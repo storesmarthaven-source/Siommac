@@ -1,0 +1,133 @@
+/* ─── View History button — sidebar gives this on desktop, button only on mobile ─── */
+@media (min-width: 769px) { #viewHistoryBtn { display: none !important; } }
+
+/* ─── Mobile menu hamburger ─── */
+.mobile-menu-btn { display: none; background: var(--navy-primary); color: white; border: none; padding: 8px 12px; border-radius: 3px; font-size: 18px; cursor: pointer; }
+
+/* ─── Sidebar mobile backdrop ─── */
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 998; opacity: 0; transition: opacity .25s; }
+.sidebar-backdrop.active { display: block; opacity: 1; }
+
+/* ─── Mobile responsive (ultra-thinking the small-screen UX) ─── */
+@media (max-width: 768px) {
+  /* Sidebar — drawer with backdrop */
+  .sidebar { position: fixed; z-index: 999; height: 100vh; transform: translateX(-100%); width: 270px; }
+  .sidebar.mobile-open { transform: translateX(0); box-shadow: 4px 0 20px rgba(0,0,0,.3); }
+  .sidebar-toggle { display: none; }
+
+  /* Main content tighter on mobile */
+  .main-content { padding: 10px; }
+  .data-section { padding: 14px; margin-bottom: 14px; }
+  .modal-dialog { margin: 8px; }
+
+  /* Page header stacks cleanly */
+  .page-header { flex-direction: column; align-items: stretch; padding: 12px 14px; gap: 10px; }
+  .page-header h1 { font-size: 17px; }
+  .page-header .header-meta { justify-content: space-between; width: 100%; }
+  .iso-clock { font-size: 11px; padding: 4px 10px; }
+  .clock-display { font-size: 26px; }
+  .iso-date { font-size: 11px; }
+
+  /* Stat cards — 2-col on phones, denser */
+  .dashboard-grid-2 { grid-template-columns: 1fr; gap: 10px; }
+  .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 12px; }
+  .stat-card-icon { width: 38px; height: 38px; font-size: 18px; margin-bottom: 8px; border-radius: 4px; }
+  .stat-card-value { font-size: 20px; margin-bottom: 2px; }
+  .stat-card-label { font-size: 9px; letter-spacing: .3px; }
+
+  /* Section headers wrap, action buttons go below title */
+  .section-header { flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 10px; }
+  .section-header h2 { font-size: 15px; }
+  .section-actions { width: 100%; flex-wrap: wrap; gap: 6px; }
+  .section-actions .btn { flex: 1 1 auto; min-width: 0; padding: 7px 10px; font-size: 12px; }
+  .section-actions .form-select { flex: 1 1 auto; padding: 7px 10px !important; font-size: 14px; min-width: 0; }
+
+  /* Tables → stacked cards (labelled rows) */
+  .data-section table thead { display: none; }
+  .data-section table, .data-section table tbody { display: block; width: 100% !important; }
+  .data-section table tbody tr { display: block; background: #fafbfc; border: 1px solid #eee; border-left: 3px solid var(--navy-accent); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .data-section table tbody tr:hover td { background: transparent !important; }
+  .data-section table tbody td { display: flex !important; justify-content: space-between !important; align-items: center; padding: 6px 0 !important; border: none !important; font-size: 13px !important; gap: 12px; min-height: 28px; }
+  .data-section table tbody td:before { content: attr(data-label); flex-shrink: 0; font-weight: 600; color: var(--navy-primary); font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+  .data-section table tbody td:not([data-label]):before { content: ''; }
+  .data-section table tbody td[data-label="Actions"],
+  .data-section table tbody td[data-label="Action"] { justify-content: flex-end !important; padding-top: 10px !important; border-top: 1px solid #f0f0f0 !important; margin-top: 4px; flex-wrap: wrap !important; gap: 8px; }
+
+  /* Enlarge action buttons for touch (Apple HIG: ≥44pt) — applies to both mobile-card layout and DataTables responsive */
+  .data-section table tbody td[data-label="Actions"] .action-icon,
+  .data-section table tbody td[data-label="Actions"] .btn,
+  .data-section table tbody td[data-label="Action"]  .action-icon,
+  .data-section table tbody td[data-label="Action"]  .btn,
+  .dataTables_wrapper table.dataTable .action-icon,
+  .dataTables_wrapper table.dataTable .btn.btn-sm {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    margin: 0 !important;
+    -webkit-tap-highlight-color: rgba(0,116,217,.18);
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .data-section table tbody td[data-label="Actions"] .action-icon i,
+  .data-section table tbody td[data-label="Action"]  .action-icon i,
+  .data-section table tbody td[data-label="Actions"] .btn i,
+  .data-section table tbody td[data-label="Action"]  .btn i {
+    font-size: 16px;
+    pointer-events: none; /* taps on icon should bubble to the button */
+  }
+
+  /* Top tabs — horizontal scroll instead of wrap */
+  .top-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px; gap: 2px; scrollbar-width: none; }
+  .top-tabs::-webkit-scrollbar { display: none; }
+  .top-tabs button { white-space: nowrap; flex-shrink: 0; padding: 8px 14px; font-size: 13px; }
+
+  /* 2x2 dashboard charts → stacked, shorter */
+  .chart-grid-2x2 { grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
+  .chart-container-md { height: 220px; }
+  .chart-container-md canvas { max-height: 220px !important; }
+
+  /* Welcome card pair (donut + bar trend) */
+  .chart-pair { grid-template-columns: 1fr; gap: 16px; }
+  .chart-wrap canvas { max-height: 180px !important; }
+
+  /* Map + camera shrink */
+  #map { height: 320px; }
+  #cameraPreview { max-height: 300px; }
+  #capturedPhoto img { max-height: 180px; }
+
+  /* Leave items — actions wrap below text */
+  .leave-request-item .d-flex { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+  .leave-request-item .btn-group { width: 100%; display: flex; }
+  .leave-request-item .btn-group .btn { flex: 1; }
+
+  /* Buttons — bigger touch targets */
+  .btn-lg { padding: 14px 20px; font-size: 15px; }
+
+  /* Hamburger visible */
+  .mobile-menu-btn { display: inline-flex; }
+
+  /* Settings palette/layout grids */
+  .palette-grid, .layout-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .palette-card, .layout-card { padding: 12px; }
+
+  /* Photos in tables shrink */
+  .data-section table tbody td a img { width: 28px !important; height: 28px !important; }
+
+  /* SweetAlert wider on mobile */
+  .swal2-popup { width: 92% !important; padding: 22px 18px !important; }
+  .swal2-title { font-size: 18px !important; }
+
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Very small phones (<380px) — fall back to single col stat cards */
+@media (max-width: 380px) {
+  .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: 1fr; }
+  .palette-grid, .layout-grid { grid-template-columns: 1fr; }
+  .page-header h1 { font-size: 16px; }
+}

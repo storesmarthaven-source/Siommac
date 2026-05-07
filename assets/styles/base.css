@@ -1,0 +1,16 @@
+:root {
+  --navy-primary: #001f3f;
+  --navy-dark: #001529;
+  --navy-light: #003366;
+  --navy-accent: #0074D9;
+  --navy-hover: #002a52;
+  --success: #34a853;
+  --warning: #fbbc04;
+  --danger: #ea4335;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+input, select, textarea { font-size: 16px !important; touch-action: manipulation; }
+.hidden { display: none !important; }

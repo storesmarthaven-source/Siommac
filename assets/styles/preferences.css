@@ -1,0 +1,32 @@
+/* ─── Top tabs (alternate layout) ─── */
+.top-tabs { display: none; background: white; border-radius: 4px; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,.06); margin-bottom: 18px; gap: 4px; flex-wrap: wrap; }
+.top-tabs button { background: transparent; border: none; padding: 10px 18px; border-radius: 4px; cursor: pointer; font-weight: 500; color: #555; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+.top-tabs button:hover { background: rgba(0,116,217,.08); color: var(--navy-primary); }
+.top-tabs button.active { background: var(--navy-accent); color: white; box-shadow: 0 2px 8px rgba(0,116,217,.3); }
+.top-tabs i { font-size: 14px; }
+
+/* layout-tabs body class — hide sidebar, show top tabs */
+body.layout-tabs .sidebar { display: none; }
+body.layout-tabs .top-tabs { display: flex; }
+body.layout-tabs .mobile-menu-btn { display: none !important; }
+
+/* ─── Layout picker cards ─── */
+.layout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.layout-card { background: #fff; border: 2px solid #e8e8e8; border-radius: 10px; padding: 22px 16px; cursor: pointer; transition: all .25s; text-align: center; position: relative; }
+.layout-card:hover { border-color: var(--navy-accent); transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+.layout-card.active { border-color: var(--navy-accent); box-shadow: 0 0 0 3px rgba(0,116,217,.18), 0 6px 18px rgba(0,0,0,.10); }
+.layout-card.active::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 10px; right: 12px; width: 24px; height: 24px; border-radius: 50%; background: var(--navy-accent); color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.layout-card .layout-icon { font-size: 36px; color: var(--navy-primary); margin-bottom: 12px; }
+.layout-card .layout-name { font-weight: 700; color: #333; font-size: 15px; margin-bottom: 4px; }
+.layout-card .layout-desc { font-size: 12px; color: #888; }
+
+/* ─── Color palette picker ─── */
+.palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.palette-card { background: #fff; border: 2px solid #e8e8e8; border-radius: 10px; padding: 16px; cursor: pointer; transition: all .25s; position: relative; overflow: hidden; }
+.palette-card:hover { border-color: var(--navy-accent); transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+.palette-card.active { border-color: var(--navy-accent); box-shadow: 0 0 0 3px rgba(0,116,217,.18), 0 6px 18px rgba(0,0,0,.10); }
+.palette-card.active::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 10px; right: 12px; width: 24px; height: 24px; border-radius: 50%; background: var(--navy-accent); color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.palette-name { font-weight: 700; color: #333; margin-bottom: 12px; font-size: 14px; }
+.palette-swatches { display: flex; gap: 4px; height: 30px; border-radius: 4px; overflow: hidden; }
+.palette-swatch { flex: 1; }
+.palette-preview { margin-top: 10px; height: 6px; border-radius: 3px; }

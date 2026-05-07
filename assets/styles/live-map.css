@@ -1,0 +1,39 @@
+/* ─── Live project map (admin/manager) ─── */
+.live-map-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+.legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.live-employees-panel { background: #f8f9fa; border-radius: 6px; padding: 14px; max-height: 540px; display: flex; flex-direction: column; gap: 10px; }
+.live-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.live-stat { background: white; padding: 10px; border-radius: 4px; text-align: center; border-left: 3px solid var(--navy-accent); box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.live-stat-num { font-size: 22px; font-weight: 700; color: var(--navy-primary); }
+.live-stat-lbl { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.live-employees-title { font-size: 11px; font-weight: 700; color: var(--navy-primary); text-transform: uppercase; letter-spacing: .8px; margin-top: 6px; }
+.live-employees-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.live-employees-list::-webkit-scrollbar { width: 6px; }
+.live-employees-list::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
+.live-emp-card { background: white; border-radius: 4px; padding: 10px 12px; border-left: 3px solid var(--success); cursor: pointer; transition: all .2s; display: flex; gap: 10px; align-items: center; }
+.live-emp-card:hover { background: #f0f5ff; transform: translateX(2px); }
+.live-emp-card.late { border-left-color: var(--warning); }
+.live-emp-card.out { border-left-color: #6c757d; opacity: .8; }
+.live-emp-thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--navy-accent); }
+.live-emp-thumb-fallback { width: 36px; height: 36px; border-radius: 50%; background: var(--navy-accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.live-emp-info { flex: 1; min-width: 0; }
+.live-emp-name { font-weight: 600; color: #333; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-emp-meta { font-size: 11px; color: #888; }
+.live-emp-empty { text-align: center; padding: 30px 10px; color: #999; font-size: 13px; }
+
+@media (max-width: 900px) {
+  .live-map-grid { grid-template-columns: 1fr; }
+  .live-employees-panel { max-height: 380px; }
+}
+
+/* leaflet popup with photo */
+.leaflet-popup-content .live-popup { min-width: 200px; }
+.leaflet-popup-content .live-popup img { width: 100%; max-width: 180px; border-radius: 4px; margin-bottom: 8px; display: block; }
+.leaflet-popup-content .live-popup .name { font-weight: 700; color: var(--navy-primary); font-size: 14px; margin-bottom: 4px; }
+.leaflet-popup-content .live-popup .row { font-size: 12px; color: #555; margin-bottom: 2px; }
+
+/* ─── Dashboard 2x2 chart grid ─── */
+.chart-grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 20px; }
+.chart-container-md { position: relative; height: 280px; padding: 8px; }
+.chart-container-md canvas { max-height: 280px !important; max-width: 100% !important; }
+@media (max-width: 900px) { .chart-grid-2x2 { grid-template-columns: 1fr; } }

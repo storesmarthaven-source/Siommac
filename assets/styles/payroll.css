@@ -1,0 +1,61 @@
+/* ─── Hourly rate input cell ─── */
+.rate-input { width: 100%; padding: 6px 10px; border: 1.5px solid #d8dde4; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--navy-primary); transition: border-color .2s; text-align: right; font-variant-numeric: tabular-nums; }
+.rate-input:focus { outline: none; border-color: var(--navy-accent); box-shadow: 0 0 0 3px rgba(0,116,217,.12); }
+.rate-input.dirty { border-color: var(--warning); background: #fffbe9; }
+.rate-cell { display: flex; align-items: center; gap: 6px; }
+.rate-cell .rate-currency { font-size: 12px; color: #666; font-weight: 600; }
+
+/* ─── Payroll generator controls ─── */
+.payroll-controls { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 14px; align-items: end; }
+.payroll-controls .form-group { margin-bottom: 0; }
+.payroll-controls .form-label { font-size: 12px; font-weight: 600; color: var(--navy-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+.payroll-controls .form-select { padding: 9px 12px !important; border-radius: 6px; border: 1.5px solid #d8dde4; font-size: 14px; }
+.payroll-controls .payroll-actions { display: flex; gap: 8px; align-self: end; }
+.payroll-controls .payroll-actions .btn { padding: 9px 18px; }
+@media (max-width: 768px) {
+  .payroll-controls { grid-template-columns: 1fr 1fr; }
+  .payroll-controls .payroll-actions { grid-column: 1 / -1; flex-wrap: wrap; }
+  .payroll-controls .payroll-actions .btn { flex: 1; }
+}
+
+/* ─── Printable payroll document (A4 = 210mm × 297mm) ─── */
+.payroll-print { padding: 16px 0; }
+.payroll-empty { background: #fff; border-radius: 8px; padding: 56px 24px; text-align: center; color: #888; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+.payroll-empty i { font-size: 46px; margin-bottom: 12px; color: var(--navy-light); opacity: .6; }
+.payroll-empty p { font-size: 14px; margin: 0; }
+
+.payroll-doc { background: #fff; padding: 14mm 12mm; width: 210mm; min-height: 297mm; max-width: 100%; margin: 0 auto; box-shadow: 0 4px 18px rgba(0,0,0,.12); color: #000; font-family: 'Poppins', Arial, sans-serif; font-size: 11.5px; line-height: 1.45; box-sizing: border-box; }
+.payroll-doc-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 14px; }
+.payroll-doc-header h1 { font-size: 18px; font-weight: 700; margin: 0 0 4px; letter-spacing: .3px; color: #000; }
+.payroll-doc-header h2 { font-size: 14px; font-weight: 600; margin: 0; color: #333; text-transform: uppercase; letter-spacing: 1px; }
+.payroll-doc-header .payroll-period { font-size: 12px; margin-top: 4px; color: #555; }
+
+.payroll-doc table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.payroll-doc table th,
+.payroll-doc table td { border: 1px solid #000; padding: 5px 7px; text-align: left; vertical-align: middle; font-size: 11px; }
+.payroll-doc table thead th { background: #e8e8e8; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: .3px; font-size: 10.5px; }
+.payroll-doc table tfoot td { background: #f4f4f4; font-weight: 700; }
+.payroll-doc table.meta td { padding: 6px 8px; }
+.payroll-doc table.meta td.label { background: #f4f4f4; font-weight: 600; width: 22%; }
+.payroll-doc table.days td.num,
+.payroll-doc table.days th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.payroll-doc table.days td.center,
+.payroll-doc table.days th.center { text-align: center; }
+.payroll-doc .row-late td { background: #fff8e1; }
+.payroll-doc .row-no-checkout td { background: #ffebee; }
+
+.payroll-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #000; margin-bottom: 16px; }
+.payroll-summary-grid .cell { padding: 7px 12px; border-bottom: 1px solid #000; border-right: 1px solid #000; display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; }
+.payroll-summary-grid .cell:nth-child(2n) { border-right: none; }
+.payroll-summary-grid .cell:nth-last-child(-n+2) { border-bottom: none; }
+.payroll-summary-grid .cell.grand { background: #000; color: #fff; grid-column: 1 / -1; padding: 10px 14px; font-size: 13px; font-weight: 700; border-bottom: none; border-right: none; }
+.payroll-summary-grid .cell .lbl { color: #444; font-weight: 600; }
+.payroll-summary-grid .cell.grand .lbl { color: #fff; }
+.payroll-summary-grid .cell .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.payroll-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 36px; }
+.payroll-signatures .sig { text-align: center; }
+.payroll-signatures .sig .line { border-top: 1px solid #000; margin-bottom: 6px; height: 38px; }
+.payroll-signatures .sig .label { font-size: 11px; font-weight: 600; }
+
+.payroll-doc-footer { margin-top: 14px; padding-top: 8px; border-top: 1px solid #aaa; font-size: 10px; color: #555; text-align: center; }
