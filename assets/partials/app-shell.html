@@ -461,31 +461,92 @@
 
       <!-- Admin — Employees CRUD -->
       <section class="app-section" id="s-adm-employees" data-role="admin">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-users"></i> <span id="allEmployeesTitle">All Employees</span></h2>
-            <div class="section-actions">
-              <button id="addEmployeeBtn" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> <span id="addEmployeeText">Add Employee</span></button>
-              <button id="refreshEmployeesBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> <span id="refreshText">Refresh</span></button>
+
+        <!-- Stats row -->
+        <div class="dashboard-grid-4" style="margin-bottom:24px;">
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-user-friends"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="empStatTotal">—</div>
+              <div class="stat-card-label">Total Employees</div>
             </div>
           </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="empStatActive">—</div>
+              <div class="stat-card-label">Active</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-user-plus"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="empStatCheckedIn">—</div>
+              <div class="stat-card-label">Checked In Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-sitemap"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="empStatDepts">—</div>
+              <div class="stat-card-label">Departments</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters + view toggle bar -->
+        <div class="emp-filters-bar">
+          <div class="emp-filter-group">
+            <select class="emp-filter-select" id="empRoleFilter">
+              <option value="all">All Roles</option>
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+            <select class="emp-filter-select" id="empStatusFilter">
+              <option value="all">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="emp-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="empSearchInput" placeholder="Search by name, position…">
+          </div>
+          <div class="emp-filter-actions">
+            <div class="emp-view-toggle">
+              <button class="emp-view-btn active" id="empCardViewBtn" title="Card View"><i class="fas fa-th-large"></i></button>
+              <button class="emp-view-btn" id="empTableViewBtn" title="Table View"><i class="fas fa-list"></i></button>
+            </div>
+            <button id="addEmployeeBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Employee</button>
+            <button id="refreshEmployeesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+          </div>
+        </div>
+
+        <!-- Card view -->
+        <div id="empCardView" class="emp-cards-grid"></div>
+
+        <!-- Table view (hidden by default) -->
+        <div id="empTableView" class="data-section" style="display:none;">
           <div style="overflow-x:auto;">
             <table id="employeesTable">
               <thead>
                 <tr>
-                  <th id="idColumn">ID</th>
-                  <th id="nameHeader">Name</th>
-                  <th id="departmentHeader">Department</th>
-                  <th id="positionHeader">Position</th>
-                  <th id="statusHeader">Status</th>
-                  <th id="attendanceHeader">Today's Status</th>
-                  <th id="actionsHeader">Actions</th>
+                  <th>#</th>
+                  <th>Employee</th>
+                  <th>Department</th>
+                  <th>Position</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Today</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="employeesTableBody"></tbody>
             </table>
           </div>
         </div>
+
       </section>
 
       <!-- Admin — Departments CRUD -->
@@ -988,53 +1049,52 @@
     </div>
   </div>
 
-  <!-- Add Employee Modal -->
-  <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addEmployeeModalTitle">Add New Employee</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="addEmployeeForm">
-            <div class="mb-3">
-              <label class="form-label">Username</label>
-              <input type="text" class="form-control" id="newUsername" required>
+  <!-- Add Employee Modal (custom overlay) -->
+  <div id="addEmployeeModal" class="emp-modal-overlay">
+    <div class="emp-modal-container">
+      <div class="emp-modal-header">
+        <h5><i class="fas fa-user-plus"></i> <span id="addEmployeeModalTitle">Add New Employee</span></h5>
+        <button class="emp-modal-close" id="closeAddEmpModalBtn" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="emp-modal-body">
+        <form id="addEmployeeForm" autocomplete="off">
+          <div class="emp-form-grid">
+            <div class="form-group">
+              <label class="form-label">Username *</label>
+              <input type="text" class="form-control" id="newUsername" placeholder="e.g. john.doe" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input type="password" class="form-control" id="newPassword" required>
+            <div class="form-group">
+              <label class="form-label">Password *</label>
+              <input type="password" class="form-control" id="newPassword" placeholder="Min. 6 characters" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="newFullName" required>
+            <div class="form-group emp-form-full">
+              <label class="form-label">Full Name *</label>
+              <input type="text" class="form-control" id="newFullName" placeholder="e.g. John Doe" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Department</label>
+            <div class="form-group">
+              <label class="form-label">Department *</label>
               <select class="form-select" id="newDepartment" required>
                 <option value="">Select Department</option>
-                <!-- Departments will be populated dynamically -->
               </select>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Position</label>
-              <input type="text" class="form-control" id="newPosition" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Role</label>
+            <div class="form-group">
+              <label class="form-label">Role *</label>
               <select class="form-select" id="newRole" required>
                 <option value="employee">Employee</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button id="saveEmployeeBtn" type="button" class="btn btn-primary">Add Employee</button>
-        </div>
+            <div class="form-group emp-form-full">
+              <label class="form-label">Position / Job Title *</label>
+              <input type="text" class="form-control" id="newPosition" placeholder="e.g. Site Supervisor" required>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="emp-modal-footer">
+        <button class="btn btn-secondary" id="cancelAddEmpBtn">Cancel</button>
+        <button class="btn btn-danger-primary" id="saveEmployeeBtn"><i class="fas fa-user-plus"></i> Add Employee</button>
       </div>
     </div>
   </div>
@@ -1071,52 +1131,52 @@
     </div>
   </div>
 
-  <!-- Edit Employee Modal -->
-  <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Employee</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="editEmployeeForm">
-            <input type="hidden" id="editUsername">
-            <div class="mb-3">
-              <label class="form-label">Full Name</label>
+  <!-- Edit Employee Modal (custom overlay) -->
+  <div id="editEmployeeModal" class="emp-modal-overlay">
+    <div class="emp-modal-container">
+      <div class="emp-modal-header">
+        <h5><i class="fas fa-user-edit"></i> Edit Employee</h5>
+        <button class="emp-modal-close" id="closeEditEmpModalBtn" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="emp-modal-body">
+        <form id="editEmployeeForm" autocomplete="off">
+          <input type="hidden" id="editUsername">
+          <div class="emp-form-grid">
+            <div class="form-group emp-form-full">
+              <label class="form-label">Full Name *</label>
               <input type="text" class="form-control" id="editFullName" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Department</label>
+            <div class="form-group">
+              <label class="form-label">Department *</label>
               <select class="form-select" id="editDepartment" required>
                 <option value="">Select Department</option>
               </select>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Position</label>
-              <input type="text" class="form-control" id="editPosition" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Role</label>
+            <div class="form-group">
+              <label class="form-label">Role *</label>
               <select class="form-select" id="editRole" required>
                 <option value="employee">Employee</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Status</label>
+            <div class="form-group">
+              <label class="form-label">Position / Job Title *</label>
+              <input type="text" class="form-control" id="editPosition" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status *</label>
               <select class="form-select" id="editStatus" required>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button id="updateEmployeeBtn" type="button" class="btn btn-primary">Update Employee</button>
-        </div>
+          </div>
+        </form>
+      </div>
+      <div class="emp-modal-footer">
+        <button class="btn btn-secondary" id="cancelEditEmpBtn">Cancel</button>
+        <button class="btn btn-danger-primary" id="updateEmployeeBtn"><i class="fas fa-save"></i> Update Employee</button>
       </div>
     </div>
   </div>

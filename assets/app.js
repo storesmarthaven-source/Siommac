@@ -793,6 +793,34 @@ const AttendanceSystem = (function() {
         showAddEmployeeModal();
       } else if (event.target.matches('#refreshEmployeesBtn, #refreshEmployeesBtn *')) {
         loadEmployeeList();
+      // Employee modal close/cancel/save
+      } else if (event.target.matches('#closeAddEmpModalBtn, #closeAddEmpModalBtn *')) {
+        closeAddEmpModal();
+      } else if (event.target.matches('#cancelAddEmpBtn, #cancelAddEmpBtn *')) {
+        closeAddEmpModal();
+      } else if (event.target.matches('#saveEmployeeBtn, #saveEmployeeBtn *')) {
+        addEmployee();
+      } else if (event.target.matches('#closeEditEmpModalBtn, #closeEditEmpModalBtn *')) {
+        closeEditEmpModal();
+      } else if (event.target.matches('#cancelEditEmpBtn, #cancelEditEmpBtn *')) {
+        closeEditEmpModal();
+      } else if (event.target.matches('#updateEmployeeBtn, #updateEmployeeBtn *')) {
+        updateEmployee();
+      // Employee view toggle
+      } else if (event.target.matches('#empCardViewBtn, #empCardViewBtn *')) {
+        _empCardView = true;
+        document.getElementById('empCardView').style.display = '';
+        document.getElementById('empTableView').style.display = 'none';
+        document.getElementById('empCardViewBtn').classList.add('active');
+        document.getElementById('empTableViewBtn').classList.remove('active');
+        _renderEmployees();
+      } else if (event.target.matches('#empTableViewBtn, #empTableViewBtn *')) {
+        _empCardView = false;
+        document.getElementById('empCardView').style.display = 'none';
+        document.getElementById('empTableView').style.display = '';
+        document.getElementById('empTableViewBtn').classList.add('active');
+        document.getElementById('empCardViewBtn').classList.remove('active');
+        _renderEmployees();
       } else if (event.target.matches('#addDepartmentBtn, #addDepartmentBtn *')) {
         showAddDepartmentModal();
       } else if (event.target.matches('#closeDeptModalBtn, #closeDeptModalBtn *')) {
@@ -819,6 +847,10 @@ const AttendanceSystem = (function() {
       if (event.target.matches('#deptSearchInput')) {
         displayDepartments(departments);
       }
+      // Employee search live filter
+      if (event.target.matches('#empSearchInput')) {
+        _renderEmployees();
+      }
       // Attendance search / dept filter — client-side re-render
       if (event.target.matches('#attSearchInput') || event.target.matches('#attDeptFilter')) {
         _renderAttTable();
@@ -829,6 +861,10 @@ const AttendanceSystem = (function() {
     document.addEventListener('change', function(event) {
       if (event.target.matches('#attendanceMonth') || event.target.matches('#attendanceYear')) {
         loadAttendanceData();
+      }
+      // Employee role/status filter
+      if (event.target.matches('#empRoleFilter') || event.target.matches('#empStatusFilter')) {
+        _renderEmployees();
       }
     });
 
@@ -1948,7 +1984,8 @@ const AttendanceSystem = (function() {
     if (target) target.classList.add('active');
   }
 
-  function showAddEmployeeModal() {
+  // ─── Employee modal helpers ───
+  function openAddEmpModal() {
     const deptSelect = document.getElementById('newDepartment');
     deptSelect.innerHTML = '<option value="">Select Department</option>';
     api('listDepartments').then(res => {
@@ -1959,9 +1996,20 @@ const AttendanceSystem = (function() {
       });
     });
     document.getElementById('addEmployeeForm').reset();
-    const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
-    modal.show();
+    document.getElementById('addEmployeeModal').classList.add('active');
   }
+
+  function closeAddEmpModal() {
+    document.getElementById('addEmployeeModal').classList.remove('active');
+    document.getElementById('addEmployeeForm').reset();
+  }
+
+  function closeEditEmpModal() {
+    document.getElementById('editEmployeeModal').classList.remove('active');
+  }
+
+  // Keep old name as alias for event delegation
+  function showAddEmployeeModal() { openAddEmpModal(); }
 
   function addEmployee() {
     const username = document.getElementById('newUsername').value.trim();
@@ -1970,26 +2018,21 @@ const AttendanceSystem = (function() {
     const department = document.getElementById('newDepartment').value;
     const position = document.getElementById('newPosition').value.trim();
     const role = document.getElementById('newRole').value;
-    
+
     if (!username || !password || !fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
       return;
     }
-    
     if (password.length < 6) {
       showPopup('warning', 'Weak Password', 'Password must be at least 6 characters.');
       return;
     }
-    
     showSpinner('Adding employee...');
-
     api('addEmployee', { username, password, fullName, department, position, role, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
         showPopup('success', 'Employee Added', 'New employee has been added successfully.');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
-        if (modal) modal.hide();
-        document.getElementById('addEmployeeForm').reset();
+        closeAddEmpModal();
         loadEmployeeList();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not add employee');
@@ -1997,47 +2040,146 @@ const AttendanceSystem = (function() {
     }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
+  // ─── Employee list state ───
+  let _empAllList = [];   // raw API data
+  let _empCardView = true; // true = cards, false = table
+
   function loadEmployeeList() {
-    // On background sync, skip skeleton/destroy so the table doesn't flash empty
     if (!_isSyncing && !swr.get('listEmployees:{}')) {
-      destroyDataTable('employeesTable');
-      setSkel('employeesTableBody', skelTableRows(7, 5));
+      // Show skeleton in whichever view is active
+      if (_empCardView) {
+        const g = document.getElementById('empCardView');
+        if (g) g.innerHTML = '<div class="emp-loading"><i class="fas fa-spinner fa-spin"></i> Loading employees…</div>';
+      } else {
+        destroyDataTable('employeesTable');
+        setSkel('employeesTableBody', skelTableRows(8, 5));
+      }
     }
     _rawApi('listEmployees', {}).then(res => {
-      if (!res || !res.success) {
-        if (!_isSyncing) document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load employees'}</td></tr>`;
-        return;
+      if (!_isSyncing) {
+        if (!res || !res.success) {
+          const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
+          if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = msg; }
+          else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
+          return;
+        }
+        swr.set('listEmployees:{}', res);
+        _empAllList = res.data || [];
+        _renderEmpStats();
+        _renderEmployees();
       }
-      swr.set('listEmployees:{}', res);
-      displayEmployeeList(res.data || []);
     }).catch(err => {
-      if (!_isSyncing) document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
+      if (!_isSyncing) {
+        const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
+        if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = `<div class="emp-err">${msg}</div>`; }
+        else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8" class="emp-err">${msg}</td></tr>`;
+      }
     });
   }
 
-  function displayEmployeeList(employees) {
-    const statusMap = {
-      checkedin:  { class: 'status-checkedin',  text: 'Checked In',     icon: '<i class="fas fa-check-circle"></i>' },
-      checkedout: { class: 'status-checkedout', text: 'Checked Out',    icon: '<i class="fas fa-sign-out-alt"></i>' },
-      notchecked: { class: 'status-notchecked', text: 'Not Checked In', icon: '<i class="fas fa-clock"></i>' }
+  function _renderEmpStats() {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('empStatTotal',    _empAllList.length);
+    set('empStatActive',   _empAllList.filter(e => e.status === 'Active').length);
+    set('empStatCheckedIn', _empAllList.filter(e => e.todayStatus === 'checkedin').length);
+    set('empStatDepts',    [...new Set(_empAllList.map(e => e.department).filter(Boolean))].length);
+  }
+
+  function _getFilteredEmpList() {
+    const role   = (document.getElementById('empRoleFilter')   || {}).value || 'all';
+    const status = (document.getElementById('empStatusFilter') || {}).value || 'all';
+    const search = ((document.getElementById('empSearchInput') || {}).value || '').toLowerCase();
+    return _empAllList.filter(e => {
+      if (role   !== 'all' && e.role   !== role)   return false;
+      if (status !== 'all' && e.status !== status) return false;
+      if (search && !e.fullName.toLowerCase().includes(search) && !(e.position||'').toLowerCase().includes(search) && !(e.department||'').toLowerCase().includes(search)) return false;
+      return true;
+    });
+  }
+
+  function _renderEmployees() {
+    const filtered = _getFilteredEmpList();
+    if (_empCardView) _renderEmpCards(filtered);
+    else              _renderEmpTable(filtered);
+  }
+
+  function _empInitials(name) {
+    return (name || '').split(' ').slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+  }
+
+  function _renderEmpCards(list) {
+    const grid = document.getElementById('empCardView');
+    if (!grid) return;
+    if (!list.length) {
+      grid.innerHTML = '<div class="emp-empty"><i class="fas fa-users-slash"></i><p>No employees match your filters.</p></div>';
+      return;
+    }
+    const todayMap = {
+      checkedin:  { cls: 'emp-today-in',  icon: 'fa-check-circle', text: 'Checked In' },
+      checkedout: { cls: 'emp-today-out', icon: 'fa-sign-out-alt', text: 'Checked Out' },
+      notchecked: { cls: 'emp-today-no',  icon: 'fa-clock',        text: 'Not In' }
     };
-    const html = employees.map((emp, index) => {
-      const todayStatus = statusMap[emp.todayStatus] || statusMap.notchecked;
+    grid.innerHTML = list.map(emp => {
+      const t = todayMap[emp.todayStatus] || todayMap.notchecked;
+      const isActive = emp.status === 'Active';
+      return `
+      <div class="emp-card">
+        <div class="emp-card-header">
+          <div class="emp-card-avatar">${_empInitials(emp.fullName)}</div>
+          <div class="emp-card-title-block">
+            <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
+            <div class="emp-card-pos">${escapeHtml(emp.position || '—')}</div>
+          </div>
+          <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
+        </div>
+        <div class="emp-card-body">
+          <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
+          <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.role)}</span></div>
+          <div class="emp-detail-row"><i class="fas fa-fingerprint"></i><span class="emp-username">@${escapeHtml(emp.username)}</span></div>
+          <div class="emp-today-row">
+            <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> ${t.text}</span>
+          </div>
+        </div>
+        <div class="emp-card-actions">
+          <button class="btn btn-outline-primary btn-sm btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-pen"></i> Edit</button>
+          <button class="btn btn-outline-danger btn-sm btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function _renderEmpTable(list) {
+    const todayMap = {
+      checkedin:  { cls: 'emp-today-in',  icon: 'fa-check-circle', text: 'Checked In' },
+      checkedout: { cls: 'emp-today-out', icon: 'fa-sign-out-alt', text: 'Checked Out' },
+      notchecked: { cls: 'emp-today-no',  icon: 'fa-clock',        text: 'Not In' }
+    };
+    const html = list.map((emp, i) => {
+      const t = todayMap[emp.todayStatus] || todayMap.notchecked;
+      const isActive = emp.status === 'Active';
       return `<tr>
-        <td data-label="ID">${index + 1}</td>
-        <td data-label="Name">${escapeHtml(emp.fullName)}</td>
-        <td data-label="Department">${escapeHtml(emp.department)}</td>
-        <td data-label="Position">${escapeHtml(emp.position)}</td>
-        <td data-label="Status"><span class="status-badge ${emp.status === 'Active' ? 'active' : 'inactive'}">${emp.status}</span></td>
-        <td data-label="Today"><span class="employee-status ${todayStatus.class}">${todayStatus.icon} ${todayStatus.text}</span></td>
-        <td data-label="Actions" style="white-space:nowrap;">
-          <button class="action-icon edit-icon btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit"><i class="fas fa-edit"></i></button>
-          <button class="action-icon delete-icon btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete"><i class="fas fa-trash"></i></button>
+        <td>${i + 1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="emp-table-avatar">${_empInitials(emp.fullName)}</div>
+            <div>
+              <div style="font-weight:600;color:var(--siomac-navy)">${escapeHtml(emp.fullName)}</div>
+              <div style="font-size:11px;color:var(--text-muted)">@${escapeHtml(emp.username)}</div>
+            </div>
+          </div>
+        </td>
+        <td>${escapeHtml(emp.department || '—')}</td>
+        <td>${escapeHtml(emp.position || '—')}</td>
+        <td><span style="text-transform:capitalize">${escapeHtml(emp.role)}</span></td>
+        <td><span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+        <td><span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> ${t.text}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="att-action-btn btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit"><i class="fas fa-pen"></i></button>
+          <button class="att-action-btn btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete"><i class="fas fa-trash"></i></button>
         </td>
       </tr>`;
-    }).join('');
+    }).join('') || `<tr><td colspan="8" class="att-empty">No employees match your filters.</td></tr>`;
 
-    // Destroy old DataTable first, then set HTML, then re-init
     destroyDataTable('employeesTable');
     document.getElementById('employeesTableBody').innerHTML = html;
     initDataTable('employeesTable', {
@@ -2045,50 +2187,52 @@ const AttendanceSystem = (function() {
     });
   }
 
+  // kept as alias — called from delegated click handler
+  function displayEmployeeList(list) { _empAllList = list; _renderEmpStats(); _renderEmployees(); }
+
   function editEmployee(username) {
     Promise.all([
       api('getEmployeeByUsername', { username }),
       api('listDepartments')
     ]).then(([empRes, deptRes]) => {
-      if (!empRes.success || !empRes.data) {
-        showPopup('error', 'Not Found', 'Employee not found');
-        return;
-      }
+      if (!empRes.success || !empRes.data) { showPopup('error', 'Not Found', 'Employee not found'); return; }
       const emp = empRes.data;
       document.getElementById('editUsername').value = emp.username;
       document.getElementById('editFullName').value = emp.fullName;
-      document.getElementById('editPosition').value = emp.position;
+      document.getElementById('editPosition').value = emp.position || '';
       document.getElementById('editRole').value = emp.role;
-      document.getElementById('editStatus').value = emp.status;
+      document.getElementById('editStatus').value = emp.status === 'Active' ? 'active' : 'inactive';
 
       const deptSelect = document.getElementById('editDepartment');
-      deptSelect.innerHTML = '';
+      deptSelect.innerHTML = '<option value="">Select Department</option>';
       ((deptRes.success && deptRes.data) || []).forEach(d => {
         const o = document.createElement('option');
         o.value = d.id; o.textContent = d.name;
         if (d.id === emp.departmentId) o.selected = true;
         deptSelect.appendChild(o);
       });
-
-      new bootstrap.Modal(document.getElementById('editEmployeeModal')).show();
+      document.getElementById('editEmployeeModal').classList.add('active');
     });
   }
 
   function updateEmployee() {
-    const username = document.getElementById('editUsername').value;
-    const fullName = document.getElementById('editFullName').value;
+    const username   = document.getElementById('editUsername').value;
+    const fullName   = document.getElementById('editFullName').value.trim();
     const department = document.getElementById('editDepartment').value;
-    const position = document.getElementById('editPosition').value;
-    const role = document.getElementById('editRole').value;
-    const status = document.getElementById('editStatus').value;
+    const position   = document.getElementById('editPosition').value.trim();
+    const role       = document.getElementById('editRole').value;
+    const status     = document.getElementById('editStatus').value;
 
+    if (!fullName || !department || !position || !role) {
+      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
+      return;
+    }
     showSpinner('Updating employee...');
     api('updateEmployee', { username, fullName, department, position, role, status, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Employee Updated', `Employee ${fullName} has been updated successfully.`);
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-        if (modal) modal.hide();
+        showPopup('success', 'Employee Updated', `${fullName} has been updated.`);
+        closeEditEmpModal();
         loadEmployeeList();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not update');
