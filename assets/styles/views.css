@@ -320,6 +320,10 @@
   cursor: pointer; border: none; transition: opacity .18s; font-family: inherit;
   display: inline-flex; align-items: center; gap: 5px;
 }
+.lv-btn-view    { background: var(--siomac-navy); color: white; }
+.lv-btn-view:hover    { opacity: .85; }
+.lv-btn-print   { background: #455A64; color: white; }
+.lv-btn-print:hover   { opacity: .85; }
 .lv-btn-approve { background: #2E7D32; color: white; }
 .lv-btn-approve:hover { opacity: .85; }
 .lv-btn-reject  { background: #C62828; color: white; }
@@ -769,6 +773,72 @@
 .section-header h2 i { color: var(--siomac-red); font-size: 1rem; }
 .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* ─── Dashboard layout editor ─── */
+.dash-layout-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  flex-wrap: wrap; gap: 10px;
+  margin-bottom: 16px;
+}
+.dash-hidden-list {
+  display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
+}
+.dash-restore-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 40px; font-size: 0.75rem;
+  font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-primary);
+  font-family: inherit; transition: background .18s, color .18s, border-color .18s;
+}
+.dash-restore-btn:hover { background: var(--siomac-red); color: #fff; border-color: var(--siomac-red); }
+.dash-layout-actions { display: flex; gap: 8px; }
+.dash-layout-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 18px; border-radius: 40px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-primary);
+  font-family: inherit; transition: background .18s, color .18s, border-color .18s;
+}
+.dash-layout-btn:hover { border-color: var(--siomac-red); color: var(--siomac-red); }
+.dash-layout-btn.active {
+  background: var(--siomac-red); color: #fff; border-color: var(--siomac-red);
+}
+.dash-layout-btn-primary {
+  background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy);
+}
+.dash-layout-btn-primary:hover { background: var(--siomac-navy-light); border-color: var(--siomac-navy-light); color: #fff; }
+
+/* Drag handle — hidden until edit mode */
+.dash-drag-handle {
+  display: none; cursor: grab; color: var(--text-muted);
+  margin-right: 8px; font-size: 0.9rem;
+}
+.dash-drag-handle:active { cursor: grabbing; }
+
+/* Hide button — hidden until edit mode */
+.dash-hide-btn {
+  display: none; background: transparent; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+  padding: 2px 5px; border-radius: 6px; transition: color .15s;
+  flex-shrink: 0;
+}
+.dash-hide-btn:hover { color: var(--siomac-red); }
+
+/* Edit mode: show handles + hide buttons, highlight widgets */
+.dash-edit-mode .dash-drag-handle { display: inline-block; }
+.dash-edit-mode .dash-hide-btn { display: inline-flex; align-items: center; }
+.dash-edit-mode .dash-widget {
+  border: 2px dashed var(--siomac-gold, #FFB712) !important;
+  cursor: default;
+}
+.dash-edit-mode #dashWidgetGrid .dash-widget { cursor: grab; }
+
+/* Hidden widget */
+.dash-widget-hidden { display: none !important; }
+
+/* Sortable drag states */
+.dash-sortable-ghost { opacity: 0.3; background: var(--bg-subtle); }
+.dash-sortable-drag  { opacity: 0.85; box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important; }
+
 /* ─── Chart card header (matches design: title left, badge right) ─── */
 .chart-card-section { padding: 20px 22px; }
 .chart-card-header {
@@ -790,27 +860,28 @@
 /* ─── Stat cards ─── */
 .stat-card {
   background: var(--bg-card);
-  padding: 16px 20px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   border: 1px solid var(--border);
-  transition: all .25s;
-  display: flex; flex-direction: row; align-items: center; gap: 14px;
+  transition: transform .22s, box-shadow .22s;
+  display: flex; flex-direction: column;
 }
-.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .stat-card-icon {
-  width: 42px; height: 42px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: 28px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-  background: rgba(27,45,85,0.1); color: var(--siomac-navy);
+  font-size: 22px; flex-shrink: 0;
+  background: rgba(228,12,12,0.09); color: var(--siomac-red);
+  margin-bottom: 14px;
 }
-.stat-card-icon.blue   { background: rgba(27,45,85,0.1);    color: var(--siomac-navy); }
-.stat-card-icon.green  { background: rgba(46,125,50,0.1);   color: var(--success); }
+.stat-card-icon.blue   { background: rgba(27,45,85,0.09);   color: var(--siomac-navy); }
+.stat-card-icon.green  { background: rgba(46,125,50,0.09);  color: var(--success); }
 .stat-card-icon.gold   { background: rgba(255,183,18,0.14); color: #c67c00; }
-.stat-card-icon.red    { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
+.stat-card-icon.red    { background: rgba(228,12,12,0.09);  color: var(--siomac-red); }
 .stat-card-body { flex: 1; min-width: 0; }
-.stat-card-value { font-size: 1.45rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 2px; }
-.stat-card-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .6px; }
+.stat-card-value { font-size: 2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
+.stat-card-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
 /* ─── Grids ─── */
 .dashboard-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }

@@ -2035,7 +2035,7 @@ const AttendanceSystem = (function() {
     if (!d) return '—';
     try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch(e) { return d; }
   }
-  function _lvCard(r, { showEmployee = false, showApproveReject = false, showEdit = false, showDelete = false } = {}) {
+  function _lvCard(r, { showEmployee = false, showApproveReject = false, showEdit = false, showDelete = false, showView = false } = {}) {
     const id = escapeHtml(r.id);
     const isPending = String(r.status).toLowerCase() === 'pending';
     return `<div class="lv-card">
@@ -2046,6 +2046,8 @@ const AttendanceSystem = (function() {
       <div class="lv-card-dates"><i class="fas fa-calendar"></i> ${_lvFmtDate(r.from || r.fromDate)} → ${_lvFmtDate(r.to || r.toDate)} <span class="lv-days-pill">${r.days || '?'} day${r.days !== 1 ? 's' : ''}</span></div>
       <div class="lv-card-reason"><i class="fas fa-comment"></i> ${escapeHtml(r.reason || '—')}</div>
       <div class="lv-card-actions">
+        ${showView ? `<button class="lv-btn lv-btn-view btn-view-leave" data-id="${id}"><i class="fas fa-file-alt"></i> View</button>` : ''}
+        ${showView ? `<button class="lv-btn lv-btn-print btn-print-leave" data-id="${id}"><i class="fas fa-print"></i> Print</button>` : ''}
         ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-approve btn-approve" data-id="${id}"><i class="fas fa-check"></i> Approve</button>` : ''}
         ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-reject btn-reject"   data-id="${id}"><i class="fas fa-times"></i> Reject</button>` : ''}
         ${showEdit && isPending ? `<button class="lv-btn lv-btn-edit btn-edit-leave" data-id="${id}"><i class="fas fa-edit"></i> Edit</button>` : ''}
@@ -2191,7 +2193,7 @@ const AttendanceSystem = (function() {
       return true;
     });
     document.getElementById('managerPendingLeaves').innerHTML = filtered.length
-      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false })).join('')
+      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false, showView: true })).join('')
       : _lvEmpty('No leave requests in this category.');
   }
 
@@ -2500,6 +2502,7 @@ const AttendanceSystem = (function() {
     document.getElementById('employeesTableBody').innerHTML = html;
     initDataTable('employeesTable', {
       searching: false,
+      dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
       columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
@@ -3126,6 +3129,7 @@ const AttendanceSystem = (function() {
     document.getElementById('attendanceTableBody').innerHTML = html;
     initDataTable('attendanceTable', {
       searching: false,
+      dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
       columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
@@ -3177,7 +3181,7 @@ const AttendanceSystem = (function() {
       return true;
     });
     document.getElementById('leavesTableBody').innerHTML = filtered.length
-      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true })).join('')
+      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true, showView: true })).join('')
       : _lvEmpty('No leave requests found.');
   }
 
