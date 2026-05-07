@@ -184,23 +184,41 @@
 
 /* Page header */
 .page-header {
-  background: var(--bg-card);
-  padding: 16px 22px;
-  border-radius: var(--radius-lg);
-  margin-bottom: 22px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
 }
+.page-header-left {
+  display: flex; align-items: center; gap: 14px;
+}
+.page-title-block { display: flex; flex-direction: column; gap: 3px; }
 .page-header h1 {
-  font-size: 1.3rem; color: var(--siomac-navy);
-  display: flex; align-items: center; gap: 10px; font-weight: 700;
+  font-size: 1.55rem; font-weight: 700; color: var(--siomac-navy);
+  display: flex; align-items: center; gap: 10px; margin: 0;
 }
-.page-header .header-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.iso-clock {
-  font-family: 'Courier New', monospace; font-size: 12px;
-  color: var(--text-muted); background: var(--bg-subtle);
-  padding: 6px 12px; border-radius: 40px;
+.page-header h1 i { color: var(--siomac-red); font-size: 1.3rem; }
+.page-subtitle {
+  font-size: 0.8rem; color: var(--text-muted); margin: 0;
+  font-weight: 400;
+}
+/* Clock pill */
+.page-header .header-meta {
+  background: var(--bg-card);
+  padding: 8px 18px;
+  border-radius: 40px;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--siomac-navy);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+}
+.page-header .header-meta i { color: var(--siomac-red); font-size: 0.8rem; }
+.header-secure {
+  color: var(--text-muted); font-size: 0.78rem;
+  border-left: 1px solid var(--border); padding-left: 8px; margin-left: 4px;
+}
+.header-secure i { color: var(--success); }
+/* Legacy .iso-clock kept for any other uses */
+.iso-clock {
+  font-size: 0.82rem; color: var(--text-muted);
 }

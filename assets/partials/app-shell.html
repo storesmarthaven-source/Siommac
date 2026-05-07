@@ -101,13 +101,20 @@
 
     <main class="main-content">
       <div class="page-header">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu"><i class="fas fa-bars"></i></button>
-        <h1 id="pageTitle">
-          <i class="fas fa-tachometer-alt" id="pageTitleIcon"></i>
-          <span id="pageTitleText">Dashboard</span>
-        </h1>
+        <div class="page-header-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu"><i class="fas fa-bars"></i></button>
+          <div class="page-title-block">
+            <h1 id="pageTitle">
+              <i class="fas fa-tachometer-alt" id="pageTitleIcon"></i>
+              <span id="pageTitleText">Operations Dashboard</span>
+            </h1>
+            <p class="page-subtitle" id="pageSubtitle">Real-time attendance &amp; workforce intelligence</p>
+          </div>
+        </div>
         <div class="header-meta">
-          <div class="iso-clock" id="isoClock" title="ISO 8601 timestamp">--</div>
+          <i class="fas fa-globe-americas"></i>
+          <span id="isoClock">--</span>
+          <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
         </div>
       </div>
 
@@ -398,20 +405,29 @@
 
         <!-- 2x2 chart grid -->
         <div class="chart-grid-2x2">
-          <div class="data-section">
-            <div class="section-header"><h2><i class="fas fa-chart-line"></i> Last 30 Days · Daily Attendance</h2></div>
+          <div class="data-section chart-card-section">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
+              <span class="chart-badge" id="trendBadge">Last 30 days</span>
+            </div>
             <div class="chart-container-md"><canvas id="trendLineChart"></canvas></div>
           </div>
-          <div class="data-section">
-            <div class="section-header"><h2><i class="fas fa-building"></i> Department Distribution</h2></div>
+          <div class="data-section chart-card-section">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
+            </div>
             <div class="chart-container-md"><canvas id="deptDistChart"></canvas></div>
           </div>
-          <div class="data-section">
-            <div class="section-header"><h2><i class="fas fa-users"></i> Today's Status</h2></div>
+          <div class="data-section chart-card-section">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
+            </div>
             <div class="chart-container-md"><canvas id="statusBarChart"></canvas></div>
           </div>
-          <div class="data-section">
-            <div class="section-header"><h2><i class="fas fa-calendar-day"></i> Leave Types · This Month</h2></div>
+          <div class="data-section chart-card-section">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
+            </div>
             <div class="chart-container-md"><canvas id="leaveTypesChart"></canvas></div>
           </div>
         </div>
@@ -474,16 +490,53 @@
 
       <!-- Admin — Departments CRUD -->
       <section class="app-section" id="s-adm-departments" data-role="admin">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-building"></i> <span id="departmentsTitle">Department Management</span></h2>
-            <div class="section-actions">
-              <button id="addDepartmentBtn" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> <span id="addDepartmentText">Add Department</span></button>
-              <button id="refreshDepartmentsBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> <span id="refreshDepartmentsText">Refresh</span></button>
+
+        <!-- Dept stats row -->
+        <div class="dashboard-grid-4" id="deptStatsRow" style="margin-bottom:28px;">
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-sitemap"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="deptStatTotal">0</div>
+              <div class="stat-card-label">Total Departments</div>
             </div>
           </div>
-          <div class="dashboard-grid-3" id="departmentsContainer" style="margin-bottom:0;"></div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="deptStatEmployees">0</div>
+              <div class="stat-card-label">Total Employees</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="deptStatHeads">0</div>
+              <div class="stat-card-label">Department Heads</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="deptStatRate">—</div>
+              <div class="stat-card-label">Avg. Attendance Rate</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Filters bar -->
+        <div class="dept-filters-bar">
+          <div class="dept-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="deptSearchInput" placeholder="Search departments…">
+          </div>
+          <button id="addDepartmentBtn" class="btn btn-danger-primary">
+            <i class="fas fa-plus"></i> New Department
+          </button>
+        </div>
+
+        <!-- Cards grid -->
+        <div class="dept-cards-grid" id="departmentsContainer"></div>
+
       </section>
 
       <!-- Admin — Project Sites CRUD -->
@@ -915,36 +968,34 @@
     </div>
   </div>
 
-  <!-- Add Department Modal -->
-  <div class="modal fade" id="addDepartmentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add New Department</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="addDepartmentForm">
-            <div class="mb-3">
-              <label class="form-label">Department Name</label>
-              <input type="text" class="form-control" id="departmentName" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" id="departmentDescription" rows="3"></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Manager</label>
-              <select class="form-select" id="departmentManager" required>
-                <option value="">Select Manager</option>
-              </select>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button id="saveDepartmentBtn" type="button" class="btn btn-primary">Add Department</button>
-        </div>
+  <!-- Department Add/Edit Modal (custom, no Bootstrap) -->
+  <div id="addDepartmentModal" class="dept-modal-overlay">
+    <div class="dept-modal-container">
+      <div class="dept-modal-header">
+        <h5><i class="fas fa-building-columns"></i> <span id="deptModalTitle">Add New Department</span></h5>
+        <button class="dept-modal-close" id="closeDeptModalBtn" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="dept-modal-body">
+        <form id="addDepartmentForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label">Department Name *</label>
+            <input type="text" class="form-control" id="departmentName" placeholder="e.g. Civil Operations" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="departmentDescription" rows="3" placeholder="Mission, responsibilities…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Manager *</label>
+            <select class="form-select" id="departmentManager" required>
+              <option value="">Select Manager</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="dept-modal-footer">
+        <button class="btn btn-secondary" id="cancelDeptModalBtn">Cancel</button>
+        <button class="btn btn-danger-primary" id="saveDepartmentBtn"><i class="fas fa-save"></i> Save Department</button>
       </div>
     </div>
   </div>

@@ -1,94 +1,102 @@
-// Chart rendering helpers for Chart.js.
+// Chart rendering — exactly matches SIOMAC industrial design spec
 window.SiomacCharts = (function () {
   let attendanceChartInstance = null;
   let trendChartInstance = null;
   const dashCharts = {};
 
   function destroyDash_(key) { if (dashCharts[key]) { dashCharts[key].destroy(); delete dashCharts[key]; } }
-  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function hexAlpha(hex, alpha) {
-    const m = hex.replace('#', '');
-    const v = m.length === 3 ? m.split('').map(c => c + c).join('') : m;
-    const r = parseInt(v.substr(0, 2), 16), g = parseInt(v.substr(2, 2), 16), b = parseInt(v.substr(4, 2), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-  }
 
+  // Global font
+  Chart.defaults.font.family = "'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif";
+  Chart.defaults.color = '#5E6F8D';
+
+  // ── Employee: personal attendance donut ──
   function displayAttendanceChart(stats) {
     const canvas = document.getElementById('attendanceChart');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
     if (attendanceChartInstance) attendanceChartInstance.destroy();
-
-    attendanceChartInstance = new Chart(ctx, {
+    attendanceChartInstance = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
         labels: ['Present', 'Absent', 'Sundays'],
         datasets: [{
           data: [stats.present, stats.absent, stats.sundays],
-          backgroundColor: ['#34a853', '#ea4335', '#0074D9'],
-          borderWidth: 2,
-          borderColor: '#fff',
+          backgroundColor: ['#2E7D32', '#E40C0C', '#1B2D55'],
+          borderWidth: 0,
           hoverOffset: 8
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { padding: 10, usePointStyle: true, font: { size: 11 } } } },
-        cutout: '60%'
-      }
-    });
-  }
-
-  function renderTrendLine(data) {
-    destroyDash_('trend');
-    const canvas = document.getElementById('trendLineChart');
-    if (!canvas) return;
-    const accent = cssVar('--navy-accent') || '#0074D9';
-    dashCharts.trend = new Chart(canvas.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: data.map(d => String(d.date).slice(5)),
-        datasets: [{
-          label: 'Present',
-          data: data.map(d => d.present),
-          borderColor: accent,
-          backgroundColor: hexAlpha(accent, 0.18),
-          borderWidth: 2,
-          fill: true,
-          tension: 0.35,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          pointBackgroundColor: accent
-        }, {
-          label: 'Late',
-          data: data.map(d => d.late),
-          borderColor: '#fbbc04',
-          backgroundColor: hexAlpha('#fbbc04', 0.10),
-          borderWidth: 2,
-          fill: false,
-          tension: 0.35,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          borderDash: [4, 4]
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f0f0f0' } },
-          x: { ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, grid: { display: false } }
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } }
         }
       }
     });
   }
 
+  // ── Admin: 30-day daily attendance trend — matches design line chart exactly ──
+  function renderTrendLine(data) {
+    destroyDash_('trend');
+    const canvas = document.getElementById('trendLineChart');
+    if (!canvas) return;
+    dashCharts.trend = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: data.map(d => String(d.date).slice(5)),
+        datasets: [
+          {
+            label: 'Present',
+            data: data.map(d => d.present),
+            borderColor: '#E40C0C',
+            backgroundColor: 'rgba(228,12,12,0.05)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: '#E40C0C',
+            pointBorderColor: 'white',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Late',
+            data: data.map(d => d.late),
+            borderColor: '#FFB712',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.3,
+            fill: false,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: '#FFB712'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // ── Admin: Department distribution — matches design doughnut exactly ──
   function renderDeptDist(data) {
     destroyDash_('dept');
     const canvas = document.getElementById('deptDistChart');
     if (!canvas) return;
-    const palette = [cssVar('--navy-primary'), cssVar('--navy-accent'), '#34a853', '#fbbc04', '#ea4335', '#8b5cf6', '#00afb9', '#e91e63'];
+    // Exact palette from design spec
+    const palette = ['#E40C0C', '#1B2D55', '#FFB712', '#2A6F9C', '#5E6F8D', '#B23C1C', '#2E7D32', '#7C3AED', '#0891B2', '#DB2777'];
     dashCharts.dept = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -96,19 +104,23 @@ window.SiomacCharts = (function () {
         datasets: [{
           data: data.map(d => d.count),
           backgroundColor: data.map((_, i) => palette[i % palette.length]),
-          borderWidth: 2,
-          borderColor: '#fff',
+          borderWidth: 0,
+          cutout: '65%',
           hoverOffset: 8
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 8 } } },
-        cutout: '58%'
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
+        }
       }
     });
   }
 
+  // ── Admin: Today's status bar chart ──
   function renderStatusBars(stats) {
     destroyDash_('status');
     const canvas = document.getElementById('statusBarChart');
@@ -119,22 +131,35 @@ window.SiomacCharts = (function () {
         labels: ['Present', 'Late', 'Absent', 'On Leave'],
         datasets: [{
           data: [stats.present, stats.late, stats.absent, stats.onLeave],
-          backgroundColor: ['#34a853', '#fbbc04', '#ea4335', cssVar('--navy-accent') || '#0074D9'],
-          borderRadius: 6,
+          backgroundColor: [
+            'rgba(46,125,50,0.85)',
+            'rgba(255,183,18,0.85)',
+            'rgba(228,12,12,0.85)',
+            'rgba(27,45,85,0.75)'
+          ],
+          borderColor: ['#2E7D32', '#FFB712', '#E40C0C', '#1B2D55'],
+          borderWidth: 0,
+          borderRadius: 8,
+          borderSkipped: false,
           maxBarThickness: 56
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + ' people' } } },
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' employees' } }
+        },
         scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f0f0f0' } },
-          x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+          y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { stepSize: 1, font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } }
         }
       }
     });
   }
 
+  // ── Admin: Leave types doughnut ──
   function renderLeaveTypes(types) {
     destroyDash_('leaves');
     const canvas = document.getElementById('leaveTypesChart');
@@ -145,50 +170,52 @@ window.SiomacCharts = (function () {
         labels: ['Sick', 'Casual', 'Annual', 'Medical'],
         datasets: [{
           data: [types.sick, types.casual, types.annual, types.medical],
-          backgroundColor: ['#ea4335', cssVar('--navy-accent') || '#0074D9', '#34a853', '#fbbc04'],
-          borderWidth: 2,
-          borderColor: '#fff',
+          backgroundColor: ['#E40C0C', '#1B2D55', '#2E7D32', '#FFB712'],
+          borderWidth: 0,
           hoverOffset: 8
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 8 } } },
-        cutout: '58%'
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
+        }
       }
     });
   }
 
+  // ── Employee: personal hours trend bar chart ──
   function displayTrendChart(records) {
     const canvas = document.getElementById('attendanceTrendChart');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
     if (trendChartInstance) trendChartInstance.destroy();
-
     const sorted = records.slice().reverse();
-    const labels = sorted.map(r => String(r.date).slice(5));
-    const data = sorted.map(r => Number(r.hours) || 0);
-
-    trendChartInstance = new Chart(ctx, {
+    trendChartInstance = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: {
-        labels,
+        labels: sorted.map(r => String(r.date).slice(5)),
         datasets: [{
           label: 'Hours',
-          data,
-          backgroundColor: 'rgba(0,116,217,0.75)',
-          borderColor: '#0074D9',
-          borderWidth: 1,
-          borderRadius: 4,
+          data: sorted.map(r => Number(r.hours) || 0),
+          backgroundColor: 'rgba(228,12,12,0.75)',
+          borderColor: '#E40C0C',
+          borderWidth: 0,
+          borderRadius: 6,
+          borderSkipped: false,
           maxBarThickness: 28
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + ' h' } } },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' hrs' } }
+        },
         scales: {
-          y: { beginAtZero: true, suggestedMax: 10, ticks: { stepSize: 2, font: { size: 10 } }, grid: { color: '#f0f0f0' } },
+          y: { beginAtZero: true, suggestedMax: 10, ticks: { stepSize: 2, font: { size: 10 } }, grid: { color: '#E9EEF3' } },
           x: { ticks: { font: { size: 10 } }, grid: { display: false } }
         }
       }
@@ -197,6 +224,7 @@ window.SiomacCharts = (function () {
 
   function hasAttendanceChart() { return !!attendanceChartInstance; }
   function hasTrendChart() { return !!trendChartInstance; }
+
   function renderDashboardCharts(data) {
     renderTrendLine(data.dailyTrend);
     renderDeptDist(data.deptDistribution);

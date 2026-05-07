@@ -616,11 +616,32 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
 
-    // page header title
+    // page header title + subtitle
     const item = allSectionItems().find(x => x.id === id);
     if (item) {
       document.getElementById('pageTitleIcon').className = 'fas ' + item.icon;
       document.getElementById('pageTitleText').textContent = item.label;
+      const subtitleEl = document.getElementById('pageSubtitle');
+      if (subtitleEl) {
+        const subtitles = {
+          's-adm-dashboard':   'Real-time attendance & workforce intelligence',
+          's-adm-employees':   'Manage employee profiles, roles and departments',
+          's-adm-departments': 'Organise and configure your department structure',
+          's-adm-attendance':  'Detailed attendance records and monthly reports',
+          's-adm-projects':    'Geo-fenced project sites and live location tracking',
+          's-adm-leaves':      'Approve, reject and track workforce leave requests',
+          's-adm-payroll':     'Generate payslips and manage hourly rates',
+          's-adm-settings':    'System configuration and company preferences',
+          's-mgr-overview':    'Department attendance and workforce snapshot',
+          's-mgr-employees':   'View and manage your department team',
+          's-mgr-leaves':      'Review pending leave requests from your team',
+          's-emp-attendance':  'Check in, check out and track your attendance',
+          's-emp-history':     'Your personal attendance history and records',
+          's-emp-leave':       'Submit and track your leave requests',
+          's-emp-profile':     'Manage your personal profile and preferences',
+        };
+        subtitleEl.textContent = subtitles[id] || 'Siddim Integrated O&M Operations';
+      }
     }
 
     // close mobile drawer + backdrop after click
@@ -774,6 +795,12 @@ const AttendanceSystem = (function() {
         loadEmployeeList();
       } else if (event.target.matches('#addDepartmentBtn, #addDepartmentBtn *')) {
         showAddDepartmentModal();
+      } else if (event.target.matches('#closeDeptModalBtn, #closeDeptModalBtn *')) {
+        closeDeptModal();
+      } else if (event.target.matches('#cancelDeptModalBtn, #cancelDeptModalBtn *')) {
+        closeDeptModal();
+      } else if (event.target.matches('#saveDepartmentBtn, #saveDepartmentBtn *')) {
+        addDepartment();
       } else if (event.target.matches('#refreshDepartmentsBtn, #refreshDepartmentsBtn *')) {
         loadDepartments();
       } else if (event.target.matches('#refreshAttendanceBtn, #refreshAttendanceBtn *')) {
@@ -787,6 +814,13 @@ const AttendanceSystem = (function() {
       }
     });
     
+    // Department search — live filter as user types
+    document.addEventListener('input', function(event) {
+      if (event.target.matches('#deptSearchInput')) {
+        displayDepartments(departments);
+      }
+    });
+
     // Manager buttons using event delegation
     document.addEventListener('click', function(event) {
       if (event.target.matches('#refreshDeptEmployeesBtn, #refreshDeptEmployeesBtn *')) {
@@ -931,17 +965,18 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // ISO 8601 everywhere — "2025-12-08T18:40:21Z"
+  // Real-time clock — header shows "HH:MM:SS AM/PM · Mon DD, YYYY"
   function updateClock() {
     const now = new Date();
-    const isoFull = now.toISOString().slice(0, 19) + 'Z';      // 2025-12-08T18:40:21Z
-    const localTime = now.toTimeString().slice(0, 8);          // HH:MM:SS local
-    const isoDate = now.toISOString().slice(0, 10);            // YYYY-MM-DD
+    // Header pill: "01:31:46 AM · May 7, 2026"
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const isoDate = now.toISOString().slice(0, 10); // YYYY-MM-DD for employee section
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    set('isoClock', isoFull);     // page header
-    set('currentTime', localTime); // employee "Today's Status" big clock
-    set('currentDate', isoDate);   // employee section date row
+    set('isoClock', `${timeStr} · ${dateStr}`);    // page header pill
+    set('currentTime', now.toTimeString().slice(0, 8)); // employee big clock HH:MM:SS
+    set('currentDate', isoDate);                        // employee section date row
   }
 
   function switchLanguage() { /* removed — English only */ }
@@ -2070,13 +2105,7 @@ const AttendanceSystem = (function() {
 
   function showAddDepartmentModal(dept) {
     editingDeptId = dept ? dept.id : null;
-    document.querySelector('#addDepartmentModal .modal-title').textContent = dept
-      ? ('Edit Department')
-      : ('Add New Department');
-    document.getElementById('saveDepartmentBtn').textContent = dept
-      ? ('Update Department')
-      : ('Add Department');
-
+    document.getElementById('deptModalTitle').textContent = dept ? 'Edit Department' : 'Add New Department';
     document.getElementById('departmentName').value = dept ? dept.name : '';
     document.getElementById('departmentDescription').value = dept ? (dept.description || '') : '';
 
@@ -2091,7 +2120,12 @@ const AttendanceSystem = (function() {
       });
     });
 
-    new bootstrap.Modal(document.getElementById('addDepartmentModal')).show();
+    document.getElementById('addDepartmentModal').classList.add('active');
+  }
+
+  function closeDeptModal() {
+    document.getElementById('addDepartmentModal').classList.remove('active');
+    editingDeptId = null;
   }
 
   function addDepartment() {
@@ -2113,10 +2147,8 @@ const AttendanceSystem = (function() {
       hideSpinner();
       if (res.success) {
         showPopup('success', 'Saved', 'Department saved successfully.');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addDepartmentModal'));
-        if (modal) modal.hide();
+        closeDeptModal();
         document.getElementById('addDepartmentForm').reset();
-        editingDeptId = null;
         loadDepartments();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save department');
@@ -2125,41 +2157,78 @@ const AttendanceSystem = (function() {
   }
 
   function loadDepartments() {
-    setSkel('departmentsContainer', skelCards(3));
+    const container = document.getElementById('departmentsContainer');
+    if (container) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
     _rawApi('listDepartments', {}).then(res => {
-      console.log('[loadDepartments] API response:', JSON.stringify(res));
       if (!res || !res.success) {
-        document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load departments'}</p>`;
+        if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-exclamation-circle"></i><p>${(res && res.message) || 'Failed to load departments'}</p></div>`;
         return;
       }
       const list = Array.isArray(res.data) ? res.data : [];
-      console.log('[loadDepartments] list length:', list.length);
       departments = list;
       swr.set('listDepartments:{}', res);
       displayDepartments(list);
     }).catch(err => {
-      console.error('[loadDepartments] catch:', err);
-      document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
+      if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-wifi"></i><p>Network error: ${err.message || 'Could not connect'}</p></div>`;
     });
   }
 
+  // Dept icons map by keyword
+  function _deptIcon(name) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('civil') || n.includes('construct'))  return 'fa-hard-hat';
+    if (n.includes('mech'))                              return 'fa-gear';
+    if (n.includes('electr') || n.includes('instrum'))  return 'fa-bolt';
+    if (n.includes('hse') || n.includes('safety') || n.includes('health')) return 'fa-shield-alt';
+    if (n.includes('admin') || n.includes('hr'))        return 'fa-file-signature';
+    if (n.includes('log') || n.includes('supply') || n.includes('warehouse')) return 'fa-truck';
+    if (n.includes('it') || n.includes('tech'))         return 'fa-laptop-code';
+    if (n.includes('finance') || n.includes('account')) return 'fa-coins';
+    return 'fa-building';
+  }
+
   function displayDepartments(departmentList) {
-    const html = departmentList.map(dept => `
-      <div class="department-card">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; gap:8px;">
-          <div class="card-title">${dept.name}</div>
-          <div class="department-actions">
-            <button class="action-icon edit-icon btn-edit-department" data-id="${dept.id}" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="action-icon delete-icon btn-delete-department" data-id="${dept.id}" title="Delete"><i class="fas fa-trash"></i></button>
+    const container = document.getElementById('departmentsContainer');
+    if (!container) return;
+
+    // Update stat badges
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setEl('deptStatTotal', departmentList.length);
+    setEl('deptStatEmployees', departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
+    setEl('deptStatHeads', departmentList.filter(d => d.manager && d.manager !== '—').length);
+    setEl('deptStatRate', '—'); // no attendance rate from this endpoint
+
+    const search = (document.getElementById('deptSearchInput') || {}).value || '';
+    const filtered = search
+      ? departmentList.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || (d.description || '').toLowerCase().includes(search.toLowerCase()))
+      : departmentList;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(dept => `
+      <div class="dept-card">
+        <div class="dept-card-header">
+          <div class="dept-card-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
+          <div class="dept-card-title-block">
+            <div class="dept-card-name">${escapeHtml(dept.name)}</div>
+            <div class="dept-card-id-tag">ID #${dept.id}</div>
           </div>
         </div>
-        <p style="color:#666; font-size:13px; margin-bottom:10px;">${dept.description || ''}</p>
-        <div class="department-info">
-          <div><i class="fas fa-user" style="color:var(--navy-accent); width:18px;"></i> ${'Manager'}: <strong>${dept.manager}</strong></div>
-          <div><i class="fas fa-users" style="color:var(--navy-accent); width:18px;"></i> ${'Employees'}: <strong>${dept.employeeCount}</strong></div>
+        <div class="dept-card-body">
+          ${dept.description ? `<div class="dept-info-row"><i class="fas fa-align-left"></i><span>${escapeHtml(dept.description)}</span></div>` : ''}
+          <div class="dept-info-row"><i class="fas fa-user-circle"></i><span><strong>Manager:</strong> ${escapeHtml(dept.manager || '—')}</span></div>
+          <div class="dept-stats-badges">
+            <span class="dept-badge blue"><i class="fas fa-users"></i> ${dept.employeeCount || 0} Employees</span>
+          </div>
+        </div>
+        <div class="dept-card-actions">
+          <button class="btn btn-outline-primary btn-sm btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
+          <button class="btn btn-outline-danger btn-sm btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
         </div>
       </div>`).join('');
-    document.getElementById('departmentsContainer').innerHTML = html;
   }
 
   function editDepartment(id) {
