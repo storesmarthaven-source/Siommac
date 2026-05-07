@@ -2370,7 +2370,7 @@ const AttendanceSystem = (function() {
     return 'fa-building';
   }
 
-  let _deptListView = true; // list view default
+  let _deptListView = false; // card view default
 
   function displayDepartments(departmentList) {
     // Update stat badges
@@ -3052,9 +3052,9 @@ const AttendanceSystem = (function() {
       order: [],
       dom: "<'dt-toolbar'<'dt-btns'B><'dt-search'f>>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
       buttons: [
-        { extend: 'csv',   text: '<i class="fas fa-file-csv"></i> CSV',   className: 'btn btn-sm btn-success', exportOptions: { columns: ':not(.dt-no-export)' } },
-        { extend: 'pdf',   text: '<i class="fas fa-file-pdf"></i> PDF',   className: 'btn btn-sm btn-danger',  exportOptions: { columns: ':not(.dt-no-export)' } },
-        { extend: 'print', text: '<i class="fas fa-print"></i> Print',    className: 'btn btn-sm btn-info',    exportOptions: { columns: ':not(.dt-no-export)' } }
+        { extend: 'csv',   text: '<i class="fas fa-file-csv"></i> CSV',   className: 'buttons-csv',   exportOptions: { columns: ':not(.dt-no-export)' } },
+        { extend: 'pdf',   text: '<i class="fas fa-file-pdf"></i> PDF',   className: 'buttons-pdf',   exportOptions: { columns: ':not(.dt-no-export)' } },
+        { extend: 'print', text: '<i class="fas fa-print"></i> Print',    className: 'buttons-print', exportOptions: { columns: ':not(.dt-no-export)' } }
       ],
       language: { searchPlaceholder: 'Search...', search: '', lengthMenu: '_MENU_ rows', info: '_START_–_END_ of _TOTAL_', infoEmpty: '0 rows', emptyTable: 'No data' }
     }, opts || {}));

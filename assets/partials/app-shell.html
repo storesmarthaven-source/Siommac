@@ -598,19 +598,19 @@
             <input type="text" id="deptSearchInput" placeholder="Search departments…">
           </div>
           <div class="dept-view-toggle">
-            <button class="dept-view-btn" id="deptCardViewBtn" title="Card view"><i class="fas fa-th-large"></i></button>
-            <button class="dept-view-btn active" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
+            <button class="dept-view-btn active" id="deptCardViewBtn" title="Card view"><i class="fas fa-th-large"></i></button>
+            <button class="dept-view-btn" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
           </div>
           <button id="addDepartmentBtn" class="btn btn-danger-primary">
             <i class="fas fa-plus"></i> New Department
           </button>
         </div>
 
-        <!-- Cards grid (hidden by default — list is default) -->
-        <div class="dept-cards-grid" id="deptCardView" style="display:none;"></div>
+        <!-- Cards grid (default) -->
+        <div class="dept-cards-grid" id="deptCardView"></div>
 
-        <!-- List / table view (default) -->
-        <div class="dept-list-view" id="deptListView">
+        <!-- List / table view -->
+        <div class="dept-list-view" id="deptListView" style="display:none;">
           <table class="dept-table">
             <thead>
               <tr>

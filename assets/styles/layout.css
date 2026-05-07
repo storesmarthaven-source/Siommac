@@ -101,8 +101,8 @@
 .sidebar-user-name { font-weight: 600; font-size: 0.9rem; color: white; margin-bottom: 6px; }
 .sidebar-user-role {
   font-size: 0.68rem; font-weight: 600;
-  background: rgba(228,12,12,0.25);
-  color: var(--siomac-gold);
+  background: rgb(199,10,10);
+  color: white;
   padding: 3px 12px; border-radius: 20px;
   display: inline-block; text-transform: uppercase; letter-spacing: 0.6px;
 }
@@ -126,11 +126,11 @@
   display: flex; align-items: center; gap: 12px;
   transition: all 0.2s; font-family: inherit;
 }
-.sidebar-menu button:hover { background: rgba(228,12,12,0.18); color: white; }
+.sidebar-menu button:hover { background: transparent; color: #f7b20c; }
 .sidebar-menu button.active {
-  background: var(--siomac-red);
+  background: #f7b20c;
   color: white; font-weight: 600;
-  box-shadow: 0 4px 14px rgba(228,12,12,0.3);
+  box-shadow: 0 4px 14px rgba(247,178,12,0.35);
 }
 .sidebar-menu i { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; }
 

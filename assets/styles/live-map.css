@@ -1,81 +1,209 @@
-/* ─── Live project map (admin/manager) ─── */
-.live-map-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
-.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+/* ─── Live Operations Map ─── */
 
-/* ── Employee panel ── */
-.live-employees-panel {
-  background: var(--bg-subtle);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  padding: 14px;
-  max-height: 540px;
-  display: flex; flex-direction: column; gap: 10px;
+/* Override .app-section.active display:block — map needs flex column to fill height */
+.app-section.active.lm-section {
+  display: flex !important;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
-.live-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.live-stat {
-  background: var(--bg-card);
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  text-align: center;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--siomac-red);
-  box-shadow: var(--shadow-card);
-}
-.live-stat-num { font-size: 22px; font-weight: 700; color: var(--siomac-navy); }
-.live-stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
-.live-employees-title {
-  font-size: 11px; font-weight: 700; color: var(--siomac-navy);
-  text-transform: uppercase; letter-spacing: .8px; margin-top: 4px;
-}
-.live-employees-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
-.live-employees-list::-webkit-scrollbar { width: 4px; }
-.live-employees-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-/* ── Employee cards ── */
-.live-emp-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  border-left: 3px solid var(--success);
+/* ── Page header ── */
+.lm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.lm-title-block { min-width: 0; }
+.lm-title {
+  font-size: 1.4rem; font-weight: 700; color: var(--siomac-navy);
+  margin: 0; display: flex; align-items: center; gap: 10px;
+}
+.lm-subtitle { color: var(--text-muted); font-size: 0.8rem; margin: 4px 0 0; }
+.lm-header-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+/* header buttons */
+.lm-btn-primary {
+  background: var(--siomac-red); border: none; padding: 9px 20px;
+  border-radius: 40px; color: white; font-weight: 600; font-size: 0.82rem;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: opacity .2s; white-space: nowrap;
+}
+.lm-btn-primary:hover { opacity: .88; }
+.lm-btn-outline {
+  background: white; border: 1.5px solid var(--border); padding: 9px 20px;
+  border-radius: 40px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .2s, border-color .2s; white-space: nowrap;
+  color: var(--text-primary);
+}
+.lm-btn-outline:hover { background: var(--bg-app); border-color: var(--siomac-navy); }
+
+/* ── Main layout: map + activity panel side by side ── */
+.lm-layout {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 210px); /* fills remaining viewport */
+}
+
+/* ── Map container ── */
+.lm-map-container {
+  flex: 3;
+  background: #eef2f9;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  min-height: 480px;
+  position: relative;
+}
+#map { height: 100%; width: 100%; min-height: 480px; }
+
+/* ── Activity panel ── */
+.lm-activity-panel {
+  flex: 0 0 300px;
+  width: 300px;
+  background: white;
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* panel header */
+.lm-panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.lm-panel-header h3 {
+  font-weight: 700; color: var(--siomac-navy); font-size: 0.95rem;
+  margin: 0; display: flex; align-items: center; gap: 8px;
+}
+
+/* stats row */
+.lm-live-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #F8FAFE;
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+  flex-shrink: 0;
+}
+.lm-stat-badge { text-align: center; flex: 1; }
+.lm-stat-number {
+  font-size: 22px; font-weight: 800; color: var(--siomac-navy); line-height: 1;
+}
+.lm-stat-label { font-size: 0.6rem; color: var(--text-muted); margin-top: 3px; line-height: 1.2; }
+
+/* employee list */
+.lm-employees-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+}
+.lm-employees-list::-webkit-scrollbar { width: 4px; }
+.lm-employees-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* employee item */
+.lm-emp-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  margin-bottom: 4px;
   cursor: pointer;
-  transition: all .2s;
-  display: flex; gap: 10px; align-items: center;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--success);
+  transition: background .15s, border-color .15s;
+  border: 1px solid transparent;
 }
-.live-emp-card:hover { background: var(--bg-subtle); transform: translateX(2px); box-shadow: var(--shadow-card); }
-.live-emp-card.late { border-left-color: var(--warning); }
-.live-emp-card.out  { border-left-color: #9ca3af; opacity: .8; }
-.live-emp-thumb {
-  width: 36px; height: 36px; border-radius: 50%;
-  object-fit: cover; flex-shrink: 0;
-  border: 2px solid var(--siomac-red);
+.lm-emp-item:hover { background: #F8FAFE; border-color: var(--border); }
+.lm-emp-avatar {
+  width: 40px; height: 40px;
+  background: var(--siomac-navy);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px;
+  flex-shrink: 0; overflow: hidden;
 }
-.live-emp-thumb-fallback {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--siomac-red), var(--siomac-red-dark));
-  color: white; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 14px; flex-shrink: 0;
+.lm-emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.lm-emp-info { flex: 1; min-width: 0; }
+.lm-emp-name {
+  font-weight: 600; font-size: 0.85rem; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.live-emp-info { flex: 1; min-width: 0; }
-.live-emp-name { font-weight: 600; color: var(--text-primary); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.live-emp-meta { font-size: 11px; color: var(--text-muted); }
-.live-emp-empty { text-align: center; padding: 30px 10px; color: var(--text-muted); font-size: 13px; }
+.lm-emp-status {
+  font-size: 0.7rem; display: flex; align-items: center;
+  gap: 5px; margin-top: 2px; color: var(--text-muted);
+}
+.lm-emp-chevron { color: #ccc; font-size: 11px; flex-shrink: 0; }
+
+/* status dots */
+.lm-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.lm-dot-green  { background: #2E7D32; }
+.lm-dot-orange { background: #ED6C02; }
+.lm-dot-gray   { background: #9E9E9E; }
+
+/* legend */
+.lm-legend {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* empty state */
+.lm-emp-empty { text-align: center; padding: 32px 12px; color: var(--text-muted); font-size: 13px; }
+.lm-emp-empty i { font-size: 28px; color: #ccc; margin-bottom: 10px; display: block; }
 
 /* ── Leaflet popup ── */
-.leaflet-popup-content-wrapper { border-radius: var(--radius-md) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important; }
-.leaflet-popup-content .live-popup { min-width: 200px; }
-.leaflet-popup-content .live-popup img { width: 100%; max-width: 180px; border-radius: var(--radius-sm); margin-bottom: 8px; display: block; }
-.leaflet-popup-content .live-popup .name { font-weight: 700; color: var(--siomac-navy); font-size: 14px; margin-bottom: 4px; }
-.leaflet-popup-content .live-popup .row { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+.leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-popup-content { margin: 14px 16px !important; }
+.leaflet-popup-content .live-popup { min-width: 190px; }
+.leaflet-popup-content .live-popup img {
+  width: 100%; max-width: 180px; border-radius: 10px;
+  margin-bottom: 8px; display: block;
+}
+.leaflet-popup-content .live-popup .name {
+  font-weight: 700; color: var(--siomac-navy); font-size: 14px; margin-bottom: 4px;
+}
+.leaflet-popup-content .live-popup .row {
+  font-size: 12px; color: #555; margin-bottom: 3px;
+  display: flex; align-items: center; gap: 6px;
+}
 
-/* ── Dashboard 2×2 chart grid ── */
+/* ── Dashboard 2×2 chart grid (shared) ── */
 .chart-grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 20px; }
 .chart-container-md { position: relative; height: 280px; padding: 8px; }
 .chart-container-md canvas { max-height: 280px !important; max-width: 100% !important; }
 
+/* legacy class kept so old refs don't break */
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+/* ── Responsive ── */
 @media (max-width: 900px) {
-  .live-map-grid { grid-template-columns: 1fr; }
-  .live-employees-panel { max-height: 380px; }
+  .lm-layout { flex-direction: column; height: auto; }
+  .lm-map-container { min-height: 320px; flex: none; }
+  .lm-activity-panel { flex: none; width: 100%; max-height: 380px; }
   .chart-grid-2x2 { grid-template-columns: 1fr; }
 }
