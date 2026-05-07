@@ -37,9 +37,9 @@
   /* Stat cards — 2-col on phones */
   .dashboard-grid-2 { grid-template-columns: 1fr; gap: 10px; }
   .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .stat-card { padding: 14px; gap: 10px; }
-  .stat-card-icon { width: 40px; height: 40px; font-size: 17px; }
-  .stat-card-value { font-size: 1.4rem; }
+  .stat-card { padding: 12px 14px; gap: 10px; }
+  .stat-card-icon { width: 36px; height: 36px; font-size: 15px; }
+  .stat-card-value { font-size: 1.2rem; }
   .stat-card-label { font-size: 9px; }
 
   /* Section headers */
