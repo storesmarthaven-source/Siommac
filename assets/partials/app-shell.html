@@ -393,7 +393,17 @@
 
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
-        <div class="dashboard-grid-3" style="margin-bottom:20px;">
+
+        <!-- Dashboard layout controls -->
+        <div class="dash-layout-bar" id="dashLayoutBar">
+          <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+          <div class="dash-layout-actions">
+            <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
+            <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+          </div>
+        </div>
+
+        <div class="ps-stats-row">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-card-body">
@@ -439,41 +449,50 @@
         </div>
 
         <!-- 2x2 chart grid -->
-        <div class="chart-grid-2x2">
-          <div class="data-section chart-card-section">
+        <div class="chart-grid-2x2" id="dashWidgetGrid">
+          <div class="data-section chart-card-section dash-widget" data-widget-id="trend" data-widget-title="Weekly Attendance Trend">
             <div class="chart-card-header">
-              <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
-              <span class="chart-badge" id="trendBadge">Last 30 days</span>
+              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="chart-badge" id="trendBadge">Last 30 days</span>
+                <button class="dash-hide-btn" data-widget-id="trend" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
+              </div>
             </div>
             <div class="chart-container-md"><canvas id="trendLineChart"></canvas></div>
           </div>
-          <div class="data-section chart-card-section">
+          <div class="data-section chart-card-section dash-widget" data-widget-id="dept" data-widget-title="Department Distribution">
             <div class="chart-card-header">
-              <h3><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
+              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
+              <button class="dash-hide-btn" data-widget-id="dept" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="deptDistChart"></canvas></div>
           </div>
-          <div class="data-section chart-card-section">
+          <div class="data-section chart-card-section dash-widget" data-widget-id="status" data-widget-title="Today's Status">
             <div class="chart-card-header">
-              <h3><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
+              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
+              <button class="dash-hide-btn" data-widget-id="status" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="statusBarChart"></canvas></div>
           </div>
-          <div class="data-section chart-card-section">
+          <div class="data-section chart-card-section dash-widget" data-widget-id="leave" data-widget-title="Leave Types · This Month">
             <div class="chart-card-header">
-              <h3><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
+              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
+              <button class="dash-hide-btn" data-widget-id="leave" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="leaveTypesChart"></canvas></div>
           </div>
         </div>
 
         <!-- Recent Attendance Activity -->
-        <div class="data-section recent-activity-section">
+        <div class="data-section recent-activity-section dash-widget" data-widget-id="activity" data-widget-title="Recent Activity">
           <div class="section-header">
-            <h2><i class="fas fa-history"></i> Recent Attendance Activity</h2>
-            <button class="btn btn-sm btn-outline-primary" onclick="AttendanceSystem.goTo('s-adm-attendance')">
-              <i class="fas fa-arrow-right"></i> View All
-            </button>
+            <h2><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-history"></i> Recent Attendance Activity</h2>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="btn btn-sm btn-outline-primary" onclick="AttendanceSystem.goTo('s-adm-attendance')">
+                <i class="fas fa-arrow-right"></i> View All
+              </button>
+              <button class="dash-hide-btn" data-widget-id="activity" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
+            </div>
           </div>
           <div class="table-responsive" id="recentAttendanceWrapper">
             <table class="recent-att-table" id="recentAttendanceTable">

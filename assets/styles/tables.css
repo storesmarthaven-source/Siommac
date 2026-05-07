@@ -36,6 +36,13 @@
   display: flex; align-items: center; gap: 8px;
 }
 
+/* ── Export-only bar (no search, no pill container — used when table has its own filters) ── */
+.dataTables_wrapper .dt-export-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
 /* ── Export / action buttons — ghost pill ──
    Targets Bootstrap classes that buttons.bootstrap5.js injects (.btn, .btn-secondary) */
 .dataTables_wrapper .dt-buttons .dt-button,
@@ -108,19 +115,36 @@
   color: var(--text-muted); font-size: 12px; padding-top: 0;
 }
 
-/* ── Pagination — fully pill, override Bootstrap's .page-link / .page-item ── */
+/* ── Pagination — fully pill ──
+   Bootstrap applies border-radius via --bs-pagination-border-radius and
+   via :first-child/:last-child selectors on .page-link. Kill all of them. */
 .dataTables_wrapper .dataTables_paginate { padding-top: 0; }
 
+/* Reset Bootstrap's CSS variable so it can't leak in */
+.dataTables_wrapper .dataTables_paginate ul.pagination {
+  --bs-pagination-border-radius: 40px;
+  --bs-pagination-border-top-left-radius: 40px;
+  --bs-pagination-border-top-right-radius: 40px;
+  --bs-pagination-border-bottom-left-radius: 40px;
+  --bs-pagination-border-bottom-right-radius: 40px;
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin: 0; padding: 0; list-style: none;
+}
+.dataTables_wrapper .dataTables_paginate .page-item { margin: 0; }
+
+/* Base style — all page-link variants */
 .dataTables_wrapper .dataTables_paginate .paginate_button,
-.dataTables_wrapper .dataTables_paginate li > a.page-link,
-.dataTables_wrapper .dataTables_paginate .page-item .page-link {
+.dataTables_wrapper .dataTables_paginate .page-item .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item:first-child .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item:last-child .page-link,
+.dataTables_wrapper .dataTables_paginate li > a.page-link {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   min-width: 36px !important;
   height: 36px !important;
   padding: 0 12px !important;
-  margin: 0 2px !important;
+  margin: 0 !important;
   border-radius: 40px !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
@@ -137,30 +161,38 @@
 /* Active page */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
-.dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+.dataTables_wrapper .dataTables_paginate .page-item.active .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item.active:first-child .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item.active:last-child .page-link {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
+  border-radius: 40px !important;
 }
 
-/* Hover (non-active, non-disabled) */
+/* Hover */
 .dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover,
-.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled) .page-link:hover {
+.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled) .page-link:hover,
+.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled):first-child .page-link:hover,
+.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled):last-child .page-link:hover {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
+  border-radius: 40px !important;
 }
 
 /* Disabled */
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
-.dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link {
+.dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item.disabled:first-child .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item.disabled:last-child .page-link {
   opacity: .4 !important;
   cursor: default !important;
   background: var(--bg-card) !important;
   color: var(--text-muted) !important;
   border-color: var(--border) !important;
-  transform: none !important;
+  border-radius: 40px !important;
   pointer-events: none !important;
 }
 
@@ -170,13 +202,6 @@
   font-size: 11.5px !important;
   padding: 0 16px !important;
 }
-
-/* Flatten Bootstrap's <ul class="pagination"> wrapper */
-.dataTables_wrapper .dataTables_paginate ul.pagination {
-  display: flex; gap: 4px; flex-wrap: wrap;
-  margin: 0; padding: 0; list-style: none;
-}
-.dataTables_wrapper .dataTables_paginate .page-item { margin: 0; }
 
 /* ── Table itself ── */
 .dataTables_wrapper table.dataTable { width: 100% !important; }
