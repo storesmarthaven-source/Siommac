@@ -536,9 +536,16 @@ async function getEmployeeByUsername(args, ctx) {
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return { success: false, message: 'User not found' };
   const profileImage = noPhoto(u.profile_image) ? '' : await getSignedUrl('profile-photos', u.profile_image);
+  // Resolve department name if department_id is set
+  let department = '';
+  if (u.department_id) {
+    const { data: dept } = await sb.from('departments').select('name').eq('id', u.department_id).maybeSingle();
+    if (dept) department = dept.name;
+  }
   return { success: true, data: {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
-    departmentId: u.department_id || '', position: u.position || '', status: u.status,
+    departmentId: u.department_id || '', department, position: u.position || '', status: u.status,
+    email: u.email || '', phone: u.phone || '',
     colorScheme: u.color_scheme || 'navy', layoutMode: u.layout_mode || 'sidebar',
     hourlyRate: Number(u.hourly_rate) || 0, profileImage
   } };
@@ -963,6 +970,8 @@ async function updateMyProfile(args, ctx) {
   if (actor.username !== args.username) return { success: false, message: 'Forbidden' };
   const patch = { updated_at: new Date().toISOString() };
   if (args.fullName) patch.full_name = String(args.fullName).trim();
+  if (args.email !== undefined) patch.email = String(args.email).trim();
+  if (args.phone !== undefined) patch.phone = String(args.phone).trim();
   if (args.newPassword) {
     if (!args.oldPassword) return { success: false, message: 'Current password is required' };
     if (!await bcrypt.compare(String(args.oldPassword), actor.password_hash)) return { success: false, message: 'Current password is incorrect' };
@@ -976,12 +985,12 @@ async function updateMyProfile(args, ctx) {
   } else if (args.profileImageBase64) {
     patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   }
-  const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name').single();
+  const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name, email, phone').single();
   if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
   // '__removed__', null, and '' all mean "no photo"
   const storedPath = noPhoto(data.profile_image) ? '' : data.profile_image;
   const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
-  return { success: true, profileImage, fullName: data.full_name };
+  return { success: true, profileImage, fullName: data.full_name, email: data.email || '', phone: data.phone || '' };
 }
 
 async function uploadLogo(args, ctx) {

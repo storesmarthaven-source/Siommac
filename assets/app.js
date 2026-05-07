@@ -654,7 +654,12 @@ const AttendanceSystem = (function() {
 
   function refreshSection(id) {
     switch (id) {
-      case 's-settings':        renderPalettes(); renderLayouts(); loadAdminBrandingSettings(); break;
+      case 's-settings':
+        // Reset to first tab
+        document.querySelectorAll('.stg-tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+        document.querySelectorAll('.stg-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+        renderPalettes(); renderLayouts(); loadAdminBrandingSettings();
+        break;
       case 's-profile':         loadMyProfile(); break;
       case 's-emp-attendance':  checkStatus(); loadChart(); loadTrendChart(); break;
       case 's-emp-history':     loadHistoryInline(); break;
@@ -1018,11 +1023,35 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#pickProfileImageBtn'))    pickProfileImage();
       if (event.target.closest('#removeProfileImageBtn')) removeProfileImage();
       if (event.target.closest('#saveProfileBtn'))        saveMyProfile();
+      if (event.target.closest('#updateSecurityBtn'))    _updateSecurityOnly();
 
       // Admin: branding + payroll rules
       if (event.target.closest('#pickLogoBtn'))             pickLogo();
       if (event.target.closest('#saveLogoBtn'))             saveLogo();
       if (event.target.closest('#savePayrollSettingsBtn'))  savePayrollSettings();
+
+      // Settings tabs
+      const stgTab = event.target.closest('.stg-tab-btn');
+      if (stgTab) {
+        document.querySelectorAll('.stg-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.stg-tab-pane').forEach(p => p.classList.remove('active'));
+        stgTab.classList.add('active');
+        const pane = document.getElementById('stg-' + stgTab.dataset.stgTab);
+        if (pane) pane.classList.add('active');
+      }
+
+      // Settings: Save All (only fires payroll save for admin; palette/layout save on click)
+      if (event.target.closest('#saveAllSettingsBtn')) savePayrollSettings();
+
+      // Settings: Reset to Defaults
+      if (event.target.closest('#resetDefaultsBtn')) _stgResetDefaults();
+
+      // Settings: Clear Cache
+      if (event.target.closest('#clearCacheBtn')) {
+        localStorage.clear();
+        cpop.fire({ icon: 'success', title: 'Cache cleared', text: 'Page will reload.', timer: 1800 })
+          .then(() => location.reload());
+      }
     });
 
     // file inputs (logo + profile photo) — change events
@@ -1173,6 +1202,9 @@ const AttendanceSystem = (function() {
     // gate admin-only Settings cards (branding + payroll rules)
     document.querySelectorAll('.admin-only').forEach(el => {
       el.style.display = currentRole === 'admin' ? '' : 'none';
+    });
+    document.querySelectorAll('.non-admin-only').forEach(el => {
+      el.style.display = currentRole !== 'admin' ? '' : 'none';
     });
 
     // build per-role menu and open the default section (both renderers — CSS shows whichever layout is active)
@@ -3407,18 +3439,38 @@ const AttendanceSystem = (function() {
   // In-memory photo state — set after every save so sync never overwrites it
   let _currentProfileImage = null; // null = "not yet loaded from DB"; '' = "no photo"; url = signed url
 
+  function _profileToast(msg, isError) {
+    const el = document.getElementById('profileToast');
+    if (!el) return;
+    el.className = 'profile-toast' + (isError ? ' error' : '');
+    el.innerHTML = `<i class="fas fa-${isError ? 'exclamation-circle' : 'check-circle'}"></i> ${msg}`;
+    el.style.display = 'flex';
+    clearTimeout(_profileToast._t);
+    _profileToast._t = setTimeout(() => { el.style.display = 'none'; }, 3500);
+  }
+
+  function _updateProfileDisplayUI(u) {
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—'; };
+    setEl('profileDisplayName', u.fullName);
+    setEl('profileDisplayRole', u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : '—');
+    setEl('profileDisplayDept', u.department);
+    setEl('profileDisplayUsername', u.username);
+    setEl('profileDisplayPosition', u.position);
+  }
+
   function loadMyProfile() {
-    // Never let the 30-second background sync overwrite what the user just saved
     if (_isSyncing) return;
 
-    document.getElementById('profileUsername').value = currentUser || '';
-    document.getElementById('profileFullName').value = currentFullName || '';
-    document.getElementById('profilePosition').value = '';
-    document.getElementById('profileOldPwd').value = '';
-    document.getElementById('profileNewPwd').value = '';
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    setVal('profileUsername', currentUser);
+    setVal('profileFullName', currentFullName);
+    setVal('profilePosition', '');
+    setVal('profileOldPwd', '');
+    setVal('profileNewPwd', '');
+    setVal('profileConfirmPwd', '');
 
-    // If we already have the photo state from a previous load or save, use it immediately
-    // so the UI doesn't flicker or re-fetch unnecessarily
+    _updateProfileDisplayUI({ fullName: currentFullName, username: currentUser, role: currentRole });
+
     if (_currentProfileImage !== null) {
       _profileImageBase64 = '';
       _removeProfileImage  = false;
@@ -3426,14 +3478,17 @@ const AttendanceSystem = (function() {
     }
 
     api('getEmployeeByUsername', { username: currentUser }).then(res => {
-      if (_isSyncing) return; // guard again — response may arrive after sync starts
+      if (_isSyncing) return;
       if (res && res.success && res.data) {
         const u = res.data;
-        document.getElementById('profileFullName').value = u.fullName || '';
-        document.getElementById('profilePosition').value = u.position || '';
+        setVal('profileFullName', u.fullName);
+        setVal('profilePosition', u.position);
+        setVal('profileDept', u.department);
+        setVal('profileEmail', u.email);
+        setVal('profilePhone', u.phone);
         _profileImageBase64 = '';
         _removeProfileImage  = false;
-        // Only update photo UI from DB if we haven't already set it from a save
+        _updateProfileDisplayUI({ ...u, username: currentUser });
         if (_currentProfileImage === null) {
           _currentProfileImage = u.profileImage || '';
           _setProfilePhotoUI(_currentProfileImage, u.fullName);
@@ -3507,51 +3562,78 @@ const AttendanceSystem = (function() {
     _setProfilePhotoUI('', currentFullName);
   }
   function saveMyProfile() {
-    const fullName = document.getElementById('profileFullName').value.trim();
-    const oldPwd = document.getElementById('profileOldPwd').value;
-    const newPwd = document.getElementById('profileNewPwd').value;
-    if (!fullName) { showPopup('warning', 'Name Required', 'Full name cannot be empty.'); return; }
-    if (newPwd && newPwd.length < 6) { showPopup('warning', 'Weak Password', 'New password must be at least 6 characters.'); return; }
+    const fullName    = (document.getElementById('profileFullName')?.value || '').trim();
+    const email       = (document.getElementById('profileEmail')?.value || '').trim();
+    const phone       = (document.getElementById('profilePhone')?.value || '').trim();
+    const oldPwd      = document.getElementById('profileOldPwd')?.value || '';
+    const newPwd      = document.getElementById('profileNewPwd')?.value || '';
+    const confirmPwd  = document.getElementById('profileConfirmPwd')?.value || '';
+
+    if (!fullName) { _profileToast('Full name cannot be empty.', true); return; }
+    if (newPwd && newPwd.length < 6) { _profileToast('New password must be at least 6 characters.', true); return; }
+    if (newPwd && newPwd !== confirmPwd) { _profileToast('New passwords do not match.', true); return; }
+    if (newPwd && !oldPwd) { _profileToast('Enter your current password to change it.', true); return; }
 
     const btn = document.getElementById('saveProfileBtn');
     const orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
     api('updateMyProfile', {
       username: currentUser,
       fullName,
+      email,
+      phone,
       profileImageBase64: _profileImageBase64 || '',
       removeProfileImage: _removeProfileImage || false,
       oldPassword: oldPwd,
       newPassword: newPwd
     }).then(res => {
       btn.disabled = false; btn.innerHTML = orig;
-      if (!res.success) { showPopup('error', 'Update Failed', res.message); return; }
+      if (!res.success) { _profileToast(res.message || 'Update failed.', true); return; }
 
       currentFullName = res.fullName || fullName;
       document.getElementById('sidebarUserName').textContent = currentFullName;
 
       const newPhoto = res.profileImage || '';
-
-      // Lock in the new photo state — sync will never overwrite this now
       _currentProfileImage = newPhoto;
-
-      // update sidebar avatar — photo if available, else initial letter
       setSidebarAvatar(document.getElementById('sidebarAvatar'), newPhoto, currentFullName);
-
-      // update profile photo preview — trust the response directly
       _setProfilePhotoUI(newPhoto, currentFullName);
-
-      // persist in session cache so it survives a reload
       updateStoredSession({ profileImage: newPhoto });
+      _updateProfileDisplayUI({ fullName: currentFullName, username: currentUser, role: currentRole, email, phone });
 
       _profileImageBase64 = '';
       _removeProfileImage  = false;
-      document.getElementById('profileOldPwd').value = '';
-      document.getElementById('profileNewPwd').value = '';
-      // Bust SWR so next visit to profile re-fetches fresh from DB
+      const clr = id => { const el = document.getElementById(id); if (el) el.value = ''; };
+      clr('profileOldPwd'); clr('profileNewPwd'); clr('profileConfirmPwd');
       swr.clear();
-      showPopup('success', 'Profile Updated', 'Your changes have been saved.');
-    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Error', err.message || 'Network error'); });
+      _profileToast('Profile updated successfully!');
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; _profileToast(err.message || 'Network error', true); });
+  }
+
+  function _updateSecurityOnly() {
+    const oldPwd     = (document.getElementById('profileOldPwd')?.value || '');
+    const newPwd     = (document.getElementById('profileNewPwd')?.value || '').trim();
+    const confirmPwd = (document.getElementById('profileConfirmPwd')?.value || '').trim();
+    if (!newPwd) { _profileToast('Enter a new password.', true); return; }
+    if (newPwd.length < 6) { _profileToast('New password must be at least 6 characters.', true); return; }
+    if (newPwd !== confirmPwd) { _profileToast('Passwords do not match.', true); return; }
+    if (!oldPwd) { _profileToast('Enter your current password.', true); return; }
+
+    const btn = document.getElementById('updateSecurityBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    api('updateMyProfile', {
+      username: currentUser, fullName: currentFullName,
+      profileImageBase64: '', removeProfileImage: false,
+      oldPassword: oldPwd, newPassword: newPwd
+    }).then(res => {
+      btn.disabled = false; btn.innerHTML = orig;
+      if (!res.success) { _profileToast(res.message || 'Update failed.', true); return; }
+      const clr = id => { const el = document.getElementById(id); if (el) el.value = ''; };
+      clr('profileOldPwd'); clr('profileNewPwd'); clr('profileConfirmPwd');
+      _profileToast('Password updated successfully!');
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; _profileToast(err.message || 'Network error', true); });
   }
 
   // ─── Admin branding + payroll-rule settings ─────────────────
@@ -3651,6 +3733,16 @@ const AttendanceSystem = (function() {
       updateStoredSession({ companyName: name, currency: 'TT', latePenaltyPerDay: late, leaveFinePerDay: leaveF, lateThresholdHHMM: lateTh, maxDistanceM: maxDist });
       showPopup('success', 'Settings Saved', 'Company settings updated successfully.');
     }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
+  }
+
+  function _stgResetDefaults() {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    set('setCompanyName',  'My Company');
+    set('setLatePenalty',  '0');
+    set('setLeaveFine',    '0');
+    set('setLateThreshold','09:00');
+    set('setMaxDistance',  '200');
+    cpop.fire({ icon: 'info', title: 'Reset to defaults', text: 'Fields reset. Click Save Settings to apply.', timer: 2800 });
   }
 
   function refreshCompanySettings() {

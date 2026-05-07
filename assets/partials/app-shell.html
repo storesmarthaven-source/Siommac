@@ -844,133 +844,309 @@
 
       <!-- My Profile — every role can edit their own name / image / pwd -->
       <section class="app-section" id="s-profile">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-user-circle"></i> My Profile</h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;"><i class="fas fa-info-circle"></i> Update your photo, name, and password.</span>
-            </div>
+
+        <!-- success toast -->
+        <div id="profileToast" class="profile-toast" style="display:none;"></div>
+
+        <!-- header -->
+        <div class="profile-page-header">
+          <div>
+            <h1 class="profile-page-title"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:8px;"></i> My Profile</h1>
+            <p class="profile-page-sub">Manage your personal information, photo, and security settings</p>
           </div>
-          <div style="display:grid; grid-template-columns: 220px 1fr; gap: 28px; align-items:start;">
-            <div style="text-align:center;">
-              <img id="profilePhotoPreview" src="" alt="Profile" style="width:160px; height:160px; border-radius:50%; object-fit:cover; border:4px solid var(--navy-primary); box-shadow: 0 6px 18px rgba(0,0,0,.15); display:none; margin:0 auto 12px;" onerror="this.style.display='none'">
-              <div id="profilePhotoEmpty" style="width:160px; height:160px; border-radius:50%; background: linear-gradient(135deg, var(--navy-accent), var(--navy-light)); color:#fff; font-size:54px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; box-shadow: 0 6px 18px rgba(0,0,0,.15);">?</div>
-              <input type="file" id="profileImageInput" accept="image/*" style="display:none;">
-              <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                <button class="btn btn-outline-primary btn-sm" id="pickProfileImageBtn"><i class="fas fa-camera"></i> Change Photo</button>
-                <button class="btn btn-outline-danger btn-sm" id="removeProfileImageBtn" style="display:none;"><i class="fas fa-trash"></i> Remove</button>
+          <button class="btn btn-danger-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+
+        <!-- main card -->
+        <div class="profile-card">
+          <!-- banner -->
+          <div class="profile-banner"></div>
+
+          <!-- avatar -->
+          <div class="profile-avatar-section">
+            <div class="profile-avatar-wrapper" id="pickProfileImageBtn">
+              <img id="profilePhotoPreview" src="" alt="Profile"
+                style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 8px 20px rgba(0,0,0,.15);display:none;"
+                onerror="this.style.display='none'">
+              <div id="profilePhotoEmpty"
+                style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--siomac-red),#C60A0A);border:4px solid white;box-shadow:0 8px 20px rgba(0,0,0,.15);color:#fff;font-size:46px;font-weight:700;display:flex;align-items:center;justify-content:center;">?</div>
+              <div class="profile-avatar-edit"><i class="fas fa-camera"></i></div>
+            </div>
+            <input type="file" id="profileImageInput" accept="image/*" style="display:none;">
+          </div>
+
+          <!-- display info -->
+          <div class="profile-info-block">
+            <div class="profile-display-name" id="profileDisplayName">—</div>
+            <div class="profile-display-role" id="profileDisplayRole">—</div>
+            <div class="profile-display-meta">
+              <span class="profile-meta-item"><i class="fas fa-building"></i> <span id="profileDisplayDept">—</span></span>
+              <span class="profile-meta-item"><i class="fas fa-id-badge"></i> <span id="profileDisplayUsername">—</span></span>
+              <span class="profile-meta-item"><i class="fas fa-briefcase"></i> <span id="profileDisplayPosition">—</span></span>
+            </div>
+            <button class="profile-remove-photo-btn" id="removeProfileImageBtn" style="display:none;">
+              <i class="fas fa-trash"></i> Remove Photo
+            </button>
+          </div>
+
+          <!-- two-column form -->
+          <div class="profile-details-grid">
+
+            <!-- Personal Information -->
+            <div class="profile-detail-section">
+              <div class="profile-section-title"><i class="fas fa-user-edit" style="color:var(--siomac-red);"></i> Personal Information</div>
+              <div class="profile-form-group">
+                <label>Full Name</label>
+                <input type="text" id="profileFullName" placeholder="Full name">
+              </div>
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>Username (read-only)</label>
+                  <input type="text" id="profileUsername" readonly class="profile-input-readonly">
+                </div>
+                <div class="profile-form-group">
+                  <label>Department (read-only)</label>
+                  <input type="text" id="profileDept" readonly class="profile-input-readonly">
+                </div>
+              </div>
+              <div class="profile-form-group">
+                <label>Position (read-only)</label>
+                <input type="text" id="profilePosition" readonly class="profile-input-readonly">
+              </div>
+              <div class="profile-form-group">
+                <label>Email Address</label>
+                <input type="email" id="profileEmail" placeholder="your@email.com">
+              </div>
+              <div class="profile-form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="profilePhone" placeholder="+1 868 555 0000">
               </div>
             </div>
-            <div>
-              <div class="form-group">
-                <label class="form-label">Username (read-only)</label>
-                <input type="text" id="profileUsername" class="form-control" readonly style="background:#f5f5f5;">
+
+            <!-- Security -->
+            <div class="profile-detail-section">
+              <div class="profile-section-title"><i class="fas fa-lock" style="color:var(--siomac-red);"></i> Security &amp; Password</div>
+              <div class="profile-form-group">
+                <label>Current Password</label>
+                <input type="password" id="profileOldPwd" placeholder="Required to change password">
               </div>
-              <div class="form-group">
-                <label class="form-label">Full Name</label>
-                <input type="text" id="profileFullName" class="form-control">
+              <div class="profile-form-group">
+                <label>New Password</label>
+                <input type="password" id="profileNewPwd" placeholder="Min. 6 characters">
+                <div class="profile-pwd-hint"><i class="fas fa-info-circle"></i> Leave empty to keep current password</div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Position (read-only)</label>
-                <input type="text" id="profilePosition" class="form-control" readonly style="background:#f5f5f5;">
+              <div class="profile-form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="profileConfirmPwd" placeholder="Confirm new password">
               </div>
-              <hr style="margin: 22px 0 18px;">
-              <div style="font-weight:600; color:var(--navy-primary); margin-bottom:10px;"><i class="fas fa-lock"></i> Change Password (optional)</div>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                <div class="form-group">
-                  <label class="form-label">Current Password</label>
-                  <input type="password" id="profileOldPwd" class="form-control" placeholder="Required to change password">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">New Password</label>
-                  <input type="password" id="profileNewPwd" class="form-control" placeholder="Min 6 characters">
-                </div>
+              <div class="profile-form-group">
+                <label>Two-Factor Authentication</label>
+                <select id="profileTwoFactor" disabled style="opacity:.6;cursor:not-allowed;">
+                  <option value="disabled">Disabled (coming soon)</option>
+                </select>
               </div>
-              <button class="btn btn-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
+              <button class="profile-btn-save" id="updateSecurityBtn"><i class="fas fa-shield-alt"></i> Update Security Settings</button>
             </div>
+
           </div>
         </div>
       </section>
 
-      <!-- Settings — color scheme + layout (visible to everyone) -->
+      <!-- Settings -->
       <section class="app-section" id="s-settings">
-        <!-- Branding + currency + payroll-rules: admin only — toggled via JS -->
-        <div class="data-section admin-only" id="brandingCard" style="display:none;">
-          <div class="section-header">
-            <h2><i class="fas fa-image"></i> Branding &amp; Logo</h2>
+
+        <!-- Page header -->
+        <div class="stg-page-header">
+          <div>
+            <h1 class="stg-page-title"><i class="fas fa-sliders-h"></i> Settings &amp; Preferences</h1>
+            <p class="stg-page-sub">Customize company branding, security, layout, notifications, and appearance</p>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 22px; align-items:start;">
-            <div style="text-align:center;">
-              <img id="logoPreview" src="" alt="Logo" style="max-width:240px; max-height:120px; width:auto; height:auto; object-fit:contain; border:3px solid var(--navy-primary); box-shadow: 0 4px 14px rgba(0,0,0,.15); display:block; margin:0 auto 12px; padding:6px; background:#fff;" onerror="this.style.display='none'">
-              <div id="logoPreviewEmpty" style="width:140px; height:140px; border-radius:12px; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center; color:#aaa; margin:0 auto 12px;"><i class="fas fa-image" style="font-size:38px;"></i></div>
+          <div class="stg-header-actions">
+            <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-undo-alt"></i> Reset to Defaults</button>
+            <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-save"></i> Save All Changes</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="stg-tabs">
+          <button class="stg-tab-btn active" data-stg-tab="company">Company &amp; Branding</button>
+          <button class="stg-tab-btn" data-stg-tab="security">Security &amp; Privacy</button>
+          <button class="stg-tab-btn" data-stg-tab="layout">Layout &amp; Navigation</button>
+          <button class="stg-tab-btn" data-stg-tab="notifications">Notifications</button>
+          <button class="stg-tab-btn" data-stg-tab="appearance">Appearance</button>
+        </div>
+
+        <!-- 1. Company & Branding -->
+        <div class="stg-tab-pane active" id="stg-company">
+
+          <!-- Company Info — live wired (admin only) -->
+          <div class="stg-card admin-only" id="brandingCard">
+            <div class="stg-card-header"><h3><i class="fas fa-building"></i> Company Information</h3></div>
+            <div class="stg-form-group">
+              <label>Company Name</label>
+              <input type="text" id="setCompanyName" maxlength="80" placeholder="My Company">
+              <small>Shown in sidebar, About, payroll doc, and leave application</small>
             </div>
-            <div>
-              <p style="font-size:13px; color:#666; margin:0 0 12px;">PNG / JPG. Any shape supported — wide logos display full-width, square logos display as circles. Applies to login screen, sidebar, and About.</p>
-              <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
-              <button class="btn btn-primary" id="pickLogoBtn"><i class="fas fa-upload"></i> Choose Logo</button>
-              <button class="btn btn-success" id="saveLogoBtn" disabled style="margin-left:8px;"><i class="fas fa-save"></i> Save</button>
-              <div id="logoFileName" style="font-size:12px; color:#888; margin-top:8px;"></div>
+            <div class="stg-form-row">
+              <div class="stg-form-group">
+                <label>Currency Symbol / Code</label>
+                <input type="text" id="setCurrency" maxlength="6" placeholder="TT" readonly class="stg-readonly">
+                <small>Fixed to TT — contact your administrator to change</small>
+              </div>
+              <div class="stg-form-group">
+                <label>Time Zone</label>
+                <select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select>
+                <small>Contact your administrator to change</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Branding & Logo — live wired (admin only) -->
+          <div class="stg-card admin-only" id="currencyCard">
+            <div class="stg-card-header"><h3><i class="fas fa-images"></i> Branding &amp; Logo</h3></div>
+            <div class="stg-logo-row">
+              <div class="stg-logo-preview-wrap">
+                <img id="logoPreview" src="" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;display:none;" onerror="this.style.display='none'">
+                <div id="logoPreviewEmpty" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><i class="fas fa-image" style="font-size:32px;color:#bbb;"></i></div>
+              </div>
+              <div>
+                <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                <button class="stg-btn-outline" id="pickLogoBtn"><i class="fas fa-upload"></i> Choose Logo</button>
+                <button class="stg-btn-save" id="saveLogoBtn" disabled style="margin-left:8px;"><i class="fas fa-save"></i> Save Logo</button>
+                <div id="logoFileName" style="font-size:12px;color:#888;margin-top:8px;"></div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">PNG / JPG up to 2MB. Applies to login screen, sidebar, and About.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payroll & Attendance Rules — live wired (admin only) -->
+          <div class="stg-card admin-only" id="payrollCard">
+            <div class="stg-card-header"><h3><i class="fas fa-coins"></i> Payroll &amp; Attendance Rules</h3></div>
+            <div class="stg-form-row">
+              <div class="stg-form-group">
+                <label>Late Penalty (per late day)</label>
+                <input type="number" id="setLatePenalty" min="0" step="0.01" placeholder="0">
+                <small>Deducted from earnings for each late check-in</small>
+              </div>
+              <div class="stg-form-group">
+                <label>Leave / Absent Fine (per absent day)</label>
+                <input type="number" id="setLeaveFine" min="0" step="0.01" placeholder="0">
+                <small>Deducted for each non-present day in the month</small>
+              </div>
+            </div>
+            <div class="stg-form-row">
+              <div class="stg-form-group">
+                <label>Late Check-In Threshold</label>
+                <input type="time" id="setLateThreshold">
+                <small>Check-ins after this time are marked late</small>
+              </div>
+              <div class="stg-form-group">
+                <label>Max Geofence Distance (metres)</label>
+                <input type="number" id="setMaxDistance" min="0" step="1" placeholder="200">
+                <small>Max metres from a project site to allow check-in</small>
+              </div>
+            </div>
+            <button class="stg-btn-primary" id="savePayrollSettingsBtn"><i class="fas fa-save"></i> Save Settings</button>
+          </div>
+
+          <!-- Non-admin placeholder -->
+          <div class="stg-card non-admin-only" id="companyReadonlyCard" style="display:none;">
+            <div class="stg-card-header"><h3><i class="fas fa-building"></i> Company Information</h3></div>
+            <p style="color:var(--text-muted);font-size:0.85rem;">Company settings are managed by your administrator.</p>
+          </div>
+        </div>
+
+        <!-- 2. Security & Privacy — dummy -->
+        <div class="stg-tab-pane" id="stg-security">
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-shield-alt"></i> Access &amp; Session</h3></div>
+            <div class="stg-form-group">
+              <label>Session Timeout (minutes)</label>
+              <select disabled class="stg-readonly">
+                <option value="60" selected>60 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="120">2 hours</option>
+              </select>
+              <small>Contact your administrator to change session duration</small>
+            </div>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">Two-Factor Authentication</div><div class="stg-switch-desc">Require OTP for login — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+            </div>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">Login alerts via email</div><div class="stg-switch-desc">Notify when new device logs in — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+            </div>
+          </div>
+          <div class="stg-card stg-danger-zone">
+            <div class="stg-card-header"><h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3></div>
+            <p style="margin-bottom:16px;font-size:0.85rem;">Clear locally cached preferences and reload the page.</p>
+            <button class="stg-btn-danger" id="clearCacheBtn"><i class="fas fa-trash"></i> Clear Local Settings</button>
+          </div>
+        </div>
+
+        <!-- 3. Layout & Navigation -->
+        <div class="stg-tab-pane" id="stg-layout">
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-th-large"></i> Navigation Layout</h3><span style="font-size:0.75rem;color:var(--text-muted);">Saved to your profile</span></div>
+            <div class="layout-grid" id="layoutGrid"></div>
+          </div>
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-columns"></i> Dashboard Default View</h3></div>
+            <div class="stg-form-group">
+              <label>Default Dashboard Tab</label>
+              <select disabled class="stg-readonly"><option>Operations Overview</option><option>Attendance Analytics</option><option>Live Map</option></select>
+              <small>Coming soon</small>
+            </div>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">Auto-refresh dashboard data</div><div class="stg-switch-desc">Refresh stats every 30 seconds — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+            </div>
+          </div>
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-font"></i> Display Density</h3></div>
+            <div class="stg-form-row">
+              <div class="stg-form-group">
+                <label>UI Density</label>
+                <select disabled class="stg-readonly"><option>Comfortable</option><option>Compact</option><option>Spacious</option></select>
+                <small>Coming soon</small>
+              </div>
+              <div class="stg-form-group">
+                <label>Font Size</label>
+                <select disabled class="stg-readonly"><option>Small</option><option selected>Medium</option><option>Large</option></select>
+                <small>Coming soon</small>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="data-section admin-only" id="currencyCard" style="display:none;">
-          <div class="section-header">
-            <h2><i class="fas fa-coins"></i> Company &amp; Payroll Settings</h2>
-          </div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Company Name</label>
-              <input type="text" id="setCompanyName" class="form-control" maxlength="80" placeholder="My Company">
-              <small class="text-muted" style="font-size:11px;">Shown in sidebar, About, payroll doc, and leave application</small>
+        <!-- 4. Notifications — dummy -->
+        <div class="stg-tab-pane" id="stg-notifications">
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-bell"></i> Notification Preferences</h3></div>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">Email notifications for approvals</div><div class="stg-switch-desc">Receive emails when leave requests are approved — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
             </div>
-            <div class="form-group">
-              <label class="form-label">Currency Symbol / Code</label>
-              <input type="text" id="setCurrency" class="form-control" maxlength="6" placeholder="TT" readonly style="background:#f5f5f5; cursor:not-allowed; color:#888;">
-              <small class="text-muted" style="font-size:11px;">Fixed to TT — contact your administrator to change</small>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">In-app alerts for late check-ins</div><div class="stg-switch-desc">Desktop and mobile alerts for late arrivals — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
             </div>
-            <div class="form-group">
-              <label class="form-label">Late-Coming Penalty (per late day)</label>
-              <input type="number" id="setLatePenalty" class="form-control" min="0" step="0.01" placeholder="0">
-              <small class="text-muted" style="font-size:11px;">Deducted from earnings for each late check-in</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Leave / Absent Fine (per absent day)</label>
-              <input type="number" id="setLeaveFine" class="form-control" min="0" step="0.01" placeholder="0">
-              <small class="text-muted" style="font-size:11px;">Deducted for each non-present day in the month</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Late Check-In Threshold</label>
-              <input type="time" id="setLateThreshold" class="form-control">
-              <small class="text-muted" style="font-size:11px;">Check-ins after this time are marked late (e.g. 09:15)</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Max Geofence Distance (metres)</label>
-              <input type="number" id="setMaxDistance" class="form-control" min="0" step="1" placeholder="200">
-              <small class="text-muted" style="font-size:11px;">Max metres from a project site to allow check-in</small>
+            <div class="stg-switch-group">
+              <div><div class="stg-switch-label">Daily attendance summary</div><div class="stg-switch-desc">Receive end-of-day report — coming soon</div></div>
+              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
             </div>
           </div>
-          <button class="btn btn-primary" id="savePayrollSettingsBtn" style="margin-top:6px;"><i class="fas fa-save"></i> Save Settings</button>
         </div>
 
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-th-large"></i> <span id="layoutTitle">Layout</span></h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;">Sidebar (vertical) or Tabs (horizontal)</span>
-            </div>
+        <!-- 5. Appearance -->
+        <div class="stg-tab-pane" id="stg-appearance">
+          <div class="stg-card">
+            <div class="stg-card-header"><h3><i class="fas fa-palette"></i> Color Theme</h3><span style="font-size:0.75rem;color:var(--text-muted);" id="settingsSubtitle">Pick a palette — saved to your profile</span></div>
+            <div class="palette-grid" id="paletteGrid"></div>
           </div>
-          <div class="layout-grid" id="layoutGrid"></div>
         </div>
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-palette"></i> <span id="settingsTitle">Color Theme</span></h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;" id="settingsSubtitle">Pick a palette — saved to your profile</span>
-            </div>
-          </div>
-          <div class="palette-grid" id="paletteGrid"></div>
-        </div>
+
       </section>
 
       <!-- About — visible to everyone -->
