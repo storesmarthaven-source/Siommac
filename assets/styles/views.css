@@ -731,9 +731,9 @@
   color: white;
   padding: 11px 14px;
   font-size: 12px; font-weight: 600;
-  text-align: center; letter-spacing: 0.3px;
+  text-align: center !important; letter-spacing: 0.3px;
 }
-.recent-att-table thead th:first-child { text-align: left; }
+.recent-att-table thead th:first-child { text-align: left !important; }
 .recent-att-table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
 .recent-att-table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
 .recent-att-table tbody tr { transition: background .15s; }
@@ -743,12 +743,12 @@
   font-size: 13px; color: var(--text-primary);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
-  text-align: center;
+  text-align: center !important;
 }
-.recent-att-table tbody td:first-child { text-align: left; }
+.recent-att-table tbody td:first-child { text-align: left !important; }
 .recent-att-table tbody tr:last-child td { border-bottom: none; }
 .rat-name { font-weight: 600; color: var(--siomac-navy); }
-.rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; }
+.rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; display: inline-block; }
 .rat-time { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-primary); }
 
 /* Status badges for recent activity */

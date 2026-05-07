@@ -265,6 +265,7 @@
   border: none;
   padding: 0;
   position: relative;
+  z-index: 1090;
 }
 .hdr-icon-btn {
   position: relative;
@@ -294,20 +295,20 @@
 /* ── Dropdown modals ── */
 .hdr-modal-overlay {
   display: none;
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 1080;
-  pointer-events: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 2000;
+  min-width: 360px;
 }
-.hdr-modal-overlay.open { display: block; pointer-events: auto; }
+.hdr-modal-overlay.open { display: block; }
 .hdr-modal {
-  position: absolute; top: calc(100% + 12px); right: 0;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
   overflow: hidden;
   animation: hdrSlideIn .18s ease;
-  pointer-events: auto;
 }
 @keyframes hdrSlideIn {
   from { opacity: 0; transform: translateY(-8px); }
