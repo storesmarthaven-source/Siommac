@@ -1838,6 +1838,7 @@ const AttendanceSystem = (function() {
     api('getAdminStats').then(res => {
       displayAdminStats((res.success && res.data) || { totalEmployees:0, presentToday:0, absentToday:0, onLeaveToday:0, activeLocations:0, lateToday:0 });
     });
+    loadRecentAttendance();
   }
 
   function displayAdminStats(stats) {
@@ -1847,6 +1848,49 @@ const AttendanceSystem = (function() {
     document.getElementById('onLeaveToday').textContent = stats.onLeaveToday;
     document.getElementById('activeLocations').textContent = stats.activeLocations;
     document.getElementById('lateToday').textContent = stats.lateToday;
+  }
+
+  function loadRecentAttendance() {
+    const tbody = document.getElementById('recentAttendanceTbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
+    api('getRecentAttendance', { limit: 10 }).then(res => {
+      if (!res || !res.success || !res.data || res.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-inbox" style="font-size:1.4rem;display:block;margin-bottom:8px;"></i>No attendance records for today yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = res.data.map(row => {
+        const statusClass = row.status === 'Present'     ? 'rat-badge rat-present'
+                          : row.status === 'Checked Out' ? 'rat-badge rat-out'
+                          : row.status === 'Late'        ? 'rat-badge rat-late'
+                          :                               'rat-badge rat-absent';
+        const statusIcon  = row.status === 'Present'     ? 'fa-user-check'
+                          : row.status === 'Checked Out' ? 'fa-sign-out-alt'
+                          : row.status === 'Late'        ? 'fa-clock'
+                          :                               'fa-user-times';
+        const checkIn  = row.checkIn  ? fmtLocalTime(row.checkIn)  : '—';
+        const checkOut = row.checkOut ? fmtLocalTime(row.checkOut) : '—';
+        return `<tr>
+          <td><span class="rat-name">${escapeHtml(row.name)}</span></td>
+          <td><span class="rat-dept">${escapeHtml(row.department)}</span></td>
+          <td class="rat-time">${checkIn}</td>
+          <td class="rat-time">${checkOut}</td>
+          <td><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
+        </tr>`;
+      }).join('');
+    }).catch(() => {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Failed to load recent activity.</td></tr>';
+    });
+  }
+
+  // expose goTo so the "View All" button in the recent activity section can navigate
+  function goTo(sectionId) {
+    const btn = document.querySelector(`.sidebar-menu button[data-target="${sectionId}"]`);
+    if (btn) { btn.click(); return; }
+    // fallback: manually activate section
+    document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.add('active');
   }
 
   function showAddEmployeeModal() {
@@ -3134,12 +3178,12 @@ const AttendanceSystem = (function() {
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     api('uploadLogo', { base64: _logoBase64, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       btn.innerHTML = orig;
-      if (!res.success) { btn.disabled = false; showPopup('error', 'Upload Failed', res.message); return; }
+      if (!res.success) { btn.disabled = false; showPopup('error', 'Upload Failed', res.message || 'Could not save logo'); return; }
       _logoBase64 = '';
       applyCompanyLogo(res.url);
       updateStoredSession({ companyLogoUrl: res.url || '' });
       showPopup('success', 'Logo Updated', 'Login + sidebar now show the new logo.');
-    });
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Upload Failed', err.message || 'Network error'); });
   }
   function savePayrollSettings() {
     const name      = document.getElementById('setCompanyName').value.trim() || 'My Company';
@@ -3271,7 +3315,8 @@ const AttendanceSystem = (function() {
     editProjectSite: editProjectSite,
     deleteProjectSite: deleteProjectSite,
     editEmployee: editEmployee,
-    deleteEmployee: deleteEmployee
+    deleteEmployee: deleteEmployee,
+    goTo: goTo
   };
 })();
 

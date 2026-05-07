@@ -278,24 +278,32 @@
       <section class="app-section" id="s-mgr-overview" data-role="manager">
         <div class="dashboard-grid-4">
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-card-value" id="departmentEmployees">0</div>
-            <div class="stat-card-label" id="departmentEmployeesLabel">Department Employees</div>
+            <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="departmentEmployees">0</div>
+              <div class="stat-card-label" id="departmentEmployeesLabel">Department Employees</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--success);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--success) 0%, #2d8e47 100%);"><i class="fas fa-user-check"></i></div>
-            <div class="stat-card-value" id="presentDepartment">0</div>
-            <div class="stat-card-label" id="presentDepartmentLabel">Present Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="presentDepartment">0</div>
+              <div class="stat-card-label" id="presentDepartmentLabel">Present Today</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--warning);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--warning) 0%, #d99e02 100%);"><i class="fas fa-bed"></i></div>
-            <div class="stat-card-value" id="onLeaveDepartment">0</div>
-            <div class="stat-card-label" id="onLeaveDepartmentLabel">On Leave</div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-bed"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="onLeaveDepartment">0</div>
+              <div class="stat-card-label" id="onLeaveDepartmentLabel">On Leave</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--danger);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);"><i class="fas fa-clock"></i></div>
-            <div class="stat-card-value" id="lateDepartment">0</div>
-            <div class="stat-card-label" id="lateDepartmentLabel">Late Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="lateDepartment">0</div>
+              <div class="stat-card-label" id="lateDepartmentLabel">Late Today</div>
+            </div>
           </div>
         </div>
       </section>
@@ -345,34 +353,46 @@
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
         <div class="dashboard-grid-3">
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-card-value" id="totalEmployees">0</div>
-            <div class="stat-card-label" id="totalEmployeesLabel">Total Employees</div>
+            <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="totalEmployees">0</div>
+              <div class="stat-card-label" id="totalEmployeesLabel">Total Employees</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--success);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--success) 0%, #2d8e47 100%);"><i class="fas fa-user-check"></i></div>
-            <div class="stat-card-value" id="presentToday">0</div>
-            <div class="stat-card-label" id="presentTodayLabel">Present Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="presentToday">0</div>
+              <div class="stat-card-label" id="presentTodayLabel">Present Today</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--danger);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);"><i class="fas fa-user-times"></i></div>
-            <div class="stat-card-value" id="absentToday">0</div>
-            <div class="stat-card-label" id="absentTodayLabel">Absent Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-user-times"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="absentToday">0</div>
+              <div class="stat-card-label" id="absentTodayLabel">Absent Today</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--warning);">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, var(--warning) 0%, #d99e02 100%);"><i class="fas fa-bed"></i></div>
-            <div class="stat-card-value" id="onLeaveToday">0</div>
-            <div class="stat-card-label" id="onLeaveTodayLabel">On Leave Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-bed"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="onLeaveToday">0</div>
+              <div class="stat-card-label" id="onLeaveTodayLabel">On Leave Today</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: var(--navy-accent);">
-            <div class="stat-card-icon"><i class="fas fa-map-marker-alt"></i></div>
-            <div class="stat-card-value" id="activeLocations">0</div>
-            <div class="stat-card-label" id="activeLocationsLabel">Active Locations</div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="activeLocations">0</div>
+              <div class="stat-card-label" id="activeLocationsLabel">Active Locations</div>
+            </div>
           </div>
-          <div class="stat-card" style="border-left-color: #8b5cf6;">
-            <div class="stat-card-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);"><i class="fas fa-clock"></i></div>
-            <div class="stat-card-value" id="lateToday">0</div>
-            <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="lateToday">0</div>
+              <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
+            </div>
           </div>
         </div>
 
@@ -393,6 +413,32 @@
           <div class="data-section">
             <div class="section-header"><h2><i class="fas fa-calendar-day"></i> Leave Types · This Month</h2></div>
             <div class="chart-container-md"><canvas id="leaveTypesChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Recent Attendance Activity -->
+        <div class="data-section recent-activity-section">
+          <div class="section-header">
+            <h2><i class="fas fa-history"></i> Recent Attendance Activity</h2>
+            <button class="btn btn-sm btn-outline-primary" onclick="AttendanceSystem.goTo('s-adm-attendance')">
+              <i class="fas fa-arrow-right"></i> View All
+            </button>
+          </div>
+          <div class="table-responsive" id="recentAttendanceWrapper">
+            <table class="recent-att-table" id="recentAttendanceTable">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Department</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentAttendanceTbody">
+                <tr><td colspan="5" class="text-center text-muted" style="padding:28px;">Loading…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>

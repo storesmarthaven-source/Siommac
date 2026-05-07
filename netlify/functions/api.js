@@ -692,6 +692,36 @@ async function getAdminStats(args, ctx) {
   };
 }
 
+async function getRecentAttendance(args, ctx) {
+  await requireRole(ctx, ['admin', 'manager']);
+  const limit = Math.min(Number(args.limit) || 10, 50);
+  // Fetch today's attendance rows ordered by most-recent check-in first
+  const todayStr = today();
+  const [{ data: att }, { data: users }, { data: depts }] = await Promise.all([
+    sb.from('attendance').select('*').eq('work_date', todayStr).order('check_in_time', { ascending: false }).limit(limit),
+    sb.from('app_users').select('id,username,full_name,department_id'),
+    sb.from('departments').select('id,name')
+  ]);
+  const userMap = Object.fromEntries((users || []).map(u => [u.username, u]));
+  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+  const rows = (att || []).map(a => {
+    const u = userMap[a.username] || {};
+    const statusLabel = a.check_out_time ? 'Checked Out'
+      : a.status === 'late' ? 'Late'
+      : a.check_in_time  ? 'Present'
+      : 'Absent';
+    return {
+      name:       u.full_name || a.username,
+      department: deptMap[u.department_id] || '—',
+      checkIn:    a.check_in_time  ? a.check_in_time  : null,
+      checkOut:   a.check_out_time ? a.check_out_time : null,
+      status:     statusLabel,
+      workDate:   a.work_date
+    };
+  });
+  return { success: true, data: rows };
+}
+
 async function listAttendance(args, ctx) {
   await requireRole(ctx, ['admin']);
   // month (0-11) + year filter — if not provided, default to today's month
@@ -876,7 +906,11 @@ async function updateMyProfile(args, ctx) {
 async function uploadLogo(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
   const url = await uploadBase64('branding', args.base64, 'company_logo');
-  await sb.from('settings').upsert({ key: 'companyLogoUrl', value: url, updated_at: new Date().toISOString() });
+  const { error } = await sb.from('settings').upsert(
+    { key: 'companyLogoUrl', value: url, updated_at: new Date().toISOString() },
+    { onConflict: 'key' }
+  );
+  if (error) { console.error('uploadLogo settings upsert error:', error); return { success: false, message: error.message }; }
   await log_(actor, 'update', 'companyLogoUrl', '', url);
   return { success: true, url };
 }
@@ -1053,6 +1087,7 @@ const routes = {
   getDeptStats,
   getDeptEmployees,
   getAdminStats,
+  getRecentAttendance,
   listAttendance,
   getLiveAttendance,
   getDashboardCharts,
