@@ -2634,15 +2634,12 @@ const AttendanceSystem = (function() {
       const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
       return `
       <div class="emp-card">
-        <div class="emp-card-header">
+        <div class="emp-card-header ${isActive ? 'emp-card-header--active' : 'emp-card-header--inactive'}">
           <div class="emp-card-title-block">
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-            <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
-            ${emp.employeeNumber ? `<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--siomac-navy);background:var(--bg-subtle);padding:2px 8px;border-radius:6px;letter-spacing:.5px;">${escapeHtml(emp.employeeNumber)}</span>` : ''}
-          </div>
+          ${emp.employeeNumber ? `<span class="emp-card-empid">${escapeHtml(emp.employeeNumber)}</span>` : ''}
         </div>
         <div class="emp-card-body">
           <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>

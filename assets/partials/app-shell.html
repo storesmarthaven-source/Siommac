@@ -652,20 +652,18 @@
             </div>
             <div class="dash-overview-actions">
               <!-- Notification / Message / Ticket icon buttons -->
-              <div class="hdr-icon-group">
-                <button class="hdr-icon-btn" id="hdrNotifBtn" title="Notifications">
-                  <i class="fas fa-bell"></i>
-                  <span class="hdr-badge" id="hdrNotifBadge">4</span>
-                </button>
-                <button class="hdr-icon-btn" id="hdrMsgBtn" title="Messages">
-                  <i class="fas fa-comment-dots"></i>
-                  <span class="hdr-badge" id="hdrMsgBadge">2</span>
-                </button>
-                <button class="hdr-icon-btn" id="hdrTicketBtn" title="Support Tickets">
-                  <i class="fas fa-ticket-alt"></i>
-                  <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
-                </button>
-              </div>
+              <button class="hdr-icon-btn" id="hdrNotifBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="hdr-badge" id="hdrNotifBadge">4</span>
+              </button>
+              <button class="hdr-icon-btn" id="hdrMsgBtn" title="Messages">
+                <i class="fas fa-comment-dots"></i>
+                <span class="hdr-badge" id="hdrMsgBadge">2</span>
+              </button>
+              <button class="hdr-icon-btn" id="hdrTicketBtn" title="Support Tickets">
+                <i class="fas fa-ticket-alt"></i>
+                <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
+              </button>
               <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
               <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
             </div>
@@ -1719,9 +1717,9 @@
       <div class="emp-modal-body">
         <form id="addEmployeeForm" autocomplete="off">
           <div class="emp-form-grid">
-            <div class="form-group emp-form-full">
-              <label class="form-label">Employee ID <span style="font-size:11px;color:var(--text-muted);font-weight:400">(auto-assigned)</span></label>
-              <input type="text" class="form-control" id="newEmployeeNumber" placeholder="Auto-assigned on save" readonly style="font-family:monospace;background:var(--bg-subtle);color:var(--text-muted);cursor:not-allowed;max-width:220px;">
+            <div class="form-group emp-form-full" style="flex-direction:row;align-items:center;gap:16px;">
+              <label class="form-label" style="margin:0;white-space:nowrap;flex-shrink:0;">Employee ID <span style="font-size:11px;color:var(--text-muted);font-weight:400">(auto-assigned)</span></label>
+              <input type="text" class="form-control" id="newEmployeeNumber" placeholder="Auto-assigned on save" readonly style="font-family:monospace;background:var(--bg-subtle);color:var(--text-muted);cursor:not-allowed;max-width:220px;margin:0;">
             </div>
             <div class="form-group">
               <label class="form-label">Username *</label>
