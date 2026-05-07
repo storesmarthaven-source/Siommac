@@ -1017,7 +1017,8 @@ const AttendanceSystem = (function() {
       role: result.role, departmentId: result.departmentId || '', position: result.position || '',
       colorScheme: result.colorScheme || 'navy', layoutMode: result.layoutMode || 'sidebar',
       token: result.token || '',
-      companyName: result.companyName || '', companyLogoUrl: result.companyLogoUrl || ''
+      companyName: result.companyName || '', companyLogoUrl: result.companyLogoUrl || '',
+      profileImage: result.profileImage || ''
     });
 
     applySession(result, /*announce*/ true);

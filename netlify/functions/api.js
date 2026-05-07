@@ -185,8 +185,9 @@ async function login(args) {
   const passOk = await bcrypt.compare(password, u.password_hash);
   if (!passOk) return { success: false, message: 'Invalid username or password' };
   await log_(u, 'login', 'user', u.id, 'login ok');
+  const storedProfilePath = (u.profile_image && u.profile_image.trim()) ? u.profile_image : '';
   const [profileImage, companyLogoUrl, companyName] = await Promise.all([
-    u.profile_image ? getSignedUrl('profile-photos', u.profile_image) : Promise.resolve(''),
+    storedProfilePath ? getSignedUrl('profile-photos', storedProfilePath) : Promise.resolve(''),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company')
   ]);
@@ -532,7 +533,9 @@ async function getEmployeeByUsername(args, ctx) {
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return null;
-  const profileImage = u.profile_image ? await getSignedUrl('profile-photos', u.profile_image) : '';
+  // Treat null and '' identically — both mean "no photo"
+  const storedPath = (u.profile_image && u.profile_image.trim()) ? u.profile_image : '';
+  const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
   return {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     departmentId: u.department_id || '', position: u.position || '', status: u.status,
@@ -856,16 +859,23 @@ async function updateMyProfile(args, ctx) {
   }
   const removePhoto = args.removeProfileImage === true || args.removeProfileImage === 'true';
   if (removePhoto) {
-    // Supabase JS client silently drops null values in .update() — use explicit empty string
-    // and treat '' in the DB as "no photo" everywhere
-    patch.profile_image = '';
+    // Clear profile_image via a dedicated update so the field definitely gets set to NULL.
+    // We do this separately because the Supabase JS client may silently drop null/'' values
+    // from a patch object when merged with other fields in some PostgREST versions.
+    const { error: clearErr } = await sb
+      .from('app_users')
+      .update({ profile_image: null, updated_at: new Date().toISOString() })
+      .eq('id', actor.id);
+    if (clearErr) { console.error('updateMyProfile clear photo error:', clearErr); return { success: false, message: clearErr.message }; }
+    // Confirm it actually cleared (PostgREST reads back the written row)
+    patch.profile_image = null;
   } else if (args.profileImageBase64) {
     patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   }
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name').single();
   if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
-  // Treat both null and '' as no photo
-  const storedPath = data.profile_image || '';
+  // Treat both null and '' as no photo — either way return empty string to frontend
+  const storedPath = (data.profile_image && data.profile_image.trim()) ? data.profile_image : '';
   const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
   return { success: true, profileImage, fullName: data.full_name };
 }
