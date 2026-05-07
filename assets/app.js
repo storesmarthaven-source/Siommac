@@ -1545,41 +1545,40 @@ const AttendanceSystem = (function() {
     currentAttendanceAction = action;
     capturedPhotoData = null;
     currentLocationData = null;
-    
+
+    // Reset to initial state
     document.getElementById('captureBtn').classList.remove('d-none');
     document.getElementById('retakeBtn').classList.add('d-none');
     document.getElementById('confirmBtn').classList.add('d-none');
     document.getElementById('capturedPhoto').classList.add('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
     document.getElementById('photoCanvas').classList.add('d-none');
-    document.getElementById('locationValidation').classList.add('hidden');
-    
-    const modalTitle = document.getElementById('cameraModalTitle');
-    modalTitle.textContent = (action === 'CheckIn' ? 'Take Selfie for Check In' : 'Take Selfie for Check Out');
-    
-    // Get location but don't do strict verification
+
+    // Title
+    const isCheckIn = action === 'CheckIn';
+    const titleEl = document.getElementById('cameraModalTitle');
+    titleEl.innerHTML = `<i class="fas fa-camera"></i> ${isCheckIn ? 'Check In' : 'Check Out'} · Selfie Verification`;
+
+    // Confirm text
+    document.getElementById('confirmText').textContent = isCheckIn ? 'Confirm Check In' : 'Confirm Check Out';
+
+    // Location — start pending
+    const locEl = document.getElementById('locationValidation');
+    locEl.className = 'cm-location cm-location--pending';
+    locEl.innerHTML = '<i class="fas fa-spinner fa-pulse fa-fw"></i><span>Verifying your location…</span>';
+
     getCurrentLocation().then(location => {
       currentLocationData = location;
-      
-      const accuracyInfo = location.fallback ? 
-        (' (Using approximate location)') : 
-        (` (Accuracy: ${Math.round(location.accuracy)}m)`);
-      
-      // Always show location as verified for testing
-      document.getElementById('locationValidation').innerHTML = 
-        `<i class="fas fa-map-marker-alt me-1"></i> ${'Location ready for attendance'}${accuracyInfo}`;
-      document.getElementById('locationValidation').className = 'location-validation location-valid';
-      document.getElementById('locationValidation').classList.remove('hidden');
+      const accuracy = location.fallback ? 'Approximate location' : `Accuracy: ${Math.round(location.accuracy)}m`;
+      locEl.className = 'cm-location cm-location--valid';
+      locEl.innerHTML = `<i class="fas fa-check-circle fa-fw"></i><span>Location verified · ${accuracy}</span>`;
       document.getElementById('confirmBtn').disabled = false;
-      
-    }).catch(error => {
-      document.getElementById('locationValidation').innerHTML = 
-        `<i class="fas fa-map-marker-alt me-1"></i> ${'Location available'}`;
-      document.getElementById('locationValidation').className = 'location-validation location-valid';
-      document.getElementById('locationValidation').classList.remove('hidden');
+    }).catch(() => {
+      locEl.className = 'cm-location cm-location--valid';
+      locEl.innerHTML = '<i class="fas fa-check-circle fa-fw"></i><span>Location available</span>';
       document.getElementById('confirmBtn').disabled = false;
     });
-    
+
     startCamera();
     const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
     cameraModal.show();
@@ -1648,6 +1647,8 @@ const AttendanceSystem = (function() {
     document.getElementById('confirmBtn').classList.remove('d-none');
     document.getElementById('capturedPhoto').classList.remove('d-none');
     document.getElementById('cameraPreview').classList.add('d-none');
+    // Update title to "Verify Selfie"
+    document.getElementById('cameraModalTitle').innerHTML = '<i class="fas fa-check-circle"></i> Verify Selfie';
     stopCamera();
   }
 
@@ -1658,6 +1659,8 @@ const AttendanceSystem = (function() {
     document.getElementById('capturedPhoto').classList.add('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
     capturedPhotoData = null;
+    const action = currentAttendanceAction;
+    document.getElementById('cameraModalTitle').innerHTML = `<i class="fas fa-camera"></i> ${action === 'CheckIn' ? 'Check In' : 'Check Out'} · Selfie Verification`;
     startCamera();
   }
 
@@ -2080,6 +2083,9 @@ const AttendanceSystem = (function() {
 
     destroyDataTable('historyTable');
     document.getElementById('historyTableBody').innerHTML = rows;
+    // Remove min-width when empty so the empty state fills the container
+    const tbl = document.getElementById('historyTable');
+    if (tbl) tbl.style.minWidth = data.length ? '' : '0';
     if (data.length) {
       initDataTable('historyTable', {
         columnDefs: [{ targets: [6, 7], orderable: false, searchable: false, className: 'text-center' }]
@@ -2297,6 +2303,8 @@ const AttendanceSystem = (function() {
       if (tab === 'emp-rejected') return s === 'rejected';
       return true;
     });
+    const lvTbl = document.querySelector('.lv-table');
+    if (lvTbl) lvTbl.style.minWidth = filtered.length ? '' : '0';
     document.getElementById('leaveRequestsList').innerHTML = filtered.length
       ? filtered.map(r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false })).join('')
       : _lvEmpty('No leave requests found.', 8);
