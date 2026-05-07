@@ -722,15 +722,7 @@
 }
 
 /* ─── Recent Attendance Activity table ─── */
-.recent-activity-section { margin-top: 0; }
-.recent-activity-section .section-header {
-  background: var(--bg-subtle, #F4F6FA);
-  border-bottom: 1px solid var(--border);
-  border-radius: 20px 20px 0 0;
-  padding: 14px 20px;
-  margin-bottom: 0;
-}
-.recent-activity-section .table-responsive { padding: 0; }
+.recent-activity-section { margin-top: 20px; }
 .recent-att-table { width: 100%; border-collapse: collapse; }
 .recent-att-table thead th {
   background: var(--siomac-navy);
@@ -928,20 +920,14 @@
 .dash-sortable-drag  { opacity: 0.85; box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important; }
 
 /* ─── Chart card header (matches design: title left, badge right) ─── */
-.chart-card-section { padding: 0; }
+.chart-card-section { padding: 20px 22px; }
 .chart-card-header {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 20px;
-  background: var(--bg-subtle, #F4F6FA);
-  border-bottom: 1px solid var(--border);
-  border-radius: 20px 20px 0 0;
+  margin-bottom: 16px;
 }
 .chart-card-header h3 {
-  font-size: 0.92rem; font-weight: 700; color: var(--siomac-navy);
-  display: flex; align-items: center; margin: 0;
-}
-.chart-card-section .chart-container-md {
-  padding: 18px 20px 20px;
+  font-size: 1rem; font-weight: 700; color: var(--siomac-navy);
+  display: flex; align-items: center;
 }
 .chart-badge {
   background: rgba(228,12,12,0.1);
