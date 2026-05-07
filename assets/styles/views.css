@@ -119,9 +119,9 @@
 }
 .hr-currency { font-weight: 600; color: var(--text-muted); font-size: 0.82rem; }
 .hr-rate-input {
-  width: 130px; padding: 9px 14px;
+  width: 90px; padding: 6px 10px;
   border: 1.5px solid var(--border); border-radius: 30px;
-  font-size: 0.9rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy);
   text-align: center; background: white; font-family: inherit;
   transition: border-color .2s, box-shadow .2s;
 }
