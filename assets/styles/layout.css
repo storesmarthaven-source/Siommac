@@ -33,13 +33,14 @@
 .sidebar.collapsed .sidebar-user-info { padding: 14px 0; }
 .sidebar.collapsed .sidebar-avatar { margin: 0 auto; width: 40px; height: 40px; font-size: 15px; border-radius: 20px; }
 .sidebar.collapsed .sidebar-menu button,
-.sidebar.collapsed .sidebar-logout button { justify-content: center; padding: 13px 0; width: 100%; gap: 0; }
+.sidebar.collapsed .sidebar-logout button { justify-content: center; padding: 13px 0; width: 100%; gap: 0; text-align: center; }
 .sidebar.collapsed .sidebar-menu i,
-.sidebar.collapsed .sidebar-logout i { margin: 0; font-size: 18px; width: auto; }
+.sidebar.collapsed .sidebar-logout i { margin: 0; font-size: 18px; width: auto; display: block; text-align: center; }
+.sidebar.collapsed .sidebar-menu-section { padding: 14px 0; }
+.sidebar.collapsed .sidebar-menu li { display: flex; justify-content: center; }
 .sidebar.collapsed .sidebar-session { padding: 10px 0; justify-content: center; flex-direction: column; gap: 2px; }
 .sidebar.collapsed .sidebar-session-time { font-size: 10px; }
-.sidebar.collapsed .sidebar-brand { padding: 22px 0; justify-content: center; }
-.sidebar.collapsed .sidebar-menu-section { padding: 14px 0; }
+.sidebar.collapsed .sidebar-brand { display: none; }
 
 /* Collapsed tooltip */
 .sidebar.collapsed [title]:hover::after {
@@ -77,8 +78,8 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center; gap: 10px;
 }
-.sidebar-brand i { font-size: 26px; color: var(--siomac-red); }
-.sidebar-brand-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.3px; color: white; }
+.sidebar-brand i { font-size: 36px; color: var(--siomac-red); }
+.sidebar-brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.3px; color: white; }
 
 /* ── User info ── */
 .sidebar-user-info {
