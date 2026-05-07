@@ -353,7 +353,7 @@ const AttendanceSystem = (function() {
         showNotification(res.message || 'Failed to mark attendance', 'error');
       }
       updateRealTimeStats();
-    });
+    }).catch(err => { showNotification(err.message || 'Network error', 'error'); });
   }
 
   // ─── Session helpers (1-hour timeout) ───
@@ -628,7 +628,7 @@ const AttendanceSystem = (function() {
       case 's-profile':         loadMyProfile(); break;
       case 's-emp-attendance':  checkStatus(); loadChart(); loadTrendChart(); break;
       case 's-emp-history':     loadHistoryInline(); break;
-      case 's-projectMap':      setTimeout(initializeMap, 80); loadLiveAttendance(); break;
+      case 's-projectMap':      setTimeout(() => { if (!map) initializeMap(); else map.invalidateSize(); }, 80); loadLiveAttendance(); break;
       case 's-emp-leave':       loadLeaveRequests(); break;
       case 's-mgr-overview':    loadDepartmentData(); break;
       case 's-mgr-employees':   loadDepartmentEmployees(); break;
@@ -1329,7 +1329,7 @@ const AttendanceSystem = (function() {
       action: currentAttendanceAction,
       photoBase64: capturedPhotoData,
       location: loc
-    }).then(handleAttendanceSuccess);
+    }).then(handleAttendanceSuccess).catch(err => { hideSpinner(); showPopup('error', 'Network Error', err.message || 'Could not connect to server'); });
   }
 
   function handleAttendanceSuccess(result) {
@@ -1614,9 +1614,7 @@ const AttendanceSystem = (function() {
     api('submitLeave', { username: currentUser, type: leaveType, fromDate, toDate, reason }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success',
-          'Leave Request Submitted',
-          'Your leave request has been submitted for approval.');
+        showPopup('success', 'Leave Request Submitted', 'Your leave request has been submitted for approval.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('leaveRequestModal'));
         if (modal) modal.hide();
         document.getElementById('leaveRequestForm').reset();
@@ -1624,7 +1622,7 @@ const AttendanceSystem = (function() {
       } else {
         showPopup('error', 'Failed', res.message || 'Could not submit leave');
       }
-    });
+    }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   function loadLeaveRequests() {
@@ -1801,7 +1799,7 @@ const AttendanceSystem = (function() {
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not approve'); return; }
         showPopup('success', 'Leave Approved', 'The leave request has been approved.');
         _refreshLeavesAfterDecision();
-      });
+      }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
 
@@ -1817,7 +1815,7 @@ const AttendanceSystem = (function() {
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not reject'); return; }
         showPopup('success', 'Leave Rejected', 'The leave request has been rejected.');
         _refreshLeavesAfterDecision();
-      });
+      }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
 
@@ -1886,17 +1884,15 @@ const AttendanceSystem = (function() {
     api('addEmployee', { username, password, fullName, department, position, role, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success',
-          'Employee Added',
-          'New employee has been added successfully.');
+        showPopup('success', 'Employee Added', 'New employee has been added successfully.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
-        modal.hide();
+        if (modal) modal.hide();
         document.getElementById('addEmployeeForm').reset();
         loadEmployeeList();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not add employee');
       }
-    });
+    }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   function loadEmployeeList() {
@@ -1984,16 +1980,14 @@ const AttendanceSystem = (function() {
     api('updateEmployee', { username, fullName, department, position, role, status, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success',
-          'Employee Updated',
-          `Employee ${fullName} has been updated successfully.`);
+        showPopup('success', 'Employee Updated', `Employee ${fullName} has been updated successfully.`);
         const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-        modal.hide();
+        if (modal) modal.hide();
         loadEmployeeList();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not update');
       }
-    });
+    }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   function deleteEmployee(username) {
@@ -2011,14 +2005,12 @@ const AttendanceSystem = (function() {
         api('deleteEmployee', { username, actorId: currentUserId, actorUsername: currentUser }).then(res => {
           hideSpinner();
           if (res.success) {
-            showPopup('success',
-              'Deleted',
-              'Employee has been deleted.');
+            showPopup('success', 'Deleted', 'Employee has been deleted.');
             loadEmployeeList();
           } else {
             showPopup('error', 'Failed', res.message || 'Could not delete');
           }
-        });
+        }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
       }
     });
   }
@@ -2069,18 +2061,16 @@ const AttendanceSystem = (function() {
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success',
-          'Saved',
-          'Department saved successfully.');
+        showPopup('success', 'Saved', 'Department saved successfully.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('addDepartmentModal'));
-        modal.hide();
+        if (modal) modal.hide();
         document.getElementById('addDepartmentForm').reset();
         editingDeptId = null;
         loadDepartments();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save department');
       }
-    });
+    }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   function loadDepartments() {
@@ -2135,14 +2125,12 @@ const AttendanceSystem = (function() {
       api('deleteDepartment', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
-          showPopup('success',
-            'Deleted',
-            'Department has been deleted.');
+          showPopup('success', 'Deleted', 'Department has been deleted.');
           loadDepartments();
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
         }
-      });
+      }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
 
@@ -2193,18 +2181,16 @@ const AttendanceSystem = (function() {
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success',
-          'Saved',
-          'Project site saved successfully.');
+        showPopup('success', 'Saved', 'Project site saved successfully.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
-        modal.hide();
+        if (modal) modal.hide();
         document.getElementById('addProjectForm').reset();
         editingSiteId = null;
         loadProjectSites();
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save site');
       }
-    });
+    }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   function loadProjectSites() {
@@ -2257,14 +2243,12 @@ const AttendanceSystem = (function() {
       api('deleteProjectSite', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
-          showPopup('success',
-            'Deleted',
-            'Project site has been deleted.');
+          showPopup('success', 'Deleted', 'Project site has been deleted.');
           loadProjectSites();
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
         }
-      });
+      }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
 
@@ -2285,7 +2269,7 @@ const AttendanceSystem = (function() {
     const thumb = url => url
       ? `<a href="${url}" target="_blank" rel="noopener" class="ms-1"><img src="${url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1px solid #ddd;" title="View selfie" onerror="this.style.display='none'"></a>`
       : '';
-    const badge = s => s === 'Late' ? 'bg-warning text-dark' : s === 'Absent' ? 'bg-danger' : s === 'Checked Out' ? 'bg-secondary' : 'bg-success';
+    const badge = s => s === 'Late' ? 'bg-warning text-dark' : s === 'Absent' || s === 'Not Checked In' ? 'bg-danger' : s === 'Checked Out' ? 'bg-secondary' : 'bg-success';
 
     let html = '';
     data.forEach(item => {
@@ -2544,7 +2528,7 @@ const AttendanceSystem = (function() {
         if (!res.success) { showPopup('error', 'Failed', res.message); return; }
         showPopup('success', 'Deleted', 'Leave application removed.');
         loadLeaveApplications();
-      });
+      }).catch(err => { showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
 
@@ -3010,7 +2994,7 @@ const AttendanceSystem = (function() {
       // Re-fetch from DB so UI reflects the true saved state (catches remove edge cases)
       loadMyProfile();
       showPopup('success', 'Profile Updated', 'Your changes have been saved.');
-    });
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
   // ─── Admin branding + payroll-rule settings ─────────────────
@@ -3023,6 +3007,11 @@ const AttendanceSystem = (function() {
       document.getElementById('setCurrency').value     = s.currency           || 'TT';
       document.getElementById('setLatePenalty').value  = s.latePenaltyPerDay  || '0';
       document.getElementById('setLeaveFine').value    = s.leaveFinePerDay    || '0';
+      // Late threshold — stored as "HH:MM" (24h), <input type="time"> expects "HH:MM"
+      const ltEl = document.getElementById('setLateThreshold');
+      if (ltEl) ltEl.value = s.lateThresholdHHMM || '09:00';
+      const mdEl = document.getElementById('setMaxDistance');
+      if (mdEl) mdEl.value = s.maxDistanceM != null ? s.maxDistanceM : '200';
       const url = s.companyLogoUrl || '';
       setLogoPreview(url);
     });
@@ -3080,25 +3069,31 @@ const AttendanceSystem = (function() {
     });
   }
   function savePayrollSettings() {
-    const name    = document.getElementById('setCompanyName').value.trim() || 'My Company';
-    const late    = String(Math.max(0, Number(document.getElementById('setLatePenalty').value) || 0));
-    const leaveF  = String(Math.max(0, Number(document.getElementById('setLeaveFine').value)   || 0));
+    const name      = document.getElementById('setCompanyName').value.trim() || 'My Company';
+    const late      = String(Math.max(0, Number(document.getElementById('setLatePenalty').value) || 0));
+    const leaveF    = String(Math.max(0, Number(document.getElementById('setLeaveFine').value)   || 0));
+    const lateThEl  = document.getElementById('setLateThreshold');
+    const lateTh    = lateThEl ? (lateThEl.value || '09:00') : '09:00';
+    const maxDistEl = document.getElementById('setMaxDistance');
+    const maxDist   = maxDistEl ? String(Math.max(0, Number(maxDistEl.value) || 200)) : '200';
     const btn = document.getElementById('savePayrollSettingsBtn');
     const orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     Promise.all([
-      api('updateSetting', { key: 'companyName',       value: name,   actorId: currentUserId, actorUsername: currentUser }),
-      api('updateSetting', { key: 'latePenaltyPerDay', value: late,   actorId: currentUserId, actorUsername: currentUser }),
-      api('updateSetting', { key: 'leaveFinePerDay',   value: leaveF, actorId: currentUserId, actorUsername: currentUser })
+      api('updateSetting', { key: 'companyName',        value: name,    actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'latePenaltyPerDay',  value: late,    actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'leaveFinePerDay',    value: leaveF,  actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'lateThresholdHHMM',  value: lateTh,  actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'maxDistanceM',        value: maxDist, actorId: currentUserId, actorUsername: currentUser })
     ]).then(rs => {
       btn.disabled = false; btn.innerHTML = orig;
       const failed = rs.find(r => !r.success);
       if (failed) { showPopup('error', 'Save Failed', failed.message || 'Could not save'); return; }
-      _payCurrency = cur;
-      applyCompanyName(name); // live-update sidebar + About without reload
-      updateStoredSession({ companyName: name, currency: cur, latePenaltyPerDay: late, leaveFinePerDay: leaveF });
-      showPopup('success', 'Settings Saved', name + ' · ' + cur + ' · Late: ' + late + ' · Leave fine: ' + leaveF);
-    });
+      _payCurrency = 'TT';
+      applyCompanyName(name);
+      updateStoredSession({ companyName: name, currency: 'TT', latePenaltyPerDay: late, leaveFinePerDay: leaveF, lateThresholdHHMM: lateTh, maxDistanceM: maxDist });
+      showPopup('success', 'Settings Saved', 'Company settings updated successfully.');
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
   }
 
   function refreshCompanySettings() {

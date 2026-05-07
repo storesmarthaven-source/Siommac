@@ -488,7 +488,8 @@ async function getSettings() {
 
 async function updateSetting(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
-  await sb.from('settings').upsert({ key: args.key, value: String(args.value || ''), updated_at: new Date().toISOString() });
+  const { error } = await sb.from('settings').upsert({ key: args.key, value: String(args.value || ''), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (error) return { success: false, message: error.message };
   await log_(actor, 'update', 'setting', args.key, String(args.value || ''));
   return { success: true };
 }
@@ -639,26 +640,50 @@ async function getAdminStats(args, ctx) {
 
 async function listAttendance(args, ctx) {
   await requireRole(ctx, ['admin']);
+  // month (0-11) + year filter — if not provided, default to today's month
+  const now = new Date();
+  const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
+  const mo = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
+  const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
+  const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
+
   const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
     sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin').order('full_name'),
     sb.from('departments').select('id,name'),
-    sb.from('attendance').select('*').eq('work_date', today())
+    sb.from('attendance').select('*').gte('work_date', start).lte('work_date', end)
   ]);
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
-  const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
+
+  // Group attendance rows by username for the selected period
+  const attByUser = {};
+  for (const a of att || []) {
+    if (!attByUser[a.username]) attByUser[a.username] = [];
+    attByUser[a.username].push(a);
+  }
+
+  // For a multi-day view we resolve photos for the most recent record per user
   const resolved = await Promise.all((users || []).map(async u => {
-    const a = attMap[u.username];
+    const recs = attByUser[u.username] || [];
+    // Most recent record for today's status display
+    const latest = recs.sort((a, b) => b.work_date < a.work_date ? -1 : 1)[0];
+    const totalDays = recs.length;
+    const present = recs.filter(r => r.check_in_time).length;
+    const absent = totalDays > 0 ? 0 : 1; // show 0 absent if any records exist
     const [checkInPhotoUrl, checkOutPhotoUrl] = await Promise.all([
-      getSignedUrl('attendance-photos', a && a.check_in_photo_url  || ''),
-      getSignedUrl('attendance-photos', a && a.check_out_photo_url || '')
+      getSignedUrl('attendance-photos', latest && latest.check_in_photo_url  || ''),
+      getSignedUrl('attendance-photos', latest && latest.check_out_photo_url || '')
     ]);
+    const todayRec = (att || []).find(a => a.username === u.username && a.work_date === today());
+    const statusLabel = !todayRec ? 'Not Checked In'
+      : todayRec.check_out_time ? 'Checked Out'
+      : todayRec.status === 'late' ? 'Late' : 'Present';
     return {
       username: u.username, name: u.full_name, department: deptMap[u.department_id] || '—',
-      todayStatus: !a ? 'Absent' : (a.check_out_time ? 'Checked Out' : (a.status === 'late' ? 'Late' : 'Present')),
-      checkIn:  a && a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '—',
-      checkOut: a && a.check_out_time ? hhmm(new Date(a.check_out_time)) : '—',
+      todayStatus: statusLabel,
+      checkIn:  latest && latest.check_in_time  ? hhmm(new Date(latest.check_in_time))  : '—',
+      checkOut: latest && latest.check_out_time ? hhmm(new Date(latest.check_out_time)) : '—',
       checkInPhotoUrl, checkOutPhotoUrl,
-      totalDays: a ? 1 : 0, present: a && a.check_in_time ? 1 : 0, absent: a ? 0 : 1
+      totalDays, present, absent: Math.max(0, totalDays === 0 ? 0 : totalDays - present)
     };
   }));
   return resolved;

@@ -109,13 +109,12 @@ create table if not exists public.settings (
 );
 
 insert into public.settings (key, value) values
-  ('companyName', 'Rameez Scripts'),
+  ('companyName', 'My Company'),
   ('workStartHour', '6'),
   ('workEndHour', '22'),
-  ('lateThresholdHHMM', '09:15'),
+  ('lateThresholdHHMM', '09:00'),
   ('maxDistanceM', '200'),
-  ('projectAreaCenter', '26.6814598463,68.0169318169'),
-  ('currency', 'Rs.'),
+  ('currency', 'TT'),
   ('companyLogoUrl', ''),
   ('latePenaltyPerDay', '0'),
   ('leaveFinePerDay', '0')
