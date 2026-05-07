@@ -198,37 +198,44 @@
         </div>
       </section>
 
-      <!-- Employee — Project Map -->
-      <!-- Live Project Map (admin/manager) — real-time employee positions today -->
-      <section class="app-section" id="s-projectMap">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-map-marked-alt"></i> <span id="liveMapTitle">Live Project Map</span></h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;" id="liveMapMeta">Auto-refresh every 30s</span>
-              <button id="refreshLiveMapBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
+      <!-- Live Operations Map (admin/manager) -->
+      <section class="app-section lm-section" id="s-projectMap">
+        <!-- header row -->
+        <div class="lm-header">
+          <div class="lm-title-block">
+            <h1 class="lm-title"><i class="fas fa-map-marked-alt" style="color:var(--siomac-red);"></i> <span id="liveMapTitle">Live Operations Map</span></h1>
+            <p class="lm-subtitle" id="liveMapMeta">Real-time employee positions &amp; project zones | Auto-refresh every 30s</p>
           </div>
-          <div class="live-map-grid">
-            <div>
-              <div id="map"></div>
-              <div style="margin-top:12px; display:flex; gap:18px; flex-wrap:wrap; font-size:12px;">
-                <div><span class="legend-dot" style="background:#e74c3c;"></span> Route</div>
-                <div><span class="legend-dot" style="background:#3498db; border-radius:50%;"></span> Zone</div>
-                <div><span class="legend-dot" style="background:#34a853; border-radius:50%;"></span> Checked In</div>
-                <div><span class="legend-dot" style="background:#fbbc04; border-radius:50%;"></span> Late</div>
-                <div><span class="legend-dot" style="background:#6c757d; border-radius:50%;"></span> Checked Out</div>
-              </div>
+          <div class="lm-header-actions">
+            <button id="refreshLiveMapBtn" class="lm-btn-outline"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button id="centerMapBtn" class="lm-btn-primary"><i class="fas fa-location-dot"></i> Center View</button>
+          </div>
+        </div>
+
+        <!-- map + activity panel -->
+        <div class="lm-layout">
+          <!-- map -->
+          <div class="lm-map-container">
+            <div id="map"></div>
+          </div>
+
+          <!-- activity panel -->
+          <div class="lm-activity-panel">
+            <div class="lm-panel-header">
+              <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
             </div>
-            <div class="live-employees-panel">
-              <div class="live-stats">
-                <div class="live-stat"><div class="live-stat-num" id="liveActiveCount">0</div><div class="live-stat-lbl">Active</div></div>
-                <div class="live-stat"><div class="live-stat-num" id="liveCheckedInCount">0</div><div class="live-stat-lbl">Checked In</div></div>
-                <div class="live-stat"><div class="live-stat-num" id="liveLateCount">0</div><div class="live-stat-lbl">Late</div></div>
-                <div class="live-stat"><div class="live-stat-num" id="liveCheckedOutCount">0</div><div class="live-stat-lbl">Out</div></div>
-              </div>
-              <div class="live-employees-title">Today's Activity</div>
-              <div class="live-employees-list" id="liveEmployeesList"></div>
+            <div class="lm-live-stats">
+              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveActiveCount">0</div><div class="lm-stat-label">Active Now</div></div>
+              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveCheckedInCount">0</div><div class="lm-stat-label">Checked In</div></div>
+              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveLateCount">0</div><div class="lm-stat-label">Late Today</div></div>
+              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveOnSiteCount">0</div><div class="lm-stat-label">On Site</div></div>
+            </div>
+            <div class="lm-employees-list" id="liveEmployeesList"></div>
+            <div class="lm-legend">
+              <span><span class="lm-dot lm-dot-green"></span> Checked In</span>
+              <span><span class="lm-dot lm-dot-orange"></span> Late</span>
+              <span><span class="lm-dot lm-dot-gray"></span> Checked Out</span>
+              <span><i class="fas fa-map-pin" style="color:var(--siomac-red);"></i> Project Zones</span>
             </div>
           </div>
         </div>
@@ -590,13 +597,33 @@
             <i class="fas fa-search"></i>
             <input type="text" id="deptSearchInput" placeholder="Search departments…">
           </div>
+          <div class="dept-view-toggle">
+            <button class="dept-view-btn" id="deptCardViewBtn" title="Card view"><i class="fas fa-th-large"></i></button>
+            <button class="dept-view-btn active" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
+          </div>
           <button id="addDepartmentBtn" class="btn btn-danger-primary">
             <i class="fas fa-plus"></i> New Department
           </button>
         </div>
 
-        <!-- Cards grid -->
-        <div class="dept-cards-grid" id="departmentsContainer"></div>
+        <!-- Cards grid (hidden by default — list is default) -->
+        <div class="dept-cards-grid" id="deptCardView" style="display:none;"></div>
+
+        <!-- List / table view (default) -->
+        <div class="dept-list-view" id="deptListView">
+          <table class="dept-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Employees</th>
+                <th>Description</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deptTableBody"></tbody>
+          </table>
+        </div>
 
       </section>
 

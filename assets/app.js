@@ -309,38 +309,39 @@ const AttendanceSystem = (function() {
   }
 
   function renderLivePanel(rows) {
-    const checkedIn = rows.filter(r => !r.isCheckedOut).length;
-    const late = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
+    const checkedIn  = rows.filter(r => !r.isCheckedOut).length;
+    const late       = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
     const checkedOut = rows.filter(r => r.isCheckedOut).length;
-    document.getElementById('liveActiveCount').textContent      = rows.length;
-    document.getElementById('liveCheckedInCount').textContent   = checkedIn;
-    document.getElementById('liveLateCount').textContent        = late;
-    document.getElementById('liveCheckedOutCount').textContent  = checkedOut;
+    // on-site = has valid lat/lng coords
+    const onSite     = rows.filter(r => (r.checkInLat || r.checkOutLat) != null).length;
+
+    document.getElementById('liveActiveCount').textContent     = rows.length;
+    document.getElementById('liveCheckedInCount').textContent  = checkedIn;
+    document.getElementById('liveLateCount').textContent       = late;
+    document.getElementById('liveOnSiteCount').textContent     = onSite;
 
     const sorted = rows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
     const html = sorted.map(r => {
-      const cls = r.isCheckedOut ? 'out' : (r.status === 'late' ? 'late' : '');
-      const initial = (r.fullName || '?').charAt(0).toUpperCase();
-      // prefer check-in selfie, fall back to profile photo, then initial letter
-      const thumbSrc = r.checkInPhotoUrl || r.profileImage || '';
-      const thumb = thumbSrc
-        ? `<img class="live-emp-thumb" src="${thumbSrc}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="live-emp-thumb-fallback" style="display:none;">${initial}</div>`
-        : `<div class="live-emp-thumb-fallback">${initial}</div>`;
-      const metaParts = [];
-      if (r.lastSeen) metaParts.push(`<i class="fas fa-clock" style="width:11px;"></i> ${r.lastSeen}`);
-      if (r.position) metaParts.push(`<i class="fas fa-id-badge" style="width:11px;"></i> ${r.position}`);
-      else if (r.department) metaParts.push(`<i class="fas fa-building" style="width:11px;"></i> ${r.department}`);
-      return `<div class="live-emp-card ${cls}" data-userid="${r.userId}">
-        <div style="position:relative;flex-shrink:0;">${thumb}</div>
-        <div class="live-emp-info">
-          <div class="live-emp-name">${r.fullName}</div>
-          <div class="live-emp-meta">${metaParts.join(' &middot; ') || (r.department || '—')}</div>
+      const initial   = (r.fullName || '?').charAt(0).toUpperCase();
+      const thumbSrc  = r.checkInPhotoUrl || r.profileImage || '';
+      const avatarInner = thumbSrc
+        ? `<img src="${thumbSrc}" alt="${initial}" onerror="this.style.display='none';this.parentElement.textContent='${initial}'">`
+        : initial;
+      const dotCls  = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
+      const statusTxt = r.isCheckedOut ? 'Checked Out' : (r.status === 'late' ? 'Late' : 'Checked In');
+      const meta = r.lastSeen ? `${statusTxt} · ${r.lastSeen}` : statusTxt;
+      return `<div class="lm-emp-item" data-userid="${r.userId}">
+        <div class="lm-emp-avatar">${avatarInner}</div>
+        <div class="lm-emp-info">
+          <div class="lm-emp-name">${escapeHtml(r.fullName || '—')}</div>
+          <div class="lm-emp-status"><span class="lm-dot ${dotCls}"></span> ${meta}</div>
         </div>
+        <i class="fas fa-chevron-right lm-emp-chevron"></i>
       </div>`;
     }).join('');
 
     document.getElementById('liveEmployeesList').innerHTML = html ||
-      '<div class="live-emp-empty"><i class="fas fa-users-slash" style="font-size:24px; color:#ccc; margin-bottom:8px;"></i><br>No check-ins yet today</div>';
+      '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
   }
 
   function focusLiveEmployee(userId) {
@@ -821,6 +822,10 @@ const AttendanceSystem = (function() {
         document.getElementById('empTableViewBtn').classList.add('active');
         document.getElementById('empCardViewBtn').classList.remove('active');
         _renderEmployees();
+      } else if (event.target.matches('#deptCardViewBtn, #deptCardViewBtn *')) {
+        _deptListView = false; _applyDeptView();
+      } else if (event.target.matches('#deptListViewBtn, #deptListViewBtn *')) {
+        _deptListView = true; _applyDeptView();
       } else if (event.target.matches('#addDepartmentBtn, #addDepartmentBtn *')) {
         showAddDepartmentModal();
       } else if (event.target.matches('#closeDeptModalBtn, #closeDeptModalBtn *')) {
@@ -983,8 +988,21 @@ const AttendanceSystem = (function() {
       // Live map: refresh button
       if (event.target.closest('#refreshLiveMapBtn')) loadLiveAttendance();
 
-      // Live map: click employee card → focus marker
-      const liveCard = event.target.closest('.live-emp-card');
+      // Live map: center map button
+      if (event.target.closest('#centerMapBtn')) {
+        if (map) {
+          if (liveMarkers.length) {
+            try { map.fitBounds(L.featureGroup(liveMarkers).getBounds().pad(0.2)); } catch (_) {}
+          } else if (attendanceZones.length) {
+            try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25)); } catch (_) {}
+          } else {
+            map.setView([10.6549, -61.5019], 12);
+          }
+        }
+      }
+
+      // Live map: click employee item → focus marker
+      const liveCard = event.target.closest('.lm-emp-item') || event.target.closest('.live-emp-card');
       if (liveCard) focusLiveEmployee(liveCard.dataset.userid);
 
       // Hourly rates — refresh + save row
@@ -2352,48 +2370,104 @@ const AttendanceSystem = (function() {
     return 'fa-building';
   }
 
-  function displayDepartments(departmentList) {
-    const container = document.getElementById('departmentsContainer');
-    if (!container) return;
+  let _deptListView = true; // list view default
 
+  function displayDepartments(departmentList) {
     // Update stat badges
     const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setEl('deptStatTotal', departmentList.length);
     setEl('deptStatEmployees', departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
     setEl('deptStatHeads', departmentList.filter(d => d.manager && d.manager !== '—').length);
-    setEl('deptStatRate', '—'); // no attendance rate from this endpoint
+    setEl('deptStatRate', '—');
 
     const search = (document.getElementById('deptSearchInput') || {}).value || '';
     const filtered = search
-      ? departmentList.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || (d.description || '').toLowerCase().includes(search.toLowerCase()))
+      ? departmentList.filter(d =>
+          d.name.toLowerCase().includes(search.toLowerCase()) ||
+          (d.description || '').toLowerCase().includes(search.toLowerCase()))
       : departmentList;
 
-    if (filtered.length === 0) {
-      container.innerHTML = `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`;
-      return;
+    // Render card view
+    const cardView = document.getElementById('deptCardView');
+    if (cardView) {
+      if (filtered.length === 0) {
+        cardView.innerHTML = `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`;
+      } else {
+        cardView.innerHTML = filtered.map(dept => `
+          <div class="dept-card">
+            <div class="dept-card-header">
+              <div class="dept-card-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
+              <div class="dept-card-title-block">
+                <div class="dept-card-name">${escapeHtml(dept.name)}</div>
+                <div class="dept-card-id-tag">ID #${dept.id}</div>
+              </div>
+            </div>
+            <div class="dept-card-body">
+              ${dept.description ? `<div class="dept-info-row"><i class="fas fa-align-left"></i><span>${escapeHtml(dept.description)}</span></div>` : ''}
+              <div class="dept-info-row"><i class="fas fa-user-circle"></i><span><strong>Manager:</strong> ${escapeHtml(dept.manager || '—')}</span></div>
+              <div class="dept-stats-badges">
+                <span class="dept-badge blue"><i class="fas fa-users"></i> ${dept.employeeCount || 0} Employees</span>
+              </div>
+            </div>
+            <div class="dept-card-actions">
+              <button class="btn btn-outline-primary btn-sm btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
+              <button class="btn btn-outline-danger btn-sm btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+          </div>`).join('');
+      }
     }
 
-    container.innerHTML = filtered.map(dept => `
-      <div class="dept-card">
-        <div class="dept-card-header">
-          <div class="dept-card-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
-          <div class="dept-card-title-block">
-            <div class="dept-card-name">${escapeHtml(dept.name)}</div>
-            <div class="dept-card-id-tag">ID #${dept.id}</div>
-          </div>
-        </div>
-        <div class="dept-card-body">
-          ${dept.description ? `<div class="dept-info-row"><i class="fas fa-align-left"></i><span>${escapeHtml(dept.description)}</span></div>` : ''}
-          <div class="dept-info-row"><i class="fas fa-user-circle"></i><span><strong>Manager:</strong> ${escapeHtml(dept.manager || '—')}</span></div>
-          <div class="dept-stats-badges">
-            <span class="dept-badge blue"><i class="fas fa-users"></i> ${dept.employeeCount || 0} Employees</span>
-          </div>
-        </div>
-        <div class="dept-card-actions">
-          <button class="btn btn-outline-primary btn-sm btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
-          <button class="btn btn-outline-danger btn-sm btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
-        </div>
-      </div>`).join('');
+    // Render list / table view
+    const tbody = document.getElementById('deptTableBody');
+    if (tbody) {
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No departments found.</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(dept => `
+          <tr>
+            <td>
+              <div class="dept-table-name-cell">
+                <div class="dept-table-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
+                <div>
+                  <div class="dept-table-name">${escapeHtml(dept.name)}</div>
+                  <div class="dept-table-id">ID #${dept.id}</div>
+                </div>
+              </div>
+            </td>
+            <td>${escapeHtml(dept.manager || '—')}</td>
+            <td><span class="dept-table-badge"><i class="fas fa-users"></i> ${dept.employeeCount || 0}</span></td>
+            <td style="color:var(--text-muted);font-size:12.5px;">${escapeHtml(dept.description || '—')}</td>
+            <td>
+              <div class="dept-table-actions">
+                <button class="dept-table-btn edit btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
+                <button class="dept-table-btn delete btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
+              </div>
+            </td>
+          </tr>`).join('');
+      }
+    }
+
+    // Apply current view mode
+    _applyDeptView();
+  }
+
+  function _applyDeptView() {
+    const cardView = document.getElementById('deptCardView');
+    const listView = document.getElementById('deptListView');
+    const cardBtn  = document.getElementById('deptCardViewBtn');
+    const listBtn  = document.getElementById('deptListViewBtn');
+    if (!cardView || !listView) return;
+    if (_deptListView) {
+      cardView.style.display = 'none';
+      listView.style.display = '';
+      if (cardBtn) cardBtn.classList.remove('active');
+      if (listBtn) listBtn.classList.add('active');
+    } else {
+      cardView.style.display = '';
+      listView.style.display = 'none';
+      if (cardBtn) cardBtn.classList.add('active');
+      if (listBtn) listBtn.classList.remove('active');
+    }
   }
 
   function editDepartment(id) {
