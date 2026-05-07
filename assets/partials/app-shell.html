@@ -10,29 +10,61 @@
 
   <!-- Login screen (shown until authentication) -->
   <div id="loginPage" class="login-container">
-    <div class="login-box">
-      <img class="login-logo" id="loginLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
-      <h2 id="loginTitle">Attendance System Login</h2>
-      <div class="login-subtitle" id="loginSubtitle">Access your dashboard</div>
-      <form id="loginForm">
-        <div class="form-group" style="text-align:left;">
-          <label id="usernameLabel"><i class="fas fa-user"></i> Username</label>
-          <input type="text" id="username" class="form-control" placeholder="Username" required autocomplete="username">
-          <div class="invalid-feedback" id="usernameError">Please enter a valid username</div>
+    <div class="login-split">
+
+      <!-- LEFT: Brand / Hero -->
+      <div class="login-hero">
+        <div class="login-hero-icon"><i class="fas fa-hard-hat"></i></div>
+        <h2 class="login-hero-title">Operations &amp;<br>Maintenance Excellence</h2>
+        <p class="login-hero-desc">Real‑time workforce tracking, geofenced attendance, and operational intelligence for Siddim Integrated O&amp;M.</p>
+        <div class="login-hero-stats">
+          <span class="login-stat"><i class="fas fa-map-marker-alt"></i> Geo-attendance</span>
+          <span class="login-stat"><i class="fas fa-shield-alt"></i> ISO 9001</span>
+          <span class="login-stat"><i class="fas fa-chart-line"></i> Live analytics</span>
         </div>
-        <div class="form-group" style="text-align:left;">
-          <label id="passwordLabel"><i class="fas fa-lock"></i> Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Password" required autocomplete="current-password">
-          <div class="invalid-feedback" id="passwordError">Please enter your password</div>
+      </div>
+
+      <!-- RIGHT: Form -->
+      <div class="login-form-side">
+        <div class="login-brand-header">
+          <img id="loginLogo" class="login-brand-logo" src="assets/images/logo.png" alt="SIOMAC LTD." onerror="this.style.display='none'">
         </div>
-        <div class="form-group form-check-row">
-          <input type="checkbox" id="rememberMe">
-          <label for="rememberMe" id="rememberMeLabel" style="font-weight:500; font-size:14px; color:#555;">Remember Me</label>
+
+        <div class="login-form-title">
+          <h3 id="loginTitle">Access Portal</h3>
+          <p id="loginSubtitle">Sign in with your corporate credentials</p>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; padding:13px;" id="loginBtn">
-          <i class="fas fa-sign-in-alt"></i> <span id="loginButton">Log In</span>
-        </button>
-      </form>
+
+        <form id="loginForm" novalidate>
+          <div class="login-input-group">
+            <input type="text" id="username" placeholder="Employee ID / Username" autocomplete="username" required>
+            <div class="login-invalid" id="usernameError">Please enter a valid username</div>
+          </div>
+          <div class="login-input-group">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+            <div class="login-invalid" id="passwordError">Please enter your password</div>
+          </div>
+
+          <div class="login-options-row">
+            <label class="login-remember">
+              <input type="checkbox" id="rememberMe">
+              <span id="rememberMeLabel">Remember me</span>
+            </label>
+          </div>
+
+          <button type="submit" id="loginBtn" class="login-cta-btn">
+            <span id="loginButton">Sign in to Dashboard</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+
+          <div class="login-security-note">
+            <i class="fas fa-fingerprint"></i>
+            <span>Encrypted access · SIOMAC internal systems</span>
+            <i class="fas fa-shield-alt"></i>
+          </div>
+        </form>
+      </div>
+
     </div>
   </div>
 
