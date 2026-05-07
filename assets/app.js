@@ -3231,10 +3231,16 @@ const AttendanceSystem = (function() {
 })();
 
 // Initialize after index.html has loaded the app shell partial.
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
+function _safeInit() {
+  try {
     AttendanceSystem.init();
-  });
+  } catch (e) {
+    console.error('AttendanceSystem.init() threw:', e);
+    throw e; // re-throw so window.onerror can display it
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _safeInit);
 } else {
-  AttendanceSystem.init();
+  _safeInit();
 }

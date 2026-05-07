@@ -54,6 +54,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
   <script>
+    // Global error catcher — surfaces any JS crash as a visible banner
+    window.addEventListener('error', function (e) {
+      console.error('GLOBAL ERROR:', e.message, 'at', e.filename, e.lineno, e.colno, e.error);
+      var banner = document.getElementById('_errBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = '_errBanner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b00020;color:#fff;padding:10px 16px;font-family:monospace;font-size:13px;white-space:pre-wrap;';
+        document.body.appendChild(banner);
+      }
+      banner.textContent = (banner.textContent ? banner.textContent + '\n' : '') +
+        'JS ERROR: ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')';
+      document.body.style.visibility = '';
+    });
+
     (function () {
       function loadScripts(paths) {
         return paths.reduce(function (chain, src) {
@@ -80,7 +95,7 @@
         })
         .catch(function (err) {
           document.body.style.visibility = '';
-          document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;">Failed to load application shell.</div>';
+          document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;"><strong>Startup error:</strong> ' + err.message + '</div>';
           console.error(err);
         });
     })();
