@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<!--
+  Developed by Mohammad Rameez Imdad (Rameez Scripts)
+  WhatsApp: https://wa.me/923224083545 (For Custom Projects)
+  YouTube: https://www.youtube.com/@rameezimdad (Subscribe for more!)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>5 Prompts — Build a Multi-Role Attendance Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy-primary: #001f3f;
+      --navy-dark: #001529;
+      --navy-light: #003366;
+      --navy-accent: #0074D9;
+      --navy-hover: #002a52;
+      --success: #34a853;
+      --warning: #fbbc04;
+      --danger: #ea4335;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; color: #222; line-height: 1.55; padding: 40px 20px 80px; }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+
+    .hero { background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-light) 100%); color: #fff; padding: 36px 32px; border-radius: 3px; margin-bottom: 28px; box-shadow: 0 6px 22px rgba(0,31,63,.18); }
+    .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.3px; }
+    .hero p { font-size: 14px; opacity: .92; max-width: 720px; }
+    .hero .stack { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .stack-tag { font-size: 11px; padding: 4px 10px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 3px; font-weight: 500; letter-spacing: .3px; text-transform: uppercase; }
+
+    .legend { background: #fff; border-left: 3px solid var(--navy-accent); padding: 14px 18px; margin-bottom: 28px; border-radius: 0 3px 3px 0; box-shadow: 0 2px 6px rgba(0,0,0,.06); font-size: 13px; color: #555; }
+    .legend strong { color: var(--navy-primary); }
+
+    .card { background: #fff; border-radius: 3px; padding: 0; margin-bottom: 22px; box-shadow: 0 2px 8px rgba(0,0,0,.08); overflow: hidden; }
+    .card-head { display: flex; align-items: center; gap: 16px; padding: 18px 22px; background: linear-gradient(90deg, #f8f9fa 0%, #fff 100%); border-bottom: 1px solid #ececec; }
+    .card-num { flex-shrink: 0; width: 44px; height: 44px; background: var(--navy-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; border-radius: 3px; }
+    .card-head .titlebox { flex: 1; min-width: 0; }
+    .card-head h2 { font-size: 17px; color: var(--navy-primary); font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+    .card-head .meta { font-size: 12px; color: #777; }
+    .card-head .meta span { display: inline-block; padding: 2px 8px; background: #f0f0f0; border-radius: 3px; margin-right: 6px; }
+    .copy-btn { flex-shrink: 0; background: var(--navy-accent); color: #fff; border: none; padding: 9px 16px; border-radius: 3px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background .2s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+    .copy-btn:hover { background: var(--navy-primary); }
+    .copy-btn.copied { background: var(--success); }
+
+    .card-body { padding: 0; }
+    .prompt { padding: 22px 24px; font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 12.5px; line-height: 1.65; white-space: pre-wrap; word-wrap: break-word; color: #2a2a2a; background: #fafafa; border: none; max-height: 520px; overflow-y: auto; }
+    .prompt::-webkit-scrollbar { width: 8px; }
+    .prompt::-webkit-scrollbar-thumb { background: #cdd2d8; border-radius: 4px; }
+
+    .toggle-bar { display: flex; gap: 8px; align-items: center; padding: 10px 22px; background: #fff; border-top: 1px solid #eee; font-size: 12px; color: #777; }
+    .toggle-bar .grow { flex: 1; }
+    .toggle-bar button { background: transparent; border: 1px solid #d8dde4; padding: 5px 12px; border-radius: 3px; cursor: pointer; color: #555; font-weight: 500; font-family: inherit; font-size: 12px; }
+    .toggle-bar button:hover { background: #f0f3f6; }
+
+    footer { text-align: center; color: #777; font-size: 12px; padding-top: 32px; border-top: 1px solid #ddd; }
+    footer a { color: var(--navy-accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      body { padding: 18px 12px 50px; }
+      .hero { padding: 22px 18px; }
+      .card-head { flex-wrap: wrap; padding: 14px 16px; gap: 10px; }
+      .copy-btn { width: 100%; justify-content: center; }
+      .prompt { padding: 18px 16px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1><i class="fas fa-bolt"></i> 5 Prompts to Build a Multi-Role Attendance Dashboard</h1>
+      <p>Run these in order with any capable AI assistant or hand them to a developer. Each prompt produces a working slice — after Prompt 1 you can log in, after Prompt 5 the app is fully polished.</p>
+      <div class="stack">
+        <span class="stack-tag">Apps Script</span>
+        <span class="stack-tag">External Hosting</span>
+        <span class="stack-tag">Vanilla JS (no React)</span>
+        <span class="stack-tag">Bootstrap 5</span>
+        <span class="stack-tag">DataTables 1.13.7</span>
+        <span class="stack-tag">Chart.js + Leaflet</span>
+      </div>
+    </div>
+
+    <div class="legend">
+      <strong>How to use:</strong> click <em>Copy</em> on a prompt, paste it into Claude / ChatGPT / Cursor, and ship the slice it returns. Run them sequentially — each prompt assumes the previous one is in place. Total build time on a fast model: roughly 6–10 hours.
+    </div>
+
+    <!-- ─────────────────────── PROMPT 1 ─────────────────────── -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">1</div>
+        <div class="titlebox">
+          <h2>Foundation — Apps Script backend, login, sidebar shell, custom popup</h2>
+          <div class="meta"><span>~ 2 hrs</span><span>Code.gs + index.html</span><span>No prerequisites</span></div>
+        </div>
+        <button class="copy-btn" data-target="p1"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="card-body">
+        <pre class="prompt" id="p1">Build the foundation of a multi-role employee attendance dashboard.
+
+STACK
+- Backend: Google Apps Script as a Web App (anonymous access). NOT bound to a Sheet — it programmatically creates one on first setup() run.
+- Frontend: a single static index.html, deployable to Hostinger / Netlify / any static host. NO Apps Script template tags — plain HTML/CSS/JS.
+- Vanilla JavaScript only. NO React, NO Vue, NO frameworks.
+- CDNs: Bootstrap 5.3.2, Font Awesome 6.5.1, DataTables 1.13.7 + Buttons + Responsive (with bs5 styling), jQuery 3.7.1 (DataTables dep), Chart.js, Leaflet 1.9.4, jszip + pdfmake (DataTables export). NO SweetAlert2 — we will build our own popup.
+
+FILES
+1. Code.gs — Apps Script backend
+2. index.html — single-page frontend
+
+BACKEND (Code.gs)
+
+Schema — 7 sheets in one spreadsheet, created by setup():
+  Users:        id, username, password, fullName, role, departmentId, position, status, createdAt, updatedAt, colorScheme, layoutMode
+  Departments:  id, name, description, managerId, createdAt, updatedAt
+  ProjectSites: id, name, address, latitude, longitude, radius, description, createdAt, updatedAt
+  Attendance:   id, userId, username, date, checkInTime, checkOutTime, checkInLat, checkInLng, checkInAccuracy, checkInPhotoUrl, checkInSiteId, checkInDistanceM, checkOutLat, checkOutLng, checkOutAccuracy, checkOutPhotoUrl, checkOutSiteId, checkOutDistanceM, totalHours, status, notes
+  LeaveRequests: id, userId, username, departmentId, type, fromDate, toDate, days, reason, status, reviewedBy, reviewedAt, reviewNotes, appliedAt
+  ActivityLogs: id, timestamp, userId, username, action, entity, entityId, details
+  Settings:     key, value, updatedAt
+
+Routing:
+  doPost(e) parses JSON body { action, args }. Look up action in a ROUTES map → call handler. Reads return { success: true, data: <value> }; writes return { success: true, ... } or { success: false, message }. Use ContentService.createTextOutput(JSON.stringify(...)).setMimeType(JSON). Frontend uses Content-Type: text/plain;charset=utf-8 to skip CORS preflight.
+
+Auth:
+  Plain-text passwords (Apps Script demo simplicity). login(username, password) returns { success, userId, username, fullName, role, departmentId, position, colorScheme, layoutMode }. logout() logs to ActivityLogs. No session tokens — frontend trust model.
+
+setup():
+  Idempotent. Creates spreadsheet if missing, ensures all 7 sheets exist with header rows, seeds Settings (companyName, lateThresholdHHMM='09:15', maxDistanceM='200', etc.) and 3 default users:
+    admin / admin123       (role: admin)
+    manager1 / manager123  (role: manager, dept: DEPT-001)
+    employee1 / emp123     (role: employee, dept: DEPT-001)
+
+Activity log helper log_(userId, username, action, entity, entityId, details) — used everywhere mutations succeed.
+
+FRONTEND (index.html)
+
+Single-page app. Login screen → app shell.
+
+Login:
+  Logo (configurable URL), Username, Password, Remember Me checkbox. fetch POST → login. On success: store session in localStorage (1-hour TTL: { ...payload, expiresAt: Date.now() + 3600000 }). On page load, auto-restore valid session (skip login). Auto-logout at expiry; toast warning at the 5-min mark.
+
+App shell:
+  Sidebar (left, 264px) — brand block + circular avatar with initial + name + role badge + nav menu + session countdown widget + logout button.
+  Main content (right) — page header with section title + ISO clock; below it, a stack of <section class="app-section"> blocks (one per page), only the .active one displayed.
+  Mobile: sidebar becomes a fixed drawer (translateX(-100%) → 0 on open) with backdrop. Hamburger button in page header.
+
+Role-based nav (built dynamically from a SECTION_DEFS map):
+  employee: Attendance, My History, My Leaves
+  manager:  Overview, My Team, Live Map, Leave Requests
+  admin:    Dashboard, Employees, Departments, Project Sites, Live Map, Attendance, Leaves
+  shared:   My Profile, Settings, About (appended to every role)
+
+Theme:
+  Navy Blue — primary #001f3f, accent #0074D9. All buttons border-radius 3px (FLAT, never curved). Section cards = white background, 3px corners, subtle shadow. Inputs font-size ≥16px (prevents iOS zoom).
+
+Custom popup (cpop) — built from scratch, NO SweetAlert2:
+  cpop.fire(opts) returns Promise<{ isConfirmed, isDismissed, isDenied, value }>.
+  opts: icon ('success'|'error'|'warning'|'info'|'question'), title, text, html, timer, timerProgressBar, toast, position ('top-end' default), showCancelButton, showConfirmButton, confirmButtonText, cancelButtonText, allowOutsideClick, didOpen, loading.
+  Animated SVG icons (success = check stroke-dasharray reveal, error = two diagonal strokes, warning = triangle with bang, info = i circle, question = ? circle).
+  Modal + toast + loading variants share DOM; ESC closes; Enter confirms; backdrop closes (unless loading or allowOutsideClick:false).
+  Mobile (≤480px): column-reversed buttons, full-width.
+  cpop.close() and cpop.showLoading() helpers.
+  Add window.Swal = cpop shim so any future Swal.fire(...) call works without changes.
+
+DataTables CDNs imported in &lt;head&gt; (CSS) + before main &lt;script&gt; (JS, after jQuery). Define an initDataTable(tableId, opts) helper now, even if no tables use it yet:
+  pageLength: 10, lengthMenu [10/25/50/100/All], responsive: true, autoWidth: false, order: []
+  dom: "&lt;'dt-toolbar'&lt;'dt-btns'B&gt;&lt;'dt-search'f&gt;&gt;rt&lt;'dt-foot'&lt;'dt-len'l&gt;&lt;'dt-info'i&gt;&lt;'dt-page'p&gt;&gt;"
+  buttons: CSV / PDF / Print (FA icons, btn-sm classes), exportOptions skips columns with class "dt-no-export".
+  Navy-themed pagination overrides.
+  On mobile, undo any "stack-to-cards" tbody styling for .dataTables_wrapper tables so DataTables Responsive's column-collapse takes over.
+
+ACCEPTANCE
+- Open Apps Script editor, paste Code.gs, run setup() once → spreadsheet appears with 7 sheets and 3 seed users. Approve Sheets + Drive scopes.
+- Deploy as Web App (Execute as: Me, Who has access: Anyone, Anonymous). Copy /exec URL into index.html const API.
+- Open index.html in a browser. Login as admin/admin123 → app shell appears with admin sidebar.
+- Click any sidebar item → matching section shows with fade-in. Other sections hidden.
+- Click sidebar collapse chevron → width shrinks to 70px, only icons visible.
+- Refresh page within 1 hour of login → auto-restored, no re-login required.
+- Wait 55 minutes → toast warns "Session Expiring". At 60 min → cpop info popup, redirected to login.
+- Type cpop.fire({ icon: 'success', title: 'Hello' }) in the console → custom popup appears (verify NO SweetAlert script is loaded).
+</pre>
+        <div class="toggle-bar">
+          <span class="grow">Slice 1 / 5 — produces a runnable shell. After this you have auth, role-based nav, and a working popup module.</span>
+          <button onclick="document.getElementById('p1').scrollTo(0,0)">Top</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────── PROMPT 2 ─────────────────────── -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">2</div>
+        <div class="titlebox">
+          <h2>Attendance Core — selfie + GPS check-in/out, history, live map</h2>
+          <div class="meta"><span>~ 2 hrs</span><span>Builds on Prompt 1</span><span>Drive scopes required</span></div>
+        </div>
+        <button class="copy-btn" data-target="p2"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="card-body">
+        <pre class="prompt" id="p2">Build the attendance subsystem on top of the foundation from Prompt 1.
+
+NEW BACKEND
+
+markAttendance(payload) — payload: { username, action: 'CheckIn'|'CheckOut'|'Project', photoBase64, location: { latitude, longitude, accuracy } }.
+  - Validate: user must be active. action must be CheckIn / CheckOut / Project.
+  - haversine_(lat1, lng1, lat2, lng2): standard haversine formula, returns metres.
+  - nearestSite_(lat, lng): scans ProjectSites, returns { site, distance } for closest.
+  - savePhoto_(b64, username, action, dateStr): parse data URL or raw base64, save as blob to Drive folder "&lt;Brand&gt; Attendance Photos" (auto-create), set sharing ANYONE_WITH_LINK + VIEW, return https://lh3.google.com/u/0/d/&lt;fileId&gt; URL. On failure, log to ActivityLogs and return ''.
+  - CheckIn: upsert today's row, write checkInTime + lat/lng/accuracy/photo/site/distance. Status = 'late' if time &gt; settings.lateThresholdHHMM (default 09:15), else 'present'.
+  - CheckOut: must have checkInTime first. Compute totalHours = round((now - checkIn) / 3600000, 2). Write checkOutTime + matching cells.
+  - Use LockService (withLock_) for race-free row updates.
+  - Log every action.
+
+getMyStatus(username): returns { hasCheckedIn, hasCheckedOut, checkInTime, checkOutTime, location } for today.
+getMyHistory(username, days): last N days, sorted desc by date, with selfie URLs.
+getMyChart(username, year, month): { present, absent, sundays } for the given month.
+getLiveAttendance(scope): rows for everyone checked in but not out today. scope='all' for admin, 'dept' for manager (filter by their dept).
+
+Project Sites CRUD:
+  listProjectSites, addProjectSite, updateProjectSite, deleteProjectSite — all admin-gated where they mutate. Each site has lat/lng/radius.
+
+Default seed: 7 zones along a route (e.g. lat 26.68 → 26.72, lng 68.01 → 68.05) with radii 150–220m.
+
+NEW FRONTEND
+
+Employee Attendance section:
+  - Today's status card: large clock (HH:MM:SS, ISO date below). Status badge: Checked In (green) / Checked Out (grey) / Not Checked In (yellow).
+  - Two big primary buttons: "Check In with Selfie" and "Check Out with Selfie" (one hidden depending on status).
+  - Below: monthly summary doughnut chart (Chart.js) showing Present / Absent / Sundays.
+  - Below: 7-day attendance trend line chart.
+
+Camera modal (Bootstrap):
+  - getUserMedia({ video: { facingMode: 'user' } }), stream into &lt;video&gt; element.
+  - "Capture Photo" → drawImage video onto offscreen canvas → canvas.toDataURL('image/jpeg', 0.85) → preview.
+  - "Retake" / "Confirm" buttons.
+  - On confirm: call markAttendance with base64 + GPS location + action.
+  - On modal hidden, stop camera stream.
+
+Geolocation:
+  - On login (employee role), navigator.geolocation.watchPosition with enableHighAccuracy. Update userLocation { lat, lng, accuracy } continuously.
+  - getCurrentLocation() helper returns a Promise — falls back to last known if watch fails.
+  - Display "Location ready for attendance" with accuracy in meters in a small validation strip above the buttons.
+
+Live Map section (admin + manager):
+  - Leaflet map centered on settings.projectAreaCenter ("lat,lng"). Tile layer: OpenStreetMap.
+  - Render each ProjectSite as a colored circle (radius from setting in metres).
+  - Live employee markers — poll getLiveAttendance every 30s. Each checked-in employee gets a marker at their last lat/lng with a popup showing name + position + check-in time + nearest site.
+  - Side panel listing the same employees as cards; clicking a card pans + opens marker popup.
+
+My History (employee, DataTable):
+  - Columns: Date, Check In, In Selfie (32px circular thumbnail, click → full image new tab), Check Out, Out Selfie, Hours, Status badge.
+  - Selfie columns: orderable: false, searchable: false.
+  - Auto-refresh every 30s while section is active.
+
+ACCEPTANCE
+- Login as employee1 → Attendance section shows clock + "Not Checked In" badge.
+- Click "Check In with Selfie" → camera modal opens → take selfie → confirm → backend logs CheckIn, status flips to "Checked In" with current time. Selfie URL works in browser.
+- 8 hours later, click "Check Out" → totalHours computed correctly.
+- My History → today's row appears with both selfie thumbnails clickable.
+- Login as admin → Live Map → see employee1 marker at the GPS location captured during check-in. Click marker → popup shows name + check-in time.
+- Open setupDemoData() in Apps Script → seeds 14 days of past attendance for 6 employees (mix of present/late/absent + 80% checkouts). My History reflects the seed data.
+</pre>
+        <div class="toggle-bar">
+          <span class="grow">Slice 2 / 5 — employees can clock in/out with selfie + GPS, see history, admin sees the team on a map.</span>
+          <button onclick="document.getElementById('p2').scrollTo(0,0)">Top</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────── PROMPT 3 ─────────────────────── -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">3</div>
+        <div class="titlebox">
+          <h2>Leave Workflow + Admin CRUD — apply, approve, reject, A4 print</h2>
+          <div class="meta"><span>~ 2 hrs</span><span>Builds on Prompts 1 + 2</span><span>Adds RBAC enforcement</span></div>
+        </div>
+        <button class="copy-btn" data-target="p3"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="card-body">
+        <pre class="prompt" id="p3">Add the leave-management workflow and admin master-data CRUD on top of Prompts 1 + 2.
+
+NEW BACKEND
+
+Leave functions:
+  submitLeave({ username, type, fromDate, toDate, reason }) — infer userId + departmentId from username. days = round((toDate - fromDate) / 86400000) + 1, min 1. status = 'pending'. Append row, log.
+  getMyLeaves(username) — own rows, sorted desc by appliedAt.
+  listAllLeaves() — all rows, with employee.fullName joined.
+  getPendingLeavesForManager(managerUsername) — rows in manager's dept where status = 'pending'.
+  approveLeave(leaveId, reviewerId, reviewerUsername, notes) / rejectLeave(...) — set status + reviewedBy + reviewedAt + reviewNotes. Reject any non-pending leave with "Already &lt;status&gt;".
+  getLeaveById(leaveId, requesterUsername) — full detail joined with employee + department + reviewer (if any) + companyName + companyLogoUrl. Permission: admin all, manager own dept, employee own. Returns { id, employee:{username,fullName,position,department}, type, fromDate, toDate, days, reason, status, reviewedBy, reviewedAt, reviewNotes, appliedAt, companyName, companyLogoUrl }.
+  updateLeave({ id, type, fromDate, toDate, reason, ... }) — only when status='pending'; owner or admin only. Recompute days.
+  deleteLeave(leaveId, ...) — admin always; owner only when status='pending'.
+
+Employee CRUD:
+  addEmployee, updateEmployee, deleteEmployee — block deleting last admin (countAdmins_() &lt;= 1). password_min 6 chars.
+  listEmployees() — joined with today's attendance status (notchecked / checkedin / checkedout).
+  getEmployeeByUsername(username) — single user, password redacted.
+
+Department CRUD:
+  listDepartments — joined with employee count + manager.fullName.
+  addDepartment, updateDepartment, deleteDepartment.
+  listManagers() — users where role='manager'.
+
+NEW FRONTEND
+
+Leave Request modal (Bootstrap, dual-mode):
+  Fields: Type (select: Sick/Casual/Annual/Emergency/Other), From, To, Reason (textarea, required).
+  Default mode: title "Request Leave", submit calls submitLeave, success popup, table refresh.
+  Edit mode (entered via Edit icon on a pending leave): title flips to "Edit Leave Request", submit button to "Update Request", calls updateLeave instead. State held in _editingLeaveId variable. Reset on hidden.bs.modal.
+
+Admin Leaves table (DataTable, columnDefs: targets:-1 orderable+searchable false):
+  Columns: Employee, Type, From, To, Days, Status badge, Actions.
+  Action icons (.action-icon class):
+    Always: View 👁 (eye), Print 🖨 (print), Delete 🗑 (trash).
+    Pending only: Approve ✅ (check-circle, success color), Reject ❌ (times-circle, danger color), Edit ✎ (edit icon).
+
+View — opens an in-page custom modal (.leave-view-modal) showing the A4 leave doc with Print + Close buttons in a sticky toolbar.
+
+Print — opens a fresh window via window.open('', '_blank'), writes &lt;!DOCTYPE&gt;&lt;html&gt;&lt;head&gt;&lt;style&gt;[A4 doc CSS]&lt;/style&gt;&lt;/head&gt;&lt;body&gt;[doc HTML]&lt;/body&gt;&lt;/html&gt;, calls win.print() after 300ms. Cleanest path — no fight with the dashboard's print CSS.
+
+Approve / Reject — cpop.fire confirmation → backend → reload list. Implementation reloads loadLeaveApplications() if currentRole==='admin', else loadManagerLeaveApplications() + loadDepartmentData() if manager.
+
+Leave Application A4 doc — formal letter, Times New Roman, 12pt, justified body:
+  Header: company logo (from settings) + company name + "Leave Application" subtitle, double-line bottom border.
+  Date row + Application No.
+  "To, The HR Manager, &lt;Company&gt;"
+  "Subject: Application for &lt;Type&gt; Leave"
+  Body paragraph: "I, &lt;name&gt;, working as &lt;position&gt; in the &lt;department&gt; department, would like to request &lt;Type&gt; Leave from &lt;from&gt; to &lt;to&gt;, totaling &lt;days&gt; day(s)."
+  Reason paragraph.
+  Polite closing.
+  "Yours sincerely" + signature line + employee name + position + username.
+  "For HR / Manager Use Only" footer with bordered table (Status / Reviewed By / Date / Notes) + authorized signature line.
+
+Manager dashboard:
+  Stats grid: dept employees, present today, on leave, late today.
+  Pending leaves list with inline Approve/Reject buttons.
+  My Team table: name, position, today status badge, last activity time, location.
+
+Admin Departments + Project Sites pages — card grids (not tables). Each card: name + manager (depts) or coords + radius (sites) + employee count + Edit/Delete buttons.
+
+Add/Edit modals for all CRUD — use the same modal in dual mode (create / edit) like the leave one.
+
+ACCEPTANCE
+- Employee submits leave → row appears in admin Leaves with "Pending" badge.
+- Admin clicks ✅ → cpop confirm → status flips to Approved, the Approve/Reject/Edit icons disappear from that row.
+- Admin clicks 🖨 on any row → fresh window opens with formal letter, employee details pre-filled, native print dialog appears.
+- Admin clicks ✎ on a pending row → modal opens with values, change dates → updateLeave fires → table refreshes.
+- Admin clicks 🗑 on approved leave → backend rejects with "Cannot delete an approved/rejected leave" (only admin can override).
+- Manager logs in → only own-dept leaves appear; getLeaveById on another dept's leave returns "Not allowed".
+- Try to delete last admin → backend rejects.
+</pre>
+        <div class="toggle-bar">
+          <span class="grow">Slice 3 / 5 — full leave lifecycle, approval flow, A4 print, and admin master-data CRUD.</span>
+          <button onclick="document.getElementById('p3').scrollTo(0,0)">Top</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────── PROMPT 4 ─────────────────────── -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">4</div>
+        <div class="titlebox">
+          <h2>Hourly Rates + Payroll Engine — late penalty, leave fine, A4 statement, CSV import</h2>
+          <div class="meta"><span>~ 2 hrs</span><span>Builds on Prompts 1 – 3</span><span>Adds money math</span></div>
+        </div>
+        <button class="copy-btn" data-target="p4"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="card-body">
+        <pre class="prompt" id="p4">Add hourly rates, a payroll engine with deductions, and a printable A4 payroll statement on top of Prompts 1 – 3.
+
+SCHEMA
+
+Add `hourlyRate` column to Users via lazy migration: setHourlyRate_() creates the column header on first write so existing sheets upgrade transparently. Same pattern for any future columns.
+
+New Settings keys (all admin-editable): currency='Rs.', latePenaltyPerDay='0', leaveFinePerDay='0', companyName='Rameez Scripts'.
+
+NEW BACKEND
+
+updateHourlyRate({ username, rate, actorId, actorUsername }) — admin-only (verify actor.role === 'admin'). Clamp rate to ≥0. Log to ActivityLogs.
+
+listHourlyRates() — all non-admin active employees with current rate, sorted by name. Returns [{ username, fullName, role, department, position, hourlyRate }].
+
+bulkImportRates({ rows: [{ username, rate }, ...], actorId, actorUsername }) — admin-only. For each row, find user by username (case-insensitive), set rate. Returns { updated, skipped, total, skippedNames } so the UI can report.
+
+getPayrollEmployees({ requesterUsername }) — admin → all active non-admins; manager → own dept only; employee → forbidden.
+
+getPayroll({ username, year, month, requesterUsername }) — full payroll math:
+  Permission check (same scope as above).
+  Pull Attendance rows where userId matches and date is in [year-month-01, last-day-of-month].
+  For each row: { date, checkIn, checkOut, hours: r.totalHours, status, earnings: hours × rate }.
+  workingDaysInMonth_(y, mo) — count of days where weekday !== 0 (Sunday off).
+  presentDays = days where status in ('present','late').
+  lateDays = days where status === 'late'.
+  absentDays = max(0, workingDays - presentDays).
+  latePenalty = lateDays × settings.latePenaltyPerDay.
+  leaveFine = absentDays × settings.leaveFinePerDay.
+  grossEarnings = sum(earnings).
+  netEarnings = max(0, grossEarnings - latePenalty - leaveFine).
+  Return { employee:{ username, fullName, position, department, hourlyRate }, period:{ year, month, label, start, end }, days, totals:{ workingDays, presentDays, lateDays, absentDays, totalHours, grossEarnings, latePenaltyPerDay, latePenalty, leaveFinePerDay, leaveFine, netEarnings }, currency, companyName, generatedAt }.
+
+NEW FRONTEND
+
+Admin → Hourly Rates section (DataTable):
+  Columns: Name, Department, Position, Role badge, Hourly Rate (currency prefix + number input + dirty-class on edit), Save (per-row button).
+  data-order + data-search on the rate cell so DataTables sorts/searches numerically.
+  DataTable buttons toolbar: CSV, PDF, Print, Import CSV.
+  Export formatter overrides the rate column to pull the input's current value (so exports contain numbers, not HTML).
+  Action column has class "dt-no-export" so it's excluded from exports.
+
+CSV Import flow:
+  Click Import CSV → hidden &lt;input type="file"&gt; → FileReader.readAsText → custom RFC-4180-aware parser (handles quoted fields, escaped quotes, CRLF). Header aliases: user|username|emp|employee for username; rate|hourly|hourlyrate|hourly_rate|amount for rate.
+  cpop confirm with row count → bulkImportRates → success popup with updated/skipped counts.
+
+Admin + Manager → Payroll section (single section, scope auto-detects):
+  Form row: Employee dropdown (populated via getPayrollEmployees), Year, Month, Generate button, Print A4 button (disabled until generated).
+  Generate → calls getPayroll → renders A4 doc into a sibling div.
+
+Payroll A4 doc (Poppins font, 11.5px base):
+  Centered company header — logo + name + "Payroll Statement" + period label + start/end dates. Double-line bottom border.
+  3-row meta table: Employee/Position, Department/Hourly Rate, Username/Generated.
+  Days breakdown table — #, Date, Check In, Check Out, Hours (right), Status (center), Earnings (right). Footer row with totals.
+  Late rows highlighted soft yellow; missing-checkout rows soft red.
+  10-cell summary grid — Working Days · Present · Late · Absent · Total Hours · Hourly Rate · Gross · Late Penalty (red minus) · Leave Fine (red minus) · NET PAYABLE (white-on-black grand-total bar across full width).
+  Two signature lines at bottom: "Employee Signature" + "Authorized Signature".
+
+Print rules (@media print):
+  size A4, margin 10mm.
+  Hide sidebar, top tabs, page header, .no-print, sync indicator.
+  Active section's .active styling already shows it; non-active stay hidden.
+  Payroll-print container fills the page; doc shadow/margin removed in print.
+  page-break-inside: avoid on rows; thead/tfoot repeat across pages.
+
+Settings additions — admin-only "Company &amp; Payroll Settings" card (gated via .admin-only class toggled in applySession when currentRole==='admin'):
+  Inputs: Company Name (full row), Currency Symbol/Code, Late Penalty/Day, Leave Fine/Day.
+  Single Save button → batches 4 updateSetting calls in parallel.
+  After save, applyCompanyName() updates sidebar brand text + About header live without reload.
+
+login() now also returns companyName (from settings, default 'Rameez Scripts'). applySession sets it via applyCompanyName().
+
+ACCEPTANCE
+- Admin → Hourly Rates → set rate to 250 for Employee 1 → Save → toast confirms → cell border returns to normal.
+- Admin → Hourly Rates → Import CSV with header `username,rate` and 5 rows → cpop confirm → 5 updated, 0 skipped, list refreshes.
+- Admin → Settings → "Company &amp; Payroll Settings" card (only admin sees it) → set Late Penalty 100 + Leave Fine 200 + Currency Rs. + Company Name "Rameez Scripts" → Save.
+- Admin → Payroll → pick Employee 1 + October 2025 → Generate → A4 doc renders with day-by-day breakdown. With 22 working days, 18 present, 4 late, 4 absent, gross = totalHours × 250, latePenalty = 4 × 100 = 400, leaveFine = 4 × 200 = 800, net = max(0, gross - 1200).
+- Late rows yellow, missing-checkout rows red, NET PAYABLE in the black bar.
+- Click Print A4 → browser print dialog with proper A4 layout, no sidebar/header in the printed output, payroll-doc fills the page.
+- Manager logs in → Payroll → only own-dept employees in dropdown. Direct API call for another dept rejected.
+</pre>
+        <div class="toggle-bar">
+          <span class="grow">Slice 4 / 5 — full payroll engine with deductions, CSV bulk-import, and printable monthly statement.</span>
+          <button onclick="document.getElementById('p4').scrollTo(0,0)">Top</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────── PROMPT 5 ─────────────────────── -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-num">5</div>
+        <div class="titlebox">
+          <h2>Polish Layer — SWR cache, DataTables everywhere, profile, branding, mobile touch</h2>
+          <div class="meta"><span>~ 2 hrs</span><span>Builds on Prompts 1 – 4</span><span>Cross-cutting concerns</span></div>
+        </div>
+        <button class="copy-btn" data-target="p5"><i class="fas fa-copy"></i> Copy</button>
+      </div>
+      <div class="card-body">
+        <pre class="prompt" id="p5">Apply the polish layer on top of Prompts 1 – 4: SWR caching, DataTables on every list view, My Profile, branding upload, and mobile touch fixes.
+
+SWR-PATTERN CACHING (vanilla, no library)
+
+Build an `swr` IIFE module:
+  swr.fetch(key, fetcher, { ttl, force, onData(data, isStale, fromCache), onError }) — returns Promise&lt;data&gt;.
+    Behaviour: if cache has entry with age &lt; ttl, emit cached via microtask AND return Promise.resolve(cached) without revalidation. If stale: emit cached then fetch fresh in background, emit fresh on arrival. If miss: only fetch + emit.
+    In-flight dedupe — concurrent calls for the same key share one Promise.
+  swr.get / set / clear / clearByPrefix(pfx) / mutate(key, data) / on(key, cb) — direct cache + subscribe API.
+  swr.focusRevalidate(true) — installs a visibilitychange handler that marks subscribed keys stale on tab return.
+  Default TTL: 60 000 ms.
+
+apiSwr(action, args, opts) wrapper around fetch() to api endpoint:
+  Cache key = action + ':' + JSON.stringify(args || {}).
+  Hash-based render guard: maintain _swrLastHash Map; if fresh data === just-delivered cached data (by JSON hash), skip the onData callback so the table doesn't re-render and DataTables doesn't flicker.
+
+Wrap the existing api(action, args) function: if a successful response matches the regex /^(add|update|delete|bulk|upload|approve|reject|submit|setup|login|logout)/i, call swr.clear() to invalidate everything. Reads (list*/get*) flow through apiSwr.
+
+Capture-phase document click handler on [id^="refresh"] — clears the cache before bubble-phase loaders run, so explicit Refresh always fetches fresh.
+
+Convert these loaders to apiSwr (skip skeleton if cached, instant render, background revalidate):
+  loadEmployeeList, loadDepartments, loadProjectSites, loadAttendanceData, loadLeaveApplications, loadDepartmentEmployees, loadManagerLeaveApplications, loadHistoryInline, loadHourlyRates.
+
+Skip on purpose (real-time): getMyStatus, getLiveAttendance, syncData, getDashboardCharts, getMyChart, login.
+
+DATATABLES on every list view
+
+Apply initDataTable() (built in Prompt 1) to every list table. Each loader follows the pattern:
+  function loadX() {
+    if (!swr.get('listX:{}')) { destroyDataTable('xTable'); setSkel(...); }
+    apiSwr('listX', {}, { onData: res =&gt; displayX((res &amp;&amp; res.success &amp;&amp; res.data) || []) });
+  }
+Each display function ends with:
+  initDataTable('xTable', { columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }] });
+
+destroyDataTable(tableId) — safe teardown (checks isDataTable before destroying).
+
+MY PROFILE section (visible to every role)
+
+Add to COMMON_ITEMS: { id: 's-profile', label: 'My Profile', icon: 'fa-user-circle' }.
+
+Section layout (2-column grid):
+  Left: 160px circular profile photo (or initial fallback in navy gradient if none) + "Change Photo" button + hidden file input.
+  Right: read-only Username, editable Full Name, read-only Position, divider, "Change Password (optional)" block with Current Password + New Password fields. Single "Save Changes" button at bottom.
+
+Backend updateMyProfile({ username, fullName, profileImageBase64, oldPassword, newPassword }):
+  Lazy-add profileImage column to Users on first write.
+  If newPassword provided, require oldPassword and verify it matches stored password; require newPassword.length ≥ 6.
+  saveImageToFolder_(base64, name, '&lt;Brand&gt; Profile Photos') — same Drive helper pattern as savePhoto_.
+  Return { success, profileImage, fullName }.
+
+After save, frontend updates:
+  Sidebar avatar → swap initial for &lt;img&gt; with new profileImage URL.
+  Sidebar user name → currentFullName updated.
+  Password fields cleared.
+
+login() now also returns profileImage (from Users row). applySession swaps the avatar element accordingly.
+
+BRANDING (admin only)
+
+Settings → "Branding &amp; Logo" card (gated by .admin-only class):
+  140px circular logo preview + "Choose Logo" file picker + Save button.
+
+Backend uploadLogo({ base64, actorId, actorUsername }) — admin only:
+  saveImageToFolder_(base64, 'company_logo', '&lt;Brand&gt; Company Branding') → companyLogoUrl setting.
+  Returns { success, url }.
+
+applyCompanyLogo(url):
+  Swap login screen logo (#loginLogo) src.
+  Replace sidebar brand FA icon with an &lt;img class="sb-brand-img"&gt; element.
+
+login() now returns companyLogoUrl. applySession calls applyCompanyLogo on each login.
+
+MOBILE TOUCH TARGETS
+
+For .action-icon and .btn.btn-sm inside cells with data-label="Actions" or "Action", and inside any DataTables table:
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  -webkit-tap-highlight-color: rgba(0,116,217,.18);
+  touch-action: manipulation;
+  display: inline-flex; align-items: center; justify-content: center;
+Inner &lt;i&gt; icon: pointer-events: none; (so tap bubbles to the button).
+Action cell becomes flex-wrap: wrap; gap: 8px; so multiple buttons fit cleanly on narrow screens.
+
+ACCEPTANCE
+- Open Employees → first load shows skeleton then DataTable. Switch to another section, switch back → table renders INSTANTLY (no skeleton). Background revalidation happens silently.
+- Edit any employee → save → cache wiped → next visit to Employees fetches fresh.
+- Click Refresh on Employees → capture-phase wipes cache → skeleton + fresh fetch.
+- Tab away for 5+ minutes, return → next interaction with a converted loader pulls fresh data.
+- Identical fresh data after cache hit → no DataTables flicker.
+- All list views (employees, attendance, leaves, history, rates) show DataTables with CSV/PDF/Print buttons + search + paginated 10/page.
+- My Profile → upload photo, change name, set new password (verify current pwd) → save → sidebar avatar + name update live without reload.
+- Wrong current password → backend returns "Current password is incorrect".
+- Admin Settings → Branding → upload logo → instantly applied to sidebar brand and login screen.
+- Phone (≤768px wide): every Edit/Delete/Approve/Reject icon ≥44×44 px and reliably tappable.
+</pre>
+        <div class="toggle-bar">
+          <span class="grow">Slice 5 / 5 — every interaction feels fast, every list is searchable + exportable, branding + profile complete the product.</span>
+          <button onclick="document.getElementById('p5').scrollTo(0,0)">Top</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Generated for Rameez Scripts · five composable prompts that rebuild the full attendance dashboard from a blank Apps Script project.<br>
+      Run them sequentially, copy each one into your AI assistant, ship the slice, then move on.
+    </footer>
+  </div>
+
+  <script>
+    // Copy-button → clipboard
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.target;
+        const text = document.getElementById(id).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.innerHTML;
+          btn.classList.add('copied');
+          btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+          setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 1500);
+        }).catch(() => {
+          // fallback: select the text in the pre
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById(id));
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
