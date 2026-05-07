@@ -3705,8 +3705,11 @@ const AttendanceSystem = (function() {
   };
 })();
 
-// Initialize the system when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize after index.html has loaded the app shell partial.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    AttendanceSystem.init();
+  });
+} else {
   AttendanceSystem.init();
-});
-
+}
