@@ -72,6 +72,10 @@ async function setting(key, fallback = '') {
   return data ? data.value : fallback;
 }
 
+// Returns true when a profile_image value means "no photo":
+// null, empty string, or the '__removed__' sentinel written when user deletes their photo.
+function noPhoto(v) { return !v || v.trim() === '' || v === '__removed__'; }
+
 // Allowed MIME types and their canonical extensions
 const ALLOWED_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
@@ -185,9 +189,8 @@ async function login(args) {
   const passOk = await bcrypt.compare(password, u.password_hash);
   if (!passOk) return { success: false, message: 'Invalid username or password' };
   await log_(u, 'login', 'user', u.id, 'login ok');
-  const storedProfilePath = (u.profile_image && u.profile_image.trim()) ? u.profile_image : '';
   const [profileImage, companyLogoUrl, companyName] = await Promise.all([
-    storedProfilePath ? getSignedUrl('profile-photos', storedProfilePath) : Promise.resolve(''),
+    noPhoto(u.profile_image) ? Promise.resolve('') : getSignedUrl('profile-photos', u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company')
   ]);
@@ -533,9 +536,7 @@ async function getEmployeeByUsername(args, ctx) {
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return null;
-  // Treat null and '' identically — both mean "no photo"
-  const storedPath = (u.profile_image && u.profile_image.trim()) ? u.profile_image : '';
-  const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
+  const profileImage = noPhoto(u.profile_image) ? '' : await getSignedUrl('profile-photos', u.profile_image);
   return {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     departmentId: u.department_id || '', position: u.position || '', status: u.status,
@@ -765,7 +766,7 @@ async function getLiveAttendance(args, ctx) {
   const photoUrls = await Promise.all(filtered.map(a => Promise.all([
     getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
     getSignedUrl('attendance-photos', a.check_out_photo_url || ''),
-    a.user_id && userMap[a.user_id] ? getSignedUrl('profile-photos', userMap[a.user_id].profile_image || '') : Promise.resolve('')
+    (a.user_id && userMap[a.user_id] && !noPhoto(userMap[a.user_id].profile_image)) ? getSignedUrl('profile-photos', userMap[a.user_id].profile_image) : Promise.resolve('')
   ])));
   return filtered.map((a, i) => {
     const u = userMap[a.user_id] || {};
@@ -859,23 +860,16 @@ async function updateMyProfile(args, ctx) {
   }
   const removePhoto = args.removeProfileImage === true || args.removeProfileImage === 'true';
   if (removePhoto) {
-    // Clear profile_image via a dedicated update so the field definitely gets set to NULL.
-    // We do this separately because the Supabase JS client may silently drop null/'' values
-    // from a patch object when merged with other fields in some PostgREST versions.
-    const { error: clearErr } = await sb
-      .from('app_users')
-      .update({ profile_image: null, updated_at: new Date().toISOString() })
-      .eq('id', actor.id);
-    if (clearErr) { console.error('updateMyProfile clear photo error:', clearErr); return { success: false, message: clearErr.message }; }
-    // Confirm it actually cleared (PostgREST reads back the written row)
-    patch.profile_image = null;
+    // Write '__removed__' — a real non-null string the DB will always store.
+    // Null and empty string are silently dropped by Supabase JS .update() on nullable columns.
+    patch.profile_image = '__removed__';
   } else if (args.profileImageBase64) {
     patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   }
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name').single();
   if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
-  // Treat both null and '' as no photo — either way return empty string to frontend
-  const storedPath = (data.profile_image && data.profile_image.trim()) ? data.profile_image : '';
+  // '__removed__', null, and '' all mean "no photo"
+  const storedPath = noPhoto(data.profile_image) ? '' : data.profile_image;
   const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
   return { success: true, profileImage, fullName: data.full_name };
 }
