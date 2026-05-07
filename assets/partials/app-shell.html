@@ -108,14 +108,6 @@
             <span id="pageTitleText">Operations Dashboard</span>
           </h1>
         </div>
-        <div class="page-header-right">
-          <!-- Clock pill -->
-          <div class="header-meta">
-            <i class="fas fa-globe-americas"></i>
-            <span id="isoClock">--</span>
-            <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
-          </div>
-        </div>
       </div>
 
       <!-- ── Notification Modal ── -->
@@ -585,8 +577,6 @@
                   <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
                 </button>
               </div>
-              <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
-              <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
             </div>
           </div>
           <div class="ps-stats-row" style="margin-bottom:0;">
@@ -632,8 +622,20 @@
               <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
             </div>
           </div>
-          <!-- Hidden widgets restore bar — shown at bottom of panel when widgets are hidden -->
-          <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+          </div>
+          <!-- Below-stats bar: clock left, Edit Layout right -->
+          <div class="dash-overview-footer">
+            <div class="dash-overview-clock">
+              <i class="fas fa-globe-americas"></i>
+              <span id="isoClock2"></span>
+              <span class="dash-overview-secure"><i class="fas fa-shield-alt"></i> Secure</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+              <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
+              <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+            </div>
+          </div>
         </div>
 
         <!-- Single sortable widget grid -->
