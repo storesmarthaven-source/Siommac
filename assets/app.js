@@ -1901,7 +1901,11 @@ const AttendanceSystem = (function() {
       setSkel('employeesTableBody', skelTableRows(7, 5));
     }
     apiSwr('listEmployees', {}, {
-      onData: res => displayEmployeeList((res && res.success && res.data) || [])
+      onData: res => {
+        if (res && !res.success) { document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;">${res.message || 'Failed to load employees'}</td></tr>`; return; }
+        displayEmployeeList((res && res.success && res.data) || []);
+      },
+      onError: err => { document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;">Network error: ${err.message || 'Could not connect'}</td></tr>`; }
     });
   }
 
@@ -2077,10 +2081,12 @@ const AttendanceSystem = (function() {
     if (!swr.get('listDepartments:{}')) setSkel('departmentsContainer', skelCards(3));
     apiSwr('listDepartments', {}, {
       onData: res => {
+        if (res && !res.success) { document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;">${res.message || 'Failed to load departments'}</p>`; return; }
         const list = (res && res.success && res.data) || [];
         departments = list;
         displayDepartments(list);
-      }
+      },
+      onError: err => { document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;">Network error: ${err.message || 'Could not connect'}</p>`; }
     });
   }
 
@@ -2197,9 +2203,11 @@ const AttendanceSystem = (function() {
     if (!swr.get('listProjectSites:{}')) setSkel('projectsContainer', skelCards(3));
     apiSwr('listProjectSites', {}, {
       onData: res => {
+        if (res && !res.success) { document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;">${res.message || 'Failed to load project sites'}</p>`; return; }
         projectSites = (res && res.success && res.data) || [];
         displayProjectSites(projectSites);
-      }
+      },
+      onError: err => { document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;">Network error: ${err.message || 'Could not connect'}</p>`; }
     });
   }
 
@@ -2261,7 +2269,11 @@ const AttendanceSystem = (function() {
       setSkel('attendanceTableBody', skelTableRows(9, 5));
     }
     apiSwr('listAttendance', args, {
-      onData: res => displayAttendanceData((res && res.success && res.data) || [])
+      onData: res => {
+        if (res && !res.success) { document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;">${res.message || 'Failed to load attendance'}</td></tr>`; return; }
+        displayAttendanceData((res && res.success && res.data) || []);
+      },
+      onError: err => { document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;">Network error: ${err.message || 'Could not connect'}</td></tr>`; }
     });
   }
 
