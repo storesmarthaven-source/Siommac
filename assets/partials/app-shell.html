@@ -409,8 +409,28 @@
       <!-- Employee — Leave -->
       <section class="app-section" id="s-emp-leave" data-role="employee">
 
-        <!-- Stats row -->
+        <!-- Leave balance cards -->
         <div class="lv-stats-row">
+          <div class="lv-stat-card">
+            <div class="lv-stat-icon annual"><i class="fas fa-umbrella-beach"></i></div>
+            <div class="lv-stat-body"><div class="lv-stat-value" id="empBalAnnual">12</div><div class="lv-stat-label">Annual Leave</div></div>
+          </div>
+          <div class="lv-stat-card">
+            <div class="lv-stat-icon sick"><i class="fas fa-thermometer-half"></i></div>
+            <div class="lv-stat-body"><div class="lv-stat-value" id="empBalSick">8</div><div class="lv-stat-label">Sick Leave</div></div>
+          </div>
+          <div class="lv-stat-card">
+            <div class="lv-stat-icon casual"><i class="fas fa-coffee"></i></div>
+            <div class="lv-stat-body"><div class="lv-stat-value" id="empBalCasual">5</div><div class="lv-stat-label">Casual Leave</div></div>
+          </div>
+          <div class="lv-stat-card">
+            <div class="lv-stat-icon medical"><i class="fas fa-hospital-user"></i></div>
+            <div class="lv-stat-body"><div class="lv-stat-value" id="empBalMedical">10</div><div class="lv-stat-label">Medical Leave</div></div>
+          </div>
+        </div>
+
+        <!-- Request status stats -->
+        <div class="lv-stats-row lv-stats-row--sm">
           <div class="lv-stat-card">
             <div class="lv-stat-icon"><i class="fas fa-clock"></i></div>
             <div class="lv-stat-body"><div class="lv-stat-value" id="empLvPending">—</div><div class="lv-stat-label">Pending</div></div>
@@ -425,7 +445,7 @@
           </div>
           <div class="lv-stat-card">
             <div class="lv-stat-icon navy"><i class="fas fa-chart-line"></i></div>
-            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvTotal">—</div><div class="lv-stat-label">Total</div></div>
+            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvTotal">—</div><div class="lv-stat-label">Total Requests</div></div>
           </div>
         </div>
 

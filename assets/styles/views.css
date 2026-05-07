@@ -224,15 +224,30 @@
   border-radius: 28px; display: flex; align-items: center; justify-content: center;
 }
 .lv-stat-icon i { font-size: 26px; color: var(--siomac-red); }
-.lv-stat-icon.green { background: rgba(46,125,50,0.1); }
+.lv-stat-icon.green   { background: rgba(46,125,50,0.1); }
 .lv-stat-icon.green i { color: #2E7D32; }
-.lv-stat-icon.red { background: rgba(198,40,40,0.1); }
-.lv-stat-icon.red i { color: #C62828; }
-.lv-stat-icon.navy { background: rgba(27,45,85,0.1); }
-.lv-stat-icon.navy i { color: var(--siomac-navy); }
+.lv-stat-icon.red     { background: rgba(198,40,40,0.1); }
+.lv-stat-icon.red i   { color: #C62828; }
+.lv-stat-icon.navy    { background: rgba(27,45,85,0.1); }
+.lv-stat-icon.navy i  { color: var(--siomac-navy); }
+/* Leave balance icon colours */
+.lv-stat-icon.annual  { background: rgba(46,125,50,0.1); }
+.lv-stat-icon.annual i { color: #2E7D32; }
+.lv-stat-icon.sick    { background: rgba(198,40,40,0.1); }
+.lv-stat-icon.sick i  { color: #C62828; }
+.lv-stat-icon.casual  { background: rgba(21,101,192,0.1); }
+.lv-stat-icon.casual i { color: #1565C0; }
+.lv-stat-icon.medical { background: rgba(239,108,0,0.1); }
+.lv-stat-icon.medical i { color: #EF6C00; }
 .lv-stat-body { flex: 1; }
 .lv-stat-value { font-size: 1.9rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; }
 .lv-stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+/* Smaller second stats row */
+.lv-stats-row--sm { margin-top: -8px; margin-bottom: 16px; }
+.lv-stats-row--sm .lv-stat-card { padding: 14px 16px; }
+.lv-stats-row--sm .lv-stat-icon { width: 44px; height: 44px; border-radius: 22px; }
+.lv-stats-row--sm .lv-stat-icon i { font-size: 20px; }
+.lv-stats-row--sm .lv-stat-value { font-size: 1.5rem; }
 
 /* Filter bar */
 .lv-filters-bar {

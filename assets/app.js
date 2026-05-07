@@ -689,9 +689,14 @@ const AttendanceSystem = (function() {
   function refreshSection(id) {
     switch (id) {
       case 's-settings':
-        // Reset to first tab
-        document.querySelectorAll('.stg-tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
-        document.querySelectorAll('.stg-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+        // Default tab: Security & Privacy for employees/managers; Company for admins
+        document.querySelectorAll('.stg-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.stg-tab-pane').forEach(p => p.classList.remove('active'));
+        { const defaultTab = currentRole === 'admin' ? 'company' : 'security';
+          const defBtn = document.querySelector(`.stg-tab-btn[data-stg-tab="${defaultTab}"]`);
+          const defPane = document.getElementById('stg-' + defaultTab);
+          if (defBtn) defBtn.classList.add('active');
+          if (defPane) defPane.classList.add('active'); }
         renderPalettes(); renderLayouts(); loadAdminBrandingSettings();
         break;
       case 's-profile':
