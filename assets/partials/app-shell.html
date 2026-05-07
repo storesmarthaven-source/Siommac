@@ -593,13 +593,14 @@
             <i class="fas fa-search"></i>
             <input type="text" id="deptSearchInput" placeholder="Search departments…">
           </div>
-          <div class="dept-view-toggle">
-            <button class="dept-view-btn active" id="deptCardViewBtn" title="Card view"><i class="fas fa-th-large"></i></button>
-            <button class="dept-view-btn" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
+          <div class="emp-filter-actions">
+            <div class="dept-view-toggle">
+              <button class="dept-view-btn active" id="deptCardViewBtn" title="Card view"><i class="fas fa-th-large"></i></button>
+              <button class="dept-view-btn" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
+            </div>
+            <button id="addDepartmentBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Department</button>
+            <button id="refreshDepartmentsBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
-          <button id="addDepartmentBtn" class="btn btn-danger-primary">
-            <i class="fas fa-plus"></i> New Department
-          </button>
         </div>
 
         <!-- Cards grid (default) -->
@@ -625,16 +626,46 @@
 
       <!-- Admin — Project Sites CRUD -->
       <section class="app-section" id="s-adm-projects" data-role="admin">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-map-marked-alt"></i> Project Site Management</h2>
-            <div class="section-actions">
-              <button id="addProjectBtn" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> Add Project Site</button>
-              <button id="refreshProjectsBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
+
+        <!-- Stats row -->
+        <div class="ps-stats-row">
+          <div class="ps-stat-card">
+            <div class="ps-stat-icon"><i class="fas fa-hard-hat"></i></div>
+            <div class="ps-stat-value" id="psTotalSites">—</div>
+            <div class="ps-stat-label">Total Sites</div>
           </div>
-          <div class="dashboard-grid-3" id="projectsContainer" style="margin-bottom:0;"></div>
+          <div class="ps-stat-card">
+            <div class="ps-stat-icon"><i class="fas fa-map-pin"></i></div>
+            <div class="ps-stat-value" id="psActiveZones">—</div>
+            <div class="ps-stat-label">Active Geofences</div>
+          </div>
+          <div class="ps-stat-card">
+            <div class="ps-stat-icon"><i class="fas fa-users"></i></div>
+            <div class="ps-stat-value" id="psAssignedWorkers">—</div>
+            <div class="ps-stat-label">Assigned Workers</div>
+          </div>
+          <div class="ps-stat-card">
+            <div class="ps-stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="ps-stat-value" id="psSiteAttendance">—</div>
+            <div class="ps-stat-label">Site Attendance</div>
+          </div>
         </div>
+
+        <!-- Filters bar -->
+        <div class="ps-filters-bar">
+          <div class="ps-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="projectSearchInput" placeholder="Search by name, location…">
+          </div>
+          <div class="emp-filter-actions">
+            <button id="addProjectBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Project Site</button>
+            <button id="refreshProjectsBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+          </div>
+        </div>
+
+        <!-- Cards grid -->
+        <div class="ps-projects-grid" id="projectsContainer"></div>
+
       </section>
 
       <!-- Admin — Attendance Records -->
@@ -848,12 +879,8 @@
         <!-- success toast -->
         <div id="profileToast" class="profile-toast" style="display:none;"></div>
 
-        <!-- header -->
-        <div class="profile-page-header">
-          <div>
-            <h1 class="profile-page-title"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:8px;"></i> My Profile</h1>
-            <p class="profile-page-sub">Manage your personal information, photo, and security settings</p>
-          </div>
+        <!-- save button row -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
           <button class="btn btn-danger-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
         </div>
 
@@ -955,16 +982,10 @@
       <!-- Settings -->
       <section class="app-section" id="s-settings">
 
-        <!-- Page header -->
-        <div class="stg-page-header">
-          <div>
-            <h1 class="stg-page-title"><i class="fas fa-sliders-h"></i> Settings &amp; Preferences</h1>
-            <p class="stg-page-sub">Customize company branding, security, layout, notifications, and appearance</p>
-          </div>
-          <div class="stg-header-actions">
-            <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-undo-alt"></i> Reset to Defaults</button>
-            <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-save"></i> Save All Changes</button>
-          </div>
+        <!-- action buttons row -->
+        <div class="stg-header-actions" style="justify-content:flex-end;margin-bottom:18px;">
+          <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-undo-alt"></i> Reset to Defaults</button>
+          <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-save"></i> Save All Changes</button>
         </div>
 
         <!-- Tabs -->

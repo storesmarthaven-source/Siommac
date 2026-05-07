@@ -165,9 +165,10 @@ const AttendanceSystem = (function() {
       // Create map without setting a view yet — avoids flash to default center
       map = L.map('map', { center: defaultCenter, zoom: 11, zoomAnimation: false });
 
-      // OpenStreetMap tile layer — free, no API key, proper attribution
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+      // CartoDB Positron — clean light style matching design spec
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &amp; CartoDB',
+        subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
 
@@ -311,8 +312,6 @@ const AttendanceSystem = (function() {
   function renderLivePanel(rows) {
     const checkedIn  = rows.filter(r => !r.isCheckedOut).length;
     const late       = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
-    const checkedOut = rows.filter(r => r.isCheckedOut).length;
-    // on-site = has valid lat/lng coords
     const onSite     = rows.filter(r => (r.checkInLat || r.checkOutLat) != null).length;
 
     document.getElementById('liveActiveCount').textContent     = rows.length;
@@ -321,17 +320,22 @@ const AttendanceSystem = (function() {
     document.getElementById('liveOnSiteCount').textContent     = onSite;
 
     const sorted = rows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
-    const html = sorted.map(r => {
+
+    if (!sorted.length) {
+      document.getElementById('liveEmployeesList').innerHTML =
+        '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
+      return;
+    }
+
+    // Render initial letter avatars immediately — no flash waiting on images
+    const listEl = document.getElementById('liveEmployeesList');
+    listEl.innerHTML = sorted.map(r => {
       const initial   = (r.fullName || '?').charAt(0).toUpperCase();
-      const thumbSrc  = r.checkInPhotoUrl || r.profileImage || '';
-      const avatarInner = thumbSrc
-        ? `<img src="${thumbSrc}" alt="${initial}" onerror="this.style.display='none';this.parentElement.textContent='${initial}'">`
-        : initial;
-      const dotCls  = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
+      const dotCls    = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
       const statusTxt = r.isCheckedOut ? 'Checked Out' : (r.status === 'late' ? 'Late' : 'Checked In');
-      const meta = r.lastSeen ? `${statusTxt} · ${r.lastSeen}` : statusTxt;
+      const meta      = r.lastSeen ? `${statusTxt} · ${r.lastSeen}` : statusTxt;
       return `<div class="lm-emp-item" data-userid="${r.userId}">
-        <div class="lm-emp-avatar">${avatarInner}</div>
+        <div class="lm-emp-avatar" data-uid="${r.userId}">${escapeHtml(initial)}</div>
         <div class="lm-emp-info">
           <div class="lm-emp-name">${escapeHtml(r.fullName || '—')}</div>
           <div class="lm-emp-status"><span class="lm-dot ${dotCls}"></span> ${meta}</div>
@@ -340,8 +344,26 @@ const AttendanceSystem = (function() {
       </div>`;
     }).join('');
 
-    document.getElementById('liveEmployeesList').innerHTML = html ||
-      '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
+    // Preload each avatar image off-screen; swap in only when fully decoded — zero flash
+    sorted.forEach(r => {
+      const src = r.checkInPhotoUrl || r.profileImage || '';
+      if (!src) return;
+      const avatarEl = listEl.querySelector(`.lm-emp-avatar[data-uid="${r.userId}"]`);
+      if (!avatarEl) return;
+      const img = new Image();
+      img.onload = () => {
+        // image ready — replace letter with photo in one paint, no layout shift
+        avatarEl.textContent = '';
+        avatarEl.style.padding = '0';
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = (r.fullName || '?').charAt(0).toUpperCase();
+        el.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+        avatarEl.appendChild(el);
+      };
+      // onerror: keep the letter — no action needed
+      img.src = src;
+    });
   }
 
   function focusLiveEmployee(userId) {
@@ -617,6 +639,10 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
 
+    // hide global page-header on live map (it has its own controls row); show it everywhere else
+    const globalHeader = document.querySelector('.page-header');
+    if (globalHeader) globalHeader.style.display = id === 's-projectMap' ? 'none' : '';
+
     // page header title + subtitle
     const item = allSectionItems().find(x => x.id === id);
     if (item) {
@@ -864,6 +890,9 @@ const AttendanceSystem = (function() {
       // Attendance search / dept filter — client-side re-render
       if (event.target.matches('#attSearchInput') || event.target.matches('#attDeptFilter')) {
         _renderAttTable();
+      }
+      if (event.target.matches('#projectSearchInput')) {
+        displayProjectSites(projectSites);
       }
     });
 
@@ -2597,7 +2626,6 @@ const AttendanceSystem = (function() {
   function loadProjectSites() {
     setSkel('projectsContainer', skelCards(3));
     _rawApi('listProjectSites', {}).then(res => {
-      console.log('[loadProjectSites] API response:', JSON.stringify(res));
       if (!res || !res.success) {
         document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
         return;
@@ -2606,37 +2634,71 @@ const AttendanceSystem = (function() {
       swr.set('listProjectSites:{}', res);
       displayProjectSites(projectSites);
     }).catch(err => {
-      console.error('[loadProjectSites] catch:', err);
       document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
     });
   }
 
+  let _psMiniMaps = {}; // track leaflet instances to avoid double-init
+
   function displayProjectSites(sites) {
-    if (!sites.length) {
-      document.getElementById('projectsContainer').innerHTML = '<p style="color:#888;padding:16px;">No project sites yet. Click <strong>Add Project Site</strong> to create one.</p>';
+    // Update stats (workers + attendance are dummy — not in DB schema)
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setEl('psTotalSites',      sites.length);
+    setEl('psActiveZones',     sites.length); // all live sites are active
+    setEl('psAssignedWorkers', '—');          // dummy — not tracked in DB
+    setEl('psSiteAttendance',  '—');          // dummy — not tracked in DB
+
+    const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
+    const filtered = search
+      ? sites.filter(s => s.name.toLowerCase().includes(search) || (s.address || '').toLowerCase().includes(search))
+      : sites;
+
+    if (!filtered.length) {
+      document.getElementById('projectsContainer').innerHTML =
+        `<div class="ps-empty"><i class="fas fa-map-marked-alt"></i><p>No project sites found. Click <strong>Add Project Site</strong> to create one.</p></div>`;
       return;
     }
-    const html = sites.map(site => {
+
+    const html = filtered.map(site => {
       const lat = Number(site.latitude)  || 0;
       const lng = Number(site.longitude) || 0;
       const rad = Number(site.radius)    || 200;
-      return `<div class="project-zone">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; gap:8px;">
-          <div class="card-title">${escapeHtml(site.name)}</div>
-          <div class="department-actions">
-            <button class="action-icon edit-icon btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="action-icon delete-icon btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
+      return `<div class="ps-card">
+        <div class="ps-card-header">
+          <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
+          <div class="ps-card-actions">
+            <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
           </div>
         </div>
-        <p style="color:#666; font-size:13px; margin-bottom:10px;">${escapeHtml(site.description || '')}</p>
-        <div class="project-info">
-          <div><i class="fas fa-map-marker-alt" style="color:var(--navy-accent); width:18px;"></i> ${escapeHtml(site.address || '')}</div>
-          <div><i class="fas fa-crosshairs" style="color:var(--navy-accent); width:18px;"></i> ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
-          <div><i class="fas fa-ruler-combined" style="color:var(--navy-accent); width:18px;"></i> Radius: ${rad}m</div>
+        <div class="ps-card-body">
+          <div class="ps-detail-row"><i class="fas fa-location-dot"></i><span>${escapeHtml(site.address || '—')}</span></div>
+          <div class="ps-detail-row"><i class="fas fa-crosshairs"></i><span>${lat.toFixed(5)}, ${lng.toFixed(5)} · Radius: ${rad}m</span></div>
+          <div class="ps-detail-row"><i class="fas fa-align-left"></i><span>${escapeHtml(site.description || '—')}</span></div>
+          <div class="ps-mini-map" id="ps-map-${site.id}"></div>
         </div>
       </div>`;
     }).join('');
+
     document.getElementById('projectsContainer').innerHTML = html;
+
+    // Init mini-maps after render — destroy old instances first
+    filtered.forEach(site => {
+      const mapId = `ps-map-${site.id}`;
+      if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
+      setTimeout(() => {
+        const el = document.getElementById(mapId);
+        if (!el || el._leaflet_id) return;
+        const lat = Number(site.latitude) || 0;
+        const lng = Number(site.longitude) || 0;
+        const rad = Number(site.radius) || 200;
+        const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([lat, lng], 14);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
+        L.marker([lat, lng]).addTo(m);
+        L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
+        _psMiniMaps[mapId] = m;
+      }, 80);
+    });
   }
 
   function editProjectSite(id) {
