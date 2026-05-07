@@ -55,14 +55,25 @@
 
   <script>
     (function () {
-      function loadAppScript() {
-        var script = document.createElement('script');
-        script.src = 'assets/app.js';
-        document.body.appendChild(script);
+      function loadScripts(paths) {
+        return paths.reduce(function (chain, src) {
+          return chain.then(function () {
+            return new Promise(function (resolve, reject) {
+              var script = document.createElement('script');
+              script.src = src;
+              script.onload = resolve;
+              script.onerror = function () { reject(new Error('Could not load ' + src)); };
+              document.body.appendChild(script);
+            });
+          });
+        }, Promise.resolve());
       }
       fetch('assets/partials/app-shell.html')
         .then(function (res) { if (!res.ok) throw new Error('Could not load app shell'); return res.text(); })
-        .then(function (html) { document.getElementById('app-root').innerHTML = html; loadAppScript(); })
+        .then(function (html) {
+          document.getElementById('app-root').innerHTML = html;
+          return loadScripts(['assets/js/popup.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/app.js']);
+        })
         .catch(function (err) {
           document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;">Failed to load application shell.</div>';
           console.error(err);
