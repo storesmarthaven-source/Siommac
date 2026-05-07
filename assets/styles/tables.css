@@ -24,6 +24,7 @@
   background: var(--bg-subtle, #F8FAFE);
   color: var(--text-primary);
   font-family: inherit;
+  box-shadow: none !important;
 }
 .dataTables_wrapper .dataTables_filter input:focus {
   border-color: var(--siomac-red) !important;
@@ -35,11 +36,13 @@
   display: flex; align-items: center; gap: 8px;
 }
 
-/* ── Export / action buttons — ghost pill ── */
-.dataTables_wrapper .dt-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-
-.dataTables_wrapper .dt-button,
-.dataTables_wrapper .dt-buttons .dt-button {
+/* ── Export / action buttons — ghost pill ──
+   Targets Bootstrap classes that buttons.bootstrap5.js injects (.btn, .btn-secondary) */
+.dataTables_wrapper .dt-buttons .dt-button,
+.dataTables_wrapper .dt-buttons .dt-button.btn,
+.dataTables_wrapper .dt-buttons .dt-button.btn-secondary,
+.dataTables_wrapper .dt-buttons a.dt-button,
+.dataTables_wrapper .dt-buttons button.dt-button {
   display: inline-flex !important;
   align-items: center !important;
   gap: 7px !important;
@@ -57,17 +60,21 @@
   box-shadow: none !important;
   white-space: nowrap !important;
   line-height: 1 !important;
+  text-shadow: none !important;
 }
-.dataTables_wrapper .dt-button:hover,
-.dataTables_wrapper .dt-buttons .dt-button:hover {
+.dataTables_wrapper .dt-buttons .dt-button:hover,
+.dataTables_wrapper .dt-buttons .dt-button.btn:hover,
+.dataTables_wrapper .dt-buttons .dt-button.btn-secondary:hover,
+.dataTables_wrapper .dt-buttons .dt-button:focus,
+.dataTables_wrapper .dt-buttons .dt-button.active,
+.dataTables_wrapper .dt-buttons .dt-button:active {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
   transform: translateY(-1px) !important;
+  box-shadow: none !important;
   opacity: 1 !important;
-}
-.dataTables_wrapper .dt-button:active {
-  transform: translateY(0) !important;
+  outline: none !important;
 }
 
 /* ── Length select ── */
@@ -81,6 +88,7 @@
   color: var(--text-primary);
   cursor: pointer;
   appearance: auto;
+  box-shadow: none !important;
 }
 .dataTables_wrapper .dataTables_length label {
   display: flex; align-items: center; gap: 8px;
@@ -100,9 +108,12 @@
   color: var(--text-muted); font-size: 12px; padding-top: 0;
 }
 
-/* ── Pagination — fully pill ── */
+/* ── Pagination — fully pill, override Bootstrap's .page-link / .page-item ── */
 .dataTables_wrapper .dataTables_paginate { padding-top: 0; }
-.dataTables_wrapper .dataTables_paginate .paginate_button {
+
+.dataTables_wrapper .dataTables_paginate .paginate_button,
+.dataTables_wrapper .dataTables_paginate li > a.page-link,
+.dataTables_wrapper .dataTables_paginate .page-item .page-link {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -119,32 +130,53 @@
   cursor: pointer !important;
   transition: background .15s, color .15s, border-color .15s !important;
   line-height: 1 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
 }
+
+/* Active page */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+.dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
 }
-.dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+
+/* Hover (non-active, non-disabled) */
+.dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover,
+.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled) .page-link:hover {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
 }
+
+/* Disabled */
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link {
   opacity: .4 !important;
   cursor: default !important;
   background: var(--bg-card) !important;
   color: var(--text-muted) !important;
   border-color: var(--border) !important;
   transform: none !important;
+  pointer-events: none !important;
 }
+
+/* Previous / Next wider */
 .dataTables_wrapper .dataTables_paginate .paginate_button.previous,
 .dataTables_wrapper .dataTables_paginate .paginate_button.next {
   font-size: 11.5px !important;
   padding: 0 16px !important;
 }
+
+/* Flatten Bootstrap's <ul class="pagination"> wrapper */
+.dataTables_wrapper .dataTables_paginate ul.pagination {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin: 0; padding: 0; list-style: none;
+}
+.dataTables_wrapper .dataTables_paginate .page-item { margin: 0; }
 
 /* ── Table itself ── */
 .dataTables_wrapper table.dataTable { width: 100% !important; }
@@ -164,7 +196,6 @@
   .dataTables_wrapper table.dataTable tbody td { display: table-cell !important; padding: 9px 10px !important; border-bottom: 1px solid var(--border) !important; min-height: auto; }
   .dataTables_wrapper table.dataTable tbody td:before { content: '' !important; display: none !important; }
   .dataTables_wrapper table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before { display: inline-block !important; }
-  .dataTables_wrapper .dt-button,
   .dataTables_wrapper .dt-buttons .dt-button { padding: 7px 12px !important; font-size: 11.5px !important; }
   .dataTables_wrapper .dataTables_paginate .paginate_button { min-width: 34px !important; height: 34px !important; }
 }

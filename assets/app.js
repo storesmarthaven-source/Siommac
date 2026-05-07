@@ -2348,6 +2348,7 @@ const AttendanceSystem = (function() {
     destroyDataTable('employeesTable');
     document.getElementById('employeesTableBody').innerHTML = html;
     initDataTable('employeesTable', {
+      searching: false,
       columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
@@ -2973,6 +2974,7 @@ const AttendanceSystem = (function() {
     destroyDataTable('attendanceTable');
     document.getElementById('attendanceTableBody').innerHTML = html;
     initDataTable('attendanceTable', {
+      searching: false,
       columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
