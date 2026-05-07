@@ -260,12 +260,10 @@
 
 /* ── Icon button group ── */
 .hdr-icon-group {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--siomac-navy);
+  display: flex; align-items: center; gap: 6px;
+  background: transparent;
   border: none;
-  border-radius: 40px;
-  padding: 10px 16px;
-  box-shadow: 0 4px 12px rgba(27,45,85,0.25);
+  padding: 0;
   position: relative;
 }
 .hdr-icon-btn {
@@ -273,12 +271,12 @@
   width: 46px; height: 46px; border-radius: 50%;
   border: none; background: transparent;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #fff;
+  cursor: pointer; color: var(--siomac-navy);
   transition: background .18s, color .18s;
   font-size: 1.3rem;
 }
-.hdr-icon-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-.hdr-icon-btn.active { background: var(--siomac-red); color: #fff; }
+.hdr-icon-btn:hover { background: rgba(27,45,85,.08); color: var(--siomac-red); }
+.hdr-icon-btn.active { background: rgba(228,12,12,.1); color: var(--siomac-red); }
 
 /* Badge */
 .hdr-badge {

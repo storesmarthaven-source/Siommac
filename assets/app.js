@@ -2323,10 +2323,10 @@ const AttendanceSystem = (function() {
         const checkOut = row.checkOut ? fmtLocalTime(row.checkOut) : '—';
         return `<tr>
           <td><span class="rat-name">${escapeHtml(row.name)}</span></td>
-          <td><span class="rat-dept">${escapeHtml(row.department)}</span></td>
-          <td class="rat-time">${checkIn}</td>
-          <td class="rat-time">${checkOut}</td>
-          <td><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
+          <td style="text-align:center;"><span class="rat-dept">${escapeHtml(row.department)}</span></td>
+          <td class="rat-time" style="text-align:center;">${checkIn}</td>
+          <td class="rat-time" style="text-align:center;">${checkOut}</td>
+          <td style="text-align:center;"><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
         </tr>`;
       }).join('');
     }).catch(() => {
