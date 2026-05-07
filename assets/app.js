@@ -382,6 +382,14 @@ const AttendanceSystem = (function() {
     } catch (_) {}
   }
 
+  function updateStoredSession(patch) {
+    try {
+      const s = loadSession();
+      if (!s) return;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(Object.assign({}, s, patch || {})));
+    } catch (_) {}
+  }
+
   function loadSession() {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -1057,6 +1065,7 @@ const AttendanceSystem = (function() {
 
     // company name — sidebar brand + About header (set everywhere from Settings)
     applyCompanyName(result.companyName || 'Rameez Scripts');
+    refreshCompanySettings();
 
     // gate admin-only Settings cards (branding + payroll rules)
     document.querySelectorAll('.admin-only').forEach(el => {
@@ -3017,6 +3026,7 @@ const AttendanceSystem = (function() {
       if (!res.success) { btn.disabled = false; showPopup('error', 'Upload Failed', res.message); return; }
       _logoBase64 = '';
       applyCompanyLogo(res.url);
+      updateStoredSession({ companyLogoUrl: res.url || '' });
       showPopup('success', 'Logo Updated', 'Login + sidebar now show the new logo.');
     });
   }
@@ -3039,7 +3049,25 @@ const AttendanceSystem = (function() {
       if (failed) { showPopup('error', 'Save Failed', failed.message || 'Could not save'); return; }
       _payCurrency = cur;
       applyCompanyName(name); // live-update sidebar + About without reload
+      updateStoredSession({ companyName: name, currency: cur, latePenaltyPerDay: late, leaveFinePerDay: leaveF });
       showPopup('success', 'Settings Saved', name + ' · ' + cur + ' · Late: ' + late + ' · Leave fine: ' + leaveF);
+    });
+  }
+
+  function refreshCompanySettings() {
+    api('getSettings').then(res => {
+      const s = (res && res.success && res.data) || null;
+      if (!s) return;
+      if (s.companyName) applyCompanyName(s.companyName);
+      if (s.companyLogoUrl) applyCompanyLogo(s.companyLogoUrl);
+      if (s.currency) _payCurrency = s.currency;
+      updateStoredSession({
+        companyName: s.companyName || 'Rameez Scripts',
+        companyLogoUrl: s.companyLogoUrl || '',
+        currency: s.currency || 'Rs.',
+        latePenaltyPerDay: s.latePenaltyPerDay || '0',
+        leaveFinePerDay: s.leaveFinePerDay || '0'
+      });
     });
   }
 
