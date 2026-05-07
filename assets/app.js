@@ -4131,6 +4131,9 @@ const AttendanceSystem = (function() {
 
     // Load activity timeline
     _loadProfileActivity();
+
+    // Load dummy documents (employee only)
+    if (currentRole === 'employee') _loadProfileDocuments();
   }
 
   function _loadProfileActivity() {
@@ -4188,6 +4191,26 @@ const AttendanceSystem = (function() {
         </div>
       `).join('');
     });
+  }
+
+  function _loadProfileDocuments() {
+    const container = document.getElementById('profileDocList');
+    if (!container) return;
+    const docs = [
+      { icon: 'fa-file-pdf',  name: 'Employment Contract.pdf',       size: '1.2 MB' },
+      { icon: 'fa-id-card',   name: 'ID_Card_Scan.pdf',              size: '0.8 MB' },
+      { icon: 'fa-file-alt',  name: 'Performance_Review_2024.pdf',   size: '2.1 MB' },
+    ];
+    container.innerHTML = docs.map(d => `
+      <div class="ep-doc-item">
+        <div class="ep-doc-icon"><i class="fas ${d.icon}"></i></div>
+        <div class="ep-doc-body">
+          <div class="ep-doc-name">${d.name}</div>
+          <div class="ep-doc-size">${d.size}</div>
+        </div>
+        <button class="ep-doc-download"><i class="fas fa-download"></i> Download</button>
+      </div>
+    `).join('');
   }
 
   let _profileImageBase64 = '';
