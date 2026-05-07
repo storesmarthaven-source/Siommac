@@ -1336,13 +1336,24 @@ const AttendanceSystem = (function() {
     applyCompanyName(result.companyName || 'My Company');
     refreshCompanySettings();
 
-    // gate admin-only Settings cards (branding + payroll rules)
+    // gate admin-only Settings cards and tabs
     document.querySelectorAll('.admin-only').forEach(el => {
       el.style.display = currentRole === 'admin' ? '' : 'none';
     });
     document.querySelectorAll('.non-admin-only').forEach(el => {
       el.style.display = currentRole !== 'admin' ? '' : 'none';
     });
+    // For non-admins, activate the first visible settings tab (Security)
+    if (currentRole !== 'admin') {
+      document.querySelectorAll('.stg-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.stg-tab-pane').forEach(pane => pane.classList.remove('active'));
+      const firstVisible = document.querySelector('.stg-tab-btn:not(.admin-only)');
+      if (firstVisible) {
+        firstVisible.classList.add('active');
+        const pane = document.getElementById('stg-' + firstVisible.dataset.stgTab);
+        if (pane) pane.classList.add('active');
+      }
+    }
 
     // build per-role menu and open the default section (both renderers — CSS shows whichever layout is active)
     buildSidebar(currentRole);
@@ -1358,6 +1369,13 @@ const AttendanceSystem = (function() {
     if (currentRole === 'employee') {
       document.getElementById('userInitial').textContent = currentFullName.charAt(0).toUpperCase();
       document.getElementById('displayNameText').textContent = currentFullName;
+      // Role + department subtitle
+      const roleDept = document.getElementById('ea-role-dept');
+      if (roleDept) {
+        const pos  = result.position   || '';
+        const dept = result.department || '';
+        roleDept.textContent = pos && dept ? `${pos} · ${dept}` : pos || dept || '—';
+      }
       startLocationTracking();
       startDashboardRefresh();
     }
@@ -1451,21 +1469,21 @@ const AttendanceSystem = (function() {
     const statusBadge = document.getElementById('statusBadge');
     const checkInBtn  = document.getElementById('checkInBtn');
     const checkOutBtn = document.getElementById('checkOutBtn');
-    if (!statusBadge || !checkInBtn || !checkOutBtn) return; // employee section not in DOM
+    if (!statusBadge || !checkInBtn || !checkOutBtn) return;
 
     if (status.hasCheckedIn && !status.hasCheckedOut) {
       statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Checked In';
-      statusBadge.className = 'status-badge active';
+      statusBadge.className = 'ea-status-badge ea-status-in';
       checkInBtn.classList.add('hidden');
       checkOutBtn.classList.remove('hidden');
     } else if (status.hasCheckedIn && status.hasCheckedOut) {
       statusBadge.innerHTML = '<i class="fas fa-sign-out-alt"></i> Checked Out';
-      statusBadge.className = 'status-badge inactive';
+      statusBadge.className = 'ea-status-badge ea-status-out';
       checkInBtn.classList.add('hidden');
       checkOutBtn.classList.add('hidden');
     } else {
       statusBadge.innerHTML = '<i class="fas fa-clock"></i> Not Checked In';
-      statusBadge.className = 'status-badge inactive';
+      statusBadge.className = 'ea-status-badge ea-status-none';
       checkInBtn.classList.remove('hidden');
       checkOutBtn.classList.add('hidden');
     }
@@ -1473,6 +1491,20 @@ const AttendanceSystem = (function() {
     document.getElementById('checkInTime').textContent  = status.checkInTime  ? fmtLocalTime(status.checkInTime)  : '--:--';
     document.getElementById('checkOutTime').textContent = status.checkOutTime ? fmtLocalTime(status.checkOutTime) : '--:--';
     if (status.location) document.getElementById('currentLocation').textContent = status.location;
+
+    // Live hours counter while checked in
+    const hoursEl = document.getElementById('todayHoursDisplay');
+    if (hoursEl) {
+      if (status.hasCheckedIn && !status.hasCheckedOut && status.checkInTime) {
+        const diff = (Date.now() - new Date(status.checkInTime).getTime()) / 3600000;
+        hoursEl.textContent = Math.max(0, diff).toFixed(1) + ' hrs';
+      } else if (status.hasCheckedIn && status.checkInTime && status.checkOutTime) {
+        const diff = (new Date(status.checkOutTime).getTime() - new Date(status.checkInTime).getTime()) / 3600000;
+        hoursEl.textContent = Math.max(0, diff).toFixed(1) + ' hrs';
+      } else {
+        hoursEl.textContent = '0.0 hrs';
+      }
+    }
   }
 
   function openCameraModal(action) {
@@ -1738,9 +1770,15 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // small donut - capped via .chart-wrap canvas CSS (max-height 200px)
+  // Populate monthly summary cards + hidden donut chart
   function displayChart(stats) {
     SiomacCharts.displayAttendanceChart(stats);
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    set('empPresentDays', stats.present);
+    set('empLateDays',    stats.late ?? '—');
+    set('empAbsentDays',  stats.absent);
+    set('empSundayDays',  stats.sundays);
+    set('empTotalDays',   (stats.present ?? 0) + (stats.absent ?? 0));
   }
 
   // Admin dashboard charts (2x2)
@@ -1906,44 +1944,132 @@ const AttendanceSystem = (function() {
     SiomacCharts.displayTrendChart(records);
   }
 
+  // ─── Employee History ───
+  let _historyRawData = [];
+  let _historySearch  = '';
+  let _historyStatus  = 'all';
+
   function loadHistoryInline() {
-    const args = { username: currentUser, days: 20 };
+    const args = { username: currentUser, days: 30 };
     if (!swr.get('getMyHistory:' + JSON.stringify(args))) {
-      destroyDataTable('historyTable');
-      setSkel('historyTableBody', skelTableRows(7, 5));
+      setSkel('historyTableBody', skelTableRows(7, 8));
     }
     apiSwr('getMyHistory', args, {
-      onData: res => displayHistoryInline((res && res.success && res.data) || [])
+      onData: res => {
+        _historyRawData = (res && res.success && res.data) || [];
+        _renderHistoryPage();
+        _bindHistoryControls();
+      }
     });
   }
 
-  function displayHistoryInline(history) {
-    const photoTd = url => url
-      ? `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--navy-accent);" onerror="this.style.display='none'"></a>`
-      : '<span class="text-muted">—</span>';
+  function _bindHistoryControls() {
+    const search = document.getElementById('histSearchInput');
+    const filter = document.getElementById('histStatusFilter');
+    const reset  = document.getElementById('histResetBtn');
+    const exportBtn = document.getElementById('exportHistoryBtn');
+    if (search && !search._ehBound) {
+      search._ehBound = true;
+      search.addEventListener('input', e => { _historySearch = e.target.value; _renderHistoryPage(); });
+    }
+    if (filter && !filter._ehBound) {
+      filter._ehBound = true;
+      filter.addEventListener('change', e => { _historyStatus = e.target.value; _renderHistoryPage(); });
+    }
+    if (reset && !reset._ehBound) {
+      reset._ehBound = true;
+      reset.addEventListener('click', () => {
+        _historySearch = ''; _historyStatus = 'all';
+        if (search) search.value = '';
+        if (filter) filter.value = 'all';
+        _renderHistoryPage();
+      });
+    }
+    if (exportBtn && !exportBtn._ehBound) {
+      exportBtn._ehBound = true;
+      exportBtn.addEventListener('click', _exportHistoryCSV);
+    }
+  }
+
+  function _renderHistoryPage() {
+    let data = _historyRawData;
+
+    // Filter
+    if (_historySearch) {
+      const q = _historySearch.toLowerCase();
+      data = data.filter(r => (r.date || '').includes(q) ||
+        new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase().includes(q));
+    }
+    if (_historyStatus !== 'all') {
+      data = data.filter(r => (r.status || '').toLowerCase() === _historyStatus);
+    }
+
+    // Stats from full dataset (not filtered)
+    const all = _historyRawData;
+    const present = all.filter(r => r.status === 'present').length;
+    const late    = all.filter(r => r.status === 'late').length;
+    const withHours = all.filter(r => Number(r.hours) > 0);
+    const avg = withHours.length ? (withHours.reduce((s, r) => s + Number(r.hours), 0) / withHours.length).toFixed(1) : '—';
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setEl('histTotalDays',   all.length);
+    setEl('histPresentCount', present);
+    setEl('histLateCount',    late);
+    setEl('histAvgHours',     avg);
+
+    // Render rows
+    const photoThumb = (url, label) => url
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="eh-photo-thumb"><img src="${escapeHtml(url)}" alt="${label}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\' style=\\'color:var(--text-muted)\\'></i>'"></a>`
+      : `<span class="eh-photo-thumb" style="cursor:default"><i class="fas fa-camera-slash" style="color:var(--text-muted);font-size:13px;"></i></span>`;
+
     const statusBadge = s => {
-      const cls = s === 'late' ? 'inactive' : s === 'absent' ? 'inactive' : 'active';
-      const label = s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
-      return `<span class="status-badge ${cls}">${label}</span>`;
+      const cls = s === 'late' ? 'eh-status-late' : s === 'absent' ? 'eh-status-absent' : 'eh-status-present';
+      return `<span class="ea-status-badge ${cls}">${s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'}</span>`;
     };
 
-    const rows = history.slice(0, 20).map(rec => `
-      <tr>
-        <td data-label="Date"><strong>${rec.date}</strong></td>
-        <td data-label="Check In">${rec.checkIn || '--:--'}</td>
-        <td data-label="In Selfie">${photoTd(rec.checkInPhotoUrl)}</td>
-        <td data-label="Check Out">${rec.checkOut || '--:--'}</td>
-        <td data-label="Out Selfie">${photoTd(rec.checkOutPhotoUrl)}</td>
-        <td data-label="Hours">${rec.hours || 0}</td>
-        <td data-label="Status">${statusBadge(rec.status)}</td>
-      </tr>`).join('');
+    const rows = data.length ? data.map(rec => {
+      const dow = rec.date ? new Date(rec.date).toLocaleDateString('en-US', { weekday: 'short' }) : '—';
+      return `<tr>
+        <td><strong>${escapeHtml(rec.date || '—')}</strong></td>
+        <td style="color:var(--text-muted)">${dow}</td>
+        <td>${rec.checkIn  || '—'}</td>
+        <td>${rec.checkOut || '—'}</td>
+        <td>${rec.hours ? Number(rec.hours).toFixed(1) + 'h' : '—'}</td>
+        <td>${statusBadge(rec.status)}</td>
+        <td>${photoThumb(rec.checkInPhotoUrl,  'Check-in selfie')}</td>
+        <td>${photoThumb(rec.checkOutPhotoUrl, 'Check-out selfie')}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text-muted);">
+      <i class="fas fa-inbox" style="font-size:36px;opacity:.3;display:block;margin-bottom:10px;"></i>No attendance records found</td></tr>`;
 
+    destroyDataTable('historyTable');
     document.getElementById('historyTableBody').innerHTML = rows;
-    initDataTable('historyTable', {
-      columnDefs: [
-        { targets: [2, 4], orderable: false, searchable: false, className: 'text-center' }
-      ]
+    if (data.length) {
+      initDataTable('historyTable', {
+        columnDefs: [{ targets: [6, 7], orderable: false, searchable: false, className: 'text-center' }]
+      });
+    }
+  }
+
+  function _exportHistoryCSV() {
+    const data = _historyRawData;
+    if (!data.length) { showPopup('warning', 'No Data', 'No history to export.'); return; }
+    const rows = [['Date', 'Day', 'Check In', 'Check Out', 'Hours', 'Status']];
+    data.forEach(r => {
+      const dow = r.date ? new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
+      rows.push([r.date || '', dow, r.checkIn || '', r.checkOut || '', r.hours || 0, r.status || '']);
     });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `attendance_${currentUser}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function displayHistoryInline(history) {
+    _historyRawData = history;
+    _renderHistoryPage();
+    _bindHistoryControls();
   }
 
   function viewHistory() {

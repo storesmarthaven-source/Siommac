@@ -259,77 +259,108 @@
 
       <!-- Employee — Attendance home -->
       <section class="app-section" id="s-emp-attendance" data-role="employee">
-        <div class="dashboard-grid-2">
-          <div class="data-section text-center">
-            <div class="user-avatar"><span id="userInitial">U</span></div>
-            <h3 style="color: var(--navy-primary); margin-bottom:6px;"><span id="welcomeText">Welcome</span>, <span id="displayNameText">User</span>!</h3>
-            <div id="statusBadge" class="status-badge"></div>
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:22px;">
-              <button id="checkInBtn" class="btn btn-success btn-lg">
-                <i class="fas fa-camera"></i> <span id="checkInText">Check In with Selfie</span>
-              </button>
-              <button id="checkOutBtn" class="btn btn-danger btn-lg hidden">
-                <i class="fas fa-camera"></i> <span id="checkOutText">Check Out with Selfie</span>
-              </button>
-              <button id="viewHistoryBtn" class="btn btn-info">
-                <i class="fas fa-history"></i> <span id="viewHistoryText">View My History</span>
-              </button>
-            </div>
+
+        <!-- Welcome Card -->
+        <div class="ea-welcome-card">
+          <div class="user-avatar"><span id="userInitial">U</span></div>
+          <h2 id="displayNameText">User</h2>
+          <div class="ea-role-text" id="ea-role-dept">—</div>
+
+          <!-- Single action button -->
+          <button id="checkInBtn" class="ea-action-btn">
+            <i class="fas fa-camera"></i> <span id="checkInText">Check In</span>
+          </button>
+          <!-- Hidden until checked in -->
+          <button id="checkOutBtn" class="ea-action-btn ea-action-btn-out hidden">
+            <i class="fas fa-camera"></i> <span id="checkOutText">Check Out</span>
+          </button>
+
+          <div class="ea-status-wrapper">
+            <div id="statusBadge" class="ea-status-badge ea-status-none"><i class="fas fa-clock"></i> Not Checked In</div>
           </div>
+        </div>
 
-          <div>
-            <div class="data-section">
-              <div class="section-header">
-                <h2><i class="fas fa-clock"></i> <span id="todayStatusText">Today's Status</span></h2>
-              </div>
-              <div class="text-center" style="margin-bottom:14px;">
-                <div class="clock-display" id="currentTime">--:--:--</div>
-                <div class="iso-date" id="currentDate">---</div>
-              </div>
-              <div>
-                <div style="display:flex; align-items:center; gap:14px; padding:12px; border-bottom:1px solid #eee;">
-                  <i class="fas fa-sign-in-alt" style="color: var(--success); font-size:20px; width:24px;"></i>
-                  <div style="flex:1;">
-                    <div class="fw-bold" id="checkInTimeLabel">Check In Time</div>
-                    <div id="checkInTime" class="text-secondary">--:--:--</div>
-                  </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:14px; padding:12px; border-bottom:1px solid #eee;">
-                  <i class="fas fa-sign-out-alt" style="color: var(--danger); font-size:20px; width:24px;"></i>
-                  <div style="flex:1;">
-                    <div class="fw-bold" id="checkOutTimeLabel">Check Out Time</div>
-                    <div id="checkOutTime" class="text-secondary">--:--:--</div>
-                  </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:14px; padding:12px;">
-                  <i class="fas fa-map-marker-alt" style="color: var(--navy-accent); font-size:20px; width:24px;"></i>
-                  <div style="flex:1;">
-                    <div class="fw-bold" id="currentLocationLabel">Current Location</div>
-                    <div id="currentLocation" class="text-secondary">Getting location...</div>
-                    <div id="locationAccuracy" class="location-info"></div>
-                    <div id="locationAddress" class="location-info"></div>
-                  </div>
-                </div>
-              </div>
+        <!-- Today's Timeline -->
+        <div class="ea-today-card">
+          <div class="ea-section-title"><i class="fas fa-clock"></i> Today's Timeline</div>
+          <div class="ea-clock-display" id="currentTime">--:--:--</div>
+          <div class="iso-date" id="currentDate" style="text-align:center;margin-bottom:18px;"></div>
+          <div class="ea-info-grid">
+            <div class="ea-info-row">
+              <i class="fas fa-sign-in-alt" style="color:var(--success)"></i>
+              <span><strong id="checkInTimeLabel">Check In</strong><br><span id="checkInTime" style="color:var(--text-muted)">--:--</span></span>
             </div>
-
-            <div class="data-section">
-              <div class="section-header">
-                <h2><i class="fas fa-chart-pie"></i> <span id="monthlySummaryText">This Month's Summary</span></h2>
-              </div>
-              <div class="chart-pair">
-                <div class="chart-wrap">
-                  <h4 class="chart-title" id="chartTitleDist">Distribution</h4>
-                  <canvas id="attendanceChart"></canvas>
-                </div>
-                <div class="chart-wrap">
-                  <h4 class="chart-title" id="chartTitleTrend">Last 7 Days · Hours</h4>
-                  <canvas id="attendanceTrendChart"></canvas>
-                </div>
-              </div>
+            <div class="ea-info-row">
+              <i class="fas fa-sign-out-alt" style="color:var(--siomac-red)"></i>
+              <span><strong id="checkOutTimeLabel">Check Out</strong><br><span id="checkOutTime" style="color:var(--text-muted)">--:--</span></span>
+            </div>
+            <div class="ea-info-row">
+              <i class="fas fa-chart-line" style="color:var(--siomac-navy)"></i>
+              <span><strong>Hours Today</strong><br><span id="todayHoursDisplay" style="color:var(--text-muted)">0.0 hrs</span></span>
+            </div>
+            <div class="ea-info-row">
+              <i class="fas fa-map-marker-alt" style="color:var(--siomac-red)"></i>
+              <span><strong id="currentLocationLabel">Location</strong><br>
+                <span id="currentLocation" style="color:var(--text-muted)">Getting location...</span>
+                <span id="locationAccuracy" class="location-info"></span>
+                <span id="locationAddress" class="location-info"></span>
+              </span>
             </div>
           </div>
         </div>
+
+        <!-- Charts Row -->
+        <div class="ea-charts-row">
+          <!-- This Month's Summary -->
+          <div class="ea-chart-card">
+            <div class="ea-section-title"><i class="fas fa-calendar-alt"></i> <span id="monthlySummaryText">This Month's Summary</span></div>
+            <div class="ea-summary-grid">
+              <div class="ea-summary-stat">
+                <div class="ea-summary-icon" style="background:rgba(46,125,50,0.1)"><i class="fas fa-check-circle" style="color:#2E7D32"></i></div>
+                <div class="ea-summary-value" id="empPresentDays">—</div>
+                <div class="ea-summary-label">Present</div>
+              </div>
+              <div class="ea-summary-stat">
+                <div class="ea-summary-icon" style="background:rgba(255,183,18,0.1)"><i class="fas fa-clock" style="color:#c67c00"></i></div>
+                <div class="ea-summary-value" id="empLateDays">—</div>
+                <div class="ea-summary-label">Late</div>
+              </div>
+              <div class="ea-summary-stat">
+                <div class="ea-summary-icon" style="background:rgba(228,12,12,0.1)"><i class="fas fa-user-slash" style="color:var(--siomac-red)"></i></div>
+                <div class="ea-summary-value" id="empAbsentDays">—</div>
+                <div class="ea-summary-label">Absent</div>
+              </div>
+              <div class="ea-summary-stat">
+                <div class="ea-summary-icon" style="background:rgba(27,45,85,0.08)"><i class="fas fa-sun" style="color:var(--siomac-navy)"></i></div>
+                <div class="ea-summary-value" id="empSundayDays">—</div>
+                <div class="ea-summary-label">Sundays</div>
+              </div>
+            </div>
+            <div class="ea-total-days-bar">
+              <span style="font-size:0.72rem;opacity:0.8">Total Working Days (Mon–Sat)</span>
+              <span class="ea-total-days-value" id="empTotalDays">—</span>
+            </div>
+          </div>
+
+          <!-- Last 7 Days Hours bar chart -->
+          <div class="ea-chart-card">
+            <div class="ea-section-title"><i class="fas fa-chart-bar"></i> Last 7 Days · Hours Worked</div>
+            <div style="position:relative;height:200px;">
+              <canvas id="attendanceTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden: donut chart canvas kept for JS compatibility -->
+        <canvas id="attendanceChart" style="display:none;"></canvas>
+
+        <!-- View History link -->
+        <div style="text-align:center;margin-top:4px;">
+          <button id="viewHistoryBtn" class="btn btn-secondary btn-sm">
+            <i class="fas fa-history"></i> <span id="viewHistoryText">View My Full History</span>
+          </button>
+        </div>
+
       </section>
 
       <!-- Live Operations Map (admin/manager) -->
@@ -422,33 +453,81 @@
 
       </section>
 
-      <!-- Employee — My History (last 20, inline) -->
+      <!-- Employee — My History -->
       <section class="app-section" id="s-emp-history" data-role="employee">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-history"></i> <span id="myHistoryText">My Attendance History</span></h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;" id="historySubtitle">Last 20 records</span>
-              <button id="refreshHistoryBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> <span id="refreshHistoryText">Refresh</span></button>
-            </div>
+
+        <!-- Page header -->
+        <div class="eh-page-header">
+          <div>
+            <h1 class="eh-page-title"><i class="fas fa-history" style="color:var(--siomac-red);margin-right:8px;"></i><span id="myHistoryText">My Attendance History</span></h1>
+            <p class="eh-page-sub" id="historySubtitle">View your complete attendance records, check-ins, and selfies</p>
           </div>
-          <div style="overflow-x:auto;">
-            <table id="historyTable">
-              <thead>
-                <tr>
-                  <th id="histDateCol">Date</th>
-                  <th id="histInCol">Check In</th>
-                  <th id="histInPhotoCol">In Selfie</th>
-                  <th id="histOutCol">Check Out</th>
-                  <th id="histOutPhotoCol">Out Selfie</th>
-                  <th id="histHoursCol">Hours</th>
-                  <th id="histStatusCol">Status</th>
-                </tr>
-              </thead>
-              <tbody id="historyTableBody"></tbody>
-            </table>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="exportHistoryBtn" class="btn btn-secondary btn-sm"><i class="fas fa-download"></i> Export CSV</button>
+            <button id="refreshHistoryBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-sync-alt"></i> <span id="refreshHistoryText">Refresh</span></button>
           </div>
         </div>
+
+        <!-- Stat cards -->
+        <div class="eh-stats-row">
+          <div class="eh-stat-card">
+            <div class="eh-stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="eh-stat-value" id="histTotalDays">—</div>
+            <div class="eh-stat-label">Total Days</div>
+          </div>
+          <div class="eh-stat-card">
+            <div class="eh-stat-icon" style="background:rgba(46,125,50,0.1)"><i class="fas fa-user-check" style="color:#2E7D32"></i></div>
+            <div class="eh-stat-value" id="histPresentCount">—</div>
+            <div class="eh-stat-label">Present</div>
+          </div>
+          <div class="eh-stat-card">
+            <div class="eh-stat-icon" style="background:rgba(255,183,18,0.12)"><i class="fas fa-clock" style="color:#c67c00"></i></div>
+            <div class="eh-stat-value" id="histLateCount">—</div>
+            <div class="eh-stat-label">Late</div>
+          </div>
+          <div class="eh-stat-card">
+            <div class="eh-stat-icon" style="background:rgba(27,45,85,0.08)"><i class="fas fa-chart-line" style="color:var(--siomac-navy)"></i></div>
+            <div class="eh-stat-value" id="histAvgHours">—</div>
+            <div class="eh-stat-label">Avg Hours/Day</div>
+          </div>
+        </div>
+
+        <!-- Filters bar -->
+        <div class="eh-filters-bar">
+          <div class="eh-search-box">
+            <i class="fas fa-search" style="color:var(--text-muted)"></i>
+            <input type="text" id="histSearchInput" placeholder="Search by date or day…">
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <select id="histStatusFilter" class="eh-filter-select">
+              <option value="all">All Status</option>
+              <option value="present">Present</option>
+              <option value="late">Late</option>
+              <option value="absent">Absent</option>
+            </select>
+            <button id="histResetBtn" class="btn btn-secondary btn-sm"><i class="fas fa-undo-alt"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="eh-table-container">
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th id="histDateCol">Date</th>
+                <th>Day</th>
+                <th id="histInCol">Check In</th>
+                <th id="histOutCol">Check Out</th>
+                <th id="histHoursCol">Hours</th>
+                <th id="histStatusCol">Status</th>
+                <th id="histInPhotoCol">In Selfie</th>
+                <th id="histOutPhotoCol">Out Selfie</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+
       </section>
 
       <!-- Manager Dashboard -->
@@ -1330,10 +1409,10 @@
 
         <!-- Tabs -->
         <div class="stg-tabs">
-          <button class="stg-tab-btn active" data-stg-tab="company">Company &amp; Branding</button>
+          <button class="stg-tab-btn active admin-only" data-stg-tab="company">Company &amp; Branding</button>
           <button class="stg-tab-btn" data-stg-tab="security">Security &amp; Privacy</button>
           <button class="stg-tab-btn" data-stg-tab="layout">Layout &amp; Navigation</button>
-          <button class="stg-tab-btn" data-stg-tab="notifications">Notifications</button>
+          <button class="stg-tab-btn admin-only" data-stg-tab="notifications">Notifications</button>
           <button class="stg-tab-btn" data-stg-tab="appearance">Appearance</button>
         </div>
 

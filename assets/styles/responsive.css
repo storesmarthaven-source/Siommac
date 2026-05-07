@@ -34,6 +34,19 @@
   .clock-display { font-size: 26px; }
   .iso-date { font-size: 11px; }
 
+  /* Employee history page */
+  .eh-filters-bar { border-radius: var(--radius-md); flex-direction: column; align-items: stretch; }
+  .eh-search-box input { width: 100%; }
+  .eh-stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  /* Employee attendance page — stack on mobile */
+  .ea-charts-row { grid-template-columns: 1fr; gap: 14px; }
+  .ea-info-grid { grid-template-columns: 1fr; }
+  .ea-info-row:nth-child(even) { border-left: none; padding-left: 0; }
+  .ea-info-row:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .ea-info-row:last-child { border-bottom: none; }
+  .ea-clock-display { font-size: 1.7rem; }
+
   /* Stat cards — 2-col on phones */
   .dashboard-grid-2 { grid-template-columns: 1fr; gap: 10px; }
   .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
