@@ -2377,6 +2377,7 @@ const AttendanceSystem = (function() {
     const department = document.getElementById('newDepartment').value;
     const position = document.getElementById('newPosition').value.trim();
     const role = document.getElementById('newRole').value;
+    const employeeNumber = (document.getElementById('newEmployeeNumber').value || '').trim().toUpperCase() || undefined;
 
     if (!username || !password || !fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
@@ -2387,10 +2388,10 @@ const AttendanceSystem = (function() {
       return;
     }
     showSpinner('Adding employee...');
-    api('addEmployee', { username, password, fullName, department, position, role, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Employee Added', 'New employee has been added successfully.');
+        showPopup('success', 'Employee Added', `New employee added${res.employeeNumber ? ' as ' + res.employeeNumber : ''}.`);
         closeAddEmpModal();
         loadEmployeeList();
       } else {
@@ -2492,6 +2493,7 @@ const AttendanceSystem = (function() {
           <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
         </div>
         <div class="emp-card-body">
+          <div class="emp-detail-row"><i class="fas fa-id-card"></i><span style="font-family:monospace;font-size:12px;font-weight:600;color:var(--siomac-navy)">${escapeHtml(emp.employeeNumber || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>
           <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.position || '—')}</span></div>
@@ -2518,7 +2520,7 @@ const AttendanceSystem = (function() {
       const t = todayMap[emp.todayStatus] || todayMap.notchecked;
       const isActive = emp.status === 'Active';
       return `<tr>
-        <td>${i + 1}</td>
+        <td style="font-family:monospace;font-size:12px;font-weight:600;color:var(--siomac-navy);white-space:nowrap">${escapeHtml(emp.employeeNumber || '—')}</td>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="emp-table-avatar">${_empInitials(emp.fullName)}</div>
@@ -2560,6 +2562,7 @@ const AttendanceSystem = (function() {
       if (!empRes.success || !empRes.data) { showPopup('error', 'Not Found', 'Employee not found'); return; }
       const emp = empRes.data;
       document.getElementById('editUsername').value = emp.username;
+      document.getElementById('editEmployeeNumber').value = emp.employeeNumber || '';
       document.getElementById('editFullName').value = emp.fullName;
       document.getElementById('editPosition').value = emp.position || '';
       document.getElementById('editRole').value = emp.role;
@@ -2578,19 +2581,20 @@ const AttendanceSystem = (function() {
   }
 
   function updateEmployee() {
-    const username   = document.getElementById('editUsername').value;
-    const fullName   = document.getElementById('editFullName').value.trim();
-    const department = document.getElementById('editDepartment').value;
-    const position   = document.getElementById('editPosition').value.trim();
-    const role       = document.getElementById('editRole').value;
-    const status     = document.getElementById('editStatus').value;
+    const username       = document.getElementById('editUsername').value;
+    const fullName       = document.getElementById('editFullName').value.trim();
+    const department     = document.getElementById('editDepartment').value;
+    const position       = document.getElementById('editPosition').value.trim();
+    const role           = document.getElementById('editRole').value;
+    const status         = document.getElementById('editStatus').value;
+    const employeeNumber = (document.getElementById('editEmployeeNumber').value || '').trim().toUpperCase();
 
     if (!fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
       return;
     }
     showSpinner('Updating employee...');
-    api('updateEmployee', { username, fullName, department, position, role, status, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
         showPopup('success', 'Employee Updated', `${fullName} has been updated.`);

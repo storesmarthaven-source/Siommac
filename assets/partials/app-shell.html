@@ -777,7 +777,7 @@
             <table id="employeesTable">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th>Emp ID</th>
                   <th>Employee</th>
                   <th>Department</th>
                   <th>Position</th>
@@ -1620,6 +1620,10 @@
         <form id="addEmployeeForm" autocomplete="off">
           <div class="emp-form-grid">
             <div class="form-group">
+              <label class="form-label">Employee ID <span style="font-size:11px;color:var(--text-muted);font-weight:400">(auto-assigned)</span></label>
+              <input type="text" class="form-control" id="newEmployeeNumber" placeholder="e.g. EMP-0042" style="font-family:monospace;text-transform:uppercase">
+            </div>
+            <div class="form-group">
               <label class="form-label">Username *</label>
               <input type="text" class="form-control" id="newUsername" placeholder="e.g. john.doe" required>
             </div>
@@ -1702,7 +1706,11 @@
         <form id="editEmployeeForm" autocomplete="off">
           <input type="hidden" id="editUsername">
           <div class="emp-form-grid">
-            <div class="form-group emp-form-full">
+            <div class="form-group">
+              <label class="form-label">Employee ID</label>
+              <input type="text" class="form-control" id="editEmployeeNumber" placeholder="e.g. EMP-0042" style="font-family:monospace;text-transform:uppercase">
+            </div>
+            <div class="form-group">
               <label class="form-label">Full Name *</label>
               <input type="text" class="form-control" id="editFullName" required>
             </div>

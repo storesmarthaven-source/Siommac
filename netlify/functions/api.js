@@ -274,6 +274,7 @@ async function listEmployees() {
     else if (a && a.check_in_time) todayStatus = 'checkedin';
     return {
       idx: i + 1, id: u.id, username: u.username, fullName: u.full_name,
+      employeeNumber: u.employee_number || '',
       department: deptMap[u.department_id] || '', departmentId: u.department_id || '',
       position: u.position || '', role: u.role, status: u.status === 'active' ? 'Active' : 'Inactive',
       todayStatus
@@ -281,16 +282,46 @@ async function listEmployees() {
   });
 }
 
+async function _nextEmployeeNumber() {
+  // Find the highest existing EMP-NNNN number and increment
+  const { data } = await sb.from('app_users')
+    .select('employee_number')
+    .like('employee_number', 'EMP-%')
+    .order('employee_number', { ascending: false })
+    .limit(1);
+  if (data && data.length && data[0].employee_number) {
+    const n = parseInt(data[0].employee_number.replace('EMP-', ''), 10);
+    return `EMP-${String(n + 1).padStart(4, '0')}`;
+  }
+  return 'EMP-0001';
+}
+
 async function addEmployee(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
   const password_hash = await bcrypt.hash(String(args.password || ''), 10);
+  // Use provided employee number or auto-generate one
+  const employee_number = args.employeeNumber
+    ? String(args.employeeNumber).trim().toUpperCase()
+    : await _nextEmployeeNumber();
+  // Check uniqueness
+  if (employee_number) {
+    const { data: existing } = await sb.from('app_users').select('id').eq('employee_number', employee_number).maybeSingle();
+    if (existing) return { success: false, message: `Employee ID "${employee_number}" is already in use.` };
+  }
   const { data, error } = await sb.from('app_users').insert({
     username: args.username, password_hash, full_name: args.fullName, role: args.role,
-    department_id: args.department, position: args.position, status: 'active'
+    department_id: args.department, position: args.position, status: 'active',
+    employee_number
   }).select('id').single();
-  if (error) return { success: false, message: error.message };
+  if (error) {
+    if (error.code === '23505') {
+      if (error.message.includes('username')) return { success: false, message: `Username "${args.username}" is already taken. Please choose a different username.` };
+      if (error.message.includes('employee_number')) return { success: false, message: `Employee ID "${employee_number}" is already in use. Please choose a different one.` };
+    }
+    return { success: false, message: error.message };
+  }
   await log_(actor, 'create', 'user', data.id, args.fullName);
-  return { success: true, id: data.id };
+  return { success: true, id: data.id, employeeNumber: employee_number };
 }
 
 async function updateEmployee(args, ctx) {
@@ -301,8 +332,25 @@ async function updateEmployee(args, ctx) {
   };
   Object.keys(patch).forEach(k => patch[k] == null || patch[k] === '' ? delete patch[k] : null);
   if (args.password) patch.password_hash = await bcrypt.hash(String(args.password), 10);
+  // Allow admin to manually set/change employee number
+  if (args.employeeNumber !== undefined) {
+    const empNum = String(args.employeeNumber || '').trim().toUpperCase();
+    if (empNum) {
+      // Ensure uniqueness (exclude this user)
+      const { data: existing } = await sb.from('app_users')
+        .select('id').eq('employee_number', empNum).neq('username', args.username).maybeSingle();
+      if (existing) return { success: false, message: `Employee ID "${empNum}" is already in use.` };
+      patch.employee_number = empNum;
+    } else {
+      patch.employee_number = null;
+    }
+  }
   const { error } = await sb.from('app_users').update(patch).eq('username', args.username);
-  if (error) return { success: false, message: error.message };
+  if (error) {
+    if (error.code === '23505' && error.message.includes('employee_number'))
+      return { success: false, message: `Employee ID "${patch.employee_number}" is already in use. Please choose a different one.` };
+    return { success: false, message: error.message };
+  }
   await log_(actor, 'update', 'user', args.username, args.fullName || args.username);
   return { success: true };
 }
@@ -544,6 +592,7 @@ async function getEmployeeByUsername(args, ctx) {
   }
   return { success: true, data: {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
+    employeeNumber: u.employee_number || '',
     departmentId: u.department_id || '', department, position: u.position || '', status: u.status,
     email: u.email || '', phone: u.phone || '',
     colorScheme: u.color_scheme || 'navy', layoutMode: u.layout_mode || 'sidebar',
