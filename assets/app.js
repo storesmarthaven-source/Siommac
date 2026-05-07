@@ -664,6 +664,7 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
     const sec = document.getElementById(id);
     if (sec) sec.classList.add('active');
+    try { localStorage.setItem('siomac_last_section_' + currentRole, id); } catch(e) {}
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
 
@@ -1348,7 +1349,11 @@ const AttendanceSystem = (function() {
     buildSidebar(currentRole);
     buildTopTabs(currentRole);
     const def = (SECTION_DEFS[currentRole] || [ABOUT_ITEM])[0];
-    showSection(def.id);
+    const savedSection = (() => {
+      try { return localStorage.getItem('siomac_last_section_' + currentRole); } catch(e) { return null; }
+    })();
+    const validIds = (SECTION_DEFS[currentRole] || [ABOUT_ITEM]).map(x => x.id);
+    showSection(savedSection && validIds.includes(savedSection) ? savedSection : def.id);
 
     // employee-only setup (welcome card + location tracking)
     if (currentRole === 'employee') {

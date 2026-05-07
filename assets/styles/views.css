@@ -299,8 +299,9 @@
 .lv-table tbody tr:hover td { background: var(--bg-subtle, #F8FAFE); }
 
 /* Employee name in table */
-.lv-emp-name { font-weight: 700; color: var(--siomac-navy); font-size: 0.85rem; }
-.lv-dept-label { font-size: 0.75rem; color: var(--text-muted); }
+.lv-emp-name { font-weight: 700; color: var(--siomac-navy); font-size: 0.85rem; text-align: left; }
+.lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
+.lv-table tbody td:first-child { text-align: left; }
 .lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; }
 
 /* Days pill */
@@ -723,23 +724,16 @@
 }
 
 /* ─── Recent Attendance Activity table ─── */
-.recent-activity-section { margin-top: 0; }
-.recent-activity-section .section-header {
-  background: var(--bg-subtle, #F4F6FA);
-  border-bottom: 1px solid var(--border);
-  border-radius: 20px 20px 0 0;
-  padding: 14px 20px;
-  margin-bottom: 0;
-}
-.recent-activity-section .table-responsive { padding: 0; }
+.recent-activity-section { margin-top: 20px; }
 .recent-att-table { width: 100%; border-collapse: collapse; }
 .recent-att-table thead th {
   background: var(--siomac-navy);
   color: white;
   padding: 11px 14px;
   font-size: 12px; font-weight: 600;
-  text-align: left; letter-spacing: 0.3px;
+  text-align: center; letter-spacing: 0.3px;
 }
+.recent-att-table thead th:first-child { text-align: left; }
 .recent-att-table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
 .recent-att-table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
 .recent-att-table tbody tr { transition: background .15s; }
@@ -749,7 +743,9 @@
   font-size: 13px; color: var(--text-primary);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  text-align: center;
 }
+.recent-att-table tbody td:first-child { text-align: left; }
 .recent-att-table tbody tr:last-child td { border-bottom: none; }
 .rat-name { font-weight: 600; color: var(--siomac-navy); }
 .rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; }
@@ -799,11 +795,11 @@
 
 /* ── Analytics overview panel ── */
 .dash-overview-panel {
-  background: #EAECF0;
+  background: transparent;
   border-radius: 24px;
-  padding: 20px 24px;
+  padding: 0;
   margin-bottom: 24px;
-  border: 1px solid #D8DCE4;
+  border: none;
 }
 .dash-overview-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -824,7 +820,7 @@
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
   margin-top: 18px; padding-top: 14px;
-  border-top: 1px solid #D8DCE4;
+  border-top: 1px solid var(--border);
 }
 .dash-overview-clock {
   display: flex; align-items: center; gap: 7px;
