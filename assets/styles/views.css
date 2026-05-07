@@ -381,18 +381,24 @@
   margin-bottom: 24px;
 }
 .ps-stat-card {
-  background: white; border-radius: 24px; padding: 20px;
-  border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  background: var(--bg-card);
+  padding: 22px 24px;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  transition: transform .22s, box-shadow .22s;
+  display: flex; flex-direction: column;
 }
+.ps-stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .ps-stat-icon {
-  width: 48px; height: 48px;
-  background: rgba(228,12,12,0.09); border-radius: 28px;
+  width: 46px; height: 46px; border-radius: 14px;
+  background: rgba(27,45,85,0.09);
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 14px; flex-shrink: 0;
 }
-.ps-stat-icon i { font-size: 22px; color: var(--siomac-red); }
-.ps-stat-value { font-size: 2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1; }
-.ps-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+.ps-stat-icon i { font-size: 20px; color: var(--siomac-navy); }
+.ps-stat-value { font-size: 1.8rem; font-weight: 800; color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
+.ps-stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
 /* Filters bar — same pill style as emp/dept */
 .ps-filters-bar {
