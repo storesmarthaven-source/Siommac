@@ -819,6 +819,26 @@ const AttendanceSystem = (function() {
       if (event.target.matches('#deptSearchInput')) {
         displayDepartments(departments);
       }
+      // Attendance search / dept filter — client-side re-render
+      if (event.target.matches('#attSearchInput') || event.target.matches('#attDeptFilter')) {
+        _renderAttTable();
+      }
+    });
+
+    // Attendance month/year selects — reload from API
+    document.addEventListener('change', function(event) {
+      if (event.target.matches('#attendanceMonth') || event.target.matches('#attendanceYear')) {
+        loadAttendanceData();
+      }
+    });
+
+    // Export attendance (CSV via DataTables built-in)
+    document.addEventListener('click', function(event) {
+      if (event.target.matches('#exportAttendanceBtn, #exportAttendanceBtn *')) {
+        const btn = document.querySelector('.dt-button.buttons-csv, .dt-button.buttons-excel');
+        if (btn) btn.click();
+        else showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
+      }
     });
 
     // Manager buttons using event delegation
@@ -2395,45 +2415,163 @@ const AttendanceSystem = (function() {
     });
   }
 
+  // ─── Attendance Overview charts (local instances, destroyed on reload) ───
+  let _attTrendChart = null;
+  let _attStatusChart = null;
+  let _attAllRows = [];   // raw rows for client-side dept filter
+  let _attDepts  = [];    // list of dept names for populating the filter select
+
   function loadAttendanceData() {
     const month = parseInt(document.getElementById('attendanceMonth').value, 10);
     const year  = parseInt(document.getElementById('attendanceYear').value, 10);
-    const args = { month, year };
-    if (!_isSyncing && !swr.get('listAttendance:' + JSON.stringify(args))) {
+    if (!_isSyncing) {
       destroyDataTable('attendanceTable');
-      setSkel('attendanceTableBody', skelTableRows(9, 5));
+      setSkel('attendanceTableBody', skelTableRows(9, 6));
     }
-    _rawApi('listAttendance', args).then(res => {
-      if (!res || !res.success) {
-        if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load attendance'}</td></tr>`;
-        return;
+    _rawApi('listDailyLog', { month, year }).then(res => {
+      if (!_isSyncing) {
+        if (!res || !res.success) {
+          document.getElementById('attendanceTableBody').innerHTML =
+            `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
+          return;
+        }
+        _attAllRows = (res.data && res.data.rows) || [];
+        _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
+        _populateAttDeptFilter();
+        _renderAttStats(res.data && res.data.stats);
+        _renderAttCharts(res.data && res.data.dailyTrend);
+        _renderAttTable();
       }
-      if (!_isSyncing) displayAttendanceData(res.data || []);
     }).catch(err => {
-      if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
+      if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML =
+        `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
     });
   }
 
-  function displayAttendanceData(data) {
-    const thumb = url => url
-      ? `<a href="${url}" target="_blank" rel="noopener" class="ms-1"><img src="${url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1px solid #ddd;" title="View selfie" onerror="this.style.display='none'"></a>`
-      : '';
-    const badge = s => s === 'Late' ? 'bg-warning text-dark' : s === 'Absent' || s === 'Not Checked In' ? 'bg-danger' : s === 'Checked Out' ? 'bg-secondary' : 'bg-success';
+  function _populateAttDeptFilter() {
+    const sel = document.getElementById('attDeptFilter');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">All Departments</option>' +
+      _attDepts.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+    if (_attDepts.includes(cur)) sel.value = cur;
+  }
 
-    const html = data.map(item => `
+  function _renderAttStats(stats) {
+    if (!stats) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('attStatPresent', stats.present);
+    set('attStatLate',    stats.late);
+    set('attStatAbsent',  stats.absent);
+    set('attStatRate',    stats.rate + '%');
+  }
+
+  function _renderAttCharts(trend) {
+    // Trend line
+    if (_attTrendChart) { _attTrendChart.destroy(); _attTrendChart = null; }
+    const tc = document.getElementById('attTrendChart');
+    if (tc && trend && trend.length) {
+      _attTrendChart = new Chart(tc.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: trend.map(d => String(d.date).slice(5)),
+          datasets: [
+            {
+              label: 'Present',
+              data: trend.map(d => d.present),
+              borderColor: '#E40C0C',
+              backgroundColor: 'rgba(228,12,12,0.06)',
+              borderWidth: 2, tension: 0.3, fill: true,
+              pointBackgroundColor: '#E40C0C', pointBorderColor: 'white',
+              pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5
+            },
+            {
+              label: 'Late',
+              data: trend.map(d => d.late),
+              borderColor: '#FFB712',
+              backgroundColor: 'transparent',
+              borderWidth: 2, borderDash: [5, 5], tension: 0.3, fill: false,
+              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#FFB712'
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { font: { size: 10 } } },
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } }
+          }
+        }
+      });
+    }
+
+    // Status distribution doughnut
+    if (_attStatusChart) { _attStatusChart.destroy(); _attStatusChart = null; }
+    const sc = document.getElementById('attStatusChart');
+    if (sc && _attAllRows.length) {
+      const counts = { Present: 0, Late: 0, Absent: 0 };
+      _attAllRows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+      _attStatusChart = new Chart(sc.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Present', 'Late', 'Absent'],
+          datasets: [{
+            data: [counts.Present, counts.Late, counts.Absent],
+            backgroundColor: ['#2E7D32', '#FFB712', '#E40C0C'],
+            borderWidth: 0, hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } } }
+        }
+      });
+    }
+  }
+
+  function _renderAttTable() {
+    const dept   = (document.getElementById('attDeptFilter') || {}).value || 'all';
+    const search = ((document.getElementById('attSearchInput') || {}).value || '').toLowerCase();
+
+    let rows = _attAllRows;
+    if (dept !== 'all') rows = rows.filter(r => r.department === dept);
+    if (search)         rows = rows.filter(r => r.name.toLowerCase().includes(search) || r.department.toLowerCase().includes(search));
+
+    const countEl = document.getElementById('attLogCount');
+    if (countEl) countEl.textContent = rows.length + ' record' + (rows.length !== 1 ? 's' : '');
+
+    const thumb = (inUrl, outUrl) => {
+      if (inUrl) return `<a href="${inUrl}" target="_blank" rel="noopener" class="att-selfie-thumb" title="View check-in selfie"><img src="${inUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\'></i>'"></a>`;
+      return `<div class="att-selfie-thumb att-no-photo"><i class="fas fa-user-slash"></i></div>`;
+    };
+
+    const statusBadge = s => {
+      if (s === 'Present') return `<span class="att-badge att-present"><i class="fas fa-circle"></i> Present</span>`;
+      if (s === 'Late')    return `<span class="att-badge att-late"><i class="fas fa-circle"></i> Late</span>`;
+      return                      `<span class="att-badge att-absent"><i class="fas fa-circle"></i> Absent</span>`;
+    };
+
+    const html = rows.map(r => `
       <tr>
-        <td data-label="Name">${escapeHtml(item.name)}</td>
-        <td data-label="Department">${escapeHtml(item.department)}</td>
-        <td data-label="Today"><span class="badge ${badge(item.todayStatus)}">${escapeHtml(item.todayStatus)}</span></td>
-        <td data-label="Check In">${escapeHtml(item.checkIn)}${thumb(item.checkInPhotoUrl)}</td>
-        <td data-label="Check Out">${escapeHtml(item.checkOut)}${thumb(item.checkOutPhotoUrl)}</td>
-        <td data-label="Total Days">${item.totalDays}</td>
-        <td data-label="Present">${item.present}</td>
-        <td data-label="Absent">${item.absent}</td>
-        <td data-label="Actions"><button class="btn btn-sm btn-info btn-view-att" data-in="${item.checkInPhotoUrl||''}" data-out="${item.checkOutPhotoUrl||''}" data-name="${escapeHtml(item.name||'')}">View</button></td>
-      </tr>`).join('');
+        <td><strong class="att-name">${escapeHtml(r.name)}</strong></td>
+        <td><span class="att-dept-pill">${escapeHtml(r.department)}</span></td>
+        <td class="att-date">${r.date}</td>
+        <td class="att-time">${escapeHtml(r.checkIn)}</td>
+        <td class="att-time">${escapeHtml(r.checkOut)}</td>
+        <td class="att-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${thumb(r.checkInPhotoUrl, r.checkOutPhotoUrl)}</td>
+        <td>
+          <button class="att-action-btn btn-view-att"
+            data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
+            data-out="${escapeHtml(r.checkOutPhotoUrl || '')}"
+            data-name="${escapeHtml(r.name)}"
+            title="View photos"><i class="fas fa-chevron-right"></i></button>
+        </td>
+      </tr>`).join('') || `<tr><td colspan="9" class="att-empty">No records match your filters.</td></tr>`;
 
-    // Always destroy first, then set HTML, then init — prevents DataTable state conflicts
     destroyDataTable('attendanceTable');
     document.getElementById('attendanceTableBody').innerHTML = html;
     initDataTable('attendanceTable', {
@@ -2441,15 +2579,19 @@ const AttendanceSystem = (function() {
     });
   }
 
+  function displayAttendanceData() {} // kept for any legacy callers
+
   function viewAttendancePhotos(inUrl, outUrl, name) {
     const slot = (url, label) => url
-      ? `<div class="text-center mx-2"><div class="fw-bold mb-1">${label}</div><a href="${url}" target="_blank"><img src="${url}" style="max-width:240px;max-height:320px;border-radius:8px;border:2px solid #6366f1;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'Image unavailable',className:'text-muted'}))"></a></div>`
-      : `<div class="text-center mx-2"><div class="fw-bold mb-1">${label}</div><div class="text-muted" style="width:240px;padding:60px 0;border:1px dashed #ccc;border-radius:8px;">No selfie</div></div>`;
+      ? `<div class="text-center mx-2"><div class="fw-bold mb-1" style="color:var(--siomac-navy)">${label}</div><a href="${url}" target="_blank"><img src="${url}" style="max-width:240px;max-height:320px;border-radius:12px;border:2px solid var(--siomac-red);" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'Image unavailable',className:'text-muted'}))"></a></div>`
+      : `<div class="text-center mx-2"><div class="fw-bold mb-1" style="color:var(--siomac-navy)">${label}</div><div class="text-muted" style="width:200px;padding:48px 0;border:1px dashed #ccc;border-radius:12px;">No selfie</div></div>`;
     Swal.fire({
-      title: name,
-      html: `<div class="d-flex justify-content-center flex-wrap">${slot(inUrl, 'Check In')}${slot(outUrl, 'Check Out')}</div>`,
-      width: '600px',
-      background: 'rgba(255,255,255,0.95)'
+      title: `<span style="color:var(--siomac-navy);font-weight:700">${name}</span>`,
+      html: `<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:16px;padding:8px 0">${slot(inUrl, 'Check In')}${slot(outUrl, 'Check Out')}</div>`,
+      width: '620px',
+      background: 'rgba(255,255,255,0.97)',
+      showConfirmButton: false,
+      showCloseButton: true
     });
   }
 

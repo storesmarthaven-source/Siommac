@@ -343,6 +343,107 @@
   display: flex; justify-content: flex-end; gap: 10px;
 }
 
+/* ═══════════════════════════════════════════
+   ATTENDANCE OVERVIEW PAGE
+═══════════════════════════════════════════ */
+
+/* Filters bar */
+.att-filters-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 60px;
+  padding: 10px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.att-filter-group {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.att-filter-select {
+  padding: 7px 14px; border-radius: 40px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 0.8rem; font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.att-filter-select:focus { border-color: var(--siomac-red); }
+
+.att-search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle);
+  padding: 7px 16px; border-radius: 40px;
+  transition: box-shadow .2s;
+}
+.att-search-box:focus-within { box-shadow: 0 0 0 2px rgba(228,12,12,0.15); }
+.att-search-box i { color: var(--text-muted); font-size: 13px; }
+.att-search-box input {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; font-family: inherit; color: var(--text-primary);
+  width: 200px;
+}
+.att-search-box input::placeholder { color: var(--text-muted); }
+.att-filter-actions { display: flex; gap: 8px; }
+
+/* Chart container */
+.att-chart-container { height: 240px; position: relative; }
+
+/* Table decorations */
+.att-name { color: var(--siomac-navy); font-weight: 600; }
+.att-dept-pill {
+  font-size: 11.5px; color: var(--text-muted);
+  background: var(--bg-subtle); padding: 3px 10px; border-radius: 20px;
+}
+.att-date, .att-time { font-variant-numeric: tabular-nums; font-size: 13px; }
+.att-hours { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--siomac-navy); }
+
+/* Status badges */
+.att-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 40px;
+  font-size: 11.5px; font-weight: 600;
+}
+.att-badge i { font-size: 7px; }
+.att-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
+.att-late    { background: rgba(255,183,18,0.15); color: #7a5900; }
+.att-absent  { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
+
+/* Selfie thumbnail */
+.att-selfie-thumb {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  overflow: hidden; border: 2px solid var(--border);
+  background: var(--bg-subtle); cursor: pointer;
+  transition: border-color .2s;
+}
+.att-selfie-thumb:hover { border-color: var(--siomac-red); }
+.att-selfie-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.att-no-photo i { font-size: 13px; color: var(--text-muted); }
+
+/* Row action button */
+.att-action-btn {
+  background: transparent; border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all .2s;
+}
+.att-action-btn:hover { background: var(--bg-subtle); color: var(--siomac-red); }
+
+/* Log count badge */
+.att-log-count {
+  font-size: 12px; color: var(--text-muted);
+  background: var(--bg-subtle); padding: 3px 12px;
+  border-radius: 20px; font-weight: 500;
+}
+
+/* Error / empty states */
+.att-err   { color: var(--siomac-red); padding: 18px; font-weight: 600; text-align: center; }
+.att-empty { color: var(--text-muted); padding: 24px; text-align: center; font-size: 13.5px; }
+
 /* ─── Sync indicator + notification ─── */
 .sync-indicator {
   position: fixed; top: 12px; right: 14px;

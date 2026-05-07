@@ -555,39 +555,110 @@
 
       <!-- Admin — Attendance Records -->
       <section class="app-section" id="s-adm-attendance" data-role="admin">
+
+        <!-- Stats row -->
+        <div class="dashboard-grid-4" style="margin-bottom:24px;">
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="attStatPresent">—</div>
+              <div class="stat-card-label">Present Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="attStatLate">—</div>
+              <div class="stat-card-label">Late Arrivals</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="attStatAbsent">—</div>
+              <div class="stat-card-label">Absent / Leave</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="attStatRate">—</div>
+              <div class="stat-card-label">Attendance Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters bar -->
+        <div class="att-filters-bar">
+          <div class="att-filter-group">
+            <select class="att-filter-select" id="attendanceMonth">
+              <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+            </select>
+            <select class="att-filter-select" id="attendanceYear"></select>
+            <select class="att-filter-select" id="attDeptFilter">
+              <option value="all">All Departments</option>
+            </select>
+          </div>
+          <div class="att-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="attSearchInput" placeholder="Search employee…">
+          </div>
+          <div class="att-filter-actions">
+            <button id="refreshAttendanceBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button id="exportAttendanceBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-download"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="dashboard-grid-2" style="margin-bottom:24px;">
+          <div class="data-section chart-card-section" style="margin-bottom:0;">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i> Daily Attendance Trend</h3>
+              <span class="chart-badge" id="attTrendBadge">This Month</span>
+            </div>
+            <div class="att-chart-container">
+              <canvas id="attTrendChart"></canvas>
+            </div>
+          </div>
+          <div class="data-section chart-card-section" style="margin-bottom:0;">
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-pie" style="color:var(--siomac-red);margin-right:8px;"></i> Status Distribution</h3>
+            </div>
+            <div class="att-chart-container">
+              <canvas id="attStatusChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily log table -->
         <div class="data-section">
           <div class="section-header">
-            <h2><i class="fas fa-calendar-check"></i> <span id="attendanceRecordsTitle">Attendance Records</span></h2>
-            <div class="section-actions">
-              <select class="form-select" id="attendanceMonth" style="width:auto; padding:7px 10px;">
-                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-              </select>
-              <select class="form-select" id="attendanceYear" style="width:auto; padding:7px 10px;"></select>
-              <button id="refreshAttendanceBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> <span id="refreshAttendanceText">Refresh</span></button>
-            </div>
+            <h2><i class="fas fa-table-list"></i> Employee Attendance Log</h2>
+            <span class="att-log-count" id="attLogCount"></span>
           </div>
           <div style="overflow-x:auto;">
             <table id="attendanceTable">
               <thead>
                 <tr>
-                  <th id="employeeNameColumn">Name</th>
-                  <th id="employeeDeptColumn">Department</th>
-                  <th id="todayStatusColumn">Today's Status</th>
-                  <th id="checkInTimeColumn">Check In</th>
-                  <th id="checkOutTimeColumn">Check Out</th>
-                  <th id="totalDaysColumn">Total Days</th>
-                  <th id="presentColumn">Present</th>
-                  <th id="absentColumn">Absent</th>
-                  <th id="actionsAttendanceColumn">Actions</th>
+                  <th>Employee</th>
+                  <th>Department</th>
+                  <th>Date</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Hours</th>
+                  <th>Status</th>
+                  <th>Selfie</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="attendanceTableBody"></tbody>
             </table>
           </div>
         </div>
+
       </section>
 
       <!-- Admin — Leave Applications -->

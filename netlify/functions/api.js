@@ -773,6 +773,87 @@ async function listAttendance(args, ctx) {
   return resolved;
 }
 
+// ── Daily Attendance Log (one row per employee per day, for the Attendance Overview page) ──
+async function listDailyLog(args, ctx) {
+  await requireRole(ctx, ['admin', 'manager']);
+  const now = new Date();
+  const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
+  const mo = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
+  const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
+  const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
+
+  const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
+    sb.from('app_users').select('id,username,full_name,department_id').eq('status', 'active').neq('role', 'admin').order('full_name'),
+    sb.from('departments').select('id,name'),
+    sb.from('attendance').select('*').gte('work_date', start).lte('work_date', end).order('work_date', { ascending: false })
+  ]);
+
+  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+  const userMap = Object.fromEntries((users || []).map(u => [u.username, u]));
+
+  // Resolve signed URLs for all records
+  const photoUrls = await Promise.all((att || []).map(a => Promise.all([
+    getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
+    getSignedUrl('attendance-photos', a.check_out_photo_url || '')
+  ])));
+
+  const rows = (att || []).map((a, i) => {
+    const u = userMap[a.username] || {};
+    const dept = deptMap[u.department_id || ''] || '—';
+    const checkIn  = a.check_in_time  ? hhmm(new Date(a.check_in_time))  : null;
+    const checkOut = a.check_out_time ? hhmm(new Date(a.check_out_time)) : null;
+    let hours = 0;
+    if (a.check_in_time && a.check_out_time) {
+      hours = ((new Date(a.check_out_time) - new Date(a.check_in_time)) / 3600000).toFixed(1);
+    }
+    const status = !checkIn ? 'Absent'
+      : a.status === 'late' ? 'Late' : 'Present';
+    return {
+      id: a.id, username: a.username,
+      name: u.full_name || a.username,
+      department: dept,
+      date: dateOnly(a.work_date),
+      checkIn: checkIn || '—',
+      checkOut: checkOut || '—',
+      hours: Number(hours),
+      status,
+      checkInPhotoUrl:  photoUrls[i][0],
+      checkOutPhotoUrl: photoUrls[i][1]
+    };
+  });
+
+  // Also compute summary stats for the period
+  const presentToday = rows.filter(r => r.date === today() && (r.status === 'Present' || r.status === 'Late'));
+  const lateToday = rows.filter(r => r.date === today() && r.status === 'Late');
+  const totalUsers = (users || []).length;
+  const presentCount = presentToday.length;
+  const rate = totalUsers ? Math.round((presentCount / totalUsers) * 100) : 0;
+
+  // Daily trend for the month (for chart)
+  const trendMap = {};
+  for (const r of rows) {
+    if (!trendMap[r.date]) trendMap[r.date] = { date: r.date, present: 0, late: 0, absent: 0 };
+    if (r.status === 'Present') trendMap[r.date].present++;
+    if (r.status === 'Late')    { trendMap[r.date].present++; trendMap[r.date].late++; }
+    if (r.status === 'Absent')  trendMap[r.date].absent++;
+  }
+  const dailyTrend = Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date));
+
+  return {
+    success: true,
+    data: {
+      rows,
+      stats: {
+        present: presentCount,
+        late: lateToday.length,
+        absent: totalUsers - presentCount,
+        rate
+      },
+      dailyTrend
+    }
+  };
+}
+
 async function getLiveAttendance(args, ctx) {
   const actor = await requireRole(ctx, ['admin', 'manager']);
   const scope = actor.role === 'manager' ? actor.department_id : args.scope;
@@ -1089,6 +1170,7 @@ const routes = {
   getAdminStats,
   getRecentAttendance,
   listAttendance,
+  listDailyLog,
   getLiveAttendance,
   getDashboardCharts,
   updateMyProfile,
