@@ -72,7 +72,7 @@
         .then(function (res) { if (!res.ok) throw new Error('Could not load app shell'); return res.text(); })
         .then(function (html) {
           document.getElementById('app-root').innerHTML = html;
-          return loadScripts(['assets/js/popup.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/app.js']);
+          return loadScripts(['assets/js/popup.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/app.js']);
         })
         .catch(function (err) {
           document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;">Failed to load application shell.</div>';
