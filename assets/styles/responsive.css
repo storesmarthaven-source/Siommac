@@ -52,9 +52,10 @@
   /* Stat cards — 2-col on phones */
   .dashboard-grid-2 { grid-template-columns: 1fr; gap: 10px; }
   .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .stat-card { padding: 12px 14px; }
-  .stat-card-icon { width: 34px; height: 34px; font-size: 15px; margin-bottom: 8px; }
-  .stat-card-value { font-size: 1.3rem; }
+  .ps-stats-row { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card-icon { width: 36px; height: 36px; font-size: 16px; margin-bottom: 10px; }
+  .stat-card-value { font-size: 1.4rem; }
   .stat-card-label { font-size: 0.68rem; }
 
   /* Section headers */

@@ -1559,6 +1559,7 @@ const AttendanceSystem = (function() {
     document.getElementById('retakeBtn').classList.add('d-none');
     document.getElementById('confirmBtn').classList.add('d-none');
     document.getElementById('capturedPhoto').classList.add('d-none');
+    document.querySelector('.cm-camera-area').classList.remove('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
     document.getElementById('photoCanvas').classList.add('d-none');
 
@@ -1654,6 +1655,7 @@ const AttendanceSystem = (function() {
     document.getElementById('retakeBtn').classList.remove('d-none');
     document.getElementById('confirmBtn').classList.remove('d-none');
     document.getElementById('capturedPhoto').classList.remove('d-none');
+    document.querySelector('.cm-camera-area').classList.add('d-none');
     document.getElementById('cameraPreview').classList.add('d-none');
     // Update title to "Verify Selfie"
     document.getElementById('cameraModalTitle').innerHTML = '<i class="fas fa-check-circle"></i> Verify Selfie';
@@ -1665,6 +1667,7 @@ const AttendanceSystem = (function() {
     document.getElementById('retakeBtn').classList.add('d-none');
     document.getElementById('confirmBtn').classList.add('d-none');
     document.getElementById('capturedPhoto').classList.add('d-none');
+    document.querySelector('.cm-camera-area').classList.remove('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
     capturedPhotoData = null;
     const action = currentAttendanceAction;
