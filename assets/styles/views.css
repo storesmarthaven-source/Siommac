@@ -793,14 +793,7 @@
 /* old bar kept for reference but replaced by overview panel */
 .dash-layout-bar { display: none; }
 
-/* ── Analytics overview panel ── */
-.dash-overview-panel {
-  background: #EAECF0;
-  border-radius: 24px;
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  border: 1px solid #D8DCE4;
-}
+/* ── Today's Overview header row (no container) ── */
 .dash-overview-header {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 12px;
@@ -808,30 +801,35 @@
 }
 .dash-overview-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 0.95rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 1rem; font-weight: 700; color: var(--siomac-navy);
 }
 .dash-overview-title i { font-size: 1rem; color: var(--siomac-red); }
 .dash-overview-actions {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 6px;
 }
-.dash-overview-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px;
-  margin-top: 16px; padding-top: 14px;
-  border-top: 1px solid var(--border);
+
+/* Larger icon buttons */
+.hdr-icon-btn--lg {
+  width: 46px !important; height: 46px !important; font-size: 1.2rem !important;
 }
-.dash-overview-clock {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 0.82rem; font-weight: 500; color: var(--siomac-navy);
+
+/* Profile avatar button */
+.hdr-profile-btn {
+  padding: 0 !important; overflow: hidden;
 }
-.dash-overview-clock i { font-size: 0.78rem; color: var(--text-muted); }
-.dash-overview-secure {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
-  background: white; border: 1px solid #D8DCE4;
-  padding: 3px 10px; border-radius: 20px;
+.hdr-profile-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--siomac-red), var(--siomac-red-dark));
+  color: white; font-weight: 700; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: .5px;
 }
-.dash-overview-secure i { color: var(--text-muted); }
+
+/* Edit Layout row — below stat cards, right-aligned */
+.dash-edit-row {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 14px; margin-bottom: 4px;
+}
 
 .dash-hidden-list {
   display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
@@ -1518,29 +1516,26 @@
   gap: 12px; border-radius: 24px 24px 0 0;
 }
 .emp-card-header--active {
-  background: #d4e8d4;
+  background: linear-gradient(135deg, var(--siomac-navy) 0%, #101D3B 100%);
 }
 .emp-card-header--inactive {
-  background: #e0e0e0;
+  background: linear-gradient(135deg, #8a8a8a 0%, #6b6b6b 100%);
 }
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
-  font-size: 1.1rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 1.1rem; font-weight: 700; color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-bottom: 4px;
 }
-.emp-card-header--inactive .emp-card-name { color: #666; }
-.emp-card-pos { font-size: 0.72rem; color: #555; }
-.emp-card-header--inactive .emp-card-pos { color: #999; }
+.emp-card-pos { font-size: 0.72rem; color: rgba(255,255,255,0.75); }
 
 /* Employee ID pill in card header */
 .emp-card-empid {
   font-family: monospace; font-size: 11px; font-weight: 700;
-  color: var(--siomac-navy); background: rgba(255,255,255,0.6);
+  color: #fff; background: rgba(255,255,255,0.18);
   padding: 2px 9px; border-radius: 6px; letter-spacing: .5px;
   flex-shrink: 0; white-space: nowrap;
 }
-.emp-card-header--inactive .emp-card-empid { color: #666; background: rgba(255,255,255,0.5); }
 
 /* Card body */
 .emp-card-body { padding: 20px; flex: 1; }

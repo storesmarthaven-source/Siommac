@@ -78,11 +78,7 @@
         <i class="fas fa-building"></i>
         <span class="sidebar-brand-text" id="companyName">My Company</span>
       </div>
-      <div class="sidebar-user-info">
-        <div class="sidebar-avatar" id="sidebarAvatar">U</div>
-        <div class="sidebar-user-name" id="sidebarUserName">User</div>
-        <div class="sidebar-user-role" id="sidebarUserRole">Role</div>
-      </div>
+      <div class="sidebar-avatar" id="sidebarAvatar" style="display:none;">U</div>
       <div class="sidebar-menu-section">
         <div class="sidebar-menu-title" id="sidebarNavTitle">Navigation</div>
         <ul class="sidebar-menu" id="sidebarMenu"></ul>
@@ -643,32 +639,33 @@
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
 
-        <!-- Analytics overview panel -->
-        <div class="dash-overview-panel">
-          <div class="dash-overview-header">
-            <div class="dash-overview-title">
-              <i class="fas fa-chart-pie"></i>
-              <span>Today's Overview</span>
-            </div>
-            <div class="dash-overview-actions">
-              <!-- Notification / Message / Ticket icon buttons -->
-              <button class="hdr-icon-btn" id="hdrNotifBtn" title="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="hdr-badge" id="hdrNotifBadge">4</span>
-              </button>
-              <button class="hdr-icon-btn" id="hdrMsgBtn" title="Messages">
-                <i class="fas fa-comment-dots"></i>
-                <span class="hdr-badge" id="hdrMsgBadge">2</span>
-              </button>
-              <button class="hdr-icon-btn" id="hdrTicketBtn" title="Support Tickets">
-                <i class="fas fa-ticket-alt"></i>
-                <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
-              </button>
-              <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
-              <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
-            </div>
+        <!-- Today's Overview header row -->
+        <div class="dash-overview-header">
+          <div class="dash-overview-title">
+            <i class="fas fa-chart-pie"></i>
+            <span>Today's Overview</span>
           </div>
-          <div class="ps-stats-row" style="margin-bottom:0;">
+          <div class="dash-overview-actions">
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrNotifBtn" title="Notifications">
+              <i class="fas fa-bell"></i>
+              <span class="hdr-badge" id="hdrNotifBadge">4</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrMsgBtn" title="Messages">
+              <i class="fas fa-comment-dots"></i>
+              <span class="hdr-badge" id="hdrMsgBadge">2</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrTicketBtn" title="Support Tickets">
+              <i class="fas fa-ticket-alt"></i>
+              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn" id="hdrProfileBtn" title="Profile">
+              <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="ps-stats-row" style="margin-bottom:0;">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-card-body">
@@ -713,15 +710,12 @@
           </div>
           <!-- Hidden widgets restore bar -->
           <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
-          </div>
-          <!-- Footer: clock + secure -->
-          <div class="dash-overview-footer">
-            <div class="dash-overview-clock">
-              <i class="fas fa-globe-americas"></i>
-              <span id="isoClock">--</span>
-              <span class="dash-overview-secure"><i class="fas fa-shield-alt"></i> Secure</span>
-            </div>
-          </div>
+        </div>
+
+        <!-- Edit Layout row — below stat cards, right-aligned -->
+        <div class="dash-edit-row">
+          <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
+          <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
         </div>
 
         <!-- Single sortable widget grid -->

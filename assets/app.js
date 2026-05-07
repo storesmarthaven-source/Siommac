@@ -788,6 +788,12 @@ const AttendanceSystem = (function() {
       });
     })();
 
+    // ── Profile icon button → go to profile section ──
+    const hdrProfileBtn = document.getElementById('hdrProfileBtn');
+    if (hdrProfileBtn) {
+      hdrProfileBtn.addEventListener('click', () => showSection('s-profile'));
+    }
+
     document.getElementById('sidebarMenu').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-section]');
       if (btn) {
@@ -1338,11 +1344,16 @@ const AttendanceSystem = (function() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appShell').classList.remove('hidden');
 
-    // populate sidebar identity (incl. avatar initials or photo)
-    document.getElementById('sidebarUserName').textContent = currentFullName;
-    document.getElementById('sidebarUserRole').textContent = currentRole;
-    const avatarEl = document.getElementById('sidebarAvatar');
-    if (avatarEl) setSidebarAvatar(avatarEl, result.profileImage || '', currentFullName);
+    // populate header profile avatar
+    const hdrAvatarEl = document.getElementById('hdrProfileAvatar');
+    if (hdrAvatarEl) {
+      const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      if (result.profileImage) {
+        hdrAvatarEl.innerHTML = `<img src="${result.profileImage}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        hdrAvatarEl.textContent = initial;
+      }
+    }
 
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
     if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
@@ -1843,18 +1854,22 @@ const AttendanceSystem = (function() {
     const grid = document.getElementById('dashWidgetGrid');
     if (!grid) return;
 
-    // Restore order inside the chart grid
+    // Restore widget order — collect all widgets first, then re-insert in saved order
     if (order.length) {
-      const gridWidgets = Array.from(grid.querySelectorAll('.dash-widget'));
+      // Build a map of all widgets across the whole dashboard section
+      const allWidgets = {};
+      document.querySelectorAll('#s-adm-dashboard .dash-widget').forEach(w => {
+        allWidgets[w.dataset.widgetId] = w;
+      });
       order.forEach(id => {
-        const el = gridWidgets.find(w => w.dataset.widgetId === id);
+        const el = allWidgets[id];
         if (el && el.parentElement === grid) grid.appendChild(el);
       });
     }
 
     // Apply hidden state
     DASH_WIDGETS.forEach(({ id }) => {
-      const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
+      const el = document.querySelector(`#s-adm-dashboard .dash-widget[data-widget-id="${id}"]`);
       if (!el) return;
       if (hidden.includes(id)) el.classList.add('dash-widget-hidden');
       else el.classList.remove('dash-widget-hidden');
@@ -1913,7 +1928,7 @@ const AttendanceSystem = (function() {
         dragClass: 'dash-sortable-drag',
         filter: 'button, a, input, select, canvas',
         preventOnFilter: false,
-        onEnd: _dashSaveLayout,
+        onEnd: () => _dashSaveLayout(),
       });
     } else {
       editBtn.classList.remove('active');
@@ -2865,7 +2880,7 @@ const AttendanceSystem = (function() {
     return 'fa-building';
   }
 
-  let _deptListView = false; // card view default
+  let _deptListView = true; // list view default
 
   function displayDepartments(departmentList) {
     // Update stat badges
@@ -4187,11 +4202,15 @@ const AttendanceSystem = (function() {
       if (!res.success) { _profileToast(res.message || 'Update failed.', true); return; }
 
       currentFullName = res.fullName || fullName;
-      document.getElementById('sidebarUserName').textContent = currentFullName;
 
       const newPhoto = res.profileImage || '';
       _currentProfileImage = newPhoto;
-      setSidebarAvatar(document.getElementById('sidebarAvatar'), newPhoto, currentFullName);
+      // Update header profile avatar
+      const hdrAv = document.getElementById('hdrProfileAvatar');
+      if (hdrAv) {
+        if (newPhoto) { hdrAv.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; }
+        else { hdrAv.textContent = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase(); }
+      }
       _setProfilePhotoUI(newPhoto, currentFullName);
       updateStoredSession({ profileImage: newPhoto });
       _updateProfileDisplayUI({ fullName: currentFullName, username: currentUser, role: currentRole, email, phone });
@@ -4404,7 +4423,7 @@ const AttendanceSystem = (function() {
         const img = existImg || document.createElement('img');
         img.className = 'sb-brand-img';
         img.alt = 'Logo';
-        img.style.cssText = 'max-height:42px; max-width:160px; width:auto; height:auto; object-fit:contain; display:block;';
+        img.style.cssText = 'max-height:72px; max-width:180px; width:auto; height:auto; object-fit:contain; display:block;';
         img.src = url;
 
         if (!existImg) brand.insertBefore(img, brand.firstChild);

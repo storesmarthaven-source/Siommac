@@ -110,8 +110,9 @@
   padding: 20px 18px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 90px;
 }
-.sidebar-brand i { font-size: 46px; color: var(--siomac-red); }
+.sidebar-brand i { font-size: 52px; color: var(--siomac-red); }
 .sidebar-brand-text { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.3px; color: white; }
 
 /* ── User info ── */
