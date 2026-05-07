@@ -2083,15 +2083,18 @@ const AttendanceSystem = (function() {
   function loadDepartments() {
     setSkel('departmentsContainer', skelCards(3));
     _rawApi('listDepartments', {}).then(res => {
+      console.log('[loadDepartments] API response:', JSON.stringify(res));
       if (!res || !res.success) {
         document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load departments'}</p>`;
         return;
       }
-      const list = (res.data) || [];
+      const list = Array.isArray(res.data) ? res.data : [];
+      console.log('[loadDepartments] list length:', list.length);
       departments = list;
       swr.set('listDepartments:{}', res);
       displayDepartments(list);
     }).catch(err => {
+      console.error('[loadDepartments] catch:', err);
       document.getElementById('departmentsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
     });
   }
@@ -2208,14 +2211,16 @@ const AttendanceSystem = (function() {
   function loadProjectSites() {
     setSkel('projectsContainer', skelCards(3));
     _rawApi('listProjectSites', {}).then(res => {
+      console.log('[loadProjectSites] API response:', JSON.stringify(res));
       if (!res || !res.success) {
         document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
         return;
       }
-      projectSites = res.data || [];
+      projectSites = Array.isArray(res.data) ? res.data : [];
       swr.set('listProjectSites:{}', res);
       displayProjectSites(projectSites);
     }).catch(err => {
+      console.error('[loadProjectSites] catch:', err);
       document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
     });
   }

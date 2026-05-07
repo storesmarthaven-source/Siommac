@@ -222,19 +222,29 @@ async function setupDemoUsers() {
 }
 
 async function listDepartments() {
-  const { data } = await sb.from('departments').select('*, manager:app_users!departments_manager_id_fkey(full_name), app_users(id)');
-  return (data || []).map(d => ({
+  // Two simple queries — avoids relying on the FK constraint alias name which may differ per DB
+  const [{ data: depts, error: dErr }, { data: users, error: uErr }] = await Promise.all([
+    sb.from('departments').select('*').order('name'),
+    sb.from('app_users').select('id, full_name, department_id, role')
+  ]);
+  if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
+  if (uErr) throw new Error('Failed to load users for departments: ' + uErr.message);
+  const managerMap = Object.fromEntries((users || []).map(u => [u.id, u.full_name]));
+  const deptUserCounts = {};
+  (users || []).forEach(u => { if (u.department_id) deptUserCounts[u.department_id] = (deptUserCounts[u.department_id] || 0) + 1; });
+  return (depts || []).map(d => ({
     id: d.id,
     name: d.name,
     description: d.description || '',
     managerId: d.manager_id || '',
-    manager: d.manager && d.manager.full_name || '—',
-    employeeCount: d.app_users ? d.app_users.length : 0
+    manager: d.manager_id ? (managerMap[d.manager_id] || '—') : '—',
+    employeeCount: deptUserCounts[d.id] || 0
   }));
 }
 
 async function listProjectSites() {
-  const { data } = await sb.from('project_sites').select('*').order('name');
+  const { data, error } = await sb.from('project_sites').select('*').order('name');
+  if (error) throw new Error('Failed to load project sites: ' + error.message);
   return (data || []).map(s => ({
     id: s.id, name: s.name, address: s.address || '',
     latitude: Number(s.latitude), longitude: Number(s.longitude), radius: Number(s.radius),
@@ -244,11 +254,13 @@ async function listProjectSites() {
 
 async function listEmployees() {
   const t = today();
-  const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
+  const [{ data: users, error: uErr }, { data: depts, error: dErr }, { data: att, error: aErr }] = await Promise.all([
     sb.from('app_users').select('*').order('full_name'),
     sb.from('departments').select('id,name'),
     sb.from('attendance').select('*').eq('work_date', t)
   ]);
+  if (uErr) throw new Error('Failed to load employees: ' + uErr.message);
+  if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
   return (users || []).map((u, i) => {
