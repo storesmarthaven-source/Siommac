@@ -369,18 +369,23 @@ async function markAttendance(args, ctx) {
 async function getMyStatus(args, ctx) {
   const actor = await requireUser(ctx);
   const username = actor.role === 'admin' && args.username ? args.username : actor.username;
-  const { data: rec } = await sb.from('attendance').select('*, site:project_sites!attendance_check_in_site_id_fkey(name)').eq('username', username).eq('work_date', today()).maybeSingle();
+  // Avoid FK alias join — fetch attendance row plain, then look up site name separately
+  const { data: rec } = await sb.from('attendance').select('*').eq('username', username).eq('work_date', today()).maybeSingle();
   if (!rec) return { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '' };
-  const [checkInPhotoUrl, checkOutPhotoUrl] = await Promise.all([
+  // Resolve site name and photo URLs in parallel
+  const [checkInPhotoUrl, checkOutPhotoUrl, siteRow] = await Promise.all([
     getSignedUrl('attendance-photos', rec.check_in_photo_url  || ''),
-    getSignedUrl('attendance-photos', rec.check_out_photo_url || '')
+    getSignedUrl('attendance-photos', rec.check_out_photo_url || ''),
+    rec.check_in_site_id
+      ? sb.from('project_sites').select('name').eq('id', rec.check_in_site_id).maybeSingle().then(r => r.data)
+      : Promise.resolve(null)
   ]);
   return {
     hasCheckedIn:  !!rec.check_in_time,
     hasCheckedOut: !!rec.check_out_time,
     checkInTime:   rec.check_in_time  ? hhmm(new Date(rec.check_in_time))  : null,
     checkOutTime:  rec.check_out_time ? hhmm(new Date(rec.check_out_time)) : null,
-    location: rec.site && rec.site.name || '',
+    location: siteRow && siteRow.name || '',
     checkInPhotoUrl, checkOutPhotoUrl
   };
 }
@@ -815,14 +820,17 @@ async function updateMyProfile(args, ctx) {
     if (!await bcrypt.compare(String(args.oldPassword), actor.password_hash)) return { success: false, message: 'Current password is incorrect' };
     patch.password_hash = await bcrypt.hash(String(args.newPassword), 10);
   }
-  if (args.removeProfileImage) {
+  // removeProfileImage flag — must be strictly true (not just truthy string)
+  if (args.removeProfileImage === true || args.removeProfileImage === 'true') {
     patch.profile_image = null;
   } else if (args.profileImageBase64) {
     patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   }
-  const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('*').single();
-  if (error) return { success: false, message: error.message };
+  const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name').single();
+  if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
+  // data.profile_image will be null if we set it to null — getSignedUrl('', '') returns ''
   const profileImage = await getSignedUrl('profile-photos', data.profile_image || '');
+  console.log('updateMyProfile: removeFlag=', args.removeProfileImage, 'db.profile_image=', data.profile_image, 'signedUrl=', profileImage ? 'yes' : 'empty');
   return { success: true, profileImage, fullName: data.full_name };
 }
 

@@ -157,10 +157,10 @@ const AttendanceSystem = (function() {
       // Create map without setting a view yet — avoids flash to default center
       map = L.map('map', { center: defaultCenter, zoom: 11, zoomAnimation: false });
 
-      // Google Maps satellite + roads hybrid tile layer
-      L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        attribution: '© Google Maps',
-        maxZoom: 20
+      // OpenStreetMap tile layer — free, no API key, proper attribution
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+        maxZoom: 19
       }).addTo(map);
 
       // Fetch project sites from DB, draw zones, THEN set final view — no double-pan
@@ -2216,22 +2216,30 @@ const AttendanceSystem = (function() {
   }
 
   function displayProjectSites(sites) {
-    const html = sites.map(site => `
-      <div class="project-zone">
+    if (!sites.length) {
+      document.getElementById('projectsContainer').innerHTML = '<p style="color:#888;padding:16px;">No project sites yet. Click <strong>Add Project Site</strong> to create one.</p>';
+      return;
+    }
+    const html = sites.map(site => {
+      const lat = Number(site.latitude)  || 0;
+      const lng = Number(site.longitude) || 0;
+      const rad = Number(site.radius)    || 200;
+      return `<div class="project-zone">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; gap:8px;">
-          <div class="card-title">${site.name}</div>
+          <div class="card-title">${escapeHtml(site.name)}</div>
           <div class="department-actions">
             <button class="action-icon edit-icon btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
             <button class="action-icon delete-icon btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
           </div>
         </div>
-        <p style="color:#666; font-size:13px; margin-bottom:10px;">${site.description || ''}</p>
+        <p style="color:#666; font-size:13px; margin-bottom:10px;">${escapeHtml(site.description || '')}</p>
         <div class="project-info">
-          <div><i class="fas fa-map-marker-alt" style="color:var(--navy-accent); width:18px;"></i> ${site.address}</div>
-          <div><i class="fas fa-crosshairs" style="color:var(--navy-accent); width:18px;"></i> ${site.latitude.toFixed(6)}, ${site.longitude.toFixed(6)}</div>
-          <div><i class="fas fa-ruler-combined" style="color:var(--navy-accent); width:18px;"></i> Radius: ${site.radius}m</div>
+          <div><i class="fas fa-map-marker-alt" style="color:var(--navy-accent); width:18px;"></i> ${escapeHtml(site.address || '')}</div>
+          <div><i class="fas fa-crosshairs" style="color:var(--navy-accent); width:18px;"></i> ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+          <div><i class="fas fa-ruler-combined" style="color:var(--navy-accent); width:18px;"></i> Radius: ${rad}m</div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     document.getElementById('projectsContainer').innerHTML = html;
   }
 
@@ -3018,7 +3026,7 @@ const AttendanceSystem = (function() {
       // update sidebar avatar — photo if available, else initial letter
       setSidebarAvatar(document.getElementById('sidebarAvatar'), newPhoto, currentFullName);
 
-      // update profile photo preview
+      // update profile photo preview — trust the response directly
       _setProfilePhotoUI(newPhoto, currentFullName);
 
       // persist in session cache so it survives a reload
@@ -3028,8 +3036,8 @@ const AttendanceSystem = (function() {
       _removeProfileImage  = false;
       document.getElementById('profileOldPwd').value = '';
       document.getElementById('profileNewPwd').value = '';
-      // Re-fetch from DB so UI reflects the true saved state (catches remove edge cases)
-      loadMyProfile();
+      // Bust SWR so next visit to profile re-fetches fresh from DB
+      swr.clear();
       showPopup('success', 'Profile Updated', 'Your changes have been saved.');
     }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Error', err.message || 'Network error'); });
   }
