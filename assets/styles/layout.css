@@ -33,11 +33,14 @@
 .sidebar.collapsed .sidebar-user-info { padding: 14px 0; }
 .sidebar.collapsed .sidebar-avatar { margin: 0 auto; width: 40px; height: 40px; font-size: 15px; border-radius: 20px; }
 .sidebar.collapsed .sidebar-menu button,
-.sidebar.collapsed .sidebar-logout button { justify-content: center; padding: 13px 0; width: 100%; gap: 0; text-align: center; }
+.sidebar.collapsed .sidebar-logout button {
+  justify-content: center; padding: 13px 0 !important;
+  width: 76px !important; gap: 0; margin: 0;
+}
 .sidebar.collapsed .sidebar-menu i,
-.sidebar.collapsed .sidebar-logout i { margin: 0; font-size: 18px; width: auto; display: block; text-align: center; }
+.sidebar.collapsed .sidebar-logout i { margin: 0 auto; font-size: 18px; width: auto; }
 .sidebar.collapsed .sidebar-menu-section { padding: 14px 0; }
-.sidebar.collapsed .sidebar-menu li { display: flex; justify-content: center; }
+.sidebar.collapsed .sidebar-menu li { display: flex; justify-content: center; width: 100%; }
 .sidebar.collapsed .sidebar-session { padding: 10px 0; justify-content: center; flex-direction: column; gap: 2px; }
 .sidebar.collapsed .sidebar-session-time { font-size: 10px; }
 .sidebar.collapsed .sidebar-brand { display: none; }
