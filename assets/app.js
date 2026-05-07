@@ -694,7 +694,12 @@ const AttendanceSystem = (function() {
         document.querySelectorAll('.stg-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
         renderPalettes(); renderLayouts(); loadAdminBrandingSettings();
         break;
-      case 's-profile':         loadMyProfile(); break;
+      case 's-profile':
+        // Reset to Personal Info tab
+        document.querySelectorAll('.ep-tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+        document.querySelectorAll('.ep-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+        loadMyProfile();
+        break;
       case 's-emp-attendance':  checkStatus(); loadChart(); loadTrendChart(); break;
       case 's-emp-history':     loadHistoryInline(); break;
       case 's-projectMap':      setTimeout(() => { if (!map) initializeMap(); else map.invalidateSize(); }, 80); loadLiveAttendance(); break;
@@ -1167,6 +1172,16 @@ const AttendanceSystem = (function() {
         if (pane) pane.classList.add('active');
       }
 
+      // Profile tabs
+      const epTab = event.target.closest('.ep-tab-btn');
+      if (epTab) {
+        document.querySelectorAll('.ep-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.ep-tab-pane').forEach(p => p.classList.remove('active'));
+        epTab.classList.add('active');
+        const pane = document.getElementById('ep-tab-' + epTab.dataset.epTab);
+        if (pane) pane.classList.add('active');
+      }
+
       // Settings: Save All (only fires payroll save for admin; palette/layout save on click)
       if (event.target.closest('#saveAllSettingsBtn')) savePayrollSettings();
 
@@ -1343,16 +1358,14 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.non-admin-only').forEach(el => {
       el.style.display = currentRole !== 'admin' ? '' : 'none';
     });
-    // For non-admins, activate the first visible settings tab (Security)
-    if (currentRole !== 'admin') {
+    // For admins, activate Company tab; for others Security is already default
+    if (currentRole === 'admin') {
       document.querySelectorAll('.stg-tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.stg-tab-pane').forEach(pane => pane.classList.remove('active'));
-      const firstVisible = document.querySelector('.stg-tab-btn:not(.admin-only)');
-      if (firstVisible) {
-        firstVisible.classList.add('active');
-        const pane = document.getElementById('stg-' + firstVisible.dataset.stgTab);
-        if (pane) pane.classList.add('active');
-      }
+      const companyBtn = document.querySelector('.stg-tab-btn[data-stg-tab="company"]');
+      if (companyBtn) companyBtn.classList.add('active');
+      const companyPane = document.getElementById('stg-company');
+      if (companyPane) companyPane.classList.add('active');
     }
 
     // build per-role menu and open the default section (both renderers — CSS shows whichever layout is active)
@@ -1476,15 +1489,24 @@ const AttendanceSystem = (function() {
       statusBadge.className = 'ea-status-badge ea-status-in';
       checkInBtn.classList.add('hidden');
       checkOutBtn.classList.remove('hidden');
+      checkOutBtn.disabled = false;
     } else if (status.hasCheckedIn && status.hasCheckedOut) {
       statusBadge.innerHTML = '<i class="fas fa-sign-out-alt"></i> Checked Out';
       statusBadge.className = 'ea-status-badge ea-status-out';
-      checkInBtn.classList.add('hidden');
       checkOutBtn.classList.add('hidden');
+      checkInBtn.classList.remove('hidden');
+      checkInBtn.disabled = true;
+      checkInBtn.style.opacity = '0.5';
+      checkInBtn.style.cursor = 'not-allowed';
+      checkInBtn.innerHTML = '<i class="fas fa-check-double"></i> Attendance Complete';
     } else {
       statusBadge.innerHTML = '<i class="fas fa-clock"></i> Not Checked In';
       statusBadge.className = 'ea-status-badge ea-status-none';
       checkInBtn.classList.remove('hidden');
+      checkInBtn.disabled = false;
+      checkInBtn.style.opacity = '';
+      checkInBtn.style.cursor = '';
+      checkInBtn.innerHTML = '<i class="fas fa-camera"></i> <span id="checkInText">Check In</span>';
       checkOutBtn.classList.add('hidden');
     }
 
@@ -2503,7 +2525,8 @@ const AttendanceSystem = (function() {
     const department = document.getElementById('newDepartment').value;
     const position = document.getElementById('newPosition').value.trim();
     const role = document.getElementById('newRole').value;
-    const employeeNumber = (document.getElementById('newEmployeeNumber').value || '').trim().toUpperCase() || undefined;
+    // Employee number is always auto-assigned on create (field is readonly)
+    const employeeNumber = undefined;
 
     if (!username || !password || !fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
@@ -2616,10 +2639,12 @@ const AttendanceSystem = (function() {
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
-          <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+            <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
+            ${emp.employeeNumber ? `<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--siomac-navy);background:var(--bg-subtle);padding:2px 8px;border-radius:6px;letter-spacing:.5px;">${escapeHtml(emp.employeeNumber)}</span>` : ''}
+          </div>
         </div>
         <div class="emp-card-body">
-          <div class="emp-detail-row"><i class="fas fa-id-card"></i><span style="font-family:monospace;font-size:12px;font-weight:600;color:var(--siomac-navy)">${escapeHtml(emp.employeeNumber || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>
           <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.position || '—')}</span></div>
@@ -4023,6 +4048,12 @@ const AttendanceSystem = (function() {
     setEl('profileDisplayDept', u.department);
     setEl('profileDisplayUsername', u.username);
     setEl('profileDisplayPosition', u.position);
+    // Contact row chips
+    setEl('profileContactEmail', u.email);
+    setEl('profileContactPhone', u.phone);
+    // Employee ID field (readonly input in personal tab)
+    const empNumInput = document.getElementById('profileEmployeeNumber');
+    if (empNumInput && empNumInput.tagName === 'INPUT') empNumInput.value = u.employeeNumber || '';
   }
 
   function loadMyProfile() {

@@ -108,13 +108,6 @@
             <span id="pageTitleText">Operations Dashboard</span>
           </h1>
         </div>
-        <div class="page-header-right">
-          <div class="header-meta">
-            <i class="fas fa-globe-americas"></i>
-            <span id="isoClock">--</span>
-            <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
-          </div>
-        </div>
       </div>
 
       <!-- ── Notification Modal ── -->
@@ -288,20 +281,30 @@
           <div class="ea-info-grid">
             <div class="ea-info-row">
               <i class="fas fa-sign-in-alt" style="color:var(--success)"></i>
-              <span><strong id="checkInTimeLabel">Check In</strong><br><span id="checkInTime" style="color:var(--text-muted)">--:--</span></span>
+              <span>
+                <strong id="checkInTimeLabel">Check In</strong>
+                <span id="checkInTime" class="ea-info-value">--:--</span>
+              </span>
             </div>
             <div class="ea-info-row">
               <i class="fas fa-sign-out-alt" style="color:var(--siomac-red)"></i>
-              <span><strong id="checkOutTimeLabel">Check Out</strong><br><span id="checkOutTime" style="color:var(--text-muted)">--:--</span></span>
+              <span>
+                <strong id="checkOutTimeLabel">Check Out</strong>
+                <span id="checkOutTime" class="ea-info-value">--:--</span>
+              </span>
             </div>
             <div class="ea-info-row">
               <i class="fas fa-chart-line" style="color:var(--siomac-navy)"></i>
-              <span><strong>Hours Today</strong><br><span id="todayHoursDisplay" style="color:var(--text-muted)">0.0 hrs</span></span>
+              <span>
+                <strong>Hours Today</strong>
+                <span id="todayHoursDisplay" class="ea-info-value">0.0 hrs</span>
+              </span>
             </div>
             <div class="ea-info-row">
               <i class="fas fa-map-marker-alt" style="color:var(--siomac-red)"></i>
-              <span><strong id="currentLocationLabel">Location</strong><br>
-                <span id="currentLocation" style="color:var(--text-muted)">Getting location...</span>
+              <span>
+                <strong id="currentLocationLabel">Location</strong>
+                <span id="currentLocation" class="ea-info-value" style="font-size:0.88rem;">Getting location...</span>
                 <span id="locationAccuracy" class="location-info"></span>
                 <span id="locationAddress" class="location-info"></span>
               </span>
@@ -345,8 +348,8 @@
           <!-- Last 7 Days Hours bar chart -->
           <div class="ea-chart-card">
             <div class="ea-section-title"><i class="fas fa-chart-bar"></i> Last 7 Days · Hours Worked</div>
-            <div style="position:relative;height:200px;">
-              <canvas id="attendanceTrendChart"></canvas>
+            <div style="position:relative;flex:1;min-height:220px;">
+              <canvas id="attendanceTrendChart" style="position:absolute;inset:0;width:100%!important;height:100%!important;"></canvas>
             </div>
           </div>
         </div>
@@ -712,6 +715,14 @@
           </div>
           <!-- Hidden widgets restore bar -->
           <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+          </div>
+          <!-- Footer: clock + secure -->
+          <div class="dash-overview-footer">
+            <div class="dash-overview-clock">
+              <i class="fas fa-globe-americas"></i>
+              <span id="isoClock">--</span>
+              <span class="dash-overview-secure"><i class="fas fa-shield-alt"></i> Secure</span>
+            </div>
           </div>
         </div>
 
@@ -1295,107 +1306,122 @@
       <!-- My Profile — every role can edit their own name / image / pwd -->
       <section class="app-section" id="s-profile">
 
-        <!-- success toast -->
+        <!-- Toast -->
         <div id="profileToast" class="profile-toast" style="display:none;"></div>
 
-        <!-- save button row -->
-        <div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
-          <button class="btn btn-danger-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
+        <!-- Page header -->
+        <div class="ep-page-header">
+          <div>
+            <h1 class="ep-page-title"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:8px;"></i> My Profile</h1>
+            <p class="ep-page-sub">Manage your personal information and security settings</p>
+          </div>
         </div>
 
-        <!-- main card -->
-        <div class="profile-card">
-          <!-- banner -->
-          <div class="profile-banner"></div>
-
-          <!-- avatar -->
-          <div class="profile-avatar-section">
-            <div class="profile-avatar-wrapper" id="pickProfileImageBtn">
-              <img id="profilePhotoPreview" src="" alt="Profile"
-                style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 8px 20px rgba(0,0,0,.15);display:none;"
-                onerror="this.style.display='none'">
-              <div id="profilePhotoEmpty"
-                style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--siomac-red),#C60A0A);border:4px solid white;box-shadow:0 8px 20px rgba(0,0,0,.15);color:#fff;font-size:46px;font-weight:700;display:flex;align-items:center;justify-content:center;">?</div>
-              <div class="profile-avatar-edit"><i class="fas fa-camera"></i></div>
+        <!-- Profile hero card -->
+        <div class="ep-hero-card">
+          <div class="ep-cover"></div>
+          <div class="ep-avatar-section">
+            <div class="ep-avatar-wrapper" id="pickProfileImageBtn">
+              <img id="profilePhotoPreview" src="" alt="Profile" onerror="this.style.display='none'" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+              <div id="profilePhotoEmpty" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:700;color:#fff;">?</div>
+              <div class="ep-avatar-edit"><i class="fas fa-camera"></i></div>
             </div>
             <input type="file" id="profileImageInput" accept="image/*" style="display:none;">
           </div>
-
-          <!-- display info -->
-          <div class="profile-info-block">
-            <div class="profile-display-name" id="profileDisplayName">—</div>
-            <div class="profile-display-role" id="profileDisplayRole">—</div>
-            <div class="profile-display-meta">
-              <span class="profile-meta-item"><i class="fas fa-building"></i> <span id="profileDisplayDept">—</span></span>
-              <span class="profile-meta-item"><i class="fas fa-id-badge"></i> <span id="profileDisplayUsername">—</span></span>
-              <span class="profile-meta-item"><i class="fas fa-briefcase"></i> <span id="profileDisplayPosition">—</span></span>
-            </div>
-            <button class="profile-remove-photo-btn" id="removeProfileImageBtn" style="display:none;">
+          <div class="ep-hero-info">
+            <div class="ep-hero-name" id="profileDisplayName">—</div>
+            <div class="ep-hero-role" id="profileDisplayRole">—</div>
+            <span class="ep-active-badge"><i class="fas fa-check-circle"></i> Active</span>
+            <button class="ep-remove-photo-btn" id="removeProfileImageBtn" style="display:none;">
               <i class="fas fa-trash"></i> Remove Photo
             </button>
           </div>
-
-          <!-- two-column form -->
-          <div class="profile-details-grid">
-
-            <!-- Personal Information -->
-            <div class="profile-detail-section">
-              <div class="profile-section-title"><i class="fas fa-user-edit" style="color:var(--siomac-red);"></i> Personal Information</div>
-              <div class="profile-form-group">
-                <label>Full Name</label>
-                <input type="text" id="profileFullName" placeholder="Full name">
-              </div>
-              <div class="profile-form-row">
-                <div class="profile-form-group">
-                  <label>Username (read-only)</label>
-                  <input type="text" id="profileUsername" readonly class="profile-input-readonly">
-                </div>
-                <div class="profile-form-group">
-                  <label>Department (read-only)</label>
-                  <input type="text" id="profileDept" readonly class="profile-input-readonly">
-                </div>
-              </div>
-              <div class="profile-form-group">
-                <label>Position (read-only)</label>
-                <input type="text" id="profilePosition" readonly class="profile-input-readonly">
-              </div>
-              <div class="profile-form-group">
-                <label>Email Address</label>
-                <input type="email" id="profileEmail" placeholder="your@email.com">
-              </div>
-              <div class="profile-form-group">
-                <label>Phone Number</label>
-                <input type="tel" id="profilePhone" placeholder="+1 868 555 0000">
-              </div>
-            </div>
-
-            <!-- Security -->
-            <div class="profile-detail-section">
-              <div class="profile-section-title"><i class="fas fa-lock" style="color:var(--siomac-red);"></i> Security &amp; Password</div>
-              <div class="profile-form-group">
-                <label>Current Password</label>
-                <input type="password" id="profileOldPwd" placeholder="Required to change password">
-              </div>
-              <div class="profile-form-group">
-                <label>New Password</label>
-                <input type="password" id="profileNewPwd" placeholder="Min. 6 characters">
-                <div class="profile-pwd-hint"><i class="fas fa-info-circle"></i> Leave empty to keep current password</div>
-              </div>
-              <div class="profile-form-group">
-                <label>Confirm New Password</label>
-                <input type="password" id="profileConfirmPwd" placeholder="Confirm new password">
-              </div>
-              <div class="profile-form-group">
-                <label>Two-Factor Authentication</label>
-                <select id="profileTwoFactor" disabled style="opacity:.6;cursor:not-allowed;">
-                  <option value="disabled">Disabled (coming soon)</option>
-                </select>
-              </div>
-              <button class="profile-btn-save" id="updateSecurityBtn"><i class="fas fa-shield-alt"></i> Update Security Settings</button>
-            </div>
-
+          <!-- Contact info row -->
+          <div class="ep-contact-row">
+            <div class="ep-contact-item"><i class="fas fa-envelope"></i><span id="profileContactEmail">—</span></div>
+            <div class="ep-contact-item"><i class="fas fa-phone"></i><span id="profileContactPhone">—</span></div>
+            <div class="ep-contact-item"><i class="fas fa-building"></i><span id="profileDisplayDept">—</span></div>
+            <div class="ep-contact-item"><i class="fas fa-id-badge"></i><span id="profileDisplayUsername">—</span></div>
+            <div class="ep-contact-item"><i class="fas fa-briefcase"></i><span id="profileDisplayPosition">—</span></div>
           </div>
         </div>
+
+        <!-- Tabs -->
+        <div class="ep-tabs-bar">
+          <button class="ep-tab-btn active" data-ep-tab="personal"><i class="fas fa-user"></i> Personal Info</button>
+          <button class="ep-tab-btn" data-ep-tab="security"><i class="fas fa-lock"></i> Security</button>
+        </div>
+
+        <!-- Tab: Personal Info -->
+        <div class="ep-tab-pane active" id="ep-tab-personal">
+          <div class="ep-form-row">
+            <div class="ep-form-group">
+              <label>Full Name</label>
+              <input type="text" id="profileFullName" placeholder="Full name">
+            </div>
+            <div class="ep-form-group">
+              <label>Employee ID</label>
+              <input type="text" id="profileEmployeeNumber" readonly class="ep-readonly" style="font-family:monospace;">
+            </div>
+          </div>
+          <div class="ep-form-row">
+            <div class="ep-form-group">
+              <label>Email Address</label>
+              <input type="email" id="profileEmail" placeholder="your@email.com">
+            </div>
+            <div class="ep-form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="profilePhone" placeholder="+1 868 555 0000">
+            </div>
+          </div>
+          <div class="ep-form-row">
+            <div class="ep-form-group">
+              <label>Username</label>
+              <input type="text" id="profileUsername" readonly class="ep-readonly">
+            </div>
+            <div class="ep-form-group">
+              <label>Department</label>
+              <input type="text" id="profileDept" readonly class="ep-readonly">
+            </div>
+          </div>
+          <div class="ep-form-row">
+            <div class="ep-form-group">
+              <label>Position</label>
+              <input type="text" id="profilePosition" readonly class="ep-readonly">
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-danger-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Save Changes</button>
+          </div>
+        </div>
+
+        <!-- Tab: Security -->
+        <div class="ep-tab-pane" id="ep-tab-security">
+          <div class="ep-form-group" style="max-width:420px;">
+            <label>Current Password</label>
+            <input type="password" id="profileOldPwd" placeholder="Required to change password">
+          </div>
+          <div class="ep-form-row" style="max-width:860px;">
+            <div class="ep-form-group">
+              <label>New Password</label>
+              <input type="password" id="profileNewPwd" placeholder="Min. 6 characters">
+            </div>
+            <div class="ep-form-group">
+              <label>Confirm New Password</label>
+              <input type="password" id="profileConfirmPwd" placeholder="Confirm new password">
+            </div>
+          </div>
+          <div class="ep-form-group" style="max-width:420px;">
+            <label>Two-Factor Authentication</label>
+            <select id="profileTwoFactor" disabled style="opacity:.6;cursor:not-allowed;">
+              <option value="disabled">Disabled (coming soon)</option>
+            </select>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-danger-primary" id="updateSecurityBtn"><i class="fas fa-shield-alt"></i> Update Security</button>
+          </div>
+        </div>
+
       </section>
 
       <!-- Settings -->
@@ -1409,15 +1435,15 @@
 
         <!-- Tabs -->
         <div class="stg-tabs">
-          <button class="stg-tab-btn active admin-only" data-stg-tab="company">Company &amp; Branding</button>
-          <button class="stg-tab-btn" data-stg-tab="security">Security &amp; Privacy</button>
+          <button class="stg-tab-btn admin-only" data-stg-tab="company">Company &amp; Branding</button>
+          <button class="stg-tab-btn active" data-stg-tab="security">Security &amp; Privacy</button>
           <button class="stg-tab-btn" data-stg-tab="layout">Layout &amp; Navigation</button>
           <button class="stg-tab-btn admin-only" data-stg-tab="notifications">Notifications</button>
           <button class="stg-tab-btn" data-stg-tab="appearance">Appearance</button>
         </div>
 
         <!-- 1. Company & Branding -->
-        <div class="stg-tab-pane active" id="stg-company">
+        <div class="stg-tab-pane" id="stg-company">
 
           <!-- Company Info — live wired (admin only) -->
           <div class="stg-card admin-only" id="brandingCard">
@@ -1489,15 +1515,10 @@
             <button class="stg-btn-primary" id="savePayrollSettingsBtn"><i class="fas fa-save"></i> Save Settings</button>
           </div>
 
-          <!-- Non-admin placeholder -->
-          <div class="stg-card non-admin-only" id="companyReadonlyCard" style="display:none;">
-            <div class="stg-card-header"><h3><i class="fas fa-building"></i> Company Information</h3></div>
-            <p style="color:var(--text-muted);font-size:0.85rem;">Company settings are managed by your administrator.</p>
-          </div>
         </div>
 
-        <!-- 2. Security & Privacy — dummy -->
-        <div class="stg-tab-pane" id="stg-security">
+        <!-- 2. Security & Privacy -->
+        <div class="stg-tab-pane active" id="stg-security">
           <div class="stg-card">
             <div class="stg-card-header"><h3><i class="fas fa-shield-alt"></i> Access &amp; Session</h3></div>
             <div class="stg-form-group">
@@ -1698,9 +1719,9 @@
       <div class="emp-modal-body">
         <form id="addEmployeeForm" autocomplete="off">
           <div class="emp-form-grid">
-            <div class="form-group">
+            <div class="form-group emp-form-full">
               <label class="form-label">Employee ID <span style="font-size:11px;color:var(--text-muted);font-weight:400">(auto-assigned)</span></label>
-              <input type="text" class="form-control" id="newEmployeeNumber" placeholder="e.g. EMP-0042" style="font-family:monospace;text-transform:uppercase">
+              <input type="text" class="form-control" id="newEmployeeNumber" placeholder="Auto-assigned on save" readonly style="font-family:monospace;background:var(--bg-subtle);color:var(--text-muted);cursor:not-allowed;max-width:220px;">
             </div>
             <div class="form-group">
               <label class="form-label">Username *</label>

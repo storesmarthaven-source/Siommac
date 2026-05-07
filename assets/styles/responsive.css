@@ -157,6 +157,17 @@
   input, select, textarea { font-size: 16px !important; }
 }
 
+  /* Employee profile page */
+  .ep-avatar-section { padding: 0 14px; margin-top: -36px; }
+  .ep-avatar-wrapper { width: 76px; height: 76px; }
+  .ep-hero-info { padding: 10px 14px 14px; }
+  .ep-hero-name { font-size: 1.05rem; }
+  .ep-contact-row { padding: 10px 14px 14px; gap: 8px 16px; }
+  .ep-tabs-bar { width: 100%; }
+  .ep-tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
+  .ep-form-row { grid-template-columns: 1fr; }
+}
+
 /* Very small phones (<380px) */
 @media (max-width: 380px) {
   .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: 1fr; }
