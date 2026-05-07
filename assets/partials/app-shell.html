@@ -283,7 +283,7 @@
 
       <!-- Manager — Department Overview -->
       <section class="app-section" id="s-mgr-overview" data-role="manager">
-        <div class="dashboard-grid-4">
+        <div class="dashboard-grid-4" style="margin-bottom:20px;">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-card-body">
@@ -299,14 +299,14 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon gold"><i class="fas fa-bed"></i></div>
+            <div class="stat-card-icon gold"><i class="fas fa-calendar-minus"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="onLeaveDepartment">0</div>
               <div class="stat-card-label" id="onLeaveDepartmentLabel">On Leave</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="lateDepartment">0</div>
               <div class="stat-card-label" id="lateDepartmentLabel">Late Today</div>
@@ -358,7 +358,7 @@
 
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
-        <div class="dashboard-grid-3">
+        <div class="dashboard-grid-3" style="margin-bottom:20px;">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-card-body">
@@ -374,14 +374,14 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-user-times"></i></div>
+            <div class="stat-card-icon red"><i class="fas fa-user-times"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="absentToday">0</div>
               <div class="stat-card-label" id="absentTodayLabel">Absent Today</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon gold"><i class="fas fa-bed"></i></div>
+            <div class="stat-card-icon gold"><i class="fas fa-calendar-minus"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="onLeaveToday">0</div>
               <div class="stat-card-label" id="onLeaveTodayLabel">On Leave Today</div>
@@ -395,7 +395,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="lateToday">0</div>
               <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
@@ -486,7 +486,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-sitemap"></i></div>
+            <div class="stat-card-icon blue"><i class="fas fa-sitemap"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="empStatDepts">—</div>
               <div class="stat-card-label">Departments</div>
@@ -515,19 +515,19 @@
           </div>
           <div class="emp-filter-actions">
             <div class="emp-view-toggle">
-              <button class="emp-view-btn active" id="empCardViewBtn" title="Card View"><i class="fas fa-th-large"></i></button>
-              <button class="emp-view-btn" id="empTableViewBtn" title="Table View"><i class="fas fa-list"></i></button>
+              <button class="emp-view-btn" id="empCardViewBtn" title="Card View"><i class="fas fa-th-large"></i></button>
+              <button class="emp-view-btn active" id="empTableViewBtn" title="Table View"><i class="fas fa-list"></i></button>
             </div>
             <button id="addEmployeeBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Employee</button>
             <button id="refreshEmployeesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
         </div>
 
-        <!-- Card view -->
-        <div id="empCardView" class="emp-cards-grid"></div>
+        <!-- Card view (hidden by default) -->
+        <div id="empCardView" class="emp-cards-grid" style="display:none;"></div>
 
-        <!-- Table view (hidden by default) -->
-        <div id="empTableView" class="data-section" style="display:none;">
+        <!-- Table view -->
+        <div id="empTableView" class="data-section">
           <div style="overflow-x:auto;">
             <table id="employeesTable">
               <thead>
@@ -569,7 +569,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-card-icon blue"><i class="fas fa-user-tie"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="deptStatHeads">0</div>
               <div class="stat-card-label">Department Heads</div>
@@ -634,7 +634,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="stat-card-icon red"><i class="fas fa-user-slash"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="attStatAbsent">—</div>
               <div class="stat-card-label">Absent / Leave</div>

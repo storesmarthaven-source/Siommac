@@ -2042,7 +2042,7 @@ const AttendanceSystem = (function() {
 
   // ─── Employee list state ───
   let _empAllList = [];   // raw API data
-  let _empCardView = true; // true = cards, false = table
+  let _empCardView = false; // true = cards, false = table
 
   function loadEmployeeList() {
     if (!_isSyncing && !swr.get('listEmployees:{}')) {
@@ -2122,27 +2122,47 @@ const AttendanceSystem = (function() {
     grid.innerHTML = list.map(emp => {
       const t = todayMap[emp.todayStatus] || todayMap.notchecked;
       const isActive = emp.status === 'Active';
+      const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
       return `
       <div class="emp-card">
         <div class="emp-card-header">
           <div class="emp-card-avatar">${_empInitials(emp.fullName)}</div>
           <div class="emp-card-title-block">
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
-            <div class="emp-card-pos">${escapeHtml(emp.position || '—')}</div>
+            <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
           <span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
         </div>
         <div class="emp-card-body">
-          <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
-          <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.role)}</span></div>
-          <div class="emp-detail-row"><i class="fas fa-fingerprint"></i><span class="emp-username">@${escapeHtml(emp.username)}</span></div>
+          <div class="emp-detail-row">
+            <i class="fas fa-sitemap"></i>
+            <span><strong style="color:var(--siomac-navy)">${escapeHtml(emp.department || '—')}</strong></span>
+          </div>
+          <div class="emp-detail-row">
+            <i class="fas fa-briefcase"></i>
+            <span>${escapeHtml(emp.position || '—')}</span>
+          </div>
+          <div class="emp-detail-row">
+            <i class="fas fa-shield-alt"></i>
+            <span>${roleCap}</span>
+          </div>
+          <div class="emp-detail-row">
+            <i class="fas fa-at"></i>
+            <span class="emp-username">${escapeHtml(emp.username)}</span>
+          </div>
           <div class="emp-today-row">
-            <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> ${t.text}</span>
+            <span class="emp-today-badge ${t.cls}">
+              <i class="fas ${t.icon}"></i> Today: ${t.text}
+            </span>
           </div>
         </div>
         <div class="emp-card-actions">
-          <button class="btn btn-outline-primary btn-sm btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-pen"></i> Edit</button>
-          <button class="btn btn-outline-danger btn-sm btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i></button>
+          <button class="btn btn-outline-primary btn-sm btn-edit-employee" data-username="${escapeHtml(emp.username)}">
+            <i class="fas fa-pen"></i> Edit
+          </button>
+          <button class="btn btn-outline-danger btn-sm btn-delete-employee" data-username="${escapeHtml(emp.username)}">
+            <i class="fas fa-trash"></i> Delete
+          </button>
         </div>
       </div>`;
     }).join('');
