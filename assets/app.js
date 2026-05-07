@@ -1132,6 +1132,7 @@ const AttendanceSystem = (function() {
     currentDeptId = null;
     currentRole = null;
     cameraStream = null;
+    _currentProfileImage = null; // reset so next login fetches fresh from DB
     locationWatchId = null;
     syncInterval = null;
     dashboardRefreshInterval = null;
@@ -2910,21 +2911,41 @@ const AttendanceSystem = (function() {
   }
 
   // ─── My Profile (self-update: name, image, pwd) ─────────────
+
+  // In-memory photo state — set after every save so sync never overwrites it
+  let _currentProfileImage = null; // null = "not yet loaded from DB"; '' = "no photo"; url = signed url
+
   function loadMyProfile() {
+    // Never let the 30-second background sync overwrite what the user just saved
+    if (_isSyncing) return;
+
     document.getElementById('profileUsername').value = currentUser || '';
     document.getElementById('profileFullName').value = currentFullName || '';
-    document.getElementById('profilePosition').value = ''; // populated from getEmployeeByUsername
+    document.getElementById('profilePosition').value = '';
     document.getElementById('profileOldPwd').value = '';
     document.getElementById('profileNewPwd').value = '';
 
+    // If we already have the photo state from a previous load or save, use it immediately
+    // so the UI doesn't flicker or re-fetch unnecessarily
+    if (_currentProfileImage !== null) {
+      _profileImageBase64 = '';
+      _removeProfileImage  = false;
+      _setProfilePhotoUI(_currentProfileImage, currentFullName);
+    }
+
     api('getEmployeeByUsername', { username: currentUser }).then(res => {
+      if (_isSyncing) return; // guard again — response may arrive after sync starts
       if (res && res.success && res.data) {
         const u = res.data;
         document.getElementById('profileFullName').value = u.fullName || '';
         document.getElementById('profilePosition').value = u.position || '';
         _profileImageBase64 = '';
         _removeProfileImage  = false;
-        _setProfilePhotoUI(u.profileImage || '', u.fullName);
+        // Only update photo UI from DB if we haven't already set it from a save
+        if (_currentProfileImage === null) {
+          _currentProfileImage = u.profileImage || '';
+          _setProfilePhotoUI(_currentProfileImage, u.fullName);
+        }
       }
     });
   }
@@ -3018,6 +3039,9 @@ const AttendanceSystem = (function() {
       document.getElementById('sidebarUserName').textContent = currentFullName;
 
       const newPhoto = res.profileImage || '';
+
+      // Lock in the new photo state — sync will never overwrite this now
+      _currentProfileImage = newPhoto;
 
       // update sidebar avatar — photo if available, else initial letter
       setSidebarAvatar(document.getElementById('sidebarAvatar'), newPhoto, currentFullName);
