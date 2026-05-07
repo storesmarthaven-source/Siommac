@@ -51,12 +51,12 @@
   gap: 20px;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 210px); /* fills remaining viewport */
+  height: calc(100vh - 210px);
 }
 
 /* ── Map container ── */
 .lm-map-container {
-  flex: 3;
+  flex: 2;
   background: #eef2f9;
   border-radius: 28px;
   overflow: hidden;
@@ -69,8 +69,8 @@
 
 /* ── Activity panel ── */
 .lm-activity-panel {
-  flex: 0 0 300px;
-  width: 300px;
+  flex: 0 0 380px;
+  width: 380px;
   background: white;
   border-radius: 28px;
   border: 1px solid var(--border);
@@ -87,7 +87,7 @@
   flex-shrink: 0;
 }
 .lm-panel-header h3 {
-  font-weight: 700; color: var(--siomac-navy); font-size: 0.95rem;
+  font-weight: 700; color: var(--siomac-navy); font-size: 1.05rem;
   margin: 0; display: flex; align-items: center; gap: 8px;
 }
 
@@ -103,9 +103,9 @@
 }
 .lm-stat-badge { text-align: center; flex: 1; }
 .lm-stat-number {
-  font-size: 22px; font-weight: 800; color: var(--siomac-navy); line-height: 1;
+  font-size: 28px; font-weight: 800; color: var(--siomac-navy); line-height: 1;
 }
-.lm-stat-label { font-size: 0.6rem; color: var(--text-muted); margin-top: 3px; line-height: 1.2; }
+.lm-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; line-height: 1.2; }
 
 /* employee list */
 .lm-employees-list {
@@ -120,32 +120,32 @@
 .lm-emp-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 10px;
+  gap: 14px;
+  padding: 13px 12px;
   border-radius: 16px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   cursor: pointer;
   transition: background .15s, border-color .15s;
   border: 1px solid transparent;
 }
 .lm-emp-item:hover { background: #F8FAFE; border-color: var(--border); }
 .lm-emp-avatar {
-  width: 40px; height: 40px;
+  width: 46px; height: 46px;
   background: var(--siomac-navy);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: white; font-weight: 700; font-size: 14px;
+  color: white; font-weight: 700; font-size: 16px;
   flex-shrink: 0; overflow: hidden;
 }
 .lm-emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .lm-emp-info { flex: 1; min-width: 0; }
 .lm-emp-name {
-  font-weight: 600; font-size: 0.85rem; color: var(--text-primary);
+  font-weight: 600; font-size: 0.95rem; color: var(--text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .lm-emp-status {
-  font-size: 0.7rem; display: flex; align-items: center;
-  gap: 5px; margin-top: 2px; color: var(--text-muted);
+  font-size: 0.78rem; display: flex; align-items: center;
+  gap: 5px; margin-top: 3px; color: var(--text-muted);
 }
 .lm-emp-chevron { color: #ccc; font-size: 11px; flex-shrink: 0; }
 
@@ -204,6 +204,6 @@
 @media (max-width: 900px) {
   .lm-layout { flex-direction: column; height: auto; }
   .lm-map-container { min-height: 320px; flex: none; }
-  .lm-activity-panel { flex: none; width: 100%; max-height: 380px; }
+  .lm-activity-panel { flex: none; width: 100%; max-height: 420px; }
   .chart-grid-2x2 { grid-template-columns: 1fr; }
 }
