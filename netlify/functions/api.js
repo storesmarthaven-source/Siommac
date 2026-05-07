@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const JWT_SECRET = process.env.JWT_SECRET;
-const TZ = process.env.APP_TZ || 'Asia/Karachi';
+const TZ = process.env.APP_TZ || 'America/Port_of_Spain';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !JWT_SECRET) {
   console.warn('Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or JWT_SECRET');
@@ -29,7 +29,8 @@ const json = (statusCode, body) => ({
 const ok = data => json(200, data && typeof data === 'object' && 'success' in data ? data : { success: true, data });
 const fail = (message, statusCode = 200) => json(statusCode, { success: false, message });
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-const hhmm = d => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(d);
+const hhmm    = d => new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
+const hhmm24  = d => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
 const dateOnly = v => !v ? '' : String(v).slice(0, 10);
 const cap = s => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
@@ -324,7 +325,7 @@ async function markAttendance(args, ctx) {
   const photo = args.photoBase64 ? await uploadBase64(photoBucket, args.photoBase64, `${actor.username}_${action}_${work_date}`) : '';
   const { data: rec } = await sb.from('attendance').select('*').eq('user_id', actor.id).eq('work_date', work_date).maybeSingle();
   const lateThreshold = await setting('lateThresholdHHMM', '09:15');
-  const late = hhmm(now).slice(0, 5) > lateThreshold;
+  const late = hhmm24(now) > lateThreshold;
 
   if (action === 'CheckIn' || action === 'Project') {
     if (rec && rec.check_in_time) return { success: false, message: 'Already checked in today' };
@@ -476,7 +477,13 @@ async function decideLeave(args, ctx, status) {
 
 async function getSettings() {
   const { data } = await sb.from('settings').select('*');
-  return Object.fromEntries((data || []).map(r => [r.key, r.value]));
+  const s = Object.fromEntries((data || []).map(r => [r.key, r.value]));
+  // currency is fixed to TT — correct any stale value in DB
+  if (!s.currency || s.currency === 'Rs.' || s.currency === 'Rs') {
+    s.currency = 'TT';
+    sb.from('settings').upsert({ key: 'currency', value: 'TT', updated_at: new Date().toISOString() }).then(() => {});
+  }
+  return s;
 }
 
 async function updateSetting(args, ctx) {
