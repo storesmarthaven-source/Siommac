@@ -1043,14 +1043,7 @@ const AttendanceSystem = (function() {
     document.getElementById('sidebarUserName').textContent = currentFullName;
     document.getElementById('sidebarUserRole').textContent = currentRole;
     const avatarEl = document.getElementById('sidebarAvatar');
-    if (avatarEl) {
-      const img = result.profileImage || '';
-      if (img) {
-        avatarEl.innerHTML = '<img src="' + img + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Profile">';
-      } else {
-        avatarEl.textContent = (currentFullName || '?').trim().charAt(0).toUpperCase();
-      }
-    }
+    if (avatarEl) setSidebarAvatar(avatarEl, result.profileImage || '', currentFullName);
 
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
     if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
@@ -1896,53 +1889,50 @@ const AttendanceSystem = (function() {
   }
 
   function loadEmployeeList() {
-    if (!swr.get('listEmployees:{}')) {
+    // On background sync, skip skeleton/destroy so the table doesn't flash empty
+    if (!_isSyncing && !swr.get('listEmployees:{}')) {
       destroyDataTable('employeesTable');
       setSkel('employeesTableBody', skelTableRows(7, 5));
     }
     _rawApi('listEmployees', {}).then(res => {
       if (!res || !res.success) {
-        document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load employees'}</td></tr>`;
+        if (!_isSyncing) document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load employees'}</td></tr>`;
         return;
       }
       swr.set('listEmployees:{}', res);
       displayEmployeeList(res.data || []);
     }).catch(err => {
-      document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
+      if (!_isSyncing) document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="7" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
     });
   }
 
   function displayEmployeeList(employees) {
-    let html = '';
     const statusMap = {
-      checkedin:  { class: 'status-checkedin',  text: 'Checked In', icon: '<i class="fas fa-check-circle"></i>' },
-      checkedout: { class: 'status-checkedout', text: 'Checked Out', icon: '<i class="fas fa-sign-out-alt"></i>' },
-      notchecked: { class: 'status-notchecked', text: 'Not Checked In',    icon: '<i class="fas fa-clock"></i>' }
+      checkedin:  { class: 'status-checkedin',  text: 'Checked In',     icon: '<i class="fas fa-check-circle"></i>' },
+      checkedout: { class: 'status-checkedout', text: 'Checked Out',    icon: '<i class="fas fa-sign-out-alt"></i>' },
+      notchecked: { class: 'status-notchecked', text: 'Not Checked In', icon: '<i class="fas fa-clock"></i>' }
     };
-    employees.forEach((emp, index) => {
+    const html = employees.map((emp, index) => {
       const todayStatus = statusMap[emp.todayStatus] || statusMap.notchecked;
-      
-      html += `
-        <tr>
-          <td data-label="ID">${index + 1}</td>
-          <td data-label="Name">${emp.fullName}</td>
-          <td data-label="Department">${emp.department}</td>
-          <td data-label="Position">${emp.position}</td>
-          <td data-label="Status"><span class="status-badge ${emp.status === 'Active' ? 'active' : 'inactive'}">${emp.status}</span></td>
-          <td data-label="Today"><span class="employee-status ${todayStatus.class}">${todayStatus.icon} ${todayStatus.text}</span></td>
-          <td data-label="Actions" style="white-space:nowrap;">
-            <button class="action-icon edit-icon btn-edit-employee" data-username="${emp.username}" title="${'Edit'}"><i class="fas fa-edit"></i></button>
-            <button class="action-icon delete-icon btn-delete-employee" data-username="${emp.username}" title="${'Delete'}"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
-    });
-    
+      return `<tr>
+        <td data-label="ID">${index + 1}</td>
+        <td data-label="Name">${escapeHtml(emp.fullName)}</td>
+        <td data-label="Department">${escapeHtml(emp.department)}</td>
+        <td data-label="Position">${escapeHtml(emp.position)}</td>
+        <td data-label="Status"><span class="status-badge ${emp.status === 'Active' ? 'active' : 'inactive'}">${emp.status}</span></td>
+        <td data-label="Today"><span class="employee-status ${todayStatus.class}">${todayStatus.icon} ${todayStatus.text}</span></td>
+        <td data-label="Actions" style="white-space:nowrap;">
+          <button class="action-icon edit-icon btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="action-icon delete-icon btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Destroy old DataTable first, then set HTML, then re-init
+    destroyDataTable('employeesTable');
     document.getElementById('employeesTableBody').innerHTML = html;
     initDataTable('employeesTable', {
-      columnDefs: [
-        { targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }
-      ]
+      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
 
@@ -2278,18 +2268,18 @@ const AttendanceSystem = (function() {
     const month = parseInt(document.getElementById('attendanceMonth').value, 10);
     const year  = parseInt(document.getElementById('attendanceYear').value, 10);
     const args = { month, year };
-    if (!swr.get('listAttendance:' + JSON.stringify(args))) {
+    if (!_isSyncing && !swr.get('listAttendance:' + JSON.stringify(args))) {
       destroyDataTable('attendanceTable');
       setSkel('attendanceTableBody', skelTableRows(9, 5));
     }
     _rawApi('listAttendance', args).then(res => {
       if (!res || !res.success) {
-        document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load attendance'}</td></tr>`;
+        if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load attendance'}</td></tr>`;
         return;
       }
       displayAttendanceData(res.data || []);
     }).catch(err => {
-      document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
+      if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
     });
   }
 
@@ -2938,15 +2928,42 @@ const AttendanceSystem = (function() {
   let _profileImageBase64 = '';
   let _removeProfileImage  = false; // flagged true when user clicks Remove
 
+  // Shared helper — updates the sidebar circular avatar with photo or initial letter
+  function setSidebarAvatar(el, imgUrl, name) {
+    if (!el) return;
+    const initial = (name || '?').trim().charAt(0).toUpperCase();
+    if (imgUrl) {
+      const img = document.createElement('img');
+      img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;';
+      img.alt = 'Profile';
+      img.onerror = () => { el.innerHTML = ''; el.textContent = initial; };
+      img.src = imgUrl;
+      el.innerHTML = '';
+      el.appendChild(img);
+    } else {
+      el.innerHTML = '';
+      el.textContent = initial;
+    }
+  }
+
   function _setProfilePhotoUI(imgUrl, fullName) {
     const imgEl   = document.getElementById('profilePhotoPreview');
     const emptyEl = document.getElementById('profilePhotoEmpty');
     const removeBtn = document.getElementById('removeProfileImageBtn');
     if (imgUrl) {
-      imgEl.src = imgUrl; imgEl.style.display = 'block';
+      imgEl.style.display = 'block';
       emptyEl.style.display = 'none';
       if (removeBtn) removeBtn.style.display = '';
+      // If URL fails to load (expired signed URL), fall back to initials
+      imgEl.onerror = () => {
+        imgEl.style.display = 'none';
+        emptyEl.style.display = 'flex';
+        emptyEl.textContent = (fullName || currentFullName || '?').charAt(0).toUpperCase();
+        if (removeBtn) removeBtn.style.display = 'none';
+      };
+      imgEl.src = imgUrl;
     } else {
+      imgEl.src = '';
       imgEl.style.display = 'none';
       emptyEl.style.display = 'flex';
       emptyEl.textContent = (fullName || currentFullName || '?').charAt(0).toUpperCase();
@@ -2998,16 +3015,8 @@ const AttendanceSystem = (function() {
 
       const newPhoto = res.profileImage || '';
 
-      // update sidebar avatar — photo if available, else initial
-      const av = document.getElementById('sidebarAvatar');
-      if (av) {
-        if (newPhoto) {
-          av.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Profile">`;
-        } else {
-          av.innerHTML = '';
-          av.textContent = (currentFullName || '?').charAt(0).toUpperCase();
-        }
-      }
+      // update sidebar avatar — photo if available, else initial letter
+      setSidebarAvatar(document.getElementById('sidebarAvatar'), newPhoto, currentFullName);
 
       // update profile photo preview
       _setProfilePhotoUI(newPhoto, currentFullName);

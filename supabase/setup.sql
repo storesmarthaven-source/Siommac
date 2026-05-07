@@ -44,3 +44,10 @@ on conflict (id) do nothing;
 update public.settings set value = 'TT',         updated_at = now() where key = 'currency'    and value in ('Rs.','Rs');
 update public.settings set value = 'My Company', updated_at = now() where key = 'companyName' and value in ('Rameez Scripts','ZKB');
 delete from public.settings where key = 'projectAreaCenter';
+
+-- ── 5. Remove old Pakistan project sites from the live map ──
+-- Deletes any site whose latitude is in the Pakistan range (23–37°N, 60–77°E).
+-- Safe to run multiple times — only affects Pakistan-coordinate rows.
+delete from public.project_sites
+where latitude between 23 and 37
+  and longitude between 60 and 77;

@@ -866,24 +866,40 @@ async function bulkImportRates(args, ctx) {
 
 async function getPayrollEmployees(args, ctx) {
   const actor = await requireRole(ctx, ['admin', 'manager']);
-  let q = sb.from('app_users').select('*, department:departments(name)').eq('status', 'active').neq('role', 'admin').order('full_name');
-  if (actor.role === 'manager') q = q.eq('department_id', actor.department_id);
-  const { data } = await q;
-  return { success: true, data: (data || []).map(u => ({ username: u.username, fullName: u.full_name, department: u.department && u.department.name || '—', position: u.position || '—' })) };
+  // Use two plain queries to avoid FK alias issues
+  const [{ data: users, error: uErr }, { data: depts, error: dErr }] = await Promise.all([
+    sb.from('app_users').select('id,username,full_name,department_id,position,status,role').eq('status', 'active').neq('role', 'admin').order('full_name'),
+    sb.from('departments').select('id,name')
+  ]);
+  if (uErr) throw new Error('Failed to load employees: ' + uErr.message);
+  if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
+  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+  let list = (users || []);
+  if (actor.role === 'manager') list = list.filter(u => u.department_id === actor.department_id);
+  return { success: true, data: list.map(u => ({ username: u.username, fullName: u.full_name, department: deptMap[u.department_id] || '—', position: u.position || '—' })) };
 }
 
-// Count Mon–Sat days in a given UTC month (Sunday = day off, Pakistan standard)
+// Count Mon–Fri days in a given UTC month (Saturday + Sunday = off, Trinidad standard)
 function workingDaysInMonth(y, mo) {
   const last = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate();
   let count = 0;
-  for (let d = 1; d <= last; d++) if (new Date(Date.UTC(y, mo, d)).getUTCDay() !== 0) count++;
+  for (let d = 1; d <= last; d++) {
+    const day = new Date(Date.UTC(y, mo, d)).getUTCDay();
+    if (day !== 0 && day !== 6) count++; // 0=Sun, 6=Sat
+  }
   return count;
 }
 
 async function getPayroll(args, ctx) {
   const actor = await requireRole(ctx, ['admin', 'manager']);
-  const { data: emp } = await sb.from('app_users').select('*, department:departments(name)').eq('username', args.username).single();
+  const { data: emp } = await sb.from('app_users').select('*').eq('username', args.username).single();
   if (!emp) return { success: false, message: 'Employee not found' };
+  // Resolve department name separately to avoid FK alias issues
+  let empDeptName = '—';
+  if (emp.department_id) {
+    const { data: deptRow } = await sb.from('departments').select('name').eq('id', emp.department_id).maybeSingle();
+    if (deptRow) empDeptName = deptRow.name;
+  }
   if (actor.role === 'manager' && emp.department_id !== actor.department_id) return { success: false, message: 'Employee not in your department' };
   const y = Number(args.year), mo = Number(args.month);
   const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
@@ -928,7 +944,7 @@ async function getPayroll(args, ctx) {
   return {
     success: true,
     data: {
-      employee: { username: emp.username, fullName: emp.full_name, position: emp.position || '—', department: emp.department && emp.department.name || '—', hourlyRate: rate },
+      employee: { username: emp.username, fullName: emp.full_name, position: emp.position || '—', department: empDeptName, hourlyRate: rate },
       period:   { year: y, month: mo, label, start, end },
       days,
       totals: {
