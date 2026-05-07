@@ -40,6 +40,8 @@
   .eh-stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
   /* Employee attendance page — stack on mobile */
+  .ea-top-row { grid-template-columns: 1fr; }
+  .ea-today-card { margin-bottom: 0; }
   .ea-charts-row { grid-template-columns: 1fr; gap: 14px; }
   .ea-info-grid { grid-template-columns: 1fr; }
   .ea-info-row:nth-child(even) { border-left: none; padding-left: 0; }
@@ -155,16 +157,16 @@
   .swal2-title { font-size: 18px !important; }
 
   input, select, textarea { font-size: 16px !important; }
-}
 
   /* Employee profile page */
-  .ep-avatar-section { padding: 0 14px; margin-top: -36px; }
-  .ep-avatar-wrapper { width: 76px; height: 76px; }
-  .ep-hero-info { padding: 10px 14px 14px; }
-  .ep-hero-name { font-size: 1.05rem; }
-  .ep-contact-row { padding: 10px 14px 14px; gap: 8px 16px; }
-  .ep-tabs-bar { width: 100%; }
-  .ep-tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
+  .ep-avatar-section { margin-top: -42px; }
+  .ep-avatar-wrapper { width: 82px; height: 82px; }
+  .ep-hero-info { padding: 10px 16px 12px; }
+  .ep-hero-name { font-size: 1.1rem; }
+  .ep-contact-row { padding: 10px 16px 16px; gap: 8px 14px; }
+  .ep-tabs-bar { padding: 0 4px; }
+  .ep-tab-btn { padding: 12px 14px; font-size: 0.82rem; }
+  .ep-tab-content { padding: 18px 16px; }
   .ep-form-row { grid-template-columns: 1fr; }
 }
 

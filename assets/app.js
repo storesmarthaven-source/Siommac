@@ -1150,6 +1150,7 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#removeProfileImageBtn')) removeProfileImage();
       if (event.target.closest('#saveProfileBtn'))        saveMyProfile();
       if (event.target.closest('#updateSecurityBtn'))    _updateSecurityOnly();
+      if (event.target.closest('#uploadDocBtn'))         _profileToast('Document upload coming soon.', false);
 
       // Admin: branding + payroll rules
       if (event.target.closest('#pickLogoBtn'))             pickLogo();
@@ -2075,8 +2076,7 @@ const AttendanceSystem = (function() {
         <td>${photoThumb(rec.checkInPhotoUrl,  'Check-in selfie')}</td>
         <td>${photoThumb(rec.checkOutPhotoUrl, 'Check-out selfie')}</td>
       </tr>`;
-    }).join('') : `<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text-muted);">
-      <i class="fas fa-inbox" style="font-size:36px;opacity:.3;display:block;margin-bottom:10px;"></i>No attendance records found</td></tr>`;
+    }).join('') : `<tr><td colspan="8" class="eh-empty-row"><i class="fas fa-inbox"></i><p>No attendance records found</p></td></tr>`;
 
     destroyDataTable('historyTable');
     document.getElementById('historyTableBody').innerHTML = rows;
@@ -4104,6 +4104,66 @@ const AttendanceSystem = (function() {
           _setProfilePhotoUI(_currentProfileImage, u.fullName);
         }
       }
+    });
+
+    // Load activity timeline
+    _loadProfileActivity();
+  }
+
+  function _loadProfileActivity() {
+    const container = document.getElementById('profileActivityList');
+    if (!container) return;
+
+    const fmtDate = d => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+             ' · ' + dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    Promise.all([
+      api('getMyHistory', {}).catch(() => null),
+      api('getMyLeaves',  {}).catch(() => null)
+    ]).then(([attRows, leaveRows]) => {
+      if (!container) return;
+      const events = [];
+
+      // getMyHistory returns an array directly (not wrapped in {success, data})
+      const attData = Array.isArray(attRows) ? attRows : (attRows && Array.isArray(attRows.data) ? attRows.data : []);
+      attData.slice(0, 15).forEach(r => {
+        // r = { date: "2025-05-07", checkIn: "09:00", checkOut: "17:00", hours, status }
+        if (r.checkIn && r.checkIn !== '--:--')  events.push({ icon: 'fa-sign-in-alt',  title: 'Clocked In',  date: r.date + ', ' + r.checkIn,  raw: new Date(r.date) });
+        if (r.checkOut && r.checkOut !== '--:--') events.push({ icon: 'fa-sign-out-alt', title: 'Clocked Out', date: r.date + ', ' + r.checkOut, raw: new Date(r.date) });
+      });
+
+      // getMyLeaves also returns array directly
+      const leaveData = Array.isArray(leaveRows) ? leaveRows : (leaveRows && Array.isArray(leaveRows.data) ? leaveRows.data : []);
+      leaveData.slice(0, 10).forEach(r => {
+        // r = { id, type, from, to, days, reason, status, appliedOn }
+        const status = r.status || '';
+        const label  = status === 'Approved' ? 'Leave Approved' : status === 'Rejected' ? 'Leave Rejected' : 'Leave Requested';
+        const icon   = status === 'Approved' ? 'fa-check-circle' : status === 'Rejected' ? 'fa-times-circle' : 'fa-calendar-plus';
+        const dateRaw = r.appliedOn || r.from || '';
+        events.push({ icon, title: label + (r.type ? ` (${r.type})` : ''), date: dateRaw, raw: new Date(dateRaw) });
+      });
+
+      // Sort newest first
+      events.sort((a, b) => b.raw - a.raw);
+
+      if (!events.length) {
+        container.innerHTML = '<div class="ep-timeline-empty"><i class="fas fa-history"></i><p>No recent activity</p></div>';
+        return;
+      }
+
+      container.innerHTML = events.slice(0, 15).map(e => `
+        <div class="ep-timeline-item">
+          <div class="ep-timeline-icon"><i class="fas ${e.icon}"></i></div>
+          <div class="ep-timeline-body">
+            <div class="ep-timeline-title">${e.title}</div>
+            <div class="ep-timeline-date">${fmtDate(e.date)}</div>
+          </div>
+        </div>
+      `).join('');
     });
   }
 

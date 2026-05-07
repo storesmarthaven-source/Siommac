@@ -366,6 +366,11 @@ async function deleteEmployee(args, ctx) {
     const { count } = await sb.from('app_users').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('status', 'active');
     if (count <= 1) return { success: false, message: 'Cannot delete the last admin account' };
   }
+  // Delete related records first to avoid FK constraint violations
+  await sb.from('attendance').delete().eq('user_id', target.id);
+  await sb.from('attendance').delete().eq('username', args.username);
+  await sb.from('leave_requests').delete().eq('user_id', target.id);
+  await sb.from('leave_requests').delete().eq('username', args.username);
   const { error } = await sb.from('app_users').delete().eq('id', target.id);
   if (error) return { success: false, message: error.message };
   await log_(actor, 'delete', 'user', args.username, args.username);
