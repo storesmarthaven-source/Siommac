@@ -292,27 +292,41 @@ const AttendanceSystem = (function() {
 
       const color = row.isCheckedOut ? '#6c757d' : (row.status === 'late' ? '#fbbc04' : '#34a853');
       const initial = (row.fullName || '?').charAt(0).toUpperCase();
+      // Use profile photo in marker if available, else fallback to coloured initial
+      const markerHtml = row.profileImage
+        ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;\\'>${initial}</div>'"></div>`
+        : `<div style="background:${color};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;">${initial}</div>`;
+
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: 'live-emp-marker',
-          html: `<div style="background:${color}; width:32px; height:32px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:13px;">${initial}</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
+          html: markerHtml,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
         })
       }).addTo(map);
 
-      const photo = row.checkOutPhotoUrl || row.checkInPhotoUrl;
+      // Best selfie to show: prefer check-out (more recent), fall back to check-in
+      const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+      const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? '⚠ Late' : '✓ Checked In');
+      const statusColor = row.isCheckedOut ? '#6c757d'    : (row.status === 'late' ? '#f59e0b' : '#34a853');
       marker.bindPopup(`
         <div class="live-popup">
-          ${photo ? `<img src="${photo}" onerror="this.style.display='none'">` : ''}
+          ${selfie
+            ? `<img src="${selfie}" alt="Selfie" onerror="this.style.display='none'">`
+            : (row.profileImage ? `<img src="${row.profileImage}" alt="${initial}" onerror="this.style.display='none'">` : '')}
           <div class="name">${row.fullName}</div>
-          <div class="row"><i class="fas fa-building" style="width:14px;"></i> ${row.department || '—'}</div>
-          <div class="row"><i class="fas fa-sign-in-alt" style="width:14px;"></i> Check In: ${row.checkInTime || '—'}</div>
-          <div class="row"><i class="fas fa-sign-out-alt" style="width:14px;"></i> Check Out: ${row.checkOutTime || '— still in'}</div>
-          ${row.siteName ? `<div class="row"><i class="fas fa-map-marker-alt" style="width:14px;"></i> ${row.siteName}${row.distanceM != null ? ` · ${row.distanceM}m` : ''}</div>` : ''}
-          <div class="row" style="margin-top:6px;"><span class="status-badge ${row.isCheckedOut ? 'inactive' : 'active'}">${row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late' : 'Checked In')}</span></div>
+          ${row.position  ? `<div class="row"><i class="fas fa-id-badge"       style="width:14px;color:#888;"></i> ${row.position}</div>` : ''}
+          ${row.department? `<div class="row"><i class="fas fa-building"        style="width:14px;color:#888;"></i> ${row.department}</div>` : ''}
+          <div class="row"><i class="fas fa-sign-in-alt"   style="width:14px;color:#888;"></i> In: <strong>${row.checkInTime  || '—'}</strong></div>
+          <div class="row"><i class="fas fa-sign-out-alt"  style="width:14px;color:#888;"></i> Out: <strong>${row.checkOutTime || '—'}</strong></div>
+          ${row.siteName  ? `<div class="row"><i class="fas fa-map-marker-alt" style="width:14px;color:#888;"></i> ${row.siteName}${row.distanceM != null ? ` <span style="color:#999;font-size:11px;">(${row.distanceM}m)</span>` : ''}</div>` : ''}
+          ${row.lastSeen  ? `<div class="row"><i class="fas fa-clock"          style="width:14px;color:#888;"></i> Last seen: ${row.lastSeen}</div>` : ''}
+          <div class="row" style="margin-top:7px;">
+            <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:${statusColor};color:#fff;font-size:11px;font-weight:700;">${statusLabel}</span>
+          </div>
         </div>
-      `);
+      `, { maxWidth: 240 });
       marker._liveUserId = row.userId; // for sidebar click → marker open
       liveMarkers.push(marker);
     });
@@ -337,14 +351,20 @@ const AttendanceSystem = (function() {
     const html = sorted.map(r => {
       const cls = r.isCheckedOut ? 'out' : (r.status === 'late' ? 'late' : '');
       const initial = (r.fullName || '?').charAt(0).toUpperCase();
-      const thumb = r.checkInPhotoUrl
-        ? `<img class="live-emp-thumb" src="${r.checkInPhotoUrl}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'live-emp-thumb-fallback',textContent:'${initial}'}))">`
+      // prefer check-in selfie, fall back to profile photo, then initial letter
+      const thumbSrc = r.checkInPhotoUrl || r.profileImage || '';
+      const thumb = thumbSrc
+        ? `<img class="live-emp-thumb" src="${thumbSrc}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="live-emp-thumb-fallback" style="display:none;">${initial}</div>`
         : `<div class="live-emp-thumb-fallback">${initial}</div>`;
+      const metaParts = [];
+      if (r.lastSeen) metaParts.push(`<i class="fas fa-clock" style="width:11px;"></i> ${r.lastSeen}`);
+      if (r.position) metaParts.push(`<i class="fas fa-id-badge" style="width:11px;"></i> ${r.position}`);
+      else if (r.department) metaParts.push(`<i class="fas fa-building" style="width:11px;"></i> ${r.department}`);
       return `<div class="live-emp-card ${cls}" data-userid="${r.userId}">
-        ${thumb}
+        <div style="position:relative;flex-shrink:0;">${thumb}</div>
         <div class="live-emp-info">
           <div class="live-emp-name">${r.fullName}</div>
-          <div class="live-emp-meta"><i class="fas fa-clock" style="width:11px;"></i> ${r.lastSeen || '—'} · ${r.department || ''}</div>
+          <div class="live-emp-meta">${metaParts.join(' &middot; ') || (r.department || '—')}</div>
         </div>
       </div>`;
     }).join('');

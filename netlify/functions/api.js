@@ -71,18 +71,91 @@ async function setting(key, fallback = '') {
   return data ? data.value : fallback;
 }
 
+// Allowed MIME types and their canonical extensions
+const ALLOWED_IMAGE_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/jpg':  'jpg',
+  'image/png':  'png',
+  'image/webp': 'webp',
+  'image/gif':  'gif'
+};
+// 8 MB hard cap (base64 is ~33% larger than binary, so 8 MB base64 ≈ 6 MB file)
+const MAX_BASE64_BYTES = 8 * 1024 * 1024;
+
 async function uploadBase64(bucket, base64, name) {
   if (!base64) return '';
-  const m = String(base64).match(/^data:([^;]+);base64,(.+)$/);
-  const mime = m ? m[1] : 'image/jpeg';
-  const raw = m ? m[2] : String(base64).split('base64,').pop();
-  const ext = mime.split('/').pop().replace('jpeg', 'jpg');
-  const path = `${name}_${Date.now()}.${ext}`;
+  const str = String(base64);
+
+  // Size guard — check before decoding to save CPU
+  if (str.length > MAX_BASE64_BYTES) throw new Error('Image too large (max 6 MB)');
+
+  const m = str.match(/^data:([^;]+);base64,(.+)$/s);
+  const mime = (m ? m[1] : 'image/jpeg').toLowerCase().trim();
+  const raw  = m ? m[2] : str.split('base64,').pop();
+
+  // MIME allowlist
+  const ext = ALLOWED_IMAGE_TYPES[mime];
+  if (!ext) throw new Error(`Unsupported image type: ${mime}. Allowed: jpeg, png, webp, gif`);
+
+  // Sanitise filename — strip path traversal and non-alphanumeric chars (except _ -)
+  const safeName = String(name).replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 80);
+  const path = `${safeName}_${Date.now()}.${ext}`;
+
   const buffer = Buffer.from(raw, 'base64');
+  // Binary size guard (after decode)
+  if (buffer.byteLength > 6 * 1024 * 1024) throw new Error('Image too large (max 6 MB)');
+
   const { error } = await sb.storage.from(bucket).upload(path, buffer, { contentType: mime, upsert: false });
   if (error) throw error;
-  const { data } = sb.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
+
+  // Return path so callers can generate signed URLs; public URL only for branding bucket
+  if (bucket === 'branding') {
+    const { data } = sb.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+  }
+  return path; // signed URL generated at read time (see getSignedUrl)
+}
+
+// ─── Signed URL helpers ────────────────────────────────────────────────────────
+// Private buckets: attendance-photos, profile-photos.
+// Returns a signed URL valid for 1 hour, or '' if path is empty / not a storage path.
+const SIGNED_TTL = 3600; // seconds
+
+async function getSignedUrl(bucket, pathOrUrl) {
+  if (!pathOrUrl) return '';
+  // If it's already a full URL (legacy lh3 or public branding URL), pass through
+  if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+  const { data, error } = await sb.storage.from(bucket).createSignedUrl(pathOrUrl, SIGNED_TTL);
+  if (error) { console.warn('signed url fail', bucket, pathOrUrl, error.message); return ''; }
+  return data.signedUrl;
+}
+
+// Resolve photo URLs for an attendance record in-place, returning new URL strings.
+async function resolveAttendancePhotos(rec) {
+  if (!rec) return rec;
+  const [inUrl, outUrl] = await Promise.all([
+    getSignedUrl('attendance-photos', rec.check_in_photo_url  || rec.checkInPhotoUrl  || ''),
+    getSignedUrl('attendance-photos', rec.check_out_photo_url || rec.checkOutPhotoUrl || '')
+  ]);
+  return { ...rec, checkInPhotoUrl: inUrl, checkOutPhotoUrl: outUrl };
+}
+
+// Batch-resolve photo URLs for an array of attendance-shaped objects
+async function resolveAttendancePhotosBatch(rows) {
+  return Promise.all((rows || []).map(r => resolveAttendancePhotos(r)));
+}
+
+// ─── Public route: getSignedUrls ──────────────────────────────────────────────
+// Frontend calls this when it needs a signed URL for a known storage path.
+// args: { bucket, path } or { paths: [{bucket, path}] }
+async function getSignedUrls(args, ctx) {
+  await requireUser(ctx);
+  if (args.paths) {
+    const urls = await Promise.all(args.paths.map(({ bucket, path: p }) => getSignedUrl(bucket, p)));
+    return { success: true, data: urls };
+  }
+  const url = await getSignedUrl(args.bucket, args.path);
+  return { success: true, data: url };
 }
 
 function haversine(lat1, lng1, lat2, lng2) {
@@ -111,6 +184,11 @@ async function login(args) {
   const passOk = await bcrypt.compare(password, u.password_hash);
   if (!passOk) return { success: false, message: 'Invalid username or password' };
   await log_(u, 'login', 'user', u.id, 'login ok');
+  const [profileImage, companyLogoUrl, companyName] = await Promise.all([
+    getSignedUrl('profile-photos', u.profile_image || ''),
+    setting('companyLogoUrl', ''),
+    setting('companyName', 'Rameez Scripts')
+  ]);
   return {
     success: true,
     token: signUser(u),
@@ -122,9 +200,9 @@ async function login(args) {
     position: u.position || '',
     colorScheme: u.color_scheme || 'navy',
     layoutMode: u.layout_mode || 'sidebar',
-    profileImage: u.profile_image || '',
-    companyLogoUrl: await setting('companyLogoUrl', ''),
-    companyName: await setting('companyName', 'Rameez Scripts')
+    profileImage,
+    companyLogoUrl,
+    companyName
   };
 }
 
@@ -214,7 +292,16 @@ async function updateEmployee(args, ctx) {
 
 async function deleteEmployee(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
-  const { error } = await sb.from('app_users').delete().eq('username', args.username).neq('id', actor.id);
+  // Cannot delete yourself
+  if (actor.username === args.username) return { success: false, message: 'You cannot delete your own account' };
+  // Cannot delete the last active admin
+  const { data: target } = await sb.from('app_users').select('id,role').eq('username', args.username).maybeSingle();
+  if (!target) return { success: false, message: 'Employee not found' };
+  if (target.role === 'admin') {
+    const { count } = await sb.from('app_users').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('status', 'active');
+    if (count <= 1) return { success: false, message: 'Cannot delete the last admin account' };
+  }
+  const { error } = await sb.from('app_users').delete().eq('id', target.id);
   if (error) return { success: false, message: error.message };
   await log_(actor, 'delete', 'user', args.username, args.username);
   return { success: true };
@@ -271,12 +358,17 @@ async function getMyStatus(args, ctx) {
   const username = actor.role === 'admin' && args.username ? args.username : actor.username;
   const { data: rec } = await sb.from('attendance').select('*, site:project_sites!attendance_check_in_site_id_fkey(name)').eq('username', username).eq('work_date', today()).maybeSingle();
   if (!rec) return { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '' };
+  const [checkInPhotoUrl, checkOutPhotoUrl] = await Promise.all([
+    getSignedUrl('attendance-photos', rec.check_in_photo_url  || ''),
+    getSignedUrl('attendance-photos', rec.check_out_photo_url || '')
+  ]);
   return {
-    hasCheckedIn: !!rec.check_in_time,
+    hasCheckedIn:  !!rec.check_in_time,
     hasCheckedOut: !!rec.check_out_time,
-    checkInTime: rec.check_in_time ? hhmm(new Date(rec.check_in_time)) : null,
-    checkOutTime: rec.check_out_time ? hhmm(new Date(rec.check_out_time)) : null,
-    location: rec.site && rec.site.name || ''
+    checkInTime:   rec.check_in_time  ? hhmm(new Date(rec.check_in_time))  : null,
+    checkOutTime:  rec.check_out_time ? hhmm(new Date(rec.check_out_time)) : null,
+    location: rec.site && rec.site.name || '',
+    checkInPhotoUrl, checkOutPhotoUrl
   };
 }
 
@@ -284,13 +376,17 @@ async function getMyHistory(args, ctx) {
   const actor = await requireUser(ctx);
   const since = new Date(); since.setDate(since.getDate() - Math.min(Number(args.days) || 30, 365));
   const { data } = await sb.from('attendance').select('*').eq('username', actor.username).gte('work_date', since.toISOString().slice(0, 10)).order('work_date', { ascending: false });
-  return (data || []).map(a => ({
-    date: dateOnly(a.work_date),
-    checkIn: a.check_in_time ? hhmm(new Date(a.check_in_time)) : '--:--',
-    checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '--:--',
-    hours: a.total_hours || 0, status: a.status,
-    checkInPhotoUrl: a.check_in_photo_url || '', checkOutPhotoUrl: a.check_out_photo_url || ''
-  }));
+  const rows = await resolveAttendancePhotosBatch(
+    (data || []).map(a => ({
+      date: dateOnly(a.work_date),
+      checkIn:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '--:--',
+      checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '--:--',
+      hours: a.total_hours || 0, status: a.status,
+      check_in_photo_url:  a.check_in_photo_url  || '',
+      check_out_photo_url: a.check_out_photo_url || ''
+    }))
+  );
+  return rows.map(r => ({ date: r.date, checkIn: r.checkIn, checkOut: r.checkOut, hours: r.hours, status: r.status, checkInPhotoUrl: r.checkInPhotoUrl, checkOutPhotoUrl: r.checkOutPhotoUrl }));
 }
 
 async function getMyChart(args, ctx) {
@@ -513,19 +609,23 @@ async function getDeptEmployees(args, ctx) {
 
 async function getAdminStats(args, ctx) {
   await requireRole(ctx, ['admin']);
+  const todayStr = today();
   const [{ data: users }, { data: att }, { data: leaves }] = await Promise.all([
-    sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin'),
-    sb.from('attendance').select('*').eq('work_date', today()),
-    sb.from('leave_requests').select('*').eq('status', 'approved')
+    sb.from('app_users').select('id').eq('status', 'active').neq('role', 'admin'),
+    sb.from('attendance').select('check_in_time,check_in_site_id,status').eq('work_date', todayStr),
+    // only leaves active today
+    sb.from('leave_requests').select('id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr)
   ]);
-  const presentToday = (att || []).filter(a => a.check_in_time).length;
+  const totalEmployees = (users || []).length;
+  const presentToday   = (att || []).filter(a => a.check_in_time).length;
+  const onLeaveToday   = (leaves || []).length;
   return {
-    totalEmployees: (users || []).length,
+    totalEmployees,
     presentToday,
-    absentToday: Math.max(0, (users || []).length - presentToday),
-    onLeaveToday: (leaves || []).length,
+    absentToday:     Math.max(0, totalEmployees - presentToday - onLeaveToday),
+    onLeaveToday,
     activeLocations: new Set((att || []).map(a => a.check_in_site_id).filter(Boolean)).size,
-    lateToday: (att || []).filter(a => a.status === 'late').length
+    lateToday:       (att || []).filter(a => a.status === 'late').length
   };
 }
 
@@ -538,17 +638,22 @@ async function listAttendance(args, ctx) {
   ]);
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
-  return (users || []).map(u => {
+  const resolved = await Promise.all((users || []).map(async u => {
     const a = attMap[u.username];
+    const [checkInPhotoUrl, checkOutPhotoUrl] = await Promise.all([
+      getSignedUrl('attendance-photos', a && a.check_in_photo_url  || ''),
+      getSignedUrl('attendance-photos', a && a.check_out_photo_url || '')
+    ]);
     return {
       username: u.username, name: u.full_name, department: deptMap[u.department_id] || '—',
       todayStatus: !a ? 'Absent' : (a.check_out_time ? 'Checked Out' : (a.status === 'late' ? 'Late' : 'Present')),
-      checkIn: a && a.check_in_time ? hhmm(new Date(a.check_in_time)) : '—',
+      checkIn:  a && a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '—',
       checkOut: a && a.check_out_time ? hhmm(new Date(a.check_out_time)) : '—',
-      checkInPhotoUrl: a && a.check_in_photo_url || '', checkOutPhotoUrl: a && a.check_out_photo_url || '',
+      checkInPhotoUrl, checkOutPhotoUrl,
       totalDays: a ? 1 : 0, present: a && a.check_in_time ? 1 : 0, absent: a ? 0 : 1
     };
-  });
+  }));
+  return resolved;
 }
 
 async function getLiveAttendance(args, ctx) {
@@ -563,25 +668,34 @@ async function getLiveAttendance(args, ctx) {
   const userMap = Object.fromEntries((users || []).map(u => [u.id, u]));
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const siteMap = Object.fromEntries((sites || []).map(s => [s.id, s.name]));
-  return (att || []).filter(a => {
+  const filtered = (att || []).filter(a => {
     const u = userMap[a.user_id];
     if (!u) return false;
     if (!scope || scope === 'all') return true;
     return u.department_id === scope;
-  }).map(a => {
+  });
+  // Resolve signed URLs in parallel
+  const photoUrls = await Promise.all(filtered.map(a => Promise.all([
+    getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
+    getSignedUrl('attendance-photos', a.check_out_photo_url || ''),
+    a.user_id && userMap[a.user_id] ? getSignedUrl('profile-photos', userMap[a.user_id].profile_image || '') : Promise.resolve('')
+  ])));
+  return filtered.map((a, i) => {
     const u = userMap[a.user_id] || {};
     const last = a.check_out_time || a.check_in_time;
+    const [checkInPhotoUrl, checkOutPhotoUrl, profileImage] = photoUrls[i];
     return {
       userId: a.user_id, username: a.username, fullName: u.full_name || a.username,
       department: deptMap[u.department_id] || '',
-      checkInTime: a.check_in_time ? hhmm(new Date(a.check_in_time)) : null,
+      position: u.position || '',
+      checkInTime:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : null,
       checkOutTime: a.check_out_time ? hhmm(new Date(a.check_out_time)) : null,
       lastSeen: last ? hhmm(new Date(last)) : null,
-      checkInLat: a.check_in_lat == null ? null : Number(a.check_in_lat),
-      checkInLng: a.check_in_lng == null ? null : Number(a.check_in_lng),
+      checkInLat:  a.check_in_lat  == null ? null : Number(a.check_in_lat),
+      checkInLng:  a.check_in_lng  == null ? null : Number(a.check_in_lng),
       checkOutLat: a.check_out_lat == null ? null : Number(a.check_out_lat),
       checkOutLng: a.check_out_lng == null ? null : Number(a.check_out_lng),
-      checkInPhotoUrl: a.check_in_photo_url || '', checkOutPhotoUrl: a.check_out_photo_url || '',
+      checkInPhotoUrl, checkOutPhotoUrl, profileImage,
       status: a.status, siteId: a.check_in_site_id || '', siteName: siteMap[a.check_in_site_id] || '',
       distanceM: a.check_in_distance_m == null ? null : Number(a.check_in_distance_m),
       isCheckedOut: !!a.check_out_time
@@ -591,12 +705,22 @@ async function getLiveAttendance(args, ctx) {
 
 async function getDashboardCharts(args, ctx) {
   await requireRole(ctx, ['admin']);
-  const [{ data: users }, { data: depts }, { data: att }, { data: leaves }] = await Promise.all([
-    sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin'),
+  const todayStr = today();
+  const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  // Fetch this month's leave requests to count leave-type breakdown
+  const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString().slice(0, 10);
+
+  const [{ data: users }, { data: depts }, { data: att }, { data: allLeaves }, { data: activeLeaves }] = await Promise.all([
+    sb.from('app_users').select('id,department_id').eq('status', 'active').neq('role', 'admin'),
     sb.from('departments').select('id,name'),
-    sb.from('attendance').select('*').gte('work_date', new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)),
-    sb.from('leave_requests').select('*')
+    sb.from('attendance').select('work_date,check_in_time,status').gte('work_date', cutoff),
+    // leave breakdown — this calendar month only (matches Apps Script behaviour)
+    sb.from('leave_requests').select('type').gte('from_date', monthStart),
+    // leaves active today — for onLeave stat
+    sb.from('leave_requests').select('id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr)
   ]);
+
+  // ── 1. daily trend (last 30 days) ──
   const byDate = {};
   for (let i = 30; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
@@ -607,21 +731,31 @@ async function getDashboardCharts(args, ctx) {
     if (byDate[d] && a.check_in_time) byDate[d].present++;
     if (byDate[d] && a.status === 'late') byDate[d].late++;
   }
-  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+
+  // ── 2. department distribution ──
+  const deptMap    = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const deptCounts = {};
   for (const u of users || []) deptCounts[u.department_id || ''] = (deptCounts[u.department_id || ''] || 0) + 1;
-  const todayAtt = (att || []).filter(a => dateOnly(a.work_date) === today());
-  const late = todayAtt.filter(a => a.status === 'late').length;
+
+  // ── 3. today's status breakdown ──
+  const todayAtt  = (att || []).filter(a => dateOnly(a.work_date) === todayStr);
+  const late      = todayAtt.filter(a => a.status === 'late').length;
   const presentRaw = todayAtt.filter(a => a.check_in_time).length;
+  const onLeave   = (activeLeaves || []).length;
+  const totalEmp  = (users || []).length;
+  const absent    = Math.max(0, totalEmp - presentRaw - onLeave);
+
+  // ── 4. leave type breakdown (this month) ──
   const leaveTypes = { sick: 0, casual: 0, annual: 0, medical: 0 };
-  for (const l of leaves || []) {
+  for (const l of allLeaves || []) {
     const t = String(l.type || '').toLowerCase();
     if (Object.prototype.hasOwnProperty.call(leaveTypes, t)) leaveTypes[t]++;
   }
+
   return {
     dailyTrend: Object.values(byDate),
     deptDistribution: Object.keys(deptCounts).map(id => ({ name: deptMap[id] || 'Unassigned', count: deptCounts[id] })),
-    statusBreakdown: { present: Math.max(0, presentRaw - late), late, absent: Math.max(0, (users || []).length - presentRaw), onLeave: 0 },
+    statusBreakdown: { present: Math.max(0, presentRaw - late), late, absent, onLeave },
     leaveTypes
   };
 }
@@ -639,7 +773,8 @@ async function updateMyProfile(args, ctx) {
   if (args.profileImageBase64) patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('*').single();
   if (error) return { success: false, message: error.message };
-  return { success: true, profileImage: data.profile_image || '', fullName: data.full_name };
+  const profileImage = await getSignedUrl('profile-photos', data.profile_image || '');
+  return { success: true, profileImage, fullName: data.full_name };
 }
 
 async function uploadLogo(args, ctx) {
@@ -688,6 +823,14 @@ async function getPayrollEmployees(args, ctx) {
   return { success: true, data: (data || []).map(u => ({ username: u.username, fullName: u.full_name, department: u.department && u.department.name || '—', position: u.position || '—' })) };
 }
 
+// Count Mon–Sat days in a given UTC month (Sunday = day off, Pakistan standard)
+function workingDaysInMonth(y, mo) {
+  const last = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate();
+  let count = 0;
+  for (let d = 1; d <= last; d++) if (new Date(Date.UTC(y, mo, d)).getUTCDay() !== 0) count++;
+  return count;
+}
+
 async function getPayroll(args, ctx) {
   const actor = await requireRole(ctx, ['admin', 'manager']);
   const { data: emp } = await sb.from('app_users').select('*, department:departments(name)').eq('username', args.username).single();
@@ -695,25 +838,59 @@ async function getPayroll(args, ctx) {
   if (actor.role === 'manager' && emp.department_id !== actor.department_id) return { success: false, message: 'Employee not in your department' };
   const y = Number(args.year), mo = Number(args.month);
   const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
-  const end = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
-  const { data: recs } = await sb.from('attendance').select('*').eq('user_id', emp.id).gte('work_date', start).lte('work_date', end).order('work_date');
+  const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
+  const label = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(Date.UTC(y, mo, 1)));
+
+  const [{ data: recs }, [latePerDay, finePerDay, currency, companyName]] = await Promise.all([
+    sb.from('attendance').select('*').eq('user_id', emp.id).gte('work_date', start).lte('work_date', end).order('work_date'),
+    Promise.all([
+      setting('latePenaltyPerDay', '0'),
+      setting('leaveFinePerDay', '0'),
+      setting('currency', 'Rs.'),
+      setting('companyName', 'Company')
+    ])
+  ]);
+
   const rate = Number(emp.hourly_rate) || 0;
+  const lateDeduct = Number(latePerDay) || 0;
+  const fineDeduct = Number(finePerDay) || 0;
+
   const days = (recs || []).map(a => {
     const hours = Number(a.total_hours) || 0;
-    return { date: dateOnly(a.work_date), checkIn: a.check_in_time ? hhmm(new Date(a.check_in_time)) : '—', checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '—', hours, status: a.status || '—', earnings: Math.round(hours * rate * 100) / 100 };
+    return {
+      date: dateOnly(a.work_date),
+      checkIn:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '—',
+      checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '—',
+      hours, status: a.status || '—',
+      earnings: Math.round(hours * rate * 100) / 100
+    };
   });
-  const totalHours = Math.round(days.reduce((s, d) => s + d.hours, 0) * 100) / 100;
+
+  const totalHours    = Math.round(days.reduce((s, d) => s + d.hours,    0) * 100) / 100;
   const grossEarnings = Math.round(days.reduce((s, d) => s + d.earnings, 0) * 100) / 100;
-  const label = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(Date.UTC(y, mo, 1)));
+  const workingDays   = workingDaysInMonth(y, mo);
+  const presentDays   = days.filter(d => d.status === 'present' || d.status === 'late').length;
+  const lateDays      = days.filter(d => d.status === 'late').length;
+  const absentDays    = Math.max(0, workingDays - presentDays);
+  const latePenalty   = Math.round(lateDays   * lateDeduct * 100) / 100;
+  const leaveFine     = Math.round(absentDays * fineDeduct * 100) / 100;
+  const netEarnings   = Math.max(0, Math.round((grossEarnings - latePenalty - leaveFine) * 100) / 100);
+
   return {
     success: true,
     data: {
       employee: { username: emp.username, fullName: emp.full_name, position: emp.position || '—', department: emp.department && emp.department.name || '—', hourlyRate: rate },
-      period: { year: y, month: mo, label, start, end },
+      period:   { year: y, month: mo, label, start, end },
       days,
-      totals: { totalDays: days.length, workingDays: days.length, presentDays: days.filter(d => d.status === 'present' || d.status === 'late').length, absentDays: 0, lateDays: days.filter(d => d.status === 'late').length, totalHours, grossEarnings, latePenalty: 0, leaveFine: 0, netEarnings: grossEarnings, totalEarnings: grossEarnings },
-      currency: await setting('currency', 'Rs.'),
-      companyName: await setting('companyName', 'Company'),
+      totals: {
+        totalDays: days.length, workingDays, presentDays, absentDays, lateDays,
+        totalHours, grossEarnings,
+        latePenaltyPerDay: lateDeduct, latePenalty,
+        leaveFinePerDay:   fineDeduct, leaveFine,
+        netEarnings, totalEarnings: grossEarnings
+      },
+      currency,
+      companyName,
       generatedAt: new Date().toISOString()
     }
   };
@@ -767,7 +944,8 @@ const routes = {
   getPayrollEmployees,
   getPayroll,
   approveLeave: (a, ctx) => decideLeave(a, ctx, 'approved'),
-  rejectLeave: (a, ctx) => decideLeave(a, ctx, 'rejected')
+  rejectLeave:  (a, ctx) => decideLeave(a, ctx, 'rejected'),
+  getSignedUrls
 };
 
 exports.handler = async event => {
