@@ -260,24 +260,24 @@
 
 /* ── Icon button group ── */
 .hdr-icon-group {
-  display: flex; align-items: center; gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  position: relative;
-  z-index: 1090;
+  display: flex; align-items: center; gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .hdr-icon-btn {
   position: relative;
-  width: 46px; height: 46px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   border: none; background: transparent;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--siomac-navy);
   transition: background .18s, color .18s;
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 .hdr-icon-btn:hover { background: rgba(27,45,85,.08); color: var(--siomac-red); }
-.hdr-icon-btn.active { background: rgba(228,12,12,.1); color: var(--siomac-red); }
+.hdr-icon-btn.active { background: var(--siomac-red); color: #fff; }
 
 /* Badge */
 .hdr-badge {
@@ -295,14 +295,12 @@
 /* ── Dropdown modals ── */
 .hdr-modal-overlay {
   display: none;
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 2000;
-  min-width: 360px;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1080;
 }
 .hdr-modal-overlay.open { display: block; }
 .hdr-modal {
+  position: absolute; top: 72px; right: 24px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;

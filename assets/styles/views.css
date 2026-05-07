@@ -795,11 +795,10 @@
 
 /* ── Analytics overview panel ── */
 .dash-overview-panel {
-  background: transparent;
+  background: var(--siomac-navy);
   border-radius: 24px;
-  padding: 0;
+  padding: 20px 24px;
   margin-bottom: 24px;
-  border: none;
 }
 .dash-overview-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -808,68 +807,48 @@
 }
 .dash-overview-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 0.95rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.95rem; font-weight: 700; color: #fff;
 }
-.dash-overview-title i { font-size: 1rem; color: var(--siomac-red); }
+.dash-overview-title i { font-size: 1rem; color: rgba(255,255,255,0.75); }
 .dash-overview-actions {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
 
-/* Footer bar: clock left, edit layout right */
-.dash-overview-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 10px;
-  margin-top: 18px; padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-.dash-overview-clock {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 0.82rem; font-weight: 500; color: var(--siomac-navy);
-}
-.dash-overview-clock i { font-size: 0.78rem; color: var(--text-muted); }
-.dash-overview-secure {
-  color: var(--text-muted); font-size: 0.76rem;
-  border-left: 1px solid var(--border);
-  padding-left: 8px; margin-left: 4px;
-}
-.dash-overview-secure i { color: var(--text-muted); }
-
-/* Buttons inside grey panel */
+/* Buttons inside navy panel — invert to white ghost */
 .dash-overview-panel .dash-layout-btn {
-  border-color: var(--border);
-  background: #fff;
-  color: var(--siomac-navy);
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
 }
 .dash-overview-panel .dash-layout-btn:hover {
-  border-color: var(--siomac-red); background: var(--siomac-red); color: #fff;
+  border-color: #fff; background: rgba(255,255,255,0.18); color: #fff;
 }
 .dash-overview-panel .dash-layout-btn.active {
   background: var(--siomac-red); border-color: var(--siomac-red); color: #fff;
 }
 .dash-overview-panel .dash-layout-btn-primary {
-  background: #fff; border-color: var(--border); color: var(--siomac-navy);
+  background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); color: #fff;
 }
 .dash-overview-panel .dash-layout-btn-primary:hover {
-  background: var(--siomac-red); border-color: var(--siomac-red); color: #fff;
+  background: rgba(255,255,255,0.25); color: #fff;
 }
 
-/* Stat cards inside grey panel — solid white */
+/* Stat cards inside navy panel — translucent white */
 .dash-overview-panel .stat-card {
-  background: #fff;
-  border-color: #D8DCE4;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: none;
 }
 .dash-overview-panel .stat-card:hover {
-  background: #fff;
+  background: rgba(255,255,255,0.12);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
-.dash-overview-panel .stat-card-value { color: var(--siomac-navy); }
-.dash-overview-panel .stat-card-label { color: var(--text-muted); }
-.dash-overview-panel .stat-card-icon.blue  { background: rgba(27,45,85,0.1);  color: var(--siomac-navy); }
-.dash-overview-panel .stat-card-icon.green { background: rgba(46,125,50,0.1); color: #2E7D32; }
-.dash-overview-panel .stat-card-icon.red   { background: rgba(198,40,40,0.1); color: #C62828; }
-.dash-overview-panel .stat-card-icon.gold  { background: rgba(255,183,18,0.1); color: #B8860B; }
+.dash-overview-panel .stat-card-value { color: #fff; }
+.dash-overview-panel .stat-card-label { color: rgba(255,255,255,0.65); }
+.dash-overview-panel .stat-card-icon.blue  { background: rgba(255,255,255,0.15); color: #fff; }
+.dash-overview-panel .stat-card-icon.green { background: rgba(46,199,90,0.25);   color: #6effa0; }
+.dash-overview-panel .stat-card-icon.red   { background: rgba(255,80,80,0.25);   color: #ff9090; }
+.dash-overview-panel .stat-card-icon.gold  { background: rgba(255,183,18,0.25);  color: #ffd266; }
 
 .dash-hidden-list {
   display: flex; gap: 8px; flex-wrap: wrap; flex: 1;

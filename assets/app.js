@@ -1204,8 +1204,7 @@ const AttendanceSystem = (function() {
     const isoDate = now.toISOString().slice(0, 10); // YYYY-MM-DD for employee section
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    set('isoClock',  `${timeStr} · ${dateStr}`);   // legacy (kept for safety)
-    set('isoClock2', `${timeStr} · ${dateStr}`);   // overview panel footer
+    set('isoClock',  `${timeStr} · ${dateStr}`);
     set('currentTime', now.toTimeString().slice(0, 8)); // employee big clock HH:MM:SS
     set('currentDate', isoDate);                        // employee section date row
   }

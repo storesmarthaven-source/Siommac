@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIOMAC — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ─── Design System Variables ─── */
+    :root {
+      --siomac-red:        #E40C0C;
+      --siomac-red-dark:   #B20808;
+      --siomac-navy:       #1B2D55;
+      --siomac-navy-light: #2A4270;
+      --siomac-navy-dark:  #101D3B;
+      --siomac-gold:       #FFB712;
+      --bg-app:     #F0F4F8;
+      --bg-card:    #FFFFFF;
+      --border:     #E9EEF3;
+      --bg-subtle:  #F8FAFE;
+      --text-primary: #1F2A44;
+      --text-muted:   #5E6F8D;
+      --radius-sm:  10px;
+      --radius-md:  16px;
+      --radius-lg:  24px;
+      --shadow-card: 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-hover: 0 12px 28px -8px rgba(0,0,0,0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ─── App Shell ─── */
+    .app-container { display: flex; min-height: 100vh; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 272px;
+      background: linear-gradient(180deg, var(--siomac-navy) 0%, var(--siomac-navy-dark) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+    }
+    .sidebar-brand {
+      padding: 28px 24px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-brand i { font-size: 40px; color: var(--siomac-red); }
+    .sidebar-brand-text h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; line-height: 1; }
+    .sidebar-brand-text p { font-size: 0.7rem; color: rgba(255,255,255,0.55); margin-top: 3px; letter-spacing: 0.3px; }
+
+    .sidebar-user-info {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-avatar {
+      width: 44px; height: 44px; border-radius: 22px;
+      background: linear-gradient(135deg, var(--siomac-red), #B20808);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; flex-shrink: 0;
+    }
+    .sidebar-user-name { font-size: 0.875rem; font-weight: 700; }
+    .sidebar-user-role { font-size: 0.7rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+    .sidebar-menu-section { padding: 16px 0; flex: 1; overflow-y: auto; }
+    .sidebar-menu-title {
+      font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.4);
+      text-transform: uppercase; letter-spacing: 1px;
+      padding: 0 20px; margin-bottom: 8px;
+    }
+    .sidebar-menu { list-style: none; padding: 0 10px; }
+    .sidebar-menu li { margin-bottom: 2px; }
+    .sidebar-menu button {
+      width: 100%; display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 12px; border: none;
+      background: transparent; color: rgba(255,255,255,0.75);
+      font-family: inherit; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; text-align: left;
+      transition: background .18s, color .18s;
+    }
+    .sidebar-menu button:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .sidebar-menu button.active { background: var(--siomac-red); color: #fff; }
+    .sidebar-menu button i { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; }
+
+    .sidebar-logout {
+      padding: 10px 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-logout button {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 10px 18px; border-radius: 12px; border: none;
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75);
+      font-family: inherit; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: background .18s;
+    }
+    .sidebar-logout button:hover { background: var(--siomac-red); color: #fff; }
+
+    /* ─── Main content ─── */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 40px;
+      min-width: 0;
+    }
+
+    /* ─── Page header ─── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 0 14px;
+      margin-bottom: 4px;
+      position: sticky; top: 0;
+      background: var(--bg-app);
+      z-index: 50;
+      border-bottom: 1px solid transparent;
+    }
+    .page-header-left { display: flex; align-items: center; gap: 12px; }
+    .page-header h1 {
+      font-size: 1.55rem; font-weight: 700; color: var(--siomac-navy);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .page-header h1 i { color: var(--siomac-red); font-size: 1.3rem; }
+    .page-header-right { display: flex; align-items: center; gap: 10px; }
+    .header-meta {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 7px 16px;
+      display: flex; align-items: center; gap: 8px;
+      color: var(--siomac-navy);
+      font-size: 0.82rem; font-weight: 500;
+    }
+    .header-meta i { color: #1b2d55; font-size: 0.8rem; }
+    .header-secure {
+      color: var(--text-muted); font-size: 0.76rem;
+      border-left: 1px solid var(--border);
+      padding-left: 8px; margin-left: 4px;
+    }
+    .header-secure i { color: var(--text-muted); }
+
+    /* ─── Notification / Message / Ticket modals ─── */
+    .hdr-modal-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1080;
+    }
+    .hdr-modal-overlay.open { display: block; }
+    .hdr-modal {
+      position: absolute; top: 72px; right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+      overflow: hidden;
+      animation: hdrSlideIn .18s ease;
+    }
+    @keyframes hdrSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hdr-modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700; font-size: 0.9rem; color: var(--siomac-navy);
+      gap: 12px;
+    }
+    .hdr-modal-head i { color: var(--siomac-red); margin-right: 6px; }
+    .hdr-modal-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 0.85rem; padding: 4px;
+      border-radius: 50%; transition: background .15s;
+    }
+    .hdr-modal-close:hover { background: rgba(228,12,12,.08); color: var(--siomac-red); }
+    .hdr-modal-body { max-height: 340px; overflow-y: auto; }
+    .hdr-modal-foot {
+      display: flex; justify-content: space-between;
+      padding: 10px 18px;
+      border-top: 1px solid var(--border);
+    }
+    .hdr-foot-link {
+      background: none; border: none; cursor: pointer;
+      font-size: 0.78rem; font-weight: 600; color: var(--siomac-red);
+      font-family: inherit; padding: 2px 0;
+    }
+    .hdr-foot-link:hover { text-decoration: underline; }
+
+    /* Notification items */
+    .hdr-notif-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background .15s;
+    }
+    .hdr-notif-item:last-child { border-bottom: none; }
+    .hdr-notif-item:hover { background: var(--bg-subtle); }
+    .hdr-notif-item.unread { background: rgba(228,12,12,.03); }
+    .hdr-notif-icon {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+    }
+    .hdr-notif-icon.red   { background: rgba(198,40,40,.1);  color: #C62828; }
+    .hdr-notif-icon.gold  { background: rgba(255,183,18,.15); color: #B8860B; }
+    .hdr-notif-icon.blue  { background: rgba(21,101,192,.1); color: #1565C0; }
+    .hdr-notif-icon.green { background: rgba(46,125,50,.1);  color: #2E7D32; }
+    .hdr-notif-icon.navy  { background: rgba(27,45,85,.1);   color: var(--siomac-navy); }
+    .hdr-notif-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
+    .hdr-notif-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Message items */
+    .hdr-msg-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background .15s;
+    }
+    .hdr-msg-item:last-child { border-bottom: none; }
+    .hdr-msg-item:hover { background: var(--bg-subtle); }
+    .hdr-msg-item.unread { background: rgba(228,12,12,.03); }
+    .hdr-msg-avatar {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: var(--siomac-red); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 700;
+    }
+    .hdr-msg-name  { font-size: 0.83rem; font-weight: 700; color: var(--text-primary); }
+    .hdr-msg-time  { font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+    .hdr-msg-preview { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+
+    /* Ticket items */
+    .hdr-ticket-item {
+      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background .15s;
+    }
+    .hdr-ticket-item:last-child { border-bottom: none; }
+    .hdr-ticket-item:hover { background: var(--bg-subtle); }
+    .hdr-ticket-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .hdr-ticket-id { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); font-family: monospace; }
+    .hdr-ticket-status {
+      font-size: 0.65rem; font-weight: 700; padding: 2px 9px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .hdr-ticket-status.open    { background: #FFEBEE; color: #C62828; }
+    .hdr-ticket-status.pending { background: #FFF8E1; color: #F57C00; }
+    .hdr-ticket-status.closed  { background: #E8F5E9; color: #2E7D32; }
+    .hdr-ticket-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
+    .hdr-ticket-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+
+    /* ─── Icon button group ─── */
+    .hdr-icon-group {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 6px 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .hdr-icon-btn {
+      position: relative;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--siomac-navy);
+      transition: background .18s, color .18s;
+      font-size: 1rem;
+    }
+    .hdr-icon-btn:hover { background: rgba(27,45,85,.08); color: var(--siomac-red); }
+    .hdr-icon-btn.active { background: var(--siomac-red); color: #fff; }
+    .hdr-badge {
+      position: absolute; top: 2px; right: 2px;
+      min-width: 17px; height: 17px;
+      background: var(--siomac-red); color: #fff;
+      border-radius: 10px; font-size: 0.6rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px; line-height: 1;
+      border: 1.5px solid var(--bg-card);
+      pointer-events: none;
+    }
+    .hdr-badge-gold { background: var(--siomac-gold); color: #1B2D55; }
+
+    /* ─── Today's Overview Panel ─── */
+    .dash-overview-panel {
+      background: var(--siomac-navy);
+      border-radius: 24px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .dash-overview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .dash-overview-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.95rem; font-weight: 700; color: #fff;
+    }
+    .dash-overview-title i { font-size: 1rem; color: rgba(255,255,255,0.75); }
+    .dash-overview-actions {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    /* Buttons inside navy panel */
+    .dash-layout-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 18px; border-radius: 40px; font-size: 0.8rem;
+      font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+      background: var(--bg-card); color: var(--text-primary);
+      font-family: inherit; transition: background .18s, color .18s, border-color .18s;
+    }
+    .dash-overview-panel .dash-layout-btn {
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .dash-overview-panel .dash-layout-btn:hover {
+      border-color: #fff; background: rgba(255,255,255,0.18); color: #fff;
+    }
+
+    /* Stat cards grid */
+    .ps-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 0;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.07);
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: transform .22s, background .22s;
+      display: flex; flex-direction: column;
+    }
+    .stat-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.12); }
+    .stat-card-icon {
+      width: 48px; height: 48px; border-radius: 28px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      margin-bottom: 14px;
+    }
+    .stat-card-icon.blue  { background: rgba(255,255,255,0.15); color: #fff; }
+    .stat-card-icon.green { background: rgba(46,199,90,0.25);   color: #6effa0; }
+    .stat-card-icon.red   { background: rgba(255,80,80,0.25);   color: #ff9090; }
+    .stat-card-icon.gold  { background: rgba(255,183,18,0.25);  color: #ffd266; }
+    .stat-card-body { flex: 1; min-width: 0; }
+    .stat-card-value { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
+    .stat-card-label { font-size: 0.75rem; color: rgba(255,255,255,0.65); font-weight: 500; }
+
+    /* ─── Widget grid ─── */
+    .dash-widget-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-top: 0;
+    }
+    .dash-widget-full { grid-column: 1 / -1; }
+
+    /* ─── Data section card ─── */
+    .data-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 22px 14px;
+      flex-wrap: wrap; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header h2 {
+      font-size: 1rem; color: var(--siomac-navy);
+      display: flex; align-items: center; gap: 10px; font-weight: 700;
+    }
+    .section-header h2 i { color: var(--siomac-red); font-size: 1rem; }
+
+    /* ─── Chart card ─── */
+    .chart-card-section { padding: 0; }
+    .chart-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+    .chart-card-header h3 {
+      font-size: 0.92rem; font-weight: 700; color: var(--siomac-navy);
+      display: flex; align-items: center; margin: 0;
+    }
+    .chart-container-md {
+      padding: 18px 20px 20px;
+      height: 240px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+    .chart-badge {
+      background: rgba(228,12,12,0.1);
+      color: var(--siomac-red);
+      padding: 4px 12px; border-radius: 40px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+
+    /* ─── Recent Attendance Table ─── */
+    .recent-att-table { width: 100%; border-collapse: collapse; }
+    .recent-att-table thead th {
+      background: var(--siomac-navy);
+      color: white;
+      padding: 11px 14px;
+      font-size: 12px; font-weight: 600;
+      text-align: center; letter-spacing: 0.3px;
+    }
+    .recent-att-table thead th:first-child { text-align: left; border-radius: var(--radius-sm) 0 0 0; }
+    .recent-att-table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
+    .recent-att-table tbody tr { transition: background .15s; }
+    .recent-att-table tbody tr:hover td { background: var(--bg-subtle); }
+    .recent-att-table tbody td {
+      padding: 11px 14px;
+      font-size: 13px; color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      text-align: center;
+    }
+    .recent-att-table tbody td:first-child { text-align: left; }
+    .recent-att-table tbody tr:last-child td { border-bottom: none; }
+    .table-responsive { overflow-x: auto; }
+
+    .rat-name { font-weight: 600; color: var(--siomac-navy); }
+    .rat-dept { font-size: 12px; color: var(--text-muted); background: var(--bg-subtle); padding: 2px 8px; border-radius: 20px; display: inline-block; }
+    .rat-time { font-variant-numeric: tabular-nums; font-size: 13px; }
+    .rat-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 40px;
+      font-size: 11.5px; font-weight: 600;
+    }
+    .rat-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
+    .rat-late    { background: rgba(198,124,0,0.12); color: #7a5900; }
+    .rat-absent  { background: rgba(198,40,40,0.1);  color: #b71c1c; }
+    .rat-out     { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
+
+    /* ─── Btn ─── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; text-decoration: none; transition: background .18s, color .18s; }
+    .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+    .btn-outline-primary { border-color: var(--siomac-navy); color: var(--siomac-navy); background: transparent; }
+    .btn-outline-primary:hover { background: var(--siomac-navy); color: #fff; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .dash-widget-grid { grid-template-columns: 1fr; }
+      .dash-widget-full { grid-column: 1; }
+    }
+    @media (max-width: 600px) {
+      .ps-stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .main-content { padding: 0 12px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Notification Modal ── -->
+  <div class="hdr-modal-overlay" id="hdrNotifModal">
+    <div class="hdr-modal" style="width:360px;">
+      <div class="hdr-modal-head">
+        <span><i class="fas fa-bell"></i> Notifications</span>
+        <button class="hdr-modal-close" data-modal="hdrNotifModal"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="hdr-modal-body">
+        <div class="hdr-notif-item unread">
+          <div class="hdr-notif-icon red"><i class="fas fa-user-times"></i></div>
+          <div class="hdr-notif-text">
+            <div class="hdr-notif-title">3 employees absent today</div>
+            <div class="hdr-notif-sub">Civil Operations · 08:05 AM</div>
+          </div>
+        </div>
+        <div class="hdr-notif-item unread">
+          <div class="hdr-notif-icon gold"><i class="fas fa-clock"></i></div>
+          <div class="hdr-notif-text">
+            <div class="hdr-notif-title">Michael Okon checked in late</div>
+            <div class="hdr-notif-sub">09:42 AM — 42 mins late</div>
+          </div>
+        </div>
+        <div class="hdr-notif-item unread">
+          <div class="hdr-notif-icon blue"><i class="fas fa-calendar-check"></i></div>
+          <div class="hdr-notif-text">
+            <div class="hdr-notif-title">Leave request pending approval</div>
+            <div class="hdr-notif-sub">Sarah Williams · Annual Leave · 5 days</div>
+          </div>
+        </div>
+        <div class="hdr-notif-item unread">
+          <div class="hdr-notif-icon green"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="hdr-notif-text">
+            <div class="hdr-notif-title">New project site added</div>
+            <div class="hdr-notif-sub">Site 7 — Port Harcourt North · Just now</div>
+          </div>
+        </div>
+        <div class="hdr-notif-item">
+          <div class="hdr-notif-icon navy"><i class="fas fa-sync-alt"></i></div>
+          <div class="hdr-notif-text">
+            <div class="hdr-notif-title">Monthly payroll report ready</div>
+            <div class="hdr-notif-sub">March 2025 · Generated yesterday</div>
+          </div>
+        </div>
+      </div>
+      <div class="hdr-modal-foot">
+        <button class="hdr-foot-link">Mark all as read</button>
+        <button class="hdr-foot-link">View all</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Messages Modal ── -->
+  <div class="hdr-modal-overlay" id="hdrMsgModal">
+    <div class="hdr-modal" style="width:380px;">
+      <div class="hdr-modal-head">
+        <span><i class="fas fa-comment-dots"></i> Messages</span>
+        <button class="hdr-modal-close" data-modal="hdrMsgModal"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="hdr-modal-body">
+        <div class="hdr-msg-item unread">
+          <div class="hdr-msg-avatar">JR</div>
+          <div class="hdr-msg-text">
+            <div class="hdr-msg-name">James Rodriguez <span class="hdr-msg-time">09:15 AM</span></div>
+            <div class="hdr-msg-preview">I'll be 30 minutes late today, traffic on the bridge…</div>
+          </div>
+        </div>
+        <div class="hdr-msg-item unread">
+          <div class="hdr-msg-avatar" style="background:#1B2D55;">AD</div>
+          <div class="hdr-msg-text">
+            <div class="hdr-msg-name">Amara Diallo <span class="hdr-msg-time">08:50 AM</span></div>
+            <div class="hdr-msg-preview">Leave form submitted, please review when you get a chance.</div>
+          </div>
+        </div>
+        <div class="hdr-msg-item">
+          <div class="hdr-msg-avatar" style="background:#455A64;">LM</div>
+          <div class="hdr-msg-text">
+            <div class="hdr-msg-name">Linda Moyo <span class="hdr-msg-time">Yesterday</span></div>
+            <div class="hdr-msg-preview">Thank you for approving my medical leave request.</div>
+          </div>
+        </div>
+        <div class="hdr-msg-item">
+          <div class="hdr-msg-avatar" style="background:#2E7D32;">KR</div>
+          <div class="hdr-msg-text">
+            <div class="hdr-msg-name">Kevin Ramkissoon <span class="hdr-msg-time">Yesterday</span></div>
+            <div class="hdr-msg-preview">Site 3 gate access needs to be updated before Friday.</div>
+          </div>
+        </div>
+      </div>
+      <div class="hdr-modal-foot">
+        <button class="hdr-foot-link">Mark all as read</button>
+        <button class="hdr-foot-link">Open inbox</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tickets Modal ── -->
+  <div class="hdr-modal-overlay" id="hdrTicketModal">
+    <div class="hdr-modal" style="width:400px;">
+      <div class="hdr-modal-head">
+        <span><i class="fas fa-ticket-alt"></i> Support Tickets</span>
+        <button class="hdr-modal-close" data-modal="hdrTicketModal"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="hdr-modal-body">
+        <div class="hdr-ticket-item">
+          <div class="hdr-ticket-top">
+            <span class="hdr-ticket-id">#TKT-0041</span>
+            <span class="hdr-ticket-status open">Open</span>
+          </div>
+          <div class="hdr-ticket-title">Geofence not triggering on Site 5</div>
+          <div class="hdr-ticket-sub">Reported by Peter Huang · Electrical · 2 hrs ago</div>
+        </div>
+        <div class="hdr-ticket-item">
+          <div class="hdr-ticket-top">
+            <span class="hdr-ticket-id">#TKT-0039</span>
+            <span class="hdr-ticket-status pending">In Progress</span>
+          </div>
+          <div class="hdr-ticket-title">Payslip PDF export missing overtime column</div>
+          <div class="hdr-ticket-sub">Reported by Admin · Yesterday</div>
+        </div>
+        <div class="hdr-ticket-item">
+          <div class="hdr-ticket-top">
+            <span class="hdr-ticket-id">#TKT-0037</span>
+            <span class="hdr-ticket-status closed">Resolved</span>
+          </div>
+          <div class="hdr-ticket-title">Employee unable to check in at Site 2</div>
+          <div class="hdr-ticket-sub">Resolved 3 days ago</div>
+        </div>
+      </div>
+      <div class="hdr-modal-foot">
+        <button class="hdr-foot-link">New ticket</button>
+        <button class="hdr-foot-link">View all tickets</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- ══════════ SIDEBAR ══════════ -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fas fa-hard-hat"></i>
+        <div class="sidebar-brand-text">
+          <h1>SIOMAC</h1>
+          <p>Workforce Intelligence</p>
+        </div>
+      </div>
+
+      <div class="sidebar-user-info">
+        <div class="sidebar-avatar">GA</div>
+        <div>
+          <div class="sidebar-user-name">Grace Adeyemi</div>
+          <div class="sidebar-user-role">Administrator</div>
+        </div>
+      </div>
+
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Main</div>
+        <ul class="sidebar-menu">
+          <li><button class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></button></li>
+          <li><button><i class="fas fa-users"></i> <span>Employees</span></button></li>
+          <li><button><i class="fas fa-calendar-check"></i> <span>Attendance</span></button></li>
+          <li><button><i class="fas fa-map-marker-alt"></i> <span>Live Map</span></button></li>
+          <li><button><i class="fas fa-umbrella-beach"></i> <span>Leave Management</span></button></li>
+        </ul>
+        <div class="sidebar-menu-title" style="margin-top:18px;">Finance</div>
+        <ul class="sidebar-menu">
+          <li><button><i class="fas fa-money-bill-wave"></i> <span>Payroll</span></button></li>
+          <li><button><i class="fas fa-clock"></i> <span>Hourly Rates</span></button></li>
+          <li><button><i class="fas fa-building"></i> <span>Project Sites</span></button></li>
+        </ul>
+        <div class="sidebar-menu-title" style="margin-top:18px;">Account</div>
+        <ul class="sidebar-menu">
+          <li><button><i class="fas fa-user-circle"></i> <span>My Profile</span></button></li>
+          <li><button><i class="fas fa-cog"></i> <span>Settings</span></button></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-logout">
+        <button><i class="fas fa-sign-out-alt"></i> <span class="logout-text">Log Out</span></button>
+      </div>
+    </aside>
+
+    <!-- ══════════ MAIN CONTENT ══════════ -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1><i class="fas fa-tachometer-alt"></i> Operations Dashboard</h1>
+        </div>
+        <div class="page-header-right">
+          <div class="header-meta">
+            <i class="fas fa-globe-americas"></i>
+            <span id="isoClock">--</span>
+            <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ TODAY'S OVERVIEW PANEL ══════════ -->
+      <div class="dash-overview-panel">
+        <div class="dash-overview-header">
+          <div class="dash-overview-title">
+            <i class="fas fa-chart-pie"></i>
+            <span>Today's Overview</span>
+          </div>
+          <div class="dash-overview-actions">
+            <!-- Icon buttons -->
+            <div class="hdr-icon-group">
+              <button class="hdr-icon-btn" id="hdrNotifBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="hdr-badge">4</span>
+              </button>
+              <button class="hdr-icon-btn" id="hdrMsgBtn" title="Messages">
+                <i class="fas fa-comment-dots"></i>
+                <span class="hdr-badge">2</span>
+              </button>
+              <button class="hdr-icon-btn" id="hdrTicketBtn" title="Support Tickets">
+                <i class="fas fa-ticket-alt"></i>
+                <span class="hdr-badge hdr-badge-gold">1</span>
+              </button>
+            </div>
+            <button class="dash-layout-btn"><i class="fas fa-edit"></i> Edit Layout</button>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="ps-stats-row">
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">284</div>
+              <div class="stat-card-label">Total Employees</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">251</div>
+              <div class="stat-card-label">Present Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red"><i class="fas fa-user-times"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">11</div>
+              <div class="stat-card-label">Absent Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-calendar-minus"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">22</div>
+              <div class="stat-card-label">On Leave Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">7</div>
+              <div class="stat-card-label">Active Locations</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value">14</div>
+              <div class="stat-card-label">Late Today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ WIDGET GRID ══════════ -->
+      <div class="dash-widget-grid">
+
+        <!-- Weekly Attendance Trend -->
+        <div class="data-section chart-card-section">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
+            <span class="chart-badge">Last 30 days</span>
+          </div>
+          <div class="chart-container-md">
+            <span><i class="fas fa-chart-line" style="font-size:2rem;opacity:0.15;display:block;text-align:center;margin-bottom:8px;"></i>Chart renders with Chart.js</span>
+          </div>
+        </div>
+
+        <!-- Department Distribution -->
+        <div class="data-section chart-card-section">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
+          </div>
+          <div class="chart-container-md">
+            <span><i class="fas fa-chart-pie" style="font-size:2rem;opacity:0.15;display:block;text-align:center;margin-bottom:8px;"></i>Chart renders with Chart.js</span>
+          </div>
+        </div>
+
+        <!-- Today's Status -->
+        <div class="data-section chart-card-section">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
+          </div>
+          <div class="chart-container-md">
+            <span><i class="fas fa-chart-bar" style="font-size:2rem;opacity:0.15;display:block;text-align:center;margin-bottom:8px;"></i>Chart renders with Chart.js</span>
+          </div>
+        </div>
+
+        <!-- Leave Types -->
+        <div class="data-section chart-card-section">
+          <div class="chart-card-header">
+            <h3><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
+          </div>
+          <div class="chart-container-md">
+            <span><i class="fas fa-chart-bar" style="font-size:2rem;opacity:0.15;display:block;text-align:center;margin-bottom:8px;"></i>Chart renders with Chart.js</span>
+          </div>
+        </div>
+
+        <!-- Recent Attendance Activity (full width) -->
+        <div class="data-section dash-widget-full">
+          <div class="section-header">
+            <h2><i class="fas fa-history"></i> Recent Attendance Activity</h2>
+            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-arrow-right"></i> View All</button>
+          </div>
+          <div class="table-responsive">
+            <table class="recent-att-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Employee</th>
+                  <th>Department</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="rat-name">Chukwuemeka Nwosu</span></td>
+                  <td><span class="rat-dept">Civil Operations</span></td>
+                  <td class="rat-time">07:52 AM</td>
+                  <td class="rat-time">04:15 PM</td>
+                  <td><span class="rat-badge rat-present"><i class="fas fa-circle" style="font-size:7px;"></i> Present</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rat-name">Michael Okon</span></td>
+                  <td><span class="rat-dept">Electrical</span></td>
+                  <td class="rat-time">09:42 AM</td>
+                  <td class="rat-time">—</td>
+                  <td><span class="rat-badge rat-late"><i class="fas fa-clock" style="font-size:9px;"></i> Late</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rat-name">Sarah Williams</span></td>
+                  <td><span class="rat-dept">HR</span></td>
+                  <td class="rat-time">—</td>
+                  <td class="rat-time">—</td>
+                  <td><span class="rat-badge rat-absent"><i class="fas fa-times-circle" style="font-size:9px;"></i> Absent</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rat-name">Amara Diallo</span></td>
+                  <td><span class="rat-dept">Administration</span></td>
+                  <td class="rat-time">08:05 AM</td>
+                  <td class="rat-time">05:02 PM</td>
+                  <td><span class="rat-badge rat-out"><i class="fas fa-sign-out-alt" style="font-size:9px;"></i> Checked Out</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rat-name">Peter Huang</span></td>
+                  <td><span class="rat-dept">Electrical</span></td>
+                  <td class="rat-time">07:58 AM</td>
+                  <td class="rat-time">—</td>
+                  <td><span class="rat-badge rat-present"><i class="fas fa-circle" style="font-size:7px;"></i> Present</span></td>
+                </tr>
+                <tr>
+                  <td><span class="rat-name">Linda Moyo</span></td>
+                  <td><span class="rat-dept">Civil Operations</span></td>
+                  <td class="rat-time">—</td>
+                  <td class="rat-time">—</td>
+                  <td><span class="rat-badge rat-absent"><i class="fas fa-times-circle" style="font-size:9px;"></i> Absent</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /.dash-widget-grid -->
+    </main>
+  </div><!-- /.app-container -->
+
+  <script>
+    // ── Live clock ──
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const el = document.getElementById('isoClock');
+      if (el) el.textContent = `${timeStr} · ${dateStr}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ── Notification / Message / Ticket modals ──
+    const pairs = [
+      { btn: 'hdrNotifBtn',  modal: 'hdrNotifModal'  },
+      { btn: 'hdrMsgBtn',    modal: 'hdrMsgModal'    },
+      { btn: 'hdrTicketBtn', modal: 'hdrTicketModal' },
+    ];
+
+    function closeAll() {
+      pairs.forEach(({ btn, modal }) => {
+        const b = document.getElementById(btn);
+        const m = document.getElementById(modal);
+        if (b) b.classList.remove('active');
+        if (m) m.classList.remove('open');
+      });
+    }
+
+    pairs.forEach(({ btn, modal }) => {
+      const b = document.getElementById(btn);
+      const m = document.getElementById(modal);
+      if (!b || !m) return;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = m.classList.contains('open');
+        closeAll();
+        if (!isOpen) { m.classList.add('open'); b.classList.add('active'); }
+      });
+    });
+
+    document.querySelectorAll('.hdr-modal-close').forEach(btn => {
+      btn.addEventListener('click', closeAll);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.hdr-modal') && !e.target.closest('.hdr-icon-btn')) closeAll();
+    });
+  </script>
+</body>
+</html>
