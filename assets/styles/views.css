@@ -1960,63 +1960,69 @@
   margin-bottom: 20px;
 }
 .ep-page-title {
-  font-size: 1.25rem; font-weight: 800; color: var(--siomac-navy); margin: 0 0 4px;
+  font-size: 1.8rem; font-weight: 700; color: var(--siomac-navy); margin: 0 0 4px;
 }
 .ep-page-sub {
-  font-size: 0.82rem; color: var(--text-muted); margin: 0;
+  font-size: 0.85rem; color: var(--text-muted); margin: 0;
 }
 
 /* Hero card */
 .ep-hero-card {
-  background: white; border-radius: 20px;
-  border: 1px solid var(--border); box-shadow: var(--shadow-card);
-  overflow: hidden; margin-bottom: 0;
-  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  background: white; border-radius: 28px;
+  border: 1px solid var(--border);
+  overflow: hidden; margin-bottom: 28px;
 }
 .ep-cover {
-  height: 130px;
-  background: linear-gradient(135deg, var(--siomac-navy) 0%, #2a4a8a 60%, var(--siomac-red) 100%);
+  height: 100px;
+  background: linear-gradient(135deg, var(--siomac-navy), #0D2B45);
 }
 
 /* Avatar section — centred below cover */
 .ep-avatar-section {
-  display: flex; justify-content: center;
+  text-align: center;
   margin-top: -50px;
+  position: relative;
+  display: inline-block;
+  left: 50%; transform: translateX(-50%);
   padding: 0;
 }
 .ep-avatar-wrapper {
   position: relative; width: 100px; height: 100px;
   border-radius: 50%; border: 4px solid white;
-  box-shadow: 0 4px 16px rgba(0,0,0,.22);
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
   cursor: pointer; overflow: hidden;
-  background: var(--siomac-navy);
-  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--siomac-red), #B20808);
+  display: inline-flex; align-items: center; justify-content: center;
 }
-.ep-avatar-wrapper:hover .ep-avatar-edit { opacity: 1; }
 .ep-avatar-edit {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.45);
+  position: absolute;
+  bottom: 8px; right: -8px;
+  background: white; width: 32px; height: 32px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 20px; opacity: 0;
-  transition: opacity .2s;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  border: 1px solid var(--border); color: var(--siomac-red);
+  font-size: 13px; transition: box-shadow .2s;
 }
+.ep-avatar-edit:hover { box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 
 /* Hero info — centred */
 .ep-hero-info {
-  padding: 12px 24px 10px;
+  padding: 16px 20px 12px;
   text-align: center;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .ep-hero-name {
-  font-size: 1.3rem; font-weight: 800; color: var(--siomac-navy); margin: 0;
+  font-size: 1.4rem; font-weight: 700; color: var(--siomac-navy); margin: 0;
 }
 .ep-hero-role {
   font-size: 0.85rem; color: var(--text-muted); margin: 0;
 }
 .ep-active-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(34,197,94,.1); color: #16a34a;
-  padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+  display: inline-block;
+  background: rgba(228,12,12,.1); color: var(--siomac-red);
+  padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600;
+  margin-top: 10px;
 }
 .ep-active-badge i { font-size: 9px; }
 
@@ -2029,41 +2035,41 @@
 }
 .ep-remove-photo-btn:hover { border-color: var(--siomac-red); color: var(--siomac-red); }
 
-/* Contact info row — centred horizontal chips */
+/* Contact info row — centred horizontal */
 .ep-contact-row {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px;
-  padding: 12px 24px 20px;
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 28px;
+  padding: 16px 20px;
   border-top: 1px solid var(--border);
-  margin-top: 10px;
+  border-bottom: 1px solid var(--border);
+  background: #FAFCFE;
 }
 .ep-contact-item {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 0.82rem; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.8rem; color: var(--text-primary);
 }
-.ep-contact-item i { font-size: 13px; color: var(--siomac-red); flex-shrink: 0; }
+.ep-contact-item i { width: 18px; font-size: 0.9rem; color: var(--siomac-red); flex-shrink: 0; }
 
-/* Tabs bar — underline style, full width */
+/* Tabs bar — underline style, rounded top */
 .ep-tabs-bar {
-  display: flex; gap: 0;
+  display: flex; gap: 8px;
   background: white;
   border: 1px solid var(--border);
-  border-top: none;
   border-bottom: none;
-  padding: 0 8px;
-  width: 100%;
-  box-sizing: border-box;
+  border-radius: 28px 28px 0 0;
+  padding: 0 28px;
   overflow-x: auto;
 }
 .ep-tab-btn {
-  padding: 14px 20px; border: none; background: transparent;
-  border-bottom: 3px solid transparent;
-  font-size: 0.88rem; font-weight: 600;
+  padding: 16px 24px; border: none; background: transparent;
+  border-bottom: 2px solid transparent;
+  font-size: 0.85rem; font-weight: 600;
   color: var(--text-muted); cursor: pointer; transition: all .2s;
-  font-family: inherit; display: inline-flex; align-items: center; gap: 7px;
-  white-space: nowrap; margin-bottom: -1px;
+  font-family: inherit; display: inline-flex; align-items: center; gap: 8px;
+  white-space: nowrap;
   border-radius: 0;
 }
-.ep-tab-btn:hover { color: var(--siomac-navy); border-bottom-color: var(--border); }
+.ep-tab-btn:hover { color: var(--siomac-red); }
 .ep-tab-btn.active {
   color: var(--siomac-red); border-bottom-color: var(--siomac-red);
   background: transparent;
@@ -2074,7 +2080,7 @@
   background: white;
   border: 1px solid var(--border);
   border-top: none;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0 0 28px 28px;
   padding: 28px;
   margin-bottom: 20px;
 }

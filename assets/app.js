@@ -1155,6 +1155,7 @@ const AttendanceSystem = (function() {
 
       // My Profile
       if (event.target.closest('#pickProfileImageBtn'))    pickProfileImage();
+      if (event.target.closest('#editAvatarBtn'))          pickProfileImage();
       if (event.target.closest('#removeProfileImageBtn')) removeProfileImage();
       if (event.target.closest('#saveProfileBtn'))        saveMyProfile();
       if (event.target.closest('#updateSecurityBtn'))    _updateSecurityOnly();
@@ -2676,7 +2677,7 @@ const AttendanceSystem = (function() {
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
-          ${emp.employeeNumber ? `<span class="emp-card-empid">${escapeHtml(emp.employeeNumber)}</span>` : ''}
+          <span class="emp-card-empid">${emp.employeeNumber ? escapeHtml(emp.employeeNumber) : 'No ID'}</span>
         </div>
         <div class="emp-card-body">
           <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>
