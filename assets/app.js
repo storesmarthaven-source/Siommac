@@ -279,25 +279,53 @@ const AttendanceSystem = (function() {
 
       // Best selfie to show: prefer check-out (more recent), fall back to check-in
       const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
-      const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? '⚠ Late' : '✓ Checked In');
-      const statusColor = row.isCheckedOut ? '#6c757d'    : (row.status === 'late' ? '#f59e0b' : '#34a853');
+      const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
+      const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
+      const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
+      const photoSrc    = selfie || row.profileImage || '';
+
+      // Build selfie/photo section
+      const photoHtml = photoSrc
+        ? `<div class="lm-popup-photo"><img src="${photoSrc}" alt="Photo" onerror="this.parentElement.style.display='none'"></div>`
+        : '';
+
+      // Nav link (Google Maps) — uses check-in coords if available
+      const navLat = row.checkInLat || row.checkOutLat || '';
+      const navLng = row.checkInLng || row.checkOutLng || '';
+      const navBtn = (navLat && navLng)
+        ? `<a href="https://www.google.com/maps?q=${navLat},${navLng}" target="_blank" class="lm-popup-btn lm-popup-btn-outline"><i class="fas fa-directions"></i> Navigate</a>`
+        : `<span class="lm-popup-btn lm-popup-btn-outline" style="opacity:.45;pointer-events:none;"><i class="fas fa-directions"></i> Navigate</span>`;
+
+      // Popup avatar: show photo if available, else letter
+      const popupAvatarContent = photoSrc
+        ? `<img src="${photoSrc}" alt="${initial}" onerror="this.style.display='none';this.parentElement.dataset.letter='${initial}';this.parentElement.classList.add('lm-popup-avatar-fallback');">`
+        : initial;
+
       marker.bindPopup(`
-        <div class="live-popup">
-          ${selfie
-            ? `<img src="${selfie}" alt="Selfie" onerror="this.style.display='none'">`
-            : (row.profileImage ? `<img src="${row.profileImage}" alt="${initial}" onerror="this.style.display='none'">` : '')}
-          <div class="name">${row.fullName}</div>
-          ${row.position  ? `<div class="row"><i class="fas fa-id-badge"       style="width:14px;color:#888;"></i> ${row.position}</div>` : ''}
-          ${row.department? `<div class="row"><i class="fas fa-building"        style="width:14px;color:#888;"></i> ${row.department}</div>` : ''}
-          <div class="row"><i class="fas fa-sign-in-alt"   style="width:14px;color:#888;"></i> In: <strong>${row.checkInTime  || '—'}</strong></div>
-          <div class="row"><i class="fas fa-sign-out-alt"  style="width:14px;color:#888;"></i> Out: <strong>${row.checkOutTime || '—'}</strong></div>
-          ${row.siteName  ? `<div class="row"><i class="fas fa-map-marker-alt" style="width:14px;color:#888;"></i> ${row.siteName}${row.distanceM != null ? ` <span style="color:#999;font-size:11px;">(${row.distanceM}m)</span>` : ''}</div>` : ''}
-          ${row.lastSeen  ? `<div class="row"><i class="fas fa-clock"          style="width:14px;color:#888;"></i> Last seen: ${row.lastSeen}</div>` : ''}
-          <div class="row" style="margin-top:7px;">
-            <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:${statusColor};color:#fff;font-size:11px;font-weight:700;">${statusLabel}</span>
+        <div class="lm-popup-card">
+          <div class="lm-popup-header">
+            <div class="lm-popup-avatar">${popupAvatarContent}</div>
+            <div class="lm-popup-title">
+              <h4>${row.fullName}</h4>
+              <p><i class="fas fa-briefcase"></i> ${[row.position, row.department].filter(Boolean).join(' · ') || 'Employee'}</p>
+            </div>
+          </div>
+          <div class="lm-popup-body">
+            ${row.employeeId ? `<div class="lm-popup-row"><i class="fas fa-id-badge"></i> ID: ${row.employeeId}</div>` : ''}
+            <div class="lm-popup-row"><i class="fas fa-sign-in-alt"></i> In: <strong>${row.checkInTime || '—'}</strong>&nbsp;&nbsp;<i class="fas fa-sign-out-alt"></i> Out: <strong>${row.checkOutTime || '—'}</strong></div>
+            ${row.siteName ? `<div class="lm-popup-row"><i class="fas fa-map-marker-alt"></i> ${row.siteName}${row.distanceM != null ? ` <span style="color:#999;font-size:11px;">(${row.distanceM}m)</span>` : ''}</div>` : ''}
+            ${row.lastSeen ? `<div class="lm-popup-row"><i class="fas fa-clock"></i> Last seen: ${row.lastSeen}</div>` : ''}
+            <div class="lm-popup-row">
+              <span class="lm-popup-status ${statusCls}"><i class="fas ${statusIcon}"></i> ${statusLabel}</span>
+            </div>
+            ${photoHtml}
+          </div>
+          <div class="lm-popup-footer">
+            ${navBtn}
+            <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> Profile</button>
           </div>
         </div>
-      `, { maxWidth: 240 });
+      `, { maxWidth: 310, minWidth: 260, className: 'siomac-popup' });
       marker._liveUserId = row.userId; // for sidebar click → marker open
       liveMarkers.push(marker);
     });
@@ -894,6 +922,14 @@ const AttendanceSystem = (function() {
       if (event.target.matches('#projectSearchInput')) {
         displayProjectSites(projectSites);
       }
+      if (event.target.matches('#leaveSearchInput')) {
+        _lvAdmSearch = event.target.value;
+        _renderAdmLeaves();
+      }
+      if (event.target.matches('#hrSearchInput')) {
+        _hrSearch = event.target.value;
+        renderHourlyRates();
+      }
     });
 
     // Attendance month/year selects — reload from API
@@ -904,6 +940,15 @@ const AttendanceSystem = (function() {
       // Employee role/status filter
       if (event.target.matches('#empRoleFilter') || event.target.matches('#empStatusFilter')) {
         _renderEmployees();
+      }
+      // Hourly rates dept/role filter
+      if (event.target.matches('#hrDeptFilter')) { _hrDept = event.target.value; renderHourlyRates(); }
+      if (event.target.matches('#hrRoleFilter')) { _hrRole = event.target.value; renderHourlyRates(); }
+      // Hourly rates CSV file picker
+      if (event.target.matches('#hrFileInput')) {
+        const f = event.target.files && event.target.files[0];
+        event.target.value = '';
+        if (f) _hrHandleFile(f);
       }
     });
 
@@ -1039,8 +1084,24 @@ const AttendanceSystem = (function() {
       const liveCard = event.target.closest('.lm-emp-item') || event.target.closest('.live-emp-card');
       if (liveCard) focusLiveEmployee(liveCard.dataset.userid);
 
-      // Hourly rates — refresh + save row
+      // Hourly rates — action buttons
       if (event.target.closest('#refreshRatesBtn')) loadHourlyRates();
+      if (event.target.closest('#saveAllRatesBtn')) _hrSaveAll();
+      if (event.target.closest('#exportRatesCsvBtn')) _hrExportCsv();
+      if (event.target.closest('#importRatesCsvBtn')) _hrOpenModal();
+      if (event.target.closest('#hrCloseModalBtn') || event.target.closest('#hrCancelModalBtn')) _hrCloseModal();
+      if (event.target.closest('#hrConfirmImportBtn')) _hrConfirmImport();
+      if (event.target.closest('#hrFileDrop') || event.target.closest('#hrFileDrop label')) {
+        document.getElementById('hrFileInput')?.click();
+      }
+      if (event.target.closest('#hrResetFiltersBtn')) {
+        _hrSearch = ''; _hrDept = 'all'; _hrRole = 'all';
+        const si = document.getElementById('hrSearchInput');
+        const df = document.getElementById('hrDeptFilter');
+        const rf = document.getElementById('hrRoleFilter');
+        if (si) si.value = ''; if (df) df.value = 'all'; if (rf) rf.value = 'all';
+        renderHourlyRates();
+      }
       const saveBtn = event.target.closest('.btn-save-rate');
       if (saveBtn) saveHourlyRate(saveBtn.dataset.username, saveBtn);
 
@@ -1058,6 +1119,18 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#pickLogoBtn'))             pickLogo();
       if (event.target.closest('#saveLogoBtn'))             saveLogo();
       if (event.target.closest('#savePayrollSettingsBtn'))  savePayrollSettings();
+
+      // Leave tabs
+      const lvTab = event.target.closest('.lv-tab-btn');
+      if (lvTab) {
+        const id = lvTab.dataset.lvTab;
+        const section = lvTab.closest('.app-section');
+        section.querySelectorAll('.lv-tab-btn').forEach(b => b.classList.remove('active'));
+        lvTab.classList.add('active');
+        if (id.startsWith('emp-')) { _lvEmpTab = id; _renderEmpLeaves(); }
+        else if (id.startsWith('mgr-')) { _lvMgrTab = id; _renderMgrLeaves(); }
+        else if (id.startsWith('adm-')) { _lvAdmTab = id; _renderAdmLeaves(); }
+      }
 
       // Settings tabs
       const stgTab = event.target.closest('.stg-tab-btn');
@@ -1798,58 +1871,83 @@ const AttendanceSystem = (function() {
     }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
+  // ── Shared leave card builder ──────────────────────────────────
+  function _lvTypeBadge(type) {
+    const map = { sick: 'lv-type-sick', casual: 'lv-type-casual', annual: 'lv-type-annual', medical: 'lv-type-medical' };
+    return `<span class="lv-type-badge ${map[String(type).toLowerCase()] || 'lv-type-casual'}">${String(type).charAt(0).toUpperCase() + String(type).slice(1)}</span>`;
+  }
+  function _lvStatusBadge(status) {
+    const map = { pending: 'lv-status-pending', approved: 'lv-status-approved', rejected: 'lv-status-rejected' };
+    return `<span class="lv-status-badge ${map[String(status).toLowerCase()] || 'lv-status-pending'}">${String(status).toUpperCase()}</span>`;
+  }
+  function _lvFmtDate(d) {
+    if (!d) return '—';
+    try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch(e) { return d; }
+  }
+  function _lvCard(r, { showEmployee = false, showApproveReject = false, showEdit = false, showDelete = false } = {}) {
+    const id = escapeHtml(r.id);
+    const isPending = String(r.status).toLowerCase() === 'pending';
+    return `<div class="lv-card">
+      <div class="lv-card-header">
+        ${showEmployee ? `<div class="lv-card-who"><div class="lv-who-name">${escapeHtml(r.employee || '—')}</div><div class="lv-who-meta">${escapeHtml(r.department || '')}${r.appliedOn ? ' · Applied ' + _lvFmtDate(r.appliedOn) : ''}</div></div>` : `<div class="lv-card-who"><div class="lv-who-name">${_lvTypeBadge(r.type)} Leave Request</div><div class="lv-who-meta">${r.appliedOn ? 'Applied ' + _lvFmtDate(r.appliedOn) : ''}</div></div>`}
+        <div style="display:flex;align-items:center;gap:6px;">${showEmployee ? _lvTypeBadge(r.type) : ''} ${_lvStatusBadge(r.status)}</div>
+      </div>
+      <div class="lv-card-dates"><i class="fas fa-calendar"></i> ${_lvFmtDate(r.from || r.fromDate)} → ${_lvFmtDate(r.to || r.toDate)} <span class="lv-days-pill">${r.days || '?'} day${r.days !== 1 ? 's' : ''}</span></div>
+      <div class="lv-card-reason"><i class="fas fa-comment"></i> ${escapeHtml(r.reason || '—')}</div>
+      <div class="lv-card-actions">
+        ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-approve btn-approve" data-id="${id}"><i class="fas fa-check"></i> Approve</button>` : ''}
+        ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-reject btn-reject"   data-id="${id}"><i class="fas fa-times"></i> Reject</button>` : ''}
+        ${showEdit && isPending ? `<button class="lv-btn lv-btn-edit btn-edit-leave" data-id="${id}"><i class="fas fa-edit"></i> Edit</button>` : ''}
+        ${showDelete ? `<button class="lv-btn lv-btn-delete btn-delete-leave" data-id="${id}"><i class="fas fa-trash"></i></button>` : ''}
+      </div>
+    </div>`;
+  }
+  function _lvEmpty(msg) {
+    return `<div class="lv-empty"><i class="fas fa-calendar-check"></i><p>${msg}</p></div>`;
+  }
+  function _lvUpdateStats(prefix, list) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set(prefix + 'Pending',  list.filter(r => String(r.status).toLowerCase() === 'pending').length);
+    set(prefix + 'Approved', list.filter(r => String(r.status).toLowerCase() === 'approved').length);
+    set(prefix + 'Rejected', list.filter(r => String(r.status).toLowerCase() === 'rejected').length);
+    set(prefix + 'Total',    list.length);
+  }
+
+  // active tab filter state per section
+  let _lvEmpTab  = 'emp-all';
+  let _lvMgrTab  = 'mgr-pending';
+  let _lvAdmTab  = 'adm-all';
+  let _lvAdmSearch = '';
+  let _lvEmpList = [], _lvMgrList = [], _lvAdmList = [];
+
   function loadLeaveRequests() {
     setSkel('leaveRequestsList', skelList(3));
     api('getMyLeaves', { username: currentUser }).then(res => {
-      // getMyLeaves returns a raw array OR {success, data} — handle both
       const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
-      displayLeaveRequests(list);
+      _lvEmpList = list;
+      _lvUpdateStats('empLv', list);
+      _renderEmpLeaves();
     });
   }
 
-  function displayLeaveRequests(leaveRequests) {
-    let html = '';
-    if (leaveRequests.length === 0) {
-      html = `<div class="text-center text-muted py-3">${'No leave requests found.'}</div>`;
-    } else {
-      leaveRequests.forEach(request => {
-        let statusClass = '';
-        let statusText = '';
-        
-        switch(request.status) {
-          case 'approved':
-            statusClass = 'text-success';
-            statusText = 'Approved';
-            break;
-          case 'rejected':
-            statusClass = 'text-danger';
-            statusText = 'Rejected';
-            break;
-          default:
-            statusClass = 'text-warning';
-            statusText = 'Pending';
-        }
-        
-        html += `
-          <div class="leave-request-item p-3 border-bottom">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <span class="leave-badge ${request.type}">${request.type.charAt(0).toUpperCase() + request.type.slice(1)} ${'Leave'}</span>
-                <div class="mt-1">
-                  <small class="text-muted">${request.from} ${'to'} ${request.to} (${request.days} ${'day'}${request.days > 1 ? 's' : ''})</small>
-                </div>
-                <div class="mt-1">
-                  <small>${request.reason}</small>
-                </div>
-              </div>
-              <div class="${statusClass} fw-bold">${statusText}</div>
-            </div>
-          </div>
-        `;
-      });
-    }
-    
-    document.getElementById('leaveRequestsList').innerHTML = html;
+  function _renderEmpLeaves() {
+    const tab = _lvEmpTab;
+    const filtered = _lvEmpList.filter(r => {
+      const s = String(r.status).toLowerCase();
+      if (tab === 'emp-pending')  return s === 'pending';
+      if (tab === 'emp-approved') return s === 'approved';
+      if (tab === 'emp-rejected') return s === 'rejected';
+      return true;
+    });
+    document.getElementById('leaveRequestsList').innerHTML = filtered.length
+      ? filtered.map(r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false })).join('')
+      : _lvEmpty('No leave requests found.');
+  }
+
+  function displayLeaveRequests(list) {
+    _lvEmpList = list;
+    _lvUpdateStats('empLv', list);
+    _renderEmpLeaves();
   }
 
   // (no-op now — old IDs lived in the employee project map which has moved.
@@ -1926,39 +2024,24 @@ const AttendanceSystem = (function() {
     });
   }
 
-  function displayManagerLeaveApplications(pendingLeaves) {
-    let html = '';
-    if (pendingLeaves.length === 0) {
-      html = `<div class="text-center text-muted py-3">${'No pending leave requests.'}</div>`;
-    } else {
-      pendingLeaves.forEach(leave => {
-        html += `
-          <div class="leave-request-item p-3 border-bottom">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <h6 class="mb-1">${leave.employee}</h6>
-                <span class="leave-badge ${leave.type}">${leave.type.charAt(0).toUpperCase() + leave.type.slice(1)} ${'Leave'}</span>
-                <div class="mt-1">
-                  <small class="text-muted">${leave.from} ${'to'} ${leave.to} (${leave.days} ${'day'}${leave.days > 1 ? 's' : ''})</small>
-                </div>
-                <div class="mt-1">
-                  <small>${'Applied on'}: ${leave.appliedOn}</small>
-                </div>
-                <div class="mt-1">
-                  <small><strong>${'Reason'}:</strong> ${leave.reason}</small>
-                </div>
-              </div>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-success btn-approve" data-id="${leave.id}">${'Approve'}</button>
-                <button class="btn btn-sm btn-danger btn-reject" data-id="${leave.id}">${'Reject'}</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-    
-    document.getElementById('managerPendingLeaves').innerHTML = html;
+  function displayManagerLeaveApplications(list) {
+    _lvMgrList = list;
+    _lvUpdateStats('mgrLv', list);
+    _renderMgrLeaves();
+  }
+
+  function _renderMgrLeaves() {
+    const tab = _lvMgrTab;
+    const filtered = _lvMgrList.filter(r => {
+      const s = String(r.status).toLowerCase();
+      if (tab === 'mgr-pending')  return s === 'pending';
+      if (tab === 'mgr-approved') return s === 'approved';
+      if (tab === 'mgr-rejected') return s === 'rejected';
+      return true;
+    });
+    document.getElementById('managerPendingLeaves').innerHTML = filtered.length
+      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false })).join('')
+      : _lvEmpty('No leave requests in this category.');
   }
 
   // shared approve / reject — works for admin (s-adm-leaves) and manager (s-mgr-leaves)
@@ -2912,8 +2995,7 @@ const AttendanceSystem = (function() {
 
   function loadLeaveApplications() {
     if (!_isSyncing && !swr.get('listAllLeaves:{}')) {
-      destroyDataTable('leavesTable');
-      setSkel('leavesTableBody', skelTableRows(7, 4));
+      setSkel('leavesTableBody', skelList(4));
     }
     apiSwr('listAllLeaves', {}, {
       onData: res => { if (!_isSyncing) displayLeaveApplications((res && res.success && res.data) || []); }
@@ -2921,40 +3003,29 @@ const AttendanceSystem = (function() {
   }
 
   function displayLeaveApplications(leaves) {
-    let html = '';
-    leaves.forEach(leave => {
-      const statusClass = leave.status === 'Approved' ? 'badge bg-success' :
-                          leave.status === 'Rejected' ? 'badge bg-danger'  : 'badge bg-warning';
-      const isPending = String(leave.status).toLowerCase() === 'pending';
-      const id = escapeHtml(leave.id);
+    _lvAdmList = leaves;
+    _lvUpdateStats('admLv', leaves);
+    _renderAdmLeaves();
+  }
 
-      html += `
-        <tr>
-          <td data-label="Employee">${escapeHtml(leave.employee)}</td>
-          <td data-label="Type">${escapeHtml(leave.type)}</td>
-          <td data-label="From">${escapeHtml(leave.from)}</td>
-          <td data-label="To">${escapeHtml(leave.to)}</td>
-          <td data-label="Days">${leave.days}</td>
-          <td data-label="Status"><span class="${statusClass}">${escapeHtml(leave.status)}</span></td>
-          <td data-label="Actions" style="white-space:nowrap;">
-            <button class="action-icon btn-view-leave"   data-id="${id}" title="View"   style="color: var(--navy-accent);"><i class="fas fa-eye"></i></button>
-            <button class="action-icon btn-print-leave"  data-id="${id}" title="Print"  style="color: var(--navy-primary);"><i class="fas fa-print"></i></button>
-            ${isPending ? `
-              <button class="action-icon btn-approve" data-id="${id}" title="Approve" style="color: var(--success);"><i class="fas fa-check-circle"></i></button>
-              <button class="action-icon btn-reject"  data-id="${id}" title="Reject"  style="color: var(--danger);"><i class="fas fa-times-circle"></i></button>
-              <button class="action-icon edit-icon btn-edit-leave" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>
-            ` : ''}
-            <button class="action-icon delete-icon btn-delete-leave" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
+  function _renderAdmLeaves() {
+    const tab    = _lvAdmTab;
+    const search = _lvAdmSearch.toLowerCase();
+    let filtered = _lvAdmList.filter(r => {
+      const s = String(r.status).toLowerCase();
+      if (tab === 'adm-pending')  { if (s !== 'pending')  return false; }
+      if (tab === 'adm-approved') { if (s !== 'approved') return false; }
+      if (tab === 'adm-rejected') { if (s !== 'rejected') return false; }
+      if (search) {
+        const name = (r.employee || '').toLowerCase();
+        const dept = (r.department || '').toLowerCase();
+        if (!name.includes(search) && !dept.includes(search)) return false;
+      }
+      return true;
     });
-
-    destroyDataTable('leavesTable');
-    document.getElementById('leavesTableBody').innerHTML = html;
-    initDataTable('leavesTable', {
-      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
-    });
+    document.getElementById('leavesTableBody').innerHTML = filtered.length
+      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true })).join('')
+      : _lvEmpty('No leave requests found.');
   }
 
   // ─── Leave: view / print / edit / delete ─────────────────────
@@ -3167,19 +3238,20 @@ const AttendanceSystem = (function() {
   let _ratesData = []; // last-fetched rates for diff/comparison
   let _payCurrency = 'TT';
   let _ratesFileInput = null;
+  let _hrSearch = '', _hrDept = 'all', _hrRole = 'all';
 
   function loadHourlyRates() {
     const tbody = document.getElementById('ratesTableBody');
     if (!tbody) return;
     const ratesCached = swr.get('listHourlyRates:{}');
     if (!ratesCached) {
-      destroyDataTable('ratesTable');
       tbody.innerHTML = skelTableRows(6, 6);
     }
     // SWR both calls in parallel — currency from settings is small + cached separately
     apiSwr('listHourlyRates', {}, {
       onData: res => {
         _ratesData = (res && res.success && res.data) || [];
+        _populateHrDeptFilter();
         renderHourlyRates();
       }
     });
@@ -3193,52 +3265,154 @@ const AttendanceSystem = (function() {
     });
   }
 
+  function _populateHrDeptFilter() {
+    const sel = document.getElementById('hrDeptFilter');
+    if (!sel) return;
+    const depts = [...new Set(_ratesData.map(r => r.department).filter(Boolean))].sort();
+    const current = sel.value;
+    sel.innerHTML = '<option value="all">All Departments</option>'
+      + depts.map(d => `<option value="${escapeHtml(d)}"${d === current ? ' selected' : ''}>${escapeHtml(d)}</option>`).join('');
+  }
+
+  function _hrUpdateStats(list) {
+    const total = list.length;
+    const rates = list.map(r => r.hourlyRate || 0);
+    const avg   = total ? (rates.reduce((s, v) => s + v, 0) / total) : 0;
+    const max   = total ? Math.max(...rates) : 0;
+    const monthly = list.reduce((s, r) => s + (r.hourlyRate || 0) * 160, 0);
+    const cur = _payCurrency + '$';
+    const el = id => document.getElementById(id);
+    if (el('hrTotalEmployees'))  el('hrTotalEmployees').textContent  = total;
+    if (el('hrAvgRate'))         el('hrAvgRate').textContent         = cur + ' ' + avg.toFixed(2);
+    if (el('hrMonthlyPayroll'))  el('hrMonthlyPayroll').textContent  = cur + ' ' + Math.round(monthly).toLocaleString();
+    if (el('hrHighestRate'))     el('hrHighestRate').textContent     = cur + ' ' + max.toFixed(2);
+  }
+
   function renderHourlyRates() {
     const tbody = document.getElementById('ratesTableBody');
-    destroyDataTable('ratesTable');
-    if (!_ratesData.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#999;"><i class="fas fa-users-slash"></i> No employees yet</td></tr>';
+    if (!tbody) return;
+
+    // client-side filter
+    const search = _hrSearch.toLowerCase();
+    const filtered = _ratesData.filter(r => {
+      if (search && !String(r.fullName || '').toLowerCase().includes(search) && !String(r.department || '').toLowerCase().includes(search)) return false;
+      if (_hrDept !== 'all' && r.department !== _hrDept) return false;
+      if (_hrRole !== 'all' && r.role !== _hrRole) return false;
+      return true;
+    });
+
+    _hrUpdateStats(filtered);
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr class="hr-empty-row"><td colspan="6"><i class="fas fa-users-slash"></i>${_ratesData.length ? 'No employees match your filters' : 'No employees yet'}</td></tr>`;
       return;
     }
-    tbody.innerHTML = _ratesData.map(r => `
+
+    const roleCls = r => r === 'admin' ? 'hr-role-admin' : r === 'manager' ? 'hr-role-manager' : 'hr-role-employee';
+    const cur = escapeHtml(_payCurrency) + '$';
+
+    tbody.innerHTML = filtered.map(r => `
       <tr>
-        <td data-label="Name"><strong>${escapeHtml(r.fullName)}</strong></td>
-        <td data-label="Department">${escapeHtml(r.department)}</td>
-        <td data-label="Position">${escapeHtml(r.position)}</td>
-        <td data-label="Role"><span class="badge" style="background:var(--navy-accent); color:#fff; padding:3px 8px; border-radius:4px; font-size:11px; text-transform:capitalize;">${escapeHtml(r.role)}</span></td>
-        <td data-label="Hourly Rate" data-order="${r.hourlyRate}" data-search="${r.hourlyRate}">
-          <div class="rate-cell">
-            <span class="rate-currency">${escapeHtml(_payCurrency)}</span>
-            <input type="number" class="rate-input" min="0" step="0.01" data-username="${escapeHtml(r.username)}" data-original="${r.hourlyRate}" value="${r.hourlyRate}" />
+        <td class="hr-emp-name">${escapeHtml(r.fullName)}</td>
+        <td>${escapeHtml(r.department)}</td>
+        <td>${escapeHtml(r.position)}</td>
+        <td class="hr-td-center"><span class="hr-role-badge ${roleCls(r.role)}">${escapeHtml(r.role)}</span></td>
+        <td class="hr-td-center">
+          <div class="hr-rate-cell">
+            <span class="hr-currency">${cur}</span>
+            <input type="number" class="hr-rate-input rate-input" min="0" step="0.50"
+              data-username="${escapeHtml(r.username)}"
+              data-original="${r.hourlyRate}"
+              value="${r.hourlyRate}">
           </div>
         </td>
-        <td data-label="Action" class="dt-no-export">
-          <button class="btn btn-sm btn-primary btn-save-rate" data-username="${escapeHtml(r.username)}"><i class="fas fa-save"></i> Save</button>
+        <td class="hr-td-center">
+          <button class="hr-save-btn btn-save-rate" data-username="${escapeHtml(r.username)}">
+            <i class="fas fa-save"></i> Save
+          </button>
         </td>
       </tr>
     `).join('');
 
-    // export formatter: pull current input value for the rate column instead of the input HTML
-    const ratesExportFormat = {
-      body: function (data, row, col, node) {
-        if (!node) return data;
-        const inp = node.querySelector && node.querySelector('input.rate-input');
-        if (inp) return inp.value;
-        return (node.textContent || '').trim();
-      }
-    };
+    // mark dirty on input change
+    tbody.querySelectorAll('.hr-rate-input').forEach(inp => {
+      inp.addEventListener('input', function () {
+        this.classList.toggle('dirty', parseFloat(this.value) !== parseFloat(this.dataset.original));
+      });
+    });
+  }
 
-    initDataTable('ratesTable', {
-      columnDefs: [
-        { targets: 4, orderable: true,  className: 'text-end' }, // Hourly Rate (sorted via data-order)
-        { targets: 5, orderable: false, searchable: false, className: 'text-center dt-no-export' }
-      ],
-      buttons: [
-        { extend: 'csv',   text: '<i class="fas fa-file-csv"></i> CSV',   className: 'btn btn-sm btn-success', exportOptions: { columns: ':not(.dt-no-export)', format: ratesExportFormat } },
-        { extend: 'pdf',   text: '<i class="fas fa-file-pdf"></i> PDF',   className: 'btn btn-sm btn-danger',  exportOptions: { columns: ':not(.dt-no-export)', format: ratesExportFormat }, title: 'Hourly Rates' },
-        { extend: 'print', text: '<i class="fas fa-print"></i> Print',   className: 'btn btn-sm btn-info',    exportOptions: { columns: ':not(.dt-no-export)', format: ratesExportFormat }, title: 'Hourly Rates' },
-        { text: '<i class="fas fa-file-import"></i> Import CSV', className: 'btn btn-sm btn-warning', action: function () { triggerRatesImport(); } }
-      ]
+  // ── New rates action helpers ──────────────────────────────────
+  function _hrSaveAll() {
+    const inputs = document.querySelectorAll('#ratesTableBody .hr-rate-input.dirty');
+    if (!inputs.length) { showNotification('No changes to save', 'info'); return; }
+    let done = 0;
+    inputs.forEach(inp => {
+      const username = inp.dataset.username;
+      const rate = Number(inp.value);
+      if (!username || isNaN(rate) || rate < 0) return;
+      api('updateHourlyRate', { username, rate, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+        if (!res.success) return;
+        inp.dataset.original = String(rate);
+        inp.classList.remove('dirty');
+        const emp = _ratesData.find(r => r.username === username);
+        if (emp) emp.hourlyRate = rate;
+        done++;
+        if (done === inputs.length) {
+          _hrUpdateStats(_ratesData);
+          showNotification(`Saved ${done} rate update${done > 1 ? 's' : ''}`, 'success');
+        }
+      });
+    });
+  }
+
+  function _hrExportCsv() {
+    let csv = 'Username,Name,Department,Position,Role,Hourly Rate\n';
+    _ratesData.forEach(r => {
+      csv += `"${r.username}","${r.fullName}","${r.department}","${r.position}","${r.role}",${r.hourlyRate}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `siomac_hourly_rates_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    showNotification('CSV exported', 'success');
+  }
+
+  function _hrOpenModal() {
+    const m = document.getElementById('hrImportModal');
+    if (m) m.classList.add('active');
+  }
+  function _hrCloseModal() {
+    const m = document.getElementById('hrImportModal');
+    if (m) { m.classList.remove('active'); }
+    const ta = document.getElementById('hrCsvPasteArea');
+    if (ta) ta.value = '';
+    const fi = document.getElementById('hrFileInput');
+    if (fi) fi.value = '';
+  }
+
+  function _hrHandleFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const ta = document.getElementById('hrCsvPasteArea');
+      if (ta) ta.value = e.target.result;
+    };
+    reader.readAsText(file);
+  }
+
+  function _hrConfirmImport() {
+    const raw = (document.getElementById('hrCsvPasteArea') || {}).value || '';
+    if (!raw.trim()) { showNotification('Paste CSV data or select a file', 'warning'); return; }
+    let parsed;
+    try { parsed = parseRatesCsv(raw); }
+    catch (err) { showNotification('CSV parse error: ' + err.message, 'error'); return; }
+    if (!parsed.length) { showNotification('No valid rows found. Format: username,rate', 'warning'); return; }
+    api('bulkImportRates', { rows: parsed, actorId: currentUserId, actorUsername: currentUser }).then(r => {
+      _hrCloseModal();
+      if (!r.success) { showNotification(r.message || 'Import failed', 'error'); return; }
+      showNotification(`Imported ${r.updated} rate${r.updated !== 1 ? 's' : ''}${r.skipped ? ` · ${r.skipped} skipped` : ''}`, 'success');
+      loadHourlyRates();
     });
   }
 

@@ -180,25 +180,140 @@
 .lm-emp-empty { text-align: center; padding: 32px 12px; color: var(--text-muted); font-size: 13px; }
 .lm-emp-empty i { font-size: 28px; color: #ccc; margin-bottom: 10px; display: block; }
 
-/* ── Leaflet popup ── */
+/* ── Leaflet popup — SIOMAC modern card ── */
 .leaflet-popup-content-wrapper {
-  border-radius: 16px !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
-  font-family: 'Inter', sans-serif !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
 }
-.leaflet-popup-content { margin: 14px 16px !important; }
-.leaflet-popup-content .live-popup { min-width: 190px; }
-.leaflet-popup-content .live-popup img {
-  width: 100%; max-width: 180px; border-radius: 10px;
-  margin-bottom: 8px; display: block;
+.leaflet-popup-tip-container { display: none !important; }
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
 }
-.leaflet-popup-content .live-popup .name {
-  font-weight: 700; color: var(--siomac-navy); font-size: 14px; margin-bottom: 4px;
+.leaflet-popup {
+  margin-bottom: 14px !important;
+  filter: drop-shadow(0 8px 28px rgba(0,0,0,0.18));
 }
-.leaflet-popup-content .live-popup .row {
-  font-size: 12px; color: #555; margin-bottom: 3px;
-  display: flex; align-items: center; gap: 6px;
+
+/* card wrapper */
+.lm-popup-card {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  min-width: 260px;
+  max-width: 300px;
+  animation: lmPopupIn .18s ease-out;
+  position: relative;
 }
+@keyframes lmPopupIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* custom arrow */
+.lm-popup-card::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 24px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  transform: rotate(45deg);
+  border-radius: 3px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
+}
+
+/* header */
+.lm-popup-header {
+  background: linear-gradient(135deg, var(--siomac-navy) 0%, #0D1E3A 100%);
+  padding: 15px 17px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.lm-popup-avatar {
+  width: 50px; height: 50px;
+  background: var(--siomac-red);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.28);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.22);
+  flex-shrink: 0; overflow: hidden;
+}
+.lm-popup-avatar img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;
+}
+/* when image fails to load, show the letter via ::after */
+.lm-popup-avatar.lm-popup-avatar-fallback::after {
+  content: attr(data-letter);
+  font-size: 20px; font-weight: 700; color: white;
+}
+.lm-popup-title h4 {
+  font-size: 0.95rem; font-weight: 700; margin: 0 0 4px;
+}
+.lm-popup-title p {
+  font-size: 0.68rem; opacity: 0.78;
+  display: flex; align-items: center; gap: 5px; margin: 0;
+}
+
+/* body */
+.lm-popup-body {
+  padding: 14px 17px 10px;
+}
+.lm-popup-row {
+  display: flex; align-items: center;
+  gap: 10px; font-size: 0.78rem;
+  color: var(--text-primary); margin-bottom: 9px;
+}
+.lm-popup-row i { width: 16px; color: var(--siomac-red); font-size: 0.8rem; flex-shrink: 0; }
+
+/* status badge inside popup */
+.lm-popup-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 40px;
+  font-size: 0.68rem; font-weight: 700;
+}
+.lm-popup-status.in  { background: #E8F5E9; color: #2E7D32; }
+.lm-popup-status.late{ background: #FFF3E0; color: #E65100; }
+.lm-popup-status.out { background: #ECEFF4; color: #546E7A; }
+
+/* selfie preview */
+.lm-popup-photo {
+  margin-top: 10px; border-radius: 14px;
+  overflow: hidden; border: 1px solid var(--border);
+  background: #F8FAFE;
+}
+.lm-popup-photo img {
+  width: 100%; max-height: 130px;
+  object-fit: cover; display: block;
+}
+
+/* footer actions */
+.lm-popup-footer {
+  padding: 10px 17px 15px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.lm-popup-btn {
+  flex: 1; padding: 7px 10px; border-radius: 40px;
+  font-size: 0.68rem; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 5px; cursor: pointer; border: none; transition: .18s;
+  font-family: inherit; text-decoration: none;
+}
+.lm-popup-btn-primary { background: var(--siomac-red); color: white; }
+.lm-popup-btn-primary:hover { opacity: .87; transform: translateY(-1px); }
+.lm-popup-btn-outline {
+  background: transparent; border: 1.5px solid var(--border);
+  color: var(--siomac-navy);
+}
+.lm-popup-btn-outline:hover { border-color: var(--siomac-red); color: var(--siomac-red); }
 
 /* ── Dashboard 2×2 chart grid (shared) ── */
 .chart-grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 20px; }

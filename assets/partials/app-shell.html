@@ -239,17 +239,37 @@
 
       <!-- Employee — Leave -->
       <section class="app-section" id="s-emp-leave" data-role="employee">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-calendar-alt"></i> <span id="leaveManagementText">Leave Management</span></h2>
-            <div class="section-actions">
-              <button id="requestLeaveBtn" class="btn btn-primary">
-                <i class="fas fa-plus"></i> <span id="requestLeaveText">Request Leave</span>
-              </button>
-            </div>
-          </div>
-          <div id="leaveRequestsList"></div>
+
+        <!-- Leave balance — dummy -->
+        <div class="lv-balance-card">
+          <div class="lv-balance-item"><div class="lv-balance-value">12</div><div class="lv-balance-label">Annual Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value">8</div><div class="lv-balance-label">Sick Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value">5</div><div class="lv-balance-label">Casual Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value">10</div><div class="lv-balance-label">Medical Leave</div></div>
         </div>
+
+        <!-- Stats row -->
+        <div class="lv-stats-row">
+          <div class="lv-stat-card"><div class="lv-stat-icon"><i class="fas fa-clock"></i></div><div class="lv-stat-value" id="empLvPending">—</div><div class="lv-stat-label">Pending</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon green"><i class="fas fa-check-circle"></i></div><div class="lv-stat-value" id="empLvApproved">—</div><div class="lv-stat-label">Approved</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon red"><i class="fas fa-times-circle"></i></div><div class="lv-stat-value" id="empLvRejected">—</div><div class="lv-stat-label">Rejected</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon navy"><i class="fas fa-chart-line"></i></div><div class="lv-stat-value" id="empLvTotal">—</div><div class="lv-stat-label">Total</div></div>
+        </div>
+
+        <!-- Filter bar + Request button -->
+        <div class="lv-filters-bar">
+          <div class="lv-tabs">
+            <button class="lv-tab-btn active" data-lv-tab="emp-all">All Requests</button>
+            <button class="lv-tab-btn" data-lv-tab="emp-pending">Pending</button>
+            <button class="lv-tab-btn" data-lv-tab="emp-approved">Approved</button>
+            <button class="lv-tab-btn" data-lv-tab="emp-rejected">Rejected</button>
+          </div>
+          <button id="requestLeaveBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Request</button>
+        </div>
+
+        <!-- Card list -->
+        <div class="lv-list" id="leaveRequestsList"></div>
+
       </section>
 
       <!-- Employee — My History (last 20, inline) -->
@@ -346,15 +366,27 @@
 
       <!-- Manager — Pending Leaves -->
       <section class="app-section" id="s-mgr-leaves" data-role="manager">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-calendar-day"></i> <span id="pendingLeaveRequestsTitle">Pending Leave Requests</span></h2>
-            <div class="section-actions">
-              <button id="refreshManagerLeavesBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
-          </div>
-          <div id="managerPendingLeaves"></div>
+
+        <!-- Stats row -->
+        <div class="lv-stats-row">
+          <div class="lv-stat-card"><div class="lv-stat-icon"><i class="fas fa-clock"></i></div><div class="lv-stat-value" id="mgrLvPending">—</div><div class="lv-stat-label">Pending</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon green"><i class="fas fa-check-circle"></i></div><div class="lv-stat-value" id="mgrLvApproved">—</div><div class="lv-stat-label">Approved</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon red"><i class="fas fa-times-circle"></i></div><div class="lv-stat-value" id="mgrLvRejected">—</div><div class="lv-stat-label">Rejected</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon navy"><i class="fas fa-chart-line"></i></div><div class="lv-stat-value" id="mgrLvTotal">—</div><div class="lv-stat-label">Total</div></div>
         </div>
+
+        <!-- Filter bar -->
+        <div class="lv-filters-bar">
+          <div class="lv-tabs">
+            <button class="lv-tab-btn active" data-lv-tab="mgr-pending">Pending</button>
+            <button class="lv-tab-btn" data-lv-tab="mgr-approved">Approved</button>
+            <button class="lv-tab-btn" data-lv-tab="mgr-rejected">Rejected</button>
+          </div>
+          <button id="refreshManagerLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+        </div>
+
+        <div class="lv-list" id="managerPendingLeaves"></div>
+
       </section>
       
       <!-- ════════ ADMIN SECTIONS ════════ -->
@@ -778,58 +810,133 @@
 
       <!-- Admin — Leave Applications -->
       <section class="app-section" id="s-adm-leaves" data-role="admin">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-calendar-day"></i> <span id="leaveApplicationsTitle">Leave Applications</span></h2>
-            <div class="section-actions">
-              <button id="refreshLeavesBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> <span id="refreshLeavesText">Refresh</span></button>
-            </div>
-          </div>
-          <div style="overflow-x:auto;">
-            <table id="leavesTable">
-              <thead>
-                <tr>
-                  <th id="employeeLeaveColumn">Employee</th>
-                  <th id="leaveTypeColumn">Leave Type</th>
-                  <th id="fromDateColumn">From</th>
-                  <th id="toDateColumn">To</th>
-                  <th id="daysColumn">Days</th>
-                  <th id="statusLeaveColumn">Status</th>
-                  <th id="actionsLeaveColumn">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="leavesTableBody"></tbody>
-            </table>
-          </div>
+
+        <!-- Stats row -->
+        <div class="lv-stats-row">
+          <div class="lv-stat-card"><div class="lv-stat-icon"><i class="fas fa-clock"></i></div><div class="lv-stat-value" id="admLvPending">—</div><div class="lv-stat-label">Pending</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon green"><i class="fas fa-check-circle"></i></div><div class="lv-stat-value" id="admLvApproved">—</div><div class="lv-stat-label">Approved</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon red"><i class="fas fa-times-circle"></i></div><div class="lv-stat-value" id="admLvRejected">—</div><div class="lv-stat-label">Rejected</div></div>
+          <div class="lv-stat-card"><div class="lv-stat-icon navy"><i class="fas fa-chart-line"></i></div><div class="lv-stat-value" id="admLvTotal">—</div><div class="lv-stat-label">Total</div></div>
         </div>
+
+        <!-- Filter bar -->
+        <div class="lv-filters-bar">
+          <div class="lv-tabs">
+            <button class="lv-tab-btn active" data-lv-tab="adm-all">All</button>
+            <button class="lv-tab-btn" data-lv-tab="adm-pending">Pending</button>
+            <button class="lv-tab-btn" data-lv-tab="adm-approved">Approved</button>
+            <button class="lv-tab-btn" data-lv-tab="adm-rejected">Rejected</button>
+          </div>
+          <div class="ps-search-box" style="max-width:260px;">
+            <i class="fas fa-search"></i>
+            <input type="text" id="leaveSearchInput" placeholder="Search employee…">
+          </div>
+          <button id="refreshLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+        </div>
+
+        <!-- Card list — replaces old DataTable -->
+        <div class="lv-list" id="leavesTableBody"></div>
+
       </section>
 
       <!-- Hourly Rates — admin only -->
       <section class="app-section" id="s-adm-rates" data-role="admin">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-money-bill-wave"></i> Hourly Rates</h2>
-            <div class="section-actions">
-              <span class="text-muted" style="font-size:13px;"><i class="fas fa-info-circle"></i> Set per-employee hourly rate. Earnings auto-calculate from check-in / check-out hours.</span>
-              <button id="refreshRatesBtn" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
+
+        <!-- action buttons row -->
+        <div class="hr-header">
+          <div class="hr-header-actions">
+            <button class="hr-btn-outline" id="exportRatesCsvBtn"><i class="fas fa-download"></i> Export CSV</button>
+            <button class="hr-btn-outline" id="importRatesCsvBtn"><i class="fas fa-upload"></i> Import CSV</button>
+            <button class="hr-btn-primary" id="saveAllRatesBtn"><i class="fas fa-save"></i> Save All</button>
           </div>
-          <div style="overflow-x:auto;">
+        </div>
+
+        <!-- stats row -->
+        <div class="hr-stats-row">
+          <div class="hr-stat-card">
+            <div class="hr-stat-icon"><i class="fas fa-users"></i></div>
+            <div class="hr-stat-value" id="hrTotalEmployees">—</div>
+            <div class="hr-stat-label">Total Employees</div>
+          </div>
+          <div class="hr-stat-card">
+            <div class="hr-stat-icon" style="background:rgba(27,45,85,.08);"><i class="fas fa-chart-line" style="color:var(--siomac-navy);"></i></div>
+            <div class="hr-stat-value" id="hrAvgRate">—</div>
+            <div class="hr-stat-label">Average Rate</div>
+          </div>
+          <div class="hr-stat-card">
+            <div class="hr-stat-icon" style="background:rgba(46,125,50,.08);"><i class="fas fa-file-invoice-dollar" style="color:#2E7D32;"></i></div>
+            <div class="hr-stat-value" id="hrMonthlyPayroll">—</div>
+            <div class="hr-stat-label">Est. Monthly Payroll</div>
+          </div>
+          <div class="hr-stat-card">
+            <div class="hr-stat-icon" style="background:rgba(237,108,2,.08);"><i class="fas fa-arrow-trend-up" style="color:#ED6C02;"></i></div>
+            <div class="hr-stat-value" id="hrHighestRate">—</div>
+            <div class="hr-stat-label">Highest Rate</div>
+          </div>
+        </div>
+
+        <!-- filters bar -->
+        <div class="hr-filters-bar">
+          <div class="hr-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="hrSearchInput" placeholder="Search by name or department…">
+          </div>
+          <div class="hr-filter-group">
+            <select id="hrDeptFilter" class="hr-filter-select">
+              <option value="all">All Departments</option>
+            </select>
+            <select id="hrRoleFilter" class="hr-filter-select">
+              <option value="all">All Roles</option>
+              <option value="manager">Manager</option>
+              <option value="employee">Employee</option>
+            </select>
+            <button id="hrResetFiltersBtn" class="hr-btn-outline" style="padding:8px 16px;"><i class="fas fa-undo-alt"></i> Reset</button>
+          </div>
+        </div>
+
+        <!-- table -->
+        <div class="hr-table-container">
+          <div class="hr-table-responsive">
             <table id="ratesTable">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Employee</th>
                   <th>Department</th>
                   <th>Position</th>
-                  <th>Role</th>
-                  <th style="width:170px;">Hourly Rate</th>
-                  <th style="width:100px;">Action</th>
+                  <th class="hr-th-center">Role</th>
+                  <th class="hr-th-center">Hourly Rate</th>
+                  <th class="hr-th-center">Action</th>
                 </tr>
               </thead>
               <tbody id="ratesTableBody"></tbody>
             </table>
           </div>
         </div>
+
+        <!-- Import CSV modal -->
+        <div id="hrImportModal" class="hr-modal-overlay">
+          <div class="hr-modal-container">
+            <div class="hr-modal-header">
+              <span><i class="fas fa-file-csv"></i> Import Hourly Rates</span>
+              <button id="hrCloseModalBtn" class="hr-modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="hr-modal-body">
+              <p class="hr-modal-hint">Upload a <strong>.csv</strong> file with <code>username</code> and <code>rate</code> columns.<br>Unknown usernames are skipped automatically.</p>
+              <label class="hr-file-drop" id="hrFileDrop">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Click to select a CSV file</span>
+                <input type="file" id="hrFileInput" accept=".csv,text/csv" style="display:none;">
+              </label>
+              <p class="hr-modal-hint" style="margin-top:10px;">Or paste raw CSV:</p>
+              <textarea id="hrCsvPasteArea" class="hr-csv-textarea" rows="5" placeholder="username,rate&#10;john.doe,28.50&#10;jane.smith,32.00"></textarea>
+            </div>
+            <div class="hr-modal-footer">
+              <button class="hr-btn-outline" id="hrCancelModalBtn">Cancel</button>
+              <button class="hr-btn-primary" id="hrConfirmImportBtn"><i class="fas fa-check"></i> Import</button>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- Payroll — admin + manager (manager scoped to own dept) -->
