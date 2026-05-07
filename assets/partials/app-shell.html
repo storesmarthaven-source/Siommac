@@ -11,7 +11,7 @@
   <!-- Login screen (shown until authentication) -->
   <div id="loginPage" class="login-container">
     <div class="login-box">
-      <img class="login-logo" id="loginLogo" src="" alt="Logo" style="display:none;">
+      <img class="login-logo" id="loginLogo" src="assets/images/logo.png" alt="Logo" onerror="this.style.display='none'">
       <h2 id="loginTitle">Attendance System Login</h2>
       <div class="login-subtitle" id="loginSubtitle">Access your dashboard</div>
       <form id="loginForm">
@@ -612,11 +612,11 @@
           </div>
           <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 22px; align-items:start;">
             <div style="text-align:center;">
-              <img id="logoPreview" src="" alt="Logo" style="width:140px; height:140px; border-radius:50%; object-fit:cover; border:3px solid var(--navy-primary); box-shadow: 0 4px 14px rgba(0,0,0,.15); display:block; margin:0 auto 12px;" onerror="this.style.display='none'">
-              <div id="logoPreviewEmpty" style="width:140px; height:140px; border-radius:50%; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center; color:#aaa; margin:0 auto 12px;"><i class="fas fa-image" style="font-size:38px;"></i></div>
+              <img id="logoPreview" src="" alt="Logo" style="max-width:240px; max-height:120px; width:auto; height:auto; object-fit:contain; border:3px solid var(--navy-primary); box-shadow: 0 4px 14px rgba(0,0,0,.15); display:block; margin:0 auto 12px; padding:6px; background:#fff;" onerror="this.style.display='none'">
+              <div id="logoPreviewEmpty" style="width:140px; height:140px; border-radius:12px; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center; color:#aaa; margin:0 auto 12px;"><i class="fas fa-image" style="font-size:38px;"></i></div>
             </div>
             <div>
-              <p style="font-size:13px; color:#666; margin:0 0 12px;">PNG / JPG, square crops best. Applies to login screen + sidebar brand.</p>
+              <p style="font-size:13px; color:#666; margin:0 0 12px;">PNG / JPG. Any shape supported — wide logos display full-width, square logos display as circles. Applies to login screen, sidebar, and About.</p>
               <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
               <button class="btn btn-primary" id="pickLogoBtn"><i class="fas fa-upload"></i> Choose Logo</button>
               <button class="btn btn-success" id="saveLogoBtn" disabled style="margin-left:8px;"><i class="fas fa-save"></i> Save</button>
@@ -637,8 +637,8 @@
             </div>
             <div class="form-group">
               <label class="form-label">Currency Symbol / Code</label>
-              <input type="text" id="setCurrency" class="form-control" maxlength="6" placeholder="Rs.">
-              <small class="text-muted" style="font-size:11px;">Used in rates table + payroll doc</small>
+              <input type="text" id="setCurrency" class="form-control" maxlength="6" placeholder="TT" readonly style="background:#f5f5f5; cursor:not-allowed; color:#888;">
+              <small class="text-muted" style="font-size:11px;">Fixed to TT — contact your administrator to change</small>
             </div>
             <div class="form-group">
               <label class="form-label">Late-Coming Penalty (per late day)</label>
@@ -681,7 +681,7 @@
             <h2><i class="fas fa-info-circle"></i> About This System</h2>
           </div>
           <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-            <img id="aboutLogo" src="" alt="Logo" style="width:80px; height:80px; object-fit:contain; border:3px solid var(--navy-primary); display:none;">
+            <img id="aboutLogo" src="" alt="Logo" style="max-width:180px; max-height:80px; width:auto; height:auto; object-fit:contain; display:none;">
             <div>
               <h3 style="color: var(--navy-primary); margin-bottom:6px;"><span id="aboutCompanyName">My Company</span> — Attendance &amp; Location Management</h3>
               <p style="color:#666; font-size:14px; margin-bottom:8px;">Selfie check-in / check-out · GPS verification · Leave workflow · Multi-role dashboards.</p>

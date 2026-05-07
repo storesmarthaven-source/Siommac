@@ -16,9 +16,9 @@
 .sidebar.collapsed .sidebar-user-info { padding: 14px 0; }
 .sidebar.collapsed .sidebar-avatar { margin: 0 auto; width: 38px; height: 38px; font-size: 15px; }
 .sidebar.collapsed .sidebar-menu button,
-.sidebar.collapsed .sidebar-logout button { justify-content: center; padding: 13px 0; }
+.sidebar.collapsed .sidebar-logout button { justify-content: center; padding: 13px 0; width: 100%; text-align: center; gap: 0; }
 .sidebar.collapsed .sidebar-menu i,
-.sidebar.collapsed .sidebar-logout i { margin: 0; font-size: 19px; }
+.sidebar.collapsed .sidebar-logout i { margin: 0; font-size: 19px; width: auto; text-align: center; }
 .sidebar.collapsed .sidebar-session { padding: 10px 0; justify-content: center; gap: 0; }
 .sidebar.collapsed .sidebar-session-time { font-size: 10px; margin-top: 2px; display: block; width: 100%; text-align: center; }
 .sidebar.collapsed .sidebar-session i { font-size: 13px; }
@@ -46,7 +46,8 @@
 
 .sidebar-brand { padding: 22px 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.08); color: #fff; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: .3px; }
 .sidebar-brand i { font-size: 22px; color: var(--navy-accent); }
-.sidebar.collapsed .sidebar-brand { padding: 22px 0; }
+.sidebar.collapsed .sidebar-brand { padding: 22px 0; justify-content: center; }
+.sidebar.collapsed .sidebar-menu-section { padding: 14px 0; }
 
 .sidebar-user-info { padding: 18px 16px; background: rgba(0,0,0,.22); border-bottom: 1px solid rgba(255,255,255,.08); text-align: center; transition: padding .25s; }
 .sidebar-avatar { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 10px; background: linear-gradient(135deg, var(--navy-accent) 0%, var(--navy-light) 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.15); transition: all .25s; text-transform: uppercase; }

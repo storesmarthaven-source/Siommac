@@ -2603,7 +2603,7 @@ const AttendanceSystem = (function() {
 
   // ─── Payroll: hourly rates table (admin) ───
   let _ratesData = []; // last-fetched rates for diff/comparison
-  let _payCurrency = 'Rs.';
+  let _payCurrency = 'TT';
   let _ratesFileInput = null;
 
   function loadHourlyRates() {
@@ -2847,7 +2847,7 @@ const AttendanceSystem = (function() {
     if (empty) empty.style.display = 'none';
     cont.style.display = 'block';
 
-    const cur = d.currency || 'Rs.';
+    const cur = d.currency || 'TT';
     _payCurrency = cur;
     const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const capStatus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
@@ -2987,10 +2987,33 @@ const AttendanceSystem = (function() {
     }).then(res => {
       btn.disabled = false; btn.innerHTML = orig;
       if (!res.success) { showPopup('error', 'Update Failed', res.message); return; }
+
       currentFullName = res.fullName || fullName;
       document.getElementById('sidebarUserName').textContent = currentFullName;
+
+      // update sidebar avatar — photo if available, else initial
       const av = document.getElementById('sidebarAvatar');
-      if (av) av.textContent = (currentFullName || '?').charAt(0).toUpperCase();
+      const newPhoto = res.profileImage || '';
+      if (av) {
+        if (newPhoto) {
+          av.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Profile">`;
+        } else {
+          av.innerHTML = '';
+          av.textContent = (currentFullName || '?').charAt(0).toUpperCase();
+        }
+      }
+
+      // update profile preview with the returned signed URL
+      if (newPhoto) {
+        const imgEl = document.getElementById('profilePhotoPreview');
+        const emptyEl = document.getElementById('profilePhotoEmpty');
+        if (imgEl) { imgEl.src = newPhoto; imgEl.style.display = 'block'; }
+        if (emptyEl) emptyEl.style.display = 'none';
+      }
+
+      // persist photo URL in session cache so it survives a reload
+      updateStoredSession({ profileImage: newPhoto });
+
       _profileImageBase64 = '';
       document.getElementById('profileOldPwd').value = '';
       document.getElementById('profileNewPwd').value = '';
@@ -3005,7 +3028,7 @@ const AttendanceSystem = (function() {
     api('getSettings').then(res => {
       const s = (res && res.data) || {};
       document.getElementById('setCompanyName').value  = s.companyName        || 'My Company';
-      document.getElementById('setCurrency').value     = s.currency           || 'Rs.';
+      document.getElementById('setCurrency').value     = s.currency           || 'TT';
       document.getElementById('setLatePenalty').value  = s.latePenaltyPerDay  || '0';
       document.getElementById('setLeaveFine').value    = s.leaveFinePerDay    || '0';
       const url = s.companyLogoUrl || '';
@@ -3013,7 +3036,7 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // shared helper: show logo preview with auto shape-detection
+  // shared helper: show logo preview with natural sizing + border shape matched to aspect ratio
   function setLogoPreview(url) {
     const img   = document.getElementById('logoPreview');
     const empty = document.getElementById('logoPreviewEmpty');
@@ -3022,10 +3045,17 @@ const AttendanceSystem = (function() {
       img.src = url;
       img.style.display = 'block';
       if (empty) empty.style.display = 'none';
-      _applyLogoShape([img], '12px');
+      // match the border/padding shape to the image's aspect ratio
+      const applyShape = function () {
+        const r = img.naturalWidth / (img.naturalHeight || 1);
+        const radius = (r >= 0.85 && r <= 1.15) ? '50%' : '10px';
+        img.style.borderRadius = radius;
+      };
+      if (img.complete && img.naturalWidth) applyShape();
+      else img.onload = applyShape;
     } else {
       img.style.display = 'none';
-      if (empty) { empty.style.display = 'flex'; empty.style.borderRadius = '50%'; }
+      if (empty) { empty.style.display = 'flex'; empty.style.borderRadius = '12px'; }
     }
   }
 
@@ -3059,7 +3089,6 @@ const AttendanceSystem = (function() {
   }
   function savePayrollSettings() {
     const name    = document.getElementById('setCompanyName').value.trim() || 'My Company';
-    const cur     = document.getElementById('setCurrency').value.trim() || 'Rs.';
     const late    = String(Math.max(0, Number(document.getElementById('setLatePenalty').value) || 0));
     const leaveF  = String(Math.max(0, Number(document.getElementById('setLeaveFine').value)   || 0));
     const btn = document.getElementById('savePayrollSettingsBtn');
@@ -3067,7 +3096,6 @@ const AttendanceSystem = (function() {
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     Promise.all([
       api('updateSetting', { key: 'companyName',       value: name,   actorId: currentUserId, actorUsername: currentUser }),
-      api('updateSetting', { key: 'currency',          value: cur,    actorId: currentUserId, actorUsername: currentUser }),
       api('updateSetting', { key: 'latePenaltyPerDay', value: late,   actorId: currentUserId, actorUsername: currentUser }),
       api('updateSetting', { key: 'leaveFinePerDay',   value: leaveF, actorId: currentUserId, actorUsername: currentUser })
     ]).then(rs => {
@@ -3091,7 +3119,7 @@ const AttendanceSystem = (function() {
       updateStoredSession({
         companyName: s.companyName || 'My Company',
         companyLogoUrl: s.companyLogoUrl || '',
-        currency: s.currency || 'Rs.',
+        currency: s.currency || 'TT',
         latePenaltyPerDay: s.latePenaltyPerDay || '0',
         leaveFinePerDay: s.leaveFinePerDay || '0'
       });
@@ -3109,31 +3137,14 @@ const AttendanceSystem = (function() {
 
   // shared shape-detection — applies border-radius to img elements based on aspect ratio.
   // squareRadius: corner radius to use when image is NOT square (default '8px')
-  function _applyLogoShape(imgs, squareRadius) {
-    const sq = squareRadius || '8px';
-    imgs.forEach(function (img) {
-      if (!img) return;
-      const apply = function () {
-        const r = img.naturalWidth / (img.naturalHeight || 1);
-        img.style.borderRadius = (r >= 0.85 && r <= 1.15) ? '50%' : sq;
-      };
-      if (img.complete && img.naturalWidth) apply();
-      else img.onload = apply;
-    });
-  }
-
   // apply logo URL to login screen, sidebar brand, and About section
   function applyCompanyLogo(url) {
-    // ── login screen logo ──
+    // ── login screen logo — custom logo or fallback to default ──
     const loginLogo = document.getElementById('loginLogo');
     if (loginLogo) {
-      if (url) {
-        loginLogo.src = url;
-        loginLogo.style.display = '';
-        _applyLogoShape([loginLogo]);
-      } else {
-        loginLogo.style.display = 'none';
-      }
+      loginLogo.src = url || 'assets/images/logo.png';
+      loginLogo.style.display = '';
+      loginLogo.style.borderRadius = '';
     }
 
     // ── About section logo ──
@@ -3142,7 +3153,6 @@ const AttendanceSystem = (function() {
       if (url) {
         aboutLogo.src = url;
         aboutLogo.style.display = 'block';
-        _applyLogoShape([aboutLogo]);
       } else {
         aboutLogo.style.display = 'none';
       }
@@ -3163,9 +3173,8 @@ const AttendanceSystem = (function() {
         const img = existImg || document.createElement('img');
         img.className = 'sb-brand-img';
         img.alt = 'Logo';
-        img.style.cssText = 'width:40px; height:40px; object-fit:contain; display:block;';
+        img.style.cssText = 'max-height:42px; max-width:160px; width:auto; height:auto; object-fit:contain; display:block;';
         img.src = url;
-        _applyLogoShape([img]);
 
         if (!existImg) brand.insertBefore(img, brand.firstChild);
       } else {

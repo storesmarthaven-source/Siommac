@@ -498,11 +498,12 @@ async function getEmployeeByUsername(args, ctx) {
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return null;
+  const profileImage = await getSignedUrl('profile-photos', u.profile_image || '');
   return {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     departmentId: u.department_id || '', position: u.position || '', status: u.status,
     colorScheme: u.color_scheme || 'navy', layoutMode: u.layout_mode || 'sidebar',
-    hourlyRate: Number(u.hourly_rate) || 0, profileImage: u.profile_image || ''
+    hourlyRate: Number(u.hourly_rate) || 0, profileImage
   };
 }
 
@@ -846,7 +847,7 @@ async function getPayroll(args, ctx) {
     Promise.all([
       setting('latePenaltyPerDay', '0'),
       setting('leaveFinePerDay', '0'),
-      setting('currency', 'Rs.'),
+      setting('currency', 'TT'),
       setting('companyName', 'Company')
     ])
   ]);
