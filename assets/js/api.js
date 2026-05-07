@@ -11,56 +11,86 @@ function getSessionToken() {
   }
 }
 
-async function _rawApi(action, args = {}) {
+// ─── Global AJAX loading bar ─────────────────────────────────
+// A slim red bar at the top of the page that fills while any AJAX call is in flight.
+(function () {
+  const bar = document.createElement('div');
+  bar.id = 'ajax-loader-bar';
+  bar.style.cssText = [
+    'position:fixed', 'top:0', 'left:0', 'height:3px', 'width:0%',
+    'background:linear-gradient(90deg,#E40C0C,#ff6b6b)',
+    'z-index:99999', 'transition:width .25s ease,opacity .3s ease',
+    'pointer-events:none', 'opacity:0'
+  ].join(';');
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.appendChild(bar);
+  });
+  // also append immediately if DOM is already ready
+  if (document.body) document.body.appendChild(bar);
+
+  let _count = 0, _timer = null;
+  window._ajaxLoaderStart = function () {
+    _count++;
+    clearTimeout(_timer);
+    bar.style.opacity = '1';
+    bar.style.width   = '70%';
+  };
+  window._ajaxLoaderDone = function () {
+    _count = Math.max(0, _count - 1);
+    if (_count > 0) return;
+    bar.style.width = '100%';
+    _timer = setTimeout(function () {
+      bar.style.opacity = '0';
+      setTimeout(function () { bar.style.width = '0%'; }, 300);
+    }, 200);
+  };
+})();
+
+function _rawApi(action, args) {
+  args = args || {};
   // 1) sanity-check the API URL before firing
   if (!API || /PASTE_YOUR_EXEC_URL_HERE/i.test(API)) {
-    return { success: false, message: 'API URL not set. Open index.html, replace the API constant with your Apps Script /exec URL, save, redeploy.' };
-  }
-  if (false && !/^https:\/\/script\.google\.com\/.*\/exec$/.test(API)) {
-    return { success: false, message: 'API URL is malformed. It must end with /exec — e.g. https://script.google.com/macros/s/<id>/exec' };
+    return Promise.resolve({ success: false, message: 'API URL not set.' });
   }
 
-  let r;
-  try {
-    r = await fetch(API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action, args, token: getSessionToken() }),
-      redirect: 'follow'
+  _ajaxLoaderStart();
+
+  return new Promise(function (resolve) {
+    $.ajax({
+      url:         API,
+      method:      'POST',
+      contentType: 'text/plain;charset=utf-8',
+      data:        JSON.stringify({ action: action, args: args, token: getSessionToken() }),
+      dataType:    'text',
+      success: function (text) {
+        _ajaxLoaderDone();
+        try {
+          resolve(JSON.parse(text));
+        } catch (e) {
+          console.error('api parse fail', action, String(text).slice(0, 200));
+          const isHtml = /^\s*</.test(text);
+          if (isHtml) {
+            resolve({ success: false, message: 'Server returned HTML instead of JSON. Check API deployment settings.' });
+          } else {
+            resolve({ success: false, message: 'Server returned non-JSON: ' + String(text).slice(0, 140) });
+          }
+        }
+      },
+      error: function (xhr, status, err) {
+        _ajaxLoaderDone();
+        console.error('api ajax fail', action, status, err);
+        resolve({ success: false, message: 'Network error: ' + (err || status || 'unreachable') });
+      }
     });
-  } catch (e) {
-    console.error('api fetch fail', action, e);
-    return { success: false, message: 'Network error: ' + (e.message || 'unreachable') + '. Check internet + API URL.' };
-  }
-
-  // 2) read as text first so we can show a meaningful error if it's HTML (login page, deploy issue)
-  const text = await r.text().catch(() => '');
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    console.error('api parse fail', action, 'status:', r.status, 'preview:', String(text).slice(0, 200));
-    const isHtml = /^\s*</.test(text);
-    if (isHtml) {
-      // Apps Script returned an HTML page — almost always a deployment / access issue
-      return {
-        success: false,
-        message:
-          'Apps Script returned an HTML page instead of JSON. Likely cause:\n\n' +
-          '1. Web App access is NOT set to "Anyone". Fix: Apps Script → Deploy → Manage deployments → ✏️ pencil → Who has access: Anyone → Save.\n' +
-          '2. Code.gs was edited but no NEW VERSION was published. Fix: Deploy → Manage deployments → ✏️ pencil → Version: New version → Save.\n' +
-          '3. Wrong URL. The /exec URL must come from a deployed Web App, not the editor URL.\n\n' +
-          'Tip: open the API URL directly in a private window — it should return JSON, not a Google login page.'
-      };
-    }
-    return { success: false, message: 'Server returned non-JSON (HTTP ' + r.status + '): ' + String(text).slice(0, 140) };
-  }
+  });
 }
 
 // Quick connection check — call from the browser console: pingApi()
-async function pingApi() {
-  const out = await _rawApi('ping', {});
-  console.log('pingApi →', out);
-  return out;
+function pingApi() {
+  return _rawApi('ping', {}).then(function (out) {
+    console.log('pingApi →', out);
+    return out;
+  });
 }
 window.pingApi = pingApi;
 
@@ -170,13 +200,15 @@ const SWR_MUTATIONS = /^(add|update|delete|bulk|upload|approve|reject|submit|set
 
 // Wrap api() so successful mutations auto-invalidate the entire SWR cache.
 // Reads (list*, get*) pass through unchanged.
-async function api(action, args = {}) {
-  const result = await _rawApi(action, args);
-  if (result && result.success && SWR_MUTATIONS.test(action)) {
-    swr.clear();           // wipe everything — next reads refetch
-    _swrLastHash.clear();
-  }
-  return result;
+function api(action, args) {
+  args = args || {};
+  return _rawApi(action, args).then(function (result) {
+    if (result && result.success && SWR_MUTATIONS.test(action)) {
+      swr.clear();
+      _swrLastHash.clear();
+    }
+    return result;
+  });
 }
 
 swr.focusRevalidate(true); // re-pull data when user returns to tab

@@ -309,8 +309,7 @@
 /* Employee name in table */
 .lv-emp-name { font-weight: 700; color: var(--siomac-navy); font-size: 0.85rem; text-align: left; }
 .lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
-.lv-table tbody td:first-child { text-align: left; }
-.lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; }
+.lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
 
 /* Days pill */
 .lv-days-pill {
@@ -779,8 +778,8 @@
 
 /* ─── Sections (formerly tab panes) ─── */
 .app-section { display: none; }
-.app-section.active { display: block; animation: fadeIn .25s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.app-section.active { display: block; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ─── Data section card ─── */
 .data-section {
@@ -851,9 +850,12 @@
 .hdr-profile-btn {
   padding: 0 !important; overflow: hidden;
 }
+/* When profile avatar is inside the navy pill, size it to match the pill height */
+.hdr-profile-btn--pill { width: 38px !important; height: 38px !important; border-radius: 50% !important; }
+.hdr-profile-btn--pill .hdr-profile-avatar { width: 38px; height: 38px; }
 .hdr-profile-avatar {
   width: 46px; height: 46px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--siomac-red), var(--siomac-red-dark));
+  background: var(--siomac-red);
   color: white; font-weight: 700; font-size: 1rem;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: .5px;
@@ -1670,11 +1672,11 @@
   background: linear-gradient(135deg, var(--siomac-navy) 0%, #101D3B 100%);
 }
 .emp-card-header--inactive {
-  background: #e8e8e8;
+  background: linear-gradient(135deg, #5a5a5a 0%, #3a3a3a 100%);
 }
-.emp-card-header--inactive .emp-card-name { color: #444; }
-.emp-card-header--inactive .emp-card-pos  { color: #777; }
-.emp-card-header--inactive .emp-card-empid { color: #555; background: rgba(0,0,0,0.08); }
+.emp-card-header--inactive .emp-card-name { color: rgba(255,255,255,.75); }
+.emp-card-header--inactive .emp-card-pos  { color: rgba(255,255,255,.5); }
+.emp-card-header--inactive .emp-card-empid { color: rgba(255,255,255,.6); background: rgba(255,255,255,.1); }
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
   font-size: 1.1rem; font-weight: 700; color: #fff;

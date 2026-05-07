@@ -963,6 +963,9 @@ const AttendanceSystem = (function() {
         _lvAdmSearch = event.target.value;
         _renderAdmLeaves();
       }
+      if (event.target.matches('#empLeaveSearch')) {
+        _renderEmpLeaves();
+      }
       if (event.target.matches('#leaveTypeFilter')) {
         _lvAdmTypeFilter = event.target.value;
         _renderAdmLeaves();
@@ -2301,14 +2304,17 @@ const AttendanceSystem = (function() {
 
   function _renderEmpLeaves() {
     const tab = _lvEmpTab;
+    const q = (document.getElementById('empLeaveSearch')?.value || '').toLowerCase().trim();
     const filtered = _lvEmpList.filter(r => {
       const s = String(r.status).toLowerCase();
-      if (tab === 'emp-pending')  return s === 'pending';
-      if (tab === 'emp-approved') return s === 'approved';
-      if (tab === 'emp-rejected') return s === 'rejected';
-      return true;
+      if (tab === 'emp-pending')  { if (s !== 'pending')  return false; }
+      else if (tab === 'emp-approved') { if (s !== 'approved') return false; }
+      else if (tab === 'emp-rejected') { if (s !== 'rejected') return false; }
+      if (!q) return true;
+      return [r.type, r.reason, r.status, r.from, r.to, r.appliedOn]
+        .some(v => String(v || '').toLowerCase().includes(q));
     });
-    const lvTbl = document.querySelector('.lv-table');
+    const lvTbl = document.querySelector('#s-emp-leave .lv-table');
     if (lvTbl) lvTbl.style.minWidth = filtered.length ? '' : '0';
     document.getElementById('leaveRequestsList').innerHTML = filtered.length
       ? filtered.map(r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false })).join('')

@@ -429,26 +429,6 @@
           </div>
         </div>
 
-        <!-- Request status stats -->
-        <div class="lv-stats-row lv-stats-row--sm">
-          <div class="lv-stat-card">
-            <div class="lv-stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvPending">—</div><div class="lv-stat-label">Pending</div></div>
-          </div>
-          <div class="lv-stat-card">
-            <div class="lv-stat-icon green"><i class="fas fa-check-circle"></i></div>
-            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvApproved">—</div><div class="lv-stat-label">Approved</div></div>
-          </div>
-          <div class="lv-stat-card">
-            <div class="lv-stat-icon red"><i class="fas fa-times-circle"></i></div>
-            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvRejected">—</div><div class="lv-stat-label">Rejected</div></div>
-          </div>
-          <div class="lv-stat-card">
-            <div class="lv-stat-icon navy"><i class="fas fa-chart-line"></i></div>
-            <div class="lv-stat-body"><div class="lv-stat-value" id="empLvTotal">—</div><div class="lv-stat-label">Total Requests</div></div>
-          </div>
-        </div>
-
         <!-- Filter bar + Request button -->
         <div class="lv-filters-bar">
           <div class="lv-tabs">
@@ -456,6 +436,10 @@
             <button class="lv-tab-btn" data-lv-tab="emp-pending">Pending</button>
             <button class="lv-tab-btn" data-lv-tab="emp-approved">Approved</button>
             <button class="lv-tab-btn" data-lv-tab="emp-rejected">Rejected</button>
+          </div>
+          <div class="lv-search-box">
+            <i class="fas fa-search" style="color:var(--text-muted);font-size:13px;"></i>
+            <input type="text" id="empLeaveSearch" placeholder="Search leaves…" autocomplete="off">
           </div>
           <button id="requestLeaveBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Request</button>
         </div>
@@ -700,10 +684,10 @@
                 <i class="fas fa-ticket-alt"></i>
                 <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
               </button>
+              <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn hdr-profile-btn--pill" id="hdrProfileBtn" title="My Profile">
+                <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
+              </button>
             </div>
-            <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn" id="hdrProfileBtn" title="Profile">
-              <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
-            </button>
           </div>
         </div>
 
