@@ -1740,7 +1740,9 @@ const AttendanceSystem = (function() {
   function loadLeaveRequests() {
     setSkel('leaveRequestsList', skelList(3));
     api('getMyLeaves', { username: currentUser }).then(res => {
-      displayLeaveRequests((res.success && res.data) || []);
+      // getMyLeaves returns a raw array OR {success, data} — handle both
+      const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
+      displayLeaveRequests(list);
     });
   }
 
@@ -2060,7 +2062,7 @@ const AttendanceSystem = (function() {
 
   // ─── Employee list state ───
   let _empAllList = [];   // raw API data
-  let _empCardView = false; // true = cards, false = table
+  let _empCardView = true; // true = cards, false = table
 
   function loadEmployeeList() {
     if (!_isSyncing && !swr.get('listEmployees:{}')) {
@@ -3258,8 +3260,10 @@ const AttendanceSystem = (function() {
   // ─── Payroll: generator + printable doc (admin + manager) ───
   let _payrollData = null;
 
+  let _payrollInitDone = false;
+
   function initPayrollSection() {
-    // populate year dropdown if empty (current year - 2 → current year)
+    // populate year dropdown once
     const yearSel = document.getElementById('payrollYear');
     if (yearSel && !yearSel.options.length) {
       const yr = new Date().getFullYear();
@@ -3270,24 +3274,30 @@ const AttendanceSystem = (function() {
         yearSel.appendChild(opt);
       }
     }
-    // default month = current month
+    // default month = current month (only on first open)
     const monthSel = document.getElementById('payrollMonth');
-    if (monthSel) monthSel.value = String(new Date().getMonth());
+    if (monthSel && !_payrollInitDone) monthSel.value = String(new Date().getMonth());
 
-    // populate employees scoped to role (admin → all, manager → own dept)
-    api('getPayrollEmployees', { requesterUsername: currentUser }).then(res => {
-      const list = (res.success && res.data) || [];
-      const sel = document.getElementById('payrollEmployee');
-      if (!sel) return;
-      sel.innerHTML = list.length
-        ? list.map(e => '<option value="' + escapeHtml(e.username) + '">' + escapeHtml(e.fullName) + ' — ' + escapeHtml(e.department) + '</option>').join('')
-        : '<option value="">No employees available</option>';
-    });
+    // populate employees only once (avoid blank flash on revisit)
+    const empSel = document.getElementById('payrollEmployee');
+    if (empSel && !_payrollInitDone) {
+      empSel.innerHTML = '<option value="">Loading employees…</option>';
+      api('getPayrollEmployees', { requesterUsername: currentUser }).then(res => {
+        const list = (res.success && res.data) || [];
+        empSel.innerHTML = list.length
+          ? list.map(e => '<option value="' + escapeHtml(e.username) + '">' + escapeHtml(e.fullName) + ' — ' + escapeHtml(e.department) + '</option>').join('')
+          : '<option value="">No employees available</option>';
+      });
+    }
 
-    // pull currency from settings (used by both rates UI and payroll doc)
-    api('getSettings').then(res => {
-      if (res && res.data && res.data.currency) _payCurrency = res.data.currency;
-    });
+    // pull currency from settings once
+    if (!_payrollInitDone) {
+      api('getSettings').then(res => {
+        if (res && res.data && res.data.currency) _payCurrency = res.data.currency;
+      });
+    }
+
+    _payrollInitDone = true;
   }
 
   function generatePayroll() {

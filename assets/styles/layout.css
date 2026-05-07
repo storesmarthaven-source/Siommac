@@ -212,12 +212,12 @@
   display: flex; align-items: center; gap: 8px;
   white-space: nowrap;
 }
-.page-header .header-meta i { color: var(--siomac-red); font-size: 0.8rem; }
+.page-header .header-meta i { color: #1b2d55; font-size: 0.8rem; }
 .header-secure {
   color: var(--text-muted); font-size: 0.78rem;
   border-left: 1px solid var(--border); padding-left: 8px; margin-left: 4px;
 }
-.header-secure i { color: var(--success); }
+.header-secure i { color: #1b2d55; }
 /* Legacy .iso-clock kept for any other uses */
 .iso-clock {
   font-size: 0.82rem; color: var(--text-muted);

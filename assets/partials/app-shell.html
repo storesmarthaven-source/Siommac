@@ -200,12 +200,8 @@
 
       <!-- Live Operations Map (admin/manager) -->
       <section class="app-section lm-section" id="s-projectMap">
-        <!-- header row -->
+        <!-- action buttons row -->
         <div class="lm-header">
-          <div class="lm-title-block">
-            <h1 class="lm-title"><i class="fas fa-map-marked-alt" style="color:var(--siomac-red);"></i> <span id="liveMapTitle">Live Operations Map</span></h1>
-            <p class="lm-subtitle" id="liveMapMeta">Real-time employee positions &amp; project zones | Auto-refresh every 30s</p>
-          </div>
           <div class="lm-header-actions">
             <button id="refreshLiveMapBtn" class="lm-btn-outline"><i class="fas fa-sync-alt"></i> Refresh</button>
             <button id="centerMapBtn" class="lm-btn-primary"><i class="fas fa-location-dot"></i> Center View</button>
@@ -522,19 +518,19 @@
           </div>
           <div class="emp-filter-actions">
             <div class="emp-view-toggle">
-              <button class="emp-view-btn" id="empCardViewBtn" title="Card View"><i class="fas fa-th-large"></i></button>
-              <button class="emp-view-btn active" id="empTableViewBtn" title="Table View"><i class="fas fa-list"></i></button>
+              <button class="emp-view-btn active" id="empCardViewBtn" title="Card View"><i class="fas fa-th-large"></i></button>
+              <button class="emp-view-btn" id="empTableViewBtn" title="Table View"><i class="fas fa-list"></i></button>
             </div>
             <button id="addEmployeeBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Employee</button>
             <button id="refreshEmployeesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
         </div>
 
-        <!-- Card view (hidden by default) -->
-        <div id="empCardView" class="emp-cards-grid" style="display:none;"></div>
+        <!-- Card view (default) -->
+        <div id="empCardView" class="emp-cards-grid"></div>
 
-        <!-- Table view -->
-        <div id="empTableView" class="data-section">
+        <!-- Table view (hidden by default) -->
+        <div id="empTableView" class="data-section" style="display:none;">
           <div style="overflow-x:auto;">
             <table id="employeesTable">
               <thead>
