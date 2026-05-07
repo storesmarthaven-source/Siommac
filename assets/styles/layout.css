@@ -224,17 +224,13 @@
 .page-header-left {
   display: flex; align-items: center; gap: 14px;
 }
-.page-title-block { display: flex; flex-direction: column; gap: 3px; }
 .page-header h1 {
   font-size: 1.55rem; font-weight: 700; color: var(--siomac-navy);
   display: flex; align-items: center; gap: 10px; margin: 0;
 }
 .page-header h1 i { color: var(--siomac-red); font-size: 1.3rem; }
-.page-subtitle {
-  font-size: 0.8rem; color: var(--text-muted); margin: 0;
-  font-weight: 400;
-}
 /* Clock pill */
+.page-header-right .header-meta,
 .page-header .header-meta {
   background: var(--bg-card);
   padding: 8px 18px;
@@ -256,3 +252,149 @@
 .iso-clock {
   font-size: 0.82rem; color: var(--text-muted);
 }
+
+/* ── Header right group ── */
+.page-header-right {
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* ── Icon button group ── */
+.hdr-icon-group {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.hdr-icon-btn {
+  position: relative;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--siomac-navy);
+  transition: background .18s, color .18s;
+  font-size: 1rem;
+}
+.hdr-icon-btn:hover { background: rgba(27,45,85,.08); color: var(--siomac-red); }
+.hdr-icon-btn.active { background: var(--siomac-red); color: #fff; }
+
+/* Badge */
+.hdr-badge {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 17px; height: 17px;
+  background: var(--siomac-red); color: #fff;
+  border-radius: 10px; font-size: 0.6rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; line-height: 1;
+  border: 1.5px solid var(--bg-card);
+  pointer-events: none;
+}
+.hdr-badge-gold { background: var(--siomac-gold, #FFB712); color: #1B2D55; }
+
+/* ── Dropdown modals ── */
+.hdr-modal-overlay {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1080;
+}
+.hdr-modal-overlay.open { display: block; }
+.hdr-modal {
+  position: absolute; top: 72px; right: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+  overflow: hidden;
+  animation: hdrSlideIn .18s ease;
+}
+@keyframes hdrSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hdr-modal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: 0.9rem; color: var(--siomac-navy);
+  gap: 12px;
+}
+.hdr-modal-head i { color: var(--siomac-red); margin-right: 6px; }
+.hdr-modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 0.85rem; padding: 4px;
+  border-radius: 50%; transition: background .15s;
+}
+.hdr-modal-close:hover { background: rgba(228,12,12,.08); color: var(--siomac-red); }
+.hdr-modal-body { max-height: 340px; overflow-y: auto; }
+.hdr-modal-foot {
+  display: flex; justify-content: space-between;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+}
+.hdr-foot-link {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.78rem; font-weight: 600; color: var(--siomac-red);
+  font-family: inherit; padding: 2px 0;
+}
+.hdr-foot-link:hover { text-decoration: underline; }
+
+/* Notification items */
+.hdr-notif-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 18px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s;
+}
+.hdr-notif-item:last-child { border-bottom: none; }
+.hdr-notif-item:hover { background: var(--bg-subtle, #F8FAFE); }
+.hdr-notif-item.unread { background: rgba(228,12,12,.03); }
+.hdr-notif-icon {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+}
+.hdr-notif-icon.red   { background: rgba(198,40,40,.1);  color: #C62828; }
+.hdr-notif-icon.gold  { background: rgba(255,183,18,.15); color: #B8860B; }
+.hdr-notif-icon.blue  { background: rgba(21,101,192,.1); color: #1565C0; }
+.hdr-notif-icon.green { background: rgba(46,125,50,.1);  color: #2E7D32; }
+.hdr-notif-icon.navy  { background: rgba(27,45,85,.1);   color: var(--siomac-navy); }
+.hdr-notif-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
+.hdr-notif-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Message items */
+.hdr-msg-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 18px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s;
+}
+.hdr-msg-item:last-child { border-bottom: none; }
+.hdr-msg-item:hover { background: var(--bg-subtle, #F8FAFE); }
+.hdr-msg-item.unread { background: rgba(228,12,12,.03); }
+.hdr-msg-avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: var(--siomac-red); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700;
+}
+.hdr-msg-name  { font-size: 0.83rem; font-weight: 700; color: var(--text-primary); }
+.hdr-msg-time  { font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+.hdr-msg-preview { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+
+/* Ticket items */
+.hdr-ticket-item {
+  padding: 13px 18px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s;
+}
+.hdr-ticket-item:last-child { border-bottom: none; }
+.hdr-ticket-item:hover { background: var(--bg-subtle, #F8FAFE); }
+.hdr-ticket-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.hdr-ticket-id { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); font-family: monospace; }
+.hdr-ticket-status {
+  font-size: 0.65rem; font-weight: 700; padding: 2px 9px;
+  border-radius: 20px; white-space: nowrap;
+}
+.hdr-ticket-status.open    { background: #FFEBEE; color: #C62828; }
+.hdr-ticket-status.pending { background: #FFF8E1; color: #F57C00; }
+.hdr-ticket-status.closed  { background: #E8F5E9; color: #2E7D32; }
+.hdr-ticket-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
+.hdr-ticket-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }

@@ -676,27 +676,6 @@ const AttendanceSystem = (function() {
     if (item) {
       document.getElementById('pageTitleIcon').className = 'fas ' + item.icon;
       document.getElementById('pageTitleText').textContent = item.label;
-      const subtitleEl = document.getElementById('pageSubtitle');
-      if (subtitleEl) {
-        const subtitles = {
-          's-adm-dashboard':   'Real-time attendance & workforce intelligence',
-          's-adm-employees':   'Manage employee profiles, roles and departments',
-          's-adm-departments': 'Organise and configure your department structure',
-          's-adm-attendance':  'Detailed attendance records and monthly reports',
-          's-adm-projects':    'Geo-fenced project sites and live location tracking',
-          's-adm-leaves':      'Approve, reject and track workforce leave requests',
-          's-adm-payroll':     'Generate payslips and manage hourly rates',
-          's-adm-settings':    'System configuration and company preferences',
-          's-mgr-overview':    'Department attendance and workforce snapshot',
-          's-mgr-employees':   'View and manage your department team',
-          's-mgr-leaves':      'Review pending leave requests from your team',
-          's-emp-attendance':  'Check in, check out and track your attendance',
-          's-emp-history':     'Your personal attendance history and records',
-          's-emp-leave':       'Submit and track your leave requests',
-          's-emp-profile':     'Manage your personal profile and preferences',
-        };
-        subtitleEl.textContent = subtitles[id] || 'Siddim Integrated O&M Operations';
-      }
     }
 
     // close mobile drawer + backdrop after click
@@ -761,6 +740,47 @@ const AttendanceSystem = (function() {
       setMobileOpen(!sidebar.classList.contains('mobile-open'));
     });
     backdrop.addEventListener('click', () => setMobileOpen(false));
+
+    // ── Header icon modals (notifications / messages / tickets) ──
+    (function () {
+      const pairs = [
+        { btn: 'hdrNotifBtn',  modal: 'hdrNotifModal'  },
+        { btn: 'hdrMsgBtn',    modal: 'hdrMsgModal'    },
+        { btn: 'hdrTicketBtn', modal: 'hdrTicketModal' },
+      ];
+      function closeAll() {
+        pairs.forEach(p => {
+          const m = document.getElementById(p.modal);
+          const b = document.getElementById(p.btn);
+          if (m) m.classList.remove('open');
+          if (b) b.classList.remove('active');
+        });
+      }
+      pairs.forEach(({ btn, modal }) => {
+        const b = document.getElementById(btn);
+        const m = document.getElementById(modal);
+        if (!b || !m) return;
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = m.classList.contains('open');
+          closeAll();
+          if (!isOpen) { m.classList.add('open'); b.classList.add('active'); }
+        });
+        // close when clicking the overlay backdrop (outside the card)
+        m.addEventListener('click', (e) => {
+          if (e.target === m) closeAll();
+        });
+      });
+      // close buttons inside each modal
+      document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('.hdr-modal-close');
+        if (closeBtn) { closeAll(); return; }
+        // click outside any modal
+        const insideModal = e.target.closest('.hdr-modal');
+        const insideBtn   = e.target.closest('.hdr-icon-btn');
+        if (!insideModal && !insideBtn) closeAll();
+      });
+    })();
 
     document.getElementById('sidebarMenu').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-section]');
@@ -924,6 +944,10 @@ const AttendanceSystem = (function() {
       }
       if (event.target.matches('#leaveSearchInput')) {
         _lvAdmSearch = event.target.value;
+        _renderAdmLeaves();
+      }
+      if (event.target.matches('#leaveTypeFilter')) {
+        _lvAdmTypeFilter = event.target.value;
         _renderAdmLeaves();
       }
       if (event.target.matches('#hrSearchInput')) {
@@ -1730,8 +1754,9 @@ const AttendanceSystem = (function() {
     { id: 'leave',    title: 'Leave Types · This Month' },
     { id: 'activity', title: 'Recent Activity' },
   ];
-  let _dashSortable = null;
-  let _dashEditMode = false;
+  let _dashSortable  = null;
+  let _dashEditMode  = false;
+  let _dashInitDone  = false;
 
   function _dashLoadLayout() {
     try { return JSON.parse(localStorage.getItem(DASH_LAYOUT_KEY)) || {}; } catch { return {}; }
@@ -1819,9 +1844,10 @@ const AttendanceSystem = (function() {
       resetBtn.style.display = '';
       _dashSortable = Sortable.create(grid, {
         animation: 250,
-        handle: '.dash-drag-handle',
         ghostClass: 'dash-sortable-ghost',
         dragClass: 'dash-sortable-drag',
+        filter: 'button, a, input, select, canvas',
+        preventOnFilter: false,
         onEnd: _dashSaveLayout,
       });
     } else {
@@ -1848,6 +1874,8 @@ const AttendanceSystem = (function() {
   }
   function initDashboardLayoutEditor() {
     _dashApplyLayout();
+    if (_dashInitDone) return;
+    _dashInitDone = true;
     const editBtn  = document.getElementById('dashEditBtn');
     const resetBtn = document.getElementById('dashResetBtn');
     if (editBtn)  editBtn.addEventListener('click', _dashToggleEditMode);
@@ -2038,25 +2066,33 @@ const AttendanceSystem = (function() {
   function _lvCard(r, { showEmployee = false, showApproveReject = false, showEdit = false, showDelete = false, showView = false } = {}) {
     const id = escapeHtml(r.id);
     const isPending = String(r.status).toLowerCase() === 'pending';
-    return `<div class="lv-card">
-      <div class="lv-card-header">
-        ${showEmployee ? `<div class="lv-card-who"><div class="lv-who-name">${escapeHtml(r.employee || '—')}</div><div class="lv-who-meta">${escapeHtml(r.department || '')}${r.appliedOn ? ' · Applied ' + _lvFmtDate(r.appliedOn) : ''}</div></div>` : `<div class="lv-card-who"><div class="lv-who-name">${_lvTypeBadge(r.type)} Leave Request</div><div class="lv-who-meta">${r.appliedOn ? 'Applied ' + _lvFmtDate(r.appliedOn) : ''}</div></div>`}
-        <div style="display:flex;align-items:center;gap:6px;">${showEmployee ? _lvTypeBadge(r.type) : ''} ${_lvStatusBadge(r.status)}</div>
-      </div>
-      <div class="lv-card-dates"><i class="fas fa-calendar"></i> ${_lvFmtDate(r.from || r.fromDate)} → ${_lvFmtDate(r.to || r.toDate)} <span class="lv-days-pill">${r.days || '?'} day${r.days !== 1 ? 's' : ''}</span></div>
-      <div class="lv-card-reason"><i class="fas fa-comment"></i> ${escapeHtml(r.reason || '—')}</div>
-      <div class="lv-card-actions">
-        ${showView ? `<button class="lv-btn lv-btn-view btn-view-leave" data-id="${id}"><i class="fas fa-file-alt"></i> View</button>` : ''}
-        ${showView ? `<button class="lv-btn lv-btn-print btn-print-leave" data-id="${id}"><i class="fas fa-print"></i> Print</button>` : ''}
-        ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-approve btn-approve" data-id="${id}"><i class="fas fa-check"></i> Approve</button>` : ''}
-        ${showApproveReject && isPending ? `<button class="lv-btn lv-btn-reject btn-reject"   data-id="${id}"><i class="fas fa-times"></i> Reject</button>` : ''}
-        ${showEdit && isPending ? `<button class="lv-btn lv-btn-edit btn-edit-leave" data-id="${id}"><i class="fas fa-edit"></i> Edit</button>` : ''}
-        ${showDelete ? `<button class="lv-btn lv-btn-delete btn-delete-leave" data-id="${id}"><i class="fas fa-trash"></i></button>` : ''}
-      </div>
-    </div>`;
+    const empCell = showEmployee
+      ? `<td><div class="lv-emp-name">${escapeHtml(r.employee || '—')}</div></td><td><span class="lv-dept-label">${escapeHtml(r.department || '—')}</span></td>`
+      : '';
+    const reasonTitle = escapeHtml(r.reason || '');
+    return `<tr>
+      ${empCell}
+      <td>${_lvTypeBadge(r.type)}</td>
+      <td>${_lvFmtDate(r.from || r.fromDate)}</td>
+      <td>${_lvFmtDate(r.to || r.toDate)}</td>
+      <td><span class="lv-days-pill">${r.days || '?'}d</span></td>
+      ${!showEmployee ? `<td class="lv-reason-cell" title="${reasonTitle}">${escapeHtml((r.reason || '—').substring(0, 40))}${(r.reason || '').length > 40 ? '…' : ''}</td>` : ''}
+      ${!showEmployee ? `<td>${_lvFmtDate(r.appliedOn)}</td>` : ''}
+      <td>${_lvStatusBadge(r.status)}</td>
+      <td>
+        <div class="lv-action-btns">
+          ${showView ? `<button class="lv-act-btn lv-act-view btn-view-leave" data-id="${id}" title="View document"><i class="fas fa-eye"></i></button>` : ''}
+          ${showView ? `<button class="lv-act-btn lv-act-print btn-print-leave" data-id="${id}" title="Print"><i class="fas fa-print"></i></button>` : ''}
+          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-approve btn-approve" data-id="${id}" title="Approve"><i class="fas fa-check"></i></button>` : ''}
+          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-reject btn-reject" data-id="${id}" title="Reject"><i class="fas fa-times"></i></button>` : ''}
+          ${showEdit && isPending ? `<button class="lv-act-btn lv-act-edit btn-edit-leave" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>` : ''}
+          ${showDelete ? `<button class="lv-act-btn lv-act-delete btn-delete-leave" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>`;
   }
-  function _lvEmpty(msg) {
-    return `<div class="lv-empty"><i class="fas fa-calendar-check"></i><p>${msg}</p></div>`;
+  function _lvEmpty(msg, colspan = 8) {
+    return `<tr><td colspan="${colspan}" class="lv-empty-row"><i class="fas fa-calendar-check"></i><p>${msg}</p></td></tr>`;
   }
   function _lvUpdateStats(prefix, list) {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -2071,10 +2107,11 @@ const AttendanceSystem = (function() {
   let _lvMgrTab  = 'mgr-pending';
   let _lvAdmTab  = 'adm-all';
   let _lvAdmSearch = '';
+  let _lvAdmTypeFilter = 'all';
   let _lvEmpList = [], _lvMgrList = [], _lvAdmList = [];
 
   function loadLeaveRequests() {
-    setSkel('leaveRequestsList', skelList(3));
+    setSkel('leaveRequestsList', skelTableRows(8, 3));
     api('getMyLeaves', { username: currentUser }).then(res => {
       const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
       _lvEmpList = list;
@@ -2094,7 +2131,7 @@ const AttendanceSystem = (function() {
     });
     document.getElementById('leaveRequestsList').innerHTML = filtered.length
       ? filtered.map(r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false })).join('')
-      : _lvEmpty('No leave requests found.');
+      : _lvEmpty('No leave requests found.', 8);
   }
 
   function displayLeaveRequests(list) {
@@ -2170,7 +2207,7 @@ const AttendanceSystem = (function() {
   function loadManagerLeaveApplications() {
     const args = { managerUsername: currentUser };
     if (!swr.get('getPendingLeavesForManager:' + JSON.stringify(args))) {
-      setSkel('managerPendingLeaves', skelList(3));
+      setSkel('managerPendingLeaves', skelTableRows(8, 3));
     }
     apiSwr('getPendingLeavesForManager', args, {
       onData: res => displayManagerLeaveApplications((res && res.success && res.data) || [])
@@ -2194,7 +2231,7 @@ const AttendanceSystem = (function() {
     });
     document.getElementById('managerPendingLeaves').innerHTML = filtered.length
       ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false, showView: true })).join('')
-      : _lvEmpty('No leave requests in this category.');
+      : _lvEmpty('No leave requests in this category.', 8);
   }
 
   // shared approve / reject — works for admin (s-adm-leaves) and manager (s-mgr-leaves)
@@ -3152,7 +3189,7 @@ const AttendanceSystem = (function() {
 
   function loadLeaveApplications() {
     if (!_isSyncing && !swr.get('listAllLeaves:{}')) {
-      setSkel('leavesTableBody', skelList(4));
+      setSkel('leavesTableBody', skelTableRows(8, 4));
     }
     apiSwr('listAllLeaves', {}, {
       onData: res => { if (!_isSyncing) displayLeaveApplications((res && res.success && res.data) || []); }
@@ -3168,11 +3205,13 @@ const AttendanceSystem = (function() {
   function _renderAdmLeaves() {
     const tab    = _lvAdmTab;
     const search = _lvAdmSearch.toLowerCase();
+    const typeF  = _lvAdmTypeFilter;
     let filtered = _lvAdmList.filter(r => {
       const s = String(r.status).toLowerCase();
       if (tab === 'adm-pending')  { if (s !== 'pending')  return false; }
       if (tab === 'adm-approved') { if (s !== 'approved') return false; }
       if (tab === 'adm-rejected') { if (s !== 'rejected') return false; }
+      if (typeF !== 'all' && String(r.type).toLowerCase() !== typeF) return false;
       if (search) {
         const name = (r.employee || '').toLowerCase();
         const dept = (r.department || '').toLowerCase();
@@ -3182,7 +3221,7 @@ const AttendanceSystem = (function() {
     });
     document.getElementById('leavesTableBody').innerHTML = filtered.length
       ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true, showView: true })).join('')
-      : _lvEmpty('No leave requests found.');
+      : _lvEmpty('No leave requests found.', 8);
   }
 
   // ─── Leave: view / print / edit / delete ─────────────────────

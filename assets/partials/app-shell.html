@@ -103,18 +103,168 @@
       <div class="page-header">
         <div class="page-header-left">
           <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu"><i class="fas fa-bars"></i></button>
-          <div class="page-title-block">
-            <h1 id="pageTitle">
-              <i class="fas fa-tachometer-alt" id="pageTitleIcon"></i>
-              <span id="pageTitleText">Operations Dashboard</span>
-            </h1>
-            <p class="page-subtitle" id="pageSubtitle">Real-time attendance &amp; workforce intelligence</p>
+          <h1 id="pageTitle">
+            <i class="fas fa-tachometer-alt" id="pageTitleIcon"></i>
+            <span id="pageTitleText">Operations Dashboard</span>
+          </h1>
+        </div>
+        <div class="page-header-right">
+          <!-- Notification / Message / Ticket icon buttons -->
+          <div class="hdr-icon-group">
+            <button class="hdr-icon-btn" id="hdrNotifBtn" title="Notifications">
+              <i class="fas fa-bell"></i>
+              <span class="hdr-badge" id="hdrNotifBadge">4</span>
+            </button>
+            <button class="hdr-icon-btn" id="hdrMsgBtn" title="Messages">
+              <i class="fas fa-comment-dots"></i>
+              <span class="hdr-badge" id="hdrMsgBadge">2</span>
+            </button>
+            <button class="hdr-icon-btn" id="hdrTicketBtn" title="Support Tickets">
+              <i class="fas fa-ticket-alt"></i>
+              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
+            </button>
+          </div>
+          <!-- Clock pill -->
+          <div class="header-meta">
+            <i class="fas fa-globe-americas"></i>
+            <span id="isoClock">--</span>
+            <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
           </div>
         </div>
-        <div class="header-meta">
-          <i class="fas fa-globe-americas"></i>
-          <span id="isoClock">--</span>
-          <span class="header-secure"><i class="fas fa-shield-alt"></i> Secure</span>
+      </div>
+
+      <!-- ── Notification Modal ── -->
+      <div class="hdr-modal-overlay" id="hdrNotifModal">
+        <div class="hdr-modal" style="width:360px;">
+          <div class="hdr-modal-head">
+            <span><i class="fas fa-bell"></i> Notifications</span>
+            <button class="hdr-modal-close" data-modal="hdrNotifModal"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="hdr-modal-body">
+            <div class="hdr-notif-item unread">
+              <div class="hdr-notif-icon red"><i class="fas fa-user-times"></i></div>
+              <div class="hdr-notif-text">
+                <div class="hdr-notif-title">3 employees absent today</div>
+                <div class="hdr-notif-sub">Civil Operations · 08:05 AM</div>
+              </div>
+            </div>
+            <div class="hdr-notif-item unread">
+              <div class="hdr-notif-icon gold"><i class="fas fa-clock"></i></div>
+              <div class="hdr-notif-text">
+                <div class="hdr-notif-title">Michael Okon checked in late</div>
+                <div class="hdr-notif-sub">09:42 AM — 42 mins late</div>
+              </div>
+            </div>
+            <div class="hdr-notif-item unread">
+              <div class="hdr-notif-icon blue"><i class="fas fa-calendar-check"></i></div>
+              <div class="hdr-notif-text">
+                <div class="hdr-notif-title">Leave request pending approval</div>
+                <div class="hdr-notif-sub">Sarah Williams · Annual Leave · 5 days</div>
+              </div>
+            </div>
+            <div class="hdr-notif-item unread">
+              <div class="hdr-notif-icon green"><i class="fas fa-map-marker-alt"></i></div>
+              <div class="hdr-notif-text">
+                <div class="hdr-notif-title">New project site added</div>
+                <div class="hdr-notif-sub">Site 7 — Port Harcourt North · Just now</div>
+              </div>
+            </div>
+            <div class="hdr-notif-item">
+              <div class="hdr-notif-icon navy"><i class="fas fa-sync-alt"></i></div>
+              <div class="hdr-notif-text">
+                <div class="hdr-notif-title">Monthly payroll report ready</div>
+                <div class="hdr-notif-sub">March 2025 · Generated yesterday</div>
+              </div>
+            </div>
+          </div>
+          <div class="hdr-modal-foot">
+            <button class="hdr-foot-link">Mark all as read</button>
+            <button class="hdr-foot-link">View all</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Messages Modal ── -->
+      <div class="hdr-modal-overlay" id="hdrMsgModal">
+        <div class="hdr-modal" style="width:380px;">
+          <div class="hdr-modal-head">
+            <span><i class="fas fa-comment-dots"></i> Messages</span>
+            <button class="hdr-modal-close" data-modal="hdrMsgModal"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="hdr-modal-body">
+            <div class="hdr-msg-item unread">
+              <div class="hdr-msg-avatar">JR</div>
+              <div class="hdr-msg-text">
+                <div class="hdr-msg-name">James Rodriguez <span class="hdr-msg-time">09:15 AM</span></div>
+                <div class="hdr-msg-preview">I'll be 30 minutes late today, traffic on the bridge…</div>
+              </div>
+            </div>
+            <div class="hdr-msg-item unread">
+              <div class="hdr-msg-avatar" style="background:#1B2D55;">AD</div>
+              <div class="hdr-msg-text">
+                <div class="hdr-msg-name">Amara Diallo <span class="hdr-msg-time">08:50 AM</span></div>
+                <div class="hdr-msg-preview">Leave form submitted, please review when you get a chance.</div>
+              </div>
+            </div>
+            <div class="hdr-msg-item">
+              <div class="hdr-msg-avatar" style="background:#455A64;">LM</div>
+              <div class="hdr-msg-text">
+                <div class="hdr-msg-name">Linda Moyo <span class="hdr-msg-time">Yesterday</span></div>
+                <div class="hdr-msg-preview">Thank you for approving my medical leave request.</div>
+              </div>
+            </div>
+            <div class="hdr-msg-item">
+              <div class="hdr-msg-avatar" style="background:#2E7D32;">KR</div>
+              <div class="hdr-msg-text">
+                <div class="hdr-msg-name">Kevin Ramkissoon <span class="hdr-msg-time">Yesterday</span></div>
+                <div class="hdr-msg-preview">Site 3 gate access needs to be updated before Friday.</div>
+              </div>
+            </div>
+          </div>
+          <div class="hdr-modal-foot">
+            <button class="hdr-foot-link">Mark all as read</button>
+            <button class="hdr-foot-link">Open inbox</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tickets Modal ── -->
+      <div class="hdr-modal-overlay" id="hdrTicketModal">
+        <div class="hdr-modal" style="width:400px;">
+          <div class="hdr-modal-head">
+            <span><i class="fas fa-ticket-alt"></i> Support Tickets</span>
+            <button class="hdr-modal-close" data-modal="hdrTicketModal"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="hdr-modal-body">
+            <div class="hdr-ticket-item open">
+              <div class="hdr-ticket-top">
+                <span class="hdr-ticket-id">#TKT-0041</span>
+                <span class="hdr-ticket-status open">Open</span>
+              </div>
+              <div class="hdr-ticket-title">Geofence not triggering on Site 5</div>
+              <div class="hdr-ticket-sub">Reported by Peter Huang · Electrical · 2 hrs ago</div>
+            </div>
+            <div class="hdr-ticket-item pending">
+              <div class="hdr-ticket-top">
+                <span class="hdr-ticket-id">#TKT-0039</span>
+                <span class="hdr-ticket-status pending">In Progress</span>
+              </div>
+              <div class="hdr-ticket-title">Payslip PDF export missing overtime column</div>
+              <div class="hdr-ticket-sub">Reported by Admin · Yesterday</div>
+            </div>
+            <div class="hdr-ticket-item closed">
+              <div class="hdr-ticket-top">
+                <span class="hdr-ticket-id">#TKT-0037</span>
+                <span class="hdr-ticket-status closed">Resolved</span>
+              </div>
+              <div class="hdr-ticket-title">Employee unable to check in at Site 2</div>
+              <div class="hdr-ticket-sub">Resolved 3 days ago</div>
+            </div>
+          </div>
+          <div class="hdr-modal-foot">
+            <button class="hdr-foot-link">New ticket</button>
+            <button class="hdr-foot-link">View all tickets</button>
+          </div>
         </div>
       </div>
 
@@ -240,12 +390,12 @@
       <!-- Employee — Leave -->
       <section class="app-section" id="s-emp-leave" data-role="employee">
 
-        <!-- Leave balance — dummy -->
-        <div class="lv-balance-card">
-          <div class="lv-balance-item"><div class="lv-balance-value">12</div><div class="lv-balance-label">Annual Leave</div></div>
-          <div class="lv-balance-item"><div class="lv-balance-value">8</div><div class="lv-balance-label">Sick Leave</div></div>
-          <div class="lv-balance-item"><div class="lv-balance-value">5</div><div class="lv-balance-label">Casual Leave</div></div>
-          <div class="lv-balance-item"><div class="lv-balance-value">10</div><div class="lv-balance-label">Medical Leave</div></div>
+        <!-- Leave balance bar -->
+        <div class="lv-balance-bar">
+          <div class="lv-balance-item"><div class="lv-balance-value" id="empBalAnnual">12</div><div class="lv-balance-label">Annual Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value" id="empBalSick">8</div><div class="lv-balance-label">Sick Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value" id="empBalCasual">5</div><div class="lv-balance-label">Casual Leave</div></div>
+          <div class="lv-balance-item"><div class="lv-balance-value" id="empBalMedical">10</div><div class="lv-balance-label">Medical Leave</div></div>
         </div>
 
         <!-- Stats row -->
@@ -267,8 +417,24 @@
           <button id="requestLeaveBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Request</button>
         </div>
 
-        <!-- Card list -->
-        <div class="lv-list" id="leaveRequestsList"></div>
+        <!-- Table -->
+        <div class="lv-table-container">
+          <table class="lv-table">
+            <thead>
+              <tr>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Applied</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leaveRequestsList"></tbody>
+          </table>
+        </div>
 
       </section>
 
@@ -385,7 +551,24 @@
           <button id="refreshManagerLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
         </div>
 
-        <div class="lv-list" id="managerPendingLeaves"></div>
+        <!-- Table -->
+        <div class="lv-table-container">
+          <table class="lv-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="managerPendingLeaves"></tbody>
+          </table>
+        </div>
 
       </section>
       
@@ -402,7 +585,6 @@
               <span>Today's Overview</span>
             </div>
             <div class="dash-overview-actions">
-              <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
               <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
               <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
             </div>
@@ -450,14 +632,16 @@
               <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
             </div>
           </div>
-          </div>
+          <!-- Hidden widgets restore bar — shown at bottom of panel when widgets are hidden -->
+          <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
         </div>
 
-        <!-- 2x2 chart grid -->
-        <div class="chart-grid-2x2" id="dashWidgetGrid">
+        <!-- Single sortable widget grid -->
+        <div class="dash-widget-grid" id="dashWidgetGrid">
+
           <div class="data-section chart-card-section dash-widget" data-widget-id="trend" data-widget-title="Weekly Attendance Trend">
             <div class="chart-card-header">
-              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
+              <h3><i class="fas fa-chart-line" style="color:var(--siomac-red);margin-right:8px;"></i>Weekly Attendance Trend</h3>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span class="chart-badge" id="trendBadge">Last 30 days</span>
                 <button class="dash-hide-btn" data-widget-id="trend" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
@@ -465,40 +649,41 @@
             </div>
             <div class="chart-container-md"><canvas id="trendLineChart"></canvas></div>
           </div>
+
           <div class="data-section chart-card-section dash-widget" data-widget-id="dept" data-widget-title="Department Distribution">
             <div class="chart-card-header">
-              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
+              <h3><i class="fas fa-building" style="color:var(--siomac-red);margin-right:8px;"></i>Department Distribution</h3>
               <button class="dash-hide-btn" data-widget-id="dept" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="deptDistChart"></canvas></div>
           </div>
+
           <div class="data-section chart-card-section dash-widget" data-widget-id="status" data-widget-title="Today's Status">
             <div class="chart-card-header">
-              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
+              <h3><i class="fas fa-users" style="color:var(--siomac-red);margin-right:8px;"></i>Today's Status</h3>
               <button class="dash-hide-btn" data-widget-id="status" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="statusBarChart"></canvas></div>
           </div>
+
           <div class="data-section chart-card-section dash-widget" data-widget-id="leave" data-widget-title="Leave Types · This Month">
             <div class="chart-card-header">
-              <h3><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
+              <h3><i class="fas fa-calendar-day" style="color:var(--siomac-red);margin-right:8px;"></i>Leave Types · This Month</h3>
               <button class="dash-hide-btn" data-widget-id="leave" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
             </div>
             <div class="chart-container-md"><canvas id="leaveTypesChart"></canvas></div>
           </div>
-        </div>
 
-        <!-- Recent Attendance Activity -->
-        <div class="data-section recent-activity-section dash-widget" data-widget-id="activity" data-widget-title="Recent Activity">
-          <div class="section-header">
-            <h2><span class="dash-drag-handle"><i class="fas fa-grip-vertical"></i></span><i class="fas fa-history"></i> Recent Attendance Activity</h2>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <button class="btn btn-sm btn-outline-primary" onclick="AttendanceSystem.goTo('s-adm-attendance')">
-                <i class="fas fa-arrow-right"></i> View All
-              </button>
-              <button class="dash-hide-btn" data-widget-id="activity" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
+          <div class="data-section recent-activity-section dash-widget dash-widget-full" data-widget-id="activity" data-widget-title="Recent Activity">
+            <div class="section-header">
+              <h2><i class="fas fa-history"></i> Recent Attendance Activity</h2>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button class="btn btn-sm btn-outline-primary" onclick="AttendanceSystem.goTo('s-adm-attendance')">
+                  <i class="fas fa-arrow-right"></i> View All
+                </button>
+                <button class="dash-hide-btn" data-widget-id="activity" title="Hide widget"><i class="fas fa-eye-slash"></i></button>
+              </div>
             </div>
-          </div>
           <div class="table-responsive" id="recentAttendanceWrapper">
             <table class="recent-att-table" id="recentAttendanceTable">
               <thead>
@@ -515,7 +700,8 @@
               </tbody>
             </table>
           </div>
-        </div>
+          </div><!-- /.recent-activity-section -->
+        </div><!-- /.dash-widget-grid -->
       </section>
 
       <!-- Admin — Employees CRUD -->
@@ -851,15 +1037,38 @@
             <button class="lv-tab-btn" data-lv-tab="adm-approved">Approved</button>
             <button class="lv-tab-btn" data-lv-tab="adm-rejected">Rejected</button>
           </div>
-          <div class="ps-search-box" style="max-width:260px;">
+          <div class="lv-search-box">
             <i class="fas fa-search"></i>
             <input type="text" id="leaveSearchInput" placeholder="Search employee…">
           </div>
+          <select id="leaveTypeFilter" class="lv-filter-select">
+            <option value="all">All Types</option>
+            <option value="sick">Sick</option>
+            <option value="casual">Casual</option>
+            <option value="annual">Annual</option>
+            <option value="medical">Medical</option>
+          </select>
           <button id="refreshLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
         </div>
 
-        <!-- Card list — replaces old DataTable -->
-        <div class="lv-list" id="leavesTableBody"></div>
+        <!-- Table -->
+        <div class="lv-table-container">
+          <table class="lv-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Leave Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leavesTableBody"></tbody>
+          </table>
+        </div>
 
       </section>
 
