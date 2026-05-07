@@ -1519,8 +1519,11 @@
   background: linear-gradient(135deg, var(--siomac-navy) 0%, #101D3B 100%);
 }
 .emp-card-header--inactive {
-  background: linear-gradient(135deg, #8a8a8a 0%, #6b6b6b 100%);
+  background: #e8e8e8;
 }
+.emp-card-header--inactive .emp-card-name { color: #444; }
+.emp-card-header--inactive .emp-card-pos  { color: #777; }
+.emp-card-header--inactive .emp-card-empid { color: #555; background: rgba(0,0,0,0.08); }
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
   font-size: 1.1rem; font-weight: 700; color: #fff;
@@ -1531,9 +1534,9 @@
 
 /* Employee ID pill in card header */
 .emp-card-empid {
-  font-family: monospace; font-size: 11px; font-weight: 700;
+  font-family: monospace; font-size: 14px; font-weight: 700;
   color: #fff; background: rgba(255,255,255,0.18);
-  padding: 2px 9px; border-radius: 6px; letter-spacing: .5px;
+  padding: 4px 12px; border-radius: 8px; letter-spacing: .5px;
   flex-shrink: 0; white-space: nowrap;
 }
 

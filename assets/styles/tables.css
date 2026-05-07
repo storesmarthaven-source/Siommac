@@ -122,17 +122,21 @@
 
 /* Reset Bootstrap's CSS variable so it can't leak in */
 .dataTables_wrapper .dataTables_paginate ul.pagination {
-  --bs-pagination-border-radius: 40px;
-  --bs-pagination-border-top-left-radius: 40px;
-  --bs-pagination-border-top-right-radius: 40px;
-  --bs-pagination-border-bottom-left-radius: 40px;
-  --bs-pagination-border-bottom-right-radius: 40px;
+  --bs-pagination-border-radius: 0;
+  --bs-pagination-border-top-left-radius: 0;
+  --bs-pagination-border-top-right-radius: 0;
+  --bs-pagination-border-bottom-left-radius: 0;
+  --bs-pagination-border-bottom-right-radius: 0;
   display: flex; gap: 4px; flex-wrap: wrap;
   margin: 0; padding: 0; list-style: none;
 }
-.dataTables_wrapper .dataTables_paginate .page-item { margin: 0; }
+/* Strip border/bg from the page-item li wrapper itself */
+.dataTables_wrapper .dataTables_paginate .page-item {
+  margin: 0; border: none !important; background: none !important;
+  border-radius: 0 !important;
+}
 
-/* Base style — all page-link variants */
+/* Base style — perfect circle for all page buttons */
 .dataTables_wrapper .dataTables_paginate .paginate_button,
 .dataTables_wrapper .dataTables_paginate .page-item .page-link,
 .dataTables_wrapper .dataTables_paginate .page-item:first-child .page-link,
@@ -141,11 +145,12 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 36px !important;
+  width: 36px !important;
   height: 36px !important;
-  padding: 0 12px !important;
+  min-width: unset !important;
+  padding: 0 !important;
   margin: 0 !important;
-  border-radius: 40px !important;
+  border-radius: 50% !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
   border: 1.5px solid var(--border) !important;
@@ -156,6 +161,14 @@
   line-height: 1 !important;
   box-shadow: none !important;
   text-decoration: none !important;
+}
+
+/* Previous / Next: slightly wider pill since they have text */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next,
+.dataTables_wrapper .dataTables_paginate .page-item:first-child .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item:last-child .page-link {
+  width: auto !important; padding: 0 14px !important; border-radius: 50px !important;
 }
 
 /* Active page */
@@ -196,12 +209,6 @@
   pointer-events: none !important;
 }
 
-/* Previous / Next wider */
-.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
-.dataTables_wrapper .dataTables_paginate .paginate_button.next {
-  font-size: 11.5px !important;
-  padding: 0 16px !important;
-}
 
 /* ── Table itself ── */
 .dataTables_wrapper table.dataTable { width: 100% !important; }

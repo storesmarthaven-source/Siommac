@@ -4423,7 +4423,7 @@ const AttendanceSystem = (function() {
         const img = existImg || document.createElement('img');
         img.className = 'sb-brand-img';
         img.alt = 'Logo';
-        img.style.cssText = 'max-height:72px; max-width:180px; width:auto; height:auto; object-fit:contain; display:block;';
+        img.style.cssText = 'height:72px; max-width:180px; width:auto; object-fit:contain; display:block;';
         img.src = url;
 
         if (!existImg) brand.insertBefore(img, brand.firstChild);
