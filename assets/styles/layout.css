@@ -111,8 +111,8 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center; gap: 10px;
 }
-.sidebar-brand i { font-size: 36px; color: var(--siomac-red); }
-.sidebar-brand-text { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.3px; color: white; }
+.sidebar-brand i { font-size: 46px; color: var(--siomac-red); }
+.sidebar-brand-text { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.3px; color: white; }
 
 /* ── User info ── */
 .sidebar-user-info {
@@ -149,7 +149,7 @@
   text-transform: uppercase; color: rgba(255,255,255,0.45);
   margin: 0 0 10px 4px; padding: 0 8px;
 }
-.sidebar-menu { list-style: none; }
+.sidebar-menu, #sidebarMenu { list-style: none !important; padding: 0 !important; margin: 0 !important; }
 .sidebar-menu li { margin-bottom: 3px; position: relative; }
 .sidebar-menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 4px 8px; }
 .sidebar-menu button {
