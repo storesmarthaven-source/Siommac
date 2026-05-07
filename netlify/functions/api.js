@@ -375,8 +375,7 @@ async function getMyStatus(args, ctx) {
   const username = actor.role === 'admin' && args.username ? args.username : actor.username;
   // Avoid FK alias join — fetch attendance row plain, then look up site name separately
   const { data: rec } = await sb.from('attendance').select('*').eq('username', username).eq('work_date', today()).maybeSingle();
-  if (!rec) return { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '' };
-  // Resolve site name and photo URLs in parallel
+  if (!rec) return { success: true, data: { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '', checkInPhotoUrl: '', checkOutPhotoUrl: '' } };
   const [checkInPhotoUrl, checkOutPhotoUrl, siteRow] = await Promise.all([
     getSignedUrl('attendance-photos', rec.check_in_photo_url  || ''),
     getSignedUrl('attendance-photos', rec.check_out_photo_url || ''),
@@ -384,14 +383,14 @@ async function getMyStatus(args, ctx) {
       ? sb.from('project_sites').select('name').eq('id', rec.check_in_site_id).maybeSingle().then(r => r.data)
       : Promise.resolve(null)
   ]);
-  return {
-    hasCheckedIn:  !!rec.check_in_time,
-    hasCheckedOut: !!rec.check_out_time,
-    checkInTime:   rec.check_in_time  ? hhmm(new Date(rec.check_in_time))  : null,
-    checkOutTime:  rec.check_out_time ? hhmm(new Date(rec.check_out_time)) : null,
+  return { success: true, data: {
+    hasCheckedIn:   !!rec.check_in_time,
+    hasCheckedOut:  !!rec.check_out_time,
+    checkInTime:    rec.check_in_time  || null,   // raw ISO — frontend formats in browser timezone
+    checkOutTime:   rec.check_out_time || null,
     location: siteRow && siteRow.name || '',
     checkInPhotoUrl, checkOutPhotoUrl
-  };
+  } };
 }
 
 async function getMyHistory(args, ctx) {
@@ -535,14 +534,14 @@ async function getEmployeeByUsername(args, ctx) {
   const actor = await requireUser(ctx);
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
-  if (!u) return null;
+  if (!u) return { success: false, message: 'User not found' };
   const profileImage = noPhoto(u.profile_image) ? '' : await getSignedUrl('profile-photos', u.profile_image);
-  return {
+  return { success: true, data: {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     departmentId: u.department_id || '', position: u.position || '', status: u.status,
     colorScheme: u.color_scheme || 'navy', layoutMode: u.layout_mode || 'sidebar',
     hourlyRate: Number(u.hourly_rate) || 0, profileImage
-  };
+  } };
 }
 
 async function listManagers(args, ctx) {

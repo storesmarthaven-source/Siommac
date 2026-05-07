@@ -43,6 +43,14 @@ const AttendanceSystem = (function() {
     MAX_DISTANCE: 200
   };
 
+  // Format an ISO timestamp string in the browser's local timezone (always correct for the user)
+  function fmtLocalTime(iso) {
+    if (!iso) return '--:--';
+    try {
+      return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    } catch (_) { return '--:--'; }
+  }
+
   // Translation dictionary
   const translations = {
     en: {
@@ -1180,8 +1188,8 @@ const AttendanceSystem = (function() {
       checkOutBtn.classList.add('hidden');
     }
 
-    document.getElementById('checkInTime').textContent  = status.checkInTime  || '--:--:--';
-    document.getElementById('checkOutTime').textContent = status.checkOutTime || '--:--:--';
+    document.getElementById('checkInTime').textContent  = status.checkInTime  ? fmtLocalTime(status.checkInTime)  : '--:--';
+    document.getElementById('checkOutTime').textContent = status.checkOutTime ? fmtLocalTime(status.checkOutTime) : '--:--';
     if (status.location) document.getElementById('currentLocation').textContent = status.location;
   }
 
