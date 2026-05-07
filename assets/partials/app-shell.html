@@ -394,16 +394,20 @@
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
 
-        <!-- Dashboard layout controls -->
-        <div class="dash-layout-bar" id="dashLayoutBar">
-          <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
-          <div class="dash-layout-actions">
-            <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
-            <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+        <!-- Analytics overview panel -->
+        <div class="dash-overview-panel">
+          <div class="dash-overview-header">
+            <div class="dash-overview-title">
+              <i class="fas fa-chart-pie"></i>
+              <span>Today's Overview</span>
+            </div>
+            <div class="dash-overview-actions">
+              <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+              <button class="dash-layout-btn" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
+              <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+            </div>
           </div>
-        </div>
-
-        <div class="ps-stats-row">
+          <div class="ps-stats-row" style="margin-bottom:0;">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-card-body">
@@ -445,6 +449,7 @@
               <div class="stat-card-value" id="lateToday">0</div>
               <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
             </div>
+          </div>
           </div>
         </div>
 

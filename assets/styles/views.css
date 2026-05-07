@@ -774,11 +774,66 @@
 .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ─── Dashboard layout editor ─── */
-.dash-layout-bar {
-  display: flex; align-items: center; justify-content: flex-end;
-  flex-wrap: wrap; gap: 10px;
-  margin-bottom: 16px;
+/* old bar kept for reference but replaced by overview panel */
+.dash-layout-bar { display: none; }
+
+/* ── Analytics overview panel ── */
+.dash-overview-panel {
+  background: var(--siomac-navy);
+  border-radius: 24px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
 }
+.dash-overview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 20px;
+}
+.dash-overview-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.95rem; font-weight: 700; color: #fff;
+}
+.dash-overview-title i { font-size: 1rem; color: rgba(255,255,255,0.75); }
+.dash-overview-actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+
+/* Buttons inside navy panel — invert to white ghost */
+.dash-overview-panel .dash-layout-btn {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.dash-overview-panel .dash-layout-btn:hover {
+  border-color: #fff; background: rgba(255,255,255,0.18); color: #fff;
+}
+.dash-overview-panel .dash-layout-btn.active {
+  background: var(--siomac-red); border-color: var(--siomac-red); color: #fff;
+}
+.dash-overview-panel .dash-layout-btn-primary {
+  background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); color: #fff;
+}
+.dash-overview-panel .dash-layout-btn-primary:hover {
+  background: rgba(255,255,255,0.25); color: #fff;
+}
+
+/* Stat cards inside navy panel — keep white */
+.dash-overview-panel .stat-card {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: none;
+}
+.dash-overview-panel .stat-card:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+}
+.dash-overview-panel .stat-card-value { color: #fff; }
+.dash-overview-panel .stat-card-label { color: rgba(255,255,255,0.65); }
+.dash-overview-panel .stat-card-icon.blue  { background: rgba(255,255,255,0.15); color: #fff; }
+.dash-overview-panel .stat-card-icon.green { background: rgba(46,199,90,0.25);   color: #6effa0; }
+.dash-overview-panel .stat-card-icon.red   { background: rgba(255,80,80,0.25);   color: #ff9090; }
+.dash-overview-panel .stat-card-icon.gold  { background: rgba(255,183,18,0.25);  color: #ffd266; }
+
 .dash-hidden-list {
   display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
 }
@@ -828,9 +883,14 @@
 .dash-edit-mode .dash-hide-btn { display: inline-flex; align-items: center; }
 .dash-edit-mode .dash-widget {
   border: 2px dashed var(--siomac-gold, #FFB712) !important;
-  cursor: default;
+  cursor: grab;
+  user-select: none;
 }
-.dash-edit-mode #dashWidgetGrid .dash-widget { cursor: grab; }
+.dash-edit-mode .dash-widget:active { cursor: grabbing; }
+/* Keep interactive elements clickable inside edit mode */
+.dash-edit-mode .dash-widget button,
+.dash-edit-mode .dash-widget a,
+.dash-edit-mode .dash-widget canvas { cursor: pointer; }
 
 /* Hidden widget */
 .dash-widget-hidden { display: none !important; }
