@@ -809,8 +809,8 @@
 
 /* ── Today's Overview header row (no container) ── */
 .dash-overview-header {
-  display: flex; align-items: center; justify-content: flex-start;
-  flex-wrap: wrap; gap: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
   margin-bottom: 20px;
 }
 .dash-overview-title {
@@ -831,9 +831,9 @@
 }
 /* Divider before profile avatar inside the pill */
 .hdr-icon-group .hdr-profile-btn--pill {
-  margin-left: 8px;
+  margin-left: 16px;
   border-left: 1px solid rgba(255,255,255,.2) !important;
-  padding-left: 10px !important;
+  padding-left: 14px !important;
   border-radius: 0 !important;
   width: auto !important;
   height: auto !important;
