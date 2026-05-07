@@ -153,79 +153,57 @@ const AttendanceSystem = (function() {
       const mapElement = document.getElementById('map');
       if (!mapElement) return;
 
-      // Check if map already exists and remove it
-      if (map && map._container) {
-        map.remove();
-        map = null;
-      }
+      // Destroy existing map instance before re-creating
+      if (map && map._container) { map.remove(); map = null; }
 
-      map = L.map('map').setView(CONFIG.PROJECT_AREA.center, 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+      // Default center — will be overridden once sites/GPS load
+      const defaultCenter = [10.6549, -61.5019]; // Trinidad & Tobago
+      map = L.map('map').setView(defaultCenter, 11);
+
+      // Google Maps satellite + roads hybrid tile layer
+      L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: '© Google Maps',
+        maxZoom: 20
       }).addTo(map);
 
-      map.setMaxBounds(CONFIG.PROJECT_AREA.bounds);
-      
-      // Draw project route
-      const routeCoordinates = [
-        [26.6814598463, 68.0169318169],
-        [26.6841112323, 68.0193544282],
-        [26.6869719621, 68.0221006435],
-        [26.6898440363, 68.0245246711],
-        [26.6926442352, 68.0270632216],
-        [26.6954443820, 68.0296018956],
-        [26.6982488508, 68.0321347155],
-        [26.7010535807, 68.0346672441],
-        [26.7038522565, 68.0372081289],
-        [26.7066425513, 68.0397604354],
-        [26.7094487711, 68.0422911191],
-        [26.7122443471, 68.0448319262],
-        [26.7150575661, 68.0473576609],
-        [26.7178581819, 68.0498962095],
-        [26.7206539461, 68.0524441672],
-        [26.7234578251, 68.0549755997]
-      ];
+      // Fetch project sites from DB and draw zones
+      api('listProjectSites', {}).then(res => {
+        const sites = (res && res.success && res.data) || (res && Array.isArray(res.data) ? res.data : []);
+        attendanceZones.forEach(z => { try { map.removeLayer(z); } catch (_) {} });
+        attendanceZones = [];
 
-      const route = L.polyline(routeCoordinates, {
-        color: '#e74c3c',
-        weight: 6,
-        opacity: 0.8,
-        lineJoin: 'round'
-      }).addTo(map);
+        if (sites.length) {
+          sites.forEach(site => {
+            if (!site.latitude || !site.longitude) return;
+            const zone = L.circle([site.latitude, site.longitude], {
+              color: '#0074D9',
+              fillColor: '#0074D9',
+              fillOpacity: 0.18,
+              radius: site.radius || 200,
+              weight: 2
+            }).addTo(map);
+            zone.bindPopup(`
+              <div style="text-align:center; padding:8px;">
+                <strong style="color:#001f3f;">${site.name}</strong><br>
+                ${site.address ? `<span style="color:#666;font-size:12px;">${site.address}</span><br>` : ''}
+                <span style="font-size:12px;">📏 Radius: ${site.radius || 200}m</span>
+              </div>
+            `);
+            attendanceZones.push(zone);
+          });
 
-      // Add attendance zones
-      CONFIG.ATTENDANCE_ZONES.forEach(location => {
-        const zone = L.circle(location.coords, {
-          color: '#3498db',
-          fillColor: '#2980b9',
-          fillOpacity: 0.3,
-          radius: location.radius
-        }).addTo(map);
-        
-        zone.bindPopup(`
-          <div style="text-align: center; padding: 10px;">
-            <h4 style="margin: 0 0 10px 0; color: #2c3e50;">${location.name}</h4>
-            <p style="margin: 5px 0;">📍 Attendance Zone</p>
-            <p style="margin: 5px 0;">📏 Radius: ${location.radius}m</p>
-          </div>
-        `);
-        attendanceZones.push(zone);
+          // Fit map to all site zones
+          const group = L.featureGroup(attendanceZones);
+          try { map.fitBounds(group.getBounds().pad(0.25)); } catch (_) {}
+        }
+
+        // re-plot live employee markers now that map + sites are ready
+        if (liveData && liveData.length) plotLiveEmployees(liveData);
       });
 
-      // Add start/end markers for the route
-      if (routeCoordinates.length > 0) {
-        L.marker(routeCoordinates[0]).addTo(map)
-          .bindPopup(`<div style="text-align:center;"><h4>🚩 Start</h4><p>Project Start</p></div>`);
-        if (routeCoordinates.length > 1) {
-          L.marker(routeCoordinates[routeCoordinates.length - 1]).addTo(map)
-            .bindPopup(`<div style="text-align:center;"><h4>🏁 End</h4><p>Project End</p></div>`);
-        }
-      }
-
+      // Show user's own GPS if available
       if (userLocation) updateUserLocationOnMap();
-      // re-plot live employee markers if we already have data (race-safe)
-      if (liveData && liveData.length) plotLiveEmployees(liveData);
-      console.log('Map initialized successfully');
+
     } catch (error) {
       console.error('Error initializing map:', error);
     }
@@ -923,8 +901,9 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#printPayrollBtn'))    printPayroll();
 
       // My Profile
-      if (event.target.closest('#pickProfileImageBtn')) pickProfileImage();
-      if (event.target.closest('#saveProfileBtn'))      saveMyProfile();
+      if (event.target.closest('#pickProfileImageBtn'))    pickProfileImage();
+      if (event.target.closest('#removeProfileImageBtn')) removeProfileImage();
+      if (event.target.closest('#saveProfileBtn'))        saveMyProfile();
 
       // Admin: branding + payroll rules
       if (event.target.closest('#pickLogoBtn'))             pickLogo();
@@ -2939,20 +2918,32 @@ const AttendanceSystem = (function() {
         const u = res.data;
         document.getElementById('profileFullName').value = u.fullName || '';
         document.getElementById('profilePosition').value = u.position || '';
-        const img = u.profileImage || '';
-        const imgEl = document.getElementById('profilePhotoPreview');
-        const emptyEl = document.getElementById('profilePhotoEmpty');
-        if (img) {
-          imgEl.src = img; imgEl.style.display = 'block'; emptyEl.style.display = 'none';
-        } else {
-          imgEl.style.display = 'none'; emptyEl.style.display = 'flex';
-          emptyEl.textContent = (u.fullName || '?').charAt(0).toUpperCase();
-        }
+        _profileImageBase64 = '';
+        _removeProfileImage  = false;
+        _setProfilePhotoUI(u.profileImage || '', u.fullName);
       }
     });
   }
 
   let _profileImageBase64 = '';
+  let _removeProfileImage  = false; // flagged true when user clicks Remove
+
+  function _setProfilePhotoUI(imgUrl, fullName) {
+    const imgEl   = document.getElementById('profilePhotoPreview');
+    const emptyEl = document.getElementById('profilePhotoEmpty');
+    const removeBtn = document.getElementById('removeProfileImageBtn');
+    if (imgUrl) {
+      imgEl.src = imgUrl; imgEl.style.display = 'block';
+      emptyEl.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = '';
+    } else {
+      imgEl.style.display = 'none';
+      emptyEl.style.display = 'flex';
+      emptyEl.textContent = (fullName || currentFullName || '?').charAt(0).toUpperCase();
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  }
+
   function pickProfileImage() {
     document.getElementById('profileImageInput').click();
   }
@@ -2961,12 +2952,15 @@ const AttendanceSystem = (function() {
     const reader = new FileReader();
     reader.onload = e => {
       _profileImageBase64 = e.target.result;
-      const imgEl = document.getElementById('profilePhotoPreview');
-      imgEl.src = _profileImageBase64;
-      imgEl.style.display = 'block';
-      document.getElementById('profilePhotoEmpty').style.display = 'none';
+      _removeProfileImage  = false;
+      _setProfilePhotoUI(_profileImageBase64, currentFullName);
     };
     reader.readAsDataURL(file);
+  }
+  function removeProfileImage() {
+    _profileImageBase64 = '';
+    _removeProfileImage  = true;
+    _setProfilePhotoUI('', currentFullName);
   }
   function saveMyProfile() {
     const fullName = document.getElementById('profileFullName').value.trim();
@@ -2982,6 +2976,7 @@ const AttendanceSystem = (function() {
       username: currentUser,
       fullName,
       profileImageBase64: _profileImageBase64 || '',
+      removeProfileImage: _removeProfileImage || false,
       oldPassword: oldPwd,
       newPassword: newPwd
     }).then(res => {
@@ -2991,9 +2986,10 @@ const AttendanceSystem = (function() {
       currentFullName = res.fullName || fullName;
       document.getElementById('sidebarUserName').textContent = currentFullName;
 
+      const newPhoto = res.profileImage || '';
+
       // update sidebar avatar — photo if available, else initial
       const av = document.getElementById('sidebarAvatar');
-      const newPhoto = res.profileImage || '';
       if (av) {
         if (newPhoto) {
           av.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Profile">`;
@@ -3003,18 +2999,14 @@ const AttendanceSystem = (function() {
         }
       }
 
-      // update profile preview with the returned signed URL
-      if (newPhoto) {
-        const imgEl = document.getElementById('profilePhotoPreview');
-        const emptyEl = document.getElementById('profilePhotoEmpty');
-        if (imgEl) { imgEl.src = newPhoto; imgEl.style.display = 'block'; }
-        if (emptyEl) emptyEl.style.display = 'none';
-      }
+      // update profile photo preview
+      _setProfilePhotoUI(newPhoto, currentFullName);
 
-      // persist photo URL in session cache so it survives a reload
+      // persist in session cache so it survives a reload
       updateStoredSession({ profileImage: newPhoto });
 
       _profileImageBase64 = '';
+      _removeProfileImage  = false;
       document.getElementById('profileOldPwd').value = '';
       document.getElementById('profileNewPwd').value = '';
       showPopup('success', 'Profile Updated', 'Your changes have been saved.');

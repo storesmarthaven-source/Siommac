@@ -771,7 +771,11 @@ async function updateMyProfile(args, ctx) {
     if (!await bcrypt.compare(String(args.oldPassword), actor.password_hash)) return { success: false, message: 'Current password is incorrect' };
     patch.password_hash = await bcrypt.hash(String(args.newPassword), 10);
   }
-  if (args.profileImageBase64) patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
+  if (args.removeProfileImage) {
+    patch.profile_image = null;
+  } else if (args.profileImageBase64) {
+    patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
+  }
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('*').single();
   if (error) return { success: false, message: error.message };
   const profileImage = await getSignedUrl('profile-photos', data.profile_image || '');
