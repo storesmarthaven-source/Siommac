@@ -187,7 +187,7 @@ async function login(args) {
   const [profileImage, companyLogoUrl, companyName] = await Promise.all([
     getSignedUrl('profile-photos', u.profile_image || ''),
     setting('companyLogoUrl', ''),
-    setting('companyName', 'Rameez Scripts')
+    setting('companyName', 'My Company')
   ]);
   return {
     success: true,

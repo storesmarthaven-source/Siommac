@@ -30,7 +30,7 @@ const AttendanceSystem = (function() {
 
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
-  const SESSION_KEY      = 'zkb_session_v1';
+  const SESSION_KEY      = 'siomac_session_v1';
   const SESSION_DURATION = 60 * 60 * 1000; // 1 hour
   const SESSION_WARN_AT  = 5  * 60 * 1000; // warn 5 min before expiry
   let _sessExpTimer  = null; // auto-logout timer
@@ -38,24 +38,7 @@ const AttendanceSystem = (function() {
   let _sessTickTimer = null; // 30s tick for sidebar countdown
   let _sessWarned    = false; // prevent duplicate warnings
 
-  // Moro to Ranipur specific configuration
   const CONFIG = {
-    PROJECT_AREA: {
-      center: [26.6814598463, 68.0169318169],
-      bounds: [
-        [26.67, 68.00],
-        [26.73, 68.06]
-      ]
-    },
-    ATTENDANCE_ZONES: [
-      { name: "Moro Starting Point", coords: [26.6814598463, 68.0169318169], radius: 150 },
-      { name: "Section A - Bridge Construction", coords: [26.6885305450, 68.0231489403], radius: 200 },
-      { name: "Section B - Road Work", coords: [26.6954443820, 68.0296018956], radius: 180 },
-      { name: "Section C - Earthwork", coords: [26.7024535367, 68.0359368316], radius: 220 },
-      { name: "Section D - Drainage", coords: [26.7094487711, 68.0422911191], radius: 160 },
-      { name: "Section E - Pavement", coords: [26.7164584161, 68.0486261814], radius: 190 },
-      { name: "Ranipur End Point", coords: [26.7234578251, 68.0549755997], radius: 150 }
-    ],
     WORKING_HOURS: { start: 6, end: 22 },
     MAX_DISTANCE: 200
   };
@@ -63,7 +46,7 @@ const AttendanceSystem = (function() {
   // Translation dictionary
   const translations = {
     en: {
-      companyName: "Rameez Scripts",
+      companyName: "My Company",
       loginTitle: "Attendance System Login", loginSubtitle: "Access your dashboard",
       username: "Username", password: "Password", rememberMe: "Remember Me", loginButton: "Log In",
       welcome: "Welcome", checkIn: "Check In with Selfie", checkOut: "Check Out with Selfie",
@@ -117,7 +100,7 @@ const AttendanceSystem = (function() {
           longitude: 68.0169318169,
           accuracy: 100,
           timestamp: new Date().toISOString(),
-          address: 'Moro, Pakistan'
+          address: 'Unknown location'
         });
         return;
       }
@@ -145,7 +128,7 @@ const AttendanceSystem = (function() {
             accuracy: 500,
             timestamp: new Date().toISOString(),
             fallback: true,
-            address: 'Moro, Pakistan'
+            address: 'Unknown location'
           });
         },
         options
@@ -229,12 +212,15 @@ const AttendanceSystem = (function() {
         attendanceZones.push(zone);
       });
 
-      // Add markers
-      L.marker(routeCoordinates[0]).addTo(map)
-        .bindPopup(`<div style="text-align: center;"><h4>🚩 Moro Starting Point</h4><p>Project Start Location</p></div>`);
-        
-      L.marker(routeCoordinates[routeCoordinates.length - 1]).addTo(map)
-        .bindPopup(`<div style="text-align: center;"><h4>🏁 Ranipur End Point</h4><p>Project End Location</p></div>`);
+      // Add start/end markers for the route
+      if (routeCoordinates.length > 0) {
+        L.marker(routeCoordinates[0]).addTo(map)
+          .bindPopup(`<div style="text-align:center;"><h4>🚩 Start</h4><p>Project Start</p></div>`);
+        if (routeCoordinates.length > 1) {
+          L.marker(routeCoordinates[routeCoordinates.length - 1]).addTo(map)
+            .bindPopup(`<div style="text-align:center;"><h4>🏁 End</h4><p>Project End</p></div>`);
+        }
+      }
 
       if (userLocation) updateUserLocationOnMap();
       // re-plot live employee markers if we already have data (race-safe)
@@ -730,6 +716,14 @@ const AttendanceSystem = (function() {
       if (savedLayout) { currentLayoutMode = savedLayout; applyLayout(savedLayout); }
     } catch (_) {}
 
+    // apply cached company name & logo instantly — before any screen is revealed —
+    // so neither the login page nor the app shell ever shows "My Company" as a flash
+    try {
+      const cached = loadSession();
+      if (cached && cached.companyName) applyCompanyName(cached.companyName);
+      if (cached && cached.companyLogoUrl) applyCompanyLogo(cached.companyLogoUrl);
+    } catch (_) {}
+
     // Set up event listeners
     setupEventListeners();
     setupSidebar();
@@ -1045,7 +1039,8 @@ const AttendanceSystem = (function() {
       userId: result.userId, username: result.username, fullName: result.fullName,
       role: result.role, departmentId: result.departmentId || '', position: result.position || '',
       colorScheme: result.colorScheme || 'navy', layoutMode: result.layoutMode || 'sidebar',
-      token: result.token || ''
+      token: result.token || '',
+      companyName: result.companyName || '', companyLogoUrl: result.companyLogoUrl || ''
     });
 
     applySession(result, /*announce*/ true);
@@ -1084,7 +1079,7 @@ const AttendanceSystem = (function() {
     if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
 
     // company name — sidebar brand + About header (set everywhere from Settings)
-    applyCompanyName(result.companyName || 'Rameez Scripts');
+    applyCompanyName(result.companyName || 'My Company');
     refreshCompanySettings();
 
     // gate admin-only Settings cards (branding + payroll rules)
@@ -3009,17 +3004,31 @@ const AttendanceSystem = (function() {
     if (currentRole !== 'admin') return;
     api('getSettings').then(res => {
       const s = (res && res.data) || {};
-      document.getElementById('setCompanyName').value  = s.companyName        || 'Rameez Scripts';
+      document.getElementById('setCompanyName').value  = s.companyName        || 'My Company';
       document.getElementById('setCurrency').value     = s.currency           || 'Rs.';
       document.getElementById('setLatePenalty').value  = s.latePenaltyPerDay  || '0';
       document.getElementById('setLeaveFine').value    = s.leaveFinePerDay    || '0';
       const url = s.companyLogoUrl || '';
-      const img = document.getElementById('logoPreview');
-      const empty = document.getElementById('logoPreviewEmpty');
-      if (url) { img.src = url; img.style.display = 'block'; empty.style.display = 'none'; }
-      else     { img.style.display = 'none'; empty.style.display = 'flex'; }
+      setLogoPreview(url);
     });
   }
+
+  // shared helper: show logo preview with auto shape-detection
+  function setLogoPreview(url) {
+    const img   = document.getElementById('logoPreview');
+    const empty = document.getElementById('logoPreviewEmpty');
+    if (!img) return;
+    if (url) {
+      img.src = url;
+      img.style.display = 'block';
+      if (empty) empty.style.display = 'none';
+      _applyLogoShape([img], '12px');
+    } else {
+      img.style.display = 'none';
+      if (empty) { empty.style.display = 'flex'; empty.style.borderRadius = '50%'; }
+    }
+  }
+
   function pickLogo() {
     document.getElementById('logoFileInput').click();
   }
@@ -3028,9 +3037,7 @@ const AttendanceSystem = (function() {
     const reader = new FileReader();
     reader.onload = e => {
       _logoBase64 = e.target.result;
-      const img = document.getElementById('logoPreview');
-      img.src = _logoBase64; img.style.display = 'block';
-      document.getElementById('logoPreviewEmpty').style.display = 'none';
+      setLogoPreview(_logoBase64);
       document.getElementById('logoFileName').textContent = file.name;
       document.getElementById('saveLogoBtn').disabled = false;
     };
@@ -3051,7 +3058,7 @@ const AttendanceSystem = (function() {
     });
   }
   function savePayrollSettings() {
-    const name    = document.getElementById('setCompanyName').value.trim() || 'Rameez Scripts';
+    const name    = document.getElementById('setCompanyName').value.trim() || 'My Company';
     const cur     = document.getElementById('setCurrency').value.trim() || 'Rs.';
     const late    = String(Math.max(0, Number(document.getElementById('setLatePenalty').value) || 0));
     const leaveF  = String(Math.max(0, Number(document.getElementById('setLeaveFine').value)   || 0));
@@ -3082,7 +3089,7 @@ const AttendanceSystem = (function() {
       if (s.companyLogoUrl) applyCompanyLogo(s.companyLogoUrl);
       if (s.currency) _payCurrency = s.currency;
       updateStoredSession({
-        companyName: s.companyName || 'Rameez Scripts',
+        companyName: s.companyName || 'My Company',
         companyLogoUrl: s.companyLogoUrl || '',
         currency: s.currency || 'Rs.',
         latePenaltyPerDay: s.latePenaltyPerDay || '0',
@@ -3093,39 +3100,84 @@ const AttendanceSystem = (function() {
 
   // apply company name to sidebar brand + About header
   function applyCompanyName(name) {
-    const safe = name && String(name).trim() ? String(name).trim() : 'Rameez Scripts';
+    const safe = name && String(name).trim() ? String(name).trim() : 'My Company';
     const sb = document.getElementById('companyName');
     const ab = document.getElementById('aboutCompanyName');
     if (sb) sb.textContent = safe;
     if (ab) ab.textContent = safe;
   }
 
-  // apply logo URL to login screen + sidebar brand
+  // shared shape-detection — applies border-radius to img elements based on aspect ratio.
+  // squareRadius: corner radius to use when image is NOT square (default '8px')
+  function _applyLogoShape(imgs, squareRadius) {
+    const sq = squareRadius || '8px';
+    imgs.forEach(function (img) {
+      if (!img) return;
+      const apply = function () {
+        const r = img.naturalWidth / (img.naturalHeight || 1);
+        img.style.borderRadius = (r >= 0.85 && r <= 1.15) ? '50%' : sq;
+      };
+      if (img.complete && img.naturalWidth) apply();
+      else img.onload = apply;
+    });
+  }
+
+  // apply logo URL to login screen, sidebar brand, and About section
   function applyCompanyLogo(url) {
+    // ── login screen logo ──
     const loginLogo = document.getElementById('loginLogo');
-    const brand = document.querySelector('.sidebar-brand');
-    if (loginLogo && url) loginLogo.src = url;
-    if (brand) {
-      // replace the FA icon with an <img> when a logo is set; keep brand text
-      const existingImg = brand.querySelector('img.sb-brand-img');
+    if (loginLogo) {
       if (url) {
-        if (existingImg) existingImg.src = url;
-        else {
-          const i = brand.querySelector('i');
-          if (i) i.remove();
-          const im = document.createElement('img');
-          im.className = 'sb-brand-img';
-          im.src = url;
-          im.alt = 'Logo';
-          im.style.cssText = 'width:32px; height:32px; border-radius:6px; object-fit:cover;';
-          brand.insertBefore(im, brand.firstChild);
-        }
+        loginLogo.src = url;
+        loginLogo.style.display = '';
+        _applyLogoShape([loginLogo]);
+      } else {
+        loginLogo.style.display = 'none';
       }
     }
+
+    // ── About section logo ──
+    const aboutLogo = document.getElementById('aboutLogo');
+    if (aboutLogo) {
+      if (url) {
+        aboutLogo.src = url;
+        aboutLogo.style.display = 'block';
+        _applyLogoShape([aboutLogo]);
+      } else {
+        aboutLogo.style.display = 'none';
+      }
+    }
+
+    // ── sidebar brand ──
+    const brand = document.querySelector('.sidebar-brand');
+    if (brand) {
+      const icon      = brand.querySelector('i');
+      const nameSpan  = brand.querySelector('#companyName');
+      const existImg  = brand.querySelector('img.sb-brand-img');
+
+      if (url) {
+        // hide icon + text; show logo image only
+        if (icon)     icon.style.display     = 'none';
+        if (nameSpan) nameSpan.style.display = 'none';
+
+        const img = existImg || document.createElement('img');
+        img.className = 'sb-brand-img';
+        img.alt = 'Logo';
+        img.style.cssText = 'width:40px; height:40px; object-fit:contain; display:block;';
+        img.src = url;
+        _applyLogoShape([img]);
+
+        if (!existImg) brand.insertBefore(img, brand.firstChild);
+      } else {
+        // no logo — restore icon + text, remove any old logo img
+        if (icon)     icon.style.display     = '';
+        if (nameSpan) nameSpan.style.display = '';
+        if (existImg) existImg.remove();
+      }
+    }
+
     // also update the preview in admin settings if it's open
-    const previewImg = document.getElementById('logoPreview');
-    const previewEmpty = document.getElementById('logoPreviewEmpty');
-    if (previewImg && url) { previewImg.src = url; previewImg.style.display = 'block'; if (previewEmpty) previewEmpty.style.display = 'none'; }
+    setLogoPreview(url || '');
   }
 
   // small html-escape + CSS.escape fallback (rate-input data-username may contain quotes)

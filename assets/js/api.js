@@ -4,7 +4,7 @@ const API = '/api';
 // text/plain content-type avoids CORS preflight that Apps Script can't answer
 function getSessionToken() {
   try {
-    const raw = localStorage.getItem('zkb_session_v1');
+    const raw = localStorage.getItem('siomac_session_v1');
     return raw ? (JSON.parse(raw).token || '') : '';
   } catch (_) {
     return '';

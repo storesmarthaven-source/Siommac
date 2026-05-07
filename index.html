@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="assets/styles/loading.css" />
   <link rel="stylesheet" href="assets/styles/responsive.css" />
 </head>
-<body>
+<body style="visibility:hidden;">
   <div id="app-root"></div>
 
   <!-- JavaScript Libraries -->
@@ -74,7 +74,12 @@
           document.getElementById('app-root').innerHTML = html;
           return loadScripts(['assets/js/popup.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/app.js']);
         })
+        .then(function () {
+          // reveal only after init() has decided which screen to show — eliminates login flash
+          document.body.style.visibility = '';
+        })
         .catch(function (err) {
+          document.body.style.visibility = '';
           document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;">Failed to load application shell.</div>';
           console.error(err);
         });

@@ -11,7 +11,7 @@
   <!-- Login screen (shown until authentication) -->
   <div id="loginPage" class="login-container">
     <div class="login-box">
-      <img class="login-logo" id="loginLogo" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiGXxCe0WNNedmFqSWeF761f7Kshhc-NP5ChRQKz9fr97cO8VaarvD0KlCwqHojJVBWv-RAxfOqMI5rD4H78KnARyOc6QgwL1nRRFWf5xNQ1d9F9HfAoLPPGlTyP0GwNl4n-INMEsWLQ4Y7zJtz5bOdAnc2ePH9-uCRgshlo6BsS6gJEz6fhrxL-5U5O3sX/s160/channels4_profile.jpg" alt="Logo" onerror="this.style.display='none'">
+      <img class="login-logo" id="loginLogo" src="" alt="Logo" style="display:none;">
       <h2 id="loginTitle">Attendance System Login</h2>
       <div class="login-subtitle" id="loginSubtitle">Access your dashboard</div>
       <form id="loginForm">
@@ -44,7 +44,7 @@
       </button>
       <div class="sidebar-brand">
         <i class="fas fa-building"></i>
-        <span class="sidebar-brand-text" id="companyName">Rameez Scripts</span>
+        <span class="sidebar-brand-text" id="companyName">My Company</span>
       </div>
       <div class="sidebar-user-info">
         <div class="sidebar-avatar" id="sidebarAvatar">U</div>
@@ -632,7 +632,7 @@
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
             <div class="form-group" style="grid-column: 1 / -1;">
               <label class="form-label">Company Name</label>
-              <input type="text" id="setCompanyName" class="form-control" maxlength="80" placeholder="Rameez Scripts">
+              <input type="text" id="setCompanyName" class="form-control" maxlength="80" placeholder="My Company">
               <small class="text-muted" style="font-size:11px;">Shown in sidebar, About, payroll doc, and leave application</small>
             </div>
             <div class="form-group">
@@ -681,15 +681,10 @@
             <h2><i class="fas fa-info-circle"></i> About This System</h2>
           </div>
           <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiGXxCe0WNNedmFqSWeF761f7Kshhc-NP5ChRQKz9fr97cO8VaarvD0KlCwqHojJVBWv-RAxfOqMI5rD4H78KnARyOc6QgwL1nRRFWf5xNQ1d9F9HfAoLPPGlTyP0GwNl4n-INMEsWLQ4Y7zJtz5bOdAnc2ePH9-uCRgshlo6BsS6gJEz6fhrxL-5U5O3sX/s160/channels4_profile.jpg" style="width:80px; height:80px; border-radius:50%; border:3px solid var(--navy-primary);">
+            <img id="aboutLogo" src="" alt="Logo" style="width:80px; height:80px; object-fit:contain; border:3px solid var(--navy-primary); display:none;">
             <div>
-              <h3 style="color: var(--navy-primary); margin-bottom:6px;"><span id="aboutCompanyName">Rameez Scripts</span> — Attendance &amp; Location Management</h3>
+              <h3 style="color: var(--navy-primary); margin-bottom:6px;"><span id="aboutCompanyName">My Company</span> — Attendance &amp; Location Management</h3>
               <p style="color:#666; font-size:14px; margin-bottom:8px;">Selfie check-in / check-out · GPS verification · Leave workflow · Multi-role dashboards.</p>
-              <p style="color:#888; font-size:13px;">Developed by Mohammad Rameez Imdad (Rameez Scripts)</p>
-              <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-                <a href="https://wa.me/923224083545" target="_blank" class="btn btn-sm" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                <a href="https://www.youtube.com/@rameezimdad" target="_blank" class="btn btn-sm" style="background:#FF0000; color:white;"><i class="fab fa-youtube"></i> YouTube</a>
-              </div>
             </div>
           </div>
         </div>
