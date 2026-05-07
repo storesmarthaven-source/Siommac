@@ -722,7 +722,7 @@ const AttendanceSystem = (function() {
       case 's-mgr-overview':    loadDepartmentData(); break;
       case 's-mgr-employees':   loadDepartmentEmployees(); break;
       case 's-mgr-leaves':      loadManagerLeaveApplications(); break;
-      case 's-adm-dashboard':   loadDashboardData(); loadDashboardCharts(); break;
+      case 's-adm-dashboard':   loadDashboardData(); loadDashboardCharts(); initDashboardLayoutEditor(); break;
       case 's-adm-employees':   loadEmployeeList(); break;
       case 's-adm-departments': loadDepartments(); break;
       case 's-adm-projects':    loadProjectSites(); break;
@@ -1237,7 +1237,11 @@ const AttendanceSystem = (function() {
     }
     
     if (!isValid) return;
-    
+
+    // Wipe any existing session immediately so a refresh mid-login
+    // doesn't restore the previous user
+    clearSession();
+
     showSpinner('Authenticating...');
 
     api('login', { username, password }).then(handleLoginSuccess);
@@ -1252,6 +1256,12 @@ const AttendanceSystem = (function() {
         result.message || ('Invalid username or password.'));
       return;
     }
+
+    // Clear any previous session before writing the new one so a refresh
+    // never restores a different user's session
+    clearSession();
+    currentUser = null; currentUserId = null; currentFullName = null;
+    currentDeptId = null; currentRole = null;
 
     if (document.getElementById('rememberMe').checked) {
       localStorage.setItem('rememberedUser', result.username);
@@ -1709,6 +1719,147 @@ const AttendanceSystem = (function() {
     api('getDashboardCharts').then(res => {
       if (res.success) SiomacCharts.renderDashboardCharts(res.data);
     });
+  }
+
+  // ─── Dashboard layout editor ───
+  const DASH_LAYOUT_KEY = 'siomac_dash_layout_v1';
+  const DASH_WIDGETS = [
+    { id: 'trend',    title: 'Weekly Attendance Trend' },
+    { id: 'dept',     title: 'Department Distribution' },
+    { id: 'status',   title: "Today's Status" },
+    { id: 'leave',    title: 'Leave Types · This Month' },
+    { id: 'activity', title: 'Recent Activity' },
+  ];
+  let _dashSortable = null;
+  let _dashEditMode = false;
+
+  function _dashLoadLayout() {
+    try { return JSON.parse(localStorage.getItem(DASH_LAYOUT_KEY)) || {}; } catch { return {}; }
+  }
+  function _dashSaveLayout() {
+    const grid   = document.getElementById('dashWidgetGrid');
+    const recent = document.querySelector('#s-adm-dashboard .recent-activity-section');
+    const order  = [];
+    if (grid) grid.querySelectorAll('.dash-widget').forEach(w => order.push(w.dataset.widgetId));
+    if (recent) order.push(recent.dataset.widgetId);
+    const hidden = DASH_WIDGETS.filter(w => {
+      const el = document.querySelector(`.dash-widget[data-widget-id="${w.id}"]`);
+      return el && el.classList.contains('dash-widget-hidden');
+    }).map(w => w.id);
+    localStorage.setItem(DASH_LAYOUT_KEY, JSON.stringify({ order, hidden }));
+  }
+  function _dashApplyLayout() {
+    const { order = [], hidden = [] } = _dashLoadLayout();
+    const grid = document.getElementById('dashWidgetGrid');
+    if (!grid) return;
+
+    // Restore order inside the chart grid
+    if (order.length) {
+      const gridWidgets = Array.from(grid.querySelectorAll('.dash-widget'));
+      order.forEach(id => {
+        const el = gridWidgets.find(w => w.dataset.widgetId === id);
+        if (el && el.parentElement === grid) grid.appendChild(el);
+      });
+    }
+
+    // Apply hidden state
+    DASH_WIDGETS.forEach(({ id }) => {
+      const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
+      if (!el) return;
+      if (hidden.includes(id)) el.classList.add('dash-widget-hidden');
+      else el.classList.remove('dash-widget-hidden');
+    });
+
+    _dashUpdateHiddenPanel(hidden);
+  }
+  function _dashUpdateHiddenPanel(hidden) {
+    const container = document.getElementById('dashHiddenWidgets');
+    if (!container) return;
+    if (!hidden || hidden.length === 0) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = hidden.map(id => {
+      const w = DASH_WIDGETS.find(x => x.id === id);
+      return w ? `<button class="dash-restore-btn" data-widget-id="${id}"><i class="fas fa-plus-circle"></i> ${w.title}</button>` : '';
+    }).join('');
+    container.querySelectorAll('.dash-restore-btn').forEach(btn => {
+      btn.addEventListener('click', () => _dashShowWidget(btn.dataset.widgetId));
+    });
+  }
+  function _dashHideWidget(id) {
+    const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
+    if (el) el.classList.add('dash-widget-hidden');
+    _dashSaveLayout();
+    const { hidden = [] } = _dashLoadLayout();
+    _dashUpdateHiddenPanel(hidden);
+  }
+  function _dashShowWidget(id) {
+    const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
+    if (el) el.classList.remove('dash-widget-hidden');
+    _dashSaveLayout();
+    const { hidden = [] } = _dashLoadLayout();
+    _dashUpdateHiddenPanel(hidden);
+  }
+  function _dashToggleEditMode() {
+    const section   = document.getElementById('s-adm-dashboard');
+    const editBtn   = document.getElementById('dashEditBtn');
+    const resetBtn  = document.getElementById('dashResetBtn');
+    const grid      = document.getElementById('dashWidgetGrid');
+    if (!section || !grid) return;
+
+    _dashEditMode = !_dashEditMode;
+    section.classList.toggle('dash-edit-mode', _dashEditMode);
+
+    if (_dashEditMode) {
+      editBtn.classList.add('active');
+      editBtn.innerHTML = '<i class="fas fa-check"></i> Done';
+      resetBtn.style.display = '';
+      _dashSortable = Sortable.create(grid, {
+        animation: 250,
+        handle: '.dash-drag-handle',
+        ghostClass: 'dash-sortable-ghost',
+        dragClass: 'dash-sortable-drag',
+        onEnd: _dashSaveLayout,
+      });
+    } else {
+      editBtn.classList.remove('active');
+      editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit Layout';
+      resetBtn.style.display = 'none';
+      if (_dashSortable) { _dashSortable.destroy(); _dashSortable = null; }
+      _dashSaveLayout();
+    }
+  }
+  function _dashReset() {
+    localStorage.removeItem(DASH_LAYOUT_KEY);
+    // Restore default order inside grid
+    const grid = document.getElementById('dashWidgetGrid');
+    if (grid) {
+      ['trend','dept','status','leave'].forEach(id => {
+        const el = grid.querySelector(`.dash-widget[data-widget-id="${id}"]`);
+        if (el) grid.appendChild(el);
+      });
+    }
+    document.querySelectorAll('.dash-widget').forEach(el => el.classList.remove('dash-widget-hidden'));
+    _dashUpdateHiddenPanel([]);
+    if (_dashEditMode) _dashToggleEditMode();
+  }
+  function initDashboardLayoutEditor() {
+    _dashApplyLayout();
+    const editBtn  = document.getElementById('dashEditBtn');
+    const resetBtn = document.getElementById('dashResetBtn');
+    if (editBtn)  editBtn.addEventListener('click', _dashToggleEditMode);
+    if (resetBtn) resetBtn.addEventListener('click', _dashReset);
+    // Hide buttons — event delegation on the section
+    const section = document.getElementById('s-adm-dashboard');
+    if (section) {
+      section.addEventListener('click', e => {
+        const btn = e.target.closest('.dash-hide-btn');
+        if (btn && _dashEditMode) _dashHideWidget(btn.dataset.widgetId);
+      });
+    }
   }
 
   // Last 7 days hours bar chart — pulls from the same getMyHistory endpoint
