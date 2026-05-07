@@ -94,14 +94,7 @@ const AttendanceSystem = (function() {
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        // Default location for testing
-        resolve({
-          latitude: 26.6814598463,
-          longitude: 68.0169318169,
-          accuracy: 100,
-          timestamp: new Date().toISOString(),
-          address: 'Unknown location'
-        });
+        resolve({ fallback: true, latitude: 10.6549, longitude: -61.5019, accuracy: 1000, timestamp: new Date().toISOString() });
         return;
       }
 
@@ -121,15 +114,7 @@ const AttendanceSystem = (function() {
           });
         },
         (error) => {
-          // Fallback to default location
-          resolve({
-            latitude: 26.6814598463,
-            longitude: 68.0169318169,
-            accuracy: 500,
-            timestamp: new Date().toISOString(),
-            fallback: true,
-            address: 'Unknown location'
-          });
+          resolve({ fallback: true, latitude: 10.6549, longitude: -61.5019, accuracy: 1000, timestamp: new Date().toISOString() });
         },
         options
       );
@@ -156,9 +141,21 @@ const AttendanceSystem = (function() {
       // Destroy existing map instance before re-creating
       if (map && map._container) { map.remove(); map = null; }
 
-      // Default center — will be overridden once sites/GPS load
-      const defaultCenter = [10.6549, -61.5019]; // Trinidad & Tobago
-      map = L.map('map').setView(defaultCenter, 11);
+      const defaultCenter = [10.6549, -61.5019]; // Trinidad & Tobago — used only if no sites/GPS
+
+      // Request browser location permission as early as possible (triggers the prompt)
+      if (navigator.geolocation && !userLocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+          },
+          () => { /* denied — keep fallback */ },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      }
+
+      // Create map without setting a view yet — avoids flash to default center
+      map = L.map('map', { center: defaultCenter, zoom: 11, zoomAnimation: false });
 
       // Google Maps satellite + roads hybrid tile layer
       L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
@@ -166,43 +163,43 @@ const AttendanceSystem = (function() {
         maxZoom: 20
       }).addTo(map);
 
-      // Fetch project sites from DB and draw zones
+      // Fetch project sites from DB, draw zones, THEN set final view — no double-pan
       api('listProjectSites', {}).then(res => {
-        const sites = (res && res.success && res.data) || (res && Array.isArray(res.data) ? res.data : []);
+        const sites = (res && res.success && res.data) || [];
         attendanceZones.forEach(z => { try { map.removeLayer(z); } catch (_) {} });
         attendanceZones = [];
 
-        if (sites.length) {
-          sites.forEach(site => {
-            if (!site.latitude || !site.longitude) return;
-            const zone = L.circle([site.latitude, site.longitude], {
-              color: '#0074D9',
-              fillColor: '#0074D9',
-              fillOpacity: 0.18,
-              radius: site.radius || 200,
-              weight: 2
-            }).addTo(map);
-            zone.bindPopup(`
-              <div style="text-align:center; padding:8px;">
-                <strong style="color:#001f3f;">${site.name}</strong><br>
-                ${site.address ? `<span style="color:#666;font-size:12px;">${site.address}</span><br>` : ''}
-                <span style="font-size:12px;">📏 Radius: ${site.radius || 200}m</span>
-              </div>
-            `);
-            attendanceZones.push(zone);
-          });
+        sites.forEach(site => {
+          if (!site.latitude || !site.longitude) return;
+          const zone = L.circle([site.latitude, site.longitude], {
+            color: '#0074D9', fillColor: '#0074D9',
+            fillOpacity: 0.18, radius: site.radius || 200, weight: 2
+          }).addTo(map);
+          zone.bindPopup(`
+            <div style="text-align:center; padding:8px;">
+              <strong style="color:#001f3f;">${site.name}</strong><br>
+              ${site.address ? `<span style="color:#666;font-size:12px;">${site.address}</span><br>` : ''}
+              <span style="font-size:12px;">📏 Radius: ${site.radius || 200}m</span>
+            </div>
+          `);
+          attendanceZones.push(zone);
+        });
 
-          // Fit map to all site zones
+        // Single final view — prefer site bounds, else GPS, else default
+        if (attendanceZones.length) {
           const group = L.featureGroup(attendanceZones);
-          try { map.fitBounds(group.getBounds().pad(0.25)); } catch (_) {}
+          try { map.fitBounds(group.getBounds().pad(0.25), { animate: false }); } catch (_) {}
+        } else if (userLocation) {
+          map.setView([userLocation.lat, userLocation.lng], 13, { animate: false });
         }
+        // else stays on defaultCenter set at map creation
 
-        // re-plot live employee markers now that map + sites are ready
+        // Plot live employee markers after view is set
         if (liveData && liveData.length) plotLiveEmployees(liveData);
-      });
 
-      // Show user's own GPS if available
-      if (userLocation) updateUserLocationOnMap();
+        // Now show user GPS marker (view already finalised above)
+        if (userLocation) updateUserLocationOnMap();
+      });
 
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -211,16 +208,17 @@ const AttendanceSystem = (function() {
 
   function updateUserLocationOnMap() {
     if (!userLocation || !map) return;
+    if (!userLocation.lat || !userLocation.lng || userLocation.fallback) return; // no real GPS
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([userLocation.lat, userLocation.lng], {
       icon: L.divIcon({
         className: 'user-location-marker',
-        html: `<div style="background: #2ecc71; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+        html: `<div style="background:#2ecc71;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12]
       })
-    }).addTo(map).bindPopup('Your current location').openPopup();
-    map.setView([userLocation.lat, userLocation.lng], 13);
+    }).addTo(map).bindPopup('Your current location');
+    // Don't call setView here — view is managed by initializeMap fitBounds
   }
 
   function showNotification(message, type) {
@@ -3009,6 +3007,8 @@ const AttendanceSystem = (function() {
       _removeProfileImage  = false;
       document.getElementById('profileOldPwd').value = '';
       document.getElementById('profileNewPwd').value = '';
+      // Re-fetch from DB so UI reflects the true saved state (catches remove edge cases)
+      loadMyProfile();
       showPopup('success', 'Profile Updated', 'Your changes have been saved.');
     });
   }
