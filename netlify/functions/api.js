@@ -186,7 +186,7 @@ async function login(args) {
   if (!passOk) return { success: false, message: 'Invalid username or password' };
   await log_(u, 'login', 'user', u.id, 'login ok');
   const [profileImage, companyLogoUrl, companyName] = await Promise.all([
-    getSignedUrl('profile-photos', u.profile_image || ''),
+    u.profile_image ? getSignedUrl('profile-photos', u.profile_image) : Promise.resolve(''),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company')
   ]);
@@ -446,16 +446,25 @@ async function getMyLeaves(args, ctx) {
 
 async function getLeaveById(args, ctx) {
   const actor = await requireUser(ctx);
-  const { data: l } = await sb.from('leave_requests').select('*, user:app_users(full_name,position,username), department:departments(name), reviewer:app_users!leave_requests_reviewed_by_fkey(full_name)').eq('id', args.leaveId).single();
+  // Plain query — no FK alias joins (they silently return null when constraint names differ)
+  const { data: l } = await sb.from('leave_requests').select('*').eq('id', args.leaveId).single();
   if (!l) return { success: false, message: 'Leave not found' };
   const allowed = actor.role === 'admin' || l.user_id === actor.id || (actor.role === 'manager' && l.department_id === actor.department_id);
   if (!allowed) return { success: false, message: 'Not allowed' };
+  // Fetch related rows separately
+  const [userRow, deptRow, reviewerRow, companyName, companyLogoUrl] = await Promise.all([
+    l.user_id    ? sb.from('app_users').select('full_name,position,username').eq('id', l.user_id).maybeSingle().then(r => r.data) : Promise.resolve(null),
+    l.department_id ? sb.from('departments').select('name').eq('id', l.department_id).maybeSingle().then(r => r.data) : Promise.resolve(null),
+    l.reviewed_by   ? sb.from('app_users').select('full_name').eq('id', l.reviewed_by).maybeSingle().then(r => r.data)   : Promise.resolve(null),
+    setting('companyName', 'Company'),
+    setting('companyLogoUrl', '')
+  ]);
   return { success: true, data: {
     id: l.id,
-    employee: { username: l.username, fullName: l.user && l.user.full_name || l.username, position: l.user && l.user.position || '', department: l.department && l.department.name || '' },
+    employee: { username: userRow && userRow.username || l.username, fullName: userRow && userRow.full_name || l.username, position: userRow && userRow.position || '', department: deptRow && deptRow.name || '' },
     type: l.type, fromDate: l.from_date, toDate: l.to_date, days: l.days, reason: l.reason, status: l.status,
-    reviewedBy: l.reviewer && l.reviewer.full_name || '', reviewedAt: l.reviewed_at, reviewNotes: l.review_notes || '', appliedAt: l.applied_at,
-    companyName: await setting('companyName', 'Company'), companyLogoUrl: await setting('companyLogoUrl', '')
+    reviewedBy: reviewerRow && reviewerRow.full_name || '', reviewedAt: l.reviewed_at, reviewNotes: l.review_notes || '', appliedAt: l.applied_at,
+    companyName, companyLogoUrl
   } };
 }
 
@@ -523,7 +532,7 @@ async function getEmployeeByUsername(args, ctx) {
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return null;
-  const profileImage = await getSignedUrl('profile-photos', u.profile_image || '');
+  const profileImage = u.profile_image ? await getSignedUrl('profile-photos', u.profile_image) : '';
   return {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     departmentId: u.department_id || '', position: u.position || '', status: u.status,
@@ -594,16 +603,41 @@ async function deleteProjectSite(args, ctx) {
 
 async function listAllLeaves(args, ctx) {
   await requireRole(ctx, ['admin']);
-  const { data } = await sb.from('leave_requests').select('*, user:app_users(full_name)').order('applied_at', { ascending: false });
-  return (data || []).map(l => ({ id: l.id, employee: l.user && l.user.full_name || l.username, type: cap(l.type) + ' Leave', from: l.from_date, to: l.to_date, days: l.days, status: cap(l.status), reason: l.reason }));
+  // Two plain queries — no FK alias joins (silently null when constraint names differ)
+  const [{ data: leaves, error: lErr }, { data: users, error: uErr }] = await Promise.all([
+    sb.from('leave_requests').select('*').order('applied_at', { ascending: false }),
+    sb.from('app_users').select('id, full_name')
+  ]);
+  if (lErr) throw new Error('Failed to load leaves: ' + lErr.message);
+  if (uErr) throw new Error('Failed to load users: ' + uErr.message);
+  const userMap = Object.fromEntries((users || []).map(u => [u.id, u.full_name]));
+  return { success: true, data: (leaves || []).map(l => ({
+    id: l.id,
+    employee: (l.user_id && userMap[l.user_id]) || l.username,
+    type: cap(l.type) + ' Leave',
+    from: l.from_date, to: l.to_date, days: l.days,
+    status: cap(l.status), reason: l.reason
+  })) };
 }
 
 async function getPendingLeavesForManager(args, ctx) {
   const actor = await requireRole(ctx, ['manager', 'admin']);
-  let q = sb.from('leave_requests').select('*, user:app_users(full_name)').eq('status', 'pending').order('applied_at', { ascending: false });
-  if (actor.role === 'manager') q = q.eq('department_id', actor.department_id);
-  const { data } = await q;
-  return (data || []).map(l => ({ id: l.id, employee: l.user && l.user.full_name || l.username, type: l.type, from: l.from_date, to: l.to_date, days: l.days, appliedOn: dateOnly(l.applied_at), reason: l.reason }));
+  // Two plain queries — no FK alias joins
+  let leavesQ = sb.from('leave_requests').select('*').eq('status', 'pending').order('applied_at', { ascending: false });
+  if (actor.role === 'manager') leavesQ = leavesQ.eq('department_id', actor.department_id);
+  const [{ data: leaves, error: lErr }, { data: users, error: uErr }] = await Promise.all([
+    leavesQ,
+    sb.from('app_users').select('id, full_name')
+  ]);
+  if (lErr) throw new Error('Failed to load leaves: ' + lErr.message);
+  if (uErr) throw new Error('Failed to load users: ' + uErr.message);
+  const userMap = Object.fromEntries((users || []).map(u => [u.id, u.full_name]));
+  return (leaves || []).map(l => ({
+    id: l.id,
+    employee: (l.user_id && userMap[l.user_id]) || l.username,
+    type: l.type, from: l.from_date, to: l.to_date, days: l.days,
+    appliedOn: dateOnly(l.applied_at), reason: l.reason
+  }));
 }
 
 async function getDeptStats(args, ctx) {
@@ -820,17 +854,19 @@ async function updateMyProfile(args, ctx) {
     if (!await bcrypt.compare(String(args.oldPassword), actor.password_hash)) return { success: false, message: 'Current password is incorrect' };
     patch.password_hash = await bcrypt.hash(String(args.newPassword), 10);
   }
-  // removeProfileImage flag — must be strictly true (not just truthy string)
-  if (args.removeProfileImage === true || args.removeProfileImage === 'true') {
-    patch.profile_image = null;
+  const removePhoto = args.removeProfileImage === true || args.removeProfileImage === 'true';
+  if (removePhoto) {
+    // Supabase JS client silently drops null values in .update() — use explicit empty string
+    // and treat '' in the DB as "no photo" everywhere
+    patch.profile_image = '';
   } else if (args.profileImageBase64) {
     patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
   }
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id).select('profile_image, full_name').single();
   if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
-  // data.profile_image will be null if we set it to null — getSignedUrl('', '') returns ''
-  const profileImage = await getSignedUrl('profile-photos', data.profile_image || '');
-  console.log('updateMyProfile: removeFlag=', args.removeProfileImage, 'db.profile_image=', data.profile_image, 'signedUrl=', profileImage ? 'yes' : 'empty');
+  // Treat both null and '' as no photo
+  const storedPath = data.profile_image || '';
+  const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
   return { success: true, profileImage, fullName: data.full_name };
 }
 
@@ -844,10 +880,18 @@ async function uploadLogo(args, ctx) {
 
 async function listHourlyRates(args, ctx) {
   await requireRole(ctx, ['admin']);
-  const { data } = await sb.from('app_users').select('*, department:departments(name)').eq('status', 'active').neq('role', 'admin').order('full_name');
-  return (data || []).map(u => ({
+  // Two plain queries — no FK alias joins
+  const [{ data: users, error: uErr }, { data: depts, error: dErr }] = await Promise.all([
+    sb.from('app_users').select('id,username,full_name,role,department_id,position,hourly_rate').eq('status', 'active').neq('role', 'admin').order('full_name'),
+    sb.from('departments').select('id,name')
+  ]);
+  if (uErr) throw new Error('Failed to load users: ' + uErr.message);
+  if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
+  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+  return (users || []).map(u => ({
     username: u.username, fullName: u.full_name, role: u.role,
-    department: u.department && u.department.name || '—', position: u.position || '—',
+    department: (u.department_id && deptMap[u.department_id]) || '—',
+    position: u.position || '—',
     hourlyRate: Number(u.hourly_rate) || 0
   }));
 }

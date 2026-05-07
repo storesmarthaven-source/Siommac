@@ -2285,7 +2285,7 @@ const AttendanceSystem = (function() {
         if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load attendance'}</td></tr>`;
         return;
       }
-      displayAttendanceData(res.data || []);
+      if (!_isSyncing) displayAttendanceData(res.data || []);
     }).catch(err => {
       if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML = `<tr><td colspan="9" style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</td></tr>`;
     });
@@ -2297,28 +2297,24 @@ const AttendanceSystem = (function() {
       : '';
     const badge = s => s === 'Late' ? 'bg-warning text-dark' : s === 'Absent' || s === 'Not Checked In' ? 'bg-danger' : s === 'Checked Out' ? 'bg-secondary' : 'bg-success';
 
-    let html = '';
-    data.forEach(item => {
-      html += `
-        <tr>
-          <td data-label="Name">${item.name}</td>
-          <td data-label="Department">${item.department}</td>
-          <td data-label="Today"><span class="badge ${badge(item.todayStatus)}">${item.todayStatus}</span></td>
-          <td data-label="Check In">${item.checkIn}${thumb(item.checkInPhotoUrl)}</td>
-          <td data-label="Check Out">${item.checkOut}${thumb(item.checkOutPhotoUrl)}</td>
-          <td data-label="Total Days">${item.totalDays}</td>
-          <td data-label="Present">${item.present}</td>
-          <td data-label="Absent">${item.absent}</td>
-          <td data-label="Actions"><button class="btn btn-sm btn-info btn-view-att" data-in="${item.checkInPhotoUrl||''}" data-out="${item.checkOutPhotoUrl||''}" data-name="${(item.name||'').replace(/"/g,'&quot;')}">View</button></td>
-        </tr>
-      `;
-    });
+    const html = data.map(item => `
+      <tr>
+        <td data-label="Name">${escapeHtml(item.name)}</td>
+        <td data-label="Department">${escapeHtml(item.department)}</td>
+        <td data-label="Today"><span class="badge ${badge(item.todayStatus)}">${escapeHtml(item.todayStatus)}</span></td>
+        <td data-label="Check In">${escapeHtml(item.checkIn)}${thumb(item.checkInPhotoUrl)}</td>
+        <td data-label="Check Out">${escapeHtml(item.checkOut)}${thumb(item.checkOutPhotoUrl)}</td>
+        <td data-label="Total Days">${item.totalDays}</td>
+        <td data-label="Present">${item.present}</td>
+        <td data-label="Absent">${item.absent}</td>
+        <td data-label="Actions"><button class="btn btn-sm btn-info btn-view-att" data-in="${item.checkInPhotoUrl||''}" data-out="${item.checkOutPhotoUrl||''}" data-name="${escapeHtml(item.name||'')}">View</button></td>
+      </tr>`).join('');
 
+    // Always destroy first, then set HTML, then init — prevents DataTable state conflicts
+    destroyDataTable('attendanceTable');
     document.getElementById('attendanceTableBody').innerHTML = html;
     initDataTable('attendanceTable', {
-      columnDefs: [
-        { targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }
-      ]
+      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
 
@@ -2335,12 +2331,12 @@ const AttendanceSystem = (function() {
   }
 
   function loadLeaveApplications() {
-    if (!swr.get('listAllLeaves:{}')) {
+    if (!_isSyncing && !swr.get('listAllLeaves:{}')) {
       destroyDataTable('leavesTable');
       setSkel('leavesTableBody', skelTableRows(7, 4));
     }
     apiSwr('listAllLeaves', {}, {
-      onData: res => displayLeaveApplications((res && res.success && res.data) || [])
+      onData: res => { if (!_isSyncing) displayLeaveApplications((res && res.success && res.data) || []); }
     });
   }
 
@@ -2374,11 +2370,10 @@ const AttendanceSystem = (function() {
       `;
     });
 
+    destroyDataTable('leavesTable');
     document.getElementById('leavesTableBody').innerHTML = html;
     initDataTable('leavesTable', {
-      columnDefs: [
-        { targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }
-      ]
+      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
     });
   }
 
