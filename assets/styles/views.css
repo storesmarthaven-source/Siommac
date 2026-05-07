@@ -397,93 +397,87 @@
 /* Cards grid */
 .emp-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
   margin-bottom: 20px;
 }
 
 /* Individual employee card */
 .emp-card {
   background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  border-radius: 24px;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border);
   overflow: hidden;
-  transition: transform .22s, box-shadow .22s;
+  transition: transform .25s, box-shadow .25s;
   display: flex; flex-direction: column;
 }
-.emp-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+.emp-card:hover { transform: translateY(-4px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12); }
 
-/* Card header — navy gradient */
+/* Card header — navy gradient, name left + status badge right */
 .emp-card-header {
-  background: linear-gradient(135deg, var(--siomac-navy) 0%, var(--siomac-navy-dark) 100%);
-  padding: 22px 22px 18px;
-  display: flex; align-items: center; gap: 16px;
-  position: relative;
-}
-.emp-card-avatar {
-  width: 60px; height: 60px; border-radius: 50%;
-  background: rgba(255,255,255,0.18);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 800; color: white; flex-shrink: 0;
-  border: 2.5px solid rgba(255,255,255,0.3);
-  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--siomac-navy) 0%, #101D3B 100%);
+  padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
 }
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
-  font-size: 16px; font-weight: 700; color: white;
+  font-size: 1.1rem; font-weight: 700; color: white;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 5px; letter-spacing: -0.2px;
+  margin-bottom: 4px;
 }
-.emp-card-pos {
-  font-size: 12.5px; color: rgba(255,255,255,0.7);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.emp-card-pos { font-size: 0.72rem; color: rgba(255,255,255,0.75); }
 
-/* Status badge — sits top-right of header */
+/* Status badge */
 .emp-status-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 12px; border-radius: 40px;
-  font-size: 11.5px; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+  padding: 4px 12px; border-radius: 30px;
+  font-size: 0.7rem; font-weight: 600; white-space: nowrap; flex-shrink: 0;
 }
-.emp-active   { background: rgba(46,125,50,0.18);  color: #1b5e20; }
-.emp-inactive { background: rgba(228,12,12,0.15);  color: var(--siomac-red); }
+.emp-active   { background: #E8F5E9; color: #2E7D32; }
+.emp-inactive { background: #FFEBEE; color: #C62828; }
 
 /* Card body */
-.emp-card-body {
-  padding: 18px 22px 14px; flex: 1;
-  display: flex; flex-direction: column; gap: 13px;
-}
+.emp-card-body { padding: 20px; flex: 1; }
+
+/* Detail rows — each with bottom border divider, matching design spec */
 .emp-detail-row {
   display: flex; align-items: center; gap: 12px;
-  font-size: 13.5px; color: var(--text-primary);
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem; color: var(--text-primary);
 }
-.emp-detail-row i {
-  color: var(--siomac-red); width: 16px; text-align: center;
-  flex-shrink: 0; font-size: 13px;
-}
-.emp-detail-row span { flex: 1; }
+.emp-detail-row:last-of-type { margin-bottom: 0; }
+.emp-detail-row i { width: 20px; color: var(--siomac-red); font-size: 14px; flex-shrink: 0; }
 .emp-username {
-  font-family: 'Courier New', monospace; font-size: 12.5px;
-  color: var(--text-muted); background: var(--bg-subtle);
-  padding: 1px 7px; border-radius: 6px;
+  font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--text-muted);
 }
-.emp-today-row { margin-top: 2px; }
+.emp-today-row { margin-top: 12px; }
 .emp-today-badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 13px; border-radius: 40px;
-  font-size: 12.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
 }
-.emp-today-in  { background: rgba(46,125,50,0.1);   color: #1b5e20; }
-.emp-today-out { background: rgba(27,45,85,0.1);    color: var(--siomac-navy); }
-.emp-today-no  { background: rgba(94,111,141,0.1);  color: var(--text-muted); }
+.emp-today-in  { background: rgba(46,125,50,0.1);  color: #1b5e20; }
+.emp-today-out { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
+.emp-today-no  { background: rgba(94,111,141,0.1); color: var(--text-muted); }
 
-/* Card actions */
+/* Card actions — right-aligned ghost buttons, no border-top */
 .emp-card-actions {
-  display: flex; gap: 8px; padding: 4px 22px 20px;
-  border-top: 1px solid var(--border); margin-top: 6px; padding-top: 14px;
+  display: flex; gap: 6px; margin-top: 16px; justify-content: flex-end;
 }
-.emp-card-actions .btn { flex: 1; font-size: 13px; padding: 9px 14px; }
+.emp-icon-btn {
+  background: transparent; border: none;
+  padding: 6px 14px; border-radius: 30px;
+  cursor: pointer; font-size: 0.78rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: background .2s;
+}
+.emp-icon-btn.edit  { color: var(--warning); }
+.emp-icon-btn.edit:hover  { background: rgba(237,108,2,0.1); }
+.emp-icon-btn.delete { color: var(--danger); }
+.emp-icon-btn.delete:hover { background: rgba(198,40,40,0.1); }
 
 /* Table avatar */
 .emp-table-avatar {
