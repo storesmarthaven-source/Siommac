@@ -2521,13 +2521,29 @@ const AttendanceSystem = (function() {
     loadRecentAttendance();
   }
 
+  function _countUp(el, target) {
+    if (!el) return;
+    const current = parseInt(el.textContent, 10);
+    const from = isNaN(current) ? 0 : current;
+    const to = Number(target) || 0;
+    if (from === to) return; // already correct, skip
+    const steps = 30;
+    const stepTime = 600 / steps;
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      el.textContent = Math.round(from + (to - from) * (step / steps));
+      if (step >= steps) { el.textContent = to; clearInterval(timer); }
+    }, stepTime);
+  }
+
   function displayAdminStats(stats) {
-    document.getElementById('totalEmployees').textContent = stats.totalEmployees;
-    document.getElementById('presentToday').textContent = stats.presentToday;
-    document.getElementById('absentToday').textContent = stats.absentToday;
-    document.getElementById('onLeaveToday').textContent = stats.onLeaveToday;
-    document.getElementById('activeLocations').textContent = stats.activeLocations;
-    document.getElementById('lateToday').textContent = stats.lateToday;
+    _countUp(document.getElementById('totalEmployees'),  stats.totalEmployees);
+    _countUp(document.getElementById('presentToday'),    stats.presentToday);
+    _countUp(document.getElementById('absentToday'),     stats.absentToday);
+    _countUp(document.getElementById('onLeaveToday'),    stats.onLeaveToday);
+    _countUp(document.getElementById('activeLocations'), stats.activeLocations);
+    _countUp(document.getElementById('lateToday'),       stats.lateToday);
   }
 
   function loadRecentAttendance() {
