@@ -1388,6 +1388,10 @@ const AttendanceSystem = (function() {
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
       const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed' };
 
+      function _initials(name) {
+        return (name || '?').trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      }
+
       function _timeAgoShort(iso) {
         if (!iso) return '';
         const d = new Date(iso);
@@ -1500,10 +1504,7 @@ const AttendanceSystem = (function() {
 
       function _fetch(keepDetail) {
         api('getTickets', {}).then(res => {
-          if (!res || !res.success) {
-            console.warn('[Tickets] getTickets failed:', res && res.message);
-            return;
-          }
+          if (!res || !res.success) return;
           _tickets = res.data || [];
           _updateTicketBadge();
           if (keepDetail && _currentTicketId) {
@@ -1512,7 +1513,7 @@ const AttendanceSystem = (function() {
             _showList();
             _renderList();
           }
-        }).catch(err => { console.error('[Tickets] fetch error:', err); });
+        }).catch(() => {});
       }
 
       function _start() {
