@@ -36,7 +36,7 @@ const cap = s => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : ''
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 
 function signUser(u) {
-  return jwt.sign({ sub: u.id, username: u.username, role: u.role, departmentId: u.department_id || '' }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ sub: u.id, username: u.username, role: u.role, departmentId: u.department_id || '' }, JWT_SECRET, { expiresIn: '8h' });
 }
 
 function verifyToken(token) {

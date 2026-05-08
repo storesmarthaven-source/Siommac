@@ -40,7 +40,7 @@ const AttendanceSystem = (function() {
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
   const SESSION_KEY           = 'siomac_session_v1';
-  const SESSION_DURATION      = 60 * 60 * 1000;        // 1 hour (default)
+  const SESSION_DURATION      = 8 * 60 * 60 * 1000;    // 8 hours (default)
   const SESSION_DURATION_LONG = 7 * 24 * 60 * 60 * 1000; // 7 days (remember me)
   const SESSION_WARN_AT       = 5 * 60 * 1000;         // warn 5 min before expiry
   let _sessExpTimer  = null; // auto-logout timer

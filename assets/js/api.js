@@ -65,7 +65,14 @@ function _rawApi(action, args) {
       success: function (text) {
         _ajaxLoaderDone();
         try {
-          resolve(JSON.parse(text));
+          const parsed = JSON.parse(text);
+          // Token expired or invalid — trigger auto-logout with a clear message
+          if (parsed && parsed.success === false && parsed.message === 'Unauthorized') {
+            if (typeof handleSessionExpired === 'function') {
+              handleSessionExpired();
+            }
+          }
+          resolve(parsed);
         } catch (e) {
           console.error('api parse fail', action, String(text).slice(0, 200));
           const isHtml = /^\s*</.test(text);
