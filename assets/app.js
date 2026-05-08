@@ -876,6 +876,87 @@ const AttendanceSystem = (function() {
     if (sess) applySession(sess, /*announce*/ false);
   }
 
+  // ─── Phone mask: enforces (868) xxx-xxxx on every .phone-mask input ──────────
+  // Prefix "(868) " is always present and locked; user types only the 7 digits.
+  // Auto-inserts "-" after the 3rd digit: (868) 123-4567
+  const PREFIX = '(868) ';
+  const PREFIX_LEN = PREFIX.length; // 6
+
+  function _maskPhone(raw) {
+    if (!raw) return '';
+    const digits = raw.replace(/\D/g, '');
+    const local = digits.startsWith('868') ? digits.slice(3) : digits;
+    const d = local.slice(0, 7);
+    if (!d) return '';
+    if (d.length <= 3) return PREFIX + d;
+    return PREFIX + d.slice(0, 3) + '-' + d.slice(3);
+  }
+
+  // Set a phone-mask input's value programmatically (applies mask)
+  function setPhone(idOrEl, value) {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) return;
+    el.value = value ? _maskPhone(value) : '';
+  }
+
+  // Read the actual phone value from a masked input (strips prefix if empty local part)
+  function readPhone(idOrEl) {
+    const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (!el) return '';
+    const v = (el.value || '').trim();
+    // If the field only contains the prefix (user focused but typed nothing), treat as empty
+    if (v === PREFIX || v === PREFIX.trimEnd()) return '';
+    return v;
+  }
+
+  (function setupPhoneMask() {
+    function onInput(e) {
+      const el = e.target;
+      if (!el.classList.contains('phone-mask')) return;
+      const pos = el.selectionStart;
+      const prev = el.value;
+      if (prev.length < PREFIX_LEN) {
+        el.value = PREFIX;
+        el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+        return;
+      }
+      const masked = _maskPhone(prev);
+      el.value = masked;
+      const newPos = Math.max(pos, PREFIX_LEN);
+      el.setSelectionRange(Math.min(newPos, masked.length), Math.min(newPos, masked.length));
+    }
+
+    function onFocus(e) {
+      const el = e.target;
+      if (!el.classList.contains('phone-mask')) return;
+      if (!el.value || el.value.length < PREFIX_LEN) el.value = PREFIX;
+      setTimeout(() => {
+        if (el.selectionStart < PREFIX_LEN) el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+      }, 0);
+    }
+
+    function onKeydown(e) {
+      const el = e.target;
+      if (!el.classList.contains('phone-mask')) return;
+      const pos = el.selectionStart;
+      if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= PREFIX_LEN && el.selectionStart === el.selectionEnd) {
+        e.preventDefault();
+      }
+    }
+
+    function onBlur(e) {
+      const el = e.target;
+      if (!el.classList.contains('phone-mask')) return;
+      // Clear if only prefix remains so placeholder shows
+      if (el.value === PREFIX) el.value = '';
+    }
+
+    document.addEventListener('input',   onInput,   true);
+    document.addEventListener('focus',   onFocus,   true);
+    document.addEventListener('keydown', onKeydown, true);
+    document.addEventListener('blur',    onBlur,    true);
+  })();
+
   function setupEventListeners() {
     // Login form
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -2723,7 +2804,7 @@ const AttendanceSystem = (function() {
     const position = document.getElementById('newPosition').value.trim();
     const role = document.getElementById('newRole').value;
     const email = document.getElementById('newEmail').value.trim();
-    const phone = document.getElementById('newPhone').value.trim();
+    const phone = readPhone('newPhone');
     // Employee number is always auto-assigned on create (field is readonly)
     const employeeNumber = undefined;
 
@@ -2946,7 +3027,7 @@ const AttendanceSystem = (function() {
       const statusVal = (emp.status || '').toLowerCase();
       document.getElementById('editStatus').value = statusVal === 'active' ? 'active' : 'inactive';
       document.getElementById('editEmail').value = emp.email || '';
-      document.getElementById('editPhone').value = emp.phone || '';
+      setPhone('editPhone', emp.phone || '');
 
       const deptSelect = document.getElementById('editDepartment');
       deptSelect.innerHTML = '<option value="">Select Department</option>';
@@ -2972,7 +3053,7 @@ const AttendanceSystem = (function() {
     const status         = document.getElementById('editStatus').value;
     const employeeNumber = (document.getElementById('editEmployeeNumber').value || '').trim().toUpperCase();
     const email          = document.getElementById('editEmail').value.trim();
-    const phone          = document.getElementById('editPhone').value.trim();
+    const phone          = readPhone('editPhone');
 
     if (!fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
@@ -4330,7 +4411,7 @@ const AttendanceSystem = (function() {
         setVal('profilePosition', u.position);
         setVal('profileDept', u.department);
         setVal('profileEmail', u.email);
-        setVal('profilePhone', u.phone);
+        setPhone('profilePhone', u.phone);
         _profileImageBase64 = '';
         _removeProfileImage  = false;
         _updateProfileDisplayUI({ ...u, username: currentUser });
@@ -4555,7 +4636,7 @@ const AttendanceSystem = (function() {
   function saveMyProfile() {
     const fullName    = (document.getElementById('profileFullName')?.value || '').trim();
     const email       = (document.getElementById('profileEmail')?.value || '').trim();
-    const phone       = (document.getElementById('profilePhone')?.value || '').trim();
+    const phone       = readPhone('profilePhone');
     const oldPwd      = document.getElementById('profileOldPwd')?.value || '';
     const newPwd      = document.getElementById('profileNewPwd')?.value || '';
     const confirmPwd  = document.getElementById('profileConfirmPwd')?.value || '';
