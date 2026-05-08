@@ -1150,7 +1150,7 @@
 .ea-welcome-card h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
 .ea-role-text { font-size: 0.82rem; color: rgba(255,255,255,.65); margin-bottom: 10px; }
 /* Status badge sits close to name, then spacer pushes button to bottom */
-.ea-status-wrapper { margin-top: 4px; margin-bottom: auto; }
+.ea-status-wrapper { margin-top: 0; margin-bottom: auto; }
 /* Push action buttons toward the bottom */
 #checkInBtn, #checkOutBtn { margin-top: 18px; }
 
@@ -1185,7 +1185,6 @@
 .ea-action-btn-complete:hover { opacity: 1 !important; transform: none !important; }
 
 /* Status badge — on navy background use semi-transparent whites */
-.ea-status-wrapper { margin-top: 18px; }
 .ea-status-badge {
   display: inline-block; padding: 7px 22px;
   border-radius: 40px; font-size: 0.82rem; font-weight: 600;
