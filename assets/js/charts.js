@@ -270,9 +270,9 @@ window.SiomacCharts = (function () {
   }
 
   function renderDashboardCharts(data) {
-    // rAF ensures the section is painted and canvases have real dimensions
-    // before Chart.js measures them — otherwise animation plays on a 0x0 canvas
-    requestAnimationFrame(() => {
+    // Double rAF: first frame applies display:block, second frame the browser
+    // has measured layout so canvases have real dimensions for animation.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       renderTrendLine(data.dailyTrend);
       renderDeptDist(data.deptDistribution);
       renderStatusBars(data.statusBreakdown);
@@ -280,7 +280,7 @@ window.SiomacCharts = (function () {
       _populateDeptStats(data.deptDistribution || []);
       _populateStatusStats(data.statusBreakdown || {});
       _populateLeaveStats(data.leaveTypes || {});
-    });
+    }));
   }
 
   // ── Silent in-place update — patches existing chart instances without redraw flicker ──
