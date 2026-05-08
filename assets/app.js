@@ -26,9 +26,17 @@ const AttendanceSystem = (function() {
   let userLocation = null;
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
-  let _isSyncing = false; // when true, suppress skeleton injection (background refresh shouldn't flash)
-  let _dashChartsLoaded = false; // charts only rendered once per session to prevent re-render flicker on section revisit
-  const _visitedSections = new Set(); // tracks which sections have been loaded at least once
+  // ─── Section load registry ───────────────────────────────────────────────────
+  // Tracks whether each section has ever successfully received data this session.
+  // Skeleton loaders only fire on the very first load; background refreshes are
+  // always silent. No global "syncing" flag — each loader decides independently.
+  const _sectionLoaded = {};
+  function _markLoaded(sectionId)   { _sectionLoaded[sectionId] = true; }
+  function _isLoaded(sectionId)     { return !!_sectionLoaded[sectionId]; }
+  function _resetLoadedState()      { Object.keys(_sectionLoaded).forEach(k => delete _sectionLoaded[k]); }
+
+  // Convenience: show skeleton only on first visit (before data ever arrived)
+  function _skelOnce(sectionId, fn) { if (!_isLoaded(sectionId)) fn(); }
 
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
@@ -245,10 +253,11 @@ const AttendanceSystem = (function() {
 
   // ─── Live Project Map (admin/manager) ───
   function loadLiveAttendance() {
-    if (!_isSyncing) setSkel('liveEmployeesList', skelList(3));
+    _skelOnce('s-projectMap', () => setSkel('liveEmployeesList', skelList(3)));
     const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
     api('getLiveAttendance', { scope }).then(res => {
       liveData = (res.success && res.data) || [];
+      _markLoaded('s-projectMap');
       plotLiveEmployees(liveData);
       renderLivePanel(liveData);
     });
@@ -629,14 +638,12 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // ─── Skeleton helpers (skip during background sync) ───
+  // ─── Skeleton helpers ───
   function setSkel(id, html) {
-    if (_isSyncing) return;
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   }
   function skelStatValues(ids) {
-    if (_isSyncing) return;
     ids.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '<div class="skeleton skel-text-lg" style="width:60px; margin:0 auto;"></div>';
@@ -693,11 +700,7 @@ const AttendanceSystem = (function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('sidebarBackdrop').classList.remove('active');
 
-    const _wasVisited = _visitedSections.has(id);
-    if (_wasVisited) _isSyncing = true; // suppress skeletons/spinners on revisit
-    _visitedSections.add(id);
     refreshSection(id);
-    if (_wasVisited) setTimeout(() => { _isSyncing = false; }, 0); // restore after sync callbacks are queued
   }
 
   function refreshSection(id) {
@@ -1452,16 +1455,13 @@ const AttendanceSystem = (function() {
 
   function syncData() {
     const indicator = document.getElementById('syncIndicator');
-    indicator.innerHTML = `<i class="fas fa-sync fa-spin"></i> <span id="syncStatusText">${translations.en.syncStatusText}</span>`;
-    indicator.classList.remove('hidden');
-
-    setTimeout(() => {
-      lastSyncTime = new Date().toISOString();
-      setTimeout(() => indicator.classList.add('hidden'), 2000);
-      _isSyncing = true;
-      refreshCurrentView();
-      setTimeout(() => { _isSyncing = false; }, 800);
-    }, 1000);
+    if (indicator) {
+      indicator.innerHTML = `<i class="fas fa-sync fa-spin"></i> <span id="syncStatusText">${translations.en.syncStatusText}</span>`;
+      indicator.classList.remove('hidden');
+      setTimeout(() => indicator.classList.add('hidden'), 2500);
+    }
+    lastSyncTime = new Date().toISOString();
+    refreshCurrentView();
   }
 
   // refresh the currently-visible section (called every 30s by syncData)
@@ -1486,8 +1486,7 @@ const AttendanceSystem = (function() {
     currentRole = null;
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
-    _dashChartsLoaded = false;  // reset so dashboard charts re-render on next login
-    _visitedSections.clear();   // reset so all sections show skeletons again on next login
+    _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
     dashboardRefreshInterval = null;
@@ -1502,12 +1501,13 @@ const AttendanceSystem = (function() {
   }
 
   function checkStatus() {
-    if (!_isSyncing) {
+    _skelOnce('s-emp-attendance', () => {
       const sb = document.getElementById('statusBadge');
       if (sb) sb.innerHTML = '<div class="skeleton skel-pill"></div>';
-    }
+    });
     api('getMyStatus', { username: currentUser }).then(res => {
       const status = (res.success && res.data) || { hasCheckedIn:false, hasCheckedOut:false, checkInTime:null, checkOutTime:null, location:'' };
+      _markLoaded('s-emp-attendance');
       updateDashboardUI(status);
     });
   }
@@ -1848,11 +1848,11 @@ const AttendanceSystem = (function() {
   function loadDashboardCharts(forceReload) {
     api('getDashboardCharts').then(res => {
       if (!res.success) return;
-      if (_dashChartsLoaded && !forceReload) {
+      if (_isLoaded('s-adm-dashboard-charts') && !forceReload) {
         SiomacCharts.updateDashboardCharts(res.data); // silent patch, no flicker
       } else {
         SiomacCharts.renderDashboardCharts(res.data); // full render on first load
-        _dashChartsLoaded = true;
+        _markLoaded('s-adm-dashboard-charts');
       }
     });
   }
@@ -2032,11 +2032,10 @@ const AttendanceSystem = (function() {
 
   function loadHistoryInline() {
     const args = { username: currentUser, days: 30 };
-    if (!swr.get('getMyHistory:' + JSON.stringify(args))) {
-      setSkel('historyTableBody', skelTableRows(7, 8));
-    }
+    _skelOnce('s-emp-history', () => setSkel('historyTableBody', skelTableRows(7, 8)));
     apiSwr('getMyHistory', args, {
       onData: res => {
+        _markLoaded('s-emp-history');
         _historyRawData = (res && res.success && res.data) || [];
         _renderHistoryPage();
         _bindHistoryControls();
@@ -2325,9 +2324,10 @@ const AttendanceSystem = (function() {
   let _lvEmpList = [], _lvMgrList = [], _lvAdmList = [];
 
   function loadLeaveRequests() {
-    if (!_isSyncing) setSkel('leaveRequestsList', skelTableRows(8, 3));
+    _skelOnce('s-emp-leave', () => setSkel('leaveRequestsList', skelTableRows(8, 3)));
     api('getMyLeaves', { username: currentUser }).then(res => {
       const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
+      _markLoaded('s-emp-leave');
       _lvEmpList = list;
       _lvUpdateStats('empLv', list);
       _renderEmpLeaves();
@@ -2365,8 +2365,9 @@ const AttendanceSystem = (function() {
 
   // Manager Dashboard Functions
   function loadDepartmentData() {
-    if (!_isSyncing) skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']);
+    _skelOnce('s-mgr-overview', () => skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']));
     api('getDeptStats', { managerUsername: currentUser }).then(res => {
+      _markLoaded('s-mgr-overview');
       displayDepartmentStats((res.success && res.data) || { total:0, present:0, onLeave:0, late:0 });
     });
   }
@@ -2380,11 +2381,9 @@ const AttendanceSystem = (function() {
 
   function loadDepartmentEmployees() {
     const args = { managerUsername: currentUser };
-    if (!swr.get('getDeptEmployees:' + JSON.stringify(args))) {
-      setSkel('departmentEmployeesTable', skelTableRows(5, 4));
-    }
+    _skelOnce('s-mgr-employees', () => setSkel('departmentEmployeesTable', skelTableRows(5, 4)));
     apiSwr('getDeptEmployees', args, {
-      onData: res => displayDepartmentEmployees((res && res.success && res.data) || [])
+      onData: res => { _markLoaded('s-mgr-employees'); displayDepartmentEmployees((res && res.success && res.data) || []); }
     });
   }
 
@@ -2425,11 +2424,9 @@ const AttendanceSystem = (function() {
 
   function loadManagerLeaveApplications() {
     const args = { managerUsername: currentUser };
-    if (!swr.get('getPendingLeavesForManager:' + JSON.stringify(args))) {
-      setSkel('managerPendingLeaves', skelTableRows(8, 3));
-    }
+    _skelOnce('s-mgr-leaves', () => setSkel('managerPendingLeaves', skelTableRows(8, 3)));
     apiSwr('getPendingLeavesForManager', args, {
-      onData: res => displayManagerLeaveApplications((res && res.success && res.data) || [])
+      onData: res => { _markLoaded('s-mgr-leaves'); displayManagerLeaveApplications((res && res.success && res.data) || []); }
     });
   }
 
@@ -2498,11 +2495,9 @@ const AttendanceSystem = (function() {
 
   // Admin Dashboard Functions
   function loadDashboardData() {
-    // Only show skeleton placeholders on first load — revisits update silently
-    if (!_dashChartsLoaded) {
-      skelStatValues(['totalEmployees','presentToday','absentToday','onLeaveToday','activeLocations','lateToday']);
-    }
+    _skelOnce('s-adm-dashboard', () => skelStatValues(['totalEmployees','presentToday','absentToday','onLeaveToday','activeLocations','lateToday']));
     api('getAdminStats').then(res => {
+      _markLoaded('s-adm-dashboard');
       displayAdminStats((res.success && res.data) || { totalEmployees:0, presentToday:0, absentToday:0, onLeaveToday:0, activeLocations:0, lateToday:0 });
     });
     loadRecentAttendance();
@@ -2520,11 +2515,11 @@ const AttendanceSystem = (function() {
   function loadRecentAttendance() {
     const tbody = document.getElementById('recentAttendanceTbody');
     if (!tbody) return;
-    // Only show spinner on first load; revisits update rows silently
-    if (!_dashChartsLoaded) {
+    _skelOnce('s-adm-dashboard-rat', () => {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
-    }
+    });
     api('getRecentAttendance', { limit: 10 }).then(res => {
+      _markLoaded('s-adm-dashboard-rat');
       if (!res || !res.success || !res.data || res.data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="padding:48px 20px;text-align:center;color:var(--text-muted);"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.4;"></i><span style="font-size:0.88rem;">No attendance records for today yet.</span></div></td></tr>';
         return;
@@ -2626,8 +2621,7 @@ const AttendanceSystem = (function() {
   let _empCardView = true; // true = cards, false = table
 
   function loadEmployeeList() {
-    if (!_isSyncing && !swr.get('listEmployees:{}')) {
-      // Show skeleton in whichever view is active
+    _skelOnce('s-adm-employees', () => {
       if (_empCardView) {
         const g = document.getElementById('empCardView');
         if (g) g.innerHTML = '<div class="emp-loading"><i class="fas fa-spinner fa-spin"></i> Loading employees…</div>';
@@ -2635,7 +2629,7 @@ const AttendanceSystem = (function() {
         destroyDataTable('employeesTable');
         setSkel('employeesTableBody', skelTableRows(8, 5));
       }
-    }
+    });
     _rawApi('listEmployees', {}).then(res => {
       if (!res || !res.success) {
         const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
@@ -2644,6 +2638,7 @@ const AttendanceSystem = (function() {
         return;
       }
       swr.set('listEmployees:{}', res);
+      _markLoaded('s-adm-employees');
       _empAllList = res.data || [];
       _renderEmpStats();
       _renderEmployees();
@@ -2909,7 +2904,9 @@ const AttendanceSystem = (function() {
 
   function loadDepartments() {
     const container = document.getElementById('departmentsContainer');
-    if (container && !_isSyncing) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
+    _skelOnce('s-adm-departments', () => {
+      if (container) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
+    });
     _rawApi('listDepartments', {}).then(res => {
       if (!res || !res.success) {
         if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-exclamation-circle"></i><p>${(res && res.message) || 'Failed to load departments'}</p></div>`;
@@ -2917,6 +2914,7 @@ const AttendanceSystem = (function() {
       }
       const list = Array.isArray(res.data) ? res.data : [];
       departments = list;
+      _markLoaded('s-adm-departments');
       swr.set('listDepartments:{}', res);
       displayDepartments(list);
     }).catch(err => {
@@ -3129,13 +3127,14 @@ const AttendanceSystem = (function() {
   }
 
   function loadProjectSites() {
-    if (!_isSyncing) setSkel('projectsContainer', skelCards(3));
+    _skelOnce('s-adm-projects', () => setSkel('projectsContainer', skelCards(3)));
     _rawApi('listProjectSites', {}).then(res => {
       if (!res || !res.success) {
         document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
         return;
       }
       projectSites = Array.isArray(res.data) ? res.data : [];
+      _markLoaded('s-adm-projects');
       swr.set('listProjectSites:{}', res);
       displayProjectSites(projectSites);
     }).catch(err => {
@@ -3245,15 +3244,14 @@ const AttendanceSystem = (function() {
     const month = parseInt(document.getElementById('attendanceMonth').value, 10);
     const year  = parseInt(document.getElementById('attendanceYear').value, 10);
     destroyDataTable('attendanceTable'); // always destroy before re-init
-    if (!_isSyncing) {
-      setSkel('attendanceTableBody', skelTableRows(9, 6));
-    }
+    _skelOnce('s-adm-attendance', () => setSkel('attendanceTableBody', skelTableRows(9, 6)));
     _rawApi('listDailyLog', { month, year }).then(res => {
       if (!res || !res.success) {
         document.getElementById('attendanceTableBody').innerHTML =
           `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
         return;
       }
+      _markLoaded('s-adm-attendance');
       _attAllRows = (res.data && res.data.rows) || [];
       _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
       _populateAttDeptFilter();
@@ -3422,11 +3420,9 @@ const AttendanceSystem = (function() {
   }
 
   function loadLeaveApplications() {
-    if (!_isSyncing && !swr.get('listAllLeaves:{}')) {
-      setSkel('leavesTableBody', skelTableRows(8, 4));
-    }
+    _skelOnce('s-adm-leaves', () => setSkel('leavesTableBody', skelTableRows(8, 4)));
     apiSwr('listAllLeaves', {}, {
-      onData: res => { displayLeaveApplications((res && res.success && res.data) || []); }
+      onData: res => { _markLoaded('s-adm-leaves'); displayLeaveApplications((res && res.success && res.data) || []); }
     });
   }
 
@@ -3673,13 +3669,11 @@ const AttendanceSystem = (function() {
   function loadHourlyRates() {
     const tbody = document.getElementById('ratesTableBody');
     if (!tbody) return;
-    const ratesCached = swr.get('listHourlyRates:{}');
-    if (!ratesCached) {
-      tbody.innerHTML = skelTableRows(6, 6);
-    }
+    _skelOnce('s-adm-rates', () => { tbody.innerHTML = skelTableRows(6, 6); });
     // SWR both calls in parallel — currency from settings is small + cached separately
     apiSwr('listHourlyRates', {}, {
       onData: res => {
+        _markLoaded('s-adm-rates');
         _ratesData = (res && res.success && res.data) || [];
         _populateHrDeptFilter();
         renderHourlyRates();
@@ -4131,8 +4125,6 @@ const AttendanceSystem = (function() {
   }
 
   function loadMyProfile() {
-    if (_isSyncing) return;
-
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
     setVal('profileUsername', currentUser);
     setVal('profileFullName', currentFullName);
@@ -4150,7 +4142,6 @@ const AttendanceSystem = (function() {
     }
 
     api('getEmployeeByUsername', { username: currentUser }).then(res => {
-      if (_isSyncing) return;
       if (res && res.success && res.data) {
         const u = res.data;
         setVal('profileFullName', u.fullName);
