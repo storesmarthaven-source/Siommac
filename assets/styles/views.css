@@ -1531,7 +1531,7 @@
 .dept-table tbody td { padding: 14px 18px; color: var(--text-primary); vertical-align: middle; }
 .dept-table-icon {
   width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--siomac-navy), #101D3B);
+  background: #fab906;
   display: inline-flex; align-items: center; justify-content: center;
   color: white; font-size: 14px; flex-shrink: 0;
 }
