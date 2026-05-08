@@ -110,6 +110,102 @@ const AttendanceSystem = (function() {
     return cpop.fire({ icon: type, title, text, showConfirmButton: true });
   };
 
+  // ─── Inline field validation ───────────────────────────────────────────────
+  // _fieldError(id, msg) — marks a field invalid with a message below it
+  // _fieldOk(id)         — clears the error state
+  // _validate(rules)     — runs all rules, marks fields, returns true if all pass
+  //
+  // Rule shape: { id, label, rules: ['required','email','phone','min:N','max:N','numeric','positive'] }
+  // Also supports: { id, check: fn, msg }  for custom one-off checks
+
+  function _fieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('field-invalid');
+    let err = el.parentElement.querySelector('.field-error-msg');
+    if (!err) {
+      err = document.createElement('div');
+      err.className = 'field-error-msg';
+      el.parentElement.appendChild(err);
+    }
+    err.textContent = msg;
+  }
+
+  function _fieldOk(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('field-invalid');
+    const err = el.parentElement && el.parentElement.querySelector('.field-error-msg');
+    if (err) err.remove();
+  }
+
+  function _clearErrors(ids) {
+    ids.forEach(_fieldOk);
+  }
+
+  function _validate(rules) {
+    let valid = true;
+    rules.forEach(rule => {
+      // Custom check
+      if (typeof rule.check === 'function') {
+        const msg = rule.check();
+        if (msg) { _fieldError(rule.id, msg); valid = false; }
+        else _fieldOk(rule.id);
+        return;
+      }
+      const el = document.getElementById(rule.id);
+      const raw = el ? el.value : '';
+      const val = raw.trim();
+      let msg = null;
+
+      for (const r of (rule.rules || [])) {
+        if (r === 'required' && !val) {
+          msg = `${rule.label} is required.`; break;
+        }
+        if (r === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          msg = `Enter a valid email address.`; break;
+        }
+        if (r === 'phone' && val) {
+          const digits = val.replace(/\D/g, '');
+          // Expect (868) xxx-xxxx = 10 digits total (868 + 7)
+          if (digits.length !== 10 || !digits.startsWith('868')) {
+            msg = `Phone must be a complete (868) xxx-xxxx number.`; break;
+          }
+        }
+        if (r === 'numeric' && val && isNaN(Number(val))) {
+          msg = `${rule.label} must be a number.`; break;
+        }
+        if (r === 'positive' && val && Number(val) <= 0) {
+          msg = `${rule.label} must be greater than 0.`; break;
+        }
+        if (typeof r === 'string' && r.startsWith('min:')) {
+          const n = parseInt(r.split(':')[1]);
+          if (val && val.length < n) { msg = `${rule.label} must be at least ${n} characters.`; break; }
+          if (r === 'min:' + n && !val) { /* required handles empty */ }
+        }
+        if (typeof r === 'string' && r.startsWith('minval:')) {
+          const n = parseFloat(r.split(':')[1]);
+          if (val && Number(val) < n) { msg = `${rule.label} must be at least ${n}.`; break; }
+        }
+        if (typeof r === 'string' && r.startsWith('maxval:')) {
+          const n = parseFloat(r.split(':')[1]);
+          if (val && Number(val) > n) { msg = `${rule.label} must be at most ${n}.`; break; }
+        }
+      }
+      if (msg) { _fieldError(rule.id, msg); valid = false; }
+      else _fieldOk(rule.id);
+    });
+    return valid;
+  }
+
+  // Clear field errors on any input/change inside a form
+  document.addEventListener('input', e => {
+    if (e.target instanceof Element && e.target.id) _fieldOk(e.target.id);
+  }, true);
+  document.addEventListener('change', e => {
+    if (e.target instanceof Element && e.target.id) _fieldOk(e.target.id);
+  }, true);
+
   // Get current location (simplified)
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -2363,15 +2459,14 @@ const AttendanceSystem = (function() {
     const toDate = document.getElementById('toDate').value;
     const reason = document.getElementById('leaveReason').value.trim();
     
-    if (!leaveType || !fromDate || !toDate || !reason) {
-      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
-      return;
-    }
-    
-    if (new Date(toDate) < new Date(fromDate)) {
-      showPopup('warning', 'Invalid Dates', 'End date must be after start date.');
-      return;
-    }
+    const ok = _validate([
+      { id: 'leaveType',   label: 'Leave Type', rules: ['required'] },
+      { id: 'fromDate',    label: 'From Date',  rules: ['required'] },
+      { id: 'toDate',      label: 'To Date',    rules: ['required'] },
+      { id: 'leaveReason', label: 'Reason',     rules: ['required'] },
+      { id: 'toDate', check: () => fromDate && toDate && new Date(toDate) < new Date(fromDate) ? 'End date must be on or after the start date.' : null },
+    ]);
+    if (!ok) return;
 
     // edit mode: same modal, but call updateLeave instead of submitLeave
     if (_editingLeaveId) {
@@ -2829,14 +2924,17 @@ const AttendanceSystem = (function() {
     // Employee number is always auto-assigned on create (field is readonly)
     const employeeNumber = undefined;
 
-    if (!username || !password || !fullName || !department || !position || !role) {
-      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
-      return;
-    }
-    if (password.length < 6) {
-      showPopup('warning', 'Weak Password', 'Password must be at least 6 characters.');
-      return;
-    }
+    const ok = _validate([
+      { id: 'newUsername',   label: 'Username',    rules: ['required'] },
+      { id: 'newPassword',   label: 'Password',    rules: ['required', 'min:6'] },
+      { id: 'newFullName',   label: 'Full Name',   rules: ['required'] },
+      { id: 'newDepartment', label: 'Department',  rules: ['required'] },
+      { id: 'newPosition',   label: 'Position',    rules: ['required'] },
+      { id: 'newRole',       label: 'Role',        rules: ['required'] },
+      { id: 'newEmail',      label: 'Email',       rules: ['email'] },
+      { id: 'newPhone',      label: 'Phone',       rules: ['phone'] },
+    ]);
+    if (!ok) return;
     showSpinner('Adding employee...');
     api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
@@ -3075,10 +3173,15 @@ const AttendanceSystem = (function() {
     const email          = document.getElementById('editEmail').value.trim();
     const phone          = readPhone('editPhone');
 
-    if (!fullName || !department || !position || !role) {
-      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
-      return;
-    }
+    const ok = _validate([
+      { id: 'editFullName',   label: 'Full Name',  rules: ['required'] },
+      { id: 'editDepartment', label: 'Department', rules: ['required'] },
+      { id: 'editPosition',   label: 'Position',   rules: ['required'] },
+      { id: 'editRole',       label: 'Role',       rules: ['required'] },
+      { id: 'editEmail',      label: 'Email',      rules: ['email'] },
+      { id: 'editPhone',      label: 'Phone',      rules: ['phone'] },
+    ]);
+    if (!ok) return;
     showSpinner('Updating employee...');
     api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
@@ -3147,11 +3250,12 @@ const AttendanceSystem = (function() {
     const description = document.getElementById('departmentDescription').value.trim();
     const manager = document.getElementById('departmentManager').value;
     
-    if (!name || !manager) {
-      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
-      return;
-    }
-    
+    const ok = _validate([
+      { id: 'departmentName',    label: 'Department Name', rules: ['required'] },
+      { id: 'departmentManager', label: 'Manager',         rules: ['required'] },
+    ]);
+    if (!ok) return;
+
     const action = editingDeptId ? 'updateDepartment' : 'addDepartment';
     const args = { name, description, manager, actorId: currentUserId, actorUsername: currentUser };
     if (editingDeptId) args.id = editingDeptId;
@@ -3362,15 +3466,14 @@ const AttendanceSystem = (function() {
     const radius = parseInt(document.getElementById('projectRadius').value);
     const description = document.getElementById('projectDescription').value.trim();
     
-    if (!name || !address || isNaN(latitude) || isNaN(longitude) || isNaN(radius)) {
-      showPopup('warning', 'Incomplete', 'Please fill all required fields.');
-      return;
-    }
-    
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      showPopup('warning', 'Invalid Coordinates', 'Please enter valid latitude and longitude values.');
-      return;
-    }
+    const ok = _validate([
+      { id: 'projectName',      label: 'Project Name', rules: ['required'] },
+      { id: 'projectAddress',   label: 'Address',      rules: ['required'] },
+      { id: 'projectLatitude',  label: 'Latitude',     rules: ['required', 'numeric', 'minval:-90',  'maxval:90'] },
+      { id: 'projectLongitude', label: 'Longitude',    rules: ['required', 'numeric', 'minval:-180', 'maxval:180'] },
+      { id: 'projectRadius',    label: 'Radius',       rules: ['required', 'numeric', 'positive'] },
+    ]);
+    if (!ok) return;
     
     const action = editingSiteId ? 'updateProjectSite' : 'addProjectSite';
     const args = { name, address, latitude, longitude, radius, description, actorId: currentUserId, actorUsername: currentUser };
@@ -4654,10 +4757,15 @@ const AttendanceSystem = (function() {
     const newPwd      = document.getElementById('profileNewPwd')?.value || '';
     const confirmPwd  = document.getElementById('profileConfirmPwd')?.value || '';
 
-    if (!fullName) { _profileToast('Full name cannot be empty.', true); return; }
-    if (newPwd && newPwd.length < 6) { _profileToast('New password must be at least 6 characters.', true); return; }
-    if (newPwd && newPwd !== confirmPwd) { _profileToast('New passwords do not match.', true); return; }
-    if (newPwd && !oldPwd) { _profileToast('Enter your current password to change it.', true); return; }
+    const profileOk = _validate([
+      { id: 'profileFullName', label: 'Full Name', rules: ['required'] },
+      { id: 'profileEmail',    label: 'Email',     rules: ['email'] },
+      { id: 'profilePhone',    label: 'Phone',     rules: ['phone'] },
+      { id: 'profileNewPwd',   check: () => newPwd && newPwd.length < 6 ? 'Password must be at least 6 characters.' : null },
+      { id: 'profileConfirmPwd', check: () => newPwd && newPwd !== confirmPwd ? 'Passwords do not match.' : null },
+      { id: 'profileOldPwd',   check: () => newPwd && !oldPwd ? 'Enter your current password to change it.' : null },
+    ]);
+    if (!profileOk) return;
 
     const btn = document.getElementById('saveProfileBtn');
     const orig = btn.innerHTML;
