@@ -3471,8 +3471,11 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // reload whichever leaves list the current role is looking at
+  // reload whichever leaves list the current role is looking at — force bypasses SWR cache
   function _refreshLeavesAfterDecision() {
+    swr.clear();
+    swr._inflight.clear();
+    _swrLastHash.clear();
     if (currentRole === 'admin') {
       loadLeaveApplications();
     } else if (currentRole === 'manager') {
