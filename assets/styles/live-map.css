@@ -15,26 +15,16 @@
   overflow: hidden;
 }
 
-/* ── Stat cards row ── */
+/* ── Stat cards + action buttons row ── */
 .lm-stat-cards-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  align-items: center;
   gap: 16px;
   flex-shrink: 0;
   padding: 0 28px;
 }
-
-/* ── Action buttons row (Refresh + Center View) ── */
-.lm-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  flex-shrink: 0;
-  padding: 0 28px;
-}
-.lm-header-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.lm-stat-cards-row .stat-card { flex: 1; }
+.lm-header-actions { display: flex; gap: 10px; flex-shrink: 0; margin-left: auto; }
 
 /* header buttons */
 .lm-btn-primary {
