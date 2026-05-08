@@ -8,8 +8,53 @@
   to = "/.netlify/functions/api"
   status = 200
 
+# ── Security headers — applied to every response ─────────────────────────────
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+
+# ── index.html — must always revalidate so new deploys take effect immediately ─
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# ── Service Worker — never cache, browser must check every time ───────────────
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# ── Local JS — long cache, busted by filename change or SW update ─────────────
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, stale-while-revalidate=86400"
+
+# ── Local CSS ─────────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/assets/styles/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, stale-while-revalidate=86400"
+
+# ── app-shell HTML partial ────────────────────────────────────────────────────
+[[headers]]
+  for = "/assets/partials/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+
+# ── Static images (logos, icons stored in repo) ───────────────────────────────
+[[headers]]
+  for = "/assets/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, stale-while-revalidate=86400"
+
+# ── Netlify function — no caching (dynamic API) ───────────────────────────────
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "no-store"

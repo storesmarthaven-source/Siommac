@@ -59,6 +59,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
+  <!-- Register Service Worker as early as possible — before app scripts load -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(function (reg) {
+          // If a waiting SW exists, prompt it to activate immediately
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          reg.addEventListener('updatefound', function () {
+            var nw = reg.installing;
+            if (nw) nw.addEventListener('statechange', function () {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                nw.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        })
+        .catch(function (e) { console.warn('[SW] Registration failed:', e); });
+    }
+  </script>
+
   <script>
     // Global error catcher — surfaces any JS crash as a visible banner
     window.addEventListener('error', function (e) {
@@ -93,7 +113,7 @@
         .then(function (res) { if (!res.ok) throw new Error('Could not load app shell'); return res.text(); })
         .then(function (html) {
           document.getElementById('app-root').innerHTML = html;
-          return loadScripts(['assets/js/popup.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/app.js']);
+          return loadScripts(['assets/js/popup.js', 'assets/js/cache.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/app.js']);
         })
         .then(function () {
           // reveal only after init() has decided which screen to show — eliminates login flash

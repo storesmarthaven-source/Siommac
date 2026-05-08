@@ -1229,8 +1229,9 @@ const AttendanceSystem = (function() {
       // Settings: Reset to Defaults
       if (event.target.closest('#resetDefaultsBtn')) _stgResetDefaults();
 
-      // Settings: Clear Cache
+      // Settings: Clear Cache — wipes SW caches + IndexedDB + in-memory SWR + localStorage
       if (event.target.closest('#clearCacheBtn')) {
+        if (typeof SwCacheManager !== 'undefined') SwCacheManager.clearAll();
         localStorage.clear();
         cpop.fire({ icon: 'success', title: 'Cache cleared', text: 'Page will reload.', timer: 1800 })
           .then(() => location.reload());
@@ -4397,6 +4398,10 @@ const AttendanceSystem = (function() {
       currentFullName = res.fullName || fullName;
 
       const newPhoto = res.profileImage || '';
+      // Evict old photo URL from SW photo cache before setting the new one
+      if (_currentProfileImage && _currentProfileImage !== newPhoto) {
+        if (typeof SwCacheManager !== 'undefined') SwCacheManager.evictPhoto(_currentProfileImage);
+      }
       _currentProfileImage = newPhoto;
       // Update header profile avatar
       const hdrAv = document.getElementById('hdrProfileAvatar');
@@ -4660,12 +4665,21 @@ const AttendanceSystem = (function() {
 })();
 
 // Initialize after index.html has loaded the app shell partial.
+// Warm the in-memory SWR from IndexedDB first so first renders are instant,
+// then init the app. warmSwr() is non-blocking and degrades gracefully.
 function _safeInit() {
-  try {
-    AttendanceSystem.init();
-  } catch (e) {
-    console.error('AttendanceSystem.init() threw:', e);
-    throw e; // re-throw so window.onerror can display it
+  const doInit = () => {
+    try {
+      AttendanceSystem.init();
+    } catch (e) {
+      console.error('AttendanceSystem.init() threw:', e);
+      throw e;
+    }
+  };
+  if (typeof SiomacDB !== 'undefined') {
+    SiomacDB.warmSwr().then(doInit).catch(doInit);
+  } else {
+    doInit();
   }
 }
 if (document.readyState === 'loading') {
