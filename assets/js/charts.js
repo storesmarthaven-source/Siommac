@@ -32,11 +32,19 @@ window.SiomacCharts = (function () {
       animateScale: true
     }
   };
-  // Lines draw in left-to-right
+  // Lines: each point drops in from above with stagger
   const ANIM_LINE = {
-    animation: {
-      duration: 1000,
-      easing: 'easeOutCubic'
+    animations: {
+      y: {
+        duration: 800,
+        easing: 'easeOutBounce',
+        delay(ctx) { return ctx.dataIndex * 30; },
+        from(ctx) {
+          const chart = ctx.chart;
+          return chart.scales && chart.scales.y ? chart.scales.y.getPixelForValue(0) : 0;
+        }
+      },
+      x: { duration: 0 }
     }
   };
 
