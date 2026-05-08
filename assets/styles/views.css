@@ -1161,10 +1161,11 @@
 .ea-action-btn:hover { opacity: .88; }
 .ea-action-btn:active { opacity: 1; }
 .ea-action-btn-out {
-  background: rgba(255,255,255,.18);
-  border: 1.5px solid rgba(255,255,255,.35);
+  background: #f59e0b;
+  border: none;
+  color: #fff;
 }
-.ea-action-btn-out:hover { background: rgba(255,255,255,.28) !important; opacity: 1 !important; }
+.ea-action-btn-out:hover { background: #d97706 !important; opacity: 1 !important; }
 .ea-action-btn-complete {
   background: #2E7D32;
   border: none;
