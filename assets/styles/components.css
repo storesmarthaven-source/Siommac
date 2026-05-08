@@ -34,12 +34,19 @@
 .btn-outline-primary:hover { background: var(--siomac-navy) !important; color: white !important; }
 .btn-outline-danger  { background: transparent !important; border: 1.5px solid var(--danger) !important; color: var(--danger) !important; }
 .btn-outline-danger:hover  { background: var(--danger) !important; color: white !important; }
-/* Refresh / icon-only secondary outline buttons */
+/* Refresh / icon-only secondary outline buttons — perfect circle */
 .btn-outline-secondary {
   background: transparent !important;
   border: 1.5px solid var(--border) !important;
   color: var(--text-muted) !important;
-  border-radius: 50px !important;
+  border-radius: 50% !important;
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
 }
 .btn-outline-secondary:hover {
   background: var(--siomac-navy) !important;
