@@ -2526,7 +2526,7 @@ const AttendanceSystem = (function() {
     }
     api('getRecentAttendance', { limit: 10 }).then(res => {
       if (!res || !res.success || !res.data || res.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-inbox" style="font-size:1.4rem;display:block;margin-bottom:8px;"></i>No attendance records for today yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:48px 20px;text-align:center;color:var(--text-muted);"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.4;"></i><span style="font-size:0.88rem;">No attendance records for today yet.</span></div></td></tr>';
         return;
       }
       tbody.innerHTML = res.data.map(row => {
