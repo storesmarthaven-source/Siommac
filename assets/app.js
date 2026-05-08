@@ -5916,12 +5916,15 @@ const AttendanceSystem = (function() {
 
     // ── About section logo ──
     const aboutLogo = document.getElementById('aboutLogo');
+    const aboutLogoFallback = document.getElementById('aboutLogoFallback');
     if (aboutLogo) {
       if (url) {
         aboutLogo.src = url;
         aboutLogo.style.display = 'block';
+        if (aboutLogoFallback) aboutLogoFallback.style.display = 'none';
       } else {
         aboutLogo.style.display = 'none';
+        if (aboutLogoFallback) aboutLogoFallback.style.display = '';
       }
     }
 

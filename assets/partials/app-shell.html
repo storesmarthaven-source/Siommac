@@ -141,7 +141,7 @@
             <div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>Loading…</p></div>
           </div>
           <div class="hdr-modal-foot">
-            <button class="hdr-foot-link" id="notifMarkAllBtn">Mark all as read</button>
+            <button class="hdr-foot-link" id="notifMarkAllBtn" style="color:var(--siomac-navy);">Mark All As Read</button>
             <button class="hdr-foot-link" id="notifRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
@@ -187,7 +187,7 @@
             </div>
           </div>
           <div class="hdr-modal-foot" id="msgModalFoot">
-            <button class="hdr-foot-link" id="msgMarkAllReadBtn">Mark all as read</button>
+            <button class="hdr-foot-link" id="msgMarkAllReadBtn" style="color:var(--siomac-navy);">Mark All As Read</button>
             <button class="hdr-foot-link" id="msgRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
@@ -243,7 +243,7 @@
             </div>
           </div>
           <div class="hdr-modal-foot" id="ticketModalFoot">
-            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--text-muted);"></span>
+            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;"></span>
             <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
@@ -266,6 +266,10 @@
             <h2 id="displayNameText">User</h2>
             <div class="ea-role-text" id="ea-role-dept">—</div>
 
+            <div class="ea-status-wrapper">
+              <div id="statusBadge" class="ea-status-badge ea-status-none"><i class="fas fa-clock"></i> Not Checked In</div>
+            </div>
+
             <!-- Single action button -->
             <button id="checkInBtn" class="ea-action-btn hidden">
               <i class="fas fa-camera"></i> <span id="checkInText">Check In</span>
@@ -274,10 +278,6 @@
             <button id="checkOutBtn" class="ea-action-btn ea-action-btn-out hidden">
               <i class="fas fa-camera"></i> <span id="checkOutText">Check Out</span>
             </button>
-
-            <div class="ea-status-wrapper">
-              <div id="statusBadge" class="ea-status-badge ea-status-none"><i class="fas fa-clock"></i> Not Checked In</div>
-            </div>
           </div>
 
           <!-- Today's Timeline -->
@@ -1700,17 +1700,55 @@
 
       <!-- About — visible to everyone -->
       <section class="app-section" id="s-about">
-        <div class="data-section">
-          <div class="section-header">
-            <h2><i class="fas fa-info-circle"></i> About This System</h2>
+        <div class="data-section" style="max-width:680px;margin:0 auto;">
+
+          <!-- Hero card -->
+          <div style="background:linear-gradient(135deg,var(--siomac-navy) 0%,#101D3B 100%);border-radius:20px;padding:36px 32px 32px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(228,12,12,0.08);"></div>
+            <div style="position:absolute;bottom:-40px;left:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
+            <img id="aboutLogo" src="" alt="Logo" style="max-height:72px;max-width:200px;object-fit:contain;display:none;margin-bottom:16px;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:rgba(228,12,12,0.18);border-radius:16px;margin-bottom:16px;" id="aboutLogoFallback">
+              <i class="fas fa-hard-hat" style="font-size:28px;color:var(--siomac-red);"></i>
+            </div>
+            <h2 style="color:#fff;font-size:1.5rem;font-weight:800;margin-bottom:6px;"><span id="aboutCompanyName">SIOMAC</span></h2>
+            <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin:0;">Operations &amp; Maintenance Management Platform</p>
           </div>
-          <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-            <img id="aboutLogo" src="" alt="Logo" style="max-width:180px; max-height:80px; width:auto; height:auto; object-fit:contain; display:none;">
-            <div>
-              <h3 style="color: var(--navy-primary); margin-bottom:6px;"><span id="aboutCompanyName">My Company</span> — Attendance &amp; Location Management</h3>
-              <p style="color:#666; font-size:14px; margin-bottom:8px;">Selfie check-in / check-out · GPS verification · Leave workflow · Multi-role dashboards.</p>
+
+          <!-- Feature pills -->
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;justify-content:center;">
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-camera" style="color:var(--siomac-red);"></i> Selfie Check-In</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-map-marker-alt" style="color:var(--siomac-red);"></i> GPS Geofencing</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-umbrella-beach" style="color:var(--siomac-red);"></i> Leave Management</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-file-invoice-dollar" style="color:var(--siomac-red);"></i> Payroll Reports</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-map-marked-alt" style="color:var(--siomac-red);"></i> Live Map</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-shield-alt" style="color:var(--siomac-red);"></i> ISO 9001</span>
+          </div>
+
+          <!-- Info row -->
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-code-branch" style="color:var(--siomac-navy);font-size:14px;"></i></div>
+              <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Version</div>
+                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">1.0.0</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-globe" style="color:var(--siomac-navy);font-size:14px;"></i></div>
+              <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Region</div>
+                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">Trinidad &amp; Tobago</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-lock" style="color:var(--siomac-navy);font-size:14px;"></i></div>
+              <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Security</div>
+                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">JWT · Supabase RLS</div>
+              </div>
             </div>
           </div>
+
         </div>
       </section>
     </main>
