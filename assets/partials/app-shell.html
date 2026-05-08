@@ -165,8 +165,8 @@
             <div class="hdr-modal-body" id="msgDetailBody" style="flex:1;"></div>
             <div style="padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
               <textarea id="msgReplyInput" rows="3" placeholder="Write your reply…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
-              <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button class="hdr-foot-link" id="msgDetailBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+              <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+                <button class="hdr-foot-link" id="msgDetailBackBtn" style="color:var(--siomac-navy);"><i class="fas fa-arrow-left"></i> Back</button>
                 <button class="hdr-foot-link" id="msgReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
               </div>
             </div>
@@ -210,16 +210,18 @@
             <div class="hdr-modal-body" id="ticketDetailBody" style="flex:1;"></div>
             <div style="padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
               <textarea id="ticketReplyInput" rows="3" placeholder="Write a reply…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
-              <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
-                <button class="hdr-foot-link" id="ticketDetailBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
-                <select id="ticketStatusSelect" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:inherit;outline:none;display:none;">
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-                <button class="hdr-foot-link" id="ticketStatusSaveBtn" style="display:none;"><i class="fas fa-save"></i> Update Status</button>
-                <button class="hdr-foot-link" id="ticketReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
+              <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                <button class="hdr-foot-link" id="ticketDetailBackBtn" style="color:var(--siomac-navy);"><i class="fas fa-arrow-left"></i> Back</button>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <select id="ticketStatusSelect" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:inherit;outline:none;display:none;">
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <button class="hdr-foot-link" id="ticketStatusSaveBtn" style="display:none;"><i class="fas fa-save"></i> Update Status</button>
+                  <button class="hdr-foot-link" id="ticketReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
+                </div>
               </div>
             </div>
           </div>
