@@ -268,8 +268,16 @@ async function listEmployees() {
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
   const usersArr = users || [];
+  // Resolve all profile photo signed URLs in one parallel batch
   const profileImages = await Promise.all(
-    usersArr.map(u => noPhoto(u.profile_image) ? Promise.resolve('') : getSignedUrl('profile-photos', u.profile_image))
+    usersArr.map(u => {
+      if (noPhoto(u.profile_image)) return Promise.resolve('');
+      // Already a full URL (legacy) — pass through
+      if (/^https?:\/\//.test(u.profile_image)) return Promise.resolve(u.profile_image);
+      return sb.storage.from('profile-photos').createSignedUrl(u.profile_image, SIGNED_TTL)
+        .then(({ data, error }) => (error || !data) ? '' : data.signedUrl)
+        .catch(() => '');
+    })
   );
   return usersArr.map((u, i) => {
     const a = attMap[u.username];
@@ -389,9 +397,8 @@ async function markAttendance(args, ctx) {
   const lat = num(loc.latitude), lng = num(loc.longitude), acc = num(loc.accuracy);
   const near = lat != null && lng != null ? await nearestSite(lat, lng) : null;
   const maxDistance = Number(await setting('maxDistanceM', '200'));
-  if (near && near.distance > Math.max(Number(near.site.radius), maxDistance)) {
-    return { success: false, message: `Outside allowed project radius (${near.distance}m)` };
-  }
+  const outsideRadius = near && near.distance > Math.max(Number(near.site.radius), maxDistance);
+  // Don't hard-block — record the distance and allow check-in with a warning flag
   const work_date = today();
   const now = new Date();
   const photoBucket = 'attendance-photos';
@@ -411,7 +418,7 @@ async function markAttendance(args, ctx) {
     const { error } = await sb.from('attendance').upsert(row, { onConflict: 'user_id,work_date' });
     if (error) return { success: false, message: error.message };
     await log_(actor, 'checkin', 'attendance', '', near && near.site.name);
-    return { success: true, time: hhmm(now), action, message: 'Checked in', site: near && near.site.name || '' };
+    return { success: true, time: hhmm(now), action, message: 'Checked in', site: near && near.site.name || '', outsideRadius };
   }
 
   if (!rec || !rec.check_in_time) return { success: false, message: 'Check in first' };
@@ -424,7 +431,7 @@ async function markAttendance(args, ctx) {
   }).eq('id', rec.id);
   if (error) return { success: false, message: error.message };
   await log_(actor, 'checkout', 'attendance', rec.id, `${hours}h`);
-  return { success: true, time: hhmm(now), action, totalHours: hours, message: 'Checked out' };
+  return { success: true, time: hhmm(now), action, totalHours: hours, message: 'Checked out', outsideRadius };
 }
 
 async function getMyStatus(args, ctx) {
@@ -938,11 +945,22 @@ async function getLiveAttendance(args, ctx) {
     return u.department_id === scope;
   });
   // Resolve signed URLs in parallel
-  const photoUrls = await Promise.all(filtered.map(a => Promise.all([
-    getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
-    getSignedUrl('attendance-photos', a.check_out_photo_url || ''),
-    (a.user_id && userMap[a.user_id] && !noPhoto(userMap[a.user_id].profile_image)) ? getSignedUrl('profile-photos', userMap[a.user_id].profile_image) : Promise.resolve('')
-  ])));
+  const photoUrls = await Promise.all(filtered.map(a => {
+    const u = userMap[a.user_id] || {};
+    const profilePath = u.profile_image || '';
+    const profilePromise = noPhoto(profilePath)
+      ? Promise.resolve('')
+      : /^https?:\/\//.test(profilePath)
+        ? Promise.resolve(profilePath)
+        : sb.storage.from('profile-photos').createSignedUrl(profilePath, SIGNED_TTL)
+            .then(({ data, error }) => (error || !data) ? '' : data.signedUrl)
+            .catch(() => '');
+    return Promise.all([
+      getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
+      getSignedUrl('attendance-photos', a.check_out_photo_url || ''),
+      profilePromise
+    ]);
+  }));
   return filtered.map((a, i) => {
     const u = userMap[a.user_id] || {};
     const last = a.check_out_time || a.check_in_time;

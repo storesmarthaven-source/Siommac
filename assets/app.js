@@ -757,12 +757,13 @@ const AttendanceSystem = (function() {
     });
     backdrop.addEventListener('click', () => setMobileOpen(false));
 
-    // ── Header icon modals (notifications / messages / tickets) ──
+    // ── Header icon modals (notifications / messages / tickets / user) ──
     (function () {
       const pairs = [
         { btn: 'hdrNotifBtn',  modal: 'hdrNotifModal'  },
         { btn: 'hdrMsgBtn',    modal: 'hdrMsgModal'    },
         { btn: 'hdrTicketBtn', modal: 'hdrTicketModal' },
+        { btn: 'hdrUserBtn',   modal: 'hdrUserModal'   },
       ];
       function closeAll() {
         pairs.forEach(p => {
@@ -782,19 +783,11 @@ const AttendanceSystem = (function() {
           closeAll();
           if (!isOpen) { m.classList.add('open'); b.classList.add('active'); }
         });
-        // close when clicking the overlay backdrop (outside the card)
-        m.addEventListener('click', (e) => {
-          if (e.target === m) closeAll();
-        });
       });
-      // close buttons inside each modal
+      // Close on X button or clicking outside the icon group
       document.addEventListener('click', (e) => {
-        const closeBtn = e.target.closest('.hdr-modal-close');
-        if (closeBtn) { closeAll(); return; }
-        // click outside any modal
-        const insideModal = e.target.closest('.hdr-modal');
-        const insideBtn   = e.target.closest('.hdr-icon-btn');
-        if (!insideModal && !insideBtn) closeAll();
+        if (e.target.closest('.hdr-modal-close')) { closeAll(); return; }
+        if (!e.target.closest('.hdr-icon-group')) closeAll();
       });
     })();
 
@@ -1527,9 +1520,10 @@ const AttendanceSystem = (function() {
       checkOutBtn.classList.add('hidden');
       checkInBtn.classList.remove('hidden');
       checkInBtn.disabled = true;
-      checkInBtn.style.opacity = '0.5';
-      checkInBtn.style.cursor = 'not-allowed';
-      checkInBtn.innerHTML = '<i class="fas fa-check-double"></i> Attendance Complete';
+      checkInBtn.style.opacity = '';
+      checkInBtn.style.cursor = 'default';
+      checkInBtn.className = 'ea-action-btn ea-action-btn-complete';
+      checkInBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Attendance Complete';
     } else {
       statusBadge.innerHTML = '<i class="fas fa-clock"></i> Not Checked In';
       statusBadge.className = 'ea-status-badge ea-status-none';

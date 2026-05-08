@@ -838,9 +838,9 @@
 }
 .dash-overview-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 1rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 1.25rem; font-weight: 700; color: #1b2d55;
 }
-.dash-overview-title i { font-size: 1rem; color: var(--siomac-red); }
+.dash-overview-title i { font-size: 1.15rem; color: #1b2d55; }
 .dash-overview-actions {
   display: flex; align-items: center; gap: 12px;
 }
@@ -1093,6 +1093,18 @@
   border: 1.5px solid rgba(255,255,255,.35);
 }
 .ea-action-btn-out:hover { background: rgba(255,255,255,.28) !important; opacity: 1 !important; }
+.ea-action-btn-complete {
+  background: #2E7D32;
+  border: none;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  padding: 9px 22px;
+  font-size: 0.82rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.ea-action-btn-complete:hover { opacity: 1 !important; transform: none !important; }
 
 /* Status badge — on navy background use semi-transparent whites */
 .ea-status-wrapper { margin-top: 18px; }
@@ -2263,9 +2275,9 @@
 }
 .dash-overview-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 0.95rem; font-weight: 700; color: #fff;
+  font-size: 1.25rem; font-weight: 700; color: #1b2d55;
 }
-.dash-overview-title i { font-size: 1rem; color: rgba(255,255,255,0.75); }
+.dash-overview-title i { font-size: 1.15rem; color: #1b2d55; }
 .dash-overview-actions {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
