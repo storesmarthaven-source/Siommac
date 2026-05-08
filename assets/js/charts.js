@@ -10,11 +10,34 @@ window.SiomacCharts = (function () {
   Chart.defaults.font.family = "'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif";
   Chart.defaults.color = '#5E6F8D';
 
+  // Pin canvas to its container's current pixel size.
+  // responsive:false prevents Chart.js ResizeObserver from interrupting animation.
+  // Pin canvas buffer to container size — only used for non-responsive charts (doughnuts, bars).
+  // Does NOT set style.width/height to avoid CSS conflicts that shift hit areas.
+  function _pinCanvas(canvas, fallbackW, fallbackH) {
+    const p = canvas.parentElement;
+    canvas.width  = (p && p.offsetWidth)  || fallbackW || 280;
+    canvas.height = (p && p.offsetHeight) || fallbackH || 260;
+  }
+
+  // Inject a centred spinner into a canvas's container. Returns a remove fn.
+  function _spinner(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const box    = canvas && canvas.parentElement;
+    if (!box) return () => {};
+    const el = document.createElement('div');
+    el.className = 'chart-spinner-wrap';
+    el.innerHTML = '<div class="chart-spinner"></div>';
+    box.appendChild(el);
+    return () => { if (el.parentNode) el.parentNode.removeChild(el); };
+  }
+
   // ── Employee: personal attendance donut ──
   function displayAttendanceChart(stats) {
     const canvas = document.getElementById('attendanceChart');
     if (!canvas) return;
     if (attendanceChartInstance) attendanceChartInstance.destroy();
+    _pinCanvas(canvas, 260, 260);
     attendanceChartInstance = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -27,10 +50,10 @@ window.SiomacCharts = (function () {
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } }
         }
@@ -39,10 +62,11 @@ window.SiomacCharts = (function () {
   }
 
   // ── Admin: 30-day daily attendance trend ──
-  function renderTrendLine(data) {
+  function renderTrendLine(data, rmSpinner) {
     destroyDash_('trend');
     const canvas = document.getElementById('trendLineChart');
     if (!canvas) return;
+    // responsive:true so Chart.js measures its own size — keeps tooltips/points aligned.
     dashCharts.trend = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
@@ -92,13 +116,15 @@ window.SiomacCharts = (function () {
         }
       }
     });
+    if (rmSpinner) rmSpinner();
   }
 
   // ── Admin: Department distribution doughnut ──
-  function renderDeptDist(data) {
+  function renderDeptDist(data, rmSpinner) {
     destroyDash_('dept');
     const canvas = document.getElementById('deptDistChart');
     if (!canvas) return;
+    _pinCanvas(canvas, 260, 260);
     dashCharts.dept = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -107,27 +133,28 @@ window.SiomacCharts = (function () {
           data: data.map(d => d.count),
           backgroundColor: data.map((_, i) => palette[i % palette.length]),
           borderWidth: 0,
-          cutout: '65%',
           hoverOffset: 8
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
       }
     });
+    if (rmSpinner) rmSpinner();
   }
 
   // ── Admin: Today's status bar chart ──
-  function renderStatusBars(stats) {
+  function renderStatusBars(stats, rmSpinner) {
     destroyDash_('status');
     const canvas = document.getElementById('statusBarChart');
     if (!canvas) return;
+    _pinCanvas(canvas, 320, 260);
     dashCharts.status = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: {
@@ -148,7 +175,7 @@ window.SiomacCharts = (function () {
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
@@ -161,13 +188,15 @@ window.SiomacCharts = (function () {
         }
       }
     });
+    if (rmSpinner) rmSpinner();
   }
 
   // ── Admin: Leave types doughnut ──
-  function renderLeaveTypes(types) {
+  function renderLeaveTypes(types, rmSpinner) {
     destroyDash_('leaves');
     const canvas = document.getElementById('leaveTypesChart');
     if (!canvas) return;
+    _pinCanvas(canvas, 260, 260);
     dashCharts.leaves = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -180,15 +209,16 @@ window.SiomacCharts = (function () {
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
       }
     });
+    if (rmSpinner) rmSpinner();
   }
 
   // ── Employee: personal hours trend bar chart ──
@@ -196,6 +226,7 @@ window.SiomacCharts = (function () {
     const canvas = document.getElementById('attendanceTrendChart');
     if (!canvas) return;
     if (trendChartInstance) trendChartInstance.destroy();
+    _pinCanvas(canvas, 500, 240);
     const sorted = records.slice().reverse();
     trendChartInstance = new Chart(canvas.getContext('2d'), {
       type: 'bar',
@@ -213,7 +244,7 @@ window.SiomacCharts = (function () {
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
@@ -270,13 +301,20 @@ window.SiomacCharts = (function () {
   }
 
   function renderDashboardCharts(data) {
+    // Inject spinners immediately — they're visible during the rAF delay.
+    const rm = {
+      trend:  _spinner('trendLineChart'),
+      dept:   _spinner('deptDistChart'),
+      status: _spinner('statusBarChart'),
+      leaves: _spinner('leaveTypesChart')
+    };
     // Double rAF: first frame applies display:block, second frame the browser
     // has measured layout so canvases have real dimensions for animation.
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      renderTrendLine(data.dailyTrend);
-      renderDeptDist(data.deptDistribution);
-      renderStatusBars(data.statusBreakdown);
-      renderLeaveTypes(data.leaveTypes);
+      renderTrendLine(data.dailyTrend,       rm.trend);
+      renderDeptDist(data.deptDistribution,  rm.dept);
+      renderStatusBars(data.statusBreakdown, rm.status);
+      renderLeaveTypes(data.leaveTypes,      rm.leaves);
       _populateDeptStats(data.deptDistribution || []);
       _populateStatusStats(data.statusBreakdown || {});
       _populateLeaveStats(data.leaveTypes || {});
@@ -285,7 +323,6 @@ window.SiomacCharts = (function () {
 
   // ── Silent in-place update — patches existing chart instances without redraw flicker ──
   function updateDashboardCharts(data) {
-    // Trend line — patch labels + both datasets
     if (dashCharts.trend && data.dailyTrend) {
       const t = dashCharts.trend;
       t.data.labels = data.dailyTrend.map(d => String(d.date).slice(5));
@@ -293,21 +330,18 @@ window.SiomacCharts = (function () {
       t.data.datasets[1].data = data.dailyTrend.map(d => d.late);
       t.update('none');
     }
-    // Dept doughnut
     if (dashCharts.dept && data.deptDistribution) {
       dashCharts.dept.data.labels = data.deptDistribution.map(d => d.name);
       dashCharts.dept.data.datasets[0].data = data.deptDistribution.map(d => d.count);
       dashCharts.dept.update('none');
       _populateDeptStats(data.deptDistribution);
     }
-    // Status bar
     if (dashCharts.status && data.statusBreakdown) {
       const s = data.statusBreakdown;
       dashCharts.status.data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
       dashCharts.status.update('none');
       _populateStatusStats(s);
     }
-    // Leave doughnut
     if (dashCharts.leaves && data.leaveTypes) {
       const l = data.leaveTypes;
       dashCharts.leaves.data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];

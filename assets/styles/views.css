@@ -1003,6 +1003,21 @@
 .chart-card-section .chart-container-md {
   padding: 18px 20px 20px;
 }
+
+/* ─── Chart loading spinner ─── */
+.chart-spinner-wrap {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 2;
+}
+.chart-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--siomac-red);
+  border-radius: 50%;
+  animation: chartSpin .7s linear infinite;
+}
+@keyframes chartSpin { to { transform: rotate(360deg); } }
 .chart-badge {
   font-size: 0.72rem; font-weight: 700;
   color: #fff; background: rgba(255,255,255,0.18);
