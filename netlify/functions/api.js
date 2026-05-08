@@ -267,7 +267,11 @@ async function listEmployees() {
   if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
-  return (users || []).map((u, i) => {
+  const usersArr = users || [];
+  const profileImages = await Promise.all(
+    usersArr.map(u => noPhoto(u.profile_image) ? Promise.resolve('') : getSignedUrl('profile-photos', u.profile_image))
+  );
+  return usersArr.map((u, i) => {
     const a = attMap[u.username];
     let todayStatus = 'notchecked';
     if (a && a.check_out_time) todayStatus = 'checkedout';
@@ -277,7 +281,7 @@ async function listEmployees() {
       employeeNumber: u.employee_number || '',
       department: deptMap[u.department_id] || '', departmentId: u.department_id || '',
       position: u.position || '', role: u.role, status: u.status === 'active' ? 'Active' : 'Inactive',
-      todayStatus
+      todayStatus, profileImage: profileImages[i] || ''
     };
   });
 }
