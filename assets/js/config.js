@@ -4,13 +4,13 @@ const SECTION_DEFS = {
   employee: [
     { id: 's-emp-attendance', label: 'Attendance',    icon: 'fa-calendar-check',    sub: "Today's check-in status and work hours" },
     { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',           sub: 'Your attendance log for the past 30 days' },
-    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-calendar-day',      sub: 'Submit requests and track approval status' }
+    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status' }
   ],
   manager: [
     { id: 's-mgr-overview',  label: 'Overview',        icon: 'fa-chart-pie',          sub: "A snapshot of your department's attendance today" },
     { id: 's-mgr-employees', label: 'My Team',         icon: 'fa-users',              sub: 'Who is in, late, or yet to clock in' },
     { id: 's-projectMap',    label: 'Live Map',        icon: 'fa-map-marked-alt',     sub: 'See where your team is right now' },
-    { id: 's-mgr-leaves',    label: 'Leave Requests',  icon: 'fa-calendar-day',       sub: 'Pending approvals waiting on you' },
+    { id: 's-mgr-leaves',    label: 'Leave Requests',  icon: 'fa-umbrella-beach',       sub: 'Pending approvals waiting on you' },
     { id: 's-payroll',       label: 'Payroll',         icon: 'fa-file-invoice-dollar',sub: 'Hours worked, rates applied and export-ready reports' }
   ],
   admin: [
@@ -20,7 +20,7 @@ const SECTION_DEFS = {
     { id: 's-adm-projects',    label: 'Project Sites', icon: 'fa-map-marker-alt',     sub: 'Field locations, boundaries and site details' },
     { id: 's-projectMap',      label: 'Live Map',      icon: 'fa-map-marked-alt',     sub: 'Live positions of everyone currently clocked in' },
     { id: 's-adm-attendance',  label: 'Attendance',    icon: 'fa-calendar-check',     sub: 'Full daily log — filter by month, dept or status' },
-    { id: 's-adm-leaves',      label: 'Leaves',        icon: 'fa-calendar-day',       sub: 'Approve, reject or flag leave applications' },
+    { id: 's-adm-leaves',      label: 'Leaves',        icon: 'fa-umbrella-beach',       sub: 'Approve, reject or flag leave applications' },
     { id: 's-adm-rates',       label: 'Hourly Rates',  icon: 'fa-money-bill-wave',    sub: 'Per-employee and per-department pay configuration' },
     { id: 's-payroll',         label: 'Payroll',       icon: 'fa-file-invoice-dollar',sub: 'Hours worked, rates applied and export-ready reports' }
   ]
