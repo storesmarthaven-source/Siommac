@@ -1823,6 +1823,40 @@
     </div>
   </div>
 
+  <!-- Employee Profile Drawer -->
+  <div id="empProfileDrawer" class="emp-drawer-overlay" aria-hidden="true">
+    <div class="emp-drawer" role="dialog" aria-labelledby="empDrawerName">
+      <div class="emp-drawer-header">
+        <div class="emp-drawer-avatar-wrap">
+          <div class="emp-drawer-avatar" id="empDrawerAvatar"></div>
+          <div class="emp-drawer-status-dot" id="empDrawerStatusDot"></div>
+        </div>
+        <div class="emp-drawer-title">
+          <div class="emp-drawer-name" id="empDrawerName"></div>
+          <div class="emp-drawer-pos" id="empDrawerPos"></div>
+          <div class="emp-drawer-empid" id="empDrawerEmpId"></div>
+        </div>
+        <button class="emp-drawer-close" id="closeEmpDrawerBtn" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="emp-drawer-body">
+        <div class="emp-drawer-section-label">Contact</div>
+        <div class="emp-drawer-row" id="empDrawerEmail"><i class="fas fa-envelope"></i><span>—</span></div>
+        <div class="emp-drawer-row" id="empDrawerPhone"><i class="fas fa-phone"></i><span>—</span></div>
+        <div class="emp-drawer-section-label" style="margin-top:18px">Details</div>
+        <div class="emp-drawer-row" id="empDrawerUsername"><i class="fas fa-at"></i><span></span></div>
+        <div class="emp-drawer-row" id="empDrawerDept"><i class="fas fa-sitemap"></i><span></span></div>
+        <div class="emp-drawer-row" id="empDrawerRole"><i class="fas fa-briefcase"></i><span></span></div>
+        <div class="emp-drawer-row" id="empDrawerStatus"><i class="fas fa-circle"></i><span></span></div>
+        <div class="emp-drawer-section-label" style="margin-top:18px">Today</div>
+        <div class="emp-drawer-row" id="empDrawerToday"><i class="fas fa-clock"></i><span></span></div>
+      </div>
+      <div class="emp-drawer-footer">
+        <button class="btn btn-outline-secondary" id="empDrawerDeleteBtn"><i class="fas fa-trash"></i> Delete</button>
+        <button class="btn btn-danger-primary" id="empDrawerEditBtn"><i class="fas fa-edit"></i> Edit Employee</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Employee Modal (custom overlay) -->
   <div id="addEmployeeModal" class="emp-modal-overlay">
     <div class="emp-modal-container">

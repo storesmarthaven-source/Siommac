@@ -932,6 +932,19 @@ const AttendanceSystem = (function() {
         closeEditEmpModal();
       } else if (event.target.matches('#updateEmployeeBtn, #updateEmployeeBtn *')) {
         updateEmployee();
+      // Employee profile drawer
+      } else if (event.target.matches('#closeEmpDrawerBtn, #closeEmpDrawerBtn *')) {
+        closeEmpDrawer();
+      } else if (event.target.matches('#empProfileDrawer') && !event.target.closest('.emp-drawer')) {
+        closeEmpDrawer();
+      } else if (event.target.matches('#empDrawerEditBtn, #empDrawerEditBtn *')) {
+        const u = document.getElementById('empProfileDrawer').dataset.username;
+        closeEmpDrawer();
+        if (u) editEmployee(u);
+      } else if (event.target.matches('#empDrawerDeleteBtn, #empDrawerDeleteBtn *')) {
+        const u = document.getElementById('empProfileDrawer').dataset.username;
+        closeEmpDrawer();
+        if (u) deleteEmployee(u);
       // Employee view toggle
       } else if (event.target.matches('#empCardViewBtn, #empCardViewBtn *')) {
         _empCardView = true;
@@ -1099,6 +1112,11 @@ const AttendanceSystem = (function() {
       } else if (event.target.closest('.btn-delete-employee')) {
         const username = event.target.closest('.btn-delete-employee').dataset.username;
         deleteEmployee(username);
+      } else if (event.target.closest('.emp-card') && !event.target.closest('.emp-card-actions')) {
+        // Click anywhere on card (outside action buttons) → open profile drawer
+        const card = event.target.closest('.emp-card');
+        const username = card.querySelector('.btn-edit-employee') && card.querySelector('.btn-edit-employee').dataset.username;
+        if (username) openEmpDrawer(username);
       }
       
       // Admin department actions
@@ -2631,6 +2649,67 @@ const AttendanceSystem = (function() {
 
   function closeEditEmpModal() {
     document.getElementById('editEmployeeModal').classList.remove('active');
+  }
+
+  // ─── Employee Profile Drawer ───────────────────────────────────────────────
+
+  function closeEmpDrawer() {
+    const drawer = document.getElementById('empProfileDrawer');
+    if (drawer) { drawer.classList.remove('active'); drawer.dataset.username = ''; }
+  }
+
+  function openEmpDrawer(username) {
+    const drawer = document.getElementById('empProfileDrawer');
+    if (!drawer) return;
+    // Find employee in the already-loaded list (instant, no API call)
+    const emp = _empAllList.find(e => e.username === username);
+    if (!emp) return;
+
+    drawer.dataset.username = username;
+
+    // Avatar
+    const avatarEl = document.getElementById('empDrawerAvatar');
+    const initial  = (emp.fullName || emp.username || '?').charAt(0).toUpperCase();
+    if (emp.profileImage) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(emp.profileImage)}" alt="">`;
+    } else {
+      avatarEl.textContent = initial;
+    }
+
+    // Status dot
+    const dot = document.getElementById('empDrawerStatusDot');
+    const isActive = emp.status === 'Active';
+    dot.className = 'emp-drawer-status-dot ' + (isActive ? 'is-active' : 'is-inactive');
+
+    // Header text
+    document.getElementById('empDrawerName').textContent  = emp.fullName || emp.username;
+    document.getElementById('empDrawerPos').textContent   = [emp.position, emp.department].filter(Boolean).join(' · ') || '—';
+    document.getElementById('empDrawerEmpId').textContent = emp.employeeNumber || 'No ID';
+
+    // Helper: set a drawer row value
+    function setRow(id, value, isMuted) {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.querySelector('span').textContent = value || '—';
+      row.classList.toggle('muted', !value || isMuted === true);
+    }
+
+    // Contact
+    setRow('empDrawerEmail', emp.email);
+    setRow('empDrawerPhone', emp.phone);
+
+    // Details
+    setRow('empDrawerUsername', '@' + emp.username);
+    setRow('empDrawerDept', emp.department);
+    const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
+    setRow('empDrawerRole', roleCap);
+    setRow('empDrawerStatus', isActive ? 'Active' : 'Inactive');
+
+    // Today status
+    const todayLabels = { checkedin: 'Checked In', checkedout: 'Checked Out', notchecked: 'Not Checked In' };
+    setRow('empDrawerToday', todayLabels[emp.todayStatus] || 'Not Checked In');
+
+    drawer.classList.add('active');
   }
 
   // Keep old name as alias for event delegation
