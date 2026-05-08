@@ -995,7 +995,7 @@
   display: flex; align-items: center; margin: 0;
 }
 .chart-card-header h3 i {
-  color: #FFB712 !important;
+  color: #fff !important;
 }
 .chart-card-section .chart-container-md {
   padding: 18px 20px 20px;
