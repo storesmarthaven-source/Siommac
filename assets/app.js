@@ -252,14 +252,22 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Live Project Map (admin/manager) ───
+  let _liveDataHash = ''; // fingerprint of last-rendered live data
   function loadLiveAttendance() {
     _skelOnce('s-projectMap', () => setSkel('liveEmployeesList', skelList(3)));
     const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
     api('getLiveAttendance', { scope }).then(res => {
-      liveData = (res.success && res.data) || [];
+      const fresh = (res.success && res.data) || [];
+      // Build a lightweight fingerprint: id + lat/lng + status per row
+      const hash = fresh.map(r => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';');
+      const markersNeedUpdate = hash !== _liveDataHash;
+      liveData = fresh;
       _markLoaded('s-projectMap');
-      plotLiveEmployees(liveData);
-      renderLivePanel(liveData);
+      if (markersNeedUpdate) {
+        _liveDataHash = hash;
+        plotLiveEmployees(liveData); // only redraw markers when data changed
+      }
+      renderLivePanel(liveData); // panel sidebar always updates (lightweight DOM)
     });
   }
 
@@ -724,7 +732,14 @@ const AttendanceSystem = (function() {
         break;
       case 's-emp-attendance':  checkStatus(); loadChart(); loadTrendChart(); break;
       case 's-emp-history':     loadHistoryInline(); break;
-      case 's-projectMap':      setTimeout(() => { if (!map) initializeMap(); else map.invalidateSize(); }, 80); loadLiveAttendance(); break;
+      case 's-projectMap':
+        // Only init/invalidate when user navigates to the map (first load).
+        // Background syncs skip this — map viewport must not reset mid-use.
+        if (!_isLoaded('s-projectMap')) {
+          setTimeout(() => { if (!map) initializeMap(); else map.invalidateSize(); }, 80);
+        }
+        loadLiveAttendance();
+        break;
       case 's-emp-leave':       loadLeaveRequests(); break;
       case 's-mgr-overview':    loadDepartmentData(); break;
       case 's-mgr-employees':   loadDepartmentEmployees(); break;
