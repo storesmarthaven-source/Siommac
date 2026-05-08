@@ -685,6 +685,8 @@ const AttendanceSystem = (function() {
     if (item) {
       document.getElementById('pageTitleIcon').className = 'fas ' + item.icon;
       document.getElementById('pageTitleText').textContent = item.label;
+      const sub = document.getElementById('pageTitleSub');
+      if (sub) sub.textContent = item.sub || '';
     }
 
     // close mobile drawer + backdrop after click

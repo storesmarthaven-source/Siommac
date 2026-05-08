@@ -220,10 +220,18 @@
 .page-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 24px; flex-wrap: nowrap; gap: 12px;
-  min-height: 52px;
+  min-height: 52px; align-items: center;
 }
 .page-header-left {
   display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
+}
+#pageTitleBlock {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+#pageTitleSub {
+  font-size: 0.78rem; color: var(--text-muted); margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-left: 2px;
 }
 .page-header-right {
   display: flex; align-items: center; gap: 10px; flex-shrink: 0;

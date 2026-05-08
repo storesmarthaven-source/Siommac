@@ -2,34 +2,34 @@
 (function () {
 const SECTION_DEFS = {
   employee: [
-    { id: 's-emp-attendance', label: 'Attendance',    icon: 'fa-calendar-check' },
-    { id: 's-emp-history',    label: 'My History',    icon: 'fa-history' },
-    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-calendar-day' }
+    { id: 's-emp-attendance', label: 'Attendance',    icon: 'fa-calendar-check',    sub: "Today's check-in status and work hours" },
+    { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',           sub: 'Your attendance log for the past 30 days' },
+    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-calendar-day',      sub: 'Submit requests and track approval status' }
   ],
   manager: [
-    { id: 's-mgr-overview',  label: 'Overview',        icon: 'fa-chart-pie' },
-    { id: 's-mgr-employees', label: 'My Team',         icon: 'fa-users' },
-    { id: 's-projectMap',    label: 'Live Map',        icon: 'fa-map-marked-alt' },
-    { id: 's-mgr-leaves',    label: 'Leave Requests',  icon: 'fa-calendar-day' },
-    { id: 's-payroll',       label: 'Payroll',         icon: 'fa-file-invoice-dollar' }
+    { id: 's-mgr-overview',  label: 'Overview',        icon: 'fa-chart-pie',          sub: "A snapshot of your department's attendance today" },
+    { id: 's-mgr-employees', label: 'My Team',         icon: 'fa-users',              sub: 'Who is in, late, or yet to clock in' },
+    { id: 's-projectMap',    label: 'Live Map',        icon: 'fa-map-marked-alt',     sub: 'See where your team is right now' },
+    { id: 's-mgr-leaves',    label: 'Leave Requests',  icon: 'fa-calendar-day',       sub: 'Pending approvals waiting on you' },
+    { id: 's-payroll',       label: 'Payroll',         icon: 'fa-file-invoice-dollar',sub: 'Hours worked, rates applied and export-ready reports' }
   ],
   admin: [
-    { id: 's-adm-dashboard',   label: 'Dashboard',     icon: 'fa-tachometer-alt' },
-    { id: 's-adm-employees',   label: 'Employees',     icon: 'fa-users' },
-    { id: 's-adm-departments', label: 'Departments',   icon: 'fa-building' },
-    { id: 's-adm-projects',    label: 'Project Sites', icon: 'fa-map-marker-alt' },
-    { id: 's-projectMap',      label: 'Live Map',      icon: 'fa-map-marked-alt' },
-    { id: 's-adm-attendance',  label: 'Attendance',    icon: 'fa-calendar-check' },
-    { id: 's-adm-leaves',      label: 'Leaves',        icon: 'fa-calendar-day' },
-    { id: 's-adm-rates',       label: 'Hourly Rates',  icon: 'fa-money-bill-wave' },
-    { id: 's-payroll',         label: 'Payroll',       icon: 'fa-file-invoice-dollar' }
+    { id: 's-adm-dashboard',   label: 'Dashboard',     icon: 'fa-tachometer-alt',     sub: "What's happening across the company right now" },
+    { id: 's-adm-employees',   label: 'Employees',     icon: 'fa-users',              sub: 'Add, edit and manage the workforce' },
+    { id: 's-adm-departments', label: 'Departments',   icon: 'fa-building',           sub: 'Structure your organisation and assign leads' },
+    { id: 's-adm-projects',    label: 'Project Sites', icon: 'fa-map-marker-alt',     sub: 'Field locations, boundaries and site details' },
+    { id: 's-projectMap',      label: 'Live Map',      icon: 'fa-map-marked-alt',     sub: 'Live positions of everyone currently clocked in' },
+    { id: 's-adm-attendance',  label: 'Attendance',    icon: 'fa-calendar-check',     sub: 'Full daily log — filter by month, dept or status' },
+    { id: 's-adm-leaves',      label: 'Leaves',        icon: 'fa-calendar-day',       sub: 'Approve, reject or flag leave applications' },
+    { id: 's-adm-rates',       label: 'Hourly Rates',  icon: 'fa-money-bill-wave',    sub: 'Per-employee and per-department pay configuration' },
+    { id: 's-payroll',         label: 'Payroll',       icon: 'fa-file-invoice-dollar',sub: 'Hours worked, rates applied and export-ready reports' }
   ]
 };
 
 const COMMON_ITEMS = [
-  { id: 's-profile',  label: 'My Profile', icon: 'fa-user-circle' },
-  { id: 's-settings', label: 'Settings',   icon: 'fa-palette' },
-  { id: 's-about',    label: 'About',      icon: 'fa-info-circle' }
+  { id: 's-profile',  label: 'My Profile', icon: 'fa-user-circle', sub: 'Your account details, photo and contact info' },
+  { id: 's-settings', label: 'Settings',   icon: 'fa-palette',     sub: 'Themes, layout, security and company branding' },
+  { id: 's-about',    label: 'About',      icon: 'fa-info-circle', sub: 'Version, credits and system information' }
 ];
 
 const PALETTES = [
