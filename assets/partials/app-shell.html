@@ -30,9 +30,10 @@
           <img id="loginLogo" class="login-brand-logo" src="assets/images/logo.png" alt="SIOMAC LTD." onerror="this.style.display='none'">
         </div>
 
+        <div class="login-form-body">
         <div class="login-form-title">
           <h3 id="loginTitle">Access Portal</h3>
-          <p id="loginSubtitle">Sign in with your corporate credentials</p>
+          <p id="loginSubtitle">Sign in to manage attendance, track project sites, handle leave requests, and access real-time workforce insights.</p>
         </div>
 
         <form id="loginForm" novalidate>
@@ -52,17 +53,20 @@
             </label>
           </div>
 
+          <div id="loginErrorBanner" class="login-error-banner" style="display:none;"></div>
+
           <button type="submit" id="loginBtn" class="login-cta-btn">
+            <i class="fas fa-sign-in-alt"></i>
             <span id="loginButton">Sign in to Dashboard</span>
-            <i class="fas fa-arrow-right"></i>
           </button>
 
           <div class="login-security-note">
             <i class="fas fa-fingerprint"></i>
-            <span>Encrypted access · SIOMAC internal systems</span>
+            <span><strong>Encrypted Access · SIOMAC Internal Systems</strong></span>
             <i class="fas fa-shield-alt"></i>
           </div>
         </form>
+        </div><!-- /.login-form-body -->
       </div>
 
     </div>
@@ -431,17 +435,19 @@
 
         <!-- Filter bar + Request button -->
         <div class="lv-filters-bar">
+          <div class="lv-search-box">
+            <i class="fas fa-search" style="color:var(--text-muted);font-size:13px;"></i>
+            <input type="text" id="empLeaveSearch" placeholder="Search leaves…" autocomplete="off">
+          </div>
           <div class="lv-tabs">
             <button class="lv-tab-btn active" data-lv-tab="emp-all">All Requests</button>
             <button class="lv-tab-btn" data-lv-tab="emp-pending">Pending</button>
             <button class="lv-tab-btn" data-lv-tab="emp-approved">Approved</button>
             <button class="lv-tab-btn" data-lv-tab="emp-rejected">Rejected</button>
           </div>
-          <div class="lv-search-box">
-            <i class="fas fa-search" style="color:var(--text-muted);font-size:13px;"></i>
-            <input type="text" id="empLeaveSearch" placeholder="Search leaves…" autocomplete="off">
+          <div class="lv-bar-actions">
+            <button id="requestLeaveBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Request</button>
           </div>
-          <button id="requestLeaveBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> New Request</button>
         </div>
 
         <!-- Table -->
@@ -510,14 +516,16 @@
             <i class="fas fa-search" style="color:var(--text-muted)"></i>
             <input type="text" id="histSearchInput" placeholder="Search by date or day…">
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <div class="eh-filter-group">
             <select id="histStatusFilter" class="eh-filter-select">
               <option value="all">All Status</option>
               <option value="present">Present</option>
               <option value="late">Late</option>
               <option value="absent">Absent</option>
             </select>
-            <button id="histResetBtn" class="btn btn-secondary btn-sm"><i class="fas fa-undo-alt"></i> Reset</button>
+          </div>
+          <div class="lv-bar-actions">
+            <button id="histResetBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-undo-alt"></i> Reset</button>
           </div>
         </div>
 
@@ -635,7 +643,10 @@
             <button class="lv-tab-btn" data-lv-tab="mgr-approved">Approved</button>
             <button class="lv-tab-btn" data-lv-tab="mgr-rejected">Rejected</button>
           </div>
-          <button id="refreshManagerLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+          <div class="lv-bar-spacer"></div>
+          <div class="lv-bar-actions">
+            <button id="refreshManagerLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
+          </div>
         </div>
 
         <!-- Table -->
@@ -850,6 +861,10 @@
 
         <!-- Filters + view toggle bar -->
         <div class="emp-filters-bar">
+          <div class="emp-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="empSearchInput" placeholder="Search by name, position…">
+          </div>
           <div class="emp-filter-group">
             <select class="emp-filter-select" id="empRoleFilter">
               <option value="all">All Roles</option>
@@ -862,10 +877,6 @@
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
-          </div>
-          <div class="emp-search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="empSearchInput" placeholder="Search by name, position…">
           </div>
           <div class="emp-filter-actions">
             <div class="emp-view-toggle">
@@ -944,6 +955,7 @@
             <i class="fas fa-search"></i>
             <input type="text" id="deptSearchInput" placeholder="Search departments…">
           </div>
+          <div class="lv-bar-spacer"></div>
           <div class="emp-filter-actions">
             <div class="dept-view-toggle">
               <button class="dept-view-btn active" id="deptListViewBtn" title="List view"><i class="fas fa-list"></i></button>
@@ -1008,7 +1020,8 @@
             <i class="fas fa-search"></i>
             <input type="text" id="projectSearchInput" placeholder="Search by name, location…">
           </div>
-          <div class="emp-filter-actions">
+          <div class="lv-bar-spacer"></div>
+          <div class="lv-bar-actions">
             <button id="addProjectBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Project Site</button>
             <button id="refreshProjectsBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
@@ -1056,6 +1069,10 @@
 
         <!-- Filters bar -->
         <div class="att-filters-bar">
+          <div class="att-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="attSearchInput" placeholder="Search employee…">
+          </div>
           <div class="att-filter-group">
             <select class="att-filter-select" id="attendanceMonth">
               <option value="0">January</option><option value="1">February</option><option value="2">March</option>
@@ -1068,13 +1085,9 @@
               <option value="all">All Departments</option>
             </select>
           </div>
-          <div class="att-search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="attSearchInput" placeholder="Search employee…">
-          </div>
           <div class="att-filter-actions">
-            <button id="refreshAttendanceBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-sync-alt"></i> Refresh</button>
             <button id="exportAttendanceBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-download"></i> Export</button>
+            <button id="refreshAttendanceBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
         </div>
 
@@ -1152,24 +1165,26 @@
 
         <!-- Filter bar -->
         <div class="lv-filters-bar">
+          <div class="lv-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="leaveSearchInput" placeholder="Search employee…">
+          </div>
           <div class="lv-tabs">
             <button class="lv-tab-btn active" data-lv-tab="adm-all">All</button>
             <button class="lv-tab-btn" data-lv-tab="adm-pending">Pending</button>
             <button class="lv-tab-btn" data-lv-tab="adm-approved">Approved</button>
             <button class="lv-tab-btn" data-lv-tab="adm-rejected">Rejected</button>
           </div>
-          <div class="lv-search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="leaveSearchInput" placeholder="Search employee…">
+          <div class="lv-bar-actions">
+            <select id="leaveTypeFilter" class="lv-filter-select">
+              <option value="all">All Types</option>
+              <option value="sick">Sick</option>
+              <option value="casual">Casual</option>
+              <option value="annual">Annual</option>
+              <option value="medical">Medical</option>
+            </select>
+            <button id="refreshLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
           </div>
-          <select id="leaveTypeFilter" class="lv-filter-select">
-            <option value="all">All Types</option>
-            <option value="sick">Sick</option>
-            <option value="casual">Casual</option>
-            <option value="annual">Annual</option>
-            <option value="medical">Medical</option>
-          </select>
-          <button id="refreshLeavesBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
         </div>
 
         <!-- Table -->
@@ -1244,7 +1259,9 @@
               <option value="manager">Manager</option>
               <option value="employee">Employee</option>
             </select>
-            <button id="hrResetFiltersBtn" class="hr-btn-outline" style="padding:8px 16px;"><i class="fas fa-undo-alt"></i> Reset</button>
+          </div>
+          <div class="lv-bar-actions">
+            <button id="hrResetFiltersBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-undo-alt"></i> Reset</button>
           </div>
         </div>
 

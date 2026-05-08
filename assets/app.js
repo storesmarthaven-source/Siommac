@@ -30,9 +30,10 @@ const AttendanceSystem = (function() {
 
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
-  const SESSION_KEY      = 'siomac_session_v1';
-  const SESSION_DURATION = 60 * 60 * 1000; // 1 hour
-  const SESSION_WARN_AT  = 5  * 60 * 1000; // warn 5 min before expiry
+  const SESSION_KEY           = 'siomac_session_v1';
+  const SESSION_DURATION      = 60 * 60 * 1000;        // 1 hour (default)
+  const SESSION_DURATION_LONG = 7 * 24 * 60 * 60 * 1000; // 7 days (remember me)
+  const SESSION_WARN_AT       = 5 * 60 * 1000;         // warn 5 min before expiry
   let _sessExpTimer  = null; // auto-logout timer
   let _sessWarnTimer = null; // 5-min warning timer
   let _sessTickTimer = null; // 30s tick for sidebar countdown
@@ -55,7 +56,7 @@ const AttendanceSystem = (function() {
   const translations = {
     en: {
       companyName: "My Company",
-      loginTitle: "Attendance System Login", loginSubtitle: "Access your dashboard",
+      loginTitle: "Attendance System Login", loginSubtitle: "Sign in to manage attendance, track project sites, handle leave requests, and access real-time workforce insights.",
       username: "Username", password: "Password", rememberMe: "Remember Me", loginButton: "Log In",
       welcome: "Welcome", checkIn: "Check In with Selfie", checkOut: "Check Out with Selfie",
       viewHistory: "View My History", monthlySummary: "This Month's Summary", todayStatus: "Today's Status",
@@ -96,7 +97,10 @@ const AttendanceSystem = (function() {
   // Utility functions — all popups go through the custom cpop module (no SweetAlert2)
   const showSpinner = (msg) => cpop.fire({ loading: true, title: msg || 'Loading...', allowOutsideClick: false, showConfirmButton: false });
   const hideSpinner = () => cpop.close();
-  const showPopup = (type, title, text) => cpop.fire({ icon: type, title, text, timer: 4000, timerProgressBar: true });
+  const showPopup = (type, title, text) => {
+    const isSuccess = type === 'success';
+    return cpop.fire({ icon: type, title, text, ...(isSuccess ? { timer: 3000, timerProgressBar: true } : { showConfirmButton: true }) });
+  };
 
   // Get current location (simplified)
   const getCurrentLocation = () => {
@@ -416,9 +420,10 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Session helpers (1-hour timeout) ───
-  function saveSession(payload) {
+  function saveSession(payload, rememberMe) {
     try {
-      const data = Object.assign({}, payload, { expiresAt: Date.now() + SESSION_DURATION });
+      const duration = rememberMe ? SESSION_DURATION_LONG : SESSION_DURATION;
+      const data = Object.assign({}, payload, { expiresAt: Date.now() + duration, rememberMe: !!rememberMe });
       localStorage.setItem(SESSION_KEY, JSON.stringify(data));
     } catch (_) {}
   }
@@ -1276,6 +1281,8 @@ const AttendanceSystem = (function() {
     
     document.getElementById('username').classList.remove('is-invalid');
     document.getElementById('password').classList.remove('is-invalid');
+    const errBanner = document.getElementById('loginErrorBanner');
+    if (errBanner) { errBanner.style.display = 'none'; errBanner.textContent = ''; }
     
     let isValid = true;
     if (!username || username.length < 3) {
@@ -1307,9 +1314,15 @@ const AttendanceSystem = (function() {
     hideSpinner();
 
     if (!result.success) {
-      showPopup('error',
-        'Login Failed',
-        result.message || ('Invalid username or password.'));
+      const msg = result.message || 'Invalid username or password.';
+      // Show inline error banner
+      const errBanner = document.getElementById('loginErrorBanner');
+      if (errBanner) { errBanner.textContent = msg; errBanner.style.display = 'flex'; }
+      // Shake + highlight both fields
+      const uEl = document.getElementById('username');
+      const pEl = document.getElementById('password');
+      if (uEl) { uEl.classList.add('is-invalid'); }
+      if (pEl) { pEl.classList.add('is-invalid'); pEl.value = ''; pEl.focus(); }
       return;
     }
 
@@ -1319,13 +1332,14 @@ const AttendanceSystem = (function() {
     currentUser = null; currentUserId = null; currentFullName = null;
     currentDeptId = null; currentRole = null;
 
-    if (document.getElementById('rememberMe').checked) {
+    const rememberMe = document.getElementById('rememberMe').checked;
+    if (rememberMe) {
       localStorage.setItem('rememberedUser', result.username);
     } else {
       localStorage.removeItem('rememberedUser');
     }
 
-    // persist 1-hour session for auto-restore on reload
+    // persist session — 7 days if remember me, 1 hour otherwise
     saveSession({
       userId: result.userId, username: result.username, fullName: result.fullName,
       role: result.role, departmentId: result.departmentId || '', position: result.position || '',
@@ -1333,7 +1347,7 @@ const AttendanceSystem = (function() {
       token: result.token || '',
       companyName: result.companyName || '', companyLogoUrl: result.companyLogoUrl || '',
       profileImage: result.profileImage || ''
-    });
+    }, rememberMe);
 
     applySession(result, /*announce*/ true);
   }
@@ -1418,11 +1432,7 @@ const AttendanceSystem = (function() {
     startSessionTimer();
     updateLanguageUI();
 
-    if (announce) {
-      showPopup('success',
-        'Login Successful',
-        `${'Welcome'}, ${currentFullName}!`);
-    }
+    // No login success popup — dashboard loads immediately
   }
 
   function startAutoSync() {

@@ -90,7 +90,7 @@
 
 .login-hero-stats {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.75rem;
 }
 .login-stat {
@@ -111,30 +111,37 @@
 /* ── FORM SIDE ── */
 .login-form-side {
   width: 58%;
-  padding: 2.8rem 2.5rem;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
-/* Brand logo area */
+/* Brand logo — full-width centered top section, separate from form body */
 .login-brand-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 110px;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(27,45,85,0.1);
+  padding: 2.2rem 2.5rem 1.8rem;
+  border-bottom: 2px solid rgba(27,45,85,0.08);
+  background: #fff;
 }
 .login-brand-logo {
   display: block;
-  width: 320px;
-  max-width: 100%;
+  width: 380px;
+  max-width: 90%;
   height: auto;
   object-fit: contain;
   border-radius: 12px;
+}
+
+/* Form body — scrollable, fills remaining space */
+.login-form-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.4rem 2.5rem 2.8rem;
+  overflow-y: auto;
 }
 
 /* Form title */
@@ -219,6 +226,35 @@
   flex-shrink: 0;
 }
 
+/* Inline login error banner */
+.login-error-banner {
+  background: rgba(255,183,18,0.12);
+  border: 1.5px solid rgba(255,183,18,0.4);
+  border-left: 4px solid #FFB712;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #7A5500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  animation: loginErrIn .2s ease;
+}
+.login-error-banner::before {
+  content: '\f06a';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  color: #FFB712;
+}
+@keyframes loginErrIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* CTA button */
 .login-cta-btn {
   width: 100%;
@@ -236,19 +272,11 @@
   gap: 12px;
   cursor: pointer;
   transition: all 0.25s;
-  box-shadow: 0 4px 16px rgba(228,12,12,0.28);
+  box-shadow: none;
   margin-bottom: 1.2rem;
 }
 .login-cta-btn:hover {
   background: #C90B0B;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(228,12,12,0.38);
-}
-.login-cta-btn i {
-  transition: transform 0.2s;
-}
-.login-cta-btn:hover i {
-  transform: translateX(4px);
 }
 .login-cta-btn:disabled {
   opacity: 0.75;
@@ -295,7 +323,13 @@
     justify-content: center;
   }
   .login-form-side {
-    padding: 2.2rem 1.8rem;
+    padding: 0;
+  }
+  .login-brand-header {
+    padding: 1.6rem 1.8rem 1.4rem;
+  }
+  .login-form-body {
+    padding: 1.8rem 1.8rem 2rem;
   }
 }
 @media (max-width: 480px) {
@@ -306,6 +340,6 @@
     font-size: 1.25rem;
   }
   .login-brand-logo {
-    width: 240px;
+    width: 260px;
   }
 }
