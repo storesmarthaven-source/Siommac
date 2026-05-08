@@ -403,6 +403,38 @@
           </div>
         </div>
 
+        <!-- stat cards row -->
+        <div class="lm-stat-cards-row">
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-bolt"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="liveActiveCount">0</div>
+              <div class="stat-card-label">Active Now</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="liveCheckedInCount">0</div>
+              <div class="stat-card-label">Checked In</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="liveLateCount">0</div>
+              <div class="stat-card-label">Late Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red"><i class="fas fa-map-pin"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="liveOnSiteCount">0</div>
+              <div class="stat-card-label">On Site</div>
+            </div>
+          </div>
+        </div>
+
         <!-- map + activity panel -->
         <div class="lm-layout">
           <!-- map -->
@@ -414,12 +446,6 @@
           <div class="lm-activity-panel">
             <div class="lm-panel-header">
               <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
-            </div>
-            <div class="lm-live-stats">
-              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveActiveCount">0</div><div class="lm-stat-label">Active Now</div></div>
-              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveCheckedInCount">0</div><div class="lm-stat-label">Checked In</div></div>
-              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveLateCount">0</div><div class="lm-stat-label">Late Today</div></div>
-              <div class="lm-stat-badge"><div class="lm-stat-number" id="liveOnSiteCount">0</div><div class="lm-stat-label">On Site</div></div>
             </div>
             <div class="lm-employees-list" id="liveEmployeesList"></div>
             <div class="lm-legend">
