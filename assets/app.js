@@ -766,7 +766,6 @@ const AttendanceSystem = (function() {
         { btn: 'hdrNotifBtn',  modal: 'hdrNotifModal'  },
         { btn: 'hdrMsgBtn',    modal: 'hdrMsgModal'    },
         { btn: 'hdrTicketBtn', modal: 'hdrTicketModal' },
-        { btn: 'hdrUserBtn',   modal: 'hdrUserModal'   },
       ];
       function closeAll() {
         pairs.forEach(p => {

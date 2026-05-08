@@ -108,6 +108,25 @@
             <span id="pageTitleText">Operations Dashboard</span>
           </h1>
         </div>
+        <div class="page-header-right">
+          <div class="hdr-icon-group">
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrNotifBtn" title="Notifications">
+              <i class="fas fa-bell"></i>
+              <span class="hdr-badge" id="hdrNotifBadge">4</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrMsgBtn" title="Messages">
+              <i class="fas fa-comment-dots"></i>
+              <span class="hdr-badge" id="hdrMsgBadge">2</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrTicketBtn" title="Support Tickets">
+              <i class="fas fa-ticket-alt"></i>
+              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
+            </button>
+            <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn hdr-profile-btn--pill" id="hdrProfileBtn" title="My Profile">
+              <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ── Notification Modal ── -->
@@ -675,31 +694,10 @@
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
 
-        <!-- Today's Overview header row -->
-        <div class="dash-overview-header">
-          <div class="dash-overview-title">
-            <i class="fas fa-chart-pie"></i>
-            <span>Today's Overview</span>
-          </div>
-          <div class="dash-overview-actions">
-            <div class="hdr-icon-group">
-              <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrNotifBtn" title="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="hdr-badge" id="hdrNotifBadge">4</span>
-              </button>
-              <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrMsgBtn" title="Messages">
-                <i class="fas fa-comment-dots"></i>
-                <span class="hdr-badge" id="hdrMsgBadge">2</span>
-              </button>
-              <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrTicketBtn" title="Support Tickets">
-                <i class="fas fa-ticket-alt"></i>
-                <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
-              </button>
-              <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn hdr-profile-btn--pill" id="hdrProfileBtn" title="My Profile">
-                <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
-              </button>
-            </div>
-          </div>
+        <!-- Today's Overview title -->
+        <div class="dash-overview-title">
+          <i class="fas fa-chart-pie"></i>
+          <span>Today's Overview</span>
         </div>
 
         <!-- Stat cards -->
