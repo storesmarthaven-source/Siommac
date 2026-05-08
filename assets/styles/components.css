@@ -34,7 +34,7 @@
 .btn-outline-primary:hover { background: var(--siomac-navy) !important; color: white !important; }
 .btn-outline-danger  { background: transparent !important; border: 1.5px solid var(--danger) !important; color: var(--danger) !important; }
 .btn-outline-danger:hover  { background: var(--danger) !important; color: white !important; }
-/* Refresh / icon-only secondary outline buttons — perfect circle */
+/* Secondary outline buttons — icon-only = circle, with text = pill */
 .btn-outline-secondary {
   background: transparent !important;
   border: 1.5px solid var(--border) !important;
@@ -47,6 +47,20 @@
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0;
+}
+/* When .btn-outline-secondary has text (e.g. Export, Reset) — use pill shape */
+#exportAttendanceBtn,
+#histResetBtn,
+#exportHistoryBtn,
+.btn-outline-secondary.btn-sm:not([title]):has(span),
+.btn-outline-secondary.has-label {
+  border-radius: 8px !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 6px 14px !important;
+  gap: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
 }
 .btn-outline-secondary:hover {
   background: var(--siomac-navy) !important;
