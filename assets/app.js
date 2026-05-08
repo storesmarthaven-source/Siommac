@@ -27,6 +27,7 @@ const AttendanceSystem = (function() {
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
   let _isSyncing = false; // when true, suppress skeleton injection (background refresh shouldn't flash)
+  let _dashChartsLoaded = false; // charts only rendered once per session to prevent re-render flicker on section revisit
 
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
@@ -612,7 +613,7 @@ const AttendanceSystem = (function() {
     applyPalette(id);                      // optimistic local apply
     renderPalettes();                      // refresh checkmarks
     // re-render any open charts so their hardcoded color choices follow the new palette
-    if (document.getElementById('s-adm-dashboard') && document.getElementById('s-adm-dashboard').classList.contains('active')) loadDashboardCharts();
+    if (document.getElementById('s-adm-dashboard') && document.getElementById('s-adm-dashboard').classList.contains('active')) loadDashboardCharts(true);
     if (SiomacCharts.hasAttendanceChart()) loadChart();
     if (SiomacCharts.hasTrendChart()) loadTrendChart();
     api('updateColorScheme', { username: currentUser, scheme: id }).then(res => {
@@ -1478,6 +1479,7 @@ const AttendanceSystem = (function() {
     currentRole = null;
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
+    _dashChartsLoaded = false;  // reset so dashboard charts re-render on next login
     locationWatchId = null;
     syncInterval = null;
     dashboardRefreshInterval = null;
@@ -1834,10 +1836,16 @@ const AttendanceSystem = (function() {
     set('empTotalDays',   (stats.present ?? 0) + (stats.absent ?? 0));
   }
 
-  // Admin dashboard charts (2x2)
-  function loadDashboardCharts() {
+  // Admin dashboard charts — full render on first load, silent in-place update on revisits
+  function loadDashboardCharts(forceReload) {
     api('getDashboardCharts').then(res => {
-      if (res.success) SiomacCharts.renderDashboardCharts(res.data);
+      if (!res.success) return;
+      if (_dashChartsLoaded && !forceReload) {
+        SiomacCharts.updateDashboardCharts(res.data); // silent patch, no flicker
+      } else {
+        SiomacCharts.renderDashboardCharts(res.data); // full render on first load
+        _dashChartsLoaded = true;
+      }
     });
   }
 
@@ -2482,7 +2490,10 @@ const AttendanceSystem = (function() {
 
   // Admin Dashboard Functions
   function loadDashboardData() {
-    skelStatValues(['totalEmployees','presentToday','absentToday','onLeaveToday','activeLocations','lateToday']);
+    // Only show skeleton placeholders on first load — revisits update silently
+    if (!_dashChartsLoaded) {
+      skelStatValues(['totalEmployees','presentToday','absentToday','onLeaveToday','activeLocations','lateToday']);
+    }
     api('getAdminStats').then(res => {
       displayAdminStats((res.success && res.data) || { totalEmployees:0, presentToday:0, absentToday:0, onLeaveToday:0, activeLocations:0, lateToday:0 });
     });
@@ -2501,7 +2512,10 @@ const AttendanceSystem = (function() {
   function loadRecentAttendance() {
     const tbody = document.getElementById('recentAttendanceTbody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
+    // Only show spinner on first load; revisits update rows silently
+    if (!_dashChartsLoaded) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
+    }
     api('getRecentAttendance', { limit: 10 }).then(res => {
       if (!res || !res.success || !res.data || res.data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-inbox" style="font-size:1.4rem;display:block;margin-bottom:8px;"></i>No attendance records for today yet.</td></tr>';

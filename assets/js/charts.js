@@ -256,5 +256,49 @@ window.SiomacCharts = (function () {
     set('leaveStatMedical', l.medical ?? '—');
   }
 
-  return { displayAttendanceChart, displayTrendChart, renderDashboardCharts, hasAttendanceChart, hasTrendChart };
+  // ── Silent in-place update — patches existing chart instances without redraw flicker ──
+  function updateDashboardCharts(data) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+
+    // Trend line — patch labels + both datasets
+    if (dashCharts.trend && data.dailyTrend) {
+      const t = dashCharts.trend;
+      t.data.labels = data.dailyTrend.map(d => String(d.date).slice(5));
+      t.data.datasets[0].data = data.dailyTrend.map(d => d.present);
+      t.data.datasets[1].data = data.dailyTrend.map(d => d.late);
+      t.update('none'); // 'none' = skip animation for silent update
+    }
+
+    // Dept doughnut — patch data + labels
+    if (dashCharts.dept && data.deptDistribution) {
+      dashCharts.dept.data.labels = data.deptDistribution.map(d => d.name);
+      dashCharts.dept.data.datasets[0].data = data.deptDistribution.map(d => d.count);
+      dashCharts.dept.update('none');
+      (data.deptDistribution || []).forEach((d, i) => set('deptStat' + i, d.count));
+    }
+
+    // Status bar — patch data
+    if (dashCharts.status && data.statusBreakdown) {
+      const s = data.statusBreakdown;
+      dashCharts.status.data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
+      dashCharts.status.update('none');
+      set('statusStatPresent', s.present ?? '—');
+      set('statusStatLate',    s.late    ?? '—');
+      set('statusStatAbsent',  s.absent  ?? '—');
+      set('statusStatLeave',   s.onLeave ?? '—');
+    }
+
+    // Leave doughnut — patch data
+    if (dashCharts.leaves && data.leaveTypes) {
+      const l = data.leaveTypes;
+      dashCharts.leaves.data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];
+      dashCharts.leaves.update('none');
+      set('leaveStatSick',    l.sick    ?? '—');
+      set('leaveStatCasual',  l.casual  ?? '—');
+      set('leaveStatAnnual',  l.annual  ?? '—');
+      set('leaveStatMedical', l.medical ?? '—');
+    }
+  }
+
+  return { displayAttendanceChart, displayTrendChart, renderDashboardCharts, updateDashboardCharts, hasAttendanceChart, hasTrendChart };
 })();
