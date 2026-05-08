@@ -12,12 +12,20 @@ window.SiomacCharts = (function () {
 
   // Pin canvas to its container's current pixel size.
   // responsive:false prevents Chart.js ResizeObserver from interrupting animation.
-  // Pin canvas buffer to container size — only used for non-responsive charts (doughnuts, bars).
-  // Does NOT set style.width/height to avoid CSS conflicts that shift hit areas.
+  // Pin canvas buffer to the container's inner (content) size, excluding padding.
+  // Using clientWidth minus padding avoids hit-area drift when the container has padding.
   function _pinCanvas(canvas, fallbackW, fallbackH) {
     const p = canvas.parentElement;
-    canvas.width  = (p && p.offsetWidth)  || fallbackW || 280;
-    canvas.height = (p && p.offsetHeight) || fallbackH || 260;
+    if (p) {
+      const cs = getComputedStyle(p);
+      const pw = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const ph = parseFloat(cs.paddingTop)  + parseFloat(cs.paddingBottom);
+      canvas.width  = Math.max((p.clientWidth  - pw) || fallbackW || 280, 1);
+      canvas.height = Math.max((p.clientHeight - ph) || fallbackH || 260, 1);
+    } else {
+      canvas.width  = fallbackW || 280;
+      canvas.height = fallbackH || 260;
+    }
   }
 
   // Inject a centred spinner into a canvas's container. Returns a remove fn.
@@ -66,7 +74,7 @@ window.SiomacCharts = (function () {
     destroyDash_('trend');
     const canvas = document.getElementById('trendLineChart');
     if (!canvas) return;
-    // responsive:true so Chart.js measures its own size — keeps tooltips/points aligned.
+    _pinCanvas(canvas, 600, 280);
     dashCharts.trend = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
@@ -104,7 +112,7 @@ window.SiomacCharts = (function () {
         ]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         animation: { duration: 1000, easing: 'easeOutCubic' },
         plugins: {
