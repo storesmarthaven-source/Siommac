@@ -511,7 +511,7 @@ const AttendanceSystem = (function() {
 
   function handleSessionExpired() {
     const t = { title: 'Session Expired', text: 'Please log in again.' };
-    if (typeof Swal !== 'undefined') Swal.fire({ icon: 'info', title: t.title, text: t.text, timer: 2500, showConfirmButton: false });
+    if (typeof Swal !== 'undefined') Swal.fire({ icon: 'info', title: t.title, text: t.text, showConfirmButton: true });
     handleLogout();
   }
 
@@ -1359,7 +1359,7 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#clearCacheBtn')) {
         if (typeof SwCacheManager !== 'undefined') SwCacheManager.clearAll();
         localStorage.clear();
-        cpop.fire({ icon: 'success', title: 'Cache cleared', text: 'Page will reload.', timer: 1800 })
+        cpop.fire({ icon: 'success', title: 'Cache cleared', text: 'Page will reload.', showConfirmButton: true })
           .then(() => location.reload());
       }
     });
@@ -4230,7 +4230,7 @@ const AttendanceSystem = (function() {
       input.dataset.original = String(rate);
       input.classList.remove('dirty');
       if (typeof Swal !== 'undefined') {
-        Swal.fire({ icon: 'success', title: 'Rate Saved', toast: true, position: 'top-end', timer: 1600, showConfirmButton: false, timerProgressBar: true });
+        Swal.fire({ icon: 'success', title: 'Rate Saved', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false, timerProgressBar: true });
       }
     });
   }
@@ -4853,7 +4853,7 @@ const AttendanceSystem = (function() {
     set('setLeaveFine',    '0');
     set('setLateThreshold','09:00');
     set('setMaxDistance',  '200');
-    cpop.fire({ icon: 'info', title: 'Reset to defaults', text: 'Fields reset. Click Save Settings to apply.', timer: 2800 });
+    cpop.fire({ icon: 'info', title: 'Reset to defaults', text: 'Fields reset. Click Save Settings to apply.', showConfirmButton: true });
   }
 
   function refreshCompanySettings() {
