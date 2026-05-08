@@ -1202,7 +1202,7 @@ const AttendanceSystem = (function() {
           const unread     = m.isUnread;
           const replyCount = m.replies.length;
           const avatarHtml = otherPhoto
-            ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);" onerror="this.outerHTML='<div class=\\'hdr-msg-avatar\\'>${escapeHtml(initials)}</div>'">`
+            ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
             : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
           return `<div class="hdr-msg-item${unread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);">
             ${avatarHtml}
@@ -1415,10 +1415,14 @@ const AttendanceSystem = (function() {
           const css      = STATUS_CSS[t.status] || 'open';
           const lbl      = STATUS_LABEL[t.status] || t.status;
           const initials = _initials(t.fromName || 'U');
+          const avatarStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;';
           const avatarHtml = t.fromPhoto
-            ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);" onerror="this.outerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:var(--siomac-red,#d40000);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;\\'>${escapeHtml(initials)}</div>'">`
-            : `<div style="width:36px;height:36px;border-radius:50%;background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
-          return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;">
+            ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="${avatarStyle}border:2px solid var(--border,#eee);">`
+            : `<div style="${avatarStyle}background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
+          const sub = isAdminView
+            ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
+            : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
+          return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}">
             ${avatarHtml}
             <div style="flex:1;min-width:0;">
               <div class="hdr-ticket-top">
@@ -1426,7 +1430,7 @@ const AttendanceSystem = (function() {
                 <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
               </div>
               <div class="hdr-ticket-title">${escapeHtml(t.subject)}</div>
-              <div class="hdr-ticket-sub">${isAdminView ? `${escapeHtml(t.fromName)} · ` : `${escapeHtml(t.category || 'General')} · `}${_timeAgoShort(t.createdAt)}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
+              <div class="hdr-ticket-sub">${sub}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
             </div>
           </div>`;
         }).join('');

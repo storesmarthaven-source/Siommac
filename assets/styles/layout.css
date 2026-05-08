@@ -443,8 +443,9 @@
 
 /* Ticket items */
 .hdr-ticket-item {
-  padding: 13px 18px; border-bottom: 1px solid var(--border);
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
   cursor: pointer; transition: background .15s;
+  display: flex; align-items: flex-start; gap: 10px;
 }
 .hdr-ticket-item:last-child { border-bottom: none; }
 .hdr-ticket-item:hover { background: var(--bg-subtle, #F8FAFE); }

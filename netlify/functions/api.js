@@ -1794,25 +1794,26 @@ async function getTickets(args, ctx) {
   const ids = (tickets || []).map(t => t.id);
   const { data: replies } = ids.length
     ? await sb.from('ticket_replies')
-        .select('id, ticket_id, from_user_id, from_username, from_name, body, created_at')
+        .select('id, ticket_id, from_username, from_name, body, created_at')
         .in('ticket_id', ids)
         .order('created_at', { ascending: true })
     : { data: [] };
 
-  // Batch-fetch profile photos for all involved users
+  // Batch-fetch profile photos by username for tickets + replies
   const ticketUsernames = [...new Set([
     ...(tickets || []).map(t => t.from_username),
-    ...(replies || []).map(r => r.from_username)
+    ...(replies  || []).map(r => r.from_username)
   ].filter(Boolean))];
-  const { data: photoUsers2 } = ticketUsernames.length
-    ? await sb.from('app_users').select('username, profile_image').in('username', ticketUsernames)
-    : { data: [] };
   const ticketPhotoMap = {};
-  await Promise.all((photoUsers2 || []).map(async u => {
-    if (!noPhoto(u.profile_image)) {
-      ticketPhotoMap[u.username] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
-    }
-  }));
+  if (ticketUsernames.length) {
+    const { data: photoUsers2 } = await sb.from('app_users')
+      .select('username, profile_image').in('username', ticketUsernames);
+    await Promise.all((photoUsers2 || []).map(async u => {
+      if (!noPhoto(u.profile_image)) {
+        ticketPhotoMap[u.username] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
+      }
+    }));
+  }
 
   const replyMap = {};
   for (const r of replies || []) {
