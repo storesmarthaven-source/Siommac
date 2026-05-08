@@ -18,7 +18,6 @@ const AttendanceSystem = (function() {
   let employees = [];
   let lastSyncTime = null;
   let syncInterval = null;
-  let dashboardRefreshInterval = null;
   let map = null;
   let userMarker = null;
   let attendanceZones = [];
@@ -1446,7 +1445,6 @@ const AttendanceSystem = (function() {
         roleDept.textContent = pos && dept ? `${pos} · ${dept}` : pos || dept || '—';
       }
       startLocationTracking();
-      startDashboardRefresh();
     }
 
     startAutoSync();
@@ -1457,26 +1455,18 @@ const AttendanceSystem = (function() {
   }
 
   function startAutoSync() {
-    syncInterval = setInterval(() => {
-      syncData();
-    }, 30000);
-    setTimeout(syncData, 1000);
+    // Single interval — refreshes the active section every 60s.
+    // No immediate fire on login (section just loaded). No indicator —
+    // apiSwr dedup means re-renders only happen when data actually changed,
+    // so there's nothing disruptive to signal to the user.
+    syncInterval = setInterval(syncData, 60000);
   }
 
   function stopAutoSync() {
-    if (syncInterval) {
-      clearInterval(syncInterval);
-      syncInterval = null;
-    }
+    if (syncInterval) { clearInterval(syncInterval); syncInterval = null; }
   }
 
   function syncData() {
-    const indicator = document.getElementById('syncIndicator');
-    if (indicator) {
-      indicator.innerHTML = `<i class="fas fa-sync fa-spin"></i> <span id="syncStatusText">${translations.en.syncStatusText}</span>`;
-      indicator.classList.remove('hidden');
-      setTimeout(() => indicator.classList.add('hidden'), 2500);
-    }
     lastSyncTime = new Date().toISOString();
     refreshCurrentView();
   }
@@ -1492,7 +1482,6 @@ const AttendanceSystem = (function() {
 
     stopCamera();
     stopAutoSync();
-    stopDashboardRefresh();
     clearSession();
     if (locationWatchId && navigator.geolocation) navigator.geolocation.clearWatch(locationWatchId);
 
@@ -1506,7 +1495,6 @@ const AttendanceSystem = (function() {
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
-    dashboardRefreshInterval = null;
 
     // hide app shell, surface login
     document.getElementById('appShell').classList.add('hidden');
@@ -1832,23 +1820,11 @@ const AttendanceSystem = (function() {
     document.getElementById('locationAccuracy').textContent = '';
   }
 
-  function startDashboardRefresh() {
-    dashboardRefreshInterval = setInterval(() => {
-      if (currentUser && currentRole === 'employee') checkStatus();
-    }, 30000);
-  }
-
-  function stopDashboardRefresh() {
-    if (dashboardRefreshInterval) {
-      clearInterval(dashboardRefreshInterval);
-      dashboardRefreshInterval = null;
-    }
-  }
 
   function loadChart() {
     const today = new Date();
-    api('getMyChart', { username: currentUser, year: today.getFullYear(), month: today.getMonth() }).then(res => {
-      if (res.success) displayChart(res.data);
+    apiSwr('getMyChart', { username: currentUser, year: today.getFullYear(), month: today.getMonth() }, {
+      onData: res => { if (res && res.success) displayChart(res.data); }
     });
   }
 
@@ -2038,8 +2014,8 @@ const AttendanceSystem = (function() {
 
   // Last 7 days hours bar chart — pulls from the same getMyHistory endpoint
   function loadTrendChart() {
-    api('getMyHistory', { username: currentUser, days: 7 }).then(res => {
-      displayTrendChart((res.success && res.data) || []);
+    apiSwr('getMyHistory', { username: currentUser, days: 7 }, {
+      onData: res => { displayTrendChart((res && res.success && res.data) || []); }
     });
   }
 
@@ -3280,24 +3256,30 @@ const AttendanceSystem = (function() {
   function loadAttendanceData() {
     const month = parseInt(document.getElementById('attendanceMonth').value, 10);
     const year  = parseInt(document.getElementById('attendanceYear').value, 10);
-    destroyDataTable('attendanceTable'); // always destroy before re-init
-    _skelOnce('s-adm-attendance', () => setSkel('attendanceTableBody', skelTableRows(9, 6)));
-    _rawApi('listDailyLog', { month, year }).then(res => {
-      if (!res || !res.success) {
+    _skelOnce('s-adm-attendance', () => {
+      destroyDataTable('attendanceTable');
+      setSkel('attendanceTableBody', skelTableRows(9, 6));
+    });
+    apiSwr('listDailyLog', { month, year }, {
+      onData: res => {
+        if (!res || !res.success) {
+          document.getElementById('attendanceTableBody').innerHTML =
+            `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
+          return;
+        }
+        destroyDataTable('attendanceTable'); // destroy before re-init on data change
+        _markLoaded('s-adm-attendance');
+        _attAllRows = (res.data && res.data.rows) || [];
+        _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
+        _populateAttDeptFilter();
+        _renderAttStats(res.data && res.data.stats);
+        _renderAttCharts(res.data && res.data.dailyTrend);
+        _renderAttTable();
+      },
+      onError: err => {
         document.getElementById('attendanceTableBody').innerHTML =
-          `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
-        return;
+          `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
       }
-      _markLoaded('s-adm-attendance');
-      _attAllRows = (res.data && res.data.rows) || [];
-      _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
-      _populateAttDeptFilter();
-      _renderAttStats(res.data && res.data.stats);
-      _renderAttCharts(res.data && res.data.dailyTrend);
-      _renderAttTable();
-    }).catch(err => {
-      document.getElementById('attendanceTableBody').innerHTML =
-        `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
     });
   }
 
