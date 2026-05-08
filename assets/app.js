@@ -931,7 +931,22 @@ const AttendanceSystem = (function() {
           e.stopPropagation();
           const isOpen = m.classList.contains('open');
           closeAll();
-          if (!isOpen) { m.classList.add('open'); b.classList.add('active'); }
+          if (!isOpen) {
+            m.classList.add('open'); b.classList.add('active');
+            // When ticket modal opens, always show the list view
+            if (btn === 'hdrTicketBtn' && typeof window._startTicketSystem === 'function') {
+              setTimeout(() => {
+                const tl = document.getElementById('ticketList');
+                if (tl) tl.style.display = '';
+                const tf = document.getElementById('ticketModalFoot');
+                if (tf) tf.style.display = '';
+                const td = document.getElementById('ticketDetailPane');
+                if (td) td.style.display = 'none';
+                const tc = document.getElementById('ticketComposePane');
+                if (tc) tc.style.display = 'none';
+              }, 0);
+            }
+          }
         });
       });
       // Close on X button or clicking outside the icon group / modal
@@ -1485,15 +1500,19 @@ const AttendanceSystem = (function() {
 
       function _fetch(keepDetail) {
         api('getTickets', {}).then(res => {
-          if (!res || !res.success) return;
+          if (!res || !res.success) {
+            console.warn('[Tickets] getTickets failed:', res && res.message);
+            return;
+          }
           _tickets = res.data || [];
           _updateTicketBadge();
           if (keepDetail && _currentTicketId) {
             _showDetail(_currentTicketId);
           } else {
+            _showList();
             _renderList();
           }
-        }).catch(() => {});
+        }).catch(err => { console.error('[Tickets] fetch error:', err); });
       }
 
       function _start() {
