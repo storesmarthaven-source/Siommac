@@ -1474,8 +1474,18 @@ const AttendanceSystem = (function() {
   // Sections that have no live data — skip on background sync
   const _noSyncSections = new Set(['s-settings', 's-profile', 's-payroll', 's-adm-rates']);
 
+  // Returns true if the user is actively typing, has a dropdown open, or a modal is visible.
+  // In any of these cases background sync should not re-render and disrupt them.
+  function _userIsInteracting() {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (document.querySelector('.modal.show')) return true;
+    return false;
+  }
+
   // refresh the currently-visible section (called every 60s by syncData)
   function refreshCurrentView() {
+    if (_userIsInteracting()) return;
     const active = document.querySelector('.app-section.active');
     if (active && !_noSyncSections.has(active.id)) refreshSection(active.id);
   }
