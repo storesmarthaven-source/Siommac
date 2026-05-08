@@ -6,6 +6,35 @@
   <base target="_top" />
   <title>Advanced Attendance & Location Management System</title>
   
+  <!-- Preload profile image as early as possible — runs before any CSS/JS so
+       the image is decoded by the time the app renders, eliminating the
+       initial-letter → photo flash on page refresh. -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('siomac_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || !s.profileImage || s.expiresAt < Date.now()) return;
+        var url = s.profileImage;
+        // <link rel="preload"> tells the browser to fetch + decode the image
+        // at highest priority, in parallel with the rest of the page load.
+        var link = document.createElement('link');
+        link.rel  = 'preload';
+        link.as   = 'image';
+        link.href = url;
+        document.head.appendChild(link);
+        // Also prime the browser image cache with an off-screen Image object
+        // so it is guaranteed decoded before any paint.
+        var img = new Image();
+        img.src = url;
+        // Store on window so applySession can check decode status instantly
+        window._preloadedProfileImage = img;
+        window._preloadedProfileUrl   = url;
+      } catch (_) {}
+    })();
+  </script>
+
   <!-- Preconnect so font bytes arrive as early as possible (eliminates FOUT) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

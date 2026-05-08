@@ -1391,18 +1391,12 @@ const AttendanceSystem = (function() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appShell').classList.remove('hidden');
 
-    // populate header profile avatar — preload off-screen, swap in one paint
+    // populate header profile avatar — use preloaded image if ready, else probe
     const hdrAvatarEl = document.getElementById('hdrProfileAvatar');
     if (hdrAvatarEl) {
       const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
       if (result.profileImage) {
-        hdrAvatarEl.textContent = initial; // show initial while decoding
-        const probe = new Image();
-        probe.onload = () => {
-          hdrAvatarEl.innerHTML = `<img src="${result.profileImage}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-        };
-        probe.onerror = () => {}; // keep initial on broken URL
-        probe.src = result.profileImage;
+        _swapAvatarImg(hdrAvatarEl, result.profileImage, initial, 'hdr');
       } else {
         hdrAvatarEl.textContent = initial;
       }
@@ -4331,19 +4325,64 @@ const AttendanceSystem = (function() {
     }
   }
 
+  // Central avatar swap — checks window._preloadedProfileImage first.
+  // If the image for this URL was preloaded in <head> and is already decoded
+  // (complete === true), applies it instantly with zero delay.
+  // Otherwise falls back to a probe Image() — shows initial until ready.
+  // target variants:
+  //   'hdr'        → el is the hdrProfileAvatar div
+  //   'attendance' → el is the .user-avatar div
+  //   'profile'    → el is { _profileEl, imgEl, emptyEl, removeBtn }
+  function _swapAvatarImg(el, url, initial, variant) {
+    const preloaded = window._preloadedProfileImage;
+    const isReady   = preloaded && window._preloadedProfileUrl === url && preloaded.complete && preloaded.naturalWidth > 0;
+
+    function applyImg() {
+      if (variant === 'hdr') {
+        el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else if (variant === 'attendance') {
+        el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else if (variant === 'profile') {
+        el.imgEl.src           = url;
+        el.imgEl.style.display = 'block';
+        el.emptyEl.style.display = 'none';
+        if (el.removeBtn) el.removeBtn.style.display = '';
+      }
+    }
+
+    function applyFallback() {
+      if (variant === 'profile') {
+        el.imgEl.src             = '';
+        el.imgEl.style.display   = 'none';
+        el.emptyEl.style.display = 'flex';
+        el.emptyEl.textContent   = initial;
+        if (el.removeBtn) el.removeBtn.style.display = 'none';
+      }
+      // hdr and attendance already show initial before this call
+    }
+
+    if (isReady) {
+      // Image already decoded — apply instantly, no flash
+      applyImg();
+      return;
+    }
+
+    // Not yet ready — probe; show initial in the meantime
+    if (variant === 'hdr')        el.textContent = initial;
+    if (variant === 'attendance') el.innerHTML   = `<span>${initial}</span>`;
+
+    const probe = new Image();
+    probe.onload  = applyImg;
+    probe.onerror = applyFallback;
+    probe.src = url;
+  }
+
   function _setAttendanceAvatar(imgUrl, fullName) {
     const avatarDiv = document.querySelector('.user-avatar');
     if (!avatarDiv) return;
     const initial = (fullName || currentFullName || '?').charAt(0).toUpperCase();
     if (imgUrl) {
-      // Show initial while image decodes, swap in one paint when ready
-      avatarDiv.innerHTML = `<span>${initial}</span>`;
-      const probe = new Image();
-      probe.onload = () => {
-        avatarDiv.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-      };
-      probe.onerror = () => {}; // keep initial on broken URL
-      probe.src = imgUrl;
+      _swapAvatarImg(avatarDiv, imgUrl, initial, 'attendance');
     } else {
       avatarDiv.innerHTML = `<span>${initial}</span>`;
     }
@@ -4355,32 +4394,16 @@ const AttendanceSystem = (function() {
     const imgEl     = document.getElementById('profilePhotoPreview');
     const emptyEl   = document.getElementById('profilePhotoEmpty');
     const removeBtn = document.getElementById('removeProfileImageBtn');
-    const name      = fullName || currentFullName || '?';
-    const initial   = name.trim().charAt(0).toUpperCase();
+    const initial   = (fullName || currentFullName || '?').trim().charAt(0).toUpperCase();
 
     if (imgUrl) {
-      // Keep initials visible until the image is fully decoded — no flash
+      // Start with initials visible
       imgEl.style.display = 'none';
       emptyEl.style.display = 'flex';
       emptyEl.textContent = initial;
       if (removeBtn) removeBtn.style.display = 'none';
 
-      const probe = new Image();
-      probe.onload = () => {
-        imgEl.src = imgUrl;
-        imgEl.style.display = 'block';
-        emptyEl.style.display = 'none';
-        if (removeBtn) removeBtn.style.display = '';
-      };
-      probe.onerror = () => {
-        // Expired/broken URL — stay on initials
-        imgEl.src = '';
-        imgEl.style.display = 'none';
-        emptyEl.style.display = 'flex';
-        emptyEl.textContent = initial;
-        if (removeBtn) removeBtn.style.display = 'none';
-      };
-      probe.src = imgUrl;
+      _swapAvatarImg({ _profileEl: true, imgEl, emptyEl, removeBtn }, imgUrl, initial, 'profile');
     } else {
       imgEl.src = '';
       imgEl.style.display = 'none';
@@ -4446,15 +4469,16 @@ const AttendanceSystem = (function() {
         if (typeof SwCacheManager !== 'undefined') SwCacheManager.evictPhoto(_currentProfileImage);
       }
       _currentProfileImage = newPhoto;
-      // Update header profile avatar (preload, then swap)
+      // Update header profile avatar
       const hdrAv = document.getElementById('hdrProfileAvatar');
       if (hdrAv) {
         const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
         if (newPhoto) {
-          hdrAv.textContent = initial;
-          const probe = new Image();
-          probe.onload = () => { hdrAv.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; };
-          probe.src = newPhoto;
+          // Update the preload reference so _swapAvatarImg picks it up immediately next time
+          window._preloadedProfileUrl = newPhoto;
+          window._preloadedProfileImage = new Image();
+          window._preloadedProfileImage.src = newPhoto;
+          _swapAvatarImg(hdrAv, newPhoto, initial, 'hdr');
         } else {
           hdrAv.textContent = initial;
         }
