@@ -28,6 +28,7 @@ const AttendanceSystem = (function() {
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
   let _isSyncing = false; // when true, suppress skeleton injection (background refresh shouldn't flash)
   let _dashChartsLoaded = false; // charts only rendered once per session to prevent re-render flicker on section revisit
+  const _visitedSections = new Set(); // tracks which sections have been loaded at least once
 
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
@@ -690,7 +691,11 @@ const AttendanceSystem = (function() {
     document.getElementById('sidebar').classList.remove('mobile-open');
     document.getElementById('sidebarBackdrop').classList.remove('active');
 
+    const _wasVisited = _visitedSections.has(id);
+    if (_wasVisited) _isSyncing = true; // suppress skeletons/spinners on revisit
+    _visitedSections.add(id);
     refreshSection(id);
+    if (_wasVisited) setTimeout(() => { _isSyncing = false; }, 0); // restore after sync callbacks are queued
   }
 
   function refreshSection(id) {
@@ -1480,6 +1485,7 @@ const AttendanceSystem = (function() {
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
     _dashChartsLoaded = false;  // reset so dashboard charts re-render on next login
+    _visitedSections.clear();   // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
     dashboardRefreshInterval = null;
@@ -2317,7 +2323,7 @@ const AttendanceSystem = (function() {
   let _lvEmpList = [], _lvMgrList = [], _lvAdmList = [];
 
   function loadLeaveRequests() {
-    setSkel('leaveRequestsList', skelTableRows(8, 3));
+    if (!_isSyncing) setSkel('leaveRequestsList', skelTableRows(8, 3));
     api('getMyLeaves', { username: currentUser }).then(res => {
       const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
       _lvEmpList = list;
@@ -2357,7 +2363,7 @@ const AttendanceSystem = (function() {
 
   // Manager Dashboard Functions
   function loadDepartmentData() {
-    skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']);
+    if (!_isSyncing) skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']);
     api('getDeptStats', { managerUsername: currentUser }).then(res => {
       displayDepartmentStats((res.success && res.data) || { total:0, present:0, onLeave:0, late:0 });
     });
@@ -2905,7 +2911,7 @@ const AttendanceSystem = (function() {
 
   function loadDepartments() {
     const container = document.getElementById('departmentsContainer');
-    if (container) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
+    if (container && !_isSyncing) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
     _rawApi('listDepartments', {}).then(res => {
       if (!res || !res.success) {
         if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-exclamation-circle"></i><p>${(res && res.message) || 'Failed to load departments'}</p></div>`;
@@ -3125,7 +3131,7 @@ const AttendanceSystem = (function() {
   }
 
   function loadProjectSites() {
-    setSkel('projectsContainer', skelCards(3));
+    if (!_isSyncing) setSkel('projectsContainer', skelCards(3));
     _rawApi('listProjectSites', {}).then(res => {
       if (!res || !res.success) {
         document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
