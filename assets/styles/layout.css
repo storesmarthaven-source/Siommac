@@ -213,7 +213,7 @@
 .main-content {
   flex: 1; overflow-y: auto;
   padding: 24px 28px;
-  background: var(--bg-app);
+  background: #F9FAFC;
 }
 
 /* Page header */
