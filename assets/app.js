@@ -3471,16 +3471,19 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // reload whichever leaves list the current role is looking at — force bypasses SWR cache
+  // reload whichever leaves list the current role is looking at — bypasses SWR entirely
   function _refreshLeavesAfterDecision() {
     swr.clear();
     swr._inflight.clear();
     _swrLastHash.clear();
     if (currentRole === 'admin') {
-      loadLeaveApplications();
+      _rawApi('listAllLeaves', {}).then(res => {
+        displayLeaveApplications((res && res.success && res.data) || []);
+      });
     } else if (currentRole === 'manager') {
-      loadManagerLeaveApplications();
-      if (typeof loadDepartmentData === 'function') loadDepartmentData();
+      _rawApi('getPendingLeavesForManager', { managerUsername: currentUser }).then(res => {
+        displayManagerLeaveApplications((res && res.success && res.data) || []);
+      });
     }
   }
 
