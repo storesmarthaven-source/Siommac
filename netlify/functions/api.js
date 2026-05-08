@@ -1002,11 +1002,11 @@ async function getDashboardCharts(args, ctx) {
   ]);
 
   // ── 1. daily trend (last 30 days) — only dates with actual data ──
-  const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const trendCutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const byDate = {};
   for (const a of att || []) {
     const d = dateOnly(a.work_date);
-    if (d < cutoff) continue;
+    if (d < trendCutoff) continue;
     if (!byDate[d]) byDate[d] = { date: d, present: 0, late: 0 };
     if (a.check_in_time) byDate[d].present++;
     if (a.status === 'late') byDate[d].late++;
