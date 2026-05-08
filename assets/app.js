@@ -266,8 +266,8 @@ const AttendanceSystem = (function() {
       if (markersNeedUpdate) {
         _liveDataHash = hash;
         plotLiveEmployees(liveData); // only redraw markers when data changed
+        renderLivePanel(liveData);   // only rebuild panel HTML when data changed (prevents photo reload)
       }
-      renderLivePanel(liveData); // panel sidebar always updates (lightweight DOM)
     });
   }
 
