@@ -2525,9 +2525,12 @@ const AttendanceSystem = (function() {
   function _countUp(el, target) {
     if (!el) return;
     const current = parseInt(el.textContent, 10);
+    const hasSkeleton = el.querySelector('.skeleton') !== null;
     const from = isNaN(current) ? 0 : current;
     const to = Number(target) || 0;
-    if (from === to) return; // already correct, skip
+    // Skip only if value is already correct AND no skeleton is showing
+    if (from === to && !hasSkeleton) { el.textContent = to; return; }
+    el.innerHTML = ''; // clear skeleton if present
     const steps = 30;
     const stepTime = 600 / steps;
     let step = 0;
