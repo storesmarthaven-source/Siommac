@@ -5,7 +5,7 @@
 //   PHOTOS  — profile images, selfies → Cache-first, 7-day cache, bg revalidate
 //   API     — /api POST calls         → Network-only (never cache mutations/auth)
 
-const CACHE_VERSION  = 'siomac-v1';
+const CACHE_VERSION  = 'siomac-v2';
 const STATIC_CACHE   = CACHE_VERSION + '-static';
 const CDN_CACHE      = CACHE_VERSION + '-cdn';
 const PHOTO_CACHE    = CACHE_VERSION + '-photos';
@@ -84,18 +84,9 @@ function isLocalStatic(url, origin) {
   return url.origin === origin && !isApiRequest(url);
 }
 
-// ── Install — precache static assets ─────────────────────────────────────────
+// ── Install — skip waiting immediately, no precache blocking install ──────────
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())   // activate immediately, no waiting
-      .catch(err => {
-        // Don't let a single missing file block install — log and continue
-        console.warn('[SW] Precache partial failure:', err);
-        return self.skipWaiting();
-      })
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 // ── Activate — delete stale caches from old versions ─────────────────────────
@@ -136,27 +127,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Local static assets — cache-first (version-busted on SW update)
+  // Local static assets — network-first with cache fallback.
+  // Tries network first so deploys take effect immediately; falls back to
+  // cache only when offline. Updates cache on every successful network response.
   if (isLocalStatic(url, self.location.origin)) {
-    event.respondWith(cacheFirstLocal(req, STATIC_CACHE));
+    event.respondWith(networkFirstLocal(req, STATIC_CACHE));
     return;
   }
 });
 
 // ── Strategies ────────────────────────────────────────────────────────────────
 
-// Cache-first: return cached immediately; if missing, fetch + store.
-// For local static — serves stale until new SW is installed.
-async function cacheFirstLocal(req, cacheName) {
-  const cache  = await caches.open(cacheName);
-  const cached = await cache.match(req, { ignoreSearch: false });
-  if (cached) return cached;
+// Network-first: try network, update cache, fall back to cache when offline.
+// This ensures every deploy is picked up immediately while still working offline.
+async function networkFirstLocal(req, cacheName) {
+  const cache = await caches.open(cacheName);
   try {
     const fresh = await fetch(req);
     if (fresh.ok) cache.put(req, fresh.clone());
     return fresh;
   } catch {
-    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+    // Offline — serve from cache
+    const cached = await cache.match(req);
+    return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
   }
 }
 
