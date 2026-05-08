@@ -56,13 +56,13 @@
   font-family: inherit; -webkit-tap-highlight-color: transparent;
 }
 .cpop-btn-ok           { background: var(--siomac-navy); color: #fff; }
-.cpop-btn-ok:hover     { background: var(--siomac-navy-light); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(27,45,85,.25); }
+.cpop-btn-ok:hover     { background: var(--siomac-navy-light); }
 .cpop-btn-cancel       { background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border); }
 .cpop-btn-cancel:hover { background: var(--border); }
 .cpop-btn-ok.cpop-btn-success { background: var(--success); }
 .cpop-btn-ok.cpop-btn-success:hover { filter: brightness(.9); }
 .cpop-btn-ok.cpop-btn-danger  { background: var(--siomac-red); }
-.cpop-btn-ok.cpop-btn-danger:hover  { background: var(--siomac-red-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(228,12,12,.3); }
+.cpop-btn-ok.cpop-btn-danger:hover  { background: var(--siomac-red-dark); }
 .cpop-btn-ok.cpop-btn-warning { background: var(--warning); color: #fff; }
 .cpop-btn.hidden { display: none !important; }
 

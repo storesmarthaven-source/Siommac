@@ -78,7 +78,7 @@
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
-  transform: translateY(-1px) !important;
+  transform: none !important;
   box-shadow: none !important;
   opacity: 1 !important;
   outline: none !important;
@@ -130,10 +130,13 @@
   display: flex; gap: 4px; flex-wrap: wrap;
   margin: 0; padding: 0; list-style: none;
 }
-/* Strip border/bg from the page-item li wrapper itself */
-.dataTables_wrapper .dataTables_paginate .page-item {
+/* Strip border/bg from the page-item li wrapper itself — also kills any .btn styles DataTables injects */
+.dataTables_wrapper .dataTables_paginate .page-item,
+.dataTables_wrapper .dataTables_paginate li.paginate_button {
   margin: 0; border: none !important; background: none !important;
-  border-radius: 0 !important;
+  border-radius: 0 !important; padding: 0 !important;
+  box-shadow: none !important; transform: none !important;
+  display: inline-flex !important; align-items: center !important;
 }
 
 /* Base style — perfect circle for all page buttons */

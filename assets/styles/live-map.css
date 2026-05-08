@@ -308,7 +308,7 @@
   font-family: inherit; text-decoration: none;
 }
 .lm-popup-btn-primary { background: var(--siomac-red); color: white; }
-.lm-popup-btn-primary:hover { opacity: .87; transform: translateY(-1px); }
+.lm-popup-btn-primary:hover { opacity: .87; }
 .lm-popup-btn-outline {
   background: transparent; border: 1.5px solid var(--border);
   color: var(--siomac-navy);
