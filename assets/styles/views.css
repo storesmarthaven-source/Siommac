@@ -45,8 +45,9 @@
   flex-shrink: 0;
 }
 .hr-stat-icon i { font-size: 24px; color: var(--siomac-red); }
-.hr-stat-value { font-size: 2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; }
-.hr-stat-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+.hr-stat-body { display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
+.hr-stat-value { font-size: 2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; white-space: nowrap; }
+.hr-stat-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; white-space: nowrap; }
 
 /* filters bar */
 .hr-filters-bar {
