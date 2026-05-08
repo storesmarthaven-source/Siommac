@@ -265,8 +265,12 @@ const AttendanceSystem = (function() {
       _markLoaded('s-projectMap');
       if (markersNeedUpdate) {
         _liveDataHash = hash;
-        plotLiveEmployees(liveData); // only redraw markers when data changed
-        renderLivePanel(liveData);   // only rebuild panel HTML when data changed (prevents photo reload)
+        // Preload all profile photos before rendering markers + panel — no flash
+        const _livePhotoUrls = liveData.map(r => r.profileImage || r.checkInPhotoUrl).filter(Boolean);
+        _preloadThenRender(_livePhotoUrls, () => {
+          plotLiveEmployees(liveData);
+          renderLivePanel(liveData);
+        });
       }
       }
     });
@@ -2688,7 +2692,8 @@ const AttendanceSystem = (function() {
         _markLoaded('s-adm-employees');
         _empAllList = res.data || [];
         _renderEmpStats();
-        _renderEmployees();
+        const _empPhotoUrls = _empAllList.map(e => e.profileImage).filter(Boolean);
+        _preloadThenRender(_empPhotoUrls, _renderEmployees);
       },
       onError: err => {
         const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
@@ -2727,6 +2732,24 @@ const AttendanceSystem = (function() {
     return (name || '').split(' ').slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
   }
 
+  // Preload an array of image URLs into the browser decode cache.
+  // Calls render() once all images are decoded OR after maxWaitMs (default 400ms),
+  // whichever comes first. This guarantees photos are ready before cards paint.
+  function _preloadThenRender(urls, render, maxWaitMs) {
+    const unique = [...new Set(urls.filter(Boolean))];
+    if (!unique.length) { render(); return; }
+    maxWaitMs = maxWaitMs || 400;
+    let done = 0;
+    let called = false;
+    const finish = () => { if (!called) { called = true; render(); } };
+    const timer = setTimeout(finish, maxWaitMs);
+    unique.forEach(url => {
+      const img = new Image();
+      img.onload = img.onerror = () => { if (++done >= unique.length) { clearTimeout(timer); finish(); } };
+      img.src = url;
+    });
+  }
+
   function _renderEmpCards(list) {
     const grid = document.getElementById('empCardView');
     if (!grid) return;
@@ -2744,12 +2767,14 @@ const AttendanceSystem = (function() {
       const isActive = emp.status === 'Active';
       const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
       const initial = escapeHtml((emp.fullName || emp.username || '?').charAt(0).toUpperCase());
-      // Always render initials first — photos swapped in after off-screen decode (no flash)
-      const photoAttr = emp.profileImage ? ` data-photo="${escapeHtml(emp.profileImage)}"` : '';
+      // Photos are pre-decoded by _preloadThenRender — render directly, no flash
+      const avatarInner = emp.profileImage
+        ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : `<span>${initial}</span>`;
       return `
       <div class="emp-card">
         <div class="emp-card-header ${isActive ? 'emp-card-header--active' : 'emp-card-header--inactive'}">
-          <div class="emp-card-avatar"${photoAttr}><span>${initial}</span></div>
+          <div class="emp-card-avatar">${avatarInner}</div>
           <div class="emp-card-title-block">
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
@@ -2772,17 +2797,6 @@ const AttendanceSystem = (function() {
       </div>`;
     }).join('');
 
-    // Post-render: probe each avatar off-screen, swap photo in on decode — no flash
-    grid.querySelectorAll('.emp-card-avatar[data-photo]').forEach(avatarEl => {
-      const url     = avatarEl.dataset.photo;
-      const initial = (avatarEl.querySelector('span') || {}).textContent || '?';
-      const probe   = new Image();
-      probe.onload  = () => {
-        avatarEl.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-      };
-      probe.onerror = () => {}; // keep initial on broken/expired URL
-      probe.src = url;
-    });
   }
 
   function _renderEmpTable(list) {
