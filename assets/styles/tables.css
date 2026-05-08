@@ -43,45 +43,59 @@
   margin-bottom: 12px;
 }
 
-/* ── Export / action buttons — ghost pill ──
-   Targets Bootstrap classes that buttons.bootstrap5.js injects (.btn, .btn-secondary) */
-.dataTables_wrapper .dt-buttons .dt-button,
-.dataTables_wrapper .dt-buttons .dt-button.btn,
-.dataTables_wrapper .dt-buttons .dt-button.btn-secondary,
-.dataTables_wrapper .dt-buttons a.dt-button,
-.dataTables_wrapper .dt-buttons button.dt-button {
+/* ── Export / action buttons ──
+   Targets both in-wrapper and relocated (#attTableBtns) positions.
+   Uses .dt-button selector AND raw Bootstrap classes to beat specificity. */
+.dt-buttons .dt-button,
+.dt-buttons .dt-button.btn,
+.dt-buttons .dt-button.btn-secondary,
+.dt-buttons a.dt-button,
+.dt-buttons button.dt-button,
+#attTableBtns .dt-button,
+#attTableBtns .dt-button.btn,
+#attTableBtns .dt-button.btn-secondary,
+#attTableBtns a.dt-button,
+#attTableBtns button.dt-button {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 7px !important;
-  padding: 7px 17px !important;
-  border-radius: 40px !important;
+  gap: 6px !important;
+  padding: 7px 16px !important;
+  border-radius: 8px !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
   font-family: inherit !important;
-  border: 1.5px solid #f8b30d !important;
+  border: none !important;
   background: #f8b30d !important;
   color: #1A2C53 !important;
   cursor: pointer !important;
-  transition: background .18s, color .18s, border-color .18s, transform .12s !important;
+  transition: background .18s, color .18s !important;
   text-decoration: none !important;
   box-shadow: none !important;
   white-space: nowrap !important;
   line-height: 1 !important;
   text-shadow: none !important;
+  width: auto !important;
+  height: auto !important;
 }
-.dataTables_wrapper .dt-buttons .dt-button:hover,
-.dataTables_wrapper .dt-buttons .dt-button.btn:hover,
-.dataTables_wrapper .dt-buttons .dt-button.btn-secondary:hover,
-.dataTables_wrapper .dt-buttons .dt-button:focus,
-.dataTables_wrapper .dt-buttons .dt-button.active,
-.dataTables_wrapper .dt-buttons .dt-button:active {
+.dt-buttons .dt-button:hover,
+.dt-buttons .dt-button.btn:hover,
+.dt-buttons .dt-button.btn-secondary:hover,
+.dt-buttons .dt-button:focus,
+.dt-buttons .dt-button.active,
+.dt-buttons .dt-button:active,
+#attTableBtns .dt-button:hover,
+#attTableBtns .dt-button.btn:hover,
+#attTableBtns .dt-button.btn-secondary:hover,
+#attTableBtns .dt-button:focus,
+#attTableBtns .dt-button.active,
+#attTableBtns .dt-button:active {
   background: var(--siomac-red) !important;
   color: #fff !important;
-  border-color: var(--siomac-red) !important;
-  transform: none !important;
   box-shadow: none !important;
   opacity: 1 !important;
   outline: none !important;
+  transform: none !important;
+  border-color: transparent !important;
 }
 
 /* ── Length select ── */
