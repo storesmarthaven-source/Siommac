@@ -95,6 +95,19 @@
   font-weight: 700; color: var(--siomac-navy); font-size: 0.95rem;
   margin: 0; display: flex; align-items: center; gap: 8px;
 }
+.lm-center-btn {
+  position: absolute;
+  bottom: 20px; left: 20px;
+  z-index: 500;
+  background: white; border: 1.5px solid var(--border);
+  color: var(--siomac-navy); font-size: 13px; font-weight: 700;
+  font-family: inherit; padding: 9px 18px; border-radius: 40px;
+  display: inline-flex; align-items: center; gap: 7px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  cursor: pointer; transition: background .18s, box-shadow .18s;
+}
+.lm-center-btn:hover { background: var(--siomac-navy); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+
 .lm-refresh-btn {
   background: var(--bg-subtle, #F4F6FA); border: 1px solid var(--border);
   cursor: pointer; color: var(--text-primary); font-size: 12px; font-weight: 600;
