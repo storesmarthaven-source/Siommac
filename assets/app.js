@@ -107,8 +107,7 @@ const AttendanceSystem = (function() {
   const showSpinner = (msg) => cpop.fire({ loading: true, title: msg || 'Loading...', allowOutsideClick: false, showConfirmButton: false });
   const hideSpinner = () => cpop.close();
   const showPopup = (type, title, text) => {
-    const isSuccess = type === 'success';
-    return cpop.fire({ icon: type, title, text, ...(isSuccess ? { timer: 3000, timerProgressBar: true } : { showConfirmButton: true }) });
+    return cpop.fire({ icon: type, title, text, showConfirmButton: true });
   };
 
   // Get current location (simplified)
