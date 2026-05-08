@@ -666,6 +666,9 @@ const AttendanceSystem = (function() {
   }
 
   function showSection(id) {
+    // If leaving the dashboard while in edit mode, exit cleanly so the final order is saved
+    if (id !== 's-adm-dashboard' && _dashEditMode) _dashToggleEditMode();
+
     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
     const sec = document.getElementById(id);
     if (sec) sec.classList.add('active');
@@ -1857,17 +1860,26 @@ const AttendanceSystem = (function() {
   function _dashLoadLayout() {
     try { return JSON.parse(localStorage.getItem(DASH_LAYOUT_KEY)) || {}; } catch { return {}; }
   }
-  function _dashSaveLayout() {
-    const grid   = document.getElementById('dashWidgetGrid');
-    const recent = document.querySelector('#s-adm-dashboard .recent-activity-section');
-    const order  = [];
-    if (grid) grid.querySelectorAll('.dash-widget').forEach(w => order.push(w.dataset.widgetId));
-    if (recent) order.push(recent.dataset.widgetId);
-    const hidden = DASH_WIDGETS.filter(w => {
-      const el = document.querySelector(`.dash-widget[data-widget-id="${w.id}"]`);
-      return el && el.classList.contains('dash-widget-hidden');
-    }).map(w => w.id);
-    localStorage.setItem(DASH_LAYOUT_KEY, JSON.stringify({ order, hidden }));
+  let _dashSaveTimer = null;
+  function _dashSaveLayout(immediate) {
+    // Write current widget order + hidden state to localStorage.
+    // Use a short debounce to coalesce rapid onEnd events from fast drags.
+    // Pass immediate=true (e.g. on Done / navigate away) to flush synchronously.
+    clearTimeout(_dashSaveTimer);
+    const doSave = () => {
+      const grid   = document.getElementById('dashWidgetGrid');
+      const recent = document.querySelector('#s-adm-dashboard .recent-activity-section');
+      const order  = [];
+      if (grid) grid.querySelectorAll('.dash-widget').forEach(w => order.push(w.dataset.widgetId));
+      if (recent) order.push(recent.dataset.widgetId);
+      const hidden = DASH_WIDGETS.filter(w => {
+        const el = document.querySelector(`.dash-widget[data-widget-id="${w.id}"]`);
+        return el && el.classList.contains('dash-widget-hidden');
+      }).map(w => w.id);
+      localStorage.setItem(DASH_LAYOUT_KEY, JSON.stringify({ order, hidden }));
+    };
+    if (immediate) { doSave(); }
+    else { _dashSaveTimer = setTimeout(doSave, 80); }
   }
   function _dashApplyLayout() {
     const { order = [], hidden = [] } = _dashLoadLayout();
@@ -1917,14 +1929,14 @@ const AttendanceSystem = (function() {
   function _dashHideWidget(id) {
     const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
     if (el) el.classList.add('dash-widget-hidden');
-    _dashSaveLayout();
+    _dashSaveLayout(true);
     const { hidden = [] } = _dashLoadLayout();
     _dashUpdateHiddenPanel(hidden);
   }
   function _dashShowWidget(id) {
     const el = document.querySelector(`.dash-widget[data-widget-id="${id}"]`);
     if (el) el.classList.remove('dash-widget-hidden');
-    _dashSaveLayout();
+    _dashSaveLayout(true);
     const { hidden = [] } = _dashLoadLayout();
     _dashUpdateHiddenPanel(hidden);
   }
@@ -1948,14 +1960,14 @@ const AttendanceSystem = (function() {
         dragClass: 'dash-sortable-drag',
         filter: 'button, a, input, select, canvas',
         preventOnFilter: false,
-        onEnd: () => _dashSaveLayout(),
+        onEnd: () => requestAnimationFrame(() => _dashSaveLayout()),
       });
     } else {
       editBtn.classList.remove('active');
       editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit Layout';
       resetBtn.style.display = 'none';
       if (_dashSortable) { _dashSortable.destroy(); _dashSortable = null; }
-      _dashSaveLayout();
+      _dashSaveLayout(true); // flush immediately on Done
     }
   }
   function _dashReset() {
@@ -1973,7 +1985,8 @@ const AttendanceSystem = (function() {
     if (_dashEditMode) _dashToggleEditMode();
   }
   function initDashboardLayoutEditor() {
-    _dashApplyLayout();
+    // Only re-apply layout when not in edit mode (edit mode already has live Sortable)
+    if (!_dashEditMode) _dashApplyLayout();
     if (_dashInitDone) return;
     _dashInitDone = true;
     const editBtn  = document.getElementById('dashEditBtn');
