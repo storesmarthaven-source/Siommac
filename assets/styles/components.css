@@ -34,6 +34,22 @@
 .btn-outline-primary:hover { background: var(--siomac-navy) !important; color: white !important; }
 .btn-outline-danger  { background: transparent !important; border: 1.5px solid var(--danger) !important; color: var(--danger) !important; }
 .btn-outline-danger:hover  { background: var(--danger) !important; color: white !important; }
+/* Refresh / icon-only secondary outline buttons */
+.btn-outline-secondary {
+  background: transparent !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  border-radius: 50px !important;
+}
+.btn-outline-secondary:hover {
+  background: var(--siomac-navy) !important;
+  border-color: var(--siomac-navy) !important;
+  color: white !important;
+}
+.btn-outline-secondary:focus,
+.btn-outline-secondary:focus-visible {
+  outline: none !important; box-shadow: none !important;
+}
 .btn:disabled { background: #d0d5de !important; cursor: not-allowed; box-shadow: none !important; }
 /* Kill Bootstrap's square focus ring on ALL buttons */
 .btn:focus,
