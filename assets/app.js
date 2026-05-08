@@ -877,59 +877,80 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Phone mask: enforces (868) xxx-xxxx on every .phone-mask input ──────────
-  // Prefix "(868) " is always present and locked; user types only the 7 digits.
-  // Auto-inserts "-" after the 3rd digit: (868) 123-4567
+  // Prefix "(868) " is always present and locked; user types only 7 local digits.
+  // Auto-inserts "-" after the 3rd local digit: (868) 123-4567
   const PREFIX = '(868) ';
   const PREFIX_LEN = PREFIX.length; // 6
 
-  function _maskPhone(raw) {
-    if (!raw) return '';
-    const digits = raw.replace(/\D/g, '');
-    const local = digits.startsWith('868') ? digits.slice(3) : digits;
-    const d = local.slice(0, 7);
-    if (!d) return '';
+  // Build masked string from local digits only (0–7 chars, no prefix, no dash)
+  function _buildMasked(localDigits) {
+    const d = localDigits.slice(0, 7);
+    if (d.length === 0) return PREFIX;
     if (d.length <= 3) return PREFIX + d;
     return PREFIX + d.slice(0, 3) + '-' + d.slice(3);
+  }
+
+  // Extract the 7 local digits from any phone string (strips prefix, dashes, spaces)
+  function _localDigits(raw) {
+    if (!raw) return '';
+    // Remove all non-digits, then strip leading 868 if present (from pasted full number)
+    const all = raw.replace(/\D/g, '');
+    return (all.startsWith('868') ? all.slice(3) : all).slice(0, 7);
   }
 
   // Set a phone-mask input's value programmatically (applies mask)
   function setPhone(idOrEl, value) {
     const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
     if (!el) return;
-    el.value = value ? _maskPhone(value) : '';
+    el.value = value ? _buildMasked(_localDigits(value)) : '';
   }
 
-  // Read the actual phone value from a masked input (strips prefix if empty local part)
+  // Read the formatted value; returns '' if nothing was typed beyond the prefix
   function readPhone(idOrEl) {
     const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
     if (!el) return '';
-    const v = (el.value || '').trim();
-    // If the field only contains the prefix (user focused but typed nothing), treat as empty
-    if (v === PREFIX || v === PREFIX.trimEnd()) return '';
-    return v;
+    const digits = _localDigits(el.value);
+    if (!digits) return '';
+    return _buildMasked(digits);
   }
 
   (function setupPhoneMask() {
     function onInput(e) {
       const el = e.target;
       if (!el.classList.contains('phone-mask')) return;
-      const pos = el.selectionStart;
-      const prev = el.value;
-      if (prev.length < PREFIX_LEN) {
-        el.value = PREFIX;
-        el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
-        return;
-      }
-      const masked = _maskPhone(prev);
+
+      // Capture cursor position BEFORE we rewrite the value
+      const cursorPos = el.selectionStart;
+
+      // Extract local digits from whatever is currently in the field
+      const digits = _localDigits(el.value);
+      const masked  = _buildMasked(digits);
       el.value = masked;
-      const newPos = Math.max(pos, PREFIX_LEN);
-      el.setSelectionRange(Math.min(newPos, masked.length), Math.min(newPos, masked.length));
+
+      // Figure out where cursor should land:
+      // Count how many local digits are before the old cursor position,
+      // then map that digit-count back to a position in the new masked string.
+      const rawBefore = el.value.slice(0, cursorPos).replace(/\D/g, '');
+      // rawBefore may include 868 prefix digits — strip them
+      const localBefore = (rawBefore.startsWith('868') ? rawBefore.slice(3) : rawBefore).length;
+      // Now find position in masked string after localBefore local digits
+      let count = 0, newPos = PREFIX_LEN;
+      for (let i = PREFIX_LEN; i < masked.length; i++) {
+        if (masked[i] !== '-') { // '-' is not a digit
+          if (count === localBefore) { newPos = i; break; }
+          count++;
+        }
+        newPos = masked.length; // if we run out, put at end
+      }
+      // Always at least after prefix
+      newPos = Math.max(newPos, PREFIX_LEN);
+      el.setSelectionRange(newPos, newPos);
     }
 
     function onFocus(e) {
       const el = e.target;
       if (!el.classList.contains('phone-mask')) return;
-      if (!el.value || el.value.length < PREFIX_LEN) el.value = PREFIX;
+      if (!_localDigits(el.value)) el.value = PREFIX;
       setTimeout(() => {
         if (el.selectionStart < PREFIX_LEN) el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
       }, 0);
@@ -939,16 +960,21 @@ const AttendanceSystem = (function() {
       const el = e.target;
       if (!el.classList.contains('phone-mask')) return;
       const pos = el.selectionStart;
-      if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= PREFIX_LEN && el.selectionStart === el.selectionEnd) {
+      const selEnd = el.selectionEnd;
+      // Block backspace/delete from eating into the prefix (when no selection)
+      if (e.key === 'Backspace' && pos <= PREFIX_LEN && pos === selEnd) { e.preventDefault(); return; }
+      if (e.key === 'Delete'    && pos < PREFIX_LEN  && pos === selEnd) { e.preventDefault(); return; }
+      // Block cursor from moving before the prefix
+      if ((e.key === 'ArrowLeft' || e.key === 'Home') && pos <= PREFIX_LEN) {
         e.preventDefault();
+        el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
       }
     }
 
     function onBlur(e) {
       const el = e.target;
       if (!el.classList.contains('phone-mask')) return;
-      // Clear if only prefix remains so placeholder shows
-      if (el.value === PREFIX) el.value = '';
+      if (!_localDigits(el.value)) el.value = ''; // clear prefix so placeholder shows
     }
 
     document.addEventListener('input',   onInput,   true);
