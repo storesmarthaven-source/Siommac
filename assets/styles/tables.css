@@ -115,12 +115,16 @@
   color: var(--text-muted); font-size: 12px; padding-top: 0;
 }
 
-/* ── Pagination — fully pill ──
-   Bootstrap applies border-radius via --bs-pagination-border-radius and
-   via :first-child/:last-child selectors on .page-link. Kill all of them. */
+/* ── Pagination ──────────────────────────────────────────────────────────────
+   DataTables + Bootstrap 5 renders TWO elements per button:
+     li.page-item.paginate_button  (wrapper)
+       └─ a.page-link              (the visible button)
+   We must style ONLY the <a>, never the <li>, or you get a ghost square behind
+   the pill. All li/page-item rules below are pure resets (no bg / border / radius).
+   ─────────────────────────────────────────────────────────────────────────── */
 .dataTables_wrapper .dataTables_paginate { padding-top: 0; }
 
-/* Reset Bootstrap's CSS variable so it can't leak in */
+/* ① Kill Bootstrap CSS vars that leak rounded corners onto the <a> */
 .dataTables_wrapper .dataTables_paginate ul.pagination {
   --bs-pagination-border-radius: 0;
   --bs-pagination-border-top-left-radius: 0;
@@ -130,21 +134,27 @@
   display: flex; gap: 4px; flex-wrap: wrap;
   margin: 0; padding: 0; list-style: none;
 }
-/* Strip border/bg from the page-item li wrapper itself — also kills any .btn styles DataTables injects */
+
+/* ② li wrapper — total reset, no visual styles at all */
 .dataTables_wrapper .dataTables_paginate .page-item,
-.dataTables_wrapper .dataTables_paginate li.paginate_button {
-  margin: 0; border: none !important; background: none !important;
-  border-radius: 0 !important; padding: 0 !important;
-  box-shadow: none !important; transform: none !important;
+.dataTables_wrapper .dataTables_paginate li.paginate_button,
+.dataTables_wrapper .dataTables_paginate li.paginate_button:hover,
+.dataTables_wrapper .dataTables_paginate li.paginate_button:focus,
+.dataTables_wrapper .dataTables_paginate li.paginate_button:active {
+  margin: 0 !important; padding: 0 !important;
+  border: none !important; background: none !important; background-color: transparent !important;
+  border-radius: 0 !important; box-shadow: none !important;
+  transform: none !important; outline: none !important;
   display: inline-flex !important; align-items: center !important;
 }
 
-/* Base style — perfect circle for all page buttons */
-.dataTables_wrapper .dataTables_paginate .paginate_button,
+/* ③ Base style — applies to the <a.page-link> inside every li */
 .dataTables_wrapper .dataTables_paginate .page-item .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item:first-child .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item:last-child .page-link,
-.dataTables_wrapper .dataTables_paginate li > a.page-link {
+.dataTables_wrapper .dataTables_paginate li > a.page-link,
+.dataTables_wrapper .dataTables_paginate .page-item .page-link:focus,
+.dataTables_wrapper .dataTables_paginate .page-item .page-link:focus-visible,
+.dataTables_wrapper .dataTables_paginate li > a.page-link:focus,
+.dataTables_wrapper .dataTables_paginate li > a.page-link:focus-visible {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -164,51 +174,46 @@
   line-height: 1 !important;
   box-shadow: none !important;
   text-decoration: none !important;
+  outline: none !important;
 }
 
-/* Previous / Next: slightly wider pill since they have text */
-.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
-.dataTables_wrapper .dataTables_paginate .paginate_button.next,
-.dataTables_wrapper .dataTables_paginate .page-item:first-child .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item:last-child .page-link {
-  width: auto !important; padding: 0 14px !important; border-radius: 50px !important;
+/* ④ Previous / Next — wider pill because they contain text */
+.dataTables_wrapper .dataTables_paginate li.previous > a.page-link,
+.dataTables_wrapper .dataTables_paginate li.previous > a.page-link:focus,
+.dataTables_wrapper .dataTables_paginate li.previous > a.page-link:focus-visible,
+.dataTables_wrapper .dataTables_paginate li.next > a.page-link,
+.dataTables_wrapper .dataTables_paginate li.next > a.page-link:focus,
+.dataTables_wrapper .dataTables_paginate li.next > a.page-link:focus-visible {
+  width: auto !important; padding: 0 16px !important; border-radius: 50px !important;
+  box-shadow: none !important; outline: none !important;
 }
 
-/* Active page */
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+/* ⑤ Active page */
 .dataTables_wrapper .dataTables_paginate .page-item.active .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item.active:first-child .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item.active:last-child .page-link {
+.dataTables_wrapper .dataTables_paginate li.paginate_button.current > a.page-link {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
-  border-radius: 40px !important;
+  border-radius: 50px !important;
 }
 
-/* Hover */
-.dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover,
+/* ⑥ Hover — on the <a> only */
 .dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled) .page-link:hover,
-.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled):first-child .page-link:hover,
-.dataTables_wrapper .dataTables_paginate .page-item:not(.active):not(.disabled):last-child .page-link:hover {
+.dataTables_wrapper .dataTables_paginate li.paginate_button:not(.current):not(.disabled) > a.page-link:hover {
   background: var(--siomac-red) !important;
   color: #fff !important;
   border-color: var(--siomac-red) !important;
-  border-radius: 40px !important;
+  border-radius: 50px !important;
 }
 
-/* Disabled */
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+/* ⑦ Disabled */
 .dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item.disabled:first-child .page-link,
-.dataTables_wrapper .dataTables_paginate .page-item.disabled:last-child .page-link {
+.dataTables_wrapper .dataTables_paginate li.paginate_button.disabled > a.page-link {
   opacity: .4 !important;
   cursor: default !important;
   background: var(--bg-card) !important;
   color: var(--text-muted) !important;
   border-color: var(--border) !important;
-  border-radius: 40px !important;
   pointer-events: none !important;
 }
 

@@ -34,7 +34,25 @@
 .btn-outline-primary:hover { background: var(--siomac-navy) !important; color: white !important; }
 .btn-outline-danger  { background: transparent !important; border: 1.5px solid var(--danger) !important; color: var(--danger) !important; }
 .btn-outline-danger:hover  { background: var(--danger) !important; color: white !important; }
-.btn:disabled { background: #d0d5de !important; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn:disabled { background: #d0d5de !important; cursor: not-allowed; box-shadow: none !important; }
+/* Kill Bootstrap's square focus ring on ALL buttons */
+.btn:focus,
+.btn:focus-visible,
+.btn:active:focus,
+.btn-outline-primary:focus,
+.btn-outline-primary:focus-visible,
+.btn-outline-danger:focus,
+.btn-outline-danger:focus-visible,
+.btn-primary:focus,
+.btn-danger:focus,
+.btn-success:focus,
+.btn-secondary:focus,
+.btn-sm:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --bs-btn-focus-shadow-rgb: transparent;
+}
 .btn-sm  { padding: 6px 12px; font-size: 12px; border-radius: var(--radius-sm); }
 .btn-lg  { padding: 13px 24px; font-size: 15px; }
 
