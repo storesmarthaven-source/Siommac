@@ -85,15 +85,22 @@
 
 /* panel header */
 .lm-panel-header {
-  padding: 18px 20px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  background: white;
+  background: transparent;
+  display: flex; align-items: center; justify-content: space-between;
 }
 .lm-panel-header h3 {
-  font-weight: 700; color: var(--siomac-navy); font-size: 1.05rem;
+  font-weight: 700; color: var(--siomac-navy); font-size: 0.95rem;
   margin: 0; display: flex; align-items: center; gap: 8px;
 }
+.lm-refresh-btn {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 13px; padding: 4px 6px;
+  border-radius: 8px; transition: color .15s, background .15s; line-height: 1;
+}
+.lm-refresh-btn:hover { color: var(--siomac-navy); background: var(--bg-subtle); }
 
 
 /* employee list */
