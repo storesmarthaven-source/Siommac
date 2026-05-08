@@ -676,9 +676,7 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
 
-    // hide global page-header on live map (it has its own controls row); show it everywhere else
-    const globalHeader = document.querySelector('.page-header');
-    if (globalHeader) globalHeader.style.display = id === 's-projectMap' ? 'none' : '';
+    // page-header shows on all pages including live map
 
     // page header title + subtitle
     const item = allSectionItems().find(x => x.id === id);
