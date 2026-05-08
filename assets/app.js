@@ -281,16 +281,21 @@ const AttendanceSystem = (function() {
         })
       }).addTo(map);
 
-      // Best selfie to show: prefer check-out (more recent), fall back to check-in
+      // Selfie = attendance check-in/out photo; profile = employee profile photo
       const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+      const profile = row.profileImage || '';
       const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
       const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
       const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
-      const photoSrc    = selfie || row.profileImage || '';
 
-      // Build selfie/photo section
-      const photoHtml = photoSrc
-        ? `<div class="lm-popup-photo"><img src="${photoSrc}" alt="Photo" onerror="this.parentElement.style.display='none'"></div>`
+      // Popup avatar: profile photo (not selfie) with initial fallback
+      const popupAvatarContent = profile
+        ? `<img src="${profile}" alt="${initial}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.display='none';this.parentElement.dataset.letter='${initial}';this.parentElement.classList.add('lm-popup-avatar-fallback');">`
+        : initial;
+
+      // Selfie section in popup body (attendance photo only)
+      const photoHtml = selfie
+        ? `<div class="lm-popup-photo"><img src="${selfie}" alt="Check-in photo" onerror="this.parentElement.style.display='none'"></div>`
         : '';
 
       // Nav link (Google Maps) — uses check-in coords if available
@@ -299,11 +304,6 @@ const AttendanceSystem = (function() {
       const navBtn = (navLat && navLng)
         ? `<a href="https://www.google.com/maps?q=${navLat},${navLng}" target="_blank" class="lm-popup-btn lm-popup-btn-outline"><i class="fas fa-directions"></i> Navigate</a>`
         : `<span class="lm-popup-btn lm-popup-btn-outline" style="opacity:.45;pointer-events:none;"><i class="fas fa-directions"></i> Navigate</span>`;
-
-      // Popup avatar: show photo if available, else letter
-      const popupAvatarContent = photoSrc
-        ? `<img src="${photoSrc}" alt="${initial}" onerror="this.style.display='none';this.parentElement.dataset.letter='${initial}';this.parentElement.classList.add('lm-popup-avatar-fallback');">`
-        : initial;
 
       marker.bindPopup(`
         <div class="lm-popup-card">
@@ -376,9 +376,9 @@ const AttendanceSystem = (function() {
       </div>`;
     }).join('');
 
-    // Preload each avatar image off-screen; swap in only when fully decoded — zero flash
+    // Preload profile photo into each avatar — off-screen decode, no flash
     sorted.forEach(r => {
-      const src = r.checkInPhotoUrl || r.profileImage || '';
+      const src = r.profileImage || r.checkInPhotoUrl || '';
       if (!src) return;
       const avatarEl = listEl.querySelector(`.lm-emp-avatar[data-uid="${r.userId}"]`);
       if (!avatarEl) return;
