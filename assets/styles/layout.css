@@ -219,16 +219,21 @@
 /* Page header */
 .page-header {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+  margin-bottom: 24px; flex-wrap: nowrap; gap: 12px;
+  min-height: 52px;
 }
 .page-header-left {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
+}
+.page-header-right {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
 .page-header h1 {
-  font-size: 1.55rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 1.45rem; font-weight: 700; color: var(--siomac-navy);
   display: flex; align-items: center; gap: 10px; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.page-header h1 i { color: var(--siomac-red); font-size: 1.3rem; }
+.page-header h1 i { color: var(--siomac-red); font-size: 1.2rem; flex-shrink: 0; }
 /* Clock pill */
 .page-header-right .header-meta,
 .page-header .header-meta {
@@ -253,10 +258,6 @@
   font-size: 0.82rem; color: var(--text-muted);
 }
 
-/* ── Header right group ── */
-.page-header-right {
-  display: flex; align-items: center; gap: 10px;
-}
 
 /* ── Icon button group ── */
 .hdr-icon-group {
