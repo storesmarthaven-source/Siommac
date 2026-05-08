@@ -43,27 +43,21 @@
   margin-bottom: 12px;
 }
 
-/* ── Neutralise Bootstrap btn-group border-radius overrides ── */
-.dt-buttons.btn-group > .btn:not(:first-child),
-.dt-buttons.btn-group > .btn:not(:last-child),
-#attTableBtns .btn-group > .btn:not(:first-child),
-#attTableBtns .btn-group > .btn:not(:last-child) {
-  border-radius: 8px !important;
-}
-
-/* ── Export / action buttons ──
-   Targets both in-wrapper and relocated (#attTableBtns) positions.
-   Uses .dt-button selector AND raw Bootstrap classes to beat specificity. */
-.dt-buttons .dt-button,
-.dt-buttons .dt-button.btn,
-.dt-buttons .dt-button.btn-secondary,
-.dt-buttons a.dt-button,
-.dt-buttons button.dt-button,
-#attTableBtns .dt-button,
-#attTableBtns .dt-button.btn,
-#attTableBtns .dt-button.btn-secondary,
-#attTableBtns a.dt-button,
-#attTableBtns button.dt-button {
+/* ── DataTables export buttons — full override ──
+   Target by the specific classes DataTables injects so Bootstrap
+   .btn.btn-secondary cannot win on specificity. */
+button.buttons-csv,
+button.buttons-excel,
+button.buttons-pdf,
+button.buttons-print,
+button.buttons-html5,
+button.buttons-copy,
+button.dt-button.buttons-csv,
+button.dt-button.buttons-excel,
+button.dt-button.buttons-pdf,
+button.dt-button.buttons-print,
+button.dt-button.buttons-html5,
+button.dt-button.buttons-copy {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -85,25 +79,24 @@
   width: auto !important;
   height: auto !important;
 }
-.dt-buttons .dt-button:hover,
-.dt-buttons .dt-button.btn:hover,
-.dt-buttons .dt-button.btn-secondary:hover,
-.dt-buttons .dt-button:focus,
-.dt-buttons .dt-button.active,
-.dt-buttons .dt-button:active,
-#attTableBtns .dt-button:hover,
-#attTableBtns .dt-button.btn:hover,
-#attTableBtns .dt-button.btn-secondary:hover,
-#attTableBtns .dt-button:focus,
-#attTableBtns .dt-button.active,
-#attTableBtns .dt-button:active {
+button.buttons-csv:hover,
+button.buttons-excel:hover,
+button.buttons-pdf:hover,
+button.buttons-print:hover,
+button.buttons-html5:hover,
+button.buttons-copy:hover,
+button.dt-button.buttons-csv:hover,
+button.dt-button.buttons-excel:hover,
+button.dt-button.buttons-pdf:hover,
+button.dt-button.buttons-print:hover,
+button.dt-button.buttons-html5:hover,
+button.dt-button.buttons-copy:hover {
   background: var(--siomac-red) !important;
   color: #fff !important;
   box-shadow: none !important;
   opacity: 1 !important;
   outline: none !important;
   transform: none !important;
-  border-color: transparent !important;
 }
 
 /* ── Length select ── */
