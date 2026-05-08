@@ -97,8 +97,6 @@ window.SiomacCharts = (function () {
     destroyDash_('dept');
     const canvas = document.getElementById('deptDistChart');
     if (!canvas) return;
-    // Exact palette from design spec
-    const palette = ['#E40C0C', '#1B2D55', '#FFB712', '#2A6F9C', '#5E6F8D', '#B23C1C', '#2E7D32', '#7C3AED', '#0891B2', '#DB2777'];
     dashCharts.dept = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
       data: {
@@ -227,76 +225,84 @@ window.SiomacCharts = (function () {
   function hasAttendanceChart() { return !!attendanceChartInstance; }
   function hasTrendChart() { return !!trendChartInstance; }
 
+  const palette = ['#E40C0C', '#1B2D55', '#FFB712', '#2A6F9C', '#5E6F8D', '#B23C1C', '#2E7D32', '#7C3AED', '#0891B2', '#DB2777'];
+
+  function _pct(n, total) { return total > 0 ? Math.round((n / total) * 100) + '%' : '—'; }
+
+  function _populateDeptStats(depts) {
+    const list = document.getElementById('deptStatsList');
+    if (!list) return;
+    const total = depts.reduce((s, d) => s + (d.count || 0), 0);
+    list.innerHTML = depts.map((d, i) => `
+      <div class="dash-chart-stat-item">
+        <span class="dash-stat-dot" style="background:${palette[i % palette.length]}"></span>
+        <span class="dash-stat-label">${d.name}</span>
+        <span class="dash-stat-pct">${_pct(d.count, total)}</span>
+        <span class="dash-stat-val">${d.count ?? '—'}</span>
+      </div>`).join('');
+  }
+
+  function _populateStatusStats(s) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    const total = (s.present || 0) + (s.late || 0) + (s.absent || 0) + (s.onLeave || 0);
+    set('statusStatPresent', s.present ?? '—');
+    set('statusStatLate',    s.late    ?? '—');
+    set('statusStatAbsent',  s.absent  ?? '—');
+    set('statusStatLeave',   s.onLeave ?? '—');
+    set('statusStatTotal',   total || '—');
+    set('statusStatRate',    _pct((s.present || 0) + (s.late || 0), total));
+  }
+
+  function _populateLeaveStats(l) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    const total = (l.sick || 0) + (l.casual || 0) + (l.annual || 0) + (l.medical || 0);
+    set('leaveStatSick',    l.sick    ?? '—');
+    set('leaveStatCasual',  l.casual  ?? '—');
+    set('leaveStatAnnual',  l.annual  ?? '—');
+    set('leaveStatMedical', l.medical ?? '—');
+    set('leaveStatTotal',   total || '—');
+  }
+
   function renderDashboardCharts(data) {
     renderTrendLine(data.dailyTrend);
     renderDeptDist(data.deptDistribution);
     renderStatusBars(data.statusBreakdown);
     renderLeaveTypes(data.leaveTypes);
-
-    // ── Populate left-side stat panels ──
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
-
-    // Dept stats — match order from deptDistribution array
-    (data.deptDistribution || []).forEach((d, i) => {
-      set('deptStat' + i, d.count);
-    });
-
-    // Status stats
-    const s = data.statusBreakdown || {};
-    set('statusStatPresent', s.present ?? '—');
-    set('statusStatLate',    s.late    ?? '—');
-    set('statusStatAbsent',  s.absent  ?? '—');
-    set('statusStatLeave',   s.onLeave ?? '—');
-
-    // Leave stats
-    const l = data.leaveTypes || {};
-    set('leaveStatSick',    l.sick    ?? '—');
-    set('leaveStatCasual',  l.casual  ?? '—');
-    set('leaveStatAnnual',  l.annual  ?? '—');
-    set('leaveStatMedical', l.medical ?? '—');
+    _populateDeptStats(data.deptDistribution || []);
+    _populateStatusStats(data.statusBreakdown || {});
+    _populateLeaveStats(data.leaveTypes || {});
   }
 
   // ── Silent in-place update — patches existing chart instances without redraw flicker ──
   function updateDashboardCharts(data) {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
-
     // Trend line — patch labels + both datasets
     if (dashCharts.trend && data.dailyTrend) {
       const t = dashCharts.trend;
       t.data.labels = data.dailyTrend.map(d => String(d.date).slice(5));
       t.data.datasets[0].data = data.dailyTrend.map(d => d.present);
       t.data.datasets[1].data = data.dailyTrend.map(d => d.late);
-      t.update('none'); // 'none' = skip animation for silent update
+      t.update('none');
     }
-
-    // Dept doughnut — patch data + labels
+    // Dept doughnut
     if (dashCharts.dept && data.deptDistribution) {
       dashCharts.dept.data.labels = data.deptDistribution.map(d => d.name);
       dashCharts.dept.data.datasets[0].data = data.deptDistribution.map(d => d.count);
       dashCharts.dept.update('none');
-      (data.deptDistribution || []).forEach((d, i) => set('deptStat' + i, d.count));
+      _populateDeptStats(data.deptDistribution);
     }
-
-    // Status bar — patch data
+    // Status bar
     if (dashCharts.status && data.statusBreakdown) {
       const s = data.statusBreakdown;
       dashCharts.status.data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
       dashCharts.status.update('none');
-      set('statusStatPresent', s.present ?? '—');
-      set('statusStatLate',    s.late    ?? '—');
-      set('statusStatAbsent',  s.absent  ?? '—');
-      set('statusStatLeave',   s.onLeave ?? '—');
+      _populateStatusStats(s);
     }
-
-    // Leave doughnut — patch data
+    // Leave doughnut
     if (dashCharts.leaves && data.leaveTypes) {
       const l = data.leaveTypes;
       dashCharts.leaves.data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];
       dashCharts.leaves.update('none');
-      set('leaveStatSick',    l.sick    ?? '—');
-      set('leaveStatCasual',  l.casual  ?? '—');
-      set('leaveStatAnnual',  l.annual  ?? '—');
-      set('leaveStatMedical', l.medical ?? '—');
+      _populateLeaveStats(l);
     }
   }
 

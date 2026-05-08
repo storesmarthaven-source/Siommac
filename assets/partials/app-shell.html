@@ -769,12 +769,7 @@
             </div>
             <div class="dash-chart-split">
               <div class="dash-chart-stats" id="deptStatsList">
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#E40C0C"></span><span class="dash-stat-label">Civil Ops</span><span class="dash-stat-val" id="deptStat0">—</span></div>
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#1B2D55"></span><span class="dash-stat-label">Mechanical</span><span class="dash-stat-val" id="deptStat1">—</span></div>
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#FFB712"></span><span class="dash-stat-label">Electrical</span><span class="dash-stat-val" id="deptStat2">—</span></div>
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#2A6F9C"></span><span class="dash-stat-label">HSE</span><span class="dash-stat-val" id="deptStat3">—</span></div>
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#5E6F8D"></span><span class="dash-stat-label">Admin</span><span class="dash-stat-val" id="deptStat4">—</span></div>
-                <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#B23C1C"></span><span class="dash-stat-label">Logistics</span><span class="dash-stat-val" id="deptStat5">—</span></div>
+                <div class="dash-chart-stat-item"><span class="dash-stat-label" style="color:var(--text-muted);font-style:italic;font-size:0.72rem;">Loading…</span></div>
               </div>
               <div class="chart-container-md"><canvas id="deptDistChart"></canvas></div>
             </div>
@@ -791,6 +786,9 @@
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#FFB712"></span><span class="dash-stat-label">Late</span><span class="dash-stat-val" id="statusStatLate">—</span></div>
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#E40C0C"></span><span class="dash-stat-label">Absent</span><span class="dash-stat-val" id="statusStatAbsent">—</span></div>
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#1B2D55"></span><span class="dash-stat-label">On Leave</span><span class="dash-stat-val" id="statusStatLeave">—</span></div>
+                <div class="dash-stat-divider"></div>
+                <div class="dash-chart-stat-item dash-stat-summary"><span class="dash-stat-label">Total</span><span class="dash-stat-val" id="statusStatTotal">—</span></div>
+                <div class="dash-chart-stat-item dash-stat-summary"><span class="dash-stat-label">Attendance Rate</span><span class="dash-stat-val dash-stat-rate" id="statusStatRate">—</span></div>
               </div>
               <div class="chart-container-md"><canvas id="statusBarChart"></canvas></div>
             </div>
@@ -807,6 +805,8 @@
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#1B2D55"></span><span class="dash-stat-label">Casual</span><span class="dash-stat-val" id="leaveStatCasual">—</span></div>
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#2E7D32"></span><span class="dash-stat-label">Annual</span><span class="dash-stat-val" id="leaveStatAnnual">—</span></div>
                 <div class="dash-chart-stat-item"><span class="dash-stat-dot" style="background:#FFB712"></span><span class="dash-stat-label">Medical</span><span class="dash-stat-val" id="leaveStatMedical">—</span></div>
+                <div class="dash-stat-divider"></div>
+                <div class="dash-chart-stat-item dash-stat-summary"><span class="dash-stat-label">Total Leaves</span><span class="dash-stat-val" id="leaveStatTotal">—</span></div>
               </div>
               <div class="chart-container-md"><canvas id="leaveTypesChart"></canvas></div>
             </div>

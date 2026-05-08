@@ -1009,24 +1009,40 @@
 .dash-chart-split {
   display: flex; align-items: center;
   padding: 16px 20px 20px;
-  gap: 16px;
+  gap: 20px;
 }
 .dash-chart-stats {
-  display: flex; flex-direction: column; gap: 12px;
-  min-width: 120px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 148px; flex-shrink: 0;
 }
 .dash-chart-stat-item {
   display: flex; align-items: center; gap: 8px;
 }
 .dash-stat-dot {
-  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .dash-stat-label {
-  font-size: 0.75rem; color: var(--text-muted); flex: 1;
+  font-size: 0.73rem; color: var(--text-muted); flex: 1; white-space: nowrap;
+}
+.dash-stat-pct {
+  font-size: 0.7rem; color: var(--text-muted); min-width: 30px; text-align: right;
 }
 .dash-stat-val {
-  font-size: 0.88rem; font-weight: 700; color: var(--siomac-navy);
-  min-width: 24px; text-align: right;
+  font-size: 0.85rem; font-weight: 700; color: var(--siomac-navy);
+  min-width: 22px; text-align: right;
+}
+.dash-stat-rate {
+  color: var(--siomac-red);
+}
+.dash-stat-divider {
+  border-top: 1px solid var(--border-color, #e5e9f0);
+  margin: 2px 0;
+}
+.dash-stat-summary .dash-stat-label {
+  font-size: 0.7rem;
+}
+.dash-stat-summary .dash-stat-val {
+  font-size: 0.82rem;
 }
 .dash-chart-split .chart-container-md {
   flex: 1; padding: 0; min-width: 0;
