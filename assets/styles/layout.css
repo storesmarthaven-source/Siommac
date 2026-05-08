@@ -390,18 +390,27 @@
 .hdr-notif-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
 .hdr-notif-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
 
-/* Bell pulse animation when new notifications arrive */
-@keyframes bellPulse {
-  0%   { transform: scale(1); }
-  20%  { transform: scale(1.25) rotate(-12deg); }
-  40%  { transform: scale(1.2)  rotate(10deg); }
-  60%  { transform: scale(1.15) rotate(-8deg); }
-  80%  { transform: scale(1.05) rotate(4deg); }
-  100% { transform: scale(1)    rotate(0deg); }
+/* Badge pop-in bounce when new notifications arrive */
+@keyframes badgeBounce {
+  0%   { transform: scale(0.4); opacity: 0; }
+  55%  { transform: scale(1.35); opacity: 1; }
+  75%  { transform: scale(0.88); }
+  90%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+@keyframes bellShake {
+  0%,100% { transform: rotate(0deg); }
+  20%     { transform: rotate(-18deg); }
+  40%     { transform: rotate(16deg); }
+  60%     { transform: rotate(-10deg); }
+  80%     { transform: rotate(6deg); }
+}
+.notif-bell-pulse .hdr-badge {
+  animation: badgeBounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
 }
 .notif-bell-pulse i {
   display: inline-block;
-  animation: bellPulse 0.7s ease;
+  animation: bellShake 0.5s ease;
 }
 
 /* Notification empty / loading state */
