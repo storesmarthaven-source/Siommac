@@ -961,6 +961,7 @@ const AttendanceSystem = (function() {
       const STORAGE_KEY = 'siomac_read_notifs_v1';
       let _notifData   = [];
       let _pollTimer   = null;
+      let _seenIds     = new Set(); // tracks IDs we've already displayed
 
       function _readIds() {
         try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); } catch { return new Set(); }
@@ -1022,7 +1023,7 @@ const AttendanceSystem = (function() {
         });
       }
 
-      function _render() {
+      function _render(newIds) {
         const list = document.getElementById('notifList');
         if (!list) return;
         const readIds = _readIds();
@@ -1046,13 +1047,14 @@ const AttendanceSystem = (function() {
 
         list.innerHTML = _notifData.map(n => {
           const isRead = readIds.has(n.id);
+          const isNew  = newIds && newIds.has(n.id);
           const resolver = NOTIF_SECTION[n.type];
           const section  = resolver ? resolver() : null;
           const iconEl = n.photoUrl
             ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
             : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
           return `
-            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
+            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}${isNew ? ' notif-new' : ''}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
               ${iconEl}
               <div class="hdr-notif-text" style="flex:1;min-width:0;">
                 <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
@@ -1067,8 +1069,16 @@ const AttendanceSystem = (function() {
       function _fetch() {
         api('getNotifications', {}).then(res => {
           if (res && res.success) {
-            _notifData = res.data || [];
-            _render();
+            const incoming = res.data || [];
+            const newIds = new Set(incoming.map(n => n.id).filter(id => !_seenIds.has(id)));
+            incoming.forEach(n => _seenIds.add(n.id));
+            _notifData = incoming;
+            _render(newIds);
+            // Pulse bell if there are genuinely new notifications
+            if (newIds.size > 0 && _seenIds.size > newIds.size) {
+              const bell = document.getElementById('hdrNotifBtn');
+              if (bell) { bell.classList.add('notif-bell-pulse'); setTimeout(() => bell.classList.remove('notif-bell-pulse'), 1000); }
+            }
           }
         }).catch(() => {});
       }

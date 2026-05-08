@@ -390,6 +390,29 @@
 .hdr-notif-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
 .hdr-notif-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
 
+/* New notification slide-in animation */
+@keyframes notifSlideIn {
+  from { opacity: 0; transform: translateX(-12px); background: rgba(228,12,12,.08); }
+  to   { opacity: 1; transform: translateX(0);     background: rgba(228,12,12,.03); }
+}
+.hdr-notif-item.notif-new {
+  animation: notifSlideIn 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+/* Bell pulse animation when new notifications arrive */
+@keyframes bellPulse {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.25) rotate(-12deg); }
+  40%  { transform: scale(1.2)  rotate(10deg); }
+  60%  { transform: scale(1.15) rotate(-8deg); }
+  80%  { transform: scale(1.05) rotate(4deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+.notif-bell-pulse i {
+  display: inline-block;
+  animation: bellPulse 0.7s ease;
+}
+
 /* Notification empty / loading state */
 .hdr-notif-empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
