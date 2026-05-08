@@ -1022,13 +1022,13 @@
   width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .dash-stat-label {
-  font-size: 0.73rem; color: var(--text-muted); flex: 1; white-space: nowrap;
+  font-size: 0.8rem; color: var(--text-muted); flex: 1; white-space: nowrap;
 }
 .dash-stat-pct {
-  font-size: 0.7rem; color: var(--text-muted); min-width: 30px; text-align: right;
+  font-size: 0.77rem; color: var(--text-muted); min-width: 30px; text-align: right;
 }
 .dash-stat-val {
-  font-size: 0.85rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.92rem; font-weight: 700; color: var(--siomac-navy);
   min-width: 22px; text-align: right;
 }
 .dash-stat-rate {
@@ -1039,10 +1039,10 @@
   margin: 2px 0;
 }
 .dash-stat-summary .dash-stat-label {
-  font-size: 0.7rem;
+  font-size: 0.77rem;
 }
 .dash-stat-summary .dash-stat-val {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
 }
 .dash-chart-split .chart-container-md {
   flex: 1; padding: 0; min-width: 0;
