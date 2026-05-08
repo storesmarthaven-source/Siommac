@@ -10,44 +10,6 @@ window.SiomacCharts = (function () {
   Chart.defaults.font.family = "'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif";
   Chart.defaults.color = '#5E6F8D';
 
-  // ── Shared animation presets ──
-  // Bars rise with a staggered per-bar delay
-  const ANIM_RISE = {
-    animation: {
-      duration: 800,
-      easing: 'easeOutQuart'
-    },
-    animations: {
-      y: {
-        from(ctx) { return ctx.chart.scales.y ? ctx.chart.scales.y.bottom : 0; }
-      }
-    }
-  };
-  // Doughnuts spin + scale in
-  const ANIM_SPIN = {
-    animation: {
-      duration: 900,
-      easing: 'easeOutQuart',
-      animateRotate: true,
-      animateScale: true
-    }
-  };
-  // Lines: each point drops in from above with stagger
-  const ANIM_LINE = {
-    animations: {
-      y: {
-        duration: 800,
-        easing: 'easeOutBounce',
-        delay(ctx) { return ctx.dataIndex * 30; },
-        from(ctx) {
-          const chart = ctx.chart;
-          return chart.scales && chart.scales.y ? chart.scales.y.getPixelForValue(0) : 0;
-        }
-      },
-      x: { duration: 0 }
-    }
-  };
-
   // ── Employee: personal attendance donut ──
   function displayAttendanceChart(stats) {
     const canvas = document.getElementById('attendanceChart');
@@ -68,7 +30,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        ...ANIM_SPIN,
+        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } }
         }
@@ -76,7 +38,7 @@ window.SiomacCharts = (function () {
     });
   }
 
-  // ── Admin: 30-day daily attendance trend — matches design line chart exactly ──
+  // ── Admin: 30-day daily attendance trend ──
   function renderTrendLine(data) {
     destroyDash_('trend');
     const canvas = document.getElementById('trendLineChart');
@@ -120,7 +82,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        ...ANIM_LINE,
+        animation: { duration: 1000, easing: 'easeOutCubic' },
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } }
         },
@@ -132,7 +94,7 @@ window.SiomacCharts = (function () {
     });
   }
 
-  // ── Admin: Department distribution — matches design doughnut exactly ──
+  // ── Admin: Department distribution doughnut ──
   function renderDeptDist(data) {
     destroyDash_('dept');
     const canvas = document.getElementById('deptDistChart');
@@ -153,7 +115,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        ...ANIM_SPIN,
+        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -188,7 +150,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        ...ANIM_RISE,
+        animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' employees' } }
@@ -221,7 +183,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        ...ANIM_SPIN,
+        animation: { duration: 900, easing: 'easeOutQuart', animateRotate: true, animateScale: true },
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -253,7 +215,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        ...ANIM_RISE,
+        animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' hrs' } }
@@ -308,13 +270,17 @@ window.SiomacCharts = (function () {
   }
 
   function renderDashboardCharts(data) {
-    renderTrendLine(data.dailyTrend);
-    renderDeptDist(data.deptDistribution);
-    renderStatusBars(data.statusBreakdown);
-    renderLeaveTypes(data.leaveTypes);
-    _populateDeptStats(data.deptDistribution || []);
-    _populateStatusStats(data.statusBreakdown || {});
-    _populateLeaveStats(data.leaveTypes || {});
+    // rAF ensures the section is painted and canvases have real dimensions
+    // before Chart.js measures them — otherwise animation plays on a 0x0 canvas
+    requestAnimationFrame(() => {
+      renderTrendLine(data.dailyTrend);
+      renderDeptDist(data.deptDistribution);
+      renderStatusBars(data.statusBreakdown);
+      renderLeaveTypes(data.leaveTypes);
+      _populateDeptStats(data.deptDistribution || []);
+      _populateStatusStats(data.statusBreakdown || {});
+      _populateLeaveStats(data.leaveTypes || {});
+    });
   }
 
   // ── Silent in-place update — patches existing chart instances without redraw flicker ──
