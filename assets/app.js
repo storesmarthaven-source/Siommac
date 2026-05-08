@@ -1005,8 +1005,21 @@ const AttendanceSystem = (function() {
       function _setBadge(btn, count) {
         let b = btn.querySelector('.sb-nav-badge');
         if (count > 0) {
-          if (!b) { b = document.createElement('span'); b.className = 'sb-nav-badge'; btn.appendChild(b); }
-          b.textContent = count > 99 ? '99+' : count;
+          const label = count > 99 ? '99+' : String(count);
+          if (!b) {
+            b = document.createElement('span');
+            b.className = 'sb-nav-badge';
+            btn.appendChild(b);
+          }
+          if (b.textContent !== label) {
+            b.textContent = label;
+            b.style.animation = 'none';
+            b.offsetWidth; // reflow to restart animation
+            b.style.animation = '';
+            b.classList.remove('sb-badge-bounce');
+            void b.offsetWidth;
+            b.classList.add('sb-badge-bounce');
+          }
         } else {
           if (b) b.remove();
         }

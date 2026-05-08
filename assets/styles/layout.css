@@ -434,9 +434,15 @@
   background: var(--siomac-red); color: #fff;
   border-radius: 10px; font-size: 0.6rem; font-weight: 700;
   padding: 0 4px; line-height: 1;
-  margin-left: 6px;    /* sits right next to the label text */
+  margin-left: 6px;
+  border: 1.5px solid rgba(255,255,255,0.25);
   pointer-events: none;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(228,12,12,0.45);
+}
+/* Sidebar badge bounce animation */
+.sb-badge-bounce {
+  animation: badgeBounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
 }
 /* Collapsed sidebar — badge floats top-right of icon */
 .sidebar.collapsed .sidebar-menu button { position: relative; }
