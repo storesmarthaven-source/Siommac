@@ -1474,12 +1474,13 @@ const AttendanceSystem = (function() {
   // Sections that have no live data — skip on background sync
   const _noSyncSections = new Set(['s-settings', 's-profile', 's-payroll', 's-adm-rates']);
 
-  // Returns true if the user is actively typing, has a dropdown open, or a modal is visible.
-  // In any of these cases background sync should not re-render and disrupt them.
+  // Returns true if the user is actively typing, has a dropdown open, a modal is visible,
+  // or the dashboard layout editor is open. In any of these cases background sync skips.
   function _userIsInteracting() {
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
     if (document.querySelector('.modal.show')) return true;
+    if (_dashEditMode) return true;
     return false;
   }
 
