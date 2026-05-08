@@ -349,6 +349,12 @@ async function updateEmployee(args, ctx) {
   };
   Object.keys(patch).forEach(k => patch[k] == null || patch[k] === '' ? delete patch[k] : null);
   if (args.password) patch.password_hash = await bcrypt.hash(String(args.password), 10);
+  // Admin can update employee profile photo
+  if (args.removeProfileImage) {
+    patch.profile_image = '__removed__';
+  } else if (args.profileImageBase64) {
+    patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${args.username}`);
+  }
   // Allow admin to manually set/change employee number
   if (args.employeeNumber !== undefined) {
     const empNum = String(args.employeeNumber || '').trim().toUpperCase();

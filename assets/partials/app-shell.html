@@ -1955,6 +1955,24 @@
       <div class="emp-modal-body">
         <form id="editEmployeeForm" autocomplete="off">
           <input type="hidden" id="editUsername">
+
+          <!-- Photo picker -->
+          <div style="display:flex;align-items:center;gap:16px;padding:12px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
+            <div style="position:relative;flex-shrink:0;">
+              <div id="editEmpAvatarWrap" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--siomac-red),var(--siomac-red-dark,#a00));overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;cursor:pointer;border:3px solid var(--border);" onclick="document.getElementById('editEmpPhotoInput').click()">
+                <img id="editEmpPhotoPreview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                <span id="editEmpPhotoInitials">?</span>
+              </div>
+              <button type="button" onclick="document.getElementById('editEmpPhotoInput').click()" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--siomac-navy);border:2px solid #fff;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="fas fa-camera"></i></button>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Profile Photo</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">Click the avatar to upload a new photo (JPG, PNG, WebP)</div>
+              <button type="button" id="editEmpRemovePhotoBtn" style="font-size:0.72rem;color:var(--siomac-red);background:none;border:none;cursor:pointer;padding:0;display:none;"><i class="fas fa-trash-alt"></i> Remove photo</button>
+            </div>
+            <input type="file" id="editEmpPhotoInput" accept="image/*" style="display:none;">
+          </div>
+
           <div class="emp-form-grid">
             <div class="form-group">
               <label class="form-label">Employee ID</label>

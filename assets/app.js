@@ -3842,6 +3842,34 @@ const AttendanceSystem = (function() {
   // kept as alias — called from delegated click handler
   function displayEmployeeList(list) { _empAllList = list; _renderEmpStats(); _renderEmployees(); }
 
+  // Tracks pending photo changes for the edit employee modal
+  let _editEmpPhotoBase64 = null;   // new photo to upload (base64 string)
+  let _editEmpRemovePhoto = false;  // flag to remove existing photo
+
+  function _resetEditEmpPhoto(emp) {
+    _editEmpPhotoBase64 = null;
+    _editEmpRemovePhoto = false;
+    const preview  = document.getElementById('editEmpPhotoPreview');
+    const initials = document.getElementById('editEmpPhotoInitials');
+    const removeBtn = document.getElementById('editEmpRemovePhotoBtn');
+    const inp = document.getElementById('editEmpPhotoInput');
+    if (inp) inp.value = '';
+    const name = emp ? (emp.fullName || emp.username || '') : '';
+    const ini  = name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+    if (initials) initials.textContent = ini;
+    if (emp && emp.profileImage) {
+      preview.src = emp.profileImage;
+      preview.style.display = '';
+      if (initials) initials.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = '';
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+      if (initials) initials.style.display = '';
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  }
+
   function editEmployee(username) {
     showSpinner('Loading employee...');
     Promise.all([
@@ -3870,12 +3898,49 @@ const AttendanceSystem = (function() {
         if (d.id === emp.departmentId) o.selected = true;
         deptSelect.appendChild(o);
       });
+
+      // Set up photo picker
+      _resetEditEmpPhoto(emp);
+
       document.getElementById('editEmployeeModal').classList.add('active');
     }).catch(err => {
       hideSpinner();
       showPopup('error', 'Error', err.message || 'Could not load employee');
     });
   }
+
+  // Edit employee photo file input change
+  document.getElementById('editEmpPhotoInput').addEventListener('change', function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const base64 = e.target.result;
+      _editEmpPhotoBase64 = base64;
+      _editEmpRemovePhoto = false;
+      const preview  = document.getElementById('editEmpPhotoPreview');
+      const initials = document.getElementById('editEmpPhotoInitials');
+      const removeBtn = document.getElementById('editEmpRemovePhotoBtn');
+      preview.src = base64;
+      preview.style.display = '';
+      if (initials) initials.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Remove photo button in edit employee modal
+  document.getElementById('editEmpRemovePhotoBtn').addEventListener('click', function () {
+    _editEmpPhotoBase64 = null;
+    _editEmpRemovePhoto = true;
+    const preview  = document.getElementById('editEmpPhotoPreview');
+    const initials = document.getElementById('editEmpPhotoInitials');
+    preview.src = '';
+    preview.style.display = 'none';
+    if (initials) initials.style.display = '';
+    this.style.display = 'none';
+    document.getElementById('editEmpPhotoInput').value = '';
+  });
 
   function updateEmployee() {
     const username       = document.getElementById('editUsername').value;
@@ -3898,7 +3963,10 @@ const AttendanceSystem = (function() {
     ]);
     if (!ok) return;
     showSpinner('Updating employee...');
-    api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    const updateArgs = { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser };
+    if (_editEmpRemovePhoto) updateArgs.removeProfileImage = true;
+    else if (_editEmpPhotoBase64) updateArgs.profileImageBase64 = _editEmpPhotoBase64;
+    api('updateEmployee', updateArgs).then(res => {
       hideSpinner();
       if (res.success) {
         closeEditEmpModal();
