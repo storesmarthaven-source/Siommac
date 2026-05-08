@@ -860,7 +860,7 @@
   color: rgba(255,255,255,.85) !important;
   box-shadow: none !important;
 }
-.hdr-icon-group .hdr-icon-btn:hover {
+.hdr-icon-group .hdr-icon-btn:not(.hdr-profile-btn--pill):hover {
   background: rgba(255,255,255,.12) !important;
   color: #fff !important;
 }
@@ -1703,6 +1703,14 @@
 .emp-card-header--inactive .emp-card-name { color: rgba(255,255,255,.75); }
 .emp-card-header--inactive .emp-card-pos  { color: rgba(255,255,255,.5); }
 .emp-card-header--inactive .emp-card-empid { color: rgba(255,255,255,.6); background: rgba(255,255,255,.1); }
+.emp-card-avatar {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; font-size: 18px; font-weight: 700; color: #fff;
+  border: 2px solid rgba(255,255,255,0.35);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
   font-size: 1.1rem; font-weight: 700; color: #fff;

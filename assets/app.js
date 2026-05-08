@@ -1401,7 +1401,7 @@ const AttendanceSystem = (function() {
 
     // employee-only setup (welcome card + location tracking)
     if (currentRole === 'employee') {
-      document.getElementById('userInitial').textContent = currentFullName.charAt(0).toUpperCase();
+      _setAttendanceAvatar(result.profileImage || '', currentFullName);
       document.getElementById('displayNameText').textContent = currentFullName;
       // Role + department subtitle
       const roleDept = document.getElementById('ea-role-dept');
@@ -2670,9 +2670,14 @@ const AttendanceSystem = (function() {
       const t = todayMap[emp.todayStatus] || todayMap.notchecked;
       const isActive = emp.status === 'Active';
       const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
+      const initial = escapeHtml((emp.fullName || emp.username || '?').charAt(0).toUpperCase());
+      const avatarHtml = emp.profileImage
+        ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${initial}</span>`
+        : `<span>${initial}</span>`;
       return `
       <div class="emp-card">
         <div class="emp-card-header ${isActive ? 'emp-card-header--active' : 'emp-card-header--inactive'}">
+          <div class="emp-card-avatar">${avatarHtml}</div>
           <div class="emp-card-title-block">
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
@@ -4234,7 +4239,20 @@ const AttendanceSystem = (function() {
     }
   }
 
+  function _setAttendanceAvatar(imgUrl, fullName) {
+    const avatarDiv = document.querySelector('.user-avatar');
+    if (!avatarDiv) return;
+    const initial = (fullName || currentFullName || '?').charAt(0).toUpperCase();
+    if (imgUrl) {
+      avatarDiv.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span>${initial}</span>'">`;
+    } else {
+      avatarDiv.innerHTML = `<span>${initial}</span>`;
+    }
+  }
+
   function _setProfilePhotoUI(imgUrl, fullName) {
+    // also sync the attendance welcome card avatar
+    _setAttendanceAvatar(imgUrl, fullName);
     const imgEl   = document.getElementById('profilePhotoPreview');
     const emptyEl = document.getElementById('profilePhotoEmpty');
     const removeBtn = document.getElementById('removeProfileImageBtn');
