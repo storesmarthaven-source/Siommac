@@ -52,6 +52,7 @@
 #exportAttendanceBtn,
 #histResetBtn,
 #exportHistoryBtn,
+#empDrawerDeleteBtn,
 .btn-outline-secondary.btn-sm:not([title]):has(span),
 .btn-outline-secondary.has-label {
   border-radius: 8px !important;
@@ -61,6 +62,16 @@
   gap: 6px !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
+}
+/* Delete button in drawer — danger outline style */
+#empDrawerDeleteBtn {
+  border-color: var(--siomac-red) !important;
+  color: var(--siomac-red) !important;
+}
+#empDrawerDeleteBtn:hover {
+  background: var(--siomac-red) !important;
+  border-color: var(--siomac-red) !important;
+  color: #fff !important;
 }
 .btn-outline-secondary:hover {
   background: var(--siomac-navy) !important;
