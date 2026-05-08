@@ -10,6 +10,23 @@ window.SiomacCharts = (function () {
   Chart.defaults.font.family = "'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif";
   Chart.defaults.color = '#5E6F8D';
 
+  // ── Shared animation presets ──
+  const ANIM_RISE = {
+    duration: 700,
+    easing: 'easeOutQuart',
+    delay(ctx) { return ctx.dataIndex * 60; }
+  };
+  const ANIM_SPIN = {
+    duration: 800,
+    easing: 'easeOutQuart',
+    animateRotate: true,
+    animateScale: true
+  };
+  const ANIM_LINE = {
+    duration: 900,
+    easing: 'easeOutCubic'
+  };
+
   // ── Employee: personal attendance donut ──
   function displayAttendanceChart(stats) {
     const canvas = document.getElementById('attendanceChart');
@@ -30,6 +47,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
+        animation: ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } }
         }
@@ -81,6 +99,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: ANIM_LINE,
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } }
         },
@@ -113,6 +132,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
+        animation: ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -147,6 +167,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: ANIM_RISE,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' employees' } }
@@ -179,6 +200,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
+        animation: ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -210,6 +232,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: ANIM_RISE,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' hrs' } }
