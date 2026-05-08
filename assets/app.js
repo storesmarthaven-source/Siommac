@@ -1271,7 +1271,9 @@ const AttendanceSystem = (function() {
     const t = translations.en;
     Object.keys(t).forEach(key => {
       const element = document.getElementById(key);
-      if (element) element.textContent = t[key];
+      // Only update elements explicitly marked as translation targets.
+      // Stat value divs share IDs with translation keys but must not be overwritten.
+      if (element && element.dataset.i18n === key) element.textContent = t[key];
     });
   }
 
