@@ -919,30 +919,28 @@ const AttendanceSystem = (function() {
       const el = e.target;
       if (!(el instanceof Element) || !el.classList.contains('phone-mask')) return;
 
-      // Capture cursor position BEFORE we rewrite the value
-      const cursorPos = el.selectionStart;
+      // Snapshot digits before the cursor BEFORE rewriting the value
+      const rawValue   = el.value;
+      const cursorPos  = el.selectionStart;
+      const beforeCursor = rawValue.slice(0, cursorPos);
+      // Count local digits (non-868-prefix) that were before the cursor
+      const digitsBeforeCursor = _localDigits(beforeCursor);
 
-      // Extract local digits from whatever is currently in the field
-      const digits = _localDigits(el.value);
-      const masked  = _buildMasked(digits);
+      // Rebuild the masked value
+      const digits = _localDigits(rawValue);
+      const masked = _buildMasked(digits);
       el.value = masked;
 
-      // Figure out where cursor should land:
-      // Count how many local digits are before the old cursor position,
-      // then map that digit-count back to a position in the new masked string.
-      const rawBefore = el.value.slice(0, cursorPos).replace(/\D/g, '');
-      // rawBefore may include 868 prefix digits — strip them
-      const localBefore = (rawBefore.startsWith('868') ? rawBefore.slice(3) : rawBefore).length;
-      // Now find position in masked string after localBefore local digits
+      // Place cursor after the same number of local digits in the new masked string
+      const target = digitsBeforeCursor.length;
       let count = 0, newPos = PREFIX_LEN;
       for (let i = PREFIX_LEN; i < masked.length; i++) {
-        if (masked[i] !== '-') { // '-' is not a digit
-          if (count === localBefore) { newPos = i; break; }
-          count++;
-        }
-        newPos = masked.length; // if we run out, put at end
+        if (masked[i] === '-') continue; // skip the dash character
+        if (count === target) { newPos = i; break; }
+        count++;
+        newPos = masked.length; // ran out — put at end
       }
-      // Always at least after prefix
+      if (count < target) newPos = masked.length; // typed past all digits → end
       newPos = Math.max(newPos, PREFIX_LEN);
       el.setSelectionRange(newPos, newPos);
     }
