@@ -289,6 +289,7 @@ async function listEmployees() {
       employeeNumber: u.employee_number || '',
       department: deptMap[u.department_id] || '', departmentId: u.department_id || '',
       position: u.position || '', role: u.role, status: u.status === 'active' ? 'Active' : 'Inactive',
+      email: u.email || '', phone: u.phone || '',
       todayStatus, profileImage: profileImages[i] || ''
     };
   });
@@ -323,7 +324,9 @@ async function addEmployee(args, ctx) {
   const { data, error } = await sb.from('app_users').insert({
     username: args.username, password_hash, full_name: args.fullName, role: args.role,
     department_id: args.department, position: args.position, status: 'active',
-    employee_number
+    employee_number,
+    email: args.email ? String(args.email).trim() : null,
+    phone: args.phone ? String(args.phone).trim() : null,
   }).select('id').single();
   if (error) {
     if (error.code === '23505') {
@@ -340,7 +343,9 @@ async function updateEmployee(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
   const patch = {
     full_name: args.fullName, department_id: args.department, position: args.position,
-    role: args.role, status: args.status, updated_at: new Date().toISOString()
+    role: args.role, status: args.status, updated_at: new Date().toISOString(),
+    email: args.email !== undefined ? (String(args.email).trim() || null) : undefined,
+    phone: args.phone !== undefined ? (String(args.phone).trim() || null) : undefined,
   };
   Object.keys(patch).forEach(k => patch[k] == null || patch[k] === '' ? delete patch[k] : null);
   if (args.password) patch.password_hash = await bcrypt.hash(String(args.password), 10);

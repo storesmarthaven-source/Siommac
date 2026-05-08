@@ -2643,6 +2643,8 @@ const AttendanceSystem = (function() {
     const department = document.getElementById('newDepartment').value;
     const position = document.getElementById('newPosition').value.trim();
     const role = document.getElementById('newRole').value;
+    const email = document.getElementById('newEmail').value.trim();
+    const phone = document.getElementById('newPhone').value.trim();
     // Employee number is always auto-assigned on create (field is readonly)
     const employeeNumber = undefined;
 
@@ -2655,7 +2657,7 @@ const AttendanceSystem = (function() {
       return;
     }
     showSpinner('Adding employee...');
-    api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
         showPopup('success', 'Employee Added', `New employee added${res.employeeNumber ? ' as ' + res.employeeNumber : ''}.`);
@@ -2786,6 +2788,8 @@ const AttendanceSystem = (function() {
           <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.position || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-at"></i><span class="emp-username">${escapeHtml(emp.username)}</span></div>
+          ${emp.email ? `<div class="emp-detail-row"><i class="fas fa-envelope"></i><span>${escapeHtml(emp.email)}</span></div>` : ''}
+          ${emp.phone ? `<div class="emp-detail-row"><i class="fas fa-phone"></i><span>${escapeHtml(emp.phone)}</span></div>` : ''}
           <div class="emp-today-row">
             <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> Today: ${t.text}</span>
           </div>
@@ -2816,6 +2820,8 @@ const AttendanceSystem = (function() {
             <div>
               <div style="font-weight:600;color:var(--siomac-navy)">${escapeHtml(emp.fullName)}</div>
               <div style="font-size:11px;color:var(--text-muted)">@${escapeHtml(emp.username)}</div>
+              ${emp.email ? `<div style="font-size:11px;color:var(--text-muted)"><i class="fas fa-envelope" style="width:11px"></i> ${escapeHtml(emp.email)}</div>` : ''}
+              ${emp.phone ? `<div style="font-size:11px;color:var(--text-muted)"><i class="fas fa-phone" style="width:11px"></i> ${escapeHtml(emp.phone)}</div>` : ''}
             </div>
           </div>
         </td>
@@ -2856,6 +2862,8 @@ const AttendanceSystem = (function() {
       document.getElementById('editPosition').value = emp.position || '';
       document.getElementById('editRole').value = emp.role;
       document.getElementById('editStatus').value = emp.status === 'Active' ? 'active' : 'inactive';
+      document.getElementById('editEmail').value = emp.email || '';
+      document.getElementById('editPhone').value = emp.phone || '';
 
       const deptSelect = document.getElementById('editDepartment');
       deptSelect.innerHTML = '<option value="">Select Department</option>';
@@ -2877,13 +2885,15 @@ const AttendanceSystem = (function() {
     const role           = document.getElementById('editRole').value;
     const status         = document.getElementById('editStatus').value;
     const employeeNumber = (document.getElementById('editEmployeeNumber').value || '').trim().toUpperCase();
+    const email          = document.getElementById('editEmail').value.trim();
+    const phone          = document.getElementById('editPhone').value.trim();
 
     if (!fullName || !department || !position || !role) {
       showPopup('warning', 'Incomplete', 'Please fill all required fields.');
       return;
     }
     showSpinner('Updating employee...');
-    api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
         showPopup('success', 'Employee Updated', `${fullName} has been updated.`);
