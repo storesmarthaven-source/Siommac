@@ -232,6 +232,28 @@ window.SiomacCharts = (function () {
     renderDeptDist(data.deptDistribution);
     renderStatusBars(data.statusBreakdown);
     renderLeaveTypes(data.leaveTypes);
+
+    // ── Populate left-side stat panels ──
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+
+    // Dept stats — match order from deptDistribution array
+    (data.deptDistribution || []).forEach((d, i) => {
+      set('deptStat' + i, d.count);
+    });
+
+    // Status stats
+    const s = data.statusBreakdown || {};
+    set('statusStatPresent', s.present ?? '—');
+    set('statusStatLate',    s.late    ?? '—');
+    set('statusStatAbsent',  s.absent  ?? '—');
+    set('statusStatLeave',   s.onLeave ?? '—');
+
+    // Leave stats
+    const l = data.leaveTypes || {};
+    set('leaveStatSick',    l.sick    ?? '—');
+    set('leaveStatCasual',  l.casual  ?? '—');
+    set('leaveStatAnnual',  l.annual  ?? '—');
+    set('leaveStatMedical', l.medical ?? '—');
   }
 
   return { displayAttendanceChart, displayTrendChart, renderDashboardCharts, hasAttendanceChart, hasTrendChart };
