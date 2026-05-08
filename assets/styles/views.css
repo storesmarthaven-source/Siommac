@@ -1848,9 +1848,13 @@
 .emp-today-out { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
 .emp-today-no  { background: rgba(94,111,141,0.1); color: var(--text-muted); }
 
-/* Card actions — right-aligned ghost buttons, no border-top */
-.emp-card-actions {
-  display: flex; gap: 6px; margin-top: 16px; justify-content: flex-end;
+/* Card footer — pinned to bottom, consistent across all cards */
+.emp-card-footer {
+  display: flex; gap: 6px; justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+  flex-shrink: 0;
 }
 .emp-icon-btn {
   background: transparent; border: none;

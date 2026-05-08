@@ -1216,7 +1216,7 @@ const AttendanceSystem = (function() {
       } else if (event.target.closest('.btn-delete-employee')) {
         const username = event.target.closest('.btn-delete-employee').dataset.username;
         deleteEmployee(username);
-      } else if (event.target.closest('.emp-card') && !event.target.closest('.emp-card-actions')) {
+      } else if (event.target.closest('.emp-card') && !event.target.closest('.emp-card-footer')) {
         // Click anywhere on card (outside action buttons) → open profile drawer
         const card = event.target.closest('.emp-card');
         const username = card.querySelector('.btn-edit-employee') && card.querySelector('.btn-edit-employee').dataset.username;
@@ -2976,10 +2976,10 @@ const AttendanceSystem = (function() {
           <div class="emp-today-row">
             <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> Today: ${t.text}</span>
           </div>
-          <div class="emp-card-actions">
-            <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-edit"></i> Edit</button>
-            <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i> Delete</button>
-          </div>
+        </div>
+        <div class="emp-card-footer">
+          <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-edit"></i> Edit</button>
+          <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i> Delete</button>
         </div>
       </div>`;
     }).join('');
