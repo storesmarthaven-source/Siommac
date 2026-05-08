@@ -1700,56 +1700,99 @@
 
       <!-- About — visible to everyone -->
       <section class="app-section" id="s-about">
-        <div class="data-section" style="max-width:680px;margin:0 auto;">
 
-          <!-- Hero card -->
-          <div style="background:linear-gradient(135deg,var(--siomac-navy) 0%,#101D3B 100%);border-radius:20px;padding:36px 32px 32px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(228,12,12,0.08);"></div>
-            <div style="position:absolute;bottom:-40px;left:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
-            <img id="aboutLogo" src="" alt="Logo" style="max-height:72px;max-width:200px;object-fit:contain;display:none;margin-bottom:16px;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:rgba(228,12,12,0.18);border-radius:16px;margin-bottom:16px;" id="aboutLogoFallback">
-              <i class="fas fa-hard-hat" style="font-size:28px;color:var(--siomac-red);"></i>
+        <!-- Hero banner — full width -->
+        <div style="background:linear-gradient(135deg,var(--siomac-navy) 0%,#0D1E3A 100%);border-radius:20px;padding:48px 40px;margin-bottom:24px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:rgba(228,12,12,0.07);pointer-events:none;"></div>
+          <div style="position:absolute;bottom:-80px;left:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03);pointer-events:none;"></div>
+          <!-- Logo / icon -->
+          <div style="flex-shrink:0;text-align:center;">
+            <img id="aboutLogo" src="" alt="Logo" style="max-height:90px;max-width:220px;object-fit:contain;display:none;">
+            <div id="aboutLogoFallback" style="width:90px;height:90px;background:rgba(228,12,12,0.18);border-radius:22px;display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-hard-hat" style="font-size:40px;color:var(--siomac-red);"></i>
             </div>
-            <h2 style="color:#fff;font-size:1.5rem;font-weight:800;margin-bottom:6px;"><span id="aboutCompanyName">SIOMAC</span></h2>
-            <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin:0;">Operations &amp; Maintenance Management Platform</p>
+          </div>
+          <!-- Title block -->
+          <div style="flex:1;min-width:220px;">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--siomac-red);margin-bottom:8px;">Workforce Management Platform</div>
+            <h1 style="color:#fff;font-size:2rem;font-weight:800;margin-bottom:8px;line-height:1.15;"><span id="aboutCompanyName">SIOMAC</span></h1>
+            <p style="color:rgba(255,255,255,0.65);font-size:0.9rem;line-height:1.65;margin-bottom:20px;max-width:560px;">A complete operations and maintenance management system built for field teams. Real-time attendance tracking, GPS-verified check-ins, leave management and payroll reporting — all in one platform.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-camera"></i> Selfie Check-In</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-map-marker-alt"></i> GPS Geofencing</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-umbrella-beach"></i> Leave Management</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-map-marked-alt"></i> Live Map</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-file-invoice-dollar"></i> Payroll</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(228,12,12,0.25);border:1px solid rgba(228,12,12,0.35);border-radius:40px;padding:5px 14px;font-size:0.75rem;font-weight:600;color:#fff;"><i class="fas fa-shield-alt"></i> ISO 9001</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature cards grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-camera" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">Selfie Attendance</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Employees check in and out using a selfie. Photos are captured, stored and linked to each attendance record for full verification.</div>
           </div>
 
-          <!-- Feature pills -->
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;justify-content:center;">
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-camera" style="color:var(--siomac-red);"></i> Selfie Check-In</span>
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-map-marker-alt" style="color:var(--siomac-red);"></i> GPS Geofencing</span>
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-umbrella-beach" style="color:var(--siomac-red);"></i> Leave Management</span>
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-file-invoice-dollar" style="color:var(--siomac-red);"></i> Payroll Reports</span>
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-map-marked-alt" style="color:var(--siomac-red);"></i> Live Map</span>
-            <span style="display:inline-flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:0.8rem;font-weight:600;color:var(--siomac-navy);"><i class="fas fa-shield-alt" style="color:var(--siomac-red);"></i> ISO 9001</span>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-map-marker-alt" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">GPS Geofencing</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Each project site has a configurable acceptance radius. Employees outside the boundary are blocked from checking in, with a clear distance message.</div>
           </div>
 
-          <!-- Info row -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-code-branch" style="color:var(--siomac-navy);font-size:14px;"></i></div>
-              <div>
-                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Version</div>
-                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">1.0.0</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-globe" style="color:var(--siomac-navy);font-size:14px;"></i></div>
-              <div>
-                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Region</div>
-                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">Trinidad &amp; Tobago</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:10px;background:rgba(27,45,85,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-lock" style="color:var(--siomac-navy);font-size:14px;"></i></div>
-              <div>
-                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Security</div>
-                <div style="font-size:0.88rem;font-weight:700;color:var(--siomac-navy);">JWT · Supabase RLS</div>
-              </div>
-            </div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-map-marked-alt" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">Live Operations Map</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">See every checked-in employee on an interactive map in real time. Click a pin to view their selfie, check-in time and project site assignment.</div>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-umbrella-beach" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">Leave Management</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Employees submit leave requests which flow through manager and admin approval. Full leave history, status tracking and automatic day calculations.</div>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-file-invoice-dollar" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">Payroll &amp; Reports</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Automatically calculates hours worked based on check-in and check-out times. Apply per-employee or department hourly rates and export payroll reports.</div>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="fas fa-bell" style="color:var(--siomac-red);font-size:18px;"></i></div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">Real-Time Notifications</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Admins and managers receive instant notifications for check-ins, late arrivals, leave requests and support tickets — with profile photos for quick identification.</div>
           </div>
 
         </div>
+
+        <!-- System info footer -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 28px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-code-branch" style="color:var(--siomac-red);width:18px;text-align:center;"></i>
+            <div><div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Version</div><div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">1.0.0</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-globe" style="color:var(--siomac-red);width:18px;text-align:center;"></i>
+            <div><div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Region</div><div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">Trinidad &amp; Tobago (AST)</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-lock" style="color:var(--siomac-red);width:18px;text-align:center;"></i>
+            <div><div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Security</div><div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">JWT · Supabase RLS · Bcrypt</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-database" style="color:var(--siomac-red);width:18px;text-align:center;"></i>
+            <div><div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Infrastructure</div><div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">Netlify · Supabase · PostgreSQL</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-shield-alt" style="color:var(--siomac-red);width:18px;text-align:center;"></i>
+            <div><div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Standard</div><div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">ISO 9001 Compliant</div></div>
+          </div>
+        </div>
+
       </section>
     </main>
   </div>
