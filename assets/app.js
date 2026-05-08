@@ -1867,11 +1867,10 @@ const AttendanceSystem = (function() {
     // Pass immediate=true (e.g. on Done / navigate away) to flush synchronously.
     clearTimeout(_dashSaveTimer);
     const doSave = () => {
-      const grid   = document.getElementById('dashWidgetGrid');
-      const recent = document.querySelector('#s-adm-dashboard .recent-activity-section');
-      const order  = [];
+      const grid  = document.getElementById('dashWidgetGrid');
+      const order = [];
+      // All widgets live inside dashWidgetGrid — just read their DOM order directly.
       if (grid) grid.querySelectorAll('.dash-widget').forEach(w => order.push(w.dataset.widgetId));
-      if (recent) order.push(recent.dataset.widgetId);
       const hidden = DASH_WIDGETS.filter(w => {
         const el = document.querySelector(`.dash-widget[data-widget-id="${w.id}"]`);
         return el && el.classList.contains('dash-widget-hidden');
@@ -1886,16 +1885,15 @@ const AttendanceSystem = (function() {
     const grid = document.getElementById('dashWidgetGrid');
     if (!grid) return;
 
-    // Restore widget order — collect all widgets first, then re-insert in saved order
+    // Restore widget order — all widgets are direct children of dashWidgetGrid
     if (order.length) {
-      // Build a map of all widgets across the whole dashboard section
       const allWidgets = {};
-      document.querySelectorAll('#s-adm-dashboard .dash-widget').forEach(w => {
+      grid.querySelectorAll('.dash-widget').forEach(w => {
         allWidgets[w.dataset.widgetId] = w;
       });
       order.forEach(id => {
         const el = allWidgets[id];
-        if (el && el.parentElement === grid) grid.appendChild(el);
+        if (el) grid.appendChild(el); // appendChild moves it to end in saved order
       });
     }
 
@@ -1975,7 +1973,7 @@ const AttendanceSystem = (function() {
     // Restore default order inside grid
     const grid = document.getElementById('dashWidgetGrid');
     if (grid) {
-      ['trend','dept','status','leave'].forEach(id => {
+      ['trend','dept','status','leave','activity'].forEach(id => {
         const el = grid.querySelector(`.dash-widget[data-widget-id="${id}"]`);
         if (el) grid.appendChild(el);
       });
