@@ -69,7 +69,7 @@
 .lm-activity-panel {
   position: absolute;
   top: 16px; right: 16px;
-  width: 280px;
+  width: 360px;
   max-height: calc(100% - 32px);
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(8px);
@@ -96,11 +96,13 @@
   margin: 0; display: flex; align-items: center; gap: 8px;
 }
 .lm-refresh-btn {
-  background: transparent; border: none; cursor: pointer;
-  color: var(--text-muted); font-size: 13px; padding: 4px 6px;
-  border-radius: 8px; transition: color .15s, background .15s; line-height: 1;
+  background: var(--bg-subtle, #F4F6FA); border: 1px solid var(--border);
+  cursor: pointer; color: var(--text-primary); font-size: 12px; font-weight: 600;
+  font-family: inherit; padding: 5px 12px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: color .15s, background .15s; line-height: 1; white-space: nowrap;
 }
-.lm-refresh-btn:hover { color: var(--siomac-navy); background: var(--bg-subtle); }
+.lm-refresh-btn:hover { color: var(--siomac-navy); background: #e8edf5; border-color: var(--siomac-navy); }
 
 
 /* employee list */
