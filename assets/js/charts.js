@@ -11,20 +11,33 @@ window.SiomacCharts = (function () {
   Chart.defaults.color = '#5E6F8D';
 
   // ── Shared animation presets ──
+  // Bars rise with a staggered per-bar delay
   const ANIM_RISE = {
-    duration: 700,
-    easing: 'easeOutQuart',
-    delay(ctx) { return ctx.dataIndex * 60; }
+    animation: {
+      duration: 800,
+      easing: 'easeOutQuart'
+    },
+    animations: {
+      y: {
+        from(ctx) { return ctx.chart.scales.y ? ctx.chart.scales.y.bottom : 0; }
+      }
+    }
   };
+  // Doughnuts spin + scale in
   const ANIM_SPIN = {
-    duration: 800,
-    easing: 'easeOutQuart',
-    animateRotate: true,
-    animateScale: true
+    animation: {
+      duration: 900,
+      easing: 'easeOutQuart',
+      animateRotate: true,
+      animateScale: true
+    }
   };
+  // Lines draw in left-to-right
   const ANIM_LINE = {
-    duration: 900,
-    easing: 'easeOutCubic'
+    animation: {
+      duration: 1000,
+      easing: 'easeOutCubic'
+    }
   };
 
   // ── Employee: personal attendance donut ──
@@ -47,7 +60,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: ANIM_SPIN,
+        ...ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } }
         }
@@ -99,7 +112,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: ANIM_LINE,
+        ...ANIM_LINE,
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } }
         },
@@ -132,7 +145,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: ANIM_SPIN,
+        ...ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -167,7 +180,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: ANIM_RISE,
+        ...ANIM_RISE,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' employees' } }
@@ -200,7 +213,7 @@ window.SiomacCharts = (function () {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '65%',
-        animation: ANIM_SPIN,
+        ...ANIM_SPIN,
         plugins: {
           legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, padding: 8 } }
         }
@@ -232,7 +245,7 @@ window.SiomacCharts = (function () {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: ANIM_RISE,
+        ...ANIM_RISE,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ' ' + c.parsed.y + ' hrs' } }
