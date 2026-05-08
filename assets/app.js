@@ -940,11 +940,11 @@ const AttendanceSystem = (function() {
       } else if (event.target.matches('#empDrawerEditBtn, #empDrawerEditBtn *')) {
         const u = document.getElementById('empProfileDrawer').dataset.username;
         closeEmpDrawer();
-        if (u) editEmployee(u);
+        if (u) setTimeout(() => editEmployee(u), 300);
       } else if (event.target.matches('#empDrawerDeleteBtn, #empDrawerDeleteBtn *')) {
         const u = document.getElementById('empProfileDrawer').dataset.username;
         closeEmpDrawer();
-        if (u) deleteEmployee(u);
+        if (u) setTimeout(() => deleteEmployee(u), 300);
       // Employee view toggle
       } else if (event.target.matches('#empCardViewBtn, #empCardViewBtn *')) {
         _empCardView = true;
@@ -2929,10 +2929,12 @@ const AttendanceSystem = (function() {
   function displayEmployeeList(list) { _empAllList = list; _renderEmpStats(); _renderEmployees(); }
 
   function editEmployee(username) {
+    showSpinner('Loading employee...');
     Promise.all([
       api('getEmployeeByUsername', { username }),
       api('listDepartments')
     ]).then(([empRes, deptRes]) => {
+      hideSpinner();
       if (!empRes.success || !empRes.data) { showPopup('error', 'Not Found', 'Employee not found'); return; }
       const emp = empRes.data;
       document.getElementById('editUsername').value = emp.username;
@@ -2940,7 +2942,9 @@ const AttendanceSystem = (function() {
       document.getElementById('editFullName').value = emp.fullName;
       document.getElementById('editPosition').value = emp.position || '';
       document.getElementById('editRole').value = emp.role;
-      document.getElementById('editStatus').value = emp.status === 'Active' ? 'active' : 'inactive';
+      // status from getEmployeeByUsername is raw DB value (lowercase)
+      const statusVal = (emp.status || '').toLowerCase();
+      document.getElementById('editStatus').value = statusVal === 'active' ? 'active' : 'inactive';
       document.getElementById('editEmail').value = emp.email || '';
       document.getElementById('editPhone').value = emp.phone || '';
 
@@ -2953,6 +2957,9 @@ const AttendanceSystem = (function() {
         deptSelect.appendChild(o);
       });
       document.getElementById('editEmployeeModal').classList.add('active');
+    }).catch(err => {
+      hideSpinner();
+      showPopup('error', 'Error', err.message || 'Could not load employee');
     });
   }
 
