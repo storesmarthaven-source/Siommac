@@ -4,15 +4,18 @@
 .app-section.active.lm-section {
   display: flex !important;
   flex-direction: column;
-  gap: 20px;
-  padding: 0 !important;
+  gap: 16px;
+  padding: 0 28px 0 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  /* global page-header is hidden for this section — only padding overhead remains */
   height: calc(100vh - 48px);
   max-height: calc(100vh - 48px);
   overflow: hidden;
+}
+/* map container fills remaining space and extends to full width */
+.lm-section .lm-layout {
+  margin: 0 -28px;
 }
 
 /* ── Stat cards + action buttons row ── */
@@ -21,7 +24,7 @@
   align-items: center;
   gap: 16px;
   flex-shrink: 0;
-  padding: 0 28px;
+  padding: 0;
 }
 .lm-stat-cards-row .stat-card { flex: 1; }
 .lm-header-actions { display: flex; gap: 10px; flex-shrink: 0; margin-left: auto; }
@@ -43,38 +46,41 @@
 }
 .lm-btn-outline:hover { background: var(--bg-app); border-color: var(--siomac-navy); }
 
-/* ── Main layout: map + activity panel side by side ── */
+/* ── Main layout: map fills full width ── */
 .lm-layout {
-  display: flex;
-  gap: 20px;
   flex: 1;
-  min-height: 0;       /* critical — lets flex children shrink below content size */
+  min-height: 0;
 }
 
-/* ── Map container ── */
+/* ── Map container — full width, relative so panel can overlay ── */
 .lm-map-container {
-  flex: 3;
+  width: 100%;
+  height: 100%;
   background: #eef2f9;
   border-radius: 28px;
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  min-height: 0;
   position: relative;
 }
 #map { height: 100%; width: 100%; }
 
-/* ── Activity panel ── */
+/* ── Activity panel — overlaid on top-right of map ── */
 .lm-activity-panel {
-  flex: 1.2;
-  background: white;
-  border-radius: 28px;
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 280px;
+  max-height: calc(100% - 32px);
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 20px;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
+  z-index: 500;
 }
 
 /* panel header */

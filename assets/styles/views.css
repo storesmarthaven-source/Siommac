@@ -2011,6 +2011,9 @@
   background: var(--bg-subtle); padding: 3px 12px;
   border-radius: 20px; font-weight: 500;
 }
+/* dt-buttons moved into section-header — hide the now-empty export bar */
+#attendanceTable_wrapper .dt-export-bar:empty { display: none; }
+.att-table-btns { display: flex; gap: 6px; margin-left: auto; }
 
 /* Error / empty states */
 .att-err   { color: var(--siomac-red); padding: 18px; font-weight: 600; text-align: center; }

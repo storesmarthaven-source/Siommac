@@ -3401,7 +3401,13 @@ const AttendanceSystem = (function() {
     initDataTable('attendanceTable', {
       searching: false,
       dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
-      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }]
+      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }],
+      initComplete: function() {
+        // Move dt-buttons group into the section-header
+        const btnContainer = document.getElementById('attTableBtns');
+        const dtBtns = document.querySelector('#attendanceTable_wrapper .dt-buttons');
+        if (btnContainer && dtBtns) btnContainer.appendChild(dtBtns);
+      }
     });
   }
 
