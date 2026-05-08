@@ -1847,12 +1847,11 @@ const AttendanceSystem = (function() {
   // Populate monthly summary cards + hidden donut chart
   function displayChart(stats) {
     SiomacCharts.displayAttendanceChart(stats);
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
-    set('empPresentDays', stats.present);
-    set('empLateDays',    stats.late ?? '—');
-    set('empAbsentDays',  stats.absent);
-    set('empSundayDays',  stats.sundays);
-    set('empTotalDays',   (stats.present ?? 0) + (stats.absent ?? 0));
+    _countUp(document.getElementById('empPresentDays'), stats.present);
+    _countUp(document.getElementById('empLateDays'),    stats.late ?? 0);
+    _countUp(document.getElementById('empAbsentDays'),  stats.absent);
+    _countUp(document.getElementById('empSundayDays'),  stats.sundays);
+    _countUp(document.getElementById('empTotalDays'),   (stats.present ?? 0) + (stats.absent ?? 0));
   }
 
   // Admin dashboard charts — full render on first load, silent in-place update on revisits
@@ -2391,10 +2390,10 @@ const AttendanceSystem = (function() {
   }
 
   function displayDepartmentStats(stats) {
-    document.getElementById('departmentEmployees').textContent = stats.total;
-    document.getElementById('presentDepartment').textContent = stats.present;
-    document.getElementById('onLeaveDepartment').textContent = stats.onLeave;
-    document.getElementById('lateDepartment').textContent = stats.late;
+    _countUp(document.getElementById('departmentEmployees'), stats.total);
+    _countUp(document.getElementById('presentDepartment'),   stats.present);
+    _countUp(document.getElementById('onLeaveDepartment'),   stats.onLeave);
+    _countUp(document.getElementById('lateDepartment'),      stats.late);
   }
 
   function loadDepartmentEmployees() {
@@ -2983,11 +2982,9 @@ const AttendanceSystem = (function() {
 
   function displayDepartments(departmentList) {
     // Update stat badges
-    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    setEl('deptStatTotal', departmentList.length);
-    setEl('deptStatEmployees', departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
-    setEl('deptStatHeads', departmentList.filter(d => d.manager && d.manager !== '—').length);
-    setEl('deptStatRate', '—');
+    _countUp(document.getElementById('deptStatTotal'),     departmentList.length);
+    _countUp(document.getElementById('deptStatEmployees'), departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
+    _countUp(document.getElementById('deptStatHeads'),     departmentList.filter(d => d.manager && d.manager !== '—').length);
 
     const search = (document.getElementById('deptSearchInput') || {}).value || '';
     const filtered = search
@@ -3190,12 +3187,9 @@ const AttendanceSystem = (function() {
   let _psMiniMaps = {}; // track leaflet instances to avoid double-init
 
   function displayProjectSites(sites) {
-    // Update stats (workers + attendance are dummy — not in DB schema)
-    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    setEl('psTotalSites',      sites.length);
-    setEl('psActiveZones',     sites.length); // all live sites are active
-    setEl('psAssignedWorkers', '—');          // dummy — not tracked in DB
-    setEl('psSiteAttendance',  '—');          // dummy — not tracked in DB
+    // Update stats
+    _countUp(document.getElementById('psTotalSites'),  sites.length);
+    _countUp(document.getElementById('psActiveZones'), sites.length);
 
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
     const filtered = search
