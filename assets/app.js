@@ -1047,14 +1047,13 @@ const AttendanceSystem = (function() {
 
         list.innerHTML = _notifData.map(n => {
           const isRead = readIds.has(n.id);
-          const isNew  = newIds && newIds.has(n.id);
           const resolver = NOTIF_SECTION[n.type];
           const section  = resolver ? resolver() : null;
           const iconEl = n.photoUrl
             ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
             : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
           return `
-            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}${isNew ? ' notif-new' : ''}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
+            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
               ${iconEl}
               <div class="hdr-notif-text" style="flex:1;min-width:0;">
                 <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
