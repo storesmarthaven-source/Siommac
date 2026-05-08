@@ -641,9 +641,18 @@ const AttendanceSystem = (function() {
     widget.classList.remove('hidden');
     const msLeft = s.expiresAt - Date.now();
     if (msLeft <= 0) { handleSessionExpired(); return; }
-    const mins = Math.floor(msLeft / 60000);
+    const totalMins = Math.floor(msLeft / 60000);
     const secs = Math.floor((msLeft % 60000) / 1000);
-    const txt = mins >= 1 ? mins + 'm' : secs + 's';
+    let txt;
+    if (totalMins >= 60) {
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      txt = m > 0 ? `${h}h ${m}m` : `${h}h`;
+    } else if (totalMins >= 1) {
+      txt = totalMins + 'm';
+    } else {
+      txt = secs + 's';
+    }
     const danger = msLeft <= SESSION_WARN_AT;
     const txtEl = document.getElementById('sessionTimerText');
     if (txtEl) txtEl.textContent = txt;
@@ -1521,7 +1530,7 @@ const AttendanceSystem = (function() {
         const badge = document.getElementById('hdrTicketBadge');
         if (badge) { badge.textContent = openCount || ''; badge.style.display = openCount ? '' : 'none'; }
         const countEl = document.getElementById('ticketOpenCount');
-        if (countEl) countEl.textContent = openCount ? `${openCount} open ticket${openCount !== 1 ? 's' : ''}` : '';
+        if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
       }
 
       function _fetch(keepDetail) {
