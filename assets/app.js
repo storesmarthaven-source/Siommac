@@ -2744,13 +2744,12 @@ const AttendanceSystem = (function() {
       const isActive = emp.status === 'Active';
       const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
       const initial = escapeHtml((emp.fullName || emp.username || '?').charAt(0).toUpperCase());
-      const avatarHtml = emp.profileImage
-        ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${initial}</span>`
-        : `<span>${initial}</span>`;
+      // Always render initials first — photos swapped in after off-screen decode (no flash)
+      const photoAttr = emp.profileImage ? ` data-photo="${escapeHtml(emp.profileImage)}"` : '';
       return `
       <div class="emp-card">
         <div class="emp-card-header ${isActive ? 'emp-card-header--active' : 'emp-card-header--inactive'}">
-          <div class="emp-card-avatar">${avatarHtml}</div>
+          <div class="emp-card-avatar"${photoAttr}><span>${initial}</span></div>
           <div class="emp-card-title-block">
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
@@ -2772,6 +2771,18 @@ const AttendanceSystem = (function() {
         </div>
       </div>`;
     }).join('');
+
+    // Post-render: probe each avatar off-screen, swap photo in on decode — no flash
+    grid.querySelectorAll('.emp-card-avatar[data-photo]').forEach(avatarEl => {
+      const url     = avatarEl.dataset.photo;
+      const initial = (avatarEl.querySelector('span') || {}).textContent || '?';
+      const probe   = new Image();
+      probe.onload  = () => {
+        avatarEl.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      };
+      probe.onerror = () => {}; // keep initial on broken/expired URL
+      probe.src = url;
+    });
   }
 
   function _renderEmpTable(list) {
