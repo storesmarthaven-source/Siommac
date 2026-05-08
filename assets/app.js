@@ -917,7 +917,7 @@ const AttendanceSystem = (function() {
   (function setupPhoneMask() {
     function onInput(e) {
       const el = e.target;
-      if (!el.classList.contains('phone-mask')) return;
+      if (!(el instanceof Element) || !el.classList.contains('phone-mask')) return;
 
       // Capture cursor position BEFORE we rewrite the value
       const cursorPos = el.selectionStart;
@@ -949,7 +949,7 @@ const AttendanceSystem = (function() {
 
     function onFocus(e) {
       const el = e.target;
-      if (!el.classList.contains('phone-mask')) return;
+      if (!(el instanceof Element) || !el.classList.contains('phone-mask')) return;
       if (!_localDigits(el.value)) el.value = PREFIX;
       setTimeout(() => {
         if (el.selectionStart < PREFIX_LEN) el.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
@@ -958,7 +958,7 @@ const AttendanceSystem = (function() {
 
     function onKeydown(e) {
       const el = e.target;
-      if (!el.classList.contains('phone-mask')) return;
+      if (!(el instanceof Element) || !el.classList.contains('phone-mask')) return;
       const pos = el.selectionStart;
       const selEnd = el.selectionEnd;
       // Block backspace/delete from eating into the prefix (when no selection)
@@ -973,7 +973,7 @@ const AttendanceSystem = (function() {
 
     function onBlur(e) {
       const el = e.target;
-      if (!el.classList.contains('phone-mask')) return;
+      if (!(el instanceof Element) || !el.classList.contains('phone-mask')) return;
       if (!_localDigits(el.value)) el.value = ''; // clear prefix so placeholder shows
     }
 
