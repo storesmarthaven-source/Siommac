@@ -374,6 +374,15 @@
 }
 
 /* ─── Project Sites ─── */
+/* Dashboard 3×3 stat grid */
+.dash-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Project Sites 4-col stat grid */
 .ps-stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1999,6 +2008,8 @@
   cursor: pointer; overflow: hidden;
   background: linear-gradient(135deg, var(--siomac-red), #B20808);
   display: inline-flex; align-items: center; justify-content: center;
+  outline: none;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 .ep-avatar-edit {
   position: absolute;
