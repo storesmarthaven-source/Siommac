@@ -1391,12 +1391,18 @@ const AttendanceSystem = (function() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appShell').classList.remove('hidden');
 
-    // populate header profile avatar
+    // populate header profile avatar — preload off-screen, swap in one paint
     const hdrAvatarEl = document.getElementById('hdrProfileAvatar');
     if (hdrAvatarEl) {
       const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
       if (result.profileImage) {
-        hdrAvatarEl.innerHTML = `<img src="${result.profileImage}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        hdrAvatarEl.textContent = initial; // show initial while decoding
+        const probe = new Image();
+        probe.onload = () => {
+          hdrAvatarEl.innerHTML = `<img src="${result.profileImage}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        };
+        probe.onerror = () => {}; // keep initial on broken URL
+        probe.src = result.profileImage;
       } else {
         hdrAvatarEl.textContent = initial;
       }
@@ -4330,7 +4336,14 @@ const AttendanceSystem = (function() {
     if (!avatarDiv) return;
     const initial = (fullName || currentFullName || '?').charAt(0).toUpperCase();
     if (imgUrl) {
-      avatarDiv.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span>${initial}</span>'">`;
+      // Show initial while image decodes, swap in one paint when ready
+      avatarDiv.innerHTML = `<span>${initial}</span>`;
+      const probe = new Image();
+      probe.onload = () => {
+        avatarDiv.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      };
+      probe.onerror = () => {}; // keep initial on broken URL
+      probe.src = imgUrl;
     } else {
       avatarDiv.innerHTML = `<span>${initial}</span>`;
     }
@@ -4339,26 +4352,40 @@ const AttendanceSystem = (function() {
   function _setProfilePhotoUI(imgUrl, fullName) {
     // also sync the attendance welcome card avatar
     _setAttendanceAvatar(imgUrl, fullName);
-    const imgEl   = document.getElementById('profilePhotoPreview');
-    const emptyEl = document.getElementById('profilePhotoEmpty');
+    const imgEl     = document.getElementById('profilePhotoPreview');
+    const emptyEl   = document.getElementById('profilePhotoEmpty');
     const removeBtn = document.getElementById('removeProfileImageBtn');
+    const name      = fullName || currentFullName || '?';
+    const initial   = name.trim().charAt(0).toUpperCase();
+
     if (imgUrl) {
-      imgEl.style.display = 'block';
-      emptyEl.style.display = 'none';
-      if (removeBtn) removeBtn.style.display = '';
-      // If URL fails to load (expired signed URL), fall back to initials
-      imgEl.onerror = () => {
+      // Keep initials visible until the image is fully decoded — no flash
+      imgEl.style.display = 'none';
+      emptyEl.style.display = 'flex';
+      emptyEl.textContent = initial;
+      if (removeBtn) removeBtn.style.display = 'none';
+
+      const probe = new Image();
+      probe.onload = () => {
+        imgEl.src = imgUrl;
+        imgEl.style.display = 'block';
+        emptyEl.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = '';
+      };
+      probe.onerror = () => {
+        // Expired/broken URL — stay on initials
+        imgEl.src = '';
         imgEl.style.display = 'none';
         emptyEl.style.display = 'flex';
-        emptyEl.textContent = (fullName || currentFullName || '?').charAt(0).toUpperCase();
+        emptyEl.textContent = initial;
         if (removeBtn) removeBtn.style.display = 'none';
       };
-      imgEl.src = imgUrl;
+      probe.src = imgUrl;
     } else {
       imgEl.src = '';
       imgEl.style.display = 'none';
       emptyEl.style.display = 'flex';
-      emptyEl.textContent = (fullName || currentFullName || '?').charAt(0).toUpperCase();
+      emptyEl.textContent = initial;
       if (removeBtn) removeBtn.style.display = 'none';
     }
   }
@@ -4419,11 +4446,18 @@ const AttendanceSystem = (function() {
         if (typeof SwCacheManager !== 'undefined') SwCacheManager.evictPhoto(_currentProfileImage);
       }
       _currentProfileImage = newPhoto;
-      // Update header profile avatar
+      // Update header profile avatar (preload, then swap)
       const hdrAv = document.getElementById('hdrProfileAvatar');
       if (hdrAv) {
-        if (newPhoto) { hdrAv.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; }
-        else { hdrAv.textContent = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase(); }
+        const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+        if (newPhoto) {
+          hdrAv.textContent = initial;
+          const probe = new Image();
+          probe.onload = () => { hdrAv.innerHTML = `<img src="${newPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; };
+          probe.src = newPhoto;
+        } else {
+          hdrAv.textContent = initial;
+        }
       }
       _setProfilePhotoUI(newPhoto, currentFullName);
       updateStoredSession({ profileImage: newPhoto });
