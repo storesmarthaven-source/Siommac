@@ -361,7 +361,11 @@ FROM (VALUES
 
 ) AS v(att_id, uname, work_date, ci_time, co_time, ci_lat, ci_lng, co_lat, co_lng, site_id, dist_m, tot_hrs, status)
 JOIN public.app_users u ON u.username = v.uname
-WHERE NOT EXISTS (SELECT 1 FROM public.attendance a WHERE a.id = v.att_id);
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.attendance a
+  WHERE a.id = v.att_id
+     OR (a.user_id = u.id AND a.work_date = v.work_date::date)
+);
 
 -- ── 5. LEAVE REQUESTS ────────────────────────────────────────
 -- reviewed_by resolved dynamically via subquery on admin role
