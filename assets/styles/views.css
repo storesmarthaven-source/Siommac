@@ -384,8 +384,8 @@
 /* Dashboard 3×3 stat grid */
 .dash-stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
   margin-bottom: 24px;
 }
 
