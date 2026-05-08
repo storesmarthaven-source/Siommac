@@ -43,6 +43,14 @@
   margin-bottom: 12px;
 }
 
+/* ── Neutralise Bootstrap btn-group border-radius overrides ── */
+.dt-buttons.btn-group > .btn:not(:first-child),
+.dt-buttons.btn-group > .btn:not(:last-child),
+#attTableBtns .btn-group > .btn:not(:first-child),
+#attTableBtns .btn-group > .btn:not(:last-child) {
+  border-radius: 8px !important;
+}
+
 /* ── Export / action buttons ──
    Targets both in-wrapper and relocated (#attTableBtns) positions.
    Uses .dt-button selector AND raw Bootstrap classes to beat specificity. */
