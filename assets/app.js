@@ -2102,12 +2102,11 @@ const AttendanceSystem = (function() {
     const present = all.filter(r => r.status === 'present').length;
     const late    = all.filter(r => r.status === 'late').length;
     const withHours = all.filter(r => Number(r.hours) > 0);
-    const avg = withHours.length ? (withHours.reduce((s, r) => s + Number(r.hours), 0) / withHours.length).toFixed(1) : '—';
-    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    setEl('histTotalDays',   all.length);
-    setEl('histPresentCount', present);
-    setEl('histLateCount',    late);
-    setEl('histAvgHours',     avg);
+    const avg = withHours.length ? (withHours.reduce((s, r) => s + Number(r.hours), 0) / withHours.length).toFixed(1) : '0';
+    _countUp(document.getElementById('histTotalDays'),    all.length);
+    _countUp(document.getElementById('histPresentCount'), present);
+    _countUp(document.getElementById('histLateCount'),    late);
+    const avgEl = document.getElementById('histAvgHours'); if (avgEl) avgEl.textContent = avg;
 
     // Render rows
     const photoThumb = (url, label) => url
@@ -2321,11 +2320,10 @@ const AttendanceSystem = (function() {
     return `<tr><td colspan="${colspan}" class="lv-empty-row"><i class="fas fa-calendar-check"></i><p>${msg}</p></td></tr>`;
   }
   function _lvUpdateStats(prefix, list) {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set(prefix + 'Pending',  list.filter(r => String(r.status).toLowerCase() === 'pending').length);
-    set(prefix + 'Approved', list.filter(r => String(r.status).toLowerCase() === 'approved').length);
-    set(prefix + 'Rejected', list.filter(r => String(r.status).toLowerCase() === 'rejected').length);
-    set(prefix + 'Total',    list.length);
+    _countUp(document.getElementById(prefix + 'Pending'),  list.filter(r => String(r.status).toLowerCase() === 'pending').length);
+    _countUp(document.getElementById(prefix + 'Approved'), list.filter(r => String(r.status).toLowerCase() === 'approved').length);
+    _countUp(document.getElementById(prefix + 'Rejected'), list.filter(r => String(r.status).toLowerCase() === 'rejected').length);
+    _countUp(document.getElementById(prefix + 'Total'),    list.length);
   }
 
   // active tab filter state per section
@@ -2693,11 +2691,10 @@ const AttendanceSystem = (function() {
   }
 
   function _renderEmpStats() {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('empStatTotal',    _empAllList.length);
-    set('empStatActive',   _empAllList.filter(e => e.status === 'Active').length);
-    set('empStatCheckedIn', _empAllList.filter(e => e.todayStatus === 'checkedin').length);
-    set('empStatDepts',    [...new Set(_empAllList.map(e => e.department).filter(Boolean))].length);
+    _countUp(document.getElementById('empStatTotal'),     _empAllList.length);
+    _countUp(document.getElementById('empStatActive'),    _empAllList.filter(e => e.status === 'Active').length);
+    _countUp(document.getElementById('empStatCheckedIn'), _empAllList.filter(e => e.todayStatus === 'checkedin').length);
+    _countUp(document.getElementById('empStatDepts'),     [...new Set(_empAllList.map(e => e.department).filter(Boolean))].length);
   }
 
   function _getFilteredEmpList() {
@@ -3323,11 +3320,10 @@ const AttendanceSystem = (function() {
 
   function _renderAttStats(stats) {
     if (!stats) return;
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('attStatPresent', stats.present);
-    set('attStatLate',    stats.late);
-    set('attStatAbsent',  stats.absent);
-    set('attStatRate',    stats.rate + '%');
+    _countUp(document.getElementById('attStatPresent'), stats.present);
+    _countUp(document.getElementById('attStatLate'),    stats.late);
+    _countUp(document.getElementById('attStatAbsent'),  stats.absent);
+    const rateEl = document.getElementById('attStatRate'); if (rateEl) rateEl.textContent = (stats.rate || 0) + '%';
   }
 
   function _renderAttCharts(trend) {
@@ -3754,10 +3750,10 @@ const AttendanceSystem = (function() {
     const monthly = list.reduce((s, r) => s + (r.hourlyRate || 0) * 160, 0);
     const cur = _payCurrency + '$';
     const el = id => document.getElementById(id);
-    if (el('hrTotalEmployees'))  el('hrTotalEmployees').textContent  = total;
-    if (el('hrAvgRate'))         el('hrAvgRate').textContent         = cur + ' ' + avg.toFixed(2);
-    if (el('hrMonthlyPayroll'))  el('hrMonthlyPayroll').textContent  = cur + ' ' + Math.round(monthly).toLocaleString();
-    if (el('hrHighestRate'))     el('hrHighestRate').textContent     = cur + ' ' + max.toFixed(2);
+    _countUp(el('hrTotalEmployees'), total);
+    if (el('hrAvgRate'))        el('hrAvgRate').textContent        = cur + ' ' + avg.toFixed(2);
+    if (el('hrMonthlyPayroll')) el('hrMonthlyPayroll').textContent = cur + ' ' + Math.round(monthly).toLocaleString();
+    if (el('hrHighestRate'))    el('hrHighestRate').textContent    = cur + ' ' + max.toFixed(2);
   }
 
   function renderHourlyRates() {
