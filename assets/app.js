@@ -2295,12 +2295,12 @@ const AttendanceSystem = (function() {
       <td>${_lvStatusBadge(r.status)}</td>
       <td>
         <div class="lv-action-btns">
-          ${showView ? `<button class="lv-act-btn lv-act-view btn-view-leave" data-id="${id}" title="View document"><i class="fas fa-eye"></i></button>` : ''}
-          ${showView ? `<button class="lv-act-btn lv-act-print btn-print-leave" data-id="${id}" title="Print"><i class="fas fa-print"></i></button>` : ''}
-          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-approve btn-approve" data-id="${id}" title="Approve"><i class="fas fa-check"></i></button>` : ''}
-          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-reject btn-reject" data-id="${id}" title="Reject"><i class="fas fa-times"></i></button>` : ''}
-          ${showEdit && isPending ? `<button class="lv-act-btn lv-act-edit btn-edit-leave" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>` : ''}
-          ${showDelete ? `<button class="lv-act-btn lv-act-delete btn-delete-leave" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
+          ${showView ? `<button class="lv-act-btn lv-act-view btn-view-leave" data-id="${id}" title="View document"><i class="fas fa-eye"></i> View</button>` : ''}
+          ${showView ? `<button class="lv-act-btn lv-act-print btn-print-leave" data-id="${id}" title="Print"><i class="fas fa-print"></i> Print</button>` : ''}
+          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-approve btn-approve" data-id="${id}" title="Approve"><i class="fas fa-check"></i> Approve</button>` : ''}
+          ${showApproveReject && isPending ? `<button class="lv-act-btn lv-act-reject btn-reject" data-id="${id}" title="Reject"><i class="fas fa-times"></i> Reject</button>` : ''}
+          ${showEdit && isPending ? `<button class="lv-act-btn lv-act-edit btn-edit-leave" data-id="${id}" title="Edit"><i class="fas fa-edit"></i> Edit</button>` : ''}
+          ${showDelete ? `<button class="lv-act-btn lv-act-delete btn-delete-leave" data-id="${id}" title="Delete"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
       </td>
     </tr>`;
@@ -2637,24 +2637,20 @@ const AttendanceSystem = (function() {
       }
     }
     _rawApi('listEmployees', {}).then(res => {
-      if (!_isSyncing) {
-        if (!res || !res.success) {
-          const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
-          if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = msg; }
-          else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
-          return;
-        }
-        swr.set('listEmployees:{}', res);
-        _empAllList = res.data || [];
-        _renderEmpStats();
-        _renderEmployees();
+      if (!res || !res.success) {
+        const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
+        if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = msg; }
+        else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
+        return;
       }
+      swr.set('listEmployees:{}', res);
+      _empAllList = res.data || [];
+      _renderEmpStats();
+      _renderEmployees();
     }).catch(err => {
-      if (!_isSyncing) {
-        const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
-        if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = `<div class="emp-err">${msg}</div>`; }
-        else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8" class="emp-err">${msg}</td></tr>`;
-      }
+      const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
+      if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = `<div class="emp-err">${msg}</div>`; }
+      else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8" class="emp-err">${msg}</td></tr>`;
     });
   }
 
@@ -3248,26 +3244,24 @@ const AttendanceSystem = (function() {
   function loadAttendanceData() {
     const month = parseInt(document.getElementById('attendanceMonth').value, 10);
     const year  = parseInt(document.getElementById('attendanceYear').value, 10);
+    destroyDataTable('attendanceTable'); // always destroy before re-init
     if (!_isSyncing) {
-      destroyDataTable('attendanceTable');
       setSkel('attendanceTableBody', skelTableRows(9, 6));
     }
     _rawApi('listDailyLog', { month, year }).then(res => {
-      if (!_isSyncing) {
-        if (!res || !res.success) {
-          document.getElementById('attendanceTableBody').innerHTML =
-            `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
-          return;
-        }
-        _attAllRows = (res.data && res.data.rows) || [];
-        _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
-        _populateAttDeptFilter();
-        _renderAttStats(res.data && res.data.stats);
-        _renderAttCharts(res.data && res.data.dailyTrend);
-        _renderAttTable();
+      if (!res || !res.success) {
+        document.getElementById('attendanceTableBody').innerHTML =
+          `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
+        return;
       }
+      _attAllRows = (res.data && res.data.rows) || [];
+      _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
+      _populateAttDeptFilter();
+      _renderAttStats(res.data && res.data.stats);
+      _renderAttCharts(res.data && res.data.dailyTrend);
+      _renderAttTable();
     }).catch(err => {
-      if (!_isSyncing) document.getElementById('attendanceTableBody').innerHTML =
+      document.getElementById('attendanceTableBody').innerHTML =
         `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
     });
   }
@@ -3432,7 +3426,7 @@ const AttendanceSystem = (function() {
       setSkel('leavesTableBody', skelTableRows(8, 4));
     }
     apiSwr('listAllLeaves', {}, {
-      onData: res => { if (!_isSyncing) displayLeaveApplications((res && res.success && res.data) || []); }
+      onData: res => { displayLeaveApplications((res && res.success && res.data) || []); }
     });
   }
 
