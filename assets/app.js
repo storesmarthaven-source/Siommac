@@ -1076,7 +1076,7 @@ const AttendanceSystem = (function() {
       function _startPolling() {
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 2 * 60 * 1000); // every 2 min
+        _pollTimer = setInterval(_fetch, 30 * 1000); // every 30 sec
       }
 
       // Mark all as read (clears bell badge + leave nav badge)
@@ -1318,7 +1318,7 @@ const AttendanceSystem = (function() {
         }
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 2 * 60 * 1000);
+        _pollTimer = setInterval(_fetch, 60 * 1000); // every 60 sec
       }
 
       // New Message button (both roles)
@@ -1522,7 +1522,7 @@ const AttendanceSystem = (function() {
         // Employee always sees New Ticket button; admin sees it too to test
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 2 * 60 * 1000);
+        _pollTimer = setInterval(_fetch, 60 * 1000); // every 60 sec
       }
 
       // New ticket button
