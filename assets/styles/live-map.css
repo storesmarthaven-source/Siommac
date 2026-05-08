@@ -99,20 +99,20 @@
   position: absolute;
   bottom: 20px; left: 20px;
   z-index: 500;
-  background: white; border: 1.5px solid var(--border);
-  color: var(--siomac-navy); font-size: 13px; font-weight: 700;
+  background: var(--siomac-red); border: none;
+  color: #fff; font-size: 13px; font-weight: 700;
   font-family: inherit; padding: 9px 18px; border-radius: 40px;
   display: inline-flex; align-items: center; gap: 7px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 14px rgba(228,12,12,0.35);
   cursor: pointer; transition: background .18s, box-shadow .18s;
 }
-.lm-center-btn:hover { background: var(--siomac-navy); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+.lm-center-btn:hover { background: #c00a0a; box-shadow: 0 6px 18px rgba(228,12,12,0.45); }
 
 .lm-refresh-btn {
   background: var(--bg-subtle, #F4F6FA); border: 1px solid var(--border);
-  cursor: pointer; color: var(--text-primary); font-size: 12px; font-weight: 600;
-  font-family: inherit; padding: 5px 12px; border-radius: 20px;
-  display: inline-flex; align-items: center; gap: 5px;
+  cursor: pointer; color: var(--text-primary); font-size: 13px; font-weight: 600;
+  font-family: inherit; padding: 8px 16px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 6px;
   transition: color .15s, background .15s; line-height: 1; white-space: nowrap;
 }
 .lm-refresh-btn:hover { color: var(--siomac-navy); background: #e8edf5; border-color: var(--siomac-navy); }
