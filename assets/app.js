@@ -1402,6 +1402,13 @@ const AttendanceSystem = (function() {
       }
     }
 
+    // Seed the profile photo from the session so opening My Profile never
+    // shows the red-circle fallback while waiting for getEmployeeByUsername.
+    // This is always up-to-date: saved at login and patched on every profile save.
+    if (result.profileImage !== undefined) {
+      _currentProfileImage = result.profileImage || '';
+    }
+
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
     if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
 
