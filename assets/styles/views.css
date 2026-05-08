@@ -1142,12 +1142,17 @@
 /* Welcome card */
 .ea-welcome-card {
   background: var(--siomac-navy); border-radius: var(--radius-lg);
-  border: none; padding: 32px 24px;
+  border: none; padding: 32px 24px 28px;
   margin-bottom: 0; text-align: center;
   color: white;
+  display: flex; flex-direction: column; align-items: center;
 }
 .ea-welcome-card h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.ea-role-text { font-size: 0.82rem; color: rgba(255,255,255,.65); margin-bottom: 24px; }
+.ea-role-text { font-size: 0.82rem; color: rgba(255,255,255,.65); margin-bottom: 10px; }
+/* Status badge sits close to name, then spacer pushes button to bottom */
+.ea-status-wrapper { margin-top: 4px; margin-bottom: auto; }
+/* Push action buttons toward the bottom */
+#checkInBtn, #checkOutBtn { margin-top: 18px; }
 
 /* Action button — flat red */
 .ea-action-btn {
@@ -1161,11 +1166,11 @@
 .ea-action-btn:hover { opacity: .88; }
 .ea-action-btn:active { opacity: 1; }
 .ea-action-btn-out {
-  background: #f59e0b;
+  background: #f8b30d;
   border: none;
   color: #fff;
 }
-.ea-action-btn-out:hover { background: #d97706 !important; opacity: 1 !important; }
+.ea-action-btn-out:hover { background: #e0a00b !important; opacity: 1 !important; }
 .ea-action-btn-complete {
   background: #2E7D32;
   border: none;
