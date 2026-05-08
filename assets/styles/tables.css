@@ -67,10 +67,10 @@ button.dt-button.buttons-copy {
   font-weight: 600 !important;
   font-family: inherit !important;
   border: none !important;
-  background: #f8b30d !important;
-  color: #1A2C53 !important;
+  background: var(--siomac-red) !important;
+  color: #fff !important;
   cursor: pointer !important;
-  transition: background .18s, color .18s !important;
+  transition: opacity .18s !important;
   text-decoration: none !important;
   box-shadow: none !important;
   white-space: nowrap !important;
@@ -78,6 +78,7 @@ button.dt-button.buttons-copy {
   text-shadow: none !important;
   width: auto !important;
   height: auto !important;
+  margin-right: 6px !important;
 }
 button.buttons-csv:hover,
 button.buttons-excel:hover,
@@ -93,8 +94,8 @@ button.dt-button.buttons-html5:hover,
 button.dt-button.buttons-copy:hover {
   background: var(--siomac-red) !important;
   color: #fff !important;
+  opacity: 0.85 !important;
   box-shadow: none !important;
-  opacity: 1 !important;
   outline: none !important;
   transform: none !important;
 }

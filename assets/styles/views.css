@@ -1002,6 +1002,13 @@
 }
 .chart-card-section .chart-container-md {
   padding: 18px 20px 20px;
+  position: relative;
+  height: 300px;
+}
+.dash-chart-split .chart-container-md {
+  flex: 1; padding: 0; min-width: 0;
+  position: relative;
+  height: 260px;
 }
 
 /* ─── Chart loading spinner ─── */
@@ -1064,10 +1071,6 @@
 .dash-stat-summary .dash-stat-val {
   font-size: 0.88rem;
 }
-.dash-chart-split .chart-container-md {
-  flex: 1; padding: 0; min-width: 0;
-}
-
 /* ─── Stat cards ─── */
 .stat-card {
   background: var(--bg-card);

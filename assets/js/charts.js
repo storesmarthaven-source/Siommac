@@ -74,7 +74,7 @@ window.SiomacCharts = (function () {
     destroyDash_('trend');
     const canvas = document.getElementById('trendLineChart');
     if (!canvas) return;
-    _pinCanvas(canvas, 600, 280);
+    _pinCanvas(canvas, 600, 260);
     dashCharts.trend = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
