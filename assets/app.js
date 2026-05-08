@@ -256,8 +256,9 @@ const AttendanceSystem = (function() {
   function loadLiveAttendance() {
     _skelOnce('s-projectMap', () => setSkel('liveEmployeesList', skelList(3)));
     const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
-    api('getLiveAttendance', { scope }).then(res => {
-      const fresh = (res.success && res.data) || [];
+    apiSwr('getLiveAttendance', { scope }, {
+      onData: res => {
+      const fresh = (res && res.success && res.data) || [];
       // Build a lightweight fingerprint: id + lat/lng + status per row
       const hash = fresh.map(r => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';');
       const markersNeedUpdate = hash !== _liveDataHash;
@@ -267,6 +268,7 @@ const AttendanceSystem = (function() {
         _liveDataHash = hash;
         plotLiveEmployees(liveData); // only redraw markers when data changed
         renderLivePanel(liveData);   // only rebuild panel HTML when data changed (prevents photo reload)
+      }
       }
     });
   }
@@ -1520,10 +1522,12 @@ const AttendanceSystem = (function() {
       const sb = document.getElementById('statusBadge');
       if (sb) sb.innerHTML = '<div class="skeleton skel-pill"></div>';
     });
-    api('getMyStatus', { username: currentUser }).then(res => {
-      const status = (res.success && res.data) || { hasCheckedIn:false, hasCheckedOut:false, checkInTime:null, checkOutTime:null, location:'' };
-      _markLoaded('s-emp-attendance');
-      updateDashboardUI(status);
+    apiSwr('getMyStatus', { username: currentUser }, {
+      onData: res => {
+        const status = (res && res.success && res.data) || { hasCheckedIn:false, hasCheckedOut:false, checkInTime:null, checkOutTime:null, location:'' };
+        _markLoaded('s-emp-attendance');
+        updateDashboardUI(status);
+      }
     });
   }
 
@@ -1861,13 +1865,16 @@ const AttendanceSystem = (function() {
 
   // Admin dashboard charts — full render on first load, silent in-place update on revisits
   function loadDashboardCharts(forceReload) {
-    api('getDashboardCharts').then(res => {
-      if (!res.success) return;
-      if (_isLoaded('s-adm-dashboard-charts') && !forceReload) {
-        SiomacCharts.updateDashboardCharts(res.data); // silent patch, no flicker
-      } else {
-        SiomacCharts.renderDashboardCharts(res.data); // full render on first load
-        _markLoaded('s-adm-dashboard-charts');
+    apiSwr('getDashboardCharts', {}, {
+      force: !!forceReload,
+      onData: res => {
+        if (!res || !res.success) return;
+        if (_isLoaded('s-adm-dashboard-charts') && !forceReload) {
+          SiomacCharts.updateDashboardCharts(res.data); // silent patch, no flicker
+        } else {
+          SiomacCharts.renderDashboardCharts(res.data); // full render on first load
+          _markLoaded('s-adm-dashboard-charts');
+        }
       }
     });
   }
@@ -2340,12 +2347,14 @@ const AttendanceSystem = (function() {
 
   function loadLeaveRequests() {
     _skelOnce('s-emp-leave', () => setSkel('leaveRequestsList', skelTableRows(8, 3)));
-    api('getMyLeaves', { username: currentUser }).then(res => {
-      const list = Array.isArray(res) ? res : ((res.success && res.data) || []);
-      _markLoaded('s-emp-leave');
-      _lvEmpList = list;
-      _lvUpdateStats('empLv', list);
-      _renderEmpLeaves();
+    apiSwr('getMyLeaves', { username: currentUser }, {
+      onData: res => {
+        const list = Array.isArray(res) ? res : ((res && res.success && res.data) || []);
+        _markLoaded('s-emp-leave');
+        _lvEmpList = list;
+        _lvUpdateStats('empLv', list);
+        _renderEmpLeaves();
+      }
     });
   }
 
@@ -2381,9 +2390,11 @@ const AttendanceSystem = (function() {
   // Manager Dashboard Functions
   function loadDepartmentData() {
     _skelOnce('s-mgr-overview', () => skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']));
-    api('getDeptStats', { managerUsername: currentUser }).then(res => {
-      _markLoaded('s-mgr-overview');
-      displayDepartmentStats((res.success && res.data) || { total:0, present:0, onLeave:0, late:0 });
+    apiSwr('getDeptStats', { managerUsername: currentUser }, {
+      onData: res => {
+        _markLoaded('s-mgr-overview');
+        displayDepartmentStats((res && res.success && res.data) || { total:0, present:0, onLeave:0, late:0 });
+      }
     });
   }
 
@@ -2511,9 +2522,11 @@ const AttendanceSystem = (function() {
   // Admin Dashboard Functions
   function loadDashboardData() {
     _skelOnce('s-adm-dashboard', () => skelStatValues(['totalEmployees','presentToday','absentToday','onLeaveToday','activeLocations','lateToday']));
-    api('getAdminStats').then(res => {
-      _markLoaded('s-adm-dashboard');
-      displayAdminStats((res.success && res.data) || { totalEmployees:0, presentToday:0, absentToday:0, onLeaveToday:0, activeLocations:0, lateToday:0 });
+    apiSwr('getAdminStats', {}, {
+      onData: res => {
+        _markLoaded('s-adm-dashboard');
+        displayAdminStats((res && res.success && res.data) || { totalEmployees:0, presentToday:0, absentToday:0, onLeaveToday:0, activeLocations:0, lateToday:0 });
+      }
     });
     loadRecentAttendance();
   }
@@ -2533,7 +2546,8 @@ const AttendanceSystem = (function() {
     _skelOnce('s-adm-dashboard-rat', () => {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:28px;"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>';
     });
-    api('getRecentAttendance', { limit: 10 }).then(res => {
+    apiSwr('getRecentAttendance', { limit: 10 }, {
+      onData: res => {
       _markLoaded('s-adm-dashboard-rat');
       if (!res || !res.success || !res.data || res.data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="padding:48px 20px;text-align:center;color:var(--text-muted);"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.4;"></i><span style="font-size:0.88rem;">No attendance records for today yet.</span></div></td></tr>';
@@ -2558,8 +2572,10 @@ const AttendanceSystem = (function() {
           <td style="text-align:center;"><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
         </tr>`;
       }).join('');
-    }).catch(() => {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Failed to load recent activity.</td></tr>';
+      },
+      onError: () => {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Failed to load recent activity.</td></tr>';
+      }
     });
   }
 
@@ -2645,22 +2661,24 @@ const AttendanceSystem = (function() {
         setSkel('employeesTableBody', skelTableRows(8, 5));
       }
     });
-    _rawApi('listEmployees', {}).then(res => {
-      if (!res || !res.success) {
-        const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
-        if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = msg; }
-        else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
-        return;
+    apiSwr('listEmployees', {}, {
+      onData: res => {
+        if (!res || !res.success) {
+          const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
+          if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = msg; }
+          else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
+          return;
+        }
+        _markLoaded('s-adm-employees');
+        _empAllList = res.data || [];
+        _renderEmpStats();
+        _renderEmployees();
+      },
+      onError: err => {
+        const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
+        if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = `<div class="emp-err">${msg}</div>`; }
+        else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8" class="emp-err">${msg}</td></tr>`;
       }
-      swr.set('listEmployees:{}', res);
-      _markLoaded('s-adm-employees');
-      _empAllList = res.data || [];
-      _renderEmpStats();
-      _renderEmployees();
-    }).catch(err => {
-      const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
-      if (_empCardView) { const g = document.getElementById('empCardView'); if (g) g.innerHTML = `<div class="emp-err">${msg}</div>`; }
-      else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8" class="emp-err">${msg}</td></tr>`;
     });
   }
 
@@ -2922,18 +2940,20 @@ const AttendanceSystem = (function() {
     _skelOnce('s-adm-departments', () => {
       if (container) container.innerHTML = '<div class="dept-loading"><i class="fas fa-spinner fa-spin"></i> Loading departments…</div>';
     });
-    _rawApi('listDepartments', {}).then(res => {
-      if (!res || !res.success) {
-        if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-exclamation-circle"></i><p>${(res && res.message) || 'Failed to load departments'}</p></div>`;
-        return;
+    apiSwr('listDepartments', {}, {
+      onData: res => {
+        if (!res || !res.success) {
+          if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-exclamation-circle"></i><p>${(res && res.message) || 'Failed to load departments'}</p></div>`;
+          return;
+        }
+        const list = Array.isArray(res.data) ? res.data : [];
+        departments = list;
+        _markLoaded('s-adm-departments');
+        displayDepartments(list);
+      },
+      onError: err => {
+        if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-wifi"></i><p>Network error: ${err.message || 'Could not connect'}</p></div>`;
       }
-      const list = Array.isArray(res.data) ? res.data : [];
-      departments = list;
-      _markLoaded('s-adm-departments');
-      swr.set('listDepartments:{}', res);
-      displayDepartments(list);
-    }).catch(err => {
-      if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-wifi"></i><p>Network error: ${err.message || 'Could not connect'}</p></div>`;
     });
   }
 
@@ -3143,17 +3163,19 @@ const AttendanceSystem = (function() {
 
   function loadProjectSites() {
     _skelOnce('s-adm-projects', () => setSkel('projectsContainer', skelCards(3)));
-    _rawApi('listProjectSites', {}).then(res => {
-      if (!res || !res.success) {
-        document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
-        return;
+    apiSwr('listProjectSites', {}, {
+      onData: res => {
+        if (!res || !res.success) {
+          document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
+          return;
+        }
+        projectSites = Array.isArray(res.data) ? res.data : [];
+        _markLoaded('s-adm-projects');
+        displayProjectSites(projectSites);
+      },
+      onError: err => {
+        document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
       }
-      projectSites = Array.isArray(res.data) ? res.data : [];
-      _markLoaded('s-adm-projects');
-      swr.set('listProjectSites:{}', res);
-      displayProjectSites(projectSites);
-    }).catch(err => {
-      document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
     });
   }
 
