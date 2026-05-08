@@ -3300,8 +3300,11 @@ const AttendanceSystem = (function() {
         _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
         _populateAttDeptFilter();
         _renderAttStats(res.data && res.data.stats);
-        _renderAttCharts(res.data && res.data.dailyTrend);
         _renderAttTable();
+        // Double rAF: first frame makes section visible, second has real container dimensions
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          _renderAttCharts(res.data && res.data.dailyTrend);
+        }));
       },
       onError: err => {
         document.getElementById('attendanceTableBody').innerHTML =
@@ -3328,10 +3331,13 @@ const AttendanceSystem = (function() {
   }
 
   function _renderAttCharts(trend) {
+    const pin = typeof SiomacCharts !== 'undefined' ? SiomacCharts.pinCanvas : function(){};
+
     // Trend line
     if (_attTrendChart) { _attTrendChart.destroy(); _attTrendChart = null; }
     const tc = document.getElementById('attTrendChart');
     if (tc && trend && trend.length) {
+      pin(tc, 600, 240);
       _attTrendChart = new Chart(tc.getContext('2d'), {
         type: 'line',
         data: {
@@ -3357,7 +3363,8 @@ const AttendanceSystem = (function() {
           ]
         },
         options: {
-          responsive: true, maintainAspectRatio: false,
+          responsive: false, maintainAspectRatio: false,
+          animation: { duration: 1000, easing: 'easeOutCubic' },
           plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } } },
           scales: {
             y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { font: { size: 10 } } },
@@ -3371,6 +3378,7 @@ const AttendanceSystem = (function() {
     if (_attStatusChart) { _attStatusChart.destroy(); _attStatusChart = null; }
     const sc = document.getElementById('attStatusChart');
     if (sc && _attAllRows.length) {
+      pin(sc, 240, 240);
       const counts = { Present: 0, Late: 0, Absent: 0 };
       _attAllRows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
       _attStatusChart = new Chart(sc.getContext('2d'), {
@@ -3384,8 +3392,9 @@ const AttendanceSystem = (function() {
           }]
         },
         options: {
-          responsive: true, maintainAspectRatio: false,
+          responsive: false, maintainAspectRatio: false,
           cutout: '65%',
+          animation: { duration: 900, easing: 'easeOutQuart' },
           plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 12 } } }
         }
       });

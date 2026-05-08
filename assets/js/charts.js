@@ -358,5 +358,5 @@ window.SiomacCharts = (function () {
     }
   }
 
-  return { displayAttendanceChart, displayTrendChart, renderDashboardCharts, updateDashboardCharts, hasAttendanceChart, hasTrendChart };
+  return { displayAttendanceChart, displayTrendChart, renderDashboardCharts, updateDashboardCharts, hasAttendanceChart, hasTrendChart, pinCanvas: _pinCanvas };
 })();
