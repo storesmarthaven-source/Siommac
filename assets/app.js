@@ -2386,9 +2386,10 @@ const AttendanceSystem = (function() {
         const modal = bootstrap.Modal.getInstance(document.getElementById('leaveRequestModal'));
         if (modal) modal.hide();
         document.getElementById('leaveRequestForm').reset();
-        showPopup('success', 'Updated', 'Leave application updated.');
-        loadLeaveApplications();
-        if (typeof loadLeaveRequests === 'function') loadLeaveRequests();
+        showPopup('success', 'Updated', 'Leave application updated.').then(() => {
+          loadLeaveApplications();
+          if (typeof loadLeaveRequests === 'function') loadLeaveRequests();
+        });
       });
       return;
     }
@@ -2398,11 +2399,10 @@ const AttendanceSystem = (function() {
     api('submitLeave', { username: currentUser, type: leaveType, fromDate, toDate, reason }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Leave Request Submitted', 'Your leave request has been submitted for approval.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('leaveRequestModal'));
         if (modal) modal.hide();
         document.getElementById('leaveRequestForm').reset();
-        loadLeaveRequests();
+        showPopup('success', 'Leave Request Submitted', 'Your leave request has been submitted for approval.').then(() => loadLeaveRequests());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not submit leave');
       }
@@ -2610,8 +2610,7 @@ const AttendanceSystem = (function() {
       api('approveLeave', { leaveId, reviewerId: currentUserId, reviewerUsername: currentUser }).then(res => {
         hideSpinner();
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not approve'); return; }
-        showPopup('success', 'Leave Approved', 'The leave request has been approved.');
-        _refreshLeavesAfterDecision();
+        showPopup('success', 'Leave Approved', 'The leave request has been approved.').then(() => _refreshLeavesAfterDecision());
       }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
@@ -2626,8 +2625,7 @@ const AttendanceSystem = (function() {
       api('rejectLeave', { leaveId, reviewerId: currentUserId, reviewerUsername: currentUser }).then(res => {
         hideSpinner();
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not reject'); return; }
-        showPopup('success', 'Leave Rejected', 'The leave request has been rejected.');
-        _refreshLeavesAfterDecision();
+        showPopup('success', 'Leave Rejected', 'The leave request has been rejected.').then(() => _refreshLeavesAfterDecision());
       }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
@@ -2843,9 +2841,8 @@ const AttendanceSystem = (function() {
     api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Employee Added', `New employee added${res.employeeNumber ? ' as ' + res.employeeNumber : ''}.`);
         closeAddEmpModal();
-        loadEmployeeList();
+        showPopup('success', 'Employee Added', `New employee added${res.employeeNumber ? ' as ' + res.employeeNumber : ''}.`).then(() => loadEmployeeList());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not add employee');
       }
@@ -3086,9 +3083,8 @@ const AttendanceSystem = (function() {
     api('updateEmployee', { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Employee Updated', `${fullName} has been updated.`);
         closeEditEmpModal();
-        loadEmployeeList();
+        showPopup('success', 'Employee Updated', `${fullName} has been updated.`).then(() => loadEmployeeList());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not update');
       }
@@ -3110,8 +3106,7 @@ const AttendanceSystem = (function() {
         api('deleteEmployee', { username, actorId: currentUserId, actorUsername: currentUser }).then(res => {
           hideSpinner();
           if (res.success) {
-            showPopup('success', 'Deleted', 'Employee has been deleted.');
-            loadEmployeeList();
+            showPopup('success', 'Deleted', 'Employee has been deleted.').then(() => loadEmployeeList());
           } else {
             showPopup('error', 'Failed', res.message || 'Could not delete');
           }
@@ -3165,10 +3160,9 @@ const AttendanceSystem = (function() {
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Saved', 'Department saved successfully.');
         closeDeptModal();
         document.getElementById('addDepartmentForm').reset();
-        loadDepartments();
+        showPopup('success', 'Saved', 'Department saved successfully.').then(() => loadDepartments());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save department');
       }
@@ -3331,8 +3325,7 @@ const AttendanceSystem = (function() {
       api('deleteDepartment', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
-          showPopup('success', 'Deleted', 'Department has been deleted.');
-          loadDepartments();
+          showPopup('success', 'Deleted', 'Department has been deleted.').then(() => loadDepartments());
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
         }
@@ -3387,12 +3380,11 @@ const AttendanceSystem = (function() {
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
-        showPopup('success', 'Saved', 'Project site saved successfully.');
         const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
         if (modal) modal.hide();
         document.getElementById('addProjectForm').reset();
         editingSiteId = null;
-        loadProjectSites();
+        showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save site');
       }
@@ -3497,8 +3489,7 @@ const AttendanceSystem = (function() {
       api('deleteProjectSite', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
-          showPopup('success', 'Deleted', 'Project site has been deleted.');
-          loadProjectSites();
+          showPopup('success', 'Deleted', 'Project site has been deleted.').then(() => loadProjectSites());
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
         }
@@ -3910,8 +3901,7 @@ const AttendanceSystem = (function() {
       if (!c.isConfirmed) return;
       api('deleteLeave', { leaveId, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-        showPopup('success', 'Deleted', 'Leave application removed.');
-        loadLeaveApplications();
+        showPopup('success', 'Deleted', 'Leave application removed.').then(() => loadLeaveApplications());
       }).catch(err => { showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
