@@ -406,18 +406,15 @@ const AttendanceSystem = (function() {
       const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
       const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
       const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
+      const statusColor = row.isCheckedOut ? '#546E7A' : (row.status === 'late' ? '#E65100' : '#2E7D32');
+      const statusBg    = row.isCheckedOut ? '#ECEFF4'  : (row.status === 'late' ? '#FFF3E0'  : '#E8F5E9');
 
-      // Popup avatar: profile photo (not selfie) with initial fallback
-      const popupAvatarContent = profile
-        ? `<img src="${profile}" alt="${initial}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.display='none';this.parentElement.dataset.letter='${initial}';this.parentElement.classList.add('lm-popup-avatar-fallback');">`
-        : initial;
+      // Profile photo or initial circle
+      const avatarHtml = profile
+        ? `<img src="${profile}" alt="${initial}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:48px;height:48px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;\\'>${initial}</div>'">`
+        : `<div style="width:48px;height:48px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;">${initial}</div>`;
 
-      // Selfie section in popup body (attendance photo only)
-      const photoHtml = selfie
-        ? `<div class="lm-popup-photo"><img src="${selfie}" alt="Check-in photo" onerror="this.parentElement.style.display='none'"></div>`
-        : '';
-
-      // Nav link (Google Maps) — uses check-in coords if available
+      // Nav link
       const navLat = row.checkInLat || row.checkOutLat || '';
       const navLng = row.checkInLng || row.checkOutLng || '';
       const navBtn = (navLat && navLng)
@@ -426,29 +423,53 @@ const AttendanceSystem = (function() {
 
       marker.bindPopup(`
         <div class="lm-popup-card">
-          <div class="lm-popup-header">
-            <div class="lm-popup-avatar">${popupAvatarContent}</div>
-            <div class="lm-popup-title">
-              <h4>${row.fullName}</h4>
-              <p><i class="fas fa-briefcase"></i> ${[row.position, row.department].filter(Boolean).join(' · ') || 'Employee'}</p>
+
+          <!-- Building banner -->
+          <div class="lm-popup-site-banner">
+            <div class="lm-popup-building-icon"><i class="fas fa-building"></i></div>
+            <div class="lm-popup-site-info">
+              <div class="lm-popup-site-name">${row.siteName ? row.siteName : 'On Site'}</div>
+              ${row.distanceM != null ? `<div class="lm-popup-site-dist"><i class="fas fa-ruler-horizontal"></i> ${row.distanceM}m from site</div>` : ''}
+            </div>
+            <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};">
+              <i class="fas ${statusIcon}"></i> ${statusLabel}
+            </span>
+          </div>
+
+          <!-- Employee row -->
+          <div class="lm-popup-emp-row">
+            ${avatarHtml}
+            <div class="lm-popup-emp-info">
+              <div class="lm-popup-emp-name">${row.fullName}</div>
+              <div class="lm-popup-emp-meta">${[row.position, row.department].filter(Boolean).join(' · ') || 'Employee'}</div>
+              ${row.employeeId ? `<div class="lm-popup-emp-meta"><i class="fas fa-id-badge" style="margin-right:3px;"></i>${row.employeeId}</div>` : ''}
             </div>
           </div>
-          <div class="lm-popup-body">
-            ${row.employeeId ? `<div class="lm-popup-row"><i class="fas fa-id-badge"></i> ID: ${row.employeeId}</div>` : ''}
-            <div class="lm-popup-row"><i class="fas fa-sign-in-alt"></i> In: <strong>${row.checkInTime || '—'}</strong>&nbsp;&nbsp;<i class="fas fa-sign-out-alt"></i> Out: <strong>${row.checkOutTime || '—'}</strong></div>
-            ${row.siteName ? `<div class="lm-popup-row"><i class="fas fa-map-marker-alt"></i> ${row.siteName}${row.distanceM != null ? ` <span style="color:#999;font-size:11px;">(${row.distanceM}m)</span>` : ''}</div>` : ''}
-            ${row.lastSeen ? `<div class="lm-popup-row"><i class="fas fa-clock"></i> Last seen: ${row.lastSeen}</div>` : ''}
-            <div class="lm-popup-row">
-              <span class="lm-popup-status ${statusCls}"><i class="fas ${statusIcon}"></i> ${statusLabel}</span>
+
+          <!-- Time row -->
+          <div class="lm-popup-times">
+            <div class="lm-popup-time-cell">
+              <i class="fas fa-sign-in-alt"></i>
+              <span class="lm-popup-time-label">In</span>
+              <span class="lm-popup-time-val">${row.checkInTime || '—'}</span>
             </div>
-            ${photoHtml}
+            <div class="lm-popup-time-divider"></div>
+            <div class="lm-popup-time-cell">
+              <i class="fas fa-sign-out-alt"></i>
+              <span class="lm-popup-time-label">Out</span>
+              <span class="lm-popup-time-val">${row.checkOutTime || '—'}</span>
+            </div>
           </div>
+
+          ${selfie ? `<div class="lm-popup-selfie"><img src="${selfie}" alt="Selfie" onerror="this.parentElement.style.display='none'"></div>` : ''}
+
+          <!-- Footer -->
           <div class="lm-popup-footer">
             ${navBtn}
-            <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> Profile</button>
+            <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
           </div>
         </div>
-      `, { maxWidth: 310, minWidth: 260, className: 'siomac-popup' });
+      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup' });
       marker._liveUserId = row.userId; // for sidebar click → marker open
       liveMarkers.push(marker);
     });
@@ -648,6 +669,7 @@ const AttendanceSystem = (function() {
                + (main.length ? '<li class="sidebar-menu-divider" aria-hidden="true"></li>' : '')
                + common.map(renderItem).join('');
     document.getElementById('sidebarMenu').innerHTML = html;
+    if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges();
   }
 
   // ─── Color palettes (CSS-variable overrides applied to :root) ───
@@ -695,6 +717,7 @@ const AttendanceSystem = (function() {
       <button data-section="${it.id}" title="${it.label}">
         <i class="fas ${it.icon}"></i><span>${it.label}</span>
       </button>`).join('');
+    if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges();
   }
 
   function renderLayouts() {
@@ -839,6 +862,7 @@ const AttendanceSystem = (function() {
           setTimeout(() => { if (!map) initializeMap(); else map.invalidateSize(); }, 80);
         }
         loadLiveAttendance();
+        if (typeof window._clearMapBadge === 'function') window._clearMapBadge();
         break;
       case 's-emp-leave':       loadLeaveRequests(); break;
       case 's-mgr-overview':    loadDepartmentData(); break;
@@ -910,11 +934,628 @@ const AttendanceSystem = (function() {
           if (!isOpen) { m.classList.add('open'); b.classList.add('active'); }
         });
       });
-      // Close on X button or clicking outside the icon group
+      // Close on X button or clicking outside the icon group / modal
       document.addEventListener('click', (e) => {
         if (e.target.closest('.hdr-modal-close')) { closeAll(); return; }
-        if (!e.target.closest('.hdr-icon-group')) closeAll();
+        if (!e.target.closest('.hdr-icon-group') && !e.target.closest('.hdr-modal')) closeAll();
       });
+    })();
+
+    // ── Notification system ──────────────────────────────────────────────────
+    (function () {
+      const STORAGE_KEY = 'siomac_read_notifs_v1';
+      let _notifData   = [];
+      let _pollTimer   = null;
+
+      function _readIds() {
+        try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); } catch { return new Set(); }
+      }
+      function _saveReadIds(set) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...set].slice(-200))); } catch {}
+      }
+
+      function _timeAgo(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d)) return '';
+        const diff = Math.floor((Date.now() - d) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      // Map notification type → section to navigate to
+      const NOTIF_SECTION = {
+        // Admin / Manager
+        leave:      () => currentRole === 'admin' ? 's-adm-leaves'      : currentRole === 'manager' ? 's-mgr-leaves'    : null,
+        late:       () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
+        checkin:    () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
+        checkout:   () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
+        absent:     () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
+        // Employee
+        my_checkin:  () => 's-emp-attendance',
+        my_checkout: () => 's-emp-attendance',
+        reminder:    () => 's-emp-attendance',
+        myleave:     () => 's-emp-leave',
+        pending:     () => 's-emp-leave',
+        upcoming:    () => 's-emp-leave',
+      };
+
+      // Section IDs that carry nav badges
+      const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
+      const MAP_SECTION_IDS   = ['s-projectMap'];
+
+      function _setBadge(btn, count) {
+        let b = btn.querySelector('.sb-nav-badge');
+        if (count > 0) {
+          if (!b) { b = document.createElement('span'); b.className = 'sb-nav-badge'; btn.appendChild(b); }
+          b.textContent = count > 99 ? '99+' : count;
+        } else {
+          if (b) b.remove();
+        }
+      }
+
+      function _updateNavBadges(unreadLeaveCount, checkedInCount) {
+        const ci = checkedInCount || 0;
+        ['#sidebarMenu', '#topTabs'].forEach(sel => {
+          document.querySelectorAll(`${sel} button[data-section]`).forEach(btn => {
+            const sec = btn.dataset.section;
+            if (LEAVE_SECTION_IDS.includes(sec)) _setBadge(btn, unreadLeaveCount);
+            if (MAP_SECTION_IDS.includes(sec))   _setBadge(btn, ci);
+          });
+        });
+      }
+
+      function _render() {
+        const list = document.getElementById('notifList');
+        if (!list) return;
+        const readIds = _readIds();
+        const unread  = _notifData.filter(n => !readIds.has(n.id));
+
+        // Bell badge
+        const badge = document.getElementById('hdrNotifBadge');
+        if (badge) {
+          badge.textContent = unread.length > 0 ? (unread.length > 99 ? '99+' : unread.length) : '';
+          badge.style.display = unread.length > 0 ? '' : 'none';
+        }
+
+        // Sidebar / top-tab badges
+        const unreadLeaveCount = unread.filter(n => n.type === 'leave').length;
+        _updateNavBadges(unreadLeaveCount, _newCheckinCount());
+
+        if (!_notifData.length) {
+          list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
+          return;
+        }
+
+        list.innerHTML = _notifData.map(n => {
+          const isRead = readIds.has(n.id);
+          const resolver = NOTIF_SECTION[n.type];
+          const section  = resolver ? resolver() : null;
+          const iconEl = n.photoUrl
+            ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
+            : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
+          return `
+            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
+              ${iconEl}
+              <div class="hdr-notif-text" style="flex:1;min-width:0;">
+                <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
+                <div class="hdr-notif-sub">${escapeHtml(n.sub)}</div>
+                <div class="hdr-notif-sub" style="margin-top:2px;opacity:.7">${_timeAgo(n.time)}</div>
+              </div>
+              ${!isRead ? '<div class="hdr-notif-dot"></div>' : ''}
+            </div>`;
+        }).join('');
+      }
+
+      function _fetch() {
+        api('getNotifications', {}).then(res => {
+          if (res && res.success) {
+            _notifData = res.data || [];
+            _render();
+          }
+        }).catch(() => {});
+      }
+
+      function _startPolling() {
+        _fetch();
+        clearInterval(_pollTimer);
+        _pollTimer = setInterval(_fetch, 2 * 60 * 1000); // every 2 min
+      }
+
+      // Mark all as read (clears bell badge + leave nav badge)
+      const markAllBtn = document.getElementById('notifMarkAllBtn');
+      if (markAllBtn) {
+        markAllBtn.addEventListener('click', () => {
+          const readIds = _readIds();
+          _notifData.forEach(n => readIds.add(n.id));
+          _saveReadIds(readIds);
+          _render();
+        });
+      }
+
+      // Refresh button
+      const refreshBtn = document.getElementById('notifRefreshBtn');
+      if (refreshBtn) refreshBtn.addEventListener('click', _fetch);
+
+      // Mark as read + navigate on item click
+      document.addEventListener('click', e => {
+        const item = e.target.closest('.hdr-notif-item[data-notif-id]');
+        if (!item) return;
+        const id      = item.dataset.notifId;
+        const section = item.dataset.notifSection;
+        // Mark read
+        const readIds = _readIds();
+        readIds.add(id);
+        _saveReadIds(readIds);
+        _render();
+        // Close the notification dropdown
+        const modal = document.getElementById('hdrNotifModal');
+        const btn   = document.getElementById('hdrNotifBtn');
+        if (modal) modal.classList.remove('open');
+        if (btn)   btn.classList.remove('active');
+        // Navigate to the relevant section
+        if (section) showSection(section);
+      });
+
+      // Timestamp of the last time the user visited Live Map — persisted across refreshes
+      const _MAP_VISITED_KEY = 'siomac_map_last_visited';
+      function _getMapLastVisited() {
+        try { return parseInt(localStorage.getItem(_MAP_VISITED_KEY) || '0', 10) || 0; } catch { return 0; }
+      }
+      function _saveMapLastVisited(ts) {
+        try { localStorage.setItem(_MAP_VISITED_KEY, String(ts)); } catch {}
+      }
+
+      function _newCheckinCount() {
+        const lastVisited = _getMapLastVisited();
+        return _notifData.filter(n =>
+          (n.type === 'checkin' || n.type === 'late') &&
+          new Date(n.time).getTime() > lastVisited
+        ).length;
+      }
+
+      // Expose so init() can kick it off after login
+      window._startNotifPolling  = _startPolling;
+      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _saveMapLastVisited(0); };
+      window._renderNotifs       = _render;
+      window._clearMapBadge      = () => {
+        _saveMapLastVisited(Date.now());
+        ['#sidebarMenu', '#topTabs'].forEach(sel => {
+          document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
+        });
+      };
+      window._refreshNavBadges   = () => {
+        const readIds = _readIds();
+        const unreadLeaveCount = _notifData.filter(n => n.type === 'leave' && !readIds.has(n.id)).length;
+        _updateNavBadges(unreadLeaveCount, _newCheckinCount());
+      };
+    })();
+
+    // ── Messages system ──────────────────────────────────────────────────────
+    (function () {
+      let _msgs      = [];
+      let _empList   = [];   // for admin compose: list of employees to pick from
+      let _currentMsgId = null;
+      let _pollTimer    = null;
+
+      function _timeAgoShort(iso) {
+        if (!iso) return '';
+        const d = new Date(iso); if (isNaN(d)) return '';
+        const s = Math.floor((Date.now() - d) / 1000);
+        if (s < 60) return 'Just now';
+        if (s < 3600) return Math.floor(s / 60) + 'm ago';
+        if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+        return Math.floor(s / 86400) + 'd ago';
+      }
+      function _initials(name) {
+        return (name || '?').trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      }
+      const _isAdmin = () => currentRole === 'admin' || currentRole === 'manager';
+
+      function _showList() {
+        document.getElementById('msgList').style.display       = '';
+        document.getElementById('msgDetailPane').style.display = 'none';
+        document.getElementById('msgComposePane').style.display= 'none';
+        document.getElementById('msgModalFoot').style.display  = '';
+        _currentMsgId = null;
+      }
+
+      function _showCompose(replyToUsername) {
+        document.getElementById('msgList').style.display       = 'none';
+        document.getElementById('msgDetailPane').style.display = 'none';
+        document.getElementById('msgComposePane').style.display= 'flex';
+        document.getElementById('msgModalFoot').style.display  = 'none';
+        document.getElementById('msgComposeSubject').value     = '';
+        document.getElementById('msgComposeBody').value        = '';
+
+        // Admin: show recipient selector; employee: hide it
+        const toWrap = document.getElementById('msgToWrap');
+        const toSel  = document.getElementById('msgToSelect');
+        if (_isAdmin()) {
+          if (toWrap) toWrap.style.display = '';
+          if (toSel) {
+            toSel.innerHTML = '<option value="">— Select employee —</option>'
+              + _empList.map(e => `<option value="${escapeHtml(e.username)}">${escapeHtml(e.fullName)} (${escapeHtml(e.role)})</option>`).join('');
+            if (replyToUsername) toSel.value = replyToUsername;
+          }
+        } else {
+          if (toWrap) toWrap.style.display = 'none';
+        }
+        document.getElementById('msgComposeSubject').focus();
+      }
+
+      function _renderList() {
+        const list = document.getElementById('msgList');
+        if (!list) return;
+        if (!_msgs.length) {
+          list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-inbox"></i><p>No messages yet</p></div>';
+          return;
+        }
+        list.innerHTML = _msgs.map(m => {
+          const isSentByMe = m.fromUsername === currentUser;
+          const otherName  = isSentByMe ? m.toName    : m.fromName;
+          const otherPhoto = isSentByMe ? m.toPhoto   : m.fromPhoto;
+          const initials   = _initials(otherName);
+          const dirLabel   = isSentByMe ? `→ ${escapeHtml(m.toName)}` : `← ${escapeHtml(m.fromName)}`;
+          const unread     = m.isUnread;
+          const replyCount = m.replies.length;
+          const avatarHtml = otherPhoto
+            ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);" onerror="this.outerHTML='<div class=\\'hdr-msg-avatar\\'>${escapeHtml(initials)}</div>'">`
+            : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
+          return `<div class="hdr-msg-item${unread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);">
+            ${avatarHtml}
+            <div class="hdr-msg-text" style="flex:1;min-width:0;">
+              <div class="hdr-msg-name">${dirLabel} <span class="hdr-msg-time">${_timeAgoShort(m.createdAt)}</span></div>
+              <div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
+              <div class="hdr-msg-preview">${escapeHtml(m.body)}</div>
+              ${replyCount ? `<div style="font-size:0.7rem;color:var(--siomac-red);margin-top:2px;"><i class="fas fa-reply"></i> ${replyCount} repl${replyCount !== 1 ? 'ies' : 'y'}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function _bubble(isMe, senderName, body, time, photoUrl) {
+        const name     = senderName || (isMe ? 'You' : 'Admin');
+        const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const align    = isMe ? 'flex-end' : 'flex-start';
+        const bubbleBg    = isMe ? 'var(--siomac-primary, #001f3f)' : 'var(--bg-subtle, #f0f2f5)';
+        const bubbleColor = isMe ? '#fff' : 'var(--text-primary)';
+        const avatarBg    = isMe ? 'var(--siomac-accent, #0074D9)' : 'var(--border-strong, #bbb)';
+        const avatar = photoUrl
+          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-accent,#0074D9)' : 'var(--border,#ddd)'};">`
+          : `<div style="width:30px;height:30px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
+        const bubble = `<div style="max-width:75%;background:${bubbleBg};color:${bubbleColor};padding:8px 12px;border-radius:${isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};font-size:0.82rem;white-space:pre-wrap;line-height:1.4;">${escapeHtml(body)}</div>`;
+        const meta   = `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:3px;text-align:${isMe ? 'right' : 'left'};">${escapeHtml(isMe ? 'You' : name)} · ${_timeAgoShort(time)}</div>`;
+        return `<div style="display:flex;flex-direction:column;align-items:${align};margin-bottom:12px;">
+          <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMe ? 'row-reverse' : 'row'};">${avatar}${bubble}</div>
+          ${meta}
+        </div>`;
+      }
+
+      function _showDetail(msgId) {
+        const m = _msgs.find(x => String(x.id) === String(msgId));
+        if (!m) return;
+        _currentMsgId = msgId;
+        document.getElementById('msgList').style.display       = 'none';
+        document.getElementById('msgComposePane').style.display= 'none';
+        document.getElementById('msgModalFoot').style.display  = 'none';
+        document.getElementById('msgDetailPane').style.display = 'flex';
+
+        // Subject header
+        const otherName = m.fromUsername === currentUser ? m.toName : m.fromName;
+        const header = `<div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle,#f8fafe);">
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;">${escapeHtml(m.fromUsername === currentUser ? 'To' : 'From')}: <strong>${escapeHtml(otherName)}</strong></div>
+          <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">${escapeHtml(m.subject)}</div>
+        </div>`;
+
+        // Opening message bubble — pick the right photo for each side
+        const isMeFirst = m.fromUsername === currentUser;
+        const myPhoto    = isMeFirst ? m.fromPhoto : m.toPhoto;
+        const otherPhoto = isMeFirst ? m.toPhoto   : m.fromPhoto;
+        const thread = _bubble(isMeFirst, m.fromName, m.body, m.createdAt, isMeFirst ? myPhoto : otherPhoto)
+          + (m.replies || []).map(r => {
+            const rIsMe = r.fromUsername === currentUser;
+            return _bubble(rIsMe, r.fromName, r.body, r.createdAt, rIsMe ? myPhoto : otherPhoto);
+          }).join('');
+
+        document.getElementById('msgDetailBody').innerHTML = header
+          + `<div style="padding:14px 16px;display:flex;flex-direction:column;">${thread}</div>`;
+
+        // Scroll to bottom of thread
+        const body = document.getElementById('msgDetailBody');
+        body.scrollTop = body.scrollHeight;
+
+        // Mark as read for the recipient
+        if (m.isUnread) {
+          api('markMessageRead', { messageId: msgId }).then(() => { m.isUnread = false; _renderList(); _updateMsgBadge(); }).catch(() => {});
+        }
+      }
+
+      function _updateMsgBadge() {
+        const unread = _msgs.filter(m => m.isUnread).length;
+        const badge = document.getElementById('hdrMsgBadge');
+        if (badge) { badge.textContent = unread || ''; badge.style.display = unread ? '' : 'none'; }
+      }
+
+      function _fetch(keepDetail) {
+        api('getMessages', {}).then(res => {
+          if (!res || !res.success) return;
+          _msgs = res.data || [];
+          _updateMsgBadge();
+          if (keepDetail && _currentMsgId) {
+            _showDetail(_currentMsgId);
+          } else {
+            _renderList();
+          }
+        }).catch(() => {});
+      }
+
+      function _start() {
+        const isAdmin = _isAdmin();
+        document.getElementById('msgModalTitle').textContent       = isAdmin ? 'Messages' : 'My Messages';
+        document.getElementById('msgComposeBtnLabel').textContent  = 'New Message';
+        document.getElementById('msgMarkAllReadBtn').style.display = isAdmin ? '' : 'none';
+        // Pre-load employee list for admin compose dropdown
+        if (isAdmin) {
+          api('getEmployeesForMsg', {}).then(res => { _empList = (res && res.data) || []; }).catch(() => {});
+        }
+        _fetch();
+        clearInterval(_pollTimer);
+        _pollTimer = setInterval(_fetch, 2 * 60 * 1000);
+      }
+
+      // New Message button (both roles)
+      document.getElementById('msgComposeBtn').addEventListener('click', () => _showCompose());
+      document.getElementById('msgCancelComposeBtn').addEventListener('click', _showList);
+      document.getElementById('msgDetailBackBtn').addEventListener('click', () => { _showList(); _renderList(); });
+
+      // Send new message
+      document.getElementById('msgSendBtn').addEventListener('click', () => {
+        const subject    = (document.getElementById('msgComposeSubject').value || '').trim();
+        const body       = (document.getElementById('msgComposeBody').value    || '').trim();
+        const toUsername = _isAdmin() ? (document.getElementById('msgToSelect')?.value || '') : '';
+        if (_isAdmin() && !toUsername) { showPopup('error', 'Missing', 'Please select a recipient.'); return; }
+        if (!subject) { document.getElementById('msgComposeSubject').focus(); return; }
+        if (!body)    { document.getElementById('msgComposeBody').focus();    return; }
+        document.getElementById('msgSendBtn').disabled = true;
+        api('sendMessage', { subject, body, toUsername }).then(res => {
+          document.getElementById('msgSendBtn').disabled = false;
+          if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          const target = _isAdmin() ? 'employee' : 'admin';
+          showPopup('success', 'Sent!', `Your message has been sent.`).then(() => { _showList(); _fetch(); });
+        }).catch(() => { document.getElementById('msgSendBtn').disabled = false; });
+      });
+
+      // Mark all as read
+      document.getElementById('msgMarkAllReadBtn').addEventListener('click', () => {
+        _msgs.filter(m => m.isUnread).forEach(m => {
+          api('markMessageRead', { messageId: m.id }).catch(() => {});
+          m.isUnread = false;
+        });
+        _renderList(); _updateMsgBadge();
+      });
+
+      document.getElementById('msgRefreshBtn').addEventListener('click', _fetch);
+
+      // Send reply (both sides)
+      document.getElementById('msgReplySendBtn').addEventListener('click', () => {
+        const body = (document.getElementById('msgReplyInput').value || '').trim();
+        if (!body) return;
+        const btn = document.getElementById('msgReplySendBtn');
+        btn.disabled = true;
+        document.getElementById('msgReplyInput').value = '';
+        api('replyMessage', { messageId: _currentMsgId, body }).then(res => {
+          btn.disabled = false;
+          if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          _fetch(true); // refresh but stay in detail view
+        }).catch(() => { btn.disabled = false; });
+      });
+
+      // Click message row → open detail
+      document.addEventListener('click', e => {
+        const row = e.target.closest('.hdr-msg-item[data-msg-id]');
+        if (!row) return;
+        _showDetail(row.dataset.msgId);
+      });
+
+      window._startMsgSystem = _start;
+      window._stopMsgSystem  = () => clearInterval(_pollTimer);
+    })();
+
+    // ── Support Tickets system ───────────────────────────────────────────────
+    (function () {
+      let _tickets = [];
+      let _currentTicketId = null;
+      let _pollTimer = null;
+
+      const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+      const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed' };
+
+      function _timeAgoShort(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d)) return '';
+        const diff = Math.floor((Date.now() - d) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      function _showList() {
+        document.getElementById('ticketList').style.display = '';
+        document.getElementById('ticketDetailPane').style.display = 'none';
+        document.getElementById('ticketComposePane').style.display = 'none';
+        document.getElementById('ticketModalFoot').style.display = '';
+        _currentTicketId = null;
+      }
+
+      function _showCompose() {
+        document.getElementById('ticketList').style.display = 'none';
+        document.getElementById('ticketDetailPane').style.display = 'none';
+        document.getElementById('ticketComposePane').style.display = 'flex';
+        document.getElementById('ticketModalFoot').style.display = 'none';
+        document.getElementById('ticketCategory').value = 'general';
+        document.getElementById('ticketSubject').value = '';
+        document.getElementById('ticketBody').value = '';
+        document.getElementById('ticketSubject').focus();
+      }
+
+      function _renderList() {
+        const list = document.getElementById('ticketList');
+        if (!list) return;
+        if (!_tickets.length) {
+          list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-ticket-alt" style="opacity:.3"></i><p>No tickets yet</p></div>';
+          return;
+        }
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        list.innerHTML = _tickets.map(t => {
+          const css      = STATUS_CSS[t.status] || 'open';
+          const lbl      = STATUS_LABEL[t.status] || t.status;
+          const initials = _initials(t.fromName || 'U');
+          const avatarHtml = t.fromPhoto
+            ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);" onerror="this.outerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:var(--siomac-red,#d40000);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;\\'>${escapeHtml(initials)}</div>'">`
+            : `<div style="width:36px;height:36px;border-radius:50%;background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
+          return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;">
+            ${avatarHtml}
+            <div style="flex:1;min-width:0;">
+              <div class="hdr-ticket-top">
+                <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
+                <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
+              </div>
+              <div class="hdr-ticket-title">${escapeHtml(t.subject)}</div>
+              <div class="hdr-ticket-sub">${isAdminView ? `${escapeHtml(t.fromName)} · ` : `${escapeHtml(t.category || 'General')} · `}${_timeAgoShort(t.createdAt)}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function _showDetail(ticketId) {
+        const t = _tickets.find(x => String(x.id) === String(ticketId));
+        if (!t) return;
+        _currentTicketId = ticketId;
+        document.getElementById('ticketList').style.display = 'none';
+        document.getElementById('ticketComposePane').style.display = 'none';
+        document.getElementById('ticketModalFoot').style.display = 'none';
+        const pane = document.getElementById('ticketDetailPane');
+        pane.style.display = 'flex';
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        // Show status controls for admin
+        document.getElementById('ticketStatusSelect').style.display = isAdminView ? '' : 'none';
+        document.getElementById('ticketStatusSaveBtn').style.display = isAdminView ? '' : 'none';
+        if (isAdminView) {
+          document.getElementById('ticketStatusSelect').value = t.status;
+        }
+        const replies = t.replies.map(r => `
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
+            <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>
+          </div>`).join('');
+        const css = STATUS_CSS[t.status] || 'open';
+        const lbl = STATUS_LABEL[t.status] || t.status;
+        document.getElementById('ticketDetailBody').innerHTML = `
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
+              <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
+              <span style="font-size:0.72rem;color:var(--text-muted);margin-left:auto;">${_timeAgoShort(t.createdAt)}</span>
+            </div>
+            <div style="font-size:0.88rem;font-weight:700;margin-bottom:6px;">${escapeHtml(t.subject)}</div>
+            ${isAdminView ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Reported by ${escapeHtml(t.fromName)}</div>` : ''}
+            <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(t.body)}</div>
+          </div>
+          ${replies}`;
+        document.getElementById('ticketReplyInput').value = '';
+      }
+
+      function _updateTicketBadge() {
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        const openCount = isAdminView ? _tickets.filter(t => t.status === 'open').length : 0;
+        const badge = document.getElementById('hdrTicketBadge');
+        if (badge) { badge.textContent = openCount || ''; badge.style.display = openCount ? '' : 'none'; }
+        const countEl = document.getElementById('ticketOpenCount');
+        if (countEl) countEl.textContent = openCount ? `${openCount} open ticket${openCount !== 1 ? 's' : ''}` : '';
+      }
+
+      function _fetch(keepDetail) {
+        api('getTickets', {}).then(res => {
+          if (!res || !res.success) return;
+          _tickets = res.data || [];
+          _updateTicketBadge();
+          if (keepDetail && _currentTicketId) {
+            _showDetail(_currentTicketId);
+          } else {
+            _renderList();
+          }
+        }).catch(() => {});
+      }
+
+      function _start() {
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        document.getElementById('ticketModalTitle').textContent = isAdminView ? 'Support Tickets' : 'My Tickets';
+        // Employee always sees New Ticket button; admin sees it too to test
+        _fetch();
+        clearInterval(_pollTimer);
+        _pollTimer = setInterval(_fetch, 2 * 60 * 1000);
+      }
+
+      // New ticket button
+      document.getElementById('ticketNewBtn').addEventListener('click', _showCompose);
+      document.getElementById('ticketCancelBtn').addEventListener('click', _showList);
+      document.getElementById('ticketDetailBackBtn').addEventListener('click', () => { _showList(); _renderList(); });
+
+      // Submit ticket
+      document.getElementById('ticketSubmitBtn').addEventListener('click', () => {
+        const category = document.getElementById('ticketCategory').value;
+        const subject  = (document.getElementById('ticketSubject').value || '').trim();
+        const body     = (document.getElementById('ticketBody').value || '').trim();
+        if (!subject) { document.getElementById('ticketSubject').focus(); return; }
+        if (!body)    { document.getElementById('ticketBody').focus(); return; }
+        document.getElementById('ticketSubmitBtn').disabled = true;
+        api('createTicket', { category, subject, body }).then(res => {
+          document.getElementById('ticketSubmitBtn').disabled = false;
+          if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          showPopup('success', 'Ticket Submitted', `Your ticket ${res.ticketNumber} has been submitted.`).then(() => { _showList(); _fetch(); });
+        }).catch(() => { document.getElementById('ticketSubmitBtn').disabled = false; });
+      });
+
+      // Send reply
+      document.getElementById('ticketReplySendBtn').addEventListener('click', () => {
+        const body = (document.getElementById('ticketReplyInput').value || '').trim();
+        if (!body) return;
+        const btn = document.getElementById('ticketReplySendBtn');
+        btn.disabled = true;
+        document.getElementById('ticketReplyInput').value = '';
+        api('replyTicket', { ticketId: _currentTicketId, body }).then(res => {
+          btn.disabled = false;
+          if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          _fetch(true); // refresh but stay in detail view
+        }).catch(() => { btn.disabled = false; });
+      });
+
+      // Update ticket status (admin)
+      document.getElementById('ticketStatusSaveBtn').addEventListener('click', () => {
+        const status = document.getElementById('ticketStatusSelect').value;
+        api('updateTicketStatus', { ticketId: _currentTicketId, status }).then(res => {
+          if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          const t = _tickets.find(x => String(x.id) === String(_currentTicketId));
+          if (t) { t.status = status; _showDetail(_currentTicketId); _renderList(); _updateTicketBadge(); }
+        }).catch(() => {});
+      });
+
+      document.getElementById('ticketRefreshBtn').addEventListener('click', _fetch);
+
+      // Click ticket row → open detail
+      document.addEventListener('click', e => {
+        const row = e.target.closest('.hdr-ticket-item[data-ticket-id]');
+        if (!row) return;
+        _showDetail(row.dataset.ticketId);
+      });
+
+      window._startTicketSystem = _start;
+      window._stopTicketSystem  = () => clearInterval(_pollTimer);
     })();
 
     // ── Profile icon button → go to profile section ──
@@ -1655,15 +2296,13 @@ const AttendanceSystem = (function() {
       if (companyPane) companyPane.classList.add('active');
     }
 
-    // build per-role menu and open the default section (both renderers — CSS shows whichever layout is active)
+    // build per-role menu and always open the dashboard on login
     buildSidebar(currentRole);
     buildTopTabs(currentRole);
     const def = (SECTION_DEFS[currentRole] || [ABOUT_ITEM])[0];
-    const savedSection = (() => {
-      try { return localStorage.getItem('siomac_last_section_' + currentRole); } catch(e) { return null; }
-    })();
-    const validIds = (SECTION_DEFS[currentRole] || [ABOUT_ITEM]).map(x => x.id);
-    showSection(savedSection && validIds.includes(savedSection) ? savedSection : def.id);
+    // Clear any stored last-section so refreshing after logout also goes to dashboard
+    try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch(e) {}
+    showSection(def.id);
 
     // employee-only setup (welcome card + location tracking)
     if (currentRole === 'employee') {
@@ -1682,6 +2321,11 @@ const AttendanceSystem = (function() {
     startAutoSync();
     startSessionTimer();
     updateLanguageUI();
+
+    // Start notification polling now that the session is established
+    if (typeof window._startNotifPolling  === 'function') window._startNotifPolling();
+    if (typeof window._startMsgSystem     === 'function') window._startMsgSystem();
+    if (typeof window._startTicketSystem  === 'function') window._startTicketSystem();
 
     // No login success popup — dashboard loads immediately
   }
@@ -1741,6 +2385,9 @@ const AttendanceSystem = (function() {
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
+    if (typeof window._stopNotifPolling  === 'function') window._stopNotifPolling();
+    if (typeof window._stopMsgSystem     === 'function') window._stopMsgSystem();
+    if (typeof window._stopTicketSystem  === 'function') window._stopTicketSystem();
 
     // hide app shell, surface login
     document.getElementById('appShell').classList.add('hidden');
@@ -1839,6 +2486,32 @@ const AttendanceSystem = (function() {
     // Confirm text
     document.getElementById('confirmText').textContent = isCheckIn ? 'Confirm Check In' : 'Confirm Check Out';
 
+    // Site selector — only for check-in
+    const siteWrap = document.getElementById('cmSiteWrap');
+    const siteSelect = document.getElementById('cmSiteSelect');
+    const siteStatus = document.getElementById('cmSiteStatus');
+    if (isCheckIn) {
+      siteWrap.style.display = '';
+      siteSelect.innerHTML = '<option value="">— Choose a site —</option>';
+      siteStatus.textContent = '';
+      document.getElementById('confirmBtn').disabled = true;
+      // Populate from already-loaded projectSites, or fetch fresh
+      const populate = (sites) => {
+        siteSelect.innerHTML = '<option value="">— Choose a site —</option>'
+          + sites.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('');
+      };
+      if (projectSites && projectSites.length) {
+        populate(projectSites);
+      } else {
+        api('listProjectSites', {}).then(res => {
+          projectSites = (res && res.success && res.data) || [];
+          populate(projectSites);
+        });
+      }
+    } else {
+      siteWrap.style.display = 'none';
+    }
+
     // Location — start pending
     const locEl = document.getElementById('locationValidation');
     locEl.className = 'cm-location cm-location--pending';
@@ -1849,17 +2522,31 @@ const AttendanceSystem = (function() {
       const accuracy = location.fallback ? 'Approximate location' : `Accuracy: ${Math.round(location.accuracy)}m`;
       locEl.className = 'cm-location cm-location--valid';
       locEl.innerHTML = `<i class="fas fa-check-circle fa-fw"></i><span>Location verified · ${accuracy}</span>`;
-      document.getElementById('confirmBtn').disabled = false;
+      // For check-in, confirm stays disabled until a site is selected
+      if (!isCheckIn) document.getElementById('confirmBtn').disabled = false;
     }).catch(() => {
       locEl.className = 'cm-location cm-location--valid';
       locEl.innerHTML = '<i class="fas fa-check-circle fa-fw"></i><span>Location available</span>';
-      document.getElementById('confirmBtn').disabled = false;
+      if (!isCheckIn) document.getElementById('confirmBtn').disabled = false;
     });
 
     startCamera();
     const cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
     cameraModal.show();
   }
+
+  // Site select change handler — enable confirm only when a site is chosen
+  document.getElementById('cmSiteSelect').addEventListener('change', function () {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const siteStatus = document.getElementById('cmSiteStatus');
+    if (this.value) {
+      confirmBtn.disabled = false;
+      siteStatus.innerHTML = `<span style="color:green;"><i class="fas fa-check-circle"></i> ${escapeHtml(this.options[this.selectedIndex].text)} selected</span>`;
+    } else {
+      confirmBtn.disabled = true;
+      siteStatus.textContent = '';
+    }
+  });
 
   function startCamera() {
     stopCamera();
@@ -1957,11 +2644,15 @@ const AttendanceSystem = (function() {
       accuracy: currentLocationData.accuracy
     } : null;
 
+    const siteSelect = document.getElementById('cmSiteSelect');
+    const siteId = (currentAttendanceAction === 'CheckIn' && siteSelect) ? (siteSelect.value || '') : '';
+
     api('markAttendance', {
       username: currentUser,
       action: currentAttendanceAction,
       photoBase64: capturedPhotoData,
-      location: loc
+      location: loc,
+      siteId
     }).then(handleAttendanceSuccess).catch(err => { hideSpinner(); showPopup('error', 'Network Error', err.message || 'Could not connect to server'); });
   }
 
@@ -3455,8 +4146,116 @@ const AttendanceSystem = (function() {
     document.getElementById('projectRadius').value      = site ? site.radius : 200;
     document.getElementById('projectDescription').value = site ? (site.description || '') : '';
 
+    // Update coordinate display
+    document.getElementById('siteLatDisplay').textContent = site ? Number(site.latitude).toFixed(6)  : '—';
+    document.getElementById('siteLngDisplay').textContent = site ? Number(site.longitude).toFixed(6) : '—';
+
+    // Reset map picker state
+    document.getElementById('sitePickerMapWrap').style.display = 'none';
+    if (window._sitePickerMap) {
+      window._sitePickerMap.remove();
+      window._sitePickerMap = null;
+      window._sitePickerMarker = null;
+      window._sitePickerCircle = null;
+    }
+
     new bootstrap.Modal(document.getElementById('addProjectModal')).show();
   }
+
+  // ── Project site map picker ─────────────────────────────────────────────────
+  function _spSetCoords(lat, lng) {
+    document.getElementById('projectLatitude').value  = lat.toFixed(6);
+    document.getElementById('projectLongitude').value = lng.toFixed(6);
+    document.getElementById('siteLatDisplay').textContent = lat.toFixed(6);
+    document.getElementById('siteLngDisplay').textContent = lng.toFixed(6);
+  }
+
+  function _spUpdateCircle(lat, lng) {
+    const radius = parseInt(document.getElementById('projectRadius').value) || 200;
+    if (window._sitePickerCircle) {
+      window._sitePickerCircle.setLatLng([lat, lng]);
+      window._sitePickerCircle.setRadius(radius);
+    } else if (window._sitePickerMap) {
+      window._sitePickerCircle = L.circle([lat, lng], {
+        radius, color: '#0074D9', fillColor: '#0074D9', fillOpacity: 0.15, weight: 2
+      }).addTo(window._sitePickerMap);
+    }
+  }
+
+  document.getElementById('pickOnMapBtn').addEventListener('click', function () {
+    const wrap = document.getElementById('sitePickerMapWrap');
+    const isOpen = wrap.style.display !== 'none';
+    wrap.style.display = isOpen ? 'none' : '';
+    if (isOpen) return;
+
+    setTimeout(() => {
+      if (window._sitePickerMap) {
+        window._sitePickerMap.invalidateSize();
+        return;
+      }
+
+      const existingLat = parseFloat(document.getElementById('projectLatitude').value);
+      const existingLng = parseFloat(document.getElementById('projectLongitude').value);
+      const center = (existingLat && existingLng)
+        ? [existingLat, existingLng]
+        : (map ? map.getCenter() : [10.6549, -61.5019]);
+
+      const pickerMap = L.map('sitePickerMap', { zoomControl: true }).setView(center, 15);
+      window._sitePickerMap = pickerMap;
+      window._sitePickerMarker = null;
+      window._sitePickerCircle = null;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors', maxZoom: 19
+      }).addTo(pickerMap);
+
+      // Place marker + circle at existing coords if editing
+      if (existingLat && existingLng) {
+        window._sitePickerMarker = L.marker([existingLat, existingLng], { draggable: true }).addTo(pickerMap);
+        _spUpdateCircle(existingLat, existingLng);
+        window._sitePickerMarker.on('dragend', function (e) {
+          const ll = e.target.getLatLng();
+          _spSetCoords(ll.lat, ll.lng);
+          _spUpdateCircle(ll.lat, ll.lng);
+        });
+      }
+
+      // Click to place / move marker + circle
+      pickerMap.on('click', function (e) {
+        const { lat, lng } = e.latlng;
+        _spSetCoords(lat, lng);
+        if (window._sitePickerMarker) {
+          window._sitePickerMarker.setLatLng([lat, lng]);
+        } else {
+          window._sitePickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
+          window._sitePickerMarker.on('dragend', function (ev) {
+            const ll = ev.target.getLatLng();
+            _spSetCoords(ll.lat, ll.lng);
+            _spUpdateCircle(ll.lat, ll.lng);
+          });
+        }
+        _spUpdateCircle(lat, lng);
+      });
+    }, 80);
+  });
+
+  // Live-update circle when radius field changes
+  document.getElementById('projectRadius').addEventListener('input', function () {
+    const lat = parseFloat(document.getElementById('projectLatitude').value);
+    const lng = parseFloat(document.getElementById('projectLongitude').value);
+    if (window._sitePickerCircle && lat && lng) _spUpdateCircle(lat, lng);
+  });
+
+  // Destroy picker map when project modal closes so it reinits cleanly next time
+  document.getElementById('addProjectModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('sitePickerMapWrap').style.display = 'none';
+    if (window._sitePickerMap) {
+      window._sitePickerMap.remove();
+      window._sitePickerMap = null;
+      window._sitePickerMarker = null;
+      window._sitePickerCircle = null;
+    }
+  });
 
   function addProjectSite() {
     const name = document.getElementById('projectName').value.trim();
@@ -3467,13 +4266,13 @@ const AttendanceSystem = (function() {
     const description = document.getElementById('projectDescription').value.trim();
     
     const ok = _validate([
-      { id: 'projectName',      label: 'Project Name', rules: ['required'] },
-      { id: 'projectAddress',   label: 'Address',      rules: ['required'] },
-      { id: 'projectLatitude',  label: 'Latitude',     rules: ['required', 'numeric', 'minval:-90',  'maxval:90'] },
-      { id: 'projectLongitude', label: 'Longitude',    rules: ['required', 'numeric', 'minval:-180', 'maxval:180'] },
-      { id: 'projectRadius',    label: 'Radius',       rules: ['required', 'numeric', 'positive'] },
+      { id: 'projectName',    label: 'Project Name', rules: ['required'] },
+      { id: 'projectAddress', label: 'Address',      rules: ['required'] },
+      { id: 'projectRadius',  label: 'Radius',       rules: ['required', 'numeric', 'positive'] },
     ]);
     if (!ok) return;
+    if (!latitude || isNaN(latitude) || latitude < -90  || latitude > 90)  { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
+    if (!longitude || isNaN(longitude) || longitude < -180 || longitude > 180) { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     
     const action = editingSiteId ? 'updateProjectSite' : 'addProjectSite';
     const args = { name, address, latitude, longitude, radius, description, actorId: currentUserId, actorUsername: currentUser };

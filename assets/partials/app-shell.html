@@ -108,17 +108,20 @@
         </div>
         <div class="page-header-right">
           <div class="hdr-icon-group">
+            <!-- Notifications: visible to all roles; employee sees their own events -->
             <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrNotifBtn" title="Notifications">
               <i class="fas fa-bell"></i>
-              <span class="hdr-badge" id="hdrNotifBadge">4</span>
+              <span class="hdr-badge" id="hdrNotifBadge" style="display:none"></span>
             </button>
+            <!-- Messages: admin/manager see inbox; employee sends messages to admin -->
             <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrMsgBtn" title="Messages">
               <i class="fas fa-comment-dots"></i>
-              <span class="hdr-badge" id="hdrMsgBadge">2</span>
+              <span class="hdr-badge" id="hdrMsgBadge" style="display:none"></span>
             </button>
+            <!-- Tickets: admin/manager see all tickets; employee creates/tracks their own -->
             <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrTicketBtn" title="Support Tickets">
               <i class="fas fa-ticket-alt"></i>
-              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge">1</span>
+              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge" style="display:none"></span>
             </button>
             <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn hdr-profile-btn--pill" id="hdrProfileBtn" title="My Profile">
               <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
@@ -134,130 +137,112 @@
             <span><i class="fas fa-bell"></i> Notifications</span>
             <button class="hdr-modal-close" data-modal="hdrNotifModal"><i class="fas fa-times"></i></button>
           </div>
-          <div class="hdr-modal-body">
-            <div class="hdr-notif-item unread">
-              <div class="hdr-notif-icon red"><i class="fas fa-user-times"></i></div>
-              <div class="hdr-notif-text">
-                <div class="hdr-notif-title">3 employees absent today</div>
-                <div class="hdr-notif-sub">Civil Operations · 08:05 AM</div>
-              </div>
-            </div>
-            <div class="hdr-notif-item unread">
-              <div class="hdr-notif-icon gold"><i class="fas fa-clock"></i></div>
-              <div class="hdr-notif-text">
-                <div class="hdr-notif-title">Michael Okon checked in late</div>
-                <div class="hdr-notif-sub">09:42 AM — 42 mins late</div>
-              </div>
-            </div>
-            <div class="hdr-notif-item unread">
-              <div class="hdr-notif-icon blue"><i class="fas fa-calendar-check"></i></div>
-              <div class="hdr-notif-text">
-                <div class="hdr-notif-title">Leave request pending approval</div>
-                <div class="hdr-notif-sub">Sarah Williams · Annual Leave · 5 days</div>
-              </div>
-            </div>
-            <div class="hdr-notif-item unread">
-              <div class="hdr-notif-icon green"><i class="fas fa-map-marker-alt"></i></div>
-              <div class="hdr-notif-text">
-                <div class="hdr-notif-title">New project site added</div>
-                <div class="hdr-notif-sub">Site 7 — Port Harcourt North · Just now</div>
-              </div>
-            </div>
-            <div class="hdr-notif-item">
-              <div class="hdr-notif-icon navy"><i class="fas fa-sync-alt"></i></div>
-              <div class="hdr-notif-text">
-                <div class="hdr-notif-title">Monthly payroll report ready</div>
-                <div class="hdr-notif-sub">March 2025 · Generated yesterday</div>
-              </div>
-            </div>
+          <div class="hdr-modal-body" id="notifList">
+            <div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>Loading…</p></div>
           </div>
           <div class="hdr-modal-foot">
-            <button class="hdr-foot-link">Mark all as read</button>
-            <button class="hdr-foot-link">View all</button>
+            <button class="hdr-foot-link" id="notifMarkAllBtn">Mark all as read</button>
+            <button class="hdr-foot-link" id="notifRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
       </div>
 
       <!-- ── Messages Modal ── -->
       <div class="hdr-modal-overlay" id="hdrMsgModal">
-        <div class="hdr-modal" style="width:380px;">
+        <div class="hdr-modal" style="width:400px; max-height:560px;">
           <div class="hdr-modal-head">
-            <span><i class="fas fa-comment-dots"></i> Messages</span>
-            <button class="hdr-modal-close" data-modal="hdrMsgModal"><i class="fas fa-times"></i></button>
+            <span><i class="fas fa-comment-dots"></i> <span id="msgModalTitle">Messages</span></span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <!-- Admin: refresh. Employee: compose new message -->
+              <button class="hdr-foot-link hdr-compose-btn" id="msgComposeBtn" title="New Message" style="padding:4px 10px;font-size:0.78rem;"><i class="fas fa-plus"></i> <span id="msgComposeBtnLabel">New Message</span></button>
+              <button class="hdr-modal-close" data-modal="hdrMsgModal"><i class="fas fa-times"></i></button>
+            </div>
           </div>
-          <div class="hdr-modal-body">
-            <div class="hdr-msg-item unread">
-              <div class="hdr-msg-avatar">JR</div>
-              <div class="hdr-msg-text">
-                <div class="hdr-msg-name">James Rodriguez <span class="hdr-msg-time">09:15 AM</span></div>
-                <div class="hdr-msg-preview">I'll be 30 minutes late today, traffic on the bridge…</div>
-              </div>
-            </div>
-            <div class="hdr-msg-item unread">
-              <div class="hdr-msg-avatar" style="background:#1B2D55;">AD</div>
-              <div class="hdr-msg-text">
-                <div class="hdr-msg-name">Amara Diallo <span class="hdr-msg-time">08:50 AM</span></div>
-                <div class="hdr-msg-preview">Leave form submitted, please review when you get a chance.</div>
-              </div>
-            </div>
-            <div class="hdr-msg-item">
-              <div class="hdr-msg-avatar" style="background:#455A64;">LM</div>
-              <div class="hdr-msg-text">
-                <div class="hdr-msg-name">Linda Moyo <span class="hdr-msg-time">Yesterday</span></div>
-                <div class="hdr-msg-preview">Thank you for approving my medical leave request.</div>
-              </div>
-            </div>
-            <div class="hdr-msg-item">
-              <div class="hdr-msg-avatar" style="background:#2E7D32;">KR</div>
-              <div class="hdr-msg-text">
-                <div class="hdr-msg-name">Kevin Ramkissoon <span class="hdr-msg-time">Yesterday</span></div>
-                <div class="hdr-msg-preview">Site 3 gate access needs to be updated before Friday.</div>
+          <!-- List view -->
+          <div class="hdr-modal-body" id="msgList" style="display:block;"></div>
+          <!-- Compose / detail view -->
+          <div id="msgDetailPane" style="display:none; flex-direction:column; height:100%;">
+            <div class="hdr-modal-body" id="msgDetailBody" style="flex:1;"></div>
+            <div style="padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
+              <textarea id="msgReplyInput" rows="3" placeholder="Write your reply…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="hdr-foot-link" id="msgDetailBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="hdr-foot-link" id="msgReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
               </div>
             </div>
           </div>
-          <div class="hdr-modal-foot">
-            <button class="hdr-foot-link">Mark all as read</button>
-            <button class="hdr-foot-link">Open inbox</button>
+          <!-- New message compose view (both roles) -->
+          <div id="msgComposePane" style="display:none; padding:14px 16px; flex-direction:column; gap:10px;">
+            <!-- Recipient selector — shown only to admin/manager, hidden for employees -->
+            <div id="msgToWrap">
+              <select id="msgToSelect" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
+                <option value="">— Select recipient —</option>
+              </select>
+            </div>
+            <input id="msgComposeSubject" type="text" placeholder="Subject" maxlength="120" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
+            <textarea id="msgComposeBody" rows="4" placeholder="Write your message…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button class="hdr-foot-link" id="msgCancelComposeBtn"><i class="fas fa-times"></i> Cancel</button>
+              <button class="hdr-foot-link" id="msgSendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+          </div>
+          <div class="hdr-modal-foot" id="msgModalFoot">
+            <button class="hdr-foot-link" id="msgMarkAllReadBtn">Mark all as read</button>
+            <button class="hdr-foot-link" id="msgRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
       </div>
 
       <!-- ── Tickets Modal ── -->
       <div class="hdr-modal-overlay" id="hdrTicketModal">
-        <div class="hdr-modal" style="width:400px;">
+        <div class="hdr-modal" style="width:420px; max-height:580px;">
           <div class="hdr-modal-head">
-            <span><i class="fas fa-ticket-alt"></i> Support Tickets</span>
-            <button class="hdr-modal-close" data-modal="hdrTicketModal"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="hdr-modal-body">
-            <div class="hdr-ticket-item open">
-              <div class="hdr-ticket-top">
-                <span class="hdr-ticket-id">#TKT-0041</span>
-                <span class="hdr-ticket-status open">Open</span>
-              </div>
-              <div class="hdr-ticket-title">Geofence not triggering on Site 5</div>
-              <div class="hdr-ticket-sub">Reported by Peter Huang · Electrical · 2 hrs ago</div>
-            </div>
-            <div class="hdr-ticket-item pending">
-              <div class="hdr-ticket-top">
-                <span class="hdr-ticket-id">#TKT-0039</span>
-                <span class="hdr-ticket-status pending">In Progress</span>
-              </div>
-              <div class="hdr-ticket-title">Payslip PDF export missing overtime column</div>
-              <div class="hdr-ticket-sub">Reported by Admin · Yesterday</div>
-            </div>
-            <div class="hdr-ticket-item closed">
-              <div class="hdr-ticket-top">
-                <span class="hdr-ticket-id">#TKT-0037</span>
-                <span class="hdr-ticket-status closed">Resolved</span>
-              </div>
-              <div class="hdr-ticket-title">Employee unable to check in at Site 2</div>
-              <div class="hdr-ticket-sub">Resolved 3 days ago</div>
+            <span><i class="fas fa-ticket-alt"></i> <span id="ticketModalTitle">Support Tickets</span></span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="hdr-foot-link hdr-compose-btn" id="ticketNewBtn" title="New Ticket" style="padding:4px 10px;font-size:0.78rem;"><i class="fas fa-plus"></i> New Ticket</button>
+              <button class="hdr-modal-close" data-modal="hdrTicketModal"><i class="fas fa-times"></i></button>
             </div>
           </div>
-          <div class="hdr-modal-foot">
-            <button class="hdr-foot-link">New ticket</button>
-            <button class="hdr-foot-link">View all tickets</button>
+          <!-- List view -->
+          <div class="hdr-modal-body" id="ticketList"></div>
+          <!-- Detail / reply view -->
+          <div id="ticketDetailPane" style="display:none; flex-direction:column;">
+            <div class="hdr-modal-body" id="ticketDetailBody" style="flex:1;"></div>
+            <div style="padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
+              <textarea id="ticketReplyInput" rows="3" placeholder="Write a reply…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
+              <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+                <button class="hdr-foot-link" id="ticketDetailBackBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <select id="ticketStatusSelect" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:inherit;outline:none;display:none;">
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <button class="hdr-foot-link" id="ticketStatusSaveBtn" style="display:none;"><i class="fas fa-save"></i> Update Status</button>
+                <button class="hdr-foot-link" id="ticketReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
+              </div>
+            </div>
+          </div>
+          <!-- New ticket compose view -->
+          <div id="ticketComposePane" style="display:none; padding:14px 16px; flex-direction:column; gap:10px;">
+            <select id="ticketCategory" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
+              <option value="general">General</option>
+              <option value="attendance">Attendance Issue</option>
+              <option value="leave">Leave Problem</option>
+              <option value="payroll">Payroll / Hours</option>
+              <option value="technical">Technical Problem</option>
+              <option value="other">Other</option>
+            </select>
+            <input id="ticketSubject" type="text" placeholder="Subject" maxlength="120" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
+            <textarea id="ticketBody" rows="5" placeholder="Describe your issue…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button class="hdr-foot-link" id="ticketCancelBtn"><i class="fas fa-times"></i> Cancel</button>
+              <button class="hdr-foot-link" id="ticketSubmitBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Submit Ticket</button>
+            </div>
+          </div>
+          <div class="hdr-modal-foot" id="ticketModalFoot">
+            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--text-muted);"></span>
+            <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
       </div>
@@ -1740,6 +1725,15 @@
           <button type="button" class="cm-close" data-bs-dismiss="modal" aria-label="Close"><i class="fas fa-times"></i></button>
         </div>
 
+        <!-- Project site selector (check-in only) -->
+        <div id="cmSiteWrap" style="padding:10px 16px 0;display:none;">
+          <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:block;"><i class="fas fa-map-marker-alt"></i> Select Project Site</label>
+          <select id="cmSiteSelect" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
+            <option value="">— Choose a site —</option>
+          </select>
+          <div id="cmSiteStatus" style="font-size:0.72rem;margin-top:4px;min-height:16px;"></div>
+        </div>
+
         <!-- Location status -->
         <div id="locationValidation" class="cm-location cm-location--pending">
           <i class="fas fa-map-marker-alt fa-fw"></i>
@@ -2031,15 +2025,24 @@
               <label class="form-label">Location Address</label>
               <input type="text" class="form-control" id="projectAddress" required>
             </div>
-            <div class="row mb-3">
-              <div class="col">
-                <label class="form-label">Latitude</label>
-                <input type="number" step="any" class="form-control" id="projectLatitude" required>
+            <div class="mb-3">
+              <label class="form-label" style="margin-bottom:6px;">Location on Map</label>
+              <!-- Read-only coordinate display + button in one row -->
+              <div id="siteCoordDisplay" style="font-size:0.78rem;color:var(--text-muted);padding:6px 10px;background:var(--bg-subtle,#f8fafe);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                <span><i class="fas fa-crosshairs" style="margin-right:4px;"></i>Lat: <strong id="siteLatDisplay">—</strong></span>
+                <span>Lng: <strong id="siteLngDisplay">—</strong></span>
+                <button type="button" id="pickOnMapBtn" style="margin-left:auto;background:var(--siomac-primary,#001f3f);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:0.73rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                  <i class="fas fa-map-marked-alt"></i> Set Location on Map
+                </button>
               </div>
-              <div class="col">
-                <label class="form-label">Longitude</label>
-                <input type="number" step="any" class="form-control" id="projectLongitude" required>
+              <!-- Map picker (hidden by default) -->
+              <div id="sitePickerMapWrap" style="display:none;margin-bottom:8px;">
+                <div id="sitePickerMap" style="height:260px;border-radius:8px;border:1px solid var(--border);"></div>
+                <p style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;margin-bottom:0;"><i class="fas fa-info-circle"></i> Click the map to place the pin. Drag to reposition. The circle reflects the attendance radius.</p>
               </div>
+              <!-- Hidden inputs still used for validation + submission -->
+              <input type="hidden" id="projectLatitude">
+              <input type="hidden" id="projectLongitude">
             </div>
             <div class="mb-3">
               <label class="form-label">Attendance Radius (meters)</label>

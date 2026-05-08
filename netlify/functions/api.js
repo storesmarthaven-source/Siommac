@@ -400,10 +400,29 @@ async function markAttendance(args, ctx) {
   const action = args.action;
   const loc = args.location || {};
   const lat = num(loc.latitude), lng = num(loc.longitude), acc = num(loc.accuracy);
-  const near = lat != null && lng != null ? await nearestSite(lat, lng) : null;
+
+  // If employee chose a specific site, validate against that site only
+  let near = null;
+  if (args.siteId) {
+    const { data: chosenSite } = await sb.from('project_sites').select('*').eq('id', args.siteId).maybeSingle();
+    if (!chosenSite) return { success: false, message: 'Selected project site not found.' };
+    const dist = (lat != null && lng != null) ? haversine(lat, lng, Number(chosenSite.latitude), Number(chosenSite.longitude)) : null;
+    const siteRadius = Math.max(Number(chosenSite.radius) || 200, 50);
+    if (dist != null && dist > siteRadius) {
+      return {
+        success: false,
+        message: `You are ${Math.round(dist)}m from "${chosenSite.name}". You must be within ${siteRadius}m to check in here.`,
+        outsideRadius: true, distanceM: Math.round(dist), siteName: chosenSite.name
+      };
+    }
+    near = { site: chosenSite, distance: dist };
+  } else if (lat != null && lng != null) {
+    near = await nearestSite(lat, lng);
+  }
+
   const maxDistance = Number(await setting('maxDistanceM', '200'));
-  const outsideRadius = near && near.distance > Math.max(Number(near.site.radius), maxDistance);
-  // Don't hard-block — record the distance and allow check-in with a warning flag
+  const outsideRadius = near && near.distance != null && near.distance > Math.max(Number(near.site.radius) || 200, maxDistance);
+  // Don't hard-block fallback (no site chosen) — record the distance and allow check-in with a warning flag
   const work_date = today();
   const now = new Date();
   const photoBucket = 'attendance-photos';
@@ -1271,8 +1290,580 @@ const routes = {
   getPayroll,
   approveLeave: (a, ctx) => decideLeave(a, ctx, 'approved'),
   rejectLeave:  (a, ctx) => decideLeave(a, ctx, 'rejected'),
-  getSignedUrls
+  getSignedUrls,
+  getNotifications,
+  markNotificationsRead: async (a, ctx) => { await requireUser(ctx); return { success: true }; },
+  // Messages
+  sendMessage,
+  getMessages,
+  replyMessage,
+  markMessageRead,
+  getEmployeesForMsg,
+  // Tickets
+  createTicket,
+  getTickets,
+  replyTicket,
+  updateTicketStatus,
 };
+
+// ── Notifications ──────────────────────────────────────────────────────────────
+async function getNotifications(args, ctx) {
+  const actor = await requireUser(ctx);
+  const todayStr = today();
+  const notifs = [];
+
+  // ── ADMIN / MANAGER ────────────────────────────────────────────────────────
+  if (actor.role === 'admin' || actor.role === 'manager') {
+
+    // 1. Pending leave requests (need approval action)
+    let leavesQ = sb.from('leave_requests')
+      .select('id, type, from_date, to_date, days, applied_at, username, user_id')
+      .eq('status', 'pending')
+      .order('applied_at', { ascending: false })
+      .limit(20);
+    if (actor.role === 'manager') leavesQ = leavesQ.eq('department_id', actor.department_id);
+    const { data: leaves } = await leavesQ;
+
+    // Resolve full names + profile photos for all leave requesters in one query
+    const leaveUserIds = [...new Set((leaves || []).map(l => l.user_id).filter(Boolean))];
+    const { data: leaveUsers } = leaveUserIds.length
+      ? await sb.from('app_users').select('id, full_name, profile_image').in('id', leaveUserIds)
+      : { data: [] };
+    const leaveNameMap  = Object.fromEntries((leaveUsers || []).map(u => [u.id, u.full_name]));
+    const leavePhotoMap = {};
+    await Promise.all((leaveUsers || []).map(async u => {
+      if (!noPhoto(u.profile_image)) {
+        leavePhotoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
+      }
+    }));
+
+    for (const l of leaves || []) {
+      const fullName = leaveNameMap[l.user_id] || l.username;
+      notifs.push({
+        id: 'leave_' + l.id,
+        type: 'leave',
+        icon: 'fa-calendar-check',
+        color: 'blue',
+        title: 'Leave request pending approval',
+        sub: `${fullName} · ${cap(l.type)} · ${l.days} day${l.days !== 1 ? 's' : ''} · ${l.from_date} – ${l.to_date}`,
+        time: l.applied_at,
+        photoUrl: leavePhotoMap[l.user_id] || '',
+        priority: 1
+      });
+    }
+
+    // Scope helper for manager vs admin attendance queries
+    const deptFilter = q => actor.role === 'manager'
+      ? q.in('username', sb.from('app_users').select('username').eq('department_id', actor.department_id))
+      : q;
+
+    // 2. Today's check-ins (present + late) — show all for admin, dept-only for manager
+    let ciQ = sb.from('attendance')
+      .select('username, user_id, check_in_time, status')
+      .eq('work_date', todayStr)
+      .not('check_in_time', 'is', null)
+      .order('check_in_time', { ascending: false })
+      .limit(actor.role === 'manager' ? 20 : 30);
+    if (actor.role === 'manager') ciQ = ciQ.eq('department_id', actor.department_id);
+    const { data: checkins } = await ciQ;
+
+    // 3. Today's check-outs
+    let coQ = sb.from('attendance')
+      .select('username, user_id, check_out_time, total_hours')
+      .eq('work_date', todayStr)
+      .not('check_out_time', 'is', null)
+      .order('check_out_time', { ascending: false })
+      .limit(actor.role === 'manager' ? 20 : 30);
+    if (actor.role === 'manager') coQ = coQ.eq('department_id', actor.department_id);
+    const { data: checkouts } = await coQ;
+
+    // Resolve full names + profile photos for all attendance rows in one query
+    const attUserIds = [...new Set([
+      ...(checkins  || []).map(a => a.user_id),
+      ...(checkouts || []).map(a => a.user_id)
+    ].filter(Boolean))];
+    const { data: attUsers } = attUserIds.length
+      ? await sb.from('app_users').select('id, full_name, profile_image').in('id', attUserIds)
+      : { data: [] };
+    const attNameMap  = Object.fromEntries((attUsers || []).map(u => [u.id, u.full_name]));
+    const attPhotoMap = {};
+    await Promise.all((attUsers || []).map(async u => {
+      if (!noPhoto(u.profile_image)) {
+        attPhotoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
+      }
+    }));
+
+    for (const a of checkins || []) {
+      const isLate  = a.status === 'late';
+      const t       = a.check_in_time ? hhmm(new Date(a.check_in_time)) : '';
+      const name    = attNameMap[a.user_id] || a.username;
+      notifs.push({
+        id: (isLate ? 'late_' : 'checkin_') + a.username + '_' + todayStr,
+        type: isLate ? 'late' : 'checkin',
+        icon: isLate ? 'fa-clock' : 'fa-sign-in-alt',
+        color: isLate ? 'gold' : 'green',
+        title: isLate ? `${name} checked in late` : `${name} checked in`,
+        sub: t ? `Today · ${t}` : 'Today',
+        time: a.check_in_time || todayStr,
+        photoUrl: attPhotoMap[a.user_id] || '',
+        priority: isLate ? 2 : 4
+      });
+    }
+
+    for (const a of checkouts || []) {
+      const t    = a.check_out_time ? hhmm(new Date(a.check_out_time)) : '';
+      const hrs  = a.total_hours != null ? `${a.total_hours}h worked` : '';
+      const name = attNameMap[a.user_id] || a.username;
+      notifs.push({
+        id: 'checkout_' + a.username + '_' + todayStr,
+        type: 'checkout',
+        icon: 'fa-sign-out-alt',
+        color: 'navy',
+        title: `${name} checked out`,
+        sub: [t ? `Today · ${t}` : 'Today', hrs].filter(Boolean).join(' · '),
+        time: a.check_out_time || todayStr,
+        photoUrl: attPhotoMap[a.user_id] || '',
+        priority: 5
+      });
+    }
+
+    // 4. Absent employees (active, non-admin, no attendance today, not on approved leave)
+    const [{ data: allUsers }, { data: todayAtt }, { data: onLeave }] = await Promise.all([
+      (() => {
+        let q = sb.from('app_users').select('username, full_name').eq('status', 'active').neq('role', 'admin');
+        if (actor.role === 'manager') q = q.eq('department_id', actor.department_id);
+        return q;
+      })(),
+      sb.from('attendance').select('username').eq('work_date', todayStr),
+      sb.from('leave_requests').select('username').eq('status', 'approved')
+        .lte('from_date', todayStr).gte('to_date', todayStr)
+    ]);
+    const checkedInSet = new Set((todayAtt || []).map(a => a.username));
+    const onLeaveSet   = new Set((onLeave  || []).map(l => l.username));
+    const absent = (allUsers || []).filter(u => !checkedInSet.has(u.username) && !onLeaveSet.has(u.username));
+    if (absent.length > 0) {
+      const names = absent.map(u => u.full_name || u.username);
+      const sub = absent.length <= 3
+        ? names.join(', ')
+        : names.slice(0, 2).join(', ') + ` and ${absent.length - 2} more`;
+      notifs.push({
+        id: 'absent_' + todayStr,
+        type: 'absent',
+        icon: 'fa-user-times',
+        color: 'red',
+        title: `${absent.length} employee${absent.length !== 1 ? 's' : ''} not checked in today`,
+        sub,
+        time: todayStr + 'T00:00:00Z',
+        priority: 3
+      });
+    }
+
+  // ── EMPLOYEE ───────────────────────────────────────────────────────────────
+  } else {
+
+    // 1. Today's own check-in confirmation
+    const { data: todayRec } = await sb.from('attendance')
+      .select('check_in_time, check_out_time, total_hours, status')
+      .eq('username', actor.username)
+      .eq('work_date', todayStr)
+      .maybeSingle();
+
+    if (todayRec && todayRec.check_in_time) {
+      const isLate = todayRec.status === 'late';
+      const t = hhmm(new Date(todayRec.check_in_time));
+      notifs.push({
+        id: 'my_checkin_' + todayStr,
+        type: 'my_checkin',
+        icon: isLate ? 'fa-clock' : 'fa-sign-in-alt',
+        color: isLate ? 'gold' : 'green',
+        title: isLate ? 'You checked in late today' : 'You checked in today',
+        sub: `At ${t}${isLate ? ' — you were past the check-in threshold' : ''}`,
+        time: todayRec.check_in_time,
+        priority: 2
+      });
+    }
+
+    // 2. Today's own check-out confirmation
+    if (todayRec && todayRec.check_out_time) {
+      const t   = hhmm(new Date(todayRec.check_out_time));
+      const hrs = todayRec.total_hours != null ? `${todayRec.total_hours}h logged` : '';
+      notifs.push({
+        id: 'my_checkout_' + todayStr,
+        type: 'my_checkout',
+        icon: 'fa-sign-out-alt',
+        color: 'navy',
+        title: 'You checked out today',
+        sub: [`At ${t}`, hrs].filter(Boolean).join(' · '),
+        time: todayRec.check_out_time,
+        priority: 3
+      });
+    }
+
+    // 3. Not checked in yet today (reminder — only if workday and past 9am)
+    const nowHour = new Date().getHours();
+    if (!todayRec && nowHour >= 9) {
+      notifs.push({
+        id: 'reminder_checkin_' + todayStr,
+        type: 'reminder',
+        icon: 'fa-bell',
+        color: 'gold',
+        title: "You haven't checked in today",
+        sub: 'Remember to check in to log your attendance',
+        time: todayStr + 'T09:00:00Z',
+        priority: 1
+      });
+    }
+
+    // 4. Approved & rejected leave decisions (most important status updates)
+    const { data: decidedLeaves } = await sb.from('leave_requests')
+      .select('id, type, status, from_date, to_date, days, applied_at')
+      .eq('user_id', actor.id)
+      .in('status', ['approved', 'rejected'])
+      .order('applied_at', { ascending: false })
+      .limit(10);
+
+    for (const l of decidedLeaves || []) {
+      const isApproved = l.status === 'approved';
+      notifs.push({
+        id: 'myleave_' + l.id,
+        type: 'myleave',
+        icon: isApproved ? 'fa-check-circle' : 'fa-times-circle',
+        color: isApproved ? 'green' : 'red',
+        title: `Leave ${isApproved ? 'approved ✓' : 'rejected'}`,
+        sub: `${cap(l.type)} · ${l.from_date} – ${l.to_date} · ${l.days} day${l.days !== 1 ? 's' : ''}`,
+        time: l.applied_at,
+        priority: isApproved ? 4 : 1
+      });
+    }
+
+    // 5. Pending leave submissions (awaiting decision)
+    const { data: pendingLeaves } = await sb.from('leave_requests')
+      .select('id, type, from_date, to_date, days, applied_at')
+      .eq('user_id', actor.id)
+      .eq('status', 'pending')
+      .order('applied_at', { ascending: false })
+      .limit(5);
+
+    for (const l of pendingLeaves || []) {
+      notifs.push({
+        id: 'mypending_' + l.id,
+        type: 'pending',
+        icon: 'fa-hourglass-half',
+        color: 'gold',
+        title: 'Leave request awaiting approval',
+        sub: `${cap(l.type)} · ${l.from_date} – ${l.to_date} · ${l.days} day${l.days !== 1 ? 's' : ''}`,
+        time: l.applied_at,
+        priority: 3
+      });
+    }
+
+    // 6. Upcoming approved leave (within next 7 days — heads-up reminder)
+    const in7 = new Date(); in7.setDate(in7.getDate() + 7);
+    const in7Str = in7.toISOString().slice(0, 10);
+    const { data: upcomingLeave } = await sb.from('leave_requests')
+      .select('id, type, from_date, to_date, days')
+      .eq('user_id', actor.id)
+      .eq('status', 'approved')
+      .gte('from_date', todayStr)
+      .lte('from_date', in7Str)
+      .order('from_date', { ascending: true })
+      .limit(3);
+
+    for (const l of upcomingLeave || []) {
+      const daysUntil = Math.ceil((new Date(l.from_date) - new Date(todayStr)) / 86400000);
+      notifs.push({
+        id: 'upcoming_leave_' + l.id,
+        type: 'upcoming',
+        icon: 'fa-calendar-alt',
+        color: 'blue',
+        title: daysUntil === 0 ? 'Your leave starts today' : `Leave starts in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`,
+        sub: `${cap(l.type)} · ${l.from_date} – ${l.to_date} · ${l.days} day${l.days !== 1 ? 's' : ''}`,
+        time: l.from_date + 'T00:00:00Z',
+        priority: 2
+      });
+    }
+  }
+
+  // Sort: priority ascending (1 = most urgent), then newest first within same priority
+  notifs.sort((a, b) => a.priority - b.priority || new Date(b.time) - new Date(a.time));
+  return { success: true, data: notifs };
+}
+
+// ── Messages ────────────────────────────────────────────────────────────────
+// Table schema (use this for Supabase):
+//   messages(id uuid pk default gen_random_uuid(),
+//            from_user_id text, from_username text, from_name text,
+//            to_user_id text, to_username text, to_name text,
+//            subject text, body text,
+//            read_by_recipient boolean default false,
+//            created_at timestamptz default now())
+//   message_replies(id uuid pk default gen_random_uuid(),
+//                   message_id uuid references messages(id) on delete cascade,
+//                   from_user_id text, from_username text, from_name text,
+//                   body text, created_at timestamptz default now())
+
+async function sendMessage(args, ctx) {
+  const actor = await requireUser(ctx);
+  const subject    = (args.subject    || '').trim();
+  const body       = (args.body       || '').trim();
+  const toUsername = (args.toUsername || '').trim(); // admin specifies target; employee always targets admin
+  if (!subject) return { success: false, message: 'Subject is required.' };
+  if (!body)    return { success: false, message: 'Message body is required.' };
+
+  let toUserId = '', toName = '', resolvedToUsername = '';
+  const isAdminSending = actor.role === 'admin' || actor.role === 'manager';
+
+  if (isAdminSending) {
+    // Admin/manager picks a specific employee
+    if (!toUsername) return { success: false, message: 'Recipient is required.' };
+    const { data: target } = await sb.from('app_users').select('id, full_name, username').eq('username', toUsername).maybeSingle();
+    if (!target) return { success: false, message: 'Employee not found.' };
+    toUserId = target.id; toName = target.full_name || target.username; resolvedToUsername = target.username;
+  } else {
+    // Employee always sends to admin (first admin found)
+    const { data: admin } = await sb.from('app_users').select('id, full_name, username').eq('role', 'admin').limit(1).maybeSingle();
+    toUserId = admin ? admin.id : ''; toName = admin ? (admin.full_name || admin.username) : 'Admin'; resolvedToUsername = admin ? admin.username : 'admin';
+  }
+
+  const { data, error } = await sb.from('messages').insert({
+    from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name || actor.username,
+    to_user_id: toUserId, to_username: resolvedToUsername, to_name: toName,
+    subject, body, read_by_recipient: false
+  }).select('id').single();
+  if (error) return { success: false, message: error.message };
+  return { success: true, id: data.id };
+}
+
+async function getMessages(args, ctx) {
+  const actor = await requireUser(ctx);
+  const isAdminView = actor.role === 'admin' || actor.role === 'manager';
+
+  // Admin/manager: all messages where they are sender OR recipient
+  // Employee: only messages involving themselves
+  let query;
+  if (isAdminView) {
+    query = sb.from('messages')
+      .select('id, from_user_id, from_username, from_name, to_user_id, to_username, to_name, subject, body, read_by_recipient, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+  } else {
+    query = sb.from('messages')
+      .select('id, from_user_id, from_username, from_name, to_user_id, to_username, to_name, subject, body, read_by_recipient, created_at')
+      .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
+      .order('created_at', { ascending: false })
+      .limit(30);
+  }
+
+  const { data: msgs, error } = await query;
+  if (error) return { success: false, message: error.message };
+
+  const ids = (msgs || []).map(m => m.id);
+  const { data: replies } = ids.length
+    ? await sb.from('message_replies')
+        .select('id, message_id, from_user_id, from_username, from_name, body, created_at')
+        .in('message_id', ids).order('created_at', { ascending: true })
+    : { data: [] };
+
+  // Collect all unique user IDs across messages + replies to batch-fetch profile photos
+  const allUserIds = [...new Set([
+    ...(msgs || []).flatMap(m => [m.from_user_id, m.to_user_id]),
+    ...(replies || []).map(r => r.from_user_id)
+  ].filter(Boolean))];
+  const { data: photoUsers } = allUserIds.length
+    ? await sb.from('app_users').select('id, profile_image').in('id', allUserIds)
+    : { data: [] };
+  // Resolve signed URLs for each user that has a photo
+  const photoMap = {};
+  await Promise.all((photoUsers || []).map(async u => {
+    if (!noPhoto(u.profile_image)) {
+      photoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
+    }
+  }));
+
+  const replyMap = {};
+  for (const r of replies || []) {
+    if (!replyMap[r.message_id]) replyMap[r.message_id] = [];
+    replyMap[r.message_id].push({
+      ...r,
+      fromPhoto: photoMap[r.from_user_id] || ''
+    });
+  }
+
+  const mapped = (msgs || []).map(m => ({
+    id: m.id,
+    fromUserId: m.from_user_id, fromUsername: m.from_username, fromName: m.from_name,
+    fromPhoto: photoMap[m.from_user_id] || '',
+    toUserId: m.to_user_id, toUsername: m.to_username, toName: m.to_name,
+    toPhoto: photoMap[m.to_user_id] || '',
+    subject: m.subject, body: m.body,
+    readByRecipient: m.read_by_recipient,
+    isUnread: isAdminView
+      ? (m.from_user_id !== actor.id && !m.read_by_recipient)
+      : (m.to_user_id === actor.id && !m.read_by_recipient),
+    createdAt: m.created_at,
+    replies: replyMap[m.id] || []
+  }));
+
+  const unreadCount = mapped.filter(m => m.isUnread).length;
+  return { success: true, data: mapped, unreadCount };
+}
+
+async function replyMessage(args, ctx) {
+  const actor = await requireUser(ctx);
+  const { messageId, body } = args;
+  if (!body || !body.trim()) return { success: false, message: 'Reply cannot be empty.' };
+  // Anyone in the conversation can reply
+  const { data: msg } = await sb.from('messages').select('from_user_id, to_user_id').eq('id', messageId).maybeSingle();
+  if (!msg) return { success: false, message: 'Message not found.' };
+  const isAdminView = actor.role === 'admin' || actor.role === 'manager';
+  const inConversation = isAdminView || msg.from_user_id === actor.id || msg.to_user_id === actor.id;
+  if (!inConversation) return { success: false, message: 'Forbidden.' };
+  // Mark as read by recipient when they reply
+  if (!isAdminView) await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
+  else await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
+  const { error } = await sb.from('message_replies').insert({
+    message_id: messageId, from_user_id: actor.id,
+    from_username: actor.username, from_name: actor.full_name || actor.username,
+    body: body.trim()
+  });
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
+
+async function markMessageRead(args, ctx) {
+  const actor = await requireUser(ctx);
+  await sb.from('messages').update({ read_by_recipient: true }).eq('id', args.messageId);
+  return { success: true };
+}
+
+async function getEmployeesForMsg(args, ctx) {
+  const actor = await requireUser(ctx);
+  if (actor.role !== 'admin' && actor.role !== 'manager') return { success: false, message: 'Forbidden.' };
+  const { data } = await sb.from('app_users')
+    .select('id, username, full_name, role')
+    .eq('status', 'active')
+    .neq('id', actor.id)
+    .order('full_name');
+  return { success: true, data: (data || []).map(u => ({ id: u.id, username: u.username, fullName: u.full_name, role: u.role })) };
+}
+
+// ── Support Tickets ──────────────────────────────────────────────────────────
+// Table: support_tickets (id, from_user_id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at)
+// Table: ticket_replies (id, ticket_id, from_user_id, from_username, from_name, body, created_at)
+
+async function createTicket(args, ctx) {
+  const actor = await requireUser(ctx);
+  const subject  = (args.subject  || '').trim();
+  const body     = (args.body     || '').trim();
+  const category = (args.category || 'general').trim();
+  if (!subject) return { success: false, message: 'Subject is required.' };
+  if (!body)    return { success: false, message: 'Description is required.' };
+  // Generate ticket number: TKT-XXXX
+  const { count } = await sb.from('support_tickets').select('id', { count: 'exact', head: true });
+  const ticketNumber = 'TKT-' + String((count || 0) + 1).padStart(4, '0');
+  const { data, error } = await sb.from('support_tickets').insert({
+    from_user_id:  actor.id,
+    from_username: actor.username,
+    from_name:     actor.full_name || actor.username,
+    ticket_number: ticketNumber,
+    category, subject, body,
+    status: 'open'
+  }).select('id, ticket_number').single();
+  if (error) return { success: false, message: error.message };
+  return { success: true, id: data.id, ticketNumber: data.ticket_number };
+}
+
+async function getTickets(args, ctx) {
+  const actor = await requireUser(ctx);
+  let query;
+  if (actor.role === 'admin' || actor.role === 'manager') {
+    query = sb.from('support_tickets')
+      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+  } else {
+    query = sb.from('support_tickets')
+      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at')
+      .eq('from_user_id', actor.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+  }
+  const { data: tickets, error } = await query;
+  if (error) return { success: false, message: error.message };
+
+  const ids = (tickets || []).map(t => t.id);
+  const { data: replies } = ids.length
+    ? await sb.from('ticket_replies')
+        .select('id, ticket_id, from_user_id, from_username, from_name, body, created_at')
+        .in('ticket_id', ids)
+        .order('created_at', { ascending: true })
+    : { data: [] };
+
+  // Batch-fetch profile photos for all involved users
+  const ticketUsernames = [...new Set([
+    ...(tickets || []).map(t => t.from_username),
+    ...(replies || []).map(r => r.from_username)
+  ].filter(Boolean))];
+  const { data: photoUsers2 } = ticketUsernames.length
+    ? await sb.from('app_users').select('username, profile_image').in('username', ticketUsernames)
+    : { data: [] };
+  const ticketPhotoMap = {};
+  await Promise.all((photoUsers2 || []).map(async u => {
+    if (!noPhoto(u.profile_image)) {
+      ticketPhotoMap[u.username] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
+    }
+  }));
+
+  const replyMap = {};
+  for (const r of replies || []) {
+    if (!replyMap[r.ticket_id]) replyMap[r.ticket_id] = [];
+    replyMap[r.ticket_id].push({ ...r, fromPhoto: ticketPhotoMap[r.from_username] || '' });
+  }
+
+  const openCount = (tickets || []).filter(t => t.status === 'open').length;
+
+  return {
+    success: true,
+    data: (tickets || []).map(t => ({
+      id: t.id, fromUsername: t.from_username, fromName: t.from_name,
+      fromPhoto: ticketPhotoMap[t.from_username] || '',
+      ticketNumber: t.ticket_number, category: t.category,
+      subject: t.subject, body: t.body, status: t.status,
+      createdAt: t.created_at, updatedAt: t.updated_at,
+      replies: replyMap[t.id] || []
+    })),
+    openCount
+  };
+}
+
+async function replyTicket(args, ctx) {
+  const actor = await requireUser(ctx);
+  const { ticketId, body } = args;
+  if (!body || !body.trim()) return { success: false, message: 'Reply cannot be empty.' };
+  const { error } = await sb.from('ticket_replies').insert({
+    ticket_id:     ticketId,
+    from_user_id:  actor.id,
+    from_username: actor.username,
+    from_name:     actor.full_name || actor.username,
+    body: body.trim()
+  });
+  if (error) return { success: false, message: error.message };
+  // Move ticket to in_progress when admin replies
+  if (actor.role === 'admin' || actor.role === 'manager') {
+    await sb.from('support_tickets').update({ status: 'in_progress', updated_at: new Date().toISOString() }).eq('id', ticketId);
+  }
+  return { success: true };
+}
+
+async function updateTicketStatus(args, ctx) {
+  const actor = await requireUser(ctx);
+  if (actor.role !== 'admin' && actor.role !== 'manager') return { success: false, message: 'Forbidden.' };
+  const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+  if (!validStatuses.includes(args.status)) return { success: false, message: 'Invalid status.' };
+  const { error } = await sb.from('support_tickets').update({ status: args.status, updated_at: new Date().toISOString() }).eq('id', args.ticketId);
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
 
 exports.handler = async event => {
   if (event.httpMethod === 'OPTIONS') return json(204, {});

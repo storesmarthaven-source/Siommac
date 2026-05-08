@@ -209,14 +209,14 @@
   filter: drop-shadow(0 8px 28px rgba(0,0,0,0.18));
 }
 
-/* card wrapper */
+/* ── Popup card ── */
 .lm-popup-card {
-  background: white;
-  border-radius: 24px;
+  background: #fff;
+  border-radius: 18px;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
-  min-width: 260px;
-  max-width: 300px;
+  min-width: 270px;
+  max-width: 310px;
   animation: lmPopupIn .18s ease-out;
   position: relative;
 }
@@ -224,92 +224,100 @@
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* custom arrow */
+/* bottom arrow */
 .lm-popup-card::after {
   content: '';
   position: absolute;
-  bottom: -9px;
-  left: 24px;
-  width: 18px;
-  height: 18px;
-  background: white;
+  bottom: -8px; left: 26px;
+  width: 16px; height: 16px;
+  background: #fff;
   transform: rotate(45deg);
   border-radius: 3px;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.07);
 }
 
-/* header */
-.lm-popup-header {
-  background: linear-gradient(135deg, var(--siomac-navy) 0%, #0D1E3A 100%);
-  padding: 15px 17px;
-  color: white;
+/* ── Site banner (building header) ── */
+.lm-popup-site-banner {
+  background: linear-gradient(135deg, var(--siomac-navy,#001f3f) 0%, #0D1E3A 100%);
+  padding: 13px 15px;
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 11px;
+  color: #fff;
 }
-.lm-popup-avatar {
-  width: 50px; height: 50px;
-  background: var(--siomac-red);
-  border-radius: 50%;
+.lm-popup-building-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.13);
+  border: 1.5px solid rgba(255,255,255,0.22);
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 700;
-  border: 2px solid rgba(255,255,255,0.28);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.22);
-  flex-shrink: 0; overflow: hidden;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  color: #fff;
 }
-.lm-popup-avatar img {
-  width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;
+.lm-popup-site-info { flex: 1; min-width: 0; }
+.lm-popup-site-name {
+  font-size: 0.82rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* when image fails to load, show the letter via ::after */
-.lm-popup-avatar.lm-popup-avatar-fallback::after {
-  content: attr(data-letter);
-  font-size: 20px; font-weight: 700; color: white;
+.lm-popup-site-dist {
+  font-size: 0.67rem; opacity: 0.72; margin-top: 2px;
+  display: flex; align-items: center; gap: 4px;
 }
-.lm-popup-title h4 {
-  font-size: 0.95rem; font-weight: 700; margin: 0 0 4px;
-}
-.lm-popup-title p {
-  font-size: 0.68rem; opacity: 0.78;
-  display: flex; align-items: center; gap: 5px; margin: 0;
+.lm-popup-status-pill {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 40px;
+  font-size: 0.65rem; font-weight: 700;
 }
 
-/* body */
-.lm-popup-body {
-  padding: 14px 17px 10px;
+/* ── Employee row ── */
+.lm-popup-emp-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px 10px;
+  border-bottom: 1px solid var(--border, #eee);
 }
-.lm-popup-row {
-  display: flex; align-items: center;
-  gap: 10px; font-size: 0.78rem;
-  color: var(--text-primary); margin-bottom: 9px;
+.lm-popup-emp-info { min-width: 0; }
+.lm-popup-emp-name {
+  font-size: 0.88rem; font-weight: 700;
+  color: var(--text-primary, #111);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lm-popup-row i { width: 16px; color: var(--siomac-red); font-size: 0.8rem; flex-shrink: 0; }
+.lm-popup-emp-meta {
+  font-size: 0.68rem; color: var(--text-muted, #888); margin-top: 2px;
+}
 
-/* status badge inside popup */
-.lm-popup-status {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 11px; border-radius: 40px;
-  font-size: 0.68rem; font-weight: 700;
+/* ── Time strip ── */
+.lm-popup-times {
+  display: flex; align-items: stretch;
+  padding: 10px 15px;
+  gap: 0;
+  border-bottom: 1px solid var(--border, #eee);
 }
-.lm-popup-status.in  { background: #E8F5E9; color: #2E7D32; }
-.lm-popup-status.late{ background: #FFF3E0; color: #E65100; }
-.lm-popup-status.out { background: #ECEFF4; color: #546E7A; }
+.lm-popup-time-cell {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.lm-popup-time-cell i { font-size: 0.75rem; color: var(--siomac-red, #d40000); }
+.lm-popup-time-label { font-size: 0.62rem; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: .04em; }
+.lm-popup-time-val   { font-size: 0.82rem; font-weight: 700; color: var(--text-primary, #111); }
+.lm-popup-time-divider {
+  width: 1px; background: var(--border, #eee); margin: 4px 10px;
+}
 
-/* selfie preview */
-.lm-popup-photo {
-  margin-top: 10px; border-radius: 14px;
-  overflow: hidden; border: 1px solid var(--border);
-  background: #F8FAFE;
+/* ── Selfie strip ── */
+.lm-popup-selfie {
+  overflow: hidden;
+  border-bottom: 1px solid var(--border, #eee);
 }
-.lm-popup-photo img {
-  width: 100%; max-height: 130px;
+.lm-popup-selfie img {
+  width: 100%; max-height: 110px;
   object-fit: cover; display: block;
 }
 
-/* footer actions */
+/* ── Footer actions ── */
 .lm-popup-footer {
-  padding: 10px 17px 15px;
-  border-top: 1px solid var(--border);
+  padding: 10px 15px 14px;
   display: flex; gap: 8px;
 }
 .lm-popup-btn {
@@ -319,13 +327,14 @@
   gap: 5px; cursor: pointer; border: none; transition: .18s;
   font-family: inherit; text-decoration: none;
 }
-.lm-popup-btn-primary { background: var(--siomac-red); color: white; }
-.lm-popup-btn-primary:hover { opacity: .87; }
+.lm-popup-btn-primary { background: var(--siomac-red, #d40000); color: #fff; }
+.lm-popup-btn-primary:hover { opacity: .85; }
 .lm-popup-btn-outline {
-  background: transparent; border: 1.5px solid var(--border);
-  color: var(--siomac-navy);
+  background: transparent;
+  border: 1.5px solid var(--border, #ddd);
+  color: var(--siomac-navy, #001f3f);
 }
-.lm-popup-btn-outline:hover { border-color: var(--siomac-red); color: var(--siomac-red); }
+.lm-popup-btn-outline:hover { border-color: var(--siomac-red, #d40000); color: var(--siomac-red, #d40000); }
 
 /* ── Dashboard 2×2 chart grid (shared) ── */
 .chart-grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 20px; }

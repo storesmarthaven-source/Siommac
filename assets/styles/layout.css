@@ -347,6 +347,26 @@
   font-family: inherit; padding: 2px 0;
 }
 .hdr-foot-link:hover { text-decoration: underline; }
+.hdr-foot-link:disabled { opacity: .5; cursor: default; text-decoration: none; }
+/* Compose button pill in modal header */
+.hdr-compose-btn {
+  border: 1.5px solid var(--siomac-red) !important;
+  border-radius: 6px !important;
+  color: var(--siomac-red) !important;
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  transition: background .15s;
+}
+.hdr-compose-btn:hover { background: rgba(228,12,12,.08) !important; text-decoration: none !important; }
+/* Detail / compose panes inside hdr-modal need full scrollable height */
+#msgDetailPane, #ticketDetailPane { display: flex; flex-direction: column; max-height: 480px; }
+#msgDetailBody, #ticketDetailBody { overflow-y: auto; flex: 1; }
+#msgComposePane, #ticketComposePane { overflow-y: auto; max-height: 380px; }
+/* Textarea focus style */
+#msgReplyInput:focus, #msgComposeBody:focus, #msgComposeSubject:focus,
+#ticketReplyInput:focus, #ticketBody:focus, #ticketSubject:focus {
+  border-color: var(--siomac-red) !important; outline: none;
+}
 
 /* Notification items */
 .hdr-notif-item {
@@ -369,6 +389,38 @@
 .hdr-notif-icon.navy  { background: rgba(27,45,85,.1);   color: var(--siomac-navy); }
 .hdr-notif-title { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); }
 .hdr-notif-sub   { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Notification empty / loading state */
+.hdr-notif-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 36px 16px; color: var(--text-muted); gap: 10px;
+}
+.hdr-notif-empty i { font-size: 2rem; opacity: .35; }
+.hdr-notif-empty p { font-size: 0.82rem; margin: 0; }
+.hdr-notif-item.read { opacity: 0.55; }
+.hdr-notif-item.unread { cursor: pointer; }
+.hdr-notif-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--siomac-red); flex-shrink: 0; margin-top: 6px; align-self: flex-start;
+}
+
+/* ── Sidebar / top-tab leave badge ── */
+.sb-nav-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 17px; height: 17px;
+  background: var(--siomac-red); color: #fff;
+  border-radius: 10px; font-size: 0.6rem; font-weight: 700;
+  padding: 0 4px; line-height: 1;
+  margin-left: 6px;    /* sits right next to the label text */
+  pointer-events: none;
+  flex-shrink: 0;
+}
+/* Collapsed sidebar — badge floats top-right of icon */
+.sidebar.collapsed .sidebar-menu button { position: relative; }
+.sidebar.collapsed .sb-nav-badge {
+  position: absolute; top: 4px; right: 4px;
+  margin-left: 0;
+}
 
 /* Message items */
 .hdr-msg-item {
