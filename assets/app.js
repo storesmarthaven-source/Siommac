@@ -805,16 +805,8 @@ const AttendanceSystem = (function() {
   // Set a header badge value and re-trigger the entrance animation each time
   function _setHdrBadge(badge, count) {
     if (!badge) return;
-    if (count > 0) {
-      badge.textContent = count > 99 ? '99+' : count;
-      badge.style.display = '';
-      badge.style.animation = 'none';
-      void badge.offsetWidth; // reflow to restart
-      badge.style.animation = '';
-    } else {
-      badge.textContent = '';
-      badge.style.display = 'none';
-    }
+    badge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+    badge.style.display = count > 0 ? '' : 'none';
   }
 
   function setSkel(id, html) {
