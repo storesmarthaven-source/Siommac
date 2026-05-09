@@ -11,28 +11,9 @@ function getSessionToken() {
   }
 }
 
-// ─── Global AJAX loading bar ─────────────────────────────────
-// Uses transform:scaleX instead of width so the animation is GPU-composited
-// and never causes page reflow or layout glitches.
-(function () {
-  const bar = document.createElement('div');
-  bar.id = 'ajax-loader-bar';
-  bar.style.cssText = [
-    'position:fixed', 'top:0', 'left:0', 'height:3px', 'width:100%',
-    'background:linear-gradient(90deg,#E40C0C,#ff6b6b)',
-    'z-index:99999', 'transform:scaleX(0)', 'transform-origin:left center',
-    'transition:transform .25s ease,opacity .3s ease',
-    'pointer-events:none', 'opacity:0', 'will-change:transform,opacity'
-  ].join(';');
-  document.addEventListener('DOMContentLoaded', function () {
-    document.body.appendChild(bar);
-  });
-  if (document.body) document.body.appendChild(bar);
-
-  let _count = 0, _timer = null;
-  window._ajaxLoaderStart = function () { _count++; };
-  window._ajaxLoaderDone  = function () { _count = Math.max(0, _count - 1); };
-})();
+// AJAX loading bar disabled — background syncs are silent
+window._ajaxLoaderStart = function () {};
+window._ajaxLoaderDone  = function () {};
 
 function _rawApi(action, args) {
   args = args || {};
@@ -207,6 +188,15 @@ function api(action, args) {
 }
 
 swr.focusRevalidate(true); // re-pull data when user returns to tab
+
+// ─── Frontend image URL cache ─────────────────────────────────────────────────
+// Signed URLs for the same storage path are stable for ~55 min (server caches them).
+// This map ensures <img> src is never swapped to an identical URL, preventing
+// any browser re-fetch or flash even across rapid _rawApi calls.
+// Usage: setImgSrc(imgElement, url)  — only updates src if url actually changed.
+window.setImgSrc = function (img, url) {
+  if (img && img.src !== url) img.src = url;
+};
 
 // Explicit "Refresh" buttons must bypass cache. Capture-phase wipes cache before
 // the existing bubble-phase loaders run, so they always see a miss.

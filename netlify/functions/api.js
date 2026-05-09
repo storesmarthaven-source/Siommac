@@ -124,14 +124,27 @@ async function uploadBase64(bucket, base64, name) {
 // ─── Signed URL helpers ────────────────────────────────────────────────────────
 // Private buckets: attendance-photos, profile-photos.
 // Returns a signed URL valid for 1 hour, or '' if path is empty / not a storage path.
-const SIGNED_TTL = 3600; // seconds
+const SIGNED_TTL = 3600; // seconds — Supabase signed URL lifetime
+
+// Module-level cache: key = "bucket:path" → { url, expiresAt }
+// Netlify functions stay warm across requests, so this persists within a warm instance.
+// We refresh 5 minutes before expiry to ensure the URL is always valid when the browser uses it.
+const _signedUrlCache = new Map();
+const SIGNED_CACHE_TTL = (SIGNED_TTL - 300) * 1000; // refresh 5 min before expiry (ms)
 
 async function getSignedUrl(bucket, pathOrUrl) {
   if (!pathOrUrl) return '';
-  // If it's already a full URL (legacy lh3 or public branding URL), pass through
+  // Already a full URL (legacy or public) — pass through unchanged
   if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+
+  const cacheKey = bucket + ':' + pathOrUrl;
+  const cached = _signedUrlCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+
   const { data, error } = await sb.storage.from(bucket).createSignedUrl(pathOrUrl, SIGNED_TTL);
   if (error) { console.warn('signed url fail', bucket, pathOrUrl, error.message); return ''; }
+
+  _signedUrlCache.set(cacheKey, { url: data.signedUrl, expiresAt: Date.now() + SIGNED_CACHE_TTL });
   return data.signedUrl;
 }
 
