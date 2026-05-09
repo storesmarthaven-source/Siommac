@@ -1355,12 +1355,10 @@ const routes = {
             .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
             .eq('read_by_recipient', false)
             .limit(30),
-      // Open tickets count: admin/manager sees all open; employee sees their own with new replies
+      // Open tickets count: admin/manager sees all open; employee — computed separately below
       isAdminOrMgr
         ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
-        : sb.from('ticket_replies').select('id', { count: 'exact', head: true })
-            .neq('from_username', actor.username)
-            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        : Promise.resolve({ count: 0 }),
       // Pending leaves count (admin/manager only)
       isAdminOrMgr
         ? (actor.role === 'manager'
@@ -1373,12 +1371,29 @@ const routes = {
         : Promise.resolve({ count: 0 })
     ]);
 
+    // Employee ticket badge: count unread admin replies on their own tickets
+    let empTicketCount = 0;
+    if (!isAdminOrMgr) {
+      const { data: myTicketIds } = await sb.from('support_tickets')
+        .select('id').eq('from_user_id', actor.id);
+      if (myTicketIds && myTicketIds.length) {
+        const ids = myTicketIds.map(t => t.id);
+        const { count } = await sb.from('ticket_replies')
+          .select('id', { count: 'exact', head: true })
+          .in('ticket_id', ids)
+          .neq('from_username', actor.username)
+          .neq('from_username', '__system__')
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        empTicketCount = count || 0;
+      }
+    }
+
     return {
       success: true,
       data: {
         notificationIds: (notifRes && notifRes.data ? notifRes.data.map(n => n.id) : []),
         messages:      msgRes.count    || 0,
-        tickets:       ticketRes.count || 0,
+        tickets:       isAdminOrMgr ? (ticketRes.count || 0) : empTicketCount,
         pendingLeaves: leaveRes.count  || 0,
         checkedIn:     checkinRes.count || 0
       }
