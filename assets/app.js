@@ -569,7 +569,7 @@ const AttendanceSystem = (function() {
             <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
           </div>
         </div>
-      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: true, autoPanPadding: L.point(24, 80) });
+      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: false });
       marker._liveUserId = row.userId; // for sidebar click → marker show
       liveMarkers.push(marker);
       // Markers are NOT added to the map here — they only appear when
@@ -714,11 +714,27 @@ const AttendanceSystem = (function() {
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
 
-    // Use zoom 15 — wide enough that the popup card (≈320px tall) fits comfortably
-    // above the marker with room to spare. Always snap with no animation so the
-    // popup opens on the settled view and autoPan can do a clean single pan.
+    // Snap to zoom 15 instantly, open popup, then measure the actual rendered card
+    // height (which varies — selfie adds ~110px) and pan so the full card is visible.
     map.setView(marker.getLatLng(), 15, { animate: false });
     marker.openPopup();
+
+    // After the popup DOM is painted, measure it and pan so top edge has 12px clearance.
+    requestAnimationFrame(() => {
+      const popupEl = marker.getPopup() && marker.getPopup().getElement
+        ? marker.getPopup().getElement()
+        : document.querySelector('.leaflet-popup');
+      if (!popupEl || !map) return;
+      const rect     = popupEl.getBoundingClientRect();
+      const mapRect  = map.getContainer().getBoundingClientRect();
+      const topGap   = rect.top - mapRect.top;      // px above map top edge
+      const padding  = 12;                          // desired clearance from top
+      if (topGap < padding) {
+        // Card is clipped — pan down by the deficit (in screen px → lat/lng delta)
+        const deficit = padding - topGap;
+        map.panBy([0, -deficit], { animate: true, duration: 0.25 });
+      }
+    });
   }
 
   function markProjectAttendance() {
