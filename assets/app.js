@@ -823,18 +823,24 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Skeleton helpers ───
-  // Set a header badge value and replay the entrance animation each time it changes
+  // Track last known count per badge element to detect real changes
+  const _badgeLastCount = new WeakMap();
+
+  // Set a header badge value — animation only fires when count genuinely changes
   function _setHdrBadge(badge, count) {
     if (!badge) return;
     const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
-    const wasHidden = badge.style.display === 'none';
-    const changed   = badge.textContent !== label;
+    const prev  = _badgeLastCount.get(badge);
+    if (prev === count) return; // nothing changed — skip entirely
+    _badgeLastCount.set(badge, count);
+
     badge.textContent = label;
     badge.style.display = count > 0 ? '' : 'none';
-    // Replay animation whenever badge appears or its count changes
-    if (count > 0 && (wasHidden || changed)) {
+
+    // Animate only when badge goes from hidden→visible or count increases
+    if (count > 0 && (prev === undefined || prev === 0 || count > prev)) {
       badge.style.animation = 'none';
-      badge.offsetWidth; // force reflow to restart
+      badge.offsetWidth; // reflow to restart
       badge.style.animation = '';
     }
   }
