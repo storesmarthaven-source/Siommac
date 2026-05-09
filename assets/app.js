@@ -5210,12 +5210,18 @@ const AttendanceSystem = (function() {
         width: 340,
       }).then(result => {
         if (result.isConfirmed) {
+          const lat = Number(site.latitude) || 0;
+          const lng = Number(site.longitude) || 0;
           showSection('s-projectMap');
-          if (map) {
-            const lat = Number(site.latitude) || 0;
-            const lng = Number(site.longitude) || 0;
-            setTimeout(() => map.setView([lat, lng], 16, { animate: true }), 300);
-          }
+          // Wait for map to initialise (first visit) then fly to site
+          const _flyToSite = () => {
+            if (map) {
+              map.setView([lat, lng], 16, { animate: true });
+            } else {
+              setTimeout(_flyToSite, 150);
+            }
+          };
+          setTimeout(_flyToSite, 350);
         }
       });
     };
