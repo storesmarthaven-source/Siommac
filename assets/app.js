@@ -1120,6 +1120,18 @@ const AttendanceSystem = (function() {
         });
       }
 
+      // Clear all — removes all notifications from view and marks them read
+      const clearAllBtn = document.getElementById('notifClearAllBtn');
+      if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+          const readIds = _readIds();
+          _notifData.forEach(n => readIds.add(n.id));
+          _saveReadIds(readIds);
+          _notifData = [];
+          _render();
+        });
+      }
+
       // Refresh button
       const refreshBtn = document.getElementById('notifRefreshBtn');
       if (refreshBtn) refreshBtn.addEventListener('click', _fetch);
