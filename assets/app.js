@@ -394,6 +394,19 @@ const AttendanceSystem = (function() {
       const html = _buildSitePopupHtml(site, liveData);
       if (zone)   zone.setPopupContent(html);
       if (marker) marker.setPopupContent(html);
+
+      // Update building pin colour: green when active employees are on site
+      if (marker) {
+        const hasActive = (liveData || []).some(r => String(r.siteId) === String(site.id) && !r.isCheckedOut);
+        const pinColor  = hasActive ? '#2E7D32' : '#1b2d54';
+        const pinIcon = L.divIcon({
+          className: 'lm-building-marker',
+          html: `<div class="lm-building-pin" style="background:${pinColor};box-shadow:0 2px 8px ${hasActive ? 'rgba(46,125,50,0.45)' : 'rgba(27,45,84,0.4)'}"><i class="fas fa-building"></i></div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+        marker.setIcon(pinIcon);
+      }
     });
   }
 
@@ -714,27 +727,29 @@ const AttendanceSystem = (function() {
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
 
-    // Snap to zoom 15 instantly, open popup, then measure the actual rendered card
-    // height (which varies — selfie adds ~110px) and pan so the full card is visible.
+    // Snap to zoom 15 instantly then open popup.
     map.setView(marker.getLatLng(), 15, { animate: false });
     marker.openPopup();
 
-    // After the popup DOM is painted, measure it and pan so top edge has 12px clearance.
-    requestAnimationFrame(() => {
-      const popupEl = marker.getPopup() && marker.getPopup().getElement
-        ? marker.getPopup().getElement()
-        : document.querySelector('.leaflet-popup');
-      if (!popupEl || !map) return;
-      const rect     = popupEl.getBoundingClientRect();
-      const mapRect  = map.getContainer().getBoundingClientRect();
-      const topGap   = rect.top - mapRect.top;      // px above map top edge
-      const padding  = 12;                          // desired clearance from top
-      if (topGap < padding) {
-        // Card is clipped — pan down by the deficit (in screen px → lat/lng delta)
-        const deficit = padding - topGap;
-        map.panBy([0, -deficit], { animate: true, duration: 0.25 });
+    // Leaflet positions the popup asynchronously. Wait two frames so the element
+    // has its final dimensions and position, then pan to ensure the full card
+    // (including selfie when present) is visible with 16px clearance at the top.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!map) return;
+      const popup = marker.getPopup();
+      const popupEl = popup && popup.getElement ? popup.getElement() : document.querySelector('.leaflet-popup');
+      if (!popupEl) return;
+      const rect    = popupEl.getBoundingClientRect();
+      const mapRect = map.getContainer().getBoundingClientRect();
+      const topGap  = rect.top - mapRect.top;   // negative = above map edge
+      const botGap  = mapRect.bottom - rect.bottom; // negative = below map edge
+      const PAD     = 16;
+      if (topGap < PAD) {
+        map.panBy([0, -(PAD - topGap)], { animate: true, duration: 0.2 });
+      } else if (botGap < PAD) {
+        map.panBy([0, PAD - botGap], { animate: true, duration: 0.2 });
       }
-    });
+    }));
   }
 
   function markProjectAttendance() {
