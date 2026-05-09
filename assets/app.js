@@ -1474,9 +1474,17 @@ const AttendanceSystem = (function() {
         if (_isAdmin()) {
           if (toWrap) toWrap.style.display = '';
           if (toSel) {
-            toSel.innerHTML = '<option value="">— Select employee —</option>'
-              + _empList.map(e => `<option value="${escapeHtml(e.username)}">${escapeHtml(e.fullName)} (${escapeHtml(e.role)})</option>`).join('');
-            if (replyToUsername) toSel.value = replyToUsername;
+            // Always re-fetch the employee list on compose open so deleted employees
+            // never appear in the dropdown
+            toSel.innerHTML = '<option value="">— Loading… —</option>';
+            api('getEmployeesForMsg', {}).then(res => {
+              _empList = (res && res.data) || [];
+              toSel.innerHTML = '<option value="">— Select employee —</option>'
+                + _empList.map(e => `<option value="${escapeHtml(e.username)}">${escapeHtml(e.fullName)} (${escapeHtml(e.role)})</option>`).join('');
+              if (replyToUsername) toSel.value = replyToUsername;
+            }).catch(() => {
+              toSel.innerHTML = '<option value="">— Failed to load —</option>';
+            });
           }
         } else {
           if (toWrap) toWrap.style.display = 'none';
@@ -1792,7 +1800,7 @@ const AttendanceSystem = (function() {
           // Confirm with server after short delay to get proper IDs + photos
           setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 800);
           showPopup('success', 'Sent!', `Your message has been sent.`);
-        }).catch(() => { document.getElementById('msgSendBtn').disabled = false; });
+        }).catch(() => { document.getElementById('msgSendBtn').disabled = false; showPopup('error', 'Failed', 'Could not send message. Please try again.'); });
       });
 
       // Mark all as read
