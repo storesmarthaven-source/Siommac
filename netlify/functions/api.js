@@ -1756,8 +1756,14 @@ async function getMessages(args, ctx) {
   for (const r of replies || []) {
     if (!replyMap[r.message_id]) replyMap[r.message_id] = [];
     replyMap[r.message_id].push({
-      ...r,
-      fromPhoto: photoMap[r.from_user_id] || ''
+      id: r.id,
+      messageId: r.message_id,
+      fromUserId: r.from_user_id,
+      fromUsername: r.from_username,
+      fromName: r.from_name,
+      fromPhoto: photoMap[r.from_user_id] || '',
+      body: r.body,
+      createdAt: r.created_at
     });
   }
 
