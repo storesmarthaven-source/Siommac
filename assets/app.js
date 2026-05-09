@@ -5953,32 +5953,34 @@ const AttendanceSystem = (function() {
           const lat = Number(site.latitude) || 0;
           const lng = Number(site.longitude) || 0;
           showSection('s-projectMap');
-          // Select the site in the filter dropdown + activity panel immediately
           _selectLiveSite(String(site.id), site.name || '');
-          // Wait for map to initialise (first visit) then fly to site and open popup
+
+          // Poll until map is ready, then fly and open popup
+          let _flyAttempts = 0;
           const _flyToSite = () => {
-            if (map) {
-              map.setView([lat, lng], 17, { animate: true });
-              // Open the building marker popup for this site after fly animation
+            _flyAttempts++;
+            if (_flyAttempts > 40) return; // give up after ~6s
+            if (!map) { setTimeout(_flyToSite, 150); return; }
+
+            // Map exists — fly immediately
+            map.setView([lat, lng], 17, { animate: true });
+
+            // Wait for site layer — may take a moment after first init
+            const _openPopup = () => {
               const entry = _siteLayerMap[site.id];
-              if (entry && entry.marker) {
+              if (entry && (entry.marker || entry.zone)) {
+                const layer = entry.marker || entry.zone;
                 setTimeout(() => {
-                  entry.marker.openPopup();
-                  // Pan slightly so popup card isn't cut off at top
-                  const px = map.latLngToContainerPoint([lat, lng]);
-                  map.panBy([0, -80], { animate: true });
-                }, 500);
-              } else if (entry && entry.zone) {
-                setTimeout(() => {
-                  entry.zone.openPopup();
-                  map.panBy([0, -80], { animate: true });
-                }, 500);
+                  layer.openPopup();
+                  map.panBy([0, -100], { animate: true });
+                }, 400);
+              } else if (_flyAttempts < 40) {
+                setTimeout(_openPopup, 150);
               }
-            } else {
-              setTimeout(_flyToSite, 150);
-            }
+            };
+            _openPopup();
           };
-          setTimeout(_flyToSite, 350);
+          setTimeout(_flyToSite, 100);
         }
       });
     };
