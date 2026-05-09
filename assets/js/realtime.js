@@ -64,6 +64,12 @@
         if (typeof window._fetchMsgs     === 'function') window._fetchMsgs();
       })
 
+      // ── message reads (per-user read state) ───────────────────────────────
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reads' }, () => {
+        if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
+        if (typeof window._fetchMsgs     === 'function') window._fetchMsgs();
+      })
+
       // ── support tickets ───────────────────────────────────────────────────
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
         if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();

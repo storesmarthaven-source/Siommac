@@ -127,6 +127,18 @@ values
   ('branding', 'branding', true)
 on conflict (id) do nothing;
 
+create table if not exists public.message_reads (
+  message_id uuid not null references public.messages(id) on delete cascade,
+  user_id    text not null references public.app_users(id) on delete cascade,
+  last_read_at timestamptz not null default now(),
+  primary key (message_id, user_id)
+);
+
+alter table public.message_reads enable row level security;
+
+-- Add message_reads to realtime publication so both sides see instant updates
+alter publication supabase_realtime add table public.message_reads;
+
 alter table public.app_users enable row level security;
 alter table public.departments enable row level security;
 alter table public.project_sites enable row level security;

@@ -246,11 +246,9 @@
             </div>
           </div>
           <div class="hdr-modal-foot" id="ticketModalFoot">
-            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;"></span>
-            <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
-              <button class="hdr-foot-link" id="ticketClearClosedEmpBtn" style="color:var(--text-muted);display:none;"><i class="fas fa-broom"></i> Clear Closed</button>
-              <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
+            <button class="hdr-foot-link" id="ticketClearClosedEmpBtn" style="color:var(--text-muted);display:none;"><i class="fas fa-broom"></i> Clear Closed</button>
+            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;margin-left:auto;"></span>
+            <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
       </div>
@@ -429,11 +427,12 @@
               <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
               <button id="refreshLiveMapBtn" class="lm-refresh-btn" title="Refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
-            <!-- selected site pill — hidden until a site is clicked on the map -->
-            <div class="lm-selected-site-bar" id="lmSelectedSiteBar" style="display:none;">
+            <!-- site filter dropdown -->
+            <div class="lm-site-filter-bar">
               <i class="fas fa-building" style="color:var(--siomac-navy);font-size:0.75rem;flex-shrink:0;"></i>
-              <span id="lmSelectedSiteName" class="lm-selected-site-name"></span>
-              <button id="lmClearSiteBtn" class="lm-clear-site-btn"><i class="fas fa-times"></i> Clear</button>
+              <select id="lmSiteSelect" class="lm-site-select">
+                <option value="">— Select a project site —</option>
+              </select>
             </div>
             <div class="lm-employees-list" id="liveEmployeesList"></div>
             <div class="lm-legend">
@@ -1819,12 +1818,16 @@
         </div>
 
         <!-- Project site selector (check-in only) -->
-        <div id="cmSiteWrap" style="padding:10px 16px 0;display:none;">
-          <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:block;"><i class="fas fa-map-marker-alt"></i> Select Project Site</label>
-          <select id="cmSiteSelect" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
-            <option value="">— Choose a site —</option>
+        <div id="cmSiteWrap" class="cm-site-wrap" style="display:none;">
+          <div class="cm-site-header">
+            <div class="cm-site-label"><i class="fas fa-map-marker-alt"></i> Select Project Site</div>
+            <div id="cmSiteStatus" class="cm-site-status cm-site-status--required">
+              <i class="fas fa-exclamation-circle"></i> Required
+            </div>
+          </div>
+          <select id="cmSiteSelect" class="cm-site-select">
+            <option value="">— Choose a project site —</option>
           </select>
-          <div id="cmSiteStatus" style="font-size:0.72rem;margin-top:4px;min-height:16px;"></div>
         </div>
 
         <!-- Location status -->
@@ -1844,15 +1847,15 @@
           <img id="photoPreview" alt="Captured selfie">
         </div>
 
-        <!-- Action buttons -->
+        <!-- Action buttons — always visible, disabled when requirements not met -->
         <div class="cm-actions">
           <button id="captureBtn" class="cm-btn cm-btn--red">
-            <i class="fas fa-camera"></i> <span id="captureText">Capture</span>
+            <i class="fas fa-camera"></i> <span id="captureText">Capture Selfie</span>
           </button>
-          <button id="retakeBtn" class="cm-btn cm-btn--outline d-none">
+          <button id="retakeBtn" class="cm-btn cm-btn--outline" style="display:none;">
             <i class="fas fa-redo-alt"></i> <span id="retakeText">Retake</span>
           </button>
-          <button id="confirmBtn" class="cm-btn cm-btn--green d-none">
+          <button id="confirmBtn" class="cm-btn cm-btn--green" style="display:none;" disabled>
             <i class="fas fa-check-circle"></i> <span id="confirmText">Confirm Check In</span>
           </button>
         </div>
@@ -2107,6 +2110,10 @@
             <div class="form-group">
               <label class="form-label">Phone Number</label>
               <input type="tel" class="form-control phone-mask" id="editPhone" placeholder="(868) xxx-xxxx" maxlength="14">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label"><i class="fas fa-lock" style="font-size:0.75rem;margin-right:4px;opacity:0.6;"></i>New Password <span style="font-weight:400;color:var(--text-muted);font-size:0.72rem;">(leave blank to keep current)</span></label>
+              <input type="password" class="form-control" id="editEmpPassword" autocomplete="new-password" placeholder="Enter new password…">
             </div>
           </div>
         </form>

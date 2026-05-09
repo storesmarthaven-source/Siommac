@@ -437,11 +437,13 @@ async function markAttendance(args, ctx) {
     if (!chosenSite) return { success: false, message: 'Selected project site not found.' };
     const dist = (lat != null && lng != null) ? haversine(lat, lng, Number(chosenSite.latitude), Number(chosenSite.longitude)) : null;
     const siteRadius = Math.max(Number(chosenSite.radius) || 200, 50);
-    // Hard-block if outside radius — no exceptions
+    // Add GPS accuracy to the allowed radius — benefit of the doubt for coarse fixes
+    const gpsAcc = (acc != null && acc > 0) ? acc : 0;
+    const allowedRadius = siteRadius + gpsAcc;
     if (dist == null) {
       return { success: false, message: 'Your location could not be determined. Please enable GPS and try again.' };
     }
-    if (dist > siteRadius) {
+    if (dist > allowedRadius) {
       return {
         success: false,
         message: `You are ${Math.round(dist)}m away from "${chosenSite.name}" (radius: ${siteRadius}m). Move closer and try again.`,
@@ -1763,11 +1765,17 @@ async function getNotifications(args, ctx) {
 //                   from_user_id text, from_username text, from_name text,
 //                   body text, created_at timestamptz default now())
 
+// ── Message read tracking ────────────────────────────────────────────────────
+// message_reads(message_id, user_id, last_read_at) — one row per user per thread.
+// Table must exist in Supabase — see supabase/schema.sql for the CREATE TABLE.
+// isUnread is computed per-actor by comparing last_read_at against the latest
+// reply/message timestamp, so both admin and employee track reads independently.
+
 async function sendMessage(args, ctx) {
   const actor = await requireUser(ctx);
   const subject    = (args.subject    || '').trim();
   const body       = (args.body       || '').trim();
-  const toUsername = (args.toUsername || '').trim(); // admin specifies target; employee always targets admin
+  const toUsername = (args.toUsername || '').trim();
   if (!subject) return { success: false, message: 'Subject is required.' };
   if (!body)    return { success: false, message: 'Message body is required.' };
 
@@ -1775,13 +1783,11 @@ async function sendMessage(args, ctx) {
   const isAdminSending = actor.role === 'admin' || actor.role === 'manager';
 
   if (isAdminSending) {
-    // Admin/manager picks a specific employee
     if (!toUsername) return { success: false, message: 'Recipient is required.' };
     const { data: target } = await sb.from('app_users').select('id, full_name, username').eq('username', toUsername).maybeSingle();
     if (!target) return { success: false, message: 'Employee not found.' };
     toUserId = target.id; toName = target.full_name || target.username; resolvedToUsername = target.username;
   } else {
-    // Employee always sends to admin (first admin found)
     const { data: admin } = await sb.from('app_users').select('id, full_name, username').eq('role', 'admin').limit(1).maybeSingle();
     toUserId = admin ? admin.id : ''; toName = admin ? (admin.full_name || admin.username) : 'Admin'; resolvedToUsername = admin ? admin.username : 'admin';
   }
@@ -1792,6 +1798,13 @@ async function sendMessage(args, ctx) {
     subject, body, read_by_recipient: false
   }).select('id').single();
   if (error) return { success: false, message: error.message };
+
+  // Sender has already "read" this thread (they just wrote it)
+  try { await sb.from('message_reads').upsert(
+    { message_id: data.id, user_id: actor.id, last_read_at: new Date().toISOString() },
+    { onConflict: 'message_id,user_id' }
+  ); } catch (_) {}
+
   return { success: true, id: data.id };
 }
 
@@ -1799,43 +1812,49 @@ async function getMessages(args, ctx) {
   const actor = await requireUser(ctx);
   const isAdminView = actor.role === 'admin' || actor.role === 'manager';
 
-  // Admin/manager: all messages where they are sender OR recipient
-  // Employee: only messages involving themselves
-  let query;
-  if (isAdminView) {
-    query = sb.from('messages')
-      .select('id, from_user_id, from_username, from_name, to_user_id, to_username, to_name, subject, body, read_by_recipient, created_at')
-      .order('created_at', { ascending: false })
-      .limit(50);
-  } else {
-    query = sb.from('messages')
-      .select('id, from_user_id, from_username, from_name, to_user_id, to_username, to_name, subject, body, read_by_recipient, created_at')
-      .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
-      .order('created_at', { ascending: false })
-      .limit(30);
+  let query = sb.from('messages')
+    .select('id, from_user_id, from_username, from_name, to_user_id, to_username, to_name, subject, body, read_by_recipient, created_at')
+    .order('created_at', { ascending: false })
+    .limit(isAdminView ? 100 : 50);
+
+  if (!isAdminView) {
+    query = query.or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`);
   }
 
   const { data: msgs, error } = await query;
   if (error) return { success: false, message: error.message };
 
   const ids = (msgs || []).map(m => m.id);
-  const { data: replies } = ids.length
-    ? await sb.from('message_replies')
-        .select('id, message_id, from_user_id, from_username, from_name, body, created_at')
-        .in('message_id', ids).order('created_at', { ascending: true })
-    : { data: [] };
 
-  // Collect all unique user IDs across messages + replies to batch-fetch profile photos
+  // Fetch replies + per-user read state in parallel
+  const [repliesResult, readsResult] = await Promise.all([
+    ids.length
+      ? sb.from('message_replies')
+          .select('id, message_id, from_user_id, from_username, from_name, body, created_at')
+          .in('message_id', ids).order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] }),
+    ids.length
+      ? sb.from('message_reads')
+          .select('message_id, last_read_at')
+          .eq('user_id', actor.id)
+          .in('message_id', ids)
+      : Promise.resolve({ data: [] })
+  ]);
+
+  const replies = repliesResult.data || [];
+  // Build map: message_id → last_read_at for this actor
+  const readMap = {};
+  (readsResult.data || []).forEach(r => { readMap[r.message_id] = r.last_read_at; });
+
+  // Batch-fetch profile photos
   const allUserIds = [...new Set([
     ...(msgs || []).flatMap(m => [m.from_user_id, m.to_user_id]),
-    ...(replies || []).map(r => r.from_user_id)
+    ...replies.map(r => r.from_user_id)
   ].filter(Boolean))];
   const { data: photoUsers } = allUserIds.length
     ? await sb.from('app_users').select('id, profile_image').in('id', allUserIds)
     : { data: [] };
-  // Track which user IDs still exist — used to flag conversations with deleted employees
   const existingUserIds = new Set((photoUsers || []).map(u => u.id));
-  // Resolve signed URLs for each user that has a photo
   const photoMap = {};
   await Promise.all((photoUsers || []).map(async u => {
     if (!noPhoto(u.profile_image)) {
@@ -1844,47 +1863,53 @@ async function getMessages(args, ctx) {
   }));
 
   const replyMap = {};
-  for (const r of replies || []) {
+  for (const r of replies) {
     if (!replyMap[r.message_id]) replyMap[r.message_id] = [];
     replyMap[r.message_id].push({
-      id: r.id,
-      messageId: r.message_id,
-      fromUserId: r.from_user_id,
-      fromUsername: r.from_username,
-      fromName: r.from_name,
+      id: r.id, messageId: r.message_id,
+      fromUserId: r.from_user_id, fromUsername: r.from_username, fromName: r.from_name,
       fromPhoto: photoMap[r.from_user_id] || '',
-      body: r.body,
-      createdAt: r.created_at
+      body: r.body, createdAt: r.created_at
     });
   }
 
   const mapped = (msgs || []).map(m => {
-    // Determine if the other participant in this conversation has been deleted
+    const threadReplies = replyMap[m.id] || [];
     const otherUserId = m.from_user_id === actor.id ? m.to_user_id : m.from_user_id;
     const otherPartyDeleted = otherUserId ? !existingUserIds.has(otherUserId) : false;
-    return ({
-    id: m.id,
-    fromUserId: m.from_user_id, fromUsername: m.from_username, fromName: m.from_name,
-    fromPhoto: photoMap[m.from_user_id] || '',
-    toUserId: m.to_user_id, toUsername: m.to_username, toName: m.to_name,
-    toPhoto: photoMap[m.to_user_id] || '',
-    subject: m.subject, body: m.body,
-    readByRecipient: m.read_by_recipient,
-    otherPartyDeleted,
-    isUnread: isAdminView
-      ? (m.from_user_id !== actor.id && !m.read_by_recipient)
-      // Employee: unread when read_by_recipient is false AND the last activity was from someone else.
-      // If there are replies, the last replier decides; if no replies, the original sender does.
-      // This prevents the employee's own sent message from appearing unread to themselves.
-      : (() => {
-          if (m.read_by_recipient) return false;
-          const replies = replyMap[m.id] || [];
-          const lastFromId = replies.length ? replies[replies.length - 1].fromUserId : m.from_user_id;
-          return lastFromId !== actor.id;
-        })(),
-    createdAt: m.created_at,
-    replies: replyMap[m.id] || []
-  });});
+
+    // Latest activity in thread (most recent reply, or original message)
+    const latestAt = threadReplies.length
+      ? threadReplies[threadReplies.length - 1].createdAt
+      : m.created_at;
+    // Latest message NOT from this actor
+    const lastFromOther = [...threadReplies].reverse().find(r => r.fromUserId !== actor.id)
+      || (m.from_user_id !== actor.id ? { createdAt: m.created_at } : null);
+
+    // isUnread: there is activity from the other side that is newer than our last read
+    const myLastRead = readMap[m.id] || null;
+    let isUnread = false;
+    if (lastFromOther) {
+      isUnread = !myLastRead || new Date(lastFromOther.createdAt) > new Date(myLastRead);
+    }
+
+    // unreadReplyCount: replies from other side since our last read
+    const unreadReplyCount = threadReplies.filter(r =>
+      r.fromUserId !== actor.id && (!myLastRead || new Date(r.createdAt) > new Date(myLastRead))
+    ).length;
+
+    return {
+      id: m.id,
+      fromUserId: m.from_user_id, fromUsername: m.from_username, fromName: m.from_name,
+      fromPhoto: photoMap[m.from_user_id] || '',
+      toUserId: m.to_user_id, toUsername: m.to_username, toName: m.to_name,
+      toPhoto: photoMap[m.to_user_id] || '',
+      subject: m.subject, body: m.body,
+      otherPartyDeleted, isUnread, unreadReplyCount,
+      latestAt, createdAt: m.created_at,
+      replies: threadReplies
+    };
+  });
 
   const unreadCount = mapped.filter(m => m.isUnread).length;
   return { success: true, data: mapped, unreadCount };
@@ -1894,13 +1919,11 @@ async function replyMessage(args, ctx) {
   const actor = await requireUser(ctx);
   const { messageId, body } = args;
   if (!body || !body.trim()) return { success: false, message: 'Reply cannot be empty.' };
-  // Anyone in the conversation can reply
   const { data: msg } = await sb.from('messages').select('from_user_id, to_user_id').eq('id', messageId).maybeSingle();
   if (!msg) return { success: false, message: 'Message not found.' };
   const isAdminView = actor.role === 'admin' || actor.role === 'manager';
   const inConversation = isAdminView || msg.from_user_id === actor.id || msg.to_user_id === actor.id;
   if (!inConversation) return { success: false, message: 'Forbidden.' };
-  // Admin/manager: verify the other participant (the employee) still exists
   if (isAdminView) {
     const otherUserId = msg.from_user_id === actor.id ? msg.to_user_id : msg.from_user_id;
     if (otherUserId) {
@@ -1908,25 +1931,32 @@ async function replyMessage(args, ctx) {
       if (!otherUser) return { success: false, message: 'This employee no longer exists. Please delete this conversation.' };
     }
   }
-  // When the employee replies → mark read (they've seen admin's reply).
-  // When admin/manager replies → reset to unread so the employee sees a new-message indicator.
-  if (isAdminView) {
-    await sb.from('messages').update({ read_by_recipient: false }).eq('id', messageId);
-  } else {
-    await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
-  }
   const { error } = await sb.from('message_replies').insert({
     message_id: messageId, from_user_id: actor.id,
     from_username: actor.username, from_name: actor.full_name || actor.username,
     body: body.trim()
   });
   if (error) return { success: false, message: error.message };
+
+  // Mark this thread as read for the sender right now (they just replied)
+  try { await sb.from('message_reads').upsert(
+    { message_id: messageId, user_id: actor.id, last_read_at: new Date().toISOString() },
+    { onConflict: 'message_id,user_id' }
+  ); } catch (_) {}
+
   return { success: true };
 }
 
 async function markMessageRead(args, ctx) {
   const actor = await requireUser(ctx);
-  await sb.from('messages').update({ read_by_recipient: true }).eq('id', args.messageId);
+  const now = new Date().toISOString();
+  // Upsert per-user read record — works for both admin and employee independently
+  try { await sb.from('message_reads').upsert(
+    { message_id: args.messageId, user_id: actor.id, last_read_at: now },
+    { onConflict: 'message_id,user_id' }
+  ); } catch (_) {}
+  // Keep legacy read_by_recipient for backwards compat
+  try { await sb.from('messages').update({ read_by_recipient: true }).eq('id', args.messageId); } catch (_) {}
   return { success: true };
 }
 
@@ -1935,7 +1965,7 @@ async function deleteMessage(args, ctx) {
   if (actor.role !== 'admin' && actor.role !== 'manager') return { success: false, message: 'Forbidden.' };
   const { messageId } = args;
   if (!messageId) return { success: false, message: 'messageId is required.' };
-  // Delete replies first (FK constraint), then the message itself
+  try { await sb.from('message_reads').delete().eq('message_id', messageId); } catch (_) {}
   await sb.from('message_replies').delete().eq('message_id', messageId);
   const { error } = await sb.from('messages').delete().eq('id', messageId);
   if (error) return { success: false, message: error.message };

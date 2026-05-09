@@ -1,7 +1,7 @@
 // Promise-based modal + toast + spinner. Compatible with the Swal.fire(opts) API.
 const cpop = (function () {
   let ready = false, modal, iconEl, titleEl, textEl, progEl, progBar, okBtn, cancelBtn, toastsEl;
-  let activeResolve = null, activeTimer = null, escHandler = null;
+  let activeResolve = null, activeTimer = null, escHandler = null, closeTimer = null;
 
   const ICONS = {
     success:  '<circle cx="26" cy="26" r="22"/><path class="check" d="M14 27 l8 7 16-18" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -40,11 +40,14 @@ const cpop = (function () {
     progBar = progEl.querySelector('span');
     okBtn = modal.querySelector('.cpop-btn-ok');
     cancelBtn = modal.querySelector('.cpop-btn-cancel');
-    okBtn.addEventListener('click', () => close(true));
-    cancelBtn.addEventListener('click', () => close(false));
-    modal.querySelector('.cpop-backdrop').addEventListener('click', () => {
+    okBtn.addEventListener('click', (e) => { e.stopPropagation(); close(true); });
+    cancelBtn.addEventListener('click', (e) => { e.stopPropagation(); close(false); });
+    modal.querySelector('.cpop-backdrop').addEventListener('click', (e) => {
+      e.stopPropagation();
       if (modal.dataset.dismiss !== 'false') close(false);
     });
+    // Stop all clicks inside the cpop box from bubbling to Bootstrap modal listeners
+    modal.querySelector('.cpop-box').addEventListener('click', (e) => e.stopPropagation());
     toastsEl = document.createElement('div');
     toastsEl.className = 'cpop-toasts';
     toastsEl.setAttribute('data-pos', 'top-end');
@@ -57,7 +60,8 @@ const cpop = (function () {
     if (escHandler)   { document.removeEventListener('keydown', escHandler); escHandler = null; }
     modal.classList.add('cpop-closing');
     const r = activeResolve; activeResolve = null;
-    setTimeout(() => {
+    closeTimer = setTimeout(() => {
+      closeTimer = null;
       modal.classList.add('cpop-hidden');
       modal.classList.remove('cpop-closing');
       if (r) r({ isConfirmed: !!confirmed, isDismissed: !confirmed, isDenied: false, value: !!confirmed });
@@ -68,6 +72,10 @@ const cpop = (function () {
     ensureDOM();
     opts = opts || {};
     if (opts.toast) return showToast(opts);
+
+    // Cancel any in-progress close animation so a new fire() is never hidden by the old timer
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+    modal.classList.remove('cpop-hidden', 'cpop-closing');
 
     if (opts.loading) {
       iconEl.className = 'cpop-icon';

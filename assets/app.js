@@ -302,7 +302,7 @@ const AttendanceSystem = (function() {
             fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
             dashArray: '6 4'
           }).addTo(map);
-          zone.bindPopup(initHtml, { className: 'siomac-popup', maxWidth: 260, minWidth: 220 });
+          zone.bindPopup(initHtml, { className: 'siomac-popup', maxWidth: 260, minWidth: 220, offset: L.point(160, 0) });
           zone.on('click', () => _selectLiveSite(site.id, site.name));
           zone._siteId = site.id;
           attendanceZones.push(zone);
@@ -319,6 +319,7 @@ const AttendanceSystem = (function() {
           buildingMarker.bindPopup(initHtml, {
             className: 'siomac-popup',
             maxWidth: 260, minWidth: 220,
+            offset: L.point(160, 0),
             autoPan: false
           });
           buildingMarker.on('click', () => _selectLiveSite(site.id, site.name));
@@ -340,6 +341,9 @@ const AttendanceSystem = (function() {
 
         // Rebuild marker objects from any already-fetched data (not added to map — on-demand only)
         if (liveData && liveData.length) plotLiveEmployees(liveData);
+
+        // Populate the site filter dropdown now that _siteLayerMap is ready
+        _populateSiteSelect();
 
         // Apply live-data colours to pins immediately (green if active employees on site)
         _refreshSitePopups();
@@ -418,19 +422,34 @@ const AttendanceSystem = (function() {
     _selectedSiteId = siteId;
     // Hide any visible employee marker when switching sites
     _hideActiveEmpMarker();
-    const bar    = document.getElementById('lmSelectedSiteBar');
-    const nameEl = document.getElementById('lmSelectedSiteName');
-    if (bar)    bar.style.display = 'flex';
-    if (nameEl) nameEl.textContent = siteName;
+    // Sync dropdown
+    const sel = document.getElementById('lmSiteSelect');
+    if (sel) sel.value = siteId;
     renderLivePanel(liveData);
   }
 
   function _clearLiveSite() {
     _selectedSiteId = '';
     _hideActiveEmpMarker();
-    const bar = document.getElementById('lmSelectedSiteBar');
-    if (bar) bar.style.display = 'none';
+    const sel = document.getElementById('lmSiteSelect');
+    if (sel) sel.value = '';
     renderLivePanel(liveData);
+  }
+
+  function _populateSiteSelect() {
+    const sel = document.getElementById('lmSiteSelect');
+    if (!sel) return;
+    const current = sel.value;
+    // Rebuild options: placeholder first, no "All Sites"
+    sel.innerHTML = '<option value="">— Select a project site —</option>';
+    Object.values(_siteLayerMap).forEach(({ site }) => {
+      const opt = document.createElement('option');
+      opt.value = site.id;
+      opt.textContent = site.name;
+      sel.appendChild(opt);
+    });
+    // Restore previous selection if still valid
+    if (current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
   }
 
   function _hideActiveEmpMarker() {
@@ -550,10 +569,10 @@ const AttendanceSystem = (function() {
             <div class="lm-popup-site-info">
               <div class="lm-popup-site-name">${row.siteName ? row.siteName : 'On Site'}</div>
               ${row.distanceM != null ? `<div class="lm-popup-site-dist"><i class="fas fa-ruler-horizontal"></i> ${row.distanceM}m from site</div>` : ''}
+              <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};margin-top:6px;display:inline-flex;">
+                <i class="fas ${statusIcon}"></i> ${statusLabel}
+              </span>
             </div>
-            <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};">
-              <i class="fas ${statusIcon}"></i> ${statusLabel}
-            </span>
           </div>
 
           <!-- Employee row -->
@@ -589,7 +608,7 @@ const AttendanceSystem = (function() {
             <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
           </div>
         </div>
-      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: false });
+      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', offset: L.point(180, 0), autoPan: false });
       marker._liveUserId = row.userId; // for sidebar click → marker show
       liveMarkers.push(marker);
       // Markers are NOT added to the map here — they only appear when
@@ -996,20 +1015,28 @@ const AttendanceSystem = (function() {
   const _badgeLastCount = new WeakMap();
 
   // Set a header badge value — animation only fires when count genuinely changes
-  function _setHdrBadge(badge, count) {
+  // Pass dot=true to show a plain dot with no number (employee msg badge)
+  function _setHdrBadge(badge, count, dot) {
     if (!badge) return;
-    const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
-    const prev  = _badgeLastCount.get(badge);
+    const prev = _badgeLastCount.get(badge);
     if (prev === count) return; // nothing changed — skip entirely
     _badgeLastCount.set(badge, count);
 
+    if (dot) {
+      // Dot mode: no number, just show/hide — never animate after first appearance
+      badge.textContent = '';
+      badge.style.display = count > 0 ? '' : 'none';
+      return;
+    }
+
+    const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
     badge.textContent = label;
     badge.style.display = count > 0 ? '' : 'none';
 
-    // Animate only when badge goes from hidden→visible or count increases
-    if (count > 0 && (prev === undefined || prev === 0 || count > prev)) {
+    // Animate only when badge goes from hidden→visible (0→N), never on N→M
+    if (count > 0 && (prev === undefined || prev === 0)) {
       badge.style.animation = 'none';
-      badge.offsetWidth; // reflow to restart
+      badge.offsetWidth; // reflow
       badge.style.animation = '';
     }
   }
@@ -1199,8 +1226,8 @@ const AttendanceSystem = (function() {
           closeAll();
           if (!isOpen) {
             m.classList.add('open'); b.classList.add('active');
-            // When ticket modal opens, always show the list view
-            if (btn === 'hdrTicketBtn' && typeof window._startTicketSystem === 'function') {
+            // When ticket modal opens, reset state + speed up polling
+            if (btn === 'hdrTicketBtn') {
               setTimeout(() => {
                 const tl = document.getElementById('ticketList');
                 if (tl) tl.style.display = '';
@@ -1210,11 +1237,14 @@ const AttendanceSystem = (function() {
                 if (td) td.style.display = 'none';
                 const tc = document.getElementById('ticketComposePane');
                 if (tc) tc.style.display = 'none';
+                if (typeof window._clearTicketDetail  === 'function') window._clearTicketDetail();
+                if (typeof window._ticketModalOpened  === 'function') window._ticketModalOpened();
               }, 0);
             }
-            // When notification modal opens, refresh immediately so data is never stale
+            // When notification modal opens, refresh immediately + speed up polling
             if (btn === 'hdrNotifBtn') {
-              if (typeof window._fetchNotifs === 'function') window._fetchNotifs();
+              if (typeof window._fetchNotifs      === 'function') window._fetchNotifs();
+              if (typeof window._notifModalOpened === 'function') window._notifModalOpened();
             }
             // When message modal opens, always show the list view (reset any open detail/compose)
             if (btn === 'hdrMsgBtn') {
@@ -1227,8 +1257,10 @@ const AttendanceSystem = (function() {
                 if (md) md.style.display = 'none';
                 const mc = document.getElementById('msgComposePane');
                 if (mc) mc.style.display = 'none';
-                // Clear tracked detail so poll doesn't keep detail alive
-                if (typeof window._clearMsgDetail === 'function') window._clearMsgDetail();
+                // Clear tracked detail + composing state so poll renders list correctly
+                if (typeof window._clearMsgDetail  === 'function') window._clearMsgDetail();
+                // Speed up polling while modal is open
+                if (typeof window._msgModalOpened  === 'function') window._msgModalOpened();
               }, 0);
             }
           }
@@ -1236,8 +1268,16 @@ const AttendanceSystem = (function() {
       });
       // Close on X button or clicking outside the icon group / modal
       document.addEventListener('click', (e) => {
-        if (e.target.closest('.hdr-modal-close')) { closeAll(); return; }
-        if (!e.target.closest('.hdr-icon-group') && !e.target.closest('.hdr-modal')) closeAll();
+        const openModal = pairs.find(p => document.getElementById(p.modal)?.classList.contains('active'));
+        if (e.target.closest('.hdr-modal-close')) { closeAll(); }
+        else if (!e.target.closest('.hdr-icon-group') && !e.target.closest('.hdr-modal')) closeAll();
+        else return;
+        // Slow polling back down for whichever modal was open
+        if (openModal) {
+          if (openModal.btn === 'hdrMsgBtn'    && typeof window._msgModalClosed    === 'function') window._msgModalClosed();
+          if (openModal.btn === 'hdrTicketBtn' && typeof window._ticketModalClosed === 'function') window._ticketModalClosed();
+          if (openModal.btn === 'hdrNotifBtn'  && typeof window._notifModalClosed  === 'function') window._notifModalClosed();
+        }
       });
     })();
 
@@ -1550,7 +1590,9 @@ const AttendanceSystem = (function() {
       window._startNotifPolling  = _startPolling;
       window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; try { localStorage.removeItem(CLEARED_KEY); } catch {} const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
       window._renderNotifs       = _render;
-      window._fetchNotifs        = _fetch; // called by Realtime on instant push
+      window._fetchNotifs        = _fetch;
+      window._notifModalOpened   = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); };
+      window._notifModalClosed   = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 5 * 1000); };
       window._clearMapBadge      = () => {
         _saveMapLastVisited(Date.now());
         ['#sidebarMenu', '#topTabs'].forEach(sel => {
@@ -1568,20 +1610,22 @@ const AttendanceSystem = (function() {
 
     // ── Messages system ──────────────────────────────────────────────────────
     (function () {
-      let _msgs      = [];
-      let _empList   = [];   // for admin compose: list of employees to pick from
+      let _msgs         = [];
+      let _empList      = [];
       let _currentMsgId = null;
-      let _composing    = false;  // true while new-message compose pane is open
+      let _composing    = false;
       let _pollTimer    = null;
+      let _modalOpen    = false;
+      // IDs we've locally marked as read — applied on top of every fetch so
+      // a poll arriving before the DB write completes doesn't flip back to unread
+      const _readPending = new Set();
 
-      // Client-side photo URL cache — prevents photo re-requests when server rotates signed URLs
       const _photoCache = {};
       function _resolvePhoto(username, photoUrl) {
         if (!username) return photoUrl || '';
         if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
         return _photoCache[username] || photoUrl || '';
       }
-
       function _timeAgoShort(iso) {
         if (!iso) return '';
         const d = new Date(iso); if (isNaN(d)) return '';
@@ -1590,6 +1634,11 @@ const AttendanceSystem = (function() {
         if (s < 3600) return Math.floor(s / 60) + 'm ago';
         if (s < 86400) return Math.floor(s / 3600) + 'h ago';
         return Math.floor(s / 86400) + 'd ago';
+      }
+      function _fmtTimestamp(iso) {
+        if (!iso) return '';
+        const d = new Date(iso); if (isNaN(d)) return '';
+        return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
       }
       function _initials(name) {
         return (name || '?').trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -1638,21 +1687,11 @@ const AttendanceSystem = (function() {
         document.getElementById('msgComposeSubject').focus();
       }
 
-      // Latest activity timestamp for a message (most recent reply, or original)
       function _msgLatest(m) {
-        if (m.replies && m.replies.length) {
-          return m.replies[m.replies.length - 1].createdAt || m.createdAt;
-        }
-        return m.createdAt;
+        return m.latestAt || (m.replies && m.replies.length ? m.replies[m.replies.length - 1].createdAt : m.createdAt);
       }
-
-      // Sort msgs by latest activity descending (most recent thread first)
       function _sortMsgs() {
-        _msgs.sort((a, b) => {
-          const ta = new Date(_msgLatest(a)).getTime() || 0;
-          const tb = new Date(_msgLatest(b)).getTime() || 0;
-          return tb - ta;
-        });
+        _msgs.sort((a, b) => (new Date(_msgLatest(b)).getTime() || 0) - (new Date(_msgLatest(a)).getTime() || 0));
       }
 
       function _msgRowHtml(m) {
@@ -1668,33 +1707,37 @@ const AttendanceSystem = (function() {
           ? (lastReply.fromUsername === currentUser ? 'You' : lastReply.fromName)
           : (isSentByMe ? 'You' : m.fromName);
         const isDeleted   = !!m.otherPartyDeleted;
+        const hasUnread   = m.isUnread && !isDeleted;
+        const hasNewReply = !m.isUnread && (m.unreadReplyCount > 0) && !isDeleted;
+        const hasIndicator = hasUnread || hasNewReply;
         const avatarHtml  = otherPhoto
           ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);${isDeleted ? 'filter:grayscale(1);opacity:.5;' : ''}">`
           : `<div class="hdr-msg-avatar" style="${isDeleted ? 'background:#aaa;color:#fff;' : (isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : '')}">${escapeHtml(initials)}</div>`;
-        const unreadDot   = m.isUnread && !isDeleted ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;margin-top:6px;display:inline-block;"></span>` : '';
-        const borderStyle = m.isUnread && !isDeleted ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
         const removedBadge = isDeleted ? `<span style="font-size:0.65rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 6px;white-space:nowrap;flex-shrink:0;">Removed</span>` : '';
+        const indicator = !hasIndicator ? '' : hasNewReply
+          ? `<span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;align-self:center;background:rgba(228,12,12,0.09);border:1.5px solid rgba(228,12,12,0.22);border-radius:20px;padding:2px 7px 2px 5px;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;"></span><span style="font-size:0.65rem;font-weight:700;color:var(--siomac-red);">New reply</span></span>`
+          : `<span style="width:9px;height:9px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;align-self:center;box-shadow:0 0 0 2px rgba(228,12,12,0.18);"></span>`;
         const listDeleteBtn = _isAdmin()
           ? `<button data-delete-msg-id="${escapeHtml(String(m.id))}" title="Delete conversation" style="border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:4px 6px;border-radius:6px;opacity:.6;transition:opacity .15s;flex-shrink:0;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.6'"><i class="fas fa-trash-alt"></i></button>`
           : '';
-        return `<div class="hdr-msg-item${m.isUnread && !isDeleted ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}${isDeleted ? 'opacity:.6;' : ''}">
+        const borderStyle = hasIndicator ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+        return `<div class="hdr-msg-item${hasIndicator ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}${isDeleted ? 'opacity:.6;' : ''}">
           ${avatarHtml}
           <div class="hdr-msg-text" style="flex:1;min-width:0;">
             <div class="hdr-msg-name" style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-              <span style="font-weight:${m.isUnread && !isDeleted ? '700' : '600'};color:${m.isUnread && !isDeleted ? 'var(--text-primary)' : 'var(--text-muted)'};${isDeleted ? 'text-decoration:line-through;' : ''}">${escapeHtml(otherName)}</span>
+              <span style="font-weight:${hasIndicator ? '700' : '600'};color:${hasIndicator ? 'var(--text-primary)' : 'var(--text-muted)'};${isDeleted ? 'text-decoration:line-through;' : ''}">${escapeHtml(otherName)}</span>
               <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">${removedBadge}<span class="hdr-msg-time" style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;">${_timeAgoShort(latestTime)}</span></div>
             </div>
-            <div style="font-size:0.78rem;font-weight:${m.isUnread && !isDeleted ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
-            <div class="hdr-msg-preview" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:var(--text-muted);font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody)}</div>
+            <div style="font-size:0.78rem;font-weight:${hasIndicator ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
+            <div class="hdr-msg-preview" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody)}</div>
           </div>
-          ${unreadDot}
+          ${indicator}
           ${listDeleteBtn}
         </div>`;
       }
 
-      // Row-level key: what must change to require a DOM update
       function _msgRowKey(m) {
-        return m.isUnread + '|' + m.replies.length + '|' + _msgLatest(m);
+        return `${m.isUnread}|${m.unreadReplyCount}|${m.replies.length}|${_msgLatest(m)}`;
       }
 
       function _renderList() {
@@ -1751,13 +1794,6 @@ const AttendanceSystem = (function() {
         });
       }
 
-      function _fmtTimestamp(iso) {
-        if (!iso) return '';
-        const d = new Date(iso);
-        if (isNaN(d)) return '';
-        return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      }
-
       function _bubble(isMe, senderName, body, time, photoUrl) {
         const name     = senderName || (isMe ? currentFullName || currentUser || 'You' : '?');
         const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -1780,12 +1816,11 @@ const AttendanceSystem = (function() {
         const m = _msgs.find(x => String(x.id) === String(msgId));
         if (!m) return;
         _currentMsgId = msgId;
-        document.getElementById('msgList').style.display       = 'none';
-        document.getElementById('msgComposePane').style.display= 'none';
-        document.getElementById('msgModalFoot').style.display  = 'none';
-        document.getElementById('msgDetailPane').style.display = 'flex';
+        document.getElementById('msgList').style.display        = 'none';
+        document.getElementById('msgComposePane').style.display = 'none';
+        document.getElementById('msgModalFoot').style.display   = 'none';
+        document.getElementById('msgDetailPane').style.display  = 'flex';
 
-        // Subject header
         const otherName    = m.fromUsername === currentUser ? m.toName : m.fromName;
         const isDeleted    = !!m.otherPartyDeleted;
         const deletedBadge = isDeleted ? `<span style="font-size:0.65rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 7px;">Employee Removed</span>` : '';
@@ -1802,107 +1837,96 @@ const AttendanceSystem = (function() {
           </div>
         </div>`;
 
-        // Each bubble uses the actual sender's photo — no swapping
         const isMeFirst = m.fromUsername === currentUser;
         const thread = `<div data-bubble-id="orig_${m.id}">${_bubble(isMeFirst, m.fromName, m.body, m.createdAt, m.fromPhoto)}</div>`
-          + (m.replies || []).map(r => {
-            const rIsMe = r.fromUsername === currentUser;
-            return `<div data-bubble-id="reply_${r.id}">${_bubble(rIsMe, r.fromName, r.body, r.createdAt, r.fromPhoto)}</div>`;
-          }).join('');
+          + (m.replies || []).map(r => `<div data-bubble-id="reply_${r.id}">${_bubble(r.fromUsername === currentUser, r.fromName, r.body, r.createdAt, r.fromPhoto)}</div>`).join('');
 
         document.getElementById('msgDetailBody').innerHTML = header
           + `<div data-msg-thread style="padding:14px 16px;display:flex;flex-direction:column;">${thread}</div>`;
 
-        // Scroll to bottom of thread
-        const body = document.getElementById('msgDetailBody');
-        body.scrollTop = body.scrollHeight;
+        const bodyEl = document.getElementById('msgDetailBody');
+        bodyEl.scrollTop = bodyEl.scrollHeight;
 
-        // Disable reply input if the other participant no longer exists
         const replyInput   = document.getElementById('msgReplyInput');
         const replySendBtn = document.getElementById('msgReplySendBtn');
         if (replyInput && replySendBtn) {
-          if (isDeleted) {
-            replyInput.disabled    = true;
-            replyInput.placeholder = 'This employee has been removed — replies are disabled.';
-            replyInput.style.background = 'var(--bg-subtle,#f8fafe)';
-            replyInput.style.color      = 'var(--text-muted)';
-            replySendBtn.disabled  = true;
-            replySendBtn.style.opacity  = '0.4';
-          } else {
-            replyInput.disabled    = false;
-            replyInput.placeholder = 'Write your reply…';
-            replyInput.style.background = '';
-            replyInput.style.color      = '';
-            replySendBtn.disabled  = false;
-            replySendBtn.style.opacity  = '';
-          }
+          replyInput.disabled    = isDeleted;
+          replyInput.placeholder = isDeleted ? 'This employee has been removed — replies are disabled.' : 'Write your reply…';
+          replyInput.style.background = isDeleted ? 'var(--bg-subtle,#f8fafe)' : '';
+          replyInput.style.color      = isDeleted ? 'var(--text-muted)' : '';
+          replySendBtn.disabled  = isDeleted;
+          replySendBtn.style.opacity  = isDeleted ? '0.4' : '';
         }
 
-        // Mark as read for the recipient
-        if (m.isUnread && !isDeleted) {
-          api('markMessageRead', { messageId: msgId }).then(() => { m.isUnread = false; _renderList(); _updateMsgBadge(); }).catch(() => {});
+        // Mark as read immediately — fires for both admin and employee
+        if ((m.isUnread || m.unreadReplyCount > 0) && !isDeleted) {
+          m.isUnread = false; m.unreadReplyCount = 0;
+          _readPending.add(String(msgId)); // guard against poll overwriting before DB confirms
+          _renderList(); _updateMsgBadge();
+          api('markMessageRead', { messageId: msgId }).catch(() => {});
         }
       }
 
       function _updateMsgBadge() {
-        // Set badge immediately from local unread count — no round-trip needed
-        const unread = _msgs.filter(m => m.isUnread).length;
-        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
-        // Also schedule a full header sync so other badges stay in sync
+        const unread = _msgs.filter(m => m.isUnread || m.unreadReplyCount > 0).length;
+        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread, currentRole === 'employee');
         _scheduleHdrBadgeSync();
       }
 
-      // Silent update while detail is open — only appends new reply bubbles,
-      // never rewrites existing content so photos and scroll position are preserved
       function _updateDetail(msgId) {
         const m = _msgs.find(x => String(x.id) === String(msgId));
         if (!m) return;
-        const body = document.getElementById('msgDetailBody');
-        if (!body) return;
+        const bodyEl = document.getElementById('msgDetailBody');
+        if (!bodyEl) return;
+        const threadEl = bodyEl.querySelector('[data-msg-thread]');
+        if (!threadEl) { _showDetail(msgId); return; }
 
-        // All messages in thread: original + replies, each with its own fromPhoto
         const allMessages = [
           { id: 'orig_' + m.id, fromUsername: m.fromUsername, fromName: m.fromName, body: m.body, createdAt: m.createdAt, fromPhoto: m.fromPhoto }
         ].concat((m.replies || []).map(r => ({ id: 'reply_' + r.id, fromUsername: r.fromUsername, fromName: r.fromName, body: r.body, createdAt: r.createdAt, fromPhoto: r.fromPhoto })));
 
-        const threadEl = body.querySelector('[data-msg-thread]');
-        if (!threadEl) {
-          // First time opening — full render via _showDetail
-          _showDetail(msgId);
-          return;
-        }
+        // Replace optimistic tmp bubbles once real data arrives
+        const realReplyIds = new Set(allMessages.filter(x => x.id.startsWith('reply_') && !x.id.includes('tmp_')).map(x => x.id));
+        if (realReplyIds.size > 0) threadEl.querySelectorAll('[data-bubble-id^="reply_tmp_"]').forEach(el => el.remove());
 
-        // Build a Set of real (non-tmp) reply IDs coming from server
-        const realReplyIds = new Set(
-          allMessages.filter(msg => msg.id.startsWith('reply_') && !msg.id.includes('tmp_')).map(msg => msg.id)
-        );
-
-        // Remove any tmp bubbles that now have a real counterpart (same position in replies array)
-        // Strategy: remove ALL tmp_* bubbles when at least one real reply exists
-        if (realReplyIds.size > 0) {
-          threadEl.querySelectorAll('[data-bubble-id^="reply_tmp_"]').forEach(el => el.remove());
-        }
-
-        // Append only messages not yet in the DOM
         const existingIds = new Set([...threadEl.querySelectorAll('[data-bubble-id]')].map(el => el.dataset.bubbleId));
-        let appended = false;
+        let appended = false, newFromOther = false;
         allMessages.forEach(msg => {
           if (existingIds.has(String(msg.id))) return;
           const isMe = msg.fromUsername === currentUser;
+          if (!isMe) newFromOther = true;
           const tmp = document.createElement('div');
           tmp.innerHTML = `<div data-bubble-id="${msg.id}">${_bubble(isMe, msg.fromName, msg.body, msg.createdAt, msg.fromPhoto)}</div>`;
           threadEl.appendChild(tmp.firstElementChild);
           appended = true;
         });
 
-        if (appended) body.scrollTop = body.scrollHeight;
+        if (appended) {
+          bodyEl.scrollTop = bodyEl.scrollHeight;
+          if (newFromOther) {
+            // Pulse header button
+            const msgBtn = document.getElementById('hdrMsgBtn');
+            if (msgBtn) { msgBtn.classList.remove('msg-new-reply-pulse'); void msgBtn.offsetWidth; msgBtn.classList.add('msg-new-reply-pulse'); setTimeout(() => msgBtn.classList.remove('msg-new-reply-pulse'), 1400); }
+            // In-thread toast
+            const existing = document.getElementById('msgNewReplyToast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.id = 'msgNewReplyToast';
+            toast.innerHTML = '<i class="fas fa-comment-dots"></i> New reply received';
+            bodyEl.parentElement.insertBefore(toast, bodyEl);
+            setTimeout(() => { toast.classList.add('msg-reply-toast-hide'); setTimeout(() => toast.remove(), 400); }, 3000);
+            // Auto-mark as read since thread is open
+            m.isUnread = false; m.unreadReplyCount = 0;
+            _readPending.add(String(msgId));
+            _updateMsgBadge();
+            api('markMessageRead', { messageId: msgId }).catch(() => {});
+          }
+        }
       }
 
-      function _fetch(keepDetail) {
-        // Always bypass SWR cache — we need fresh data (replies must appear instantly)
+      function _fetch() {
         _rawApi('getMessages', {}).then(res => {
           if (!res || !res.success) return;
-          // Normalize photos through client-side cache so signed URLs never change mid-session
           const raw = res.data || [];
           raw.forEach(m => {
             m.fromPhoto = _resolvePhoto(m.fromUsername, m.fromPhoto);
@@ -1910,9 +1934,22 @@ const AttendanceSystem = (function() {
             (m.replies || []).forEach(r => { r.fromPhoto = _resolvePhoto(r.fromUsername, r.fromPhoto); });
           });
           _msgs = raw;
-          _sortMsgs(); // ensure newest-activity thread is always first
+          // Apply local read overrides — prevents a poll arriving before the DB write
+          // completes from flipping a thread back to unread
+          _readPending.forEach(id => {
+            const m = _msgs.find(x => String(x.id) === id);
+            if (m) {
+              if (!m.isUnread && m.unreadReplyCount === 0) {
+                _readPending.delete(id); // server confirmed — safe to remove override
+              } else {
+                m.isUnread = false; m.unreadReplyCount = 0;
+              }
+            } else {
+              _readPending.delete(id); // thread gone
+            }
+          });
+          _sortMsgs();
           _updateMsgBadge();
-          // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentMsgId) {
             _updateDetail(_currentMsgId);
           } else if (!_composing) {
@@ -1926,13 +1963,12 @@ const AttendanceSystem = (function() {
         document.getElementById('msgModalTitle').textContent       = isAdmin ? 'Messages' : 'My Messages';
         document.getElementById('msgComposeBtnLabel').textContent  = 'New Message';
         document.getElementById('msgMarkAllReadBtn').style.display = isAdmin ? '' : 'none';
-        // Pre-load employee list for admin compose dropdown
         if (isAdmin) {
           api('getEmployeesForMsg', {}).then(res => { _empList = (res && res.data) || []; }).catch(() => {});
         }
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 10 * 1000); // 10s fallback; Realtime covers instant
+        _pollTimer = setInterval(_fetch, 5 * 1000); // 5s always — Realtime is primary, poll is safety net
       }
 
       // New Message button (both roles)
@@ -1966,9 +2002,8 @@ const AttendanceSystem = (function() {
           });
           _showList();
           _renderList();
-          // Confirm with server after short delay to get proper IDs + photos
-          setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 800);
-          showPopup('success', 'Sent!', `Your message has been sent.`);
+          _fetch(); // immediate fetch to get real server IDs
+          showPopup('success', 'Sent!', 'Your message has been sent.');
         }).catch(() => { document.getElementById('msgSendBtn').disabled = false; showPopup('error', 'Failed', 'Could not send message. Please try again.'); });
       });
 
@@ -1999,8 +2034,8 @@ const AttendanceSystem = (function() {
         api('replyMessage', { messageId: _currentMsgId, body }).then(res => {
           btn.disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-          // Confirm with server to replace tmp IDs with real ones
-          setTimeout(() => _fetch(), 800);
+          // Fetch immediately to replace tmp bubbles with real data and update badge
+          _fetch();
         }).catch(() => { btn.disabled = false; });
       });
 
@@ -2043,16 +2078,13 @@ const AttendanceSystem = (function() {
         });
       });
 
-      window._applyMsgData = (res) => {
-        if (!res || !res.success) return;
-        _msgs = res.data || [];
-        _updateMsgBadge();
-        _renderList();
-      };
       window._startMsgSystem  = _start;
-      window._stopMsgSystem   = () => clearInterval(_pollTimer);
-      window._fetchMsgs       = () => _fetch(!!_currentMsgId); // keep detail open if viewing one
-      window._clearMsgDetail  = () => { _currentMsgId = null; }; // called when modal re-opens
+      window._stopMsgSystem   = () => { clearInterval(_pollTimer); _msgs = []; _currentMsgId = null; _composing = false; _readPending.clear(); };
+      window._fetchMsgs       = _fetch;
+      window._clearMsgDetail  = () => { _currentMsgId = null; _composing = false; };
+      // Modal open: fetch immediately + tighten poll to 3s; modal closed: relax to 5s
+      window._msgModalOpened  = () => { _clearMsgDetail && _clearMsgDetail(); _fetch(); clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); _modalOpen = true; };
+      window._msgModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 5 * 1000); _modalOpen = false; };
     })();
 
     // ── Support Tickets system ───────────────────────────────────────────────
@@ -2490,9 +2522,12 @@ const AttendanceSystem = (function() {
         _showList();
         _renderList();
       };
-      window._startTicketSystem = _start;
-      window._stopTicketSystem  = () => clearInterval(_pollTimer);
-      window._fetchTickets      = () => _fetch(!!_currentTicketId); // keep detail open if viewing one
+      window._startTicketSystem  = _start;
+      window._stopTicketSystem   = () => clearInterval(_pollTimer);
+      window._fetchTickets       = () => _fetch(!!_currentTicketId);
+      window._clearTicketDetail  = () => { _currentTicketId = null; _composing = false; };
+      window._ticketModalOpened  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); };
+      window._ticketModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 10 * 1000); };
     })();
 
     // ── Profile icon button → go to profile section ──
@@ -2808,6 +2843,16 @@ const AttendanceSystem = (function() {
 
     // Attendance month/year selects — reload from API
     document.addEventListener('change', function(event) {
+      // Live map: site filter dropdown
+      if (event.target.matches('#lmSiteSelect')) {
+        const val = event.target.value;
+        if (val) {
+          const entry = _siteLayerMap[val];
+          _selectLiveSite(val, entry ? entry.site.name : val);
+        } else {
+          _clearLiveSite();
+        }
+      }
       if (event.target.matches('#attendanceMonth') || event.target.matches('#attendanceYear')) {
         loadAttendanceData();
       }
@@ -2953,8 +2998,7 @@ const AttendanceSystem = (function() {
       // Live map: refresh button
       if (event.target.closest('#refreshLiveMapBtn')) loadLiveAttendance();
 
-      // Live map: clear site filter button
-      if (event.target.closest('#lmClearSiteBtn')) _clearLiveSite();
+      // Live map: site filter dropdown handled via change event (see below)
 
       // Live map: center map button — zooms to active employee marker if one is shown,
       // otherwise fits all site zones
@@ -3205,6 +3249,7 @@ const AttendanceSystem = (function() {
     currentRole     = result.role;
     currentColorScheme = result.colorScheme || 'navy';
     applyPalette(currentColorScheme);
+    // Employee role: badges show as plain dots (no number)
     currentLayoutMode = result.layoutMode || 'sidebar';
     applyLayout(currentLayoutMode);
 
@@ -3376,6 +3421,8 @@ const AttendanceSystem = (function() {
     _currentProfileImage = null; // reset so next login fetches fresh from DB
     _mapViewSet = false;        // reset so map re-fits on next login's first visit
     _selectedSiteId = '';       // reset site filter
+    const _lmSelReset = document.getElementById('lmSiteSelect');
+    if (_lmSelReset) { _lmSelReset.innerHTML = '<option value="">— Select a project site —</option>'; _lmSelReset.value = ''; }
     _siteLayerMap = {};         // reset site layer refs
     _activeEmpMarker = null;    // reset active employee marker
     _resetLoadedState();        // reset so all sections show skeletons again on next login
@@ -3463,15 +3510,51 @@ const AttendanceSystem = (function() {
     }
   }
 
+  // Updates the camera modal location pill — shows distance to selected site when known
+  function _updateCmLocationDisplay(location) {
+    const locEl = document.getElementById('locationValidation');
+    if (!locEl) return;
+    const accuracy = location.fallback ? 'Approximate location' : `Accuracy: ${Math.round(location.accuracy)}m`;
+
+    // Try to compute distance to the currently selected site
+    const siteSelect = document.getElementById('cmSiteSelect');
+    const siteOpt = siteSelect && siteSelect.value ? siteSelect.options[siteSelect.selectedIndex] : null;
+    const siteLat  = siteOpt ? parseFloat(siteOpt.dataset.lat  || '') : NaN;
+    const siteLng  = siteOpt ? parseFloat(siteOpt.dataset.lng  || '') : NaN;
+    const siteRad  = siteOpt ? parseInt(siteOpt.dataset.radius || '200') : 200;
+
+    if (!location.fallback && siteOpt && !isNaN(siteLat) && !isNaN(siteLng)) {
+      const R = 6371000;
+      const toRad = d => d * Math.PI / 180;
+      const dLat = toRad(siteLat - location.latitude);
+      const dLng = toRad(siteLng - location.longitude);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(location.latitude)) * Math.cos(toRad(siteLat)) * Math.sin(dLng/2)**2;
+      const dist = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+      const gpsAcc = Math.round(location.accuracy || 0);
+      const allowedRadius = siteRad + gpsAcc;
+      const insideFence = dist <= allowedRadius;
+      locEl.className = 'cm-location ' + (insideFence ? 'cm-location--valid' : 'cm-location--warn');
+      const distLabel = dist < 1000 ? `${dist}m away` : `${(dist/1000).toFixed(1)}km away`;
+      const coordLabel = `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`;
+      locEl.innerHTML = `<i class="fas fa-${insideFence ? 'check-circle' : 'exclamation-triangle'} fa-fw"></i><span>${insideFence ? 'Within site · ' : 'Too far · '}${distLabel} · ${accuracy} · ${coordLabel}</span>`;
+    } else {
+      const coordLabel = (!location.fallback && location.latitude) ? ` · ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : '';
+      locEl.className = 'cm-location cm-location--valid';
+      locEl.innerHTML = `<i class="fas fa-check-circle fa-fw"></i><span>Location verified · ${accuracy}${coordLabel}</span>`;
+    }
+  }
+
   function openCameraModal(action) {
     currentAttendanceAction = action;
     capturedPhotoData = null;
     currentLocationData = null;
 
     // Reset to initial state
-    document.getElementById('captureBtn').classList.remove('d-none');
-    document.getElementById('retakeBtn').classList.add('d-none');
-    document.getElementById('confirmBtn').classList.add('d-none');
+    document.getElementById('captureBtn').style.display = '';
+    document.getElementById('captureBtn').disabled = false;
+    document.getElementById('retakeBtn').style.display = 'none';
+    document.getElementById('confirmBtn').style.display = 'none';
+    document.getElementById('confirmBtn').disabled = true;
     document.getElementById('capturedPhoto').classList.add('d-none');
     document.querySelector('.cm-camera-area').classList.remove('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
@@ -3491,13 +3574,15 @@ const AttendanceSystem = (function() {
     const siteStatus = document.getElementById('cmSiteStatus');
     if (isCheckIn) {
       siteWrap.style.display = '';
-      siteSelect.innerHTML = '<option value="">— Choose a site —</option>';
-      siteStatus.textContent = '';
+      siteSelect.innerHTML = '<option value="">— Choose a project site —</option>';
+      siteStatus.className = 'cm-site-status cm-site-status--required';
+      siteStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Required';
+      document.getElementById('captureBtn').disabled = true;
       document.getElementById('confirmBtn').disabled = true;
       // Populate from already-loaded projectSites, or fetch fresh
       const populate = (sites) => {
         siteSelect.innerHTML = '<option value="">— Choose a site —</option>'
-          + sites.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('');
+          + sites.map(s => `<option value="${escapeHtml(s.id)}" data-lat="${Number(s.latitude)||''}" data-lng="${Number(s.longitude)||''}" data-radius="${Number(s.radius)||200}">${escapeHtml(s.name)}</option>`).join('');
       };
       if (projectSites && projectSites.length) {
         populate(projectSites);
@@ -3518,14 +3603,13 @@ const AttendanceSystem = (function() {
 
     getCurrentLocation().then(location => {
       currentLocationData = location;
-      const accuracy = location.fallback ? 'Approximate location' : `Accuracy: ${Math.round(location.accuracy)}m`;
-      locEl.className = 'cm-location cm-location--valid';
-      locEl.innerHTML = `<i class="fas fa-check-circle fa-fw"></i><span>Location verified · ${accuracy}</span>`;
+      _updateCmLocationDisplay(location);
       // For check-in, confirm stays disabled until a site is selected
       if (!isCheckIn) document.getElementById('confirmBtn').disabled = false;
     }).catch(() => {
-      locEl.className = 'cm-location cm-location--valid';
-      locEl.innerHTML = '<i class="fas fa-check-circle fa-fw"></i><span>Location available</span>';
+      const locEl2 = document.getElementById('locationValidation');
+      locEl2.className = 'cm-location cm-location--valid';
+      locEl2.innerHTML = '<i class="fas fa-check-circle fa-fw"></i><span>Location available</span>';
       if (!isCheckIn) document.getElementById('confirmBtn').disabled = false;
     });
 
@@ -3534,17 +3618,25 @@ const AttendanceSystem = (function() {
     cameraModal.show();
   }
 
-  // Site select change handler — enable confirm only when a site is chosen
+  // Site select change handler — enable/disable capture+confirm based on selection
   document.getElementById('cmSiteSelect').addEventListener('change', function () {
+    const captureBtn = document.getElementById('captureBtn');
     const confirmBtn = document.getElementById('confirmBtn');
     const siteStatus = document.getElementById('cmSiteStatus');
     if (this.value) {
-      confirmBtn.disabled = false;
-      siteStatus.innerHTML = `<span style="color:green;"><i class="fas fa-check-circle"></i> ${escapeHtml(this.options[this.selectedIndex].text)} selected</span>`;
+      captureBtn.disabled = false;
+      // confirmBtn only enabled after photo is taken — but if photo already taken, enable now
+      if (capturedPhotoData) confirmBtn.disabled = false;
+      siteStatus.className = 'cm-site-status cm-site-status--ok';
+      siteStatus.innerHTML = `<i class="fas fa-check-circle"></i> ${escapeHtml(this.options[this.selectedIndex].text)}`;
     } else {
+      captureBtn.disabled = true;
       confirmBtn.disabled = true;
-      siteStatus.textContent = '';
+      siteStatus.className = 'cm-site-status cm-site-status--required';
+      siteStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Required';
     }
+    // Refresh distance display whenever site selection changes
+    if (currentLocationData) _updateCmLocationDisplay(currentLocationData);
   });
 
   function startCamera() {
@@ -3605,25 +3697,57 @@ const AttendanceSystem = (function() {
     }
 
     photoPreview.src = capturedPhotoData;
-    document.getElementById('captureBtn').classList.add('d-none');
-    document.getElementById('retakeBtn').classList.remove('d-none');
-    document.getElementById('confirmBtn').classList.remove('d-none');
+    document.getElementById('captureBtn').style.display = 'none';
+
+    const retakeBtn  = document.getElementById('retakeBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    // Animate retake button in
+    retakeBtn.style.display = '';
+    retakeBtn.classList.remove('cm-btn--animate', 'cm-btn--animate-delay');
+    void retakeBtn.offsetWidth;
+    retakeBtn.classList.add('cm-btn--animate');
+
+    // Animate confirm button in with a slight delay
+    confirmBtn.style.display = '';
+    confirmBtn.classList.remove('cm-btn--animate', 'cm-btn--animate-delay');
+    void confirmBtn.offsetWidth;
+    confirmBtn.classList.add('cm-btn--animate-delay');
+
+    // For check-in: confirm only enabled if site already selected
+    if (currentAttendanceAction === 'CheckIn') {
+      const siteVal = (document.getElementById('cmSiteSelect') || {}).value || '';
+      confirmBtn.disabled = !siteVal;
+    } else {
+      confirmBtn.disabled = false;
+    }
     document.getElementById('capturedPhoto').classList.remove('d-none');
     document.querySelector('.cm-camera-area').classList.add('d-none');
     document.getElementById('cameraPreview').classList.add('d-none');
-    // Update title to "Verify Selfie"
     document.getElementById('cameraModalTitle').innerHTML = '<i class="fas fa-check-circle"></i> Verify Selfie';
     stopCamera();
   }
 
   function retakePhoto() {
-    document.getElementById('captureBtn').classList.remove('d-none');
-    document.getElementById('retakeBtn').classList.add('d-none');
-    document.getElementById('confirmBtn').classList.add('d-none');
+    capturedPhotoData = null;
+    document.getElementById('captureBtn').style.display = '';
+    // For check-in keep capture disabled if no site selected
+    if (currentAttendanceAction === 'CheckIn') {
+      const siteVal = (document.getElementById('cmSiteSelect') || {}).value || '';
+      document.getElementById('captureBtn').disabled = !siteVal;
+    } else {
+      document.getElementById('captureBtn').disabled = false;
+    }
+    const _rb = document.getElementById('retakeBtn');
+    const _cb = document.getElementById('confirmBtn');
+    _rb.style.display = 'none';
+    _rb.classList.remove('cm-btn--animate', 'cm-btn--animate-delay');
+    _cb.style.display = 'none';
+    _cb.classList.remove('cm-btn--animate', 'cm-btn--animate-delay');
+    _cb.disabled = true;
     document.getElementById('capturedPhoto').classList.add('d-none');
     document.querySelector('.cm-camera-area').classList.remove('d-none');
     document.getElementById('cameraPreview').classList.remove('d-none');
-    capturedPhotoData = null;
     const action = currentAttendanceAction;
     document.getElementById('cameraModalTitle').innerHTML = `<i class="fas fa-camera"></i> ${action === 'CheckIn' ? 'Check In' : 'Check Out'} · Selfie Verification`;
     startCamera();
@@ -3637,12 +3761,6 @@ const AttendanceSystem = (function() {
 
     const siteSelect = document.getElementById('cmSiteSelect');
     const siteId = (currentAttendanceAction === 'CheckIn' && siteSelect) ? (siteSelect.value || '') : '';
-
-    // Guard: site required for check-in (belt-and-suspenders — button should already be disabled)
-    if (currentAttendanceAction === 'CheckIn' && !siteId) {
-      showPopup('error', 'Site Required', 'Please select a project site before checking in.');
-      return;
-    }
 
     // Guard: location required for check-in
     if (currentAttendanceAction === 'CheckIn' && !currentLocationData) {
@@ -3675,8 +3793,9 @@ const AttendanceSystem = (function() {
         ? ('Check In')
         : ('Check Out');
 
+      const timeDisplay = result.time ? fmtLocalTime(result.time) : '';
       showPopup('success', `${actionText} Successful!`,
-        `${'Recorded at'} ${result.time || ''}${result.site ? ' — ' + result.site : ''}`);
+        `${timeDisplay}${result.site ? ' · ' + result.site : ''}`);
 
       const cameraModal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
       if (cameraModal) cameraModal.hide();
@@ -3684,9 +3803,8 @@ const AttendanceSystem = (function() {
       checkStatus();
       if (currentAttendanceAction === 'CheckIn') loadChart();
     } else {
-      showPopup('error',
-        'Attendance Failed',
-        result.message || ('Unknown error occurred'));
+      // Show error without hiding the camera modal — Bootstrap teardown interferes with the popup
+      showPopup('error', 'Attendance Failed', result.message || 'Unknown error occurred');
     }
   }
 
@@ -4643,6 +4761,8 @@ const AttendanceSystem = (function() {
 
   function closeEditEmpModal() {
     document.getElementById('editEmployeeModal').classList.remove('active');
+    const pwField = document.getElementById('editEmpPassword');
+    if (pwField) pwField.value = '';
   }
 
   // ─── Employee Profile Drawer ───────────────────────────────────────────────
@@ -4878,8 +4998,8 @@ const AttendanceSystem = (function() {
       return;
     }
 
-    // Remove empty state if present
-    if (grid.querySelector('.emp-empty')) grid.innerHTML = '';
+    // Remove empty/loading states if present
+    if (grid.querySelector('.emp-empty, .emp-loading')) grid.innerHTML = '';
 
     // DOM diff
     const _empCardExisting = new Map();
@@ -5077,6 +5197,7 @@ const AttendanceSystem = (function() {
     const employeeNumber = (document.getElementById('editEmployeeNumber').value || '').trim().toUpperCase();
     const email          = document.getElementById('editEmail').value.trim();
     const phone          = readPhone('editPhone');
+    const newPassword    = (document.getElementById('editEmpPassword').value || '').trim();
 
     const ok = _validate([
       { id: 'editFullName',   label: 'Full Name',  rules: ['required'] },
@@ -5087,8 +5208,13 @@ const AttendanceSystem = (function() {
       { id: 'editPhone',      label: 'Phone',      rules: ['phone'] },
     ]);
     if (!ok) return;
+    if (newPassword && newPassword.length < 6) {
+      showPopup('error', 'Password Too Short', 'New password must be at least 6 characters.');
+      return;
+    }
     showSpinner('Updating employee...');
     const updateArgs = { username, fullName, department, position, role, status, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser };
+    if (newPassword) updateArgs.password = newPassword;
     if (_editEmpRemovePhoto) updateArgs.removeProfileImage = true;
     else if (_editEmpPhotoBase64) updateArgs.profileImageBase64 = _editEmpPhotoBase64;
     api('updateEmployee', updateArgs).then(res => {

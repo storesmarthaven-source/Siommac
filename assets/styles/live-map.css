@@ -120,8 +120,8 @@
 .lm-refresh-btn:hover { color: var(--siomac-navy); background: #e8edf5; border-color: var(--siomac-navy); }
 
 
-/* selected-site bar (appears between header and employee list when a site is active) */
-.lm-selected-site-bar {
+/* site filter bar — always visible between panel header and employee list */
+.lm-site-filter-bar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -130,34 +130,23 @@
   flex-shrink: 0;
   background: #eef3fb;
 }
-.lm-selected-site-name {
+.lm-site-select {
   flex: 1;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--siomac-navy);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.lm-clear-site-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--siomac-navy);
-  border: none;
-  cursor: pointer;
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
+  min-width: 0;
   font-family: inherit;
-  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--siomac-navy);
+  background: #fff;
+  border: 1.5px solid var(--border);
   border-radius: 20px;
-  flex-shrink: 0;
-  transition: background .15s, opacity .15s;
-  line-height: 1;
-  white-space: nowrap;
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
+  appearance: auto;
 }
-.lm-clear-site-btn:hover { background: var(--siomac-red); }
+.lm-site-select:focus { border-color: var(--siomac-navy); }
 
 /* employee list */
 .lm-employees-list {
@@ -262,8 +251,38 @@
   white-space: nowrap;
 }
 .leaflet-popup {
-  margin-bottom: 14px !important;
+  margin-bottom: 0 !important;
   filter: drop-shadow(0 8px 28px rgba(0,0,0,0.18));
+}
+
+/* ── Popup close button ── */
+.leaflet-popup-close-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 24px !important;
+  height: 24px !important;
+  background: rgba(255,255,255,0.18) !important;
+  border: 1.5px solid rgba(255,255,255,0.32) !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 22px !important;
+  text-align: center !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background .15s, border-color .15s !important;
+  z-index: 10 !important;
+  text-decoration: none !important;
+}
+.leaflet-popup-close-button:hover {
+  background: rgba(228,12,12,0.75) !important;
+  border-color: rgba(228,12,12,0.9) !important;
+  color: #fff !important;
 }
 
 /* ── Popup card ── */
@@ -281,16 +300,17 @@
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* bottom arrow */
+/* left arrow — points toward the pin which is to the left of the popup */
 .lm-popup-card::after {
   content: '';
   position: absolute;
-  bottom: -8px; left: 26px;
+  top: 50%; left: -8px;
   width: 16px; height: 16px;
-  background: #fff;
-  transform: rotate(45deg);
-  border-radius: 3px;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.07);
+  background: linear-gradient(135deg, var(--siomac-navy,#001f3f) 0%, #0D1E3A 100%);
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 2px;
+  box-shadow: -2px 2px 5px rgba(0,0,0,0.08);
+  pointer-events: none;
 }
 
 /* ── Site banner (building header) ── */
@@ -318,7 +338,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .lm-popup-site-dist {
-  font-size: 0.67rem; opacity: 0.72; margin-top: 2px;
+  font-size: 0.67rem; color: rgba(255,255,255,0.82); margin-top: 2px;
   display: flex; align-items: center; gap: 4px;
 }
 .lm-popup-status-pill {
