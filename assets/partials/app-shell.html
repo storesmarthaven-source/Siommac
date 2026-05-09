@@ -169,7 +169,7 @@
               <textarea id="msgReplyInput" rows="3" placeholder="Write your reply…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
               <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
                 <button class="hdr-foot-link" id="msgDetailBackBtn" style="color:var(--siomac-navy);"><i class="fas fa-arrow-left"></i> Back</button>
-                <button class="hdr-foot-link" id="msgReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
+                <button class="hdr-foot-link" id="msgReplySendBtn" style="color:var(--siomac-blue);opacity:0.4;" disabled><i class="fas fa-paper-plane"></i> Send Reply</button>
               </div>
             </div>
           </div>
@@ -183,9 +183,9 @@
             </div>
             <input id="msgComposeSubject" type="text" placeholder="Subject" maxlength="120" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;outline:none;">
             <textarea id="msgComposeBody" rows="4" placeholder="Write your message…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <div style="display:flex;gap:8px;justify-content:space-between;">
               <button class="hdr-foot-link" id="msgCancelComposeBtn"><i class="fas fa-times"></i> Cancel</button>
-              <button class="hdr-foot-link" id="msgSendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send</button>
+              <button class="hdr-foot-link" id="msgSendBtn" style="color:var(--siomac-blue);opacity:0.4;" disabled><i class="fas fa-paper-plane"></i> Send</button>
             </div>
           </div>
           <div class="hdr-modal-foot" id="msgModalFoot">
@@ -223,7 +223,7 @@
                     <option value="closed">Closed</option>
                   </select>
                   <button class="hdr-foot-link" id="ticketStatusSaveBtn" style="display:none;"><i class="fas fa-save"></i> Update Status</button>
-                  <button class="hdr-foot-link" id="ticketReplySendBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Send Reply</button>
+                  <button class="hdr-foot-link" id="ticketReplySendBtn" style="color:var(--siomac-blue);opacity:0.4;" disabled><i class="fas fa-paper-plane"></i> Send Reply</button>
                 </div>
               </div>
             </div>
@@ -242,12 +242,12 @@
             <textarea id="ticketBody" rows="5" placeholder="Describe your issue…" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:inherit;resize:none;outline:none;"></textarea>
             <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
               <button class="hdr-foot-link" id="ticketCancelBtn" style="color:var(--siomac-navy);"><i class="fas fa-times"></i> Cancel</button>
-              <button class="hdr-foot-link" id="ticketSubmitBtn" style="color:var(--siomac-red);"><i class="fas fa-paper-plane"></i> Submit Ticket</button>
+              <button class="hdr-foot-link" id="ticketSubmitBtn" style="color:var(--siomac-blue);"><i class="fas fa-paper-plane"></i> Submit Ticket</button>
             </div>
           </div>
           <div class="hdr-modal-foot" id="ticketModalFoot">
             <button class="hdr-foot-link" id="ticketClearClosedEmpBtn" style="color:var(--text-muted);display:none;"><i class="fas fa-broom"></i> Clear Closed</button>
-            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;margin-left:auto;"></span>
+            <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;margin-right:auto;"></span>
             <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
         </div>
@@ -406,7 +406,7 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-icon red"><i class="fas fa-map-pin"></i></div>
+            <div class="stat-card-icon red"><i class="fas fa-map-pin" style="color:#eef3fb;"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="liveOnSiteCount">0</div>
               <div class="stat-card-label">On Site</div>
@@ -439,7 +439,7 @@
               <span><span class="lm-dot lm-dot-green"></span> Checked In</span>
               <span><span class="lm-dot lm-dot-orange"></span> Late</span>
               <span><span class="lm-dot lm-dot-gray"></span> Checked Out</span>
-              <span><i class="fas fa-map-pin" style="color:var(--siomac-red);"></i> Project Zones</span>
+              <span><i class="fas fa-map-pin" style="color:#eef3fb;"></i> Project Zones</span>
             </div>
           </div>
         </div>
@@ -2144,21 +2144,27 @@
               <input type="text" class="form-control" id="projectAddress" required>
             </div>
             <div class="mb-3">
-              <label class="form-label" style="margin-bottom:6px;">Location on Map</label>
-              <!-- Read-only coordinate display + button in one row -->
-              <div id="siteCoordDisplay" style="font-size:0.78rem;color:var(--text-muted);padding:6px 10px;background:var(--bg-subtle,#f8fafe);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-                <span><i class="fas fa-crosshairs" style="margin-right:4px;"></i>Lat: <strong id="siteLatDisplay">—</strong></span>
-                <span>Lng: <strong id="siteLngDisplay">—</strong></span>
-                <button type="button" id="pickOnMapBtn" style="margin-left:auto;background:var(--siomac-primary,#001f3f);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:0.73rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
-                  <i class="fas fa-map-marked-alt"></i> Set Location on Map
+              <label class="form-label" style="margin-bottom:6px;">Location</label>
+              <!-- Action buttons row -->
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button type="button" id="useMyLocationBtn" style="flex:1;background:#f0f4f8;color:var(--siomac-navy,#1b2d54);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+                  <i class="fas fa-location-crosshairs"></i> Use My Location
                 </button>
+                <button type="button" id="pickOnMapBtn" style="flex:1;background:var(--siomac-navy,#1b2d54);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+                  <i class="fas fa-map-marked-alt"></i> Set on Map
+                </button>
+              </div>
+              <!-- Coordinate display (shown once a location is set) -->
+              <div id="siteCoordDisplay" style="display:none;font-size:0.78rem;color:var(--text-muted);padding:7px 10px;background:var(--bg-subtle,#f8fafe);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
+                <i class="fas fa-crosshairs" style="margin-right:5px;"></i>
+                Lat: <strong id="siteLatDisplay">—</strong>&ensp;Lng: <strong id="siteLngDisplay">—</strong>
               </div>
               <!-- Map picker (hidden by default) -->
               <div id="sitePickerMapWrap" style="display:none;margin-bottom:8px;">
                 <div id="sitePickerMap" style="height:260px;border-radius:8px;border:1px solid var(--border);"></div>
                 <p style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;margin-bottom:0;"><i class="fas fa-info-circle"></i> Click the map to place the pin. Drag to reposition. The circle reflects the attendance radius.</p>
               </div>
-              <!-- Hidden inputs still used for validation + submission -->
+              <!-- Hidden inputs used for validation + submission -->
               <input type="hidden" id="projectLatitude">
               <input type="hidden" id="projectLongitude">
             </div>

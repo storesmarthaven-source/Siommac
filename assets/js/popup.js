@@ -2,6 +2,7 @@
 const cpop = (function () {
   let ready = false, modal, iconEl, titleEl, textEl, progEl, progBar, okBtn, cancelBtn, toastsEl;
   let activeResolve = null, activeTimer = null, escHandler = null, closeTimer = null;
+  let _mdCapture = null; // capture-phase mousedown blocker while cpop is open
 
   const ICONS = {
     success:  '<circle cx="26" cy="26" r="22"/><path class="check" d="M14 27 l8 7 16-18" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -46,7 +47,7 @@ const cpop = (function () {
       e.stopPropagation();
       if (modal.dataset.dismiss !== 'false') close(false);
     });
-    // Stop all clicks inside the cpop box from bubbling to Bootstrap modal listeners
+    // Stop clicks inside the cpop box from bubbling to Bootstrap modal listeners
     modal.querySelector('.cpop-box').addEventListener('click', (e) => e.stopPropagation());
     toastsEl = document.createElement('div');
     toastsEl.className = 'cpop-toasts';
@@ -54,10 +55,33 @@ const cpop = (function () {
     document.body.appendChild(toastsEl);
   }
 
+  // Install a capture-phase mousedown listener that prevents Bootstrap modals
+  // from receiving mousedown events while cpop is visible. Bootstrap uses
+  // mousedown on the .modal element to detect outside-clicks; this blocks it.
+  function _installMdCapture() {
+    if (_mdCapture) return;
+    _mdCapture = (e) => {
+      // If the click target is inside cpop itself, let it through
+      if (modal && modal.contains(e.target)) return;
+      // Block mousedown from reaching any open Bootstrap modal
+      const bsModal = e.target && e.target.closest && e.target.closest('.modal.show');
+      if (bsModal) { e.stopImmediatePropagation(); }
+    };
+    document.addEventListener('mousedown', _mdCapture, true);
+  }
+
+  function _removeMdCapture() {
+    if (!_mdCapture) return;
+    document.removeEventListener('mousedown', _mdCapture, true);
+    _mdCapture = null;
+  }
+
   function close(confirmed) {
     if (!ready || modal.classList.contains('cpop-hidden')) return;
-    if (activeTimer)  { clearTimeout(activeTimer);  activeTimer = null; }
-    if (escHandler)   { document.removeEventListener('keydown', escHandler); escHandler = null; }
+    if (activeTimer) { clearTimeout(activeTimer); activeTimer = null; }
+    if (escHandler)  { document.removeEventListener('keydown', escHandler); escHandler = null; }
+    _removeMdCapture();
+    _unfreezeBsModals();
     modal.classList.add('cpop-closing');
     const r = activeResolve; activeResolve = null;
     closeTimer = setTimeout(() => {
@@ -68,14 +92,53 @@ const cpop = (function () {
     }, 180);
   }
 
+  // Freeze all open Bootstrap modals so they can't be dismissed while cpop is showing
+  function _freezeBsModals() {
+    document.querySelectorAll('.modal.show').forEach(m => {
+      // Use a plain data attribute name (no leading underscore) to avoid dataset double-dash bug
+      m.setAttribute('data-cpop-prev-backdrop', m.getAttribute('data-bs-backdrop') || '');
+      m.setAttribute('data-bs-backdrop', 'static');
+      m.setAttribute('data-cpop-prev-keyboard', m.getAttribute('data-bs-keyboard') || '');
+      m.setAttribute('data-bs-keyboard', 'false');
+      const inst = window.bootstrap && bootstrap.Modal.getInstance(m);
+      if (inst) { inst._config.backdrop = 'static'; inst._config.keyboard = false; }
+    });
+  }
+  function _unfreezeBsModals() {
+    document.querySelectorAll('.modal[data-cpop-prev-backdrop]').forEach(m => {
+      const prev = m.getAttribute('data-cpop-prev-backdrop');
+      if (prev) m.setAttribute('data-bs-backdrop', prev); else m.removeAttribute('data-bs-backdrop');
+      m.removeAttribute('data-cpop-prev-backdrop');
+      const prevK = m.getAttribute('data-cpop-prev-keyboard');
+      if (prevK) m.setAttribute('data-bs-keyboard', prevK); else m.removeAttribute('data-bs-keyboard');
+      m.removeAttribute('data-cpop-prev-keyboard');
+      const inst = window.bootstrap && bootstrap.Modal.getInstance(m);
+      if (inst) { inst._config.backdrop = prev || true; inst._config.keyboard = prevK !== 'false'; }
+    });
+  }
+
   function fire(opts) {
     ensureDOM();
     opts = opts || {};
     if (opts.toast) return showToast(opts);
 
-    // Cancel any in-progress close animation so a new fire() is never hidden by the old timer
-    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+    // Cancel any in-progress close animation or auto-close timer from a previous popup
+    if (closeTimer)  { clearTimeout(closeTimer);  closeTimer  = null; }
+    if (activeTimer) { clearTimeout(activeTimer); activeTimer = null; }
+
+    // Reset CSS animations: remove classes, force reflow on the modal AND its
+    // animated children so any in-progress fade-out animations are fully cancelled.
     modal.classList.remove('cpop-hidden', 'cpop-closing');
+    // Force reflow on children that have CSS animations, cancelling any running animation
+    [modal,
+     modal.querySelector('.cpop-backdrop'),
+     modal.querySelector('.cpop-box')
+    ].forEach(el => { if (el) void el.offsetWidth; });
+
+    // Always freeze Bootstrap modals while cpop is visible (even for loading spinner),
+    // and install a capture-phase mousedown blocker for Belt-and-suspenders protection.
+    _freezeBsModals();
+    _installMdCapture();
 
     if (opts.loading) {
       iconEl.className = 'cpop-icon';
@@ -111,10 +174,12 @@ const cpop = (function () {
       progEl.style.display = 'none';
     }
 
-    modal.dataset.dismiss = (opts.allowOutsideClick === false || opts.loading) ? 'false' : 'true';
+    // Error and warning modals must always be dismissed explicitly — never by timer or outside click
+    const isAlert = opts.icon === 'error' || opts.icon === 'warning';
+    modal.dataset.dismiss = (opts.allowOutsideClick === false || opts.loading || isAlert) ? 'false' : 'true';
     modal.classList.remove('cpop-hidden', 'cpop-closing');
 
-    if (opts.timer) activeTimer = setTimeout(() => close(false), opts.timer);
+    if (opts.timer && !isAlert) activeTimer = setTimeout(() => close(false), opts.timer);
 
     escHandler = (e) => {
       if (e.key === 'Escape' && modal.dataset.dismiss !== 'false') close(false);

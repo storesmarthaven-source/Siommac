@@ -1745,6 +1745,32 @@ async function getNotifications(args, ctx) {
         });
       }
     }
+
+    // 9. Ticket closed / resolved notifications for employees
+    const { data: closedTickets } = await sb.from('support_tickets')
+      .select('id, ticket_number, subject, status, updated_at')
+      .eq('from_user_id', actor.id)
+      .in('status', ['closed', 'resolved'])
+      .order('updated_at', { ascending: false })
+      .limit(10);
+    for (const t of closedTickets || []) {
+      const icon  = t.status === 'closed' ? 'fa-lock' : 'fa-check-circle';
+      const label = t.status === 'closed' ? 'closed' : 'resolved';
+      notifs.push({
+        id:       `ticket_${t.status}_${t.id}`,
+        type:     'ticketstatus',
+        icon,
+        color:    t.status === 'closed' ? 'navy' : 'green',
+        title:    `Your ticket has been ${label}`,
+        sub:      `#${t.ticket_number || ''} ${t.subject ? '· ' + t.subject : ''}`,
+        body:     t.status === 'closed'
+                    ? 'This ticket has been closed. No further replies are possible.'
+                    : 'This ticket has been marked as resolved. Open a new ticket if the issue persists.',
+        rawTime:  t.updated_at,
+        time:     t.updated_at,
+        priority: 1
+      });
+    }
   }
 
   // Sort: priority ascending (1 = most urgent), then newest first within same priority
@@ -1995,17 +2021,39 @@ async function createTicket(args, ctx) {
   const category = (args.category || 'general').trim();
   if (!subject) return { success: false, message: 'Subject is required.' };
   if (!body)    return { success: false, message: 'Description is required.' };
-  // Generate ticket number: TKT-XXXX
-  const { count } = await sb.from('support_tickets').select('id', { count: 'exact', head: true });
-  const ticketNumber = 'TKT-' + String((count || 0) + 1).padStart(4, '0');
-  const { data, error } = await sb.from('support_tickets').insert({
-    from_user_id:  actor.id,
-    from_username: actor.username,
-    from_name:     actor.full_name || actor.username,
-    ticket_number: ticketNumber,
-    category, subject, body,
-    status: 'open'
-  }).select('id, ticket_number').single();
+  // Generate a collision-safe ticket number by finding the current MAX and incrementing.
+  // Fall back to a timestamp+random suffix if the insert still conflicts (race condition).
+  async function _genTicketNumber() {
+    const { data: maxRow } = await sb.from('support_tickets')
+      .select('ticket_number')
+      .order('ticket_number', { ascending: false })
+      .limit(1)
+      .single();
+    let next = 1;
+    if (maxRow && maxRow.ticket_number) {
+      const m = String(maxRow.ticket_number).match(/(\d+)$/);
+      if (m) next = parseInt(m[1], 10) + 1;
+    }
+    return 'TKT-' + String(next).padStart(4, '0');
+  }
+
+  let ticketNumber = await _genTicketNumber();
+  let data, error;
+  // Retry up to 3 times with a random suffix on unique-constraint collision
+  for (let attempt = 0; attempt < 3; attempt++) {
+    ({ data, error } = await sb.from('support_tickets').insert({
+      from_user_id:  actor.id,
+      from_username: actor.username,
+      from_name:     actor.full_name || actor.username,
+      ticket_number: ticketNumber,
+      category, subject, body,
+      status: 'open'
+    }).select('id, ticket_number').single());
+    if (!error) break;
+    if (!error.message.includes('unique') && !error.message.includes('duplicate')) break;
+    // Collision — append random suffix and retry
+    ticketNumber = 'TKT-' + String(Date.now()).slice(-6) + Math.floor(Math.random() * 100);
+  }
   if (error) return { success: false, message: error.message };
   return { success: true, id: data.id, ticketNumber: data.ticket_number };
 }
@@ -2015,17 +2063,29 @@ async function getTickets(args, ctx) {
   let query;
   if (actor.role === 'admin' || actor.role === 'manager') {
     query = sb.from('support_tickets')
-      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at')
+      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at, cleared_by_admin, cleared_by_employee')
+      .eq('cleared_by_admin', false)
       .order('created_at', { ascending: false })
       .limit(50);
   } else {
     query = sb.from('support_tickets')
-      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at')
+      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at, cleared_by_admin, cleared_by_employee')
       .eq('from_user_id', actor.id)
+      .eq('cleared_by_employee', false)
       .order('created_at', { ascending: false })
       .limit(20);
   }
-  const { data: tickets, error } = await query;
+  let { data: tickets, error } = await query;
+  if (error && (error.message.includes('cleared_by_admin') || error.message.includes('cleared_by_employee'))) {
+    // Columns not yet created — fall back to unfiltered query (legacy behaviour)
+    const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
+    const fallback = sb.from('support_tickets')
+      .select('id, from_username, from_name, ticket_number, category, subject, body, status, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .limit(isAdminOrMgr ? 50 : 20);
+    if (!isAdminOrMgr) fallback.eq('from_user_id', actor.id);
+    ({ data: tickets, error } = await fallback);
+  }
   if (error) return { success: false, message: error.message };
 
   const ids = (tickets || []).map(t => t.id);
@@ -2111,21 +2171,26 @@ async function replyTicket(args, ctx) {
 
 async function clearClosedTickets(args, ctx) {
   const actor = await requireUser(ctx);
-  // Admin/manager: clear ALL closed/resolved/deleted tickets
-  // Employee: clear only their own closed/resolved/deleted tickets
   const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
+  // Find matching tickets to clear
   let query = sb.from('support_tickets')
     .select('id')
     .in('status', ['closed', 'resolved', 'deleted']);
   if (!isAdminOrMgr) query = query.eq('from_user_id', actor.id);
-  const { data: toDelete, error: fetchErr } = await query;
+  const { data: toHide, error: fetchErr } = await query;
   if (fetchErr) return { success: false, message: fetchErr.message };
-  if (!toDelete || !toDelete.length) return { success: true, count: 0 };
-  const ids = toDelete.map(t => t.id);
-  // Delete replies first (foreign key)
-  await sb.from('ticket_replies').delete().in('ticket_id', ids);
-  const { error } = await sb.from('support_tickets').delete().in('id', ids);
-  if (error) return { success: false, message: error.message };
+  if (!toHide || !toHide.length) return { success: true, count: 0 };
+  const ids = toHide.map(t => t.id);
+  // Soft-hide: set the caller's cleared flag instead of physically deleting.
+  // This keeps the ticket visible to the other party.
+  const flag = isAdminOrMgr ? { cleared_by_admin: true } : { cleared_by_employee: true };
+  const { error } = await sb.from('support_tickets').update(flag).in('id', ids);
+  if (error) {
+    // Columns don't exist yet — fall back to hard delete (legacy behaviour)
+    await sb.from('ticket_replies').delete().in('ticket_id', ids);
+    const { error: delErr } = await sb.from('support_tickets').delete().in('id', ids);
+    if (delErr) return { success: false, message: delErr.message };
+  }
   return { success: true, count: ids.length };
 }
 

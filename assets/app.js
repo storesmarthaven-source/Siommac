@@ -42,6 +42,46 @@ const AttendanceSystem = (function() {
   // Convenience: show skeleton only on first visit (before data ever arrived)
   function _skelOnce(sectionId, fn) { if (!_isLoaded(sectionId)) fn(); }
 
+  // ─── Global photo cache ──────────────────────────────────────────────────────
+  // Single source of truth for all profile photo URLs, keyed by username.
+  // Every part of the app (messages, tickets, employees, live map, notifications)
+  // reads from and writes to this same object so a URL fetched once is reused
+  // everywhere without any further network requests.
+  const _photoCache = {};
+
+  // Resolve a photo URL for a username. If the server returned a URL, store it.
+  // Always returns the cached copy so rendered <img> srcs never change mid-session.
+  function _resolvePhoto(username, photoUrl) {
+    if (!username) return photoUrl || '';
+    if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
+    return _photoCache[username] || photoUrl || '';
+  }
+
+  // Seed the cache from any source that already has photos in memory.
+  // Call this before any fetch that will resolve photos, so the server doesn't
+  // need to return signed URLs we already have.
+  function _seedPhotoCache() {
+    // Logged-in user's own photo
+    if (currentUser && _currentProfileImage) _photoCache[currentUser] = _currentProfileImage;
+    // All employees already loaded by the employees page
+    if (Array.isArray(_empAllList)) {
+      _empAllList.forEach(e => {
+        if (e.username && e.profileImage && !_photoCache[e.username])
+          _photoCache[e.username] = e.profileImage;
+      });
+    }
+  }
+
+  // Patch a single entry (called on profile save, employee update, etc.)
+  function _patchPhotoCache(username, photoUrl) {
+    if (username) _photoCache[username] = photoUrl || '';
+  }
+
+  // Clear on logout so stale signed URLs don't linger across sessions
+  function _clearPhotoCache() {
+    Object.keys(_photoCache).forEach(k => delete _photoCache[k]);
+  }
+
   // ─── Session (1-hour timeout) ───
   // frontend-driven session: payload + expiresAt in localStorage. auto-restore on reload, auto-logout at expiry.
   const SESSION_KEY           = 'siomac_session_v1';
@@ -112,7 +152,14 @@ const AttendanceSystem = (function() {
   const showSpinner = (msg) => cpop.fire({ loading: true, title: msg || 'Loading...', allowOutsideClick: false, showConfirmButton: false });
   const hideSpinner = () => cpop.close();
   const showPopup = (type, title, text) => {
-    return cpop.fire({ icon: type, title, text, showConfirmButton: true });
+    const isAlert = type === 'error' || type === 'warning';
+    return cpop.fire({
+      icon: type, title, text,
+      showConfirmButton: true,
+      // Errors and warnings must be dismissed by the user — no auto-close, no outside-click dismiss
+      allowOutsideClick: !isAlert,
+      timer: undefined
+    });
   };
 
   // ─── Inline field validation ───────────────────────────────────────────────
@@ -494,6 +541,9 @@ const AttendanceSystem = (function() {
       const markersNeedUpdate = hash !== _liveDataHash;
       liveData = fresh;
       _markLoaded('s-projectMap');
+      // Update live map nav badge with current checked-in count (not checked out)
+      const _liveCheckedInCount = fresh.filter(r => !r.isCheckedOut).length;
+      if (typeof window._setLiveMapBadge === 'function') window._setLiveMapBadge(_liveCheckedInCount);
       if (markersNeedUpdate) {
         _liveDataHash = hash;
         // Render immediately — photos are already cached client-side (24h signed URLs
@@ -638,12 +688,12 @@ const AttendanceSystem = (function() {
 
     const listEl = document.getElementById('liveEmployeesList');
 
-    // If no site is selected, show prompt and zero out stat cards
+    // If no site is selected, zero out stat cards
     if (!_selectedSiteId) {
-      document.getElementById('liveActiveCount').textContent    = '—';
-      document.getElementById('liveCheckedInCount').textContent = '—';
-      document.getElementById('liveLateCount').textContent      = '—';
-      document.getElementById('liveOnSiteCount').textContent    = '—';
+      document.getElementById('liveActiveCount').textContent    = '0';
+      document.getElementById('liveCheckedInCount').textContent = '0';
+      document.getElementById('liveLateCount').textContent      = '0';
+      document.getElementById('liveOnSiteCount').textContent    = '0';
       listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-map-pin"></i>Tap a job site on the map to view live activity</div>';
       return;
     }
@@ -1054,9 +1104,9 @@ const AttendanceSystem = (function() {
         const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
         const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
         _setHdrBadge(document.getElementById('hdrNotifBadge'),  unreadNotifs);
-        // hdrMsgBadge is owned by _updateMsgBadge() which counts from the local _msgs list —
-        // that reflects exactly what's shown in the UI, so we don't overwrite it here.
-        _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets  || 0);
+        // hdrMsgBadge is owned by _updateMsgBadge() — counts from local _msgs list, never overwritten here.
+        // hdrTicketBadge is owned by _updateTicketBadge() — counts from local _tickets list so the badge
+        // never jumps ahead of what's actually rendered in the list. Don't overwrite it from the server count.
         // Update leave badge only — map badge is handled by _render after _notifData loads
         if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
       }).catch(() => {});
@@ -1335,6 +1385,7 @@ const AttendanceSystem = (function() {
         pending:      () => 's-emp-leave',
         upcoming:     () => 's-emp-leave',
         ticketreply:  () => '__modal:hdrTicketModal',
+        ticketstatus: () => '__modal:hdrTicketModal',
         msgreply:     () => '__modal:hdrMsgModal',
       };
 
@@ -1599,6 +1650,11 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
         });
       };
+      window._setLiveMapBadge = (count) => {
+        ['#sidebarMenu', '#topTabs'].forEach(sel => {
+          document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, count));
+        });
+      };
       // Leave badge — driven by getHeaderCounts (server source, no _notifData needed)
       window._refreshNavBadges = (leaveCount) => {
         const leave = (leaveCount != null) ? leaveCount
@@ -1620,12 +1676,7 @@ const AttendanceSystem = (function() {
       // a poll arriving before the DB write completes doesn't flip back to unread
       const _readPending = new Set();
 
-      const _photoCache = {};
-      function _resolvePhoto(username, photoUrl) {
-        if (!username) return photoUrl || '';
-        if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
-        return _photoCache[username] || photoUrl || '';
-      }
+      // Uses the app-wide _photoCache / _resolvePhoto / _seedPhotoCache
       function _timeAgoShort(iso) {
         if (!iso) return '';
         const d = new Date(iso); if (isNaN(d)) return '';
@@ -1662,6 +1713,7 @@ const AttendanceSystem = (function() {
         document.getElementById('msgComposeSubject').value     = '';
         document.getElementById('msgComposeBody').value        = '';
         _composing = true;
+        if (typeof _syncMsgSendBtn === 'function') _syncMsgSendBtn();
 
         // Admin: show recipient selector; employee: hide it
         const toWrap = document.getElementById('msgToWrap');
@@ -1868,8 +1920,8 @@ const AttendanceSystem = (function() {
       }
 
       function _updateMsgBadge() {
-        const unread = _msgs.filter(m => m.isUnread || m.unreadReplyCount > 0).length;
-        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread, currentRole === 'employee');
+        const unread = _msgs.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length;
+        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
         _scheduleHdrBadgeSync();
       }
 
@@ -1925,6 +1977,7 @@ const AttendanceSystem = (function() {
       }
 
       function _fetch() {
+        _seedPhotoCache(); // prime from _empAllList + _currentProfileImage before resolving
         _rawApi('getMessages', {}).then(res => {
           if (!res || !res.success) return;
           const raw = res.data || [];
@@ -1968,13 +2021,37 @@ const AttendanceSystem = (function() {
         }
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 5 * 1000); // 5s always — Realtime is primary, poll is safety net
+        _pollTimer = setInterval(_fetch, 5 * 1000);
       }
 
       // New Message button (both roles)
       document.getElementById('msgComposeBtn').addEventListener('click', () => _showCompose());
       document.getElementById('msgCancelComposeBtn').addEventListener('click', _showList);
       document.getElementById('msgDetailBackBtn').addEventListener('click', () => { _showList(); _renderList(); });
+
+      // Disable send/reply buttons when their inputs are empty
+      function _syncMsgSendBtn() {
+        const btn = document.getElementById('msgSendBtn');
+        if (!btn) return;
+        const subject = (document.getElementById('msgComposeSubject').value || '').trim();
+        const body    = (document.getElementById('msgComposeBody').value    || '').trim();
+        const empty   = !subject || !body;
+        btn.disabled     = empty;
+        btn.style.opacity = empty ? '0.4' : '';
+      }
+      function _syncMsgReplyBtn() {
+        const btn = document.getElementById('msgReplySendBtn');
+        if (!btn) return;
+        const empty = !(document.getElementById('msgReplyInput').value || '').trim();
+        btn.disabled     = empty;
+        btn.style.opacity = empty ? '0.4' : '';
+      }
+      document.getElementById('msgComposeSubject').addEventListener('input', _syncMsgSendBtn);
+      document.getElementById('msgComposeBody').addEventListener('input', _syncMsgSendBtn);
+      document.getElementById('msgReplyInput').addEventListener('input', _syncMsgReplyBtn);
+      // Set initial state
+      _syncMsgSendBtn();
+      _syncMsgReplyBtn();
 
       // Send new message
       document.getElementById('msgSendBtn').addEventListener('click', () => {
@@ -2009,9 +2086,11 @@ const AttendanceSystem = (function() {
 
       // Mark all as read
       document.getElementById('msgMarkAllReadBtn').addEventListener('click', () => {
-        _msgs.filter(m => m.isUnread).forEach(m => {
+        _msgs.filter(m => m.isUnread || m.unreadReplyCount > 0).forEach(m => {
           api('markMessageRead', { messageId: m.id }).catch(() => {});
           m.isUnread = false;
+          m.unreadReplyCount = 0;
+          _readPending.add(String(m.id));
         });
         _renderList(); _updateMsgBadge();
       });
@@ -2024,6 +2103,7 @@ const AttendanceSystem = (function() {
         if (!body) return;
         const btn = document.getElementById('msgReplySendBtn');
         btn.disabled = true;
+        btn.style.opacity = '0.4';
         document.getElementById('msgReplyInput').value = '';
         const replyAt = new Date().toISOString();
         // Optimistic: append reply bubble immediately
@@ -2032,11 +2112,11 @@ const AttendanceSystem = (function() {
         if (m) m.replies.push(tmpReply);
         _updateDetail(_currentMsgId);
         api('replyMessage', { messageId: _currentMsgId, body }).then(res => {
-          btn.disabled = false;
+          if (typeof _syncMsgReplyBtn === 'function') _syncMsgReplyBtn(); else btn.disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
           // Fetch immediately to replace tmp bubbles with real data and update badge
           _fetch();
-        }).catch(() => { btn.disabled = false; });
+        }).catch(() => { if (typeof _syncMsgReplyBtn === 'function') _syncMsgReplyBtn(); else btn.disabled = false; });
       });
 
       // Click message row → open detail (ignore clicks on the delete button)
@@ -2097,14 +2177,7 @@ const AttendanceSystem = (function() {
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed', deleted: 'Deleted' };
       const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed', deleted: 'deleted' };
 
-      // Client-side photo URL cache keyed by username — prevents photo re-requests
-      // when server rotates signed URLs on each poll. Cleared only on logout.
-      const _photoCache = {};
-      function _resolvePhoto(username, photoUrl) {
-        if (!username) return photoUrl || '';
-        if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
-        return _photoCache[username] || photoUrl || '';
-      }
+      // Uses the app-wide _photoCache / _resolvePhoto / _seedPhotoCache
 
       function _initials(name) {
         return (name || '?').trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -2241,7 +2314,9 @@ const AttendanceSystem = (function() {
         document.getElementById('ticketStatusSelect').style.display = isAdminView ? '' : 'none';
         document.getElementById('ticketStatusSaveBtn').style.display = isAdminView ? '' : 'none';
         if (isAdminView) {
-          document.getElementById('ticketStatusSelect').value = t.status;
+          const sel = document.getElementById('ticketStatusSelect');
+          sel.value = t.status;
+          sel.dataset.userChanged = ''; // reset on fresh open
         }
         const isDeleted = t.status === 'deleted';
         const css = STATUS_CSS[t.status] || 'open';
@@ -2297,8 +2372,9 @@ const AttendanceSystem = (function() {
           replyInput.placeholder = isDeleted ? 'This ticket has been deleted.' : isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
           replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
           replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
-          replySendBtn.disabled  = isClosed;
-          replySendBtn.style.opacity  = isClosed ? '0.4' : '';
+          // When open: also disable send if input is empty (input was just cleared)
+          replySendBtn.disabled     = isClosed || !replyInput.value.trim();
+          replySendBtn.style.opacity = (isClosed || !replyInput.value.trim()) ? '0.4' : '';
         }
       }
 
@@ -2321,9 +2397,9 @@ const AttendanceSystem = (function() {
           const lbl = STATUS_LABEL[t.status] || t.status;
           statusEl.className = `hdr-ticket-status ${css}`;
           statusEl.textContent = lbl;
-          // Sync status select
+          // Sync status select only if the user hasn't changed it (avoid clobbering a pending selection)
           const sel = document.getElementById('ticketStatusSelect');
-          if (sel && document.getElementById('ticketDetailPane').style.display !== 'none') sel.value = t.status;
+          if (sel && document.getElementById('ticketDetailPane').style.display !== 'none' && sel.dataset.userChanged !== '1') sel.value = t.status;
         }
         // Append only new replies
         const existingIds = new Set([...repliesEl.querySelectorAll('[data-reply-id]')].map(el => el.dataset.replyId));
@@ -2357,21 +2433,23 @@ const AttendanceSystem = (function() {
           replyInput.placeholder = isDeleted2 ? 'This ticket has been deleted.' : isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
           replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
           replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
-          replySendBtn.disabled  = isClosed;
-          replySendBtn.style.opacity  = isClosed ? '0.4' : '';
+          replySendBtn.disabled     = isClosed || !replyInput.value.trim();
+          replySendBtn.style.opacity = (isClosed || !replyInput.value.trim()) ? '0.4' : '';
         }
       }
 
       function _updateTicketBadge() {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         const openCount = isAdminView ? _tickets.filter(t => t.status === 'open').length : 0;
-        // Trigger combined sync so all badges refresh together
-        _scheduleHdrBadgeSync();
+        // Drive the badge directly from the local list so it never gets ahead of what's rendered.
+        // (hdrBadgeSync drives it from the server count which arrives before _fetch completes.)
+        _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
         const countEl = document.getElementById('ticketOpenCount');
         if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
       }
 
       function _fetch(keepDetail) {
+        _seedPhotoCache(); // prime from _empAllList + _currentProfileImage before resolving
         // Bypass SWR cache — new tickets/replies must appear instantly
         _rawApi('getTickets', {}).then(res => {
           if (!res || !res.success) return;
@@ -2431,25 +2509,49 @@ const AttendanceSystem = (function() {
         }).catch(() => { document.getElementById('ticketSubmitBtn').disabled = false; });
       });
 
+      // Disable ticket reply button when input is empty
+      function _syncTicketReplyBtn() {
+        const btn = document.getElementById('ticketReplySendBtn');
+        if (!btn || btn.disabled && _currentTicketId && (() => { const t = _tickets.find(x => String(x.id) === String(_currentTicketId)); return t && ['closed','resolved','deleted'].includes(t.status); })()) return;
+        const empty = !(document.getElementById('ticketReplyInput').value || '').trim();
+        // Only toggle if ticket isn't already closed-disabled
+        const t = _currentTicketId ? _tickets.find(x => String(x.id) === String(_currentTicketId)) : null;
+        const isClosed = t && ['closed','resolved','deleted'].includes(t.status);
+        if (!isClosed) {
+          btn.disabled     = empty;
+          btn.style.opacity = empty ? '0.4' : '';
+        }
+      }
+      document.getElementById('ticketReplyInput').addEventListener('input', _syncTicketReplyBtn);
+      _syncTicketReplyBtn();
+
       // Send reply
       document.getElementById('ticketReplySendBtn').addEventListener('click', () => {
         const body = (document.getElementById('ticketReplyInput').value || '').trim();
         if (!body) return;
         const btn = document.getElementById('ticketReplySendBtn');
         btn.disabled = true;
+        btn.style.opacity = '0.4';
         document.getElementById('ticketReplyInput').value = '';
         api('replyTicket', { ticketId: _currentTicketId, body }).then(res => {
-          btn.disabled = false;
+          if (typeof _syncTicketReplyBtn === 'function') _syncTicketReplyBtn(); else btn.disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
           _fetch(true); // refresh but stay in detail view
-        }).catch(() => { btn.disabled = false; });
+        }).catch(() => { if (typeof _syncTicketReplyBtn === 'function') _syncTicketReplyBtn(); else btn.disabled = false; });
+      });
+
+      // Mark select as user-changed so polls don't reset it mid-selection
+      document.getElementById('ticketStatusSelect').addEventListener('change', () => {
+        document.getElementById('ticketStatusSelect').dataset.userChanged = '1';
       });
 
       // Update ticket status (admin)
       document.getElementById('ticketStatusSaveBtn').addEventListener('click', () => {
-        const status = document.getElementById('ticketStatusSelect').value;
+        const sel = document.getElementById('ticketStatusSelect');
+        const status = sel.value;
         api('updateTicketStatus', { ticketId: _currentTicketId, status }).then(res => {
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          sel.dataset.userChanged = ''; // clear flag — status now saved
           const t = _tickets.find(x => String(x.id) === String(_currentTicketId));
           if (t) { t.status = status; _showDetail(_currentTicketId); _renderList(); _updateTicketBadge(); }
         }).catch(() => {});
@@ -3109,11 +3211,20 @@ const AttendanceSystem = (function() {
       if (event.target.id === 'profileImageInput')     onProfileImagePicked(event.target.files && event.target.files[0]);
     });
 
-    // Mark rate inputs dirty on edit (visual hint that Save is needed)
+    // Mark rate inputs dirty on edit + live-update stats cards as you type
     document.addEventListener('input', function(event) {
       const inp = event.target.closest('.rate-input');
       if (!inp) return;
       inp.classList.toggle('dirty', String(inp.value) !== String(inp.dataset.original));
+      // Build a live snapshot of _ratesData with current input values for instant stat refresh
+      if (typeof _ratesData !== 'undefined' && typeof renderHourlyRates !== 'undefined') {
+        const snapshot = _ratesData.map(r => {
+          const liveInp = document.querySelector(`.rate-input[data-username="${CSS.escape(r.username)}"]`);
+          const liveVal = liveInp ? parseFloat(liveInp.value) : NaN;
+          return Object.assign({}, r, { hourlyRate: isNaN(liveVal) ? (r.hourlyRate || 0) : liveVal });
+        });
+        if (typeof _hrUpdateStats === 'function') _hrUpdateStats(snapshot);
+      }
     });
   }
 
@@ -3275,6 +3386,7 @@ const AttendanceSystem = (function() {
     // This is always up-to-date: saved at login and patched on every profile save.
     if (result.profileImage !== undefined) {
       _currentProfileImage = result.profileImage || '';
+      _patchPhotoCache(currentUser, _currentProfileImage); // seed global cache at login
     }
 
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
@@ -3339,8 +3451,8 @@ const AttendanceSystem = (function() {
       _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
       // hdrMsgBadge is set by _updateMsgBadge() once messages load — skip here to avoid
       // showing a stale server count that doesn't match what's in the list.
-      // Tickets badge
-      _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets || 0);
+      // hdrTicketBadge is set by _updateTicketBadge() from the local _tickets list — skip here
+      // so the badge never jumps ahead of what's actually rendered in the ticket list.
       // Sidebar leave badge
       if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
     }).catch(() => {});
@@ -3419,6 +3531,7 @@ const AttendanceSystem = (function() {
     currentRole = null;
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
+    _clearPhotoCache();          // evict all cached signed URLs — stale after logout
     _mapViewSet = false;        // reset so map re-fits on next login's first visit
     _selectedSiteId = '';       // reset site filter
     const _lmSelReset = document.getElementById('lmSiteSelect');
@@ -3802,6 +3915,10 @@ const AttendanceSystem = (function() {
 
       checkStatus();
       if (currentAttendanceAction === 'CheckIn') loadChart();
+      // Refresh admin-facing views so the employee's new status appears immediately
+      if (typeof loadEmployeeList    === 'function') loadEmployeeList();
+      if (typeof loadLiveAttendance  === 'function') loadLiveAttendance();
+      if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
     } else {
       // Show error without hiding the camera modal — Bootstrap teardown interferes with the popup
       showPopup('error', 'Attendance Failed', result.message || 'Unknown error occurred');
@@ -4857,6 +4974,10 @@ const AttendanceSystem = (function() {
       hideSpinner();
       if (res.success) {
         closeAddEmpModal();
+        // Optimistically add to in-memory list and re-render immediately
+        const newEmp = { username, fullName, department, position, role, status: 'Active', todayStatus: 'notchecked', employeeNumber: res.employeeNumber || employeeNumber || '', email, phone, hourlyRate: 0 };
+        _empAllList.unshift(newEmp);
+        _renderEmpStats(); _renderEmployees();
         showPopup('success', 'Employee Added', `New employee added${res.employeeNumber ? ' as ' + res.employeeNumber : ''}.`).then(() => loadEmployeeList());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not add employee');
@@ -4865,7 +4986,7 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Employee list state ───
-  let _empAllList = [];   // raw API data
+  let _empAllList = [];   // raw API data — accessible to _seedPhotoCache via closure
   let _empCardView = true; // true = cards, false = table
 
   function loadEmployeeList() {
@@ -4888,6 +5009,8 @@ const AttendanceSystem = (function() {
         }
         _markLoaded('s-adm-employees');
         _empAllList = res.data || [];
+        // Bulk-seed the global photo cache so every part of the app can use these URLs
+        _empAllList.forEach(e => { if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage); });
         _renderEmpStats();
         const _empPhotoUrls = _empAllList.map(e => e.profileImage).filter(Boolean);
         _preloadThenRender(_empPhotoUrls, _renderEmployees);
@@ -5221,6 +5344,16 @@ const AttendanceSystem = (function() {
       hideSpinner();
       if (res.success) {
         closeEditEmpModal();
+        // Patch in-memory entry and re-render immediately
+        const idx = _empAllList.findIndex(e => e.username === username);
+        if (idx !== -1) {
+          Object.assign(_empAllList[idx], { fullName, department, position, role, status, employeeNumber, email, phone });
+          if (res.profileImage !== undefined) {
+            _empAllList[idx].profileImage = res.profileImage || '';
+            _patchPhotoCache(username, res.profileImage || '');
+          }
+        }
+        _renderEmpStats(); _renderEmployees();
         showPopup('success', 'Employee Updated', `${fullName} has been updated.`).then(() => loadEmployeeList());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not update');
@@ -5243,6 +5376,9 @@ const AttendanceSystem = (function() {
         api('deleteEmployee', { username, actorId: currentUserId, actorUsername: currentUser }).then(res => {
           hideSpinner();
           if (res.success) {
+            // Remove from in-memory list and re-render immediately
+            _empAllList = _empAllList.filter(e => e.username !== username);
+            _renderEmpStats(); _renderEmployees();
             showPopup('success', 'Deleted', 'Employee has been deleted.').then(() => loadEmployeeList());
           } else {
             showPopup('error', 'Failed', res.message || 'Could not delete');
@@ -5300,6 +5436,14 @@ const AttendanceSystem = (function() {
       if (res.success) {
         closeDeptModal();
         document.getElementById('addDepartmentForm').reset();
+        // Patch in-memory departments and re-render immediately
+        if (editingDeptId) {
+          const idx = departments.findIndex(d => String(d.id) === String(editingDeptId));
+          if (idx !== -1) Object.assign(departments[idx], { name, description, manager });
+        } else if (res.id) {
+          departments.push({ id: res.id, name, description, manager, employeeCount: 0 });
+        }
+        displayDepartments(departments);
         showPopup('success', 'Saved', 'Department saved successfully.').then(() => loadDepartments());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save department');
@@ -5508,6 +5652,9 @@ const AttendanceSystem = (function() {
       api('deleteDepartment', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
+          // Remove from in-memory list and re-render immediately
+          departments = departments.filter(d => String(d.id) !== String(id));
+          displayDepartments(departments);
           showPopup('success', 'Deleted', 'Department has been deleted.').then(() => loadDepartments());
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
@@ -5535,8 +5682,16 @@ const AttendanceSystem = (function() {
     document.getElementById('projectDescription').value = site ? (site.description || '') : '';
 
     // Update coordinate display
-    document.getElementById('siteLatDisplay').textContent = site ? Number(site.latitude).toFixed(6)  : '—';
-    document.getElementById('siteLngDisplay').textContent = site ? Number(site.longitude).toFixed(6) : '—';
+    const _coordBox = document.getElementById('siteCoordDisplay');
+    if (site && site.latitude && site.longitude) {
+      document.getElementById('siteLatDisplay').textContent = Number(site.latitude).toFixed(6);
+      document.getElementById('siteLngDisplay').textContent = Number(site.longitude).toFixed(6);
+      if (_coordBox) _coordBox.style.display = '';
+    } else {
+      document.getElementById('siteLatDisplay').textContent = '—';
+      document.getElementById('siteLngDisplay').textContent = '—';
+      if (_coordBox) _coordBox.style.display = 'none';
+    }
 
     // Reset map picker state
     document.getElementById('sitePickerMapWrap').style.display = 'none';
@@ -5556,6 +5711,8 @@ const AttendanceSystem = (function() {
     document.getElementById('projectLongitude').value = lng.toFixed(6);
     document.getElementById('siteLatDisplay').textContent = lat.toFixed(6);
     document.getElementById('siteLngDisplay').textContent = lng.toFixed(6);
+    const coordBox = document.getElementById('siteCoordDisplay');
+    if (coordBox) coordBox.style.display = '';
   }
 
   function _spUpdateCircle(lat, lng) {
@@ -5570,25 +5727,39 @@ const AttendanceSystem = (function() {
     }
   }
 
-  document.getElementById('pickOnMapBtn').addEventListener('click', function () {
+  // ── Shared map-open logic — opens the picker, inits Leaflet, drops pin at (lat,lng)
+  function _spOpenMap(centerLat, centerLng) {
     const wrap = document.getElementById('sitePickerMapWrap');
-    const isOpen = wrap.style.display !== 'none';
-    wrap.style.display = isOpen ? 'none' : '';
-    if (isOpen) return;
+    wrap.style.display = '';
 
     setTimeout(() => {
       if (window._sitePickerMap) {
+        // Map already exists — just pan to new center and update pin
         window._sitePickerMap.invalidateSize();
+        if (centerLat && centerLng) {
+          window._sitePickerMap.setView([centerLat, centerLng], 16);
+          if (window._sitePickerMarker) {
+            window._sitePickerMarker.setLatLng([centerLat, centerLng]);
+          } else {
+            window._sitePickerMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(window._sitePickerMap);
+            window._sitePickerMarker.on('dragend', function (e) {
+              const ll = e.target.getLatLng();
+              _spSetCoords(ll.lat, ll.lng);
+              _spUpdateCircle(ll.lat, ll.lng);
+            });
+          }
+          _spUpdateCircle(centerLat, centerLng);
+        }
         return;
       }
 
-      const existingLat = parseFloat(document.getElementById('projectLatitude').value);
-      const existingLng = parseFloat(document.getElementById('projectLongitude').value);
+      const existingLat = centerLat || parseFloat(document.getElementById('projectLatitude').value);
+      const existingLng = centerLng || parseFloat(document.getElementById('projectLongitude').value);
       const center = (existingLat && existingLng)
         ? [existingLat, existingLng]
         : (map ? map.getCenter() : [10.6549, -61.5019]);
 
-      const pickerMap = L.map('sitePickerMap', { zoomControl: true }).setView(center, 15);
+      const pickerMap = L.map('sitePickerMap', { zoomControl: true }).setView(center, existingLat ? 16 : 15);
       window._sitePickerMap = pickerMap;
       window._sitePickerMarker = null;
       window._sitePickerCircle = null;
@@ -5597,7 +5768,7 @@ const AttendanceSystem = (function() {
         attribution: '© OpenStreetMap contributors', maxZoom: 19
       }).addTo(pickerMap);
 
-      // Place marker + circle at existing coords if editing
+      // Place marker + circle at coords if known
       if (existingLat && existingLng) {
         window._sitePickerMarker = L.marker([existingLat, existingLng], { draggable: true }).addTo(pickerMap);
         _spUpdateCircle(existingLat, existingLng);
@@ -5625,6 +5796,47 @@ const AttendanceSystem = (function() {
         _spUpdateCircle(lat, lng);
       });
     }, 80);
+  }
+
+  document.getElementById('pickOnMapBtn').addEventListener('click', function () {
+    const wrap = document.getElementById('sitePickerMapWrap');
+    const isOpen = wrap.style.display !== 'none';
+    if (isOpen) {
+      wrap.style.display = 'none';
+      return;
+    }
+    _spOpenMap(); // opens at existing coords or map center
+  });
+
+  // "Use My Location" — gets GPS coords, sets them, and opens the map picker
+  document.getElementById('useMyLocationBtn').addEventListener('click', function () {
+    if (!navigator.geolocation) {
+      showPopup('error', 'Not Supported', 'Geolocation is not supported by your browser.');
+      return;
+    }
+    const btn = this;
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        _spSetCoords(lat, lng);
+        _spOpenMap(lat, lng); // open/update map centered on my location
+      },
+      (err) => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        const msg = err.code === 1 ? 'Location permission denied. Please allow location access and try again.'
+                  : err.code === 2 ? 'Location unavailable. Try again or set on map.'
+                  : 'Location request timed out. Try again.';
+        showPopup('error', 'Location Error', msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   });
 
   // Live-update circle when radius field changes
@@ -5667,13 +5879,26 @@ const AttendanceSystem = (function() {
     if (editingSiteId) args.id = editingSiteId;
 
     showSpinner('Saving project site...');
+    const _editingId = editingSiteId; // capture before clearing
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
-        if (modal) modal.hide();
+        const bsModal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+        if (bsModal) bsModal.hide();
         document.getElementById('addProjectForm').reset();
         editingSiteId = null;
+        // Patch in-memory list and re-render immediately (isolated — errors here must not suppress the success popup)
+        try {
+          if (_editingId) {
+            const idx = projectSites.findIndex(s => String(s.id) === String(_editingId));
+            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description });
+          } else if (res.id) {
+            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description });
+          }
+          displayProjectSites(projectSites);
+        } catch (renderErr) {
+          console.warn('[ProjectSite] Re-render error (non-fatal):', renderErr);
+        }
         showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites());
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save site');
@@ -5728,10 +5953,17 @@ const AttendanceSystem = (function() {
           const lat = Number(site.latitude) || 0;
           const lng = Number(site.longitude) || 0;
           showSection('s-projectMap');
-          // Wait for map to initialise (first visit) then fly to site
+          // Select the site in the filter dropdown + activity panel immediately
+          _selectLiveSite(String(site.id), site.name || '');
+          // Wait for map to initialise (first visit) then fly to site and open popup
           const _flyToSite = () => {
             if (map) {
               map.setView([lat, lng], 16, { animate: true });
+              // Open the building marker popup for this site
+              const entry = _siteLayerMap[site.id];
+              if (entry && entry.marker) {
+                setTimeout(() => entry.marker.openPopup(), 400);
+              }
             } else {
               setTimeout(_flyToSite, 150);
             }
@@ -5822,10 +6054,12 @@ const AttendanceSystem = (function() {
           delete _psMiniMaps[mapId];
           const tmp = document.createElement('div');
           tmp.innerHTML = _psCardRowHtml(site);
-          container.replaceChild(tmp.firstElementChild, el);
+          const newEl = tmp.firstElementChild;
+          // Use replaceWith — safe even if el was moved by a prior insertBefore
+          el.parentNode === container ? container.replaceChild(newEl, el) : container.appendChild(newEl);
           el = container.children[i];
         }
-        if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+        if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
       }
       if (el) el.dataset.rowKey = key;
 
@@ -5887,6 +6121,9 @@ const AttendanceSystem = (function() {
       api('deleteProjectSite', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
+          // Remove from in-memory list and re-render immediately
+          projectSites = projectSites.filter(s => String(s.id) !== String(id));
+          displayProjectSites(projectSites);
           showPopup('success', 'Deleted', 'Project site has been deleted.').then(() => loadProjectSites());
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
@@ -6431,12 +6668,38 @@ const AttendanceSystem = (function() {
       </tr>
     `).join('');
 
-    // mark dirty on input change
-    tbody.querySelectorAll('.hr-rate-input').forEach(inp => {
-      inp.addEventListener('input', function () {
-        this.classList.toggle('dirty', parseFloat(this.value) !== parseFloat(this.dataset.original));
-      });
-    });
+    // mark dirty on input change — live stat refresh handled by global delegated listener
+  }
+
+  // ── Propagate a saved rate change to all in-memory caches so other pages
+  //    reflect the new value immediately without a server round-trip. ──────
+  function _propagateRateChange(username, rate) {
+    // 1. Rates page data
+    const rd = _ratesData.find(r => r.username === username);
+    if (rd) rd.hourlyRate = rate;
+
+    // 2. Employee list (cards + table page)
+    if (Array.isArray(_empAllList)) {
+      const ed = _empAllList.find(e => e.username === username);
+      if (ed) ed.hourlyRate = rate;
+    }
+
+    // 3. Attendance rows (each row has employee hourly rate embedded)
+    if (Array.isArray(_attAllRows)) {
+      _attAllRows.filter(r => r.username === username).forEach(r => { r.hourlyRate = rate; });
+    }
+
+    // 4. Departments list carries aggregated payroll — trigger a silent re-render if visible
+    // (departments don't store per-employee rates, so nothing to patch in memory, but
+    //  re-rendering will pick up updated _empAllList if the dept page is open)
+
+    // 5. Re-render whichever page is currently visible
+    const sec = document.querySelector('.app-section.active');
+    const secId = sec ? sec.id : '';
+    if (secId === 's-adm-employees')   _renderEmployees && _renderEmployees();
+    if (secId === 's-adm-attendance')  _renderAttTable  && _renderAttTable();
+    if (secId === 's-adm-departments') displayDepartments && displayDepartments(departments);
+    if (secId === 's-adm-projects')    displayProjectSites && displayProjectSites(projectSites);
   }
 
   // ── New rates action helpers ──────────────────────────────────
@@ -6452,8 +6715,7 @@ const AttendanceSystem = (function() {
         if (!res.success) return;
         inp.dataset.original = String(rate);
         inp.classList.remove('dirty');
-        const emp = _ratesData.find(r => r.username === username);
-        if (emp) emp.hourlyRate = rate;
+        _propagateRateChange(username, rate);
         done++;
         if (done === inputs.length) {
           _hrUpdateStats(_ratesData);
@@ -6508,6 +6770,10 @@ const AttendanceSystem = (function() {
     api('bulkImportRates', { rows: parsed, actorId: currentUserId, actorUsername: currentUser }).then(r => {
       _hrCloseModal();
       if (!r.success) { showNotification(r.message || 'Import failed', 'error'); return; }
+      // Propagate all imported rates to all in-memory caches immediately
+      parsed.forEach(({ username, rate }) => _propagateRateChange(username, Number(rate)));
+      _hrUpdateStats(_ratesData);
+      renderHourlyRates();
       showNotification(`Imported ${r.updated} rate${r.updated !== 1 ? 's' : ''}${r.skipped ? ` · ${r.skipped} skipped` : ''}`, 'success');
       loadHourlyRates();
     });
@@ -6616,6 +6882,8 @@ const AttendanceSystem = (function() {
       }
       input.dataset.original = String(rate);
       input.classList.remove('dirty');
+      _propagateRateChange(username, rate);
+      _hrUpdateStats(_ratesData);
       if (typeof Swal !== 'undefined') {
         Swal.fire({ icon: 'success', title: 'Rate Saved', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false, timerProgressBar: true });
       }
@@ -7086,6 +7354,7 @@ const AttendanceSystem = (function() {
         if (typeof SwCacheManager !== 'undefined') SwCacheManager.evictPhoto(_currentProfileImage);
       }
       _currentProfileImage = newPhoto;
+      _patchPhotoCache(currentUser, newPhoto); // keep global cache current
       // Update header profile avatar
       const hdrAv = document.getElementById('hdrProfileAvatar');
       if (hdrAv) {
