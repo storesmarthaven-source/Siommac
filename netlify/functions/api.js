@@ -1346,14 +1346,15 @@ const routes = {
     const [notifRes, msgRes, ticketRes, leaveRes, checkinRes] = await Promise.all([
       // Notification count — reuse getNotifications (already optimised, returns array)
       getNotifications(a, ctx).catch(() => ({ data: [] })),
-      // Unread messages count
-      // Admin/manager: messages not from them that are unread
-      // Employee: messages they are part of (as sender OR recipient) that are unread
+      // Unread messages count — count distinct unread threads (1 per conversation, not per reply)
+      // Admin/manager: threads where they are NOT the original sender and recipient hasn't read yet
+      // Employee: threads involving them that are unread
       isAdminOrMgr
-        ? sb.from('messages').select('id', { count: 'exact', head: true }).eq('read_by_recipient', false).neq('from_user_id', actor.id)
+        ? sb.from('messages').select('id', { count: 'exact', head: true }).eq('read_by_recipient', false).neq('from_user_id', actor.id).limit(50)
         : sb.from('messages').select('id', { count: 'exact', head: true })
             .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
-            .eq('read_by_recipient', false),
+            .eq('read_by_recipient', false)
+            .limit(30),
       // Open tickets count: admin/manager sees all open; employee sees their own with new replies
       isAdminOrMgr
         ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
@@ -1872,6 +1873,14 @@ async function replyMessage(args, ctx) {
   const isAdminView = actor.role === 'admin' || actor.role === 'manager';
   const inConversation = isAdminView || msg.from_user_id === actor.id || msg.to_user_id === actor.id;
   if (!inConversation) return { success: false, message: 'Forbidden.' };
+  // Admin/manager: verify the other participant (the employee) still exists
+  if (isAdminView) {
+    const otherUserId = msg.from_user_id === actor.id ? msg.to_user_id : msg.from_user_id;
+    if (otherUserId) {
+      const { data: otherUser } = await sb.from('app_users').select('id').eq('id', otherUserId).maybeSingle();
+      if (!otherUser) return { success: false, message: 'This employee no longer exists. Please delete this conversation.' };
+    }
+  }
   // When the employee replies → mark read (they've seen admin's reply).
   // When admin/manager replies → reset to unread so the employee sees a new-message indicator.
   if (isAdminView) {

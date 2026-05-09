@@ -898,9 +898,10 @@ const AttendanceSystem = (function() {
         const storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
         const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
         const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
-        _setHdrBadge(document.getElementById('hdrNotifBadge'),   unreadNotifs);
-        _setHdrBadge(document.getElementById('hdrMsgBadge'),     c.messages || 0);
-        _setHdrBadge(document.getElementById('hdrTicketBadge'),  c.tickets  || 0);
+        _setHdrBadge(document.getElementById('hdrNotifBadge'),  unreadNotifs);
+        // hdrMsgBadge is owned by _updateMsgBadge() which counts from the local _msgs list —
+        // that reflects exactly what's shown in the UI, so we don't overwrite it here.
+        _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets  || 0);
         // Update leave badge only — map badge is handled by _render after _notifData loads
         if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
       }).catch(() => {});
@@ -2990,8 +2991,8 @@ const AttendanceSystem = (function() {
       const _storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
       const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id) && !_storedClearedIds.has(id)).length;
       _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
-      // Messages badge
-      _setHdrBadge(document.getElementById('hdrMsgBadge'), c.messages || 0);
+      // hdrMsgBadge is set by _updateMsgBadge() once messages load — skip here to avoid
+      // showing a stale server count that doesn't match what's in the list.
       // Tickets badge
       _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets || 0);
       // Sidebar leave badge
