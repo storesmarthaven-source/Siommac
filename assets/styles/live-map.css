@@ -240,6 +240,7 @@
 .leaflet-popup-content {
   margin: 0 !important;
   width: auto !important;
+  white-space: nowrap;
 }
 .leaflet-popup {
   margin-bottom: 14px !important;

@@ -28,6 +28,7 @@ const AttendanceSystem = (function() {
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
   let _mapViewSet = false;    // true after first fitBounds — prevents re-centering on revisit
   let _selectedSiteId = '';   // currently selected site filter in the live panel ('' = none)
+  let _siteLayerMap = {};     // siteId → { zone, marker, siteObj } for popup refresh
   // ─── Section load registry ───────────────────────────────────────────────────
   // Tracks whether each section has ever successfully received data this session.
   // Skeleton loaders only fire on the very first load; background refreshes are
@@ -292,19 +293,7 @@ const AttendanceSystem = (function() {
         sites.forEach(site => {
           if (!site.latitude || !site.longitude) return;
 
-          const popupHtml = `
-            <div class="lm-site-popup-card">
-              <div class="lm-site-popup-banner">
-                <div class="lm-site-popup-building-icon"><i class="fas fa-building"></i></div>
-                <div>
-                  <div class="lm-site-popup-name">${site.name}</div>
-                  ${site.address ? `<div class="lm-site-popup-addr">${site.address}</div>` : ''}
-                </div>
-              </div>
-              <div class="lm-site-popup-footer">
-                <i class="fas fa-ruler-horizontal"></i> ${site.radius || 200}m radius
-              </div>
-            </div>`;
+          const initHtml = _buildSitePopupHtml(site, liveData);
 
           // Radius circle — click selects this site in the activity panel
           const zone = L.circle([site.latitude, site.longitude], {
@@ -312,7 +301,7 @@ const AttendanceSystem = (function() {
             fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
             dashArray: '6 4'
           }).addTo(map);
-          zone.bindPopup(popupHtml, { className: 'siomac-popup', maxWidth: 240, minWidth: 200 });
+          zone.bindPopup(initHtml, { className: 'siomac-popup', maxWidth: 260, minWidth: 220 });
           zone.on('click', () => _selectLiveSite(site.id, site.name));
           zone._siteId = site.id;
           attendanceZones.push(zone);
@@ -326,15 +315,17 @@ const AttendanceSystem = (function() {
               iconAnchor: [18, 18]
             })
           }).addTo(map);
-          buildingMarker.bindPopup(popupHtml, {
+          buildingMarker.bindPopup(initHtml, {
             className: 'siomac-popup',
-            maxWidth: 240, minWidth: 200,
-            offset: L.point(-130, 0), // open to the left of the marker
+            maxWidth: 260, minWidth: 220,
             autoPan: false
           });
           buildingMarker.on('click', () => _selectLiveSite(site.id, site.name));
           buildingMarker._siteId = site.id;
           attendanceZones.push(buildingMarker);
+
+          // Store refs so we can refresh popup content when live data updates
+          _siteLayerMap[site.id] = { zone, marker: buildingMarker, site };
         });
 
         // Single final view on FIRST load only — prefer employee markers, then site bounds.
@@ -362,6 +353,53 @@ const AttendanceSystem = (function() {
     } catch (error) {
       console.error('Error initializing map:', error);
     }
+  }
+
+  // ─── Site popup HTML (built fresh from live data each refresh) ───────────────
+  function _buildSitePopupHtml(site, rows) {
+    const siteRows   = (rows || []).filter(r => String(r.siteId) === String(site.id));
+    const total      = siteRows.length;
+    const checkedIn  = siteRows.filter(r => !r.isCheckedOut).length;
+    const late       = siteRows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
+    const checkedOut = siteRows.filter(r => r.isCheckedOut).length;
+    return `<div class="lm-site-popup-card">
+      <div class="lm-site-popup-banner">
+        <div class="lm-site-popup-building-icon"><i class="fas fa-building"></i></div>
+        <div class="lm-site-popup-info">
+          <div class="lm-site-popup-name">${escapeHtml(site.name)}</div>
+          ${site.address ? `<div class="lm-site-popup-addr">${escapeHtml(site.address)}</div>` : ''}
+        </div>
+      </div>
+      <div class="lm-site-popup-stats">
+        <div class="lm-site-popup-stat">
+          <span class="lm-site-popup-stat-val">${total}</span>
+          <span class="lm-site-popup-stat-lbl">On Site</span>
+        </div>
+        <div class="lm-site-popup-divider"></div>
+        <div class="lm-site-popup-stat">
+          <span class="lm-site-popup-stat-val lm-sps-green">${checkedIn}</span>
+          <span class="lm-site-popup-stat-lbl">Checked In</span>
+        </div>
+        <div class="lm-site-popup-divider"></div>
+        <div class="lm-site-popup-stat">
+          <span class="lm-site-popup-stat-val lm-sps-gold">${late}</span>
+          <span class="lm-site-popup-stat-lbl">Late</span>
+        </div>
+        <div class="lm-site-popup-divider"></div>
+        <div class="lm-site-popup-stat">
+          <span class="lm-site-popup-stat-val lm-sps-gray">${checkedOut}</span>
+          <span class="lm-site-popup-stat-lbl">Out</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function _refreshSitePopups() {
+    Object.values(_siteLayerMap).forEach(({ zone, marker, site }) => {
+      const html = _buildSitePopupHtml(site, liveData);
+      if (zone)   zone.setPopupContent(html);
+      if (marker) marker.setPopupContent(html);
+    });
   }
 
   // ─── Site selection (click building / zone on map → filter activity panel) ───
@@ -560,6 +598,9 @@ const AttendanceSystem = (function() {
   }
 
   function renderLivePanel(rows) {
+    // Refresh popup content on all site markers with latest live counts
+    _refreshSitePopups();
+
     const listEl = document.getElementById('liveEmployeesList');
 
     // If no site is selected, show prompt and zero out stat cards
@@ -3207,6 +3248,7 @@ const AttendanceSystem = (function() {
     _currentProfileImage = null; // reset so next login fetches fresh from DB
     _mapViewSet = false;        // reset so map re-fits on next login's first visit
     _selectedSiteId = '';       // reset site filter
+    _siteLayerMap = {};         // reset site layer refs
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;

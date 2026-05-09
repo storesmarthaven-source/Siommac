@@ -1560,24 +1560,58 @@
 .lm-cluster-icon i { font-size: 15px; line-height: 1; }
 .lm-cluster-count { font-size: 11px; font-weight: 700; line-height: 1; }
 
-/* Site zone popup card — compact version of lm-popup-card */
-.lm-site-popup-card { width: 200px; font-family: inherit; }
+/* Site zone popup card */
+.lm-site-popup-card {
+  width: 240px; font-family: inherit;
+  border-radius: 14px; overflow: hidden;
+  white-space: nowrap;
+}
 .lm-site-popup-banner {
   display: flex; align-items: center; gap: 10px;
-  background: #1b2d54; padding: 10px 12px;
+  background: #1b2d54; padding: 11px 13px;
+  white-space: nowrap;
 }
 .lm-site-popup-building-icon {
-  width: 30px; height: 30px; border-radius: 8px;
+  width: 32px; height: 32px; border-radius: 8px;
   background: rgba(255,255,255,0.12);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; color: #fff; font-size: 14px;
 }
-.lm-site-popup-name { font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.2; }
-.lm-site-popup-addr { font-size: 0.68rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
-.lm-site-popup-footer {
-  padding: 8px 12px; font-size: 0.72rem;
-  background: var(--bg-card);
-  color: var(--text-muted); display: flex; align-items: center; gap: 5px;
+.lm-site-popup-info { min-width: 0; overflow: hidden; }
+.lm-site-popup-name {
+  font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lm-site-popup-addr {
+  font-size: 0.67rem; color: rgba(255,255,255,0.6); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* stats row */
+.lm-site-popup-stats {
+  display: flex; align-items: stretch;
+  background: var(--bg-card, #fff);
+  padding: 10px 8px;
+  gap: 0;
+  white-space: nowrap;
+}
+.lm-site-popup-stat {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.lm-site-popup-stat-val {
+  font-size: 1.15rem; font-weight: 800;
+  color: var(--siomac-navy, #1b2d54); line-height: 1;
+}
+.lm-sps-green { color: #2E7D32; }
+.lm-sps-gold  { color: #c67c00; }
+.lm-sps-gray  { color: #757575; }
+.lm-site-popup-stat-lbl {
+  font-size: 0.6rem; color: var(--text-muted, #888);
+  text-transform: uppercase; letter-spacing: .04em;
+  white-space: nowrap;
+}
+.lm-site-popup-divider {
+  width: 1px; background: var(--border, #eee); margin: 4px 4px;
 }
 
 .user-location-marker > div { background: var(--success) !important; border: 3px solid white !important; box-shadow: 0 2px 6px rgba(0,0,0,.3) !important; }
