@@ -1503,19 +1503,26 @@ const AttendanceSystem = (function() {
         });
       }
 
+      function _fmtTimestamp(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d)) return '';
+        return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+
       function _bubble(isMe, senderName, body, time, photoUrl) {
         const name     = senderName || (isMe ? 'You' : 'Admin');
         const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
         const align    = isMe ? 'flex-end' : 'flex-start';
-        const bubbleBg    = isMe ? 'var(--siomac-primary, #001f3f)' : 'var(--bg-subtle, #f0f2f5)';
+        const bubbleBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--bg-subtle, #f0f2f5)';
         const bubbleColor = isMe ? '#fff' : 'var(--text-primary)';
-        const avatarBg    = isMe ? 'var(--siomac-accent, #0074D9)' : 'var(--border-strong, #bbb)';
+        const avatarBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : '#888';
         const avatar = photoUrl
-          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-accent,#0074D9)' : 'var(--border,#ddd)'};">`
-          : `<div style="width:30px;height:30px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
+          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--border,#ddd)'};">`
+          : `<div style="width:32px;height:32px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
         const bubble = `<div style="max-width:75%;background:${bubbleBg};color:${bubbleColor};padding:8px 12px;border-radius:${isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};font-size:0.82rem;white-space:pre-wrap;line-height:1.4;">${escapeHtml(body)}</div>`;
-        const meta   = `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:3px;text-align:${isMe ? 'right' : 'left'};">${escapeHtml(isMe ? 'You' : name)} · ${_timeAgoShort(time)}</div>`;
-        return `<div style="display:flex;flex-direction:column;align-items:${align};margin-bottom:12px;">
+        const meta   = `<div style="font-size:0.67rem;color:var(--text-muted);margin-top:3px;text-align:${isMe ? 'right' : 'left'};">${escapeHtml(isMe ? 'You' : name)} · ${_fmtTimestamp(time)}</div>`;
+        return `<div style="display:flex;flex-direction:column;align-items:${align};margin-bottom:14px;">
           <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMe ? 'row-reverse' : 'row'};">${avatar}${bubble}</div>
           ${meta}
         </div>`;
@@ -1537,14 +1544,12 @@ const AttendanceSystem = (function() {
           <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">${escapeHtml(m.subject)}</div>
         </div>`;
 
-        // Opening message bubble — pick the right photo for each side
+        // Each bubble uses the actual sender's photo — no swapping
         const isMeFirst = m.fromUsername === currentUser;
-        const myPhoto    = isMeFirst ? m.fromPhoto : m.toPhoto;
-        const otherPhoto = isMeFirst ? m.toPhoto   : m.fromPhoto;
-        const thread = `<div data-bubble-id="orig_${m.id}">${_bubble(isMeFirst, m.fromName, m.body, m.createdAt, isMeFirst ? myPhoto : otherPhoto)}</div>`
+        const thread = `<div data-bubble-id="orig_${m.id}">${_bubble(isMeFirst, m.fromName, m.body, m.createdAt, m.fromPhoto)}</div>`
           + (m.replies || []).map(r => {
             const rIsMe = r.fromUsername === currentUser;
-            return `<div data-bubble-id="reply_${r.id}">${_bubble(rIsMe, r.fromName, r.body, r.createdAt, rIsMe ? myPhoto : otherPhoto)}</div>`;
+            return `<div data-bubble-id="reply_${r.id}">${_bubble(rIsMe, r.fromName, r.body, r.createdAt, r.fromPhoto)}</div>`;
           }).join('');
 
         document.getElementById('msgDetailBody').innerHTML = header
@@ -1573,14 +1578,10 @@ const AttendanceSystem = (function() {
         const body = document.getElementById('msgDetailBody');
         if (!body) return;
 
-        const isMeFirst = m.fromUsername === currentUser;
-        const myPhoto    = isMeFirst ? m.fromPhoto : m.toPhoto;
-        const otherPhoto = isMeFirst ? m.toPhoto   : m.fromPhoto;
-
-        // All messages in thread: original + replies
+        // All messages in thread: original + replies, each with its own fromPhoto
         const allMessages = [
-          { id: 'orig_' + m.id, fromUsername: m.fromUsername, fromName: m.fromName, body: m.body, createdAt: m.createdAt }
-        ].concat((m.replies || []).map(r => ({ id: 'reply_' + r.id, fromUsername: r.fromUsername, fromName: r.fromName, body: r.body, createdAt: r.createdAt })));
+          { id: 'orig_' + m.id, fromUsername: m.fromUsername, fromName: m.fromName, body: m.body, createdAt: m.createdAt, fromPhoto: m.fromPhoto }
+        ].concat((m.replies || []).map(r => ({ id: 'reply_' + r.id, fromUsername: r.fromUsername, fromName: r.fromName, body: r.body, createdAt: r.createdAt, fromPhoto: r.fromPhoto })));
 
         const threadEl = body.querySelector('[data-msg-thread]');
         if (!threadEl) {
@@ -1596,7 +1597,7 @@ const AttendanceSystem = (function() {
           if (existingIds.has(String(msg.id))) return;
           const isMe = msg.fromUsername === currentUser;
           const tmp = document.createElement('div');
-          tmp.innerHTML = `<div data-bubble-id="${msg.id}">${_bubble(isMe, msg.fromName, msg.body, msg.createdAt, isMe ? myPhoto : otherPhoto)}</div>`;
+          tmp.innerHTML = `<div data-bubble-id="${msg.id}">${_bubble(isMe, msg.fromName, msg.body, msg.createdAt, msg.fromPhoto)}</div>`;
           threadEl.appendChild(tmp.firstElementChild);
           appended = true;
         });
@@ -1647,12 +1648,25 @@ const AttendanceSystem = (function() {
         if (!subject) { document.getElementById('msgComposeSubject').focus(); return; }
         if (!body)    { document.getElementById('msgComposeBody').focus();    return; }
         document.getElementById('msgSendBtn').disabled = true;
+        const sentAt = new Date().toISOString();
         api('sendMessage', { subject, body, toUsername }).then(res => {
           document.getElementById('msgSendBtn').disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+          // Optimistic update — show message immediately without waiting for server poll
+          _msgs.unshift({
+            id: res.id || ('tmp_' + Date.now()),
+            fromUsername: currentUser, fromName: currentFullName || currentUser,
+            fromPhoto: _currentProfileImage || '',
+            toUsername: toUsername || 'admin', toName: toUsername || 'Admin',
+            toPhoto: '',
+            subject, body,
+            isUnread: false, readByRecipient: false,
+            createdAt: sentAt, replies: []
+          });
           _showList();
-          // Small delay so DB write is visible before re-fetch
-          setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 400);
+          _renderList();
+          // Confirm with server after short delay to get proper IDs + photos
+          setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 800);
           showPopup('success', 'Sent!', `Your message has been sent.`);
         }).catch(() => { document.getElementById('msgSendBtn').disabled = false; });
       });
@@ -1675,10 +1689,17 @@ const AttendanceSystem = (function() {
         const btn = document.getElementById('msgReplySendBtn');
         btn.disabled = true;
         document.getElementById('msgReplyInput').value = '';
+        const replyAt = new Date().toISOString();
+        // Optimistic: append reply bubble immediately
+        const m = _msgs.find(x => String(x.id) === String(_currentMsgId));
+        const tmpReply = { id: 'tmp_' + Date.now(), fromUsername: currentUser, fromName: currentFullName || currentUser, fromPhoto: _currentProfileImage || '', body, createdAt: replyAt };
+        if (m) m.replies.push(tmpReply);
+        _updateDetail(_currentMsgId);
         api('replyMessage', { messageId: _currentMsgId, body }).then(res => {
           btn.disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-          _fetch(true); // refresh but stay in detail view
+          // Confirm with server to replace tmp IDs with real ones
+          setTimeout(() => _fetch(), 800);
         }).catch(() => { btn.disabled = false; });
       });
 
