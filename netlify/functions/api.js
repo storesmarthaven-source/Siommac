@@ -1330,6 +1330,7 @@ const routes = {
   getMessages,
   replyMessage,
   markMessageRead,
+  deleteMessage,
   getEmployeesForMsg,
   // Tickets
   createTicket,
@@ -1890,6 +1891,18 @@ async function replyMessage(args, ctx) {
 async function markMessageRead(args, ctx) {
   const actor = await requireUser(ctx);
   await sb.from('messages').update({ read_by_recipient: true }).eq('id', args.messageId);
+  return { success: true };
+}
+
+async function deleteMessage(args, ctx) {
+  const actor = await requireUser(ctx);
+  if (actor.role !== 'admin' && actor.role !== 'manager') return { success: false, message: 'Forbidden.' };
+  const { messageId } = args;
+  if (!messageId) return { success: false, message: 'messageId is required.' };
+  // Delete replies first (FK constraint), then the message itself
+  await sb.from('message_replies').delete().eq('message_id', messageId);
+  const { error } = await sb.from('messages').delete().eq('id', messageId);
+  if (error) return { success: false, message: error.message };
   return { success: true };
 }
 

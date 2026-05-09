@@ -1082,6 +1082,10 @@ const AttendanceSystem = (function() {
                 if (tc) tc.style.display = 'none';
               }, 0);
             }
+            // When notification modal opens, refresh immediately so data is never stale
+            if (btn === 'hdrNotifBtn') {
+              if (typeof window._fetchNotifs === 'function') window._fetchNotifs();
+            }
             // When message modal opens, always show the list view (reset any open detail/compose)
             if (btn === 'hdrMsgBtn') {
               setTimeout(() => {
@@ -1113,6 +1117,7 @@ const AttendanceSystem = (function() {
       let _notifData   = [];
       let _pollTimer   = null;
       let _seenIds     = new Set(); // tracks IDs we've already displayed
+      let _loaded      = false;    // true after first successful fetch — prevents premature "No notifications"
 
       function _readIds() {
         try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); } catch { return new Set(); }
@@ -1217,7 +1222,8 @@ const AttendanceSystem = (function() {
 
         if (!_notifData.length) {
           _lastNotifRenderHash = '';
-          list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
+          // Only show empty state after first fetch — avoids flash of "No notifications" before data loads
+          if (_loaded) list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
           return;
         }
 
@@ -1283,6 +1289,7 @@ const AttendanceSystem = (function() {
             const newIds = new Set(incoming.map(n => n.id).filter(id => !_seenIds.has(id)));
             incoming.forEach(n => _seenIds.add(n.id));
             _notifData = incoming;
+            _loaded = true;
             _render(newIds);
             // Pulse bell if there are genuinely new notifications
             if (newIds.size > 0 && _seenIds.size > newIds.size) {
@@ -1372,12 +1379,13 @@ const AttendanceSystem = (function() {
         const newIds = new Set(incoming.map(n => n.id).filter(id => !_seenIds.has(id)));
         incoming.forEach(n => _seenIds.add(n.id));
         _notifData = incoming;
+        _loaded = true;
         _render(newIds);
       };
 
       // Expose so init() can kick it off after login
       window._startNotifPolling  = _startPolling;
-      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); };
+      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
       window._renderNotifs       = _render;
       window._fetchNotifs        = _fetch; // called by Realtime on instant push
       window._clearMapBadge      = () => {
@@ -1604,9 +1612,17 @@ const AttendanceSystem = (function() {
 
         // Subject header
         const otherName = m.fromUsername === currentUser ? m.toName : m.fromName;
+        const deleteBtn = _isAdmin()
+          ? `<button data-delete-msg-id="${escapeHtml(String(m.id))}" title="Delete conversation" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.8rem;padding:2px 6px;border-radius:6px;display:flex;align-items:center;gap:4px;opacity:.75;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.75'"><i class="fas fa-trash-alt"></i> Delete</button>`
+          : '';
         const header = `<div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle,#f8fafe);">
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;">${escapeHtml(m.fromUsername === currentUser ? 'To' : 'From')}: <strong>${escapeHtml(otherName)}</strong></div>
-          <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">${escapeHtml(m.subject)}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;">${escapeHtml(m.fromUsername === currentUser ? 'To' : 'From')}: <strong>${escapeHtml(otherName)}</strong></div>
+              <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">${escapeHtml(m.subject)}</div>
+            </div>
+            ${deleteBtn}
+          </div>
         </div>`;
 
         // Each bubble uses the actual sender's photo — no swapping
@@ -1795,6 +1811,37 @@ const AttendanceSystem = (function() {
         const row = e.target.closest('.hdr-msg-item[data-msg-id]');
         if (!row) return;
         _showDetail(row.dataset.msgId);
+      });
+
+      // Delete entire conversation (admin only)
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('[data-delete-msg-id]');
+        if (!btn) return;
+        const msgId = btn.dataset.deleteMsgId;
+        if (!msgId) return;
+        const m = _msgs.find(x => String(x.id) === String(msgId));
+        const label = m ? `"${m.subject}"` : 'this conversation';
+        cpop.fire({
+          icon: 'warning',
+          title: `Delete ${label}?`,
+          text: 'This will permanently delete the entire conversation and all replies. This cannot be undone.',
+          showCancelButton: true,
+          confirmButtonText: 'Delete',
+          cancelButtonText: 'Cancel'
+        }).then(result => {
+          if (!result.isConfirmed) return;
+          btn.disabled = true;
+          api('deleteMessage', { messageId: msgId }).then(res => {
+            btn.disabled = false;
+            if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not delete conversation.'); return; }
+            // Remove from local list and go back
+            _msgs = _msgs.filter(x => String(x.id) !== String(msgId));
+            _showList();
+            _renderList();
+            _updateMsgBadge();
+            showPopup('success', 'Deleted', 'Conversation deleted.');
+          }).catch(() => { btn.disabled = false; });
+        });
       });
 
       window._applyMsgData = (res) => {
