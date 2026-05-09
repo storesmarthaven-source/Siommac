@@ -3543,6 +3543,12 @@ const AttendanceSystem = (function() {
   }
 
   function displayAdminStats(stats) {
+    // Animate all cards in together on first load
+    document.querySelectorAll('.dash-stats-row .stat-card').forEach(card => {
+      card.classList.remove('stat-card-animate');
+      void card.offsetWidth; // reflow to restart animation
+      card.classList.add('stat-card-animate');
+    });
     _countUp(document.getElementById('totalEmployees'),  stats.totalEmployees);
     _countUp(document.getElementById('presentToday'),    stats.presentToday);
     _countUp(document.getElementById('absentToday'),     stats.absentToday);
