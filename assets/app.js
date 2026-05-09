@@ -392,12 +392,10 @@ const AttendanceSystem = (function() {
       _markLoaded('s-projectMap');
       if (markersNeedUpdate) {
         _liveDataHash = hash;
-        // Preload all profile photos before rendering markers + panel — no flash
-        const _livePhotoUrls = liveData.map(r => r.profileImage || r.checkInPhotoUrl).filter(Boolean);
-        _preloadThenRender(_livePhotoUrls, () => {
-          plotLiveEmployees(liveData);
-          renderLivePanel(liveData);
-        });
+        // Render immediately — photos are already cached client-side (24h signed URLs
+        // + _photoCache), so preloading adds latency without benefit for the live map.
+        plotLiveEmployees(liveData);
+        renderLivePanel(liveData);
       }
       }
     });
@@ -548,8 +546,8 @@ const AttendanceSystem = (function() {
       return;
     }
 
-    // Remove empty state if present
-    if (listEl.querySelector('.lm-emp-empty')) listEl.innerHTML = '';
+    // Remove empty state or skeleton placeholders (skeleton items have no data-id)
+    if (listEl.querySelector('.lm-emp-empty') || listEl.querySelector('.leave-request-item')) listEl.innerHTML = '';
 
     function _liveEmpRowHtml(r) {
       const initial   = (r.fullName || '?').charAt(0).toUpperCase();
@@ -5200,7 +5198,7 @@ const AttendanceSystem = (function() {
         html: `
           <div style="text-align:center;">
             <div style="font-size:2.8rem;font-weight:800;color:var(--siomac-navy);line-height:1;">${count}</div>
-            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">Employee${count !== 1 ? 's' : ''} Currently on Site</div>
           </div>`,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
@@ -5257,8 +5255,8 @@ const AttendanceSystem = (function() {
       return;
     }
 
-    // Remove empty state if present
-    if (container.querySelector('.ps-empty')) container.innerHTML = '';
+    // Remove empty state or skeleton placeholders (they have no data-id)
+    if (container.querySelector('.ps-empty') || container.querySelector('.skel-card')) container.innerHTML = '';
 
     function _psCardRowHtml(site) {
       const lat = Number(site.latitude)  || 0;
