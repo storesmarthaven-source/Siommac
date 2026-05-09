@@ -1170,7 +1170,7 @@ const AttendanceSystem = (function() {
       }
 
       function _fetch() {
-        api('getNotifications', {}).then(res => {
+        _rawApi('getNotifications', {}).then(res => {
           if (res && res.success) {
             const incoming = res.data || [];
             const newIds = new Set(incoming.map(n => n.id).filter(id => !_seenIds.has(id)));
