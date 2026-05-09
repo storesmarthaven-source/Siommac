@@ -569,7 +569,7 @@ const AttendanceSystem = (function() {
             <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
           </div>
         </div>
-      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: true, autoPanPadding: L.point(20, 20) });
+      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: true, autoPanPadding: L.point(24, 80) });
       marker._liveUserId = row.userId; // for sidebar click → marker show
       liveMarkers.push(marker);
       // Markers are NOT added to the map here — they only appear when
@@ -714,19 +714,11 @@ const AttendanceSystem = (function() {
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
 
-    // Zoom to a good level first (no animate so popup opens on the right view),
-    // then openPopup — Leaflet's autoPan will pan the map so the full card is visible.
-    const currentZoom = map.getZoom();
-    if (currentZoom < 15) {
-      map.setView(marker.getLatLng(), 16, { animate: false });
-    } else {
-      map.panTo(marker.getLatLng(), { animate: false });
-    }
+    // Use zoom 15 — wide enough that the popup card (≈320px tall) fits comfortably
+    // above the marker with room to spare. Always snap with no animation so the
+    // popup opens on the settled view and autoPan can do a clean single pan.
+    map.setView(marker.getLatLng(), 15, { animate: false });
     marker.openPopup();
-    // After popup opens, let autoPan finish bringing the card fully into view
-    map.once('popupopen', () => {
-      map.panInsideBounds(map.getBounds(), { animate: true });
-    });
   }
 
   function markProjectAttendance() {
@@ -2389,6 +2381,31 @@ const AttendanceSystem = (function() {
       });
 
       document.getElementById('ticketRefreshBtn').addEventListener('click', _fetch);
+
+      // Clear closed/resolved/deleted tickets
+      document.getElementById('ticketClearClosedBtn').addEventListener('click', () => {
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        const closedCount = _tickets.filter(t =>
+          ['closed', 'resolved', 'deleted'].includes(t.status) &&
+          (isAdminView || t.fromUsername === currentUser)
+        ).length;
+        if (!closedCount) { showPopup('info', 'Nothing to Clear', 'There are no closed, resolved or deleted tickets to clear.'); return; }
+        cpop.fire({
+          icon: 'warning',
+          title: 'Clear Closed Tickets?',
+          text: `This will permanently delete ${closedCount} closed, resolved or deleted ticket${closedCount !== 1 ? 's' : ''}. This cannot be undone.`,
+          showCancelButton: true,
+          confirmButtonText: 'Clear All',
+          confirmButtonColor: '#e40c0c'
+        }).then(result => {
+          if (!result.isConfirmed) return;
+          api('clearClosedTickets', {}).then(res => {
+            if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+            showPopup('success', 'Cleared', `${res.count} ticket${res.count !== 1 ? 's' : ''} removed.`);
+            _fetch();
+          }).catch(() => showPopup('error', 'Error', 'Could not clear tickets.'));
+        });
+      });
 
       // Delete ticket button (employee only, on list row or detail view)
       document.addEventListener('click', e => {

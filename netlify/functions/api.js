@@ -1338,6 +1338,7 @@ const routes = {
   replyTicket,
   updateTicketStatus,
   deleteTicket,
+  clearClosedTickets,
   // Lightweight badge counts — all 4 badges in one fast request on login
   getHeaderCounts: async (a, ctx) => {
     const actor = await requireUser(ctx);
@@ -2075,6 +2076,26 @@ async function replyTicket(args, ctx) {
     await sb.from('support_tickets').update({ status: 'in_progress', updated_at: new Date().toISOString() }).eq('id', ticketId);
   }
   return { success: true };
+}
+
+async function clearClosedTickets(args, ctx) {
+  const actor = await requireUser(ctx);
+  // Admin/manager: clear ALL closed/resolved/deleted tickets
+  // Employee: clear only their own closed/resolved/deleted tickets
+  const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
+  let query = sb.from('support_tickets')
+    .select('id')
+    .in('status', ['closed', 'resolved', 'deleted']);
+  if (!isAdminOrMgr) query = query.eq('from_user_id', actor.id);
+  const { data: toDelete, error: fetchErr } = await query;
+  if (fetchErr) return { success: false, message: fetchErr.message };
+  if (!toDelete || !toDelete.length) return { success: true, count: 0 };
+  const ids = toDelete.map(t => t.id);
+  // Delete replies first (foreign key)
+  await sb.from('ticket_replies').delete().in('ticket_id', ids);
+  const { error } = await sb.from('support_tickets').delete().in('id', ids);
+  if (error) return { success: false, message: error.message };
+  return { success: true, count: ids.length };
 }
 
 async function deleteTicket(args, ctx) {

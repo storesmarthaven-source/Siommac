@@ -246,7 +246,10 @@
           </div>
           <div class="hdr-modal-foot" id="ticketModalFoot">
             <span id="ticketOpenCount" style="font-size:0.78rem;color:var(--siomac-navy);font-weight:600;"></span>
-            <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="hdr-foot-link" id="ticketClearClosedBtn" style="color:var(--text-muted);"><i class="fas fa-broom"></i> Clear Closed</button>
+              <button class="hdr-foot-link" id="ticketRefreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
           </div>
         </div>
       </div>
@@ -429,7 +432,7 @@
             <div class="lm-selected-site-bar" id="lmSelectedSiteBar" style="display:none;">
               <i class="fas fa-building" style="color:var(--siomac-navy);font-size:0.75rem;flex-shrink:0;"></i>
               <span id="lmSelectedSiteName" class="lm-selected-site-name"></span>
-              <button id="lmClearSiteBtn" class="lm-clear-site-btn" title="Show all sites"><i class="fas fa-times"></i></button>
+              <button id="lmClearSiteBtn" class="lm-clear-site-btn"><i class="fas fa-times"></i> Clear</button>
             </div>
             <div class="lm-employees-list" id="liveEmployeesList"></div>
             <div class="lm-legend">

@@ -125,7 +125,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   background: #eef3fb;
@@ -140,18 +140,24 @@
   text-overflow: ellipsis;
 }
 .lm-clear-site-btn {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--siomac-navy);
   border: none;
   cursor: pointer;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  padding: 2px 5px;
-  border-radius: 50%;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 4px 10px;
+  border-radius: 20px;
   flex-shrink: 0;
-  transition: color .15s, background .15s;
+  transition: background .15s, opacity .15s;
   line-height: 1;
+  white-space: nowrap;
 }
-.lm-clear-site-btn:hover { color: var(--siomac-red); background: rgba(228,12,12,0.07); }
+.lm-clear-site-btn:hover { background: var(--siomac-red); }
 
 /* employee list */
 .lm-employees-list {
@@ -226,8 +232,21 @@
 }
 
 /* empty state */
-.lm-emp-empty { text-align: center; padding: 32px 12px; color: var(--text-muted); font-size: 13px; }
-.lm-emp-empty i { font-size: 28px; color: #ccc; margin-bottom: 10px; display: block; }
+.lm-emp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+  font-size: 0.83rem;
+  font-weight: 500;
+  line-height: 1.5;
+  gap: 10px;
+}
+.lm-emp-empty i { font-size: 2.2rem; color: #ccc; }
 
 /* ── Leaflet popup — SIOMAC modern card ── */
 .leaflet-popup-content-wrapper {
