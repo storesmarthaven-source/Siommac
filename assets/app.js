@@ -1096,7 +1096,7 @@ const AttendanceSystem = (function() {
       const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
       const MAP_SECTION_IDS   = ['s-projectMap'];
 
-      // Track last rendered label per section — survives DOM rebuilds (buttons get replaced)
+      // Track last rendered label per section key — survives DOM rebuilds
       const _sbBadgeLastLabel = new Map();
 
       function _setBadge(btn, count) {
@@ -1104,26 +1104,29 @@ const AttendanceSystem = (function() {
         const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
         const prev  = _sbBadgeLastLabel.get(key);
 
+        // Nothing changed — skip entirely (no DOM touch, no animation)
+        if (prev === label) return;
+        _sbBadgeLastLabel.set(key, label);
+
         let b = btn.querySelector('.sb-nav-badge');
         if (count > 0) {
           if (!b) {
+            // Create with animation suppressed so CSS badgeFadeIn doesn't auto-fire
             b = document.createElement('span');
             b.className = 'sb-nav-badge';
-            btn.appendChild(b);
-          }
-          // Only update text + animate when label actually changed
-          if (prev !== label) {
-            _sbBadgeLastLabel.set(key, label);
-            b.textContent = label;
             b.style.animation = 'none';
-            b.offsetWidth; // reflow
-            b.style.animation = '';
-            b.classList.remove('sb-badge-bounce');
-            void b.offsetWidth;
-            b.classList.add('sb-badge-bounce');
+            btn.appendChild(b);
+            b.offsetWidth; // flush so 'none' takes effect before we clear it
           }
+          b.textContent = label;
+          // Animate the count change
+          b.style.animation = 'none';
+          b.offsetWidth;
+          b.style.animation = '';
+          b.classList.remove('sb-badge-bounce');
+          void b.offsetWidth;
+          b.classList.add('sb-badge-bounce');
         } else {
-          if (prev !== '') _sbBadgeLastLabel.set(key, '');
           if (b) b.remove();
         }
       }
