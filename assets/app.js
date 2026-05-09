@@ -5494,6 +5494,14 @@ const AttendanceSystem = (function() {
     _countUp(document.getElementById('deptStatTotal'),     departmentList.length);
     _countUp(document.getElementById('deptStatEmployees'), departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
     _countUp(document.getElementById('deptStatHeads'),     departmentList.filter(d => d.manager && d.manager !== '—').length);
+    // Avg attendance rate — from _empAllList (has todayStatus per employee)
+    const _rateEl = document.getElementById('deptStatRate');
+    if (_rateEl) {
+      const activeEmps = (_empAllList || []).filter(e => e.status === 'Active');
+      const checkedIn  = activeEmps.filter(e => e.todayStatus === 'checkedin' || e.todayStatus === 'checkedout').length;
+      const rate = activeEmps.length > 0 ? Math.round((checkedIn / activeEmps.length) * 100) : 0;
+      _rateEl.textContent = rate + '%';
+    }
 
     const search = (document.getElementById('deptSearchInput') || {}).value || '';
     const filtered = search
@@ -5908,6 +5916,7 @@ const AttendanceSystem = (function() {
 
   function loadProjectSites() {
     _skelOnce('s-adm-projects', () => setSkel('projectsContainer', skelCards(3)));
+    const _doDisplay = () => displayProjectSites(projectSites);
     apiSwr('listProjectSites', {}, {
       onData: res => {
         if (!res || !res.success) {
@@ -5916,7 +5925,15 @@ const AttendanceSystem = (function() {
         }
         projectSites = Array.isArray(res.data) ? res.data : [];
         _markLoaded('s-adm-projects');
-        displayProjectSites(projectSites);
+        // Ensure liveData is populated for the Site Attendance stat
+        if (liveData && liveData.length) {
+          _doDisplay();
+        } else {
+          const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
+          _rawApi('getLiveAttendance', { scope }).then(r => {
+            liveData = (r && r.success && r.data) || [];
+          }).catch(() => {}).finally(() => _doDisplay());
+        }
       },
       onError: err => {
         document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
@@ -6003,6 +6020,12 @@ const AttendanceSystem = (function() {
     // Update stats
     _countUp(document.getElementById('psTotalSites'),  sites.length);
     _countUp(document.getElementById('psActiveZones'), sites.length);
+    // Assigned Workers — total active employees across all sites (from _empAllList)
+    const _activeEmps = (_empAllList || []).filter(e => e.status === 'Active').length;
+    _countUp(document.getElementById('psAssignedWorkers'), _activeEmps);
+    // Site Attendance — employees currently checked in at any site today (from liveData)
+    const _onSiteNow = (liveData || []).filter(r => !r.isCheckedOut).length;
+    _countUp(document.getElementById('psSiteAttendance'), _onSiteNow);
 
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
     const filtered = search
