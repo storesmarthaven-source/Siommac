@@ -2086,26 +2086,36 @@ const AttendanceSystem = (function() {
             <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(t.body)}</div>
           </div>
           <div data-ticket-replies>
-            ${t.replies.map(r => `
-              <div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
+            ${t.replies.map(r => {
+              const isSystem = r.fromUsername === '__system__';
+              if (isSystem) {
+                return `<div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:#f5f5f5;display:flex;align-items:flex-start;gap:8px;">
+                  <i class="fas fa-lock" style="color:#999;font-size:0.75rem;margin-top:3px;flex-shrink:0;"></i>
+                  <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">System · ${_timeAgoShort(r.createdAt)}</div>
+                    <div style="font-size:0.82rem;color:#777;font-style:italic;">${escapeHtml(r.body)}</div>
+                  </div>
+                </div>`;
+              }
+              return `<div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
                 <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
                 <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>`;
         document.getElementById('ticketReplyInput').value = '';
 
-        // Disable reply for employees on closed/resolved tickets
+        // Disable reply for everyone on closed/resolved tickets
         const isClosed = t.status === 'closed' || t.status === 'resolved';
         const replyInput   = document.getElementById('ticketReplyInput');
         const replySendBtn = document.getElementById('ticketReplySendBtn');
         if (replyInput && replySendBtn) {
-          const lockReply = !isAdminView && isClosed;
-          replyInput.disabled    = lockReply;
-          replyInput.placeholder = lockReply ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
-          replyInput.style.background = lockReply ? 'var(--bg-subtle,#f8fafe)' : '';
-          replyInput.style.color      = lockReply ? 'var(--text-muted)' : '';
-          replySendBtn.disabled  = lockReply;
-          replySendBtn.style.opacity  = lockReply ? '0.4' : '';
+          replyInput.disabled    = isClosed;
+          replyInput.placeholder = isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
+          replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
+          replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
+          replySendBtn.disabled  = isClosed;
+          replySendBtn.style.opacity  = isClosed ? '0.4' : '';
         }
       }
 
@@ -2138,12 +2148,34 @@ const AttendanceSystem = (function() {
           if (existingIds.has(String(r.id))) return;
           const div = document.createElement('div');
           div.dataset.replyId = String(r.id);
-          div.style.cssText = `padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};`;
-          div.innerHTML = `<div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
-            <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>`;
+          const isSystem = r.fromUsername === '__system__';
+          if (isSystem) {
+            div.style.cssText = 'padding:10px 16px;border-bottom:1px solid var(--border);background:#f5f5f5;display:flex;align-items:flex-start;gap:8px;';
+            div.innerHTML = `<i class="fas fa-lock" style="color:#999;font-size:0.75rem;margin-top:3px;flex-shrink:0;"></i>
+              <div>
+                <div style="font-size:0.72rem;font-weight:700;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">System · ${_timeAgoShort(r.createdAt)}</div>
+                <div style="font-size:0.82rem;color:#777;font-style:italic;">${escapeHtml(r.body)}</div>
+              </div>`;
+          } else {
+            div.style.cssText = `padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};`;
+            div.innerHTML = `<div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
+              <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>`;
+          }
           repliesEl.appendChild(div);
           body.scrollTop = body.scrollHeight;
         });
+        // Re-evaluate reply lock in case status changed via poll
+        const isClosed = t.status === 'closed' || t.status === 'resolved';
+        const replyInput   = document.getElementById('ticketReplyInput');
+        const replySendBtn = document.getElementById('ticketReplySendBtn');
+        if (replyInput && replySendBtn) {
+          replyInput.disabled    = isClosed;
+          replyInput.placeholder = isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
+          replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
+          replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
+          replySendBtn.disabled  = isClosed;
+          replySendBtn.style.opacity  = isClosed ? '0.4' : '';
+        }
       }
 
       function _updateTicketBadge() {

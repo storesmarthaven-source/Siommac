@@ -2042,8 +2042,8 @@ async function replyTicket(args, ctx) {
   const { data: ticket } = await sb.from('support_tickets').select('status, from_user_id').eq('id', ticketId).maybeSingle();
   if (!ticket) return { success: false, message: 'Ticket not found.' };
   const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
-  // Employees cannot reply to closed or resolved tickets
-  if (!isAdminOrMgr && (ticket.status === 'closed' || ticket.status === 'resolved')) {
+  // No one can reply to a closed or resolved ticket
+  if (ticket.status === 'closed' || ticket.status === 'resolved') {
     return { success: false, message: 'This ticket is closed and can no longer be replied to.' };
   }
   const { error } = await sb.from('ticket_replies').insert({
@@ -2066,8 +2066,25 @@ async function updateTicketStatus(args, ctx) {
   if (actor.role !== 'admin' && actor.role !== 'manager') return { success: false, message: 'Forbidden.' };
   const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
   if (!validStatuses.includes(args.status)) return { success: false, message: 'Invalid status.' };
+  // Fetch current status so we can detect the transition
+  const { data: ticket } = await sb.from('support_tickets').select('status').eq('id', args.ticketId).maybeSingle();
+  if (!ticket) return { success: false, message: 'Ticket not found.' };
   const { error } = await sb.from('support_tickets').update({ status: args.status, updated_at: new Date().toISOString() }).eq('id', args.ticketId);
   if (error) return { success: false, message: error.message };
+  // Auto-post a system message when ticket is closed or resolved for the first time
+  const wasOpen = ticket.status !== 'closed' && ticket.status !== 'resolved';
+  if (wasOpen && (args.status === 'closed' || args.status === 'resolved')) {
+    const systemMsg = args.status === 'closed'
+      ? `This ticket has been closed by ${actor.full_name || actor.username}. No further replies are possible.`
+      : `This ticket has been marked as resolved by ${actor.full_name || actor.username}. If your issue persists, please open a new ticket.`;
+    await sb.from('ticket_replies').insert({
+      ticket_id:     args.ticketId,
+      from_user_id:  actor.id,
+      from_username: '__system__',
+      from_name:     'System',
+      body:          systemMsg
+    });
+  }
   return { success: true };
 }
 
