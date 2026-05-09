@@ -1160,12 +1160,14 @@ const AttendanceSystem = (function() {
         checkout:   () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
         absent:     () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
         // Employee
-        my_checkin:  () => 's-emp-attendance',
-        my_checkout: () => 's-emp-attendance',
-        reminder:    () => 's-emp-attendance',
-        myleave:     () => 's-emp-leave',
-        pending:     () => 's-emp-leave',
-        upcoming:    () => 's-emp-leave',
+        my_checkin:   () => 's-emp-attendance',
+        my_checkout:  () => 's-emp-attendance',
+        reminder:     () => 's-emp-attendance',
+        myleave:      () => 's-emp-leave',
+        pending:      () => 's-emp-leave',
+        upcoming:     () => 's-emp-leave',
+        ticketreply:  () => '__modal:hdrTicketModal',
+        msgreply:     () => '__modal:hdrMsgModal',
       };
 
       // Section IDs that carry nav badges
@@ -1255,11 +1257,13 @@ const AttendanceSystem = (function() {
           const iconEl = n.photoUrl
             ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
             : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
+          const bodyPreview = n.body ? `<div class="hdr-notif-sub" style="margin-top:3px;font-style:italic;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHtml(n.body)}"</div>` : '';
           return `<div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-id="${escapeHtml(n.id)}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
               ${iconEl}
               <div class="hdr-notif-text" style="flex:1;min-width:0;">
                 <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
                 <div class="hdr-notif-sub">${n.rawTime ? `At ${fmtLocalTime(n.rawTime)}${n.sub && n.sub !== 'Check-in recorded' && n.sub !== 'Check-out recorded' ? ' · ' + escapeHtml(n.sub) : ''}` : escapeHtml(n.sub)}</div>
+                ${bodyPreview}
                 <div class="hdr-notif-sub" style="margin-top:2px;opacity:.7">${_timeAgo(n.time)}</div>
               </div>
               ${!isRead ? '<div class="hdr-notif-dot"></div>' : ''}
@@ -1369,8 +1373,21 @@ const AttendanceSystem = (function() {
         const btn   = document.getElementById('hdrNotifBtn');
         if (modal) modal.classList.remove('open');
         if (btn)   btn.classList.remove('active');
-        // Navigate to the relevant section
-        if (section) showSection(section);
+        // Navigate to the relevant section or open a header modal
+        if (section) {
+          if (section.startsWith('__modal:')) {
+            const modalId = section.slice('__modal:'.length);
+            const targetModal = document.getElementById(modalId);
+            const targetBtn   = document.getElementById(modalId.replace('Modal', 'Btn'));
+            if (targetModal) { targetModal.classList.add('open'); }
+            if (targetBtn)   { targetBtn.classList.add('active'); }
+            // Trigger start systems so the modal is populated
+            if (modalId === 'hdrTicketModal' && typeof window._startTicketSystem === 'function') window._startTicketSystem();
+            if (modalId === 'hdrMsgModal'    && typeof window._fetchMsgs         === 'function') window._fetchMsgs();
+          } else {
+            showSection(section);
+          }
+        }
       });
 
       // Timestamp of the last time the user visited Live Map — persisted across refreshes

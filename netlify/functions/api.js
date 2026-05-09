@@ -1703,20 +1703,22 @@ async function getNotifications(args, ctx) {
     if ((myTickets || []).length) {
       const ticketIds = myTickets.map(t => t.id);
       const { data: ticketReplies } = await sb.from('ticket_replies')
-        .select('id, ticket_id, from_name, created_at')
+        .select('id, ticket_id, from_name, body, created_at')
         .in('ticket_id', ticketIds)
         .neq('from_username', actor.username)
         .order('created_at', { ascending: false })
         .limit(5);
       for (const r of ticketReplies || []) {
         const tkt = myTickets.find(t => t.id === r.ticket_id) || {};
+        const preview = r.body ? (r.body.length > 80 ? r.body.slice(0, 80) + '…' : r.body) : '';
         notifs.push({
           id: 'ticketreply_' + r.id,
           type: 'ticketreply',
           icon: 'fa-ticket-alt',
           color: 'navy',
-          title: `${r.from_name || 'Admin'} replied to ticket #${tkt.ticketNumber || ''}`,
-          sub: tkt.subject || 'your ticket',
+          title: `${r.from_name || 'Admin'} replied to your ticket`,
+          sub: `#${tkt.ticket_number || ''} ${tkt.subject ? '· ' + tkt.subject : ''}`,
+          body: preview,
           rawTime: r.created_at,
           time: r.created_at,
           priority: 1
