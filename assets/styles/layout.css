@@ -298,7 +298,6 @@
   padding: 0 4px; line-height: 1;
   border: 1px solid var(--bg-card);
   pointer-events: none;
-  animation: badgeFadeIn 0.25s ease both;
 }
 @keyframes badgeFadeIn {
   from { opacity: 0; transform: scale(0.5); }
