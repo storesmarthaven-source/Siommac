@@ -1541,14 +1541,14 @@ const AttendanceSystem = (function() {
         const isMeFirst = m.fromUsername === currentUser;
         const myPhoto    = isMeFirst ? m.fromPhoto : m.toPhoto;
         const otherPhoto = isMeFirst ? m.toPhoto   : m.fromPhoto;
-        const thread = _bubble(isMeFirst, m.fromName, m.body, m.createdAt, isMeFirst ? myPhoto : otherPhoto)
+        const thread = `<div data-bubble-id="orig_${m.id}">${_bubble(isMeFirst, m.fromName, m.body, m.createdAt, isMeFirst ? myPhoto : otherPhoto)}</div>`
           + (m.replies || []).map(r => {
             const rIsMe = r.fromUsername === currentUser;
-            return _bubble(rIsMe, r.fromName, r.body, r.createdAt, rIsMe ? myPhoto : otherPhoto);
+            return `<div data-bubble-id="reply_${r.id}">${_bubble(rIsMe, r.fromName, r.body, r.createdAt, rIsMe ? myPhoto : otherPhoto)}</div>`;
           }).join('');
 
         document.getElementById('msgDetailBody').innerHTML = header
-          + `<div style="padding:14px 16px;display:flex;flex-direction:column;">${thread}</div>`;
+          + `<div data-msg-thread style="padding:14px 16px;display:flex;flex-direction:column;">${thread}</div>`;
 
         // Scroll to bottom of thread
         const body = document.getElementById('msgDetailBody');
@@ -1565,14 +1565,54 @@ const AttendanceSystem = (function() {
         _scheduleHdrBadgeSync();
       }
 
+      // Silent update while detail is open — only appends new reply bubbles,
+      // never rewrites existing content so photos and scroll position are preserved
+      function _updateDetail(msgId) {
+        const m = _msgs.find(x => String(x.id) === String(msgId));
+        if (!m) return;
+        const body = document.getElementById('msgDetailBody');
+        if (!body) return;
+
+        const isMeFirst = m.fromUsername === currentUser;
+        const myPhoto    = isMeFirst ? m.fromPhoto : m.toPhoto;
+        const otherPhoto = isMeFirst ? m.toPhoto   : m.fromPhoto;
+
+        // All messages in thread: original + replies
+        const allMessages = [
+          { id: 'orig_' + m.id, fromUsername: m.fromUsername, fromName: m.fromName, body: m.body, createdAt: m.createdAt }
+        ].concat((m.replies || []).map(r => ({ id: 'reply_' + r.id, fromUsername: r.fromUsername, fromName: r.fromName, body: r.body, createdAt: r.createdAt })));
+
+        const threadEl = body.querySelector('[data-msg-thread]');
+        if (!threadEl) {
+          // First time opening — full render via _showDetail
+          _showDetail(msgId);
+          return;
+        }
+
+        // Append only messages not yet in the DOM
+        const existingIds = new Set([...threadEl.querySelectorAll('[data-bubble-id]')].map(el => el.dataset.bubbleId));
+        let appended = false;
+        allMessages.forEach(msg => {
+          if (existingIds.has(String(msg.id))) return;
+          const isMe = msg.fromUsername === currentUser;
+          const tmp = document.createElement('div');
+          tmp.innerHTML = `<div data-bubble-id="${msg.id}">${_bubble(isMe, msg.fromName, msg.body, msg.createdAt, isMe ? myPhoto : otherPhoto)}</div>`;
+          threadEl.appendChild(tmp.firstElementChild);
+          appended = true;
+        });
+
+        if (appended) body.scrollTop = body.scrollHeight;
+      }
+
       function _fetch(keepDetail) {
         // Always bypass SWR cache — we need fresh data (replies must appear instantly)
         _rawApi('getMessages', {}).then(res => {
           if (!res || !res.success) return;
           _msgs = res.data || [];
           _updateMsgBadge();
-          if (keepDetail && _currentMsgId) {
-            _showDetail(_currentMsgId);
+          // If detail is open (user is reading/replying), stay there silently
+          if (_currentMsgId) {
+            _updateDetail(_currentMsgId);
           } else {
             _renderList();
           }
@@ -1793,11 +1833,6 @@ const AttendanceSystem = (function() {
         if (isAdminView) {
           document.getElementById('ticketStatusSelect').value = t.status;
         }
-        const replies = t.replies.map(r => `
-          <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
-            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
-            <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>
-          </div>`).join('');
         const css = STATUS_CSS[t.status] || 'open';
         const lbl = STATUS_LABEL[t.status] || t.status;
         document.getElementById('ticketDetailBody').innerHTML = `
@@ -1811,8 +1846,51 @@ const AttendanceSystem = (function() {
             ${isAdminView ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Reported by ${escapeHtml(t.fromName)}</div>` : ''}
             <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(t.body)}</div>
           </div>
-          ${replies}`;
+          <div data-ticket-replies>
+            ${t.replies.map(r => `
+              <div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
+                <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
+                <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>
+              </div>`).join('')}
+          </div>`;
         document.getElementById('ticketReplyInput').value = '';
+      }
+
+      // Silent poll update — only appends new replies, never rewrites existing content
+      function _updateTicketDetail(ticketId) {
+        const t = _tickets.find(x => String(x.id) === String(ticketId));
+        if (!t) return;
+        const body = document.getElementById('ticketDetailBody');
+        if (!body) return;
+        const repliesEl = body.querySelector('[data-ticket-replies]');
+        if (!repliesEl) {
+          // First open — full render
+          _showDetail(ticketId);
+          return;
+        }
+        // Update status badge without rewriting the whole pane
+        const statusEl = body.querySelector('.hdr-ticket-status');
+        if (statusEl) {
+          const css = STATUS_CSS[t.status] || 'open';
+          const lbl = STATUS_LABEL[t.status] || t.status;
+          statusEl.className = `hdr-ticket-status ${css}`;
+          statusEl.textContent = lbl;
+          // Sync status select
+          const sel = document.getElementById('ticketStatusSelect');
+          if (sel && document.getElementById('ticketDetailPane').style.display !== 'none') sel.value = t.status;
+        }
+        // Append only new replies
+        const existingIds = new Set([...repliesEl.querySelectorAll('[data-reply-id]')].map(el => el.dataset.replyId));
+        (t.replies || []).forEach(r => {
+          if (existingIds.has(String(r.id))) return;
+          const div = document.createElement('div');
+          div.dataset.replyId = String(r.id);
+          div.style.cssText = `padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};`;
+          div.innerHTML = `<div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
+            <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>`;
+          repliesEl.appendChild(div);
+          body.scrollTop = body.scrollHeight;
+        });
       }
 
       function _updateTicketBadge() {
@@ -1830,8 +1908,9 @@ const AttendanceSystem = (function() {
           if (!res || !res.success) return;
           _tickets = res.data || [];
           _updateTicketBadge();
-          if (keepDetail && _currentTicketId) {
-            _showDetail(_currentTicketId);
+          // If detail is open (user is reading/replying), update silently
+          if (_currentTicketId) {
+            _updateTicketDetail(_currentTicketId);
           } else {
             _showList();
             _renderList();
