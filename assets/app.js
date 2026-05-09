@@ -5958,11 +5958,21 @@ const AttendanceSystem = (function() {
           // Wait for map to initialise (first visit) then fly to site and open popup
           const _flyToSite = () => {
             if (map) {
-              map.setView([lat, lng], 16, { animate: true });
-              // Open the building marker popup for this site
+              map.setView([lat, lng], 17, { animate: true });
+              // Open the building marker popup for this site after fly animation
               const entry = _siteLayerMap[site.id];
               if (entry && entry.marker) {
-                setTimeout(() => entry.marker.openPopup(), 400);
+                setTimeout(() => {
+                  entry.marker.openPopup();
+                  // Pan slightly so popup card isn't cut off at top
+                  const px = map.latLngToContainerPoint([lat, lng]);
+                  map.panBy([0, -80], { animate: true });
+                }, 500);
+              } else if (entry && entry.zone) {
+                setTimeout(() => {
+                  entry.zone.openPopup();
+                  map.panBy([0, -80], { animate: true });
+                }, 500);
               }
             } else {
               setTimeout(_flyToSite, 150);
