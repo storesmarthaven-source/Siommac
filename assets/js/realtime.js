@@ -6,7 +6,8 @@
 //   alter publication supabase_realtime add table message_replies;
 //   alter publication supabase_realtime add table support_tickets;
 //   alter publication supabase_realtime add table ticket_replies;
-//   alter publication supabase_realtime add table notifications;
+//   alter publication supabase_realtime add table leave_requests;
+//   alter publication supabase_realtime add table attendance;
 // When a change arrives the badge sync + data fetch fires immediately.
 // Auto-reconnects on error with exponential back-off (max 60s).
 
@@ -77,10 +78,14 @@
         if (typeof window._fetchTickets  === 'function') window._fetchTickets();
       })
 
-      // ── notifications ─────────────────────────────────────────────────────
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
+      // ── leave requests (drives notification badge) ────────────────────────────
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leave_requests' }, () => {
         if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
-        if (typeof window._fetchNotifs   === 'function') window._fetchNotifs();
+      })
+
+      // ── attendance (drives check-in count badge) ──────────────────────────────
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {
+        if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
       })
 
       .subscribe((status, err) => {
