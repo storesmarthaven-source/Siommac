@@ -2360,6 +2360,11 @@ const AttendanceSystem = (function() {
         // Only employees can create tickets
         const newBtn = document.getElementById('ticketNewBtn');
         if (newBtn) newBtn.style.display = isAdminView ? 'none' : '';
+        // Header clear-closed = admin only; footer clear-closed = employee only
+        const hdrClear = document.getElementById('ticketClearClosedBtn');
+        const empClear = document.getElementById('ticketClearClosedEmpBtn');
+        if (hdrClear) hdrClear.style.display = isAdminView ? '' : 'none';
+        if (empClear) empClear.style.display  = isAdminView ? 'none' : '';
         _fetch();
         clearInterval(_pollTimer);
         _pollTimer = setInterval(_fetch, 10 * 1000); // 10s fallback; Realtime covers instant
@@ -2412,6 +2417,7 @@ const AttendanceSystem = (function() {
       });
 
       document.getElementById('ticketRefreshBtn').addEventListener('click', _fetch);
+      document.getElementById('ticketClearClosedEmpBtn').addEventListener('click', () => document.getElementById('ticketClearClosedBtn').click());
 
       // Clear closed/resolved/deleted tickets
       document.getElementById('ticketClearClosedBtn').addEventListener('click', () => {
