@@ -1477,8 +1477,78 @@
 
 /* ─── Map ─── */
 #map { height: 460px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
-.leaflet-popup-content-wrapper { border-radius: var(--radius-sm) !important; }
+
+/* Leaflet popup shell */
+.siomac-popup .leaflet-popup-content-wrapper {
+  padding: 0; border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+  overflow: hidden; border: none !important;
+}
+.siomac-popup .leaflet-popup-content { margin: 0 !important; font-size: 13px; color: var(--text-primary); width: auto !important; }
+.siomac-popup .leaflet-popup-tip-container { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.12)); }
+.leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: 0 6px 24px rgba(0,0,0,0.13) !important; }
 .leaflet-popup-content { font-size: 13px; color: var(--text-primary); }
+
+/* Employee popup card */
+.lm-popup-card { width: 280px; font-family: inherit; }
+.lm-popup-site-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: #1b2d54; padding: 12px 14px;
+}
+.lm-popup-building-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: #fff; font-size: 16px;
+}
+.lm-popup-site-info { flex: 1; min-width: 0; }
+.lm-popup-site-name { font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lm-popup-site-dist { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.lm-popup-status-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+  border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+}
+.lm-popup-emp-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px 8px; border-bottom: 1px solid var(--border);
+}
+.lm-popup-emp-name { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); }
+.lm-popup-emp-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.lm-popup-times {
+  display: flex; align-items: center;
+  padding: 10px 14px; border-bottom: 1px solid var(--border); gap: 8px;
+}
+.lm-popup-time-cell { display: flex; align-items: center; gap: 5px; flex: 1; font-size: 0.75rem; color: var(--text-muted); }
+.lm-popup-time-cell i { color: var(--siomac-navy); width: 12px; text-align: center; }
+.lm-popup-time-label { font-weight: 600; color: var(--text-primary); }
+.lm-popup-time-val { font-weight: 700; color: var(--siomac-navy); margin-left: auto; }
+.lm-popup-time-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+.lm-popup-selfie { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+.lm-popup-selfie img { width: 100%; border-radius: 8px; max-height: 120px; object-fit: cover; display: block; }
+.lm-popup-footer { display: flex; gap: 8px; padding: 10px 14px; }
+.lm-popup-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: 0.75rem; font-weight: 600; padding: 7px 10px;
+  border-radius: 8px; cursor: pointer; border: none; text-decoration: none;
+  transition: opacity .15s;
+}
+.lm-popup-btn:hover { opacity: 0.85; }
+.lm-popup-btn-primary { background: #1b2d54; color: #fff; }
+.lm-popup-btn-outline { background: var(--bg-subtle); color: var(--siomac-navy); border: 1px solid var(--border); }
+
+/* Site zone popup */
+.lm-site-popup { text-align: center; padding: 4px 2px; min-width: 140px; }
+.lm-site-popup-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: rgba(27,45,84,0.08); display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px; color: #1b2d54; font-size: 18px;
+}
+.lm-site-popup-name { font-size: 0.88rem; font-weight: 700; color: #1b2d54; margin-bottom: 4px; }
+.lm-site-popup-addr { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+.lm-site-popup-radius { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+.user-location-marker > div { background: var(--success) !important; border: 3px solid white !important; box-shadow: 0 2px 6px rgba(0,0,0,.3) !important; }
 .user-location-marker > div { background: var(--success) !important; border: 3px solid white !important; box-shadow: 0 2px 6px rgba(0,0,0,.3) !important; }
 
 /* ─── Leave list items ─── */

@@ -293,10 +293,11 @@ const AttendanceSystem = (function() {
             fillOpacity: 0.18, radius: site.radius || 200, weight: 2
           }).addTo(map);
           zone.bindPopup(`
-            <div style="text-align:center; padding:8px;">
-              <strong style="color:#001f3f;">${site.name}</strong><br>
-              ${site.address ? `<span style="color:#666;font-size:12px;">${site.address}</span><br>` : ''}
-              <span style="font-size:12px;">📏 Radius: ${site.radius || 200}m</span>
+            <div class="lm-site-popup">
+              <div class="lm-site-popup-icon"><i class="fas fa-building"></i></div>
+              <div class="lm-site-popup-name">${site.name}</div>
+              ${site.address ? `<div class="lm-site-popup-addr">${site.address}</div>` : ''}
+              <div class="lm-site-popup-radius"><i class="fas fa-ruler-horizontal"></i> ${site.radius || 200}m radius</div>
             </div>
           `);
           attendanceZones.push(zone);
