@@ -1058,9 +1058,8 @@ const AttendanceSystem = (function() {
           badge.style.display = unread.length > 0 ? '' : 'none';
         }
 
-        // Sidebar / top-tab badges
-        const unreadLeaveCount = unread.filter(n => n.type === 'leave').length;
-        _updateNavBadges(unreadLeaveCount, _newCheckinCount());
+        // Sidebar / top-tab badges — use actual pending leave count, not unread notifications
+        _updateNavBadges(_getPendingLeaveCount(), _newCheckinCount());
 
         if (!_notifData.length) {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
@@ -1172,10 +1171,13 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
         });
       };
-      window._refreshNavBadges   = () => {
-        const readIds = _readIds();
-        const unreadLeaveCount = _notifData.filter(n => n.type === 'leave' && !readIds.has(n.id)).length;
-        _updateNavBadges(unreadLeaveCount, _newCheckinCount());
+      // leaveCount is optional — if supplied, uses actual pending leave count instead of unread notifications
+      window._refreshNavBadges = (leaveCount) => {
+        const count = (leaveCount != null) ? leaveCount : (() => {
+          const readIds = _readIds();
+          return _notifData.filter(n => n.type === 'leave' && !readIds.has(n.id)).length;
+        })();
+        _updateNavBadges(count, _newCheckinCount());
       };
     })();
 
@@ -3309,6 +3311,12 @@ const AttendanceSystem = (function() {
   let _lvAdmTypeFilter = 'all';
   let _lvEmpList = [], _lvMgrList = [], _lvAdmList = [];
 
+  // Returns the number of pending leave requests for the sidebar badge
+  function _getPendingLeaveCount() {
+    const list = currentRole === 'admin' ? _lvAdmList : currentRole === 'manager' ? _lvMgrList : [];
+    return list.filter(r => String(r.status).toLowerCase() === 'pending').length;
+  }
+
   function loadLeaveRequests() {
     _skelOnce('s-emp-leave', () => setSkel('leaveRequestsList', skelTableRows(8, 3)));
     apiSwr('getMyLeaves', { username: currentUser }, {
@@ -3424,6 +3432,7 @@ const AttendanceSystem = (function() {
     _lvMgrList = list;
     _lvUpdateStats('mgrLv', list);
     _renderMgrLeaves();
+    if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(_getPendingLeaveCount());
   }
 
   function _renderMgrLeaves() {
@@ -4738,6 +4747,7 @@ const AttendanceSystem = (function() {
     _lvAdmList = leaves;
     _lvUpdateStats('admLv', leaves);
     _renderAdmLeaves();
+    if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(_getPendingLeaveCount());
   }
 
   function _renderAdmLeaves() {
