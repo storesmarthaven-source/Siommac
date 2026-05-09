@@ -569,7 +569,7 @@ const AttendanceSystem = (function() {
             <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
           </div>
         </div>
-      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup' });
+      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', autoPan: true, autoPanPadding: L.point(20, 20) });
       marker._liveUserId = row.userId; // for sidebar click → marker show
       liveMarkers.push(marker);
       // Markers are NOT added to the map here — they only appear when
@@ -710,11 +710,23 @@ const AttendanceSystem = (function() {
       map.removeLayer(_activeEmpMarker);
     }
 
-    // Show this marker and zoom to it
+    // Add marker to map first
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
-    map.setView(marker.getLatLng(), 16, { animate: true });
+
+    // Zoom to a good level first (no animate so popup opens on the right view),
+    // then openPopup — Leaflet's autoPan will pan the map so the full card is visible.
+    const currentZoom = map.getZoom();
+    if (currentZoom < 15) {
+      map.setView(marker.getLatLng(), 16, { animate: false });
+    } else {
+      map.panTo(marker.getLatLng(), { animate: false });
+    }
     marker.openPopup();
+    // After popup opens, let autoPan finish bringing the card fully into view
+    map.once('popupopen', () => {
+      map.panInsideBounds(map.getBounds(), { animate: true });
+    });
   }
 
   function markProjectAttendance() {
