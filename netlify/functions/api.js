@@ -448,7 +448,7 @@ async function markAttendance(args, ctx) {
     const { error } = await sb.from('attendance').upsert(row, { onConflict: 'user_id,work_date' });
     if (error) return { success: false, message: error.message };
     await log_(actor, 'checkin', 'attendance', '', near && near.site.name);
-    return { success: true, time: hhmm(now), action, message: 'Checked in', site: near && near.site.name || '', outsideRadius };
+    return { success: true, time: now.toISOString(), action, message: 'Checked in', site: near && near.site.name || '', outsideRadius };
   }
 
   if (!rec || !rec.check_in_time) return { success: false, message: 'Check in first' };
@@ -461,7 +461,7 @@ async function markAttendance(args, ctx) {
   }).eq('id', rec.id);
   if (error) return { success: false, message: error.message };
   await log_(actor, 'checkout', 'attendance', rec.id, `${hours}h`);
-  return { success: true, time: hhmm(now), action, totalHours: hours, message: 'Checked out', outsideRadius };
+  return { success: true, time: now.toISOString(), action, totalHours: hours, message: 'Checked out', outsideRadius };
 }
 
 async function getMyStatus(args, ctx) {
@@ -494,8 +494,8 @@ async function getMyHistory(args, ctx) {
   const rows = await resolveAttendancePhotosBatch(
     (data || []).map(a => ({
       date: dateOnly(a.work_date),
-      checkIn:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '--:--',
-      checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '--:--',
+      checkIn:  a.check_in_time  || null,
+      checkOut: a.check_out_time || null,
       hours: a.total_hours || 0, status: a.status,
       check_in_photo_url:  a.check_in_photo_url  || '',
       check_out_photo_url: a.check_out_photo_url || ''
@@ -768,7 +768,7 @@ async function getDeptEmployees(args, ctx) {
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
   return (users || []).map(u => {
     const a = attMap[u.username];
-    return { name: u.full_name, position: u.position || '', status: !a ? 'notchecked' : (a.check_out_time ? 'checkedout' : 'checkedin'), lastActivity: a ? hhmm(new Date(a.check_out_time || a.check_in_time)) : '—', location: 'Project' };
+    return { name: u.full_name, position: u.position || '', status: !a ? 'notchecked' : (a.check_out_time ? 'checkedout' : 'checkedin'), lastActivity: a ? (a.check_out_time || a.check_in_time) : null, location: 'Project' };
   });
 }
 
@@ -866,8 +866,8 @@ async function listAttendance(args, ctx) {
     return {
       username: u.username, name: u.full_name, department: deptMap[u.department_id] || '—',
       todayStatus: statusLabel,
-      checkIn:  latest && latest.check_in_time  ? hhmm(new Date(latest.check_in_time))  : '—',
-      checkOut: latest && latest.check_out_time ? hhmm(new Date(latest.check_out_time)) : '—',
+      checkIn:  latest && latest.check_in_time  || null,
+      checkOut: latest && latest.check_out_time || null,
       checkInPhotoUrl, checkOutPhotoUrl,
       totalDays, present, absent: Math.max(0, totalDays === 0 ? 0 : totalDays - present)
     };
@@ -902,8 +902,8 @@ async function listDailyLog(args, ctx) {
   const rows = (att || []).map((a, i) => {
     const u = userMap[a.username] || {};
     const dept = deptMap[u.department_id || ''] || '—';
-    const checkIn  = a.check_in_time  ? hhmm(new Date(a.check_in_time))  : null;
-    const checkOut = a.check_out_time ? hhmm(new Date(a.check_out_time)) : null;
+    const checkIn  = a.check_in_time  || null;
+    const checkOut = a.check_out_time || null;
     let hours = 0;
     if (a.check_in_time && a.check_out_time) {
       hours = ((new Date(a.check_out_time) - new Date(a.check_in_time)) / 3600000).toFixed(1);
@@ -915,8 +915,8 @@ async function listDailyLog(args, ctx) {
       name: u.full_name || a.username,
       department: dept,
       date: dateOnly(a.work_date),
-      checkIn: checkIn || '—',
-      checkOut: checkOut || '—',
+      checkIn: checkIn || null,
+      checkOut: checkOut || null,
       hours: Number(hours),
       status,
       checkInPhotoUrl:  photoUrls[i][0],
@@ -999,9 +999,9 @@ async function getLiveAttendance(args, ctx) {
       userId: a.user_id, username: a.username, fullName: u.full_name || a.username,
       department: deptMap[u.department_id] || '',
       position: u.position || '',
-      checkInTime:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : null,
-      checkOutTime: a.check_out_time ? hhmm(new Date(a.check_out_time)) : null,
-      lastSeen: last ? hhmm(new Date(last)) : null,
+      checkInTime:  a.check_in_time  || null,
+      checkOutTime: a.check_out_time || null,
+      lastSeen: last || null,
       checkInLat:  a.check_in_lat  == null ? null : Number(a.check_in_lat),
       checkInLng:  a.check_in_lng  == null ? null : Number(a.check_in_lng),
       checkOutLat: a.check_out_lat == null ? null : Number(a.check_out_lat),
@@ -1208,8 +1208,8 @@ async function getPayroll(args, ctx) {
     const hours = Number(a.total_hours) || 0;
     return {
       date: dateOnly(a.work_date),
-      checkIn:  a.check_in_time  ? hhmm(new Date(a.check_in_time))  : '—',
-      checkOut: a.check_out_time ? hhmm(new Date(a.check_out_time)) : '—',
+      checkIn:  a.check_in_time  || null,
+      checkOut: a.check_out_time || null,
       hours, status: a.status || '—',
       earnings: Math.round(hours * rate * 100) / 100
     };
@@ -1435,7 +1435,6 @@ async function getNotifications(args, ctx) {
 
     for (const a of checkins || []) {
       const isLate  = a.status === 'late';
-      const t       = a.check_in_time ? hhmm(new Date(a.check_in_time)) : '';
       const name    = attNameMap[a.user_id] || a.username;
       notifs.push({
         id: (isLate ? 'late_' : 'checkin_') + a.username + '_' + todayStr,
@@ -1443,7 +1442,8 @@ async function getNotifications(args, ctx) {
         icon: isLate ? 'fa-clock' : 'fa-sign-in-alt',
         color: isLate ? 'gold' : 'green',
         title: isLate ? `${name} checked in late` : `${name} checked in`,
-        sub: t ? `Today · ${t}` : 'Today',
+        sub: 'Today',
+        rawTime: a.check_in_time || null,
         time: a.check_in_time || todayStr,
         photoUrl: attPhotoMap[a.user_id] || '',
         priority: isLate ? 2 : 4
@@ -1451,7 +1451,6 @@ async function getNotifications(args, ctx) {
     }
 
     for (const a of checkouts || []) {
-      const t    = a.check_out_time ? hhmm(new Date(a.check_out_time)) : '';
       const hrs  = a.total_hours != null ? `${a.total_hours}h worked` : '';
       const name = attNameMap[a.user_id] || a.username;
       notifs.push({
@@ -1460,7 +1459,8 @@ async function getNotifications(args, ctx) {
         icon: 'fa-sign-out-alt',
         color: 'navy',
         title: `${name} checked out`,
-        sub: [t ? `Today · ${t}` : 'Today', hrs].filter(Boolean).join(' · '),
+        sub: hrs || 'Today',
+        rawTime: a.check_out_time || null,
         time: a.check_out_time || todayStr,
         photoUrl: attPhotoMap[a.user_id] || '',
         priority: 5
@@ -1510,14 +1510,14 @@ async function getNotifications(args, ctx) {
 
     if (todayRec && todayRec.check_in_time) {
       const isLate = todayRec.status === 'late';
-      const t = hhmm(new Date(todayRec.check_in_time));
       notifs.push({
         id: 'my_checkin_' + todayStr,
         type: 'my_checkin',
         icon: isLate ? 'fa-clock' : 'fa-sign-in-alt',
         color: isLate ? 'gold' : 'green',
         title: isLate ? 'You checked in late today' : 'You checked in today',
-        sub: `At ${t}${isLate ? ' — you were past the check-in threshold' : ''}`,
+        sub: isLate ? 'You were past the check-in threshold' : 'Check-in recorded',
+        rawTime: todayRec.check_in_time,
         time: todayRec.check_in_time,
         priority: 2
       });
@@ -1525,7 +1525,6 @@ async function getNotifications(args, ctx) {
 
     // 2. Today's own check-out confirmation
     if (todayRec && todayRec.check_out_time) {
-      const t   = hhmm(new Date(todayRec.check_out_time));
       const hrs = todayRec.total_hours != null ? `${todayRec.total_hours}h logged` : '';
       notifs.push({
         id: 'my_checkout_' + todayStr,
@@ -1533,7 +1532,8 @@ async function getNotifications(args, ctx) {
         icon: 'fa-sign-out-alt',
         color: 'navy',
         title: 'You checked out today',
-        sub: [`At ${t}`, hrs].filter(Boolean).join(' · '),
+        sub: hrs || 'Check-out recorded',
+        rawTime: todayRec.check_out_time,
         time: todayRec.check_out_time,
         priority: 3
       });

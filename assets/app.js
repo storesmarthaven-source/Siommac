@@ -481,13 +481,13 @@ const AttendanceSystem = (function() {
             <div class="lm-popup-time-cell">
               <i class="fas fa-sign-in-alt"></i>
               <span class="lm-popup-time-label">In</span>
-              <span class="lm-popup-time-val">${row.checkInTime || '—'}</span>
+              <span class="lm-popup-time-val">${row.checkInTime ? fmtLocalTime(row.checkInTime) : '—'}</span>
             </div>
             <div class="lm-popup-time-divider"></div>
             <div class="lm-popup-time-cell">
               <i class="fas fa-sign-out-alt"></i>
               <span class="lm-popup-time-label">Out</span>
-              <span class="lm-popup-time-val">${row.checkOutTime || '—'}</span>
+              <span class="lm-popup-time-val">${row.checkOutTime ? fmtLocalTime(row.checkOutTime) : '—'}</span>
             </div>
           </div>
 
@@ -549,7 +549,7 @@ const AttendanceSystem = (function() {
       const initial   = (r.fullName || '?').charAt(0).toUpperCase();
       const dotCls    = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
       const statusTxt = r.isCheckedOut ? 'Checked Out' : (r.status === 'late' ? 'Late' : 'Checked In');
-      const meta      = r.lastSeen ? `${statusTxt} · ${r.lastSeen}` : statusTxt;
+      const meta      = r.lastSeen ? `${statusTxt} · ${fmtLocalTime(r.lastSeen)}` : statusTxt;
       return `<div class="lm-emp-item" data-userid="${r.userId}">
         <div class="lm-emp-avatar" data-uid="${r.userId}">${escapeHtml(initial)}</div>
         <div class="lm-emp-info">
@@ -1144,7 +1144,7 @@ const AttendanceSystem = (function() {
               ${iconEl}
               <div class="hdr-notif-text" style="flex:1;min-width:0;">
                 <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
-                <div class="hdr-notif-sub">${escapeHtml(n.sub)}</div>
+                <div class="hdr-notif-sub">${n.rawTime ? `At ${fmtLocalTime(n.rawTime)}${n.sub && n.sub !== 'Check-in recorded' && n.sub !== 'Check-out recorded' ? ' · ' + escapeHtml(n.sub) : ''}` : escapeHtml(n.sub)}</div>
                 <div class="hdr-notif-sub" style="margin-top:2px;opacity:.7">${_timeAgo(n.time)}</div>
               </div>
               ${!isRead ? '<div class="hdr-notif-dot"></div>' : ''}
@@ -3218,8 +3218,8 @@ const AttendanceSystem = (function() {
       return `<tr>
         <td><strong>${escapeHtml(rec.date || '—')}</strong></td>
         <td style="color:var(--text-muted)">${dow}</td>
-        <td>${rec.checkIn  || '—'}</td>
-        <td>${rec.checkOut || '—'}</td>
+        <td>${rec.checkIn  ? fmtLocalTime(rec.checkIn)  : '—'}</td>
+        <td>${rec.checkOut ? fmtLocalTime(rec.checkOut) : '—'}</td>
         <td>${rec.hours ? Number(rec.hours).toFixed(1) + 'h' : '—'}</td>
         <td>${statusBadge(rec.status)}</td>
         <td>${photoThumb(rec.checkInPhotoUrl,  'Check-in selfie')}</td>
@@ -3245,7 +3245,7 @@ const AttendanceSystem = (function() {
     const rows = [['Date', 'Day', 'Check In', 'Check Out', 'Hours', 'Status']];
     data.forEach(r => {
       const dow = r.date ? new Date(r.date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
-      rows.push([r.date || '', dow, r.checkIn || '', r.checkOut || '', r.hours || 0, r.status || '']);
+      rows.push([r.date || '', dow, r.checkIn ? fmtLocalTime(r.checkIn) : '', r.checkOut ? fmtLocalTime(r.checkOut) : '', r.hours || 0, r.status || '']);
     });
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -3291,9 +3291,9 @@ const AttendanceSystem = (function() {
     history.forEach(rec => {
       tableHtml += `<tr>
         <td>${rec.date}</td>
-        <td>${rec.checkIn}</td>
+        <td>${rec.checkIn ? fmtLocalTime(rec.checkIn) : '—'}</td>
         <td>${photoTd(rec.checkInPhotoUrl)}</td>
-        <td>${rec.checkOut}</td>
+        <td>${rec.checkOut ? fmtLocalTime(rec.checkOut) : '—'}</td>
         <td>${photoTd(rec.checkOutPhotoUrl)}</td>
         <td>${rec.hours}</td>
       </tr>`;
@@ -3528,7 +3528,7 @@ const AttendanceSystem = (function() {
           <td data-label="Name">${emp.name}</td>
           <td data-label="Position">${emp.position}</td>
           <td data-label="Status"><span class="employee-status ${statusClass}">${statusIcon} ${statusText}</span></td>
-          <td data-label="Last Activity">${emp.lastActivity}</td>
+          <td data-label="Last Activity">${emp.lastActivity ? fmtLocalTime(emp.lastActivity) : '—'}</td>
           <td data-label="Location"><small class="text-muted">${emp.location}</small></td>
         </tr>
       `;
@@ -4816,8 +4816,8 @@ const AttendanceSystem = (function() {
         <td><strong class="att-name">${escapeHtml(r.name)}</strong></td>
         <td><span class="att-dept-pill">${escapeHtml(r.department)}</span></td>
         <td class="att-date">${r.date}</td>
-        <td class="att-time">${escapeHtml(r.checkIn)}</td>
-        <td class="att-time">${escapeHtml(r.checkOut)}</td>
+        <td class="att-time">${r.checkIn  ? fmtLocalTime(r.checkIn)  : '—'}</td>
+        <td class="att-time">${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
         <td class="att-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
         <td>${statusBadge(r.status)}</td>
         <td>${thumb(r.checkInPhotoUrl, r.checkOutPhotoUrl)}</td>
@@ -5465,13 +5465,13 @@ const AttendanceSystem = (function() {
     const rows = !d.days.length
       ? '<tr><td colspan="7" style="text-align:center; padding:18px; color:#888;">No attendance records for this period</td></tr>'
       : d.days.map((day, i) => {
-          const cls = (day.checkOut === '—' && day.checkIn !== '—') ? 'row-no-checkout'
+          const cls = (!day.checkOut && day.checkIn) ? 'row-no-checkout'
                     : (day.status === 'late') ? 'row-late' : '';
           return '<tr class="' + cls + '">'
             + '<td class="num">' + (i + 1) + '</td>'
             + '<td>' + escapeHtml(day.date) + '</td>'
-            + '<td class="center">' + escapeHtml(day.checkIn) + '</td>'
-            + '<td class="center">' + escapeHtml(day.checkOut) + '</td>'
+            + '<td class="center">' + (day.checkIn  ? fmtLocalTime(day.checkIn)  : '—') + '</td>'
+            + '<td class="center">' + (day.checkOut ? fmtLocalTime(day.checkOut) : '—') + '</td>'
             + '<td class="num">' + day.hours.toFixed(2) + '</td>'
             + '<td class="center">' + escapeHtml(capStatus(day.status)) + '</td>'
             + '<td class="num">' + fmt(day.earnings) + '</td>'
@@ -5629,9 +5629,9 @@ const AttendanceSystem = (function() {
       // getMyHistory returns an array directly (not wrapped in {success, data})
       const attData = Array.isArray(attRows) ? attRows : (attRows && Array.isArray(attRows.data) ? attRows.data : []);
       attData.slice(0, 15).forEach(r => {
-        // r = { date: "2025-05-07", checkIn: "09:00", checkOut: "17:00", hours, status }
-        if (r.checkIn && r.checkIn !== '--:--')  events.push({ icon: 'fa-sign-in-alt',  title: 'Clocked In',  date: r.date + ', ' + r.checkIn,  raw: new Date(r.date) });
-        if (r.checkOut && r.checkOut !== '--:--') events.push({ icon: 'fa-sign-out-alt', title: 'Clocked Out', date: r.date + ', ' + r.checkOut, raw: new Date(r.date) });
+        // r = { date: "2025-05-07", checkIn: ISO|null, checkOut: ISO|null, hours, status }
+        if (r.checkIn)  events.push({ icon: 'fa-sign-in-alt',  title: 'Clocked In',  date: r.date + ', ' + fmtLocalTime(r.checkIn),  raw: new Date(r.checkIn) });
+        if (r.checkOut) events.push({ icon: 'fa-sign-out-alt', title: 'Clocked Out', date: r.date + ', ' + fmtLocalTime(r.checkOut), raw: new Date(r.checkOut) });
       });
 
       // getMyLeaves also returns array directly
