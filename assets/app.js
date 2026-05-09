@@ -1480,7 +1480,7 @@ const AttendanceSystem = (function() {
         }
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 60 * 1000); // every 60 sec
+        _pollTimer = setInterval(_fetch, 10 * 1000); // 10s fallback; Realtime covers instant
       }
 
       // New Message button (both roles)
@@ -1500,8 +1500,10 @@ const AttendanceSystem = (function() {
         api('sendMessage', { subject, body, toUsername }).then(res => {
           document.getElementById('msgSendBtn').disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-          const target = _isAdmin() ? 'employee' : 'admin';
-          showPopup('success', 'Sent!', `Your message has been sent.`).then(() => { _showList(); _fetch(); });
+          _showList();
+          // Small delay so DB write is visible before re-fetch
+          setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 400);
+          showPopup('success', 'Sent!', `Your message has been sent.`);
         }).catch(() => { document.getElementById('msgSendBtn').disabled = false; });
       });
 
@@ -1691,7 +1693,7 @@ const AttendanceSystem = (function() {
         document.getElementById('ticketModalTitle').textContent = isAdminView ? 'Support Tickets' : 'My Tickets';
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 60 * 1000); // every 60 sec
+        _pollTimer = setInterval(_fetch, 10 * 1000); // 10s fallback; Realtime covers instant
       }
 
       // New ticket button
@@ -1710,7 +1712,9 @@ const AttendanceSystem = (function() {
         api('createTicket', { category, subject, body }).then(res => {
           document.getElementById('ticketSubmitBtn').disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-          showPopup('success', 'Ticket Submitted', `Your ticket ${res.ticketNumber} has been submitted.`).then(() => { _showList(); _fetch(); });
+          _showList();
+          setTimeout(() => { _fetch(); _scheduleHdrBadgeSync(); }, 400);
+          showPopup('success', 'Ticket Submitted', `Your ticket ${res.ticketNumber} has been submitted.`);
         }).catch(() => { document.getElementById('ticketSubmitBtn').disabled = false; });
       });
 
