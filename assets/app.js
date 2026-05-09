@@ -1115,11 +1115,12 @@ const AttendanceSystem = (function() {
         });
       }
 
+      let _lastNotifRenderHash = '';
+
       function _render(newIds) {
         const list = document.getElementById('notifList');
         if (!list) return;
         const readIds = _readIds();
-        const unread  = _notifData.filter(n => !readIds.has(n.id));
 
         // Refresh all header badges together so they appear simultaneously
         _scheduleHdrBadgeSync();
@@ -1128,9 +1129,16 @@ const AttendanceSystem = (function() {
         _updateNavBadges(_getPendingLeaveCount(), _newCheckinCount());
 
         if (!_notifData.length) {
+          _lastNotifRenderHash = '';
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
           return;
         }
+
+        // Build a hash of id+readState — skip full re-render if nothing visible changed.
+        // This prevents profile photo img tags from being destroyed and re-fetched on every poll.
+        const renderHash = _notifData.map(n => n.id + (readIds.has(n.id) ? 'r' : 'u')).join(',');
+        if (renderHash === _lastNotifRenderHash) return;
+        _lastNotifRenderHash = renderHash;
 
         list.innerHTML = _notifData.map(n => {
           const isRead = readIds.has(n.id);
@@ -1182,6 +1190,7 @@ const AttendanceSystem = (function() {
           const readIds = _readIds();
           _notifData.forEach(n => readIds.add(n.id));
           _saveReadIds(readIds);
+          _lastNotifRenderHash = ''; // force re-render so items show as read
           _render();
         });
       }
@@ -1194,6 +1203,7 @@ const AttendanceSystem = (function() {
           _notifData.forEach(n => readIds.add(n.id));
           _saveReadIds(readIds);
           _notifData = [];
+          _lastNotifRenderHash = ''; // force re-render to empty state
           _render();
         });
       }
