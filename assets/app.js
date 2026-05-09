@@ -341,6 +341,9 @@ const AttendanceSystem = (function() {
         // Rebuild marker objects from any already-fetched data (not added to map — on-demand only)
         if (liveData && liveData.length) plotLiveEmployees(liveData);
 
+        // Apply live-data colours to pins immediately (green if active employees on site)
+        _refreshSitePopups();
+
         // Now show user GPS marker (view already finalised above)
         if (userLocation) updateUserLocationOnMap();
       });
@@ -478,6 +481,10 @@ const AttendanceSystem = (function() {
         // + _photoCache), so preloading adds latency without benefit for the live map.
         plotLiveEmployees(liveData);
         renderLivePanel(liveData);
+      } else {
+        // Data unchanged but site pins may not have been coloured yet
+        // (map could have finished drawing after the last renderLivePanel call)
+        _refreshSitePopups();
       }
       }
     });
