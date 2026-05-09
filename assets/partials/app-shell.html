@@ -412,25 +412,25 @@
           </div>
         </div>
 
-        <!-- map (full width) with overlay activity panel -->
+        <!-- map + activity panel side by side -->
         <div class="lm-layout">
           <div class="lm-map-container">
             <div id="map"></div>
             <!-- Center View — overlaid bottom-left of map -->
             <button id="centerMapBtn" class="lm-center-btn"><i class="fas fa-location-dot"></i> Center View</button>
-            <!-- activity panel overlaid on the map -->
-            <div class="lm-activity-panel">
-              <div class="lm-panel-header">
-                <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
-                <button id="refreshLiveMapBtn" class="lm-refresh-btn" title="Refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
-              </div>
-              <div class="lm-employees-list" id="liveEmployeesList"></div>
-              <div class="lm-legend">
-                <span><span class="lm-dot lm-dot-green"></span> Checked In</span>
-                <span><span class="lm-dot lm-dot-orange"></span> Late</span>
-                <span><span class="lm-dot lm-dot-gray"></span> Checked Out</span>
-                <span><i class="fas fa-map-pin" style="color:var(--siomac-red);"></i> Project Zones</span>
-              </div>
+          </div>
+          <!-- activity panel — sits to the right of the map -->
+          <div class="lm-activity-panel">
+            <div class="lm-panel-header">
+              <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
+              <button id="refreshLiveMapBtn" class="lm-refresh-btn" title="Refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <div class="lm-employees-list" id="liveEmployeesList"></div>
+            <div class="lm-legend">
+              <span><span class="lm-dot lm-dot-green"></span> Checked In</span>
+              <span><span class="lm-dot lm-dot-orange"></span> Late</span>
+              <span><span class="lm-dot lm-dot-gray"></span> Checked Out</span>
+              <span><i class="fas fa-map-pin" style="color:var(--siomac-red);"></i> Project Zones</span>
             </div>
           </div>
         </div>

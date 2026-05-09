@@ -13,9 +13,11 @@
   max-height: calc(100vh - 48px);
   overflow: hidden;
 }
-/* map container fills remaining space and extends to full width */
+/* map + panel row extends to full width */
 .lm-section .lm-layout {
   margin: 0 -28px;
+  padding: 0 28px;
+  box-sizing: border-box;
 }
 
 /* ── Stat cards + action buttons row ── */
@@ -46,15 +48,19 @@
 }
 .lm-btn-outline:hover { background: var(--bg-app); border-color: var(--siomac-navy); }
 
-/* ── Main layout: map fills full width ── */
+/* ── Main layout: map + panel side by side ── */
 .lm-layout {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
 }
 
-/* ── Map container — full width, relative so panel can overlay ── */
+/* ── Map container — fills remaining space ── */
 .lm-map-container {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 100%;
   background: #eef2f9;
   border-radius: 28px;
@@ -65,22 +71,18 @@
 }
 #map { height: 100%; width: 100%; }
 
-/* ── Activity panel — overlaid on top-right of map ── */
+/* ── Activity panel — fixed-width column to the right of the map ── */
 .lm-activity-panel {
-  position: absolute;
-  top: 16px; right: 16px;
-  width: 360px;
-  max-height: calc(100% - 32px);
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 320px;
+  flex-shrink: 0;
+  height: 100%;
+  background: var(--bg-card, #fff);
   border-radius: 20px;
   border: 1px solid var(--border);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 500;
 }
 
 /* panel header */
@@ -347,7 +349,7 @@
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .lm-layout { flex-direction: column; }
-  .lm-map-container { min-height: 320px; flex: none; height: 320px; }
-  .lm-activity-panel { flex: none; width: 100%; max-height: 420px; }
+  .lm-map-container { flex: none; height: 320px; min-height: 320px; width: 100%; }
+  .lm-activity-panel { flex: none; width: 100%; height: auto; max-height: 380px; }
   .chart-grid-2x2 { grid-template-columns: 1fr; }
 }
