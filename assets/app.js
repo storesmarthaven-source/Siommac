@@ -1096,7 +1096,14 @@ const AttendanceSystem = (function() {
       const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
       const MAP_SECTION_IDS   = ['s-projectMap'];
 
+      // Track last known count per button to avoid redundant animation replays
+      const _sbBadgeLastCount = new WeakMap();
+
       function _setBadge(btn, count) {
+        const prev = _sbBadgeLastCount.get(btn);
+        if (prev === count) return; // nothing changed — skip entirely
+        _sbBadgeLastCount.set(btn, count);
+
         let b = btn.querySelector('.sb-nav-badge');
         if (count > 0) {
           const label = count > 99 ? '99+' : String(count);
@@ -1105,8 +1112,9 @@ const AttendanceSystem = (function() {
             b.className = 'sb-nav-badge';
             btn.appendChild(b);
           }
-          if (b.textContent !== label) {
-            b.textContent = label;
+          b.textContent = label;
+          // Animate only when badge goes from hidden→visible or count increases
+          if (prev === undefined || prev === 0 || count > prev) {
             b.style.animation = 'none';
             b.offsetWidth; // reflow to restart animation
             b.style.animation = '';
