@@ -537,20 +537,22 @@ const AttendanceSystem = (function() {
 
     const sorted = rows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
 
+    const listEl = document.getElementById('liveEmployeesList');
+
     if (!sorted.length) {
-      document.getElementById('liveEmployeesList').innerHTML =
-        '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
+      listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
       return;
     }
 
-    // Render initial letter avatars immediately — no flash waiting on images
-    const listEl = document.getElementById('liveEmployeesList');
-    listEl.innerHTML = sorted.map(r => {
+    // Remove empty state if present
+    if (listEl.querySelector('.lm-emp-empty')) listEl.innerHTML = '';
+
+    function _liveEmpRowHtml(r) {
       const initial   = (r.fullName || '?').charAt(0).toUpperCase();
       const dotCls    = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
       const statusTxt = r.isCheckedOut ? 'Checked Out' : (r.status === 'late' ? 'Late' : 'Checked In');
       const meta      = r.lastSeen ? `${statusTxt} · ${fmtLocalTime(r.lastSeen)}` : statusTxt;
-      return `<div class="lm-emp-item" data-userid="${r.userId}">
+      return `<div class="lm-emp-item" data-id="${r.userId}">
         <div class="lm-emp-avatar" data-uid="${r.userId}">${escapeHtml(initial)}</div>
         <div class="lm-emp-info">
           <div class="lm-emp-name">${escapeHtml(r.fullName || '—')}</div>
@@ -558,9 +560,41 @@ const AttendanceSystem = (function() {
         </div>
         <i class="fas fa-chevron-right lm-emp-chevron"></i>
       </div>`;
-    }).join('');
+    }
+    function _liveEmpRowKey(r) {
+      return (r.isCheckedOut ? 'out' : r.status) + '|' + (r.lastSeen || '');
+    }
 
-    // Preload profile photo into each avatar — off-screen decode, no flash
+    // DOM diff — only replace rows that changed
+    const _liveExistingById = new Map();
+    listEl.querySelectorAll('[data-id]').forEach(el => _liveExistingById.set(el.dataset.id, el));
+    const _liveSeen = new Set();
+    sorted.forEach((r, i) => {
+      const id  = String(r.userId);
+      const key = _liveEmpRowKey(r);
+      _liveSeen.add(id);
+      let el = _liveExistingById.get(id);
+      if (!el) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _liveEmpRowHtml(r);
+        el = tmp.firstElementChild;
+        listEl.insertBefore(el, listEl.children[i] || null);
+      } else {
+        if (el.dataset.rowKey !== key) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _liveEmpRowHtml(r);
+          listEl.replaceChild(tmp.firstElementChild, el);
+          el = listEl.children[i];
+        }
+        if (listEl.children[i] !== el) listEl.insertBefore(el, listEl.children[i] || null);
+      }
+      if (el) el.dataset.rowKey = key;
+    });
+    _liveExistingById.forEach((el, id) => {
+      if (!_liveSeen.has(id) && el.parentNode === listEl) listEl.removeChild(el);
+    });
+
+    // Preload profile photo into each avatar (only for new/changed rows) — off-screen decode, no flash
     sorted.forEach(r => {
       const src = r.profileImage || r.checkInPhotoUrl || '';
       if (!src) return;
@@ -1171,15 +1205,13 @@ const AttendanceSystem = (function() {
         if (renderHash === _lastNotifRenderHash) return;
         _lastNotifRenderHash = renderHash;
 
-        list.innerHTML = _notifData.map(n => {
-          const isRead = readIds.has(n.id);
+        function _notifRowHtml(n, isRead) {
           const resolver = NOTIF_SECTION[n.type];
           const section  = resolver ? resolver() : null;
           const iconEl = n.photoUrl
             ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
             : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
-          return `
-            <div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
+          return `<div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-id="${escapeHtml(n.id)}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
               ${iconEl}
               <div class="hdr-notif-text" style="flex:1;min-width:0;">
                 <div class="hdr-notif-title">${escapeHtml(n.title)}</div>
@@ -1188,7 +1220,38 @@ const AttendanceSystem = (function() {
               </div>
               ${!isRead ? '<div class="hdr-notif-dot"></div>' : ''}
             </div>`;
-        }).join('');
+        }
+        function _notifRowKey(n, isRead) { return (isRead ? 'r' : 'u') + '|' + n.id; }
+
+        // DOM diff — preserve img elements that haven't changed (avoids re-fetching photos)
+        const _notifExisting = new Map();
+        list.querySelectorAll('[data-id]').forEach(el => _notifExisting.set(el.dataset.id, el));
+        const _notifSeen = new Set();
+        _notifData.forEach((n, i) => {
+          const id  = String(n.id);
+          const isRead = readIds.has(n.id);
+          const key = _notifRowKey(n, isRead);
+          _notifSeen.add(id);
+          let el = _notifExisting.get(id);
+          if (!el) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = _notifRowHtml(n, isRead);
+            el = tmp.firstElementChild;
+            list.insertBefore(el, list.children[i] || null);
+          } else {
+            if (el.dataset.rowKey !== key) {
+              const tmp = document.createElement('div');
+              tmp.innerHTML = _notifRowHtml(n, isRead);
+              list.replaceChild(tmp.firstElementChild, el);
+              el = list.children[i];
+            }
+            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+          }
+          if (el) el.dataset.rowKey = key;
+        });
+        _notifExisting.forEach((el, id) => {
+          if (!_notifSeen.has(id) && el.parentNode === list) list.removeChild(el);
+        });
       }
 
       function _fetch() {
@@ -1363,34 +1426,81 @@ const AttendanceSystem = (function() {
         document.getElementById('msgComposeSubject').focus();
       }
 
+      function _msgRowHtml(m) {
+        const isSentByMe = m.fromUsername === currentUser;
+        const otherName  = isSentByMe ? m.toName  : m.fromName;
+        const otherPhoto = isSentByMe ? m.toPhoto : m.fromPhoto;
+        const initials   = _initials(otherName);
+        const dirLabel   = isSentByMe ? `→ ${escapeHtml(m.toName)}` : `← ${escapeHtml(m.fromName)}`;
+        const replyCount = m.replies.length;
+        const avatarHtml = otherPhoto
+          ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
+          : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
+        return `<div class="hdr-msg-item${m.isUnread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);">
+          ${avatarHtml}
+          <div class="hdr-msg-text" style="flex:1;min-width:0;">
+            <div class="hdr-msg-name">${dirLabel} <span class="hdr-msg-time">${_timeAgoShort(m.createdAt)}</span></div>
+            <div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
+            <div class="hdr-msg-preview">${escapeHtml(m.body)}</div>
+            ${replyCount ? `<div style="font-size:0.7rem;color:var(--siomac-red);margin-top:2px;"><i class="fas fa-reply"></i> ${replyCount} repl${replyCount !== 1 ? 'ies' : 'y'}</div>` : ''}
+          </div>
+        </div>`;
+      }
+
+      // Row-level key: what must change to require a DOM update
+      function _msgRowKey(m) {
+        return m.isUnread + '|' + m.replies.length + '|' + m.createdAt;
+      }
+
       function _renderList() {
         const list = document.getElementById('msgList');
         if (!list) return;
+
         if (!_msgs.length) {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-inbox"></i><p>No messages yet</p></div>';
           return;
         }
-        list.innerHTML = _msgs.map(m => {
-          const isSentByMe = m.fromUsername === currentUser;
-          const otherName  = isSentByMe ? m.toName    : m.fromName;
-          const otherPhoto = isSentByMe ? m.toPhoto   : m.fromPhoto;
-          const initials   = _initials(otherName);
-          const dirLabel   = isSentByMe ? `→ ${escapeHtml(m.toName)}` : `← ${escapeHtml(m.fromName)}`;
-          const unread     = m.isUnread;
-          const replyCount = m.replies.length;
-          const avatarHtml = otherPhoto
-            ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
-            : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
-          return `<div class="hdr-msg-item${unread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);">
-            ${avatarHtml}
-            <div class="hdr-msg-text" style="flex:1;min-width:0;">
-              <div class="hdr-msg-name">${dirLabel} <span class="hdr-msg-time">${_timeAgoShort(m.createdAt)}</span></div>
-              <div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
-              <div class="hdr-msg-preview">${escapeHtml(m.body)}</div>
-              ${replyCount ? `<div style="font-size:0.7rem;color:var(--siomac-red);margin-top:2px;"><i class="fas fa-reply"></i> ${replyCount} repl${replyCount !== 1 ? 'ies' : 'y'}</div>` : ''}
-            </div>
-          </div>`;
-        }).join('');
+
+        // Remove empty-state placeholder if present
+        const empty = list.querySelector('.hdr-notif-empty');
+        if (empty) list.innerHTML = '';
+
+        const existingById = new Map();
+        list.querySelectorAll('.hdr-msg-item[data-msg-id]').forEach(el => {
+          existingById.set(el.dataset.msgId, el);
+        });
+
+        const seen = new Set();
+        _msgs.forEach((m, i) => {
+          const id  = String(m.id);
+          const key = _msgRowKey(m);
+          seen.add(id);
+          let el = existingById.get(id);
+          if (!el) {
+            // New row — insert at correct position
+            el = document.createElement('div');
+            el.innerHTML = _msgRowHtml(m);
+            const newNode = el.firstElementChild;
+            const refNode = list.children[i] || null;
+            list.insertBefore(newNode, refNode);
+          } else {
+            // Existing row — only repaint if key changed
+            if (el.dataset.msgKey !== key) {
+              const tmp = document.createElement('div');
+              tmp.innerHTML = _msgRowHtml(m);
+              list.replaceChild(tmp.firstElementChild, el);
+              el = list.children[i]; // re-ref after replace
+            }
+            // Ensure correct order without moving if already in place
+            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+          }
+          if (el) el.dataset.msgKey = key;
+        });
+
+        // Remove rows no longer in data
+        existingById.forEach((el, id) => {
+          if (!seen.has(id) && el.parentNode === list) list.removeChild(el);
+        });
       }
 
       function _bubble(isMe, senderName, body, time, photoUrl) {
@@ -1593,37 +1703,78 @@ const AttendanceSystem = (function() {
         document.getElementById('ticketSubject').focus();
       }
 
+      function _ticketRowHtml(t) {
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        const css      = STATUS_CSS[t.status] || 'open';
+        const lbl      = STATUS_LABEL[t.status] || t.status;
+        const initials = _initials(t.fromName || 'U');
+        const avatarStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;';
+        const avatarHtml = t.fromPhoto
+          ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="${avatarStyle}border:2px solid var(--border,#eee);">`
+          : `<div style="${avatarStyle}background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
+        const sub = isAdminView
+          ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
+          : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
+        return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}">
+          ${avatarHtml}
+          <div style="flex:1;min-width:0;">
+            <div class="hdr-ticket-top">
+              <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
+              <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
+            </div>
+            <div class="hdr-ticket-title">${escapeHtml(t.subject)}</div>
+            <div class="hdr-ticket-sub">${sub}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
+          </div>
+        </div>`;
+      }
+
+      function _ticketRowKey(t) {
+        return (t.status || '') + '|' + (t.replies || []).length;
+      }
+
       function _renderList() {
         const list = document.getElementById('ticketList');
         if (!list) return;
+
         if (!_tickets.length) {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-ticket-alt" style="opacity:.3"></i><p>No tickets yet</p></div>';
           return;
         }
-        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
-        list.innerHTML = _tickets.map(t => {
-          const css      = STATUS_CSS[t.status] || 'open';
-          const lbl      = STATUS_LABEL[t.status] || t.status;
-          const initials = _initials(t.fromName || 'U');
-          const avatarStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;';
-          const avatarHtml = t.fromPhoto
-            ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="${avatarStyle}border:2px solid var(--border,#eee);">`
-            : `<div style="${avatarStyle}background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
-          const sub = isAdminView
-            ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
-            : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
-          return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}">
-            ${avatarHtml}
-            <div style="flex:1;min-width:0;">
-              <div class="hdr-ticket-top">
-                <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
-                <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
-              </div>
-              <div class="hdr-ticket-title">${escapeHtml(t.subject)}</div>
-              <div class="hdr-ticket-sub">${sub}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
-            </div>
-          </div>`;
-        }).join('');
+
+        const empty = list.querySelector('.hdr-notif-empty');
+        if (empty) list.innerHTML = '';
+
+        const existingById = new Map();
+        list.querySelectorAll('.hdr-ticket-item[data-ticket-id]').forEach(el => {
+          existingById.set(el.dataset.ticketId, el);
+        });
+
+        const seen = new Set();
+        _tickets.forEach((t, i) => {
+          const id  = String(t.id);
+          const key = _ticketRowKey(t);
+          seen.add(id);
+          let el = existingById.get(id);
+          if (!el) {
+            el = document.createElement('div');
+            el.innerHTML = _ticketRowHtml(t);
+            const newNode = el.firstElementChild;
+            list.insertBefore(newNode, list.children[i] || null);
+          } else {
+            if (el.dataset.ticketKey !== key) {
+              const tmp = document.createElement('div');
+              tmp.innerHTML = _ticketRowHtml(t);
+              list.replaceChild(tmp.firstElementChild, el);
+              el = list.children[i];
+            }
+            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+          }
+          if (el) el.dataset.ticketKey = key;
+        });
+
+        existingById.forEach((el, id) => {
+          if (!seen.has(id) && el.parentNode === list) list.removeChild(el);
+        });
       }
 
       function _showDetail(ticketId) {
@@ -2229,7 +2380,7 @@ const AttendanceSystem = (function() {
 
       // Live map: click employee item → focus marker
       const liveCard = event.target.closest('.lm-emp-item') || event.target.closest('.live-emp-card');
-      if (liveCard) focusLiveEmployee(liveCard.dataset.userid);
+      if (liveCard) focusLiveEmployee(liveCard.dataset.id || liveCard.dataset.userid);
 
       // Hourly rates — action buttons
       if (event.target.closest('#refreshRatesBtn')) loadHourlyRates();
@@ -3467,7 +3618,7 @@ const AttendanceSystem = (function() {
       ? `<td><div class="lv-emp-name">${escapeHtml(r.employee || '—')}</div></td><td><span class="lv-dept-label">${escapeHtml(r.department || '—')}</span></td>`
       : '';
     const reasonTitle = escapeHtml(r.reason || '');
-    return `<tr>
+    return `<tr data-id="${id}">
       ${empCell}
       <td>${_lvTypeBadge(r.type)}</td>
       <td>${_lvFmtDate(r.from || r.fromDate)}</td>
@@ -3490,6 +3641,50 @@ const AttendanceSystem = (function() {
   }
   function _lvEmpty(msg, colspan = 8) {
     return `<tr><td colspan="${colspan}" class="lv-empty-row"><i class="fas fa-calendar-check"></i><p>${msg}</p></td></tr>`;
+  }
+
+  function _lvRowKey(r) {
+    return (r.status || '') + '|' + (r.from || r.fromDate || '') + '|' + (r.to || r.toDate || '') + '|' + (r.type || '') + '|' + (r.days || '');
+  }
+
+  // DOM-diffing renderer for leave tables (tbody or div containers holding <tr data-id> rows)
+  function _diffLeaveList(containerId, items, rowHtmlFn, emptyMsg, colspan) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (!items.length) {
+      container.innerHTML = _lvEmpty(emptyMsg, colspan);
+      return;
+    }
+    // Remove empty state or skeleton rows (no data-id) on first real render
+    if (!container.querySelector('tr[data-id]') && container.children.length) container.innerHTML = '';
+
+    const existing = new Map();
+    container.querySelectorAll('tr[data-id]').forEach(el => existing.set(el.dataset.id, el));
+    const seen = new Set();
+    items.forEach((r, i) => {
+      const id  = String(r.id);
+      const key = _lvRowKey(r);
+      seen.add(id);
+      let el = existing.get(id);
+      if (!el) {
+        const tmp = document.createElement('tbody');
+        tmp.innerHTML = rowHtmlFn(r);
+        el = tmp.firstElementChild;
+        container.insertBefore(el, container.children[i] || null);
+      } else {
+        if (el.dataset.rowKey !== key) {
+          const tmp = document.createElement('tbody');
+          tmp.innerHTML = rowHtmlFn(r);
+          container.replaceChild(tmp.firstElementChild, el);
+          el = container.children[i];
+        }
+        if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+      }
+      if (el) el.dataset.rowKey = key;
+    });
+    existing.forEach((el, id) => {
+      if (!seen.has(id) && el.parentNode === container) container.removeChild(el);
+    });
   }
   function _lvUpdateStats(prefix, list) {
     _countUp(document.getElementById(prefix + 'Pending'),  list.filter(r => String(r.status).toLowerCase() === 'pending').length);
@@ -3539,9 +3734,7 @@ const AttendanceSystem = (function() {
     });
     const lvTbl = document.querySelector('#s-emp-leave .lv-table');
     if (lvTbl) lvTbl.style.minWidth = filtered.length ? '' : '0';
-    document.getElementById('leaveRequestsList').innerHTML = filtered.length
-      ? filtered.map(r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false })).join('')
-      : _lvEmpty('No leave requests found.', 8);
+    _diffLeaveList('leaveRequestsList', filtered, r => _lvCard(r, { showEmployee: false, showEdit: true, showDelete: false }), 'No leave requests found.', 8);
   }
 
   function displayLeaveRequests(list) {
@@ -3639,9 +3832,7 @@ const AttendanceSystem = (function() {
       if (tab === 'mgr-rejected') return s === 'rejected';
       return true;
     });
-    document.getElementById('managerPendingLeaves').innerHTML = filtered.length
-      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false, showView: true })).join('')
-      : _lvEmpty('No leave requests in this category.', 8);
+    _diffLeaveList('managerPendingLeaves', filtered, r => _lvCard(r, { showEmployee: true, showApproveReject: true, showDelete: false, showView: true }), 'No leave requests in this category.', 8);
   }
 
   // shared approve / reject — works for admin (s-adm-leaves) and manager (s-mgr-leaves)
@@ -3752,7 +3943,7 @@ const AttendanceSystem = (function() {
         tbody.innerHTML = '<tr><td colspan="5" style="padding:48px 20px;text-align:center;color:var(--text-muted);"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.4;"></i><span style="font-size:0.88rem;">No attendance records for today yet.</span></div></td></tr>';
         return;
       }
-      tbody.innerHTML = res.data.map(row => {
+      function _ratRowHtml(row) {
         const statusClass = row.status === 'Present'     ? 'rat-badge rat-present'
                           : row.status === 'Checked Out' ? 'rat-badge rat-out'
                           : row.status === 'Late'        ? 'rat-badge rat-late'
@@ -3763,14 +3954,48 @@ const AttendanceSystem = (function() {
                           :                               'fa-user-times';
         const checkIn  = row.checkIn  ? fmtLocalTime(row.checkIn)  : '—';
         const checkOut = row.checkOut ? fmtLocalTime(row.checkOut) : '—';
-        return `<tr>
+        // Use username or name as the stable row id
+        const rowId = escapeHtml(row.username || row.name || '');
+        return `<tr data-id="${rowId}">
           <td><span class="rat-name">${escapeHtml(row.name)}</span></td>
           <td style="text-align:center;"><span class="rat-dept">${escapeHtml(row.department)}</span></td>
           <td class="rat-time" style="text-align:center;">${checkIn}</td>
           <td class="rat-time" style="text-align:center;">${checkOut}</td>
           <td style="text-align:center;"><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
         </tr>`;
-      }).join('');
+      }
+      function _ratRowKey(row) { return (row.status || '') + '|' + (row.checkIn || '') + '|' + (row.checkOut || ''); }
+
+      // DOM diff — only update rows that changed
+      // Clear skeleton/spinner rows that have no data-id (only on first real render)
+      if (!tbody.querySelector('tr[data-id]') && tbody.children.length) tbody.innerHTML = '';
+      const _ratExisting = new Map();
+      tbody.querySelectorAll('tr[data-id]').forEach(el => _ratExisting.set(el.dataset.id, el));
+      const _ratSeen = new Set();
+      res.data.forEach((row, i) => {
+        const id  = String(row.username || row.name || i);
+        const key = _ratRowKey(row);
+        _ratSeen.add(id);
+        let el = _ratExisting.get(id);
+        if (!el) {
+          const tmp = document.createElement('tbody');
+          tmp.innerHTML = _ratRowHtml(row);
+          el = tmp.firstElementChild;
+          tbody.insertBefore(el, tbody.children[i] || null);
+        } else {
+          if (el.dataset.rowKey !== key) {
+            const tmp = document.createElement('tbody');
+            tmp.innerHTML = _ratRowHtml(row);
+            tbody.replaceChild(tmp.firstElementChild, el);
+            el = tbody.children[i];
+          }
+          if (tbody.children[i] !== el) tbody.insertBefore(el, tbody.children[i] || null);
+        }
+        if (el) el.dataset.rowKey = key;
+      });
+      _ratExisting.forEach((el, id) => {
+        if (!_ratSeen.has(id) && el.parentNode === tbody) tbody.removeChild(el);
+      });
       },
       onError: () => {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Failed to load recent activity.</td></tr>';
@@ -3994,29 +4219,20 @@ const AttendanceSystem = (function() {
     });
   }
 
-  function _renderEmpCards(list) {
-    const grid = document.getElementById('empCardView');
-    if (!grid) return;
-    if (!list.length) {
-      grid.innerHTML = '<div class="emp-empty"><i class="fas fa-users-slash"></i><p>No employees match your filters.</p></div>';
-      return;
-    }
+  function _empCardRowHtml(emp) {
     const todayMap = {
       checkedin:  { cls: 'emp-today-in',  icon: 'fa-check-circle', text: 'Checked In' },
       checkedout: { cls: 'emp-today-out', icon: 'fa-sign-out-alt', text: 'Checked Out' },
       notchecked: { cls: 'emp-today-no',  icon: 'fa-clock',        text: 'Not In' }
     };
-    grid.innerHTML = list.map(emp => {
-      const t = todayMap[emp.todayStatus] || todayMap.notchecked;
-      const isActive = emp.status === 'Active';
-      const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
-      const initial = escapeHtml((emp.fullName || emp.username || '?').charAt(0).toUpperCase());
-      // Photos are pre-decoded by _preloadThenRender — render directly, no flash
-      const avatarInner = emp.profileImage
-        ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-        : `<span>${initial}</span>`;
-      return `
-      <div class="emp-card">
+    const t = todayMap[emp.todayStatus] || todayMap.notchecked;
+    const isActive = emp.status === 'Active';
+    const roleCap = emp.role ? emp.role.charAt(0).toUpperCase() + emp.role.slice(1) : '—';
+    const initial = escapeHtml((emp.fullName || emp.username || '?').charAt(0).toUpperCase());
+    const avatarInner = emp.profileImage
+      ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : `<span>${initial}</span>`;
+    return `<div class="emp-card" data-id="${escapeHtml(emp.username)}">
         <div class="emp-card-header ${isActive ? 'emp-card-header--active' : 'emp-card-header--inactive'}">
           <div class="emp-card-avatar">${avatarInner}</div>
           <div class="emp-card-title-block">
@@ -4041,8 +4257,50 @@ const AttendanceSystem = (function() {
           <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i> Delete</button>
         </div>
       </div>`;
-    }).join('');
+  }
+  function _empCardRowKey(emp) {
+    return (emp.status || '') + '|' + (emp.todayStatus || '') + '|' + (emp.profileImage || '') + '|' + (emp.fullName || '') + '|' + (emp.position || '') + '|' + (emp.department || '');
+  }
 
+  function _renderEmpCards(list) {
+    const grid = document.getElementById('empCardView');
+    if (!grid) return;
+    if (!list.length) {
+      grid.innerHTML = '<div class="emp-empty"><i class="fas fa-users-slash"></i><p>No employees match your filters.</p></div>';
+      return;
+    }
+
+    // Remove empty state if present
+    if (grid.querySelector('.emp-empty')) grid.innerHTML = '';
+
+    // DOM diff
+    const _empCardExisting = new Map();
+    grid.querySelectorAll('[data-id]').forEach(el => _empCardExisting.set(el.dataset.id, el));
+    const _empCardSeen = new Set();
+    list.forEach((emp, i) => {
+      const id  = String(emp.username);
+      const key = _empCardRowKey(emp);
+      _empCardSeen.add(id);
+      let el = _empCardExisting.get(id);
+      if (!el) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _empCardRowHtml(emp);
+        el = tmp.firstElementChild;
+        grid.insertBefore(el, grid.children[i] || null);
+      } else {
+        if (el.dataset.rowKey !== key) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _empCardRowHtml(emp);
+          grid.replaceChild(tmp.firstElementChild, el);
+          el = grid.children[i];
+        }
+        if (grid.children[i] !== el) grid.insertBefore(el, grid.children[i] || null);
+      }
+      if (el) el.dataset.rowKey = key;
+    });
+    _empCardExisting.forEach((el, id) => {
+      if (!_empCardSeen.has(id) && el.parentNode === grid) grid.removeChild(el);
+    });
   }
 
   function _renderEmpTable(list) {
@@ -4366,14 +4624,8 @@ const AttendanceSystem = (function() {
           (d.description || '').toLowerCase().includes(search.toLowerCase()))
       : departmentList;
 
-    // Render card view
-    const cardView = document.getElementById('deptCardView');
-    if (cardView) {
-      if (filtered.length === 0) {
-        cardView.innerHTML = `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`;
-      } else {
-        cardView.innerHTML = filtered.map(dept => `
-          <div class="dept-card">
+    function _deptCardRowHtml(dept) {
+      return `<div class="dept-card" data-id="${dept.id}">
             <div class="dept-card-header">
               <div class="dept-card-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
               <div class="dept-card-title-block">
@@ -4392,18 +4644,13 @@ const AttendanceSystem = (function() {
               <button class="btn btn-outline-primary btn-sm btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
               <button class="btn btn-outline-danger btn-sm btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
             </div>
-          </div>`).join('');
-      }
+          </div>`;
     }
-
-    // Render list / table view
-    const tbody = document.getElementById('deptTableBody');
-    if (tbody) {
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No departments found.</td></tr>`;
-      } else {
-        tbody.innerHTML = filtered.map(dept => `
-          <tr>
+    function _deptCardRowKey(dept) {
+      return (dept.name || '') + '|' + (dept.manager || '') + '|' + (dept.employeeCount || 0) + '|' + (dept.description || '');
+    }
+    function _deptTableRowHtml(dept) {
+      return `<tr data-id="${dept.id}">
             <td>
               <div class="dept-table-name-cell">
                 <div class="dept-table-icon"><i class="fas ${_deptIcon(dept.name)}"></i></div>
@@ -4422,7 +4669,63 @@ const AttendanceSystem = (function() {
                 <button class="dept-table-btn delete btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
               </div>
             </td>
-          </tr>`).join('');
+          </tr>`;
+    }
+
+    function _diffList(container, items, rowHtmlFn, rowKeyFn, emptyHtml, wrapTag) {
+      if (!container) return;
+      if (!items.length) { container.innerHTML = emptyHtml; return; }
+      // Remove empty state sentinel
+      const firstChild = container.firstElementChild;
+      if (firstChild && !firstChild.dataset.id) container.innerHTML = '';
+      const existing = new Map();
+      container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
+      const seen = new Set();
+      items.forEach((item, i) => {
+        const id  = String(item.id);
+        const key = rowKeyFn(item);
+        seen.add(id);
+        let el = existing.get(id);
+        if (!el) {
+          const tmp = document.createElement(wrapTag || 'div');
+          tmp.innerHTML = rowHtmlFn(item);
+          el = tmp.firstElementChild;
+          container.insertBefore(el, container.children[i] || null);
+        } else {
+          if (el.dataset.rowKey !== key) {
+            const tmp = document.createElement(wrapTag || 'div');
+            tmp.innerHTML = rowHtmlFn(item);
+            container.replaceChild(tmp.firstElementChild, el);
+            el = container.children[i];
+          }
+          if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+        }
+        if (el) el.dataset.rowKey = key;
+      });
+      existing.forEach((el, id) => {
+        if (!seen.has(id) && el.parentNode === container) container.removeChild(el);
+      });
+    }
+
+    // Render card view
+    const cardView = document.getElementById('deptCardView');
+    if (cardView) {
+      if (filtered.length === 0) {
+        cardView.innerHTML = `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`;
+      } else {
+        if (cardView.querySelector('.dept-empty')) cardView.innerHTML = '';
+        _diffList(cardView, filtered, _deptCardRowHtml, _deptCardRowKey, `<div class="dept-empty"><i class="fas fa-building"></i><p>No departments found. Create a new one.</p></div>`, 'div');
+      }
+    }
+
+    // Render list / table view
+    const tbody = document.getElementById('deptTableBody');
+    if (tbody) {
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No departments found.</td></tr>`;
+      } else {
+        if (!tbody.querySelector('[data-id]')) tbody.innerHTML = '';
+        _diffList(tbody, filtered, _deptTableRowHtml, _deptCardRowKey, `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No departments found.</td></tr>`, 'tbody');
       }
     }
 
@@ -4674,17 +4977,21 @@ const AttendanceSystem = (function() {
       ? sites.filter(s => s.name.toLowerCase().includes(search) || (s.address || '').toLowerCase().includes(search))
       : sites;
 
+    const container = document.getElementById('projectsContainer');
+
     if (!filtered.length) {
-      document.getElementById('projectsContainer').innerHTML =
-        `<div class="ps-empty"><i class="fas fa-map-marked-alt"></i><p>No project sites found. Click <strong>Add Project Site</strong> to create one.</p></div>`;
+      container.innerHTML = `<div class="ps-empty"><i class="fas fa-map-marked-alt"></i><p>No project sites found. Click <strong>Add Project Site</strong> to create one.</p></div>`;
       return;
     }
 
-    const html = filtered.map(site => {
+    // Remove empty state if present
+    if (container.querySelector('.ps-empty')) container.innerHTML = '';
+
+    function _psCardRowHtml(site) {
       const lat = Number(site.latitude)  || 0;
       const lng = Number(site.longitude) || 0;
       const rad = Number(site.radius)    || 200;
-      return `<div class="ps-card">
+      return `<div class="ps-card" data-id="${site.id}">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
           <div class="ps-card-actions">
@@ -4699,26 +5006,64 @@ const AttendanceSystem = (function() {
           <div class="ps-mini-map" id="ps-map-${site.id}"></div>
         </div>
       </div>`;
-    }).join('');
+    }
+    function _psCardRowKey(site) {
+      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '');
+    }
 
-    document.getElementById('projectsContainer').innerHTML = html;
+    // DOM diff for project cards
+    const _psExisting = new Map();
+    container.querySelectorAll('[data-id]').forEach(el => _psExisting.set(el.dataset.id, el));
+    const _psSeen = new Set();
+    filtered.forEach((site, i) => {
+      const id  = String(site.id);
+      const key = _psCardRowKey(site);
+      _psSeen.add(id);
+      let el = _psExisting.get(id);
+      const isNew = !el;
+      if (!el) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _psCardRowHtml(site);
+        el = tmp.firstElementChild;
+        container.insertBefore(el, container.children[i] || null);
+      } else {
+        if (el.dataset.rowKey !== key) {
+          // Destroy existing mini-map before replacing the element
+          const mapId = `ps-map-${site.id}`;
+          if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _psCardRowHtml(site);
+          container.replaceChild(tmp.firstElementChild, el);
+          el = container.children[i];
+        }
+        if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+      }
+      if (el) el.dataset.rowKey = key;
 
-    // Init mini-maps after render — destroy old instances first
-    filtered.forEach(site => {
+      // Init mini-map if this is a new card or was replaced
       const mapId = `ps-map-${site.id}`;
-      if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
-      setTimeout(() => {
-        const el = document.getElementById(mapId);
-        if (!el || el._leaflet_id) return;
-        const lat = Number(site.latitude) || 0;
-        const lng = Number(site.longitude) || 0;
-        const rad = Number(site.radius) || 200;
-        const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([lat, lng], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
-        L.marker([lat, lng]).addTo(m);
-        L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
-        _psMiniMaps[mapId] = m;
-      }, 80);
+      if (!_psMiniMaps[mapId]) {
+        setTimeout(() => {
+          const mapEl = document.getElementById(mapId);
+          if (!mapEl || mapEl._leaflet_id) return;
+          const lat = Number(site.latitude) || 0;
+          const lng = Number(site.longitude) || 0;
+          const rad = Number(site.radius) || 200;
+          const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([lat, lng], 14);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
+          L.marker([lat, lng]).addTo(m);
+          L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
+          _psMiniMaps[mapId] = m;
+        }, 80);
+      }
+    });
+    _psExisting.forEach((el, id) => {
+      if (!_psSeen.has(id) && el.parentNode === container) {
+        // Destroy mini-map for removed sites
+        const mapId = `ps-map-${id}`;
+        if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
+        container.removeChild(el);
+      }
     });
   }
 
@@ -4980,9 +5325,7 @@ const AttendanceSystem = (function() {
       }
       return true;
     });
-    document.getElementById('leavesTableBody').innerHTML = filtered.length
-      ? filtered.map(r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true, showView: true })).join('')
-      : _lvEmpty('No leave requests found.', 8);
+    _diffLeaveList('leavesTableBody', filtered, r => _lvCard(r, { showEmployee: true, showApproveReject: true, showEdit: true, showDelete: true, showView: true }), 'No leave requests found.', 8);
   }
 
   // ─── Leave: view / print / edit / delete ─────────────────────
