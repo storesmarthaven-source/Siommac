@@ -5189,40 +5189,52 @@ const AttendanceSystem = (function() {
   // Show a Swal popup for a project site card mini-map click:
   // worker count from liveData + button to jump to Live Map section
   function _showSitePopup(site) {
-    const workers = (liveData || []).filter(r => !r.isCheckedOut && String(r.checkInSiteId) === String(site.id));
-    const count   = workers.length;
-    const names   = workers.map(r => `<li style="padding:2px 0;"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:6px;"></i>${escapeHtml(r.fullName || r.username || '—')}</li>`).join('');
-    const listHtml = count
-      ? `<ul style="list-style:none;padding:0;margin:10px 0 0;text-align:left;max-height:160px;overflow-y:auto;">${names}</ul>`
-      : `<p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;">No employees currently checked in here.</p>`;
+    const _renderPopup = (liveRows) => {
+      const workers  = (liveRows || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id));
+      const count    = workers.length;
+      const names    = workers.map(r => `<li style="padding:2px 0;"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:6px;"></i>${escapeHtml(r.fullName || r.username || '—')}</li>`).join('');
+      const listHtml = count
+        ? `<ul style="list-style:none;padding:0;margin:10px 0 0;text-align:left;max-height:160px;overflow-y:auto;">${names}</ul>`
+        : `<p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;">No employees currently checked in here.</p>`;
 
-    Swal.fire({
-      title: `<i class="fas fa-hard-hat" style="color:var(--siomac-red);margin-right:8px;"></i>${escapeHtml(site.name)}`,
-      html: `
-        <div style="text-align:center;">
-          <div style="font-size:2.2rem;font-weight:800;color:var(--siomac-navy);">${count}</div>
-          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
-          ${listHtml}
-        </div>`,
-      showCancelButton: true,
-      confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
-      cancelButtonText: 'Close',
-      confirmButtonColor: 'var(--siomac-navy)',
-      cancelButtonColor: '#aaa',
-      width: 340,
-    }).then(result => {
-      if (result.isConfirmed) {
-        // Navigate to live map section and focus the site
-        showSection('s-projectMap');
-        if (map) {
-          const lat = Number(site.latitude) || 0;
-          const lng = Number(site.longitude) || 0;
-          setTimeout(() => {
-            map.setView([lat, lng], 16, { animate: true });
-          }, 300);
+      Swal.fire({
+        title: `<i class="fas fa-hard-hat" style="color:var(--siomac-red);margin-right:8px;"></i>${escapeHtml(site.name)}`,
+        html: `
+          <div style="text-align:center;">
+            <div style="font-size:2.2rem;font-weight:800;color:var(--siomac-navy);">${count}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
+            ${listHtml}
+          </div>`,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
+        cancelButtonText: 'Close',
+        confirmButtonColor: 'var(--siomac-navy)',
+        cancelButtonColor: '#aaa',
+        width: 340,
+      }).then(result => {
+        if (result.isConfirmed) {
+          showSection('s-projectMap');
+          if (map) {
+            const lat = Number(site.latitude) || 0;
+            const lng = Number(site.longitude) || 0;
+            setTimeout(() => map.setView([lat, lng], 16, { animate: true }), 300);
+          }
         }
-      }
-    });
+      });
+    };
+
+    // Use cached liveData if already loaded, otherwise fetch fresh
+    if (liveData && liveData.length) {
+      _renderPopup(liveData);
+    } else {
+      const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
+      _rawApi('getLiveAttendance', { scope })
+        .then(res => {
+          liveData = (res && res.success && res.data) || [];
+          _renderPopup(liveData);
+        })
+        .catch(() => _renderPopup([]));
+    }
   }
 
   function displayProjectSites(sites) {
