@@ -423,28 +423,38 @@ async function markAttendance(args, ctx) {
   const loc = args.location || {};
   const lat = num(loc.latitude), lng = num(loc.longitude), acc = num(loc.accuracy);
 
-  // If employee chose a specific site, validate against that site only
+  // A project site must always be selected for check-in — no fallback allowed.
+  // For check-out, siteId is optional (use nearest site for recording purposes only).
   let near = null;
+  const isCheckIn = action === 'CheckIn' || action === 'Project';
+
+  if (isCheckIn && !args.siteId) {
+    return { success: false, message: 'Please select a project site before checking in.' };
+  }
+
   if (args.siteId) {
     const { data: chosenSite } = await sb.from('project_sites').select('*').eq('id', args.siteId).maybeSingle();
     if (!chosenSite) return { success: false, message: 'Selected project site not found.' };
     const dist = (lat != null && lng != null) ? haversine(lat, lng, Number(chosenSite.latitude), Number(chosenSite.longitude)) : null;
     const siteRadius = Math.max(Number(chosenSite.radius) || 200, 50);
-    if (dist != null && dist > siteRadius) {
+    // Hard-block if outside radius — no exceptions
+    if (dist == null) {
+      return { success: false, message: 'Your location could not be determined. Please enable GPS and try again.' };
+    }
+    if (dist > siteRadius) {
       return {
         success: false,
-        message: `You are ${Math.round(dist)}m from "${chosenSite.name}". You must be within ${siteRadius}m to check in here.`,
+        message: `You are ${Math.round(dist)}m away from "${chosenSite.name}" (radius: ${siteRadius}m). Move closer and try again.`,
         outsideRadius: true, distanceM: Math.round(dist), siteName: chosenSite.name
       };
     }
     near = { site: chosenSite, distance: dist };
   } else if (lat != null && lng != null) {
+    // Check-out only: record nearest site for reporting, no radius enforcement
     near = await nearestSite(lat, lng);
   }
 
-  const maxDistance = Number(await setting('maxDistanceM', '200'));
-  const outsideRadius = near && near.distance != null && near.distance > Math.max(Number(near.site.radius) || 200, maxDistance);
-  // Don't hard-block fallback (no site chosen) — record the distance and allow check-in with a warning flag
+  const outsideRadius = false; // radius already enforced above for check-in
   const work_date = today();
   const now = new Date();
   const photoBucket = 'attendance-photos';

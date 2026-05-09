@@ -507,10 +507,14 @@ const AttendanceSystem = (function() {
       liveMarkers.push(marker);
     });
 
-    // Add all markers into a cluster group so overlapping pins merge
+    // Add all markers into a cluster group so overlapping pins merge.
+    // animate:false + animateAddingMarkers:false prevent the cluster plugin
+    // from triggering any automatic zoom/pan when markers are added.
     _liveClusterGroup = L.markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 50,
+      animate: false,
+      animateAddingMarkers: false,
       iconCreateFunction: function (cluster) {
         return L.divIcon({
           html: `<div class="lm-cluster-icon"><i class="fas fa-users"></i><span class="lm-cluster-count">${cluster.getChildCount()}</span></div>`,
@@ -521,8 +525,8 @@ const AttendanceSystem = (function() {
     });
     liveMarkers.forEach(m => _liveClusterGroup.addLayer(m));
     map.addLayer(_liveClusterGroup);
-    // Note: fitBounds is handled by the caller (initializeMap) on first load only.
-    // Background refreshes intentionally do NOT re-fit so the user's pan/zoom is preserved.
+    // fitBounds handled by initializeMap on first load only.
+    // Background refreshes intentionally preserve the user's pan/zoom.
   }
 
   function renderLivePanel(rows) {
@@ -2538,6 +2542,13 @@ const AttendanceSystem = (function() {
       } else if (event.target.closest('.btn-delete-project')) {
         const projectId = event.target.closest('.btn-delete-project').dataset.id;
         deleteProjectSite(projectId);
+      } else if (event.target.closest('.ps-card') && !event.target.closest('.ps-mini-map')) {
+        // Click on card body/header (not the mini-map — that has its own Leaflet click) → site popup
+        const card = event.target.closest('.ps-card');
+        if (card && !event.target.closest('.ps-card-actions')) {
+          const site = projectSites.find(s => String(s.id) === String(card.dataset.id));
+          if (site) _showSitePopup(site);
+        }
       }
 
       // Admin attendance — view selfies
@@ -3235,6 +3246,21 @@ const AttendanceSystem = (function() {
       return;
     }
 
+    const siteSelect = document.getElementById('cmSiteSelect');
+    const siteId = (currentAttendanceAction === 'CheckIn' && siteSelect) ? (siteSelect.value || '') : '';
+
+    // Guard: site required for check-in (belt-and-suspenders — button should already be disabled)
+    if (currentAttendanceAction === 'CheckIn' && !siteId) {
+      showPopup('error', 'Site Required', 'Please select a project site before checking in.');
+      return;
+    }
+
+    // Guard: location required for check-in
+    if (currentAttendanceAction === 'CheckIn' && !currentLocationData) {
+      showPopup('error', 'Location Required', 'Your location could not be determined. Please enable GPS and try again.');
+      return;
+    }
+
     showSpinner('Processing attendance...');
 
     const loc = currentLocationData ? {
@@ -3242,9 +3268,6 @@ const AttendanceSystem = (function() {
       longitude: currentLocationData.longitude,
       accuracy: currentLocationData.accuracy
     } : null;
-
-    const siteSelect = document.getElementById('cmSiteSelect');
-    const siteId = (currentAttendanceAction === 'CheckIn' && siteSelect) ? (siteSelect.value || '') : '';
 
     api('markAttendance', {
       username: currentUser,
@@ -5163,6 +5186,45 @@ const AttendanceSystem = (function() {
 
   let _psMiniMaps = {}; // track leaflet instances to avoid double-init
 
+  // Show a Swal popup for a project site card mini-map click:
+  // worker count from liveData + button to jump to Live Map section
+  function _showSitePopup(site) {
+    const workers = (liveData || []).filter(r => !r.isCheckedOut && String(r.checkInSiteId) === String(site.id));
+    const count   = workers.length;
+    const names   = workers.map(r => `<li style="padding:2px 0;"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:6px;"></i>${escapeHtml(r.fullName || r.username || '—')}</li>`).join('');
+    const listHtml = count
+      ? `<ul style="list-style:none;padding:0;margin:10px 0 0;text-align:left;max-height:160px;overflow-y:auto;">${names}</ul>`
+      : `<p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;">No employees currently checked in here.</p>`;
+
+    Swal.fire({
+      title: `<i class="fas fa-hard-hat" style="color:var(--siomac-red);margin-right:8px;"></i>${escapeHtml(site.name)}`,
+      html: `
+        <div style="text-align:center;">
+          <div style="font-size:2.2rem;font-weight:800;color:var(--siomac-navy);">${count}</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
+          ${listHtml}
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
+      cancelButtonText: 'Close',
+      confirmButtonColor: 'var(--siomac-navy)',
+      cancelButtonColor: '#aaa',
+      width: 340,
+    }).then(result => {
+      if (result.isConfirmed) {
+        // Navigate to live map section and focus the site
+        showSection('s-projectMap');
+        if (map) {
+          const lat = Number(site.latitude) || 0;
+          const lng = Number(site.longitude) || 0;
+          setTimeout(() => {
+            map.setView([lat, lng], 16, { animate: true });
+          }, 300);
+        }
+      }
+    });
+  }
+
   function displayProjectSites(sites) {
     // Update stats
     _countUp(document.getElementById('psTotalSites'),  sites.length);
@@ -5245,10 +5307,13 @@ const AttendanceSystem = (function() {
           const lat = Number(site.latitude) || 0;
           const lng = Number(site.longitude) || 0;
           const rad = Number(site.radius) || 200;
-          const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, attributionControl: false }).setView([lat, lng], 14);
+          const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false }).setView([lat, lng], 15);
           L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
-          L.marker([lat, lng]).addTo(m);
           L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
+          L.marker([lat, lng]).addTo(m);
+          // Click on mini-map → show worker count popup + open live map button
+          m.on('click', () => _showSitePopup(site));
+          mapEl.style.cursor = 'pointer';
           _psMiniMaps[mapId] = m;
         }, 80);
       }
