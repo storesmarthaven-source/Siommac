@@ -1292,7 +1292,7 @@ const AttendanceSystem = (function() {
 
       // Expose so init() can kick it off after login
       window._startNotifPolling  = _startPolling;
-      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _saveMapLastVisited(0); };
+      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); };
       window._renderNotifs       = _render;
       window._fetchNotifs        = _fetch; // called by Realtime on instant push
       window._clearMapBadge      = () => {
@@ -2540,6 +2540,14 @@ const AttendanceSystem = (function() {
       // Sidebar leave badge
       if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
     }).catch(() => {});
+
+    // Seed lastVisited to now on login so existing checkins don't show as new
+    // (only checkins that happen after this login will show the map badge)
+    try {
+      const _MAP_VISITED_KEY = 'siomac_map_last_visited';
+      const lv = parseInt(localStorage.getItem(_MAP_VISITED_KEY) || '0', 10) || 0;
+      if (!lv) localStorage.setItem(_MAP_VISITED_KEY, String(Date.now()));
+    } catch (_) {}
 
     // Start full polling (fetches complete data for each system independently)
     if (typeof window._startNotifPolling  === 'function') window._startNotifPolling();
