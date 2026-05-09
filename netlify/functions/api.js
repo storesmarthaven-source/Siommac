@@ -1337,7 +1337,7 @@ const routes = {
     return {
       success: true,
       data: {
-        notifications: (notifRes && notifRes.data ? notifRes.data.length : 0),
+        notificationIds: (notifRes && notifRes.data ? notifRes.data.map(n => n.id) : []),
         messages:      msgRes.count    || 0,
         tickets:       ticketRes.count || 0,
         pendingLeaves: leaveRes.count  || 0

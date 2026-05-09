@@ -2406,9 +2406,12 @@ const AttendanceSystem = (function() {
     _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
       if (!res || !res.success) return;
       const c = res.data || {};
-      // Bell badge
+      // Bell badge — cross-reference returned IDs with locally-stored read IDs
+      const _storedReadIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1') || '[]')); } catch { return new Set(); } })();
+      const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id)).length;
       const notifBadge = document.getElementById('hdrNotifBadge');
-      if (notifBadge) { notifBadge.textContent = c.notifications || ''; notifBadge.style.display = c.notifications ? '' : 'none'; }
+      if (notifBadge) { notifBadge.textContent = unreadNotifs || ''; notifBadge.style.display = unreadNotifs ? '' : 'none'; }
+      // Messages badge
       // Messages badge
       const msgBadge = document.getElementById('hdrMsgBadge');
       if (msgBadge) { msgBadge.textContent = c.messages || ''; msgBadge.style.display = c.messages ? '' : 'none'; }
