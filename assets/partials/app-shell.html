@@ -425,6 +425,12 @@
               <h3><i class="fas fa-user-clock"></i> Live Field Activity</h3>
               <button id="refreshLiveMapBtn" class="lm-refresh-btn" title="Refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
+            <!-- selected site pill — hidden until a site is clicked on the map -->
+            <div class="lm-selected-site-bar" id="lmSelectedSiteBar" style="display:none;">
+              <i class="fas fa-building" style="color:var(--siomac-navy);font-size:0.75rem;flex-shrink:0;"></i>
+              <span id="lmSelectedSiteName" class="lm-selected-site-name"></span>
+              <button id="lmClearSiteBtn" class="lm-clear-site-btn" title="Show all sites"><i class="fas fa-times"></i></button>
+            </div>
             <div class="lm-employees-list" id="liveEmployeesList"></div>
             <div class="lm-legend">
               <span><span class="lm-dot lm-dot-green"></span> Checked In</span>

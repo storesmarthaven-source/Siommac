@@ -26,7 +26,8 @@ const AttendanceSystem = (function() {
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let _liveClusterGroup = null; // markercluster group for employee markers
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
-  let _mapViewSet = false; // true after first fitBounds — prevents re-centering on revisit
+  let _mapViewSet = false;    // true after first fitBounds — prevents re-centering on revisit
+  let _selectedSiteId = '';   // currently selected site filter in the live panel ('' = none)
   // ─── Section load registry ───────────────────────────────────────────────────
   // Tracks whether each section has ever successfully received data this session.
   // Skeleton loaders only fire on the very first load; background refreshes are
@@ -305,16 +306,18 @@ const AttendanceSystem = (function() {
               </div>
             </div>`;
 
-          // Radius circle
+          // Radius circle — click selects this site in the activity panel
           const zone = L.circle([site.latitude, site.longitude], {
             color: '#1b2d54', fillColor: '#1b2d54',
             fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
             dashArray: '6 4'
           }).addTo(map);
           zone.bindPopup(popupHtml, { className: 'siomac-popup', maxWidth: 240, minWidth: 200 });
+          zone.on('click', () => _selectLiveSite(site.id, site.name));
+          zone._siteId = site.id;
           attendanceZones.push(zone);
 
-          // Building marker at center
+          // Building marker at center — click also selects the site
           const buildingMarker = L.marker([site.latitude, site.longitude], {
             icon: L.divIcon({
               className: 'lm-building-marker',
@@ -329,6 +332,8 @@ const AttendanceSystem = (function() {
             offset: L.point(-130, 0), // open to the left of the marker
             autoPan: false
           });
+          buildingMarker.on('click', () => _selectLiveSite(site.id, site.name));
+          buildingMarker._siteId = site.id;
           attendanceZones.push(buildingMarker);
         });
 
@@ -357,6 +362,24 @@ const AttendanceSystem = (function() {
     } catch (error) {
       console.error('Error initializing map:', error);
     }
+  }
+
+  // ─── Site selection (click building / zone on map → filter activity panel) ───
+  function _selectLiveSite(siteId, siteName) {
+    _selectedSiteId = siteId;
+    const bar  = document.getElementById('lmSelectedSiteBar');
+    const nameEl = document.getElementById('lmSelectedSiteName');
+    if (bar)    bar.style.display = 'flex';
+    if (nameEl) nameEl.textContent = siteName;
+    // Re-render panel with the new filter (uses current liveData)
+    renderLivePanel(liveData);
+  }
+
+  function _clearLiveSite() {
+    _selectedSiteId = '';
+    const bar = document.getElementById('lmSelectedSiteBar');
+    if (bar) bar.style.display = 'none';
+    renderLivePanel(liveData);
   }
 
   function updateUserLocationOnMap() {
@@ -537,21 +560,34 @@ const AttendanceSystem = (function() {
   }
 
   function renderLivePanel(rows) {
-    const checkedIn  = rows.filter(r => !r.isCheckedOut).length;
-    const late       = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
-    const onSite     = rows.filter(r => (r.checkInLat || r.checkOutLat) != null).length;
+    const listEl = document.getElementById('liveEmployeesList');
 
-    document.getElementById('liveActiveCount').textContent     = rows.length;
+    // If no site is selected, show prompt and zero out stat cards
+    if (!_selectedSiteId) {
+      document.getElementById('liveActiveCount').textContent    = '—';
+      document.getElementById('liveCheckedInCount').textContent = '—';
+      document.getElementById('liveLateCount').textContent      = '—';
+      document.getElementById('liveOnSiteCount').textContent    = '—';
+      listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-map-pin"></i>Tap a job site on the map to view live activity</div>';
+      return;
+    }
+
+    // Filter to only employees checked in at the selected site
+    const siteRows = rows.filter(r => String(r.siteId) === String(_selectedSiteId));
+
+    const checkedIn = siteRows.filter(r => !r.isCheckedOut).length;
+    const late      = siteRows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
+    const onSite    = siteRows.filter(r => (r.checkInLat || r.checkOutLat) != null).length;
+
+    document.getElementById('liveActiveCount').textContent     = siteRows.length;
     document.getElementById('liveCheckedInCount').textContent  = checkedIn;
     document.getElementById('liveLateCount').textContent       = late;
     document.getElementById('liveOnSiteCount').textContent     = onSite;
 
-    const sorted = rows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
-
-    const listEl = document.getElementById('liveEmployeesList');
+    const sorted = siteRows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
 
     if (!sorted.length) {
-      listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins yet today</div>';
+      listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins at this site today</div>';
       return;
     }
 
@@ -2749,6 +2785,9 @@ const AttendanceSystem = (function() {
       // Live map: refresh button
       if (event.target.closest('#refreshLiveMapBtn')) loadLiveAttendance();
 
+      // Live map: clear site filter button
+      if (event.target.closest('#lmClearSiteBtn')) _clearLiveSite();
+
       // Live map: center map button
       if (event.target.closest('#centerMapBtn')) {
         if (map) {
@@ -3167,6 +3206,7 @@ const AttendanceSystem = (function() {
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
     _mapViewSet = false;        // reset so map re-fits on next login's first visit
+    _selectedSiteId = '';       // reset site filter
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;

@@ -120,6 +120,39 @@
 .lm-refresh-btn:hover { color: var(--siomac-navy); background: #e8edf5; border-color: var(--siomac-navy); }
 
 
+/* selected-site bar (appears between header and employee list when a site is active) */
+.lm-selected-site-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: #eef3fb;
+}
+.lm-selected-site-name {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--siomac-navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lm-clear-site-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 2px 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+  line-height: 1;
+}
+.lm-clear-site-btn:hover { color: var(--siomac-red); background: rgba(228,12,12,0.07); }
+
 /* employee list */
 .lm-employees-list {
   flex: 1;
