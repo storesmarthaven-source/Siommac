@@ -1517,29 +1517,29 @@ const AttendanceSystem = (function() {
         const initials    = _initials(otherName);
         const replyCount  = m.replies.length;
         const lastReply   = replyCount ? m.replies[replyCount - 1] : null;
-        // Show latest activity time, not original send time
         const latestTime  = _msgLatest(m);
-        // Preview = last reply body if exists, else original body
         const previewBody = lastReply ? lastReply.body : m.body;
         const previewBy   = lastReply
           ? (lastReply.fromUsername === currentUser ? 'You' : lastReply.fromName)
           : (isSentByMe ? 'You' : m.fromName);
+        const isDeleted   = !!m.otherPartyDeleted;
         const avatarHtml  = otherPhoto
-          ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
-          : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
-        const unreadDot   = m.isUnread ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;margin-top:6px;display:inline-block;"></span>` : '';
-        const borderStyle = m.isUnread ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+          ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);${isDeleted ? 'filter:grayscale(1);opacity:.5;' : ''}">`
+          : `<div class="hdr-msg-avatar" style="${isDeleted ? 'background:#aaa;color:#fff;' : (isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : '')}">${escapeHtml(initials)}</div>`;
+        const unreadDot   = m.isUnread && !isDeleted ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;margin-top:6px;display:inline-block;"></span>` : '';
+        const borderStyle = m.isUnread && !isDeleted ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+        const removedBadge = isDeleted ? `<span style="font-size:0.65rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 6px;white-space:nowrap;flex-shrink:0;">Removed</span>` : '';
         const listDeleteBtn = _isAdmin()
           ? `<button data-delete-msg-id="${escapeHtml(String(m.id))}" title="Delete conversation" style="border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:4px 6px;border-radius:6px;opacity:.6;transition:opacity .15s;flex-shrink:0;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.6'"><i class="fas fa-trash-alt"></i></button>`
           : '';
-        return `<div class="hdr-msg-item${m.isUnread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}">
+        return `<div class="hdr-msg-item${m.isUnread && !isDeleted ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}${isDeleted ? 'opacity:.6;' : ''}">
           ${avatarHtml}
           <div class="hdr-msg-text" style="flex:1;min-width:0;">
-            <div class="hdr-msg-name" style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-weight:${m.isUnread ? '700' : '600'};color:${m.isUnread ? 'var(--text-primary)' : 'var(--text-muted)'};">${escapeHtml(otherName)}</span>
-              <span class="hdr-msg-time" style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;margin-left:6px;">${_timeAgoShort(latestTime)}</span>
+            <div class="hdr-msg-name" style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <span style="font-weight:${m.isUnread && !isDeleted ? '700' : '600'};color:${m.isUnread && !isDeleted ? 'var(--text-primary)' : 'var(--text-muted)'};${isDeleted ? 'text-decoration:line-through;' : ''}">${escapeHtml(otherName)}</span>
+              <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">${removedBadge}<span class="hdr-msg-time" style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;">${_timeAgoShort(latestTime)}</span></div>
             </div>
-            <div style="font-size:0.78rem;font-weight:${m.isUnread ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
+            <div style="font-size:0.78rem;font-weight:${m.isUnread && !isDeleted ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
             <div class="hdr-msg-preview" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:var(--text-muted);font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody)}</div>
           </div>
           ${unreadDot}
@@ -1641,14 +1641,16 @@ const AttendanceSystem = (function() {
         document.getElementById('msgDetailPane').style.display = 'flex';
 
         // Subject header
-        const otherName = m.fromUsername === currentUser ? m.toName : m.fromName;
+        const otherName    = m.fromUsername === currentUser ? m.toName : m.fromName;
+        const isDeleted    = !!m.otherPartyDeleted;
+        const deletedBadge = isDeleted ? `<span style="font-size:0.65rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 7px;">Employee Removed</span>` : '';
         const deleteBtn = _isAdmin()
           ? `<button data-delete-msg-id="${escapeHtml(String(m.id))}" title="Delete conversation" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.8rem;padding:2px 6px;border-radius:6px;display:flex;align-items:center;gap:4px;opacity:.75;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.75'"><i class="fas fa-trash-alt"></i> Delete</button>`
           : '';
         const header = `<div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle,#f8fafe);">
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="flex:1;min-width:0;">
-              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;">${escapeHtml(m.fromUsername === currentUser ? 'To' : 'From')}: <strong>${escapeHtml(otherName)}</strong></div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px;display:flex;align-items:center;gap:6px;">${escapeHtml(m.fromUsername === currentUser ? 'To' : 'From')}: <strong>${escapeHtml(otherName)}</strong>${deletedBadge}</div>
               <div style="font-size:0.88rem;font-weight:700;color:var(--text-primary);">${escapeHtml(m.subject)}</div>
             </div>
             ${deleteBtn}
@@ -1670,8 +1672,29 @@ const AttendanceSystem = (function() {
         const body = document.getElementById('msgDetailBody');
         body.scrollTop = body.scrollHeight;
 
+        // Disable reply input if the other participant no longer exists
+        const replyInput   = document.getElementById('msgReplyInput');
+        const replySendBtn = document.getElementById('msgReplySendBtn');
+        if (replyInput && replySendBtn) {
+          if (isDeleted) {
+            replyInput.disabled    = true;
+            replyInput.placeholder = 'This employee has been removed — replies are disabled.';
+            replyInput.style.background = 'var(--bg-subtle,#f8fafe)';
+            replyInput.style.color      = 'var(--text-muted)';
+            replySendBtn.disabled  = true;
+            replySendBtn.style.opacity  = '0.4';
+          } else {
+            replyInput.disabled    = false;
+            replyInput.placeholder = 'Write your reply…';
+            replyInput.style.background = '';
+            replyInput.style.color      = '';
+            replySendBtn.disabled  = false;
+            replySendBtn.style.opacity  = '';
+          }
+        }
+
         // Mark as read for the recipient
-        if (m.isUnread) {
+        if (m.isUnread && !isDeleted) {
           api('markMessageRead', { messageId: msgId }).then(() => { m.isUnread = false; _renderList(); _updateMsgBadge(); }).catch(() => {});
         }
       }
@@ -2053,6 +2076,20 @@ const AttendanceSystem = (function() {
               </div>`).join('')}
           </div>`;
         document.getElementById('ticketReplyInput').value = '';
+
+        // Disable reply for employees on closed/resolved tickets
+        const isClosed = t.status === 'closed' || t.status === 'resolved';
+        const replyInput   = document.getElementById('ticketReplyInput');
+        const replySendBtn = document.getElementById('ticketReplySendBtn');
+        if (replyInput && replySendBtn) {
+          const lockReply = !isAdminView && isClosed;
+          replyInput.disabled    = lockReply;
+          replyInput.placeholder = lockReply ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
+          replyInput.style.background = lockReply ? 'var(--bg-subtle,#f8fafe)' : '';
+          replyInput.style.color      = lockReply ? 'var(--text-muted)' : '';
+          replySendBtn.disabled  = lockReply;
+          replySendBtn.style.opacity  = lockReply ? '0.4' : '';
+        }
       }
 
       // Silent poll update — only appends new replies, never rewrites existing content
@@ -2126,6 +2163,9 @@ const AttendanceSystem = (function() {
       function _start() {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         document.getElementById('ticketModalTitle').textContent = isAdminView ? 'Support Tickets' : 'My Tickets';
+        // Only employees can create tickets
+        const newBtn = document.getElementById('ticketNewBtn');
+        if (newBtn) newBtn.style.display = isAdminView ? 'none' : '';
         _fetch();
         clearInterval(_pollTimer);
         _pollTimer = setInterval(_fetch, 10 * 1000); // 10s fallback; Realtime covers instant

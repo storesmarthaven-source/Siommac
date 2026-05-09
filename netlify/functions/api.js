@@ -1813,6 +1813,8 @@ async function getMessages(args, ctx) {
   const { data: photoUsers } = allUserIds.length
     ? await sb.from('app_users').select('id, profile_image').in('id', allUserIds)
     : { data: [] };
+  // Track which user IDs still exist — used to flag conversations with deleted employees
+  const existingUserIds = new Set((photoUsers || []).map(u => u.id));
   // Resolve signed URLs for each user that has a photo
   const photoMap = {};
   await Promise.all((photoUsers || []).map(async u => {
@@ -1836,7 +1838,11 @@ async function getMessages(args, ctx) {
     });
   }
 
-  const mapped = (msgs || []).map(m => ({
+  const mapped = (msgs || []).map(m => {
+    // Determine if the other participant in this conversation has been deleted
+    const otherUserId = m.from_user_id === actor.id ? m.to_user_id : m.from_user_id;
+    const otherPartyDeleted = otherUserId ? !existingUserIds.has(otherUserId) : false;
+    return ({
     id: m.id,
     fromUserId: m.from_user_id, fromUsername: m.from_username, fromName: m.from_name,
     fromPhoto: photoMap[m.from_user_id] || '',
@@ -1844,6 +1850,7 @@ async function getMessages(args, ctx) {
     toPhoto: photoMap[m.to_user_id] || '',
     subject: m.subject, body: m.body,
     readByRecipient: m.read_by_recipient,
+    otherPartyDeleted,
     isUnread: isAdminView
       ? (m.from_user_id !== actor.id && !m.read_by_recipient)
       // Employee: unread when read_by_recipient is false AND the last activity was from someone else.
@@ -1857,7 +1864,7 @@ async function getMessages(args, ctx) {
         })(),
     createdAt: m.created_at,
     replies: replyMap[m.id] || []
-  }));
+  });});
 
   const unreadCount = mapped.filter(m => m.isUnread).length;
   return { success: true, data: mapped, unreadCount };
@@ -1932,6 +1939,7 @@ async function getEmployeesForMsg(args, ctx) {
 
 async function createTicket(args, ctx) {
   const actor = await requireUser(ctx);
+  if (actor.role === 'admin' || actor.role === 'manager') return { success: false, message: 'Admins and managers cannot create support tickets.' };
   const subject  = (args.subject  || '').trim();
   const body     = (args.body     || '').trim();
   const category = (args.category || 'general').trim();
@@ -2028,6 +2036,14 @@ async function replyTicket(args, ctx) {
   const actor = await requireUser(ctx);
   const { ticketId, body } = args;
   if (!body || !body.trim()) return { success: false, message: 'Reply cannot be empty.' };
+  // Fetch ticket to check status and ownership
+  const { data: ticket } = await sb.from('support_tickets').select('status, from_user_id').eq('id', ticketId).maybeSingle();
+  if (!ticket) return { success: false, message: 'Ticket not found.' };
+  const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
+  // Employees cannot reply to closed or resolved tickets
+  if (!isAdminOrMgr && (ticket.status === 'closed' || ticket.status === 'resolved')) {
+    return { success: false, message: 'This ticket is closed and can no longer be replied to.' };
+  }
   const { error } = await sb.from('ticket_replies').insert({
     ticket_id:     ticketId,
     from_user_id:  actor.id,
