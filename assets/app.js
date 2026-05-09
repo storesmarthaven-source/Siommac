@@ -2451,9 +2451,11 @@ const AttendanceSystem = (function() {
     currentLayoutMode = result.layoutMode || 'sidebar';
     applyLayout(currentLayoutMode);
 
-    // swap login → app shell
+    // swap login → app shell; lock scroll to prevent double scrollbar
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appShell').classList.remove('hidden');
+    document.documentElement.classList.add('app-active');
+    document.body.classList.add('app-active');
 
     // populate header profile avatar — use preloaded image if ready, else probe
     const hdrAvatarEl = document.getElementById('hdrProfileAvatar');
@@ -2623,9 +2625,11 @@ const AttendanceSystem = (function() {
     if (typeof window._stopTicketSystem  === 'function') window._stopTicketSystem();
     if (typeof window._teardownRealtime  === 'function') window._teardownRealtime();
 
-    // hide app shell, surface login
+    // hide app shell, surface login; restore natural scroll for login page
     document.getElementById('appShell').classList.add('hidden');
     document.getElementById('loginPage').classList.remove('hidden');
+    document.documentElement.classList.remove('app-active');
+    document.body.classList.remove('app-active');
     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
     document.getElementById('sidebarMenu').innerHTML = '';
     document.getElementById('password').value = '';
