@@ -1631,7 +1631,10 @@ const AttendanceSystem = (function() {
       }
 
       function _updateMsgBadge() {
-        // Trigger combined sync so all badges refresh together
+        // Set badge immediately from local unread count — no round-trip needed
+        const unread = _msgs.filter(m => m.isUnread).length;
+        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
+        // Also schedule a full header sync so other badges stay in sync
         _scheduleHdrBadgeSync();
       }
 
