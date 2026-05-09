@@ -1792,6 +1792,16 @@ const AttendanceSystem = (function() {
       if (cached && cached.companyLogoUrl) applyCompanyLogo(cached.companyLogoUrl);
     } catch (_) {}
 
+    // Fetch live branding from server for the login page — no token needed.
+    // Ensures the correct logo shows even on first visit or after cache clear.
+    _rawApi('getSettings', {}).then(function(s) {
+      if (!s || typeof s !== 'object') return;
+      const logoUrl = s.companyLogoUrl || s.logoUrl || '';
+      const name    = s.companyName || '';
+      if (logoUrl) applyCompanyLogo(logoUrl);
+      if (name)    applyCompanyName(name);
+    }).catch(function() {});
+
     // Set up event listeners
     setupEventListeners();
     setupSidebar();
