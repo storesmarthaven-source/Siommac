@@ -5192,10 +5192,6 @@ const AttendanceSystem = (function() {
     const _renderPopup = (liveRows) => {
       const workers  = (liveRows || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id));
       const count    = workers.length;
-      const names    = workers.map(r => `<li style="padding:2px 0;"><i class="fas fa-user-circle" style="color:var(--siomac-red);margin-right:6px;"></i>${escapeHtml(r.fullName || r.username || '—')}</li>`).join('');
-      const listHtml = count
-        ? `<ul style="list-style:none;padding:0;margin:10px 0 0;text-align:left;max-height:160px;overflow-y:auto;">${names}</ul>`
-        : `<p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;">No employees currently checked in here.</p>`;
 
       Swal.fire({
         title: escapeHtml(site.name),
@@ -5203,9 +5199,8 @@ const AttendanceSystem = (function() {
         customClass: { icon: 'swal-no-border' },
         html: `
           <div style="text-align:center;">
-            <div style="font-size:2.2rem;font-weight:800;color:var(--siomac-navy);">${count}</div>
-            <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
-            ${listHtml}
+            <div style="font-size:2.8rem;font-weight:800;color:var(--siomac-navy);line-height:1;">${count}</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">employee${count !== 1 ? 's' : ''} currently on site</div>
           </div>`,
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
