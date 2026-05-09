@@ -895,8 +895,9 @@ const AttendanceSystem = (function() {
       _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
         if (!res || !res.success) return;
         const c = res.data || {};
-        const storedReadIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1') || '[]')); } catch { return new Set(); } })();
-        const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id)).length;
+        const storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
+        const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
+        const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
         _setHdrBadge(document.getElementById('hdrNotifBadge'),   unreadNotifs);
         _setHdrBadge(document.getElementById('hdrMsgBadge'),     c.messages || 0);
         _setHdrBadge(document.getElementById('hdrTicketBadge'),  c.tickets  || 0);
@@ -1113,7 +1114,8 @@ const AttendanceSystem = (function() {
 
     // ── Notification system ──────────────────────────────────────────────────
     (function () {
-      const STORAGE_KEY = 'siomac_read_notifs_v1';
+      const STORAGE_KEY        = 'siomac_read_notifs_v1';
+      const CLEARED_KEY        = 'siomac_cleared_notifs_v1';
       let _notifData   = [];
       let _pollTimer   = null;
       let _seenIds     = new Set(); // tracks IDs we've already displayed
@@ -1124,6 +1126,17 @@ const AttendanceSystem = (function() {
       }
       function _saveReadIds(set) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...set].slice(-200))); } catch {}
+      }
+      function _clearedIds() {
+        try { return new Set(JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]')); } catch { return new Set(); }
+      }
+      function _saveClearedIds(set) {
+        try { localStorage.setItem(CLEARED_KEY, JSON.stringify([...set].slice(-500))); } catch {}
+      }
+      // Filter out any notifications the user has explicitly cleared
+      function _visibleNotifs() {
+        const cleared = _clearedIds();
+        return cleared.size ? _notifData.filter(n => !cleared.has(n.id)) : _notifData;
       }
 
       function _timeAgo(iso) {
@@ -1220,7 +1233,9 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, _newCheckinCount()));
         });
 
-        if (!_notifData.length) {
+        const visible = _visibleNotifs();
+
+        if (!visible.length) {
           _lastNotifRenderHash = '';
           // Only show empty state after first fetch — avoids flash of "No notifications" before data loads
           if (_loaded) list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>';
@@ -1229,7 +1244,7 @@ const AttendanceSystem = (function() {
 
         // Build a hash of id+readState — skip full re-render if nothing visible changed.
         // This prevents profile photo img tags from being destroyed and re-fetched on every poll.
-        const renderHash = _notifData.map(n => n.id + (readIds.has(n.id) ? 'r' : 'u')).join(',');
+        const renderHash = visible.map(n => n.id + (readIds.has(n.id) ? 'r' : 'u')).join(',');
         if (renderHash === _lastNotifRenderHash) return;
         _lastNotifRenderHash = renderHash;
 
@@ -1255,7 +1270,7 @@ const AttendanceSystem = (function() {
         const _notifExisting = new Map();
         list.querySelectorAll('[data-id]').forEach(el => _notifExisting.set(el.dataset.id, el));
         const _notifSeen = new Set();
-        _notifData.forEach((n, i) => {
+        visible.forEach((n, i) => {
           const id  = String(n.id);
           const isRead = readIds.has(n.id);
           const key = _notifRowKey(n, isRead);
@@ -1318,14 +1333,16 @@ const AttendanceSystem = (function() {
         });
       }
 
-      // Clear all — removes all notifications from view and marks them read
+      // Clear all — hides all current notifications and marks them read.
+      // IDs are persisted in CLEARED_KEY so polls don't bring them back.
       const clearAllBtn = document.getElementById('notifClearAllBtn');
       if (clearAllBtn) {
         clearAllBtn.addEventListener('click', () => {
-          const readIds = _readIds();
-          _notifData.forEach(n => readIds.add(n.id));
+          const readIds    = _readIds();
+          const clearedIds = _clearedIds();
+          _notifData.forEach(n => { readIds.add(n.id); clearedIds.add(n.id); });
           _saveReadIds(readIds);
-          _notifData = [];
+          _saveClearedIds(clearedIds);
           _lastNotifRenderHash = ''; // force re-render to empty state
           _render();
         });
@@ -1385,7 +1402,7 @@ const AttendanceSystem = (function() {
 
       // Expose so init() can kick it off after login
       window._startNotifPolling  = _startPolling;
-      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
+      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; try { localStorage.removeItem(CLEARED_KEY); } catch {} const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
       window._renderNotifs       = _render;
       window._fetchNotifs        = _fetch; // called by Realtime on instant push
       window._clearMapBadge      = () => {
@@ -2955,10 +2972,10 @@ const AttendanceSystem = (function() {
     _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
       if (!res || !res.success) return;
       const c = res.data || {};
-      // Bell badge — cross-reference returned IDs with locally-stored read IDs
-      const _storedReadIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1') || '[]')); } catch { return new Set(); } })();
-      const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id)).length;
-      const notifBadge = document.getElementById('hdrNotifBadge');
+      // Bell badge — cross-reference returned IDs with locally-stored read + cleared IDs
+      const _storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
+      const _storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
+      const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id) && !_storedClearedIds.has(id)).length;
       _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
       // Messages badge
       _setHdrBadge(document.getElementById('hdrMsgBadge'), c.messages || 0);
