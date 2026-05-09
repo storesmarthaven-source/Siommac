@@ -823,11 +823,20 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Skeleton helpers ───
-  // Set a header badge value (CSS animation fires naturally on show)
+  // Set a header badge value and replay the entrance animation each time it changes
   function _setHdrBadge(badge, count) {
     if (!badge) return;
-    badge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+    const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
+    const wasHidden = badge.style.display === 'none';
+    const changed   = badge.textContent !== label;
+    badge.textContent = label;
     badge.style.display = count > 0 ? '' : 'none';
+    // Replay animation whenever badge appears or its count changes
+    if (count > 0 && (wasHidden || changed)) {
+      badge.style.animation = 'none';
+      badge.offsetWidth; // force reflow to restart
+      badge.style.animation = '';
+    }
   }
 
   // Debounced combined badge refresh — all three header badges update together
@@ -1426,7 +1435,8 @@ const AttendanceSystem = (function() {
       }
 
       function _fetch(keepDetail) {
-        api('getMessages', {}).then(res => {
+        // Always bypass SWR cache — we need fresh data (replies must appear instantly)
+        _rawApi('getMessages', {}).then(res => {
           if (!res || !res.success) return;
           _msgs = res.data || [];
           _updateMsgBadge();
@@ -1514,7 +1524,7 @@ const AttendanceSystem = (function() {
       };
       window._startMsgSystem = _start;
       window._stopMsgSystem  = () => clearInterval(_pollTimer);
-      window._fetchMsgs      = () => _fetch(false); // called by Realtime on instant push
+      window._fetchMsgs      = () => _fetch(!!_currentMsgId); // keep detail open if viewing one
     })();
 
     // ── Support Tickets system ───────────────────────────────────────────────
@@ -1641,7 +1651,8 @@ const AttendanceSystem = (function() {
       }
 
       function _fetch(keepDetail) {
-        api('getTickets', {}).then(res => {
+        // Bypass SWR cache — new tickets/replies must appear instantly
+        _rawApi('getTickets', {}).then(res => {
           if (!res || !res.success) return;
           _tickets = res.data || [];
           _updateTicketBadge();
@@ -1724,7 +1735,7 @@ const AttendanceSystem = (function() {
       };
       window._startTicketSystem = _start;
       window._stopTicketSystem  = () => clearInterval(_pollTimer);
-      window._fetchTickets      = () => _fetch(false); // called by Realtime on instant push
+      window._fetchTickets      = () => _fetch(!!_currentTicketId); // keep detail open if viewing one
     })();
 
     // ── Profile icon button → go to profile section ──
