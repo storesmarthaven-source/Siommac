@@ -322,7 +322,12 @@ const AttendanceSystem = (function() {
               iconAnchor: [18, 18]
             })
           }).addTo(map);
-          buildingMarker.bindPopup(popupHtml, { className: 'siomac-popup', maxWidth: 240, minWidth: 200 });
+          buildingMarker.bindPopup(popupHtml, {
+            className: 'siomac-popup',
+            maxWidth: 240, minWidth: 200,
+            offset: L.point(-130, 0), // open to the left of the marker
+            autoPan: false
+          });
           attendanceZones.push(buildingMarker);
         });
 
@@ -818,11 +823,30 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Skeleton helpers ───
-  // Set a header badge value and re-trigger the entrance animation each time
+  // Set a header badge value (CSS animation fires naturally on show)
   function _setHdrBadge(badge, count) {
     if (!badge) return;
     badge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
     badge.style.display = count > 0 ? '' : 'none';
+  }
+
+  // Debounced combined badge refresh — all three header badges update together
+  // from a single getHeaderCounts call so they always animate in simultaneously.
+  let _hdrBadgeSyncTimer = null;
+  function _scheduleHdrBadgeSync() {
+    clearTimeout(_hdrBadgeSyncTimer);
+    _hdrBadgeSyncTimer = setTimeout(() => {
+      _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
+        if (!res || !res.success) return;
+        const c = res.data || {};
+        const storedReadIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1') || '[]')); } catch { return new Set(); } })();
+        const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id)).length;
+        _setHdrBadge(document.getElementById('hdrNotifBadge'),   unreadNotifs);
+        _setHdrBadge(document.getElementById('hdrMsgBadge'),     c.messages || 0);
+        _setHdrBadge(document.getElementById('hdrTicketBadge'),  c.tickets  || 0);
+        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
+      }).catch(() => {});
+    }, 80); // 80ms debounce — collapses concurrent triggers into one request
   }
 
   function setSkel(id, html) {
@@ -1097,8 +1121,8 @@ const AttendanceSystem = (function() {
         const readIds = _readIds();
         const unread  = _notifData.filter(n => !readIds.has(n.id));
 
-        // Bell badge
-        _setHdrBadge(document.getElementById('hdrNotifBadge'), unread.length);
+        // Refresh all header badges together so they appear simultaneously
+        _scheduleHdrBadgeSync();
 
         // Sidebar / top-tab badges — use actual pending leave count, not unread notifications
         _updateNavBadges(_getPendingLeaveCount(), _newCheckinCount());
@@ -1386,8 +1410,8 @@ const AttendanceSystem = (function() {
       }
 
       function _updateMsgBadge() {
-        const unread = _msgs.filter(m => m.isUnread).length;
-        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
+        // Trigger combined sync so all badges refresh together
+        _scheduleHdrBadgeSync();
       }
 
       function _fetch(keepDetail) {
@@ -1598,7 +1622,8 @@ const AttendanceSystem = (function() {
       function _updateTicketBadge() {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         const openCount = isAdminView ? _tickets.filter(t => t.status === 'open').length : 0;
-        _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
+        // Trigger combined sync so all badges refresh together
+        _scheduleHdrBadgeSync();
         const countEl = document.getElementById('ticketOpenCount');
         if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
       }

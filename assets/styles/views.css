@@ -1574,6 +1574,7 @@
 .lm-site-popup-addr { font-size: 0.68rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
 .lm-site-popup-footer {
   padding: 8px 12px; font-size: 0.72rem;
+  background: var(--bg-card);
   color: var(--text-muted); display: flex; align-items: center; gap: 5px;
 }
 
