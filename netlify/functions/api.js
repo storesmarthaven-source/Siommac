@@ -1723,6 +1723,7 @@ async function getNotifications(args, ctx) {
         .select('id, ticket_id, from_name, body, created_at')
         .in('ticket_id', ticketIds)
         .neq('from_username', actor.username)
+        .neq('from_username', '__system__')
         .order('created_at', { ascending: false })
         .limit(5);
       for (const r of ticketReplies || []) {
