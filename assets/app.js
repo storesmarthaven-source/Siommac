@@ -1152,8 +1152,8 @@ const AttendanceSystem = (function() {
         // Refresh all header badges together so they appear simultaneously
         _scheduleHdrBadgeSync();
 
-        // Sidebar / top-tab badges — use actual pending leave count, not unread notifications
-        _updateNavBadges(_getPendingLeaveCount(), _newCheckinCount());
+        // Sidebar / top-tab badges — routed through _refreshNavBadges (single source of truth)
+        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges();
 
         if (!_notifData.length) {
           _lastNotifRenderHash = '';
@@ -1297,12 +1297,10 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
         });
       };
-      // leaveCount is optional — if supplied, uses actual pending leave count instead of unread notifications
+      // Always use _getPendingLeaveCount() — single consistent source of truth
       window._refreshNavBadges = (leaveCount) => {
-        const count = (leaveCount != null) ? leaveCount : (() => {
-          const readIds = _readIds();
-          return _notifData.filter(n => n.type === 'leave' && !readIds.has(n.id)).length;
-        })();
+        const count = (leaveCount != null) ? leaveCount
+          : (typeof _getPendingLeaveCount === 'function' ? _getPendingLeaveCount() : 0);
         _updateNavBadges(count, _newCheckinCount());
       };
     })();
