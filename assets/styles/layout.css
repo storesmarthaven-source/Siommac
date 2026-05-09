@@ -296,7 +296,7 @@
   border-radius: 10px; font-size: 0.6rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   padding: 0 4px; line-height: 1;
-  border: none;
+  border: 1.5px solid rgba(255,255,255,0.85);
   pointer-events: none;
   animation: badgeFadeIn 0.25s ease both;
 }
@@ -442,9 +442,9 @@
   margin-left: 6px;
   pointer-events: none;
   flex-shrink: 0;
-  border: none;
+  border: 1.5px solid rgba(255,255,255,0.85);
   box-shadow: 0 1px 4px rgba(228,12,12,0.35);
-  animation: badgeFadeIn 0.25s ease both;
+  /* No auto-animation — JS triggers it only on genuine count increase */
 }
 /* Sidebar badge bounce animation */
 .sb-badge-bounce {
