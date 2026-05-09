@@ -1777,7 +1777,15 @@ async function getMessages(args, ctx) {
     readByRecipient: m.read_by_recipient,
     isUnread: isAdminView
       ? (m.from_user_id !== actor.id && !m.read_by_recipient)
-      : (m.to_user_id === actor.id && !m.read_by_recipient),
+      // Employee: unread when read_by_recipient is false AND the last activity was from someone else.
+      // If there are replies, the last replier decides; if no replies, the original sender does.
+      // This prevents the employee's own sent message from appearing unread to themselves.
+      : (() => {
+          if (m.read_by_recipient) return false;
+          const replies = replyMap[m.id] || [];
+          const lastFromId = replies.length ? replies[replies.length - 1].fromUserId : m.from_user_id;
+          return lastFromId !== actor.id;
+        })(),
     createdAt: m.created_at,
     replies: replyMap[m.id] || []
   }));
@@ -1796,9 +1804,13 @@ async function replyMessage(args, ctx) {
   const isAdminView = actor.role === 'admin' || actor.role === 'manager';
   const inConversation = isAdminView || msg.from_user_id === actor.id || msg.to_user_id === actor.id;
   if (!inConversation) return { success: false, message: 'Forbidden.' };
-  // Mark as read by recipient when they reply
-  if (!isAdminView) await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
-  else await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
+  // When the employee replies → mark read (they've seen admin's reply).
+  // When admin/manager replies → reset to unread so the employee sees a new-message indicator.
+  if (isAdminView) {
+    await sb.from('messages').update({ read_by_recipient: false }).eq('id', messageId);
+  } else {
+    await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId);
+  }
   const { error } = await sb.from('message_replies').insert({
     message_id: messageId, from_user_id: actor.id,
     from_username: actor.username, from_name: actor.full_name || actor.username,
