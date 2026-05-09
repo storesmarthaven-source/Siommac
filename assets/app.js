@@ -4039,10 +4039,20 @@ const AttendanceSystem = (function() {
     const ini  = name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
     if (initials) initials.textContent = ini;
     if (emp && emp.profileImage) {
-      preview.src = emp.profileImage;
-      preview.style.display = '';
-      if (initials) initials.style.display = 'none';
-      if (removeBtn) removeBtn.style.display = '';
+      // Show initials immediately while the new photo loads — prevents previous employee's
+      // photo flashing before the correct one arrives
+      preview.src = '';
+      preview.style.display = 'none';
+      if (initials) initials.style.display = '';
+      if (removeBtn) removeBtn.style.display = 'none';
+      const img = new Image();
+      img.onload = () => {
+        preview.src = emp.profileImage;
+        preview.style.display = '';
+        if (initials) initials.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = '';
+      };
+      img.src = emp.profileImage;
     } else {
       preview.src = '';
       preview.style.display = 'none';
