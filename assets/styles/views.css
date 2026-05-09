@@ -1550,13 +1550,15 @@
 /* Marker cluster bubble */
 .lm-cluster { background: transparent !important; }
 .lm-cluster-icon {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: #1b2d54;
-  color: #fff; font-size: 13px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   border: 3px solid #fff;
   box-shadow: 0 2px 8px rgba(27,45,84,0.45);
 }
+.lm-cluster-icon i { font-size: 13px; line-height: 1; }
+.lm-cluster-count { font-size: 9px; font-weight: 700; line-height: 1; }
 
 /* Site zone popup card — compact version of lm-popup-card */
 .lm-site-popup-card { width: 200px; font-family: inherit; }

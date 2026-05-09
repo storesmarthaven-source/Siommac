@@ -510,7 +510,7 @@ const AttendanceSystem = (function() {
       maxClusterRadius: 50,
       iconCreateFunction: function (cluster) {
         return L.divIcon({
-          html: `<div class="lm-cluster-icon">${cluster.getChildCount()}</div>`,
+          html: `<div class="lm-cluster-icon"><i class="fas fa-users"></i><span class="lm-cluster-count">${cluster.getChildCount()}</span></div>`,
           className: 'lm-cluster',
           iconSize: [40, 40]
         });
