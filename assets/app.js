@@ -1172,7 +1172,7 @@ const AttendanceSystem = (function() {
       function _startPolling() {
         _fetch();
         clearInterval(_pollTimer);
-        _pollTimer = setInterval(_fetch, 30 * 1000); // every 30 sec
+        _pollTimer = setInterval(_fetch, 5 * 1000); // every 5 sec for near-instant delivery
       }
 
       // Mark all as read (clears bell badge + leave nav badge)
