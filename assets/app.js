@@ -859,7 +859,8 @@ const AttendanceSystem = (function() {
         _setHdrBadge(document.getElementById('hdrNotifBadge'),   unreadNotifs);
         _setHdrBadge(document.getElementById('hdrMsgBadge'),     c.messages || 0);
         _setHdrBadge(document.getElementById('hdrTicketBadge'),  c.tickets  || 0);
-        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0, c.checkedIn || 0);
+        // Update leave badge only — map badge is handled by _render after _notifData loads
+        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
       }).catch(() => {});
     }, 80); // 80ms debounce — collapses concurrent triggers into one request
   }
@@ -1149,8 +1150,14 @@ const AttendanceSystem = (function() {
         if (!list) return;
         const readIds = _readIds();
 
-        // Refresh all header badges + sidebar badge together via getHeaderCounts
+        // Refresh header badges + leave badge via getHeaderCounts (server source)
         _scheduleHdrBadgeSync();
+
+        // Map badge uses _notifData (now populated) filtered by last-visited timestamp
+        // so visiting live map correctly clears it and new checkins re-show it
+        ['#sidebarMenu', '#topTabs'].forEach(sel => {
+          document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, _newCheckinCount()));
+        });
 
         if (!_notifData.length) {
           _lastNotifRenderHash = '';
@@ -1294,11 +1301,11 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
         });
       };
-      // leaveCount and checkedIn come from getHeaderCounts — single source of truth
-      window._refreshNavBadges = (leaveCount, checkedIn) => {
+      // Leave badge — driven by getHeaderCounts (server source, no _notifData needed)
+      window._refreshNavBadges = (leaveCount) => {
         const leave = (leaveCount != null) ? leaveCount
           : (typeof _getPendingLeaveCount === 'function' ? _getPendingLeaveCount() : 0);
-        const ci = (checkedIn != null) ? checkedIn : _newCheckinCount();
+        const ci = _newCheckinCount(); // uses _notifData + lastVisited timestamp
         _updateNavBadges(leave, ci);
       };
     })();
