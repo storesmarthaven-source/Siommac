@@ -1096,13 +1096,14 @@ const AttendanceSystem = (function() {
       const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
       const MAP_SECTION_IDS   = ['s-projectMap'];
 
-      // Track last known count per button to avoid redundant animation replays
-      const _sbBadgeLastCount = new WeakMap();
+      // Track last known count per section ID — survives DOM rebuilds
+      const _sbBadgeLastCount = new Map();
 
       function _setBadge(btn, count) {
-        const prev = _sbBadgeLastCount.get(btn);
+        const sectionKey = btn.dataset.section || btn.id || btn.textContent;
+        const prev = _sbBadgeLastCount.get(sectionKey);
         if (prev === count) return; // nothing changed — skip entirely
-        _sbBadgeLastCount.set(btn, count);
+        _sbBadgeLastCount.set(sectionKey, count);
 
         let b = btn.querySelector('.sb-nav-badge');
         if (count > 0) {
