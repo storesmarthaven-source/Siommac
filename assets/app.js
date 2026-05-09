@@ -328,23 +328,17 @@ const AttendanceSystem = (function() {
           _siteLayerMap[site.id] = { zone, marker: buildingMarker, site };
         });
 
-        // Single final view on FIRST load only — prefer employee markers, then site bounds.
-        // After the first fitBounds we set _mapViewSet so revisiting never re-centers.
+        // Fit to project site zones on first load only — never to employee markers,
+        // so the view stays stable and doesn't jump to check-in locations on open.
         if (!_mapViewSet) {
-          if (liveData && liveData.length) {
-            plotLiveEmployees(liveData); // markers added to cluster group first
-            try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2), { animate: false }); _mapViewSet = true; } catch (_) {
-              if (attendanceZones.length) {
-                try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25), { animate: false }); _mapViewSet = true; } catch (_) {}
-              }
-            }
-          } else if (attendanceZones.length) {
-            const group = L.featureGroup(attendanceZones);
-            try { map.fitBounds(group.getBounds().pad(0.25), { animate: false }); _mapViewSet = true; } catch (_) {}
+          if (attendanceZones.length) {
+            try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25), { animate: false }); } catch (_) {}
           }
-          // else stays on defaultCenter — mark as set so we don't keep trying
-          if (!_mapViewSet) _mapViewSet = true;
+          _mapViewSet = true;
         }
+
+        // Plot any already-fetched employee markers (view stays unchanged)
+        if (liveData && liveData.length) plotLiveEmployees(liveData);
 
         // Now show user GPS marker (view already finalised above)
         if (userLocation) updateUserLocationOnMap();
