@@ -1075,6 +1075,21 @@ const AttendanceSystem = (function() {
                 if (tc) tc.style.display = 'none';
               }, 0);
             }
+            // When message modal opens, always show the list view (reset any open detail/compose)
+            if (btn === 'hdrMsgBtn') {
+              setTimeout(() => {
+                const ml = document.getElementById('msgList');
+                if (ml) ml.style.display = '';
+                const mf = document.getElementById('msgModalFoot');
+                if (mf) mf.style.display = '';
+                const md = document.getElementById('msgDetailPane');
+                if (md) md.style.display = 'none';
+                const mc = document.getElementById('msgComposePane');
+                if (mc) mc.style.display = 'none';
+                // Clear tracked detail so poll doesn't keep detail alive
+                if (typeof window._clearMsgDetail === 'function') window._clearMsgDetail();
+              }, 0);
+            }
           }
         });
       });
@@ -1380,6 +1395,14 @@ const AttendanceSystem = (function() {
       let _currentMsgId = null;
       let _pollTimer    = null;
 
+      // Client-side photo URL cache — prevents photo re-requests when server rotates signed URLs
+      const _photoCache = {};
+      function _resolvePhoto(username, photoUrl) {
+        if (!username) return photoUrl || '';
+        if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
+        return _photoCache[username] || photoUrl || '';
+      }
+
       function _timeAgoShort(iso) {
         if (!iso) return '';
         const d = new Date(iso); if (isNaN(d)) return '';
@@ -1426,30 +1449,59 @@ const AttendanceSystem = (function() {
         document.getElementById('msgComposeSubject').focus();
       }
 
+      // Latest activity timestamp for a message (most recent reply, or original)
+      function _msgLatest(m) {
+        if (m.replies && m.replies.length) {
+          return m.replies[m.replies.length - 1].createdAt || m.createdAt;
+        }
+        return m.createdAt;
+      }
+
+      // Sort msgs by latest activity descending (most recent thread first)
+      function _sortMsgs() {
+        _msgs.sort((a, b) => {
+          const ta = new Date(_msgLatest(a)).getTime() || 0;
+          const tb = new Date(_msgLatest(b)).getTime() || 0;
+          return tb - ta;
+        });
+      }
+
       function _msgRowHtml(m) {
-        const isSentByMe = m.fromUsername === currentUser;
-        const otherName  = isSentByMe ? m.toName  : m.fromName;
-        const otherPhoto = isSentByMe ? m.toPhoto : m.fromPhoto;
-        const initials   = _initials(otherName);
-        const dirLabel   = isSentByMe ? `→ ${escapeHtml(m.toName)}` : `← ${escapeHtml(m.fromName)}`;
-        const replyCount = m.replies.length;
-        const avatarHtml = otherPhoto
-          ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
+        const isSentByMe  = m.fromUsername === currentUser;
+        const otherName   = isSentByMe ? m.toName  : m.fromName;
+        const otherPhoto  = isSentByMe ? m.toPhoto : m.fromPhoto;
+        const initials    = _initials(otherName);
+        const replyCount  = m.replies.length;
+        const lastReply   = replyCount ? m.replies[replyCount - 1] : null;
+        // Show latest activity time, not original send time
+        const latestTime  = _msgLatest(m);
+        // Preview = last reply body if exists, else original body
+        const previewBody = lastReply ? lastReply.body : m.body;
+        const previewBy   = lastReply
+          ? (lastReply.fromUsername === currentUser ? 'You' : lastReply.fromName)
+          : (isSentByMe ? 'You' : m.fromName);
+        const avatarHtml  = otherPhoto
+          ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);">`
           : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
-        return `<div class="hdr-msg-item${m.isUnread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);">
+        const unreadDot   = m.isUnread ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;margin-top:6px;display:inline-block;"></span>` : '';
+        const borderStyle = m.isUnread ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+        return `<div class="hdr-msg-item${m.isUnread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}">
           ${avatarHtml}
           <div class="hdr-msg-text" style="flex:1;min-width:0;">
-            <div class="hdr-msg-name">${dirLabel} <span class="hdr-msg-time">${_timeAgoShort(m.createdAt)}</span></div>
-            <div style="font-size:0.78rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
-            <div class="hdr-msg-preview">${escapeHtml(m.body)}</div>
-            ${replyCount ? `<div style="font-size:0.7rem;color:var(--siomac-red);margin-top:2px;"><i class="fas fa-reply"></i> ${replyCount} repl${replyCount !== 1 ? 'ies' : 'y'}</div>` : ''}
+            <div class="hdr-msg-name" style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:${m.isUnread ? '700' : '600'};color:${m.isUnread ? 'var(--text-primary)' : 'var(--text-muted)'};">${escapeHtml(otherName)}</span>
+              <span class="hdr-msg-time" style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;margin-left:6px;">${_timeAgoShort(latestTime)}</span>
+            </div>
+            <div style="font-size:0.78rem;font-weight:${m.isUnread ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(m.subject)}</div>
+            <div class="hdr-msg-preview" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:var(--text-muted);font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody)}</div>
           </div>
+          ${unreadDot}
         </div>`;
       }
 
       // Row-level key: what must change to require a DOM update
       function _msgRowKey(m) {
-        return m.isUnread + '|' + m.replies.length + '|' + m.createdAt;
+        return m.isUnread + '|' + m.replies.length + '|' + _msgLatest(m);
       }
 
       function _renderList() {
@@ -1460,6 +1512,9 @@ const AttendanceSystem = (function() {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-inbox"></i><p>No messages yet</p></div>';
           return;
         }
+
+        // Sort by latest activity so newest thread is always first
+        _sortMsgs();
 
         // Remove empty-state placeholder if present
         const empty = list.querySelector('.hdr-notif-empty');
@@ -1511,14 +1566,14 @@ const AttendanceSystem = (function() {
       }
 
       function _bubble(isMe, senderName, body, time, photoUrl) {
-        const name     = senderName || (isMe ? 'You' : 'Admin');
+        const name     = senderName || (isMe ? currentFullName || currentUser || 'You' : '?');
         const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
         const align    = isMe ? 'flex-end' : 'flex-start';
         const bubbleBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--bg-subtle, #f0f2f5)';
         const bubbleColor = isMe ? '#fff' : 'var(--text-primary)';
         const avatarBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : '#888';
         const avatar = photoUrl
-          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--border,#ddd)'};">`
+          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" crossorigin="anonymous" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--border,#ddd)'};">`
           : `<div style="width:32px;height:32px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
         const bubble = `<div style="max-width:75%;background:${bubbleBg};color:${bubbleColor};padding:8px 12px;border-radius:${isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};font-size:0.82rem;white-space:pre-wrap;line-height:1.4;">${escapeHtml(body)}</div>`;
         const meta   = `<div style="font-size:0.67rem;color:var(--text-muted);margin-top:3px;text-align:${isMe ? 'right' : 'left'};">${escapeHtml(isMe ? 'You' : name)} · ${_fmtTimestamp(time)}</div>`;
@@ -1590,6 +1645,17 @@ const AttendanceSystem = (function() {
           return;
         }
 
+        // Build a Set of real (non-tmp) reply IDs coming from server
+        const realReplyIds = new Set(
+          allMessages.filter(msg => msg.id.startsWith('reply_') && !msg.id.includes('tmp_')).map(msg => msg.id)
+        );
+
+        // Remove any tmp bubbles that now have a real counterpart (same position in replies array)
+        // Strategy: remove ALL tmp_* bubbles when at least one real reply exists
+        if (realReplyIds.size > 0) {
+          threadEl.querySelectorAll('[data-bubble-id^="reply_tmp_"]').forEach(el => el.remove());
+        }
+
         // Append only messages not yet in the DOM
         const existingIds = new Set([...threadEl.querySelectorAll('[data-bubble-id]')].map(el => el.dataset.bubbleId));
         let appended = false;
@@ -1609,7 +1675,15 @@ const AttendanceSystem = (function() {
         // Always bypass SWR cache — we need fresh data (replies must appear instantly)
         _rawApi('getMessages', {}).then(res => {
           if (!res || !res.success) return;
-          _msgs = res.data || [];
+          // Normalize photos through client-side cache so signed URLs never change mid-session
+          const raw = res.data || [];
+          raw.forEach(m => {
+            m.fromPhoto = _resolvePhoto(m.fromUsername, m.fromPhoto);
+            m.toPhoto   = _resolvePhoto(m.toUsername,   m.toPhoto);
+            (m.replies || []).forEach(r => { r.fromPhoto = _resolvePhoto(r.fromUsername, r.fromPhoto); });
+          });
+          _msgs = raw;
+          _sortMsgs(); // ensure newest-activity thread is always first
           _updateMsgBadge();
           // If detail is open (user is reading/replying), stay there silently
           if (_currentMsgId) {
@@ -1716,9 +1790,10 @@ const AttendanceSystem = (function() {
         _updateMsgBadge();
         _renderList();
       };
-      window._startMsgSystem = _start;
-      window._stopMsgSystem  = () => clearInterval(_pollTimer);
-      window._fetchMsgs      = () => _fetch(!!_currentMsgId); // keep detail open if viewing one
+      window._startMsgSystem  = _start;
+      window._stopMsgSystem   = () => clearInterval(_pollTimer);
+      window._fetchMsgs       = () => _fetch(!!_currentMsgId); // keep detail open if viewing one
+      window._clearMsgDetail  = () => { _currentMsgId = null; }; // called when modal re-opens
     })();
 
     // ── Support Tickets system ───────────────────────────────────────────────
@@ -1729,6 +1804,15 @@ const AttendanceSystem = (function() {
 
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
       const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed' };
+
+      // Client-side photo URL cache keyed by username — prevents photo re-requests
+      // when server rotates signed URLs on each poll. Cleared only on logout.
+      const _photoCache = {};
+      function _resolvePhoto(username, photoUrl) {
+        if (!username) return photoUrl || '';
+        if (photoUrl && !_photoCache[username]) _photoCache[username] = photoUrl;
+        return _photoCache[username] || photoUrl || '';
+      }
 
       function _initials(name) {
         return (name || '?').trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -1771,7 +1855,7 @@ const AttendanceSystem = (function() {
         const initials = _initials(t.fromName || 'U');
         const avatarStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;';
         const avatarHtml = t.fromPhoto
-          ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" style="${avatarStyle}border:2px solid var(--border,#eee);">`
+          ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="${avatarStyle}border:2px solid var(--border,#eee);">`
           : `<div style="${avatarStyle}background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
         const sub = isAdminView
           ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
@@ -1927,7 +2011,13 @@ const AttendanceSystem = (function() {
         // Bypass SWR cache — new tickets/replies must appear instantly
         _rawApi('getTickets', {}).then(res => {
           if (!res || !res.success) return;
-          _tickets = res.data || [];
+          // Normalize photos through client-side cache so signed URLs never change mid-session
+          const raw = res.data || [];
+          raw.forEach(t => {
+            t.fromPhoto = _resolvePhoto(t.fromUsername, t.fromPhoto);
+            (t.replies || []).forEach(r => { r.fromPhoto = _resolvePhoto(r.fromUsername, r.fromPhoto); });
+          });
+          _tickets = raw;
           _updateTicketBadge();
           // If detail is open (user is reading/replying), update silently
           if (_currentTicketId) {
