@@ -24,6 +24,7 @@ const AttendanceSystem = (function() {
   let projectSites = [];
   let userLocation = null;
   let liveMarkers = []; // leaflet markers for active employees on the live map
+  let _liveClusterGroup = null; // markercluster group for employee markers
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
   // ─── Section load registry ───────────────────────────────────────────────────
   // Tracks whether each section has ever successfully received data this session.
@@ -395,7 +396,8 @@ const AttendanceSystem = (function() {
   }
 
   function clearLiveMarkers_() {
-    liveMarkers.forEach(m => { try { map.removeLayer(m); } catch (_) {} });
+    if (_liveClusterGroup) { try { map.removeLayer(_liveClusterGroup); } catch (_) {} }
+    _liveClusterGroup = null;
     liveMarkers = [];
   }
 
@@ -421,7 +423,7 @@ const AttendanceSystem = (function() {
           iconSize: [36, 36],
           iconAnchor: [18, 18]
         })
-      }).addTo(map);
+      });
 
       // Selfie = attendance check-in/out photo; profile = employee profile photo
       const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
@@ -497,10 +499,24 @@ const AttendanceSystem = (function() {
       liveMarkers.push(marker);
     });
 
+    // Add all markers into a cluster group so overlapping pins merge
+    _liveClusterGroup = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 50,
+      iconCreateFunction: function (cluster) {
+        return L.divIcon({
+          html: `<div class="lm-cluster-icon">${cluster.getChildCount()}</div>`,
+          className: 'lm-cluster',
+          iconSize: [40, 40]
+        });
+      }
+    });
+    liveMarkers.forEach(m => _liveClusterGroup.addLayer(m));
+    map.addLayer(_liveClusterGroup);
+
     // fit map bounds to markers if any
     if (liveMarkers.length) {
-      const group = L.featureGroup(liveMarkers);
-      try { map.fitBounds(group.getBounds().pad(0.2)); } catch (_) {}
+      try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2)); } catch (_) {}
     }
   }
 

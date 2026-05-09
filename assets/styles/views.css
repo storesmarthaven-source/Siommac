@@ -1547,6 +1547,17 @@
   box-shadow: 0 2px 8px rgba(27,45,84,0.4);
 }
 
+/* Marker cluster bubble */
+.lm-cluster { background: transparent !important; }
+.lm-cluster-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #1b2d54;
+  color: #fff; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(27,45,84,0.45);
+}
+
 /* Site zone popup card — compact version of lm-popup-card */
 .lm-site-popup-card { width: 200px; font-family: inherit; }
 .lm-site-popup-banner {
