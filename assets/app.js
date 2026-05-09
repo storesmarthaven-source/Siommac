@@ -402,8 +402,10 @@ const AttendanceSystem = (function() {
   }
 
   function clearLiveMarkers_() {
-    if (_liveClusterGroup) { try { map.removeLayer(_liveClusterGroup); } catch (_) {} }
-    _liveClusterGroup = null;
+    // Keep the cluster group attached to the map — just clear its layers.
+    // Removing + re-adding the group triggers viewport changes in MarkerClusterGroup
+    // even with animate:false, causing the unwanted zoom-to-markers on every refresh.
+    if (_liveClusterGroup) { try { _liveClusterGroup.clearLayers(); } catch (_) {} }
     liveMarkers = [];
   }
 
@@ -505,24 +507,27 @@ const AttendanceSystem = (function() {
       liveMarkers.push(marker);
     });
 
-    // Add all markers into a cluster group so overlapping pins merge.
-    // animate:false + animateAddingMarkers:false prevent the cluster plugin
-    // from triggering any automatic zoom/pan when markers are added.
-    _liveClusterGroup = L.markerClusterGroup({
-      showCoverageOnHover: false,
-      maxClusterRadius: 50,
-      animate: false,
-      animateAddingMarkers: false,
-      iconCreateFunction: function (cluster) {
-        return L.divIcon({
-          html: `<div class="lm-cluster-icon"><i class="fas fa-users"></i><span class="lm-cluster-count">${cluster.getChildCount()}</span></div>`,
-          className: 'lm-cluster',
-          iconSize: [40, 40]
-        });
-      }
-    });
-    liveMarkers.forEach(m => _liveClusterGroup.addLayer(m));
-    map.addLayer(_liveClusterGroup);
+    // Create the cluster group once and keep it attached to the map permanently.
+    // Re-adding it on every refresh triggers viewport changes in MarkerClusterGroup
+    // even with animate:false — causing the unwanted zoom-in on each poll.
+    if (!_liveClusterGroup) {
+      _liveClusterGroup = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 50,
+        animate: false,
+        animateAddingMarkers: false,
+        iconCreateFunction: function (cluster) {
+          return L.divIcon({
+            html: `<div class="lm-cluster-icon"><i class="fas fa-users"></i><span class="lm-cluster-count">${cluster.getChildCount()}</span></div>`,
+            className: 'lm-cluster',
+            iconSize: [40, 40]
+          });
+        }
+      });
+      map.addLayer(_liveClusterGroup);
+    }
+    // Bulk-add new markers into the existing (now empty) cluster group
+    _liveClusterGroup.addLayers(liveMarkers);
     // fitBounds handled by initializeMap on first load only.
     // Background refreshes intentionally preserve the user's pan/zoom.
   }
