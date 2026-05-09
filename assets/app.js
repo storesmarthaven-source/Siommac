@@ -26,9 +26,10 @@ const AttendanceSystem = (function() {
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let _liveClusterGroup = null; // markercluster group for employee markers
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
-  let _mapViewSet = false;    // true after first fitBounds — prevents re-centering on revisit
-  let _selectedSiteId = '';   // currently selected site filter in the live panel ('' = none)
-  let _siteLayerMap = {};     // siteId → { zone, marker, siteObj } for popup refresh
+  let _mapViewSet = false;      // true after first fitBounds — prevents re-centering on revisit
+  let _selectedSiteId = '';     // currently selected site filter in the live panel ('' = none)
+  let _siteLayerMap = {};       // siteId → { zone, marker, siteObj } for popup refresh
+  let _activeEmpMarker = null;  // the single employee marker currently shown on the map
   // ─── Section load registry ───────────────────────────────────────────────────
   // Tracks whether each section has ever successfully received data this session.
   // Skeleton loaders only fire on the very first load; background refreshes are
@@ -337,7 +338,7 @@ const AttendanceSystem = (function() {
           _mapViewSet = true;
         }
 
-        // Plot any already-fetched employee markers (view stays unchanged)
+        // Rebuild marker objects from any already-fetched data (not added to map — on-demand only)
         if (liveData && liveData.length) plotLiveEmployees(liveData);
 
         // Now show user GPS marker (view already finalised above)
@@ -399,19 +400,28 @@ const AttendanceSystem = (function() {
   // ─── Site selection (click building / zone on map → filter activity panel) ───
   function _selectLiveSite(siteId, siteName) {
     _selectedSiteId = siteId;
-    const bar  = document.getElementById('lmSelectedSiteBar');
+    // Hide any visible employee marker when switching sites
+    _hideActiveEmpMarker();
+    const bar    = document.getElementById('lmSelectedSiteBar');
     const nameEl = document.getElementById('lmSelectedSiteName');
     if (bar)    bar.style.display = 'flex';
     if (nameEl) nameEl.textContent = siteName;
-    // Re-render panel with the new filter (uses current liveData)
     renderLivePanel(liveData);
   }
 
   function _clearLiveSite() {
     _selectedSiteId = '';
+    _hideActiveEmpMarker();
     const bar = document.getElementById('lmSelectedSiteBar');
     if (bar) bar.style.display = 'none';
     renderLivePanel(liveData);
+  }
+
+  function _hideActiveEmpMarker() {
+    if (_activeEmpMarker && map) {
+      try { map.removeLayer(_activeEmpMarker); } catch (_) {}
+    }
+    _activeEmpMarker = null;
   }
 
   function updateUserLocationOnMap() {
@@ -461,10 +471,8 @@ const AttendanceSystem = (function() {
   }
 
   function clearLiveMarkers_() {
-    // Keep the cluster group attached to the map — just clear its layers.
-    // Removing + re-adding the group triggers viewport changes in MarkerClusterGroup
-    // even with animate:false, causing the unwanted zoom-to-markers on every refresh.
-    if (_liveClusterGroup) { try { _liveClusterGroup.clearLayers(); } catch (_) {} }
+    // Remove only the active employee marker from the map (others were never added).
+    // Do NOT clear _activeEmpMarker here — plotLiveEmployees handles continuity.
     liveMarkers = [];
   }
 
@@ -562,33 +570,27 @@ const AttendanceSystem = (function() {
           </div>
         </div>
       `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup' });
-      marker._liveUserId = row.userId; // for sidebar click → marker open
+      marker._liveUserId = row.userId; // for sidebar click → marker show
       liveMarkers.push(marker);
+      // Markers are NOT added to the map here — they only appear when
+      // the user selects an employee from the Live Field Activity panel.
     });
 
-    // Create the cluster group once and keep it attached to the map permanently.
-    // Re-adding it on every refresh triggers viewport changes in MarkerClusterGroup
-    // even with animate:false — causing the unwanted zoom-in on each poll.
-    if (!_liveClusterGroup) {
-      _liveClusterGroup = L.markerClusterGroup({
-        showCoverageOnHover: false,
-        maxClusterRadius: 50,
-        animate: false,
-        animateAddingMarkers: false,
-        iconCreateFunction: function (cluster) {
-          return L.divIcon({
-            html: `<div class="lm-cluster-icon"><i class="fas fa-users"></i><span class="lm-cluster-count">${cluster.getChildCount()}</span></div>`,
-            className: 'lm-cluster',
-            iconSize: [40, 40]
-          });
-        }
-      });
-      map.addLayer(_liveClusterGroup);
+    // If the previously active marker was for an employee whose data just refreshed,
+    // keep it visible but update its position/content in place.
+    if (_activeEmpMarker && map) {
+      const stillExists = liveMarkers.find(m => m._liveUserId === _activeEmpMarker._liveUserId);
+      if (stillExists) {
+        // Swap to updated marker (same position, fresh popup content)
+        map.removeLayer(_activeEmpMarker);
+        stillExists.addTo(map);
+        _activeEmpMarker = stillExists;
+      } else {
+        // Employee no longer in data — hide marker
+        map.removeLayer(_activeEmpMarker);
+        _activeEmpMarker = null;
+      }
     }
-    // Bulk-add new markers into the existing (now empty) cluster group
-    _liveClusterGroup.addLayers(liveMarkers);
-    // fitBounds handled by initializeMap on first load only.
-    // Background refreshes intentionally preserve the user's pan/zoom.
   }
 
   function renderLivePanel(rows) {
@@ -699,11 +701,20 @@ const AttendanceSystem = (function() {
   }
 
   function focusLiveEmployee(userId) {
+    if (!map) return;
     const marker = liveMarkers.find(m => m._liveUserId === userId);
-    if (marker && map) {
-      map.setView(marker.getLatLng(), 15);
-      marker.openPopup();
+    if (!marker) return;
+
+    // Hide the previously shown employee marker (if different)
+    if (_activeEmpMarker && _activeEmpMarker !== marker) {
+      map.removeLayer(_activeEmpMarker);
     }
+
+    // Show this marker and zoom to it
+    if (!map.hasLayer(marker)) marker.addTo(map);
+    _activeEmpMarker = marker;
+    map.setView(marker.getLatLng(), 16, { animate: true });
+    marker.openPopup();
   }
 
   function markProjectAttendance() {
@@ -2823,11 +2834,12 @@ const AttendanceSystem = (function() {
       // Live map: clear site filter button
       if (event.target.closest('#lmClearSiteBtn')) _clearLiveSite();
 
-      // Live map: center map button
+      // Live map: center map button — zooms to active employee marker if one is shown,
+      // otherwise fits all site zones
       if (event.target.closest('#centerMapBtn')) {
         if (map) {
-          if (liveMarkers.length) {
-            try { map.fitBounds(L.featureGroup(liveMarkers).getBounds().pad(0.2)); } catch (_) {}
+          if (_activeEmpMarker) {
+            map.setView(_activeEmpMarker.getLatLng(), 16, { animate: true });
           } else if (attendanceZones.length) {
             try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25)); } catch (_) {}
           } else {
@@ -3243,6 +3255,7 @@ const AttendanceSystem = (function() {
     _mapViewSet = false;        // reset so map re-fits on next login's first visit
     _selectedSiteId = '';       // reset site filter
     _siteLayerMap = {};         // reset site layer refs
+    _activeEmpMarker = null;    // reset active employee marker
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
