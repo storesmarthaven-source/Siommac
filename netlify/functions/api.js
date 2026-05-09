@@ -1346,13 +1346,19 @@ const routes = {
       // Notification count — reuse getNotifications (already optimised, returns array)
       getNotifications(a, ctx).catch(() => ({ data: [] })),
       // Unread messages count
+      // Admin/manager: messages not from them that are unread
+      // Employee: messages they are part of (as sender OR recipient) that are unread
       isAdminOrMgr
         ? sb.from('messages').select('id', { count: 'exact', head: true }).eq('read_by_recipient', false).neq('from_user_id', actor.id)
-        : sb.from('messages').select('id', { count: 'exact', head: true }).eq('to_user_id', actor.id).eq('read_by_recipient', false),
-      // Open tickets count (admin/manager only)
+        : sb.from('messages').select('id', { count: 'exact', head: true })
+            .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
+            .eq('read_by_recipient', false),
+      // Open tickets count: admin/manager sees all open; employee sees their own with new replies
       isAdminOrMgr
         ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
-        : Promise.resolve({ count: 0 }),
+        : sb.from('ticket_replies').select('id', { count: 'exact', head: true })
+            .neq('from_username', actor.username)
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
       // Pending leaves count (admin/manager only)
       isAdminOrMgr
         ? (actor.role === 'manager'
@@ -1654,6 +1660,67 @@ async function getNotifications(args, ctx) {
         priority: 2
       });
     }
+
+    // 7. Unread message replies from admin (last 7 days)
+    const { data: myMsgs } = await sb.from('messages')
+      .select('id, subject')
+      .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
+      .eq('read_by_recipient', false)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if ((myMsgs || []).length) {
+      const msgIds = myMsgs.map(m => m.id);
+      const { data: msgReplies } = await sb.from('message_replies')
+        .select('id, message_id, from_name, created_at')
+        .in('message_id', msgIds)
+        .neq('from_username', actor.username)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      for (const r of msgReplies || []) {
+        const subj = (myMsgs.find(m => m.id === r.message_id) || {}).subject || 'your message';
+        notifs.push({
+          id: 'msgreply_' + r.id,
+          type: 'msgreply',
+          icon: 'fa-envelope',
+          color: 'blue',
+          title: `${r.from_name || 'Admin'} replied to your message`,
+          sub: subj,
+          rawTime: r.created_at,
+          time: r.created_at,
+          priority: 1
+        });
+      }
+    }
+
+    // 8. Admin replies to employee's tickets (last 7 days)
+    const { data: myTickets } = await sb.from('support_tickets')
+      .select('id, ticket_number, subject')
+      .eq('from_user_id', actor.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if ((myTickets || []).length) {
+      const ticketIds = myTickets.map(t => t.id);
+      const { data: ticketReplies } = await sb.from('ticket_replies')
+        .select('id, ticket_id, from_name, created_at')
+        .in('ticket_id', ticketIds)
+        .neq('from_username', actor.username)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      for (const r of ticketReplies || []) {
+        const tkt = myTickets.find(t => t.id === r.ticket_id) || {};
+        notifs.push({
+          id: 'ticketreply_' + r.id,
+          type: 'ticketreply',
+          icon: 'fa-ticket-alt',
+          color: 'navy',
+          title: `${r.from_name || 'Admin'} replied to ticket #${tkt.ticketNumber || ''}`,
+          sub: tkt.subject || 'your ticket',
+          rawTime: r.created_at,
+          time: r.created_at,
+          priority: 1
+        });
+      }
+    }
   }
 
   // Sort: priority ascending (1 = most urgent), then newest first within same priority
@@ -1908,7 +1975,15 @@ async function getTickets(args, ctx) {
   const replyMap = {};
   for (const r of replies || []) {
     if (!replyMap[r.ticket_id]) replyMap[r.ticket_id] = [];
-    replyMap[r.ticket_id].push({ ...r, fromPhoto: ticketPhotoMap[r.from_username] || '' });
+    replyMap[r.ticket_id].push({
+      id: r.id,
+      ticketId: r.ticket_id,
+      fromUsername: r.from_username,
+      fromName: r.from_name,
+      fromPhoto: ticketPhotoMap[r.from_username] || '',
+      body: r.body,
+      createdAt: r.created_at
+    });
   }
 
   const openCount = (tickets || []).filter(t => t.status === 'open').length;
