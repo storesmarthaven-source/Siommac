@@ -71,6 +71,9 @@
 <body style="visibility:hidden;">
   <div id="app-root"></div>
 
+  <!-- Supabase JS client — needed for Realtime subscriptions -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
   <!-- JavaScript Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -145,7 +148,7 @@
         .then(function (res) { if (!res.ok) throw new Error('Could not load app shell'); return res.text(); })
         .then(function (html) {
           document.getElementById('app-root').innerHTML = html;
-          return loadScripts(['assets/js/popup.js', 'assets/js/cache.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/app.js']);
+          return loadScripts(['assets/js/popup.js', 'assets/js/cache.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/js/realtime.js', 'assets/app.js']);
         })
         .then(function () {
           // reveal only after init() has decided which screen to show — eliminates login flash

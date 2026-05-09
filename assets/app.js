@@ -331,17 +331,20 @@ const AttendanceSystem = (function() {
           attendanceZones.push(buildingMarker);
         });
 
-        // Single final view — prefer site bounds, else GPS, else default
-        if (attendanceZones.length) {
+        // Single final view — prefer employee markers, then site bounds, then default.
+        // Never zoom to the current user's GPS — that's distracting and not useful on open.
+        if (liveData && liveData.length) {
+          plotLiveEmployees(liveData); // markers added to cluster group first
+          try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2), { animate: false }); } catch (_) {
+            if (attendanceZones.length) {
+              try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25), { animate: false }); } catch (_) {}
+            }
+          }
+        } else if (attendanceZones.length) {
           const group = L.featureGroup(attendanceZones);
           try { map.fitBounds(group.getBounds().pad(0.25), { animate: false }); } catch (_) {}
-        } else if (userLocation) {
-          map.setView([userLocation.lat, userLocation.lng], 13, { animate: false });
         }
         // else stays on defaultCenter set at map creation
-
-        // Plot live employee markers after view is set
-        if (liveData && liveData.length) plotLiveEmployees(liveData);
 
         // Now show user GPS marker (view already finalised above)
         if (userLocation) updateUserLocationOnMap();
@@ -518,11 +521,8 @@ const AttendanceSystem = (function() {
     });
     liveMarkers.forEach(m => _liveClusterGroup.addLayer(m));
     map.addLayer(_liveClusterGroup);
-
-    // fit map bounds to markers if any
-    if (liveMarkers.length) {
-      try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2)); } catch (_) {}
-    }
+    // Note: fitBounds is handled by the caller (initializeMap) on first load only.
+    // Background refreshes intentionally do NOT re-fit so the user's pan/zoom is preserved.
   }
 
   function renderLivePanel(rows) {
@@ -1263,6 +1263,7 @@ const AttendanceSystem = (function() {
       window._startNotifPolling  = _startPolling;
       window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _saveMapLastVisited(0); };
       window._renderNotifs       = _render;
+      window._fetchNotifs        = _fetch; // called by Realtime on instant push
       window._clearMapBadge      = () => {
         _saveMapLastVisited(Date.now());
         ['#sidebarMenu', '#topTabs'].forEach(sel => {
@@ -1513,6 +1514,7 @@ const AttendanceSystem = (function() {
       };
       window._startMsgSystem = _start;
       window._stopMsgSystem  = () => clearInterval(_pollTimer);
+      window._fetchMsgs      = () => _fetch(false); // called by Realtime on instant push
     })();
 
     // ── Support Tickets system ───────────────────────────────────────────────
@@ -1722,6 +1724,7 @@ const AttendanceSystem = (function() {
       };
       window._startTicketSystem = _start;
       window._stopTicketSystem  = () => clearInterval(_pollTimer);
+      window._fetchTickets      = () => _fetch(false); // called by Realtime on instant push
     })();
 
     // ── Profile icon button → go to profile section ──
@@ -2511,6 +2514,12 @@ const AttendanceSystem = (function() {
     if (typeof window._startMsgSystem     === 'function') window._startMsgSystem();
     if (typeof window._startTicketSystem  === 'function') window._startTicketSystem();
 
+    // Start Supabase Realtime — instant push for notifications, messages, tickets
+    if (typeof window._initRealtime === 'function') window._initRealtime(currentUserId);
+
+    // Badge-only background poll — fallback every 30s in case Realtime is unavailable
+    setInterval(_scheduleHdrBadgeSync, 30 * 1000);
+
     // No login success popup — dashboard loads immediately
   }
 
@@ -2572,6 +2581,7 @@ const AttendanceSystem = (function() {
     if (typeof window._stopNotifPolling  === 'function') window._stopNotifPolling();
     if (typeof window._stopMsgSystem     === 'function') window._stopMsgSystem();
     if (typeof window._stopTicketSystem  === 'function') window._stopTicketSystem();
+    if (typeof window._teardownRealtime  === 'function') window._teardownRealtime();
 
     // hide app shell, surface login
     document.getElementById('appShell').classList.add('hidden');
