@@ -1149,11 +1149,8 @@ const AttendanceSystem = (function() {
         if (!list) return;
         const readIds = _readIds();
 
-        // Refresh all header badges together so they appear simultaneously
+        // Refresh all header badges + sidebar badge together via getHeaderCounts
         _scheduleHdrBadgeSync();
-
-        // Sidebar / top-tab badges — routed through _refreshNavBadges (single source of truth)
-        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges();
 
         if (!_notifData.length) {
           _lastNotifRenderHash = '';
