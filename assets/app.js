@@ -288,19 +288,41 @@ const AttendanceSystem = (function() {
 
         sites.forEach(site => {
           if (!site.latitude || !site.longitude) return;
+
+          const popupHtml = `
+            <div class="lm-site-popup-card">
+              <div class="lm-site-popup-banner">
+                <div class="lm-site-popup-building-icon"><i class="fas fa-building"></i></div>
+                <div>
+                  <div class="lm-site-popup-name">${site.name}</div>
+                  ${site.address ? `<div class="lm-site-popup-addr">${site.address}</div>` : ''}
+                </div>
+              </div>
+              <div class="lm-site-popup-footer">
+                <i class="fas fa-ruler-horizontal"></i> ${site.radius || 200}m radius
+              </div>
+            </div>`;
+
+          // Radius circle
           const zone = L.circle([site.latitude, site.longitude], {
-            color: '#0074D9', fillColor: '#0074D9',
-            fillOpacity: 0.18, radius: site.radius || 200, weight: 2
+            color: '#1b2d54', fillColor: '#1b2d54',
+            fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
+            dashArray: '6 4'
           }).addTo(map);
-          zone.bindPopup(`
-            <div class="lm-site-popup">
-              <div class="lm-site-popup-icon"><i class="fas fa-building"></i></div>
-              <div class="lm-site-popup-name">${site.name}</div>
-              ${site.address ? `<div class="lm-site-popup-addr">${site.address}</div>` : ''}
-              <div class="lm-site-popup-radius"><i class="fas fa-ruler-horizontal"></i> ${site.radius || 200}m radius</div>
-            </div>
-          `);
+          zone.bindPopup(popupHtml, { className: 'siomac-popup', maxWidth: 240, minWidth: 200 });
           attendanceZones.push(zone);
+
+          // Building marker at center
+          const buildingMarker = L.marker([site.latitude, site.longitude], {
+            icon: L.divIcon({
+              className: 'lm-building-marker',
+              html: `<div class="lm-building-pin"><i class="fas fa-building"></i></div>`,
+              iconSize: [36, 36],
+              iconAnchor: [18, 18]
+            })
+          }).addTo(map);
+          buildingMarker.bindPopup(popupHtml, { className: 'siomac-popup', maxWidth: 240, minWidth: 200 });
+          attendanceZones.push(buildingMarker);
         });
 
         // Single final view — prefer site bounds, else GPS, else default
