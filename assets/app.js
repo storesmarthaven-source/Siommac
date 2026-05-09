@@ -5465,7 +5465,17 @@ const AttendanceSystem = (function() {
         const list = Array.isArray(res.data) ? res.data : [];
         departments = list;
         _markLoaded('s-adm-departments');
-        displayDepartments(list);
+        // Ensure _empAllList is populated for the attendance rate stat
+        if (_empAllList && _empAllList.length) {
+          displayDepartments(list);
+        } else {
+          _rawApi('listEmployees', {}).then(r => {
+            if (r && r.success && r.data) {
+              _empAllList = r.data;
+              _empAllList.forEach(e => { if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage); });
+            }
+          }).catch(() => {}).finally(() => displayDepartments(list));
+        }
       },
       onError: err => {
         if (container) container.innerHTML = `<div class="dept-empty"><i class="fas fa-wifi"></i><p>Network error: ${err.message || 'Could not connect'}</p></div>`;
