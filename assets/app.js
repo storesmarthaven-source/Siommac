@@ -5198,7 +5198,9 @@ const AttendanceSystem = (function() {
         : `<p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;">No employees currently checked in here.</p>`;
 
       Swal.fire({
-        title: `<i class="fas fa-hard-hat" style="color:var(--siomac-red);margin-right:8px;"></i>${escapeHtml(site.name)}`,
+        title: escapeHtml(site.name),
+        iconHtml: '<i class="fas fa-hard-hat" style="color:var(--siomac-red);font-size:1.6rem;"></i>',
+        customClass: { icon: 'swal-no-border' },
         html: `
           <div style="text-align:center;">
             <div style="font-size:2.2rem;font-weight:800;color:var(--siomac-navy);">${count}</div>
