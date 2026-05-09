@@ -26,6 +26,7 @@ const AttendanceSystem = (function() {
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let _liveClusterGroup = null; // markercluster group for employee markers
   let liveData    = []; // last-fetched live attendance rows (for sidebar panel + map sync)
+  let _mapViewSet = false; // true after first fitBounds — prevents re-centering on revisit
   // ─── Section load registry ───────────────────────────────────────────────────
   // Tracks whether each section has ever successfully received data this session.
   // Skeleton loaders only fire on the very first load; background refreshes are
@@ -331,20 +332,23 @@ const AttendanceSystem = (function() {
           attendanceZones.push(buildingMarker);
         });
 
-        // Single final view — prefer employee markers, then site bounds, then default.
-        // Never zoom to the current user's GPS — that's distracting and not useful on open.
-        if (liveData && liveData.length) {
-          plotLiveEmployees(liveData); // markers added to cluster group first
-          try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2), { animate: false }); } catch (_) {
-            if (attendanceZones.length) {
-              try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25), { animate: false }); } catch (_) {}
+        // Single final view on FIRST load only — prefer employee markers, then site bounds.
+        // After the first fitBounds we set _mapViewSet so revisiting never re-centers.
+        if (!_mapViewSet) {
+          if (liveData && liveData.length) {
+            plotLiveEmployees(liveData); // markers added to cluster group first
+            try { map.fitBounds(_liveClusterGroup.getBounds().pad(0.2), { animate: false }); _mapViewSet = true; } catch (_) {
+              if (attendanceZones.length) {
+                try { map.fitBounds(L.featureGroup(attendanceZones).getBounds().pad(0.25), { animate: false }); _mapViewSet = true; } catch (_) {}
+              }
             }
+          } else if (attendanceZones.length) {
+            const group = L.featureGroup(attendanceZones);
+            try { map.fitBounds(group.getBounds().pad(0.25), { animate: false }); _mapViewSet = true; } catch (_) {}
           }
-        } else if (attendanceZones.length) {
-          const group = L.featureGroup(attendanceZones);
-          try { map.fitBounds(group.getBounds().pad(0.25), { animate: false }); } catch (_) {}
+          // else stays on defaultCenter — mark as set so we don't keep trying
+          if (!_mapViewSet) _mapViewSet = true;
         }
-        // else stays on defaultCenter set at map creation
 
         // Now show user GPS marker (view already finalised above)
         if (userLocation) updateUserLocationOnMap();
@@ -3162,6 +3166,7 @@ const AttendanceSystem = (function() {
     currentRole = null;
     cameraStream = null;
     _currentProfileImage = null; // reset so next login fetches fresh from DB
+    _mapViewSet = false;        // reset so map re-fits on next login's first visit
     _resetLoadedState();        // reset so all sections show skeletons again on next login
     locationWatchId = null;
     syncInterval = null;
