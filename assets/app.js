@@ -5302,7 +5302,8 @@ const AttendanceSystem = (function() {
         if (el.dataset.rowKey !== key) {
           // Destroy existing mini-map before replacing the element
           const mapId = `ps-map-${site.id}`;
-          if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
+          if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
+          delete _psMiniMaps[mapId];
           const tmp = document.createElement('div');
           tmp.innerHTML = _psCardRowHtml(site);
           container.replaceChild(tmp.firstElementChild, el);
@@ -5312,31 +5313,39 @@ const AttendanceSystem = (function() {
       }
       if (el) el.dataset.rowKey = key;
 
-      // Init mini-map if this is a new card or was replaced
+      // Init mini-map if this is a new card or was replaced.
+      // Reserve the slot immediately to prevent duplicate inits on rapid re-renders.
       const mapId = `ps-map-${site.id}`;
       if (!_psMiniMaps[mapId]) {
+        _psMiniMaps[mapId] = 'pending'; // guard against re-entry
+        // Stagger by index so many cards don't all race to init at once
         setTimeout(() => {
           const mapEl = document.getElementById(mapId);
-          if (!mapEl || mapEl._leaflet_id) return;
+          if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
           const lat = Number(site.latitude) || 0;
           const lng = Number(site.longitude) || 0;
           const rad = Number(site.radius) || 200;
-          const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false }).setView([lat, lng], 15);
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
-          L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
-          L.marker([lat, lng]).addTo(m);
-          // Click on mini-map → show worker count popup + open live map button
-          m.on('click', () => _showSitePopup(site));
-          mapEl.style.cursor = 'pointer';
-          _psMiniMaps[mapId] = m;
-        }, 80);
+          try {
+            const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false }).setView([lat, lng], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
+            L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
+            L.marker([lat, lng]).addTo(m);
+            m.invalidateSize(); // force correct size after DOM paint
+            m.on('click', () => _showSitePopup(site));
+            mapEl.style.cursor = 'pointer';
+            _psMiniMaps[mapId] = m;
+          } catch (e) {
+            delete _psMiniMaps[mapId]; // allow retry next render
+          }
+        }, 80 + i * 40); // stagger: card 0 = 80ms, card 1 = 120ms, card 2 = 160ms …
       }
     });
     _psExisting.forEach((el, id) => {
       if (!_psSeen.has(id) && el.parentNode === container) {
         // Destroy mini-map for removed sites
         const mapId = `ps-map-${id}`;
-        if (_psMiniMaps[mapId]) { _psMiniMaps[mapId].remove(); delete _psMiniMaps[mapId]; }
+        if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
+        delete _psMiniMaps[mapId];
         container.removeChild(el);
       }
     });
