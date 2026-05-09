@@ -1337,6 +1337,7 @@ const routes = {
   getTickets,
   replyTicket,
   updateTicketStatus,
+  deleteTicket,
   // Lightweight badge counts — all 4 badges in one fast request on login
   getHeaderCounts: async (a, ctx) => {
     const actor = await requireUser(ctx);
@@ -2072,6 +2073,40 @@ async function replyTicket(args, ctx) {
   // Move ticket to in_progress when admin replies
   if (actor.role === 'admin' || actor.role === 'manager') {
     await sb.from('support_tickets').update({ status: 'in_progress', updated_at: new Date().toISOString() }).eq('id', ticketId);
+  }
+  return { success: true };
+}
+
+async function deleteTicket(args, ctx) {
+  const actor = await requireUser(ctx);
+  const { ticketId } = args;
+  // Only employees can delete their own tickets
+  if (actor.role === 'admin' || actor.role === 'manager') {
+    return { success: false, message: 'Admins cannot delete tickets. Use the status controls instead.' };
+  }
+  const { data: ticket } = await sb.from('support_tickets')
+    .select('id, from_user_id, status, subject')
+    .eq('id', ticketId).maybeSingle();
+  if (!ticket) return { success: false, message: 'Ticket not found.' };
+  if (ticket.from_user_id !== actor.id) return { success: false, message: 'You can only delete your own tickets.' };
+  if (ticket.status === 'closed' || ticket.status === 'resolved') {
+    return { success: false, message: 'This ticket is already closed and cannot be deleted.' };
+  }
+  // Soft-delete: set status to 'deleted'
+  const { error } = await sb.from('support_tickets')
+    .update({ status: 'deleted', updated_at: new Date().toISOString() })
+    .eq('id', ticketId);
+  if (error) return { success: false, message: error.message };
+  // Post a system note so admin can see it was deleted before being resolved
+  const wasActive = ticket.status === 'open' || ticket.status === 'in_progress';
+  if (wasActive) {
+    await sb.from('ticket_replies').insert({
+      ticket_id:     ticketId,
+      from_user_id:  actor.id,
+      from_username: '__system__',
+      from_name:     'System',
+      body:          `This ticket was deleted by the employee (${actor.full_name || actor.username}) before it was resolved.`
+    });
   }
   return { success: true };
 }

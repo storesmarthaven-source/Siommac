@@ -2032,8 +2032,8 @@ const AttendanceSystem = (function() {
       let _composing = false;  // true while new-ticket compose pane is open
       let _pollTimer = null;
 
-      const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
-      const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed' };
+      const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed', deleted: 'Deleted' };
+      const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed', deleted: 'deleted' };
 
       // Client-side photo URL cache keyed by username — prevents photo re-requests
       // when server rotates signed URLs on each poll. Cleared only on logout.
@@ -2082,26 +2082,33 @@ const AttendanceSystem = (function() {
 
       function _ticketRowHtml(t) {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        const isDeleted   = t.status === 'deleted';
         const css      = STATUS_CSS[t.status] || 'open';
         const lbl      = STATUS_LABEL[t.status] || t.status;
         const initials = _initials(t.fromName || 'U');
-        const avatarStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;';
+        const avatarStyle = `width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;${isDeleted ? 'filter:grayscale(1);opacity:0.5;' : ''}`;
         const avatarHtml = t.fromPhoto
           ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="${avatarStyle}border:2px solid var(--border,#eee);">`
-          : `<div style="${avatarStyle}background:var(--siomac-primary,#001f3f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
+          : `<div style="${avatarStyle}background:${isDeleted ? '#aaa' : 'var(--siomac-primary,#001f3f)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
         const sub = isAdminView
           ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
           : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
-        return `<div class="hdr-ticket-item ${css}" data-ticket-id="${escapeHtml(String(t.id))}">
+        const deletedBadge = isDeleted ? `<span style="font-size:0.62rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 6px;margin-left:4px;">Deleted</span>` : '';
+        const deleteBtn = (!isAdminView && !isDeleted && (t.status === 'open' || t.status === 'in_progress'))
+          ? `<button data-delete-ticket-id="${escapeHtml(String(t.id))}" title="Delete ticket" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:2px 6px;border-radius:6px;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.7'"><i class="fas fa-trash-alt"></i></button>`
+          : '';
+        return `<div class="hdr-ticket-item ${css}${isDeleted ? ' hdr-ticket-deleted' : ''}" data-ticket-id="${escapeHtml(String(t.id))}" style="${isDeleted ? 'opacity:0.6;pointer-events:' + (isAdminView ? 'auto' : 'none') + ';' : ''}">
           ${avatarHtml}
           <div style="flex:1;min-width:0;">
             <div class="hdr-ticket-top">
-              <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
+              <span class="hdr-ticket-id" style="${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">#${escapeHtml(t.ticketNumber)}</span>
               <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
+              ${deletedBadge}
             </div>
-            <div class="hdr-ticket-title">${escapeHtml(t.subject)}</div>
+            <div class="hdr-ticket-title" style="${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">${escapeHtml(t.subject)}</div>
             <div class="hdr-ticket-sub">${sub}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
           </div>
+          ${deleteBtn}
         </div>`;
       }
 
@@ -2113,7 +2120,11 @@ const AttendanceSystem = (function() {
         const list = document.getElementById('ticketList');
         if (!list) return;
 
-        if (!_tickets.length) {
+        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        // Employees never see their deleted tickets in the list
+        const visibleTickets = isAdminView ? _tickets : _tickets.filter(t => t.status !== 'deleted');
+
+        if (!visibleTickets.length) {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-ticket-alt" style="opacity:.3"></i><p>No tickets yet</p></div>';
           return;
         }
@@ -2127,7 +2138,7 @@ const AttendanceSystem = (function() {
         });
 
         const seen = new Set();
-        _tickets.forEach((t, i) => {
+        visibleTickets.forEach((t, i) => {
           const id  = String(t.id);
           const key = _ticketRowKey(t);
           seen.add(id);
@@ -2170,18 +2181,30 @@ const AttendanceSystem = (function() {
         if (isAdminView) {
           document.getElementById('ticketStatusSelect').value = t.status;
         }
+        const isDeleted = t.status === 'deleted';
         const css = STATUS_CSS[t.status] || 'open';
         const lbl = STATUS_LABEL[t.status] || t.status;
+        const deletedBanner = isDeleted
+          ? `<div style="padding:8px 16px;background:#fff3cd;border-bottom:1px solid #ffc107;display:flex;align-items:center;gap:8px;font-size:0.78rem;color:#7a5c00;">
+               <i class="fas fa-trash-alt"></i>
+               <span>This ticket was <strong>deleted by the employee</strong> before it was resolved.</span>
+             </div>`
+          : '';
+        const deleteBtn = (!isAdminView && !isDeleted && (t.status === 'open' || t.status === 'in_progress'))
+          ? `<button data-delete-ticket-id="${escapeHtml(String(t.id))}" style="border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.78rem;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:5px;padding:0;margin-top:8px;opacity:.8;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.8'"><i class="fas fa-trash-alt"></i> Delete Ticket</button>`
+          : '';
         document.getElementById('ticketDetailBody').innerHTML = `
-          <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+          ${deletedBanner}
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);${isDeleted ? 'opacity:0.65;' : ''}">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <span class="hdr-ticket-id">#${escapeHtml(t.ticketNumber)}</span>
+              <span class="hdr-ticket-id" style="${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">#${escapeHtml(t.ticketNumber)}</span>
               <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
               <span style="font-size:0.72rem;color:var(--text-muted);margin-left:auto;">${_timeAgoShort(t.createdAt)}</span>
             </div>
-            <div style="font-size:0.88rem;font-weight:700;margin-bottom:6px;">${escapeHtml(t.subject)}</div>
+            <div style="font-size:0.88rem;font-weight:700;margin-bottom:6px;${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">${escapeHtml(t.subject)}</div>
             ${isAdminView ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">Reported by ${escapeHtml(t.fromName)}</div>` : ''}
             <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(t.body)}</div>
+            ${deleteBtn}
           </div>
           <div data-ticket-replies>
             ${t.replies.map(r => {
@@ -2203,13 +2226,13 @@ const AttendanceSystem = (function() {
           </div>`;
         document.getElementById('ticketReplyInput').value = '';
 
-        // Disable reply for everyone on closed/resolved tickets
-        const isClosed = t.status === 'closed' || t.status === 'resolved';
+        // Disable reply for everyone on closed/resolved/deleted tickets
+        const isClosed = t.status === 'closed' || t.status === 'resolved' || t.status === 'deleted';
         const replyInput   = document.getElementById('ticketReplyInput');
         const replySendBtn = document.getElementById('ticketReplySendBtn');
         if (replyInput && replySendBtn) {
           replyInput.disabled    = isClosed;
-          replyInput.placeholder = isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
+          replyInput.placeholder = isDeleted ? 'This ticket has been deleted.' : isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
           replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
           replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
           replySendBtn.disabled  = isClosed;
@@ -2263,12 +2286,13 @@ const AttendanceSystem = (function() {
           body.scrollTop = body.scrollHeight;
         });
         // Re-evaluate reply lock in case status changed via poll
-        const isClosed = t.status === 'closed' || t.status === 'resolved';
+        const isDeleted2 = t.status === 'deleted';
+        const isClosed = t.status === 'closed' || t.status === 'resolved' || isDeleted2;
         const replyInput   = document.getElementById('ticketReplyInput');
         const replySendBtn = document.getElementById('ticketReplySendBtn');
         if (replyInput && replySendBtn) {
           replyInput.disabled    = isClosed;
-          replyInput.placeholder = isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
+          replyInput.placeholder = isDeleted2 ? 'This ticket has been deleted.' : isClosed ? 'This ticket is closed and can no longer be replied to.' : 'Write your reply…';
           replyInput.style.background = isClosed ? 'var(--bg-subtle,#f8fafe)' : '';
           replyInput.style.color      = isClosed ? 'var(--text-muted)' : '';
           replySendBtn.disabled  = isClosed;
@@ -2366,8 +2390,33 @@ const AttendanceSystem = (function() {
 
       document.getElementById('ticketRefreshBtn').addEventListener('click', _fetch);
 
-      // Click ticket row → open detail
+      // Delete ticket button (employee only, on list row or detail view)
       document.addEventListener('click', e => {
+        const btn = e.target.closest('[data-delete-ticket-id]');
+        if (!btn) return;
+        e.stopPropagation();
+        const ticketId = btn.dataset.deleteTicketId;
+        const t = _tickets.find(x => String(x.id) === String(ticketId));
+        cpop.fire({
+          icon: 'warning',
+          title: 'Delete Ticket?',
+          text: t ? `Delete ticket #${t.ticketNumber} — "${t.subject}"? This cannot be undone.` : 'Are you sure you want to delete this ticket?',
+          showCancelButton: true,
+          confirmButtonText: 'Delete',
+          confirmButtonColor: '#e40c0c'
+        }).then(result => {
+          if (!result.isConfirmed) return;
+          api('deleteTicket', { ticketId }).then(res => {
+            if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+            _fetch();
+            _showList();
+          }).catch(() => showPopup('error', 'Error', 'Could not delete ticket.'));
+        });
+      });
+
+      // Click ticket row → open detail (guard against delete button clicks)
+      document.addEventListener('click', e => {
+        if (e.target.closest('[data-delete-ticket-id]')) return;
         const row = e.target.closest('.hdr-ticket-item[data-ticket-id]');
         if (!row) return;
         _showDetail(row.dataset.ticketId);
