@@ -6,7 +6,7 @@
 ═══════════════════════════════════════════ */
 .sidebar {
   width: 272px;
-  background: linear-gradient(180deg, var(--siomac-navy) 0%, var(--siomac-navy-dark) 100%);
+  background: #1b2d54;
   color: white;
   display: flex;
   flex-direction: column;
