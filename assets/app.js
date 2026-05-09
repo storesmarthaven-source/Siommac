@@ -1393,6 +1393,7 @@ const AttendanceSystem = (function() {
       let _msgs      = [];
       let _empList   = [];   // for admin compose: list of employees to pick from
       let _currentMsgId = null;
+      let _composing    = false;  // true while new-message compose pane is open
       let _pollTimer    = null;
 
       // Client-side photo URL cache — prevents photo re-requests when server rotates signed URLs
@@ -1423,6 +1424,7 @@ const AttendanceSystem = (function() {
         document.getElementById('msgComposePane').style.display= 'none';
         document.getElementById('msgModalFoot').style.display  = '';
         _currentMsgId = null;
+        _composing    = false;
       }
 
       function _showCompose(replyToUsername) {
@@ -1432,6 +1434,7 @@ const AttendanceSystem = (function() {
         document.getElementById('msgModalFoot').style.display  = 'none';
         document.getElementById('msgComposeSubject').value     = '';
         document.getElementById('msgComposeBody').value        = '';
+        _composing = true;
 
         // Admin: show recipient selector; employee: hide it
         const toWrap = document.getElementById('msgToWrap');
@@ -1685,10 +1688,10 @@ const AttendanceSystem = (function() {
           _msgs = raw;
           _sortMsgs(); // ensure newest-activity thread is always first
           _updateMsgBadge();
-          // If detail is open (user is reading/replying), stay there silently
+          // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentMsgId) {
             _updateDetail(_currentMsgId);
-          } else {
+          } else if (!_composing) {
             _renderList();
           }
         }).catch(() => {});
@@ -1800,6 +1803,7 @@ const AttendanceSystem = (function() {
     (function () {
       let _tickets = [];
       let _currentTicketId = null;
+      let _composing = false;  // true while new-ticket compose pane is open
       let _pollTimer = null;
 
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
@@ -1835,6 +1839,7 @@ const AttendanceSystem = (function() {
         document.getElementById('ticketComposePane').style.display = 'none';
         document.getElementById('ticketModalFoot').style.display = '';
         _currentTicketId = null;
+        _composing = false;
       }
 
       function _showCompose() {
@@ -1846,6 +1851,7 @@ const AttendanceSystem = (function() {
         document.getElementById('ticketSubject').value = '';
         document.getElementById('ticketBody').value = '';
         document.getElementById('ticketSubject').focus();
+        _composing = true;
       }
 
       function _ticketRowHtml(t) {
@@ -2019,10 +2025,10 @@ const AttendanceSystem = (function() {
           });
           _tickets = raw;
           _updateTicketBadge();
-          // If detail is open (user is reading/replying), update silently
+          // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentTicketId) {
             _updateTicketDetail(_currentTicketId);
-          } else {
+          } else if (!_composing) {
             _showList();
             _renderList();
           }
