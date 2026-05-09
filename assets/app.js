@@ -779,6 +779,21 @@ const AttendanceSystem = (function() {
   }
 
   // ─── Skeleton helpers ───
+  // Set a header badge value and re-trigger the entrance animation each time
+  function _setHdrBadge(badge, count) {
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = '';
+      badge.style.animation = 'none';
+      void badge.offsetWidth; // reflow to restart
+      badge.style.animation = '';
+    } else {
+      badge.textContent = '';
+      badge.style.display = 'none';
+    }
+  }
+
   function setSkel(id, html) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
@@ -1052,11 +1067,7 @@ const AttendanceSystem = (function() {
         const unread  = _notifData.filter(n => !readIds.has(n.id));
 
         // Bell badge
-        const badge = document.getElementById('hdrNotifBadge');
-        if (badge) {
-          badge.textContent = unread.length > 0 ? (unread.length > 99 ? '99+' : unread.length) : '';
-          badge.style.display = unread.length > 0 ? '' : 'none';
-        }
+        _setHdrBadge(document.getElementById('hdrNotifBadge'), unread.length);
 
         // Sidebar / top-tab badges — use actual pending leave count, not unread notifications
         _updateNavBadges(_getPendingLeaveCount(), _newCheckinCount());
@@ -1345,8 +1356,7 @@ const AttendanceSystem = (function() {
 
       function _updateMsgBadge() {
         const unread = _msgs.filter(m => m.isUnread).length;
-        const badge = document.getElementById('hdrMsgBadge');
-        if (badge) { badge.textContent = unread || ''; badge.style.display = unread ? '' : 'none'; }
+        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
       }
 
       function _fetch(keepDetail) {
@@ -1557,8 +1567,7 @@ const AttendanceSystem = (function() {
       function _updateTicketBadge() {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         const openCount = isAdminView ? _tickets.filter(t => t.status === 'open').length : 0;
-        const badge = document.getElementById('hdrTicketBadge');
-        if (badge) { badge.textContent = openCount || ''; badge.style.display = openCount ? '' : 'none'; }
+        _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
         const countEl = document.getElementById('ticketOpenCount');
         if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
       }
@@ -2422,14 +2431,11 @@ const AttendanceSystem = (function() {
       const _storedReadIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1') || '[]')); } catch { return new Set(); } })();
       const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id)).length;
       const notifBadge = document.getElementById('hdrNotifBadge');
-      if (notifBadge) { notifBadge.textContent = unreadNotifs || ''; notifBadge.style.display = unreadNotifs ? '' : 'none'; }
+      _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
       // Messages badge
-      // Messages badge
-      const msgBadge = document.getElementById('hdrMsgBadge');
-      if (msgBadge) { msgBadge.textContent = c.messages || ''; msgBadge.style.display = c.messages ? '' : 'none'; }
+      _setHdrBadge(document.getElementById('hdrMsgBadge'), c.messages || 0);
       // Tickets badge
-      const ticketBadge = document.getElementById('hdrTicketBadge');
-      if (ticketBadge) { ticketBadge.textContent = c.tickets || ''; ticketBadge.style.display = c.tickets ? '' : 'none'; }
+      _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets || 0);
       // Sidebar leave badge
       if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
     }).catch(() => {});
