@@ -46,7 +46,7 @@
 }
 .hr-stat-icon i { font-size: 24px; color: var(--siomac-red); }
 .hr-stat-body { display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
-.hr-stat-value { font-size: 2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; white-space: nowrap; }
+.hr-stat-value { font-size: 2rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; white-space: nowrap; }
 .hr-stat-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; white-space: nowrap; }
 
 /* filters bar */
@@ -244,7 +244,7 @@
 .lv-stat-icon.medical { background: rgba(239,108,0,0.1); }
 .lv-stat-icon.medical i { color: #EF6C00; }
 .lv-stat-body { flex: 1; }
-.lv-stat-value { font-size: 1.9rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; }
+.lv-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; }
 .lv-stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 /* Smaller second stats row */
 .lv-stats-row--sm { margin-top: -8px; margin-bottom: 16px; }
@@ -416,7 +416,7 @@
   flex-shrink: 0;
 }
 .ps-stat-icon i { font-size: 22px; color: var(--siomac-navy); }
-.ps-stat-value { font-size: 1.9rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; }
+.ps-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; }
 .ps-stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 
 /* Filters bar — same pill style as emp/dept */
@@ -1108,7 +1108,7 @@
 .stat-card-icon.gold   { background: rgba(255,183,18,0.14); color: #c67c00; }
 .stat-card-icon.red    { background: rgba(228,12,12,0.09);  color: var(--siomac-red); }
 .stat-card-body { flex: 1; min-width: 0; }
-.stat-card-value { font-size: 1.9rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; min-height: 1.8rem; }
+.stat-card-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; min-height: 1.8rem; }
 .stat-card-value:empty { min-height: 1.8rem; }
 .stat-card-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 
@@ -1266,7 +1266,7 @@
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 10px; font-size: 18px;
 }
-.ea-summary-value { font-size: 1.6rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; }
+.ea-summary-value { font-size: 1.6rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; }
 .ea-summary-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 
 .ea-total-days-bar {
@@ -1275,7 +1275,7 @@
   display: flex; justify-content: space-between; align-items: center;
   color: white;
 }
-.ea-total-days-value { font-size: 1.5rem; font-weight: 800; }
+.ea-total-days-value { font-size: 1.5rem; font-weight: 700; }
 
 /* Clock / date (shared) */
 .clock-display {
@@ -1310,7 +1310,7 @@
   background: rgba(228,12,12,0.1); display: flex; align-items: center;
   justify-content: center; font-size: 18px; color: var(--siomac-red); margin-bottom: 12px;
 }
-.eh-stat-value { font-size: 1.7rem; font-weight: 800; color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
+.eh-stat-value { font-size: 1.7rem; font-weight: 700; color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
 .eh-stat-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
 
 .eh-filters-bar {
