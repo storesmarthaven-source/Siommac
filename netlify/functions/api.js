@@ -1328,7 +1328,8 @@ const routes = {
     const actor = await requireUser(ctx);
     const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
 
-    const [notifRes, msgRes, ticketRes, leaveRes] = await Promise.all([
+    const todayStr = today();
+    const [notifRes, msgRes, ticketRes, leaveRes, checkinRes] = await Promise.all([
       // Notification count — reuse getNotifications (already optimised, returns array)
       getNotifications(a, ctx).catch(() => ({ data: [] })),
       // Unread messages count
@@ -1344,6 +1345,10 @@ const routes = {
         ? (actor.role === 'manager'
             ? sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').eq('department_id', actor.department_id)
             : sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'))
+        : Promise.resolve({ count: 0 }),
+      // Checked-in count today (admin/manager only — for live map badge)
+      isAdminOrMgr
+        ? sb.from('attendance').select('id', { count: 'exact', head: true }).eq('date', todayStr).not('check_in', 'is', null)
         : Promise.resolve({ count: 0 })
     ]);
 
@@ -1353,7 +1358,8 @@ const routes = {
         notificationIds: (notifRes && notifRes.data ? notifRes.data.map(n => n.id) : []),
         messages:      msgRes.count    || 0,
         tickets:       ticketRes.count || 0,
-        pendingLeaves: leaveRes.count  || 0
+        pendingLeaves: leaveRes.count  || 0,
+        checkedIn:     checkinRes.count || 0
       }
     };
   },

@@ -859,7 +859,7 @@ const AttendanceSystem = (function() {
         _setHdrBadge(document.getElementById('hdrNotifBadge'),   unreadNotifs);
         _setHdrBadge(document.getElementById('hdrMsgBadge'),     c.messages || 0);
         _setHdrBadge(document.getElementById('hdrTicketBadge'),  c.tickets  || 0);
-        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
+        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0, c.checkedIn || 0);
       }).catch(() => {});
     }, 80); // 80ms debounce — collapses concurrent triggers into one request
   }
@@ -1294,11 +1294,12 @@ const AttendanceSystem = (function() {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
         });
       };
-      // Always use _getPendingLeaveCount() — single consistent source of truth
-      window._refreshNavBadges = (leaveCount) => {
-        const count = (leaveCount != null) ? leaveCount
+      // leaveCount and checkedIn come from getHeaderCounts — single source of truth
+      window._refreshNavBadges = (leaveCount, checkedIn) => {
+        const leave = (leaveCount != null) ? leaveCount
           : (typeof _getPendingLeaveCount === 'function' ? _getPendingLeaveCount() : 0);
-        _updateNavBadges(count, _newCheckinCount());
+        const ci = (checkedIn != null) ? checkedIn : _newCheckinCount();
+        _updateNavBadges(leave, ci);
       };
     })();
 
