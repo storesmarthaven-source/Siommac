@@ -1520,6 +1520,9 @@ const AttendanceSystem = (function() {
           : `<div class="hdr-msg-avatar" style="${isSentByMe ? 'background:var(--siomac-navy,#001f3f);color:#fff' : ''}">${escapeHtml(initials)}</div>`;
         const unreadDot   = m.isUnread ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;margin-top:6px;display:inline-block;"></span>` : '';
         const borderStyle = m.isUnread ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+        const listDeleteBtn = _isAdmin()
+          ? `<button data-delete-msg-id="${escapeHtml(String(m.id))}" title="Delete conversation" style="border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:4px 6px;border-radius:6px;opacity:.6;transition:opacity .15s;flex-shrink:0;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.6'"><i class="fas fa-trash-alt"></i></button>`
+          : '';
         return `<div class="hdr-msg-item${m.isUnread ? ' unread' : ''}" data-msg-id="${escapeHtml(String(m.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}">
           ${avatarHtml}
           <div class="hdr-msg-text" style="flex:1;min-width:0;">
@@ -1531,6 +1534,7 @@ const AttendanceSystem = (function() {
             <div class="hdr-msg-preview" style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:var(--text-muted);font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody)}</div>
           </div>
           ${unreadDot}
+          ${listDeleteBtn}
         </div>`;
       }
 
@@ -1823,8 +1827,9 @@ const AttendanceSystem = (function() {
         }).catch(() => { btn.disabled = false; });
       });
 
-      // Click message row → open detail
+      // Click message row → open detail (ignore clicks on the delete button)
       document.addEventListener('click', e => {
+        if (e.target.closest('[data-delete-msg-id]')) return;
         const row = e.target.closest('.hdr-msg-item[data-msg-id]');
         if (!row) return;
         _showDetail(row.dataset.msgId);
