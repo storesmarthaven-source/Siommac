@@ -2384,6 +2384,19 @@ const AttendanceSystem = (function() {
     if (typeof window._startMsgSystem     === 'function') window._startMsgSystem();
     if (typeof window._startTicketSystem  === 'function') window._startTicketSystem();
 
+    // Pre-fetch pending leave count so the sidebar badge shows immediately on login
+    // without requiring the user to visit the leaves section first
+    if (currentRole === 'admin' || currentRole === 'manager') {
+      const _leaveAction = currentRole === 'admin' ? 'listAllLeaves' : 'getPendingLeavesForManager';
+      const _leaveArgs   = currentRole === 'admin' ? {} : { managerUsername: currentUser };
+      _rawApi(_leaveAction, _leaveArgs).then(res => {
+        const list = (res && res.success && res.data) || [];
+        if (currentRole === 'admin') _lvAdmList = list;
+        else _lvMgrList = list;
+        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(_getPendingLeaveCount());
+      }).catch(() => {});
+    }
+
     // No login success popup — dashboard loads immediately
   }
 
