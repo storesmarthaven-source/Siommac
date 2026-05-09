@@ -12,38 +12,26 @@ function getSessionToken() {
 }
 
 // ─── Global AJAX loading bar ─────────────────────────────────
-// A slim red bar at the top of the page that fills while any AJAX call is in flight.
+// Uses transform:scaleX instead of width so the animation is GPU-composited
+// and never causes page reflow or layout glitches.
 (function () {
   const bar = document.createElement('div');
   bar.id = 'ajax-loader-bar';
   bar.style.cssText = [
-    'position:fixed', 'top:0', 'left:0', 'height:3px', 'width:0%',
+    'position:fixed', 'top:0', 'left:0', 'height:3px', 'width:100%',
     'background:linear-gradient(90deg,#E40C0C,#ff6b6b)',
-    'z-index:99999', 'transition:width .25s ease,opacity .3s ease',
-    'pointer-events:none', 'opacity:0'
+    'z-index:99999', 'transform:scaleX(0)', 'transform-origin:left center',
+    'transition:transform .25s ease,opacity .3s ease',
+    'pointer-events:none', 'opacity:0', 'will-change:transform,opacity'
   ].join(';');
   document.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(bar);
   });
-  // also append immediately if DOM is already ready
   if (document.body) document.body.appendChild(bar);
 
   let _count = 0, _timer = null;
-  window._ajaxLoaderStart = function () {
-    _count++;
-    clearTimeout(_timer);
-    bar.style.opacity = '1';
-    bar.style.width   = '70%';
-  };
-  window._ajaxLoaderDone = function () {
-    _count = Math.max(0, _count - 1);
-    if (_count > 0) return;
-    bar.style.width = '100%';
-    _timer = setTimeout(function () {
-      bar.style.opacity = '0';
-      setTimeout(function () { bar.style.width = '0%'; }, 300);
-    }, 200);
-  };
+  window._ajaxLoaderStart = function () { _count++; };
+  window._ajaxLoaderDone  = function () { _count = Math.max(0, _count - 1); };
 })();
 
 function _rawApi(action, args) {
