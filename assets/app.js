@@ -1161,6 +1161,16 @@ const AttendanceSystem = (function() {
         ).length;
       }
 
+      // Feed data directly from getHeaderData combined call
+      window._applyNotifData = (res) => {
+        if (!res || !res.success) return;
+        const incoming = res.data || [];
+        const newIds = new Set(incoming.map(n => n.id).filter(id => !_seenIds.has(id)));
+        incoming.forEach(n => _seenIds.add(n.id));
+        _notifData = incoming;
+        _render(newIds);
+      };
+
       // Expose so init() can kick it off after login
       window._startNotifPolling  = _startPolling;
       window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _saveMapLastVisited(0); };
@@ -1408,6 +1418,12 @@ const AttendanceSystem = (function() {
         _showDetail(row.dataset.msgId);
       });
 
+      window._applyMsgData = (res) => {
+        if (!res || !res.success) return;
+        _msgs = res.data || [];
+        _updateMsgBadge();
+        _renderList();
+      };
       window._startMsgSystem = _start;
       window._stopMsgSystem  = () => clearInterval(_pollTimer);
     })();
@@ -1552,7 +1568,6 @@ const AttendanceSystem = (function() {
       function _start() {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         document.getElementById('ticketModalTitle').textContent = isAdminView ? 'Support Tickets' : 'My Tickets';
-        // Employee always sees New Ticket button; admin sees it too to test
         _fetch();
         clearInterval(_pollTimer);
         _pollTimer = setInterval(_fetch, 60 * 1000); // every 60 sec
@@ -1611,6 +1626,13 @@ const AttendanceSystem = (function() {
         _showDetail(row.dataset.ticketId);
       });
 
+      window._applyTicketData = (res) => {
+        if (!res || !res.success) return;
+        _tickets = res.data || [];
+        _updateTicketBadge();
+        _showList();
+        _renderList();
+      };
       window._startTicketSystem = _start;
       window._stopTicketSystem  = () => clearInterval(_pollTimer);
     })();
@@ -2379,23 +2401,28 @@ const AttendanceSystem = (function() {
     startSessionTimer();
     updateLanguageUI();
 
-    // Start notification polling now that the session is established
+    // Single lightweight call — gets all badge counts at once so all badges
+    // appear simultaneously on login, then each system polls independently
+    _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
+      if (!res || !res.success) return;
+      const c = res.data || {};
+      // Bell badge
+      const notifBadge = document.getElementById('hdrNotifBadge');
+      if (notifBadge) { notifBadge.textContent = c.notifications || ''; notifBadge.style.display = c.notifications ? '' : 'none'; }
+      // Messages badge
+      const msgBadge = document.getElementById('hdrMsgBadge');
+      if (msgBadge) { msgBadge.textContent = c.messages || ''; msgBadge.style.display = c.messages ? '' : 'none'; }
+      // Tickets badge
+      const ticketBadge = document.getElementById('hdrTicketBadge');
+      if (ticketBadge) { ticketBadge.textContent = c.tickets || ''; ticketBadge.style.display = c.tickets ? '' : 'none'; }
+      // Sidebar leave badge
+      if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
+    }).catch(() => {});
+
+    // Start full polling (fetches complete data for each system independently)
     if (typeof window._startNotifPolling  === 'function') window._startNotifPolling();
     if (typeof window._startMsgSystem     === 'function') window._startMsgSystem();
     if (typeof window._startTicketSystem  === 'function') window._startTicketSystem();
-
-    // Pre-fetch pending leave count so the sidebar badge shows immediately on login
-    // without requiring the user to visit the leaves section first
-    if (currentRole === 'admin' || currentRole === 'manager') {
-      const _leaveAction = currentRole === 'admin' ? 'listAllLeaves' : 'getPendingLeavesForManager';
-      const _leaveArgs   = currentRole === 'admin' ? {} : { managerUsername: currentUser };
-      _rawApi(_leaveAction, _leaveArgs).then(res => {
-        const list = (res && res.success && res.data) || [];
-        if (currentRole === 'admin') _lvAdmList = list;
-        else _lvMgrList = list;
-        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(_getPendingLeaveCount());
-      }).catch(() => {});
-    }
 
     // No login success popup — dashboard loads immediately
   }

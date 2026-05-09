@@ -1310,6 +1310,40 @@ const routes = {
   getTickets,
   replyTicket,
   updateTicketStatus,
+  // Lightweight badge counts — all 4 badges in one fast request on login
+  getHeaderCounts: async (a, ctx) => {
+    const actor = await requireUser(ctx);
+    const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
+
+    const [notifRes, msgRes, ticketRes, leaveRes] = await Promise.all([
+      // Notification count — reuse getNotifications (already optimised, returns array)
+      getNotifications(a, ctx).catch(() => ({ data: [] })),
+      // Unread messages count
+      isAdminOrMgr
+        ? sb.from('messages').select('id', { count: 'exact', head: true }).eq('read_by_recipient', false).neq('from_user_id', actor.id)
+        : sb.from('messages').select('id', { count: 'exact', head: true }).eq('to_user_id', actor.id).eq('read_by_recipient', false),
+      // Open tickets count (admin/manager only)
+      isAdminOrMgr
+        ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
+        : Promise.resolve({ count: 0 }),
+      // Pending leaves count (admin/manager only)
+      isAdminOrMgr
+        ? (actor.role === 'manager'
+            ? sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').eq('department_id', actor.department_id)
+            : sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'))
+        : Promise.resolve({ count: 0 })
+    ]);
+
+    return {
+      success: true,
+      data: {
+        notifications: (notifRes && notifRes.data ? notifRes.data.length : 0),
+        messages:      msgRes.count    || 0,
+        tickets:       ticketRes.count || 0,
+        pendingLeaves: leaveRes.count  || 0
+      }
+    };
+  },
 };
 
 // ── Notifications ──────────────────────────────────────────────────────────────
