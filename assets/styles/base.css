@@ -73,3 +73,68 @@ select:-webkit-autofill:focus {
 }
 
 .hidden { display: none !important; }
+
+/* ─── Universal card entry animation ─── */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.emp-card,
+.dept-card,
+.ps-card,
+.lm-emp-item,
+.leave-request-item,
+.ticket-item,
+.msg-thread-item {
+  animation: cardIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger up to 12 items */
+.emp-card:nth-child(1),  .dept-card:nth-child(1),  .ps-card:nth-child(1),
+.lm-emp-item:nth-child(1), .leave-request-item:nth-child(1),
+.ticket-item:nth-child(1), .msg-thread-item:nth-child(1)  { animation-delay:  0ms; }
+
+.emp-card:nth-child(2),  .dept-card:nth-child(2),  .ps-card:nth-child(2),
+.lm-emp-item:nth-child(2), .leave-request-item:nth-child(2),
+.ticket-item:nth-child(2), .msg-thread-item:nth-child(2)  { animation-delay: 40ms; }
+
+.emp-card:nth-child(3),  .dept-card:nth-child(3),  .ps-card:nth-child(3),
+.lm-emp-item:nth-child(3), .leave-request-item:nth-child(3),
+.ticket-item:nth-child(3), .msg-thread-item:nth-child(3)  { animation-delay: 80ms; }
+
+.emp-card:nth-child(4),  .dept-card:nth-child(4),  .ps-card:nth-child(4),
+.lm-emp-item:nth-child(4), .leave-request-item:nth-child(4),
+.ticket-item:nth-child(4), .msg-thread-item:nth-child(4)  { animation-delay: 120ms; }
+
+.emp-card:nth-child(5),  .dept-card:nth-child(5),  .ps-card:nth-child(5),
+.lm-emp-item:nth-child(5), .leave-request-item:nth-child(5),
+.ticket-item:nth-child(5), .msg-thread-item:nth-child(5)  { animation-delay: 160ms; }
+
+.emp-card:nth-child(6),  .dept-card:nth-child(6),  .ps-card:nth-child(6),
+.lm-emp-item:nth-child(6), .leave-request-item:nth-child(6),
+.ticket-item:nth-child(6), .msg-thread-item:nth-child(6)  { animation-delay: 200ms; }
+
+.emp-card:nth-child(7),  .dept-card:nth-child(7),  .ps-card:nth-child(7),
+.lm-emp-item:nth-child(7), .leave-request-item:nth-child(7),
+.ticket-item:nth-child(7), .msg-thread-item:nth-child(7)  { animation-delay: 240ms; }
+
+.emp-card:nth-child(8),  .dept-card:nth-child(8),  .ps-card:nth-child(8),
+.lm-emp-item:nth-child(8), .leave-request-item:nth-child(8),
+.ticket-item:nth-child(8), .msg-thread-item:nth-child(8)  { animation-delay: 280ms; }
+
+.emp-card:nth-child(9),  .dept-card:nth-child(9),  .ps-card:nth-child(9),
+.lm-emp-item:nth-child(9), .leave-request-item:nth-child(9),
+.ticket-item:nth-child(9), .msg-thread-item:nth-child(9)  { animation-delay: 320ms; }
+
+.emp-card:nth-child(10), .dept-card:nth-child(10), .ps-card:nth-child(10),
+.lm-emp-item:nth-child(10), .leave-request-item:nth-child(10),
+.ticket-item:nth-child(10), .msg-thread-item:nth-child(10) { animation-delay: 360ms; }
+
+.emp-card:nth-child(11), .dept-card:nth-child(11), .ps-card:nth-child(11),
+.lm-emp-item:nth-child(11), .leave-request-item:nth-child(11),
+.ticket-item:nth-child(11), .msg-thread-item:nth-child(11) { animation-delay: 400ms; }
+
+.emp-card:nth-child(12), .dept-card:nth-child(12), .ps-card:nth-child(12),
+.lm-emp-item:nth-child(12), .leave-request-item:nth-child(12),
+.ticket-item:nth-child(12), .msg-thread-item:nth-child(12) { animation-delay: 440ms; }
