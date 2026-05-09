@@ -3473,7 +3473,8 @@ const AttendanceSystem = (function() {
       api('approveLeave', { leaveId, reviewerId: currentUserId, reviewerUsername: currentUser }).then(res => {
         hideSpinner();
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not approve'); return; }
-        showPopup('success', 'Leave Approved', 'The leave request has been approved.').then(() => _refreshLeavesAfterDecision());
+        _refreshLeavesAfterDecision();
+        showPopup('success', 'Leave Approved', 'The leave request has been approved.');
       }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
@@ -3488,7 +3489,8 @@ const AttendanceSystem = (function() {
       api('rejectLeave', { leaveId, reviewerId: currentUserId, reviewerUsername: currentUser }).then(res => {
         hideSpinner();
         if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not reject'); return; }
-        showPopup('success', 'Leave Rejected', 'The leave request has been rejected.').then(() => _refreshLeavesAfterDecision());
+        _refreshLeavesAfterDecision();
+        showPopup('success', 'Leave Rejected', 'The leave request has been rejected.');
       }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
     });
   }
