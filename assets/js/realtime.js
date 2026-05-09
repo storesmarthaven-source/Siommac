@@ -36,16 +36,14 @@
     // Tear down any existing client + pending retry
     _teardown();
 
-    const token = _getToken();
-
+    // Use anon key only — our custom JWT is not a Supabase Auth token so
+    // setAuth() would cause a signature mismatch and trigger CHANNEL_ERROR.
+    // postgres_changes subscriptions here have no row-filter so RLS is not
+    // evaluated on the channel itself; data is still protected by the API layer.
     _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth:     { persistSession: false, autoRefreshToken: false },
-      realtime: { params: { eventsPerSecond: 10 } },
-      global:   { headers: token ? { Authorization: 'Bearer ' + token } : {} }
+      realtime: { params: { eventsPerSecond: 10 } }
     });
-
-    // Pass our custom JWT so postgres_changes can satisfy RLS
-    if (token) _client.realtime.setAuth(token);
 
     _client
       .channel('siomac-live', { config: { broadcast: { self: false } } })
