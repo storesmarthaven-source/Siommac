@@ -3162,16 +3162,18 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#saveLogoBtn'))             saveLogo();
       if (event.target.closest('#savePayrollSettingsBtn'))  savePayrollSettings();
 
-      // Leave tabs
+      // Leave tabs — only fire when the button has data-lv-tab (not project-site filter tabs)
       const lvTab = event.target.closest('.lv-tab-btn');
       if (lvTab) {
         const id = lvTab.dataset.lvTab;
-        const section = lvTab.closest('.app-section');
-        section.querySelectorAll('.lv-tab-btn').forEach(b => b.classList.remove('active'));
-        lvTab.classList.add('active');
-        if (id.startsWith('emp-')) { _lvEmpTab = id; _renderEmpLeaves(); }
-        else if (id.startsWith('mgr-')) { _lvMgrTab = id; _renderMgrLeaves(); }
-        else if (id.startsWith('adm-')) { _lvAdmTab = id; _renderAdmLeaves(); }
+        if (id) {
+          const section = lvTab.closest('.app-section');
+          section.querySelectorAll('.lv-tab-btn').forEach(b => b.classList.remove('active'));
+          lvTab.classList.add('active');
+          if (id.startsWith('emp-')) { _lvEmpTab = id; _renderEmpLeaves(); }
+          else if (id.startsWith('mgr-')) { _lvMgrTab = id; _renderMgrLeaves(); }
+          else if (id.startsWith('adm-')) { _lvAdmTab = id; _renderAdmLeaves(); }
+        }
       }
 
       // Settings tabs
@@ -3417,13 +3419,20 @@ const AttendanceSystem = (function() {
       if (companyPane) companyPane.classList.add('active');
     }
 
-    // build per-role menu and always open the dashboard on login
+    // build per-role menu
     buildSidebar(currentRole);
     buildTopTabs(currentRole);
     const def = (SECTION_DEFS[currentRole] || [ABOUT_ITEM])[0];
-    // Clear any stored last-section so refreshing after logout also goes to dashboard
-    try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch(e) {}
-    showSection(def.id);
+    // On a page refresh (announce=false) restore the last visited section;
+    // on a fresh login (announce=true) always go to the dashboard and clear any stored state.
+    if (announce) {
+      try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch(e) {}
+      showSection(def.id);
+    } else {
+      let lastSection = null;
+      try { lastSection = localStorage.getItem('siomac_last_section_' + currentRole); } catch(e) {}
+      showSection((lastSection && document.getElementById(lastSection)) ? lastSection : def.id);
+    }
 
     // employee-only setup (welcome card + location tracking)
     if (currentRole === 'employee') {
