@@ -492,20 +492,6 @@ const AttendanceSystem = (function() {
     });
     dropdown.innerHTML = '';
 
-    // "All sites" clear option
-    const totalOnSite = (liveData || []).filter(r => !r.isCheckedOut).length;
-    const clearOpt = document.createElement('div');
-    clearOpt.className = 'lm-cs-option' + (!current ? ' selected' : '');
-    clearOpt.dataset.value = '';
-    clearOpt.innerHTML = `
-      <div class="lm-cs-opt-icon lm-cs-opt-icon-all"><i class="fas fa-globe"></i></div>
-      <div class="lm-cs-opt-text">
-        <div class="lm-cs-opt-name">All Sites</div>
-        <div class="lm-cs-opt-sub">Show everyone across all sites</div>
-      </div>
-      `;
-    dropdown.appendChild(clearOpt);
-
     sites.forEach(site => {
       const isActive  = (liveData || []).some(r => !r.isCheckedOut && String(r.siteId) === String(site.id));
       const onSiteNow = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
@@ -538,7 +524,7 @@ const AttendanceSystem = (function() {
     const dot   = document.getElementById('lmCsTriggerDot');
     if (!label) return;
     if (!val) {
-      label.textContent = 'All Sites';
+      label.textContent = 'Select a Site';
       if (dot) dot.className = 'lm-cs-dot lm-cs-dot-empty';
       return;
     }
