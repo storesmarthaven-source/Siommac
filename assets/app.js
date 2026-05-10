@@ -6534,7 +6534,7 @@ const AttendanceSystem = (function() {
       const overflow = assigned.length - shown.length;
       const avatarsHtml = assigned.length ? `
         <div class="ps-assigned-row">
-          <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} assigned</span>
+          <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
           <div class="ps-assigned-avatars">
             ${shown.map(e => e.photoUrl
               ? `<img class="ps-emp-avatar" src="${escapeHtml(e.photoUrl)}" title="${escapeHtml(e.name)}" alt="${escapeHtml(e.name)}">`
@@ -6542,7 +6542,7 @@ const AttendanceSystem = (function() {
             ).join('')}
             ${overflow > 0 ? `<div class="ps-emp-avatar ps-emp-avatar--more">+${overflow}</div>` : ''}
           </div>
-        </div>` : `<div class="ps-assigned-row ps-assigned-empty"><i class="fas fa-user-plus"></i> No employees assigned</div>`;
+        </div>` : `<div class="ps-assigned-row ps-assigned-empty"><i class="fas fa-user-plus"></i> No Employees Assigned</div>`;
 
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}${selected ? ' ps-card--selected' : ''}" data-id="${site.id}" style="cursor:pointer;">
         <div class="ps-card-header">

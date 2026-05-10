@@ -573,7 +573,9 @@
   font-size: 0.78rem; color: var(--text-muted);
 }
 .ps-assigned-empty { color: var(--text-muted); font-style: italic; gap: 6px; }
+.ps-assigned-empty i { color: #47904A; }
 .ps-assigned-lbl { white-space: nowrap; flex-shrink: 0; }
+.ps-assigned-lbl i { color: #47904A; }
 .ps-assigned-avatars { display: flex; align-items: center; gap: -4px; }
 .ps-emp-avatar {
   width: 28px; height: 28px; border-radius: 50%;
