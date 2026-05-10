@@ -2792,22 +2792,20 @@ const AttendanceSystem = (function() {
       if (savedLayout) { currentLayoutMode = savedLayout; applyLayout(savedLayout); }
     } catch (_) {}
 
-    // apply cached company name & logo instantly — before any screen is revealed —
-    // so neither the login page nor the app shell ever shows "My Company" as a flash
+    // Apply cached company name instantly to avoid flash — but NOT the logo.
+    // The logo URL in localStorage may point to an old file (each upload creates
+    // a new unique path). Always fetch the logo fresh from the server instead.
     try {
       const cached = loadSession();
       if (cached && cached.companyName) applyCompanyName(cached.companyName);
-      if (cached && cached.companyLogoUrl) applyCompanyLogo(cached.companyLogoUrl);
     } catch (_) {}
 
-    // Fetch live branding from server for the login page — no token needed.
-    // Ensures the correct logo shows even on first visit or after cache clear.
+    // Fetch live branding from server — always authoritative for the logo.
     _rawApi('getSettings', {}).then(function(s) {
       if (!s || typeof s !== 'object') return;
       const logoUrl = s.companyLogoUrl || s.logoUrl || '';
       const name    = s.companyName || '';
-      // Append cache-buster so SW/browser never serves a stale logo from cache
-      if (logoUrl) applyCompanyLogo(logoUrl + (logoUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now());
+      if (logoUrl) applyCompanyLogo(logoUrl);
       if (name)    applyCompanyName(name);
     }).catch(function() {});
 
@@ -3544,10 +3542,7 @@ const AttendanceSystem = (function() {
     }
 
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
-    if (result.companyLogoUrl) {
-      const _lurl = result.companyLogoUrl;
-      applyCompanyLogo(_lurl + (_lurl.includes('?') ? '&' : '?') + '_cb=' + Date.now());
-    }
+    if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
 
     // company name — sidebar brand + About header (set everywhere from Settings)
     applyCompanyName(result.companyName || 'My Company');
