@@ -120,33 +120,140 @@
 .lm-refresh-btn:hover { color: var(--siomac-navy); background: #e8edf5; border-color: var(--siomac-navy); }
 
 
-/* site filter bar — always visible between panel header and employee list */
+/* site filter bar */
 .lm-site-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   background: #eef3fb;
 }
-.lm-site-select {
-  flex: 1;
-  min-width: 0;
+
+/* ── Custom site select ── */
+.lm-custom-select {
+  position: relative;
+  width: 100%;
   font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--siomac-navy);
-  background: #fff;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 10px;
-  cursor: pointer;
-  outline: none;
-  transition: border-color .15s;
-  appearance: auto;
+  user-select: none;
 }
-.lm-site-select:focus { border-color: var(--siomac-navy); }
+
+/* Trigger button */
+.lm-custom-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #DFE7F3;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.lm-custom-select.open .lm-custom-select-trigger {
+  border-color: #DFE7F3;
+  border-radius: 12px 12px 0 0;
+}
+
+/* Icon box inside trigger */
+.lm-cs-icon-box {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: #1b2d54;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+/* Text block inside trigger */
+.lm-cs-text { flex: 1; min-width: 0; }
+.lm-cs-sublabel {
+  font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 1px;
+}
+.lm-cs-label {
+  font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Chevron */
+.lm-cs-arrow {
+  font-size: 0.7rem; color: var(--text-muted);
+  transition: transform .2s; flex-shrink: 0;
+}
+.lm-custom-select.open .lm-cs-arrow { transform: rotate(180deg); }
+
+/* Status dot */
+.lm-cs-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.lm-cs-dot-green {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+}
+.lm-cs-dot-gray  { background: #9ca3af; }
+.lm-cs-dot-empty { background: transparent; border: none; }
+
+/* Dropdown panel */
+.lm-custom-select-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: #fff;
+  border: 1.5px solid #f3f1f1;
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 999;
+}
+.lm-custom-select-dropdown::-webkit-scrollbar { width: 4px; }
+.lm-custom-select-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.lm-custom-select.open .lm-custom-select-dropdown { display: block; }
+
+/* Individual option */
+.lm-cs-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px solid #f0f4f8;
+}
+.lm-cs-option:last-child { border-bottom: none; border-radius: 0 0 12px 12px; }
+.lm-cs-option:hover { background: #f5f8ff; }
+.lm-cs-option.selected { background: #eef3fb; }
+
+/* Icon box inside each option */
+.lm-cs-opt-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.9rem;
+}
+.lm-cs-opt-icon-active   { background: rgba(34,197,94,.12);  color: #16a34a; }
+.lm-cs-opt-icon-inactive { background: rgba(107,114,128,.10); color: #6b7280; }
+.lm-cs-opt-icon-all      { background: rgba(27,45,84,.08);    color: var(--siomac-navy); }
+
+/* Text block inside option */
+.lm-cs-opt-text { flex: 1; min-width: 0; }
+.lm-cs-opt-name {
+  font-size: 0.82rem; font-weight: 700;
+  color: var(--text-primary); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.lm-cs-option.selected .lm-cs-opt-name { color: var(--siomac-navy); }
+.lm-cs-opt-sub {
+  font-size: 0.68rem; color: var(--text-muted); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Count pill */
+.lm-cs-opt-pill {
+  font-size: 0.68rem; font-weight: 700;
+  border-radius: 20px; padding: 2px 8px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.lm-cs-opt-pill-green { background: rgba(34,197,94,.15); color: #16a34a; }
+.lm-cs-opt-pill-gray  { background: #f0f4f8; color: var(--text-muted); }
 
 /* employee list */
 .lm-employees-list {

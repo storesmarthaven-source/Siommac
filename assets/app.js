@@ -391,6 +391,7 @@ const AttendanceSystem = (function() {
 
         // Populate the site filter dropdown now that _siteLayerMap is ready
         _populateSiteSelect();
+        _initCustomSelect();
 
         // Apply live-data colours to pins immediately (green if active employees on site)
         _refreshSitePopups();
@@ -407,8 +408,7 @@ const AttendanceSystem = (function() {
   // ─── Site popup HTML (built fresh from live data each refresh) ───────────────
   function _buildSitePopupHtml(site, rows) {
     const siteRows   = (rows || []).filter(r => String(r.siteId) === String(site.id));
-    const total      = siteRows.length;
-    const checkedIn  = siteRows.filter(r => !r.isCheckedOut).length;
+    const total      = siteRows.filter(r => !r.isCheckedOut).length;  // on site = currently checked in only
     const late       = siteRows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
     const checkedOut = siteRows.filter(r => r.isCheckedOut).length;
     return `<div class="lm-site-popup-card">
@@ -423,11 +423,6 @@ const AttendanceSystem = (function() {
         <div class="lm-site-popup-stat">
           <span class="lm-site-popup-stat-val">${total}</span>
           <span class="lm-site-popup-stat-lbl">On Site</span>
-        </div>
-        <div class="lm-site-popup-divider"></div>
-        <div class="lm-site-popup-stat">
-          <span class="lm-site-popup-stat-val lm-sps-green">${checkedIn}</span>
-          <span class="lm-site-popup-stat-lbl">Checked In</span>
         </div>
         <div class="lm-site-popup-divider"></div>
         <div class="lm-site-popup-stat">
@@ -467,36 +462,113 @@ const AttendanceSystem = (function() {
   // ─── Site selection (click building / zone on map → filter activity panel) ───
   function _selectLiveSite(siteId, siteName) {
     _selectedSiteId = siteId;
-    // Hide any visible employee marker when switching sites
     _hideActiveEmpMarker();
-    // Sync dropdown
-    const sel = document.getElementById('lmSiteSelect');
-    if (sel) sel.value = siteId;
+    _syncCustomSelectTrigger(siteId);
+    _populateSiteSelect(); // refresh dots + selected state
     renderLivePanel(liveData);
   }
 
   function _clearLiveSite() {
     _selectedSiteId = '';
     _hideActiveEmpMarker();
-    const sel = document.getElementById('lmSiteSelect');
-    if (sel) sel.value = '';
+    _syncCustomSelectTrigger('');
+    _populateSiteSelect();
     renderLivePanel(liveData);
   }
 
   function _populateSiteSelect() {
-    const sel = document.getElementById('lmSiteSelect');
-    if (!sel) return;
-    const current = sel.value;
-    // Rebuild options: placeholder first, no "All Sites"
-    sel.innerHTML = '<option value="">— Select a project site —</option>';
-    Object.values(_siteLayerMap).forEach(({ site }) => {
-      const opt = document.createElement('option');
-      opt.value = site.id;
-      opt.textContent = site.name;
-      sel.appendChild(opt);
+    const dropdown = document.getElementById('lmCustomSelectDropdown');
+    const hiddenSel = document.getElementById('lmSiteSelect');
+    if (!dropdown) return;
+    const current = _selectedSiteId || '';
+
+    // Build options
+    const sites = Object.values(_siteLayerMap).map(({ site }) => site);
+    dropdown.innerHTML = '';
+
+    // "All sites" clear option
+    const totalOnSite = (liveData || []).filter(r => !r.isCheckedOut).length;
+    const clearOpt = document.createElement('div');
+    clearOpt.className = 'lm-cs-option' + (!current ? ' selected' : '');
+    clearOpt.dataset.value = '';
+    clearOpt.innerHTML = `
+      <div class="lm-cs-opt-icon lm-cs-opt-icon-all"><i class="fas fa-globe"></i></div>
+      <div class="lm-cs-opt-text">
+        <div class="lm-cs-opt-name">All Sites</div>
+        <div class="lm-cs-opt-sub">Show everyone across all sites</div>
+      </div>
+      `;
+    dropdown.appendChild(clearOpt);
+
+    sites.forEach(site => {
+      const isActive  = (liveData || []).some(r => !r.isCheckedOut && String(r.siteId) === String(site.id));
+      const onSiteNow = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
+      const opt = document.createElement('div');
+      opt.className = 'lm-cs-option' + (String(site.id) === String(current) ? ' selected' : '');
+      opt.dataset.value = site.id;
+      opt.innerHTML = `
+        <div class="lm-cs-opt-icon ${isActive ? 'lm-cs-opt-icon-active' : 'lm-cs-opt-icon-inactive'}">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="lm-cs-opt-text">
+          <div class="lm-cs-opt-name">${escapeHtml(site.name)}</div>
+        </div>
+        ${isActive ? `<span class="lm-cs-dot lm-cs-dot-green"></span>` : `<span class="lm-cs-dot lm-cs-dot-gray"></span>`}`;
+      dropdown.appendChild(opt);
     });
-    // Restore previous selection if still valid
-    if (current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+
+    // Sync trigger label
+    _syncCustomSelectTrigger(current, sites);
+
+    // Sync hidden select (for change event compat)
+    if (hiddenSel) {
+      hiddenSel.innerHTML = '<option value=""></option>' + sites.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      hiddenSel.value = current;
+    }
+  }
+
+  function _syncCustomSelectTrigger(val, sites) {
+    const label = document.getElementById('lmCustomSelectLabel');
+    const dot   = document.getElementById('lmCsTriggerDot');
+    if (!label) return;
+    if (!val) {
+      label.textContent = 'All Sites';
+      if (dot) dot.className = 'lm-cs-dot lm-cs-dot-empty';
+      return;
+    }
+    const allSites = sites || Object.values(_siteLayerMap).map(e => e.site);
+    const site     = allSites.find(s => String(s.id) === String(val));
+    const isActive = (liveData || []).some(r => !r.isCheckedOut && String(r.siteId) === String(val));
+    label.textContent = site ? site.name : val;
+    if (dot) dot.className = `lm-cs-dot ${isActive ? 'lm-cs-dot-green' : 'lm-cs-dot-gray'}`;
+  }
+
+  // Open/close custom select — wired once via event delegation
+  function _initCustomSelect() {
+    const wrap = document.getElementById('lmCustomSelect');
+    if (!wrap || wrap._csInited) return;
+    wrap._csInited = true;
+
+    document.getElementById('lmCustomSelectTrigger').addEventListener('click', e => {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+    });
+
+    document.getElementById('lmCustomSelectDropdown').addEventListener('click', e => {
+      const opt = e.target.closest('.lm-cs-option');
+      if (!opt) return;
+      wrap.classList.remove('open');
+      const val = opt.dataset.value;
+      // Sync hidden select and fire change
+      const hiddenSel = document.getElementById('lmSiteSelect');
+      if (hiddenSel) {
+        hiddenSel.value = val;
+        hiddenSel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('click', () => wrap.classList.remove('open'));
   }
 
   function _hideActiveEmpMarker() {
@@ -685,27 +757,32 @@ const AttendanceSystem = (function() {
   function renderLivePanel(rows) {
     // Refresh popup content on all site markers with latest live counts
     _refreshSitePopups();
+    // Refresh custom dropdown dots to reflect current active state
+    _populateSiteSelect();
 
     const listEl = document.getElementById('liveEmployeesList');
 
-    // If no site is selected, zero out stat cards
+    // If no site is selected, show global totals across all sites
     if (!_selectedSiteId) {
-      document.getElementById('liveActiveCount').textContent    = '0';
-      document.getElementById('liveCheckedInCount').textContent = '0';
-      document.getElementById('liveLateCount').textContent      = '0';
-      document.getElementById('liveOnSiteCount').textContent    = '0';
+      const allCheckedIn = rows.filter(r => !r.isCheckedOut).length;
+      const allLate      = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
+      const allOnSite    = rows.filter(r => !r.isCheckedOut && r.checkInLat != null).length;
+      document.getElementById('liveActiveCount').textContent    = allCheckedIn;
+      document.getElementById('liveCheckedInCount').textContent = allCheckedIn;
+      document.getElementById('liveLateCount').textContent      = allLate;
+      document.getElementById('liveOnSiteCount').textContent    = allOnSite;
       listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-map-pin"></i>Tap a job site on the map to view live activity</div>';
       return;
     }
 
-    // Filter to only employees checked in at the selected site
+    // Filter to only employees at the selected site
     const siteRows = rows.filter(r => String(r.siteId) === String(_selectedSiteId));
 
     const checkedIn = siteRows.filter(r => !r.isCheckedOut).length;
     const late      = siteRows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
-    const onSite    = siteRows.filter(r => (r.checkInLat || r.checkOutLat) != null).length;
+    const onSite    = siteRows.filter(r => !r.isCheckedOut && r.checkInLat != null).length;
 
-    document.getElementById('liveActiveCount').textContent     = siteRows.length;
+    document.getElementById('liveActiveCount').textContent     = checkedIn;
     document.getElementById('liveCheckedInCount').textContent  = checkedIn;
     document.getElementById('liveLateCount').textContent       = late;
     document.getElementById('liveOnSiteCount').textContent     = onSite;
@@ -2955,6 +3032,18 @@ const AttendanceSystem = (function() {
         if (val) {
           const entry = _siteLayerMap[val];
           _selectLiveSite(val, entry ? entry.site.name : val);
+          // Fly the map to the selected site
+          if (entry && entry.site && map) {
+            const lat = Number(entry.site.latitude);
+            const lng = Number(entry.site.longitude);
+            const rad = Number(entry.site.radius) || 200;
+            if (lat && lng) {
+              const bounds = L.latLng(lat, lng).toBounds(rad * 4);
+              map.fitBounds(bounds, { padding: [40, 40], animate: false });
+              // Open the site popup
+              if (entry.marker) entry.marker.openPopup();
+            }
+          }
         } else {
           _clearLiveSite();
         }
@@ -4856,12 +4945,10 @@ const AttendanceSystem = (function() {
 
   // expose goTo so the "View All" button in the recent activity section can navigate
   function goTo(sectionId) {
-    const btn = document.querySelector(`.sidebar-menu button[data-target="${sectionId}"]`);
+    const btn = document.querySelector(`.sidebar-menu button[data-section="${sectionId}"]`);
     if (btn) { btn.click(); return; }
-    // fallback: manually activate section
-    document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
-    const target = document.getElementById(sectionId);
-    if (target) target.classList.add('active');
+    // fallback: use showSection directly (triggers data load)
+    showSection(sectionId);
   }
 
   // ─── Employee modal helpers ───
@@ -5034,7 +5121,11 @@ const AttendanceSystem = (function() {
   function _renderEmpStats() {
     _countUp(document.getElementById('empStatTotal'),     _empAllList.length);
     _countUp(document.getElementById('empStatActive'),    _empAllList.filter(e => e.status === 'Active').length);
-    _countUp(document.getElementById('empStatCheckedIn'), _empAllList.filter(e => e.todayStatus === 'checkedin').length);
+    // Use liveData for currently on-site count (excludes checked-out employees)
+    const _empStatOnSite = liveData && liveData.length
+      ? liveData.filter(r => !r.isCheckedOut).length
+      : _empAllList.filter(e => e.todayStatus === 'checkedin').length;
+    _countUp(document.getElementById('empStatCheckedIn'), _empStatOnSite);
     _countUp(document.getElementById('empStatDepts'),     [...new Set(_empAllList.map(e => e.department).filter(Boolean))].length);
   }
 
@@ -5539,12 +5630,12 @@ const AttendanceSystem = (function() {
       const activeEmps = (_empAllList || []).filter(e => e.status === 'Active');
       let checkedIn = 0;
       if (liveData && liveData.length) {
-        // liveData has all rows today (checked-in + checked-out), each unique by username
-        const liveUsernames = new Set((liveData || []).map(r => r.username).filter(Boolean));
+        // Only count currently on-site (not checked out)
+        const liveUsernames = new Set(liveData.filter(r => !r.isCheckedOut).map(r => r.username).filter(Boolean));
         checkedIn = activeEmps.filter(e => liveUsernames.has(e.username)).length;
       } else {
-        // fallback: use todayStatus on _empAllList
-        checkedIn = activeEmps.filter(e => e.todayStatus === 'checkedin' || e.todayStatus === 'checkedout').length;
+        // fallback: use todayStatus on _empAllList (checkedin only, not checkedout)
+        checkedIn = activeEmps.filter(e => e.todayStatus === 'checkedin').length;
       }
       const rate = activeEmps.length > 0 ? Math.round((checkedIn / activeEmps.length) * 100) : 0;
       _countUp(_rateEl, rate, '%');
@@ -5942,28 +6033,23 @@ const AttendanceSystem = (function() {
         if (bsModal) bsModal.hide();
         document.getElementById('addProjectForm').reset();
         editingSiteId = null;
-        // Patch in-memory list and re-render immediately (isolated — errors here must not suppress the success popup)
-        try {
-          if (_editingId) {
-            const idx = projectSites.findIndex(s => String(s.id) === String(_editingId));
-            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description });
-          } else if (res.id) {
-            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description });
-          }
-          displayProjectSites(projectSites);
-        } catch (renderErr) {
-          console.warn('[ProjectSite] Re-render error (non-fatal):', renderErr);
-        }
-        showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites());
+        showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites(true));
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save site');
       }
     }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
-  function loadProjectSites() {
+  function loadProjectSites(forceWipe = false) {
     _skelOnce('s-adm-projects', () => setSkel('psActiveContainer', skelCards(3)));
-    const _doDisplay = () => displayProjectSites(projectSites);
+    let _wiped = false;
+    const _doDisplay = () => {
+      // On a forced reload (after save/delete), wipe containers exactly once,
+      // right before the first paint — so cards are never blank while the popup
+      // is still showing, but stale Leaflet instances are gone before re-render.
+      if (forceWipe && !_wiped) { _wiped = true; _psWipeContainers(); }
+      displayProjectSites(projectSites);
+    };
     apiSwr('listProjectSites', {}, {
       onData: res => {
         if (!res || !res.success) {
@@ -5992,6 +6078,21 @@ const AttendanceSystem = (function() {
 
   let _psMiniMaps = {};    // track leaflet instances to avoid double-init
   let _psRenderGen = 0;   // incremented on every displayProjectSites call; stale timeouts bail
+
+  // Wipe both project-site containers and purge all Leaflet instances.
+  // Call before any re-render that must start with a clean slate.
+  function _psWipeContainers() {
+    ['psActiveContainer', 'psInactiveContainer'].forEach(cid => {
+      const c = document.getElementById(cid);
+      if (!c) return;
+      c.querySelectorAll('[data-id]').forEach(el => {
+        const m = _psMiniMaps[`ps-map-${el.dataset.id}`];
+        if (m && m !== 'pending') { try { m.remove(); } catch (_) {} }
+        delete _psMiniMaps[`ps-map-${el.dataset.id}`];
+      });
+      c.innerHTML = '';
+    });
+  }
 
   // Show a Swal popup for a project site card mini-map click:
   // worker count from liveData + button to jump to Live Map section
@@ -6069,6 +6170,7 @@ const AttendanceSystem = (function() {
 
   // Current filter state for project sites: 'all' | 'active' | 'inactive'
   let _psSiteFilter = 'all';
+  let _psLastFilter = null;  // tracks last rendered filter to detect tab switches
 
   function displayProjectSites(sites) {
     // Bump global render generation — all pending mini-map timeouts from
@@ -6091,6 +6193,12 @@ const AttendanceSystem = (function() {
     const _onSiteNow = (liveData || []).filter(r => !r.isCheckedOut).length;
     _countUp(document.getElementById('psSiteAttendance'), _onSiteNow);
 
+    // ── Wipe containers on filter tab switch to prevent stale Leaflet instances ─
+    if (_psSiteFilter !== _psLastFilter) {
+      _psLastFilter = _psSiteFilter;
+      _psWipeContainers();
+    }
+
     // ── Search + filter ───────────────────────────────────────────────────────
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
     let filtered = search
@@ -6104,23 +6212,17 @@ const AttendanceSystem = (function() {
 
     // ── Section header stats ──────────────────────────────────────────────────
     const _live = liveData || [];
-    // Active section: sites count, employees on-site now, peak today (all who checked in)
+    // Active section: sites count, employees on-site now, late employees today
     const _activeSiteIds = new Set(activePart.map(s => String(s.id)));
     const _onSiteNowActive = _live.filter(r => !r.isCheckedOut && _activeSiteIds.has(String(r.siteId))).length;
-    const _peakToday       = _live.filter(r => _activeSiteIds.has(String(r.siteId))).length;
+    const _lateToday       = _live.filter(r => !r.isCheckedOut && r.status === 'late' && _activeSiteIds.has(String(r.siteId))).length;
     const _el = id => document.getElementById(id);
     if (_el('psActiveSectionCount'))    _el('psActiveSectionCount').textContent    = activePart.length;
     if (_el('psActiveOnSiteNow'))       _el('psActiveOnSiteNow').textContent       = _onSiteNowActive;
-    if (_el('psActiveCheckedOutToday')) _el('psActiveCheckedOutToday').textContent = _peakToday;
+    if (_el('psActiveCheckedOutToday')) _el('psActiveCheckedOutToday').textContent = _lateToday;
 
-    // Inactive section: sites count, sites visited today (had check-ins but now empty), never visited today
-    const _inactiveSiteIds = new Set(inactivePart.map(s => String(s.id)));
-    const _visitedToday   = _live.filter(r => _inactiveSiteIds.has(String(r.siteId)));
-    const _visitedSiteIds = new Set(_visitedToday.map(r => String(r.siteId)));
-    const _neverVisited   = inactivePart.filter(s => !_visitedSiteIds.has(String(s.id))).length;
-    if (_el('psInactiveSectionCount'))      _el('psInactiveSectionCount').textContent      = inactivePart.length;
-    if (_el('psInactiveCheckedOutToday'))   _el('psInactiveCheckedOutToday').textContent   = _visitedSiteIds.size;
-    if (_el('psInactiveNeverVisited'))      _el('psInactiveNeverVisited').textContent      = _neverVisited;
+    // Inactive section: sites count only
+    if (_el('psInactiveSectionCount')) _el('psInactiveSectionCount').textContent = inactivePart.length;
 
     // Show/hide whole sections depending on filter + content
     const _activeWrap   = document.getElementById('psActiveSectionWrap');
@@ -6176,11 +6278,12 @@ const AttendanceSystem = (function() {
         return;
       }
 
-      // Clear skeleton / empty-state placeholders (they have no data-id)
-      if (container.querySelector('.ps-empty, .skel-card')) {
-        container.querySelectorAll('[data-id]').forEach(el => _destroyMap(`ps-map-${el.dataset.id}`));
-        container.innerHTML = '';
-      }
+      // Always strip non-card children (skeletons, empty-state divs) before diffing.
+      // They have no data-id, so the diff loop's insertBefore(el, container.children[i])
+      // would treat them as position anchors, producing orphaned blank nodes.
+      Array.from(container.children).forEach(child => {
+        if (!child.dataset.id) container.removeChild(child);
+      });
 
       const existing = new Map();
       container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
@@ -6215,9 +6318,14 @@ const AttendanceSystem = (function() {
         // Ensure correct DOM order
         if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
 
-        // Init mini-map — skip if already live or pending from THIS generation
+        // Init mini-map.
+        // Skip only if a *live* Leaflet instance already exists for this generation.
+        // A 'pending' entry means a previous gen scheduled an init that hasn't fired yet
+        // (or will bail due to gen mismatch) — always re-schedule so this gen wins.
         const mapId = `ps-map-${site.id}`;
-        if (!_psMiniMaps[mapId]) {
+        const _mapVal = _psMiniMaps[mapId];
+        const _isLiveMap = _mapVal && _mapVal !== 'pending';
+        if (!_isLiveMap) {
           _psMiniMaps[mapId] = 'pending';
           const capturedGen = gen;
           setTimeout(() => {
@@ -6274,10 +6382,7 @@ const AttendanceSystem = (function() {
       api('deleteProjectSite', { id, actorId: currentUserId, actorUsername: currentUser }).then(res => {
         hideSpinner();
         if (res.success) {
-          // Remove from in-memory list and re-render immediately
-          projectSites = projectSites.filter(s => String(s.id) !== String(id));
-          displayProjectSites(projectSites);
-          showPopup('success', 'Deleted', 'Project site has been deleted.').then(() => loadProjectSites());
+          showPopup('success', 'Deleted', 'Project site has been deleted.').then(() => loadProjectSites(true));
         } else {
           showPopup('error', 'Failed', res.message || 'Could not delete');
         }
@@ -6767,12 +6872,11 @@ const AttendanceSystem = (function() {
     const avg   = total ? (rates.reduce((s, v) => s + v, 0) / total) : 0;
     const max   = total ? Math.max(...rates) : 0;
     const monthly = list.reduce((s, r) => s + (r.hourlyRate || 0) * 160, 0);
-    const cur = _payCurrency + '$';
     const el = id => document.getElementById(id);
     _countUp(el('hrTotalEmployees'), total);
-    if (el('hrAvgRate'))        el('hrAvgRate').textContent        = cur + ' ' + avg.toFixed(2);
-    if (el('hrMonthlyPayroll')) el('hrMonthlyPayroll').textContent = cur + ' ' + Math.round(monthly).toLocaleString();
-    if (el('hrHighestRate'))    el('hrHighestRate').textContent    = cur + ' ' + max.toFixed(2);
+    if (el('hrAvgRate'))        el('hrAvgRate').textContent        = '$' + avg.toFixed(2);
+    if (el('hrMonthlyPayroll')) el('hrMonthlyPayroll').textContent = '$' + Math.round(monthly).toLocaleString();
+    if (el('hrHighestRate'))    el('hrHighestRate').textContent    = '$' + max.toFixed(2);
   }
 
   function renderHourlyRates() {
@@ -6796,7 +6900,7 @@ const AttendanceSystem = (function() {
     }
 
     const roleCls = r => r === 'admin' ? 'hr-role-admin' : r === 'manager' ? 'hr-role-manager' : 'hr-role-employee';
-    const cur = escapeHtml(_payCurrency) + '$';
+    const cur = '$';
 
     tbody.innerHTML = filtered.map(r => `
       <tr>
