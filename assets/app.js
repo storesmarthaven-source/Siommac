@@ -3074,9 +3074,10 @@ const AttendanceSystem = (function() {
       if (event.target.matches('#empSearchInput')) {
         _renderEmployees();
       }
-      // Attendance search / dept filter — client-side re-render
-      if (event.target.matches('#attSearchInput') || event.target.matches('#attDeptFilter')) {
+      // Attendance search — client-side re-render (both table and consistency)
+      if (event.target.matches('#attSearchInput')) {
         _renderAttTable();
+        _renderAttConsistency();
       }
       if (event.target.matches('#projectSearchInput')) {
         displayProjectSites(projectSites);
@@ -3123,6 +3124,28 @@ const AttendanceSystem = (function() {
         }
       }
       if (event.target.matches('#attendanceMonth') || event.target.matches('#attendanceYear')) {
+        if (_attFilterMode === 'month') loadAttendanceData();
+      }
+      // Dept / search client-side re-filter (no new API call needed)
+      if (event.target.matches('#attDeptFilter')) {
+        _renderAttTable();
+        _renderAttConsistency();
+      }
+      // Attendance mode toggle (Month / Date Range)
+      if (event.target.matches('.att-mode-btn')) {
+        const mode = event.target.dataset.mode;
+        _attFilterMode = mode;
+        document.querySelectorAll('.att-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        document.getElementById('attMonthPickers').style.display  = mode === 'month' ? '' : 'none';
+        document.getElementById('attRangePickers').style.display  = mode === 'range' ? '' : 'none';
+        if (mode === 'month') loadAttendanceData();
+      }
+      // Apply date range
+      if (event.target.matches('#attApplyRange, #attApplyRange *')) {
+        const from = (document.getElementById('attDateFrom') || {}).value;
+        if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
+        swr.clearByPrefix('listDailyLog:');
+        for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
         loadAttendanceData();
       }
       // Employee role/status filter
@@ -3424,7 +3447,9 @@ const AttendanceSystem = (function() {
   }
 
   function initializeDateSelectors() {
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentYear  = now.getFullYear();
+    const currentMonth = now.getMonth();
     const yearSelect = document.getElementById('attendanceYear');
     if (yearSelect) {
       yearSelect.innerHTML = '';
@@ -3436,10 +3461,18 @@ const AttendanceSystem = (function() {
         yearSelect.appendChild(option);
       }
     }
-    
-    const currentMonth = new Date().getMonth();
     const monthSelect = document.getElementById('attendanceMonth');
     if (monthSelect) monthSelect.value = currentMonth;
+
+    // Seed date range pickers: default to current month's start → today
+    const todayStr  = now.toISOString().slice(0, 10);
+    const monthStart = new Date(currentYear, currentMonth, 1).toISOString().slice(0, 10);
+    const fromEl = document.getElementById('attDateFrom');
+    const toEl   = document.getElementById('attDateTo');
+    if (fromEl && !fromEl.value) fromEl.value = monthStart;
+    if (toEl   && !toEl.value)   toEl.value   = todayStr;
+    if (fromEl) fromEl.max = todayStr;
+    if (toEl)   toEl.max   = todayStr;
   }
 
   function handleLogin(e) {
@@ -6445,31 +6478,47 @@ const AttendanceSystem = (function() {
   // ─── Attendance Overview charts (local instances, destroyed on reload) ───
   let _attTrendChart = null;
   let _attStatusChart = null;
-  let _attAllRows = [];   // raw rows for client-side dept filter
-  let _attDepts  = [];    // list of dept names for populating the filter select
+  let _attAllRows      = [];   // raw rows from server (current fetch)
+  let _attConsistency  = [];   // employee consistency rows from server
+  let _attDepts        = [];   // dept names for filter
+  let _attDateRange    = null; // { start, end, days } from last server response
+  let _attFilterMode   = 'month'; // 'month' | 'range'
+
+  function _attApiArgs() {
+    if (_attFilterMode === 'range') {
+      const from = (document.getElementById('attDateFrom') || {}).value || '';
+      const to   = (document.getElementById('attDateTo')   || {}).value || '';
+      if (from) return { dateFrom: from, dateTo: to || from };
+    }
+    const month = parseInt((document.getElementById('attendanceMonth') || {}).value, 10);
+    const year  = parseInt((document.getElementById('attendanceYear')  || {}).value, 10);
+    return { month, year };
+  }
 
   function loadAttendanceData() {
-    const month = parseInt(document.getElementById('attendanceMonth').value, 10);
-    const year  = parseInt(document.getElementById('attendanceYear').value, 10);
+    const args = _attApiArgs();
     _skelOnce('s-adm-attendance', () => {
       destroyDataTable('attendanceTable');
       setSkel('attendanceTableBody', skelTableRows(9, 6));
     });
-    apiSwr('listDailyLog', { month, year }, {
+    apiSwr('listDailyLog', args, {
       onData: res => {
         if (!res || !res.success) {
           document.getElementById('attendanceTableBody').innerHTML =
             `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
           return;
         }
-        destroyDataTable('attendanceTable'); // destroy before re-init on data change
+        destroyDataTable('attendanceTable');
         _markLoaded('s-adm-attendance');
-        _attAllRows = (res.data && res.data.rows) || [];
-        _attDepts   = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
+        _attAllRows     = (res.data && res.data.rows)        || [];
+        _attConsistency = (res.data && res.data.consistency) || [];
+        _attDateRange   = (res.data && res.data.dateRange)   || null;
+        _attDepts = [...new Set(_attAllRows.map(r => r.department).filter(Boolean))].sort();
         _populateAttDeptFilter();
         _renderAttStats(res.data && res.data.stats);
         _renderAttTable();
-        // Double rAF: first frame makes section visible, second has real container dimensions
+        _renderAttConsistency();
+        _updateAttBadge();
         requestAnimationFrame(() => requestAnimationFrame(() => {
           _renderAttCharts(res.data && res.data.dailyTrend);
         }));
@@ -6479,6 +6528,23 @@ const AttendanceSystem = (function() {
           `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
       }
     });
+  }
+
+  function _updateAttBadge() {
+    const badge = document.getElementById('attTrendBadge');
+    if (!badge) return;
+    if (_attFilterMode === 'range' && _attDateRange) {
+      badge.textContent = _attDateRange.start === _attDateRange.end
+        ? _attDateRange.start
+        : _attDateRange.start + ' → ' + _attDateRange.end;
+    } else {
+      const monthEl = document.getElementById('attendanceMonth');
+      const yearEl  = document.getElementById('attendanceYear');
+      if (monthEl && yearEl) {
+        const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        badge.textContent = (names[+monthEl.value] || '') + ' ' + (yearEl.value || '');
+      }
+    }
   }
 
   function _populateAttDeptFilter() {
@@ -6496,6 +6562,62 @@ const AttendanceSystem = (function() {
     _countUp(document.getElementById('attStatLate'),    stats.late);
     _countUp(document.getElementById('attStatAbsent'),  stats.absent);
     _countUp(document.getElementById('attStatRate'),    stats.rate || 0, '%');
+    // Adjust label based on mode: single day = "Present Today", range = "Check-ins"
+    const presLabel = document.getElementById('attStatPresentLabel');
+    const rateLabel = document.getElementById('attStatRateLabel');
+    const isSingleDay = _attDateRange && _attDateRange.days === 1;
+    if (presLabel) presLabel.textContent = isSingleDay ? 'Present Today' : 'Check-ins';
+    if (rateLabel) rateLabel.textContent = isSingleDay ? 'Attendance Rate' : 'Avg Daily Rate';
+  }
+
+  function _renderAttConsistency() {
+    const body = document.getElementById('attConsistencyBody');
+    if (!body) return;
+    // Apply dept + search client-side
+    const dept   = (document.getElementById('attDeptFilter')  || {}).value || 'all';
+    const search = ((document.getElementById('attSearchInput') || {}).value || '').toLowerCase();
+    let rows = _attConsistency;
+    if (dept !== 'all') rows = rows.filter(r => r.department === dept);
+    if (search) rows = rows.filter(r =>
+      r.name.toLowerCase().includes(search) || (r.department || '').toLowerCase().includes(search)
+    );
+
+    const subtitle = document.getElementById('attConsistencySubtitle');
+    if (subtitle && _attDateRange) {
+      const dayLabel = _attDateRange.days === 1 ? '1 day' : _attDateRange.days + ' days';
+      subtitle.textContent = dayLabel + ' · ' + rows.length + ' employee' + (rows.length !== 1 ? 's' : '');
+    }
+
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="7" class="att-empty">No data for selected period.</td></tr>';
+      destroyDataTable('attConsistencyTable');
+      return;
+    }
+
+    const rateBar = r => {
+      const pct = r.attendanceRate;
+      const col = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
+      return `<div class="att-rate-wrap">
+        <div class="att-rate-bar" style="width:${pct}%;background:${col};"></div>
+        <span class="att-rate-val">${pct}%</span>
+      </div>`;
+    };
+
+    body.innerHTML = rows.map(r => `<tr>
+      <td><strong class="att-name">${escapeHtml(r.name)}</strong></td>
+      <td><span class="att-dept-pill">${escapeHtml(r.department || '—')}</span></td>
+      <td class="text-center">${r.presentDays}</td>
+      <td class="text-center"><span style="color:#7a5900;font-weight:600">${r.lateDays}</span></td>
+      <td class="text-center"><span style="color:#b71c1c;font-weight:600">${r.absentDays}</span></td>
+      <td class="text-center">${r.avgHours}h</td>
+      <td>${rateBar(r)}</td>
+    </tr>`).join('');
+    destroyDataTable('attConsistencyTable');
+    initDataTable('attConsistencyTable', {
+      searching: false, paging: false,
+      dom: "<'dt-export-bar'B>rt",
+      columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+    });
   }
 
   function _renderAttCharts(trend) {
@@ -6505,28 +6627,40 @@ const AttendanceSystem = (function() {
     if (_attTrendChart) { _attTrendChart.destroy(); _attTrendChart = null; }
     const tc = document.getElementById('attTrendChart');
     if (tc && trend && trend.length) {
+      // For single-day view, use bar chart; for multi-day use line
+      const isMultiDay = trend.length > 1;
       pin(tc, 600, 240);
       _attTrendChart = new Chart(tc.getContext('2d'), {
-        type: 'line',
+        type: isMultiDay ? 'line' : 'bar',
         data: {
           labels: trend.map(d => String(d.date).slice(5)),
           datasets: [
             {
               label: 'Present',
               data: trend.map(d => d.present),
-              borderColor: '#E40C0C',
-              backgroundColor: 'rgba(228,12,12,0.06)',
-              borderWidth: 2, tension: 0.3, fill: true,
-              pointBackgroundColor: '#E40C0C', pointBorderColor: 'white',
+              borderColor: '#2E7D32',
+              backgroundColor: isMultiDay ? 'rgba(46,125,50,0.07)' : 'rgba(46,125,50,0.7)',
+              borderWidth: 2, tension: 0.3, fill: isMultiDay,
+              pointBackgroundColor: '#2E7D32', pointBorderColor: 'white',
               pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5
             },
             {
               label: 'Late',
               data: trend.map(d => d.late),
               borderColor: '#FFB712',
-              backgroundColor: 'transparent',
-              borderWidth: 2, borderDash: [5, 5], tension: 0.3, fill: false,
+              backgroundColor: isMultiDay ? 'transparent' : 'rgba(255,183,18,0.7)',
+              borderWidth: 2, borderDash: isMultiDay ? [5, 5] : undefined,
+              tension: 0.3, fill: false,
               pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#FFB712'
+            },
+            {
+              label: 'Absent',
+              data: trend.map(d => d.absent),
+              borderColor: '#E40C0C',
+              backgroundColor: isMultiDay ? 'transparent' : 'rgba(228,12,12,0.6)',
+              borderWidth: 2, borderDash: isMultiDay ? [3, 3] : undefined,
+              tension: 0.3, fill: false,
+              pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#E40C0C'
             }
           ]
         },
@@ -6535,8 +6669,8 @@ const AttendanceSystem = (function() {
           animation: { duration: 1000, easing: 'easeOutCubic' },
           plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 }, padding: 16 } } },
           scales: {
-            y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { font: { size: 10 } } },
-            x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } }
+            y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { font: { size: 10 }, stepSize: 1 } },
+            x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 15 } }
           }
         }
       });
@@ -6575,7 +6709,7 @@ const AttendanceSystem = (function() {
 
     let rows = _attAllRows;
     if (dept !== 'all') rows = rows.filter(r => r.department === dept);
-    if (search)         rows = rows.filter(r => r.name.toLowerCase().includes(search) || r.department.toLowerCase().includes(search));
+    if (search)         rows = rows.filter(r => r.name.toLowerCase().includes(search) || (r.department || '').toLowerCase().includes(search));
 
     const countEl = document.getElementById('attLogCount');
     if (countEl) countEl.textContent = rows.length + ' record' + (rows.length !== 1 ? 's' : '');

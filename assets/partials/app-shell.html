@@ -1135,7 +1135,7 @@
             <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="attStatPresent">0</div>
-              <div class="stat-card-label">Present Today</div>
+              <div class="stat-card-label" id="attStatPresentLabel">Present</div>
             </div>
           </div>
           <div class="stat-card">
@@ -1156,18 +1156,31 @@
             <div class="stat-card-icon blue"><i class="fas fa-chart-line"></i></div>
             <div class="stat-card-body">
               <div class="stat-card-value" id="attStatRate">0%</div>
-              <div class="stat-card-label">Attendance Rate</div>
+              <div class="stat-card-label" id="attStatRateLabel">Attendance Rate</div>
             </div>
           </div>
         </div>
 
         <!-- Filters bar -->
         <div class="att-filters-bar">
+          <!-- Search -->
           <div class="att-search-box">
             <i class="fas fa-search"></i>
             <input type="text" id="attSearchInput" placeholder="Search employee…">
           </div>
-          <div class="att-filter-group">
+
+          <!-- Mode toggle: Month | Date Range -->
+          <div class="att-mode-toggle">
+            <button class="att-mode-btn active" id="attModeMonth" data-mode="month">
+              <i class="fas fa-calendar-alt"></i> Month
+            </button>
+            <button class="att-mode-btn" id="attModeRange" data-mode="range">
+              <i class="fas fa-calendar-week"></i> Date Range
+            </button>
+          </div>
+
+          <!-- Month pickers (shown in month mode) -->
+          <div class="att-filter-group" id="attMonthPickers">
             <select class="att-filter-select" id="attendanceMonth">
               <option value="0">January</option><option value="1">February</option><option value="2">March</option>
               <option value="3">April</option><option value="4">May</option><option value="5">June</option>
@@ -1175,10 +1188,28 @@
               <option value="9">October</option><option value="10">November</option><option value="11">December</option>
             </select>
             <select class="att-filter-select" id="attendanceYear"></select>
-            <select class="att-filter-select" id="attDeptFilter">
-              <option value="all">All Departments</option>
-            </select>
           </div>
+
+          <!-- Date range pickers (shown in range mode) -->
+          <div class="att-filter-group att-range-group" id="attRangePickers" style="display:none;">
+            <div class="att-date-input-wrap">
+              <i class="fas fa-calendar-day"></i>
+              <input type="date" class="att-date-input" id="attDateFrom" title="From date">
+            </div>
+            <span class="att-range-sep">→</span>
+            <div class="att-date-input-wrap">
+              <i class="fas fa-calendar-day"></i>
+              <input type="date" class="att-date-input" id="attDateTo" title="To date">
+            </div>
+            <button class="att-apply-btn" id="attApplyRange"><i class="fas fa-check"></i> Apply</button>
+          </div>
+
+          <!-- Dept filter (always visible) -->
+          <select class="att-filter-select" id="attDeptFilter">
+            <option value="all">All Departments</option>
+          </select>
+
+          <!-- Actions -->
           <div class="att-filter-actions">
             <button id="exportAttendanceBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-download"></i> Export</button>
             <button id="refreshAttendanceBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync-alt"></i></button>
@@ -1203,6 +1234,30 @@
             <div class="att-chart-container">
               <canvas id="attStatusChart"></canvas>
             </div>
+          </div>
+        </div>
+
+        <!-- Employee Consistency / Trend Analytics -->
+        <div class="data-section" id="attConsistencySection" style="margin-bottom:24px;">
+          <div class="section-header">
+            <h2><i class="fas fa-user-clock"></i> Employee Consistency</h2>
+            <span class="att-log-count" id="attConsistencySubtitle"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="attConsistencyTable">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Department</th>
+                  <th>Present Days</th>
+                  <th>Late Days</th>
+                  <th>Absent Days</th>
+                  <th>Avg Hours/Day</th>
+                  <th>Attendance Rate</th>
+                </tr>
+              </thead>
+              <tbody id="attConsistencyBody"></tbody>
+            </table>
           </div>
         </div>
 

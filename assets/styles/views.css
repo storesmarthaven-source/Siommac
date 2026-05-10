@@ -2429,11 +2429,85 @@
 }
 /* dt-buttons moved into section-header — hide the now-empty export bar */
 #attendanceTable_wrapper .dt-export-bar:empty { display: none; }
+#attConsistencyTable_wrapper .dt-export-bar:empty { display: none; }
 .att-table-btns { display: flex; gap: 6px; margin-left: auto; }
 
 /* Error / empty states */
 .att-err   { color: var(--siomac-red); padding: 18px; font-weight: 600; text-align: center; }
 .att-empty { color: var(--text-muted); padding: 24px; text-align: center; font-size: 13.5px; }
+
+/* ── Mode toggle (Month / Date Range) ─────────────────────────────────────── */
+.att-mode-toggle {
+  display: flex; gap: 2px;
+  background: var(--bg-subtle);
+  border-radius: 40px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.att-mode-btn {
+  border: none; outline: none; cursor: pointer;
+  padding: 5px 14px; border-radius: 40px;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  color: var(--text-muted); background: transparent;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.att-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--siomac-red);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.att-mode-btn i { font-size: 11px; }
+
+/* ── Date range pickers ──────────────────────────────────────────────────── */
+.att-range-group { align-items: center; }
+.att-date-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-subtle);
+  padding: 6px 12px; border-radius: 40px;
+  border: 1px solid var(--border);
+  transition: border-color .2s;
+}
+.att-date-input-wrap:focus-within { border-color: var(--siomac-red); }
+.att-date-input-wrap i { color: var(--text-muted); font-size: 12px; }
+.att-date-input {
+  border: none; outline: none; background: transparent;
+  font-size: 12.5px; font-family: inherit; color: var(--text-primary);
+  width: 118px; cursor: pointer;
+}
+.att-range-sep { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+.att-apply-btn {
+  padding: 6px 16px; border-radius: 40px; border: none; cursor: pointer;
+  background: var(--siomac-red); color: #fff;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity .2s;
+}
+.att-apply-btn:hover { opacity: 0.87; }
+
+/* ── Attendance rate bar (consistency table) ─────────────────────────────── */
+.att-rate-wrap {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 110px;
+}
+.att-rate-bar {
+  height: 6px; border-radius: 3px;
+  flex: 1; max-width: 70px;
+  min-width: 4px;
+  transition: width .4s;
+}
+.att-rate-val {
+  font-size: 12px; font-weight: 700;
+  color: var(--text-primary); white-space: nowrap;
+}
+
+/* ── Responsive: stack filters on small screens ──────────────────────────── */
+@media (max-width: 700px) {
+  .att-filters-bar { border-radius: 16px; padding: 12px 14px; }
+  .att-search-box input { width: 130px; }
+  .att-date-input { width: 100px; }
+  .att-filter-actions { margin-left: 0; }
+}
 
 /* ─── Sync indicator + notification ─── */
 .sync-indicator {

@@ -927,13 +927,24 @@ async function listAttendance(args, ctx) {
 }
 
 // ── Daily Attendance Log (one row per employee per day, for the Attendance Overview page) ──
+// Accepts either:
+//   { month, year }             → full calendar month
+//   { dateFrom, dateTo }        → arbitrary date range (YYYY-MM-DD)
+//   { dateFrom } with no dateTo → single day
 async function listDailyLog(args, ctx) {
   await requireRole(ctx, ['admin', 'manager']);
   const now = new Date();
-  const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
-  const mo = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
-  const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
-  const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
+
+  let start, end;
+  if (args.dateFrom) {
+    start = String(args.dateFrom).slice(0, 10);
+    end   = args.dateTo ? String(args.dateTo).slice(0, 10) : start;
+  } else {
+    const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
+    const mo = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
+    start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
+    end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
+  }
 
   const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
     sb.from('app_users').select('id,username,full_name,department_id').eq('status', 'active').neq('role', 'admin').order('full_name'),
@@ -975,14 +986,19 @@ async function listDailyLog(args, ctx) {
     };
   });
 
-  // Also compute summary stats for the period
-  const presentToday = rows.filter(r => r.date === today() && (r.status === 'Present' || r.status === 'Late'));
-  const lateToday = rows.filter(r => r.date === today() && r.status === 'Late');
   const totalUsers = (users || []).length;
-  const presentCount = presentToday.length;
-  const rate = totalUsers ? Math.round((presentCount / totalUsers) * 100) : 0;
 
-  // Daily trend for the month (for chart)
+  // Stats: summarise over the entire range
+  const presentRows = rows.filter(r => r.status === 'Present' || r.status === 'Late');
+  const lateRows    = rows.filter(r => r.status === 'Late');
+  // Unique days with any attendance record
+  const days = [...new Set(rows.map(r => r.date))].sort();
+  const dayCount = days.length || 1;
+  // Rate = avg daily attendance across all days in range
+  const totalExpected = totalUsers * dayCount;
+  const rate = totalExpected ? Math.round((presentRows.length / totalExpected) * 100) : 0;
+
+  // Daily trend for chart (one entry per date)
   const trendMap = {};
   for (const r of rows) {
     if (!trendMap[r.date]) trendMap[r.date] = { date: r.date, present: 0, late: 0, absent: 0 };
@@ -992,17 +1008,40 @@ async function listDailyLog(args, ctx) {
   }
   const dailyTrend = Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date));
 
+  // Employee consistency analytics — streaks, rates, avg hours per employee
+  const empMap = {};
+  for (const r of rows) {
+    if (!empMap[r.username]) empMap[r.username] = { name: r.name, department: r.department, days: [], presentDays: 0, lateDays: 0, totalHours: 0 };
+    const e = empMap[r.username];
+    e.days.push(r.date);
+    if (r.status === 'Present' || r.status === 'Late') e.presentDays++;
+    if (r.status === 'Late') e.lateDays++;
+    e.totalHours += r.hours || 0;
+  }
+  const consistency = Object.entries(empMap).map(([username, e]) => {
+    const rate = dayCount ? Math.round((e.presentDays / dayCount) * 100) : 0;
+    return {
+      username, name: e.name, department: e.department,
+      presentDays: e.presentDays, lateDays: e.lateDays,
+      absentDays: dayCount - e.presentDays,
+      attendanceRate: rate,
+      avgHours: e.presentDays ? +(e.totalHours / e.presentDays).toFixed(1) : 0
+    };
+  }).sort((a, b) => b.attendanceRate - a.attendanceRate);
+
   return {
     success: true,
     data: {
       rows,
+      dateRange: { start, end, days: dayCount },
       stats: {
-        present: presentCount,
-        late: lateToday.length,
-        absent: totalUsers - presentCount,
+        present: presentRows.length,
+        late: lateRows.length,
+        absent: rows.filter(r => r.status === 'Absent').length,
         rate
       },
-      dailyTrend
+      dailyTrend,
+      consistency
     }
   };
 }
