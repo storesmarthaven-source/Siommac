@@ -1291,7 +1291,14 @@ const routes = {
   updateDepartment,
   deleteDepartment,
   listManagers,
-  listProjectSites: async (a, ctx) => { await requireUser(ctx); return listProjectSites(); },
+  listProjectSites: async (a, ctx) => {
+    await requireUser(ctx);
+    const [sites, activeEmpRes] = await Promise.all([
+      listProjectSites(),
+      sb.from('app_users').select('id', { count: 'exact', head: true }).eq('status', 'Active').eq('role', 'employee')
+    ]);
+    return { success: true, data: sites, totalActiveEmployees: activeEmpRes.count || 0 };
+  },
   addProjectSite,
   updateProjectSite,
   deleteProjectSite,
@@ -1348,18 +1355,13 @@ const routes = {
     const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
 
     const todayStr = today();
-    const [notifRes, msgRes, ticketRes, leaveRes, checkinRes] = await Promise.all([
+    const [notifRes, msgThreadsRes, ticketRes, leaveRes, checkinRes] = await Promise.all([
       // Notification count — reuse getNotifications (already optimised, returns array)
       getNotifications(a, ctx).catch(() => ({ data: [] })),
-      // Unread messages count — count distinct unread threads (1 per conversation, not per reply)
-      // Admin/manager: threads where they are NOT the original sender and recipient hasn't read yet
-      // Employee: threads involving them that are unread
+      // Fetch thread metadata for unread thread count (same logic as getMessages)
       isAdminOrMgr
-        ? sb.from('messages').select('id', { count: 'exact', head: true }).eq('read_by_recipient', false).neq('from_user_id', actor.id).limit(50)
-        : sb.from('messages').select('id', { count: 'exact', head: true })
-            .or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`)
-            .eq('read_by_recipient', false)
-            .limit(30),
+        ? sb.from('messages').select('id, from_user_id, to_user_id, created_at').order('created_at', { ascending: false }).limit(100)
+        : sb.from('messages').select('id, from_user_id, to_user_id, created_at').or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`).order('created_at', { ascending: false }).limit(50),
       // Open tickets count: admin/manager sees all open; employee — computed separately below
       isAdminOrMgr
         ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
@@ -1370,11 +1372,48 @@ const routes = {
             ? sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').eq('department_id', actor.department_id)
             : sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'))
         : Promise.resolve({ count: 0 }),
-      // Checked-in count today (admin/manager only — for live map badge)
+      // Active sites today (admin/manager only — for live map badge)
+      // A site is active if it has at least one employee currently checked in (check_out IS NULL)
       isAdminOrMgr
-        ? sb.from('attendance').select('id', { count: 'exact', head: true }).eq('date', todayStr).not('check_in', 'is', null)
-        : Promise.resolve({ count: 0 })
+        ? sb.from('attendance').select('site_id').eq('date', todayStr).not('check_in', 'is', null).is('check_out', null).not('site_id', 'is', null)
+        : Promise.resolve({ data: [] })
     ]);
+
+    // Compute unread thread count — exact same logic as getMessages/unreadCount
+    // Fetch read state, replies, and existing user IDs (to match otherPartyDeleted filter)
+    const _threads   = msgThreadsRes.data || [];
+    const _threadIds = _threads.map(m => m.id);
+    let msgUnreadCount = 0;
+    if (_threadIds.length) {
+      // Collect all other-party user IDs from these threads
+      const _otherUserIds = [...new Set(_threads.map(m =>
+        m.from_user_id === actor.id ? m.to_user_id : m.from_user_id
+      ).filter(Boolean))];
+
+      const [msgReadsRes, msgRepliesRes, existingUsersRes] = await Promise.all([
+        sb.from('message_reads').select('message_id, last_read_at').eq('user_id', actor.id).in('message_id', _threadIds),
+        sb.from('message_replies').select('message_id, from_user_id, created_at').in('message_id', _threadIds).order('created_at', { ascending: false }),
+        _otherUserIds.length ? sb.from('app_users').select('id').in('id', _otherUserIds) : Promise.resolve({ data: [] })
+      ]);
+      const _readMap = {};
+      (msgReadsRes.data || []).forEach(r => { _readMap[r.message_id] = r.last_read_at; });
+      const _latestOtherReply = {};
+      (msgRepliesRes.data || []).forEach(r => {
+        if (r.from_user_id !== actor.id && !_latestOtherReply[r.message_id])
+          _latestOtherReply[r.message_id] = r.created_at; // ordered desc so first = latest
+      });
+      const _existingUserIds = new Set((existingUsersRes.data || []).map(u => u.id));
+      msgUnreadCount = _threads.filter(m => {
+        // Skip threads where the other party's account was deleted (matches getMessages filter)
+        const otherUserId = m.from_user_id === actor.id ? m.to_user_id : m.from_user_id;
+        if (otherUserId && !_existingUserIds.has(otherUserId)) return false;
+        const lastOtherAt = _latestOtherReply[m.id]
+          || (m.from_user_id !== actor.id ? m.created_at : null);
+        if (!lastOtherAt) return false;
+        const myLastRead = _readMap[m.id] || null;
+        return !myLastRead || new Date(lastOtherAt) > new Date(myLastRead);
+      }).length;
+    }
 
     // Employee ticket badge: count unread admin replies on their own tickets
     let empTicketCount = 0;
@@ -1393,14 +1432,16 @@ const routes = {
       }
     }
 
+    const activeSiteIds = new Set((checkinRes.data || []).map(r => r.site_id).filter(Boolean));
+
     return {
       success: true,
       data: {
         notificationIds: (notifRes && notifRes.data ? notifRes.data.map(n => n.id) : []),
-        messages:      msgRes.count    || 0,
+        messages:      msgUnreadCount,
         tickets:       isAdminOrMgr ? (ticketRes.count || 0) : empTicketCount,
         pendingLeaves: leaveRes.count  || 0,
-        checkedIn:     checkinRes.count || 0
+        activeSites:   activeSiteIds.size
       }
     };
   },
@@ -1938,7 +1979,7 @@ async function getMessages(args, ctx) {
     };
   });
 
-  const unreadCount = mapped.filter(m => m.isUnread).length;
+  const unreadCount = mapped.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length;
   return { success: true, data: mapped, unreadCount };
 }
 

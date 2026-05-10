@@ -1076,48 +1076,52 @@
 
         <!-- Active sites section -->
         <div class="ps-section ps-section--active" id="psActiveSectionWrap">
-          <div class="ps-section-header">
-            <div class="ps-section-icon"><i class="fas fa-map-location-dot"></i></div>
-            <div class="ps-section-label">
-              <h4 class="ps-section-title">Active Sites</h4>
-              <div class="ps-section-sub">Sites with employees currently on-site</div>
+          <div class="ps-section-container">
+            <div class="ps-section-header">
+              <div class="ps-section-icon"><i class="fas fa-map-location-dot"></i></div>
+              <div class="ps-section-label">
+                <h4 class="ps-section-title">Live Worksites</h4>
+                <div class="ps-section-sub">Locations with active workforce presence</div>
+              </div>
+              <div class="ps-section-stats">
+                <div class="ps-section-stat">
+                  <span class="ps-section-stat-val" id="psActiveSectionCount">0</span>
+                  <span class="ps-section-stat-lbl">Sites</span>
+                </div>
+                <div class="ps-section-stat-divider"></div>
+                <div class="ps-section-stat">
+                  <span class="ps-section-stat-val" id="psActiveOnSiteNow">0</span>
+                  <span class="ps-section-stat-lbl">On-Site Now</span>
+                </div>
+                <div class="ps-section-stat-divider"></div>
+                <div class="ps-section-stat">
+                  <span class="ps-section-stat-val" id="psActiveCheckedOutToday">0</span>
+                  <span class="ps-section-stat-lbl">Late Today</span>
+                </div>
+              </div>
             </div>
-            <div class="ps-section-stats">
-              <div class="ps-section-stat">
-                <span class="ps-section-stat-val" id="psActiveSectionCount">0</span>
-                <span class="ps-section-stat-lbl">Sites</span>
-              </div>
-              <div class="ps-section-stat-divider"></div>
-              <div class="ps-section-stat">
-                <span class="ps-section-stat-val" id="psActiveOnSiteNow">0</span>
-                <span class="ps-section-stat-lbl">On-Site Now</span>
-              </div>
-              <div class="ps-section-stat-divider"></div>
-              <div class="ps-section-stat">
-                <span class="ps-section-stat-val" id="psActiveCheckedOutToday">0</span>
-                <span class="ps-section-stat-lbl">Late Today</span>
-              </div>
-            </div>
+            <div class="ps-projects-grid" id="psActiveContainer"></div>
           </div>
-          <div class="ps-projects-grid" id="psActiveContainer"></div>
         </div>
 
         <!-- Inactive sites section -->
         <div class="ps-section ps-section--inactive" id="psInactiveSectionWrap">
-          <div class="ps-section-header">
-            <div class="ps-section-icon"><i class="fas fa-building-circle-xmark"></i></div>
-            <div class="ps-section-label">
-              <h4 class="ps-section-title">Inactive Sites</h4>
-              <div class="ps-section-sub">No employees currently on-site</div>
-            </div>
-            <div class="ps-section-stats">
-              <div class="ps-section-stat">
-                <span class="ps-section-stat-val" id="psInactiveSectionCount">0</span>
-                <span class="ps-section-stat-lbl">Sites</span>
+          <div class="ps-section-container">
+            <div class="ps-section-header">
+              <div class="ps-section-icon"><i class="fas fa-building-circle-xmark"></i></div>
+              <div class="ps-section-label">
+                <h4 class="ps-section-title">Inactive Sites</h4>
+                <div class="ps-section-sub">No employees currently on-site</div>
+              </div>
+              <div class="ps-section-stats">
+                <div class="ps-section-stat">
+                  <span class="ps-section-stat-val" id="psInactiveSectionCount">0</span>
+                  <span class="ps-section-stat-lbl">Sites</span>
+                </div>
               </div>
             </div>
+            <div class="ps-projects-grid" id="psInactiveContainer"></div>
           </div>
-          <div class="ps-projects-grid" id="psInactiveContainer"></div>
         </div>
 
       </section>

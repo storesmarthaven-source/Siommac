@@ -22,6 +22,7 @@ const AttendanceSystem = (function() {
   let userMarker = null;
   let attendanceZones = [];
   let projectSites = [];
+  let _totalActiveEmployees = 0; // populated from listProjectSites response
   let userLocation = null;
   let liveMarkers = []; // leaflet markers for active employees on the live map
   let _liveClusterGroup = null; // markercluster group for employee markers
@@ -482,8 +483,13 @@ const AttendanceSystem = (function() {
     if (!dropdown) return;
     const current = _selectedSiteId || '';
 
-    // Build options
-    const sites = Object.values(_siteLayerMap).map(({ site }) => site);
+    // Build options — active sites (someone checked in) always appear before inactive
+    const sites = Object.values(_siteLayerMap).map(({ site }) => site).sort((a, b) => {
+      const aActive = (liveData || []).some(r => !r.isCheckedOut && String(r.siteId) === String(a.id));
+      const bActive = (liveData || []).some(r => !r.isCheckedOut && String(r.siteId) === String(b.id));
+      if (aActive === bActive) return (a.name || '').localeCompare(b.name || '');
+      return aActive ? -1 : 1;
+    });
     dropdown.innerHTML = '';
 
     // "All sites" clear option
@@ -609,13 +615,13 @@ const AttendanceSystem = (function() {
       onData: res => {
       const fresh = (res && res.success && res.data) || [];
       // Build a lightweight fingerprint: id + lat/lng + status per row
-      const hash = fresh.map(r => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';');
+      // Use a sentinel so empty array ('') never falsely matches the initial value
+      const hash = fresh.length ? fresh.map(r => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';') : '__empty__';
       const markersNeedUpdate = hash !== _liveDataHash;
       liveData = fresh;
       _markLoaded('s-projectMap');
-      // Update live map nav badge with current checked-in count (not checked out)
-      const _liveCheckedInCount = fresh.filter(r => !r.isCheckedOut).length;
-      if (typeof window._setLiveMapBadge === 'function') window._setLiveMapBadge(_liveCheckedInCount);
+      // Sync all badges — liveData is now fresh so activeSites count is accurate
+      _scheduleHdrBadgeSync();
       if (markersNeedUpdate) {
         _liveDataHash = hash;
         // Render immediately — photos are already cached client-side (24h signed URLs
@@ -762,15 +768,21 @@ const AttendanceSystem = (function() {
 
     const listEl = document.getElementById('liveEmployeesList');
 
+    // Always strip skeletons/empty-state nodes before any rendering path.
+    // skelList() produces .leave-request-item divs with no data-id; the DOM diff
+    // also inserts plain div empty-states — clear them all unconditionally here
+    // so they never bleed through into the rendered list.
+    Array.from(listEl.children).forEach(c => { if (!c.dataset.id) listEl.removeChild(c); });
+
     // If no site is selected, show global totals across all sites
     if (!_selectedSiteId) {
       const allCheckedIn = rows.filter(r => !r.isCheckedOut).length;
       const allLate      = rows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
       const allOnSite    = rows.filter(r => !r.isCheckedOut && r.checkInLat != null).length;
-      document.getElementById('liveActiveCount').textContent    = allCheckedIn;
-      document.getElementById('liveCheckedInCount').textContent = allCheckedIn;
-      document.getElementById('liveLateCount').textContent      = allLate;
-      document.getElementById('liveOnSiteCount').textContent    = allOnSite;
+      _countUp(document.getElementById('liveActiveCount'),    allCheckedIn);
+      _countUp(document.getElementById('liveCheckedInCount'), allCheckedIn);
+      _countUp(document.getElementById('liveLateCount'),      allLate);
+      _countUp(document.getElementById('liveOnSiteCount'),    allOnSite);
       listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-map-pin"></i>Tap a job site on the map to view live activity</div>';
       return;
     }
@@ -782,10 +794,10 @@ const AttendanceSystem = (function() {
     const late      = siteRows.filter(r => r.status === 'late' && !r.isCheckedOut).length;
     const onSite    = siteRows.filter(r => !r.isCheckedOut && r.checkInLat != null).length;
 
-    document.getElementById('liveActiveCount').textContent     = checkedIn;
-    document.getElementById('liveCheckedInCount').textContent  = checkedIn;
-    document.getElementById('liveLateCount').textContent       = late;
-    document.getElementById('liveOnSiteCount').textContent     = onSite;
+    _countUp(document.getElementById('liveActiveCount'),    checkedIn);
+    _countUp(document.getElementById('liveCheckedInCount'), checkedIn);
+    _countUp(document.getElementById('liveLateCount'),      late);
+    _countUp(document.getElementById('liveOnSiteCount'),    onSite);
 
     const sorted = siteRows.slice().sort((a, b) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
 
@@ -794,8 +806,6 @@ const AttendanceSystem = (function() {
       return;
     }
 
-    // Remove empty state or skeleton placeholders (skeleton items have no data-id)
-    if (listEl.querySelector('.lm-emp-empty') || listEl.querySelector('.leave-request-item')) listEl.innerHTML = '';
 
     function _liveEmpRowHtml(r) {
       const initial   = (r.fullName || '?').charAt(0).toUpperCase();
@@ -815,34 +825,33 @@ const AttendanceSystem = (function() {
       return (r.isCheckedOut ? 'out' : r.status) + '|' + (r.lastSeen || '');
     }
 
-    // DOM diff — only replace rows that changed
+    // Fragment-based rebuild -- no live-NodeList insertBefore thrash
     const _liveExistingById = new Map();
     listEl.querySelectorAll('[data-id]').forEach(el => _liveExistingById.set(el.dataset.id, el));
-    const _liveSeen = new Set();
-    sorted.forEach((r, i) => {
+    const _liveSeen = new Set(sorted.map(r => String(r.userId)));
+    // Remove rows no longer in list
+    _liveExistingById.forEach((el, id) => {
+      if (!_liveSeen.has(id) && el.parentNode === listEl) listEl.removeChild(el);
+    });
+    const _liveFrag = document.createDocumentFragment();
+    sorted.forEach(r => {
       const id  = String(r.userId);
       const key = _liveEmpRowKey(r);
-      _liveSeen.add(id);
       let el = _liveExistingById.get(id);
       if (!el) {
         const tmp = document.createElement('div');
         tmp.innerHTML = _liveEmpRowHtml(r);
         el = tmp.firstElementChild;
-        listEl.insertBefore(el, listEl.children[i] || null);
-      } else {
-        if (el.dataset.rowKey !== key) {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = _liveEmpRowHtml(r);
-          listEl.replaceChild(tmp.firstElementChild, el);
-          el = listEl.children[i];
-        }
-        if (listEl.children[i] !== el) listEl.insertBefore(el, listEl.children[i] || null);
+      } else if (el.dataset.rowKey !== key) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _liveEmpRowHtml(r);
+        el = tmp.firstElementChild;
       }
       if (el) el.dataset.rowKey = key;
+      if (el) _liveFrag.appendChild(el);
     });
-    _liveExistingById.forEach((el, id) => {
-      if (!_liveSeen.has(id) && el.parentNode === listEl) listEl.removeChild(el);
-    });
+    listEl.innerHTML = '';
+    listEl.appendChild(_liveFrag);
 
     // Preload profile photo into each avatar (only for new/changed rows) — off-screen decode, no flash
     sorted.forEach(r => {
@@ -1168,26 +1177,44 @@ const AttendanceSystem = (function() {
     }
   }
 
-  // Debounced combined badge refresh — all three header badges update together
-  // from a single getHeaderCounts call so they always animate in simultaneously.
+  // Debounced combined badge refresh — fires one getHeaderCounts call then sets
+  // all badges (notif, msg, ticket, leave, map) in the same callback frame.
+  // Msg + ticket counts come from the server so they appear with no dependency
+  // on local _msgs/_tickets lists being populated yet.
   let _hdrBadgeSyncTimer = null;
   function _scheduleHdrBadgeSync() {
     clearTimeout(_hdrBadgeSyncTimer);
-    _hdrBadgeSyncTimer = setTimeout(() => {
-      _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
-        if (!res || !res.success) return;
-        const c = res.data || {};
-        const storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
-        const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
-        const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
-        _setHdrBadge(document.getElementById('hdrNotifBadge'),  unreadNotifs);
-        // hdrMsgBadge is owned by _updateMsgBadge() — counts from local _msgs list, never overwritten here.
-        // hdrTicketBadge is owned by _updateTicketBadge() — counts from local _tickets list so the badge
-        // never jumps ahead of what's actually rendered in the list. Don't overwrite it from the server count.
-        // Update leave badge only — map badge is handled by _render after _notifData loads
-        if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
-      }).catch(() => {});
-    }, 80); // 80ms debounce — collapses concurrent triggers into one request
+    _hdrBadgeSyncTimer = setTimeout(_doHdrBadgeSync, 80);
+  }
+  function _doHdrBadgeSync() {
+    _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
+      if (!res || !res.success) return;
+      const c = res.data || {};
+
+      // ── Notif badge (cross-referenced against locally stored read/cleared IDs) ──
+      const storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
+      const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
+      const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
+      _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
+
+      // ── Msg badge — from server, same as notif + leave so all appear together ──
+      _setHdrBadge(document.getElementById('hdrMsgBadge'), c.messages || 0);
+
+      // ── Ticket badge — from server ──
+      _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets || 0);
+
+      // ── Leave sidebar badge ──
+      if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
+
+      // ── Map sidebar badge — active sites from server ──
+      const activeSites = c.activeSites != null
+        ? c.activeSites
+        : (typeof liveData !== 'undefined'
+            ? new Set(liveData.filter(r => !r.isCheckedOut && r.siteId).map(r => String(r.siteId))).size
+            : 0);
+      if (typeof window._setLiveMapBadge === 'function') window._setLiveMapBadge(activeSites);
+
+    }).catch(() => {});
   }
 
   function setSkel(id, html) {
@@ -1221,7 +1248,7 @@ const AttendanceSystem = (function() {
   }
   function skelList(n) {
     let html = '';
-    for (let i = 0; i < n; i++) html += `<div class="leave-request-item"><div class="skeleton skel-text" style="width:25%;"></div><div class="skeleton skel-text" style="width:55%; margin-top:8px;"></div><div class="skeleton skel-text-sm" style="width:75%; margin-top:6px;"></div></div>`;
+    for (let i = 0; i < n; i++) html += `<div class="lm-emp-item lm-emp-item--skel"><div class="lm-emp-avatar skeleton"></div><div class="lm-emp-info"><div class="skeleton skel-text" style="width:55%;"></div><div class="skeleton skel-text-sm" style="width:75%; margin-top:6px;"></div></div></div>`;
     return html;
   }
 
@@ -1505,13 +1532,11 @@ const AttendanceSystem = (function() {
         }
       }
 
-      function _updateNavBadges(unreadLeaveCount, checkedInCount) {
-        const ci = checkedInCount || 0;
+      function _updateNavBadges(unreadLeaveCount) {
+        // Map badge is owned exclusively by _setLiveMapBadge — never touched here
         ['#sidebarMenu', '#topTabs'].forEach(sel => {
           document.querySelectorAll(`${sel} button[data-section]`).forEach(btn => {
-            const sec = btn.dataset.section;
-            if (LEAVE_SECTION_IDS.includes(sec)) _setBadge(btn, unreadLeaveCount);
-            if (MAP_SECTION_IDS.includes(sec))   _setBadge(btn, ci);
+            if (LEAVE_SECTION_IDS.includes(btn.dataset.section)) _setBadge(btn, unreadLeaveCount);
           });
         });
       }
@@ -1522,15 +1547,6 @@ const AttendanceSystem = (function() {
         const list = document.getElementById('notifList');
         if (!list) return;
         const readIds = _readIds();
-
-        // Refresh header badges + leave badge via getHeaderCounts (server source)
-        _scheduleHdrBadgeSync();
-
-        // Map badge uses _notifData (now populated) filtered by last-visited timestamp
-        // so visiting live map correctly clears it and new checkins re-show it
-        ['#sidebarMenu', '#topTabs'].forEach(sel => {
-          document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, _newCheckinCount()));
-        });
 
         const visible = _visibleNotifs();
 
@@ -1567,35 +1583,25 @@ const AttendanceSystem = (function() {
         }
         function _notifRowKey(n, isRead) { return (isRead ? 'r' : 'u') + '|' + n.id; }
 
-        // DOM diff — preserve img elements that haven't changed (avoids re-fetching photos)
+        // Fragment-based rebuild -- no live-NodeList insertBefore thrash
         const _notifExisting = new Map();
         list.querySelectorAll('[data-id]').forEach(el => _notifExisting.set(el.dataset.id, el));
-        const _notifSeen = new Set();
-        visible.forEach((n, i) => {
+        const _notifFrag = document.createDocumentFragment();
+        visible.forEach(n => {
           const id  = String(n.id);
           const isRead = readIds.has(n.id);
           const key = _notifRowKey(n, isRead);
-          _notifSeen.add(id);
           let el = _notifExisting.get(id);
-          if (!el) {
+          if (!el || el.dataset.rowKey !== key) {
             const tmp = document.createElement('div');
             tmp.innerHTML = _notifRowHtml(n, isRead);
             el = tmp.firstElementChild;
-            list.insertBefore(el, list.children[i] || null);
-          } else {
-            if (el.dataset.rowKey !== key) {
-              const tmp = document.createElement('div');
-              tmp.innerHTML = _notifRowHtml(n, isRead);
-              list.replaceChild(tmp.firstElementChild, el);
-              el = list.children[i];
-            }
-            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
           }
           if (el) el.dataset.rowKey = key;
+          if (el) _notifFrag.appendChild(el);
         });
-        _notifExisting.forEach((el, id) => {
-          if (!_notifSeen.has(id) && el.parentNode === list) list.removeChild(el);
-        });
+        list.innerHTML = '';
+        list.appendChild(_notifFrag);
       }
 
       function _fetch() {
@@ -1716,34 +1722,32 @@ const AttendanceSystem = (function() {
 
       // Expose so init() can kick it off after login
       window._startNotifPolling  = _startPolling;
-      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0, 0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; try { localStorage.removeItem(CLEARED_KEY); } catch {} const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
+      window._stopNotifPolling   = () => { clearInterval(_pollTimer); _updateNavBadges(0); _notifData = []; _loaded = false; _lastNotifRenderHash = ''; try { localStorage.removeItem(CLEARED_KEY); } catch {} const l = document.getElementById('notifList'); if (l) l.innerHTML = ''; };
       window._renderNotifs       = _render;
       window._fetchNotifs        = _fetch;
       window._notifModalOpened   = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); };
       window._notifModalClosed   = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 5 * 1000); };
       window._clearMapBadge      = () => {
+        // Badge reflects active sites — visiting map does not zero it
         _saveMapLastVisited(Date.now());
-        ['#sidebarMenu', '#topTabs'].forEach(sel => {
-          document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, 0));
-        });
       };
       window._setLiveMapBadge = (count) => {
         ['#sidebarMenu', '#topTabs'].forEach(sel => {
           document.querySelectorAll(`${sel} button[data-section="s-projectMap"]`).forEach(btn => _setBadge(btn, count));
         });
       };
-      // Leave badge — driven by getHeaderCounts (server source, no _notifData needed)
+      // Leave badge only — map badge is owned exclusively by _setLiveMapBadge
       window._refreshNavBadges = (leaveCount) => {
         const leave = (leaveCount != null) ? leaveCount
           : (typeof _getPendingLeaveCount === 'function' ? _getPendingLeaveCount() : 0);
-        const ci = _newCheckinCount(); // uses _notifData + lastVisited timestamp
-        _updateNavBadges(leave, ci);
+        _updateNavBadges(leave);
       };
     })();
 
     // ── Messages system ──────────────────────────────────────────────────────
     (function () {
       let _msgs         = [];
+      let _msgsLoaded   = false;
       let _empList      = [];
       let _currentMsgId = null;
       let _composing    = false;
@@ -1890,37 +1894,22 @@ const AttendanceSystem = (function() {
           existingById.set(el.dataset.msgId, el);
         });
 
-        const seen = new Set();
-        _msgs.forEach((m, i) => {
+        // Fragment-based rebuild -- no live-NodeList insertBefore thrash
+        const _msgFrag = document.createDocumentFragment();
+        _msgs.forEach(m => {
           const id  = String(m.id);
           const key = _msgRowKey(m);
-          seen.add(id);
           let el = existingById.get(id);
-          if (!el) {
-            // New row — insert at correct position
-            el = document.createElement('div');
-            el.innerHTML = _msgRowHtml(m);
-            const newNode = el.firstElementChild;
-            const refNode = list.children[i] || null;
-            list.insertBefore(newNode, refNode);
-          } else {
-            // Existing row — only repaint if key changed
-            if (el.dataset.msgKey !== key) {
-              const tmp = document.createElement('div');
-              tmp.innerHTML = _msgRowHtml(m);
-              list.replaceChild(tmp.firstElementChild, el);
-              el = list.children[i]; // re-ref after replace
-            }
-            // Ensure correct order without moving if already in place
-            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+          if (!el || el.dataset.msgKey !== key) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = _msgRowHtml(m);
+            el = tmp.firstElementChild;
           }
           if (el) el.dataset.msgKey = key;
+          if (el) _msgFrag.appendChild(el);
         });
-
-        // Remove rows no longer in data
-        existingById.forEach((el, id) => {
-          if (!seen.has(id) && el.parentNode === list) list.removeChild(el);
-        });
+        list.innerHTML = '';
+        list.appendChild(_msgFrag);
       }
 
       function _bubble(isMe, senderName, body, time, photoUrl) {
@@ -1975,6 +1964,8 @@ const AttendanceSystem = (function() {
 
         const bodyEl = document.getElementById('msgDetailBody');
         bodyEl.scrollTop = bodyEl.scrollHeight;
+        // Re-scroll after paint in case images/content shifted layout
+        requestAnimationFrame(() => { bodyEl.scrollTop = bodyEl.scrollHeight; });
 
         const replyInput   = document.getElementById('msgReplyInput');
         const replySendBtn = document.getElementById('msgReplySendBtn');
@@ -1997,9 +1988,9 @@ const AttendanceSystem = (function() {
       }
 
       function _updateMsgBadge() {
+        if (!_msgsLoaded) return; // don't zero badge before first fetch completes
         const unread = _msgs.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length;
         _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
-        _scheduleHdrBadgeSync();
       }
 
       function _updateDetail(msgId) {
@@ -2079,7 +2070,14 @@ const AttendanceSystem = (function() {
             }
           });
           _sortMsgs();
-          _updateMsgBadge();
+          _msgsLoaded = true;
+          // Use the server-computed unread thread count if available (matches getHeaderCounts logic),
+          // otherwise fall back to local filter — prevents badge flicker from count mismatch.
+          if (res.unreadCount != null) {
+            _setHdrBadge(document.getElementById('hdrMsgBadge'), res.unreadCount);
+          } else {
+            _updateMsgBadge();
+          }
           if (_currentMsgId) {
             _updateDetail(_currentMsgId);
           } else if (!_composing) {
@@ -2235,10 +2233,12 @@ const AttendanceSystem = (function() {
         });
       });
 
-      window._startMsgSystem  = _start;
-      window._stopMsgSystem   = () => { clearInterval(_pollTimer); _msgs = []; _currentMsgId = null; _composing = false; _readPending.clear(); };
-      window._fetchMsgs       = _fetch;
-      window._clearMsgDetail  = () => { _currentMsgId = null; _composing = false; };
+      window._startMsgSystem      = _start;
+      window._stopMsgSystem       = () => { clearInterval(_pollTimer); _msgs = []; _msgsLoaded = false; _currentMsgId = null; _composing = false; _readPending.clear(); };
+      window._fetchMsgs           = _fetch;
+      window._updateMsgBadgeNow   = _updateMsgBadge;
+      window._getMsgUnreadCount   = () => _msgs.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length;
+      window._clearMsgDetail      = () => { _currentMsgId = null; _composing = false; };
       // Modal open: fetch immediately + tighten poll to 3s; modal closed: relax to 5s
       window._msgModalOpened  = () => { _clearMsgDetail && _clearMsgDetail(); _fetch(); clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); _modalOpen = true; };
       window._msgModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 5 * 1000); _modalOpen = false; };
@@ -2247,9 +2247,11 @@ const AttendanceSystem = (function() {
     // ── Support Tickets system ───────────────────────────────────────────────
     (function () {
       let _tickets = [];
+      let _ticketsLoaded = false;
       let _currentTicketId = null;
       let _composing = false;  // true while new-ticket compose pane is open
       let _pollTimer = null;
+      const _seenReplyIds = new Set(); // tracks reply ids already notified so we don't re-fire
 
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed', deleted: 'Deleted' };
       const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed', deleted: 'deleted' };
@@ -2269,6 +2271,34 @@ const AttendanceSystem = (function() {
         if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
         if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
         return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      function _ticketBubble(r) {
+        const isMe     = r.fromUsername === currentUser;
+        const isSystem = r.fromUsername === '__system__';
+        if (isSystem) {
+          return `<div data-reply-id="${escapeHtml(String(r.id))}" style="display:flex;align-items:center;gap:8px;padding:6px 16px;margin-bottom:8px;">
+            <i class="fas fa-lock" style="color:#aaa;font-size:0.7rem;flex-shrink:0;"></i>
+            <span style="font-size:0.75rem;color:#999;font-style:italic;">${escapeHtml(r.body)}</span>
+            <span style="font-size:0.67rem;color:#bbb;margin-left:auto;white-space:nowrap;">${_timeAgoShort(r.createdAt)}</span>
+          </div>`;
+        }
+        const name     = r.fromName || r.fromUsername || '?';
+        const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const align    = isMe ? 'flex-end' : 'flex-start';
+        const bubbleBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--bg-subtle,#f0f2f5)';
+        const bubbleColor = isMe ? '#fff' : 'var(--text-primary)';
+        const avatarBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : '#888';
+        const photoUrl  = r.fromPhoto || '';
+        const avatar = photoUrl
+          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" crossorigin="anonymous" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--border,#ddd)'};">`
+          : `<div style="width:28px;height:28px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;">${escapeHtml(initials)}</div>`;
+        const bubble = `<div style="max-width:75%;background:${bubbleBg};color:${bubbleColor};padding:7px 11px;border-radius:${isMe ? '12px 12px 4px 12px' : '12px 12px 12px 4px'};font-size:0.81rem;white-space:pre-wrap;line-height:1.4;">${escapeHtml(r.body)}</div>`;
+        const meta   = `<div style="font-size:0.65rem;color:var(--text-muted);margin-top:3px;text-align:${isMe ? 'right' : 'left'};">${escapeHtml(isMe ? 'You' : name)} · ${_timeAgoShort(r.createdAt)}</div>`;
+        return `<div data-reply-id="${escapeHtml(String(r.id))}" style="display:flex;flex-direction:column;align-items:${align};margin-bottom:12px;">
+          <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMe ? 'row-reverse' : 'row'};">${avatar}${bubble}</div>
+          ${meta}
+        </div>`;
       }
 
       function _showList() {
@@ -2349,32 +2379,22 @@ const AttendanceSystem = (function() {
           existingById.set(el.dataset.ticketId, el);
         });
 
-        const seen = new Set();
-        visibleTickets.forEach((t, i) => {
+        // Fragment-based rebuild -- no live-NodeList insertBefore thrash
+        const _tkFrag = document.createDocumentFragment();
+        visibleTickets.forEach(t => {
           const id  = String(t.id);
           const key = _ticketRowKey(t);
-          seen.add(id);
           let el = existingById.get(id);
-          if (!el) {
-            el = document.createElement('div');
-            el.innerHTML = _ticketRowHtml(t);
-            const newNode = el.firstElementChild;
-            list.insertBefore(newNode, list.children[i] || null);
-          } else {
-            if (el.dataset.ticketKey !== key) {
-              const tmp = document.createElement('div');
-              tmp.innerHTML = _ticketRowHtml(t);
-              list.replaceChild(tmp.firstElementChild, el);
-              el = list.children[i];
-            }
-            if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
+          if (!el || el.dataset.ticketKey !== key) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = _ticketRowHtml(t);
+            el = tmp.firstElementChild;
           }
           if (el) el.dataset.ticketKey = key;
+          if (el) _tkFrag.appendChild(el);
         });
-
-        existingById.forEach((el, id) => {
-          if (!seen.has(id) && el.parentNode === list) list.removeChild(el);
-        });
+        list.innerHTML = '';
+        list.appendChild(_tkFrag);
       }
 
       function _showDetail(ticketId) {
@@ -2420,25 +2440,17 @@ const AttendanceSystem = (function() {
             <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(t.body)}</div>
             ${deleteBtn}
           </div>
-          <div data-ticket-replies>
-            ${t.replies.map(r => {
-              const isSystem = r.fromUsername === '__system__';
-              if (isSystem) {
-                return `<div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:#f5f5f5;display:flex;align-items:flex-start;gap:8px;">
-                  <i class="fas fa-lock" style="color:#999;font-size:0.75rem;margin-top:3px;flex-shrink:0;"></i>
-                  <div>
-                    <div style="font-size:0.72rem;font-weight:700;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">System · ${_timeAgoShort(r.createdAt)}</div>
-                    <div style="font-size:0.82rem;color:#777;font-style:italic;">${escapeHtml(r.body)}</div>
-                  </div>
-                </div>`;
-              }
-              return `<div data-reply-id="${escapeHtml(String(r.id))}" style="padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};">
-                <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
-                <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>
-              </div>`;
-            }).join('')}
+          <div data-ticket-replies style="padding:12px 16px;display:flex;flex-direction:column;">
+            ${t.replies.map(r => _ticketBubble(r)).join('')}
           </div>`;
         document.getElementById('ticketReplyInput').value = '';
+
+        // Scroll to bottom so latest reply is visible
+        const _tBody = document.getElementById('ticketDetailBody');
+        if (_tBody) {
+          _tBody.scrollTop = _tBody.scrollHeight;
+          requestAnimationFrame(() => { _tBody.scrollTop = _tBody.scrollHeight; });
+        }
 
         // Disable reply for everyone on closed/resolved/deleted tickets
         const isClosed = t.status === 'closed' || t.status === 'resolved' || t.status === 'deleted';
@@ -2478,28 +2490,20 @@ const AttendanceSystem = (function() {
           const sel = document.getElementById('ticketStatusSelect');
           if (sel && document.getElementById('ticketDetailPane').style.display !== 'none' && sel.dataset.userChanged !== '1') sel.value = t.status;
         }
-        // Append only new replies
+        // Append only new replies as bubbles
         const existingIds = new Set([...repliesEl.querySelectorAll('[data-reply-id]')].map(el => el.dataset.replyId));
+        let appended = false;
         (t.replies || []).forEach(r => {
           if (existingIds.has(String(r.id))) return;
-          const div = document.createElement('div');
-          div.dataset.replyId = String(r.id);
-          const isSystem = r.fromUsername === '__system__';
-          if (isSystem) {
-            div.style.cssText = 'padding:10px 16px;border-bottom:1px solid var(--border);background:#f5f5f5;display:flex;align-items:flex-start;gap:8px;';
-            div.innerHTML = `<i class="fas fa-lock" style="color:#999;font-size:0.75rem;margin-top:3px;flex-shrink:0;"></i>
-              <div>
-                <div style="font-size:0.72rem;font-weight:700;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">System · ${_timeAgoShort(r.createdAt)}</div>
-                <div style="font-size:0.82rem;color:#777;font-style:italic;">${escapeHtml(r.body)}</div>
-              </div>`;
-          } else {
-            div.style.cssText = `padding:10px 16px;border-bottom:1px solid var(--border);background:${r.fromUsername === currentUser ? 'rgba(228,12,12,.04)' : 'var(--bg-subtle,#f8fafe)'};`;
-            div.innerHTML = `<div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${escapeHtml(r.fromName)} · ${_timeAgoShort(r.createdAt)}</div>
-              <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${escapeHtml(r.body)}</div>`;
-          }
-          repliesEl.appendChild(div);
-          body.scrollTop = body.scrollHeight;
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _ticketBubble(r);
+          repliesEl.appendChild(tmp.firstElementChild);
+          appended = true;
         });
+        if (appended) {
+          body.scrollTop = body.scrollHeight;
+          requestAnimationFrame(() => { body.scrollTop = body.scrollHeight; });
+        }
         // Re-evaluate reply lock in case status changed via poll
         const isDeleted2 = t.status === 'deleted';
         const isClosed = t.status === 'closed' || t.status === 'resolved' || isDeleted2;
@@ -2516,13 +2520,19 @@ const AttendanceSystem = (function() {
       }
 
       function _updateTicketBadge() {
+        if (!_ticketsLoaded) return;
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
-        const openCount = isAdminView ? _tickets.filter(t => t.status === 'open').length : 0;
-        // Drive the badge directly from the local list so it never gets ahead of what's rendered.
-        // (hdrBadgeSync drives it from the server count which arrives before _fetch completes.)
-        _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
-        const countEl = document.getElementById('ticketOpenCount');
-        if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
+        if (isAdminView) {
+          const openCount = _tickets.filter(t => t.status === 'open').length;
+          _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
+          const countEl = document.getElementById('ticketOpenCount');
+          if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
+        } else {
+          // Employees: show count of unseen admin replies
+          const unseen = _tickets.reduce((sum, t) =>
+            sum + (t.replies || []).filter(r => !_seenReplyIds.has(String(r.id))).length, 0);
+          _setHdrBadge(document.getElementById('hdrTicketBadge'), unseen);
+        }
       }
 
       function _fetch(keepDetail) {
@@ -2536,8 +2546,23 @@ const AttendanceSystem = (function() {
             t.fromPhoto = _resolvePhoto(t.fromUsername, t.fromPhoto);
             (t.replies || []).forEach(r => { r.fromPhoto = _resolvePhoto(r.fromUsername, r.fromPhoto); });
           });
+
+          // Mark all current reply ids as seen only after badge is updated
+          // (done after _updateTicketBadge call below)
+
+          const _firstLoad = !_ticketsLoaded;
           _tickets = raw;
+          _ticketsLoaded = true;
+          // On first load, seal all existing replies as seen — badge stays at 0
+          // On subsequent polls, _updateTicketBadge reads unseen count before sealing
+          if (_firstLoad) {
+            raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+          }
           _updateTicketBadge();
+          // After badge is set, seal so next poll won't re-count
+          if (!_firstLoad) {
+            raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+          }
           // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentTicketId) {
             _updateTicketDetail(_currentTicketId);
@@ -2701,11 +2726,18 @@ const AttendanceSystem = (function() {
         _showList();
         _renderList();
       };
-      window._startTicketSystem  = _start;
-      window._stopTicketSystem   = () => clearInterval(_pollTimer);
-      window._fetchTickets       = () => _fetch(!!_currentTicketId);
+      window._startTicketSystem        = _start;
+      window._stopTicketSystem         = () => { clearInterval(_pollTimer); _tickets = []; _ticketsLoaded = false; };
+      window._fetchTickets             = () => _fetch(!!_currentTicketId);
+      window._updateTicketBadgeNow     = _updateTicketBadge;
+      window._getTicketUnreadCount     = () => (currentRole === 'admin' || currentRole === 'manager') ? _tickets.filter(t => t.status === 'open').length : 0;
       window._clearTicketDetail  = () => { _currentTicketId = null; _composing = false; };
-      window._ticketModalOpened  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000); };
+      window._ticketModalOpened  = () => {
+        clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000);
+        // Clear the unseen badge — employee has opened the modal
+        _tickets.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+        _setHdrBadge(document.getElementById('hdrTicketBadge'), 0);
+      };
       window._ticketModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 10 * 1000); };
     })();
 
@@ -2983,7 +3015,7 @@ const AttendanceSystem = (function() {
       } else if (event.target.matches('#addProjectBtn, #addProjectBtn *')) {
         showAddProjectModal();
       } else if (event.target.matches('#refreshProjectsBtn, #refreshProjectsBtn *')) {
-        loadProjectSites();
+        loadProjectSites(false, true);
       } else if (event.target.matches('#s-adm-projects .lv-tab-btn')) {
         _psSiteFilter = event.target.dataset.filter || 'all';
         document.querySelectorAll('#s-adm-projects .lv-tab-btn').forEach(t => t.classList.toggle('active', t.dataset.filter === _psSiteFilter));
@@ -3541,24 +3573,6 @@ const AttendanceSystem = (function() {
     startSessionTimer();
     updateLanguageUI();
 
-    // Single lightweight call — gets all badge counts at once so all badges
-    // appear simultaneously on login, then each system polls independently
-    _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
-      if (!res || !res.success) return;
-      const c = res.data || {};
-      // Bell badge — cross-reference returned IDs with locally-stored read + cleared IDs
-      const _storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
-      const _storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
-      const unreadNotifs = (c.notificationIds || []).filter(id => !_storedReadIds.has(id) && !_storedClearedIds.has(id)).length;
-      _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
-      // hdrMsgBadge is set by _updateMsgBadge() once messages load — skip here to avoid
-      // showing a stale server count that doesn't match what's in the list.
-      // hdrTicketBadge is set by _updateTicketBadge() from the local _tickets list — skip here
-      // so the badge never jumps ahead of what's actually rendered in the ticket list.
-      // Sidebar leave badge
-      if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
-    }).catch(() => {});
-
     // Seed lastVisited to now on login so existing checkins don't show as new
     // (only checkins that happen after this login will show the map badge)
     try {
@@ -3567,7 +3581,11 @@ const AttendanceSystem = (function() {
       if (!lv) localStorage.setItem(_MAP_VISITED_KEY, String(Date.now()));
     } catch (_) {}
 
-    // Start full polling (fetches complete data for each system independently)
+    // Fire one getHeaderCounts immediately — sets all badges (notif, msg, ticket, leave, map)
+    // in a single response so they all appear at the same time on login/refresh.
+    _doHdrBadgeSync();
+
+    // Start all polling systems in parallel — they update UI lists and refine badge counts
     if (typeof window._startNotifPolling  === 'function') window._startNotifPolling();
     if (typeof window._startMsgSystem     === 'function') window._startMsgSystem();
     if (typeof window._startTicketSystem  === 'function') window._startTicketSystem();
@@ -4018,7 +4036,7 @@ const AttendanceSystem = (function() {
       checkStatus();
       if (currentAttendanceAction === 'CheckIn') loadChart();
       // Refresh admin-facing views so the employee's new status appears immediately
-      if (typeof loadEmployeeList    === 'function') loadEmployeeList();
+      if (typeof loadEmployeeList    === 'function') loadEmployeeList(true);
       if (typeof loadLiveAttendance  === 'function') loadLiveAttendance();
       if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
     } else {
@@ -4592,7 +4610,7 @@ const AttendanceSystem = (function() {
     return (r.status || '') + '|' + (r.from || r.fromDate || '') + '|' + (r.to || r.toDate || '') + '|' + (r.type || '') + '|' + (r.days || '');
   }
 
-  // DOM-diffing renderer for leave tables (tbody or div containers holding <tr data-id> rows)
+  // Fragment-based renderer for leave tables (tbody or div containers holding <tr data-id> rows)
   function _diffLeaveList(containerId, items, rowHtmlFn, emptyMsg, colspan) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -4600,36 +4618,23 @@ const AttendanceSystem = (function() {
       container.innerHTML = _lvEmpty(emptyMsg, colspan);
       return;
     }
-    // Remove empty state or skeleton rows (no data-id) on first real render
-    if (!container.querySelector('tr[data-id]') && container.children.length) container.innerHTML = '';
-
     const existing = new Map();
     container.querySelectorAll('tr[data-id]').forEach(el => existing.set(el.dataset.id, el));
-    const seen = new Set();
-    items.forEach((r, i) => {
+    const frag = document.createDocumentFragment();
+    items.forEach(r => {
       const id  = String(r.id);
       const key = _lvRowKey(r);
-      seen.add(id);
       let el = existing.get(id);
-      if (!el) {
+      if (!el || el.dataset.rowKey !== key) {
         const tmp = document.createElement('tbody');
         tmp.innerHTML = rowHtmlFn(r);
         el = tmp.firstElementChild;
-        container.insertBefore(el, container.children[i] || null);
-      } else {
-        if (el.dataset.rowKey !== key) {
-          const tmp = document.createElement('tbody');
-          tmp.innerHTML = rowHtmlFn(r);
-          container.replaceChild(tmp.firstElementChild, el);
-          el = container.children[i];
-        }
-        if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
       }
       if (el) el.dataset.rowKey = key;
+      if (el) frag.appendChild(el);
     });
-    existing.forEach((el, id) => {
-      if (!seen.has(id) && el.parentNode === container) container.removeChild(el);
-    });
+    container.innerHTML = '';
+    container.appendChild(frag);
   }
   function _lvUpdateStats(prefix, list) {
     _countUp(document.getElementById(prefix + 'Pending'),  list.filter(r => String(r.status).toLowerCase() === 'pending').length);
@@ -4841,23 +4846,25 @@ const AttendanceSystem = (function() {
     loadRecentAttendance();
   }
 
-  function _countUp(el, target, suffix) {
+  function _countUp(el, target, suffix, prefix, thousands) {
     if (!el) return;
     const sfx = suffix || '';
-    const current = parseInt(el.textContent, 10);
+    const pfx = prefix || '';
+    const fmt = v => thousands ? Math.round(v).toLocaleString() : Math.round(v);
+    const current = parseInt(el.textContent.replace(/[^0-9.-]/g, ''), 10);
     const hasSkeleton = el.querySelector('.skeleton') !== null;
     const from = isNaN(current) ? 0 : current;
     const to = Number(target) || 0;
     // Skip only if value is already correct AND no skeleton is showing
-    if (from === to && !hasSkeleton) { el.textContent = to + sfx; return; }
+    if (from === to && !hasSkeleton) { el.textContent = pfx + fmt(to) + sfx; return; }
     el.innerHTML = ''; // clear skeleton if present
     const steps = 30;
     const stepTime = 600 / steps;
     let step = 0;
     const timer = setInterval(() => {
       step++;
-      el.textContent = Math.round(from + (to - from) * (step / steps)) + sfx;
-      if (step >= steps) { el.textContent = to + sfx; clearInterval(timer); }
+      el.textContent = pfx + fmt(from + (to - from) * (step / steps)) + sfx;
+      if (step >= steps) { el.textContent = pfx + fmt(to) + sfx; clearInterval(timer); }
     }, stepTime);
   }
 
@@ -4906,36 +4913,24 @@ const AttendanceSystem = (function() {
       }
       function _ratRowKey(row) { return (row.status || '') + '|' + (row.checkIn || '') + '|' + (row.checkOut || ''); }
 
-      // DOM diff — only update rows that changed
-      // Clear skeleton/spinner rows that have no data-id (only on first real render)
-      if (!tbody.querySelector('tr[data-id]') && tbody.children.length) tbody.innerHTML = '';
+      // Fragment-based rebuild -- no live-NodeList insertBefore thrash
       const _ratExisting = new Map();
       tbody.querySelectorAll('tr[data-id]').forEach(el => _ratExisting.set(el.dataset.id, el));
-      const _ratSeen = new Set();
+      const _ratFrag = document.createDocumentFragment();
       res.data.forEach((row, i) => {
         const id  = String(row.username || row.name || i);
         const key = _ratRowKey(row);
-        _ratSeen.add(id);
         let el = _ratExisting.get(id);
-        if (!el) {
+        if (!el || el.dataset.rowKey !== key) {
           const tmp = document.createElement('tbody');
           tmp.innerHTML = _ratRowHtml(row);
           el = tmp.firstElementChild;
-          tbody.insertBefore(el, tbody.children[i] || null);
-        } else {
-          if (el.dataset.rowKey !== key) {
-            const tmp = document.createElement('tbody');
-            tmp.innerHTML = _ratRowHtml(row);
-            tbody.replaceChild(tmp.firstElementChild, el);
-            el = tbody.children[i];
-          }
-          if (tbody.children[i] !== el) tbody.insertBefore(el, tbody.children[i] || null);
         }
         if (el) el.dataset.rowKey = key;
+        if (el) _ratFrag.appendChild(el);
       });
-      _ratExisting.forEach((el, id) => {
-        if (!_ratSeen.has(id) && el.parentNode === tbody) tbody.removeChild(el);
-      });
+      tbody.innerHTML = '';
+      tbody.appendChild(_ratFrag);
       },
       onError: () => {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:20px;">Failed to load recent activity.</td></tr>';
@@ -5084,7 +5079,7 @@ const AttendanceSystem = (function() {
   let _empAllList = [];   // raw API data — accessible to _seedPhotoCache via closure
   let _empCardView = true; // true = cards, false = table
 
-  function loadEmployeeList() {
+  function loadEmployeeList(force) {
     _skelOnce('s-adm-employees', () => {
       if (_empCardView) {
         const g = document.getElementById('empCardView');
@@ -5094,7 +5089,7 @@ const AttendanceSystem = (function() {
         setSkel('employeesTableBody', skelTableRows(8, 5));
       }
     });
-    apiSwr('listEmployees', {}, {
+    apiSwr('listEmployees', {}, { force: !!force,
       onData: res => {
         if (!res || !res.success) {
           const msg = `<div class="emp-err">Error: ${escapeHtml((res && res.message) || 'Failed to load employees')}</div>`;
@@ -5223,34 +5218,24 @@ const AttendanceSystem = (function() {
     // Remove empty/loading states if present
     if (grid.querySelector('.emp-empty, .emp-loading')) grid.innerHTML = '';
 
-    // DOM diff
+    // Fragment-based rebuild -- no live-NodeList insertBefore thrash
     const _empCardExisting = new Map();
     grid.querySelectorAll('[data-id]').forEach(el => _empCardExisting.set(el.dataset.id, el));
-    const _empCardSeen = new Set();
-    list.forEach((emp, i) => {
+    const _empFrag = document.createDocumentFragment();
+    list.forEach(emp => {
       const id  = String(emp.username);
       const key = _empCardRowKey(emp);
-      _empCardSeen.add(id);
       let el = _empCardExisting.get(id);
-      if (!el) {
+      if (!el || el.dataset.rowKey !== key) {
         const tmp = document.createElement('div');
         tmp.innerHTML = _empCardRowHtml(emp);
         el = tmp.firstElementChild;
-        grid.insertBefore(el, grid.children[i] || null);
-      } else {
-        if (el.dataset.rowKey !== key) {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = _empCardRowHtml(emp);
-          grid.replaceChild(tmp.firstElementChild, el);
-          el = grid.children[i];
-        }
-        if (grid.children[i] !== el) grid.insertBefore(el, grid.children[i] || null);
       }
       if (el) el.dataset.rowKey = key;
+      if (el) _empFrag.appendChild(el);
     });
-    _empCardExisting.forEach((el, id) => {
-      if (!_empCardSeen.has(id) && el.parentNode === grid) grid.removeChild(el);
-    });
+    grid.innerHTML = '';
+    grid.appendChild(_empFrag);
   }
 
   function _renderEmpTable(list) {
@@ -5699,36 +5684,24 @@ const AttendanceSystem = (function() {
     function _diffList(container, items, rowHtmlFn, rowKeyFn, emptyHtml, wrapTag) {
       if (!container) return;
       if (!items.length) { container.innerHTML = emptyHtml; return; }
-      // Remove empty state sentinel
-      const firstChild = container.firstElementChild;
-      if (firstChild && !firstChild.dataset.id) container.innerHTML = '';
+      // Fragment-based rebuild -- no live-NodeList insertBefore thrash
       const existing = new Map();
       container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
-      const seen = new Set();
-      items.forEach((item, i) => {
+      const frag = document.createDocumentFragment();
+      items.forEach(item => {
         const id  = String(item.id);
         const key = rowKeyFn(item);
-        seen.add(id);
         let el = existing.get(id);
-        if (!el) {
+        if (!el || el.dataset.rowKey !== key) {
           const tmp = document.createElement(wrapTag || 'div');
           tmp.innerHTML = rowHtmlFn(item);
           el = tmp.firstElementChild;
-          container.insertBefore(el, container.children[i] || null);
-        } else {
-          if (el.dataset.rowKey !== key) {
-            const tmp = document.createElement(wrapTag || 'div');
-            tmp.innerHTML = rowHtmlFn(item);
-            container.replaceChild(tmp.firstElementChild, el);
-            el = container.children[i];
-          }
-          if (container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
         }
         if (el) el.dataset.rowKey = key;
+        if (el) frag.appendChild(el);
       });
-      existing.forEach((el, id) => {
-        if (!seen.has(id) && el.parentNode === container) container.removeChild(el);
-      });
+      container.innerHTML = '';
+      container.appendChild(frag);
     }
 
     // Render card view
@@ -6040,7 +6013,7 @@ const AttendanceSystem = (function() {
     }).catch(err => { hideSpinner(); showPopup('error', 'Error', err.message || 'Network error'); });
   }
 
-  function loadProjectSites(forceWipe = false) {
+  function loadProjectSites(forceWipe = false, forceRefresh = false) {
     _skelOnce('s-adm-projects', () => setSkel('psActiveContainer', skelCards(3)));
     let _wiped = false;
     const _doDisplay = () => {
@@ -6050,7 +6023,7 @@ const AttendanceSystem = (function() {
       if (forceWipe && !_wiped) { _wiped = true; _psWipeContainers(); }
       displayProjectSites(projectSites);
     };
-    apiSwr('listProjectSites', {}, {
+    apiSwr('listProjectSites', {}, { force: forceRefresh,
       onData: res => {
         if (!res || !res.success) {
           const _errMsg = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
@@ -6058,6 +6031,7 @@ const AttendanceSystem = (function() {
           return;
         }
         projectSites = Array.isArray(res.data) ? res.data : [];
+        if (res.totalActiveEmployees != null) _totalActiveEmployees = res.totalActiveEmployees;
         _markLoaded('s-adm-projects');
         // Ensure liveData is populated for the Site Attendance stat
         if (liveData && liveData.length) {
@@ -6170,7 +6144,6 @@ const AttendanceSystem = (function() {
 
   // Current filter state for project sites: 'all' | 'active' | 'inactive'
   let _psSiteFilter = 'all';
-  let _psLastFilter = null;  // tracks last rendered filter to detect tab switches
 
   function displayProjectSites(sites) {
     // Bump global render generation — all pending mini-map timeouts from
@@ -6190,14 +6163,10 @@ const AttendanceSystem = (function() {
     _countUp(document.getElementById('psActiveZones'), activeSites.length);
     const _activeEmps = (_empAllList || []).filter(e => e.status === 'Active').length;
     _countUp(document.getElementById('psAssignedWorkers'), _activeEmps);
-    const _onSiteNow = (liveData || []).filter(r => !r.isCheckedOut).length;
-    _countUp(document.getElementById('psSiteAttendance'), _onSiteNow);
-
-    // ── Wipe containers on filter tab switch to prevent stale Leaflet instances ─
-    if (_psSiteFilter !== _psLastFilter) {
-      _psLastFilter = _psSiteFilter;
-      _psWipeContainers();
-    }
+    const _onSiteNow     = (liveData || []).filter(r => !r.isCheckedOut).length;
+    const _denominator   = _totalActiveEmployees > 0 ? _totalActiveEmployees : (_empAllList || []).filter(e => e.status === 'Active').length;
+    const _attendancePct = _denominator > 0 ? Math.round((_onSiteNow / _denominator) * 100) : 0;
+    _countUp(document.getElementById('psSiteAttendance'), _attendancePct, '%');
 
     // ── Search + filter ───────────────────────────────────────────────────────
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
@@ -6227,8 +6196,23 @@ const AttendanceSystem = (function() {
     // Show/hide whole sections depending on filter + content
     const _activeWrap   = document.getElementById('psActiveSectionWrap');
     const _inactiveWrap = document.getElementById('psInactiveSectionWrap');
-    if (_activeWrap)   _activeWrap.classList.toggle('hidden',   _psSiteFilter === 'inactive');
+    // Active section: hide when filter is 'inactive' OR when no active sites exist at all
+    const _hasActiveSites = sites.some(s => s.isActive);
+    if (_activeWrap)   _activeWrap.classList.toggle('hidden',   _psSiteFilter === 'inactive' || !_hasActiveSites);
     if (_inactiveWrap) _inactiveWrap.classList.toggle('hidden', _psSiteFilter === 'active');
+
+    // Disable/enable the "Active" filter tab based on whether any active sites exist
+    const _activeFilterBtn = document.querySelector('#s-adm-projects .lv-tab-btn[data-filter="active"]');
+    if (_activeFilterBtn) {
+      _activeFilterBtn.disabled = !_hasActiveSites;
+      _activeFilterBtn.style.opacity = _hasActiveSites ? '' : '0.4';
+      _activeFilterBtn.style.cursor  = _hasActiveSites ? '' : 'not-allowed';
+      // If the active filter is selected but no active sites, revert to 'all'
+      if (!_hasActiveSites && _psSiteFilter === 'active') {
+        _psSiteFilter = 'all';
+        document.querySelectorAll('#s-adm-projects .lv-tab-btn').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
+      }
+    }
 
     // ── Card HTML helpers ─────────────────────────────────────────────────────
     function _psCardRowHtml(site) {
@@ -6256,14 +6240,15 @@ const AttendanceSystem = (function() {
       return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0');
     }
 
-    // ── DOM diff helper (used for both containers) ────────────────────────────
+    // -- Render helper: rebuild container from scratch each call ----------------
+    // Fragment-based rebuild avoids all positional insertBefore ambiguity that
+    // caused duplicate cards when switching filters rapidly or on refresh.
+    // Mini-maps with a live Leaflet instance are preserved (detached & re-attached);
+    // everything else is re-created cleanly.
     function _diffContainer(container, list) {
       if (!container) return;
 
-      // Use the render generation captured at the top of displayProjectSites.
-      // Any setTimeout that fires after a newer render has started will see
-      // _psRenderGen !== capturedGen and bail without touching the DOM.
-      const gen = renderGen;
+      const capturedGen = renderGen;
 
       // Helper: destroy a mini-map slot cleanly
       function _destroyMap(mapId) {
@@ -6272,64 +6257,55 @@ const AttendanceSystem = (function() {
         delete _psMiniMaps[mapId];
       }
 
+      // Collect currently live Leaflet instances we can reuse
+      const liveMapEls = new Map(); // mapId -> live map DOM element (already has _leaflet_id)
+      container.querySelectorAll('.ps-mini-map[id]').forEach(el => {
+        if (el._leaflet_id) liveMapEls.set(el.id, el);
+      });
+
+      // Determine which site IDs are going away -- destroy their maps
+      const incomingIds = new Set(list.map(s => String(s.id)));
+      container.querySelectorAll('[data-id]').forEach(el => {
+        if (!incomingIds.has(el.dataset.id)) _destroyMap(`ps-map-${el.dataset.id}`);
+      });
+
       if (!list.length) {
-        container.querySelectorAll('[data-id]').forEach(el => _destroyMap(`ps-map-${el.dataset.id}`));
         container.innerHTML = '';
         return;
       }
 
-      // Always strip non-card children (skeletons, empty-state divs) before diffing.
-      // They have no data-id, so the diff loop's insertBefore(el, container.children[i])
-      // would treat them as position anchors, producing orphaned blank nodes.
-      Array.from(container.children).forEach(child => {
-        if (!child.dataset.id) container.removeChild(child);
-      });
-
-      const existing = new Map();
-      container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
-      const seen = new Set();
+      // Build new DOM in a fragment -- zero interaction with live container during build
+      const frag = document.createDocumentFragment();
 
       list.forEach((site, i) => {
-        const id  = String(site.id);
-        const key = _psCardRowKey(site);
-        seen.add(id);
-        let el = existing.get(id);
-        if (!el) {
-          // New card — insert at correct position
-          const tmp = document.createElement('div');
-          tmp.innerHTML = _psCardRowHtml(site);
-          el = tmp.firstElementChild;
-          el.dataset.rowKey = key;
-          container.insertBefore(el, container.children[i] || null);
-        } else if (el.dataset.rowKey !== key) {
-          // Data changed — replace element and destroy its old mini-map
-          _destroyMap(`ps-map-${site.id}`);
-          const tmp = document.createElement('div');
-          tmp.innerHTML = _psCardRowHtml(site);
-          const newEl = tmp.firstElementChild;
-          newEl.dataset.rowKey = key;
-          if (el.parentNode === container) container.replaceChild(newEl, el);
-          else container.appendChild(newEl);
-          el = newEl;
-        } else {
-          // Unchanged — just reorder if needed
-          el.dataset.rowKey = key;
-        }
-        // Ensure correct DOM order
-        if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
-
-        // Init mini-map.
-        // Skip only if a *live* Leaflet instance already exists for this generation.
-        // A 'pending' entry means a previous gen scheduled an init that hasn't fired yet
-        // (or will bail due to gen mismatch) — always re-schedule so this gen wins.
         const mapId = `ps-map-${site.id}`;
+        const key   = _psCardRowKey(site);
+
+        // Create card shell from HTML
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _psCardRowHtml(site);
+        const card = tmp.firstElementChild;
+        card.dataset.rowKey = key;
+
+        // If we already have a live Leaflet map element for this slot, splice it in
+        // so Leaflet doesn't need to reinitialize (preserves tiles, avoids flicker).
+        const liveEl = liveMapEls.get(mapId);
+        if (liveEl) {
+          const placeholder = card.querySelector(`#${mapId}`);
+          if (placeholder) placeholder.parentNode.replaceChild(liveEl, placeholder);
+          // Invalidate size in case container was hidden/resized
+          const lm = _psMiniMaps[mapId];
+          if (lm && lm !== 'pending') setTimeout(() => { try { lm.invalidateSize(); } catch (_) {} }, 50);
+        }
+
+        frag.appendChild(card);
+
+        // Schedule mini-map init only if no live instance exists
         const _mapVal = _psMiniMaps[mapId];
         const _isLiveMap = _mapVal && _mapVal !== 'pending';
         if (!_isLiveMap) {
           _psMiniMaps[mapId] = 'pending';
-          const capturedGen = gen;
           setTimeout(() => {
-            // Bail if a newer displayProjectSites call has already run
             if (_psRenderGen !== capturedGen) { delete _psMiniMaps[mapId]; return; }
             const mapEl = document.getElementById(mapId);
             if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
@@ -6349,13 +6325,9 @@ const AttendanceSystem = (function() {
         }
       });
 
-      // Remove cards no longer in the list
-      existing.forEach((el, id) => {
-        if (!seen.has(id) && el.parentNode === container) {
-          _destroyMap(`ps-map-${id}`);
-          container.removeChild(el);
-        }
-      });
+      // Atomic swap -- one DOM write, no incremental insertBefore thrash
+      container.innerHTML = '';
+      container.appendChild(frag);
     }
 
     _diffContainer(document.getElementById('psActiveContainer'),   activePart);
@@ -6443,7 +6415,7 @@ const AttendanceSystem = (function() {
     _countUp(document.getElementById('attStatPresent'), stats.present);
     _countUp(document.getElementById('attStatLate'),    stats.late);
     _countUp(document.getElementById('attStatAbsent'),  stats.absent);
-    const rateEl = document.getElementById('attStatRate'); if (rateEl) rateEl.textContent = (stats.rate || 0) + '%';
+    _countUp(document.getElementById('attStatRate'),    stats.rate || 0, '%');
   }
 
   function _renderAttCharts(trend) {
@@ -6874,9 +6846,9 @@ const AttendanceSystem = (function() {
     const monthly = list.reduce((s, r) => s + (r.hourlyRate || 0) * 160, 0);
     const el = id => document.getElementById(id);
     _countUp(el('hrTotalEmployees'), total);
-    if (el('hrAvgRate'))        el('hrAvgRate').textContent        = '$' + avg.toFixed(2);
-    if (el('hrMonthlyPayroll')) el('hrMonthlyPayroll').textContent = '$' + Math.round(monthly).toLocaleString();
-    if (el('hrHighestRate'))    el('hrHighestRate').textContent    = '$' + max.toFixed(2);
+    _countUp(el('hrAvgRate'),        Math.round(avg),     '', '$', true);
+    _countUp(el('hrMonthlyPayroll'), Math.round(monthly), '', '$', true);
+    _countUp(el('hrHighestRate'),    Math.round(max),     '', '$', true);
   }
 
   function renderHourlyRates() {
