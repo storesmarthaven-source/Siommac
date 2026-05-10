@@ -1052,6 +1052,11 @@
             <i class="fas fa-search"></i>
             <input type="text" id="projectSearchInput" placeholder="Search by name, location…">
           </div>
+          <div class="ps-filter-tabs">
+            <button class="ps-filter-tab active" data-filter="all">All</button>
+            <button class="ps-filter-tab" data-filter="active">Active</button>
+            <button class="ps-filter-tab" data-filter="inactive">Inactive</button>
+          </div>
           <div class="lv-bar-spacer"></div>
           <div class="lv-bar-actions">
             <button id="addProjectBtn" class="btn btn-danger-primary btn-sm"><i class="fas fa-plus"></i> Add Project Site</button>
@@ -1059,8 +1064,31 @@
           </div>
         </div>
 
-        <!-- Cards grid -->
-        <div class="ps-projects-grid" id="projectsContainer"></div>
+        <!-- Active sites section -->
+        <div class="ps-section ps-section--active" id="psActiveSectionWrap">
+          <div class="ps-section-header">
+            <div class="ps-section-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="ps-section-label">
+              <h4 class="ps-section-title">Active Sites</h4>
+              <div class="ps-section-sub">Currently operational project sites</div>
+            </div>
+            <span class="ps-section-count" id="psActiveSectionCount">0</span>
+          </div>
+          <div class="ps-projects-grid" id="psActiveContainer"></div>
+        </div>
+
+        <!-- Inactive sites section -->
+        <div class="ps-section ps-section--inactive" id="psInactiveSectionWrap">
+          <div class="ps-section-header">
+            <div class="ps-section-icon"><i class="fas fa-map-marker-slash"></i></div>
+            <div class="ps-section-label">
+              <h4 class="ps-section-title">Inactive Sites</h4>
+              <div class="ps-section-sub">Paused or decommissioned project sites</div>
+            </div>
+            <span class="ps-section-count" id="psInactiveSectionCount">0</span>
+          </div>
+          <div class="ps-projects-grid" id="psInactiveContainer"></div>
+        </div>
 
       </section>
 
@@ -2175,6 +2203,12 @@
             <div class="mb-3">
               <label class="form-label">Description</label>
               <textarea class="form-control" id="projectDescription" rows="3"></textarea>
+            </div>
+            <div class="mb-3 d-flex align-items-center gap-2">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="projectIsActive" checked>
+                <label class="form-check-label" for="projectIsActive">Active Site</label>
+              </div>
             </div>
           </form>
         </div>

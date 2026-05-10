@@ -2907,6 +2907,10 @@ const AttendanceSystem = (function() {
         showAddProjectModal();
       } else if (event.target.matches('#refreshProjectsBtn, #refreshProjectsBtn *')) {
         loadProjectSites();
+      } else if (event.target.matches('.ps-filter-tab')) {
+        _psSiteFilter = event.target.dataset.filter || 'all';
+        document.querySelectorAll('.ps-filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === _psSiteFilter));
+        displayProjectSites(projectSites);
       }
     });
     
@@ -5722,6 +5726,8 @@ const AttendanceSystem = (function() {
     document.getElementById('projectLongitude').value   = site ? site.longitude : '';
     document.getElementById('projectRadius').value      = site ? site.radius : 200;
     document.getElementById('projectDescription').value = site ? (site.description || '') : '';
+    const _isActiveEl = document.getElementById('projectIsActive');
+    if (_isActiveEl) _isActiveEl.checked = site ? (site.isActive !== false) : true;
 
     // Update coordinate display
     const _coordBox = document.getElementById('siteCoordDisplay');
@@ -5916,8 +5922,9 @@ const AttendanceSystem = (function() {
     if (!latitude || isNaN(latitude) || latitude < -90  || latitude > 90)  { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     if (!longitude || isNaN(longitude) || longitude < -180 || longitude > 180) { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     
+    const isActive = document.getElementById('projectIsActive') ? document.getElementById('projectIsActive').checked : true;
     const action = editingSiteId ? 'updateProjectSite' : 'addProjectSite';
-    const args = { name, address, latitude, longitude, radius, description, actorId: currentUserId, actorUsername: currentUser };
+    const args = { name, address, latitude, longitude, radius, description, isActive, actorId: currentUserId, actorUsername: currentUser };
     if (editingSiteId) args.id = editingSiteId;
 
     showSpinner('Saving project site...');
@@ -5933,9 +5940,9 @@ const AttendanceSystem = (function() {
         try {
           if (_editingId) {
             const idx = projectSites.findIndex(s => String(s.id) === String(_editingId));
-            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description });
+            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description, isActive });
           } else if (res.id) {
-            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description });
+            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description, isActive });
           }
           displayProjectSites(projectSites);
         } catch (renderErr) {
@@ -5949,12 +5956,13 @@ const AttendanceSystem = (function() {
   }
 
   function loadProjectSites() {
-    _skelOnce('s-adm-projects', () => setSkel('projectsContainer', skelCards(3)));
+    _skelOnce('s-adm-projects', () => setSkel('psActiveContainer', skelCards(3)));
     const _doDisplay = () => displayProjectSites(projectSites);
     apiSwr('listProjectSites', {}, {
       onData: res => {
         if (!res || !res.success) {
-          document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
+          const _errMsg = `<p style="color:#b00;padding:16px;font-weight:600;">Error: ${(res && res.message) || 'Failed to load project sites'}</p>`;
+          const _ac = document.getElementById('psActiveContainer'); if (_ac) _ac.innerHTML = _errMsg;
           return;
         }
         projectSites = Array.isArray(res.data) ? res.data : [];
@@ -5970,7 +5978,8 @@ const AttendanceSystem = (function() {
         }
       },
       onError: err => {
-        document.getElementById('projectsContainer').innerHTML = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
+        const _errMsg = `<p style="color:#b00;padding:16px;font-weight:600;">Network error: ${err.message || 'Could not connect'}</p>`;
+        const _ac = document.getElementById('psActiveContainer'); if (_ac) _ac.innerHTML = _errMsg;
       }
     });
   }
@@ -6050,42 +6059,57 @@ const AttendanceSystem = (function() {
     }
   }
 
+  // Current filter state for project sites: 'all' | 'active' | 'inactive'
+  let _psSiteFilter = 'all';
+
   function displayProjectSites(sites) {
-    // Update stats
+    // ── Stats ────────────────────────────────────────────────────────────────
+    const activeSites = sites.filter(s => s.isActive !== false);
     _countUp(document.getElementById('psTotalSites'),  sites.length);
-    _countUp(document.getElementById('psActiveZones'), sites.length);
-    // Assigned Workers — total active employees across all sites (from _empAllList)
+    _countUp(document.getElementById('psActiveZones'), activeSites.length);
     const _activeEmps = (_empAllList || []).filter(e => e.status === 'Active').length;
     _countUp(document.getElementById('psAssignedWorkers'), _activeEmps);
-    // Site Attendance — employees currently checked in at any site today (from liveData)
     const _onSiteNow = (liveData || []).filter(r => !r.isCheckedOut).length;
     _countUp(document.getElementById('psSiteAttendance'), _onSiteNow);
 
+    // ── Search + filter ───────────────────────────────────────────────────────
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
-    const filtered = search
+    let filtered = search
       ? sites.filter(s => s.name.toLowerCase().includes(search) || (s.address || '').toLowerCase().includes(search))
       : sites;
+    if (_psSiteFilter === 'active')   filtered = filtered.filter(s => s.isActive !== false);
+    if (_psSiteFilter === 'inactive') filtered = filtered.filter(s => s.isActive === false);
 
-    const container = document.getElementById('projectsContainer');
+    const activePart   = filtered.filter(s => s.isActive !== false);
+    const inactivePart = filtered.filter(s => s.isActive === false);
 
-    if (!filtered.length) {
-      container.innerHTML = `<div class="ps-empty"><i class="fas fa-map-marked-alt"></i><p>No project sites found. Click <strong>Add Project Site</strong> to create one.</p></div>`;
-      return;
-    }
+    // Section count badges
+    const _activeCountEl   = document.getElementById('psActiveSectionCount');
+    const _inactiveCountEl = document.getElementById('psInactiveSectionCount');
+    if (_activeCountEl)   _activeCountEl.textContent   = activePart.length;
+    if (_inactiveCountEl) _inactiveCountEl.textContent = inactivePart.length;
 
-    // Remove empty state or skeleton placeholders (they have no data-id)
-    if (container.querySelector('.ps-empty') || container.querySelector('.skel-card')) container.innerHTML = '';
+    // Show/hide whole sections depending on filter + content
+    const _activeWrap   = document.getElementById('psActiveSectionWrap');
+    const _inactiveWrap = document.getElementById('psInactiveSectionWrap');
+    if (_activeWrap)   _activeWrap.classList.toggle('hidden',   _psSiteFilter === 'inactive');
+    if (_inactiveWrap) _inactiveWrap.classList.toggle('hidden', _psSiteFilter === 'active');
 
+    // ── Card HTML helpers ─────────────────────────────────────────────────────
     function _psCardRowHtml(site) {
-      const lat = Number(site.latitude)  || 0;
-      const lng = Number(site.longitude) || 0;
-      const rad = Number(site.radius)    || 200;
-      return `<div class="ps-card" data-id="${site.id}">
+      const lat    = Number(site.latitude)  || 0;
+      const lng    = Number(site.longitude) || 0;
+      const rad    = Number(site.radius)    || 200;
+      const active = site.isActive !== false;
+      return `<div class="ps-card${active ? '' : ' ps-card--inactive'}" data-id="${site.id}">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
-          <div class="ps-card-actions">
-            <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="ps-status-badge ${active ? 'active' : 'inactive'}">${active ? 'Active' : 'Inactive'}</span>
+            <div class="ps-card-actions">
+              <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
+              <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
         </div>
         <div class="ps-card-body">
@@ -6097,77 +6121,91 @@ const AttendanceSystem = (function() {
       </div>`;
     }
     function _psCardRowKey(site) {
-      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '');
+      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive !== false ? '1' : '0');
     }
 
-    // DOM diff for project cards
-    const _psExisting = new Map();
-    container.querySelectorAll('[data-id]').forEach(el => _psExisting.set(el.dataset.id, el));
-    const _psSeen = new Set();
-    filtered.forEach((site, i) => {
-      const id  = String(site.id);
-      const key = _psCardRowKey(site);
-      _psSeen.add(id);
-      let el = _psExisting.get(id);
-      const isNew = !el;
-      if (!el) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = _psCardRowHtml(site);
-        el = tmp.firstElementChild;
-        container.insertBefore(el, container.children[i] || null);
-      } else {
-        if (el.dataset.rowKey !== key) {
-          // Destroy existing mini-map before replacing the element
-          const mapId = `ps-map-${site.id}`;
+    // ── DOM diff helper (used for both containers) ────────────────────────────
+    function _diffContainer(container, list) {
+      if (!container) return;
+
+      if (!list.length) {
+        // Show empty state — destroy any mini-maps first
+        container.querySelectorAll('[data-id]').forEach(el => {
+          const mapId = `ps-map-${el.dataset.id}`;
           if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
           delete _psMiniMaps[mapId];
+        });
+        container.innerHTML = '';
+        return;
+      }
+
+      // Remove empty/skeleton placeholders
+      if (container.querySelector('.ps-empty') || container.querySelector('.skel-card')) container.innerHTML = '';
+
+      const existing = new Map();
+      container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
+      const seen = new Set();
+
+      list.forEach((site, i) => {
+        const id  = String(site.id);
+        const key = _psCardRowKey(site);
+        seen.add(id);
+        let el = existing.get(id);
+        if (!el) {
           const tmp = document.createElement('div');
           tmp.innerHTML = _psCardRowHtml(site);
-          const newEl = tmp.firstElementChild;
-          // Use replaceWith — safe even if el was moved by a prior insertBefore
-          el.parentNode === container ? container.replaceChild(newEl, el) : container.appendChild(newEl);
-          el = container.children[i];
-        }
-        if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
-      }
-      if (el) el.dataset.rowKey = key;
-
-      // Init mini-map if this is a new card or was replaced.
-      // Reserve the slot immediately to prevent duplicate inits on rapid re-renders.
-      const mapId = `ps-map-${site.id}`;
-      if (!_psMiniMaps[mapId]) {
-        _psMiniMaps[mapId] = 'pending'; // guard against re-entry
-        // Stagger by index so many cards don't all race to init at once
-        setTimeout(() => {
-          const mapEl = document.getElementById(mapId);
-          if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
-          const lat = Number(site.latitude) || 0;
-          const lng = Number(site.longitude) || 0;
-          const rad = Number(site.radius) || 200;
-          try {
-            const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false }).setView([lat, lng], 15);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
-            L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
-            L.marker([lat, lng]).addTo(m);
-            m.invalidateSize(); // force correct size after DOM paint
-            m.on('click', () => _showSitePopup(site));
-            mapEl.style.cursor = 'pointer';
-            _psMiniMaps[mapId] = m;
-          } catch (e) {
-            delete _psMiniMaps[mapId]; // allow retry next render
+          el = tmp.firstElementChild;
+          container.insertBefore(el, container.children[i] || null);
+        } else {
+          if (el.dataset.rowKey !== key) {
+            const mapId = `ps-map-${site.id}`;
+            if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
+            delete _psMiniMaps[mapId];
+            const tmp = document.createElement('div');
+            tmp.innerHTML = _psCardRowHtml(site);
+            const newEl = tmp.firstElementChild;
+            el.parentNode === container ? container.replaceChild(newEl, el) : container.appendChild(newEl);
+            el = container.children[i];
           }
-        }, 80 + i * 40); // stagger: card 0 = 80ms, card 1 = 120ms, card 2 = 160ms …
-      }
-    });
-    _psExisting.forEach((el, id) => {
-      if (!_psSeen.has(id) && el.parentNode === container) {
-        // Destroy mini-map for removed sites
-        const mapId = `ps-map-${id}`;
-        if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
-        delete _psMiniMaps[mapId];
-        container.removeChild(el);
-      }
-    });
+          if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+        }
+        if (el) el.dataset.rowKey = key;
+
+        const mapId = `ps-map-${site.id}`;
+        if (!_psMiniMaps[mapId]) {
+          _psMiniMaps[mapId] = 'pending';
+          setTimeout(() => {
+            const mapEl = document.getElementById(mapId);
+            if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
+            const lat = Number(site.latitude) || 0;
+            const lng = Number(site.longitude) || 0;
+            const rad = Number(site.radius) || 200;
+            try {
+              const m = L.map(mapId, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false }).setView([lat, lng], 15);
+              L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(m);
+              L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
+              L.marker([lat, lng]).addTo(m);
+              m.invalidateSize();
+              m.on('click', () => _showSitePopup(site));
+              mapEl.style.cursor = 'pointer';
+              _psMiniMaps[mapId] = m;
+            } catch (e) { delete _psMiniMaps[mapId]; }
+          }, 80 + i * 40);
+        }
+      });
+
+      existing.forEach((el, id) => {
+        if (!seen.has(id) && el.parentNode === container) {
+          const mapId = `ps-map-${id}`;
+          if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
+          delete _psMiniMaps[mapId];
+          container.removeChild(el);
+        }
+      });
+    }
+
+    _diffContainer(document.getElementById('psActiveContainer'),   activePart);
+    _diffContainer(document.getElementById('psInactiveContainer'), inactivePart);
   }
 
   function editProjectSite(id) {
