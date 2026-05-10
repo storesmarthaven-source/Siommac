@@ -1169,6 +1169,11 @@
             <input type="text" id="attSearchInput" placeholder="Search employee…">
           </div>
 
+          <!-- Dept filter -->
+          <select class="att-filter-select" id="attDeptFilter">
+            <option value="all">All Departments</option>
+          </select>
+
           <!-- Mode toggle: Month | Date Range -->
           <div class="att-mode-toggle">
             <button class="att-mode-btn active" id="attModeMonth" data-mode="month">
@@ -1203,11 +1208,6 @@
             </div>
             <button class="att-apply-btn" id="attApplyRange"><i class="fas fa-check"></i> Apply</button>
           </div>
-
-          <!-- Dept filter (always visible) -->
-          <select class="att-filter-select" id="attDeptFilter">
-            <option value="all">All Departments</option>
-          </select>
 
           <!-- Actions -->
           <div class="att-filter-actions">

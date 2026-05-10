@@ -3131,27 +3131,6 @@ const AttendanceSystem = (function() {
         _renderAttTable();
         _renderAttConsistency();
       }
-      // Attendance mode toggle (Month / Date Range)
-      if (event.target.matches('.att-mode-btn')) {
-        const mode = event.target.dataset.mode;
-        _attFilterMode = mode;
-        document.querySelectorAll('.att-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        document.getElementById('attMonthPickers').style.display  = mode === 'month' ? '' : 'none';
-        document.getElementById('attRangePickers').style.display  = mode === 'range' ? '' : 'none';
-        if (mode === 'month') loadAttendanceData();
-      }
-      // Apply date range
-      if (event.target.matches('#attApplyRange, #attApplyRange *')) {
-        const fromEl = document.getElementById('attDateFrom');
-        const toEl   = document.getElementById('attDateTo');
-        const from = (fromEl || {}).value;
-        if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
-        // Clamp: if dateTo < dateFrom, set dateTo = dateFrom
-        if (toEl && toEl.value && toEl.value < from) toEl.value = from;
-        swr.clearByPrefix('listDailyLog:');
-        for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
-        loadAttendanceData();
-      }
       // Keep attDateTo min in sync when attDateFrom changes
       if (event.target.matches('#attDateFrom')) {
         const toEl = document.getElementById('attDateTo');
@@ -3181,6 +3160,33 @@ const AttendanceSystem = (function() {
         const btn = document.querySelector('.dt-button.buttons-csv, .dt-button.buttons-excel');
         if (btn) btn.click();
         else showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
+      }
+
+      // Attendance mode toggle (Month / Date Range) — buttons fire click, not change
+      if (event.target.matches('.att-mode-btn')) {
+        const mode = event.target.dataset.mode;
+        if (!mode) return;
+        _attFilterMode = mode;
+        document.querySelectorAll('.att-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        document.getElementById('attMonthPickers').style.display = mode === 'month' ? '' : 'none';
+        document.getElementById('attRangePickers').style.display = mode === 'range' ? '' : 'none';
+        if (mode === 'month') {
+          swr.clearByPrefix('listDailyLog:');
+          for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
+          loadAttendanceData();
+        }
+      }
+
+      // Apply date range button
+      if (event.target.matches('#attApplyRange, #attApplyRange *')) {
+        const fromEl = document.getElementById('attDateFrom');
+        const toEl   = document.getElementById('attDateTo');
+        const from = (fromEl || {}).value;
+        if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
+        if (toEl && toEl.value && toEl.value < from) toEl.value = from;
+        swr.clearByPrefix('listDailyLog:');
+        for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
+        loadAttendanceData();
       }
     });
 
