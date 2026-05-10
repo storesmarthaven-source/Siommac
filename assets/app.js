@@ -5158,11 +5158,14 @@ const AttendanceSystem = (function() {
     const html = list.map((emp, i) => {
       const t = todayMap[emp.todayStatus] || todayMap.notchecked;
       const isActive = emp.status === 'Active';
+      const avatarInner = emp.profileImage
+        ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+        : _empInitials(emp.fullName);
       return `<tr>
         <td style="font-family:monospace;font-size:12px;font-weight:600;color:var(--siomac-navy);white-space:nowrap">${escapeHtml(emp.employeeNumber || '—')}</td>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="emp-table-avatar">${_empInitials(emp.fullName)}</div>
+            <div class="emp-table-avatar">${avatarInner}</div>
             <div>
               <div style="font-weight:600;color:var(--siomac-navy)">${escapeHtml(emp.fullName)}</div>
               <div style="font-size:11px;color:var(--text-muted)">@${escapeHtml(emp.username)}</div>
