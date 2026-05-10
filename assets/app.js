@@ -4739,22 +4739,23 @@ const AttendanceSystem = (function() {
     loadRecentAttendance();
   }
 
-  function _countUp(el, target) {
+  function _countUp(el, target, suffix) {
     if (!el) return;
+    const sfx = suffix || '';
     const current = parseInt(el.textContent, 10);
     const hasSkeleton = el.querySelector('.skeleton') !== null;
     const from = isNaN(current) ? 0 : current;
     const to = Number(target) || 0;
     // Skip only if value is already correct AND no skeleton is showing
-    if (from === to && !hasSkeleton) { el.textContent = to; return; }
+    if (from === to && !hasSkeleton) { el.textContent = to + sfx; return; }
     el.innerHTML = ''; // clear skeleton if present
     const steps = 30;
     const stepTime = 600 / steps;
     let step = 0;
     const timer = setInterval(() => {
       step++;
-      el.textContent = Math.round(from + (to - from) * (step / steps));
-      if (step >= steps) { el.textContent = to; clearInterval(timer); }
+      el.textContent = Math.round(from + (to - from) * (step / steps)) + sfx;
+      if (step >= steps) { el.textContent = to + sfx; clearInterval(timer); }
     }, stepTime);
   }
 
@@ -5510,7 +5511,7 @@ const AttendanceSystem = (function() {
       const activeEmps = (_empAllList || []).filter(e => e.status === 'Active');
       const checkedIn  = activeEmps.filter(e => e.todayStatus === 'checkedin' || e.todayStatus === 'checkedout').length;
       const rate = activeEmps.length > 0 ? Math.round((checkedIn / activeEmps.length) * 100) : 0;
-      _rateEl.textContent = rate + '%';
+      _countUp(_rateEl, rate, '%');
     }
 
     const search = (document.getElementById('deptSearchInput') || {}).value || '';
