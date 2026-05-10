@@ -454,7 +454,7 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   position: relative; overflow: hidden;
 }
-.ps-section--active   .ps-section-header { background: #2E7D32; }
+.ps-section--active   .ps-section-header { background: var(--siomac-navy); }
 .ps-section--inactive .ps-section-header { background: #4b5563; }
 
 /* Subtle radial highlight top-right */
