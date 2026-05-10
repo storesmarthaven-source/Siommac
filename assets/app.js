@@ -6125,22 +6125,33 @@ const AttendanceSystem = (function() {
     }
 
     // ── DOM diff helper (used for both containers) ────────────────────────────
+    // Each call bumps a generation token stored on the container so that any
+    // pending setTimeout from a previous render can detect it is stale and bail.
     function _diffContainer(container, list) {
       if (!container) return;
 
+      // Bump generation — stale map-init timeouts check this before running
+      const gen = (container._psGen || 0) + 1;
+      container._psGen = gen;
+
+      // Helper: destroy a mini-map slot cleanly
+      function _destroyMap(mapId) {
+        const m = _psMiniMaps[mapId];
+        if (m && m !== 'pending') { try { m.remove(); } catch (_) {} }
+        delete _psMiniMaps[mapId];
+      }
+
       if (!list.length) {
-        // Show empty state — destroy any mini-maps first
-        container.querySelectorAll('[data-id]').forEach(el => {
-          const mapId = `ps-map-${el.dataset.id}`;
-          if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
-          delete _psMiniMaps[mapId];
-        });
+        container.querySelectorAll('[data-id]').forEach(el => _destroyMap(`ps-map-${el.dataset.id}`));
         container.innerHTML = '';
         return;
       }
 
-      // Remove empty/skeleton placeholders
-      if (container.querySelector('.ps-empty') || container.querySelector('.skel-card')) container.innerHTML = '';
+      // Clear skeleton / empty-state placeholders (they have no data-id)
+      if (container.querySelector('.ps-empty, .skel-card')) {
+        container.querySelectorAll('[data-id]').forEach(el => _destroyMap(`ps-map-${el.dataset.id}`));
+        container.innerHTML = '';
+      }
 
       const existing = new Map();
       container.querySelectorAll('[data-id]').forEach(el => existing.set(el.dataset.id, el));
@@ -6152,29 +6163,37 @@ const AttendanceSystem = (function() {
         seen.add(id);
         let el = existing.get(id);
         if (!el) {
+          // New card — insert at correct position
           const tmp = document.createElement('div');
           tmp.innerHTML = _psCardRowHtml(site);
           el = tmp.firstElementChild;
+          el.dataset.rowKey = key;
           container.insertBefore(el, container.children[i] || null);
+        } else if (el.dataset.rowKey !== key) {
+          // Data changed — replace element and destroy its old mini-map
+          _destroyMap(`ps-map-${site.id}`);
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _psCardRowHtml(site);
+          const newEl = tmp.firstElementChild;
+          newEl.dataset.rowKey = key;
+          if (el.parentNode === container) container.replaceChild(newEl, el);
+          else container.appendChild(newEl);
+          el = newEl;
         } else {
-          if (el.dataset.rowKey !== key) {
-            const mapId = `ps-map-${site.id}`;
-            if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
-            delete _psMiniMaps[mapId];
-            const tmp = document.createElement('div');
-            tmp.innerHTML = _psCardRowHtml(site);
-            const newEl = tmp.firstElementChild;
-            el.parentNode === container ? container.replaceChild(newEl, el) : container.appendChild(newEl);
-            el = container.children[i];
-          }
-          if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
+          // Unchanged — just reorder if needed
+          el.dataset.rowKey = key;
         }
-        if (el) el.dataset.rowKey = key;
+        // Ensure correct DOM order
+        if (el && container.children[i] !== el) container.insertBefore(el, container.children[i] || null);
 
+        // Init mini-map — skip if already live or pending from THIS generation
         const mapId = `ps-map-${site.id}`;
         if (!_psMiniMaps[mapId]) {
           _psMiniMaps[mapId] = 'pending';
+          const capturedGen = gen;
           setTimeout(() => {
+            // Bail if a newer render has already replaced this container's content
+            if (container._psGen !== capturedGen) { delete _psMiniMaps[mapId]; return; }
             const mapEl = document.getElementById(mapId);
             if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
             const lat = Number(site.latitude) || 0;
@@ -6194,11 +6213,10 @@ const AttendanceSystem = (function() {
         }
       });
 
+      // Remove cards no longer in the list
       existing.forEach((el, id) => {
         if (!seen.has(id) && el.parentNode === container) {
-          const mapId = `ps-map-${id}`;
-          if (_psMiniMaps[mapId] && _psMiniMaps[mapId] !== 'pending') { _psMiniMaps[mapId].remove(); }
-          delete _psMiniMaps[mapId];
+          _destroyMap(`ps-map-${id}`);
           container.removeChild(el);
         }
       });
