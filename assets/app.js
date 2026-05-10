@@ -3277,10 +3277,22 @@ const AttendanceSystem = (function() {
         }
       }
 
-      // Admin attendance — view selfies
+      // Admin attendance — view selfies (from emp detail panel)
       if (event.target.closest('.btn-view-att')) {
         const btn = event.target.closest('.btn-view-att');
         viewAttendancePhotos(btn.dataset.in, btn.dataset.out, btn.dataset.name);
+      }
+
+      // Admin attendance — open employee detail panel
+      if (event.target.closest('.btn-view-emp-detail')) {
+        const btn = event.target.closest('.btn-view-emp-detail');
+        _openAttEmpPanel(btn.dataset.username);
+      }
+
+      // Close employee detail panel
+      if (event.target.matches('#attEmpPanelClose, #attEmpPanelClose *') ||
+          event.target.matches('#attEmpPanel') ) {
+        _closeAttEmpPanel();
       }
 
       // Settings — palette card click
@@ -6615,54 +6627,79 @@ const AttendanceSystem = (function() {
     if (rateLabel) rateLabel.textContent = isSingleDay ? 'Attendance Rate' : 'Avg Daily Rate';
   }
 
+  // _renderAttConsistency is now only called internally — no longer renders a table.
+  // The consistency data powers the slide panel opened by "View Details" per employee.
   function _renderAttConsistency() {
-    const body = document.getElementById('attConsistencyBody');
-    if (!body) return;
-    // Apply dept + search client-side
-    const dept   = (document.getElementById('attDeptFilter')  || {}).value || 'all';
-    const search = ((document.getElementById('attSearchInput') || {}).value || '').toLowerCase();
-    let rows = _attConsistency;
-    if (dept !== 'all') rows = rows.filter(r => r.department === dept);
-    if (search) rows = rows.filter(r =>
-      r.name.toLowerCase().includes(search) || (r.department || '').toLowerCase().includes(search)
-    );
+    // Nothing to render into a table anymore — panel is opened on demand.
+    // We just close any open panel since the data has been refreshed.
+    _closeAttEmpPanel();
+  }
 
-    const subtitle = document.getElementById('attConsistencySubtitle');
-    if (subtitle && _attDateRange) {
-      const dayLabel = _attDateRange.days === 1 ? '1 day' : _attDateRange.days + ' days';
-      subtitle.textContent = dayLabel + ' · ' + rows.length + ' employee' + (rows.length !== 1 ? 's' : '');
-    }
+  function _openAttEmpPanel(username) {
+    const empData = _attConsistency.find(r => r.username === username);
+    if (!empData) return;
 
-    if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="7" class="att-empty">No data for selected period.</td></tr>';
-      destroyDataTable('attConsistencyTable');
-      return;
-    }
+    // Header
+    const initials = empData.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    document.getElementById('attEmpAvatar').textContent = initials;
+    document.getElementById('attEmpPanelName').textContent = empData.name;
+    document.getElementById('attEmpPanelDept').textContent = empData.department || '';
 
-    const rateBar = r => {
-      const pct = r.attendanceRate;
-      const col = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
-      return `<div class="att-rate-wrap">
-        <div class="att-rate-bar" style="width:${pct}%;background:${col};"></div>
-        <span class="att-rate-val">${pct}%</span>
+    // Stats strip
+    const pct = empData.attendanceRate;
+    const rateCol = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
+    document.getElementById('attEmpPanelStats').innerHTML = `
+      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#2E7D32">${empData.presentDays}</span><span class="att-panel-stat-lbl">Present</span></div>
+      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#7a5900">${empData.lateDays}</span><span class="att-panel-stat-lbl">Late</span></div>
+      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#b71c1c">${empData.absentDays}</span><span class="att-panel-stat-lbl">Absent</span></div>
+      <div class="att-panel-stat"><span class="att-panel-stat-val">${empData.avgHours}h</span><span class="att-panel-stat-lbl">Avg/Day</span></div>
+      <div class="att-panel-stat att-panel-stat--rate">
+        <span class="att-panel-stat-val" style="color:${rateCol}">${pct}%</span>
+        <span class="att-panel-stat-lbl">Rate</span>
+        <div class="att-rate-wrap" style="margin-top:4px;">
+          <div class="att-rate-bar" style="width:${pct}%;background:${rateCol};"></div>
+        </div>
       </div>`;
+
+    // History rows for this employee
+    const empRows = _attAllRows.filter(r => r.username === username)
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    const statusBadge = s => {
+      if (s === 'Present') return `<span class="att-badge att-present"><i class="fas fa-circle"></i> Present</span>`;
+      if (s === 'Late')    return `<span class="att-badge att-late"><i class="fas fa-circle"></i> Late</span>`;
+      return                      `<span class="att-badge att-absent"><i class="fas fa-circle"></i> Absent</span>`;
     };
 
-    body.innerHTML = rows.map(r => `<tr>
-      <td><strong class="att-name">${escapeHtml(r.name)}</strong></td>
-      <td><span class="att-dept-pill">${escapeHtml(r.department || '—')}</span></td>
-      <td class="text-center">${r.presentDays}</td>
-      <td class="text-center"><span style="color:#7a5900;font-weight:600">${r.lateDays}</span></td>
-      <td class="text-center"><span style="color:#b71c1c;font-weight:600">${r.absentDays}</span></td>
-      <td class="text-center">${r.avgHours}h</td>
-      <td>${rateBar(r)}</td>
-    </tr>`).join('');
-    destroyDataTable('attConsistencyTable');
-    initDataTable('attConsistencyTable', {
-      searching: false, paging: false,
-      dom: "<'dt-export-bar'B>rt",
-      columnDefs: [{ targets: -1, orderable: false, searchable: false }]
-    });
+    document.getElementById('attEmpPanelRows').innerHTML = empRows.length
+      ? empRows.map(r => `
+        <div class="att-panel-row">
+          <div class="att-panel-row-date">${r.date}</div>
+          <div class="att-panel-row-times">
+            <span><i class="fas fa-sign-in-alt"></i> ${r.checkIn ? fmtLocalTime(r.checkIn) : '—'}</span>
+            <span><i class="fas fa-sign-out-alt"></i> ${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</span>
+            <span><i class="fas fa-clock"></i> ${r.hours > 0 ? r.hours + 'h' : '—'}</span>
+          </div>
+          <div>${statusBadge(r.status)}</div>
+          ${(r.checkInPhotoUrl || r.checkOutPhotoUrl) ? `
+          <button class="att-action-btn btn-view-att"
+            data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
+            data-out="${escapeHtml(r.checkOutPhotoUrl || '')}"
+            data-name="${escapeHtml(empData.name)}"
+            title="View selfie"><i class="fas fa-camera"></i></button>` : ''}
+        </div>`).join('')
+      : '<div class="att-empty" style="padding:16px 0;">No records in this period.</div>';
+
+    const panel = document.getElementById('attEmpPanel');
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => panel.classList.add('att-emp-panel--open'));
+  }
+
+  function _closeAttEmpPanel() {
+    const panel = document.getElementById('attEmpPanel');
+    if (!panel) return;
+    panel.classList.remove('att-emp-panel--open');
+    setTimeout(() => { if (!panel.classList.contains('att-emp-panel--open')) panel.style.display = 'none'; }, 280);
   }
 
   function _renderAttCharts(trend) {
@@ -6759,11 +6796,6 @@ const AttendanceSystem = (function() {
     const countEl = document.getElementById('attLogCount');
     if (countEl) countEl.textContent = rows.length + ' record' + (rows.length !== 1 ? 's' : '');
 
-    const thumb = (inUrl, outUrl) => {
-      if (inUrl) return `<a href="${inUrl}" target="_blank" rel="noopener" class="att-selfie-thumb" title="View check-in selfie"><img src="${inUrl}" onerror="if(this.parentElement)this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\'></i>'"></a>`;
-      return `<div class="att-selfie-thumb att-no-photo"><i class="fas fa-user-slash"></i></div>`;
-    };
-
     const statusBadge = s => {
       if (s === 'Present') return `<span class="att-badge att-present"><i class="fas fa-circle"></i> Present</span>`;
       if (s === 'Late')    return `<span class="att-badge att-late"><i class="fas fa-circle"></i> Late</span>`;
@@ -6779,15 +6811,12 @@ const AttendanceSystem = (function() {
         <td class="att-time">${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
         <td class="att-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${thumb(r.checkInPhotoUrl, r.checkOutPhotoUrl)}</td>
         <td>
-          <button class="att-action-btn btn-view-att"
-            data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
-            data-out="${escapeHtml(r.checkOutPhotoUrl || '')}"
-            data-name="${escapeHtml(r.name)}"
-            title="View photos"><i class="fas fa-chevron-right"></i></button>
+          <button class="att-action-btn btn-view-emp-detail"
+            data-username="${escapeHtml(r.username)}"
+            title="View employee details"><i class="fas fa-chart-bar"></i> Details</button>
         </td>
-      </tr>`).join('') || `<tr><td colspan="9" class="att-empty">No records match your filters.</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="8" class="att-empty">No records match your filters.</td></tr>`;
 
     destroyDataTable('attendanceTable');
     document.getElementById('attendanceTableBody').innerHTML = html;
@@ -6796,7 +6825,6 @@ const AttendanceSystem = (function() {
       dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
       columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'text-center dt-no-export' }],
       initComplete: function() {
-        // Move dt-buttons group into the section-header
         const btnContainer = document.getElementById('attTableBtns');
         const dtBtns = document.querySelector('#attendanceTable_wrapper .dt-buttons');
         if (btnContainer && dtBtns) btnContainer.appendChild(dtBtns);

@@ -1237,34 +1237,10 @@
           </div>
         </div>
 
-        <!-- Employee Consistency / Trend Analytics -->
-        <div class="data-section" id="attConsistencySection" style="margin-bottom:24px;">
-          <div class="section-header">
-            <h2><i class="fas fa-user-clock"></i> Employee Consistency</h2>
-            <span class="att-log-count" id="attConsistencySubtitle"></span>
-          </div>
-          <div style="overflow-x:auto;">
-            <table id="attConsistencyTable">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Department</th>
-                  <th>Present Days</th>
-                  <th>Late Days</th>
-                  <th>Absent Days</th>
-                  <th>Avg Hours/Day</th>
-                  <th>Attendance Rate</th>
-                </tr>
-              </thead>
-              <tbody id="attConsistencyBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Daily log table -->
+        <!-- Attendance Log + Consistency combined -->
         <div class="data-section">
           <div class="section-header">
-            <h2><i class="fas fa-table-list"></i> Employee Attendance Log</h2>
+            <h2><i class="fas fa-table-list"></i> Attendance Log</h2>
             <span class="att-log-count" id="attLogCount"></span>
             <div id="attTableBtns" class="att-table-btns"></div>
           </div>
@@ -1279,12 +1255,30 @@
                   <th>Check Out</th>
                   <th>Hours</th>
                   <th>Status</th>
-                  <th>Selfie</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="attendanceTableBody"></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Employee detail slide-panel -->
+        <div id="attEmpPanel" class="att-emp-panel" style="display:none;">
+          <div class="att-emp-panel-inner">
+            <div class="att-emp-panel-header">
+              <div class="att-emp-panel-title">
+                <div class="att-emp-avatar" id="attEmpAvatar"></div>
+                <div>
+                  <div class="att-emp-panel-name" id="attEmpPanelName"></div>
+                  <div class="att-emp-panel-dept" id="attEmpPanelDept"></div>
+                </div>
+              </div>
+              <button class="att-emp-panel-close" id="attEmpPanelClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="att-emp-panel-stats" id="attEmpPanelStats"></div>
+            <div class="att-emp-panel-section-title">Attendance History</div>
+            <div class="att-emp-panel-rows" id="attEmpPanelRows"></div>
           </div>
         </div>
 
