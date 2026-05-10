@@ -6104,14 +6104,14 @@ const AttendanceSystem = (function() {
 
     // ── Section header stats ──────────────────────────────────────────────────
     const _live = liveData || [];
-    // Active section: sites count, employees on-site now, employees who left today
+    // Active section: sites count, employees on-site now, peak today (all who checked in)
     const _activeSiteIds = new Set(activePart.map(s => String(s.id)));
-    const _onSiteNowActive     = _live.filter(r => !r.isCheckedOut && _activeSiteIds.has(String(r.siteId))).length;
-    const _checkedOutFromActive = _live.filter(r => r.isCheckedOut  && _activeSiteIds.has(String(r.siteId))).length;
+    const _onSiteNowActive = _live.filter(r => !r.isCheckedOut && _activeSiteIds.has(String(r.siteId))).length;
+    const _peakToday       = _live.filter(r => _activeSiteIds.has(String(r.siteId))).length;
     const _el = id => document.getElementById(id);
     if (_el('psActiveSectionCount'))    _el('psActiveSectionCount').textContent    = activePart.length;
     if (_el('psActiveOnSiteNow'))       _el('psActiveOnSiteNow').textContent       = _onSiteNowActive;
-    if (_el('psActiveCheckedOutToday')) _el('psActiveCheckedOutToday').textContent = _checkedOutFromActive;
+    if (_el('psActiveCheckedOutToday')) _el('psActiveCheckedOutToday').textContent = _peakToday;
 
     // Inactive section: sites count, sites visited today (had check-ins but now empty), never visited today
     const _inactiveSiteIds = new Set(inactivePart.map(s => String(s.id)));
