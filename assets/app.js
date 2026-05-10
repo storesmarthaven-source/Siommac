@@ -6684,71 +6684,72 @@ const AttendanceSystem = (function() {
       ? (_attDateRange.days === 1 ? _attDateRange.start : _attDateRange.start + ' → ' + _attDateRange.end)
       : '';
 
+    const adpHtml = `
+      <div class="adp">
+        <div class="adp-header">
+          <div class="adp-avatar">${initials}</div>
+          <div class="adp-identity">
+            <div class="adp-name">${escapeHtml(empData.name)}</div>
+            <div class="adp-meta">
+              <span class="adp-dept"><i class="fas fa-building"></i> ${escapeHtml(empData.department || '—')}</span>
+              ${periodLabel ? `<span class="adp-period"><i class="fas fa-calendar-alt"></i> ${periodLabel}</span>` : ''}
+            </div>
+          </div>
+          <div class="adp-rate-pill" style="background:${rateCol}20;color:${rateCol};">
+            <i class="fas fa-chart-line"></i> ${pct}%
+          </div>
+        </div>
+        <div class="adp-stats">
+          <div class="adp-stat adp-stat--present">
+            <div class="adp-stat-val">${empData.presentDays}</div>
+            <div class="adp-stat-lbl">Present</div>
+          </div>
+          <div class="adp-stat adp-stat--late">
+            <div class="adp-stat-val">${empData.lateDays}</div>
+            <div class="adp-stat-lbl">Late</div>
+          </div>
+          <div class="adp-stat adp-stat--absent">
+            <div class="adp-stat-val">${empData.absentDays}</div>
+            <div class="adp-stat-lbl">Absent</div>
+          </div>
+          <div class="adp-stat adp-stat--hours">
+            <div class="adp-stat-val">${empData.avgHours}h</div>
+            <div class="adp-stat-lbl">Avg / Day</div>
+          </div>
+          <div class="adp-stat adp-stat--rate">
+            <div class="adp-stat-val" style="color:${rateCol}">${pct}%</div>
+            <div class="adp-stat-lbl">Rate</div>
+            <div class="adp-rate-bar-wrap">
+              <div class="adp-rate-bar-fill" style="width:${pct}%;background:${rateCol};"></div>
+            </div>
+          </div>
+        </div>
+        <div class="adp-log-wrap">
+          <div class="adp-section-title"><i class="fas fa-table-list"></i> Attendance Log</div>
+          ${empRows.length ? `
+          <table class="adp-log-table">
+            <thead><tr>
+              <th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody>${logRows}</tbody>
+          </table>` : `<div class="att-empty">No records in this period.</div>`}
+        </div>
+      </div>`;
+
     Swal.fire({
-      html: `
-        <div class="adp">
-          <!-- Header -->
-          <div class="adp-header">
-            <div class="adp-avatar">${initials}</div>
-            <div class="adp-identity">
-              <div class="adp-name">${escapeHtml(empData.name)}</div>
-              <div class="adp-meta">
-                <span class="adp-dept"><i class="fas fa-building"></i> ${escapeHtml(empData.department || '—')}</span>
-                ${periodLabel ? `<span class="adp-period"><i class="fas fa-calendar-alt"></i> ${periodLabel}</span>` : ''}
-              </div>
-            </div>
-            <div class="adp-rate-pill" style="background:${rateCol}20;color:${rateCol};">
-              <i class="fas fa-chart-line"></i> ${pct}%
-            </div>
-          </div>
-
-          <!-- Stat cards -->
-          <div class="adp-stats">
-            <div class="adp-stat adp-stat--present">
-              <div class="adp-stat-val">${empData.presentDays}</div>
-              <div class="adp-stat-lbl">Present</div>
-            </div>
-            <div class="adp-stat adp-stat--late">
-              <div class="adp-stat-val">${empData.lateDays}</div>
-              <div class="adp-stat-lbl">Late</div>
-            </div>
-            <div class="adp-stat adp-stat--absent">
-              <div class="adp-stat-val">${empData.absentDays}</div>
-              <div class="adp-stat-lbl">Absent</div>
-            </div>
-            <div class="adp-stat adp-stat--hours">
-              <div class="adp-stat-val">${empData.avgHours}h</div>
-              <div class="adp-stat-lbl">Avg / Day</div>
-            </div>
-            <div class="adp-stat adp-stat--rate">
-              <div class="adp-stat-val" style="color:${rateCol}">${pct}%</div>
-              <div class="adp-stat-lbl">Rate</div>
-              <div class="adp-rate-bar-wrap">
-                <div class="adp-rate-bar-fill" style="width:${pct}%;background:${rateCol};"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Log table -->
-          <div class="adp-log-wrap">
-            <div class="adp-section-title"><i class="fas fa-table-list"></i> Attendance Log</div>
-            ${empRows.length ? `
-            <table class="adp-log-table">
-              <thead>
-                <tr>
-                  <th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th></th>
-                </tr>
-              </thead>
-              <tbody>${logRows}</tbody>
-            </table>` : `<div class="att-empty">No records in this period.</div>`}
-          </div>
-        </div>`,
+      html: adpHtml,
       width: '980px',
       padding: 0,
-      background: 'var(--bg-card)',
+      background: 'transparent',
       showConfirmButton: false,
       showCloseButton: true,
-      customClass: { popup: 'adp-popup', closeButton: 'adp-close-btn' }
+      customClass: { popup: 'adp-popup', closeButton: 'adp-close-btn', htmlContainer: 'adp-swal-body' },
+      didOpen: popup => {
+        // Move the .adp node directly into the popup root so Swal's
+        // html-container padding/margin cannot constrain it
+        const adpEl = popup.querySelector('.adp');
+        if (adpEl) popup.appendChild(adpEl);
+      }
     });
   }
 

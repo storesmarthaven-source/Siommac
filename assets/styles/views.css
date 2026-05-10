@@ -2496,6 +2496,7 @@
 /* ── Details button in attendance log ───────────────────────────────────── */
 .btn-view-emp-detail {
   display: inline-flex; align-items: center; gap: 5px;
+  width: auto; height: auto;
   padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
   background: var(--bg-subtle); color: var(--siomac-navy);
   font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
@@ -2509,25 +2510,34 @@
 /* ── Employee Detail Popup (adp) ─────────────────────────────────────────── */
 .adp-popup {
   border-radius: 18px !important;
-  overflow: hidden;
+  overflow: hidden !important;
   padding: 0 !important;
+  background: var(--bg-card) !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
+/* Hide Swal's own inner html wrapper — .adp is moved to popup root */
+.adp-swal-body { display: none !important; }
+/* Also nuke the icon wrapper if Swal injects one */
+.adp-popup .swal2-icon { display: none !important; }
+
 .adp-close-btn {
   position: absolute !important;
-  top: 16px !important; right: 16px !important;
+  top: 14px !important; right: 14px !important;
   color: #fff !important; font-size: 18px !important;
   opacity: 0.8;
   z-index: 10;
 }
 .adp-close-btn:hover { opacity: 1 !important; }
 
-.adp { font-family: inherit; }
+.adp { font-family: inherit; width: 100%; }
 
-/* Header */
+/* Header — top rounded corners match the popup */
 .adp-header {
   display: flex; align-items: center; gap: 16px;
   padding: 28px 28px 22px;
   background: var(--siomac-navy);
+  border-radius: 18px 18px 0 0;
   color: #fff;
 }
 .adp-avatar {
