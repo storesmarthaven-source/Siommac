@@ -2801,8 +2801,9 @@ const AttendanceSystem = (function() {
     } catch (_) {}
 
     // Fetch live branding from server — always authoritative for the logo.
-    _rawApi('getSettings', {}).then(function(s) {
-      if (!s || typeof s !== 'object') { applyCompanyLogo(''); return; }
+    _rawApi('getSettings', {}).then(function(res) {
+      // API wraps plain objects as { success: true, data: {...} }
+      const s = (res && res.data) || res || {};
       const logoUrl = s.companyLogoUrl || s.logoUrl || '';
       const name    = s.companyName || '';
       applyCompanyLogo(logoUrl); // always call — falls back to default if no custom logo
