@@ -5,7 +5,7 @@
 //   PHOTOS  — profile images, selfies → Cache-first, 7-day cache, bg revalidate
 //   API     — /api POST calls         → Network-only (never cache mutations/auth)
 
-const CACHE_VERSION  = 'siomac-v4';
+const CACHE_VERSION  = 'siomac-v5';
 const STATIC_CACHE   = CACHE_VERSION + '-static';
 const CDN_CACHE      = CACHE_VERSION + '-cdn';
 const PHOTO_CACHE    = CACHE_VERSION + '-photos';
@@ -66,8 +66,10 @@ function isPhotoRequest(url) {
   if (PHOTO_HOSTS.some(h => url.hostname.includes(h))) return true;
   // Supabase project URL — image paths in storage bucket
   if (PHOTO_PATH_PATTERNS.some(p => p.test(url.pathname))) return true;
-  // Any image extension from any host
-  if (/\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(url.pathname)) return true;
+  // External hosts with image extensions — NOT local assets (logo, icons etc.
+  // must go through networkFirstLocal so deploys take effect immediately)
+  if (url.origin !== self.location.origin &&
+      /\.(jpg|jpeg|png|gif|webp|avif|svg)(\?|$)/i.test(url.pathname)) return true;
   return false;
 }
 
