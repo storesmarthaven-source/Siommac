@@ -6010,6 +6010,7 @@ const AttendanceSystem = (function() {
             <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">Employee${count !== 1 ? 's' : ''} Currently on Site</div>
           </div>`,
         showCancelButton: true,
+        showConfirmButton: !!site.isActive,
         confirmButtonText: '<i class="fas fa-map-marked-alt"></i> Open in Live Map',
         cancelButtonText: 'Close',
         confirmButtonColor: 'var(--siomac-navy)',
@@ -6136,12 +6137,9 @@ const AttendanceSystem = (function() {
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}" data-id="${site.id}">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="ps-status-badge ${active ? 'active' : 'inactive'}">${active ? 'Active' : 'Inactive'}</span>
-            <div class="ps-card-actions">
-              <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
-              <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
-            </div>
+          <div class="ps-card-actions">
+            <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
           </div>
         </div>
         <div class="ps-card-body">
