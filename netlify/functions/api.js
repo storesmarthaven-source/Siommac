@@ -491,6 +491,25 @@ async function markAttendance(args, ctx) {
   if (args.siteId) {
     const { data: chosenSite } = await sb.from('project_sites').select('*').eq('id', args.siteId).maybeSingle();
     if (!chosenSite) return { success: false, message: 'Selected project site not found.' };
+
+    // If this is a check-in, verify the employee is assigned to this site.
+    // Admins and managers are exempt — they can check in anywhere.
+    if (isCheckIn && actor.role === 'employee') {
+      const { data: assignment } = await sb.from('project_site_employees')
+        .select('site_id').eq('site_id', args.siteId).eq('user_id', actor.id).maybeSingle();
+      if (!assignment) {
+        // Check if employee is assigned to any site at all
+        const { data: anyAssignment } = await sb.from('project_site_employees')
+          .select('site_id, project_sites(name)').eq('user_id', actor.id);
+        if (anyAssignment && anyAssignment.length > 0) {
+          const assignedNames = anyAssignment.map(a => a.project_sites && a.project_sites.name).filter(Boolean).join(', ');
+          return { success: false, message: `You are not assigned to "${chosenSite.name}". Your assigned site(s): ${assignedNames}.` };
+        }
+        // Employee has no assignments at all — block check-in to unassigned site
+        return { success: false, message: `You are not assigned to "${chosenSite.name}". Contact your administrator to be assigned to a project site.` };
+      }
+    }
+
     const dist = (lat != null && lng != null) ? haversine(lat, lng, Number(chosenSite.latitude), Number(chosenSite.longitude)) : null;
     const siteRadius = Math.max(Number(chosenSite.radius) || 200, 50);
     // Add GPS accuracy to the allowed radius — benefit of the doubt for coarse fixes

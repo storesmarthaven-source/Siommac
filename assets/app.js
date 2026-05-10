@@ -3968,16 +3968,28 @@ const AttendanceSystem = (function() {
       siteStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Required';
       document.getElementById('captureBtn').disabled = true;
       document.getElementById('confirmBtn').disabled = true;
-      // Populate from already-loaded projectSites, or fetch fresh
+      // Populate from already-loaded projectSites, or fetch fresh.
+      // Employees only see sites they are assigned to; admins/managers see all.
       const populate = (sites) => {
-        siteSelect.innerHTML = '<option value="">— Choose a site —</option>'
-          + sites.map(s => `<option value="${escapeHtml(s.id)}" data-lat="${Number(s.latitude)||''}" data-lng="${Number(s.longitude)||''}" data-radius="${Number(s.radius)||200}">${escapeHtml(s.name)}</option>`).join('');
+        let filtered = sites;
+        if (currentRole === 'employee') {
+          filtered = sites.filter(s =>
+            (s.assignedEmployees || []).some(e => e.id === currentUserId)
+          );
+        }
+        if (!filtered.length && currentRole === 'employee') {
+          siteSelect.innerHTML = '<option value="">— No sites assigned to you —</option>';
+        } else {
+          siteSelect.innerHTML = '<option value="">— Choose a site —</option>'
+            + filtered.map(s => `<option value="${escapeHtml(s.id)}" data-lat="${Number(s.latitude)||''}" data-lng="${Number(s.longitude)||''}" data-radius="${Number(s.radius)||200}">${escapeHtml(s.name)}</option>`).join('');
+        }
       };
       if (projectSites && projectSites.length) {
         populate(projectSites);
       } else {
         api('listProjectSites', {}).then(res => {
           projectSites = (res && res.success && res.data) || [];
+          if (Array.isArray(res && res.employees)) _psAllEmployees = res.employees;
           populate(projectSites);
         });
       }
