@@ -2518,8 +2518,11 @@
 }
 /* Hide Swal's own inner html wrapper — .adp is moved to popup root */
 .adp-swal-body { display: none !important; }
-/* Also nuke the icon wrapper if Swal injects one */
-.adp-popup .swal2-icon { display: none !important; }
+/* Nuke the icon wrapper if Swal injects one (removed in didOpen too) */
+.adp-popup .swal2-icon { display: none !important; margin: 0 !important; }
+/* Prevent Swal container from capping the popup width */
+.swal2-container:has(.adp-popup) { align-items: center; }
+.adp-popup { max-width: 98vw !important; box-sizing: border-box; }
 
 .adp-close-btn {
   position: absolute !important;
@@ -2592,8 +2595,14 @@
   margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
 }
 .adp-log-table {
-  width: 100%; border-collapse: collapse; font-size: 13px;
+  width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
 }
+.adp-log-table th:nth-child(1), .adp-log-table td:nth-child(1) { width: 110px; }
+.adp-log-table th:nth-child(2), .adp-log-table td:nth-child(2) { width: 110px; }
+.adp-log-table th:nth-child(3), .adp-log-table td:nth-child(3) { width: 110px; }
+.adp-log-table th:nth-child(4), .adp-log-table td:nth-child(4) { width: 70px; }
+.adp-log-table th:nth-child(5), .adp-log-table td:nth-child(5) { width: 90px; }
+.adp-log-table th:nth-child(6), .adp-log-table td:nth-child(6) { width: 44px; text-align: center; }
 .adp-log-table thead tr {
   border-bottom: 2px solid var(--border);
 }

@@ -6745,6 +6745,9 @@ const AttendanceSystem = (function() {
       showCloseButton: true,
       customClass: { popup: 'adp-popup', closeButton: 'adp-close-btn', htmlContainer: 'adp-swal-body' },
       didOpen: popup => {
+        // Remove Swal's icon element entirely
+        const icon = popup.querySelector('.swal2-icon');
+        if (icon) icon.remove();
         // Move the .adp node directly into the popup root so Swal's
         // html-container padding/margin cannot constrain it
         const adpEl = popup.querySelector('.adp');
