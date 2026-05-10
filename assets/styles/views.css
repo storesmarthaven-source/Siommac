@@ -546,6 +546,8 @@
   font-size: 13px; transition: background .18s;
 }
 .ps-card-btn:hover { background: #7CBB7F; }
+.ps-card.ps-card--inactive .ps-card-btn:hover { background: #B2B5BD; }
+.ps-card.ps-card--inactive .ps-detail-row i { color: #8b919d; }
 
 .ps-card-body { padding: 20px; }
 .ps-detail-row {

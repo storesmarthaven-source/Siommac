@@ -2282,7 +2282,7 @@ const AttendanceSystem = (function() {
         const align    = isMe ? 'flex-end' : 'flex-start';
         const bubbleBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--bg-subtle,#f0f2f5)';
         const bubbleColor = isMe ? '#fff' : 'var(--text-primary)';
-        const avatarBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : '#888';
+        const avatarBg    = isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--siomac-red,#e40c0c)';
         const photoUrl  = r.fromPhoto || '';
         const avatar = photoUrl
           ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" crossorigin="anonymous" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isMe ? 'var(--siomac-navy,#1b2d54)' : 'var(--border,#ddd)'};">`
@@ -2319,13 +2319,15 @@ const AttendanceSystem = (function() {
       function _ticketRowHtml(t) {
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         const isDeleted   = t.status === 'deleted';
+        const isSentByMe  = t.fromUsername === currentUser;
         const css      = STATUS_CSS[t.status] || 'open';
         const lbl      = STATUS_LABEL[t.status] || t.status;
         const initials = _initials(t.fromName || 'U');
-        const avatarStyle = `width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;${isDeleted ? 'filter:grayscale(1);opacity:0.5;' : ''}`;
+        const avatarImgStyle = `width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;${isDeleted ? 'filter:grayscale(1);opacity:0.5;' : ''}`;
+        const avatarInlineOverride = isDeleted ? 'background:#aaa;color:#fff;' : (isSentByMe ? 'background:var(--siomac-navy,#1b2d54);color:#fff;' : '');
         const avatarHtml = t.fromPhoto
-          ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="${avatarStyle}border:2px solid var(--border,#eee);">`
-          : `<div style="${avatarStyle}background:${isDeleted ? '#aaa' : 'var(--siomac-primary,#001f3f)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">${escapeHtml(initials)}</div>`;
+          ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="${avatarImgStyle}border:2px solid var(--border,#eee);">`
+          : `<div class="hdr-msg-avatar" style="width:36px;height:36px;font-size:0.7rem;${avatarInlineOverride}">${escapeHtml(initials)}</div>`;
         const sub = isAdminView
           ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
           : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
@@ -2418,9 +2420,7 @@ const AttendanceSystem = (function() {
                <span>This ticket was <strong>deleted by the employee</strong> before it was resolved.</span>
              </div>`
           : '';
-        const deleteBtn = (!isAdminView && !isDeleted && (t.status === 'open' || t.status === 'in_progress'))
-          ? `<button data-delete-ticket-id="${escapeHtml(String(t.id))}" style="border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.78rem;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:5px;padding:0;margin-top:8px;opacity:.8;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.8'"><i class="fas fa-trash-alt"></i> Delete Ticket</button>`
-          : '';
+        const deleteBtn = '';
         document.getElementById('ticketDetailBody').innerHTML = `
           ${deletedBanner}
           <div style="padding:14px 16px;border-bottom:1px solid var(--border);${isDeleted ? 'opacity:0.65;' : ''}">
@@ -4027,6 +4027,24 @@ const AttendanceSystem = (function() {
       const cameraModal = bootstrap.Modal.getInstance(document.getElementById('cameraModal'));
       if (cameraModal) cameraModal.hide();
 
+      // Immediately update the dashboard UI from the server response — no round-trip needed.
+      // The server already returns the check-in/out time; we don't need to wait for checkStatus().
+      const isCheckIn = currentAttendanceAction === 'CheckIn';
+      updateDashboardUI({
+        hasCheckedIn:  true,
+        hasCheckedOut: !isCheckIn,
+        checkInTime:   isCheckIn ? result.time : null,
+        checkOutTime:  isCheckIn ? null : result.time,
+        location:      result.site || ''
+      });
+
+      // Bust SWR cache so background revalidation fetches fresh data.
+      ['getMyStatus:', 'getMyChart:', 'getMyHistory:', 'getLiveAttendance:'].forEach(pfx => {
+        swr.clearByPrefix(pfx);
+        for (const k of _swrLastHash.keys()) { if (k.indexOf(pfx) === 0) _swrLastHash.delete(k); }
+      });
+
+      // Background sync — confirms state from server and updates hours/location details
       checkStatus();
       if (currentAttendanceAction === 'CheckIn') loadChart();
       // Refresh admin-facing views so the employee's new status appears immediately
