@@ -3269,11 +3269,22 @@ const AttendanceSystem = (function() {
         const projectId = event.target.closest('.btn-delete-project').dataset.id;
         deleteProjectSite(projectId);
       } else if (event.target.closest('.ps-card') && !event.target.closest('.ps-mini-map')) {
-        // Click on card body/header (not the mini-map — that has its own Leaflet click) → site popup
         const card = event.target.closest('.ps-card');
         if (card && !event.target.closest('.ps-card-actions')) {
-          const site = projectSites.find(s => String(s.id) === String(card.dataset.id));
-          if (site && site.isActive) _showSitePopup(site);
+          const siteId = String(card.dataset.id);
+          const site   = projectSites.find(s => String(s.id) === siteId);
+          if (site) {
+            // Toggle selection — click same card again to deselect
+            _psSelectedSiteId = (_psSelectedSiteId === siteId) ? null : siteId;
+            // Update selected highlight on all cards
+            document.querySelectorAll('.ps-card').forEach(c => {
+              c.classList.toggle('ps-card--selected', String(c.dataset.id) === _psSelectedSiteId);
+            });
+            // Update the two stat cards
+            _updatePsSiteStats(projectSites);
+            // Also show popup for active sites
+            if (site.isActive) _showSitePopup(site);
+          }
         }
       }
 
@@ -5984,7 +5995,17 @@ const AttendanceSystem = (function() {
       window._sitePickerCircle = null;
     }
 
-    new bootstrap.Modal(document.getElementById('addProjectModal')).show();
+    // Initialise employee picker — pre-select already-assigned employees
+    const preselected = site ? (site.assignedEmployees || []).map(e => e.id) : [];
+    // Defer until modal is visible so the DOM is ready
+    const modalEl = document.getElementById('addProjectModal');
+    const _onShown = () => {
+      _psInitPicker(preselected);
+      modalEl.removeEventListener('shown.bs.modal', _onShown);
+    };
+    modalEl.addEventListener('shown.bs.modal', _onShown);
+
+    new bootstrap.Modal(modalEl).show();
   }
 
   // ── Project site map picker ─────────────────────────────────────────────────
@@ -6137,6 +6158,7 @@ const AttendanceSystem = (function() {
       window._sitePickerMarker = null;
       window._sitePickerCircle = null;
     }
+    _psResetPicker();
   });
 
   function addProjectSite() {
@@ -6156,6 +6178,11 @@ const AttendanceSystem = (function() {
     if (!latitude || isNaN(latitude) || latitude < -90  || latitude > 90)  { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     if (!longitude || isNaN(longitude) || longitude < -180 || longitude > 180) { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     
+    // Collect selected employee IDs from the picker
+    const selectedUserIds = Array.from(
+      document.querySelectorAll('#psEmpPickerSelected .ps-picker-chip')
+    ).map(el => el.dataset.uid).filter(Boolean);
+
     const action = editingSiteId ? 'updateProjectSite' : 'addProjectSite';
     const args = { name, address, latitude, longitude, radius, description, actorId: currentUserId, actorUsername: currentUser };
     if (editingSiteId) args.id = editingSiteId;
@@ -6165,11 +6192,15 @@ const AttendanceSystem = (function() {
     api(action, args).then(res => {
       hideSpinner();
       if (res.success) {
+        const siteId = res.id || _editingId;
+        // Save employee assignments (fire and forget — non-blocking)
+        if (siteId) api('assignSiteEmployees', { siteId, userIds: selectedUserIds }).catch(() => {});
         const bsModal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
         if (bsModal) bsModal.hide();
         document.getElementById('addProjectForm').reset();
+        _psResetPicker();
         editingSiteId = null;
-        showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites(true));
+        showPopup('success', 'Saved', 'Project site saved successfully.').then(() => loadProjectSites(true, true));
       } else {
         showPopup('error', 'Failed', res.message || 'Could not save site');
       }
@@ -6195,6 +6226,7 @@ const AttendanceSystem = (function() {
         }
         projectSites = Array.isArray(res.data) ? res.data : [];
         if (res.totalActiveEmployees != null) _totalActiveEmployees = res.totalActiveEmployees;
+        if (Array.isArray(res.employees)) _psAllEmployees = res.employees;
         _markLoaded('s-adm-projects');
         // Ensure liveData is populated for the Site Attendance stat
         if (liveData && liveData.length) {
@@ -6213,8 +6245,124 @@ const AttendanceSystem = (function() {
     });
   }
 
-  let _psMiniMaps = {};    // track leaflet instances to avoid double-init
-  let _psRenderGen = 0;   // incremented on every displayProjectSites call; stale timeouts bail
+  let _psMiniMaps = {};        // track leaflet instances to avoid double-init
+  let _psRenderGen = 0;        // incremented on every displayProjectSites call; stale timeouts bail
+  let _psAllEmployees = [];    // flat list of all active employees for the picker
+  let _psSelectedSiteId = null; // currently selected site card (null = show global stats)
+
+  // Update "Assigned Workers" and "Site Attendance" stat cards.
+  // If a site is selected, show per-site figures; otherwise show global totals.
+  function _updatePsSiteStats(allSites) {
+    const site = _psSelectedSiteId
+      ? (allSites || projectSites).find(s => String(s.id) === _psSelectedSiteId)
+      : null;
+
+    if (site) {
+      // Per-site: assigned count + checked-in count ÷ assigned count
+      const assigned  = (site.assignedEmployees || []).length;
+      const checkedIn = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
+      const pct = assigned > 0 ? Math.round((checkedIn / assigned) * 100) : 0;
+      _countUp(document.getElementById('psAssignedWorkers'), assigned);
+      _countUp(document.getElementById('psSiteAttendance'),  pct, '%');
+    } else {
+      // Global: total active employees + overall on-site %
+      const totalAssigned = _totalActiveEmployees > 0 ? _totalActiveEmployees : (_empAllList || []).filter(e => e.status === 'Active').length;
+      const onSiteNow     = (liveData || []).filter(r => !r.isCheckedOut).length;
+      const pct = totalAssigned > 0 ? Math.round((onSiteNow / totalAssigned) * 100) : 0;
+      _countUp(document.getElementById('psAssignedWorkers'), totalAssigned);
+      _countUp(document.getElementById('psSiteAttendance'),  pct, '%');
+    }
+  }
+
+  // ── Employee picker for Add/Edit site modal ───────────────────────────────
+  let _psPickerSelected = new Set(); // user IDs currently selected
+
+  function _psResetPicker() {
+    _psPickerSelected = new Set();
+    const grid = document.getElementById('psEmpPickerGrid');
+    const chips = document.getElementById('psEmpPickerSelected');
+    if (grid)  grid.innerHTML = '';
+    if (chips) chips.innerHTML = '';
+    const input = document.getElementById('psEmpPickerSearch');
+    if (input) input.value = '';
+  }
+
+  function _psRenderPickerGrid(filter) {
+    const grid = document.getElementById('psEmpPickerGrid');
+    if (!grid) return;
+    const q = (filter || '').toLowerCase();
+    const list = q
+      ? _psAllEmployees.filter(e => e.name.toLowerCase().includes(q))
+      : _psAllEmployees;
+    grid.innerHTML = list.map(e => {
+      const sel = _psPickerSelected.has(e.id);
+      const initials = (e.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      return `<div class="ps-picker-item${sel ? ' ps-picker-item--selected' : ''}" data-uid="${escapeHtml(e.id)}" title="${escapeHtml(e.name)}">
+        ${e.photoUrl
+          ? `<img class="ps-picker-photo" src="${escapeHtml(e.photoUrl)}" alt="${escapeHtml(e.name)}">`
+          : `<div class="ps-picker-photo ps-picker-photo--initials">${initials}</div>`}
+        <div class="ps-picker-name">${escapeHtml(e.name)}</div>
+        ${sel ? '<div class="ps-picker-check"><i class="fas fa-check"></i></div>' : ''}
+      </div>`;
+    }).join('') || `<div class="ps-picker-empty">No employees found</div>`;
+  }
+
+  function _psRenderPickerChips() {
+    const chips = document.getElementById('psEmpPickerSelected');
+    if (!chips) return;
+    chips.innerHTML = Array.from(_psPickerSelected).map(uid => {
+      const emp = _psAllEmployees.find(e => e.id === uid);
+      if (!emp) return '';
+      const initials = (emp.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      return `<div class="ps-picker-chip" data-uid="${escapeHtml(uid)}">
+        ${emp.photoUrl
+          ? `<img class="ps-picker-chip-photo" src="${escapeHtml(emp.photoUrl)}" alt="">`
+          : `<div class="ps-picker-chip-photo ps-picker-chip-photo--initials">${initials}</div>`}
+        <span>${escapeHtml(emp.name)}</span>
+        <button class="ps-picker-chip-remove" data-uid="${escapeHtml(uid)}" type="button"><i class="fas fa-times"></i></button>
+      </div>`;
+    }).join('');
+    // Update count label
+    const lbl = document.getElementById('psEmpPickerCount');
+    if (lbl) lbl.textContent = _psPickerSelected.size
+      ? `${_psPickerSelected.size} selected`
+      : 'None selected';
+  }
+
+  function _psInitPicker(preselectedIds) {
+    _psPickerSelected = new Set(preselectedIds || []);
+    _psRenderPickerGrid('');
+    _psRenderPickerChips();
+    // Search input
+    const input = document.getElementById('psEmpPickerSearch');
+    if (input) {
+      input.oninput = () => _psRenderPickerGrid(input.value);
+    }
+    // Grid click delegation
+    const grid = document.getElementById('psEmpPickerGrid');
+    if (grid) {
+      grid.onclick = e => {
+        const item = e.target.closest('.ps-picker-item');
+        if (!item) return;
+        const uid = item.dataset.uid;
+        if (_psPickerSelected.has(uid)) _psPickerSelected.delete(uid);
+        else _psPickerSelected.add(uid);
+        _psRenderPickerGrid(document.getElementById('psEmpPickerSearch')?.value || '');
+        _psRenderPickerChips();
+      };
+    }
+    // Chip remove delegation
+    const chips = document.getElementById('psEmpPickerSelected');
+    if (chips) {
+      chips.onclick = e => {
+        const btn = e.target.closest('.ps-picker-chip-remove');
+        if (!btn) return;
+        _psPickerSelected.delete(btn.dataset.uid);
+        _psRenderPickerGrid(document.getElementById('psEmpPickerSearch')?.value || '');
+        _psRenderPickerChips();
+      };
+    }
+  }
 
   // Wipe both project-site containers and purge all Leaflet instances.
   // Call before any re-render that must start with a clean slate.
@@ -6324,12 +6472,7 @@ const AttendanceSystem = (function() {
     const activeSites = sites.filter(s => s.isActive);
     _countUp(document.getElementById('psTotalSites'),  sites.length);
     _countUp(document.getElementById('psActiveZones'), activeSites.length);
-    const _activeEmps = (_empAllList || []).filter(e => e.status === 'Active').length;
-    _countUp(document.getElementById('psAssignedWorkers'), _activeEmps);
-    const _onSiteNow     = (liveData || []).filter(r => !r.isCheckedOut).length;
-    const _denominator   = _totalActiveEmployees > 0 ? _totalActiveEmployees : (_empAllList || []).filter(e => e.status === 'Active').length;
-    const _attendancePct = _denominator > 0 ? Math.round((_onSiteNow / _denominator) * 100) : 0;
-    _countUp(document.getElementById('psSiteAttendance'), _attendancePct, '%');
+    _updatePsSiteStats(sites);
 
     // ── Search + filter ───────────────────────────────────────────────────────
     const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
@@ -6383,7 +6526,25 @@ const AttendanceSystem = (function() {
       const lng    = Number(site.longitude) || 0;
       const rad    = Number(site.radius)    || 200;
       const active = !!site.isActive;
-      return `<div class="ps-card${active ? '' : ' ps-card--inactive'}" data-id="${site.id}">
+      const selected = _psSelectedSiteId === String(site.id);
+      const assigned = site.assignedEmployees || [];
+      // Show up to 5 avatar circles, then +N overflow
+      const MAX_AVATARS = 5;
+      const shown = assigned.slice(0, MAX_AVATARS);
+      const overflow = assigned.length - shown.length;
+      const avatarsHtml = assigned.length ? `
+        <div class="ps-assigned-row">
+          <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} assigned</span>
+          <div class="ps-assigned-avatars">
+            ${shown.map(e => e.photoUrl
+              ? `<img class="ps-emp-avatar" src="${escapeHtml(e.photoUrl)}" title="${escapeHtml(e.name)}" alt="${escapeHtml(e.name)}">`
+              : `<div class="ps-emp-avatar ps-emp-avatar--initials" title="${escapeHtml(e.name)}">${(e.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>`
+            ).join('')}
+            ${overflow > 0 ? `<div class="ps-emp-avatar ps-emp-avatar--more">+${overflow}</div>` : ''}
+          </div>
+        </div>` : `<div class="ps-assigned-row ps-assigned-empty"><i class="fas fa-user-plus"></i> No employees assigned</div>`;
+
+      return `<div class="ps-card${active ? '' : ' ps-card--inactive'}${selected ? ' ps-card--selected' : ''}" data-id="${site.id}" style="cursor:pointer;">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
           <div class="ps-card-actions">
@@ -6395,12 +6556,14 @@ const AttendanceSystem = (function() {
           <div class="ps-detail-row"><i class="fas fa-location-dot"></i><span>${escapeHtml(site.address || '—')}</span></div>
           <div class="ps-detail-row"><i class="fas fa-crosshairs"></i><span>${lat.toFixed(5)}, ${lng.toFixed(5)} · Radius: ${rad}m</span></div>
           <div class="ps-detail-row"><i class="fas fa-align-left"></i><span>${escapeHtml(site.description || '—')}</span></div>
+          ${avatarsHtml}
           <div class="ps-mini-map" id="ps-map-${site.id}"></div>
         </div>
       </div>`;
     }
     function _psCardRowKey(site) {
-      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0');
+      const assignedKey = (site.assignedEmployees || []).map(e => e.id).join(',');
+      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0') + '|' + assignedKey + '|' + (_psSelectedSiteId === String(site.id) ? '1' : '0');
     }
 
     // -- Render helper: rebuild container from scratch each call ----------------

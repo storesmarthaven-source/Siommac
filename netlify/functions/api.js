@@ -291,13 +291,47 @@ async function listDepartments() {
 }
 
 async function listProjectSites() {
-  const { data, error } = await sb.from('project_sites').select('*').order('name');
+  const [{ data, error }, { data: assignments }] = await Promise.all([
+    sb.from('project_sites').select('*').order('name'),
+    sb.from('project_site_employees')
+      .select('site_id, user_id, app_users(id, full_name, profile_image, signed_url, signed_url_expires_at)')
+  ]);
   if (error) throw new Error('Failed to load project sites: ' + error.message);
+
+  // Build per-site assigned employee list with signed photo URLs
+  const siteEmpMap = {};
+  for (const a of assignments || []) {
+    if (!siteEmpMap[a.site_id]) siteEmpMap[a.site_id] = [];
+    const u = a.app_users || {};
+    // Reuse cached signed URL if still valid (> 1h remaining)
+    const now = Date.now();
+    const expires = u.signed_url_expires_at ? new Date(u.signed_url_expires_at).getTime() : 0;
+    const photoUrl = (u.signed_url && expires > now + 3600 * 1000) ? u.signed_url : '';
+    siteEmpMap[a.site_id].push({ id: u.id, name: u.full_name || '', photoUrl });
+  }
+
   return (data || []).map(s => ({
     id: s.id, name: s.name, address: s.address || '',
     latitude: Number(s.latitude), longitude: Number(s.longitude), radius: Number(s.radius),
-    description: s.description || ''
+    description: s.description || '',
+    assignedEmployees: siteEmpMap[s.id] || []
   }));
+}
+
+async function assignSiteEmployees(args, ctx) {
+  await requireRole(ctx, ['admin']);
+  const siteId  = String(args.siteId  || '');
+  const userIds = Array.isArray(args.userIds) ? args.userIds.map(String) : [];
+  if (!siteId) return { success: false, message: 'Missing siteId' };
+
+  // Replace all assignments for this site atomically
+  await sb.from('project_site_employees').delete().eq('site_id', siteId);
+  if (userIds.length) {
+    const rows = userIds.map(uid => ({ site_id: siteId, user_id: uid }));
+    const { error } = await sb.from('project_site_employees').insert(rows);
+    if (error) return { success: false, message: error.message };
+  }
+  return { success: true };
 }
 
 async function listEmployees() {
@@ -1346,15 +1380,24 @@ const routes = {
   listManagers,
   listProjectSites: async (a, ctx) => {
     await requireUser(ctx);
-    const [sites, activeEmpRes] = await Promise.all([
+    const [sites, activeEmpRes, { data: allEmps }] = await Promise.all([
       listProjectSites(),
-      sb.from('app_users').select('id', { count: 'exact', head: true }).eq('status', 'Active').eq('role', 'employee')
+      sb.from('app_users').select('id', { count: 'exact', head: true }).eq('status', 'active').neq('role', 'admin'),
+      sb.from('app_users').select('id, full_name, signed_url, signed_url_expires_at, profile_image').eq('status', 'active').neq('role', 'admin').order('full_name')
     ]);
-    return { success: true, data: sites, totalActiveEmployees: activeEmpRes.count || 0 };
+    // Build employee picker list with stable photo URLs
+    const now = Date.now();
+    const pickerEmployees = (allEmps || []).map(u => {
+      const expires = u.signed_url_expires_at ? new Date(u.signed_url_expires_at).getTime() : 0;
+      const photoUrl = (u.signed_url && expires > now + 3600 * 1000) ? u.signed_url : '';
+      return { id: u.id, name: u.full_name || '', photoUrl };
+    });
+    return { success: true, data: sites, totalActiveEmployees: activeEmpRes.count || 0, employees: pickerEmployees };
   },
   addProjectSite,
   updateProjectSite,
   deleteProjectSite,
+  assignSiteEmployees,
   getSettings: async () => getSettings(),
   updateSetting,
   markAttendance,
