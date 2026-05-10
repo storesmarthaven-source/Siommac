@@ -2907,9 +2907,9 @@ const AttendanceSystem = (function() {
         showAddProjectModal();
       } else if (event.target.matches('#refreshProjectsBtn, #refreshProjectsBtn *')) {
         loadProjectSites();
-      } else if (event.target.matches('.ps-filter-tab')) {
+      } else if (event.target.matches('#s-adm-projects .lv-tab-btn')) {
         _psSiteFilter = event.target.dataset.filter || 'all';
-        document.querySelectorAll('.ps-filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === _psSiteFilter));
+        document.querySelectorAll('#s-adm-projects .lv-tab-btn').forEach(t => t.classList.toggle('active', t.dataset.filter === _psSiteFilter));
         displayProjectSites(projectSites);
       }
     });

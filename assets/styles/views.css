@@ -440,23 +440,6 @@
 }
 .ps-search-box input::placeholder { color: var(--text-muted); }
 
-/* Filter tabs */
-.ps-filter-tabs {
-  display: flex; gap: 4px;
-  background: var(--bg-subtle); border-radius: 40px;
-  padding: 3px; border: 1px solid var(--border);
-}
-.ps-filter-tab {
-  border: none; background: transparent;
-  padding: 5px 16px; border-radius: 40px;
-  font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
-  cursor: pointer; transition: background .18s, color .18s;
-  font-family: inherit;
-}
-.ps-filter-tab.active {
-  background: var(--siomac-navy); color: #fff;
-}
-.ps-filter-tab:not(.active):hover { background: var(--border); color: var(--text-primary); }
 
 /* Section wrapper */
 .ps-section { margin-bottom: 32px; }
