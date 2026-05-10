@@ -564,7 +564,6 @@
   border: 2px solid var(--siomac-navy) !important;
   box-shadow: 0 0 0 4px rgba(27,45,84,0.12), 0 8px 24px rgba(0,0,0,0.1) !important;
 }
-.ps-card--selected .ps-card-header { background: var(--siomac-navy); }
 
 /* Assigned employee avatars on card */
 .ps-assigned-row {
