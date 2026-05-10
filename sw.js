@@ -5,7 +5,7 @@
 //   PHOTOS  — profile images, selfies → Cache-first, 7-day cache, bg revalidate
 //   API     — /api POST calls         → Network-only (never cache mutations/auth)
 
-const CACHE_VERSION  = 'siomac-v5';
+const CACHE_VERSION  = 'siomac-v6';
 const STATIC_CACHE   = CACHE_VERSION + '-static';
 const CDN_CACHE      = CACHE_VERSION + '-cdn';
 const PHOTO_CACHE    = CACHE_VERSION + '-photos';

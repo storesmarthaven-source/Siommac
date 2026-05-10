@@ -113,7 +113,8 @@ async function uploadBase64(bucket, base64, name) {
   const { error } = await sb.storage.from(bucket).upload(path, buffer, { contentType: mime, upsert: false });
   if (error) throw error;
 
-  // Return path so callers can generate signed URLs; public URL only for branding bucket
+  // Public buckets (branding) → stable public URL.
+  // profile-photos and attendance-photos are private; return path for signed URL generation.
   if (bucket === 'branding') {
     const { data } = sb.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
@@ -122,22 +123,19 @@ async function uploadBase64(bucket, base64, name) {
 }
 
 // ─── Signed URL helpers ────────────────────────────────────────────────────────
-// Private buckets: attendance-photos, profile-photos.
-// TTL set to 24 hours so cold-start cache misses still serve long-lived URLs —
-// the browser's own HTTP cache deduplicates repeat requests within that window,
-// and the client-side photo cache in app.js pins the first URL per username
-// for the entire session, preventing photo reloads on every poll.
+// Both profile-photos and attendance-photos are private buckets.
+// TTL = 24 h. We persist signed URLs for profile photos in the DB (signed_url,
+// signed_url_expires_at columns on app_users) so the same URL is reused across
+// cold starts — making it stable enough for the SW photo cache to hit on refresh.
 const SIGNED_TTL = 86400; // seconds — 24 hours
+const SIGNED_REFRESH_BEFORE = 3600; // regenerate when less than 1 h remaining
 
-// Module-level cache: key = "bucket:path" → { url, expiresAt }
-// Netlify functions stay warm across requests, so this persists within a warm instance.
-// We refresh 30 minutes before expiry to ensure the URL is always valid when the browser uses it.
+// In-memory cache for attendance photos (short-lived, no need to persist)
 const _signedUrlCache = new Map();
-const SIGNED_CACHE_TTL = (SIGNED_TTL - 1800) * 1000; // refresh 30 min before expiry (ms)
+const SIGNED_CACHE_TTL = (SIGNED_TTL - 1800) * 1000;
 
 async function getSignedUrl(bucket, pathOrUrl) {
   if (!pathOrUrl) return '';
-  // Already a full URL (legacy or public) — pass through unchanged
   if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
 
   const cacheKey = bucket + ':' + pathOrUrl;
@@ -148,6 +146,36 @@ async function getSignedUrl(bucket, pathOrUrl) {
   if (error) { console.warn('signed url fail', bucket, pathOrUrl, error.message); return ''; }
 
   _signedUrlCache.set(cacheKey, { url: data.signedUrl, expiresAt: Date.now() + SIGNED_CACHE_TTL });
+  return data.signedUrl;
+}
+
+// Get a stable signed URL for a profile photo.
+// Reads the cached URL from app_users; regenerates only when < 1 h from expiry.
+// This ensures the same URL is returned across cold starts so the SW cache hits.
+async function getProfileSignedUrl(userId, imagePath) {
+  if (!imagePath || noPhoto(imagePath)) return '';
+  if (/^https?:\/\//.test(imagePath)) return imagePath;
+
+  // Read cached URL + expiry from DB
+  const { data: row } = await sb
+    .from('app_users')
+    .select('signed_url, signed_url_expires_at')
+    .eq('id', userId)
+    .maybeSingle();
+
+  const now = Date.now();
+  const expiresAt = row && row.signed_url_expires_at ? new Date(row.signed_url_expires_at).getTime() : 0;
+  const stillValid = row && row.signed_url && expiresAt > now + SIGNED_REFRESH_BEFORE * 1000;
+
+  if (stillValid) return row.signed_url;
+
+  // Generate a fresh signed URL and persist it
+  const { data, error } = await sb.storage.from('profile-photos').createSignedUrl(imagePath, SIGNED_TTL);
+  if (error || !data) { console.warn('profile signed url fail', imagePath, error && error.message); return ''; }
+
+  const newExpiry = new Date(now + SIGNED_TTL * 1000).toISOString();
+  await sb.from('app_users').update({ signed_url: data.signedUrl, signed_url_expires_at: newExpiry }).eq('id', userId);
+
   return data.signedUrl;
 }
 
@@ -206,7 +234,7 @@ async function login(args) {
   if (!passOk) return { success: false, message: 'Invalid username or password' };
   await log_(u, 'login', 'user', u.id, 'login ok');
   const [profileImage, companyLogoUrl, companyName] = await Promise.all([
-    noPhoto(u.profile_image) ? Promise.resolve('') : getSignedUrl('profile-photos', u.profile_image),
+    getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company')
   ]);
@@ -284,16 +312,10 @@ async function listEmployees() {
   const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
   const attMap = Object.fromEntries((att || []).map(a => [a.username, a]));
   const usersArr = users || [];
-  // Resolve all profile photo signed URLs in one parallel batch
+  // Resolve profile photo URLs — reuses DB-persisted signed URLs so the same URL
+  // is returned across cold starts (stable SW cache key = no reload on refresh)
   const profileImages = await Promise.all(
-    usersArr.map(u => {
-      if (noPhoto(u.profile_image)) return Promise.resolve('');
-      // Already a full URL (legacy) — pass through
-      if (/^https?:\/\//.test(u.profile_image)) return Promise.resolve(u.profile_image);
-      return sb.storage.from('profile-photos').createSignedUrl(u.profile_image, SIGNED_TTL)
-        .then(({ data, error }) => (error || !data) ? '' : data.signedUrl)
-        .catch(() => '');
-    })
+    usersArr.map(u => getProfileSignedUrl(u.id, u.profile_image))
   );
   return usersArr.map((u, i) => {
     const a = attMap[u.username];
@@ -657,7 +679,7 @@ async function getEmployeeByUsername(args, ctx) {
   if (actor.role === 'employee' && actor.username !== args.username) return null;
   const { data: u } = await sb.from('app_users').select('*').eq('username', args.username).maybeSingle();
   if (!u) return { success: false, message: 'User not found' };
-  const profileImage = noPhoto(u.profile_image) ? '' : await getSignedUrl('profile-photos', u.profile_image);
+  const profileImage = await getProfileSignedUrl(u.id, u.profile_image);
   // Resolve department name if department_id is set
   let department = '';
   if (u.department_id) {
@@ -1003,21 +1025,13 @@ async function getLiveAttendance(args, ctx) {
     if (!scope || scope === 'all') return true;
     return u.department_id === scope;
   });
-  // Resolve signed URLs in parallel
+  // Resolve photo URLs in parallel — profile uses DB-persisted signed URL (stable cache key)
   const photoUrls = await Promise.all(filtered.map(a => {
     const u = userMap[a.user_id] || {};
-    const profilePath = u.profile_image || '';
-    const profilePromise = noPhoto(profilePath)
-      ? Promise.resolve('')
-      : /^https?:\/\//.test(profilePath)
-        ? Promise.resolve(profilePath)
-        : sb.storage.from('profile-photos').createSignedUrl(profilePath, SIGNED_TTL)
-            .then(({ data, error }) => (error || !data) ? '' : data.signedUrl)
-            .catch(() => '');
     return Promise.all([
       getSignedUrl('attendance-photos', a.check_in_photo_url  || ''),
       getSignedUrl('attendance-photos', a.check_out_photo_url || ''),
-      profilePromise
+      getProfileSignedUrl(u.id, u.profile_image || '')
     ]);
   }));
   return filtered.map((a, i) => {
@@ -1123,7 +1137,7 @@ async function updateMyProfile(args, ctx) {
   if (error) { console.error('updateMyProfile DB error:', error); return { success: false, message: error.message }; }
   // '__removed__', null, and '' all mean "no photo"
   const storedPath = noPhoto(data.profile_image) ? '' : data.profile_image;
-  const profileImage = storedPath ? await getSignedUrl('profile-photos', storedPath) : '';
+  const profileImage = await getProfileSignedUrl(actor.id, storedPath);
   return { success: true, profileImage, fullName: data.full_name, email: data.email || '', phone: data.phone || '' };
 }
 
@@ -1473,9 +1487,7 @@ async function getNotifications(args, ctx) {
     const leaveNameMap  = Object.fromEntries((leaveUsers || []).map(u => [u.id, u.full_name]));
     const leavePhotoMap = {};
     await Promise.all((leaveUsers || []).map(async u => {
-      if (!noPhoto(u.profile_image)) {
-        leavePhotoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
-      }
+      leavePhotoMap[u.id] = await getProfileSignedUrl(u.id, u.profile_image).catch(() => '');
     }));
 
     for (const l of leaves || []) {
@@ -1529,9 +1541,7 @@ async function getNotifications(args, ctx) {
     const attNameMap  = Object.fromEntries((attUsers || []).map(u => [u.id, u.full_name]));
     const attPhotoMap = {};
     await Promise.all((attUsers || []).map(async u => {
-      if (!noPhoto(u.profile_image)) {
-        attPhotoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
-      }
+      attPhotoMap[u.id] = await getProfileSignedUrl(u.id, u.profile_image).catch(() => '');
     }));
 
     for (const a of checkins || []) {
@@ -1925,9 +1935,7 @@ async function getMessages(args, ctx) {
   const existingUserIds = new Set((photoUsers || []).map(u => u.id));
   const photoMap = {};
   await Promise.all((photoUsers || []).map(async u => {
-    if (!noPhoto(u.profile_image)) {
-      photoMap[u.id] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
-    }
+    photoMap[u.id] = await getProfileSignedUrl(u.id, u.profile_image).catch(() => '');
   }));
 
   const replyMap = {};
@@ -2146,11 +2154,9 @@ async function getTickets(args, ctx) {
   const ticketPhotoMap = {};
   if (ticketUsernames.length) {
     const { data: photoUsers2 } = await sb.from('app_users')
-      .select('username, profile_image').in('username', ticketUsernames);
+      .select('id, username, profile_image').in('username', ticketUsernames);
     await Promise.all((photoUsers2 || []).map(async u => {
-      if (!noPhoto(u.profile_image)) {
-        ticketPhotoMap[u.username] = await getSignedUrl('profile-photos', u.profile_image).catch(() => '');
-      }
+      ticketPhotoMap[u.username] = await getProfileSignedUrl(u.id, u.profile_image).catch(() => '');
     }));
   }
 
