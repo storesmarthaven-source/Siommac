@@ -457,13 +457,6 @@
 .ps-section--active   .ps-section-header { background: var(--siomac-navy); }
 .ps-section--inactive .ps-section-header { background: #4b5563; }
 
-/* Subtle radial highlight top-right */
-.ps-section-header::after {
-  content: '';
-  position: absolute; right: -30px; top: -30px;
-  width: 120px; height: 120px; border-radius: 50%;
-  background: rgba(255,255,255,0.06); pointer-events: none;
-}
 
 .ps-section-icon {
   width: 44px; height: 44px; border-radius: 14px;
@@ -474,11 +467,11 @@
 
 .ps-section-label { flex: 1; }
 .ps-section-title {
-  font-size: 1.05rem; font-weight: 700;
+  font-size: 1.25rem; font-weight: 700;
   color: #fff; margin: 0; line-height: 1.2;
 }
 .ps-section-sub {
-  font-size: 0.74rem; color: rgba(255,255,255,0.65); margin-top: 3px;
+  font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-top: 3px;
 }
 .ps-section-stats {
   display: flex; align-items: center; gap: 0;
