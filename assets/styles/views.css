@@ -494,10 +494,10 @@
 .ps-status-badge.active   { background: rgba(46,125,50,0.18); color: #2E7D32; }
 .ps-status-badge.inactive { background: rgba(158,158,158,0.18); color: #757575; }
 
-/* Cards grid — always 2 columns */
+/* Cards grid */
 .ps-projects-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 24px;
 }
 .ps-card {
@@ -556,10 +556,8 @@
 }
 .ps-empty i { font-size: 48px; opacity: .3; display: block; margin-bottom: 14px; }
 
-@media (max-width: 900px) {
-  .ps-projects-grid { grid-template-columns: 1fr; }
-}
 @media (max-width: 700px) {
+  .ps-projects-grid { grid-template-columns: 1fr; }
   .ps-filters-bar { border-radius: 24px; }
 }
 
