@@ -5735,8 +5735,6 @@ const AttendanceSystem = (function() {
     document.getElementById('projectLongitude').value   = site ? site.longitude : '';
     document.getElementById('projectRadius').value      = site ? site.radius : 200;
     document.getElementById('projectDescription').value = site ? (site.description || '') : '';
-    const _isActiveEl = document.getElementById('projectIsActive');
-    if (_isActiveEl) _isActiveEl.checked = site ? (site.isActive !== false) : true;
 
     // Update coordinate display
     const _coordBox = document.getElementById('siteCoordDisplay');
@@ -5931,9 +5929,8 @@ const AttendanceSystem = (function() {
     if (!latitude || isNaN(latitude) || latitude < -90  || latitude > 90)  { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     if (!longitude || isNaN(longitude) || longitude < -180 || longitude > 180) { showPopup('error', 'Missing Location', 'Please use "Set Location on Map" to place the site pin.'); return; }
     
-    const isActive = document.getElementById('projectIsActive') ? document.getElementById('projectIsActive').checked : true;
     const action = editingSiteId ? 'updateProjectSite' : 'addProjectSite';
-    const args = { name, address, latitude, longitude, radius, description, isActive, actorId: currentUserId, actorUsername: currentUser };
+    const args = { name, address, latitude, longitude, radius, description, actorId: currentUserId, actorUsername: currentUser };
     if (editingSiteId) args.id = editingSiteId;
 
     showSpinner('Saving project site...');
@@ -5949,9 +5946,9 @@ const AttendanceSystem = (function() {
         try {
           if (_editingId) {
             const idx = projectSites.findIndex(s => String(s.id) === String(_editingId));
-            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description, isActive });
+            if (idx !== -1) Object.assign(projectSites[idx], { name, address, latitude, longitude, radius, description });
           } else if (res.id) {
-            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description, isActive });
+            projectSites.push({ id: res.id, name, address, latitude, longitude, radius, description });
           }
           displayProjectSites(projectSites);
         } catch (renderErr) {
@@ -6077,8 +6074,15 @@ const AttendanceSystem = (function() {
     // previous renders will see a stale gen and bail without touching the DOM
     const renderGen = ++_psRenderGen;
 
+    // ── Compute isActive per site from liveData ───────────────────────────────
+    // A site is active if at least one employee is currently checked in there
+    const _checkedInSiteIds = new Set(
+      (liveData || []).filter(r => !r.isCheckedOut && r.siteId).map(r => String(r.siteId))
+    );
+    sites = sites.map(s => Object.assign({}, s, { isActive: _checkedInSiteIds.has(String(s.id)) }));
+
     // ── Stats ────────────────────────────────────────────────────────────────
-    const activeSites = sites.filter(s => s.isActive !== false);
+    const activeSites = sites.filter(s => s.isActive);
     _countUp(document.getElementById('psTotalSites'),  sites.length);
     _countUp(document.getElementById('psActiveZones'), activeSites.length);
     const _activeEmps = (_empAllList || []).filter(e => e.status === 'Active').length;
@@ -6091,11 +6095,11 @@ const AttendanceSystem = (function() {
     let filtered = search
       ? sites.filter(s => s.name.toLowerCase().includes(search) || (s.address || '').toLowerCase().includes(search))
       : sites;
-    if (_psSiteFilter === 'active')   filtered = filtered.filter(s => s.isActive !== false);
-    if (_psSiteFilter === 'inactive') filtered = filtered.filter(s => s.isActive === false);
+    if (_psSiteFilter === 'active')   filtered = filtered.filter(s => s.isActive);
+    if (_psSiteFilter === 'inactive') filtered = filtered.filter(s => !s.isActive);
 
-    const activePart   = filtered.filter(s => s.isActive !== false);
-    const inactivePart = filtered.filter(s => s.isActive === false);
+    const activePart   = filtered.filter(s => s.isActive);
+    const inactivePart = filtered.filter(s => !s.isActive);
 
     // Section count badges
     const _activeCountEl   = document.getElementById('psActiveSectionCount');
@@ -6114,7 +6118,7 @@ const AttendanceSystem = (function() {
       const lat    = Number(site.latitude)  || 0;
       const lng    = Number(site.longitude) || 0;
       const rad    = Number(site.radius)    || 200;
-      const active = site.isActive !== false;
+      const active = !!site.isActive;
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}" data-id="${site.id}">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
@@ -6135,7 +6139,7 @@ const AttendanceSystem = (function() {
       </div>`;
     }
     function _psCardRowKey(site) {
-      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive !== false ? '1' : '0');
+      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0');
     }
 
     // ── DOM diff helper (used for both containers) ────────────────────────────

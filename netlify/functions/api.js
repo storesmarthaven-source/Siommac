@@ -268,8 +268,7 @@ async function listProjectSites() {
   return (data || []).map(s => ({
     id: s.id, name: s.name, address: s.address || '',
     latitude: Number(s.latitude), longitude: Number(s.longitude), radius: Number(s.radius),
-    description: s.description || '',
-    isActive: s.is_active !== false // default true if column missing
+    description: s.description || ''
   }));
 }
 
@@ -709,8 +708,7 @@ async function addProjectSite(args, ctx) {
   const actor = await requireRole(ctx, ['admin']);
   const { data, error } = await sb.from('project_sites').insert({
     name: args.name, address: args.address || '', latitude: args.latitude, longitude: args.longitude,
-    radius: args.radius, description: args.description || '',
-    is_active: args.isActive !== false
+    radius: args.radius, description: args.description || ''
   }).select('id').single();
   if (error) return { success: false, message: error.message };
   await log_(actor, 'create', 'site', data.id, args.name);
@@ -722,7 +720,6 @@ async function updateProjectSite(args, ctx) {
   const { error } = await sb.from('project_sites').update({
     name: args.name, address: args.address || '', latitude: args.latitude, longitude: args.longitude,
     radius: args.radius, description: args.description || '',
-    is_active: args.isActive !== false,
     updated_at: new Date().toISOString()
   }).eq('id', args.id);
   if (error) return { success: false, message: error.message };
