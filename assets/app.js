@@ -577,7 +577,7 @@ const AttendanceSystem = (function() {
       const initial = (row.fullName || '?').charAt(0).toUpperCase();
       // Use profile photo in marker if available, else fallback to coloured initial
       const markerHtml = row.profileImage
-        ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;\\'>${initial}</div>'"></div>`
+        ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;\\'>${initial}</div>'"></div>`
         : `<div style="background:${color};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;">${initial}</div>`;
 
       const marker = L.marker([lat, lng], {
@@ -650,7 +650,7 @@ const AttendanceSystem = (function() {
             </div>
           </div>
 
-          ${selfie ? `<div class="lm-popup-selfie"><img src="${selfie}" alt="Selfie" onerror="this.parentElement.style.display='none'"></div>` : ''}
+          ${selfie ? `<div class="lm-popup-selfie"><img src="${selfie}" alt="Selfie" onerror="if(this.parentElement)this.parentElement.style.display='none'"></div>` : ''}
 
           <!-- Footer -->
           <div class="lm-popup-footer">
@@ -1474,7 +1474,7 @@ const AttendanceSystem = (function() {
           const resolver = NOTIF_SECTION[n.type];
           const section  = resolver ? resolver() : null;
           const iconEl = n.photoUrl
-            ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
+            ? `<div class="hdr-notif-icon ${escapeHtml(n.color)}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(n.photoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="if(this.parentElement)this.parentElement.innerHTML='<i class=\\'fas ${escapeHtml(n.icon)}\\'></i>'"></div>`
             : `<div class="hdr-notif-icon ${escapeHtml(n.color)}"><i class="fas ${escapeHtml(n.icon)}"></i></div>`;
           const bodyPreview = n.body ? `<div class="hdr-notif-sub" style="margin-top:3px;font-style:italic;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHtml(n.body)}"</div>` : '';
           return `<div class="hdr-notif-item${isRead ? ' read' : ' unread'}" data-id="${escapeHtml(n.id)}" data-notif-id="${escapeHtml(n.id)}"${section ? ` data-notif-section="${escapeHtml(section)}"` : ''} style="cursor:${section ? 'pointer' : 'default'}">
@@ -4290,7 +4290,7 @@ const AttendanceSystem = (function() {
 
     // Render rows
     const photoThumb = (url, label) => url
-      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="eh-photo-thumb"><img src="${escapeHtml(url)}" alt="${label}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\' style=\\'color:var(--text-muted)\\'></i>'"></a>`
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="eh-photo-thumb"><img src="${escapeHtml(url)}" alt="${label}" onerror="if(this.parentElement)this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\' style=\\'color:var(--text-muted)\\'></i>'"></a>`
       : `<span class="eh-photo-thumb" style="cursor:default"><i class="fas fa-camera-slash" style="color:var(--text-muted);font-size:13px;"></i></span>`;
 
     const statusBadge = s => {
@@ -6405,7 +6405,7 @@ const AttendanceSystem = (function() {
     if (countEl) countEl.textContent = rows.length + ' record' + (rows.length !== 1 ? 's' : '');
 
     const thumb = (inUrl, outUrl) => {
-      if (inUrl) return `<a href="${inUrl}" target="_blank" rel="noopener" class="att-selfie-thumb" title="View check-in selfie"><img src="${inUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\'></i>'"></a>`;
+      if (inUrl) return `<a href="${inUrl}" target="_blank" rel="noopener" class="att-selfie-thumb" title="View check-in selfie"><img src="${inUrl}" onerror="if(this.parentElement)this.parentElement.innerHTML='<i class=\\'fas fa-camera-slash\\'></i>'"></a>`;
       return `<div class="att-selfie-thumb att-no-photo"><i class="fas fa-user-slash"></i></div>`;
     };
 
