@@ -47,11 +47,11 @@
   [headers.values]
     Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
 
-# ── Static images (logos, icons stored in repo) ───────────────────────────────
+# ── Static images — short cache so logo updates take effect quickly ───────────
 [[headers]]
   for = "/assets/images/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, stale-while-revalidate=86400"
+    Cache-Control = "public, max-age=3600, must-revalidate"
 
 # ── Netlify function — no caching (dynamic API) ───────────────────────────────
 [[headers]]
