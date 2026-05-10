@@ -99,10 +99,10 @@
 }
 .lm-center-btn {
   position: absolute;
-  top: 94px; left: 10px;
+  top: 72px; left: 10px;
   z-index: 500;
   background: var(--siomac-red); border: 2px solid rgba(0,0,0,0.2);
-  color: #fff; font-size: 14px;
+  color: #fff; font-size: 13px;
   font-family: inherit; padding: 0;
   width: 26px; height: 26px;
   border-radius: 4px;
