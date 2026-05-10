@@ -2802,12 +2802,12 @@ const AttendanceSystem = (function() {
 
     // Fetch live branding from server — always authoritative for the logo.
     _rawApi('getSettings', {}).then(function(s) {
-      if (!s || typeof s !== 'object') return;
+      if (!s || typeof s !== 'object') { applyCompanyLogo(''); return; }
       const logoUrl = s.companyLogoUrl || s.logoUrl || '';
       const name    = s.companyName || '';
-      if (logoUrl) applyCompanyLogo(logoUrl);
-      if (name)    applyCompanyName(name);
-    }).catch(function() {});
+      applyCompanyLogo(logoUrl); // always call — falls back to default if no custom logo
+      if (name) applyCompanyName(name);
+    }).catch(function() { applyCompanyLogo(''); }); // show default on network error
 
     // Set up event listeners
     setupEventListeners();
