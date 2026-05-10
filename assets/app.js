@@ -543,7 +543,15 @@ const AttendanceSystem = (function() {
 
     document.getElementById('lmCustomSelectTrigger').addEventListener('click', e => {
       e.stopPropagation();
-      wrap.classList.toggle('open');
+      const isOpen = wrap.classList.toggle('open');
+      if (isOpen) {
+        const trigger  = document.getElementById('lmCustomSelectTrigger');
+        const dropdown = document.getElementById('lmCustomSelectDropdown');
+        const rect = trigger.getBoundingClientRect();
+        dropdown.style.top   = (rect.bottom + 4) + 'px';
+        dropdown.style.left  = rect.left + 'px';
+        dropdown.style.width = rect.width + 'px';
+      }
     });
 
     document.getElementById('lmCustomSelectDropdown').addEventListener('click', e => {

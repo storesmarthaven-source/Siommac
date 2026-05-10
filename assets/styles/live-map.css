@@ -99,16 +99,19 @@
 }
 .lm-center-btn {
   position: absolute;
-  bottom: 20px; left: 20px;
+  top: 80px; right: 10px;
   z-index: 500;
-  background: var(--siomac-red); border: none;
-  color: #fff; font-size: 13px; font-weight: 700;
-  font-family: inherit; padding: 9px 18px; border-radius: 40px;
-  display: inline-flex; align-items: center; gap: 7px;
-  box-shadow: 0 4px 14px rgba(228,12,12,0.35);
-  cursor: pointer; transition: background .18s, box-shadow .18s;
+  background: #fff; border: 2px solid rgba(0,0,0,0.2);
+  color: #333; font-size: 18px; font-weight: 700;
+  font-family: inherit; padding: 0;
+  width: 30px; height: 30px;
+  border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: none;
+  cursor: pointer; transition: background .18s;
 }
-.lm-center-btn:hover { background: #c00a0a; box-shadow: 0 6px 18px rgba(228,12,12,0.45); }
+.lm-center-btn:hover { background: #f4f4f4; }
+.lm-center-btn span { display: none; }
 
 .lm-refresh-btn {
   background: var(--bg-subtle, #F4F6FA); border: 1px solid var(--border);
@@ -150,7 +153,7 @@
 }
 .lm-custom-select.open .lm-custom-select-trigger {
   border-color: #DFE7F3;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
 }
 
 /* Icon box inside trigger */
@@ -195,16 +198,14 @@
 /* Dropdown panel */
 .lm-custom-select-dropdown {
   display: none;
-  position: absolute;
-  bottom: 100%; left: 0; right: 0;
+  position: fixed;
   background: #fff;
   border: 1.5px solid #f3f1f1;
-  border-bottom: none;
-  border-radius: 14px 14px 0 0;
+  border-radius: 14px;
   max-height: 260px;
   overflow-y: auto;
-  z-index: 999;
-  padding-top: 6px;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
 }
 .lm-custom-select-dropdown::-webkit-scrollbar { width: 4px; }
 .lm-custom-select-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -220,7 +221,6 @@
   transition: background .12s;
   border-bottom: 1px solid #f0f4f8;
 }
-.lm-cs-option:first-child { border-radius: 12px 12px 0 0; }
 .lm-cs-option:last-child { border-bottom: none; }
 .lm-cs-option:hover { background: #f5f8ff; }
 .lm-cs-option.selected { background: #eef3fb; }
