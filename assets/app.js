@@ -2792,23 +2792,35 @@ const AttendanceSystem = (function() {
       if (savedLayout) { currentLayoutMode = savedLayout; applyLayout(savedLayout); }
     } catch (_) {}
 
-    // Apply cached company name instantly to avoid flash — but NOT the logo.
-    // The logo URL in localStorage may point to an old file (each upload creates
-    // a new unique path). Always fetch the logo fresh from the server instead.
+    // Show cached branding instantly (no flash), then revalidate from server.
+    // Logo URL is safe to cache — each upload creates a unique filename so
+    // the cached URL stays valid; it only changes when admin uploads a new logo.
     try {
       const cached = loadSession();
-      if (cached && cached.companyName) applyCompanyName(cached.companyName);
-    } catch (_) {}
+      // Fall back to lightweight branding cache for logged-out visitors
+      const branding = cached || JSON.parse(localStorage.getItem('siomac_branding') || 'null');
+      if (branding && branding.companyName) applyCompanyName(branding.companyName);
+      if (branding && branding.companyLogoUrl) applyCompanyLogo(branding.companyLogoUrl);
+      else applyCompanyLogo(''); // show default if no cached URL
+    } catch (_) { applyCompanyLogo(''); }
 
-    // Fetch live branding from server — always authoritative for the logo.
+    // Background revalidate — updates logo if admin changed it since last visit.
     _rawApi('getSettings', {}).then(function(res) {
-      // API wraps plain objects as { success: true, data: {...} }
       const s = (res && res.data) || res || {};
       const logoUrl = s.companyLogoUrl || s.logoUrl || '';
       const name    = s.companyName || '';
-      applyCompanyLogo(logoUrl); // always call — falls back to default if no custom logo
+      applyCompanyLogo(logoUrl);
       if (name) applyCompanyName(name);
-    }).catch(function() { applyCompanyLogo(''); }); // show default on network error
+      // Persist fresh URL so next load is instant
+      try {
+        const sess = loadSession();
+        if (sess) updateStoredSession({ companyLogoUrl: logoUrl, companyName: name || sess.companyName });
+        else {
+          // No active session (not logged in) — store branding in a separate lightweight key
+          localStorage.setItem('siomac_branding', JSON.stringify({ companyLogoUrl: logoUrl, companyName: name }));
+        }
+      } catch (_) {}
+    }).catch(function() {}); // keep showing cached logo on network error
 
     // Set up event listeners
     setupEventListeners();
