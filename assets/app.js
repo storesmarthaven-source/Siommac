@@ -2806,7 +2806,8 @@ const AttendanceSystem = (function() {
       if (!s || typeof s !== 'object') return;
       const logoUrl = s.companyLogoUrl || s.logoUrl || '';
       const name    = s.companyName || '';
-      if (logoUrl) applyCompanyLogo(logoUrl);
+      // Append cache-buster so SW/browser never serves a stale logo from cache
+      if (logoUrl) applyCompanyLogo(logoUrl + (logoUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now());
       if (name)    applyCompanyName(name);
     }).catch(function() {});
 
@@ -3543,7 +3544,10 @@ const AttendanceSystem = (function() {
     }
 
     // company logo (if admin uploaded one) — apply to login screen + sidebar brand
-    if (result.companyLogoUrl) applyCompanyLogo(result.companyLogoUrl);
+    if (result.companyLogoUrl) {
+      const _lurl = result.companyLogoUrl;
+      applyCompanyLogo(_lurl + (_lurl.includes('?') ? '&' : '?') + '_cb=' + Date.now());
+    }
 
     // company name — sidebar brand + About header (set everywhere from Settings)
     applyCompanyName(result.companyName || 'My Company');
