@@ -150,7 +150,7 @@
 }
 .lm-custom-select.open .lm-custom-select-trigger {
   border-color: #DFE7F3;
-  border-radius: 12px 12px 0 0;
+  border-radius: 0 0 12px 12px;
 }
 
 /* Icon box inside trigger */
@@ -196,15 +196,15 @@
 .lm-custom-select-dropdown {
   display: none;
   position: absolute;
-  top: 100%; left: 0; right: 0;
+  bottom: 100%; left: 0; right: 0;
   background: #fff;
   border: 1.5px solid #f3f1f1;
-  border-top: none;
-  border-radius: 0 0 14px 14px;
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
   max-height: 260px;
   overflow-y: auto;
   z-index: 999;
-  padding-bottom: 6px;
+  padding-top: 6px;
 }
 .lm-custom-select-dropdown::-webkit-scrollbar { width: 4px; }
 .lm-custom-select-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -220,7 +220,8 @@
   transition: background .12s;
   border-bottom: 1px solid #f0f4f8;
 }
-.lm-cs-option:last-child { border-bottom: none; border-radius: 0 0 12px 12px; }
+.lm-cs-option:first-child { border-radius: 12px 12px 0 0; }
+.lm-cs-option:last-child { border-bottom: none; }
 .lm-cs-option:hover { background: #f5f8ff; }
 .lm-cs-option.selected { background: #eef3fb; }
 
