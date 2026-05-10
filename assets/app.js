@@ -5993,7 +5993,8 @@ const AttendanceSystem = (function() {
     });
   }
 
-  let _psMiniMaps = {}; // track leaflet instances to avoid double-init
+  let _psMiniMaps = {};    // track leaflet instances to avoid double-init
+  let _psRenderGen = 0;   // incremented on every displayProjectSites call; stale timeouts bail
 
   // Show a Swal popup for a project site card mini-map click:
   // worker count from liveData + button to jump to Live Map section
@@ -6072,6 +6073,10 @@ const AttendanceSystem = (function() {
   let _psSiteFilter = 'all';
 
   function displayProjectSites(sites) {
+    // Bump global render generation — all pending mini-map timeouts from
+    // previous renders will see a stale gen and bail without touching the DOM
+    const renderGen = ++_psRenderGen;
+
     // ── Stats ────────────────────────────────────────────────────────────────
     const activeSites = sites.filter(s => s.isActive !== false);
     _countUp(document.getElementById('psTotalSites'),  sites.length);
@@ -6134,14 +6139,13 @@ const AttendanceSystem = (function() {
     }
 
     // ── DOM diff helper (used for both containers) ────────────────────────────
-    // Each call bumps a generation token stored on the container so that any
-    // pending setTimeout from a previous render can detect it is stale and bail.
     function _diffContainer(container, list) {
       if (!container) return;
 
-      // Bump generation — stale map-init timeouts check this before running
-      const gen = (container._psGen || 0) + 1;
-      container._psGen = gen;
+      // Use the render generation captured at the top of displayProjectSites.
+      // Any setTimeout that fires after a newer render has started will see
+      // _psRenderGen !== capturedGen and bail without touching the DOM.
+      const gen = renderGen;
 
       // Helper: destroy a mini-map slot cleanly
       function _destroyMap(mapId) {
@@ -6201,8 +6205,8 @@ const AttendanceSystem = (function() {
           _psMiniMaps[mapId] = 'pending';
           const capturedGen = gen;
           setTimeout(() => {
-            // Bail if a newer render has already replaced this container's content
-            if (container._psGen !== capturedGen) { delete _psMiniMaps[mapId]; return; }
+            // Bail if a newer displayProjectSites call has already run
+            if (_psRenderGen !== capturedGen) { delete _psMiniMaps[mapId]; return; }
             const mapEl = document.getElementById(mapId);
             if (!mapEl || mapEl._leaflet_id) { delete _psMiniMaps[mapId]; return; }
             const lat = Number(site.latitude) || 0;
