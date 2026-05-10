@@ -618,8 +618,12 @@ const AttendanceSystem = (function() {
       _scheduleHdrBadgeSync();
       if (markersNeedUpdate) {
         _liveDataHash = hash;
-        // Render immediately — photos are already cached client-side (24h signed URLs
-        // + _photoCache), so preloading adds latency without benefit for the live map.
+        // Preload all profile + selfie photos into browser cache before rendering
+        fresh.forEach(function(r) {
+          if (r.profileImage) { _patchPhotoCache(r.userId || r.username, r.profileImage); new Image().src = r.profileImage; }
+          if (r.checkInPhotoUrl)  { new Image().src = r.checkInPhotoUrl; }
+          if (r.checkOutPhotoUrl) { new Image().src = r.checkOutPhotoUrl; }
+        });
         plotLiveEmployees(liveData);
         renderLivePanel(liveData);
       } else {
@@ -3633,6 +3637,26 @@ const AttendanceSystem = (function() {
 
     // Badge-only background poll — fallback every 30s in case Realtime is unavailable
     setInterval(_scheduleHdrBadgeSync, 30 * 1000);
+
+    // Silently preload all employee profile photos into browser + SW cache
+    // so every section (messages, tickets, live map, employee cards) renders
+    // avatars instantly without a per-avatar network round-trip.
+    // Runs fully in the background — never blocks login or section load.
+    setTimeout(function _bulkPhotoPreload() {
+      _rawApi('listEmployees', {}).then(function(res) {
+        const employees = (res && res.data) || (Array.isArray(res) ? res : []);
+        employees.forEach(function(e) {
+          if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage);
+          if (e.profileImage) { const img = new Image(); img.src = e.profileImage; }
+        });
+        // Also seed from _empAllList if already loaded (admin visited employees tab)
+        if (_empAllList && _empAllList.length) {
+          _empAllList.forEach(function(e) {
+            if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage);
+          });
+        }
+      }).catch(function() {});
+    }, 1500); // slight delay so login UI settles first
 
     // No login success popup — dashboard loads immediately
   }
