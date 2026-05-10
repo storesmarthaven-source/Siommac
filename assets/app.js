@@ -4760,11 +4760,11 @@ const AttendanceSystem = (function() {
   }
 
   function displayAdminStats(stats) {
-    // Animate all cards in together on first load
+    // Animate cards only on first load — not on background refreshes
     document.querySelectorAll('.dash-stats-row .stat-card').forEach(card => {
-      card.classList.remove('stat-card-animate');
-      void card.offsetWidth; // reflow to restart animation
-      card.classList.add('stat-card-animate');
+      if (!card.classList.contains('stat-card-animate')) {
+        card.classList.add('stat-card-animate');
+      }
     });
     _countUp(document.getElementById('totalEmployees'),  stats.totalEmployees);
     _countUp(document.getElementById('presentToday'),    stats.presentToday);
