@@ -6633,35 +6633,7 @@ const AttendanceSystem = (function() {
     const pct = empData.attendanceRate;
     const rateCol = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
 
-    const rateBar = `<div class="att-rate-wrap">
-      <div class="att-rate-bar" style="width:${pct}%;background:${rateCol};"></div>
-      <span class="att-rate-val">${pct}%</span>
-    </div>`;
-
-    // Summary consistency table (same columns as the old full table)
-    const summaryTable = `
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
-        <thead>
-          <tr style="border-bottom:2px solid #e9eef3;text-align:left;">
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Present Days</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Late Days</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Absent Days</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Avg Hours/Day</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Attendance Rate</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:10px 10px;font-weight:700;color:#2E7D32;">${empData.presentDays}</td>
-            <td style="padding:10px 10px;font-weight:700;color:#7a5900;">${empData.lateDays}</td>
-            <td style="padding:10px 10px;font-weight:700;color:#b71c1c;">${empData.absentDays}</td>
-            <td style="padding:10px 10px;font-weight:600;">${empData.avgHours}h</td>
-            <td style="padding:10px 10px;">${rateBar}</td>
-          </tr>
-        </tbody>
-      </table>`;
-
-    // Day-by-day log table
+    // Day-by-day log
     const empRows = _attAllRows.filter(r => r.username === username)
       .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -6672,13 +6644,13 @@ const AttendanceSystem = (function() {
     };
 
     const logRows = empRows.map(r => `
-      <tr>
-        <td style="padding:8px 10px;" class="att-date">${r.date}</td>
-        <td style="padding:8px 10px;" class="att-time">${r.checkIn  ? fmtLocalTime(r.checkIn)  : '—'}</td>
-        <td style="padding:8px 10px;" class="att-time">${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
-        <td style="padding:8px 10px;" class="att-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
-        <td style="padding:8px 10px;">${statusBadge(r.status)}</td>
-        <td style="padding:8px 10px;">
+      <tr class="adp-log-row">
+        <td class="adp-log-date">${r.date}</td>
+        <td class="adp-log-time"><i class="fas fa-sign-in-alt adp-ti"></i>${r.checkIn  ? fmtLocalTime(r.checkIn)  : '—'}</td>
+        <td class="adp-log-time"><i class="fas fa-sign-out-alt adp-to"></i>${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
+        <td class="adp-log-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="adp-log-action">
           ${(r.checkInPhotoUrl || r.checkOutPhotoUrl) ? `
           <button class="att-action-btn btn-view-att"
             data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
@@ -6688,36 +6660,76 @@ const AttendanceSystem = (function() {
         </td>
       </tr>`).join('');
 
-    const logTable = empRows.length ? `
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="border-bottom:2px solid #e9eef3;text-align:left;">
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Date</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Check In</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Check Out</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Hours</th>
-            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Status</th>
-            <th style="padding:8px 10px;"></th>
-          </tr>
-        </thead>
-        <tbody>${logRows}</tbody>
-      </table>` : `<div class="att-empty">No records in this period.</div>`;
+    const initials = empData.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const periodLabel = _attDateRange
+      ? (_attDateRange.days === 1 ? _attDateRange.start : _attDateRange.start + ' → ' + _attDateRange.end)
+      : '';
 
     Swal.fire({
-      html: `<div style="text-align:left;">
-               <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #e9eef3;">
-                 <span style="font-size:18px;font-weight:700;color:var(--siomac-navy);">${escapeHtml(empData.name)}</span>
-                 <span style="font-size:13px;color:#6b7280;">${escapeHtml(empData.department || '')}</span>
-               </div>
-               ${summaryTable}
-               <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:8px;">Attendance Log</div>
-               <div style="overflow-x:auto;">${logTable}</div>
-             </div>`,
-      width: '860px',
-      background: 'rgba(255,255,255,0.97)',
+      html: `
+        <div class="adp">
+          <!-- Header -->
+          <div class="adp-header">
+            <div class="adp-avatar">${initials}</div>
+            <div class="adp-identity">
+              <div class="adp-name">${escapeHtml(empData.name)}</div>
+              <div class="adp-meta">
+                <span class="adp-dept"><i class="fas fa-building"></i> ${escapeHtml(empData.department || '—')}</span>
+                ${periodLabel ? `<span class="adp-period"><i class="fas fa-calendar-alt"></i> ${periodLabel}</span>` : ''}
+              </div>
+            </div>
+            <div class="adp-rate-pill" style="background:${rateCol}20;color:${rateCol};">
+              <i class="fas fa-chart-line"></i> ${pct}%
+            </div>
+          </div>
+
+          <!-- Stat cards -->
+          <div class="adp-stats">
+            <div class="adp-stat adp-stat--present">
+              <div class="adp-stat-val">${empData.presentDays}</div>
+              <div class="adp-stat-lbl">Present</div>
+            </div>
+            <div class="adp-stat adp-stat--late">
+              <div class="adp-stat-val">${empData.lateDays}</div>
+              <div class="adp-stat-lbl">Late</div>
+            </div>
+            <div class="adp-stat adp-stat--absent">
+              <div class="adp-stat-val">${empData.absentDays}</div>
+              <div class="adp-stat-lbl">Absent</div>
+            </div>
+            <div class="adp-stat adp-stat--hours">
+              <div class="adp-stat-val">${empData.avgHours}h</div>
+              <div class="adp-stat-lbl">Avg / Day</div>
+            </div>
+            <div class="adp-stat adp-stat--rate">
+              <div class="adp-stat-val" style="color:${rateCol}">${pct}%</div>
+              <div class="adp-stat-lbl">Rate</div>
+              <div class="adp-rate-bar-wrap">
+                <div class="adp-rate-bar-fill" style="width:${pct}%;background:${rateCol};"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Log table -->
+          <div class="adp-log-wrap">
+            <div class="adp-section-title"><i class="fas fa-table-list"></i> Attendance Log</div>
+            ${empRows.length ? `
+            <table class="adp-log-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody>${logRows}</tbody>
+            </table>` : `<div class="att-empty">No records in this period.</div>`}
+          </div>
+        </div>`,
+      width: '980px',
+      padding: 0,
+      background: 'var(--bg-card)',
       showConfirmButton: false,
       showCloseButton: true,
-      customClass: { popup: 'att-detail-popup' }
+      customClass: { popup: 'adp-popup', closeButton: 'adp-close-btn' }
     });
   }
 

@@ -2506,6 +2506,102 @@
 }
 .btn-view-emp-detail i { font-size: 11px; }
 
+/* ── Employee Detail Popup (adp) ─────────────────────────────────────────── */
+.adp-popup {
+  border-radius: 18px !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.adp-close-btn {
+  position: absolute !important;
+  top: 16px !important; right: 16px !important;
+  color: #fff !important; font-size: 18px !important;
+  opacity: 0.8;
+  z-index: 10;
+}
+.adp-close-btn:hover { opacity: 1 !important; }
+
+.adp { font-family: inherit; }
+
+/* Header */
+.adp-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 28px 28px 22px;
+  background: var(--siomac-navy);
+  color: #fff;
+}
+.adp-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.25);
+}
+.adp-identity { flex: 1; min-width: 0; }
+.adp-name { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.adp-meta { display: flex; gap: 14px; margin-top: 4px; flex-wrap: wrap; }
+.adp-dept, .adp-period {
+  font-size: 12px; opacity: 0.75;
+  display: flex; align-items: center; gap: 5px;
+}
+.adp-rate-pill {
+  padding: 6px 14px; border-radius: 40px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Stat cards strip */
+.adp-stats {
+  display: flex; border-bottom: 1px solid var(--border);
+}
+.adp-stat {
+  flex: 1; padding: 18px 12px; text-align: center;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.adp-stat:last-child { border-right: none; }
+.adp-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+.adp-stat-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+.adp-stat--present .adp-stat-val { color: #2E7D32; }
+.adp-stat--late    .adp-stat-val { color: #7a5900; }
+.adp-stat--absent  .adp-stat-val { color: #b71c1c; }
+.adp-stat--hours   .adp-stat-val { color: var(--siomac-navy); }
+.adp-stat--rate { flex: 1.4; }
+.adp-rate-bar-wrap {
+  width: 80%; height: 5px; background: var(--border);
+  border-radius: 3px; overflow: hidden; margin-top: 4px;
+}
+.adp-rate-bar-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* Log table */
+.adp-log-wrap { padding: 20px 24px 24px; }
+.adp-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.adp-log-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.adp-log-table thead tr {
+  border-bottom: 2px solid var(--border);
+}
+.adp-log-table th {
+  padding: 8px 12px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted);
+}
+.adp-log-row { border-bottom: 1px solid var(--border); transition: background .15s; }
+.adp-log-row:last-child { border-bottom: none; }
+.adp-log-row:hover { background: var(--bg-subtle); }
+.adp-log-date  { padding: 10px 12px; font-weight: 600; color: var(--siomac-navy); white-space: nowrap; }
+.adp-log-time  { padding: 10px 12px; color: var(--text-muted); white-space: nowrap; }
+.adp-log-hours { padding: 10px 12px; font-weight: 600; color: var(--siomac-navy); }
+.adp-log-action { padding: 10px 12px; text-align: center; }
+.adp-ti { color: #2E7D32; margin-right: 5px; font-size: 11px; }
+.adp-to { color: var(--siomac-red); margin-right: 5px; font-size: 11px; }
+
 /* ── Attendance rate bar ─────────────────────────────────────────────────── */
 .att-rate-wrap {
   display: flex; align-items: center; gap: 8px;
