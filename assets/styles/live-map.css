@@ -352,17 +352,36 @@
   box-shadow: none !important;
   border-radius: 0 !important;
   padding: 0 !important;
+  overflow: visible !important;
 }
-.leaflet-popup-tip-container { display: none !important; }
+.leaflet-popup-tip-container {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important; height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.leaflet-popup-tip {
+  display: none !important;
+  visibility: hidden !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
 .leaflet-popup-content {
   margin: 0 !important;
   width: auto !important;
-  white-space: nowrap;
+  white-space: normal;
 }
 .leaflet-popup {
   margin-bottom: 0 !important;
-  filter: drop-shadow(0 8px 28px rgba(0,0,0,0.18));
+  filter: none;
 }
+/* Kill any outline/focus ring that shows as a blue dot on the popup anchor */
+.siomac-popup,
+.siomac-popup *,
+.leaflet-popup,
+.leaflet-popup * { outline: none !important; }
+.siomac-popup .leaflet-popup-content-wrapper { border: none !important; }
 
 /* ── Popup close button ── */
 .leaflet-popup-close-button {
@@ -404,6 +423,7 @@
   max-width: 310px;
   animation: lmPopupIn .18s ease-out;
   position: relative;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
 }
 @keyframes lmPopupIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -446,10 +466,6 @@
   font-size: 0.82rem; font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lm-popup-site-dist {
-  font-size: 0.67rem; color: rgba(255,255,255,0.82); margin-top: 2px;
-  display: flex; align-items: center; gap: 4px;
-}
 .lm-popup-status-pill {
   flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 4px;
@@ -463,14 +479,15 @@
   padding: 13px 15px 10px;
   border-bottom: 1px solid var(--border, #eee);
 }
-.lm-popup-emp-info { min-width: 0; }
+.lm-popup-emp-info { min-width: 0; flex: 1; }
 .lm-popup-emp-name {
   font-size: 0.88rem; font-weight: 700;
   color: var(--text-primary, #111);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: normal; word-break: break-word;
 }
 .lm-popup-emp-meta {
   font-size: 0.68rem; color: var(--text-muted, #888); margin-top: 2px;
+  white-space: normal; word-break: break-word;
 }
 
 /* ── Time strip ── */
@@ -481,12 +498,12 @@
   border-bottom: 1px solid var(--border, #eee);
 }
 .lm-popup-time-cell {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 2px;
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px; text-align: center;
 }
 .lm-popup-time-cell i { font-size: 0.75rem; color: var(--siomac-red, #d40000); }
-.lm-popup-time-label { font-size: 0.62rem; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: .04em; }
-.lm-popup-time-val   { font-size: 0.82rem; font-weight: 700; color: var(--text-primary, #111); }
+.lm-popup-time-label { font-size: 0.62rem; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: .04em; width: 100%; text-align: center; }
+.lm-popup-time-val   { font-size: 0.82rem; font-weight: 700; color: var(--text-primary, #111); width: 100%; text-align: center; }
 .lm-popup-time-divider {
   width: 1px; background: var(--border, #eee); margin: 4px 10px;
 }

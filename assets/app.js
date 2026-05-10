@@ -664,6 +664,8 @@ const AttendanceSystem = (function() {
       // Selfie = attendance check-in/out photo; profile = employee profile photo
       const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
       const profile = row.profileImage || '';
+      // Preload selfie into browser cache so the popup shows it instantly on open
+      if (selfie) { const _pre = new Image(); _pre.src = selfie; }
       const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
       const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
       const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
@@ -690,7 +692,6 @@ const AttendanceSystem = (function() {
             <div class="lm-popup-building-icon"><i class="fas fa-building"></i></div>
             <div class="lm-popup-site-info">
               <div class="lm-popup-site-name">${row.siteName ? row.siteName : 'On Site'}</div>
-              ${row.distanceM != null ? `<div class="lm-popup-site-dist"><i class="fas fa-ruler-horizontal"></i> ${row.distanceM}m from site</div>` : ''}
               <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};margin-top:6px;display:inline-flex;">
                 <i class="fas ${statusIcon}"></i> ${statusLabel}
               </span>
@@ -737,15 +738,22 @@ const AttendanceSystem = (function() {
       // the user selects an employee from the Live Field Activity panel.
     });
 
-    // If the previously active marker was for an employee whose data just refreshed,
-    // keep it visible but update its position/content in place.
+    // If an employee marker is currently open, silently update it in place.
+    // Never remove/re-add — that closes the popup and jumps the map.
     if (_activeEmpMarker && map) {
       const stillExists = liveMarkers.find(m => m._liveUserId === _activeEmpMarker._liveUserId);
       if (stillExists) {
-        // Swap to updated marker (same position, fresh popup content)
-        map.removeLayer(_activeEmpMarker);
-        stillExists.addTo(map);
-        _activeEmpMarker = stillExists;
+        if (stillExists !== _activeEmpMarker) {
+          // New marker object for same employee — transfer map presence silently.
+          // Add new one first so the map never has zero markers for this employee.
+          stillExists.addTo(map);
+          map.removeLayer(_activeEmpMarker);
+          _activeEmpMarker = stillExists;
+        }
+        // Re-open popup in place with fresh content (no pan/zoom)
+        if (map.hasLayer(_activeEmpMarker)) {
+          _activeEmpMarker.openPopup();
+        }
       } else {
         // Employee no longer in data — hide marker
         map.removeLayer(_activeEmpMarker);
@@ -874,6 +882,12 @@ const AttendanceSystem = (function() {
     const marker = liveMarkers.find(m => m._liveUserId === userId);
     if (!marker) return;
 
+    // If the same marker is already open on the map, just swap the popup
+    // content in place — no zoom, no pan, no flicker.
+    if (_activeEmpMarker === marker && map.hasLayer(marker) && marker.isPopupOpen()) {
+      return;
+    }
+
     // Hide the previously shown employee marker (if different)
     if (_activeEmpMarker && _activeEmpMarker !== marker) {
       map.removeLayer(_activeEmpMarker);
@@ -883,27 +897,45 @@ const AttendanceSystem = (function() {
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
 
-    // Snap to zoom 15 instantly then open popup.
-    map.setView(marker.getLatLng(), 15, { animate: false });
+    // Only zoom in if not already at a useful zoom level
+    const currentZoom = map.getZoom();
+    if (currentZoom < 14) {
+      map.setView(marker.getLatLng(), 15, { animate: true, duration: 0.4 });
+    }
     marker.openPopup();
 
-    // Leaflet positions the popup asynchronously. Wait two frames so the element
-    // has its final dimensions and position, then pan to ensure the full card
-    // (including selfie when present) is visible with 16px clearance at the top.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    // Pan only enough to ensure the full popup card is visible (16px padding).
+    function _panToPopup() {
       if (!map) return;
       const popup = marker.getPopup();
       const popupEl = popup && popup.getElement ? popup.getElement() : document.querySelector('.leaflet-popup');
       if (!popupEl) return;
       const rect    = popupEl.getBoundingClientRect();
       const mapRect = map.getContainer().getBoundingClientRect();
-      const topGap  = rect.top - mapRect.top;   // negative = above map edge
-      const botGap  = mapRect.bottom - rect.bottom; // negative = below map edge
+      const topGap  = rect.top - mapRect.top;
+      const botGap  = mapRect.bottom - rect.bottom;
       const PAD     = 16;
       if (topGap < PAD) {
         map.panBy([0, -(PAD - topGap)], { animate: true, duration: 0.2 });
       } else if (botGap < PAD) {
         map.panBy([0, PAD - botGap], { animate: true, duration: 0.2 });
+      }
+    }
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const popup = marker.getPopup();
+      const popupEl = popup && popup.getElement ? popup.getElement() : document.querySelector('.leaflet-popup');
+      if (!popupEl) { _panToPopup(); return; }
+
+      // Selfies are preloaded — complete will almost always be true immediately.
+      const selfieImg = popupEl.querySelector('.lm-popup-selfie img');
+      if (selfieImg && !selfieImg.complete) {
+        let _done = false;
+        const _finish = () => { if (_done) return; _done = true; _panToPopup(); };
+        selfieImg.addEventListener('load',  _finish, { once: true });
+        selfieImg.addEventListener('error', _finish, { once: true });
+      } else {
+        _panToPopup();
       }
     }));
   }
