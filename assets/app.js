@@ -4760,12 +4760,6 @@ const AttendanceSystem = (function() {
   }
 
   function displayAdminStats(stats) {
-    // Animate cards only on first load — not on background refreshes
-    document.querySelectorAll('.dash-stats-row .stat-card').forEach(card => {
-      if (!card.classList.contains('stat-card-animate')) {
-        card.classList.add('stat-card-animate');
-      }
-    });
     _countUp(document.getElementById('totalEmployees'),  stats.totalEmployees);
     _countUp(document.getElementById('presentToday'),    stats.presentToday);
     _countUp(document.getElementById('absentToday'),     stats.absentToday);
@@ -5466,16 +5460,33 @@ const AttendanceSystem = (function() {
         const list = Array.isArray(res.data) ? res.data : [];
         departments = list;
         _markLoaded('s-adm-departments');
-        // Ensure _empAllList is populated for the attendance rate stat
-        if (_empAllList && _empAllList.length) {
+        // Ensure both _empAllList (for denominator) and liveData (for numerator) are
+        // populated before rendering — both are needed for the attendance rate stat
+        const _needEmps = !(_empAllList && _empAllList.length);
+        const _needLive = !(liveData && liveData.length);
+        if (!_needEmps && !_needLive) {
           displayDepartments(list);
         } else {
-          _rawApi('listEmployees', {}).then(r => {
-            if (r && r.success && r.data) {
-              _empAllList = r.data;
-              _empAllList.forEach(e => { if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage); });
-            }
-          }).catch(() => {}).finally(() => displayDepartments(list));
+          const _scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
+          const _fetches = [];
+          if (_needEmps) {
+            _fetches.push(
+              _rawApi('listEmployees', {}).then(r => {
+                if (r && r.success && r.data) {
+                  _empAllList = r.data;
+                  _empAllList.forEach(e => { if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage); });
+                }
+              }).catch(() => {})
+            );
+          }
+          if (_needLive) {
+            _fetches.push(
+              _rawApi('getLiveAttendance', { scope: _scope }).then(r => {
+                liveData = (r && r.success && r.data) || [];
+              }).catch(() => {})
+            );
+          }
+          Promise.all(_fetches).finally(() => displayDepartments(list));
         }
       },
       onError: err => {
@@ -5505,11 +5516,20 @@ const AttendanceSystem = (function() {
     _countUp(document.getElementById('deptStatTotal'),     departmentList.length);
     _countUp(document.getElementById('deptStatEmployees'), departmentList.reduce((s, d) => s + (d.employeeCount || 0), 0));
     _countUp(document.getElementById('deptStatHeads'),     departmentList.filter(d => d.manager && d.manager !== '—').length);
-    // Avg attendance rate — from _empAllList (has todayStatus per employee)
+    // Avg attendance rate — use liveData (always fresh) for checked-in count,
+    // denominator from _empAllList active employees
     const _rateEl = document.getElementById('deptStatRate');
     if (_rateEl) {
       const activeEmps = (_empAllList || []).filter(e => e.status === 'Active');
-      const checkedIn  = activeEmps.filter(e => e.todayStatus === 'checkedin' || e.todayStatus === 'checkedout').length;
+      let checkedIn = 0;
+      if (liveData && liveData.length) {
+        // liveData has all rows today (checked-in + checked-out), each unique by username
+        const liveUsernames = new Set((liveData || []).map(r => r.username).filter(Boolean));
+        checkedIn = activeEmps.filter(e => liveUsernames.has(e.username)).length;
+      } else {
+        // fallback: use todayStatus on _empAllList
+        checkedIn = activeEmps.filter(e => e.todayStatus === 'checkedin' || e.todayStatus === 'checkedout').length;
+      }
       const rate = activeEmps.length > 0 ? Math.round((checkedIn / activeEmps.length) * 100) : 0;
       _countUp(_rateEl, rate, '%');
     }

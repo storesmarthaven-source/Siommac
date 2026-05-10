@@ -1071,20 +1071,7 @@
 .dash-stat-summary .dash-stat-val {
   font-size: 0.88rem;
 }
-/* ─── Stat card entrance animation ─── */
-@keyframes statCardIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.stat-card.stat-card-animate {
-  animation: statCardIn 0.35s ease both;
-}
-.dash-stats-row .stat-card:nth-child(1) { animation-delay: 0ms; }
-.dash-stats-row .stat-card:nth-child(2) { animation-delay: 50ms; }
-.dash-stats-row .stat-card:nth-child(3) { animation-delay: 100ms; }
-.dash-stats-row .stat-card:nth-child(4) { animation-delay: 150ms; }
-.dash-stats-row .stat-card:nth-child(5) { animation-delay: 200ms; }
-.dash-stats-row .stat-card:nth-child(6) { animation-delay: 250ms; }
+/* stat-card-animate kept as a no-op class (values animate via _countUp, not the card) */
 
 /* ─── Stat cards ─── */
 .stat-card {
