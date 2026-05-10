@@ -6551,7 +6551,7 @@ const AttendanceSystem = (function() {
     const args = _attApiArgs();
     _skelOnce('s-adm-attendance', () => {
       destroyDataTable('attendanceTable');
-      setSkel('attendanceTableBody', skelTableRows(9, 6));
+      setSkel('attendanceTableBody', skelTableRows(8, 6));
     });
     apiSwr('listDailyLog', args, {
       onData: res => {
@@ -6627,8 +6627,27 @@ const AttendanceSystem = (function() {
   }
 
   function _openAttEmpPanel(username) {
-    const empData = _attConsistency.find(r => r.username === username);
-    if (!empData) return;
+    // Try consistency array first; fall back to computing from raw rows
+    let empData = _attConsistency.find(r => r.username === username);
+    if (!empData) {
+      const empRows = _attAllRows.filter(r => r.username === username);
+      if (!empRows.length) return;
+      const first = empRows[0];
+      const dayCount = _attDateRange ? _attDateRange.days : 1;
+      const presentDays = empRows.filter(r => r.status === 'Present' || r.status === 'Late').length;
+      const lateDays    = empRows.filter(r => r.status === 'Late').length;
+      const totalHours  = empRows.reduce((s, r) => s + (r.hours || 0), 0);
+      empData = {
+        username,
+        name:           first.name,
+        department:     first.department,
+        presentDays,
+        lateDays,
+        absentDays:     Math.max(0, dayCount - presentDays),
+        attendanceRate: dayCount ? Math.round((presentDays / dayCount) * 100) : 0,
+        avgHours:       presentDays ? +(totalHours / presentDays).toFixed(1) : 0
+      };
+    }
 
     const pct = empData.attendanceRate;
     const rateCol = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
