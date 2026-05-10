@@ -3079,7 +3079,7 @@ const AttendanceSystem = (function() {
         const card = event.target.closest('.ps-card');
         if (card && !event.target.closest('.ps-card-actions')) {
           const site = projectSites.find(s => String(s.id) === String(card.dataset.id));
-          if (site) _showSitePopup(site);
+          if (site && site.isActive) _showSitePopup(site);
         }
       }
 
@@ -6234,8 +6234,7 @@ const AttendanceSystem = (function() {
               L.circle([lat, lng], { radius: rad, color: '#E40C0C', fillColor: '#FFB712', fillOpacity: 0.2, weight: 2 }).addTo(m);
               L.marker([lat, lng]).addTo(m);
               m.invalidateSize();
-              m.on('click', () => _showSitePopup(site));
-              mapEl.style.cursor = 'pointer';
+              if (site.isActive) { m.on('click', () => _showSitePopup(site)); mapEl.style.cursor = 'pointer'; }
               _psMiniMaps[mapId] = m;
             } catch (e) { delete _psMiniMaps[mapId]; }
           }, 80 + i * 40);
