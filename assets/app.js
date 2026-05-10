@@ -3289,11 +3289,6 @@ const AttendanceSystem = (function() {
         _openAttEmpPanel(btn.dataset.username);
       }
 
-      // Close employee detail panel
-      if (event.target.matches('#attEmpPanelClose, #attEmpPanelClose *') ||
-          event.target.matches('#attEmpPanel') ) {
-        _closeAttEmpPanel();
-      }
 
       // Settings — palette card click
       const pCard = event.target.closest('.palette-card');
@@ -6562,7 +6557,7 @@ const AttendanceSystem = (function() {
       onData: res => {
         if (!res || !res.success) {
           document.getElementById('attendanceTableBody').innerHTML =
-            `<tr><td colspan="9" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
+            `<tr><td colspan="8" class="att-err">Error: ${escapeHtml((res && res.message) || 'Failed to load attendance')}</td></tr>`;
           return;
         }
         destroyDataTable('attendanceTable');
@@ -6582,7 +6577,7 @@ const AttendanceSystem = (function() {
       },
       onError: err => {
         document.getElementById('attendanceTableBody').innerHTML =
-          `<tr><td colspan="9" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
+          `<tr><td colspan="8" class="att-err">Network error: ${escapeHtml(err.message || 'Could not connect')}</td></tr>`;
       }
     });
   }
@@ -6627,41 +6622,46 @@ const AttendanceSystem = (function() {
     if (rateLabel) rateLabel.textContent = isSingleDay ? 'Attendance Rate' : 'Avg Daily Rate';
   }
 
-  // _renderAttConsistency is now only called internally — no longer renders a table.
-  // The consistency data powers the slide panel opened by "View Details" per employee.
   function _renderAttConsistency() {
-    // Nothing to render into a table anymore — panel is opened on demand.
-    // We just close any open panel since the data has been refreshed.
-    _closeAttEmpPanel();
+    // No-op — consistency data is shown per-employee via Details modal.
   }
 
   function _openAttEmpPanel(username) {
     const empData = _attConsistency.find(r => r.username === username);
     if (!empData) return;
 
-    // Header
-    const initials = empData.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    document.getElementById('attEmpAvatar').textContent = initials;
-    document.getElementById('attEmpPanelName').textContent = empData.name;
-    document.getElementById('attEmpPanelDept').textContent = empData.department || '';
-
-    // Stats strip
     const pct = empData.attendanceRate;
     const rateCol = pct >= 80 ? '#2E7D32' : pct >= 50 ? '#FFB712' : '#E40C0C';
-    document.getElementById('attEmpPanelStats').innerHTML = `
-      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#2E7D32">${empData.presentDays}</span><span class="att-panel-stat-lbl">Present</span></div>
-      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#7a5900">${empData.lateDays}</span><span class="att-panel-stat-lbl">Late</span></div>
-      <div class="att-panel-stat"><span class="att-panel-stat-val" style="color:#b71c1c">${empData.absentDays}</span><span class="att-panel-stat-lbl">Absent</span></div>
-      <div class="att-panel-stat"><span class="att-panel-stat-val">${empData.avgHours}h</span><span class="att-panel-stat-lbl">Avg/Day</span></div>
-      <div class="att-panel-stat att-panel-stat--rate">
-        <span class="att-panel-stat-val" style="color:${rateCol}">${pct}%</span>
-        <span class="att-panel-stat-lbl">Rate</span>
-        <div class="att-rate-wrap" style="margin-top:4px;">
-          <div class="att-rate-bar" style="width:${pct}%;background:${rateCol};"></div>
-        </div>
-      </div>`;
 
-    // History rows for this employee
+    const rateBar = `<div class="att-rate-wrap">
+      <div class="att-rate-bar" style="width:${pct}%;background:${rateCol};"></div>
+      <span class="att-rate-val">${pct}%</span>
+    </div>`;
+
+    // Summary consistency table (same columns as the old full table)
+    const summaryTable = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+        <thead>
+          <tr style="border-bottom:2px solid #e9eef3;text-align:left;">
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Present Days</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Late Days</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Absent Days</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Avg Hours/Day</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Attendance Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:10px 10px;font-weight:700;color:#2E7D32;">${empData.presentDays}</td>
+            <td style="padding:10px 10px;font-weight:700;color:#7a5900;">${empData.lateDays}</td>
+            <td style="padding:10px 10px;font-weight:700;color:#b71c1c;">${empData.absentDays}</td>
+            <td style="padding:10px 10px;font-weight:600;">${empData.avgHours}h</td>
+            <td style="padding:10px 10px;">${rateBar}</td>
+          </tr>
+        </tbody>
+      </table>`;
+
+    // Day-by-day log table
     const empRows = _attAllRows.filter(r => r.username === username)
       .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -6671,36 +6671,57 @@ const AttendanceSystem = (function() {
       return                      `<span class="att-badge att-absent"><i class="fas fa-circle"></i> Absent</span>`;
     };
 
-    document.getElementById('attEmpPanelRows').innerHTML = empRows.length
-      ? empRows.map(r => `
-        <div class="att-panel-row">
-          <div class="att-panel-row-date">${r.date}</div>
-          <div class="att-panel-row-times">
-            <span><i class="fas fa-sign-in-alt"></i> ${r.checkIn ? fmtLocalTime(r.checkIn) : '—'}</span>
-            <span><i class="fas fa-sign-out-alt"></i> ${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</span>
-            <span><i class="fas fa-clock"></i> ${r.hours > 0 ? r.hours + 'h' : '—'}</span>
-          </div>
-          <div>${statusBadge(r.status)}</div>
+    const logRows = empRows.map(r => `
+      <tr>
+        <td style="padding:8px 10px;" class="att-date">${r.date}</td>
+        <td style="padding:8px 10px;" class="att-time">${r.checkIn  ? fmtLocalTime(r.checkIn)  : '—'}</td>
+        <td style="padding:8px 10px;" class="att-time">${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
+        <td style="padding:8px 10px;" class="att-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
+        <td style="padding:8px 10px;">${statusBadge(r.status)}</td>
+        <td style="padding:8px 10px;">
           ${(r.checkInPhotoUrl || r.checkOutPhotoUrl) ? `
           <button class="att-action-btn btn-view-att"
             data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
             data-out="${escapeHtml(r.checkOutPhotoUrl || '')}"
             data-name="${escapeHtml(empData.name)}"
             title="View selfie"><i class="fas fa-camera"></i></button>` : ''}
-        </div>`).join('')
-      : '<div class="att-empty" style="padding:16px 0;">No records in this period.</div>';
+        </td>
+      </tr>`).join('');
 
-    const panel = document.getElementById('attEmpPanel');
-    panel.style.display = 'flex';
-    requestAnimationFrame(() => panel.classList.add('att-emp-panel--open'));
+    const logTable = empRows.length ? `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid #e9eef3;text-align:left;">
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Date</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Check In</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Check Out</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Hours</th>
+            <th style="padding:8px 10px;color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;">Status</th>
+            <th style="padding:8px 10px;"></th>
+          </tr>
+        </thead>
+        <tbody>${logRows}</tbody>
+      </table>` : `<div class="att-empty">No records in this period.</div>`;
+
+    Swal.fire({
+      html: `<div style="text-align:left;">
+               <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #e9eef3;">
+                 <span style="font-size:18px;font-weight:700;color:var(--siomac-navy);">${escapeHtml(empData.name)}</span>
+                 <span style="font-size:13px;color:#6b7280;">${escapeHtml(empData.department || '')}</span>
+               </div>
+               ${summaryTable}
+               <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:8px;">Attendance Log</div>
+               <div style="overflow-x:auto;">${logTable}</div>
+             </div>`,
+      width: '860px',
+      background: 'rgba(255,255,255,0.97)',
+      showConfirmButton: false,
+      showCloseButton: true,
+      customClass: { popup: 'att-detail-popup' }
+    });
   }
 
-  function _closeAttEmpPanel() {
-    const panel = document.getElementById('attEmpPanel');
-    if (!panel) return;
-    panel.classList.remove('att-emp-panel--open');
-    setTimeout(() => { if (!panel.classList.contains('att-emp-panel--open')) panel.style.display = 'none'; }, 280);
-  }
+  function _closeAttEmpPanel() { Swal.close(); }
 
   function _renderAttCharts(trend) {
     const pin = typeof SiomacCharts !== 'undefined' ? SiomacCharts.pinCanvas : function(){};
