@@ -2505,8 +2505,43 @@
 @media (max-width: 700px) {
   .att-filters-bar { border-radius: 16px; padding: 12px 14px; }
   .att-search-box input { width: 130px; }
-  .att-date-input { width: 100px; }
+  .att-date-input { width: 90px; }
   .att-filter-actions { margin-left: 0; }
+}
+
+/* ── Flatpickr theme overrides ───────────────────────────────────────────── */
+.flatpickr-calendar {
+  font-family: inherit;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+  border: 1px solid var(--border);
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--siomac-red) !important;
+  border-color: var(--siomac-red) !important;
+}
+.flatpickr-day:hover {
+  background: rgba(228,12,12,0.08);
+}
+.flatpickr-day.today {
+  border-color: var(--siomac-red);
+}
+.flatpickr-day.today:hover {
+  background: rgba(228,12,12,0.08);
+  color: inherit;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+  fill: var(--siomac-red);
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp:after  { border-bottom-color: var(--siomac-red); }
+.flatpickr-current-month .numInputWrapper span.arrowDown:after { border-top-color: var(--siomac-red); }
+/* Make the input look like the rest of the filter bar */
+.att-date-input-wrap .flatpickr-input {
+  cursor: pointer;
 }
 
 /* ─── Sync indicator + notification ─── */

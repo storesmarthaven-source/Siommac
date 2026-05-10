@@ -3131,14 +3131,6 @@ const AttendanceSystem = (function() {
         _renderAttTable();
         _renderAttConsistency();
       }
-      // Keep attDateTo min in sync when attDateFrom changes
-      if (event.target.matches('#attDateFrom')) {
-        const toEl = document.getElementById('attDateTo');
-        if (toEl) {
-          toEl.min = event.target.value;
-          if (toEl.value && toEl.value < event.target.value) toEl.value = event.target.value;
-        }
-      }
       // Employee role/status filter
       if (event.target.matches('#empRoleFilter') || event.target.matches('#empStatusFilter')) {
         _renderEmployees();
@@ -3179,11 +3171,9 @@ const AttendanceSystem = (function() {
 
       // Apply date range button
       if (event.target.matches('#attApplyRange, #attApplyRange *')) {
-        const fromEl = document.getElementById('attDateFrom');
-        const toEl   = document.getElementById('attDateTo');
-        const from = (fromEl || {}).value;
+        const from = _attFpFrom && _attFpFrom.selectedDates[0]
+          ? _attFpFrom.formatDate(_attFpFrom.selectedDates[0], 'Y-m-d') : '';
         if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
-        if (toEl && toEl.value && toEl.value < from) toEl.value = from;
         swr.clearByPrefix('listDailyLog:');
         for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
         loadAttendanceData();
@@ -3482,16 +3472,45 @@ const AttendanceSystem = (function() {
     const monthSelect = document.getElementById('attendanceMonth');
     if (monthSelect) monthSelect.value = currentMonth;
 
-    // Seed date range pickers: default to current month's start → today
-    const todayStr  = now.toISOString().slice(0, 10);
+    // Initialise Flatpickr date pickers for the date range inputs
+    const todayStr   = now.toISOString().slice(0, 10);
     const monthStart = new Date(currentYear, currentMonth, 1).toISOString().slice(0, 10);
-    const fromEl = document.getElementById('attDateFrom');
-    const toEl   = document.getElementById('attDateTo');
-    if (fromEl && !fromEl.value) fromEl.value = monthStart;
-    if (toEl   && !toEl.value)   toEl.value   = todayStr;
-    if (fromEl) fromEl.max = todayStr;
-    if (toEl)   toEl.max   = todayStr;
+
+    if (typeof flatpickr !== 'undefined') {
+      // Destroy existing instances if re-initialising (e.g. after logout)
+      const fromEl = document.getElementById('attDateFrom');
+      const toEl   = document.getElementById('attDateTo');
+      if (fromEl && fromEl._flatpickr) fromEl._flatpickr.destroy();
+      if (toEl   && toEl._flatpickr)   toEl._flatpickr.destroy();
+
+      _attFpFrom = flatpickr('#attDateFrom', {
+        dateFormat: 'Y-m-d',
+        maxDate: 'today',
+        defaultDate: monthStart,
+        allowInput: false,
+        disableMobile: true,
+        onChange: function(selectedDates, dateStr) {
+          // Keep "To" min in sync
+          if (_attFpTo) _attFpTo.set('minDate', dateStr);
+          if (_attFpTo && _attFpTo.selectedDates[0] && _attFpTo.selectedDates[0] < selectedDates[0]) {
+            _attFpTo.setDate(dateStr, false);
+          }
+        }
+      });
+
+      _attFpTo = flatpickr('#attDateTo', {
+        dateFormat: 'Y-m-d',
+        maxDate: 'today',
+        minDate: monthStart,
+        defaultDate: todayStr,
+        allowInput: false,
+        disableMobile: true,
+      });
+    }
   }
+
+  let _attFpFrom = null; // flatpickr instance for attDateFrom
+  let _attFpTo   = null; // flatpickr instance for attDateTo
 
   function handleLogin(e) {
     e.preventDefault();
@@ -3776,6 +3795,8 @@ const AttendanceSystem = (function() {
     _attAllRows     = [];
     _attConsistency = [];
     _attDateRange   = null;
+    if (_attFpFrom) { _attFpFrom.destroy(); _attFpFrom = null; }
+    if (_attFpTo)   { _attFpTo.destroy();   _attFpTo   = null; }
     locationWatchId = null;
     syncInterval = null;
     if (typeof window._stopNotifPolling  === 'function') window._stopNotifPolling();
@@ -6508,8 +6529,10 @@ const AttendanceSystem = (function() {
 
   function _attApiArgs() {
     if (_attFilterMode === 'range') {
-      const from = (document.getElementById('attDateFrom') || {}).value || '';
-      const to   = (document.getElementById('attDateTo')   || {}).value || '';
+      const from = _attFpFrom && _attFpFrom.selectedDates[0]
+        ? _attFpFrom.formatDate(_attFpFrom.selectedDates[0], 'Y-m-d') : '';
+      const to   = _attFpTo && _attFpTo.selectedDates[0]
+        ? _attFpTo.formatDate(_attFpTo.selectedDates[0], 'Y-m-d') : from;
       if (from) return { dateFrom: from, dateTo: to || from };
     }
     const month = parseInt((document.getElementById('attendanceMonth') || {}).value, 10);

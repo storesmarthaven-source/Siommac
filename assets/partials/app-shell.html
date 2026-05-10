@@ -1197,14 +1197,14 @@
 
           <!-- Date range pickers (shown in range mode) -->
           <div class="att-filter-group att-range-group" id="attRangePickers" style="display:none;">
-            <div class="att-date-input-wrap">
+            <div class="att-date-input-wrap" id="attDateFromWrap">
               <i class="fas fa-calendar-day"></i>
-              <input type="date" class="att-date-input" id="attDateFrom" title="From date">
+              <input type="text" class="att-date-input" id="attDateFrom" placeholder="From date" readonly>
             </div>
             <span class="att-range-sep">→</span>
-            <div class="att-date-input-wrap">
+            <div class="att-date-input-wrap" id="attDateToWrap">
               <i class="fas fa-calendar-day"></i>
-              <input type="date" class="att-date-input" id="attDateTo" title="To date">
+              <input type="text" class="att-date-input" id="attDateTo" placeholder="To date" readonly>
             </div>
             <button class="att-apply-btn" id="attApplyRange"><i class="fas fa-check"></i> Apply</button>
           </div>

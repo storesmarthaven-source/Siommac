@@ -37,7 +37,7 @@ const PRECACHE_URLS = [
 
 // CDN hosts — stale-while-revalidate strategy
 const CDN_HOSTS = [
-  'cdnjs.cloudflare.com',
+  'cdnjs.cloudflare.com', // includes flatpickr
   'cdn.jsdelivr.net',
   'cdn.datatables.net',
   'unpkg.com',
