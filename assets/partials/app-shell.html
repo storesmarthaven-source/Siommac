@@ -1070,9 +1070,24 @@
             <div class="ps-section-icon"><i class="fas fa-map-marker-alt"></i></div>
             <div class="ps-section-label">
               <h4 class="ps-section-title">Active Sites</h4>
-              <div class="ps-section-sub">Currently operational project sites</div>
+              <div class="ps-section-sub">Sites with employees currently on-site</div>
             </div>
-            <span class="ps-section-count" id="psActiveSectionCount">0</span>
+            <div class="ps-section-stats">
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psActiveSectionCount">0</span>
+                <span class="ps-section-stat-lbl">Sites</span>
+              </div>
+              <div class="ps-section-stat-divider"></div>
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psActiveOnSiteNow">0</span>
+                <span class="ps-section-stat-lbl">On-Site Now</span>
+              </div>
+              <div class="ps-section-stat-divider"></div>
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psActiveCheckedOutToday">0</span>
+                <span class="ps-section-stat-lbl">Left Today</span>
+              </div>
+            </div>
           </div>
           <div class="ps-projects-grid" id="psActiveContainer"></div>
         </div>
@@ -1083,9 +1098,24 @@
             <div class="ps-section-icon"><i class="fas fa-map-marker-slash"></i></div>
             <div class="ps-section-label">
               <h4 class="ps-section-title">Inactive Sites</h4>
-              <div class="ps-section-sub">Paused or decommissioned project sites</div>
+              <div class="ps-section-sub">No employees currently on-site</div>
             </div>
-            <span class="ps-section-count" id="psInactiveSectionCount">0</span>
+            <div class="ps-section-stats">
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psInactiveSectionCount">0</span>
+                <span class="ps-section-stat-lbl">Sites</span>
+              </div>
+              <div class="ps-section-stat-divider"></div>
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psInactiveCheckedOutToday">0</span>
+                <span class="ps-section-stat-lbl">Visited Today</span>
+              </div>
+              <div class="ps-section-stat-divider"></div>
+              <div class="ps-section-stat">
+                <span class="ps-section-stat-val" id="psInactiveNeverVisited">0</span>
+                <span class="ps-section-stat-lbl">No Activity</span>
+              </div>
+            </div>
           </div>
           <div class="ps-projects-grid" id="psInactiveContainer"></div>
         </div>

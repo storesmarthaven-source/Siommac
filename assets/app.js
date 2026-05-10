@@ -6101,11 +6101,25 @@ const AttendanceSystem = (function() {
     const activePart   = filtered.filter(s => s.isActive);
     const inactivePart = filtered.filter(s => !s.isActive);
 
-    // Section count badges
-    const _activeCountEl   = document.getElementById('psActiveSectionCount');
-    const _inactiveCountEl = document.getElementById('psInactiveSectionCount');
-    if (_activeCountEl)   _activeCountEl.textContent   = activePart.length;
-    if (_inactiveCountEl) _inactiveCountEl.textContent = inactivePart.length;
+    // ── Section header stats ──────────────────────────────────────────────────
+    const _live = liveData || [];
+    // Active section: sites count, employees on-site now, employees who left today
+    const _activeSiteIds = new Set(activePart.map(s => String(s.id)));
+    const _onSiteNowActive     = _live.filter(r => !r.isCheckedOut && _activeSiteIds.has(String(r.siteId))).length;
+    const _checkedOutFromActive = _live.filter(r => r.isCheckedOut  && _activeSiteIds.has(String(r.siteId))).length;
+    const _el = id => document.getElementById(id);
+    if (_el('psActiveSectionCount'))    _el('psActiveSectionCount').textContent    = activePart.length;
+    if (_el('psActiveOnSiteNow'))       _el('psActiveOnSiteNow').textContent       = _onSiteNowActive;
+    if (_el('psActiveCheckedOutToday')) _el('psActiveCheckedOutToday').textContent = _checkedOutFromActive;
+
+    // Inactive section: sites count, sites visited today (had check-ins but now empty), never visited today
+    const _inactiveSiteIds = new Set(inactivePart.map(s => String(s.id)));
+    const _visitedToday   = _live.filter(r => _inactiveSiteIds.has(String(r.siteId)));
+    const _visitedSiteIds = new Set(_visitedToday.map(r => String(r.siteId)));
+    const _neverVisited   = inactivePart.filter(s => !_visitedSiteIds.has(String(s.id))).length;
+    if (_el('psInactiveSectionCount'))      _el('psInactiveSectionCount').textContent      = inactivePart.length;
+    if (_el('psInactiveCheckedOutToday'))   _el('psInactiveCheckedOutToday').textContent   = _visitedSiteIds.size;
+    if (_el('psInactiveNeverVisited'))      _el('psInactiveNeverVisited').textContent      = _neverVisited;
 
     // Show/hide whole sections depending on filter + content
     const _activeWrap   = document.getElementById('psActiveSectionWrap');
