@@ -3142,11 +3142,23 @@ const AttendanceSystem = (function() {
       }
       // Apply date range
       if (event.target.matches('#attApplyRange, #attApplyRange *')) {
-        const from = (document.getElementById('attDateFrom') || {}).value;
+        const fromEl = document.getElementById('attDateFrom');
+        const toEl   = document.getElementById('attDateTo');
+        const from = (fromEl || {}).value;
         if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
+        // Clamp: if dateTo < dateFrom, set dateTo = dateFrom
+        if (toEl && toEl.value && toEl.value < from) toEl.value = from;
         swr.clearByPrefix('listDailyLog:');
         for (const k of _swrLastHash.keys()) { if (k.startsWith('listDailyLog:')) _swrLastHash.delete(k); }
         loadAttendanceData();
+      }
+      // Keep attDateTo min in sync when attDateFrom changes
+      if (event.target.matches('#attDateFrom')) {
+        const toEl = document.getElementById('attDateTo');
+        if (toEl) {
+          toEl.min = event.target.value;
+          if (toEl.value && toEl.value < event.target.value) toEl.value = event.target.value;
+        }
       }
       // Employee role/status filter
       if (event.target.matches('#empRoleFilter') || event.target.matches('#empStatusFilter')) {
@@ -3754,6 +3766,10 @@ const AttendanceSystem = (function() {
     _siteLayerMap = {};         // reset site layer refs
     _activeEmpMarker = null;    // reset active employee marker
     _resetLoadedState();        // reset so all sections show skeletons again on next login
+    _attFilterMode  = 'month'; // reset attendance filter mode
+    _attAllRows     = [];
+    _attConsistency = [];
+    _attDateRange   = null;
     locationWatchId = null;
     syncInterval = null;
     if (typeof window._stopNotifPolling  === 'function') window._stopNotifPolling();
