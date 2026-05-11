@@ -3590,14 +3590,6 @@
   opacity: 0; max-width: 0; padding-left: 0; padding-right: 0;
   margin: 0; border-width: 0; pointer-events: none; overflow: hidden;
 }
-/* Subtle fade-in slide when enabled after payroll run */
-@keyframes prApprovalPop {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.pr-approval-btn.pr-approval-pop {
-  animation: prApprovalPop 0.25s ease forwards;
-}
 
 /* Reports toggle button — red solid default, white+red-border when active */
 .pr-report-btn {

@@ -7844,6 +7844,7 @@ const AttendanceSystem = (function() {
   let _prDeptFilter  = 'all';
   let _prRunData = null;       // last successful run result
   let _prCurrentRows = [];    // rows currently visible in the table (after filters)
+  let _prRanThisSession = false; // true only after a Run Payroll in the current payroll session
   let _prEmpAll      = [];     // all employees loaded for picker
   let _prEmpSelected = new Set(); // selected employee IDs in reports mode
   let _prOverrides = {};       // userId → overridden hours
@@ -8039,6 +8040,7 @@ const AttendanceSystem = (function() {
         btn.disabled = false; btn.innerHTML = orig;
         if (!res || !res.success) { showPopup('error', 'Failed', res.message || 'Could not run payroll'); return; }
         _prRunData = res.data;
+        _prRanThisSession = true;
         _prEmpSelected.clear(); // reset any prior selection when a new run happens
         _prRenderDashboard(res.data.totals);
         _prRenderTable(res.data.rows, from, to);
@@ -8067,9 +8069,9 @@ const AttendanceSystem = (function() {
       searchEl.disabled = false;
       searchEl.placeholder = _prReportsMode ? 'Filter Employees…' : 'Search Payroll Register…';
     }
-    // Enable Send for Approval only after a successful Run Payroll (not reports)
+    // Enable Send for Approval only after a successful Run Payroll in this session (not reports)
     if (!_prReportsMode) {
-      _prSetApprovalBtn(rows.length > 0);
+      _prSetApprovalBtn(_prRanThisSession && rows.length > 0);
     }
     // Destroy existing DataTable instance before re-writing tbody
     destroyDataTable('payrollRunTable');
@@ -8696,8 +8698,8 @@ const AttendanceSystem = (function() {
       _prEmpSelected.clear();
       _prEmpCloseDropdown();
       _prEmpUpdateBadge();
-      // Clear previous run data — user must run payroll again in this mode
-      _prRunData = null;
+      // Reset session run state — user must run payroll again in this mode
+      _prRanThisSession = false;
       _prCurrentRows = [];
       const searchEl3 = document.getElementById('prSearchInput');
       if (searchEl3) { searchEl3.disabled = true; searchEl3.value = ''; searchEl3.placeholder = 'Search Payroll Register…'; }
@@ -8759,14 +8761,9 @@ const AttendanceSystem = (function() {
       btn.classList.add('pr-approval-hidden');
       btn.disabled = true;
     } else {
-      // Show and enable — animate in
+      // Show and enable
       btn.disabled = false;
       btn.classList.remove('pr-approval-hidden');
-      btn.classList.remove('pr-approval-pop');
-      setTimeout(() => {
-        void btn.offsetWidth;
-        btn.classList.add('pr-approval-pop');
-      }, 50);
     }
   }
 
