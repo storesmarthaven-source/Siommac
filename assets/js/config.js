@@ -4,7 +4,8 @@ const SECTION_DEFS = {
   employee: [
     { id: 's-emp-attendance', label: 'Attendance',    icon: 'fa-calendar-check',    sub: "Today's check-in status and work hours" },
     { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',           sub: 'Your attendance log for the past 30 days' },
-    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status' }
+    { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',    sub: 'Submit requests and track approval status' },
+    { id: 's-emp-payroll',    label: 'My Payslips',   icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips' }
   ],
   manager: [
     { id: 's-mgr-overview',  label: 'Overview',        icon: 'fa-chart-pie',          sub: "A snapshot of your department's attendance today" },

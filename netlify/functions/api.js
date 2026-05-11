@@ -362,6 +362,7 @@ async function listEmployees() {
       department: deptMap[u.department_id] || '', departmentId: u.department_id || '',
       position: u.position || '', role: u.role, status: u.status === 'active' ? 'Active' : 'Inactive',
       email: u.email || '', phone: u.phone || '',
+      payCycle: u.pay_cycle || '',
       todayStatus, profileImage: profileImages[i] || ''
     };
   });
@@ -399,6 +400,15 @@ async function addEmployee(args, ctx) {
     employee_number,
     email: args.email ? String(args.email).trim() : null,
     phone: args.phone ? String(args.phone).trim() : null,
+    // Payroll fields
+    pay_cycle:                    args.payCycle                  || 'monthly',
+    pay_basis:                    args.payBasis                  || 'salary',
+    hourly_rate:                  parseFloat(args.hourlyRate)    || 0,
+    monthly_salary:               parseFloat(args.monthlySalary) || 0,
+    standard_hours_per_day:       parseFloat(args.standardHoursPerDay) || 8,
+    nis_applicable:               args.nisApplicable             !== false,
+    health_surcharge_applicable:  args.healthSurchargeApplicable !== false,
+    tax_resident:                 args.taxResident               !== false,
   }).select('id').single();
   if (error) {
     if (error.code === '23505') {
@@ -418,6 +428,15 @@ async function updateEmployee(args, ctx) {
     role: args.role, status: args.status, updated_at: new Date().toISOString(),
     email: args.email !== undefined ? (String(args.email).trim() || null) : undefined,
     phone: args.phone !== undefined ? (String(args.phone).trim() || null) : undefined,
+    // Payroll fields (only patch if provided)
+    ...(args.payCycle               !== undefined && { pay_cycle:                   args.payCycle }),
+    ...(args.payBasis               !== undefined && { pay_basis:                   args.payBasis }),
+    ...(args.hourlyRate             !== undefined && { hourly_rate:                 parseFloat(args.hourlyRate) || 0 }),
+    ...(args.monthlySalary          !== undefined && { monthly_salary:              parseFloat(args.monthlySalary) || 0 }),
+    ...(args.standardHoursPerDay    !== undefined && { standard_hours_per_day:      parseFloat(args.standardHoursPerDay) || 8 }),
+    ...(args.nisApplicable          !== undefined && { nis_applicable:              args.nisApplicable }),
+    ...(args.healthSurchargeApplicable !== undefined && { health_surcharge_applicable: args.healthSurchargeApplicable }),
+    ...(args.taxResident            !== undefined && { tax_resident:                args.taxResident }),
   };
   Object.keys(patch).forEach(k => patch[k] == null || patch[k] === '' ? delete patch[k] : null);
   if (args.password) patch.password_hash = await bcrypt.hash(String(args.password), 10);
@@ -745,7 +764,15 @@ async function getEmployeeByUsername(args, ctx) {
     departmentId: u.department_id || '', department, position: u.position || '', status: u.status,
     email: u.email || '', phone: u.phone || '',
     colorScheme: u.color_scheme || 'navy', layoutMode: u.layout_mode || 'sidebar',
-    hourlyRate: Number(u.hourly_rate) || 0, profileImage
+    hourlyRate: Number(u.hourly_rate) || 0, profileImage,
+    // Payroll fields
+    payCycle:                    u.pay_cycle                   || 'monthly',
+    payBasis:                    u.pay_basis                   || 'salary',
+    monthlySalary:               Number(u.monthly_salary)      || 0,
+    standardHoursPerDay:         Number(u.standard_hours_per_day) || 8,
+    nisApplicable:               u.nis_applicable              !== false,
+    healthSurchargeApplicable:   u.health_surcharge_applicable !== false,
+    taxResident:                 u.tax_resident                !== false,
   } };
 }
 
@@ -1380,6 +1407,350 @@ async function getPayroll(args, ctx) {
   };
 }
 
+// ─── Trinidad & Tobago Payroll Engine ────────────────────────────────────────
+
+// Default constants — can be overridden via settings table keys prefixed "payroll_"
+const TT_DEFAULTS = {
+  PERSONAL_ALLOWANCE_ANNUAL:  90000,
+  PAYE_RATE_LOW:              0.25,
+  PAYE_RATE_HIGH:             0.30,
+  PAYE_HIGH_THRESHOLD_ANNUAL: 1000000,
+  NIS_RATE:                   0.06,
+  NIS_MONTHLY_CAP:            13600,
+  HS_HIGH_DAILY:              1.65,
+  HS_HIGH_WEEKLY:             8.25,
+  HS_HIGH_FORTNIGHTLY:        16.50,
+  HS_HIGH_MONTHLY:            33.00,
+  HS_LOW_DAILY:               0.30,
+  HS_LOW_WEEKLY:              1.50,
+  HS_LOW_FORTNIGHTLY:         3.00,
+  HS_LOW_MONTHLY:             6.00,
+  HS_THRESHOLD_WEEKLY:        469.99,
+};
+
+// Build TT_PAYROLL from defaults, optionally merged with DB settings
+function _buildTtPayroll(settings) {
+  const n = (key, def) => {
+    const v = settings && settings['payroll_' + key.toLowerCase()];
+    return v !== undefined && v !== '' ? Number(v) : def;
+  };
+  const nisMonthly = n('nis_monthly_cap', TT_DEFAULTS.NIS_MONTHLY_CAP);
+  const nisRate    = n('nis_rate',        TT_DEFAULTS.NIS_RATE);
+  const hsThresh   = n('hs_threshold_weekly', TT_DEFAULTS.HS_THRESHOLD_WEEKLY);
+  const allowAnn   = n('personal_allowance_annual', TT_DEFAULTS.PERSONAL_ALLOWANCE_ANNUAL);
+  return {
+    PERSONAL_ALLOWANCE_ANNUAL:  allowAnn,
+    PAYE_RATE_LOW:              n('paye_rate_low',              TT_DEFAULTS.PAYE_RATE_LOW),
+    PAYE_RATE_HIGH:             n('paye_rate_high',             TT_DEFAULTS.PAYE_RATE_HIGH),
+    PAYE_HIGH_THRESHOLD_ANNUAL: n('paye_high_threshold_annual', TT_DEFAULTS.PAYE_HIGH_THRESHOLD_ANNUAL),
+    NIS_RATE:    nisRate,
+    NIS_MONTHLY_CAP: nisMonthly,
+    NIS_CAP: {
+      daily:       r2(nisMonthly * nisRate * (1/0.06) * (1/12) * (1/260) * 260 / 12),
+      // derive per-cycle from monthly cap proportionally
+      // daily = monthly / (52/12*5) ≈ 626.15 at defaults
+      weekly:      r2(nisMonthly / (52 / 12)),
+      fortnightly: r2(nisMonthly / (26 / 12)),
+      monthly:     nisMonthly,
+    },
+    ALLOWANCE: {
+      daily:       r2(allowAnn / 260),
+      weekly:      r2(allowAnn / 52),
+      fortnightly: r2(allowAnn / 26),
+      monthly:     r2(allowAnn / 12),
+    },
+    HS_HIGH: {
+      daily:       n('hs_high_daily',       TT_DEFAULTS.HS_HIGH_DAILY),
+      weekly:      n('hs_high_weekly',      TT_DEFAULTS.HS_HIGH_WEEKLY),
+      fortnightly: n('hs_high_fortnightly', TT_DEFAULTS.HS_HIGH_FORTNIGHTLY),
+      monthly:     n('hs_high_monthly',     TT_DEFAULTS.HS_HIGH_MONTHLY),
+    },
+    HS_LOW: {
+      daily:       n('hs_low_daily',       TT_DEFAULTS.HS_LOW_DAILY),
+      weekly:      n('hs_low_weekly',      TT_DEFAULTS.HS_LOW_WEEKLY),
+      fortnightly: n('hs_low_fortnightly', TT_DEFAULTS.HS_LOW_FORTNIGHTLY),
+      monthly:     n('hs_low_monthly',     TT_DEFAULTS.HS_LOW_MONTHLY),
+    },
+    HS_THRESHOLD_WEEKLY: hsThresh,
+  };
+}
+
+// Module-level cache (reloaded on each listPayrollRun call)
+let TT_PAYROLL = _buildTtPayroll(null);
+
+// Convert weekly gross threshold to each cycle for comparison
+function _hsThreshold(cycle) {
+  const w = TT_PAYROLL.HS_THRESHOLD_WEEKLY;
+  return { daily: w / 5, weekly: w, fortnightly: w * 2, monthly: w * 4.333 }[cycle] || w;
+}
+
+// Round to 2 decimal places
+function r2(n) { return Math.round(n * 100) / 100; }
+
+function calcPayslip(emp, hoursWorked) {
+  const cycle  = emp.pay_cycle  || 'monthly';
+  const basis  = emp.pay_basis  || 'salary';
+  const stdHrs = Number(emp.standard_hours_per_day) || 8;
+  const nisApplicable = emp.nis_applicable !== false;
+  const hsApplicable  = emp.health_surcharge_applicable !== false;
+  const taxResident   = emp.tax_resident !== false;
+
+  // ── A. Gross Pay ────────────────────────────────────────────────────────────
+  let grossPay = 0;
+  if (basis === 'hourly') {
+    grossPay = r2(hoursWorked * (Number(emp.hourly_rate) || 0));
+  } else {
+    // Salary — convert monthly salary to pay cycle
+    const monthlySalary = Number(emp.monthly_salary) || 0;
+    grossPay = r2({
+      daily:       monthlySalary / 22,        // ~22 working days/month
+      weekly:      monthlySalary / 4.333,
+      fortnightly: monthlySalary / 2.166,
+      monthly:     monthlySalary,
+    }[cycle] || monthlySalary);
+  }
+
+  // ── B. PAYE ─────────────────────────────────────────────────────────────────
+  let paye = 0;
+  if (taxResident) {
+    const allowance   = TT_PAYROLL.ALLOWANCE[cycle] || 0;
+    const taxablePay  = Math.max(0, grossPay - allowance);
+    if (taxablePay > 0) {
+      // Annualise to check 30% band
+      const annualFactor = { daily: 260, weekly: 52, fortnightly: 26, monthly: 12 }[cycle] || 12;
+      const annualTaxable = taxablePay * annualFactor;
+      const highThreshold = TT_PAYROLL.PAYE_HIGH_THRESHOLD_ANNUAL / annualFactor;
+
+      if (taxablePay <= highThreshold) {
+        paye = r2(taxablePay * TT_PAYROLL.PAYE_RATE_LOW);
+      } else {
+        const lowPart  = r2(highThreshold * TT_PAYROLL.PAYE_RATE_LOW);
+        const highPart = r2((taxablePay - highThreshold) * TT_PAYROLL.PAYE_RATE_HIGH);
+        paye = r2(lowPart + highPart);
+      }
+    }
+  } else {
+    // Non-resident: flat 25% on full gross, no personal allowance
+    paye = r2(grossPay * TT_PAYROLL.PAYE_RATE_LOW);
+  }
+
+  // ── C. NIS ──────────────────────────────────────────────────────────────────
+  let nis = 0;
+  if (nisApplicable) {
+    const nisCap      = TT_PAYROLL.NIS_CAP[cycle] || TT_PAYROLL.NIS_CAP.monthly;
+    const insurable   = Math.min(grossPay, nisCap);
+    nis = r2(insurable * TT_PAYROLL.NIS_RATE);
+  }
+
+  // ── D. Health Surcharge ─────────────────────────────────────────────────────
+  let healthSurcharge = 0;
+  if (hsApplicable) {
+    const threshold = _hsThreshold(cycle);
+    healthSurcharge = grossPay > threshold
+      ? TT_PAYROLL.HS_HIGH[cycle]
+      : TT_PAYROLL.HS_LOW[cycle];
+  }
+
+  const totalDeductions = r2(paye + nis + healthSurcharge);
+  const netPay          = r2(Math.max(0, grossPay - totalDeductions));
+
+  return { grossPay, paye, nis, healthSurcharge, totalDeductions, netPay };
+}
+
+async function listPayrollRun(args, ctx) {
+  await requireRole(ctx, ['admin', 'manager']);
+
+  const dateFrom = String(args.dateFrom || '').slice(0, 10);
+  const dateTo   = String(args.dateTo   || '').slice(0, 10);
+  if (!dateFrom || !dateTo) return { success: false, message: 'Missing dateFrom or dateTo' };
+
+  const cycleFilter = args.cycle || 'all';
+
+  // Reload T&T constants from settings so any admin edits take effect immediately
+  const { data: settingsRows } = await sb.from('settings').select('key,value');
+  const settingsMap = Object.fromEntries((settingsRows || []).map(r => [r.key, r.value]));
+  TT_PAYROLL = _buildTtPayroll(settingsMap);
+
+  // Fetch active employees with payroll fields
+  let empQuery = sb.from('app_users')
+    .select('id, username, full_name, department_id, position, pay_cycle, pay_basis, hourly_rate, monthly_salary, standard_hours_per_day, nis_applicable, health_surcharge_applicable, tax_resident')
+    .eq('status', 'active').neq('role', 'admin').order('full_name');
+  if (cycleFilter !== 'all') empQuery = empQuery.eq('pay_cycle', cycleFilter);
+
+  const [{ data: emps }, { data: depts }, { data: attRecs }] = await Promise.all([
+    empQuery,
+    sb.from('departments').select('id,name'),
+    sb.from('attendance')
+      .select('user_id, work_date, check_in_time, check_out_time, total_hours, status')
+      .gte('work_date', dateFrom).lte('work_date', dateTo)
+  ]);
+
+  const deptMap = Object.fromEntries((depts || []).map(d => [d.id, d.name]));
+
+  // Group attendance by user_id
+  const attByUser = {};
+  for (const a of attRecs || []) {
+    if (!attByUser[a.user_id]) attByUser[a.user_id] = [];
+    attByUser[a.user_id].push(a);
+  }
+
+  // Apply any hour overrides passed in (keyed by userId)
+  const overrides = args.overrides || {}; // { userId: hoursNumber }
+
+  const rows = (emps || []).map(emp => {
+    const recs = attByUser[emp.id] || [];
+    const autoHours = r2(recs.reduce((s, a) => s + (Number(a.total_hours) || 0), 0));
+    const hoursWorked = overrides[emp.id] != null ? Number(overrides[emp.id]) : autoHours;
+    const calc = calcPayslip(emp, hoursWorked);
+    return {
+      userId:       emp.id,
+      username:     emp.username,
+      name:         emp.full_name,
+      department:   deptMap[emp.department_id] || '—',
+      position:     emp.position || '—',
+      payCycle:     emp.pay_cycle     || 'monthly',
+      payBasis:     emp.pay_basis     || 'salary',
+      hourlyRate:   Number(emp.hourly_rate)    || 0,
+      monthlySalary:Number(emp.monthly_salary) || 0,
+      stdHours:     Number(emp.standard_hours_per_day) || 8,
+      nisApplicable:emp.nis_applicable !== false,
+      hsApplicable: emp.health_surcharge_applicable !== false,
+      taxResident:  emp.tax_resident  !== false,
+      autoHours,
+      hoursWorked,
+      overridden:   overrides[emp.id] != null,
+      daysWorked:   recs.filter(a => a.check_in_time).length,
+      ...calc
+    };
+  });
+
+  // Dashboard totals
+  const totals = rows.reduce((t, r) => {
+    t.grossPay        = r2(t.grossPay        + r.grossPay);
+    t.paye            = r2(t.paye            + r.paye);
+    t.nis             = r2(t.nis             + r.nis);
+    t.healthSurcharge = r2(t.healthSurcharge + r.healthSurcharge);
+    t.totalDeductions = r2(t.totalDeductions + r.totalDeductions);
+    t.netPay          = r2(t.netPay          + r.netPay);
+    return t;
+  }, { grossPay: 0, paye: 0, nis: 0, healthSurcharge: 0, totalDeductions: 0, netPay: 0 });
+
+  return { success: true, data: { rows, totals, dateFrom, dateTo, cycleFilter } };
+}
+
+// ── Approve payroll: persist payslips + notify each employee ─────────────────
+async function approvePayroll(args, ctx) {
+  await requireRole(ctx, ['admin', 'manager']);
+  const { rows, dateFrom, dateTo, cycleFilter, approvedBy } = args;
+  if (!Array.isArray(rows) || !rows.length) return { success: false, message: 'No payroll rows provided' };
+  if (!dateFrom || !dateTo) return { success: false, message: 'Missing date range' };
+
+  // Upsert one row per employee — idempotent on (user_id, date_from, date_to, pay_cycle)
+  const records = rows.map(r => ({
+    user_id:           r.userId,
+    username:          r.username,
+    date_from:         dateFrom,
+    date_to:           dateTo,
+    pay_cycle:         r.payCycle || cycleFilter || 'monthly',
+    pay_basis:         r.payBasis || 'salary',
+    gross_pay:         r.grossPay        || 0,
+    nis:               r.nis             || 0,
+    health_surcharge:  r.healthSurcharge || 0,
+    paye:              r.paye            || 0,
+    total_deductions:  r.totalDeductions || 0,
+    net_pay:           r.netPay          || 0,
+    hours_worked:      r.hoursWorked     || 0,
+    days_worked:       r.daysWorked      || 0,
+    hourly_rate:       r.hourlyRate      || 0,
+    monthly_salary:    r.monthlySalary   || 0,
+    department:        r.department      || '',
+    position:          r.position        || '',
+    approved_by:       approvedBy        || 'admin',
+    approved_at:       new Date().toISOString(),
+    status:            'approved'
+  }));
+
+  const { error } = await sb.from('payroll_approvals')
+    .upsert(records, { onConflict: 'user_id,date_from,date_to,pay_cycle' });
+  if (error) return { success: false, message: error.message };
+
+  return { success: true, count: records.length };
+}
+
+// ── Employee: fetch own approved payslips ─────────────────────────────────────
+async function getMyPayslips(args, ctx) {
+  const actor = await requireUser(ctx);
+  const { data, error } = await sb.from('payroll_approvals')
+    .select('*')
+    .eq('user_id', actor.id)
+    .eq('status', 'approved')
+    .order('date_from', { ascending: false })
+    .limit(24);
+  if (error) return { success: false, message: error.message };
+  return { success: true, data: data || [] };
+}
+
+async function getPayrollConstants(args, ctx) {
+  await requireRole(ctx, ['admin']);
+  const { data } = await sb.from('settings').select('key,value').like('key', 'payroll_%');
+  const stored = Object.fromEntries((data || []).map(r => [r.key.replace('payroll_', ''), r.value]));
+  // Return defaults merged with any stored overrides
+  const merged = {};
+  Object.entries(TT_DEFAULTS).forEach(([k, v]) => {
+    const dbKey = k.toLowerCase();
+    merged[k] = stored[dbKey] !== undefined ? Number(stored[dbKey]) : v;
+  });
+  return { success: true, data: merged };
+}
+
+async function savePayrollConstants(args, ctx) {
+  await requireRole(ctx, ['admin']);
+  const allowed = Object.keys(TT_DEFAULTS).map(k => k.toLowerCase());
+  const upserts = [];
+  for (const [k, v] of Object.entries(args.constants || {})) {
+    if (!allowed.includes(k.toLowerCase())) continue;
+    upserts.push({ key: 'payroll_' + k.toLowerCase(), value: String(v), updated_at: new Date().toISOString() });
+  }
+  if (!upserts.length) return { success: false, message: 'No valid constants provided' };
+  const { error } = await sb.from('settings').upsert(upserts, { onConflict: 'key' });
+  if (error) return { success: false, message: error.message };
+  // Reload the module-level constants immediately
+  const { data: settingsRows } = await sb.from('settings').select('key,value');
+  TT_PAYROLL = _buildTtPayroll(Object.fromEntries((settingsRows || []).map(r => [r.key, r.value])));
+  return { success: true };
+}
+
+async function updateEmployeePayroll(args, ctx) {
+  await requireRole(ctx, ['admin']);
+  const { userId, payCycle, payBasis, hourlyRate, monthlySalary, standardHoursPerDay, nisApplicable, healthSurchargeApplicable, taxResident } = args;
+  if (!userId) return { success: false, message: 'Missing userId' };
+  const { error } = await sb.from('app_users').update({
+    pay_cycle:                    payCycle               || 'monthly',
+    pay_basis:                    payBasis               || 'salary',
+    hourly_rate:                  Number(hourlyRate)     || 0,
+    monthly_salary:               Number(monthlySalary)  || 0,
+    standard_hours_per_day:       Number(standardHoursPerDay) || 8,
+    nis_applicable:               nisApplicable !== false,
+    health_surcharge_applicable:  healthSurchargeApplicable !== false,
+    tax_resident:                 taxResident !== false,
+    updated_at:                   new Date().toISOString()
+  }).eq('id', userId);
+  if (error) return { success: false, message: error.message };
+  return { success: true };
+}
+
+// Verify the calling user's password — used for sensitive-action gates (e.g. payroll constants)
+async function verifyPassword(args, ctx) {
+  const u = await requireUser(ctx);
+  const password = String(args.password || '');
+  if (!password) return { success: false, message: 'Password required.' };
+  // Re-fetch the current hash from DB
+  const { data: row } = await sb.from('app_users').select('password_hash').eq('id', u.id).single();
+  if (!row) return { success: false, message: 'User not found.' };
+  const ok = await bcrypt.compare(password, row.password_hash);
+  return ok ? { success: true } : { success: false, message: 'Incorrect password.' };
+}
+
 const routes = {
   ping: async () => ({ ok: true, ts: new Date().toISOString() }),
   setupDemoUsers,
@@ -1440,6 +1811,13 @@ const routes = {
   getDashboardCharts,
   updateMyProfile,
   uploadLogo,
+  listPayrollRun,
+  approvePayroll,
+  getMyPayslips,
+  verifyPassword,
+  getPayrollConstants,
+  savePayrollConstants,
+  updateEmployeePayroll,
   listHourlyRates,
   updateHourlyRate,
   bulkImportRates,
@@ -1530,19 +1908,23 @@ const routes = {
       }).length;
     }
 
-    // Employee ticket badge: count unread admin replies on their own tickets
+    // Employee ticket badge: count admin replies newer than last time they opened the modal
     let empTicketCount = 0;
     if (!isAdminOrMgr) {
       const { data: myTicketIds } = await sb.from('support_tickets')
         .select('id').eq('from_user_id', actor.id);
       if (myTicketIds && myTicketIds.length) {
         const ids = myTicketIds.map(t => t.id);
+        // Use ticketSeenSince if provided (persisted from last modal open), else last 7 days
+        const seenSince = a.ticketSeenSince && !isNaN(new Date(a.ticketSeenSince))
+          ? new Date(a.ticketSeenSince).toISOString()
+          : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const { count } = await sb.from('ticket_replies')
           .select('id', { count: 'exact', head: true })
           .in('ticket_id', ids)
           .neq('from_username', actor.username)
           .neq('from_username', '__system__')
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+          .gte('created_at', seenSince);
         empTicketCount = count || 0;
       }
     }
@@ -1809,7 +2191,30 @@ async function getNotifications(args, ctx) {
       });
     }
 
-    // 6. Upcoming approved leave (within next 7 days — heads-up reminder)
+    // 6. Approved payslips (most recent 3 — payslip-ready notifications)
+    const { data: myPayslips } = await sb.from('payroll_approvals')
+      .select('id, date_from, date_to, pay_cycle, net_pay, approved_at')
+      .eq('user_id', actor.id)
+      .eq('status', 'approved')
+      .order('approved_at', { ascending: false })
+      .limit(3);
+    for (const p of myPayslips || []) {
+      const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+      const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      notifs.push({
+        id: 'payslip_' + p.id,
+        type: 'payslip',
+        icon: 'fa-file-invoice-dollar',
+        color: 'green',
+        title: 'Your payslip is ready',
+        sub: `${cycleLabel[p.pay_cycle] || p.pay_cycle} · ${p.date_from} – ${p.date_to} · Net TTD ${fmt(p.net_pay)}`,
+        time: p.approved_at,
+        priority: 1,
+        sectionLink: 's-emp-payroll'
+      });
+    }
+
+    // 7. Upcoming approved leave (within next 7 days — heads-up reminder)
     const in7 = new Date(); in7.setDate(in7.getDate() + 7);
     const in7Str = in7.toISOString().slice(0, 10);
     const { data: upcomingLeave } = await sb.from('leave_requests')

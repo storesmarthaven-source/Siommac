@@ -1217,7 +1217,8 @@ const AttendanceSystem = (function() {
     _hdrBadgeSyncTimer = setTimeout(_doHdrBadgeSync, 80);
   }
   function _doHdrBadgeSync() {
-    _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole }).then(res => {
+    const ticketSeenSince = (() => { try { return localStorage.getItem('siomac_ticket_seen_since_' + currentUser) || null; } catch { return null; } })();
+    _rawApi('getHeaderCounts', { managerUsername: currentUser, role: currentRole, ticketSeenSince }).then(res => {
       if (!res || !res.success) return;
       const c = res.data || {};
 
@@ -1314,14 +1315,9 @@ const AttendanceSystem = (function() {
   function refreshSection(id) {
     switch (id) {
       case 's-settings':
-        // Default tab: Security & Privacy for employees/managers; Company for admins
-        document.querySelectorAll('.stg-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.stg-tab-pane').forEach(p => p.classList.remove('active'));
-        { const defaultTab = currentRole === 'admin' ? 'company' : 'security';
-          const defBtn = document.querySelector(`.stg-tab-btn[data-stg-tab="${defaultTab}"]`);
-          const defPane = document.getElementById('stg-' + defaultTab);
-          if (defBtn) defBtn.classList.add('active');
-          if (defPane) defPane.classList.add('active'); }
+        // Default panel: Company for admins, Appearance for others
+        { const defaultTab = currentRole === 'admin' ? 'company' : 'appearance';
+          _stgActivatePanel(defaultTab); }
         renderPalettes(); renderLayouts(); loadAdminBrandingSettings();
         break;
       case 's-profile':
@@ -1342,6 +1338,7 @@ const AttendanceSystem = (function() {
         if (typeof window._clearMapBadge === 'function') window._clearMapBadge();
         break;
       case 's-emp-leave':       loadLeaveRequests(); break;
+      case 's-emp-payroll':     loadMyPayslips(); break;
       case 's-mgr-overview':    loadDepartmentData(); break;
       case 's-mgr-employees':   loadDepartmentEmployees(); break;
       case 's-mgr-leaves':      loadManagerLeaveApplications(); break;
@@ -1518,6 +1515,7 @@ const AttendanceSystem = (function() {
         myleave:      () => 's-emp-leave',
         pending:      () => 's-emp-leave',
         upcoming:     () => 's-emp-leave',
+        payslip:      () => 's-emp-payroll',
         ticketreply:  () => '__modal:hdrTicketModal',
         ticketstatus: () => '__modal:hdrTicketModal',
         msgreply:     () => '__modal:hdrMsgModal',
@@ -2281,7 +2279,14 @@ const AttendanceSystem = (function() {
       let _currentTicketId = null;
       let _composing = false;  // true while new-ticket compose pane is open
       let _pollTimer = null;
-      const _seenReplyIds = new Set(); // tracks reply ids already notified so we don't re-fire
+      // Persisted seen-reply IDs — survives page refresh via localStorage
+      const _SEEN_KEY = 'siomac_seen_reply_ids_' + (currentUser || '');
+      const _seenReplyIds = new Set(
+        JSON.parse(localStorage.getItem(_SEEN_KEY) || '[]')
+      );
+      function _persistSeen() {
+        try { localStorage.setItem(_SEEN_KEY, JSON.stringify([..._seenReplyIds])); } catch (_) {}
+      }
 
       const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed', deleted: 'Deleted' };
       const STATUS_CSS   = { open: 'open', in_progress: 'pending', resolved: 'closed', closed: 'closed', deleted: 'deleted' };
@@ -2587,11 +2592,13 @@ const AttendanceSystem = (function() {
           // On subsequent polls, _updateTicketBadge reads unseen count before sealing
           if (_firstLoad) {
             raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+            _persistSeen();
           }
           _updateTicketBadge();
           // After badge is set, seal so next poll won't re-count
           if (!_firstLoad) {
             raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+            _persistSeen();
           }
           // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentTicketId) {
@@ -2764,9 +2771,13 @@ const AttendanceSystem = (function() {
       window._clearTicketDetail  = () => { _currentTicketId = null; _composing = false; };
       window._ticketModalOpened  = () => {
         clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000);
-        // Clear the unseen badge — employee has opened the modal
-        _tickets.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
-        _setHdrBadge(document.getElementById('hdrTicketBadge'), 0);
+        // Only clear badge for employees — admin badge reflects open ticket count, not reads
+        if (currentRole === 'employee') {
+          _tickets.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
+          _persistSeen();
+          try { localStorage.setItem('siomac_ticket_seen_since_' + currentUser, new Date().toISOString()); } catch (_) {}
+          _setHdrBadge(document.getElementById('hdrTicketBadge'), 0);
+        }
       };
       window._ticketModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 10 * 1000); };
     })();
@@ -3097,6 +3108,10 @@ const AttendanceSystem = (function() {
         _hrSearch = event.target.value;
         renderHourlyRates();
       }
+      // Payroll settings modal — live estimate on input
+      if (event.target.matches('#prsMonthlySalary, #prsHourlyRate, #prsStdHours')) {
+        _prsRefreshEstimate();
+      }
     });
 
     // Attendance month/year selects — reload from API
@@ -3143,6 +3158,10 @@ const AttendanceSystem = (function() {
         const f = event.target.files && event.target.files[0];
         event.target.value = '';
         if (f) _hrHandleFile(f);
+      }
+      // Payroll settings modal toggles — refresh live estimate
+      if (event.target.matches('#prsNis, #prsHs, #prsTax')) {
+        _prsRefreshEstimate();
       }
     });
 
@@ -3357,9 +3376,71 @@ const AttendanceSystem = (function() {
       const saveBtn = event.target.closest('.btn-save-rate');
       if (saveBtn) saveHourlyRate(saveBtn.dataset.username, saveBtn);
 
-      // Payroll — generate + print
-      if (event.target.closest('#generatePayrollBtn')) generatePayroll();
-      if (event.target.closest('#printPayrollBtn'))    printPayroll();
+      // Payroll settings modal
+      if (event.target.closest('#prsCloseBtn') || event.target.closest('#prsCancelBtn')) _prsClose();
+      if (event.target.closest('#prsSaveBtn')) _prsSave();
+      // Close on backdrop click
+      if (event.target.id === 'prSettingsModal') _prsClose();
+
+      // Payroll constants modal (T&T statutory rates)
+      if (event.target.closest('#prSettingsBtn')) _prcOpen();
+      if (event.target.closest('#prcCloseBtn') || event.target.closest('#prcCancelBtn')) _prcClose();
+      if (event.target.closest('#prcVerifyBtn')) _prcVerify();
+      if (event.target.closest('#prcSaveBtn')) _prcSave();
+      if (event.target.closest('#prcRestoreBtn')) _prcRestoreDefaults();
+      // Close on backdrop click
+      if (event.target.id === 'prConstantsModal') _prcClose();
+      // Constants modal section tabs
+      const prcTab = event.target.closest('.prc-tab');
+      if (prcTab && prcTab.dataset.prcTab) {
+        document.querySelectorAll('.prc-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.prc-panel').forEach(p => p.classList.remove('active'));
+        prcTab.classList.add('active');
+        const panel = document.getElementById('prc-' + prcTab.dataset.prcTab);
+        if (panel) panel.classList.add('active');
+      }
+
+      // Cycle pills
+      const prsCyclePill = event.target.closest('#prsCycleGroup .prs-pill');
+      if (prsCyclePill) {
+        document.querySelectorAll('#prsCycleGroup .prs-pill').forEach(p => p.classList.remove('active'));
+        prsCyclePill.classList.add('active');
+        document.getElementById('prsPayCycle').value = prsCyclePill.dataset.val;
+        _prsRefreshEstimate();
+      }
+      // Basis pills
+      const prsBasisPill = event.target.closest('#prsBasisGroup .prs-pill');
+      if (prsBasisPill) {
+        document.querySelectorAll('#prsBasisGroup .prs-pill').forEach(p => p.classList.remove('active'));
+        prsBasisPill.classList.add('active');
+        const basis = prsBasisPill.dataset.val;
+        document.getElementById('prsPayBasis').value = basis;
+        _prsToggleRateRows(basis);
+        _prsRefreshEstimate();
+      }
+
+      // Payroll page — filter panel toggle
+      if (event.target.closest('#prFilterToggle')) {
+        const toggle = document.getElementById('prFilterToggle');
+        const expand = document.getElementById('prFilterExpand');
+        if (toggle && expand) {
+          const open = expand.classList.toggle('open');
+          toggle.classList.toggle('active', open);
+        }
+      }
+
+      // Payroll page — mode toggle + unified action
+      if (event.target.closest('#prReportBtn'))        _prToggleReportsMode();
+      if (event.target.closest('#prApplyBtn'))         _prReportsMode ? _prRunReportsSearch() : _prRunPayroll();
+      if (event.target.closest('#prSendApprovalBtn'))  _prSendForApproval();
+      // Payroll page — payslip / edit buttons (dynamic rows)
+      const prPayslipBtn = event.target.closest('.pr-payslip-btn');
+      if (prPayslipBtn) _prOpenPayslip(prPayslipBtn.dataset.uid);
+      const prEditBtn = event.target.closest('.pr-edit-btn');
+      if (prEditBtn) _prOpenEditPayroll(prEditBtn.dataset.uid);
+
+      // (cycle filter is now a select dropdown — handled via 'change' event listener)
+
 
       // My Profile
       if (event.target.closest('#pickProfileImageBtn'))    pickProfileImage();
@@ -3388,15 +3469,9 @@ const AttendanceSystem = (function() {
         }
       }
 
-      // Settings tabs
-      const stgTab = event.target.closest('.stg-tab-btn');
-      if (stgTab) {
-        document.querySelectorAll('.stg-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.stg-tab-pane').forEach(p => p.classList.remove('active'));
-        stgTab.classList.add('active');
-        const pane = document.getElementById('stg-' + stgTab.dataset.stgTab);
-        if (pane) pane.classList.add('active');
-      }
+      // Settings nav items — scroll to section
+      const stgNav = event.target.closest('.stg-nav-item');
+      if (stgNav && stgNav.dataset.stgTab) _stgActivatePanel(stgNav.dataset.stgTab, true);
 
       // Profile tabs
       const epTab = event.target.closest('.ep-tab-btn');
@@ -3660,15 +3735,8 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.non-admin-only').forEach(el => {
       el.style.display = currentRole !== 'admin' ? '' : 'none';
     });
-    // For admins, activate Company tab; for others Security is already default
-    if (currentRole === 'admin') {
-      document.querySelectorAll('.stg-tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.stg-tab-pane').forEach(pane => pane.classList.remove('active'));
-      const companyBtn = document.querySelector('.stg-tab-btn[data-stg-tab="company"]');
-      if (companyBtn) companyBtn.classList.add('active');
-      const companyPane = document.getElementById('stg-company');
-      if (companyPane) companyPane.classList.add('active');
-    }
+    // Settings: default panel based on role
+    _stgActivatePanel(currentRole === 'admin' ? 'company' : 'appearance');
 
     // build per-role menu
     buildSidebar(currentRole);
@@ -4883,6 +4951,129 @@ const AttendanceSystem = (function() {
   // live counts now render via renderLivePanel for admin/manager only.)
   function updateRealTimeStats() { /* deprecated */ }
 
+  // ─── Employee — My Payslips ────────────────────────────────────────────────
+  function loadMyPayslips() {
+    const grid   = document.getElementById('empPayslipGrid');
+    const empty  = document.getElementById('empPayrollEmpty');
+    const stats  = document.getElementById('empPsStats');
+    if (!grid) return;
+    grid.innerHTML = '<div class="emp-payslip-skeleton"></div>'.repeat(3);
+    if (empty) empty.style.display = 'none';
+    if (stats) stats.style.display = 'none';
+
+    api('getMyPayslips', {}).then(res => {
+      const slips = (res && res.success && res.data) ? res.data : [];
+      grid.innerHTML = '';
+      if (!slips.length) {
+        if (empty) empty.style.display = 'flex';
+        return;
+      }
+
+      const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+      const fmt  = n => 'TTD ' + Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      const fmtS = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+      // Populate stats strip
+      if (stats) {
+        const ytd = slips.reduce((s, p) => s + Number(p.net_pay || 0), 0);
+        const latest = slips[0];
+        document.getElementById('empPsCount').textContent  = slips.length;
+        document.getElementById('empPsLatestNet').textContent = fmt(latest.net_pay);
+        document.getElementById('empPsYtd').textContent   = fmt(ytd);
+        stats.style.display = 'flex';
+      }
+
+      grid.innerHTML = slips.map((p, i) => {
+        const cycle = cycleLabel[p.pay_cycle] || p.pay_cycle || '—';
+        const monthLabel = p.date_from ? new Date(p.date_from + 'T12:00:00').toLocaleDateString('en-TT', { month: 'long', year: 'numeric' }) : '—';
+        const approvedDate = p.approved_at ? new Date(p.approved_at).toLocaleDateString('en-TT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        const isLatest = i === 0;
+        return `
+          <div class="emp-payslip-card${isLatest ? ' emp-payslip-card--latest' : ''}">
+            <div class="emp-payslip-card-top">
+              <div class="emp-payslip-card-month">${monthLabel}</div>
+              <span class="emp-payslip-card-cycle-tag">${cycle}</span>
+            </div>
+            <div class="emp-payslip-card-net">
+              <span class="emp-payslip-net-label">Net Pay</span>
+              <span class="emp-payslip-net-val">TTD ${fmtS(p.net_pay)}</span>
+            </div>
+            <div class="emp-payslip-card-breakdown">
+              <div class="emp-payslip-brow">
+                <span>Gross</span><span>TTD ${fmtS(p.gross_pay)}</span>
+              </div>
+              <div class="emp-payslip-brow emp-payslip-brow--ded">
+                <span>Deductions</span><span>− TTD ${fmtS(p.total_deductions)}</span>
+              </div>
+            </div>
+            <div class="emp-payslip-card-footer">
+              <span class="emp-payslip-approved"><i class="fas fa-circle-check"></i> ${approvedDate}</span>
+              <button class="emp-payslip-view-btn" data-payslip='${escapeHtml(JSON.stringify(p))}'>
+                <i class="fas fa-eye"></i> View & Print
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Wire view buttons
+      grid.querySelectorAll('.emp-payslip-view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          try { _empOpenPayslip(JSON.parse(btn.dataset.payslip)); } catch(_) {}
+        });
+      });
+    }).catch(() => {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+    });
+  }
+
+  function _empOpenPayslip(p) {
+    const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+    const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    Swal.fire({
+      html: `
+        <div class="pr-payslip">
+          <div class="pr-payslip-header">
+            <div class="pr-payslip-logo"><i class="fas fa-building"></i></div>
+            <div>
+              <div class="pr-payslip-title">Payslip</div>
+              <div class="pr-payslip-period">${escapeHtml(p.date_from)} — ${escapeHtml(p.date_to)}</div>
+            </div>
+            <button class="pr-payslip-print-btn no-print" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+          </div>
+          <div class="pr-payslip-info">
+            <div class="pr-payslip-info-row"><span>Department</span><strong>${escapeHtml(p.department || '—')}</strong></div>
+            <div class="pr-payslip-info-row"><span>Position</span><strong>${escapeHtml(p.position || '—')}</strong></div>
+            <div class="pr-payslip-info-row"><span>Pay Cycle</span><strong>${cycleLabel[p.pay_cycle] || p.pay_cycle}</strong></div>
+            <div class="pr-payslip-info-row"><span>Pay Period</span><strong>${escapeHtml(p.date_from)} to ${escapeHtml(p.date_to)}</strong></div>
+            <div class="pr-payslip-info-row"><span>Hours Worked</span><strong>${p.hours_worked || 0}h</strong></div>
+            <div class="pr-payslip-info-row"><span>Days Worked</span><strong>${p.days_worked || 0}</strong></div>
+          </div>
+          <div class="pr-payslip-section-title">Earnings</div>
+          <div class="pr-payslip-line pr-payslip-gross">
+            <span>Gross Pay</span><span>TTD ${fmt(p.gross_pay)}</span>
+          </div>
+          <div class="pr-payslip-section-title">Deductions</div>
+          <div class="pr-payslip-line"><span>NIS (6%)</span><span>${p.nis > 0 ? 'TTD ' + fmt(p.nis) : 'N/A'}</span></div>
+          <div class="pr-payslip-line"><span>Health Surcharge</span><span>${p.health_surcharge > 0 ? 'TTD ' + fmt(p.health_surcharge) : 'N/A'}</span></div>
+          <div class="pr-payslip-line"><span>PAYE (25%/30%)</span><span>TTD ${fmt(p.paye)}</span></div>
+          <div class="pr-payslip-line pr-payslip-total-ded">
+            <span>Total Deductions</span><span>TTD ${fmt(p.total_deductions)}</span>
+          </div>
+          <div class="pr-payslip-net">
+            <span>Net Pay</span><span>TTD ${fmt(p.net_pay)}</span>
+          </div>
+          <div class="pr-payslip-footer">This is a computer-generated payslip — Trinidad & Tobago</div>
+        </div>`,
+      width: '560px',
+      padding: 0,
+      background: 'transparent',
+      showConfirmButton: false,
+      showCloseButton: true,
+      customClass: { popup: 'pr-payslip-popup', closeButton: 'adp-close-btn' }
+    });
+  }
+
   // Manager Dashboard Functions
   function loadDepartmentData() {
     _skelOnce('s-mgr-overview', () => skelStatValues(['departmentEmployees','presentDepartment','onLeaveDepartment','lateDepartment']));
@@ -5245,8 +5436,10 @@ const AttendanceSystem = (function() {
       { id: 'newPhone',      label: 'Phone',       rules: ['phone'] },
     ]);
     if (!ok) return;
+
     showSpinner('Adding employee...');
-    api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, email, phone, actorId: currentUserId, actorUsername: currentUser }).then(res => {
+    api('addEmployee', { username, password, fullName, department, position, role, employeeNumber, email, phone,
+      actorId: currentUserId, actorUsername: currentUser }).then(res => {
       hideSpinner();
       if (res.success) {
         closeAddEmpModal();
@@ -6567,7 +6760,7 @@ const AttendanceSystem = (function() {
         <div class="ps-card-body">
           <div class="ps-detail-row"><i class="fas fa-location-dot"></i><span>${escapeHtml(site.address || '—')}</span></div>
           <div class="ps-detail-row"><i class="fas fa-crosshairs"></i><span>${lat.toFixed(5)}, ${lng.toFixed(5)} · Radius: ${rad}m</span></div>
-          <div class="ps-detail-row"><i class="fas fa-align-left"></i><span>${escapeHtml(site.description || '—')}</span></div>
+          <div class="ps-detail-row ps-detail-row--last"><i class="fas fa-align-left"></i><span>${escapeHtml(site.description || '—')}</span></div>
           ${avatarsHtml}
           <div class="ps-mini-map" id="ps-map-${site.id}"></div>
         </div>
@@ -7637,149 +7830,920 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // ─── Payroll: generator + printable doc (admin + manager) ───
-  let _payrollData = null;
+  // ─── Payroll (T&T) ──────────────────────────────────────────────────────────
+  let _prFpFrom = null, _prFpTo = null;
+  let _prDT = null; // DataTable instance
+  let _prCycleFilter = 'all';
+  let _prDeptFilter  = 'all';
+  let _prRunData = null;       // last successful run result
+  let _prCurrentRows = [];    // rows currently visible in the table (after filters)
+  let _prEmpAll      = [];     // all employees loaded for picker
+  let _prEmpSelected = new Set(); // selected employee IDs in reports mode
+  let _prOverrides = {};       // userId → overridden hours
+  let _prReportsMode = false;  // false = Run Payroll, true = Reports
 
-  let _payrollInitDone = false;
+  const _prFmt = n => '$' + Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const _prFmtShort = n => '$' + Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   function initPayrollSection() {
-    // populate year dropdown once
-    const yearSel = document.getElementById('payrollYear');
-    if (yearSel && !yearSel.options.length) {
-      const yr = new Date().getFullYear();
-      for (let y = yr - 2; y <= yr; y++) {
-        const opt = document.createElement('option');
-        opt.value = String(y); opt.textContent = String(y);
-        if (y === yr) opt.selected = true;
-        yearSel.appendChild(opt);
+    if (_prFpFrom) return; // already initialised
+    const now         = new Date();
+    const monthStart  = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd    = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const monthStartS = monthStart.toISOString().slice(0, 10);
+    const monthEndS   = monthEnd.toISOString().slice(0, 10);
+
+    _prFpFrom = flatpickr('#prDateFrom', {
+      dateFormat: 'Y-m-d',
+      defaultDate: monthStartS,
+      minDate: monthStartS,
+      maxDate: monthEndS,
+      onChange: ds => {
+        if (_prFpTo && ds[0]) _prFpTo.set('minDate', ds[0]);
+        _prUpdateClearBtn();
       }
-    }
-    // default month = current month (only on first open)
-    const monthSel = document.getElementById('payrollMonth');
-    if (monthSel && !_payrollInitDone) monthSel.value = String(new Date().getMonth());
+    });
+    _prFpTo = flatpickr('#prDateTo', {
+      dateFormat: 'Y-m-d',
+      defaultDate: monthEndS,
+      minDate: monthStartS,
+      maxDate: monthEndS,
+      onChange: ds => {
+        if (_prFpFrom && ds[0]) _prFpFrom.set('maxDate', ds[0]);
+        _prUpdateClearBtn();
+      }
+    });
 
-    // populate employees only once (avoid blank flash on revisit)
-    const empSel = document.getElementById('payrollEmployee');
-    if (empSel && !_payrollInitDone) {
-      empSel.innerHTML = '<option value="">Loading employees…</option>';
-      api('getPayrollEmployees', { requesterUsername: currentUser }).then(res => {
-        const list = (res.success && res.data) || [];
-        empSel.innerHTML = list.length
-          ? list.map(e => '<option value="' + escapeHtml(e.username) + '">' + escapeHtml(e.fullName) + ' — ' + escapeHtml(e.department) + '</option>').join('')
-          : '<option value="">No employees available</option>';
+    // Disable Send for Approval until payroll has been run (starts hidden+disabled)
+    const approvalBtn = document.getElementById('prSendApprovalBtn');
+    if (approvalBtn) { approvalBtn.disabled = true; approvalBtn.classList.add('pr-approval-hidden'); }
+    // Clear button starts disabled (no filters changed yet)
+    const clearBtn = document.getElementById('prClearFiltersBtn');
+    if (clearBtn) clearBtn.disabled = true;
+
+    // Search input — drives DataTable in payroll mode, employee picker in reports mode
+    const searchEl = document.getElementById('prSearchInput');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        if (_prReportsMode) { _prEmpOpenDropdown(); _prEmpRenderList(); }
+        else if (_prDT) _prDT.search(searchEl.value).draw();
+      });
+      searchEl.addEventListener('focus', () => {
+        if (_prReportsMode) _prEmpOpenDropdown();
       });
     }
 
-    // pull currency from settings once
-    if (!_payrollInitDone) {
-      api('getSettings').then(res => {
-        if (res && res.data && res.data.currency) _payCurrency = res.data.currency;
+    // Close employee dropdown when clicking outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#prSearchWrap') && !e.target.closest('#prEmpDropdown')) _prEmpCloseDropdown();
+    });
+    // Reposition dropdown on scroll/resize
+    window.addEventListener('scroll', () => {
+      if (document.getElementById('prEmpDropdown')?.classList.contains('open')) _prEmpOpenDropdown();
+    }, true);
+    window.addEventListener('resize', () => {
+      if (document.getElementById('prEmpDropdown')?.classList.contains('open')) _prEmpOpenDropdown();
+    });
+
+    // Clear Filters button — enabled only when something is non-default
+    document.getElementById('prClearFiltersBtn')?.addEventListener('click', () => {
+      // Reset cycle
+      const cycleEl = document.getElementById('prCycleSelect');
+      if (cycleEl) { cycleEl.value = 'all'; _prCycleFilter = 'all'; }
+      // Reset department
+      const deptEl = document.getElementById('prDeptSelect');
+      if (deptEl) { deptEl.value = 'all'; _prDeptFilter = 'all'; }
+      // Reset dates to current month defaults
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+      if (_prFpFrom) _prFpFrom.setDate(_prReportsMode ? null : monthStart, false);
+      if (_prFpTo)   _prFpTo.setDate(_prReportsMode ? null : monthEnd, false);
+      // Re-apply filters to table / employee list
+      _prApplyFilters();
+      if (_prReportsMode) _prEmpRenderList();
+      _prUpdateClearBtn();
+    });
+
+    // Select all / Clear buttons
+    document.getElementById('prEmpSelectAll')?.addEventListener('click', e => {
+      e.stopPropagation();
+      _prEmpGetFiltered().forEach(emp => _prEmpSelected.add(String(emp.id)));
+      _prEmpRenderList(); _prEmpUpdateBadge();
+    });
+    document.getElementById('prEmpClearAll')?.addEventListener('click', e => {
+      e.stopPropagation();
+      _prEmpSelected.clear();
+      _prEmpRenderList(); _prEmpUpdateBadge();
+    });
+
+    // Cycle dropdown — re-applies filters on change
+    const cycleEl = document.getElementById('prCycleSelect');
+    if (cycleEl) {
+      cycleEl.addEventListener('change', () => {
+        _prCycleFilter = cycleEl.value || 'all';
+        _prApplyFilters();
+        if (_prReportsMode) _prEmpRenderList();
+        _prUpdateClearBtn();
       });
     }
 
-    _payrollInitDone = true;
-  }
+    // Department dropdown — populate from API, re-applies filters on change
+    const deptEl = document.getElementById('prDeptSelect');
+    if (deptEl) {
+      api('listDepartments').then(res => {
+        if (res && res.success && res.data) {
+          res.data.forEach(d => {
+            const o = document.createElement('option');
+            o.value = d.id; o.textContent = d.name;
+            deptEl.appendChild(o);
+          });
+        }
+      });
+      deptEl.addEventListener('change', () => {
+        _prDeptFilter = deptEl.value || 'all';
+        _prApplyFilters();
+        if (_prReportsMode) _prEmpRenderList();
+        _prUpdateClearBtn();
+      });
+    }
 
-  function generatePayroll() {
-    const username = document.getElementById('payrollEmployee').value;
-    const year     = Number(document.getElementById('payrollYear').value);
-    const month    = Number(document.getElementById('payrollMonth').value);
-    if (!username) { showPopup('warning', 'Select Employee', 'Pick an employee first.'); return; }
-    const btn = document.getElementById('generatePayrollBtn');
-    const orig = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    api('getPayroll', { username, year, month, requesterUsername: currentUser }).then(res => {
-      btn.disabled = false; btn.innerHTML = orig;
-      if (!res.success) { showPopup('error', 'Failed', res.message || 'Could not generate payroll'); return; }
-      _payrollData = res.data;
-      renderPayrollDoc(_payrollData);
-      document.getElementById('printPayrollBtn').disabled = false;
+    // Load all employees into memory for picker
+    api('listEmployees', {}).then(res => {
+      _prEmpAll = (res && res.success && res.data) ? res.data : [];
     });
   }
 
-  function renderPayrollDoc(d) {
-    const empty = document.getElementById('payrollEmpty');
-    const cont  = document.getElementById('payrollContent');
-    if (empty) empty.style.display = 'none';
-    cont.style.display = 'block';
-
-    const cur = d.currency || 'TT';
-    _payCurrency = cur;
-    const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    const capStatus = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
-
-    const rows = !d.days.length
-      ? '<tr><td colspan="7" style="text-align:center; padding:18px; color:#888;">No attendance records for this period</td></tr>'
-      : d.days.map((day, i) => {
-          const cls = (!day.checkOut && day.checkIn) ? 'row-no-checkout'
-                    : (day.status === 'late') ? 'row-late' : '';
-          return '<tr class="' + cls + '">'
-            + '<td class="num">' + (i + 1) + '</td>'
-            + '<td>' + escapeHtml(day.date) + '</td>'
-            + '<td class="center">' + (day.checkIn  ? fmtLocalTime(day.checkIn)  : '—') + '</td>'
-            + '<td class="center">' + (day.checkOut ? fmtLocalTime(day.checkOut) : '—') + '</td>'
-            + '<td class="num">' + day.hours.toFixed(2) + '</td>'
-            + '<td class="center">' + escapeHtml(capStatus(day.status)) + '</td>'
-            + '<td class="num">' + fmt(day.earnings) + '</td>'
-            + '</tr>';
-        }).join('');
-
-    cont.innerHTML =
-      '<div class="payroll-doc">'
-      + '<div class="payroll-doc-header">'
-      +   '<h1>' + escapeHtml(d.companyName) + '</h1>'
-      +   '<h2>Payroll Statement</h2>'
-      +   '<div class="payroll-period">' + escapeHtml(d.period.label) + ' &nbsp;·&nbsp; ' + escapeHtml(d.period.start) + ' to ' + escapeHtml(d.period.end) + '</div>'
-      + '</div>'
-      + '<table class="meta">'
-      +   '<tr><td class="label">Employee</td><td>' + escapeHtml(d.employee.fullName) + '</td>'
-      +       '<td class="label">Position</td><td>' + escapeHtml(d.employee.position) + '</td></tr>'
-      +   '<tr><td class="label">Department</td><td>' + escapeHtml(d.employee.department) + '</td>'
-      +       '<td class="label">Hourly Rate</td><td>' + cur + ' ' + fmt(d.employee.hourlyRate) + '</td></tr>'
-      +   '<tr><td class="label">Username</td><td>' + escapeHtml(d.employee.username) + '</td>'
-      +       '<td class="label">Generated</td><td>' + escapeHtml((d.generatedAt || '').slice(0, 19).replace('T', ' ')) + '</td></tr>'
-      + '</table>'
-      + '<table class="days">'
-      +   '<thead><tr>'
-      +     '<th class="num" style="width:32px;">#</th>'
-      +     '<th style="width:88px;">Date</th>'
-      +     '<th class="center" style="width:78px;">Check In</th>'
-      +     '<th class="center" style="width:78px;">Check Out</th>'
-      +     '<th class="num" style="width:60px;">Hours</th>'
-      +     '<th class="center" style="width:74px;">Status</th>'
-      +     '<th class="num">Earnings (' + cur + ')</th>'
-      +   '</tr></thead>'
-      +   '<tbody>' + rows + '</tbody>'
-      +   '<tfoot><tr>'
-      +     '<td colspan="4" style="text-align:right;">Totals →</td>'
-      +     '<td class="num">' + d.totals.totalHours.toFixed(2) + '</td>'
-      +     '<td class="center">' + d.totals.totalDays + ' day' + (d.totals.totalDays === 1 ? '' : 's') + '</td>'
-      +     '<td class="num">' + fmt(d.totals.totalEarnings) + '</td>'
-      +   '</tr></tfoot>'
-      + '</table>'
-      + '<div class="payroll-summary-grid">'
-      +   '<div class="cell"><span class="lbl">Working Days (Mon–Sat)</span><span class="val">' + (d.totals.workingDays || 0) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Present Days</span><span class="val">' + d.totals.presentDays + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Late Days</span><span class="val">' + d.totals.lateDays + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Absent Days</span><span class="val">' + (d.totals.absentDays || 0) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Total Hours</span><span class="val">' + d.totals.totalHours.toFixed(2) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Hourly Rate</span><span class="val">' + cur + ' ' + fmt(d.employee.hourlyRate) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Gross Earnings</span><span class="val">' + cur + ' ' + fmt(d.totals.grossEarnings || d.totals.totalEarnings) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Late Penalty (' + d.totals.lateDays + ' × ' + cur + ' ' + fmt(d.totals.latePenaltyPerDay || 0) + ')</span><span class="val" style="color:#c1272d;">- ' + cur + ' ' + fmt(d.totals.latePenalty || 0) + '</span></div>'
-      +   '<div class="cell"><span class="lbl">Leave Fine (' + (d.totals.absentDays || 0) + ' × ' + cur + ' ' + fmt(d.totals.leaveFinePerDay || 0) + ')</span><span class="val" style="color:#c1272d;">- ' + cur + ' ' + fmt(d.totals.leaveFine || 0) + '</span></div>'
-      +   '<div class="cell grand"><span class="lbl">NET PAYABLE</span><span class="val">' + cur + ' ' + fmt(d.totals.netEarnings != null ? d.totals.netEarnings : d.totals.totalEarnings) + '</span></div>'
-      + '</div>'
-      + '<div class="payroll-signatures">'
-      +   '<div class="sig"><div class="line"></div><div class="label">Employee Signature</div></div>'
-      +   '<div class="sig"><div class="line"></div><div class="label">Authorized Signature</div></div>'
-      + '</div>'
-      + '<div class="payroll-doc-footer">This is a computer-generated payroll statement.</div>'
-      + '</div>';
+  // Enables Clear button only when any filter differs from its default
+  function _prUpdateClearBtn() {
+    const btn = document.getElementById('prClearFiltersBtn');
+    if (!btn) return;
+    const now        = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const fromVal = _prFpFrom && _prFpFrom.selectedDates[0]
+      ? _prFpFrom.formatDate(_prFpFrom.selectedDates[0], 'Y-m-d') : '';
+    const toVal   = _prFpTo && _prFpTo.selectedDates[0]
+      ? _prFpTo.formatDate(_prFpTo.selectedDates[0], 'Y-m-d') : '';
+    const cycleChanged = _prCycleFilter !== 'all';
+    const deptChanged  = _prDeptFilter  !== 'all';
+    const dateChanged  = _prReportsMode
+      ? (!!fromVal || !!toVal)                                      // any date set counts in reports
+      : (fromVal !== monthStart || toVal !== monthEnd);             // differs from month default in payroll
+    const isDirty = cycleChanged || deptChanged || dateChanged;
+    btn.disabled = !isDirty;
   }
 
-  function printPayroll() {
-    if (!_payrollData) { showPopup('warning', 'Nothing to Print', 'Generate a payroll first.'); return; }
-    window.print();
+  // Apply cycle filter and re-render (search handled by DataTables)
+  function _prApplyFilters() {
+    if (!_prRunData) return;
+    const from = _prRunData.dateFrom, to = _prRunData.dateTo;
+    let rows = _prRunData.rows;
+    if (_prCycleFilter !== 'all') rows = rows.filter(r => r.payCycle === _prCycleFilter);
+    if (_prDeptFilter  !== 'all') rows = rows.filter(r => String(r.departmentId) === String(_prDeptFilter));
+    _prCurrentRows = rows;
+    const r2 = n => Math.round(n * 100) / 100;
+    const totals = rows.reduce((t, r) => {
+      t.grossPay        = r2(t.grossPay        + r.grossPay);
+      t.paye            = r2(t.paye            + r.paye);
+      t.nis             = r2(t.nis             + r.nis);
+      t.healthSurcharge = r2(t.healthSurcharge + r.healthSurcharge);
+      t.totalDeductions = r2(t.totalDeductions + r.totalDeductions);
+      t.netPay          = r2(t.netPay          + r.netPay);
+      return t;
+    }, { grossPay: 0, paye: 0, nis: 0, healthSurcharge: 0, totalDeductions: 0, netPay: 0 });
+    _prRenderDashboard(totals);
+    _prRenderTable(rows, from, to);
+  }
+
+  function _prRunPayroll() {
+    const from = _prFpFrom && _prFpFrom.selectedDates[0]
+      ? _prFpFrom.formatDate(_prFpFrom.selectedDates[0], 'Y-m-d') : '';
+    const to   = _prFpTo && _prFpTo.selectedDates[0]
+      ? _prFpTo.formatDate(_prFpTo.selectedDates[0], 'Y-m-d') : '';
+    if (!from || !to) { showPopup('warning', 'Select Dates', 'Please pick a date range first.'); return; }
+    const btn = document.getElementById('prApplyBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    api('listPayrollRun', { dateFrom: from, dateTo: to, cycle: _prCycleFilter, overrides: _prOverrides })
+      .then(res => {
+        btn.disabled = false; btn.innerHTML = orig;
+        if (!res || !res.success) { showPopup('error', 'Failed', res.message || 'Could not run payroll'); return; }
+        _prRunData = res.data;
+        _prRenderDashboard(res.data.totals);
+        _prRenderTable(res.data.rows, from, to);
+      })
+      .catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Error', err.message); });
+  }
+
+  function _prRenderDashboard(totals) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = _prFmt(val); };
+    set('prTotalGross',      totals.grossPay);
+    set('prTotalNet',        totals.netPay);
+    set('prTotalPaye',       totals.paye);
+    set('prTotalNis',        totals.nis);
+    set('prTotalHs',         totals.healthSurcharge);
+    set('prTotalDeductions', totals.totalDeductions);
+  }
+
+  function _prRenderTable(rows, dateFrom, dateTo) {
+    const tbody = document.getElementById('payrollRunBody');
+    if (!tbody) return;
+    // Track what's currently visible so Submit for Approval uses the right rows
+    _prCurrentRows = rows;
+    // Enable search field once data is loaded
+    const searchEl = document.getElementById('prSearchInput');
+    if (searchEl) {
+      searchEl.disabled = false;
+      searchEl.placeholder = _prReportsMode ? 'Filter Employees…' : 'Search Payroll Register…';
+    }
+    // Enable Send for Approval only after a successful Run Payroll (not reports)
+    if (!_prReportsMode) {
+      _prSetApprovalBtn(rows.length > 0);
+    }
+    // Destroy existing DataTable instance before re-writing tbody
+    destroyDataTable('payrollRunTable');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="11" class="pr-empty"><i class="fas fa-play-circle"></i> No employees found for this period and cycle.</td></tr>`;
+      return;
+    }
+    const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+    tbody.innerHTML = rows.map(r => `
+      <tr data-uid="${escapeHtml(r.userId)}">
+        <td>
+          <strong>${escapeHtml(r.name)}</strong><br>
+          <small class="text-muted">${escapeHtml(r.position)}</small>
+        </td>
+        <td>${escapeHtml(r.department)}</td>
+        <td><span class="pr-cycle-badge pr-cycle-${r.payCycle}">${cycleLabel[r.payCycle] || r.payCycle}</span></td>
+        <td>${r.payBasis === 'hourly' ? 'Hourly' : 'Salary'}</td>
+        <td>${Number(r.hoursWorked || 0).toFixed(1)}</td>
+        <td>${_prFmtShort(r.grossPay)}</td>
+        <td>${r.nisApplicable ? _prFmtShort(r.nis) : '—'}</td>
+        <td>${r.hsApplicable ? _prFmtShort(r.healthSurcharge) : '—'}</td>
+        <td>${_prFmtShort(r.paye)}</td>
+        <td><strong>${_prFmtShort(r.netPay)}</strong></td>
+        <td class="dt-no-export" style="white-space:nowrap;">
+          <button class="pr-row-btn pr-payslip-btn" data-uid="${escapeHtml(r.userId)}">
+            <i class="fas fa-file-invoice-dollar"></i> Payslip
+          </button>
+          ${_prReportsMode ? '' : `<button class="pr-row-btn pr-edit-btn" data-uid="${escapeHtml(r.userId)}">
+            <i class="fas fa-sliders"></i> Edit
+          </button>`}
+        </td>
+      </tr>`).join('');
+    // Init DataTable — CSV/PDF/Print buttons moved into section-header
+    _prDT = initDataTable('payrollRunTable', {
+      dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
+      searching: true,
+      order: [[0, 'asc']],
+      columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'dt-no-export' }],
+      initComplete: function() {
+        const btnContainer = document.getElementById('prTableBtns');
+        const dtBtns = document.querySelector('#payrollRunTable_wrapper .dt-buttons');
+        if (btnContainer && dtBtns) btnContainer.appendChild(dtBtns);
+        // Restore any existing search query from the filter bar input
+        const q = document.getElementById('prSearchInput')?.value || '';
+        if (q && _prDT) _prDT.search(q).draw();
+      }
+    });
+  }
+
+  function _prOpenPayslip(userId) {
+    if (!_prRunData) return;
+    const row = _prRunData.rows.find(r => r.userId === userId);
+    if (!row) return;
+    const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
+    const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const from = _prRunData.dateFrom, to = _prRunData.dateTo;
+    const rateLabel = row.payBasis === 'hourly'
+      ? `TTD ${fmt(row.hourlyRate)} / hr`
+      : `TTD ${fmt(row.monthlySalary)} / month`;
+
+    Swal.fire({
+      html: `
+        <div class="pr-payslip">
+          <div class="pr-payslip-header">
+            <div class="pr-payslip-logo"><i class="fas fa-building"></i></div>
+            <div>
+              <div class="pr-payslip-title">Payslip</div>
+              <div class="pr-payslip-period">${escapeHtml(from)} — ${escapeHtml(to)}</div>
+            </div>
+            <button class="pr-payslip-print-btn no-print" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+          </div>
+          <div class="pr-payslip-info">
+            <div class="pr-payslip-info-row"><span>Employee</span><strong>${escapeHtml(row.name)}</strong></div>
+            <div class="pr-payslip-info-row"><span>Department</span><strong>${escapeHtml(row.department)}</strong></div>
+            <div class="pr-payslip-info-row"><span>Position</span><strong>${escapeHtml(row.position)}</strong></div>
+            <div class="pr-payslip-info-row"><span>Pay Cycle</span><strong>${cycleLabel[row.payCycle] || row.payCycle}</strong></div>
+            <div class="pr-payslip-info-row"><span>Pay Period</span><strong>${escapeHtml(from)} to ${escapeHtml(to)}</strong></div>
+            <div class="pr-payslip-info-row"><span>Hours Worked</span><strong>${row.hoursWorked}h${row.overridden ? ' (overridden)' : ''}</strong></div>
+            <div class="pr-payslip-info-row"><span>Rate</span><strong>${rateLabel}</strong></div>
+          </div>
+          <div class="pr-payslip-section-title">Earnings</div>
+          <div class="pr-payslip-line pr-payslip-gross">
+            <span>Gross Pay</span><span>TTD ${fmt(row.grossPay)}</span>
+          </div>
+          <div class="pr-payslip-section-title">Deductions</div>
+          <div class="pr-payslip-line"><span>NIS (6%)</span><span>${row.nisApplicable ? 'TTD ' + fmt(row.nis) : 'N/A'}</span></div>
+          <div class="pr-payslip-line"><span>Health Surcharge</span><span>${row.hsApplicable ? 'TTD ' + fmt(row.healthSurcharge) : 'N/A'}</span></div>
+          <div class="pr-payslip-line"><span>PAYE (25%/30%)</span><span>TTD ${fmt(row.paye)}</span></div>
+          <div class="pr-payslip-line pr-payslip-total-ded">
+            <span>Total Deductions</span><span>TTD ${fmt(row.totalDeductions)}</span>
+          </div>
+          <div class="pr-payslip-net">
+            <span>Net Pay</span><span>TTD ${fmt(row.netPay)}</span>
+          </div>
+          <div class="pr-payslip-footer">This is a computer-generated payslip — Trinidad & Tobago</div>
+        </div>`,
+      width: '560px',
+      padding: 0,
+      background: 'transparent',
+      showConfirmButton: false,
+      showCloseButton: true,
+      customClass: { popup: 'pr-payslip-popup', closeButton: 'adp-close-btn' }
+    });
+  }
+
+  // ─── Payroll Settings Modal ───────────────────────────────────────────────
+  let _prsUserId = null;
+
+  function _prsOpen(userId) {
+    if (!_prRunData) return;
+    const row = _prRunData.rows.find(r => r.userId === userId);
+    if (!row) return;
+    _prsUserId = userId;
+
+    // Header
+    const initials = (row.name || '').split(' ').slice(0,2).map(w => w[0]||'').join('').toUpperCase() || '?';
+    const avatarEl = document.getElementById('prsAvatar');
+    const photo = _photoCache[row.username] || '';
+    if (photo) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(photo)}" alt="">`;
+    } else {
+      avatarEl.textContent = initials;
+    }
+    document.getElementById('prsName').textContent = row.name;
+    document.getElementById('prsMeta').textContent = `${row.department} · ${row.position}`;
+
+    // Cycle pills
+    document.getElementById('prsPayCycle').value = row.payCycle || 'monthly';
+    document.querySelectorAll('#prsCycleGroup .prs-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.val === row.payCycle);
+    });
+
+    // Basis pills + rate visibility
+    document.getElementById('prsPayBasis').value = row.payBasis || 'salary';
+    document.querySelectorAll('#prsBasisGroup .prs-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.val === row.payBasis);
+    });
+    _prsToggleRateRows(row.payBasis || 'salary');
+
+    // Rate inputs
+    document.getElementById('prsMonthlySalary').value = row.monthlySalary || 0;
+    document.getElementById('prsHourlyRate').value    = row.hourlyRate    || 0;
+    document.getElementById('prsStdHours').value      = row.stdHours      || 8;
+
+    // Toggles
+    document.getElementById('prsNis').checked = row.nisApplicable !== false;
+    document.getElementById('prsHs').checked  = row.hsApplicable  !== false;
+    document.getElementById('prsTax').checked = row.taxResident   !== false;
+
+    // Live estimate
+    _prsRefreshEstimate();
+
+    document.getElementById('prSettingsModal').classList.add('active');
+  }
+
+  function _prsToggleRateRows(basis) {
+    document.getElementById('prsSalaryRow').style.display = basis === 'salary' ? '' : 'none';
+    document.getElementById('prsHourlyRow').style.display = basis === 'hourly' ? '' : 'none';
+  }
+
+  // T&T estimate calculation (mirrors calcPayslip in api.js — monthly basis)
+  function _prsRefreshEstimate() {
+    const cycle    = document.getElementById('prsPayCycle').value   || 'monthly';
+    const basis    = document.getElementById('prsPayBasis').value   || 'salary';
+    const salary   = parseFloat(document.getElementById('prsMonthlySalary').value) || 0;
+    const rate     = parseFloat(document.getElementById('prsHourlyRate').value)    || 0;
+    const stdHrs   = parseFloat(document.getElementById('prsStdHours').value)      || 8;
+    const nisOn    = document.getElementById('prsNis').checked;
+    const hsOn     = document.getElementById('prsHs').checked;
+    const taxOn    = document.getElementById('prsTax').checked;
+
+    // Estimate always shown as monthly equivalent
+    const WORK_DAYS = { daily: 1, weekly: 5, fortnightly: 10, monthly: 22 };
+    const workDays = WORK_DAYS[cycle] || 22;
+    const hoursWorked = workDays * stdHrs;
+    const gross = basis === 'hourly' ? rate * hoursWorked : salary;
+
+    // NIS — 6% capped at 13,600/month
+    const nisCaps = { daily: 626.15, weekly: 3138.46, fortnightly: 6276.92, monthly: 13600 };
+    const nisCap  = nisCaps[cycle] || 13600;
+    const nis = nisOn ? Math.min(gross * 0.06, nisCap) : 0;
+
+    // Health surcharge — fixed per cycle, based on weekly gross equivalent
+    const weeklyGross = cycle === 'weekly' ? gross
+      : cycle === 'daily' ? gross * 5
+      : cycle === 'fortnightly' ? gross / 2
+      : gross / (52/12);
+    const hsHigh = { daily: 1.65, weekly: 8.25, fortnightly: 16.50, monthly: 33.00 };
+    const hsLow  = { daily: 0.30, weekly: 1.50, fortnightly:  3.00, monthly:  6.00 };
+    const hs = hsOn ? (weeklyGross > 469.99 ? (hsHigh[cycle]||33) : (hsLow[cycle]||6)) : 0;
+
+    // PAYE — annualise, subtract allowance, apply rates
+    const annualMultiplier = { daily: 260, weekly: 52, fortnightly: 26, monthly: 12 };
+    const annualGross = gross * (annualMultiplier[cycle] || 12);
+    const allowance   = taxOn ? 90000 : 0;
+    const taxable     = Math.max(0, annualGross - allowance);
+    const annualPaye  = taxable <= 1000000
+      ? taxable * 0.25
+      : 1000000 * 0.25 + (taxable - 1000000) * 0.30;
+    const paye = taxOn ? annualPaye / (annualMultiplier[cycle] || 12) : 0;
+
+    const net = gross - nis - hs - paye;
+    const fmt = n => 'TTD ' + Math.max(0, n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    document.getElementById('prsEstGross').textContent = fmt(gross);
+    document.getElementById('prsEstNis').textContent   = nisOn ? fmt(nis) : '—';
+    document.getElementById('prsEstHs').textContent    = hsOn  ? fmt(hs)  : '—';
+    document.getElementById('prsEstPaye').textContent  = taxOn ? fmt(paye): '—';
+    document.getElementById('prsEstNet').textContent   = fmt(net);
+  }
+
+  function _prsClose() {
+    document.getElementById('prSettingsModal').classList.remove('active');
+    _prsUserId = null;
+  }
+
+  function _prsSave() {
+    if (!_prsUserId) return;
+    const saveBtn = document.getElementById('prsSaveBtn');
+    saveBtn.disabled = true;
+    const orig = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    api('updateEmployeePayroll', {
+      userId:                    _prsUserId,
+      payCycle:                  document.getElementById('prsPayCycle').value,
+      payBasis:                  document.getElementById('prsPayBasis').value,
+      hourlyRate:                document.getElementById('prsHourlyRate').value,
+      monthlySalary:             document.getElementById('prsMonthlySalary').value,
+      standardHoursPerDay:       document.getElementById('prsStdHours').value,
+      nisApplicable:             document.getElementById('prsNis').checked,
+      healthSurchargeApplicable: document.getElementById('prsHs').checked,
+      taxResident:               document.getElementById('prsTax').checked,
+    }).then(res => {
+      saveBtn.disabled = false; saveBtn.innerHTML = orig;
+      if (!res.success) { showPopup('error', 'Failed', res.message); return; }
+      _prsClose();
+      showPopup('success', 'Saved', 'Payroll settings updated.').then(() => _prRunPayroll());
+    }).catch(err => {
+      saveBtn.disabled = false; saveBtn.innerHTML = orig;
+      showPopup('error', 'Error', err.message);
+    });
+  }
+
+  // Keep alias for click handler compatibility
+  function _prOpenEditPayroll(userId) { _prsOpen(userId); }
+
+  // ─── T&T Payroll Constants modal ──────────────────────────────────────────────
+  // Password-protected settings for NIS / Health Surcharge / PAYE statutory rates.
+  // Phase 1: gate (password entry). Phase 2: form (edit constants).
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // T&T_DEFAULTS mirrored client-side for "Restore Defaults" button
+  const _prcDefaults = {
+    nisRate:              6,        // %
+    nisMonthlyCap:        13600,    // TTD
+    hsThreshold:          469.99,   // weekly threshold
+    hsHighDaily:          1.65,
+    hsHighWeekly:         8.25,
+    hsHighFortnightly:    16.50,
+    hsHighMonthly:        33.00,
+    hsLowDaily:           0.30,
+    hsLowWeekly:          1.50,
+    hsLowFortnightly:     3.00,
+    hsLowMonthly:         6.00,
+    allowanceAnnual:      90000,
+    payeRateLow:          25,       // %
+    payeRateHigh:         30,       // %
+    payeHighThreshold:    1000000,  // annual TTD
+  };
+
+  let _prcPwdKeyHandler = null;
+
+  function _prcOpen() {
+    const modal = document.getElementById('prConstantsModal');
+    if (!modal) return;
+    // Reset to gate view
+    document.getElementById('prcGate').style.display  = '';
+    document.getElementById('prcForm').style.display  = 'none';
+    // Reset to first tab
+    document.querySelectorAll('.prc-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+    document.querySelectorAll('.prc-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+    document.getElementById('prcPassword').value       = '';
+    const _ge = document.getElementById('prcGateError');
+    if (_ge) { _ge.textContent = ''; _ge.style.display = 'none'; }
+    modal.classList.add('active');
+    // Wire Enter key on password field (deduplicated)
+    const pwdEl = document.getElementById('prcPassword');
+    if (pwdEl) {
+      if (_prcPwdKeyHandler) pwdEl.removeEventListener('keydown', _prcPwdKeyHandler);
+      _prcPwdKeyHandler = (e) => { if (e.key === 'Enter') _prcVerify(); };
+      pwdEl.addEventListener('keydown', _prcPwdKeyHandler);
+      setTimeout(() => pwdEl.focus(), 120);
+    }
+  }
+
+  async function _prcVerify() {
+    const pwd     = document.getElementById('prcPassword').value;
+    const errEl   = document.getElementById('prcGateError');
+    const btn     = document.getElementById('prcVerifyBtn');
+    const showErr = (msg) => { errEl.textContent = msg; errEl.style.display = msg ? '' : 'none'; };
+    if (!pwd) { showErr('Please enter your password.'); return; }
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    showErr('');
+    try {
+      const res = await api('verifyPassword', { password: pwd });
+      if (!res || !res.success) {
+        showErr(res.message || 'Incorrect password.');
+        btn.disabled = false; btn.innerHTML = orig;
+        return;
+      }
+      // Password correct — load current constants and show form
+      const cres = await api('getPayrollConstants', {});
+      if (cres && cres.success && cres.data) _prcPopulateForm(cres.data);
+      document.getElementById('prcGate').style.display = 'none';
+      document.getElementById('prcForm').style.display = '';
+    } catch (e) {
+      showErr('Error verifying password.');
+    }
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+
+  function _prcPopulateForm(d) {
+    // d is what the server returns — keys are camelCase versions of TT_DEFAULTS
+    // Server returns the raw numeric values merged from defaults + DB overrides.
+    // Server keys: PERSONAL_ALLOWANCE_ANNUAL, NIS_RATE (0-1), NIS_MONTHLY_CAP, etc.
+    const g = (id, v) => { const el = document.getElementById(id); if (el) el.value = v != null ? v : ''; };
+    // Rate inputs now use human % values (e.g. 6 for 6%, 25 for 25%)
+    // Server stores as 0-1 decimals — multiply by 100 to display
+    const pct = v => v != null ? +(v * 100).toFixed(4) : null;
+    g('prcNisRate',           pct(d.NIS_RATE)                    ?? _prcDefaults.nisRate);
+    g('prcNisMonthlyCap',     d.NIS_MONTHLY_CAP                  ?? _prcDefaults.nisMonthlyCap);
+    g('prcHsThreshold',       d.HS_THRESHOLD_WEEKLY              ?? _prcDefaults.hsThreshold);
+    g('prcHsHighDaily',       d.HS_HIGH_DAILY                    ?? _prcDefaults.hsHighDaily);
+    g('prcHsHighWeekly',      d.HS_HIGH_WEEKLY                   ?? _prcDefaults.hsHighWeekly);
+    g('prcHsHighFortnightly', d.HS_HIGH_FORTNIGHTLY              ?? _prcDefaults.hsHighFortnightly);
+    g('prcHsHighMonthly',     d.HS_HIGH_MONTHLY                  ?? _prcDefaults.hsHighMonthly);
+    g('prcHsLowDaily',        d.HS_LOW_DAILY                     ?? _prcDefaults.hsLowDaily);
+    g('prcHsLowWeekly',       d.HS_LOW_WEEKLY                    ?? _prcDefaults.hsLowWeekly);
+    g('prcHsLowFortnightly',  d.HS_LOW_FORTNIGHTLY               ?? _prcDefaults.hsLowFortnightly);
+    g('prcHsLowMonthly',      d.HS_LOW_MONTHLY                   ?? _prcDefaults.hsLowMonthly);
+    g('prcAllowanceAnnual',   d.PERSONAL_ALLOWANCE_ANNUAL        ?? _prcDefaults.allowanceAnnual);
+    g('prcPayeRateLow',       pct(d.PAYE_RATE_LOW)               ?? _prcDefaults.payeRateLow);
+    g('prcPayeRateHigh',      pct(d.PAYE_RATE_HIGH)              ?? _prcDefaults.payeRateHigh);
+    g('prcPayeHighThreshold', d.PAYE_HIGH_THRESHOLD_ANNUAL       ?? _prcDefaults.payeHighThreshold);
+  }
+
+  function _prcClose() {
+    const modal = document.getElementById('prConstantsModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  async function _prcSave() {
+    const btn  = document.getElementById('prcSaveBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const gv = id => { const el = document.getElementById(id); return el ? parseFloat(el.value) : null; };
+
+    // Rate inputs are %, convert back to 0-1 decimals for the API
+    const payload = {
+      PERSONAL_ALLOWANCE_ANNUAL:   gv('prcAllowanceAnnual'),
+      PAYE_RATE_LOW:                gv('prcPayeRateLow')  / 100,
+      PAYE_RATE_HIGH:               gv('prcPayeRateHigh') / 100,
+      PAYE_HIGH_THRESHOLD_ANNUAL:   gv('prcPayeHighThreshold'),
+      NIS_RATE:                     gv('prcNisRate')      / 100,
+      NIS_MONTHLY_CAP:              gv('prcNisMonthlyCap'),
+      HS_HIGH_DAILY:                gv('prcHsHighDaily'),
+      HS_HIGH_WEEKLY:               gv('prcHsHighWeekly'),
+      HS_HIGH_FORTNIGHTLY:          gv('prcHsHighFortnightly'),
+      HS_HIGH_MONTHLY:              gv('prcHsHighMonthly'),
+      HS_LOW_DAILY:                 gv('prcHsLowDaily'),
+      HS_LOW_WEEKLY:                gv('prcHsLowWeekly'),
+      HS_LOW_FORTNIGHTLY:           gv('prcHsLowFortnightly'),
+      HS_LOW_MONTHLY:               gv('prcHsLowMonthly'),
+      HS_THRESHOLD_WEEKLY:          gv('prcHsThreshold'),
+    };
+
+    // Basic validation — all must be positive numbers
+    for (const [k, v] of Object.entries(payload)) {
+      if (v == null || isNaN(v) || v < 0) {
+        showPopup('error', 'Invalid Value', `Please check the value for "${k.replace(/_/g,' ')}".`);
+        btn.disabled = false; btn.innerHTML = orig;
+        return;
+      }
+    }
+
+    try {
+      const res = await api('savePayrollConstants', { constants: payload });
+      btn.disabled = false; btn.innerHTML = orig;
+      if (!res || !res.success) { showPopup('error', 'Save Failed', res.message || 'Could not save constants.'); return; }
+      _prcClose();
+      showPopup('success', 'Saved', 'T&T payroll constants updated. Re-run payroll to apply.');
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = orig;
+      showPopup('error', 'Error', 'An unexpected error occurred.');
+    }
+  }
+
+  function _prcRestoreDefaults() {
+    cpop.fire({
+      icon: 'warning',
+      title: 'Restore Defaults?',
+      text: 'This will reset all T&T statutory rates to their built-in defaults. You will still need to click Save.',
+      showConfirmButton: true,
+      confirmButtonText: 'Yes, restore',
+      showCancelButton: true,
+      allowOutsideClick: true,
+    }).then(result => {
+      if (!result || !result.isConfirmed) return;
+      // _prcDefaults has rates as % and _prcPopulateForm now expects server format (0-1)
+      // so divide by 100 for the rate fields
+      _prcPopulateForm({
+        NIS_RATE:                    _prcDefaults.nisRate      / 100,
+        NIS_MONTHLY_CAP:             _prcDefaults.nisMonthlyCap,
+        HS_THRESHOLD_WEEKLY:         _prcDefaults.hsThreshold,
+        HS_HIGH_DAILY:               _prcDefaults.hsHighDaily,
+        HS_HIGH_WEEKLY:              _prcDefaults.hsHighWeekly,
+        HS_HIGH_FORTNIGHTLY:         _prcDefaults.hsHighFortnightly,
+        HS_HIGH_MONTHLY:             _prcDefaults.hsHighMonthly,
+        HS_LOW_DAILY:                _prcDefaults.hsLowDaily,
+        HS_LOW_WEEKLY:               _prcDefaults.hsLowWeekly,
+        HS_LOW_FORTNIGHTLY:          _prcDefaults.hsLowFortnightly,
+        HS_LOW_MONTHLY:              _prcDefaults.hsLowMonthly,
+        PERSONAL_ALLOWANCE_ANNUAL:   _prcDefaults.allowanceAnnual,
+        PAYE_RATE_LOW:               _prcDefaults.payeRateLow  / 100,
+        PAYE_RATE_HIGH:              _prcDefaults.payeRateHigh / 100,
+        PAYE_HIGH_THRESHOLD_ANNUAL:  _prcDefaults.payeHighThreshold,
+      });
+    });
+  }
+
+  // ─── Employee picker (Reports mode) ─────────────────────────────────────────
+  function _prEmpGetFiltered() {
+    const q    = (document.getElementById('prSearchInput')?.value || '').toLowerCase();
+    const dept = _prDeptFilter;
+    const cycle = _prCycleFilter;
+    return _prEmpAll.filter(e => {
+      if (dept  !== 'all' && String(e.departmentId) !== String(dept))   return false;
+      if (cycle !== 'all' && e.payCycle !== cycle)                       return false;
+      if (q && !`${e.fullName || ''} ${e.firstName || ''} ${e.lastName || ''} ${e.departmentName || e.department || ''}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  function _prEmpOpenDropdown() {
+    const dropdown = document.getElementById('prEmpDropdown');
+    const anchor   = document.getElementById('prSearchWrap');
+    if (!dropdown || !anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    dropdown.style.top   = (rect.bottom + 6) + 'px';
+    dropdown.style.left  = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.classList.add('open');
+    _prEmpRenderList();
+  }
+
+  function _prEmpCloseDropdown() {
+    document.getElementById('prEmpDropdown')?.classList.remove('open');
+  }
+
+  function _prEmpRenderList() {
+    const list = document.getElementById('prEmpList');
+    if (!list) return;
+    const filtered = _prEmpGetFiltered();
+    if (!filtered.length) {
+      list.innerHTML = '<li class="pr-emp-list-empty">No employees match the current filters.</li>';
+      _prEmpUpdateBadge(); return;
+    }
+    list.innerHTML = filtered.map(e => {
+      const name    = e.fullName || `${e.firstName || ''} ${e.lastName || ''}`.trim() || e.username || '—';
+      const cycleLabel = (e.payCycle || '').replace(/\b\w/g, c => c.toUpperCase());
+      const meta    = [e.departmentName || e.department, cycleLabel].filter(Boolean).join(' · ');
+      const checked = _prEmpSelected.has(String(e.id)) ? 'checked' : '';
+      const sel     = _prEmpSelected.has(String(e.id)) ? 'selected' : '';
+      const photoSrc = _resolvePhoto(e.username, e.profileImage || e.photoUrl) || 'assets/images/default-avatar.png';
+      const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const photoEl  = photoSrc && photoSrc !== 'assets/images/default-avatar.png'
+        ? `<img src="${photoSrc}" alt="${initials}" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span class="pr-emp-initials" style="display:none">${initials}</span>`
+        : `<span class="pr-emp-initials">${initials}</span>`;
+      return `<li class="${sel}" data-id="${e.id}">
+        <input type="checkbox" ${checked} data-id="${e.id}">
+        <div class="pr-emp-avatar">${photoEl}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="pr-emp-name">${name}</div>
+          ${meta ? `<div class="pr-emp-meta">${meta}</div>` : ''}
+        </div>
+      </li>`;
+    }).join('');
+
+    // Checkbox click
+    list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', e => {
+        e.stopPropagation();
+        const id = cb.dataset.id;
+        cb.checked ? _prEmpSelected.add(id) : _prEmpSelected.delete(id);
+        cb.closest('li').classList.toggle('selected', cb.checked);
+        _prEmpUpdateBadge();
+      });
+    });
+
+    _prEmpUpdateBadge();
+  }
+
+  function _prEmpUpdateBadge() {
+    const countEl = document.getElementById('prEmpCount');
+    const badge   = document.getElementById('prEmpBadge');
+    const n = _prEmpSelected.size;
+    if (countEl) countEl.textContent = n === 0 ? 'All employees' : `${n} selected`;
+    if (badge) {
+      badge.textContent = n > 0 ? n : '';
+      badge.style.display = n > 0 ? 'block' : 'none';
+    }
+    // Update placeholder text
+    const input = document.getElementById('prSearchInput');
+    if (input && !input.value) {
+      input.placeholder = n > 0 ? `${n} employee${n > 1 ? 's' : ''} selected` : 'Filter Employees…';
+    }
+  }
+
+  // ─── Reports mode toggle ─────────────────────────────────────────────────────
+  function _prToggleReportsMode(forceOn) {
+    _prReportsMode = forceOn !== undefined ? forceOn : !_prReportsMode;
+    const btn      = document.getElementById('prReportBtn');
+    const applyBtn = document.getElementById('prApplyBtn');
+    if (btn) btn.classList.toggle('active', _prReportsMode);
+    if (applyBtn) applyBtn.innerHTML = _prReportsMode
+      ? '<i class="fas fa-chart-bar"></i> Generate Report'
+      : '<i class="fas fa-play"></i> Run Payroll';
+    // Switch table title
+    const titleEl = document.getElementById('prTableTitle');
+    if (titleEl) titleEl.innerHTML = _prReportsMode
+      ? '<i class="fas fa-chart-bar" style="margin-right:8px;color:var(--siomac-red);"></i>Payroll Reports'
+      : '<i class="fas fa-money-check-dollar" style="margin-right:8px;color:var(--siomac-red);"></i>Payroll Register';
+    // In payroll mode disable search until data loads; reports mode always enabled
+    const searchEl2 = document.getElementById('prSearchInput');
+    if (searchEl2) {
+      searchEl2.disabled = !_prReportsMode;
+      searchEl2.value = '';
+      searchEl2.placeholder = _prReportsMode ? 'Filter Employees…' : 'Search Payroll Register…';
+    }
+    // Date pickers: unrestrict in Reports mode, lock to current month in Run Payroll mode
+    if (_prFpFrom && _prFpTo) {
+      const now        = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+      if (_prReportsMode) {
+        _prFpFrom.set('minDate', null);
+        _prFpFrom.set('maxDate', 'today');
+        _prFpTo.set('minDate', null);
+        _prFpTo.set('maxDate', 'today');
+      } else {
+        _prFpFrom.set('minDate', monthStart);
+        _prFpFrom.set('maxDate', monthEnd);
+        _prFpTo.set('minDate', monthStart);
+        _prFpTo.set('maxDate', monthEnd);
+        _prFpFrom.setDate(monthStart, false);
+        _prFpTo.setDate(monthEnd, false);
+      }
+    }
+    // Expand filter panel on Reports on, collapse on Reports off
+    const filterToggle = document.getElementById('prFilterToggle');
+    const filterExpand = document.getElementById('prFilterExpand');
+    if (filterToggle && filterExpand) {
+      filterExpand.classList.toggle('open', _prReportsMode);
+      filterToggle.classList.toggle('active', _prReportsMode);
+    }
+    // Reset employee selection when leaving reports mode
+    if (!_prReportsMode) {
+      _prEmpSelected.clear();
+      _prEmpCloseDropdown();
+      _prEmpUpdateBadge();
+      // Restore approval button state when leaving reports
+      _prSetApprovalBtn(!!_prRunData);
+    } else {
+      // Hide approval button when entering reports mode
+      _prSetApprovalBtn(false, true /* hide */);
+    }
+    // Clear table when switching modes
+    if (_prDT) { destroyDataTable('payrollRunTable'); _prDT = null; }
+    const tbody = document.getElementById('payrollRunBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="11" class="pr-empty"><i class="fas fa-${_prReportsMode ? 'chart-bar' : 'play-circle'}"></i> ${_prReportsMode ? 'Open the Filters panel, pick a date range and click Generate Report.' : 'Select a date range and click Run Payroll to generate.'}</td></tr>`;
+    // Re-evaluate clear button after mode switch (dates may have reset)
+    _prUpdateClearBtn();
+  }
+
+  function _prRunReportsSearch() {
+    const from = _prFpFrom && _prFpFrom.selectedDates[0]
+      ? _prFpFrom.formatDate(_prFpFrom.selectedDates[0], 'Y-m-d') : '';
+    const to = _prFpTo && _prFpTo.selectedDates[0]
+      ? _prFpTo.formatDate(_prFpTo.selectedDates[0], 'Y-m-d') : '';
+    if (!from || !to) { showPopup('warning', 'Select Dates', 'Pick a date range to search.'); return; }
+
+    const btn  = document.getElementById('prApplyBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching…';
+
+    // If specific employees selected, pass their IDs; otherwise run for all (filtered by dept/cycle)
+    const employeeIds = _prEmpSelected.size > 0 ? [..._prEmpSelected] : null;
+    api('listPayrollRun', {
+      dateFrom: from, dateTo: to,
+      cycle: _prCycleFilter,
+      department: _prDeptFilter !== 'all' ? _prDeptFilter : null,
+      employeeIds,
+      overrides: {}
+    })
+      .then(res => {
+        btn.disabled = false; btn.innerHTML = orig;
+        if (!res || !res.success) { showPopup('error', 'Failed', res.message || 'Report generation failed'); return; }
+        // Filter client-side by selected employees if API doesn't support it
+        let rows = res.data.rows.map(r => ({ ...r, dateFrom: from, dateTo: to }));
+        if (employeeIds) rows = rows.filter(r => employeeIds.includes(String(r.userId || r.id)));
+        _prRenderTable(rows, from, to);
+        _prEmpCloseDropdown();
+      })
+      .catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Error', err.message); });
+  }
+
+  // ─── Approval button state helper ────────────────────────────────────────────
+  // enabled=true → show + enable (animate in if was hidden)
+  // enabled=false, hide=true  → animate out (reports mode)
+  // enabled=false, hide=false → show greyed (disabled but visible)
+  function _prSetApprovalBtn(enabled, hide) {
+    const btn = document.getElementById('prSendApprovalBtn');
+    if (!btn) return;
+    if (hide || !enabled) {
+      // Keep hidden whenever not actively enabled — no grey disabled state
+      btn.classList.add('pr-approval-hidden');
+      btn.disabled = true;
+    } else {
+      // Show and enable — animate in
+      btn.disabled = false;
+      btn.classList.remove('pr-approval-hidden');
+      btn.classList.remove('pr-approval-pop');
+      setTimeout(() => {
+        void btn.offsetWidth;
+        btn.classList.add('pr-approval-pop');
+      }, 50);
+    }
+  }
+
+  // ─── Send Payroll for Approval ──────────────────────────────────────────────
+  function _prSendForApproval() {
+    const rows = _prCurrentRows && _prCurrentRows.length ? _prCurrentRows : (_prRunData && _prRunData.rows);
+    if (!rows || !rows.length) {
+      showPopup('warning', 'No Payroll Data', 'Run payroll first before submitting for approval.');
+      return;
+    }
+    const from = _prRunData.dateFrom;
+    const to   = _prRunData.dateTo;
+    const periodText = `${from} to ${to}`;
+    const cycleText  = _prCycleFilter !== 'all'
+      ? _prCycleFilter.replace(/\b\w/g, c => c.toUpperCase())
+      : 'All Cycles';
+    const empCount = rows.length;
+
+    Swal.fire({
+      title: 'Submit for Approval',
+      html: `<p style="margin:0 0 8px;">You are about to submit the <strong>${cycleText}</strong> payroll for <strong>${periodText}</strong> to the <strong>Finance Department</strong> for approval.</p>
+             <p style="margin:0 0 8px;">Once approved, <strong>${empCount} employee${empCount !== 1 ? 's' : ''}</strong> will be notified that their payslip is ready.</p>
+             <p style="margin:0;color:var(--text-muted);font-size:0.88rem;">An email will be sent to Finance to review and approve this payroll run.</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-paper-plane"></i> Yes, Submit',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: 'var(--siomac-navy)',
+      cancelButtonColor: '#6c757d',
+      reverseButtons: true,
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      api('approvePayroll', {
+        rows:         rows,
+        dateFrom:     from,
+        dateTo:       to,
+        cycleFilter:  _prCycleFilter,
+        approvedBy:   currentFullName || currentUser
+      }).then(res => {
+        if (!res || !res.success) {
+          showPopup('error', 'Failed', res?.message || 'Could not approve payroll');
+          return;
+        }
+        showNotification(`Payroll submitted to Finance for approval ✅`, 'success');
+      }).catch(err => showPopup('error', 'Error', err.message));
+    });
   }
 
   // ─── My Profile (self-update: name, image, pwd) ─────────────
@@ -8252,6 +9216,18 @@ const AttendanceSystem = (function() {
       updateStoredSession({ companyName: name, currency: 'TT', latePenaltyPerDay: late, leaveFinePerDay: leaveF, lateThresholdHHMM: lateTh, maxDistanceM: maxDist });
       showPopup('success', 'Settings Saved', 'Company settings updated successfully.');
     }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
+  }
+
+  function _stgActivatePanel(tab, scroll) {
+    // Highlight nav item
+    document.querySelectorAll('.stg-nav-item').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.stg-nav-item[data-stg-tab="${tab}"]`);
+    if (btn) btn.classList.add('active');
+    // Scroll to panel only when user clicks nav (not on initial load)
+    if (scroll) {
+      const panel = document.getElementById('stg-' + tab);
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function _stgResetDefaults() {

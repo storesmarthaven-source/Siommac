@@ -595,6 +595,39 @@
 
       </section>
 
+      <!-- Employee — My Payslips -->
+      <section class="app-section" id="s-emp-payroll" data-role="employee">
+
+        <!-- Summary stat strip -->
+        <div class="emp-ps-stats" id="empPsStats" style="display:none;">
+          <div class="emp-ps-stat">
+            <span class="emp-ps-stat-label">Total Payslips</span>
+            <span class="emp-ps-stat-val" id="empPsCount">—</span>
+          </div>
+          <div class="emp-ps-stat-divider"></div>
+          <div class="emp-ps-stat">
+            <span class="emp-ps-stat-label">Latest Net Pay</span>
+            <span class="emp-ps-stat-val green" id="empPsLatestNet">—</span>
+          </div>
+          <div class="emp-ps-stat-divider"></div>
+          <div class="emp-ps-stat">
+            <span class="emp-ps-stat-label">YTD Net Pay</span>
+            <span class="emp-ps-stat-val" id="empPsYtd">—</span>
+          </div>
+        </div>
+
+        <!-- Empty / loading state -->
+        <div id="empPayrollEmpty" class="emp-payroll-empty" style="display:none;">
+          <div class="emp-payroll-empty-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+          <h3>No payslips yet</h3>
+          <p>Your approved payslips will appear here once admin processes payroll.</p>
+        </div>
+
+        <!-- Payslip cards grid -->
+        <div class="emp-payslip-grid" id="empPayslipGrid"></div>
+
+      </section>
+
       <!-- Manager Dashboard -->
       <!-- ════════ MANAGER SECTIONS ════════ -->
 
@@ -1440,43 +1473,178 @@
 
       <!-- Payroll — admin + manager (manager scoped to own dept) -->
       <section class="app-section" id="s-payroll">
-        <div class="data-section no-print">
-          <div class="section-header">
-            <h2><i class="fas fa-file-invoice-dollar"></i> Generate Payroll</h2>
+
+        <!-- Dashboard stat cards — 3×2 grid -->
+        <div class="dashboard-grid-3" style="margin-bottom:20px;">
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-dollar-sign"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalGross">$0.00</div>
+              <div class="stat-card-label">Total Gross Pay</div>
+            </div>
           </div>
-          <div class="payroll-controls">
-            <div class="form-group">
-              <label class="form-label">Employee</label>
-              <select id="payrollEmployee" class="form-select"></select>
+          <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fas fa-wallet"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalNet">$0.00</div>
+              <div class="stat-card-label">Total Net Pay</div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Year</label>
-              <select id="payrollYear" class="form-select"></select>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red"><i class="fas fa-arrow-trend-down"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalDeductions">$0.00</div>
+              <div class="stat-card-label">Total Deductions</div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Month</label>
-              <select id="payrollMonth" class="form-select">
-                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-              </select>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-landmark"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalPaye">$0.00</div>
+              <div class="stat-card-label">PAYE Tax</div>
             </div>
-            <div class="form-group payroll-actions">
-              <button id="generatePayrollBtn" class="btn btn-primary"><i class="fas fa-cogs"></i> Generate</button>
-              <button id="printPayrollBtn" class="btn btn-success" disabled><i class="fas fa-print"></i> Print A4</button>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fas fa-hand-holding-medical"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalNis">$0.00</div>
+              <div class="stat-card-label">NIS Contributions</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon gold"><i class="fas fa-stethoscope"></i></div>
+            <div class="stat-card-body">
+              <div class="stat-card-value" id="prTotalHs">$0.00</div>
+              <div class="stat-card-label">Health Surcharge</div>
             </div>
           </div>
         </div>
 
-        <!-- Printable payroll output (A4) -->
-        <div class="payroll-print" id="payrollPrintArea">
-          <div class="payroll-empty no-print" id="payrollEmpty">
-            <i class="fas fa-file-invoice-dollar"></i>
-            <p>Select an employee and month, then click <strong>Generate</strong>.</p>
+        <!-- Filters bar — mode-switching: Run Payroll ↔ Reports -->
+        <div class="pr-filters-bar" id="prFiltersBar">
+
+          <!-- Always-visible row -->
+          <div class="pr-bar-main">
+            <!-- Search — drives DataTable in payroll mode, employee picker in reports mode -->
+            <div class="pr-search-wrap pr-search-wrap--lg" id="prSearchWrap" style="position:relative;">
+              <i class="fas fa-magnifying-glass pr-search-icon"></i>
+              <input type="text" class="pr-search-input pr-search-input--lg" id="prSearchInput" placeholder="Search Payroll Register…" autocomplete="off" disabled>
+              <span class="pr-search-badge" id="prEmpBadge" style="display:none;"></span>
+              <!-- Reports mode: employee dropdown anchored below search field -->
+              <div class="pr-emp-dropdown" id="prEmpDropdown">
+                <div class="pr-emp-dropdown-actions">
+                  <span class="pr-emp-count" id="prEmpCount">0 selected</span>
+                  <button class="pr-emp-action-btn" id="prEmpSelectAll">Select all</button>
+                  <button class="pr-emp-action-btn" id="prEmpClearAll">Clear</button>
+                </div>
+                <ul class="pr-emp-list" id="prEmpList"></ul>
+              </div>
+            </div>
+
+            <!-- Centre controls -->
+            <div class="pr-bar-actions">
+              <div class="pr-filters-divider"></div>
+              <button class="pr-filter-toggle" id="prFilterToggle" title="Show / hide filters">
+                <i class="fas fa-sliders"></i> Filters
+              </button>
+              <!-- Apply button — label/icon/width fixed so Reports never shifts -->
+              <div class="pr-apply-wrap">
+                <button class="pr-apply-btn" id="prApplyBtn"><i class="fas fa-play"></i> Run Payroll</button>
+              </div>
+              <div class="pr-filters-divider" style="margin:0 20px;"></div>
+              <button class="pr-report-btn" id="prReportBtn" title="Toggle Reports mode"><i class="fas fa-chart-bar"></i> Reports</button>
+            </div>
+
+            <!-- Far-right actions -->
+            <div class="pr-bar-right">
+              <button class="pr-approval-btn" id="prSendApprovalBtn" title="Send payroll to Finance Department for approval">
+                <i class="fas fa-paper-plane"></i> Submit for Approval
+              </button>
+              <button class="pr-statutory-btn" id="prSettingsBtn" title="Statutory Rate Configuration">
+                <i class="fas fa-scale-balanced"></i>
+              </button>
+            </div>
           </div>
-          <div id="payrollContent" style="display:none;"></div>
+
+          <!-- Collapsible filter row — navy blue -->
+          <div class="pr-filter-expand" id="prFilterExpand">
+            <div class="pr-filter-fields">
+              <!-- Period -->
+              <div class="pr-filter-group">
+                <span class="pr-date-label"><i class="fas fa-calendar-range" style="margin-right:6px;"></i>Period</span>
+                <input type="text" class="pr-date-input" id="prDateFrom" placeholder="From" readonly>
+                <span class="pr-arrow-sep">→</span>
+                <input type="text" class="pr-date-input" id="prDateTo" placeholder="To" readonly>
+              </div>
+
+              <div class="pr-filters-divider"></div>
+
+              <!-- Pay Cycle -->
+              <div class="pr-filter-group">
+                <span class="pr-date-label"><i class="fas fa-calendar-week" style="margin-right:6px;"></i>Pay Cycle</span>
+                <select class="pr-cycle-select" id="prCycleSelect">
+                  <option value="all">All Cycles</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="fortnightly">Fortnightly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+
+              <div class="pr-filters-divider"></div>
+
+              <!-- Department -->
+              <div class="pr-filter-group">
+                <span class="pr-date-label"><i class="fas fa-sitemap" style="margin-right:6px;"></i>Department</span>
+                <select class="pr-cycle-select" id="prDeptSelect">
+                  <option value="all">All Departments</option>
+                </select>
+              </div>
+
+              <div class="pr-filters-divider"></div>
+
+              <!-- Clear Filters -->
+              <button class="pr-clear-filters-btn" id="prClearFiltersBtn" title="Reset all filters">
+                <i class="fas fa-xmark"></i> Clear
+              </button>
+
+            </div>
+          </div>
+
         </div>
+
+        <!-- Payroll table card (cycle filters built in) -->
+        <!-- Payroll DataTable -->
+        <div class="data-section">
+          <div class="section-header">
+            <h2 id="prTableTitle"><i class="fas fa-money-check-dollar" style="margin-right:8px;color:var(--siomac-red);"></i>Payroll Register</h2>
+            <div class="section-actions">
+              <div id="prTableBtns"></div>
+            </div>
+          </div>
+          <table id="payrollRunTable" class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Cycle</th>
+                <th>Basis</th>
+                <th>Hours</th>
+                <th>Gross Pay</th>
+                <th>NIS</th>
+                <th>Health</th>
+                <th>PAYE</th>
+                <th>Net Pay</th>
+                <th class="dt-no-export"></th>
+              </tr>
+            </thead>
+            <tbody id="payrollRunBody">
+              <tr><td colspan="11" class="pr-empty"><i class="fas fa-play-circle"></i> Select a date range and click Run Payroll to generate.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+
       </section>
 
       <!-- My Profile — every role can edit their own name / image / pwd -->
@@ -1619,186 +1787,282 @@
       <!-- Settings -->
       <section class="app-section" id="s-settings">
 
-        <!-- action buttons row -->
-        <div class="stg-header-actions" style="justify-content:flex-end;margin-bottom:18px;">
-          <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-undo-alt"></i> Reset to Defaults</button>
-          <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-save"></i> Save All Changes</button>
-        </div>
-
-        <!-- Tabs -->
-        <div class="stg-tabs">
-          <button class="stg-tab-btn admin-only" data-stg-tab="company">Company &amp; Branding</button>
-          <button class="stg-tab-btn active" data-stg-tab="security">Security &amp; Privacy</button>
-          <button class="stg-tab-btn" data-stg-tab="layout">Layout &amp; Navigation</button>
-          <button class="stg-tab-btn admin-only" data-stg-tab="notifications">Notifications</button>
-          <button class="stg-tab-btn" data-stg-tab="appearance">Appearance</button>
-        </div>
-
-        <!-- 1. Company & Branding -->
-        <div class="stg-tab-pane" id="stg-company">
-
-          <!-- Company Info — live wired (admin only) -->
-          <div class="stg-card admin-only" id="brandingCard">
-            <div class="stg-card-header"><h3><i class="fas fa-building"></i> Company Information</h3></div>
-            <div class="stg-form-group">
-              <label>Company Name</label>
-              <input type="text" id="setCompanyName" maxlength="80" placeholder="My Company">
-              <small>Shown in sidebar, About, payroll doc, and leave application</small>
-            </div>
-            <div class="stg-form-row">
-              <div class="stg-form-group">
-                <label>Currency Symbol / Code</label>
-                <input type="text" id="setCurrency" maxlength="6" placeholder="TT" readonly class="stg-readonly">
-                <small>Fixed to TT — contact your administrator to change</small>
-              </div>
-              <div class="stg-form-group">
-                <label>Time Zone</label>
-                <select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select>
-                <small>Contact your administrator to change</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Branding & Logo — live wired (admin only) -->
-          <div class="stg-card admin-only" id="currencyCard">
-            <div class="stg-card-header"><h3><i class="fas fa-images"></i> Branding &amp; Logo</h3></div>
-            <div class="stg-logo-row">
-              <div class="stg-logo-preview-wrap">
-                <img id="logoPreview" src="" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;display:none;" onerror="this.style.display='none'">
-                <div id="logoPreviewEmpty" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><i class="fas fa-image" style="font-size:32px;color:#bbb;"></i></div>
-              </div>
-              <div>
-                <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
-                <button class="stg-btn-outline" id="pickLogoBtn"><i class="fas fa-upload"></i> Choose Logo</button>
-                <button class="stg-btn-save" id="saveLogoBtn" disabled style="margin-left:8px;"><i class="fas fa-save"></i> Save Logo</button>
-                <div id="logoFileName" style="font-size:12px;color:#888;margin-top:8px;"></div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">PNG / JPG up to 2MB. Applies to login screen, sidebar, and About.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Payroll & Attendance Rules — live wired (admin only) -->
-          <div class="stg-card admin-only" id="payrollCard">
-            <div class="stg-card-header"><h3><i class="fas fa-coins"></i> Payroll &amp; Attendance Rules</h3></div>
-            <div class="stg-form-row">
-              <div class="stg-form-group">
-                <label>Late Penalty (per late day)</label>
-                <input type="number" id="setLatePenalty" min="0" step="0.01" placeholder="0">
-                <small>Deducted from earnings for each late check-in</small>
-              </div>
-              <div class="stg-form-group">
-                <label>Leave / Absent Fine (per absent day)</label>
-                <input type="number" id="setLeaveFine" min="0" step="0.01" placeholder="0">
-                <small>Deducted for each non-present day in the month</small>
-              </div>
-            </div>
-            <div class="stg-form-row">
-              <div class="stg-form-group">
-                <label>Late Check-In Threshold</label>
-                <input type="time" id="setLateThreshold">
-                <small>Check-ins after this time are marked late</small>
-              </div>
-              <div class="stg-form-group">
-                <label>Max Geofence Distance (metres)</label>
-                <input type="number" id="setMaxDistance" min="0" step="1" placeholder="200">
-                <small>Max metres from a project site to allow check-in</small>
-              </div>
-            </div>
-            <button class="stg-btn-primary" id="savePayrollSettingsBtn"><i class="fas fa-save"></i> Save Settings</button>
-          </div>
-
-        </div>
-
-        <!-- 2. Security & Privacy -->
-        <div class="stg-tab-pane active" id="stg-security">
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-shield-alt"></i> Access &amp; Session</h3></div>
-            <div class="stg-form-group">
-              <label>Session Timeout (minutes)</label>
-              <select disabled class="stg-readonly">
-                <option value="60" selected>60 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="120">2 hours</option>
-              </select>
-              <small>Contact your administrator to change session duration</small>
-            </div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">Two-Factor Authentication</div><div class="stg-switch-desc">Require OTP for login — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
-            </div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">Login alerts via email</div><div class="stg-switch-desc">Notify when new device logs in — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
-            </div>
-          </div>
-          <div class="stg-card stg-danger-zone">
-            <div class="stg-card-header"><h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3></div>
-            <p style="margin-bottom:16px;font-size:0.85rem;">Clear locally cached preferences and reload the page.</p>
-            <button class="stg-btn-danger" id="clearCacheBtn"><i class="fas fa-trash"></i> Clear Local Settings</button>
+        <!-- Page header -->
+        <div class="stg-page-hero">
+          <div class="stg-page-hero-icon"><i class="fas fa-sliders"></i></div>
+          <div>
+            <div class="stg-page-hero-title">Settings</div>
+            <div class="stg-page-hero-sub">Manage your workspace, appearance, and account preferences</div>
           </div>
         </div>
 
-        <!-- 3. Layout & Navigation -->
-        <div class="stg-tab-pane" id="stg-layout">
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-th-large"></i> Navigation Layout</h3><span style="font-size:0.75rem;color:var(--text-muted);">Saved to your profile</span></div>
-            <div class="layout-grid" id="layoutGrid"></div>
-          </div>
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-columns"></i> Dashboard Default View</h3></div>
-            <div class="stg-form-group">
-              <label>Default Dashboard Tab</label>
-              <select disabled class="stg-readonly"><option>Operations Overview</option><option>Attendance Analytics</option><option>Live Map</option></select>
-              <small>Coming soon</small>
-            </div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">Auto-refresh dashboard data</div><div class="stg-switch-desc">Refresh stats every 30 seconds — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
-            </div>
-          </div>
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-font"></i> Display Density</h3></div>
-            <div class="stg-form-row">
-              <div class="stg-form-group">
-                <label>UI Density</label>
-                <select disabled class="stg-readonly"><option>Comfortable</option><option>Compact</option><option>Spacious</option></select>
-                <small>Coming soon</small>
-              </div>
-              <div class="stg-form-group">
-                <label>Font Size</label>
-                <select disabled class="stg-readonly"><option>Small</option><option selected>Medium</option><option>Large</option></select>
-                <small>Coming soon</small>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Two-column layout: sidebar nav + content -->
+        <div class="stg-layout">
 
-        <!-- 4. Notifications — dummy -->
-        <div class="stg-tab-pane" id="stg-notifications">
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-bell"></i> Notification Preferences</h3></div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">Email notifications for approvals</div><div class="stg-switch-desc">Receive emails when leave requests are approved — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+          <!-- Left nav -->
+          <nav class="stg-nav">
+            <div class="stg-nav-group admin-only">
+              <div class="stg-nav-group-label">Workspace</div>
+              <button class="stg-nav-item admin-only" data-stg-tab="company">
+                <span class="stg-nav-icon" style="background:rgba(27,45,85,.08);"><i class="fas fa-building" style="color:var(--siomac-navy);"></i></span>
+                <span class="stg-nav-label">Company &amp; Branding</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
+              <button class="stg-nav-item admin-only" data-stg-tab="attendance-rules">
+                <span class="stg-nav-icon" style="background:rgba(202,138,4,.10);"><i class="fas fa-clock" style="color:#ca8a04;"></i></span>
+                <span class="stg-nav-label">Attendance Rules</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
             </div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">In-app alerts for late check-ins</div><div class="stg-switch-desc">Desktop and mobile alerts for late arrivals — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+            <div class="stg-nav-group">
+              <div class="stg-nav-group-label">Personal</div>
+              <button class="stg-nav-item" data-stg-tab="appearance">
+                <span class="stg-nav-icon" style="background:rgba(124,58,237,.09);"><i class="fas fa-palette" style="color:#7c3aed;"></i></span>
+                <span class="stg-nav-label">Appearance</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
+              <button class="stg-nav-item" data-stg-tab="layout">
+                <span class="stg-nav-icon" style="background:rgba(37,99,235,.09);"><i class="fas fa-table-columns" style="color:#2563eb;"></i></span>
+                <span class="stg-nav-label">Layout &amp; Navigation</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
+              <button class="stg-nav-item" data-stg-tab="notifications">
+                <span class="stg-nav-icon" style="background:rgba(71,144,74,.09);"><i class="fas fa-bell" style="color:#47904a;"></i></span>
+                <span class="stg-nav-label">Notifications</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
             </div>
-            <div class="stg-switch-group">
-              <div><div class="stg-switch-label">Daily attendance summary</div><div class="stg-switch-desc">Receive end-of-day report — coming soon</div></div>
-              <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+            <div class="stg-nav-group">
+              <div class="stg-nav-group-label">System</div>
+              <button class="stg-nav-item" data-stg-tab="security">
+                <span class="stg-nav-icon" style="background:rgba(228,12,12,.08);"><i class="fas fa-shield-halved" style="color:var(--siomac-red);"></i></span>
+                <span class="stg-nav-label">Security &amp; Privacy</span>
+                <i class="fas fa-chevron-right stg-nav-arrow"></i>
+              </button>
             </div>
-          </div>
-        </div>
+          </nav>
 
-        <!-- 5. Appearance -->
-        <div class="stg-tab-pane" id="stg-appearance">
-          <div class="stg-card">
-            <div class="stg-card-header"><h3><i class="fas fa-palette"></i> Color Theme</h3><span style="font-size:0.75rem;color:var(--text-muted);" id="settingsSubtitle">Pick a palette — saved to your profile</span></div>
-            <div class="palette-grid" id="paletteGrid"></div>
-          </div>
-        </div>
+          <!-- Right content panels -->
+          <div class="stg-content">
+
+            <!-- 1. Company & Branding -->
+            <div class="stg-panel" id="stg-company">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(27,45,85,.08);"><i class="fas fa-building" style="color:var(--siomac-navy);"></i></div>
+                <div>
+                  <div class="stg-panel-title">Company &amp; Branding</div>
+                  <div class="stg-panel-sub">Identity and regional settings for your workspace</div>
+                </div>
+              </div>
+
+              <div class="stg-card admin-only" id="brandingCard">
+                <div class="stg-card-label"><i class="fas fa-id-card"></i> Company Information</div>
+                <div class="stg-form-group">
+                  <label>Company Name</label>
+                  <input type="text" id="setCompanyName" maxlength="80" placeholder="My Company">
+                  <small>Shown in sidebar, About, payroll documents, and leave applications</small>
+                </div>
+                <div class="stg-form-row">
+                  <div class="stg-form-group">
+                    <label>Currency</label>
+                    <input type="text" id="setCurrency" maxlength="6" placeholder="TT" readonly class="stg-readonly">
+                    <small>Fixed to TT — contact your administrator to change</small>
+                  </div>
+                  <div class="stg-form-group">
+                    <label>Time Zone</label>
+                    <select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select>
+                    <small>Contact your administrator to change</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stg-card admin-only" id="currencyCard">
+                <div class="stg-card-label"><i class="fas fa-image"></i> Logo &amp; Branding</div>
+                <div class="stg-logo-row">
+                  <div class="stg-logo-preview-wrap">
+                    <img id="logoPreview" src="" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;display:none;" onerror="this.style.display='none'">
+                    <div id="logoPreviewEmpty" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><i class="fas fa-image" style="font-size:28px;color:#ccc;"></i></div>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                      <button class="stg-btn-outline" id="pickLogoBtn"><i class="fas fa-upload"></i> Choose Logo</button>
+                      <button class="stg-btn-save" id="saveLogoBtn" disabled><i class="fas fa-check"></i> Save Logo</button>
+                    </div>
+                    <div id="logoFileName" style="font-size:11px;color:#888;margin-top:8px;"></div>
+                    <p style="font-size:0.73rem;color:var(--text-muted);margin-top:6px;line-height:1.5;">PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stg-card-actions admin-only">
+                <button class="stg-btn-outline" id="resetDefaultsBtn"><i class="fas fa-rotate-left"></i> Reset Defaults</button>
+                <button class="stg-btn-primary" id="saveAllSettingsBtn"><i class="fas fa-check"></i> Save Changes</button>
+              </div>
+            </div>
+
+            <!-- 2. Attendance Rules -->
+            <div class="stg-panel" id="stg-attendance-rules">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(202,138,4,.10);"><i class="fas fa-clock" style="color:#ca8a04;"></i></div>
+                <div>
+                  <div class="stg-panel-title">Attendance Rules</div>
+                  <div class="stg-panel-sub">Control late thresholds, fines, and geofencing</div>
+                </div>
+              </div>
+
+              <div class="stg-card admin-only" id="payrollCard">
+                <div class="stg-card-label"><i class="fas fa-triangle-exclamation"></i> Late &amp; Absence Penalties</div>
+                <div class="stg-form-row">
+                  <div class="stg-form-group">
+                    <label>Late Penalty (per late day)</label>
+                    <div class="stg-input-prefix-wrap"><span class="stg-input-prefix">$</span><input type="number" id="setLatePenalty" min="0" step="0.01" placeholder="0"></div>
+                    <small>Deducted for each late check-in during payroll</small>
+                  </div>
+                  <div class="stg-form-group">
+                    <label>Absent / Leave Fine (per day)</label>
+                    <div class="stg-input-prefix-wrap"><span class="stg-input-prefix">$</span><input type="number" id="setLeaveFine" min="0" step="0.01" placeholder="0"></div>
+                    <small>Deducted for each absent day in the period</small>
+                  </div>
+                </div>
+
+                <div class="stg-card-label" style="margin-top:20px;"><i class="fas fa-map-pin"></i> Check-In Thresholds</div>
+                <div class="stg-form-row">
+                  <div class="stg-form-group">
+                    <label>Late Check-In Time</label>
+                    <input type="time" id="setLateThreshold">
+                    <small>Check-ins after this time are flagged late</small>
+                  </div>
+                  <div class="stg-form-group">
+                    <label>Max Geofence Distance</label>
+                    <div class="stg-input-prefix-wrap stg-input-suffix-wrap"><input type="number" id="setMaxDistance" min="0" step="1" placeholder="200"><span class="stg-input-suffix">m</span></div>
+                    <small>Max metres from a site to allow check-in</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stg-card-actions admin-only">
+                <button class="stg-btn-primary" id="savePayrollSettingsBtn"><i class="fas fa-check"></i> Save Rules</button>
+              </div>
+            </div>
+
+            <!-- 3. Appearance -->
+            <div class="stg-panel" id="stg-appearance">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(124,58,237,.09);"><i class="fas fa-palette" style="color:#7c3aed;"></i></div>
+                <div>
+                  <div class="stg-panel-title">Appearance</div>
+                  <div class="stg-panel-sub" id="settingsSubtitle">Choose a colour theme — saved to your profile</div>
+                </div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-swatchbook"></i> Colour Theme</div>
+                <div class="palette-grid" id="paletteGrid"></div>
+              </div>
+            </div>
+
+            <!-- 4. Layout & Navigation -->
+            <div class="stg-panel" id="stg-layout">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(37,99,235,.09);"><i class="fas fa-table-columns" style="color:#2563eb;"></i></div>
+                <div>
+                  <div class="stg-panel-title">Layout &amp; Navigation</div>
+                  <div class="stg-panel-sub">Personalise how you navigate the app</div>
+                </div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-sidebar"></i> Navigation Style</div>
+                <div class="layout-grid" id="layoutGrid"></div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-gauge"></i> Dashboard Preferences</div>
+                <div class="stg-form-group">
+                  <label>Default Dashboard View</label>
+                  <select disabled class="stg-readonly"><option>Operations Overview</option><option>Attendance Analytics</option><option>Live Map</option></select>
+                  <small>Coming soon</small>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Auto-refresh dashboard</div><div class="stg-switch-desc">Refresh stats every 30 seconds — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Compact table rows</div><div class="stg-switch-desc">Reduce row height in all data tables — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Notifications -->
+            <div class="stg-panel" id="stg-notifications">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(71,144,74,.09);"><i class="fas fa-bell" style="color:#47904a;"></i></div>
+                <div>
+                  <div class="stg-panel-title">Notifications</div>
+                  <div class="stg-panel-sub">Control what alerts you receive</div>
+                </div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-envelope"></i> Email Alerts</div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Leave approval emails</div><div class="stg-switch-desc">Receive an email when a leave request is approved or rejected — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">New device login alert</div><div class="stg-switch-desc">Notify when your account is accessed from a new device — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+                </div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-mobile-screen"></i> In-App Alerts</div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Late check-in alerts</div><div class="stg-switch-desc">Desktop and mobile push alerts for late arrivals — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" checked disabled><span class="stg-slider"></span></label>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Daily attendance summary</div><div class="stg-switch-desc">Receive an end-of-day digest report — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. Security & Privacy -->
+            <div class="stg-panel" id="stg-security">
+              <div class="stg-panel-header">
+                <div class="stg-panel-icon" style="background:rgba(228,12,12,.08);"><i class="fas fa-shield-halved" style="color:var(--siomac-red);"></i></div>
+                <div>
+                  <div class="stg-panel-title">Security &amp; Privacy</div>
+                  <div class="stg-panel-sub">Session, access, and cache settings</div>
+                </div>
+              </div>
+              <div class="stg-card">
+                <div class="stg-card-label"><i class="fas fa-lock"></i> Access &amp; Session</div>
+                <div class="stg-form-group">
+                  <label>Session Timeout</label>
+                  <select disabled class="stg-readonly">
+                    <option value="60" selected>60 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="120">2 hours</option>
+                  </select>
+                  <small>Contact your administrator to change the session duration</small>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Two-Factor Authentication</div><div class="stg-switch-desc">Require a one-time code at login — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+                </div>
+                <div class="stg-switch-group">
+                  <div><div class="stg-switch-label">Login alerts via email</div><div class="stg-switch-desc">Notify when a new device logs in — coming soon</div></div>
+                  <label class="stg-toggle"><input type="checkbox" disabled><span class="stg-slider"></span></label>
+                </div>
+              </div>
+              <div class="stg-card stg-danger-zone">
+                <div class="stg-card-label stg-danger-label"><i class="fas fa-triangle-exclamation"></i> Danger Zone</div>
+                <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:18px;line-height:1.6;">Clear all locally cached preferences, theme choices, and session tokens, then reload the page. Your server-side data is not affected.</p>
+                <button class="stg-btn-danger" id="clearCacheBtn"><i class="fas fa-trash-can"></i> Clear Local Settings</button>
+              </div>
+            </div>
+
+          </div><!-- /.stg-content -->
+        </div><!-- /.stg-layout -->
 
       </section>
 
@@ -2134,6 +2398,417 @@
     </div>
   </div>
 
+  <!-- Statutory Rates Modal -->
+  <div id="prConstantsModal" class="prs-overlay">
+    <div class="prc-modal">
+
+      <!-- Modal header -->
+      <div class="prc-modal-header">
+        <div class="prc-modal-header-icon"><i class="fas fa-scale-balanced"></i></div>
+        <div class="prc-modal-header-text">
+          <div class="prc-modal-title">Statutory Rate Configuration</div>
+          <div class="prc-modal-sub">Trinidad &amp; Tobago &nbsp;·&nbsp; Effective rates used in all payroll calculations</div>
+        </div>
+        <button class="prc-modal-close" id="prcCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Password gate -->
+      <div id="prcGate" class="prc-gate">
+        <div class="prc-gate-graphic">
+          <div class="prc-gate-ring"><i class="fas fa-shield-halved"></i></div>
+        </div>
+        <div class="prc-gate-title">Authorisation Required</div>
+        <div class="prc-gate-desc">Statutory rates affect all payroll calculations. Confirm your identity to proceed.</div>
+        <div class="prc-gate-input-wrap">
+          <i class="fas fa-lock prc-gate-input-icon"></i>
+          <input type="password" id="prcPassword" class="prc-gate-input" placeholder="Enter your admin password" autocomplete="current-password">
+        </div>
+        <div id="prcGateError" class="prc-gate-error" style="display:none;"></div>
+        <button class="prc-btn-primary" id="prcVerifyBtn" style="width:100%;justify-content:center;margin-top:4px;">
+          <i class="fas fa-arrow-right"></i> Continue
+        </button>
+      </div>
+
+      <!-- Constants form -->
+      <div id="prcForm" style="display:none;">
+
+        <!-- Section tabs -->
+        <div class="prc-tabs">
+          <button class="prc-tab active" data-prc-tab="nis">
+            <i class="fas fa-shield-halved"></i> NIS
+          </button>
+          <button class="prc-tab" data-prc-tab="hs">
+            <i class="fas fa-heart-pulse"></i> Health Surcharge
+          </button>
+          <button class="prc-tab" data-prc-tab="paye">
+            <i class="fas fa-file-invoice-dollar"></i> PAYE
+          </button>
+        </div>
+
+        <!-- ── NIS Panel ── -->
+        <div class="prc-panel active" id="prc-nis">
+          <div class="prc-panel-intro">
+            <div class="prc-panel-intro-icon" style="background:rgba(27,45,84,.08);"><i class="fas fa-shield-halved" style="color:var(--siomac-navy);"></i></div>
+            <div>
+              <div class="prc-panel-intro-title">National Insurance Scheme</div>
+              <div class="prc-panel-intro-desc">Employee contribution deducted each pay period, capped at the monthly insurable earnings ceiling set by the NIS.</div>
+            </div>
+          </div>
+
+          <div class="prc-fields-grid">
+            <div class="prc-field-block">
+              <div class="prc-field-label">
+                Employee Contribution Rate
+                <span class="prc-tooltip" data-tip="Current statutory rate is 6% of insurable earnings. Set by the National Insurance Act."><i class="fas fa-circle-info"></i></span>
+              </div>
+              <div class="prc-input-row">
+                <div class="prc-input-box prc-input-pct">
+                  <input type="number" id="prcNisRate" step="0.01" min="0" max="100" placeholder="6">
+                  <span class="prc-input-badge">%</span>
+                </div>
+              </div>
+              <div class="prc-field-hint">Enter as a percentage — e.g. <strong>6</strong> for 6%</div>
+            </div>
+
+            <div class="prc-field-block">
+              <div class="prc-field-label">
+                Monthly Insurable Earnings Ceiling
+                <span class="prc-tooltip" data-tip="NIS contributions are capped once monthly earnings reach this ceiling. Currently TTD 13,600."><i class="fas fa-circle-info"></i></span>
+              </div>
+              <div class="prc-input-row">
+                <div class="prc-input-box">
+                  <span class="prc-input-pre">TTD</span>
+                  <input type="number" id="prcNisMonthlyCap" step="1" min="0" placeholder="13600">
+                </div>
+              </div>
+              <div class="prc-field-hint">Maximum monthly earnings subject to NIS contributions</div>
+            </div>
+          </div>
+
+          <div class="prc-notice">
+            <i class="fas fa-circle-info"></i>
+            NIS is deducted from gross pay each cycle. The monthly cap is prorated automatically for weekly, fortnightly, and daily pay cycles.
+          </div>
+        </div>
+
+        <!-- ── Health Surcharge Panel ── -->
+        <div class="prc-panel" id="prc-hs">
+          <div class="prc-panel-intro">
+            <div class="prc-panel-intro-icon" style="background:rgba(124,58,237,.08);"><i class="fas fa-heart-pulse" style="color:#7c3aed;"></i></div>
+            <div>
+              <div class="prc-panel-intro-title">Health Surcharge</div>
+              <div class="prc-panel-intro-desc">A fixed flat amount deducted per pay period. The rate applied depends on whether weekly earnings exceed the threshold.</div>
+            </div>
+          </div>
+
+          <div class="prc-field-block" style="margin-bottom:20px;">
+            <div class="prc-field-label">
+              Weekly Earnings Threshold
+              <span class="prc-tooltip" data-tip="Employees earning above TTD 469.99 per week pay the higher surcharge rate. Those at or below pay the lower rate."><i class="fas fa-circle-info"></i></span>
+            </div>
+            <div class="prc-input-row">
+              <div class="prc-input-box" style="max-width:200px;">
+                <span class="prc-input-pre">TTD</span>
+                <input type="number" id="prcHsThreshold" step="0.01" min="0" placeholder="469.99">
+              </div>
+            </div>
+            <div class="prc-field-hint">Compared against the employee's annualised weekly equivalent earnings</div>
+          </div>
+
+          <div class="prc-hs-rates-grid">
+            <!-- High rate -->
+            <div class="prc-hs-rate-card prc-hs-high">
+              <div class="prc-hs-rate-header">
+                <i class="fas fa-arrow-trend-up"></i>
+                <div>
+                  <div class="prc-hs-rate-title">High Rate</div>
+                  <div class="prc-hs-rate-sub">Earnings above threshold</div>
+                </div>
+              </div>
+              <div class="prc-hs-rate-fields">
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Daily</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsHighDaily" step="0.01" min="0" placeholder="1.65"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Weekly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsHighWeekly" step="0.01" min="0" placeholder="8.25"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Fortnightly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsHighFortnightly" step="0.01" min="0" placeholder="16.50"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Monthly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsHighMonthly" step="0.01" min="0" placeholder="33.00"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Low rate -->
+            <div class="prc-hs-rate-card prc-hs-low">
+              <div class="prc-hs-rate-header">
+                <i class="fas fa-arrow-trend-down"></i>
+                <div>
+                  <div class="prc-hs-rate-title">Low Rate</div>
+                  <div class="prc-hs-rate-sub">Earnings at or below threshold</div>
+                </div>
+              </div>
+              <div class="prc-hs-rate-fields">
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Daily</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsLowDaily" step="0.01" min="0" placeholder="0.30"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Weekly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsLowWeekly" step="0.01" min="0" placeholder="1.50"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Fortnightly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsLowFortnightly" step="0.01" min="0" placeholder="3.00"></div>
+                </div>
+                <div class="prc-hs-cell">
+                  <div class="prc-hs-cycle-label">Monthly</div>
+                  <div class="prc-input-box prc-input-sm"><span class="prc-input-pre">$</span><input type="number" id="prcHsLowMonthly" step="0.01" min="0" placeholder="6.00"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prc-notice">
+            <i class="fas fa-circle-info"></i>
+            Health Surcharge is a fixed flat deduction — not percentage-based. Set each cycle's amount directly as prescribed by the Health Surcharge Act.
+          </div>
+        </div>
+
+        <!-- ── PAYE Panel ── -->
+        <div class="prc-panel" id="prc-paye">
+          <div class="prc-panel-intro">
+            <div class="prc-panel-intro-icon" style="background:rgba(202,138,4,.08);"><i class="fas fa-file-invoice-dollar" style="color:#ca8a04;"></i></div>
+            <div>
+              <div class="prc-panel-intro-title">Pay As You Earn (PAYE)</div>
+              <div class="prc-panel-intro-desc">Income tax withheld from salary. Calculated on chargeable income after the personal allowance. Two bands apply.</div>
+            </div>
+          </div>
+
+          <div class="prc-fields-grid">
+            <div class="prc-field-block">
+              <div class="prc-field-label">
+                Personal Allowance (Annual)
+                <span class="prc-tooltip" data-tip="The first TTD 90,000 of annual chargeable income is exempt from income tax under the Income Tax Act."><i class="fas fa-circle-info"></i></span>
+              </div>
+              <div class="prc-input-row">
+                <div class="prc-input-box">
+                  <span class="prc-input-pre">TTD</span>
+                  <input type="number" id="prcAllowanceAnnual" step="1" min="0" placeholder="90000">
+                </div>
+              </div>
+              <div class="prc-field-hint">Subtracted from gross annual earnings before tax is applied</div>
+            </div>
+
+            <div class="prc-field-block">
+              <div class="prc-field-label">
+                High-Rate Threshold (Annual)
+                <span class="prc-tooltip" data-tip="Chargeable income above TTD 1,000,000 per year is taxed at the high PAYE rate. Income below this uses the low rate."><i class="fas fa-circle-info"></i></span>
+              </div>
+              <div class="prc-input-row">
+                <div class="prc-input-box">
+                  <span class="prc-input-pre">TTD</span>
+                  <input type="number" id="prcPayeHighThreshold" step="1" min="0" placeholder="1000000">
+                </div>
+              </div>
+              <div class="prc-field-hint">Chargeable income above this amount is taxed at the high rate</div>
+            </div>
+          </div>
+
+          <div class="prc-paye-bands">
+            <div class="prc-paye-band prc-paye-low">
+              <div class="prc-paye-band-header">
+                <div class="prc-paye-band-dot"></div>
+                <div>
+                  <div class="prc-paye-band-title">Standard Rate</div>
+                  <div class="prc-paye-band-sub">Applied to chargeable income up to the high-rate threshold</div>
+                </div>
+              </div>
+              <div class="prc-input-box prc-input-pct" style="max-width:140px;">
+                <input type="number" id="prcPayeRateLow" step="0.01" min="0" max="100" placeholder="25">
+                <span class="prc-input-badge">%</span>
+              </div>
+              <div class="prc-field-hint">Enter as a percentage — e.g. <strong>25</strong> for 25%</div>
+            </div>
+
+            <div class="prc-paye-band prc-paye-high">
+              <div class="prc-paye-band-header">
+                <div class="prc-paye-band-dot"></div>
+                <div>
+                  <div class="prc-paye-band-title">Higher Rate</div>
+                  <div class="prc-paye-band-sub">Applied to chargeable income exceeding the threshold</div>
+                </div>
+              </div>
+              <div class="prc-input-box prc-input-pct" style="max-width:140px;">
+                <input type="number" id="prcPayeRateHigh" step="0.01" min="0" max="100" placeholder="30">
+                <span class="prc-input-badge">%</span>
+              </div>
+              <div class="prc-field-hint">Enter as a percentage — e.g. <strong>30</strong> for 30%</div>
+            </div>
+          </div>
+
+          <div class="prc-notice">
+            <i class="fas fa-circle-info"></i>
+            PAYE is calculated annually then prorated to the pay cycle. The personal allowance is applied before either band is assessed.
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="prc-modal-footer">
+          <button class="prc-btn-ghost" id="prcRestoreBtn"><i class="fas fa-rotate-left"></i> Restore Defaults</button>
+          <div style="display:flex;gap:10px;">
+            <button class="prc-btn-outline" id="prcCancelBtn">Cancel</button>
+            <button class="prc-btn-primary" id="prcSaveBtn"><i class="fas fa-check"></i> Save Changes</button>
+          </div>
+        </div>
+
+      </div><!-- /#prcForm -->
+    </div><!-- /.prc-modal -->
+  </div>
+
+  <!-- Payroll Settings Modal -->
+  <div id="prSettingsModal" class="prs-overlay">
+    <div class="prs-container">
+
+      <!-- Header -->
+      <div class="prs-header">
+        <div class="prs-header-left">
+          <div class="prs-avatar" id="prsAvatar"></div>
+          <div>
+            <div class="prs-name" id="prsName">Employee Name</div>
+            <div class="prs-meta" id="prsMeta">Department · Position</div>
+          </div>
+        </div>
+        <button class="prs-close" id="prsCloseBtn" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Body -->
+      <div class="prs-body">
+
+        <!-- LEFT: Pay configuration -->
+        <div class="prs-section">
+          <div class="prs-section-title"><i class="fas fa-coins"></i> Pay Configuration</div>
+
+          <!-- Cycle pills -->
+          <div class="prs-field-label">Pay Cycle</div>
+          <div class="prs-pill-group" id="prsCycleGroup">
+            <button class="prs-pill" data-val="daily">Daily</button>
+            <button class="prs-pill" data-val="weekly">Weekly</button>
+            <button class="prs-pill" data-val="fortnightly">Fortnightly</button>
+            <button class="prs-pill active" data-val="monthly">Monthly</button>
+          </div>
+          <input type="hidden" id="prsPayCycle" value="monthly">
+
+          <!-- Basis pills -->
+          <div class="prs-field-label" style="margin-top:20px;">Pay Basis</div>
+          <div class="prs-pill-group" id="prsBasisGroup">
+            <button class="prs-pill active" data-val="salary"><i class="fas fa-building"></i> Salary</button>
+            <button class="prs-pill" data-val="hourly"><i class="fas fa-clock"></i> Hourly</button>
+          </div>
+          <input type="hidden" id="prsPayBasis" value="salary">
+
+          <!-- Rate inputs -->
+          <div class="prs-rate-row" id="prsSalaryRow">
+            <div class="prs-field-label">Monthly Salary</div>
+            <div class="prs-money-input">
+              <span class="prs-currency">TTD</span>
+              <input type="number" id="prsMonthlySalary" min="0" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+          <div class="prs-rate-row" id="prsHourlyRow" style="display:none;">
+            <div class="prs-field-label">Hourly Rate</div>
+            <div class="prs-money-input">
+              <span class="prs-currency">TTD</span>
+              <input type="number" id="prsHourlyRate" min="0" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="prs-rate-row">
+            <div class="prs-field-label">Standard Hours / Day</div>
+            <div class="prs-hours-input-wrap">
+              <input type="number" id="prsStdHours" min="1" max="24" step="0.5" placeholder="8">
+              <span class="prs-hours-unit">hrs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Deductions + live preview -->
+        <div class="prs-section">
+          <div class="prs-section-title"><i class="fas fa-shield-halved"></i> Deduction Rules</div>
+
+          <div class="prs-toggle-list">
+            <label class="prs-toggle-row">
+              <div class="prs-toggle-info">
+                <span class="prs-toggle-name">NIS Contribution</span>
+                <span class="prs-toggle-desc">6% of gross, capped at $13,600/month</span>
+              </div>
+              <div class="prs-switch-wrap">
+                <input type="checkbox" id="prsNis" class="prs-switch-input">
+                <span class="prs-switch"></span>
+              </div>
+            </label>
+            <label class="prs-toggle-row">
+              <div class="prs-toggle-info">
+                <span class="prs-toggle-name">Health Surcharge</span>
+                <span class="prs-toggle-desc">Fixed rate based on weekly earnings</span>
+              </div>
+              <div class="prs-switch-wrap">
+                <input type="checkbox" id="prsHs" class="prs-switch-input">
+                <span class="prs-switch"></span>
+              </div>
+            </label>
+            <label class="prs-toggle-row">
+              <div class="prs-toggle-info">
+                <span class="prs-toggle-name">Tax Resident (PAYE)</span>
+                <span class="prs-toggle-desc">25% up to $1M, 30% above — $90k personal allowance</span>
+              </div>
+              <div class="prs-switch-wrap">
+                <input type="checkbox" id="prsTax" class="prs-switch-input">
+                <span class="prs-switch"></span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Live estimate -->
+          <div class="prs-estimate">
+            <div class="prs-estimate-title">Monthly Estimate</div>
+            <div class="prs-estimate-grid">
+              <div class="prs-est-row prs-est-gross">
+                <span>Gross Pay</span><span id="prsEstGross">—</span>
+              </div>
+              <div class="prs-est-row prs-est-ded">
+                <span>NIS</span><span id="prsEstNis">—</span>
+              </div>
+              <div class="prs-est-row prs-est-ded">
+                <span>Health Surcharge</span><span id="prsEstHs">—</span>
+              </div>
+              <div class="prs-est-row prs-est-ded">
+                <span>PAYE</span><span id="prsEstPaye">—</span>
+              </div>
+              <div class="prs-est-row prs-est-net">
+                <span>Net Pay</span><span id="prsEstNet">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="prs-footer">
+        <button class="prs-btn-cancel" id="prsCancelBtn">Cancel</button>
+        <button class="prs-btn-save" id="prsSaveBtn"><i class="fas fa-check"></i> Save Changes</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Edit Employee Modal (custom overlay) -->
   <div id="editEmployeeModal" class="emp-modal-overlay">
     <div class="emp-modal-container">
@@ -2144,6 +2819,9 @@
       <div class="emp-modal-body">
         <form id="editEmployeeForm" autocomplete="off">
           <input type="hidden" id="editUsername">
+
+          <!-- Profile Tab -->
+          <div class="emp-tab-panel active" id="editEmpTabProfile">
 
           <!-- Photo picker -->
           <div style="display:flex;align-items:center;gap:16px;padding:12px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
@@ -2209,6 +2887,8 @@
               <input type="password" class="form-control" id="editEmpPassword" autocomplete="new-password" placeholder="Enter new password…">
             </div>
           </div>
+          </div><!-- /.emp-tab-panel#editEmpTabProfile -->
+
         </form>
       </div>
       <div class="emp-modal-footer">
@@ -2216,7 +2896,7 @@
         <button class="btn btn-danger-primary" id="updateEmployeeBtn"><i class="fas fa-save"></i> Update Employee</button>
       </div>
     </div>
-  </div>
+  </div><!-- /#editEmployeeModal -->
 
   <!-- Add Project Site Modal -->
   <div class="modal fade" id="addProjectModal" tabindex="-1" aria-hidden="true">
