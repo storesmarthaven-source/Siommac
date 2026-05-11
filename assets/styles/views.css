@@ -575,8 +575,16 @@
 }
 .ps-assigned-empty { color: var(--text-primary); font-style: normal; gap: 6px; }
 .ps-assigned-empty i { color: #47904A; }
+.ps-assigned-lbl-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .ps-assigned-lbl { white-space: nowrap; flex-shrink: 0; }
 .ps-assigned-lbl i { color: #47904A; }
+.ps-checkedin-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #dcfce7; color: #15803d;
+  border: 1px solid #bbf7d0; border-radius: 20px;
+  padding: 1px 8px; font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+}
+.ps-checkedin-badge i { font-size: 0.68rem; }
 .ps-assigned-avatars { display: flex; align-items: center; gap: -4px; }
 .ps-emp-avatar {
   width: 28px; height: 28px; border-radius: 50%;
@@ -3581,14 +3589,13 @@
   opacity: 0; max-width: 0; padding-left: 0; padding-right: 0;
   margin: 0; border-width: 0; pointer-events: none; overflow: hidden;
 }
-/* Pop-in animation when enabled after payroll run */
+/* Subtle fade-in slide when enabled after payroll run */
 @keyframes prApprovalPop {
-  0%   { transform: scale(0.82); opacity: 0; }
-  60%  { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(1);    opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .pr-approval-btn.pr-approval-pop {
-  animation: prApprovalPop 0.38s cubic-bezier(.34,1.56,.64,1) forwards;
+  animation: prApprovalPop 0.25s ease forwards;
 }
 
 /* Reports toggle button — red solid default, white+red-border when active */
@@ -4115,6 +4122,7 @@
 .prc-modal-header {
   display: flex; align-items: center; gap: 16px;
   padding: 20px 24px; background: var(--siomac-navy); flex-shrink: 0;
+  border-radius: 28px 28px 0 0;
 }
 .prc-modal-header-icon {
   width: 42px; height: 42px; border-radius: 13px;

@@ -6733,13 +6733,21 @@ const AttendanceSystem = (function() {
       const active = !!site.isActive;
       const selected = _psSelectedSiteId === String(site.id);
       const assigned = site.assignedEmployees || [];
+      // Checked-in count for this site (from liveData, already loaded above)
+      const checkedInCount = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
       // Show up to 5 avatar circles, then +N overflow
       const MAX_AVATARS = 5;
       const shown = assigned.slice(0, MAX_AVATARS);
       const overflow = assigned.length - shown.length;
+      const checkedInBadge = checkedInCount > 0
+        ? `<span class="ps-checkedin-badge"><i class="fas fa-circle-check"></i> ${checkedInCount} Checked In</span>`
+        : '';
       const avatarsHtml = assigned.length ? `
         <div class="ps-assigned-row">
-          <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
+          <div class="ps-assigned-lbl-group">
+            <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
+            ${checkedInBadge}
+          </div>
           <div class="ps-assigned-avatars">
             ${shown.map(e => e.photoUrl
               ? `<img class="ps-emp-avatar" src="${escapeHtml(e.photoUrl)}" title="${escapeHtml(e.name)}" alt="${escapeHtml(e.name)}">`
@@ -6767,8 +6775,9 @@ const AttendanceSystem = (function() {
       </div>`;
     }
     function _psCardRowKey(site) {
-      const assignedKey = (site.assignedEmployees || []).map(e => e.id).join(',');
-      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0') + '|' + assignedKey + '|' + (_psSelectedSiteId === String(site.id) ? '1' : '0');
+      const assignedKey  = (site.assignedEmployees || []).map(e => e.id).join(',');
+      const checkedInKey = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
+      return (site.name || '') + '|' + (site.address || '') + '|' + (site.latitude || '') + '|' + (site.longitude || '') + '|' + (site.radius || '') + '|' + (site.description || '') + '|' + (site.isActive ? '1' : '0') + '|' + assignedKey + '|' + (_psSelectedSiteId === String(site.id) ? '1' : '0') + '|' + checkedInKey;
     }
 
     // -- Render helper: rebuild container from scratch each call ----------------
@@ -7881,15 +7890,15 @@ const AttendanceSystem = (function() {
     const clearBtn = document.getElementById('prClearFiltersBtn');
     if (clearBtn) clearBtn.disabled = true;
 
-    // Search input — drives DataTable in payroll mode, employee picker in reports mode
+    // Search input — opens employee picker dropdown in both modes
     const searchEl = document.getElementById('prSearchInput');
     if (searchEl) {
       searchEl.addEventListener('input', () => {
-        if (_prReportsMode) { _prEmpOpenDropdown(); _prEmpRenderList(); }
-        else if (_prDT) _prDT.search(searchEl.value).draw();
+        _prEmpOpenDropdown();
+        _prEmpRenderList();
       });
       searchEl.addEventListener('focus', () => {
-        if (_prReportsMode) _prEmpOpenDropdown();
+        _prEmpOpenDropdown();
       });
     }
 
@@ -7920,8 +7929,8 @@ const AttendanceSystem = (function() {
       if (_prFpFrom) _prFpFrom.setDate(_prReportsMode ? null : monthStart, false);
       if (_prFpTo)   _prFpTo.setDate(_prReportsMode ? null : monthEnd, false);
       // Re-apply filters to table / employee list
-      _prApplyFilters();
-      if (_prReportsMode) _prEmpRenderList();
+      if (_prReportsMode) { _prApplyFilters(); _prEmpRenderList(); }
+      else { _prEmpSelected.clear(); _prApplyPayrollSelection(); _prEmpUpdateBadge(); }
       _prUpdateClearBtn();
     });
 
@@ -7930,11 +7939,13 @@ const AttendanceSystem = (function() {
       e.stopPropagation();
       _prEmpGetFiltered().forEach(emp => _prEmpSelected.add(String(emp.id)));
       _prEmpRenderList(); _prEmpUpdateBadge();
+      if (!_prReportsMode) _prApplyPayrollSelection();
     });
     document.getElementById('prEmpClearAll')?.addEventListener('click', e => {
       e.stopPropagation();
       _prEmpSelected.clear();
       _prEmpRenderList(); _prEmpUpdateBadge();
+      if (!_prReportsMode) _prApplyPayrollSelection();
     });
 
     // Cycle dropdown — re-applies filters on change
@@ -7942,8 +7953,8 @@ const AttendanceSystem = (function() {
     if (cycleEl) {
       cycleEl.addEventListener('change', () => {
         _prCycleFilter = cycleEl.value || 'all';
-        _prApplyFilters();
-        if (_prReportsMode) _prEmpRenderList();
+        if (_prReportsMode) { _prApplyFilters(); _prEmpRenderList(); }
+        else { _prEmpSelected.clear(); _prEmpCloseDropdown(); _prApplyPayrollSelection(); _prEmpUpdateBadge(); }
         _prUpdateClearBtn();
       });
     }
@@ -7962,8 +7973,8 @@ const AttendanceSystem = (function() {
       });
       deptEl.addEventListener('change', () => {
         _prDeptFilter = deptEl.value || 'all';
-        _prApplyFilters();
-        if (_prReportsMode) _prEmpRenderList();
+        if (_prReportsMode) { _prApplyFilters(); _prEmpRenderList(); }
+        else { _prEmpSelected.clear(); _prEmpCloseDropdown(); _prApplyPayrollSelection(); _prEmpUpdateBadge(); }
         _prUpdateClearBtn();
       });
     }
@@ -8030,6 +8041,7 @@ const AttendanceSystem = (function() {
         btn.disabled = false; btn.innerHTML = orig;
         if (!res || !res.success) { showPopup('error', 'Failed', res.message || 'Could not run payroll'); return; }
         _prRunData = res.data;
+        _prEmpSelected.clear(); // reset any prior selection when a new run happens
         _prRenderDashboard(res.data.totals);
         _prRenderTable(res.data.rows, from, to);
       })
@@ -8492,11 +8504,35 @@ const AttendanceSystem = (function() {
     });
   }
 
-  // ─── Employee picker (Reports mode) ─────────────────────────────────────────
+  // ─── Employee picker ─────────────────────────────────────────────────────────
+  // In Reports mode: filters _prEmpAll (all employees).
+  // In Run Payroll mode: filters _prRunData.rows (only employees in the current run).
   function _prEmpGetFiltered() {
-    const q    = (document.getElementById('prSearchInput')?.value || '').toLowerCase();
-    const dept = _prDeptFilter;
+    const q     = (document.getElementById('prSearchInput')?.value || '').toLowerCase();
+    const dept  = _prDeptFilter;
     const cycle = _prCycleFilter;
+
+    if (!_prReportsMode) {
+      // Payroll mode — source is the rows from the current run
+      const source = (_prRunData && _prRunData.rows) ? _prRunData.rows : [];
+      return source.filter(r => {
+        if (dept  !== 'all' && String(r.departmentId) !== String(dept)) return false;
+        if (cycle !== 'all' && r.payCycle !== cycle)                    return false;
+        if (q && !`${r.name || ''} ${r.department || ''}`.toLowerCase().includes(q)) return false;
+        return true;
+      // Map to a shape compatible with _prEmpRenderList
+      }).map(r => ({
+        id:             r.userId,
+        fullName:       r.name,
+        departmentName: r.department,
+        payCycle:       r.payCycle,
+        username:       r.username,
+        profileImage:   r.profileImage || r.photoUrl || null,
+        departmentId:   r.departmentId,
+      }));
+    }
+
+    // Reports mode — source is _prEmpAll
     return _prEmpAll.filter(e => {
       if (dept  !== 'all' && String(e.departmentId) !== String(dept))   return false;
       if (cycle !== 'all' && e.payCycle !== cycle)                       return false;
@@ -8558,6 +8594,8 @@ const AttendanceSystem = (function() {
         cb.checked ? _prEmpSelected.add(id) : _prEmpSelected.delete(id);
         cb.closest('li').classList.toggle('selected', cb.checked);
         _prEmpUpdateBadge();
+        // In payroll mode, re-filter the table rows to match selection
+        if (!_prReportsMode) _prApplyPayrollSelection();
       });
     });
 
@@ -8576,8 +8614,36 @@ const AttendanceSystem = (function() {
     // Update placeholder text
     const input = document.getElementById('prSearchInput');
     if (input && !input.value) {
-      input.placeholder = n > 0 ? `${n} employee${n > 1 ? 's' : ''} selected` : 'Filter Employees…';
+      const defaultPlaceholder = _prReportsMode ? 'Filter Employees…' : 'Search Payroll Register…';
+      input.placeholder = n > 0 ? `${n} employee${n > 1 ? 's' : ''} selected` : defaultPlaceholder;
     }
+  }
+
+  // ─── Payroll mode: filter table rows to match employee selection ────────────
+  // Called whenever the selection changes in Run Payroll mode.
+  // If any employees are selected, only those rows appear in the table (and get
+  // sent for approval). If nothing is selected, all filtered rows are shown.
+  function _prApplyPayrollSelection() {
+    if (!_prRunData) return;
+    // Start from the full cycle/dept-filtered set
+    let base = _prRunData.rows;
+    if (_prCycleFilter !== 'all') base = base.filter(r => r.payCycle === _prCycleFilter);
+    if (_prDeptFilter  !== 'all') base = base.filter(r => String(r.departmentId) === String(_prDeptFilter));
+    // Further narrow to selected employees (if any)
+    if (_prEmpSelected.size > 0) {
+      base = base.filter(r => _prEmpSelected.has(String(r.userId)));
+    }
+    _prCurrentRows = base;
+    const from = _prRunData.dateFrom, to = _prRunData.dateTo;
+    _prRenderDashboard({ // Recalculate totals for visible rows
+      grossPay:        base.reduce((s, r) => s + (r.grossPay        || 0), 0),
+      netPay:          base.reduce((s, r) => s + (r.netPay          || 0), 0),
+      paye:            base.reduce((s, r) => s + (r.paye            || 0), 0),
+      nis:             base.reduce((s, r) => s + (r.nis             || 0), 0),
+      healthSurcharge: base.reduce((s, r) => s + (r.healthSurcharge || 0), 0),
+      totalDeductions: base.reduce((s, r) => s + (r.totalDeductions || 0), 0),
+    });
+    _prRenderTable(base, from, to);
   }
 
   // ─── Reports mode toggle ─────────────────────────────────────────────────────
@@ -8632,8 +8698,13 @@ const AttendanceSystem = (function() {
       _prEmpSelected.clear();
       _prEmpCloseDropdown();
       _prEmpUpdateBadge();
-      // Restore approval button state when leaving reports
-      _prSetApprovalBtn(!!_prRunData);
+      // Clear previous run data — user must run payroll again in this mode
+      _prRunData = null;
+      _prCurrentRows = [];
+      const searchEl3 = document.getElementById('prSearchInput');
+      if (searchEl3) { searchEl3.disabled = true; searchEl3.value = ''; searchEl3.placeholder = 'Search Payroll Register…'; }
+      // Approval button stays hidden until a new run happens
+      _prSetApprovalBtn(false, true);
     } else {
       // Hide approval button when entering reports mode
       _prSetApprovalBtn(false, true /* hide */);
