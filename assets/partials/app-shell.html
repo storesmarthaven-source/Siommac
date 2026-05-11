@@ -1944,6 +1944,26 @@
               <div class="stg-card-actions admin-only">
                 <button class="stg-btn-primary" id="savePayrollSettingsBtn"><i class="fas fa-check"></i> Save Rules</button>
               </div>
+
+              <!-- Work Hours -->
+              <div class="stg-card admin-only" id="workHoursCard">
+                <div class="stg-card-label"><i class="fas fa-business-time"></i> Work Hours</div>
+                <div class="stg-form-row">
+                  <div class="stg-form-group">
+                    <label>Work Start Time</label>
+                    <input type="time" id="setWorkStart" value="08:00">
+                    <small>Earliest allowed check-in time</small>
+                  </div>
+                  <div class="stg-form-group">
+                    <label>Work End Time</label>
+                    <input type="time" id="setWorkEnd" value="17:00">
+                    <small>Employees are auto signed-out at this time</small>
+                  </div>
+                </div>
+              </div>
+              <div class="stg-card-actions admin-only">
+                <button class="stg-btn-primary" id="saveWorkHoursBtn"><i class="fas fa-business-time"></i> Save Work Hours</button>
+              </div>
             </div>
 
             <!-- 3. Appearance -->

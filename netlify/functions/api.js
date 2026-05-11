@@ -553,6 +553,17 @@ async function markAttendance(args, ctx) {
   const outsideRadius = false; // radius already enforced above for check-in
   const work_date = today();
   const now = new Date();
+
+  // Work-hours enforcement — block check-in outside configured hours
+  if (isCheckIn) {
+    const whRaw = await setting('workHours', '{"start":"08:00","end":"17:00"}');
+    let wh = { start: '08:00', end: '17:00' };
+    try { wh = JSON.parse(whRaw); } catch (_) {}
+    const nowHHMM = hhmm24(now);
+    if (nowHHMM < wh.start || nowHHMM >= wh.end) {
+      return { success: false, message: `Check-in is only allowed between ${wh.start} and ${wh.end}.` };
+    }
+  }
   const photoBucket = 'attendance-photos';
   const photo = args.photoBase64 ? await uploadBase64(photoBucket, args.photoBase64, `${actor.username}_${action}_${work_date}`) : '';
   const { data: rec } = await sb.from('attendance').select('*').eq('user_id', actor.id).eq('work_date', work_date).maybeSingle();
@@ -736,6 +747,28 @@ async function updateSetting(args, ctx) {
   const { error } = await sb.from('settings').upsert({ key: args.key, value: String(args.value || ''), updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) return { success: false, message: error.message };
   await log_(actor, 'update', 'setting', args.key, String(args.value || ''));
+  return { success: true };
+}
+
+async function getWorkHours() {
+  const raw = await setting('workHours', '{"start":"08:00","end":"17:00"}');
+  let wh = { start: '08:00', end: '17:00' };
+  try { wh = JSON.parse(raw); } catch (_) {}
+  return { success: true, data: wh };
+}
+
+async function saveWorkHours(args, ctx) {
+  const actor = await requireRole(ctx, ['admin']);
+  const start = (args.start || '').trim();
+  const end   = (args.end   || '').trim();
+  if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) {
+    return { success: false, message: 'Invalid time format. Use HH:MM.' };
+  }
+  if (start >= end) return { success: false, message: 'Work start must be before end time.' };
+  const value = JSON.stringify({ start, end });
+  const { error } = await sb.from('settings').upsert({ key: 'workHours', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (error) return { success: false, message: error.message };
+  await log_(actor, 'update', 'setting', 'workHours', value);
   return { success: true };
 }
 
@@ -1790,6 +1823,8 @@ const routes = {
   assignSiteEmployees,
   getSettings: async () => getSettings(),
   updateSetting,
+  getWorkHours: async () => getWorkHours(),
+  saveWorkHours,
   markAttendance,
   getMyStatus,
   getMyHistory,

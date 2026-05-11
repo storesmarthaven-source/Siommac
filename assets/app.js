@@ -3454,6 +3454,7 @@ const AttendanceSystem = (function() {
       if (event.target.closest('#pickLogoBtn'))             pickLogo();
       if (event.target.closest('#saveLogoBtn'))             saveLogo();
       if (event.target.closest('#savePayrollSettingsBtn'))  savePayrollSettings();
+      if (event.target.closest('#saveWorkHoursBtn'))        saveWorkHours();
 
       // Leave tabs — only fire when the button has data-lv-tab (not project-site filter tabs)
       const lvTab = event.target.closest('.lv-tab-btn');
@@ -9200,6 +9201,14 @@ const AttendanceSystem = (function() {
       if (ltEl) ltEl.value = s.lateThresholdHHMM || '09:00';
       const mdEl = document.getElementById('setMaxDistance');
       if (mdEl) mdEl.value = s.maxDistanceM != null ? s.maxDistanceM : '200';
+      // Work hours
+      try {
+        const wh = s.workHours ? JSON.parse(s.workHours) : { start: '08:00', end: '17:00' };
+        const wsEl = document.getElementById('setWorkStart');
+        const weEl = document.getElementById('setWorkEnd');
+        if (wsEl) wsEl.value = wh.start || '08:00';
+        if (weEl) weEl.value = wh.end   || '17:00';
+      } catch (_) {}
       const url = s.companyLogoUrl || '';
       setLogoPreview(url);
     });
@@ -9284,6 +9293,21 @@ const AttendanceSystem = (function() {
     }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
   }
 
+  function saveWorkHours() {
+    const start = (document.getElementById('setWorkStart')?.value || '08:00');
+    const end   = (document.getElementById('setWorkEnd')?.value   || '17:00');
+    if (start >= end) { showPopup('error', 'Invalid Hours', 'Work start must be before end time.'); return; }
+    const btn = document.getElementById('saveWorkHoursBtn');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    api('saveWorkHours', { start, end }).then(res => {
+      btn.disabled = false; btn.innerHTML = orig;
+      if (!res || !res.success) { showPopup('error', 'Save Failed', res.message || 'Could not save work hours'); return; }
+      updateStoredSession({ workHoursStart: start, workHoursEnd: end });
+      showPopup('success', 'Work Hours Saved', `Check-in allowed ${start} – ${end}. Employees will be auto signed-out at ${end}.`);
+    }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
+  }
+
   function _stgActivatePanel(tab, scroll) {
     // Highlight nav item
     document.querySelectorAll('.stg-nav-item').forEach(b => b.classList.remove('active'));
@@ -9303,6 +9327,8 @@ const AttendanceSystem = (function() {
     set('setLeaveFine',    '0');
     set('setLateThreshold','09:00');
     set('setMaxDistance',  '200');
+    set('setWorkStart',    '08:00');
+    set('setWorkEnd',      '17:00');
     cpop.fire({ icon: 'info', title: 'Reset to defaults', text: 'Fields reset. Click Save Settings to apply.', showConfirmButton: true });
   }
 
