@@ -8701,6 +8701,8 @@ const AttendanceSystem = (function() {
       // Reset session run state — user must run payroll again in this mode
       _prRanThisSession = false;
       _prCurrentRows = [];
+      // Zero out the stats dashboard
+      _prRenderDashboard({ grossPay: 0, netPay: 0, paye: 0, nis: 0, healthSurcharge: 0, totalDeductions: 0 });
       const searchEl3 = document.getElementById('prSearchInput');
       if (searchEl3) { searchEl3.disabled = true; searchEl3.value = ''; searchEl3.placeholder = 'Search Payroll Register…'; }
       // Approval button stays hidden until a new run happens
