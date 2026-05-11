@@ -6462,20 +6462,17 @@ const AttendanceSystem = (function() {
       ? (allSites || projectSites).find(s => String(s.id) === _psSelectedSiteId)
       : null;
 
-    if (site) {
-      // Per-site: assigned count + checked-in count ÷ assigned count
+    // Only show stats for active selected sites; inactive sites and no selection show zeros
+    if (site && site.isActive) {
       const assigned  = (site.assignedEmployees || []).length;
       const checkedIn = (liveData || []).filter(r => !r.isCheckedOut && String(r.siteId) === String(site.id)).length;
       const pct = assigned > 0 ? Math.round((checkedIn / assigned) * 100) : 0;
       _countUp(document.getElementById('psAssignedWorkers'), assigned);
       _countUp(document.getElementById('psSiteAttendance'),  pct, '%');
     } else {
-      // Global: total active employees + overall on-site %
-      const totalAssigned = _totalActiveEmployees > 0 ? _totalActiveEmployees : (_empAllList || []).filter(e => e.status === 'Active').length;
-      const onSiteNow     = (liveData || []).filter(r => !r.isCheckedOut).length;
-      const pct = totalAssigned > 0 ? Math.round((onSiteNow / totalAssigned) * 100) : 0;
-      _countUp(document.getElementById('psAssignedWorkers'), totalAssigned);
-      _countUp(document.getElementById('psSiteAttendance'),  pct, '%');
+      // No site selected or inactive site — zero out
+      _countUp(document.getElementById('psAssignedWorkers'), 0);
+      _countUp(document.getElementById('psSiteAttendance'),  0, '%');
     }
   }
 
@@ -8708,7 +8705,8 @@ const AttendanceSystem = (function() {
       // Approval button stays hidden until a new run happens
       _prSetApprovalBtn(false, true);
     } else {
-      // Hide approval button when entering reports mode
+      // Entering Reports mode — clear stats and hide approval button
+      _prRenderDashboard({ grossPay: 0, netPay: 0, paye: 0, nis: 0, healthSurcharge: 0, totalDeductions: 0 });
       _prSetApprovalBtn(false, true /* hide */);
     }
     // Clear table when switching modes
