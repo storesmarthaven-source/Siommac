@@ -6740,14 +6740,11 @@ const AttendanceSystem = (function() {
       const shown = assigned.slice(0, MAX_AVATARS);
       const overflow = assigned.length - shown.length;
       const checkedInBadge = checkedInCount > 0
-        ? `<span class="ps-checkedin-badge"><i class="fas fa-circle-check"></i> ${checkedInCount} Checked In</span>`
+        ? `<span class="ps-checkedin-badge"><i class="fas fa-circle-check"></i> ${checkedInCount} on site</span>`
         : '';
       const avatarsHtml = assigned.length ? `
         <div class="ps-assigned-row">
-          <div class="ps-assigned-lbl-group">
-            <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
-            ${checkedInBadge}
-          </div>
+          <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
           <div class="ps-assigned-avatars">
             ${shown.map(e => e.photoUrl
               ? `<img class="ps-emp-avatar" src="${escapeHtml(e.photoUrl)}" title="${escapeHtml(e.name)}" alt="${escapeHtml(e.name)}">`
@@ -6755,6 +6752,7 @@ const AttendanceSystem = (function() {
             ).join('')}
             ${overflow > 0 ? `<div class="ps-emp-avatar ps-emp-avatar--more">+${overflow}</div>` : ''}
           </div>
+          ${checkedInBadge}
         </div>` : `<div class="ps-assigned-row ps-assigned-empty"><i class="fas fa-user-plus"></i> No Employees Assigned</div>`;
 
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}${selected ? ' ps-card--selected' : ''}" data-id="${site.id}" style="cursor:pointer;">

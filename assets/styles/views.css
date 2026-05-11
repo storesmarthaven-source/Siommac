@@ -575,17 +575,18 @@
 }
 .ps-assigned-empty { color: var(--text-primary); font-style: normal; gap: 6px; }
 .ps-assigned-empty i { color: #47904A; }
-.ps-assigned-lbl-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .ps-assigned-lbl { white-space: nowrap; flex-shrink: 0; }
 .ps-assigned-lbl i { color: #47904A; }
 .ps-checkedin-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: #dcfce7; color: #15803d;
-  border: 1px solid #bbf7d0; border-radius: 20px;
-  padding: 1px 8px; font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #16a34a; color: #fff;
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+  margin-left: auto; flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
-.ps-checkedin-badge i { font-size: 0.68rem; }
-.ps-assigned-avatars { display: flex; align-items: center; gap: -4px; }
+.ps-checkedin-badge i { font-size: 0.7rem; }
+.ps-assigned-avatars { display: flex; align-items: center; gap: -4px; flex: 1; }
 .ps-emp-avatar {
   width: 28px; height: 28px; border-radius: 50%;
   border: 2px solid white; object-fit: cover;
