@@ -5772,10 +5772,14 @@ const AttendanceSystem = (function() {
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
+          ${currentRole === 'admin' ? `
+          <div class="card-overlay-actions">
+            <button class="card-overlay-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit employee"><i class="fas fa-pen"></i></button>
+            <button class="card-overlay-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete employee"><i class="fas fa-trash"></i></button>
+          </div>` : ''}
         </div>
         <div class="emp-card-body">
-          <div class="emp-detail-row"><i class="fas fa-id-card"></i><span class="emp-card-empid">${emp.employeeNumber ? escapeHtml(emp.employeeNumber) : 'No ID'}</span></div>
-          <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>
+          <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span><span class="emp-card-empid">${emp.employeeNumber ? escapeHtml(emp.employeeNumber) : ''}</span></div>
           <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.position || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-at"></i><span class="emp-username">${escapeHtml(emp.username)}</span></div>
@@ -5785,11 +5789,6 @@ const AttendanceSystem = (function() {
             <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> Today: ${t.text}</span>
           </div>
         </div>
-        ${currentRole === 'admin' ? `
-        <div class="card-overlay-actions emp-card-footer">
-          <button class="card-overlay-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit employee"><i class="fas fa-pen"></i></button>
-          <button class="card-overlay-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete employee"><i class="fas fa-trash"></i></button>
-        </div>` : ''}
       </div>`;
   }
   function _empCardRowKey(emp) {

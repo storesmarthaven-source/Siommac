@@ -562,20 +562,17 @@
   background: var(--siomac-red);
   transform: translateY(-1px);
 }
-/* on light backgrounds (emp-card) — coloured buttons */
-.emp-card-footer .card-overlay-btn.edit {
-  background: rgba(255,255,255,0.92); color: var(--siomac-navy);
+/* emp-card header uses same dark background — same white ghost button style */
+.emp-card-header .card-overlay-btn {
+  background: rgba(255,255,255,0.18); color: white;
 }
-.emp-card-footer .card-overlay-btn.edit:hover {
-  background: var(--siomac-navy); color: #fff;
-  transform: translateY(-1px); box-shadow: 0 3px 8px rgba(27,45,84,0.22);
+.emp-card-header .card-overlay-btn.edit:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-1px);
 }
-.emp-card-footer .card-overlay-btn.delete {
-  background: rgba(255,255,255,0.92); color: var(--danger);
-}
-.emp-card-footer .card-overlay-btn.delete:hover {
-  background: var(--danger); color: #fff;
-  transform: translateY(-1px); box-shadow: 0 3px 8px rgba(198,40,40,0.28);
+.emp-card-header .card-overlay-btn.delete:hover {
+  background: var(--siomac-red);
+  transform: translateY(-1px);
 }
 .ps-card.ps-card--inactive .ps-detail-row i { color: #8b919d; }
 
@@ -2353,7 +2350,6 @@
 
 /* Individual employee card */
 .emp-card {
-  position: relative;
   background: var(--bg-card);
   border-radius: 24px;
   box-shadow: var(--shadow-card);
@@ -2365,11 +2361,11 @@
 }
 .emp-card:hover { transform: translateY(-4px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12); }
 
-/* Card header — colour signals active/inactive, no badge */
+/* Card header */
 .emp-card-header {
   padding: 16px 20px;
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 12px; border-radius: 24px 24px 0 0;
+  display: flex; align-items: center; gap: 12px;
+  border-radius: 24px 24px 0 0;
 }
 .emp-card-header--active {
   background: #1b2d54;
@@ -2395,10 +2391,13 @@
 }
 .emp-card-pos { font-size: 0.72rem; color: rgba(255,255,255,0.75); }
 
-/* Employee ID — now in the body detail rows */
+/* Employee ID pill — right side of the role row */
 .emp-card-empid {
-  font-family: monospace; font-size: 0.82rem; font-weight: 700;
-  color: var(--siomac-navy); letter-spacing: .5px;
+  margin-left: auto; flex-shrink: 0;
+  font-family: monospace; font-size: 0.72rem; font-weight: 700;
+  color: #fff; letter-spacing: .6px;
+  background: var(--siomac-navy); border: 1px solid rgba(27,45,84,0.25);
+  padding: 2px 9px; border-radius: 20px;
 }
 
 /* Card body */
@@ -2416,7 +2415,7 @@
 .emp-username {
   font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--text-muted);
 }
-.emp-today-row { margin-top: 12px; }
+.emp-today-row { margin-top: 12px; display: flex; justify-content: flex-end; }
 .emp-today-badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 13px; border-radius: 40px;
@@ -2426,12 +2425,6 @@
 .emp-today-out { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
 .emp-today-no  { background: rgba(94,111,141,0.1); color: var(--text-muted); }
 
-/* emp-card-footer — positions the shared overlay buttons top-right of the header */
-.emp-card-footer {
-  position: absolute;
-  top: 10px; right: 10px;
-  z-index: 2;
-}
 
 /* Table avatar */
 .emp-table-avatar {
