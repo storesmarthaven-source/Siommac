@@ -632,8 +632,10 @@ const AttendanceSystem = (function() {
           if (_activeSec && _activeSec.id === 's-adm-projects') displayProjectSites(projectSites);
         }
       } else {
-        // Data unchanged but site pins may not have been coloured yet
-        // (map could have finished drawing after the last renderLivePanel call)
+        // Data unchanged — but _selectedSiteId may have just changed (e.g. user
+        // navigated here from project sites), so always re-render the panel and
+        // refresh site pin colours to reflect current selection.
+        renderLivePanel(liveData);
         _refreshSitePopups();
       }
       }
@@ -6809,8 +6811,13 @@ const AttendanceSystem = (function() {
           showSection('s-projectMap');
           _selectLiveSite(String(site.id), site.name || '');
 
-          // Poll until map is ready, then fly and open popup
+          // Poll until map is ready, then fly and open popup.
+          // _flyAttempts waits for Leaflet map object.
+          // _popAttempts waits for _siteLayerMap[site.id] (populated after
+          // listProjectSites resolves inside initializeMap — can take 1-3s on
+          // first visit, so allow up to 100 × 150ms = 15s).
           let _flyAttempts = 0;
+          let _popAttempts = 0;
           const _flyToSite = () => {
             _flyAttempts++;
             if (_flyAttempts > 40) return; // give up after ~6s
@@ -6819,8 +6826,10 @@ const AttendanceSystem = (function() {
             // Map exists — fly immediately
             map.setView([lat, lng], 17, { animate: true });
 
-            // Wait for site layer — may take a moment after first init
+            // Wait for site layer independently — first visit can be slow
             const _openPopup = () => {
+              _popAttempts++;
+              if (_popAttempts > 100) return; // give up after ~15s
               const entry = _siteLayerMap[site.id];
               if (entry && (entry.marker || entry.zone)) {
                 const layer = entry.marker || entry.zone;
@@ -6828,7 +6837,7 @@ const AttendanceSystem = (function() {
                   layer.openPopup();
                   map.panBy([0, -100], { animate: true });
                 }, 400);
-              } else if (_flyAttempts < 40) {
+              } else {
                 setTimeout(_openPopup, 150);
               }
             };
