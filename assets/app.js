@@ -626,6 +626,11 @@ const AttendanceSystem = (function() {
         });
         plotLiveEmployees(liveData);
         renderLivePanel(liveData);
+        // Re-render project site cards if that section is active — active status derived from liveData
+        if (projectSites.length) {
+          const _activeSec = document.querySelector('.app-section.active');
+          if (_activeSec && _activeSec.id === 's-adm-projects') displayProjectSites(projectSites);
+        }
       } else {
         // Data unchanged but site pins may not have been coloured yet
         // (map could have finished drawing after the last renderLivePanel call)
@@ -1290,6 +1295,15 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
     const sec = document.getElementById(id);
     if (sec) sec.classList.add('active');
+    // Invalidate any Leaflet mini-maps in the newly-visible section — they may have
+    // been initialised while the section was hidden (zero dimensions) and need a resize.
+    if (id === 's-adm-projects') {
+      setTimeout(() => {
+        Object.values(_psMiniMaps).forEach(m => {
+          if (m && m !== 'pending') { try { m.invalidateSize(); } catch (_) {} }
+        });
+      }, 80);
+    }
     try { localStorage.setItem('siomac_last_section_' + currentRole, id); } catch(e) {}
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
@@ -2828,6 +2842,20 @@ const AttendanceSystem = (function() {
       if (name) applyCompanyName(name);
       // Cache company contact info for payslip rendering
       _companyInfo = { name: name, address: s.companyAddress || '', phone: s.companyPhone || '', email: s.companyEmail || '', nis: s.companyNIS || '', bir: s.companyBIR || '', logoUrl: logoUrl };
+      // Load statutory rates for payslip display (admin only — falls back to defaults silently)
+      if (currentRole === 'admin' || currentRole === 'manager') {
+        _rawApi('getPayrollConstants', {}).then(cr => {
+          if (cr && cr.success && cr.data) {
+            const d = cr.data;
+            _statutoryRates = {
+              allowanceAnnual: d.PERSONAL_ALLOWANCE_ANNUAL || 90000,
+              nisRate:         Math.round((d.NIS_RATE || 0.06) * 100),
+              payeRateLow:     Math.round((d.PAYE_RATE_LOW || 0.25) * 100),
+              payeRateHigh:    Math.round((d.PAYE_RATE_HIGH || 0.30) * 100),
+            };
+          }
+        }).catch(() => {});
+      }
       // Persist fresh URL so next load is instant
       try {
         const sess = loadSession();
@@ -3070,6 +3098,8 @@ const AttendanceSystem = (function() {
       } else if (event.target.matches('#addProjectBtn, #addProjectBtn *')) {
         showAddProjectModal();
       } else if (event.target.matches('#refreshProjectsBtn, #refreshProjectsBtn *')) {
+        _liveDataHash = ''; // force liveData re-render even if data unchanged
+        loadLiveAttendance();
         loadProjectSites(false, true);
       } else if (event.target.matches('#s-adm-projects .lv-tab-btn')) {
         _psSiteFilter = event.target.dataset.filter || 'all';
@@ -5180,7 +5210,7 @@ const AttendanceSystem = (function() {
             <div class="pr-payslip-meta-row"><span>Rate</span><strong>${rateStr}</strong></div>
             <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${d.hours_worked || d.hoursWorked || 0}h</strong></div>
             <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${d.days_worked || d.daysWorked || '—'}</strong></div>
-            <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD 84,000.00 / yr</strong></div>
+            <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD ${fmt(_statutoryRates.allowanceAnnual)} / yr</strong></div>
             <div class="pr-payslip-meta-row pr-payslip-meta-row--sep"><span>NIS Reg</span><strong>${escapeHtml(_companyInfo.nis || '1234567')}</strong></div>
             <div class="pr-payslip-meta-row"><span>BIR File</span><strong>${escapeHtml(_companyInfo.bir || '100123456')}</strong></div>
           </div>
@@ -5203,7 +5233,7 @@ const AttendanceSystem = (function() {
               <thead><tr><th>Description</th><th>Amount</th></tr></thead>
               <tbody>
                 <tr><td>Health Surcharge</td><td>${(d.health_surcharge || d.healthSurcharge) > 0 ? 'TTD ' + fmt(d.health_surcharge || d.healthSurcharge) : 'N/A'}</td></tr>
-                <tr><td>NIS (6%)</td><td>${(d.nis) > 0 ? 'TTD ' + fmt(d.nis) : 'N/A'}</td></tr>
+                <tr><td>NIS (${_statutoryRates.nisRate}%)</td><td>${(d.nis) > 0 ? 'TTD ' + fmt(d.nis) : 'N/A'}</td></tr>
                 <tr><td>PAYE</td><td>TTD ${fmt(d.paye)}</td></tr>
               </tbody>
             </table>
@@ -6148,7 +6178,7 @@ const AttendanceSystem = (function() {
     return 'fa-building';
   }
 
-  let _deptListView = true; // list view default
+  let _deptListView = false; // card view default
 
   function displayDepartments(departmentList) {
     // Update stat badges
@@ -9329,7 +9359,8 @@ const AttendanceSystem = (function() {
 
   // ─── Admin branding + payroll-rule settings ─────────────────
   let _logoBase64 = '';
-  let _companyInfo = { name: '', address: '', phone: '', email: '', nis: '', bir: '', logoUrl: '' };
+  let _companyInfo    = { name: '', address: '', phone: '', email: '', nis: '', bir: '', logoUrl: '' };
+  let _statutoryRates = { allowanceAnnual: 90000, nisRate: 6, payeRateLow: 25, payeRateHigh: 30 };
   function loadAdminBrandingSettings() {
     if (currentRole !== 'admin') return;
     api('getSettings').then(res => {

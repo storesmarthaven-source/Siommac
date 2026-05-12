@@ -87,9 +87,12 @@
         if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
       })
 
-      // ── attendance (drives check-in count badge) ──────────────────────────────
+      // ── attendance (drives check-in count badge + live map + project sites) ─────
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {
         if (typeof _scheduleHdrBadgeSync === 'function') _scheduleHdrBadgeSync();
+        // Refresh live attendance — loadLiveAttendance will also re-render project site cards
+        // if that section is active and liveData changed (hash mismatch triggers the update)
+        if (typeof loadLiveAttendance === 'function') loadLiveAttendance();
       })
 
       .subscribe((status, err) => {
