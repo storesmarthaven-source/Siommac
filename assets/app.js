@@ -5784,8 +5784,8 @@ const AttendanceSystem = (function() {
         </div>
         ${currentRole === 'admin' ? `
         <div class="emp-card-footer">
-          <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-edit"></i> Edit</button>
-          <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i> Delete</button>
+          <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit employee"><i class="fas fa-pen"></i></button>
+          <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete employee"><i class="fas fa-trash"></i></button>
         </div>` : ''}
       </div>`;
   }

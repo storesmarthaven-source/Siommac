@@ -2330,6 +2330,7 @@
 
 /* Individual employee card */
 .emp-card {
+  position: relative;
   background: var(--bg-card);
   border-radius: 24px;
   box-shadow: var(--shadow-card);
@@ -2405,25 +2406,41 @@
 .emp-today-out { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
 .emp-today-no  { background: rgba(94,111,141,0.1); color: var(--text-muted); }
 
-/* Card footer — pinned to bottom, consistent across all cards */
+/* Card action buttons — icon-only overlay in top-right corner */
 .emp-card-footer {
-  display: flex; gap: 6px; justify-content: flex-end;
-  padding: 12px 20px;
-  border-top: 1px solid var(--border-color);
-  margin-top: auto;
-  flex-shrink: 0;
+  position: absolute;
+  top: 10px; right: 10px;
+  display: flex; gap: 6px;
+  z-index: 2;
 }
 .emp-icon-btn {
-  background: transparent; border: none;
-  padding: 6px 14px; border-radius: 30px;
-  cursor: pointer; font-size: 0.78rem; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 5px;
-  transition: background .2s;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
 }
-.emp-icon-btn.edit  { color: var(--warning); }
-.emp-icon-btn.edit:hover  { background: rgba(237,108,2,0.1); }
-.emp-icon-btn.delete { color: var(--danger); }
-.emp-icon-btn.delete:hover { background: rgba(198,40,40,0.1); }
+.emp-icon-btn.edit {
+  background: rgba(255,255,255,0.92);
+  color: var(--siomac-navy);
+}
+.emp-icon-btn.edit:hover {
+  background: var(--siomac-navy);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(27,45,84,0.22);
+}
+.emp-icon-btn.delete {
+  background: rgba(255,255,255,0.92);
+  color: var(--danger);
+}
+.emp-icon-btn.delete:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(198,40,40,0.28);
+}
 
 /* Table avatar */
 .emp-table-avatar {
