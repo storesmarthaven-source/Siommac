@@ -8323,12 +8323,8 @@ const AttendanceSystem = (function() {
         <td>${_prFmtShort(r.paye)}</td>
         <td><strong>${_prFmtShort(r.netPay)}</strong></td>
         <td class="dt-no-export" style="white-space:nowrap;">
-          <button class="pr-row-btn pr-payslip-btn" data-uid="${escapeHtml(r.userId)}">
-            <i class="fas fa-file-invoice-dollar"></i> Payslip
-          </button>
-          ${_prReportsMode ? '' : `<button class="pr-row-btn pr-edit-btn" data-uid="${escapeHtml(r.userId)}">
-            <i class="fas fa-sliders"></i> Edit
-          </button>`}
+          <button class="pr-row-btn pr-payslip-btn" data-uid="${escapeHtml(r.userId)}" title="View payslip"><i class="fas fa-eye"></i></button>
+          ${_prReportsMode ? '' : `<button class="pr-row-btn pr-edit-btn" data-uid="${escapeHtml(r.userId)}" title="Edit payroll"><i class="fas fa-sliders"></i></button>`}
         </td>
       </tr>`).join('');
     // Init DataTable — CSV/PDF/Print buttons moved into section-header

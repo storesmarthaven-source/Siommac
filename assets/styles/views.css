@@ -104,6 +104,7 @@
 }
 #ratesTable tr:last-child td { border-bottom: none; }
 #ratesTable tr:hover td { background: #F8FAFE; }
+#payrollRunTable tr:hover td { background: #F8FAFE !important; }
 #ratesTable .hr-td-center { text-align: center; }
 
 .hr-emp-name { font-weight: 600; font-size: 0.88rem; }
@@ -2396,7 +2397,7 @@
   margin-left: auto; flex-shrink: 0;
   font-family: monospace; font-size: 0.72rem; font-weight: 700;
   color: #fff; letter-spacing: .6px;
-  background: var(--siomac-navy); border: 1px solid rgba(27,45,84,0.25);
+  background: #63708d; border: 1px solid rgba(99,112,141,0.25);
   padding: 2px 9px; border-radius: 20px;
 }
 
@@ -3674,16 +3675,14 @@
 .pr-row td.pr-actions > * { display: inline-flex; margin-left: 6px; }
 .pr-row td.pr-actions > *:first-child { margin-left: 0; }
 .pr-row-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--siomac-navy);
-  font-size: 0.75rem; font-weight: 600; font-family: inherit;
-  cursor: pointer; transition: all .18s; white-space: nowrap;
-  background: var(--siomac-navy); color: #fff;
+  background: transparent; border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all .2s; font-size: 13px;
 }
-.pr-row-btn i { font-size: 0.7rem; }
-.pr-row-btn:hover { opacity: 0.85; }
-.pr-payslip-btn { background: var(--siomac-navy); border-color: var(--siomac-navy); color: #fff; }
-.pr-edit-btn    { background: var(--siomac-navy); border-color: var(--siomac-navy); color: #fff; }
+.pr-row-btn:hover { background: var(--bg-subtle); color: var(--siomac-red); }
+.pr-payslip-btn:hover { color: var(--siomac-navy); }
+.pr-edit-btn:hover    { color: var(--siomac-red); }
 
 /* Empty state */
 .pr-empty {
