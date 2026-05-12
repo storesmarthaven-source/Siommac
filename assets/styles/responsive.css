@@ -172,6 +172,15 @@
   .ep-form-row { grid-template-columns: 1fr; }
 }
 
+/* Payroll reports drawer — stack on smaller screens */
+@media (max-width: 800px) {
+  .pr-archive-fields { grid-template-columns: 1fr 1fr; }
+  .pr-archive-field--action { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .pr-archive-fields { grid-template-columns: 1fr; }
+}
+
 /* Very small phones (<380px) */
 @media (max-width: 380px) {
   .dashboard-grid-3, .dashboard-grid-4 { grid-template-columns: 1fr; }

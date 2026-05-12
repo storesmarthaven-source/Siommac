@@ -1504,10 +1504,10 @@ const AttendanceSystem = (function() {
       const NOTIF_SECTION = {
         // Admin / Manager
         leave:      () => currentRole === 'admin' ? 's-adm-leaves'      : currentRole === 'manager' ? 's-mgr-leaves'    : null,
-        late:       () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
-        checkin:    () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
-        checkout:   () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
-        absent:     () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-mgr-overview'  : null,
+        late:       () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-adm-attendance'  : null,
+        checkin:    () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-adm-attendance'  : null,
+        checkout:   () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-adm-attendance'  : null,
+        absent:     () => currentRole === 'admin' ? 's-adm-attendance'  : currentRole === 'manager' ? 's-adm-attendance'  : null,
         // Employee
         my_checkin:   () => 's-emp-attendance',
         my_checkout:  () => 's-emp-attendance',
@@ -2826,6 +2826,8 @@ const AttendanceSystem = (function() {
       const name    = s.companyName || '';
       applyCompanyLogo(logoUrl);
       if (name) applyCompanyName(name);
+      // Cache company contact info for payslip rendering
+      _companyInfo = { name: name, address: s.companyAddress || '', phone: s.companyPhone || '', email: s.companyEmail || '', nis: s.companyNIS || '', bir: s.companyBIR || '', logoUrl: logoUrl };
       // Persist fresh URL so next load is instant
       try {
         const sess = loadSession();
@@ -3267,7 +3269,12 @@ const AttendanceSystem = (function() {
       } else if (event.target.closest('.emp-card') && !event.target.closest('.emp-card-footer')) {
         // Click anywhere on card (outside action buttons) → open profile drawer
         const card = event.target.closest('.emp-card');
-        const username = card.querySelector('.btn-edit-employee') && card.querySelector('.btn-edit-employee').dataset.username;
+        const username = card.dataset.id;
+        if (username) openEmpDrawer(username);
+      } else if (event.target.closest('#employeesTableBody tr') && !event.target.closest('.att-action-btn')) {
+        // Click on table row (outside action buttons) → open profile drawer
+        const row = event.target.closest('#employeesTableBody tr');
+        const username = row.dataset.username;
         if (username) openEmpDrawer(username);
       }
       
@@ -5028,50 +5035,207 @@ const AttendanceSystem = (function() {
     });
   }
 
-  function _empOpenPayslip(p) {
+  window._printPayslip = function _printPayslip() {
+    const node = document.querySelector('.cpop-box .pr-payslip');
+    if (!node) return;
+    const ci = _companyInfo;
+
+    const logoHtml = ci.logoUrl
+      ? `<img src="${ci.logoUrl}" alt="Logo" style="height:80px;width:auto;max-width:200px;object-fit:contain;display:block;">`
+      : '';
+
+    const css = `
+      @page { size: A4 landscape; margin: 10mm; }
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin:0; padding:0; font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#1b2d55; background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .pr-payslip { width:257mm; }
+
+      /* ── Hide screen-only elements ── */
+      .no-print, .pr-payslip-header, .pr-payslip-brand { display:none !important; }
+      /* NIS/BIR rows: shown on print */
+      .pr-payslip-meta-row--sep { display:flex !important; border-top:none; border-bottom:1px dotted #dce2ef !important; }
+      .pr-payslip-meta-row--sep + .pr-payslip-meta-row { display:flex !important; }
+
+      /* ── Print header (brand + employee info) ── */
+      .pr-print-header {
+        background:#1b2d55; color:#fff; display:flex; align-items:center;
+        justify-content:space-between; padding:16px 24px; gap:20px;
+        -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      }
+      .pr-print-header-emp  { flex:1; }
+      .pr-print-header-emp-name { font-size:18px; font-weight:700; line-height:1.2; }
+      .pr-print-header-emp-role { font-size:11px; opacity:.7; margin-top:3px; }
+      .pr-print-header-emp-tag  { display:inline-block; margin-top:6px; background:rgba(255,255,255,.15); border-radius:4px; padding:3px 10px; font-size:10px; }
+      .pr-print-header-co { text-align:right; font-size:10px; line-height:1.8; opacity:.88; padding-right:20px; }
+      .pr-print-header-logo { display:flex; align-items:center; }
+      .pr-print-header-logo img { height:72px; width:auto; max-width:180px; object-fit:contain; display:block; }
+
+      /* ── Meta grid ── */
+      .pr-payslip-meta { display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid #dce2ef; }
+      .pr-payslip-meta-col { padding:12px 18px; align-self:start; }
+      .pr-payslip-meta-col:first-child { border-right:1px solid #dce2ef; }
+      .pr-payslip-meta-row { display:flex; justify-content:space-between; align-items:baseline; padding:5px 0; font-size:11px; border-bottom:1px dotted #dce2ef; }
+      .pr-payslip-meta-row:last-child { border-bottom:none; }
+      .pr-payslip-meta-row span { color:#6b7a99; }
+      .pr-payslip-meta-row strong { font-weight:600; color:#1b2d55; }
+
+      /* ── Earnings / Deductions ── */
+      .pr-payslip-tables { display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid #dce2ef; }
+      .pr-payslip-table-col { padding:10px 0 10px; }
+      .pr-payslip-table-col:first-child { border-right:1px solid #dce2ef; }
+      .pr-payslip-section-title { padding:8px 18px 5px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b7a99; border-bottom:1px solid #dce2ef; margin-bottom:0; }
+      .pr-payslip-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+      .pr-payslip-tbl th { padding:5px 18px; text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7a99; background:#f5f7fc; border-bottom:1px solid #dce2ef; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .pr-payslip-tbl td { padding:6px 18px; border-bottom:1px solid rgba(0,0,0,.04); }
+      .pr-payslip-tbl tr:last-child td { border-bottom:none; }
+      .pr-payslip-subtotal { display:flex; justify-content:space-between; padding:7px 18px; font-size:11px; font-weight:700; color:#166534; background:rgba(22,101,52,0.07); border-top:2px solid #dce2ef; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .pr-payslip-subtotal--ded { color:#b91c1c; background:rgba(185,28,28,.07); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      /* ── Net Pay ── */
+      .pr-payslip-net { display:flex; justify-content:space-between; align-items:center; padding:11px 20px; font-size:15px; font-weight:700; background:#1b2d55; color:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      /* ── YTD ── */
+      .pr-payslip-ytd { padding:10px 18px; background:#f8fafe; border-bottom:1px solid #dce2ef; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .pr-payslip-ytd .pr-payslip-section-title { padding:0 0 6px; border-bottom:none; }
+      .pr-payslip-ytd-row { display:flex; gap:0; }
+      .pr-payslip-ytd-item { flex:1; text-align:center; padding:5px 8px; border-right:1px solid #dce2ef; }
+      .pr-payslip-ytd-item:last-child { border-right:none; }
+      .pr-payslip-ytd-item span   { display:block; font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7a99; margin-bottom:2px; }
+      .pr-payslip-ytd-item strong { font-size:11px; font-weight:700; color:#1b2d55; }
+
+      /* ── Footer ── */
+      .pr-payslip-footer { text-align:center; padding:7px 20px; font-size:9px; color:#a0aec0; }
+    `;
+
+    const printHeader = `
+      <div class="pr-print-header">
+        <div class="pr-print-header-emp">
+          <div class="pr-print-header-emp-name">${node.querySelector('.pr-payslip-subtitle')?.textContent || ''}</div>
+          <div class="pr-print-header-emp-role">${node.querySelector('.pr-payslip-period')?.textContent || ''}</div>
+          <div class="pr-print-header-emp-tag">Pay Statement</div>
+        </div>
+        <div class="pr-print-header-co">
+          ${ci.address ? ci.address + '<br>' : ''}
+          ${ci.phone   ? 'Tel: ' + ci.phone + '<br>' : ''}
+          ${ci.email   ? ci.email + '<br>' : ''}
+          ${ci.nis || ci.bir ? `NIS: ${ci.nis||'—'} &nbsp;&bull;&nbsp; BIR: ${ci.bir||'—'}` : ''}
+        </div>
+        <div class="pr-print-header-logo">${logoHtml}</div>
+      </div>`;
+
+    const win = window.open('', '_blank', 'width=1100,height=800');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"><style>${css}</style></head><body>${printHeader}${node.outerHTML}</body></html>`);
+    win.document.close();
+    // Wait for Font Awesome to load before printing so icons render
+    const faLink = win.document.querySelector('link[rel="stylesheet"]');
+    const _doPrint = () => { win.focus(); win.print(); };
+    if (faLink) {
+      let _printed = false;
+      faLink.onload = () => { if (!_printed) { _printed = true; setTimeout(_doPrint, 200); } };
+      faLink.onerror = () => { if (!_printed) { _printed = true; setTimeout(_doPrint, 200); } };
+      setTimeout(() => { if (!_printed) { _printed = true; _doPrint(); } }, 1500);
+    } else {
+      setTimeout(_doPrint, 600);
+    }
+  }
+
+  function _buildPayslipHtml(d) {
+    const fmt  = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
-    const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    Swal.fire({
-      html: `
-        <div class="pr-payslip">
-          <div class="pr-payslip-header">
-            <div class="pr-payslip-logo"><i class="fas fa-building"></i></div>
-            <div>
-              <div class="pr-payslip-title">Payslip</div>
-              <div class="pr-payslip-period">${escapeHtml(p.date_from)} — ${escapeHtml(p.date_to)}</div>
-            </div>
-            <button class="pr-payslip-print-btn no-print" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+    const rateStr = d.pay_basis === 'hourly'
+      ? `TTD ${fmt(d.hourly_rate)} / hr`
+      : `TTD ${fmt(d.monthly_salary)} / month`;
+    return `
+      <div class="pr-payslip">
+        <div class="pr-payslip-header">
+          <div class="pr-payslip-header-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+          <div class="pr-payslip-header-info">
+            <div class="pr-payslip-subtitle">${escapeHtml(d.name || '—')}</div>
+            <div class="pr-payslip-period">${escapeHtml(d.position || '—')} &bull; ${escapeHtml(d.department || '—')}</div>
           </div>
-          <div class="pr-payslip-info">
-            <div class="pr-payslip-info-row"><span>Department</span><strong>${escapeHtml(p.department || '—')}</strong></div>
-            <div class="pr-payslip-info-row"><span>Position</span><strong>${escapeHtml(p.position || '—')}</strong></div>
-            <div class="pr-payslip-info-row"><span>Pay Cycle</span><strong>${cycleLabel[p.pay_cycle] || p.pay_cycle}</strong></div>
-            <div class="pr-payslip-info-row"><span>Pay Period</span><strong>${escapeHtml(p.date_from)} to ${escapeHtml(p.date_to)}</strong></div>
-            <div class="pr-payslip-info-row"><span>Hours Worked</span><strong>${p.hours_worked || 0}h</strong></div>
-            <div class="pr-payslip-info-row"><span>Days Worked</span><strong>${p.days_worked || 0}</strong></div>
+          <button class="pr-payslip-print-btn no-print" onclick="window._printPayslip()"><i class="fas fa-print"></i> Print</button>
+          <button class="pr-payslip-close-btn no-print" onclick="cpop.close()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="pr-payslip-brand">
+          ${(_companyInfo.logoUrl) ? `<img src="${escapeHtml(_companyInfo.logoUrl)}" alt="Logo" class="pr-payslip-brand-logo">` : ''}
+          <div class="pr-payslip-brand-contact">
+            <div class="pr-payslip-brand-name">${escapeHtml(_companyInfo.name || 'My Company')}</div>
+            ${_companyInfo.address ? `<div class="pr-payslip-brand-detail">${escapeHtml(_companyInfo.address)}</div>` : ''}
+            ${_companyInfo.phone   ? `<div class="pr-payslip-brand-detail"><i class="fas fa-phone"></i> ${escapeHtml(_companyInfo.phone)}</div>` : ''}
+            ${_companyInfo.email   ? `<div class="pr-payslip-brand-detail"><i class="fas fa-envelope"></i> ${escapeHtml(_companyInfo.email)}</div>` : ''}
+            <div class="pr-payslip-brand-detail">NIS Reg: ${escapeHtml(_companyInfo.nis || '1234567')}</div>
+            <div class="pr-payslip-brand-detail">BIR File: ${escapeHtml(_companyInfo.bir || '100123456')}</div>
           </div>
-          <div class="pr-payslip-section-title">Earnings</div>
-          <div class="pr-payslip-line pr-payslip-gross">
-            <span>Gross Pay</span><span>TTD ${fmt(p.gross_pay)}</span>
+        </div>
+
+        <div class="pr-payslip-meta">
+          <div class="pr-payslip-meta-col">
+            <div class="pr-payslip-meta-row"><span>Pay Period</span><strong>${escapeHtml(d.date_from)} — ${escapeHtml(d.date_to)}</strong></div>
+            <div class="pr-payslip-meta-row"><span>Pay Cycle</span><strong>${cycleLabel[d.pay_cycle] || d.pay_cycle || '—'}</strong></div>
+            <div class="pr-payslip-meta-row"><span>Pay Date</span><strong>${escapeHtml(d.pay_date || '—')}</strong></div>
+            <div class="pr-payslip-meta-row"><span>Payroll Type</span><strong>Normal</strong></div>
           </div>
-          <div class="pr-payslip-section-title">Deductions</div>
-          <div class="pr-payslip-line"><span>NIS (6%)</span><span>${p.nis > 0 ? 'TTD ' + fmt(p.nis) : 'N/A'}</span></div>
-          <div class="pr-payslip-line"><span>Health Surcharge</span><span>${p.health_surcharge > 0 ? 'TTD ' + fmt(p.health_surcharge) : 'N/A'}</span></div>
-          <div class="pr-payslip-line"><span>PAYE (25%/30%)</span><span>TTD ${fmt(p.paye)}</span></div>
-          <div class="pr-payslip-line pr-payslip-total-ded">
-            <span>Total Deductions</span><span>TTD ${fmt(p.total_deductions)}</span>
+          <div class="pr-payslip-meta-col">
+            <div class="pr-payslip-meta-row"><span>Rate</span><strong>${rateStr}</strong></div>
+            <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${d.hours_worked || d.hoursWorked || 0}h</strong></div>
+            <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${d.days_worked || d.daysWorked || '—'}</strong></div>
+            <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD 84,000.00 / yr</strong></div>
+            <div class="pr-payslip-meta-row pr-payslip-meta-row--sep"><span>NIS Reg</span><strong>${escapeHtml(_companyInfo.nis || '1234567')}</strong></div>
+            <div class="pr-payslip-meta-row"><span>BIR File</span><strong>${escapeHtml(_companyInfo.bir || '100123456')}</strong></div>
           </div>
-          <div class="pr-payslip-net">
-            <span>Net Pay</span><span>TTD ${fmt(p.net_pay)}</span>
+        </div>
+
+        <div class="pr-payslip-tables">
+          <div class="pr-payslip-table-col">
+            <div class="pr-payslip-section-title"><i class="fas fa-plus-circle"></i> Earnings</div>
+            <table class="pr-payslip-tbl">
+              <thead><tr><th>Description</th><th>Rate</th><th>Units</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr><td>${d.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td><td>${d.pay_basis === 'hourly' ? fmt(d.hourly_rate || d.hourlyRate) : '—'}</td><td>${d.hours_worked || d.hoursWorked || '—'}</td><td>TTD ${fmt(d.gross_pay || d.grossPay)}</td></tr>
+              </tbody>
+            </table>
+            <div class="pr-payslip-subtotal"><span>Gross Pay</span><span>TTD ${fmt(d.gross_pay || d.grossPay)}</span></div>
           </div>
-          <div class="pr-payslip-footer">This is a computer-generated payslip — Trinidad & Tobago</div>
-        </div>`,
-      width: '560px',
-      padding: 0,
-      background: 'transparent',
-      showConfirmButton: false,
-      showCloseButton: true,
-      customClass: { popup: 'pr-payslip-popup', closeButton: 'adp-close-btn' }
+          <div class="pr-payslip-table-col">
+            <div class="pr-payslip-section-title"><i class="fas fa-minus-circle"></i> Deductions</div>
+            <table class="pr-payslip-tbl">
+              <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr><td>Health Surcharge</td><td>${(d.health_surcharge || d.healthSurcharge) > 0 ? 'TTD ' + fmt(d.health_surcharge || d.healthSurcharge) : 'N/A'}</td></tr>
+                <tr><td>NIS (6%)</td><td>${(d.nis) > 0 ? 'TTD ' + fmt(d.nis) : 'N/A'}</td></tr>
+                <tr><td>PAYE</td><td>TTD ${fmt(d.paye)}</td></tr>
+              </tbody>
+            </table>
+            <div class="pr-payslip-subtotal pr-payslip-subtotal--ded"><span>Total Deductions</span><span>TTD ${fmt(d.total_deductions || d.totalDeductions)}</span></div>
+          </div>
+        </div>
+
+        <div class="pr-payslip-net">
+          <span>Net Pay</span><span>TTD ${fmt(d.net_pay || d.netPay)}</span>
+        </div>
+
+        <div class="pr-payslip-ytd">
+          <div class="pr-payslip-section-title"><i class="fas fa-calendar-alt"></i> Year to Date</div>
+          <div class="pr-payslip-ytd-row">
+            <div class="pr-payslip-ytd-item"><span>Earnings</span><strong>TTD ${fmt(d.gross_pay || d.grossPay)}</strong></div>
+            <div class="pr-payslip-ytd-item"><span>Gross</span><strong>TTD ${fmt(d.gross_pay || d.grossPay)}</strong></div>
+            <div class="pr-payslip-ytd-item"><span>PAYE</span><strong>TTD ${fmt(d.paye)}</strong></div>
+            <div class="pr-payslip-ytd-item"><span>NIS</span><strong>TTD ${fmt(d.nis)}</strong></div>
+            <div class="pr-payslip-ytd-item"><span>HS</span><strong>TTD ${fmt(d.health_surcharge || d.healthSurcharge)}</strong></div>
+          </div>
+        </div>
+
+        <div class="pr-payslip-footer">This is a computer-generated payslip &mdash; Trinidad &amp; Tobago</div>
+      </div>`;
+  }
+
+  function _empOpenPayslip(p) {
+    cpop.fire({
+      icon: false, title: '',
+      panelClass: 'cpop-box--panel cpop-box--payslip',
+      showConfirmButton: false, allowOutsideClick: true,
+      html: _buildPayslipHtml(p),
     });
   }
 
@@ -5577,10 +5741,11 @@ const AttendanceSystem = (function() {
             <span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> Today: ${t.text}</span>
           </div>
         </div>
+        ${currentRole === 'admin' ? `
         <div class="emp-card-footer">
           <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-edit"></i> Edit</button>
           <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}"><i class="fas fa-trash"></i> Delete</button>
-        </div>
+        </div>` : ''}
       </div>`;
   }
   function _empCardRowKey(emp) {
@@ -5630,7 +5795,7 @@ const AttendanceSystem = (function() {
       const avatarInner = emp.profileImage
         ? `<img src="${escapeHtml(emp.profileImage)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
         : _empInitials(emp.fullName);
-      return `<tr>
+      return `<tr data-username="${escapeHtml(emp.username)}" style="cursor:pointer;">
         <td style="font-family:monospace;font-size:12px;font-weight:600;color:var(--siomac-navy);white-space:nowrap">${escapeHtml(emp.employeeNumber || '—')}</td>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
@@ -5649,8 +5814,10 @@ const AttendanceSystem = (function() {
         <td><span class="emp-status-badge ${isActive ? 'emp-active' : 'emp-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
         <td><span class="emp-today-badge ${t.cls}"><i class="fas ${t.icon}"></i> ${t.text}</span></td>
         <td style="white-space:nowrap;">
+          ${currentRole === 'admin' ? `
           <button class="att-action-btn btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit"><i class="fas fa-pen"></i></button>
           <button class="att-action-btn btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete"><i class="fas fa-trash"></i></button>
+          ` : ''}
         </td>
       </tr>`;
     }).join('') || `<tr><td colspan="8" class="att-empty">No employees match your filters.</td></tr>`;
@@ -6737,9 +6904,18 @@ const AttendanceSystem = (function() {
       const MAX_AVATARS = 5;
       const shown = assigned.slice(0, MAX_AVATARS);
       const overflow = assigned.length - shown.length;
-      const checkedInBadge = checkedInCount > 0
-        ? `<span class="ps-checkedin-badge"><i class="fas fa-circle-check"></i> ${checkedInCount} on site</span>`
-        : '';
+      // On-site badge: shows "X / Y on site" (checked-in out of total assigned)
+      const presenceBadge = checkedInCount > 0
+        ? `<span class="ps-presence-badge">
+            <span class="ps-live-dot"></span>
+            <span class="ps-presence-badge__count">${checkedInCount}<span class="ps-presence-badge__total"> / ${assigned.length}</span></span>
+            <span class="ps-presence-badge__label">On Site</span>
+           </span>`
+        : `<span class="ps-presence-badge ps-presence-badge--empty">
+            <span class="ps-live-dot"></span>
+            <span class="ps-presence-badge__count">0<span class="ps-presence-badge__total"> / ${assigned.length}</span></span>
+            <span class="ps-presence-badge__label">On Site</span>
+           </span>`;
       const avatarsHtml = assigned.length ? `
         <div class="ps-assigned-row">
           <span class="ps-assigned-lbl"><i class="fas fa-users"></i> ${assigned.length} Assigned</span>
@@ -6750,15 +6926,17 @@ const AttendanceSystem = (function() {
             ).join('')}
             ${overflow > 0 ? `<div class="ps-emp-avatar ps-emp-avatar--more">+${overflow}</div>` : ''}
           </div>
-          ${checkedInBadge}
+          ${presenceBadge}
         </div>` : `<div class="ps-assigned-row ps-assigned-empty"><i class="fas fa-user-plus"></i> No Employees Assigned</div>`;
 
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}${selected ? ' ps-card--selected' : ''}" data-id="${site.id}" style="cursor:pointer;">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
           <div class="ps-card-actions">
+            ${currentRole === 'admin' ? `
             <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
             <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
+            ` : ''}
           </div>
         </div>
         <div class="ps-card-body">
@@ -6861,9 +7039,16 @@ const AttendanceSystem = (function() {
         }
       });
 
-      // Atomic swap -- one DOM write, no incremental insertBefore thrash
-      container.innerHTML = '';
-      container.appendChild(frag);
+      // Smart swap: if every card in the fragment matches the existing DOM key-for-key,
+      // skip the innerHTML wipe so CSS entrance animations don't fire a second time.
+      const existingCards = Array.from(container.querySelectorAll('[data-id]'));
+      const newCards      = Array.from(frag.querySelectorAll('[data-id]'));
+      const sameCount     = existingCards.length === newCards.length;
+      const sameKeys      = sameCount && newCards.every((nc, i) => nc.dataset.rowKey === existingCards[i].dataset.rowKey);
+      if (!sameKeys) {
+        container.innerHTML = '';
+        container.appendChild(frag);
+      }
     }
 
     _diffContainer(document.getElementById('psActiveContainer'),   activePart);
@@ -7042,14 +7227,6 @@ const AttendanceSystem = (function() {
         <td class="adp-log-time"><i class="fas fa-sign-out-alt adp-to"></i>${r.checkOut ? fmtLocalTime(r.checkOut) : '—'}</td>
         <td class="adp-log-hours">${r.hours > 0 ? r.hours + 'h' : '—'}</td>
         <td>${statusBadge(r.status)}</td>
-        <td class="adp-log-action">
-          ${(r.checkInPhotoUrl || r.checkOutPhotoUrl) ? `
-          <button class="att-action-btn btn-view-att"
-            data-in="${escapeHtml(r.checkInPhotoUrl || '')}"
-            data-out="${escapeHtml(r.checkOutPhotoUrl || '')}"
-            data-name="${escapeHtml(empData.name)}"
-            title="View selfie"><i class="fas fa-camera"></i></button>` : ''}
-        </td>
       </tr>`).join('');
 
     const initials = empData.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -7067,9 +7244,6 @@ const AttendanceSystem = (function() {
               <span class="adp-dept"><i class="fas fa-building"></i> ${escapeHtml(empData.department || '—')}</span>
               ${periodLabel ? `<span class="adp-period"><i class="fas fa-calendar-alt"></i> ${periodLabel}</span>` : ''}
             </div>
-          </div>
-          <div class="adp-rate-pill" style="background:${rateCol}20;color:${rateCol};">
-            <i class="fas fa-chart-line"></i> ${pct}%
           </div>
         </div>
         <div class="adp-stats">
@@ -7102,30 +7276,20 @@ const AttendanceSystem = (function() {
           ${empRows.length ? `
           <table class="adp-log-table">
             <thead><tr>
-              <th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th></th>
+              <th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th>
             </tr></thead>
             <tbody>${logRows}</tbody>
           </table>` : `<div class="att-empty">No records in this period.</div>`}
         </div>
       </div>`;
 
-    Swal.fire({
+    cpop.fire({
+      icon: false,
+      title: '',
       html: adpHtml,
-      width: '980px',
-      padding: 0,
-      background: 'transparent',
+      panelClass: 'cpop-box--panel',
       showConfirmButton: false,
-      showCloseButton: true,
-      customClass: { popup: 'adp-popup', closeButton: 'adp-close-btn', htmlContainer: 'adp-swal-body' },
-      didOpen: popup => {
-        // Remove Swal's icon element entirely
-        const icon = popup.querySelector('.swal2-icon');
-        if (icon) icon.remove();
-        // Move the .adp node directly into the popup root so Swal's
-        // html-container padding/margin cannot constrain it
-        const adpEl = popup.querySelector('.adp');
-        if (adpEl) popup.appendChild(adpEl);
-      }
+      allowOutsideClick: true,
     });
   }
 
@@ -8124,54 +8288,31 @@ const AttendanceSystem = (function() {
     const row = _prRunData.rows.find(r => r.userId === userId);
     if (!row) return;
     const cycleLabel = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
-    const fmt = n => Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const from = _prRunData.dateFrom, to = _prRunData.dateTo;
-    const rateLabel = row.payBasis === 'hourly'
-      ? `TTD ${fmt(row.hourlyRate)} / hr`
-      : `TTD ${fmt(row.monthlySalary)} / month`;
-
-    Swal.fire({
-      html: `
-        <div class="pr-payslip">
-          <div class="pr-payslip-header">
-            <div class="pr-payslip-logo"><i class="fas fa-building"></i></div>
-            <div>
-              <div class="pr-payslip-title">Payslip</div>
-              <div class="pr-payslip-period">${escapeHtml(from)} — ${escapeHtml(to)}</div>
-            </div>
-            <button class="pr-payslip-print-btn no-print" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-          </div>
-          <div class="pr-payslip-info">
-            <div class="pr-payslip-info-row"><span>Employee</span><strong>${escapeHtml(row.name)}</strong></div>
-            <div class="pr-payslip-info-row"><span>Department</span><strong>${escapeHtml(row.department)}</strong></div>
-            <div class="pr-payslip-info-row"><span>Position</span><strong>${escapeHtml(row.position)}</strong></div>
-            <div class="pr-payslip-info-row"><span>Pay Cycle</span><strong>${cycleLabel[row.payCycle] || row.payCycle}</strong></div>
-            <div class="pr-payslip-info-row"><span>Pay Period</span><strong>${escapeHtml(from)} to ${escapeHtml(to)}</strong></div>
-            <div class="pr-payslip-info-row"><span>Hours Worked</span><strong>${row.hoursWorked}h${row.overridden ? ' (overridden)' : ''}</strong></div>
-            <div class="pr-payslip-info-row"><span>Rate</span><strong>${rateLabel}</strong></div>
-          </div>
-          <div class="pr-payslip-section-title">Earnings</div>
-          <div class="pr-payslip-line pr-payslip-gross">
-            <span>Gross Pay</span><span>TTD ${fmt(row.grossPay)}</span>
-          </div>
-          <div class="pr-payslip-section-title">Deductions</div>
-          <div class="pr-payslip-line"><span>NIS (6%)</span><span>${row.nisApplicable ? 'TTD ' + fmt(row.nis) : 'N/A'}</span></div>
-          <div class="pr-payslip-line"><span>Health Surcharge</span><span>${row.hsApplicable ? 'TTD ' + fmt(row.healthSurcharge) : 'N/A'}</span></div>
-          <div class="pr-payslip-line"><span>PAYE (25%/30%)</span><span>TTD ${fmt(row.paye)}</span></div>
-          <div class="pr-payslip-line pr-payslip-total-ded">
-            <span>Total Deductions</span><span>TTD ${fmt(row.totalDeductions)}</span>
-          </div>
-          <div class="pr-payslip-net">
-            <span>Net Pay</span><span>TTD ${fmt(row.netPay)}</span>
-          </div>
-          <div class="pr-payslip-footer">This is a computer-generated payslip — Trinidad & Tobago</div>
-        </div>`,
-      width: '560px',
-      padding: 0,
-      background: 'transparent',
-      showConfirmButton: false,
-      showCloseButton: true,
-      customClass: { popup: 'pr-payslip-popup', closeButton: 'adp-close-btn' }
+    cpop.fire({
+      icon: false, title: '',
+      panelClass: 'cpop-box--panel cpop-box--payslip',
+      showConfirmButton: false, allowOutsideClick: true,
+      html: _buildPayslipHtml({
+        name:             row.name,
+        department:       row.department,
+        position:         row.position,
+        pay_basis:        row.payBasis,
+        hourly_rate:      row.hourlyRate,
+        monthly_salary:   row.monthlySalary,
+        pay_cycle:        row.payCycle,
+        date_from:        from,
+        date_to:          to,
+        pay_date:         to,
+        hours_worked:     row.hoursWorked + (row.overridden ? ' (overridden)' : ''),
+        days_worked:      row.daysWorked || '—',
+        gross_pay:        row.grossPay,
+        nis:              row.nisApplicable ? row.nis : 0,
+        health_surcharge: row.hsApplicable  ? row.healthSurcharge : 0,
+        paye:             row.paye,
+        total_deductions: row.totalDeductions,
+        net_pay:          row.netPay,
+      }),
     });
   }
 
@@ -9188,6 +9329,7 @@ const AttendanceSystem = (function() {
 
   // ─── Admin branding + payroll-rule settings ─────────────────
   let _logoBase64 = '';
+  let _companyInfo = { name: '', address: '', phone: '', email: '', nis: '', bir: '', logoUrl: '' };
   function loadAdminBrandingSettings() {
     if (currentRole !== 'admin') return;
     api('getSettings').then(res => {
@@ -9196,6 +9338,7 @@ const AttendanceSystem = (function() {
       document.getElementById('setCurrency').value     = s.currency           || 'TT';
       document.getElementById('setLatePenalty').value  = s.latePenaltyPerDay  || '0';
       document.getElementById('setLeaveFine').value    = s.leaveFinePerDay    || '0';
+      _companyInfo = { name: s.companyName || '', address: s.companyAddress || '', phone: s.companyPhone || '', email: s.companyEmail || '', nis: s.companyNIS || '', bir: s.companyBIR || '', logoUrl: s.companyLogoUrl || '' };
       // Late threshold — stored as "HH:MM" (24h), <input type="time"> expects "HH:MM"
       const ltEl = document.getElementById('setLateThreshold');
       if (ltEl) ltEl.value = s.lateThresholdHHMM || '09:00';
@@ -9209,6 +9352,16 @@ const AttendanceSystem = (function() {
         if (wsEl) wsEl.value = wh.start || '08:00';
         if (weEl) weEl.value = wh.end   || '17:00';
       } catch (_) {}
+      const addrEl = document.getElementById('setCompanyAddress');
+      const phoneEl = document.getElementById('setCompanyPhone');
+      const emailEl = document.getElementById('setCompanyEmail');
+      if (addrEl) addrEl.value = s.companyAddress || '';
+      if (phoneEl) phoneEl.value = s.companyPhone  || '';
+      if (emailEl) emailEl.value = s.companyEmail  || '';
+      const nisEl = document.getElementById('setCompanyNIS');
+      const birEl = document.getElementById('setCompanyBIR');
+      if (nisEl) nisEl.value = s.companyNIS || '';
+      if (birEl) birEl.value = s.companyBIR || '';
       const url = s.companyLogoUrl || '';
       setLogoPreview(url);
     });
@@ -9273,6 +9426,11 @@ const AttendanceSystem = (function() {
     const lateTh    = lateThEl ? (lateThEl.value || '09:00') : '09:00';
     const maxDistEl = document.getElementById('setMaxDistance');
     const maxDist   = maxDistEl ? String(Math.max(0, Number(maxDistEl.value) || 200)) : '200';
+    const addr      = (document.getElementById('setCompanyAddress')?.value || '').trim();
+    const phone     = (document.getElementById('setCompanyPhone')?.value   || '').trim();
+    const email     = (document.getElementById('setCompanyEmail')?.value   || '').trim();
+    const nis       = (document.getElementById('setCompanyNIS')?.value     || '').trim();
+    const bir       = (document.getElementById('setCompanyBIR')?.value     || '').trim();
     const btn = document.getElementById('savePayrollSettingsBtn');
     const orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
@@ -9281,14 +9439,19 @@ const AttendanceSystem = (function() {
       api('updateSetting', { key: 'latePenaltyPerDay',  value: late,    actorId: currentUserId, actorUsername: currentUser }),
       api('updateSetting', { key: 'leaveFinePerDay',    value: leaveF,  actorId: currentUserId, actorUsername: currentUser }),
       api('updateSetting', { key: 'lateThresholdHHMM',  value: lateTh,  actorId: currentUserId, actorUsername: currentUser }),
-      api('updateSetting', { key: 'maxDistanceM',        value: maxDist, actorId: currentUserId, actorUsername: currentUser })
+      api('updateSetting', { key: 'maxDistanceM',        value: maxDist, actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'companyAddress',      value: addr,    actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'companyPhone',        value: phone,   actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'companyEmail',        value: email,   actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'companyNIS',          value: nis,     actorId: currentUserId, actorUsername: currentUser }),
+      api('updateSetting', { key: 'companyBIR',          value: bir,     actorId: currentUserId, actorUsername: currentUser }),
     ]).then(rs => {
       btn.disabled = false; btn.innerHTML = orig;
       const failed = rs.find(r => !r.success);
       if (failed) { showPopup('error', 'Save Failed', failed.message || 'Could not save'); return; }
       _payCurrency = 'TT';
       applyCompanyName(name);
-      updateStoredSession({ companyName: name, currency: 'TT', latePenaltyPerDay: late, leaveFinePerDay: leaveF, lateThresholdHHMM: lateTh, maxDistanceM: maxDist });
+      updateStoredSession({ companyName: name, currency: 'TT', latePenaltyPerDay: late, leaveFinePerDay: leaveF, lateThresholdHHMM: lateTh, maxDistanceM: maxDist, companyAddress: addr, companyPhone: phone, companyEmail: email });
       showPopup('success', 'Settings Saved', 'Company settings updated successfully.');
     }).catch(err => { btn.disabled = false; btn.innerHTML = orig; showPopup('error', 'Network Error', err.message || 'Could not connect'); });
   }

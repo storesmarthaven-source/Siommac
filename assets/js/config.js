@@ -8,11 +8,11 @@ const SECTION_DEFS = {
     { id: 's-emp-payroll',    label: 'My Payslips',   icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips' }
   ],
   manager: [
-    { id: 's-mgr-overview',  label: 'Overview',        icon: 'fa-chart-pie',          sub: "A snapshot of your department's attendance today" },
-    { id: 's-mgr-employees', label: 'My Team',         icon: 'fa-users',              sub: 'Who is in, late, or yet to clock in' },
-    { id: 's-projectMap',    label: 'Live Map',        icon: 'fa-map-marked-alt',     sub: 'See where your team is right now' },
-    { id: 's-mgr-leaves',    label: 'Leave Requests',  icon: 'fa-umbrella-beach',       sub: 'Pending approvals waiting on you' },
-    { id: 's-payroll',       label: 'Payroll',         icon: 'fa-file-invoice-dollar',sub: 'Hours worked, rates applied and export-ready reports' }
+    { id: 's-adm-dashboard',  label: 'Dashboard',     icon: 'fa-tachometer-alt',     sub: "What's happening across the company right now" },
+    { id: 's-adm-employees',  label: 'Employees',     icon: 'fa-users',              sub: 'View the workforce' },
+    { id: 's-adm-projects',   label: 'Project Sites', icon: 'fa-map-marker-alt',     sub: 'Field locations and site details' },
+    { id: 's-projectMap',     label: 'Live Map',      icon: 'fa-map-marked-alt',     sub: 'Live positions of everyone currently clocked in' },
+    { id: 's-adm-attendance', label: 'Attendance',    icon: 'fa-calendar-check',     sub: 'Full daily log — filter by month, dept or status' },
   ],
   admin: [
     { id: 's-adm-dashboard',   label: 'Dashboard',     icon: 'fa-tachometer-alt',     sub: "What's happening across the company right now" },

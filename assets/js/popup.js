@@ -140,16 +140,31 @@ const cpop = (function () {
     _freezeBsModals();
     _installMdCapture();
 
+    const box = modal.querySelector('.cpop-box');
+    // Panel mode: wide, no padding, left-aligned — used for detail dialogs
+    if (opts.panelClass) {
+      box.className = 'cpop-box ' + opts.panelClass;
+    } else {
+      box.className = 'cpop-box';
+    }
+
     if (opts.loading) {
       iconEl.className = 'cpop-icon';
       iconEl.innerHTML = '<div class="cpop-loading"></div>';
+      iconEl.style.display = '';
+    } else if (opts.icon === false || opts.icon === null) {
+      iconEl.className = 'cpop-icon';
+      iconEl.innerHTML = '';
+      iconEl.style.display = 'none';
     } else {
       const icon = opts.icon || 'info';
       iconEl.className = 'cpop-icon cpop-icon-' + icon;
       iconEl.innerHTML = svg(icon);
+      iconEl.style.display = '';
     }
 
     titleEl.textContent = opts.title || '';
+    titleEl.style.display = opts.title ? '' : 'none';
     if (opts.html) textEl.innerHTML = opts.html;
     else textEl.textContent = opts.text || '';
 

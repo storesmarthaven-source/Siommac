@@ -937,7 +937,7 @@ async function getDeptEmployees(args, ctx) {
 }
 
 async function getAdminStats(args, ctx) {
-  await requireRole(ctx, ['admin']);
+  await requireRole(ctx, ['admin', 'manager']);
   const todayStr = today();
   const [{ data: users }, { data: att }, { data: leaves }] = await Promise.all([
     sb.from('app_users').select('id').eq('status', 'active').neq('role', 'admin'),
@@ -989,7 +989,7 @@ async function getRecentAttendance(args, ctx) {
 }
 
 async function listAttendance(args, ctx) {
-  await requireRole(ctx, ['admin']);
+  await requireRole(ctx, ['admin', 'manager']);
   // month (0-11) + year filter — if not provided, default to today's month
   const now = new Date();
   const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
@@ -1210,7 +1210,7 @@ async function getLiveAttendance(args, ctx) {
 }
 
 async function getDashboardCharts(args, ctx) {
-  await requireRole(ctx, ['admin']);
+  await requireRole(ctx, ['admin', 'manager']);
   const todayStr = today();
   const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   // Fetch this month's leave requests to count leave-type breakdown
@@ -1791,7 +1791,7 @@ const routes = {
   logout: async (a, ctx) => { const u = await requireUser(ctx); await log_(u, 'logout', 'user', u.id, ''); return { success: true }; },
   updateColorScheme: (a, ctx) => updatePref(a, ctx, 'color_scheme', 'scheme'),
   updateLayoutMode: (a, ctx) => updatePref(a, ctx, 'layout_mode', 'mode'),
-  listEmployees: async (a, ctx) => { await requireRole(ctx, ['admin']); return listEmployees(); },
+  listEmployees: async (a, ctx) => { await requireRole(ctx, ['admin', 'manager']); return listEmployees(); },
   addEmployee,
   updateEmployee,
   deleteEmployee,
