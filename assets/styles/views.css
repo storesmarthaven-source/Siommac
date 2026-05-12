@@ -4538,3 +4538,13 @@
   .emp-ps-stat-divider { display: none; }
   .emp-ps-stat-val { font-size: 1.1rem; }
 }
+
+/* ── Refresh button spin animation ───────────────────────────────────────── */
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+.btn-spinning .fa-sync-alt,
+.btn-spinning .fa-sync {
+  display: inline-block;
+  animation: btn-spin 0.7s linear infinite;
+}

@@ -1701,7 +1701,7 @@ const AttendanceSystem = (function() {
 
       // Refresh button
       const refreshBtn = document.getElementById('notifRefreshBtn');
-      if (refreshBtn) refreshBtn.addEventListener('click', _fetch);
+      if (refreshBtn) refreshBtn.addEventListener('click', () => { _spinBtn(refreshBtn); _fetch(); });
 
       // Mark as read + navigate on item click
       document.addEventListener('click', e => {
@@ -2214,7 +2214,7 @@ const AttendanceSystem = (function() {
         _renderList(); _updateMsgBadge();
       });
 
-      document.getElementById('msgRefreshBtn').addEventListener('click', _fetch);
+      document.getElementById('msgRefreshBtn').addEventListener('click', () => { _spinBtn('msgRefreshBtn'); _fetch(); });
 
       // Send reply (both sides)
       document.getElementById('msgReplySendBtn').addEventListener('click', () => {
@@ -2712,7 +2712,7 @@ const AttendanceSystem = (function() {
         }).catch(() => {});
       });
 
-      document.getElementById('ticketRefreshBtn').addEventListener('click', _fetch);
+      document.getElementById('ticketRefreshBtn').addEventListener('click', () => { _spinBtn('ticketRefreshBtn'); _fetch(); });
       document.getElementById('ticketClearClosedEmpBtn').addEventListener('click', () => document.getElementById('ticketClearClosedBtn').click());
 
       // Clear closed/resolved/deleted tickets
@@ -3010,7 +3010,7 @@ const AttendanceSystem = (function() {
       } else if (event.target.matches('#viewHistoryBtn, #viewHistoryBtn *')) {
         viewHistory();
       } else if (event.target.matches('#refreshHistoryBtn, #refreshHistoryBtn *')) {
-        loadHistoryInline();
+        _spinBtn('refreshHistoryBtn'); loadHistoryInline();
       } else if (event.target.matches('#requestLeaveBtn, #requestLeaveBtn *')) {
         openLeaveRequestModal();
       } else if (event.target.matches('#markAttendanceBtn, #markAttendanceBtn *')) {
@@ -3032,12 +3032,20 @@ const AttendanceSystem = (function() {
     // Leave request modal
     document.getElementById('submitLeaveBtn').addEventListener('click', submitLeaveRequest);
     
+    // Spin any refresh button for ~1s on click
+    function _spinBtn(idOrEl) {
+      const el = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+      if (!el) return;
+      el.classList.add('btn-spinning');
+      setTimeout(() => el.classList.remove('btn-spinning'), 1000);
+    }
+
     // Admin buttons using event delegation
     document.addEventListener('click', function(event) {
       if (event.target.matches('#addEmployeeBtn, #addEmployeeBtn *')) {
         showAddEmployeeModal();
       } else if (event.target.matches('#refreshEmployeesBtn, #refreshEmployeesBtn *')) {
-        loadEmployeeList();
+        _spinBtn('refreshEmployeesBtn'); loadEmployeeList();
       // Employee modal close/cancel/save
       } else if (event.target.matches('#closeAddEmpModalBtn, #closeAddEmpModalBtn *')) {
         closeAddEmpModal();
@@ -3092,14 +3100,15 @@ const AttendanceSystem = (function() {
       } else if (event.target.matches('#saveDepartmentBtn, #saveDepartmentBtn *')) {
         addDepartment();
       } else if (event.target.matches('#refreshDepartmentsBtn, #refreshDepartmentsBtn *')) {
-        loadDepartments();
+        _spinBtn('refreshDepartmentsBtn'); loadDepartments();
       } else if (event.target.matches('#refreshAttendanceBtn, #refreshAttendanceBtn *')) {
-        loadAttendanceData();
+        _spinBtn('refreshAttendanceBtn'); loadAttendanceData();
       } else if (event.target.matches('#refreshLeavesBtn, #refreshLeavesBtn *')) {
-        loadLeaveApplications();
+        _spinBtn('refreshLeavesBtn'); loadLeaveApplications();
       } else if (event.target.matches('#addProjectBtn, #addProjectBtn *')) {
         showAddProjectModal();
       } else if (event.target.matches('#refreshProjectsBtn, #refreshProjectsBtn *')) {
+        _spinBtn('refreshProjectsBtn');
         _liveDataHash = ''; // force liveData re-render even if data unchanged
         loadLiveAttendance();
         loadProjectSites(false, true);
@@ -3236,9 +3245,9 @@ const AttendanceSystem = (function() {
     // Manager buttons using event delegation
     document.addEventListener('click', function(event) {
       if (event.target.matches('#refreshDeptEmployeesBtn, #refreshDeptEmployeesBtn *')) {
-        loadDepartmentEmployees();
+        _spinBtn('refreshDeptEmployeesBtn'); loadDepartmentEmployees();
       } else if (event.target.matches('#refreshManagerLeavesBtn, #refreshManagerLeavesBtn *')) {
-        loadManagerLeaveApplications();
+        _spinBtn('refreshManagerLeavesBtn'); loadManagerLeaveApplications();
       }
     });
     
@@ -3372,7 +3381,7 @@ const AttendanceSystem = (function() {
       if (tabBtn) showSection(tabBtn.dataset.section);
 
       // Live map: refresh button
-      if (event.target.closest('#refreshLiveMapBtn')) loadLiveAttendance();
+      if (event.target.closest('#refreshLiveMapBtn')) { _spinBtn('refreshLiveMapBtn'); loadLiveAttendance(); }
 
       // Live map: site filter dropdown handled via change event (see below)
 
