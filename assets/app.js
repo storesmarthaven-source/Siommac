@@ -3337,7 +3337,7 @@ const AttendanceSystem = (function() {
         deleteProjectSite(projectId);
       } else if (event.target.closest('.ps-card') && !event.target.closest('.ps-mini-map')) {
         const card = event.target.closest('.ps-card');
-        if (card && !event.target.closest('.ps-card-actions')) {
+        if (card && !event.target.closest('.card-overlay-actions')) {
           const siteId = String(card.dataset.id);
           const site   = projectSites.find(s => String(s.id) === siteId);
           if (site) {
@@ -5682,13 +5682,16 @@ const AttendanceSystem = (function() {
           else document.getElementById('employeesTableBody').innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
           return;
         }
+        const _firstLoad = !_isLoaded('s-adm-employees');
         _markLoaded('s-adm-employees');
         _empAllList = res.data || [];
         // Bulk-seed the global photo cache so every part of the app can use these URLs
         _empAllList.forEach(e => { if (e.username && e.profileImage) _patchPhotoCache(e.username, e.profileImage); });
         _renderEmpStats();
         const _empPhotoUrls = _empAllList.map(e => e.profileImage).filter(Boolean);
-        _preloadThenRender(_empPhotoUrls, _renderEmployees);
+        // On repeat visits photos are already in browser cache — render immediately to avoid blank flash
+        if (_firstLoad) _preloadThenRender(_empPhotoUrls, _renderEmployees);
+        else _renderEmployees();
       },
       onError: err => {
         const msg = `Network error: ${escapeHtml(err.message || 'Could not connect')}`;
@@ -5769,9 +5772,9 @@ const AttendanceSystem = (function() {
             <div class="emp-card-name">${escapeHtml(emp.fullName)}</div>
             <div class="emp-card-pos">${escapeHtml(emp.position || '—')} &middot; ${escapeHtml(emp.department || '—')}</div>
           </div>
-          <span class="emp-card-empid">${emp.employeeNumber ? escapeHtml(emp.employeeNumber) : 'No ID'}</span>
         </div>
         <div class="emp-card-body">
+          <div class="emp-detail-row"><i class="fas fa-id-card"></i><span class="emp-card-empid">${emp.employeeNumber ? escapeHtml(emp.employeeNumber) : 'No ID'}</span></div>
           <div class="emp-detail-row"><i class="fas fa-briefcase"></i><span>${roleCap}</span></div>
           <div class="emp-detail-row"><i class="fas fa-sitemap"></i><span>${escapeHtml(emp.department || '—')}</span></div>
           <div class="emp-detail-row"><i class="fas fa-id-badge"></i><span>${escapeHtml(emp.position || '—')}</span></div>
@@ -5783,9 +5786,9 @@ const AttendanceSystem = (function() {
           </div>
         </div>
         ${currentRole === 'admin' ? `
-        <div class="emp-card-footer">
-          <button class="emp-icon-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit employee"><i class="fas fa-pen"></i></button>
-          <button class="emp-icon-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete employee"><i class="fas fa-trash"></i></button>
+        <div class="card-overlay-actions emp-card-footer">
+          <button class="card-overlay-btn edit btn-edit-employee" data-username="${escapeHtml(emp.username)}" title="Edit employee"><i class="fas fa-pen"></i></button>
+          <button class="card-overlay-btn delete btn-delete-employee" data-username="${escapeHtml(emp.username)}" title="Delete employee"><i class="fas fa-trash"></i></button>
         </div>` : ''}
       </div>`;
   }
@@ -5820,8 +5823,13 @@ const AttendanceSystem = (function() {
       if (el) el.dataset.rowKey = key;
       if (el) _empFrag.appendChild(el);
     });
-    grid.innerHTML = '';
-    grid.appendChild(_empFrag);
+
+    // Skip wipe+append if every card matches key-for-key — avoids blank flash on repeat visits
+    const _existingCards = Array.from(grid.querySelectorAll('[data-id]'));
+    const _newCards      = Array.from(_empFrag.querySelectorAll('[data-id]'));
+    const _sameKeys      = _existingCards.length === _newCards.length &&
+                           _newCards.every((nc, i) => nc.dataset.rowKey === _existingCards[i].dataset.rowKey);
+    if (!_sameKeys) { grid.innerHTML = ''; grid.appendChild(_empFrag); }
   }
 
   function _renderEmpTable(list) {
@@ -6229,6 +6237,10 @@ const AttendanceSystem = (function() {
                 <div class="dept-card-name">${escapeHtml(dept.name)}</div>
                 <div class="dept-card-id-tag">ID #${dept.id}</div>
               </div>
+              <div class="card-overlay-actions">
+                <button class="card-overlay-btn edit btn-edit-department" data-id="${dept.id}" title="Edit department"><i class="fas fa-pen"></i></button>
+                <button class="card-overlay-btn delete btn-delete-department" data-id="${dept.id}" title="Delete department"><i class="fas fa-trash"></i></button>
+              </div>
             </div>
             <div class="dept-card-body">
               ${dept.description ? `<div class="dept-info-row"><i class="fas fa-align-left"></i><span>${escapeHtml(dept.description)}</span></div>` : ''}
@@ -6236,10 +6248,6 @@ const AttendanceSystem = (function() {
               <div class="dept-stats-badges">
                 <span class="dept-badge blue"><i class="fas fa-users"></i> ${dept.employeeCount || 0} Employees</span>
               </div>
-            </div>
-            <div class="dept-card-actions">
-              <button class="btn btn-outline-primary btn-sm btn-edit-department" data-id="${dept.id}"><i class="fas fa-pen"></i> Edit</button>
-              <button class="btn btn-outline-danger btn-sm btn-delete-department" data-id="${dept.id}"><i class="fas fa-trash"></i> Delete</button>
             </div>
           </div>`;
     }
@@ -6980,12 +6988,11 @@ const AttendanceSystem = (function() {
       return `<div class="ps-card${active ? '' : ' ps-card--inactive'}${selected ? ' ps-card--selected' : ''}" data-id="${site.id}" style="cursor:pointer;">
         <div class="ps-card-header">
           <h3><i class="fas fa-hard-hat"></i> ${escapeHtml(site.name)}</h3>
-          <div class="ps-card-actions">
-            ${currentRole === 'admin' ? `
-            <button class="ps-card-btn btn-edit-project" data-id="${site.id}" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="ps-card-btn btn-delete-project" data-id="${site.id}" title="Delete"><i class="fas fa-trash"></i></button>
-            ` : ''}
-          </div>
+          ${currentRole === 'admin' ? `
+          <div class="card-overlay-actions">
+            <button class="card-overlay-btn edit btn-edit-project" data-id="${site.id}" title="Edit site"><i class="fas fa-pen"></i></button>
+            <button class="card-overlay-btn delete btn-delete-project" data-id="${site.id}" title="Delete site"><i class="fas fa-trash"></i></button>
+          </div>` : ''}
         </div>
         <div class="ps-card-body">
           <div class="ps-detail-row"><i class="fas fa-location-dot"></i><span>${escapeHtml(site.address || '—')}</span></div>

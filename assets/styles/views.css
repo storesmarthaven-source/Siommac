@@ -530,24 +530,53 @@
 .ps-card-header {
   background: #47904a;
   padding: 16px 20px; color: white;
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; align-items: center; gap: 10px;
 }
 .ps-card.ps-card--inactive .ps-card-header { background: #8b919d; }
 .ps-card.ps-card--inactive { opacity: 0.82; }
 .ps-card-header h3 {
   font-size: 1rem; font-weight: 700;
   display: flex; align-items: center; gap: 8px; margin: 0;
-  text-transform: capitalize;
+  text-transform: capitalize; flex: 1; min-width: 0;
 }
-.ps-card-actions { display: flex; gap: 8px; }
-.ps-card-btn {
-  background: rgba(255,255,255,0.15); border: none; color: white;
-  width: 32px; height: 32px; border-radius: 12px; cursor: pointer;
+/* shared overlay action buttons — used on ps-card, dept-card, emp-card */
+.card-overlay-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.card-overlay-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; transition: background .18s;
+  font-size: 13px; transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
-.ps-card-btn:hover { background: #7CBB7F; }
-.ps-card.ps-card--inactive .ps-card-btn:hover { background: #B2B5BD; }
+/* on dark headers — white ghost buttons */
+.ps-card-header .card-overlay-btn,
+.dept-card-header .card-overlay-btn {
+  background: rgba(255,255,255,0.18); color: white;
+}
+.ps-card-header .card-overlay-btn:hover,
+.dept-card-header .card-overlay-btn.edit:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-1px);
+}
+.dept-card-header .card-overlay-btn.delete:hover {
+  background: var(--siomac-red);
+  transform: translateY(-1px);
+}
+/* on light backgrounds (emp-card) — coloured buttons */
+.emp-card-footer .card-overlay-btn.edit {
+  background: rgba(255,255,255,0.92); color: var(--siomac-navy);
+}
+.emp-card-footer .card-overlay-btn.edit:hover {
+  background: var(--siomac-navy); color: #fff;
+  transform: translateY(-1px); box-shadow: 0 3px 8px rgba(27,45,84,0.22);
+}
+.emp-card-footer .card-overlay-btn.delete {
+  background: rgba(255,255,255,0.92); color: var(--danger);
+}
+.emp-card-footer .card-overlay-btn.delete:hover {
+  background: var(--danger); color: #fff;
+  transform: translateY(-1px); box-shadow: 0 3px 8px rgba(198,40,40,0.28);
+}
 .ps-card.ps-card--inactive .ps-detail-row i { color: #8b919d; }
 
 .ps-card-body { padding: 20px; }
@@ -2133,10 +2162,10 @@
 .dept-table-btn.delete { color: var(--danger); }
 .dept-table-btn.delete:hover { background: rgba(198,40,40,0.1); }
 
-/* Cards grid */
+/* Cards grid — 3 columns fixed, matching employee/project card layout */
 .dept-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
 }
 
@@ -2155,8 +2184,8 @@
 /* Card header — navy gradient with icon */
 .dept-card-header {
   background: #1b2d54;
-  padding: 20px 20px 16px;
-  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
 }
 .dept-card-icon {
   width: 46px; height: 46px; border-radius: 12px;
@@ -2199,12 +2228,6 @@
 .dept-badge.gold   { background: rgba(255,183,18,0.13); color: #7a5900; }
 .dept-badge.red    { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
 
-/* Card footer actions */
-.dept-card-actions {
-  display: flex; gap: 8px;
-  padding: 0 20px 16px;
-}
-.dept-card-actions .btn { flex: 1; font-size: 12.5px; padding: 8px 12px; }
 
 /* Empty / loading states */
 .dept-empty {
@@ -2319,10 +2342,10 @@
 .emp-view-btn.active { background: var(--siomac-red); color: white; }
 .emp-view-btn:not(.active):hover { color: var(--siomac-red); }
 
-/* Cards grid */
+/* Cards grid — 3 columns */
 .emp-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-bottom: 20px;
   align-items: start;
@@ -2356,7 +2379,6 @@
 }
 .emp-card-header--inactive .emp-card-name { color: rgba(255,255,255,.75); }
 .emp-card-header--inactive .emp-card-pos  { color: rgba(255,255,255,.5); }
-.emp-card-header--inactive .emp-card-empid { color: rgba(255,255,255,.6); background: rgba(255,255,255,.1); }
 .emp-card-avatar {
   width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
   background: rgba(255,255,255,0.22);
@@ -2373,12 +2395,10 @@
 }
 .emp-card-pos { font-size: 0.72rem; color: rgba(255,255,255,0.75); }
 
-/* Employee ID pill in card header */
+/* Employee ID — now in the body detail rows */
 .emp-card-empid {
-  font-family: monospace; font-size: 14px; font-weight: 700;
-  color: #fff; background: rgba(255,255,255,0.18);
-  padding: 4px 12px; border-radius: 8px; letter-spacing: .5px;
-  flex-shrink: 0; white-space: nowrap;
+  font-family: monospace; font-size: 0.82rem; font-weight: 700;
+  color: var(--siomac-navy); letter-spacing: .5px;
 }
 
 /* Card body */
@@ -2406,40 +2426,11 @@
 .emp-today-out { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
 .emp-today-no  { background: rgba(94,111,141,0.1); color: var(--text-muted); }
 
-/* Card action buttons — icon-only overlay in top-right corner */
+/* emp-card-footer — positions the shared overlay buttons top-right of the header */
 .emp-card-footer {
   position: absolute;
   top: 10px; right: 10px;
-  display: flex; gap: 6px;
   z-index: 2;
-}
-.emp-icon-btn {
-  width: 30px; height: 30px; border-radius: 8px;
-  border: none; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0.8rem;
-  transition: background .18s, transform .15s, box-shadow .18s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-}
-.emp-icon-btn.edit {
-  background: rgba(255,255,255,0.92);
-  color: var(--siomac-navy);
-}
-.emp-icon-btn.edit:hover {
-  background: var(--siomac-navy);
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(27,45,84,0.22);
-}
-.emp-icon-btn.delete {
-  background: rgba(255,255,255,0.92);
-  color: var(--danger);
-}
-.emp-icon-btn.delete:hover {
-  background: var(--danger);
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(198,40,40,0.28);
 }
 
 /* Table avatar */
