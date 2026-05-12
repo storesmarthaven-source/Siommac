@@ -7027,7 +7027,11 @@ const AttendanceSystem = (function() {
         return;
       }
 
-      // Build new DOM in a fragment -- zero interaction with live container during build
+      // Build new DOM in a fragment -- zero interaction with live container during build.
+      // NOTE: do NOT move live Leaflet map elements into the fragment yet — if the
+      // key-check below determines no DOM rebuild is needed, the fragment is discarded
+      // and any DOM elements moved into it become orphaned (invisible). Instead, record
+      // which cards have live maps and splice them in only if we actually swap.
       const frag = document.createDocumentFragment();
 
       list.forEach((site, i) => {
@@ -7039,17 +7043,7 @@ const AttendanceSystem = (function() {
         tmp.innerHTML = _psCardRowHtml(site);
         const card = tmp.firstElementChild;
         card.dataset.rowKey = key;
-
-        // If we already have a live Leaflet map element for this slot, splice it in
-        // so Leaflet doesn't need to reinitialize (preserves tiles, avoids flicker).
-        const liveEl = liveMapEls.get(mapId);
-        if (liveEl) {
-          const placeholder = card.querySelector(`#${mapId}`);
-          if (placeholder) placeholder.parentNode.replaceChild(liveEl, placeholder);
-          // Invalidate size in case container was hidden/resized
-          const lm = _psMiniMaps[mapId];
-          if (lm && lm !== 'pending') setTimeout(() => { try { lm.invalidateSize(); } catch (_) {} }, 50);
-        }
+        card.dataset.mapId  = mapId; // used below during actual swap
 
         frag.appendChild(card);
 
@@ -7078,13 +7072,30 @@ const AttendanceSystem = (function() {
         }
       });
 
-      // Smart swap: if every card in the fragment matches the existing DOM key-for-key,
-      // skip the innerHTML wipe so CSS entrance animations don't fire a second time.
+      // Smart swap: if every card matches key-for-key, skip innerHTML wipe so
+      // CSS entrance animations don't replay and existing Leaflet instances stay
+      // attached to the live DOM (moving them into an unused fragment would orphan them).
       const existingCards = Array.from(container.querySelectorAll('[data-id]'));
       const newCards      = Array.from(frag.querySelectorAll('[data-id]'));
       const sameCount     = existingCards.length === newCards.length;
       const sameKeys      = sameCount && newCards.every((nc, i) => nc.dataset.rowKey === existingCards[i].dataset.rowKey);
-      if (!sameKeys) {
+      if (sameKeys) {
+        // Just invalidate sizes — existing maps are still correctly in the DOM
+        Object.values(_psMiniMaps).forEach(m => {
+          if (m && m !== 'pending') setTimeout(() => { try { m.invalidateSize(); } catch (_) {} }, 50);
+        });
+      } else {
+        // Splice live Leaflet elements into fragment cards before swapping in
+        frag.querySelectorAll('[data-map-id]').forEach(card => {
+          const mapId = card.dataset.mapId;
+          const liveEl = liveMapEls.get(mapId);
+          if (liveEl) {
+            const placeholder = card.querySelector(`#${mapId}`);
+            if (placeholder) placeholder.parentNode.replaceChild(liveEl, placeholder);
+            const lm = _psMiniMaps[mapId];
+            if (lm && lm !== 'pending') setTimeout(() => { try { lm.invalidateSize(); } catch (_) {} }, 50);
+          }
+        });
         container.innerHTML = '';
         container.appendChild(frag);
       }
