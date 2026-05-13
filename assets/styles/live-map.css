@@ -99,19 +99,78 @@
 }
 .lm-center-btn {
   position: absolute;
-  top: 68px; left: 10px;
+  top: 12px; right: 12px; left: auto;
   z-index: 1000;
-  width: 26px; height: 26px;
-  background: var(--siomac-red);
+  height: auto;
+  background: var(--siomac-navy);
   border: none;
-  border-radius: 4px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-  color: #fff; font-size: 14px;
-  font-family: inherit; padding: 0;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background .18s;
+  border-radius: 60px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  color: #fff; font-size: 0.78rem; font-weight: 600;
+  font-family: inherit; padding: 7px 14px;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: background .18s, transform .15s;
+  white-space: nowrap;
 }
-.lm-center-btn:hover { background: var(--siomac-red-dark); }
+.lm-center-btn:hover { background: var(--siomac-red); transform: translateY(-1px); }
+
+/* Hide the default Leaflet popup bubble for live employee markers — we use a custom overlay instead */
+.live-emp-marker + .leaflet-popup,
+.leaflet-popup.siomac-popup { /* still allow site popups — only suppress via JS */ }
+.lm-emp-leaflet-popup-hidden { display: none !important; }
+
+/* ── Employee popup overlay (custom, replaces Leaflet popup) ── */
+.lm-emp-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  /* positioned via JS using marker screen coords */
+}
+
+/* animated line extending left from marker */
+.lm-emp-overlay-line {
+  height: 2px;
+  width: 0;
+  background: var(--siomac-navy);
+  border-radius: 2px;
+  flex-shrink: 0;
+  animation: lm-line-grow 0.3s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes lm-line-grow {
+  from { width: 0; }
+  to   { width: 80px; }
+}
+
+/* card that fades/slides in after line */
+.lm-emp-overlay-card {
+  pointer-events: all;
+  border-radius: 18px;
+  overflow: hidden;
+  width: 300px;
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: lm-card-appear 0.25s ease 0.28s forwards;
+  flex-shrink: 0;
+}
+@keyframes lm-card-appear {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* dot at junction of line and marker */
+.lm-emp-overlay-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--siomac-navy);
+  flex-shrink: 0;
+  order: -1; /* sits between marker and line */
+  opacity: 0;
+  animation: lm-dot-pop 0.2s ease 0.05s forwards;
+}
+@keyframes lm-dot-pop {
+  to { opacity: 1; }
+}
 
 .lm-refresh-btn {
   background: var(--bg-subtle, #F4F6FA); border: 1px solid var(--border);
@@ -423,7 +482,7 @@
   max-width: 310px;
   animation: lmPopupIn .18s ease-out;
   position: relative;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  box-shadow: none;
 }
 @keyframes lmPopupIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -438,7 +497,7 @@
   background: linear-gradient(135deg, var(--siomac-navy,#001f3f) 0%, #0D1E3A 100%);
   transform: translateY(-50%) rotate(45deg);
   border-radius: 2px;
-  box-shadow: -2px 2px 5px rgba(0,0,0,0.08);
+  box-shadow: none;
   pointer-events: none;
 }
 

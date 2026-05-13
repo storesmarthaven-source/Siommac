@@ -35,6 +35,9 @@
     })();
   </script>
 
+  <!-- Restore dashboard panel theme before first paint to avoid flash -->
+  <script>(function(){try{var t=localStorage.getItem('siomac-theme');if(t==='dark')document.body.setAttribute('data-theme','dark');}catch(_){}})();</script>
+
   <!-- Preconnect so font bytes arrive as early as possible -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

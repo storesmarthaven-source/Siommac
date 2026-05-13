@@ -98,36 +98,8 @@
       <div class="page-header">
         <div class="page-header-left">
           <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu"><i class="fas fa-bars"></i></button>
-          <div id="pageTitleBlock">
-            <h1 id="pageTitle">
-              <i class="fas fa-tachometer-alt" id="pageTitleIcon"></i>
-              <span id="pageTitleText">Operations Dashboard</span>
-            </h1>
-            <p id="pageTitleSub">Company-wide attendance overview and insights</p>
-          </div>
         </div>
-        <div class="page-header-right">
-          <div class="hdr-icon-group">
-            <!-- Notifications: visible to all roles; employee sees their own events -->
-            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrNotifBtn" title="Notifications">
-              <i class="fas fa-bell"></i>
-              <span class="hdr-badge" id="hdrNotifBadge" style="display:none"></span>
-            </button>
-            <!-- Messages: admin/manager see inbox; employee sends messages to admin -->
-            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrMsgBtn" title="Messages">
-              <i class="fas fa-comment-dots"></i>
-              <span class="hdr-badge" id="hdrMsgBadge" style="display:none"></span>
-            </button>
-            <!-- Tickets: admin/manager see all tickets; employee creates/tracks their own -->
-            <button class="hdr-icon-btn hdr-icon-btn--lg" id="hdrTicketBtn" title="Support Tickets">
-              <i class="fas fa-ticket-alt"></i>
-              <span class="hdr-badge hdr-badge-gold" id="hdrTicketBadge" style="display:none"></span>
-            </button>
-            <button class="hdr-icon-btn hdr-icon-btn--lg hdr-profile-btn hdr-profile-btn--pill" id="hdrProfileBtn" title="My Profile">
-              <div class="hdr-profile-avatar" id="hdrProfileAvatar">S</div>
-            </button>
-          </div>
-        </div>
+        <div class="page-header-right"></div>
       </div>
 
       <!-- ── Notification Modal ── -->
@@ -260,6 +232,34 @@
 
       <!-- Employee — Attendance home -->
       <section class="app-section" id="s-emp-attendance" data-role="employee">
+
+        <!-- Profile + notification pill -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="empProfileBtn">
+              <div class="pnp-avatar" id="empProfileAvatar">U</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="empProfileName">Employee</span>
+                <span class="pnp-role" id="empProfileRole">Employee</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="empNotifBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="pnp-badge" id="empNotifBadge" style="display:none"></span>
+              </button>
+              <button class="pnp-icon-btn" id="empMsgBtn" title="Messages">
+                <i class="fas fa-comment-dots"></i>
+                <span class="pnp-badge" id="empMsgBadge" style="display:none"></span>
+              </button>
+              <button class="pnp-icon-btn" id="empTicketBtn" title="Support Tickets">
+                <i class="fas fa-ticket-alt"></i>
+                <span class="pnp-badge pnp-badge-gold" id="empTicketBadge" style="display:none"></span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Welcome + Timeline row -->
         <div class="ea-top-row">
@@ -418,8 +418,8 @@
         <div class="lm-layout">
           <div class="lm-map-container">
             <div id="map"></div>
-            <!-- Center View — overlaid bottom-left of map -->
-            <button id="centerMapBtn" class="lm-center-btn" title="Center View"><i class="fas fa-crosshairs"></i></button>
+            <!-- Center View — overlaid right of map -->
+            <button id="centerMapBtn" class="lm-center-btn" title="Center View"><i class="fas fa-bullseye"></i> Center View</button>
           </div>
           <!-- activity panel — sits to the right of the map -->
           <div class="lm-activity-panel">
@@ -633,6 +633,35 @@
 
       <!-- Manager — Department Overview -->
       <section class="app-section" id="s-mgr-overview" data-role="manager">
+
+        <!-- Profile + notification pill -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="mgrProfileBtn">
+              <div class="pnp-avatar" id="mgrProfileAvatar">M</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="mgrProfileName">Manager</span>
+                <span class="pnp-role" id="mgrProfileRole">Manager</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="mgrNotifBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="pnp-badge" id="mgrNotifBadge" style="display:none"></span>
+              </button>
+              <button class="pnp-icon-btn" id="mgrMsgBtn" title="Messages">
+                <i class="fas fa-comment-dots"></i>
+                <span class="pnp-badge" id="mgrMsgBadge" style="display:none"></span>
+              </button>
+              <button class="pnp-icon-btn" id="mgrTicketBtn" title="Support Tickets">
+                <i class="fas fa-ticket-alt"></i>
+                <span class="pnp-badge pnp-badge-gold" id="mgrTicketBadge" style="display:none"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="dashboard-grid-4" style="margin-bottom:20px;">
           <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
@@ -753,58 +782,111 @@
       <!-- Admin — Dashboard (stats) -->
       <section class="app-section" id="s-adm-dashboard" data-role="admin">
 
-        <!-- Stat cards -->
-        <div class="dash-stats-row" style="margin-bottom:0;">
-          <div class="stat-card">
-            <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="totalEmployees"></div>
-              <div class="stat-card-label" id="totalEmployeesLabel">Total Employees</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="presentToday"></div>
-              <div class="stat-card-label" id="presentTodayLabel">Present Today</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-icon red"><i class="fas fa-user-times"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="absentToday"></div>
-              <div class="stat-card-label" id="absentTodayLabel">Absent Today</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-icon gold"><i class="fas fa-calendar-minus"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="onLeaveToday"></div>
-              <div class="stat-card-label" id="onLeaveTodayLabel">On Leave Today</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-icon blue"><i class="fas fa-map-marker-alt"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="activeLocations"></div>
-              <div class="stat-card-label" id="activeLocationsLabel">Active Locations</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
-            <div class="stat-card-body">
-              <div class="stat-card-value" id="lateToday"></div>
-              <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
-            </div>
-          </div>
-          <!-- Hidden widgets restore bar -->
-          <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
-        </div>
+        <!-- Overview Panel — light panel, gear background, profile pill, stat cards, navy footer -->
+        <div class="dash-overview-panel">
 
-        <!-- Edit Layout row — below stat cards, right-aligned -->
-        <div class="dash-edit-row">
-          <button class="dash-layout-btn admin-only" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
-          <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+          <!-- Main content: top bar + stat cards -->
+          <div class="dash-panel-content">
+
+            <!-- Top bar -->
+            <div class="overview-top-bar">
+              <div class="overview-title-section">
+                <i class="fas fa-chart-pie"></i>
+                <h2>Today's Overview</h2>
+              </div>
+              <!-- Profile + notification merged pill — untouched -->
+              <div class="profile-notif-pill">
+                <div class="pnp-profile" id="hdrProfileBtn">
+                  <div class="pnp-avatar" id="hdrProfileAvatar">S</div>
+                  <div class="pnp-info">
+                    <span class="pnp-name" id="dashProfileName">Admin</span>
+                    <span class="pnp-role" id="dashProfileRole">Administrator</span>
+                  </div>
+                </div>
+                <div class="pnp-divider"></div>
+                <div class="pnp-icons">
+                  <button class="pnp-icon-btn" id="hdrNotifBtn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="pnp-badge" id="hdrNotifBadge" style="display:none"></span>
+                  </button>
+                  <button class="pnp-icon-btn" id="hdrMsgBtn" title="Messages">
+                    <i class="fas fa-comment-dots"></i>
+                    <span class="pnp-badge" id="hdrMsgBadge" style="display:none"></span>
+                  </button>
+                  <button class="pnp-icon-btn" id="hdrTicketBtn" title="Support Tickets">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span class="pnp-badge pnp-badge-gold" id="hdrTicketBadge" style="display:none"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stat cards — horizontal layout (icon left, value+label right) -->
+            <div class="dash-stats-row">
+              <div class="stat-card">
+                <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="totalEmployees"></div>
+                  <div class="stat-card-label" id="totalEmployeesLabel">Employees</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon blue"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="activeLocations"></div>
+                  <div class="stat-card-label" id="activeLocationsLabel">Locations</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon green"><i class="fas fa-user-check"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="presentToday"></div>
+                  <div class="stat-card-label" id="presentTodayLabel">Present Today</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon red"><i class="fas fa-user-times"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="absentToday"></div>
+                  <div class="stat-card-label" id="absentTodayLabel">Absent Today</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon gold"><i class="fas fa-calendar-minus"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="onLeaveToday"></div>
+                  <div class="stat-card-label" id="onLeaveTodayLabel">On Leave Today</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon gold"><i class="fas fa-clock"></i></div>
+                <div class="stat-card-content">
+                  <div class="stat-card-value" id="lateToday"></div>
+                  <div class="stat-card-label" id="lateTodayLabel">Late Today</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /.dash-panel-content -->
+
+          <!-- Merged navy footer — flush inside the panel, no gap -->
+          <div class="dash-panel-footer">
+            <div class="overview-date-badge">
+              <div class="odb-icon"><i class="fas fa-calendar-day"></i></div>
+              <span class="odb-text"><span class="odb-day" id="dashTodayDay">Tuesday</span><span class="odb-sep">·</span><span class="odb-date" id="dashTodayDate">May 12, 2026</span></span>
+            </div>
+            <!-- Hidden widgets restore bar -->
+            <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;"></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="dash-theme-toggle">
+                <button class="dash-theme-btn" id="dashThemeLight" title="Light mode"><i class="fas fa-sun"></i></button>
+                <button class="dash-theme-btn" id="dashThemeDark" title="Dark mode"><i class="fas fa-moon"></i></button>
+              </div>
+              <button class="dash-layout-btn admin-only" id="dashEditBtn"><i class="fas fa-edit"></i> Edit Layout</button>
+              <button class="dash-layout-btn dash-layout-btn-primary" id="dashResetBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Reset</button>
+            </div>
+          </div>
+
         </div>
 
         <!-- Single sortable widget grid -->
@@ -902,6 +984,24 @@
       <!-- Admin — Employees CRUD -->
       <section class="app-section" id="s-adm-employees" data-role="admin">
 
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admEmpProfileBtn">
+              <div class="pnp-avatar" id="admEmpProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admEmpProfileName">Admin</span>
+                <span class="pnp-role" id="admEmpProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admEmpNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admEmpNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admEmpMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admEmpMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admEmpTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admEmpTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
+
         <!-- Stats row -->
         <div class="dashboard-grid-4" style="margin-bottom:24px;">
           <div class="stat-card">
@@ -992,6 +1092,24 @@
       <!-- Admin — Departments CRUD -->
       <section class="app-section" id="s-adm-departments" data-role="admin">
 
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admDeptProfileBtn">
+              <div class="pnp-avatar" id="admDeptProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admDeptProfileName">Admin</span>
+                <span class="pnp-role" id="admDeptProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admDeptNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admDeptNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admDeptMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admDeptMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admDeptTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admDeptTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
+
         <!-- Dept stats row -->
         <div class="dashboard-grid-4" id="deptStatsRow" style="margin-bottom:28px;">
           <div class="stat-card">
@@ -1064,6 +1182,24 @@
 
       <!-- Admin — Project Sites CRUD -->
       <section class="app-section" id="s-adm-projects" data-role="admin">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admProjProfileBtn">
+              <div class="pnp-avatar" id="admProjProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admProjProfileName">Admin</span>
+                <span class="pnp-role" id="admProjProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admProjNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admProjNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admProjMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admProjMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admProjTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admProjTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- Stats row -->
         <div class="ps-stats-row">
@@ -1161,6 +1297,24 @@
 
       <!-- Admin — Attendance Records -->
       <section class="app-section" id="s-adm-attendance" data-role="admin">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admAttProfileBtn">
+              <div class="pnp-avatar" id="admAttProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admAttProfileName">Admin</span>
+                <span class="pnp-role" id="admAttProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admAttNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admAttNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admAttMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admAttMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admAttTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admAttTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- Stats row -->
         <div class="dashboard-grid-4" style="margin-bottom:24px;">
@@ -1302,6 +1456,24 @@
       <!-- Admin — Leave Applications -->
       <section class="app-section" id="s-adm-leaves" data-role="admin">
 
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admLvProfileBtn">
+              <div class="pnp-avatar" id="admLvProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admLvProfileName">Admin</span>
+                <span class="pnp-role" id="admLvProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admLvNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admLvNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admLvMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admLvMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admLvTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admLvTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
+
         <!-- Stats row -->
         <div class="lv-stats-row">
           <div class="lv-stat-card">
@@ -1369,6 +1541,24 @@
 
       <!-- Hourly Rates — admin only -->
       <section class="app-section" id="s-adm-rates" data-role="admin">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admRatesProfileBtn">
+              <div class="pnp-avatar" id="admRatesProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admRatesProfileName">Admin</span>
+                <span class="pnp-role" id="admRatesProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admRatesNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admRatesNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admRatesMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admRatesMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admRatesTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admRatesTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- stats row -->
         <div class="hr-stats-row">
@@ -1473,6 +1663,24 @@
 
       <!-- Payroll — admin + manager (manager scoped to own dept) -->
       <section class="app-section" id="s-payroll">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admPayProfileBtn">
+              <div class="pnp-avatar" id="admPayProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admPayProfileName">Admin</span>
+                <span class="pnp-role" id="admPayProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admPayNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admPayNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admPayMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admPayMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admPayTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admPayTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- Dashboard stat cards — 3×2 grid -->
         <div class="dashboard-grid-3" style="margin-bottom:20px;">
@@ -1650,6 +1858,24 @@
       <!-- My Profile — every role can edit their own name / image / pwd -->
       <section class="app-section" id="s-profile">
 
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admProfProfileBtn">
+              <div class="pnp-avatar" id="admProfProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admProfProfileName">Admin</span>
+                <span class="pnp-role" id="admProfProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admProfNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admProfNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admProfMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admProfMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admProfTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admProfTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
+
         <!-- Toast -->
         <div id="profileToast" class="profile-toast" style="display:none;"></div>
 
@@ -1786,6 +2012,24 @@
 
       <!-- Settings -->
       <section class="app-section" id="s-settings">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admStgProfileBtn">
+              <div class="pnp-avatar" id="admStgProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admStgProfileName">Admin</span>
+                <span class="pnp-role" id="admStgProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admStgNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admStgNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admStgMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admStgMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admStgTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admStgTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- Page header -->
         <div class="stg-page-hero">
@@ -2112,6 +2356,24 @@
 
       <!-- About — visible to everyone -->
       <section class="app-section" id="s-about">
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div class="profile-notif-pill">
+            <div class="pnp-profile" id="admAbtProfileBtn">
+              <div class="pnp-avatar" id="admAbtProfileAvatar">A</div>
+              <div class="pnp-info">
+                <span class="pnp-name" id="admAbtProfileName">Admin</span>
+                <span class="pnp-role" id="admAbtProfileRole">Administrator</span>
+              </div>
+            </div>
+            <div class="pnp-divider"></div>
+            <div class="pnp-icons">
+              <button class="pnp-icon-btn" id="admAbtNotifBtn" title="Notifications"><i class="fas fa-bell"></i><span class="pnp-badge" id="admAbtNotifBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admAbtMsgBtn" title="Messages"><i class="fas fa-comment-dots"></i><span class="pnp-badge" id="admAbtMsgBadge" style="display:none"></span></button>
+              <button class="pnp-icon-btn" id="admAbtTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt"></i><span class="pnp-badge pnp-badge-gold" id="admAbtTicketBadge" style="display:none"></span></button>
+            </div>
+          </div>
+        </div>
 
         <!-- Hero banner — full width -->
         <div style="background:#1b2d54;border-radius:20px;padding:48px 40px;margin-bottom:24px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;">

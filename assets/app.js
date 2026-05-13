@@ -326,6 +326,15 @@ const AttendanceSystem = (function() {
       // Create map without setting a view yet — avoids flash to default center
       map = L.map('map', { center: defaultCenter, zoom: 11, zoomAnimation: false });
 
+      // Clicking the map background dismisses the employee overlay
+      map.on('click', () => {
+        if (_empOverlayEl) {
+          _removeLiveEmpOverlay();
+          if (_activeEmpMarker) { map.removeLayer(_activeEmpMarker); _activeEmpMarker = null; }
+          map.off('move zoom', _repositionLiveEmpOverlay);
+        }
+      });
+
       // CartoDB Positron — clean light style matching design spec
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &amp; CartoDB',
@@ -350,7 +359,7 @@ const AttendanceSystem = (function() {
             fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
             dashArray: '6 4'
           }).addTo(map);
-          zone.bindPopup(initHtml, { className: 'siomac-popup', maxWidth: 260, minWidth: 220, offset: L.point(160, 0) });
+          zone.bindPopup(initHtml, { className: 'siomac-popup', maxWidth: 260, minWidth: 220, offset: L.point(160, 0), autoPan: true, autoPanPadding: L.point(20, 20) });
           zone.on('click', () => _selectLiveSite(site.id, site.name));
           zone._siteId = site.id;
           attendanceZones.push(zone);
@@ -368,7 +377,7 @@ const AttendanceSystem = (function() {
             className: 'siomac-popup',
             maxWidth: 260, minWidth: 220,
             offset: L.point(160, 0),
-            autoPan: false
+            autoPan: true, autoPanPadding: L.point(20, 20)
           });
           buildingMarker.on('click', () => _selectLiveSite(site.id, site.name));
           buildingMarker._siteId = site.id;
@@ -465,6 +474,7 @@ const AttendanceSystem = (function() {
     _selectedSiteId = siteId;
     _hideActiveEmpMarker();
     _syncCustomSelectTrigger(siteId);
+    _updateSiteMarkerZIndex();
     _populateSiteSelect(); // refresh dots + selected state
     renderLivePanel(liveData);
   }
@@ -473,8 +483,17 @@ const AttendanceSystem = (function() {
     _selectedSiteId = '';
     _hideActiveEmpMarker();
     _syncCustomSelectTrigger('');
+    _updateSiteMarkerZIndex();
     _populateSiteSelect();
     renderLivePanel(liveData);
+  }
+
+  function _updateSiteMarkerZIndex() {
+    Object.entries(_siteLayerMap).forEach(([id, { marker }]) => {
+      if (!marker) return;
+      // Active site pin sits above all others (but below employee markers at 1000)
+      marker.setZIndexOffset(String(id) === String(_selectedSiteId) ? 500 : 0);
+    });
   }
 
   function _populateSiteSelect() {
@@ -660,115 +679,55 @@ const AttendanceSystem = (function() {
       const initial = (row.fullName || '?').charAt(0).toUpperCase();
       // Use profile photo in marker if available, else fallback to coloured initial
       const markerHtml = row.profileImage
-        ? `<div style="width:36px;height:36px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;\\'>${initial}</div>'"></div>`
-        : `<div style="background:${color};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;">${initial}</div>`;
+        ? `<div style="width:52px;height:52px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 8px rgba(0,0,0,.4);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;\\'>${initial}</div>'"></div>`
+        : `<div style="background:${color};width:52px;height:52px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;">${initial}</div>`;
 
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: 'live-emp-marker',
           html: markerHtml,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
-        })
+          iconSize: [52, 52],
+          iconAnchor: [26, 26]
+        }),
+        zIndexOffset: 1000  // always above building pins
       });
 
-      // Selfie = attendance check-in/out photo; profile = employee profile photo
-      const selfie  = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
-      const profile = row.profileImage || '';
-      // Preload selfie into browser cache so the popup shows it instantly on open
-      if (selfie) { const _pre = new Image(); _pre.src = selfie; }
-      const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
-      const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
-      const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
-      const statusColor = row.isCheckedOut ? '#546E7A' : (row.status === 'late' ? '#E65100' : '#2E7D32');
-      const statusBg    = row.isCheckedOut ? '#ECEFF4'  : (row.status === 'late' ? '#FFF3E0'  : '#E8F5E9');
+      // Preload selfie + profile into browser cache so the overlay card shows them instantly
+      const _selfie = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+      if (_selfie) { const _pre = new Image(); _pre.src = _selfie; }
+      if (row.profileImage) { const _pr = new Image(); _pr.src = row.profileImage; }
 
-      // Profile photo or initial circle
-      const avatarHtml = profile
-        ? `<img src="${profile}" alt="${initial}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:48px;height:48px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;\\'>${initial}</div>'">`
-        : `<div style="width:48px;height:48px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;">${initial}</div>`;
-
-      // Nav link
-      const navLat = row.checkInLat || row.checkOutLat || '';
-      const navLng = row.checkInLng || row.checkOutLng || '';
-      const navBtn = (navLat && navLng)
-        ? `<a href="https://www.google.com/maps?q=${navLat},${navLng}" target="_blank" class="lm-popup-btn lm-popup-btn-outline"><i class="fas fa-directions"></i> Navigate</a>`
-        : `<span class="lm-popup-btn lm-popup-btn-outline" style="opacity:.45;pointer-events:none;"><i class="fas fa-directions"></i> Navigate</span>`;
-
-      marker.bindPopup(`
-        <div class="lm-popup-card">
-
-          <!-- Building banner -->
-          <div class="lm-popup-site-banner">
-            <div class="lm-popup-building-icon"><i class="fas fa-building"></i></div>
-            <div class="lm-popup-site-info">
-              <div class="lm-popup-site-name">${row.siteName ? row.siteName : 'On Site'}</div>
-              <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};margin-top:6px;display:inline-flex;">
-                <i class="fas ${statusIcon}"></i> ${statusLabel}
-              </span>
-            </div>
-          </div>
-
-          <!-- Employee row -->
-          <div class="lm-popup-emp-row">
-            ${avatarHtml}
-            <div class="lm-popup-emp-info">
-              <div class="lm-popup-emp-name">${row.fullName}</div>
-              <div class="lm-popup-emp-meta">${[row.position, row.department].filter(Boolean).join(' · ') || 'Employee'}</div>
-              ${row.employeeId ? `<div class="lm-popup-emp-meta"><i class="fas fa-id-badge" style="margin-right:3px;"></i>${row.employeeId}</div>` : ''}
-            </div>
-          </div>
-
-          <!-- Time row -->
-          <div class="lm-popup-times">
-            <div class="lm-popup-time-cell">
-              <i class="fas fa-sign-in-alt"></i>
-              <span class="lm-popup-time-label">In</span>
-              <span class="lm-popup-time-val">${row.checkInTime ? fmtLocalTime(row.checkInTime) : '—'}</span>
-            </div>
-            <div class="lm-popup-time-divider"></div>
-            <div class="lm-popup-time-cell">
-              <i class="fas fa-sign-out-alt"></i>
-              <span class="lm-popup-time-label">Out</span>
-              <span class="lm-popup-time-val">${row.checkOutTime ? fmtLocalTime(row.checkOutTime) : '—'}</span>
-            </div>
-          </div>
-
-          ${selfie ? `<div class="lm-popup-selfie"><img src="${selfie}" alt="Selfie" onerror="if(this.parentElement)this.parentElement.style.display='none'"></div>` : ''}
-
-          <!-- Footer -->
-          <div class="lm-popup-footer">
-            ${navBtn}
-            <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
-          </div>
-        </div>
-      `, { maxWidth: 310, minWidth: 270, className: 'siomac-popup', offset: L.point(180, 0), autoPan: false });
       marker._liveUserId = row.userId; // for sidebar click → marker show
+      marker._liveRow    = row;         // full row data for custom overlay card
       liveMarkers.push(marker);
       // Markers are NOT added to the map here — they only appear when
       // the user selects an employee from the Live Field Activity panel.
     });
 
-    // If an employee marker is currently open, silently update it in place.
-    // Never remove/re-add — that closes the popup and jumps the map.
+    // If a custom employee overlay is open, silently refresh its card content.
     if (_activeEmpMarker && map) {
       const stillExists = liveMarkers.find(m => m._liveUserId === _activeEmpMarker._liveUserId);
       if (stillExists) {
+        // Sync latest row data onto the active marker (may be same object or new one)
+        _activeEmpMarker._liveRow = stillExists._liveRow;
         if (stillExists !== _activeEmpMarker) {
-          // New marker object for same employee — transfer map presence silently.
-          // Add new one first so the map never has zero markers for this employee.
-          stillExists.addTo(map);
-          map.removeLayer(_activeEmpMarker);
-          _activeEmpMarker = stillExists;
+          // New marker object for same employee — keep existing DOM marker on map,
+          // just swap the liveMarkers reference so future lookups hit the right one.
+          const idx = liveMarkers.indexOf(stillExists);
+          if (idx !== -1) liveMarkers[idx] = _activeEmpMarker;
+          _activeEmpMarker._liveUserId = stillExists._liveUserId;
         }
-        // Re-open popup in place with fresh content (no pan/zoom)
-        if (map.hasLayer(_activeEmpMarker)) {
-          _activeEmpMarker.openPopup();
+        // Silently update the overlay card HTML without re-animating
+        if (_empOverlayEl) {
+          const cardEl = _empOverlayEl.querySelector('.lm-emp-overlay-card');
+          if (cardEl) cardEl.innerHTML = _buildEmpOverlayHtml(_activeEmpMarker._liveRow);
         }
       } else {
-        // Employee no longer in data — hide marker
+        // Employee no longer in data — remove overlay and marker
+        _removeLiveEmpOverlay();
         map.removeLayer(_activeEmpMarker);
         _activeEmpMarker = null;
+        map.off('move zoom', _repositionLiveEmpOverlay);
       }
     }
   }
@@ -838,33 +797,41 @@ const AttendanceSystem = (function() {
       return (r.isCheckedOut ? 'out' : r.status) + '|' + (r.lastSeen || '');
     }
 
-    // Fragment-based rebuild -- no live-NodeList insertBefore thrash
+    // In-place DOM diff — only add/update changed rows, never wipe the list.
+    // Wiping and re-inserting replays the CSS entrance animation on every poll.
     const _liveExistingById = new Map();
     listEl.querySelectorAll('[data-id]').forEach(el => _liveExistingById.set(el.dataset.id, el));
     const _liveSeen = new Set(sorted.map(r => String(r.userId)));
-    // Remove rows no longer in list
+    // Remove rows no longer in data
     _liveExistingById.forEach((el, id) => {
       if (!_liveSeen.has(id) && el.parentNode === listEl) listEl.removeChild(el);
     });
-    const _liveFrag = document.createDocumentFragment();
-    sorted.forEach(r => {
+    // Insert new / update changed rows in sorted order — existing unchanged rows stay in DOM
+    sorted.forEach((r, i) => {
       const id  = String(r.userId);
       const key = _liveEmpRowKey(r);
       let el = _liveExistingById.get(id);
       if (!el) {
+        // Brand-new row — create and insert (will animate once)
         const tmp = document.createElement('div');
         tmp.innerHTML = _liveEmpRowHtml(r);
         el = tmp.firstElementChild;
+        el.dataset.rowKey = key;
+        listEl.appendChild(el);
       } else if (el.dataset.rowKey !== key) {
+        // Data changed — update content in place, no DOM remove/re-add (no animation replay)
         const tmp = document.createElement('div');
         tmp.innerHTML = _liveEmpRowHtml(r);
-        el = tmp.firstElementChild;
+        const fresh = tmp.firstElementChild;
+        fresh.dataset.rowKey = key;
+        el.replaceWith(fresh);
+        _liveExistingById.set(id, fresh);
+        el = fresh;
       }
-      if (el) el.dataset.rowKey = key;
-      if (el) _liveFrag.appendChild(el);
+      // Ensure correct sort order without re-inserting unchanged nodes
+      const expectedNext = listEl.children[i];
+      if (expectedNext !== el) listEl.insertBefore(el, expectedNext || null);
     });
-    listEl.innerHTML = '';
-    listEl.appendChild(_liveFrag);
 
     // Preload profile photo into each avatar (only for new/changed rows) — off-screen decode, no flash
     sorted.forEach(r => {
@@ -888,67 +855,141 @@ const AttendanceSystem = (function() {
     });
   }
 
-  function focusLiveEmployee(userId) {
-    if (!map) return;
-    const marker = liveMarkers.find(m => m._liveUserId === userId);
-    if (!marker) return;
+  // ── Custom employee overlay (animated line + card) ──────────────────────
+  let _empOverlayEl = null;
 
-    // If the same marker is already open on the map, just swap the popup
-    // content in place — no zoom, no pan, no flicker.
-    if (_activeEmpMarker === marker && map.hasLayer(marker) && marker.isPopupOpen()) {
+  function _removeLiveEmpOverlay() {
+    if (_empOverlayEl) { _empOverlayEl.remove(); _empOverlayEl = null; }
+  }
+
+  function _buildEmpOverlayHtml(row) {
+    const initial     = (row.fullName || '?').charAt(0).toUpperCase();
+    const profile     = row.profileImage || '';
+    const selfie      = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+    const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
+    const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
+    const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
+    const statusColor = row.isCheckedOut ? '#546E7A' : (row.status === 'late' ? '#E65100' : '#2E7D32');
+    const statusBg    = row.isCheckedOut ? '#ECEFF4'  : (row.status === 'late' ? '#FFF3E0'  : '#E8F5E9');
+    const avatarHtml  = profile
+      ? `<img src="${profile}" alt="${initial}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;\\'>${initial}</div>'">`
+      : `<div style="width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;">${initial}</div>`;
+    const navLat = row.checkInLat || row.checkOutLat || '';
+    const navLng = row.checkInLng || row.checkOutLng || '';
+    const navBtn = (navLat && navLng)
+      ? `<a href="https://www.google.com/maps?q=${navLat},${navLng}" target="_blank" class="lm-popup-btn lm-popup-btn-outline"><i class="fas fa-directions"></i> Navigate</a>`
+      : `<span class="lm-popup-btn lm-popup-btn-outline" style="opacity:.45;pointer-events:none;"><i class="fas fa-directions"></i> Navigate</span>`;
+    return `
+      <div class="lm-popup-card" style="margin:0;">
+        <div class="lm-popup-site-banner">
+          <div class="lm-popup-building-icon"><i class="fas fa-building"></i></div>
+          <div class="lm-popup-site-info">
+            <div class="lm-popup-site-name">${row.siteName ? row.siteName : 'On Site'}</div>
+            <span class="lm-popup-status-pill" style="background:${statusBg};color:${statusColor};margin-top:6px;display:inline-flex;">
+              <i class="fas ${statusIcon}"></i> ${statusLabel}
+            </span>
+          </div>
+        </div>
+        <div class="lm-popup-emp-row">
+          ${avatarHtml}
+          <div class="lm-popup-emp-info">
+            <div class="lm-popup-emp-name">${row.fullName}</div>
+            <div class="lm-popup-emp-meta">${[row.position, row.department].filter(Boolean).join(' · ') || 'Employee'}</div>
+            ${row.employeeId ? `<div class="lm-popup-emp-meta"><i class="fas fa-id-badge" style="margin-right:3px;"></i>${row.employeeId}</div>` : ''}
+          </div>
+        </div>
+        <div class="lm-popup-times">
+          <div class="lm-popup-time-cell">
+            <i class="fas fa-sign-in-alt"></i>
+            <span class="lm-popup-time-label">In</span>
+            <span class="lm-popup-time-val">${row.checkInTime ? fmtLocalTime(row.checkInTime) : '—'}</span>
+          </div>
+          <div class="lm-popup-time-divider"></div>
+          <div class="lm-popup-time-cell">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="lm-popup-time-label">Out</span>
+            <span class="lm-popup-time-val">${row.checkOutTime ? fmtLocalTime(row.checkOutTime) : '—'}</span>
+          </div>
+        </div>
+        ${selfie ? `<div class="lm-popup-selfie"><img src="${selfie}" alt="Selfie" onerror="if(this.parentElement)this.parentElement.style.display='none'"></div>` : ''}
+        <div class="lm-popup-footer">
+          ${navBtn}
+          <button class="lm-popup-btn lm-popup-btn-primary" onclick="document.getElementById('liveEmployeesList').querySelector('[data-uid=\\'${row.userId}\\']')?.scrollIntoView({behavior:'smooth',block:'nearest'})"><i class="fas fa-user"></i> View</button>
+        </div>
+      </div>`;
+  }
+
+  function _showLiveEmpOverlay(marker) {
+    _removeLiveEmpOverlay();
+    // Close any open site popup so it doesn't stay visible behind the employee card
+    if (map) map.closePopup();
+    const row        = marker._liveRow;
+    if (!row) return;
+    const mapContainer = map.getContainer();
+    const markerPx     = map.latLngToContainerPoint(marker.getLatLng());
+
+    const overlay = document.createElement('div');
+    overlay.className = 'lm-emp-overlay';
+    // markerPx.y = vertical center of the 52px marker; transform centres overlay on it
+    // markerPx.x = horizontal center of marker; right = distance from right edge of map to marker center + half marker
+    overlay.style.top       = markerPx.y + 'px';
+    overlay.style.right     = (mapContainer.offsetWidth - markerPx.x + 26) + 'px'; // 26 = half of 52px marker
+    overlay.style.transform = 'translateY(-50%)'; // vertically centre on marker midpoint
+    overlay.style.flexDirection = 'row-reverse'; // dot → line → card going left
+
+    overlay.innerHTML = `
+      <div class="lm-emp-overlay-dot"></div>
+      <div class="lm-emp-overlay-line"></div>
+      <div class="lm-emp-overlay-card">${_buildEmpOverlayHtml(row)}</div>`;
+
+    // Close on click outside
+    overlay.querySelector('.lm-emp-overlay-card').addEventListener('click', e => e.stopPropagation());
+
+    mapContainer.appendChild(overlay);
+    _empOverlayEl = overlay;
+  }
+
+  function focusLiveEmployee(userId) {
+    if (!map || !userId) return;
+    const marker = liveMarkers.find(m => String(m._liveUserId) === String(userId));
+    if (!marker) { console.warn('[focusLiveEmployee] no marker for userId:', userId, 'liveMarkers:', liveMarkers.map(m => m._liveUserId)); return; }
+
+    // Toggle off if same marker clicked again
+    if (_activeEmpMarker === marker && _empOverlayEl) {
+      _removeLiveEmpOverlay();
+      _activeEmpMarker = null;
       return;
     }
 
-    // Hide the previously shown employee marker (if different)
+    // Remove old overlay + marker
+    _removeLiveEmpOverlay();
     if (_activeEmpMarker && _activeEmpMarker !== marker) {
       map.removeLayer(_activeEmpMarker);
     }
 
-    // Add marker to map first
     if (!map.hasLayer(marker)) marker.addTo(map);
     _activeEmpMarker = marker;
 
-    // Only zoom in if not already at a useful zoom level
     const currentZoom = map.getZoom();
-    if (currentZoom < 14) {
-      map.setView(marker.getLatLng(), 15, { animate: true, duration: 0.4 });
-    }
-    marker.openPopup();
+    const targetZoom  = currentZoom < 14 ? 15 : currentZoom;
 
-    // Pan only enough to ensure the full popup card is visible (16px padding).
-    function _panToPopup() {
-      if (!map) return;
-      const popup = marker.getPopup();
-      const popupEl = popup && popup.getElement ? popup.getElement() : document.querySelector('.leaflet-popup');
-      if (!popupEl) return;
-      const rect    = popupEl.getBoundingClientRect();
-      const mapRect = map.getContainer().getBoundingClientRect();
-      const topGap  = rect.top - mapRect.top;
-      const botGap  = mapRect.bottom - rect.bottom;
-      const PAD     = 16;
-      if (topGap < PAD) {
-        map.panBy([0, -(PAD - topGap)], { animate: true, duration: 0.2 });
-      } else if (botGap < PAD) {
-        map.panBy([0, PAD - botGap], { animate: true, duration: 0.2 });
-      }
-    }
+    // setView with animate:false is synchronous — map is settled immediately after.
+    map.setView(marker.getLatLng(), targetZoom, { animate: false });
 
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const popup = marker.getPopup();
-      const popupEl = popup && popup.getElement ? popup.getElement() : document.querySelector('.leaflet-popup');
-      if (!popupEl) { _panToPopup(); return; }
+    // Show overlay now — coordinates are correct since no animation occurred.
+    _showLiveEmpOverlay(marker);
 
-      // Selfies are preloaded — complete will almost always be true immediately.
-      const selfieImg = popupEl.querySelector('.lm-popup-selfie img');
-      if (selfieImg && !selfieImg.complete) {
-        let _done = false;
-        const _finish = () => { if (_done) return; _done = true; _panToPopup(); };
-        selfieImg.addEventListener('load',  _finish, { once: true });
-        selfieImg.addEventListener('error', _finish, { once: true });
-      } else {
-        _panToPopup();
-      }
-    }));
+    // Reposition overlay on subsequent map move/zoom
+    map.off('move zoom', _repositionLiveEmpOverlay);
+    map.on('move zoom', _repositionLiveEmpOverlay);
+  }
+
+  function _repositionLiveEmpOverlay() {
+    if (!_empOverlayEl || !_activeEmpMarker) return;
+    const mapContainer = map.getContainer();
+    const markerPx     = map.latLngToContainerPoint(_activeEmpMarker.getLatLng());
+    _empOverlayEl.style.top   = markerPx.y + 'px';
+    _empOverlayEl.style.right = (mapContainer.offsetWidth - markerPx.x + 26) + 'px';
   }
 
   function markProjectAttendance() {
@@ -1233,13 +1274,12 @@ const AttendanceSystem = (function() {
       const storedReadIds    = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_read_notifs_v1')    || '[]')); } catch { return new Set(); } })();
       const storedClearedIds = (() => { try { return new Set(JSON.parse(localStorage.getItem('siomac_cleared_notifs_v1') || '[]')); } catch { return new Set(); } })();
       const unreadNotifs = (c.notificationIds || []).filter(id => !storedReadIds.has(id) && !storedClearedIds.has(id)).length;
-      _setHdrBadge(document.getElementById('hdrNotifBadge'), unreadNotifs);
-
-      // ── Msg badge — from server, same as notif + leave so all appear together ──
-      _setHdrBadge(document.getElementById('hdrMsgBadge'), c.messages || 0);
-
-      // ── Ticket badge — from server ──
-      _setHdrBadge(document.getElementById('hdrTicketBadge'), c.tickets || 0);
+      const _admPillNotifIds  = ['hdrNotifBadge','empNotifBadge','mgrNotifBadge','admEmpNotifBadge','admDeptNotifBadge','admProjNotifBadge','admAttNotifBadge','admLvNotifBadge','admRatesNotifBadge','admPayNotifBadge','admProfNotifBadge','admStgNotifBadge','admAbtNotifBadge'];
+      const _admPillMsgIds    = ['hdrMsgBadge','empMsgBadge','mgrMsgBadge','admEmpMsgBadge','admDeptMsgBadge','admProjMsgBadge','admAttMsgBadge','admLvMsgBadge','admRatesMsgBadge','admPayMsgBadge','admProfMsgBadge','admStgMsgBadge','admAbtMsgBadge'];
+      const _admPillTicketIds = ['hdrTicketBadge','empTicketBadge','mgrTicketBadge','admEmpTicketBadge','admDeptTicketBadge','admProjTicketBadge','admAttTicketBadge','admLvTicketBadge','admRatesTicketBadge','admPayTicketBadge','admProfTicketBadge','admStgTicketBadge','admAbtTicketBadge'];
+      _admPillNotifIds.forEach(id  => _setHdrBadge(document.getElementById(id), unreadNotifs));
+      _admPillMsgIds.forEach(id    => _setHdrBadge(document.getElementById(id), c.messages || 0));
+      _admPillTicketIds.forEach(id => _setHdrBadge(document.getElementById(id), c.tickets || 0));
 
       // ── Leave sidebar badge ──
       if (typeof window._refreshNavBadges === 'function') window._refreshNavBadges(c.pendingLeaves || 0);
@@ -1310,16 +1350,6 @@ const AttendanceSystem = (function() {
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
     document.querySelectorAll('#topTabs button').forEach(b => b.classList.toggle('active', b.dataset.section === id));
 
-    // page-header shows on all pages including live map
-
-    // page header title + subtitle
-    const item = allSectionItems().find(x => x.id === id);
-    if (item) {
-      document.getElementById('pageTitleIcon').className = 'fas ' + item.icon;
-      document.getElementById('pageTitleText').textContent = item.label;
-      const sub = document.getElementById('pageTitleSub');
-      if (sub) sub.textContent = item.sub || '';
-    }
 
     // close mobile drawer + backdrop after click
     document.getElementById('sidebar').classList.remove('mobile-open');
@@ -1404,6 +1434,42 @@ const AttendanceSystem = (function() {
         { btn: 'hdrNotifBtn',  modal: 'hdrNotifModal'  },
         { btn: 'hdrMsgBtn',    modal: 'hdrMsgModal'    },
         { btn: 'hdrTicketBtn', modal: 'hdrTicketModal' },
+        { btn: 'empNotifBtn',  modal: 'hdrNotifModal'  },
+        { btn: 'empMsgBtn',    modal: 'hdrMsgModal'    },
+        { btn: 'empTicketBtn', modal: 'hdrTicketModal' },
+        { btn: 'mgrNotifBtn',       modal: 'hdrNotifModal'  },
+        { btn: 'mgrMsgBtn',         modal: 'hdrMsgModal'    },
+        { btn: 'mgrTicketBtn',      modal: 'hdrTicketModal' },
+        { btn: 'admEmpNotifBtn',    modal: 'hdrNotifModal'  },
+        { btn: 'admEmpMsgBtn',      modal: 'hdrMsgModal'    },
+        { btn: 'admEmpTicketBtn',   modal: 'hdrTicketModal' },
+        { btn: 'admDeptNotifBtn',   modal: 'hdrNotifModal'  },
+        { btn: 'admDeptMsgBtn',     modal: 'hdrMsgModal'    },
+        { btn: 'admDeptTicketBtn',  modal: 'hdrTicketModal' },
+        { btn: 'admProjNotifBtn',   modal: 'hdrNotifModal'  },
+        { btn: 'admProjMsgBtn',     modal: 'hdrMsgModal'    },
+        { btn: 'admProjTicketBtn',  modal: 'hdrTicketModal' },
+        { btn: 'admAttNotifBtn',    modal: 'hdrNotifModal'  },
+        { btn: 'admAttMsgBtn',      modal: 'hdrMsgModal'    },
+        { btn: 'admAttTicketBtn',   modal: 'hdrTicketModal' },
+        { btn: 'admLvNotifBtn',     modal: 'hdrNotifModal'  },
+        { btn: 'admLvMsgBtn',       modal: 'hdrMsgModal'    },
+        { btn: 'admLvTicketBtn',    modal: 'hdrTicketModal' },
+        { btn: 'admRatesNotifBtn',  modal: 'hdrNotifModal'  },
+        { btn: 'admRatesMsgBtn',    modal: 'hdrMsgModal'    },
+        { btn: 'admRatesTicketBtn', modal: 'hdrTicketModal' },
+        { btn: 'admPayNotifBtn',    modal: 'hdrNotifModal'  },
+        { btn: 'admPayMsgBtn',      modal: 'hdrMsgModal'    },
+        { btn: 'admPayTicketBtn',   modal: 'hdrTicketModal' },
+        { btn: 'admProfNotifBtn',   modal: 'hdrNotifModal'  },
+        { btn: 'admProfMsgBtn',     modal: 'hdrMsgModal'    },
+        { btn: 'admProfTicketBtn',  modal: 'hdrTicketModal' },
+        { btn: 'admStgNotifBtn',    modal: 'hdrNotifModal'  },
+        { btn: 'admStgMsgBtn',      modal: 'hdrMsgModal'    },
+        { btn: 'admStgTicketBtn',   modal: 'hdrTicketModal' },
+        { btn: 'admAbtNotifBtn',    modal: 'hdrNotifModal'  },
+        { btn: 'admAbtMsgBtn',      modal: 'hdrMsgModal'    },
+        { btn: 'admAbtTicketBtn',   modal: 'hdrTicketModal' },
       ];
       function closeAll() {
         pairs.forEach(p => {
@@ -1422,9 +1488,22 @@ const AttendanceSystem = (function() {
           const isOpen = m.classList.contains('open');
           closeAll();
           if (!isOpen) {
+            // Position the modal centred below the button that opened it
+            const modalBox = m.querySelector('.hdr-modal');
+            if (modalBox) {
+              const bRect     = b.getBoundingClientRect();
+              const mWidth    = modalBox.offsetWidth || parseInt(modalBox.style.width) || 360;
+              const gap       = 12;
+              let left = bRect.left + bRect.width / 2 - mWidth / 2;
+              const pad = 10;
+              left = Math.max(pad, Math.min(left, window.innerWidth - mWidth - pad));
+              modalBox.style.top   = (bRect.bottom + gap) + 'px';
+              modalBox.style.left  = left + 'px';
+              modalBox.style.right = 'auto';
+            }
             m.classList.add('open'); b.classList.add('active');
             // When ticket modal opens, reset state + speed up polling
-            if (btn === 'hdrTicketBtn') {
+            if (btn === 'hdrTicketBtn' || btn === 'empTicketBtn' || btn === 'mgrTicketBtn') {
               setTimeout(() => {
                 const tl = document.getElementById('ticketList');
                 if (tl) tl.style.display = '';
@@ -1885,7 +1964,7 @@ const AttendanceSystem = (function() {
           : (isSentByMe ? 'You' : m.fromName);
         const isDeleted   = !!m.otherPartyDeleted;
         const hasUnread   = m.isUnread && !isDeleted;
-        const hasNewReply = !m.isUnread && (m.unreadReplyCount > 0) && !isDeleted;
+        const hasNewReply = ((m.unreadReplyCount > 0) || (!isSentByMe && m.isUnread)) && !isDeleted;
         const hasIndicator = hasUnread || hasNewReply;
         const avatarHtml  = otherPhoto
           ? `<img src="${escapeHtml(otherPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border,#eee);${isDeleted ? 'filter:grayscale(1);opacity:.5;' : ''}">`
@@ -2034,7 +2113,7 @@ const AttendanceSystem = (function() {
       function _updateMsgBadge() {
         if (!_msgsLoaded) return; // don't zero badge before first fetch completes
         const unread = _msgs.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length;
-        _setHdrBadge(document.getElementById('hdrMsgBadge'), unread);
+        ['hdrMsgBadge','empMsgBadge','mgrMsgBadge'].forEach(id => _setHdrBadge(document.getElementById(id), unread));
       }
 
       function _updateDetail(msgId) {
@@ -2068,9 +2147,11 @@ const AttendanceSystem = (function() {
         if (appended) {
           bodyEl.scrollTop = bodyEl.scrollHeight;
           if (newFromOther) {
-            // Pulse header button
-            const msgBtn = document.getElementById('hdrMsgBtn');
-            if (msgBtn) { msgBtn.classList.remove('msg-new-reply-pulse'); void msgBtn.offsetWidth; msgBtn.classList.add('msg-new-reply-pulse'); setTimeout(() => msgBtn.classList.remove('msg-new-reply-pulse'), 1400); }
+            // Pulse header button on all pills
+            ['hdrMsgBtn','empMsgBtn','mgrMsgBtn'].forEach(id => {
+              const msgBtn = document.getElementById(id);
+              if (msgBtn) { msgBtn.classList.remove('msg-new-reply-pulse'); void msgBtn.offsetWidth; msgBtn.classList.add('msg-new-reply-pulse'); setTimeout(() => msgBtn.classList.remove('msg-new-reply-pulse'), 1400); }
+            });
             // In-thread toast
             const existing = document.getElementById('msgNewReplyToast');
             if (existing) existing.remove();
@@ -2118,7 +2199,7 @@ const AttendanceSystem = (function() {
           // Use the server-computed unread thread count if available (matches getHeaderCounts logic),
           // otherwise fall back to local filter — prevents badge flicker from count mismatch.
           if (res.unreadCount != null) {
-            _setHdrBadge(document.getElementById('hdrMsgBadge'), res.unreadCount);
+            ['hdrMsgBadge','empMsgBadge','mgrMsgBadge'].forEach(id => _setHdrBadge(document.getElementById(id), res.unreadCount));
           } else {
             _updateMsgBadge();
           }
@@ -2374,41 +2455,59 @@ const AttendanceSystem = (function() {
       }
 
       function _ticketRowHtml(t) {
-        const isAdminView = currentRole === 'admin' || currentRole === 'manager';
-        const isDeleted   = t.status === 'deleted';
-        const isSentByMe  = t.fromUsername === currentUser;
-        const css      = STATUS_CSS[t.status] || 'open';
-        const lbl      = STATUS_LABEL[t.status] || t.status;
-        const initials = _initials(t.fromName || 'U');
+        const isAdminView  = currentRole === 'admin' || currentRole === 'manager';
+        const isDeleted    = t.status === 'deleted';
+        const isSentByMe   = t.fromUsername === currentUser;
+        const css          = STATUS_CSS[t.status] || 'open';
+        const lbl          = STATUS_LABEL[t.status] || t.status;
+        const lastReply    = t.replies && t.replies.length ? t.replies[t.replies.length - 1] : null;
+        const latestTime   = lastReply ? lastReply.createdAt : t.createdAt;
+        const previewBody  = lastReply ? lastReply.body : t.body;
+        const previewBy    = lastReply
+          ? (lastReply.fromUsername === currentUser ? 'You' : (lastReply.fromName || lastReply.fromUsername))
+          : (isSentByMe ? 'You' : (t.fromName || t.fromUsername));
+
+        // Unseen replies from the other party — "New reply" tag for both admin and employee
+        const unseenCount  = (t.replies || []).filter(r => !_seenReplyIds.has(String(r.id)) && r.fromUsername !== currentUser).length;
+        const hasNewReply  = unseenCount > 0 && !isDeleted;
+
+        const initials     = _initials(isAdminView ? (t.fromName || 'U') : 'Me');
+        const displayName  = isAdminView ? (t.fromName || '—') : (t.subject);
         const avatarImgStyle = `width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover;${isDeleted ? 'filter:grayscale(1);opacity:0.5;' : ''}`;
         const avatarInlineOverride = isDeleted ? 'background:#aaa;color:#fff;' : (isSentByMe ? 'background:var(--siomac-navy,#1b2d54);color:#fff;' : '');
-        const avatarHtml = t.fromPhoto
+        const avatarHtml   = t.fromPhoto
           ? `<img src="${escapeHtml(t.fromPhoto)}" alt="${escapeHtml(initials)}" crossorigin="anonymous" style="${avatarImgStyle}border:2px solid var(--border,#eee);">`
           : `<div class="hdr-msg-avatar" style="width:36px;height:36px;font-size:0.7rem;${avatarInlineOverride}">${escapeHtml(initials)}</div>`;
-        const sub = isAdminView
-          ? `${escapeHtml(t.fromName || '—')} · ${_timeAgoShort(t.createdAt)}`
-          : `${escapeHtml(t.category || 'General')} · ${_timeAgoShort(t.createdAt)}`;
         const deletedBadge = isDeleted ? `<span style="font-size:0.62rem;font-weight:600;color:#999;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:1px 6px;margin-left:4px;">Deleted</span>` : '';
-        const deleteBtn = (!isAdminView && !isDeleted && (t.status === 'open' || t.status === 'in_progress'))
-          ? `<button data-delete-ticket-id="${escapeHtml(String(t.id))}" title="Delete ticket" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:2px 6px;border-radius:6px;opacity:.7;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.7'"><i class="fas fa-trash-alt"></i></button>`
+        const deleteBtn    = (!isAdminView && !isDeleted && (t.status === 'open' || t.status === 'in_progress'))
+          ? `<button data-delete-ticket-id="${escapeHtml(String(t.id))}" title="Delete ticket" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:2px 6px;border-radius:6px;opacity:.7;transition:opacity .15s;flex-shrink:0;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.7'"><i class="fas fa-trash-alt"></i></button>`
           : '';
-        return `<div class="hdr-ticket-item ${css}${isDeleted ? ' hdr-ticket-deleted' : ''}" data-ticket-id="${escapeHtml(String(t.id))}" style="${isDeleted ? 'opacity:0.6;pointer-events:' + (isAdminView ? 'auto' : 'none') + ';' : ''}">
+        const indicator    = !hasNewReply ? '' :
+          `<span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;align-self:center;background:rgba(228,12,12,0.09);border:1.5px solid rgba(228,12,12,0.22);border-radius:20px;padding:2px 7px 2px 5px;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;"></span><span style="font-size:0.65rem;font-weight:700;color:var(--siomac-red);">New reply</span></span>`;
+        const borderStyle  = hasNewReply ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
+
+        return `<div class="hdr-ticket-item ${css}${isDeleted ? ' hdr-ticket-deleted' : ''}${hasNewReply ? ' unread' : ''}" data-ticket-id="${escapeHtml(String(t.id))}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);${borderStyle}${isDeleted ? 'opacity:0.6;pointer-events:' + (isAdminView ? 'auto' : 'none') + ';' : ''}">
           ${avatarHtml}
           <div style="flex:1;min-width:0;">
-            <div class="hdr-ticket-top">
-              <span class="hdr-ticket-id" style="${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">#${escapeHtml(t.ticketNumber)}</span>
-              <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>
-              ${deletedBadge}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <span style="font-weight:${hasNewReply ? '700' : '600'};color:${hasNewReply ? 'var(--text-primary)' : 'var(--text-muted)'};${isDeleted ? 'text-decoration:line-through;' : ''}">${escapeHtml(isAdminView ? (t.fromName || '—') : `#${t.ticketNumber}`)}</span>
+              <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                <span class="hdr-ticket-status ${css}">${escapeHtml(lbl)}</span>${deletedBadge}
+                <span style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;">${_timeAgoShort(latestTime)}</span>
+              </div>
             </div>
-            <div class="hdr-ticket-title" style="${isDeleted ? 'text-decoration:line-through;color:#999;' : ''}">${escapeHtml(t.subject)}</div>
-            <div class="hdr-ticket-sub">${sub}${t.replies.length ? ` · ${t.replies.length} repl${t.replies.length !== 1 ? 'ies' : 'y'}` : ''}</div>
+            <div style="font-size:0.78rem;font-weight:${hasNewReply ? '700' : '600'};color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(t.subject)}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="font-style:italic;">${escapeHtml(previewBy)}:</span> ${escapeHtml(previewBody || '—')}</div>
           </div>
+          ${indicator}
           ${deleteBtn}
         </div>`;
       }
 
       function _ticketRowKey(t) {
-        return (t.status || '') + '|' + (t.replies || []).length;
+        const lastReply = t.replies && t.replies.length ? t.replies[t.replies.length - 1] : null;
+        const unseenCount = (t.replies || []).filter(r => !_seenReplyIds.has(String(r.id))).length;
+        return (t.status || '') + '|' + (t.replies || []).length + '|' + (lastReply ? lastReply.createdAt : t.createdAt) + '|' + unseenCount;
       }
 
       function _renderList() {
@@ -2417,7 +2516,13 @@ const AttendanceSystem = (function() {
 
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
         // Employees never see their deleted tickets in the list
-        const visibleTickets = isAdminView ? _tickets : _tickets.filter(t => t.status !== 'deleted');
+        const visibleTickets = (isAdminView ? _tickets : _tickets.filter(t => t.status !== 'deleted'))
+          .slice()
+          .sort((a, b) => {
+            const latestA = a.replies && a.replies.length ? a.replies[a.replies.length - 1].createdAt : a.createdAt;
+            const latestB = b.replies && b.replies.length ? b.replies[b.replies.length - 1].createdAt : b.createdAt;
+            return new Date(latestB).getTime() - new Date(latestA).getTime();
+          });
 
         if (!visibleTickets.length) {
           list.innerHTML = '<div class="hdr-notif-empty"><i class="fas fa-ticket-alt" style="opacity:.3"></i><p>No tickets yet</p></div>';
@@ -2454,6 +2559,11 @@ const AttendanceSystem = (function() {
         const t = _tickets.find(x => String(x.id) === String(ticketId));
         if (!t) return;
         _currentTicketId = ticketId;
+        // Seal all replies on this ticket as seen immediately — clears badge/indicator for both roles
+        (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id)));
+        _persistSeen();
+        _updateTicketBadge();
+        _renderList();
         document.getElementById('ticketList').style.display = 'none';
         document.getElementById('ticketComposePane').style.display = 'none';
         document.getElementById('ticketModalFoot').style.display = 'none';
@@ -2573,16 +2683,14 @@ const AttendanceSystem = (function() {
       function _updateTicketBadge() {
         if (!_ticketsLoaded) return;
         const isAdminView = currentRole === 'admin' || currentRole === 'manager';
+        // Unseen replies from the other party across all tickets
+        const unseen = _tickets.reduce((sum, t) =>
+          sum + (t.replies || []).filter(r => !_seenReplyIds.has(String(r.id)) && r.fromUsername !== currentUser).length, 0);
+        ['hdrTicketBadge','empTicketBadge','mgrTicketBadge'].forEach(id => _setHdrBadge(document.getElementById(id), unseen));
         if (isAdminView) {
           const openCount = _tickets.filter(t => t.status === 'open').length;
-          _setHdrBadge(document.getElementById('hdrTicketBadge'), openCount);
           const countEl = document.getElementById('ticketOpenCount');
           if (countEl) countEl.textContent = openCount ? `${openCount} Open Ticket${openCount !== 1 ? 's' : ''}` : '';
-        } else {
-          // Employees: show count of unseen admin replies
-          const unseen = _tickets.reduce((sum, t) =>
-            sum + (t.replies || []).filter(r => !_seenReplyIds.has(String(r.id))).length, 0);
-          _setHdrBadge(document.getElementById('hdrTicketBadge'), unseen);
         }
       }
 
@@ -2601,21 +2709,9 @@ const AttendanceSystem = (function() {
           // Mark all current reply ids as seen only after badge is updated
           // (done after _updateTicketBadge call below)
 
-          const _firstLoad = !_ticketsLoaded;
           _tickets = raw;
           _ticketsLoaded = true;
-          // On first load, seal all existing replies as seen — badge stays at 0
-          // On subsequent polls, _updateTicketBadge reads unseen count before sealing
-          if (_firstLoad) {
-            raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
-            _persistSeen();
-          }
           _updateTicketBadge();
-          // After badge is set, seal so next poll won't re-count
-          if (!_firstLoad) {
-            raw.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
-            _persistSeen();
-          }
           // Detail open → silent update; composing → leave pane alone; else refresh list
           if (_currentTicketId) {
             _updateTicketDetail(_currentTicketId);
@@ -2688,10 +2784,22 @@ const AttendanceSystem = (function() {
         btn.disabled = true;
         btn.style.opacity = '0.4';
         document.getElementById('ticketReplyInput').value = '';
+        const _optimisticReply = { id: 'tmp_' + Date.now(), fromUsername: currentUser, fromName: currentFullName || currentUser, fromPhoto: _currentProfileImage || '', body, createdAt: new Date().toISOString() };
+        const _t = _tickets.find(x => String(x.id) === String(_currentTicketId));
+        if (_t) {
+          _t.replies = _t.replies || [];
+          _t.replies.push(_optimisticReply);
+          // Seal the optimistic reply as seen so it doesn't trigger badge for sender
+          _seenReplyIds.add(String(_optimisticReply.id));
+          _persistSeen();
+          _updateTicketBadge();
+          _renderList();
+          _showDetail(_currentTicketId);
+        }
         api('replyTicket', { ticketId: _currentTicketId, body }).then(res => {
           if (typeof _syncTicketReplyBtn === 'function') _syncTicketReplyBtn(); else btn.disabled = false;
           if (!res.success) { showPopup('error', 'Failed', res.message); return; }
-          _fetch(true); // refresh but stay in detail view
+          _fetch(true); // refresh to get real server IDs
         }).catch(() => { if (typeof _syncTicketReplyBtn === 'function') _syncTicketReplyBtn(); else btn.disabled = false; });
       });
 
@@ -2787,13 +2895,7 @@ const AttendanceSystem = (function() {
       window._clearTicketDetail  = () => { _currentTicketId = null; _composing = false; };
       window._ticketModalOpened  = () => {
         clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 3 * 1000);
-        // Only clear badge for employees — admin badge reflects open ticket count, not reads
-        if (currentRole === 'employee') {
-          _tickets.forEach(t => { (t.replies || []).forEach(r => _seenReplyIds.add(String(r.id))); });
-          _persistSeen();
-          try { localStorage.setItem('siomac_ticket_seen_since_' + currentUser, new Date().toISOString()); } catch (_) {}
-          _setHdrBadge(document.getElementById('hdrTicketBadge'), 0);
-        }
+        // Speed up polling — badge/row updates happen per-ticket in _showDetail
       };
       window._ticketModalClosed  = () => { clearInterval(_pollTimer); _pollTimer = setInterval(_fetch, 10 * 1000); };
     })();
@@ -2803,6 +2905,32 @@ const AttendanceSystem = (function() {
     if (hdrProfileBtn) {
       hdrProfileBtn.addEventListener('click', () => showSection('s-profile'));
     }
+
+    // ── Dashboard today date ──
+    const _dashDate = document.getElementById('dashTodayDate');
+    const _dashDay  = document.getElementById('dashTodayDay');
+    if (_dashDate) {
+      const _now = new Date();
+      _dashDate.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(_now);
+      if (_dashDay) _dashDay.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(_now);
+    }
+
+    // ── Dashboard theme toggle ──
+    (function() {
+      const btnLight = document.getElementById('dashThemeLight');
+      const btnDark  = document.getElementById('dashThemeDark');
+      if (!btnLight || !btnDark) return;
+      function _applyTheme(t) {
+        document.body.setAttribute('data-theme', t);
+        btnLight.classList.toggle('active', t === 'light');
+        btnDark.classList.toggle('active',  t === 'dark');
+        localStorage.setItem('siomac-theme', t);
+      }
+      const saved = localStorage.getItem('siomac-theme') || 'light';
+      _applyTheme(saved);
+      btnLight.addEventListener('click', () => _applyTheme('light'));
+      btnDark.addEventListener('click',  () => _applyTheme('dark'));
+    })();
 
     document.getElementById('sidebarMenu').addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-section]');
@@ -3399,9 +3527,9 @@ const AttendanceSystem = (function() {
         }
       }
 
-      // Live map: click employee item → focus marker
+      // Live map: click employee item → focus marker (only when inside s-projectMap section)
       const liveCard = event.target.closest('.lm-emp-item') || event.target.closest('.live-emp-card');
-      if (liveCard) focusLiveEmployee(liveCard.dataset.id || liveCard.dataset.userid);
+      if (liveCard && event.target.closest('#s-projectMap')) focusLiveEmployee(String(liveCard.dataset.id || liveCard.dataset.userid || ''));
 
       // Hourly rates — action buttons
       if (event.target.closest('#refreshRatesBtn')) loadHourlyRates();
@@ -3761,6 +3889,57 @@ const AttendanceSystem = (function() {
         hdrAvatarEl.textContent = initial;
       }
     }
+
+    // populate dashboard pill avatar/name/role
+    const dashAv = document.getElementById('dashProfileAvatar');
+    if (dashAv) {
+      const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      if (result.profileImage) {
+        _swapAvatarImg(dashAv, result.profileImage, initial, 'hdr');
+      } else {
+        dashAv.textContent = initial;
+      }
+    }
+    const dashName = document.getElementById('dashProfileName');
+    if (dashName) dashName.textContent = currentFullName || currentUser || 'Admin';
+    const dashRole = document.getElementById('dashProfileRole');
+    if (dashRole) dashRole.textContent = (currentRole || 'admin').charAt(0).toUpperCase() + (currentRole || 'admin').slice(1);
+
+    // populate employee pill avatar/name/role
+    const _empAv = document.getElementById('empProfileAvatar');
+    if (_empAv) {
+      const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      if (result.profileImage) { _swapAvatarImg(_empAv, result.profileImage, initial, 'hdr'); } else { _empAv.textContent = initial; }
+    }
+    const _empName = document.getElementById('empProfileName');
+    if (_empName) _empName.textContent = currentFullName || currentUser || 'Employee';
+    const _empRole = document.getElementById('empProfileRole');
+    if (_empRole) _empRole.textContent = (currentRole || 'employee').charAt(0).toUpperCase() + (currentRole || 'employee').slice(1);
+
+    // populate manager pill avatar/name/role
+    const _mgrAv = document.getElementById('mgrProfileAvatar');
+    if (_mgrAv) {
+      const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      if (result.profileImage) { _swapAvatarImg(_mgrAv, result.profileImage, initial, 'hdr'); } else { _mgrAv.textContent = initial; }
+    }
+    const _mgrName = document.getElementById('mgrProfileName');
+    if (_mgrName) _mgrName.textContent = currentFullName || currentUser || 'Manager';
+    const _mgrRole = document.getElementById('mgrProfileRole');
+    if (_mgrRole) _mgrRole.textContent = (currentRole || 'manager').charAt(0).toUpperCase() + (currentRole || 'manager').slice(1);
+
+    // populate admin section pills avatar/name/role
+    const _admPillPrefixes = ['admEmp','admDept','admProj','admAtt','admLv','admRates','admPay','admProf','admStg','admAbt'];
+    _admPillPrefixes.forEach(pfx => {
+      const _av = document.getElementById(pfx + 'ProfileAvatar');
+      if (_av) {
+        const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+        if (result.profileImage) { _swapAvatarImg(_av, result.profileImage, initial, 'hdr'); } else { _av.textContent = initial; }
+      }
+      const _nm = document.getElementById(pfx + 'ProfileName');
+      if (_nm) _nm.textContent = currentFullName || currentUser || 'Admin';
+      const _rl = document.getElementById(pfx + 'ProfileRole');
+      if (_rl) _rl.textContent = (currentRole || 'admin').charAt(0).toUpperCase() + (currentRole || 'admin').slice(1);
+    });
 
     // Seed the profile photo from the session so opening My Profile never
     // shows the red-circle fallback while waiting for getEmployeeByUsername.
@@ -6839,25 +7018,20 @@ const AttendanceSystem = (function() {
             if (_flyAttempts > 40) return; // give up after ~6s
             if (!map) { setTimeout(_flyToSite, 150); return; }
 
-            // Map exists — fly immediately
-            map.setView([lat, lng], 17, { animate: true });
-
-            // Wait for site layer independently — first visit can be slow
-            const _openPopup = () => {
+            // Fly to site, then wait for animation to finish before opening popup
+            // so autoPanPadding fires against the final viewport (not mid-animation).
+            const _tryOpenPopup = () => {
               _popAttempts++;
-              if (_popAttempts > 100) return; // give up after ~15s
+              if (_popAttempts > 100) return;
               const entry = _siteLayerMap[site.id];
               if (entry && (entry.marker || entry.zone)) {
-                const layer = entry.marker || entry.zone;
-                setTimeout(() => {
-                  layer.openPopup();
-                  map.panBy([0, -100], { animate: true });
-                }, 400);
+                (entry.marker || entry.zone).openPopup();
               } else {
-                setTimeout(_openPopup, 150);
+                setTimeout(_tryOpenPopup, 150);
               }
             };
-            _openPopup();
+            map.once('moveend', _tryOpenPopup);
+            map.setView([lat, lng], 17, { animate: true });
           };
           setTimeout(_flyToSite, 100);
         }
@@ -8323,8 +8497,12 @@ const AttendanceSystem = (function() {
         <td>${_prFmtShort(r.paye)}</td>
         <td><strong>${_prFmtShort(r.netPay)}</strong></td>
         <td class="dt-no-export" style="white-space:nowrap;">
-          <button class="pr-row-btn pr-payslip-btn" data-uid="${escapeHtml(r.userId)}" title="View payslip"><i class="fas fa-eye"></i></button>
-          ${_prReportsMode ? '' : `<button class="pr-row-btn pr-edit-btn" data-uid="${escapeHtml(r.userId)}" title="Edit payroll"><i class="fas fa-sliders"></i></button>`}
+          <button class="pr-row-btn pr-payslip-btn" data-uid="${escapeHtml(r.userId)}">
+            <i class="fas fa-eye"></i> Payslip
+          </button>
+          ${_prReportsMode ? '' : `<button class="pr-row-btn pr-edit-btn" data-uid="${escapeHtml(r.userId)}">
+            <i class="fas fa-sliders"></i> Edit
+          </button>`}
         </td>
       </tr>`).join('');
     // Init DataTable — CSV/PDF/Print buttons moved into section-header
@@ -9335,20 +9513,29 @@ const AttendanceSystem = (function() {
       }
       _currentProfileImage = newPhoto;
       _patchPhotoCache(currentUser, newPhoto); // keep global cache current
-      // Update header profile avatar
-      const hdrAv = document.getElementById('hdrProfileAvatar');
-      if (hdrAv) {
-        const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      // Update header + dashboard pill profile avatar
+      const initial = (currentFullName || currentUser || '?').trim().charAt(0).toUpperCase();
+      const _allAvatarIds = ['hdrProfileAvatar','dashProfileAvatar','empProfileAvatar','mgrProfileAvatar',
+        'admEmpProfileAvatar','admDeptProfileAvatar','admProjProfileAvatar','admAttProfileAvatar',
+        'admLvProfileAvatar','admRatesProfileAvatar','admPayProfileAvatar','admProfProfileAvatar',
+        'admStgProfileAvatar','admAbtProfileAvatar'];
+      _allAvatarIds.forEach(avId => {
+        const av = document.getElementById(avId);
+        if (!av) return;
         if (newPhoto) {
-          // Update the preload reference so _swapAvatarImg picks it up immediately next time
           window._preloadedProfileUrl = newPhoto;
           window._preloadedProfileImage = new Image();
           window._preloadedProfileImage.src = newPhoto;
-          _swapAvatarImg(hdrAv, newPhoto, initial, 'hdr');
+          _swapAvatarImg(av, newPhoto, initial, 'hdr');
         } else {
-          hdrAv.textContent = initial;
+          av.textContent = initial;
         }
-      }
+      });
+      const _allNameIds = ['dashProfileName','empProfileName','mgrProfileName',
+        'admEmpProfileName','admDeptProfileName','admProjProfileName','admAttProfileName',
+        'admLvProfileName','admRatesProfileName','admPayProfileName','admProfProfileName',
+        'admStgProfileName','admAbtProfileName'];
+      _allNameIds.forEach(nmId => { const el = document.getElementById(nmId); if (el) el.textContent = currentFullName || currentUser || 'Admin'; });
       _setProfilePhotoUI(newPhoto, currentFullName);
       updateStoredSession({ profileImage: newPhoto });
       _updateProfileDisplayUI({ fullName: currentFullName, username: currentUser, role: currentRole, email, phone });

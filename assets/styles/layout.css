@@ -219,8 +219,8 @@
 /* Page header */
 .page-header {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 24px; flex-wrap: nowrap; gap: 12px;
-  min-height: 52px; align-items: center;
+  flex-wrap: nowrap; gap: 12px;
+  min-height: 0; margin-bottom: 0;
 }
 .page-header-left {
   display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
@@ -321,7 +321,7 @@
 }
 .hdr-modal-overlay.open { display: block; }
 .hdr-modal {
-  position: absolute; top: 72px; right: 24px;
+  position: fixed; top: 72px; right: 24px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;

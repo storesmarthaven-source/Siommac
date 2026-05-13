@@ -94,9 +94,10 @@ const swr = (function () {
     const cached = cache.get(key);
     const isFresh = cached && (Date.now() - cached.ts) < ttl;
 
-    // 1) deliver cached synchronously-via-microtask if available
+    // 1) deliver cached data synchronously so the UI renders immediately on
+    //    repeat visits — no microtask gap that leaves a blank section visible.
     if (cached && opts.onData) {
-      Promise.resolve().then(() => { try { opts.onData(cached.data, /*isStale*/ !isFresh, /*fromCache*/ true); } catch (_) {} });
+      try { opts.onData(cached.data, /*isStale*/ !isFresh, /*fromCache*/ true); } catch (_) {}
     }
     // fresh + not forced → no revalidation
     if (cached && isFresh && !force) return Promise.resolve(cached.data);
