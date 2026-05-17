@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser }         from '../lib/auth';
 import { getProfileSignedUrl } from '../lib/photos';
+import { zv, CreateTicketSchema, ReplyTicketSchema, GetTicketSchema, UpdateTicketSchema } from '../lib/validate';
 import type { HonoVariables }  from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -17,14 +18,12 @@ async function _genTicketNumber(): Promise<string> {
 }
 
 router.post('/createTicket', async c => {
-  const actor    = await requireUser(c);
+  const actor = await requireUser(c);
   if (actor.role === 'admin' || actor.role === 'manager') return c.json({ success: false, message: 'Admins and managers cannot create support tickets.' });
-  const args     = (c.get('body').args ?? {}) as Record<string, string>;
-  const subject  = (args.subject  ?? '').trim();
-  const body     = (args.body     ?? '').trim();
-  const category = (args.category ?? 'general').trim();
-  if (!subject) return c.json({ success: false, message: 'Subject is required.' });
-  if (!body)    return c.json({ success: false, message: 'Description is required.' });
+  const v = zv(c, CreateTicketSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { subject, body, priority } = v.data;
+  const category = ((c.get('body').args ?? {}) as Record<string, string>).category?.trim() ?? 'general';
 
   let ticketNumber = await _genTicketNumber();
   let data: { id: string; ticket_number: string } | null = null;
@@ -33,7 +32,7 @@ router.post('/createTicket', async c => {
   for (let attempt = 0; attempt < 3; attempt++) {
     ({ data, error } = await sb.from('support_tickets').insert({
       from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name ?? actor.username,
-      ticket_number: ticketNumber, category, subject, body, status: 'open',
+      ticket_number: ticketNumber, category, subject, body, status: 'open', priority: priority ?? 'medium',
     }).select('id, ticket_number').single<{ id: string; ticket_number: string }>());
     if (!error) break;
     if (!error.message.includes('unique') && !error.message.includes('duplicate')) break;
@@ -89,12 +88,13 @@ router.post('/getTickets', async c => {
 
 router.post('/replyTicket', async c => {
   const actor = await requireUser(c);
-  const { ticketId, body } = (c.get('body').args ?? {}) as Record<string, string>;
-  if (!body?.trim()) return c.json({ success: false, message: 'Reply cannot be empty.' });
+  const v = zv(c, ReplyTicketSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { ticketId, body } = v.data;
   const { data: ticket } = await sb.from('support_tickets').select('status, from_user_id').eq('id', ticketId).maybeSingle<{ status: string; from_user_id: string }>();
   if (!ticket) return c.json({ success: false, message: 'Ticket not found.' });
   if (ticket.status === 'closed' || ticket.status === 'resolved') return c.json({ success: false, message: 'This ticket is closed and can no longer be replied to.' });
-  const { error } = await sb.from('ticket_replies').insert({ ticket_id: ticketId, from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name ?? actor.username, body: body.trim() });
+  const { error } = await sb.from('ticket_replies').insert({ ticket_id: ticketId, from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name ?? actor.username, body });
   if (error) return c.json({ success: false, message: error.message });
   if (actor.role === 'admin' || actor.role === 'manager') {
     await sb.from('support_tickets').update({ status: 'in_progress', updated_at: new Date().toISOString() }).eq('id', ticketId);
@@ -104,10 +104,11 @@ router.post('/replyTicket', async c => {
 
 router.post('/updateTicketStatus', async c => {
   const actor = await requireUser(c);
-  if (actor.role !== 'admin' && actor.role !== 'manager') return c.json({ success: false, message: 'Forbidden.' });
-  const { ticketId, status } = (c.get('body').args ?? {}) as Record<string, string>;
-  const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
-  if (!validStatuses.includes(status)) return c.json({ success: false, message: 'Invalid status.' });
+  if (actor.role !== 'admin' && actor.role !== 'manager') return c.json({ success: false, message: 'Forbidden.' }, 403);
+  const v = zv(c, UpdateTicketSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { ticketId, status } = v.data;
+  if (!status) return c.json({ success: false, message: 'Status is required.' }, 400);
   const { data: ticket } = await sb.from('support_tickets').select('status').eq('id', ticketId).maybeSingle<{ status: string }>();
   if (!ticket) return c.json({ success: false, message: 'Ticket not found.' });
   const { error } = await sb.from('support_tickets').update({ status, updated_at: new Date().toISOString() }).eq('id', ticketId);
@@ -124,7 +125,9 @@ router.post('/updateTicketStatus', async c => {
 
 router.post('/deleteTicket', async c => {
   const actor = await requireUser(c);
-  const { ticketId } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, GetTicketSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { ticketId } = v.data;
   if (actor.role === 'admin' || actor.role === 'manager') return c.json({ success: false, message: 'Admins cannot delete tickets. Use the status controls instead.' });
   const { data: ticket } = await sb.from('support_tickets').select('id, from_user_id, status, subject').eq('id', ticketId).maybeSingle<{ id: string; from_user_id: string; status: string; subject: string }>();
   if (!ticket) return c.json({ success: false, message: 'Ticket not found.' });

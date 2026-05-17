@@ -2,25 +2,29 @@ import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole } from '../lib/auth';
 import { getProfileSignedUrl }      from '../lib/photos';
+import { zv, MarkMessageReadSchema, z } from '../lib/validate';
 import type { HonoVariables }       from '../../../types/api';
 import type { AppUser }             from '../../../types/db';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
+const SendMessageFullSchema = z.object({
+  subject:    z.string().min(1).max(256),
+  body:       z.string().min(1).max(5000),
+  toUsername: z.string().max(64).optional(),
+});
+
 router.post('/sendMessage', async c => {
-  const actor      = await requireUser(c);
-  const args       = (c.get('body').args ?? {}) as Record<string, string>;
-  const subject    = (args.subject    ?? '').trim();
-  const body       = (args.body       ?? '').trim();
-  const toUsername = (args.toUsername ?? '').trim();
-  if (!subject) return c.json({ success: false, message: 'Subject is required.' });
-  if (!body)    return c.json({ success: false, message: 'Message body is required.' });
+  const actor = await requireUser(c);
+  const v = zv(c, SendMessageFullSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { subject, body, toUsername } = v.data;
 
   const isAdminSending = actor.role === 'admin' || actor.role === 'manager';
   let toUserId = '', toName = '', resolvedToUsername = '';
 
   if (isAdminSending) {
-    if (!toUsername) return c.json({ success: false, message: 'Recipient is required.' });
+    if (!toUsername) return c.json({ success: false, message: 'Recipient is required.' }, 400);
     const { data: target } = await sb.from('app_users').select('id, full_name, username').eq('username', toUsername).maybeSingle<Pick<AppUser, 'id' | 'full_name' | 'username'>>();
     if (!target) return c.json({ success: false, message: 'Employee not found.' });
     toUserId = target.id; toName = target.full_name ?? target.username; resolvedToUsername = target.username;
@@ -90,15 +94,21 @@ router.post('/getMessages', async c => {
   return c.json({ success: true, data: mapped, unreadCount: mapped.filter(m => !m.otherPartyDeleted && (m.isUnread || m.unreadReplyCount > 0)).length });
 });
 
+const ReplyMessageSchema = z.object({
+  messageId: z.string().min(1).max(64),
+  body:      z.string().min(1).max(5000),
+});
+
 router.post('/replyMessage', async c => {
   const actor = await requireUser(c);
-  const { messageId, body } = (c.get('body').args ?? {}) as Record<string, string>;
-  if (!body?.trim()) return c.json({ success: false, message: 'Reply cannot be empty.' });
-  const { data: msg } = await sb.from('messages').select('from_user_id, to_user_id').eq('id', messageId).maybeSingle<{ from_user_id: string; to_user_id: string }>();
+  const v = zv(c, ReplyMessageSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { messageId, body } = v.data;
+  const { data: msg } = await sb.from('messages').select('from_user_id, to_user_id').eq('id', String(messageId)).maybeSingle<{ from_user_id: string; to_user_id: string }>();
   if (!msg) return c.json({ success: false, message: 'Message not found.' });
   const isAdminView    = actor.role === 'admin' || actor.role === 'manager';
   const inConversation = isAdminView || msg.from_user_id === actor.id || msg.to_user_id === actor.id;
-  if (!inConversation) return c.json({ success: false, message: 'Forbidden.' });
+  if (!inConversation) return c.json({ success: false, message: 'Forbidden.' }, 403);
   if (isAdminView) {
     const otherUserId = msg.from_user_id === actor.id ? msg.to_user_id : msg.from_user_id;
     if (otherUserId) {
@@ -106,7 +116,7 @@ router.post('/replyMessage', async c => {
       if (!otherUser) return c.json({ success: false, message: 'This employee no longer exists. Please delete this conversation.' });
     }
   }
-  const { error } = await sb.from('message_replies').insert({ message_id: messageId, from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name ?? actor.username, body: body.trim() });
+  const { error } = await sb.from('message_replies').insert({ message_id: messageId, from_user_id: actor.id, from_username: actor.username, from_name: actor.full_name ?? actor.username, body });
   if (error) return c.json({ success: false, message: error.message });
   try { await sb.from('message_reads').upsert({ message_id: messageId, user_id: actor.id, last_read_at: new Date().toISOString() }, { onConflict: 'message_id,user_id' }); } catch { /* best-effort */ }
   return c.json({ success: true });
@@ -114,7 +124,9 @@ router.post('/replyMessage', async c => {
 
 router.post('/markMessageRead', async c => {
   const actor = await requireUser(c);
-  const { messageId } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, MarkMessageReadSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { messageId } = v.data;
   const now = new Date().toISOString();
   try { await sb.from('message_reads').upsert({ message_id: messageId, user_id: actor.id, last_read_at: now }, { onConflict: 'message_id,user_id' }); } catch { /* best-effort */ }
   try { await sb.from('messages').update({ read_by_recipient: true }).eq('id', messageId); } catch { /* best-effort */ }
@@ -123,9 +135,10 @@ router.post('/markMessageRead', async c => {
 
 router.post('/deleteMessage', async c => {
   const actor = await requireUser(c);
-  if (actor.role !== 'admin' && actor.role !== 'manager') return c.json({ success: false, message: 'Forbidden.' });
-  const { messageId } = (c.get('body').args ?? {}) as Record<string, string>;
-  if (!messageId) return c.json({ success: false, message: 'messageId is required.' });
+  if (actor.role !== 'admin' && actor.role !== 'manager') return c.json({ success: false, message: 'Forbidden.' }, 403);
+  const v = zv(c, MarkMessageReadSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { messageId } = v.data;
   try { await sb.from('message_reads').delete().eq('message_id', messageId); } catch { /* best-effort */ }
   await sb.from('message_replies').delete().eq('message_id', messageId);
   const { error } = await sb.from('messages').delete().eq('id', messageId);

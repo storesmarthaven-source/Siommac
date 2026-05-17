@@ -3,6 +3,7 @@ import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
 import { dateOnly, r2 }                   from '../lib/helpers';
 import { setting, getAllSettings, invalidateSettingsCache } from '../lib/settings';
+import { zv, z, zPayCycle, zPayBasis, zDateStr } from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 import type { Payslip }                   from '../../../types/api';
 import type { AppUser, PayCycle, PayBasis } from '../../../types/db';
@@ -333,23 +334,48 @@ router.post('/listPayrollRun', async c => {
   return c.json({ success: true, data: { rows, totals, dateFrom, dateTo, cycleFilter } });
 });
 
+const ApprovePayrollSchema = z.object({
+  dateFrom:    zDateStr,
+  dateTo:      zDateStr,
+  cycleFilter: zPayCycle.optional(),
+  approvedBy:  z.string().max(128).optional(),
+  rows: z.array(z.object({
+    userId:        z.string().max(64),
+    username:      z.string().max(64),
+    payCycle:      zPayCycle.optional(),
+    payBasis:      zPayBasis.optional(),
+    grossPay:      z.number().nonnegative(),
+    nis:           z.number().nonnegative(),
+    healthSurcharge: z.number().nonnegative(),
+    paye:          z.number().nonnegative(),
+    totalDeductions: z.number().nonnegative(),
+    netPay:        z.number().nonnegative(),
+    hoursWorked:   z.number().nonnegative(),
+    daysWorked:    z.number().int().nonnegative(),
+    hourlyRate:    z.number().nonnegative().optional(),
+    monthlySalary: z.number().nonnegative().optional(),
+    department:    z.string().max(128).optional(),
+    position:      z.string().max(128).optional(),
+  })).min(1).max(1000),
+});
+
 router.post('/approvePayroll', async c => {
   await requireRole(c, ['admin', 'manager']);
-  const { rows, dateFrom, dateTo, cycleFilter, approvedBy } = (c.get('body').args ?? {}) as Record<string, unknown>;
-  if (!Array.isArray(rows) || !rows.length) return c.json({ success: false, message: 'No payroll rows provided' });
-  if (!dateFrom || !dateTo) return c.json({ success: false, message: 'Missing date range' });
+  const v = zv(c, ApprovePayrollSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { rows, dateFrom, dateTo, cycleFilter, approvedBy } = v.data;
 
-  const records = (rows as any[]).map(r => ({
+  const records = rows.map(r => ({
     user_id: r.userId, username: r.username,
     date_from: dateFrom, date_to: dateTo,
-    pay_cycle: r.payCycle || cycleFilter || 'monthly',
-    pay_basis: r.payBasis || 'salary',
-    gross_pay: r.grossPay || 0, nis: r.nis || 0, health_surcharge: r.healthSurcharge || 0,
-    paye: r.paye || 0, total_deductions: r.totalDeductions || 0, net_pay: r.netPay || 0,
-    hours_worked: r.hoursWorked || 0, days_worked: r.daysWorked || 0,
-    hourly_rate: r.hourlyRate || 0, monthly_salary: r.monthlySalary || 0,
-    department: r.department || '', position: r.position || '',
-    approved_by: approvedBy || 'admin', approved_at: new Date().toISOString(), status: 'approved',
+    pay_cycle: r.payCycle ?? cycleFilter ?? 'monthly',
+    pay_basis: r.payBasis ?? 'salary',
+    gross_pay: r.grossPay, nis: r.nis, health_surcharge: r.healthSurcharge,
+    paye: r.paye, total_deductions: r.totalDeductions, net_pay: r.netPay,
+    hours_worked: r.hoursWorked, days_worked: r.daysWorked,
+    hourly_rate: r.hourlyRate ?? 0, monthly_salary: r.monthlySalary ?? 0,
+    department: r.department ?? '', position: r.position ?? '',
+    approved_by: approvedBy ?? 'admin', approved_at: new Date().toISOString(), status: 'approved',
   }));
 
   const { error } = await sb.from('payroll_approvals').upsert(records, { onConflict: 'user_id,date_from,date_to,pay_cycle' });
@@ -394,19 +420,32 @@ router.post('/savePayrollConstants', async c => {
   return c.json({ success: true });
 });
 
+const UpdateEmployeePayrollSchema = z.object({
+  userId:                    z.string().min(1).max(64),
+  payCycle:                  zPayCycle.optional(),
+  payBasis:                  zPayBasis.optional(),
+  hourlyRate:                z.number().nonnegative().optional(),
+  monthlySalary:             z.number().nonnegative().optional(),
+  standardHoursPerDay:       z.number().min(1).max(24).optional(),
+  nisApplicable:             z.boolean().optional(),
+  healthSurchargeApplicable: z.boolean().optional(),
+  taxResident:               z.boolean().optional(),
+});
+
 router.post('/updateEmployeePayroll', async c => {
   await requireRole(c, ['admin']);
-  const { userId, payCycle, payBasis, hourlyRate, monthlySalary, standardHoursPerDay, nisApplicable, healthSurchargeApplicable, taxResident } = (c.get('body').args ?? {}) as Record<string, unknown>;
-  if (!userId) return c.json({ success: false, message: 'Missing userId' });
+  const v = zv(c, UpdateEmployeePayrollSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { userId, payCycle, payBasis, hourlyRate, monthlySalary, standardHoursPerDay, nisApplicable, healthSurchargeApplicable, taxResident } = v.data;
   const { error } = await sb.from('app_users').update({
     pay_cycle:                   payCycle               ?? 'monthly',
     pay_basis:                   payBasis               ?? 'salary',
-    hourly_rate:                 Number(hourlyRate)     || 0,
-    monthly_salary:              Number(monthlySalary)  || 0,
-    standard_hours_per_day:      Number(standardHoursPerDay) || 8,
-    nis_applicable:              nisApplicable !== false,
+    hourly_rate:                 hourlyRate             ?? 0,
+    monthly_salary:              monthlySalary          ?? 0,
+    standard_hours_per_day:      standardHoursPerDay    ?? 8,
+    nis_applicable:              nisApplicable          !== false,
     health_surcharge_applicable: healthSurchargeApplicable !== false,
-    tax_resident:                taxResident !== false,
+    tax_resident:                taxResident            !== false,
     updated_at:                  new Date().toISOString(),
   }).eq('id', userId);
   if (error) return c.json({ success: false, message: error.message });

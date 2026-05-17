@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { sb }   from '../lib/db';
+import { sb, sbAnon } from '../lib/db';
 import { requireUser, requireRole, log_ }               from '../lib/auth';
 import { getAllSettings, setting, invalidateSettingsCache } from '../lib/settings';
-import { uploadBase64 }                                  from '../lib/upload';
+import { uploadBase64, createUploadUrl }                 from '../lib/upload';
 import { getSignedUrl }                                  from '../lib/photos';
-import { zv, UpdateSettingSchema, SaveWorkHoursSchema, UploadLogoSchema } from '../lib/validate';
+import { zv, UpdateSettingSchema, SaveWorkHoursSchema, UploadLogoSchema, z } from '../lib/validate';
 import type { HonoVariables }                            from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -75,6 +75,28 @@ router.post('/getSignedUrls', async c => {
   }
   const url = await getSignedUrl(String(args.bucket ?? ''), String(args.path ?? ''));
   return c.json({ success: true, data: url });
+});
+
+// ── Presigned upload URL ──────────────────────────────────────────────────────
+// Returns a short-lived URL the client uses to PUT a file directly to Supabase
+// Storage — the Lambda never holds image bytes in memory.
+const GetUploadUrlSchema = z.object({
+  bucket:   z.enum(['profile-photos', 'attendance-photos', 'branding']),
+  name:     z.string().min(1).max(128),
+  mimeType: z.enum(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']),
+});
+
+router.post('/getUploadUrl', async c => {
+  await requireUser(c);
+  const v = zv(c, GetUploadUrlSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { bucket, name, mimeType } = v.data;
+  try {
+    const result = await createUploadUrl(bucket, name, mimeType);
+    return c.json({ success: true, ...result });
+  } catch (e) {
+    return c.json({ success: false, message: (e as Error).message }, 500);
+  }
 });
 
 export default router;
