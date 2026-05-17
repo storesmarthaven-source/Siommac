@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
+import { zv, AddDepartmentSchema, UpdateDepartmentSchema, DeleteDepartmentSchema } from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -49,9 +50,11 @@ router.post('/listDepartments', async c => {
 
 router.post('/addDepartment', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { name, description, manager } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, AddDepartmentSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { name, managerId } = v.data;
   const { data, error } = await sb.from('departments')
-    .insert({ name, description: description ?? '', manager_id: manager ?? null })
+    .insert({ name, manager_id: managerId ?? null })
     .select('id').single<{ id: string }>();
   if (error) return c.json({ success: false, message: error.message });
   await log_(actor, 'create', 'department', data.id, name);
@@ -60,21 +63,25 @@ router.post('/addDepartment', async c => {
 
 router.post('/updateDepartment', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { id, name, description, manager } = (c.get('body').args ?? {}) as Record<string, string>;
-  const { error } = await sb.from('departments')
-    .update({ name, description: description ?? '', manager_id: manager ?? null, updated_at: new Date().toISOString() })
-    .eq('id', id);
+  const v = zv(c, UpdateDepartmentSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { id, name, managerId } = v.data;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (name      !== undefined) patch.name       = name;
+  if (managerId !== undefined) patch.manager_id = managerId ?? null;
+  const { error } = await sb.from('departments').update(patch).eq('id', id);
   if (error) return c.json({ success: false, message: error.message });
-  await log_(actor, 'update', 'department', id, name);
+  await log_(actor, 'update', 'department', id, name ?? id);
   return c.json({ success: true });
 });
 
 router.post('/deleteDepartment', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { id } = (c.get('body').args ?? {}) as Record<string, string>;
-  const { error } = await sb.from('departments').delete().eq('id', id);
+  const v = zv(c, DeleteDepartmentSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { error } = await sb.from('departments').delete().eq('id', v.data.id);
   if (error) return c.json({ success: false, message: error.message });
-  await log_(actor, 'delete', 'department', id, '');
+  await log_(actor, 'delete', 'department', v.data.id, '');
   return c.json({ success: true });
 });
 

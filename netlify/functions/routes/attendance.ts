@@ -5,6 +5,7 @@ import { today, hhmm24, dateOnly, num }   from '../lib/helpers';
 import { setting }                         from '../lib/settings';
 import { getSignedUrl, getProfileSignedUrl, resolveAttendancePhotosBatch } from '../lib/photos';
 import { uploadBase64 }                    from '../lib/upload';
+import { zv, MarkAttendanceSchema, GetMyStatusSchema, GetMyHistorySchema, GetMyChartSchema, ListAttendanceSchema, ListDailyLogSchema, GetLiveAttendanceSchema, GetRecentAttendanceSchema, GetDeptStatsSchema } from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 import type { AppUser, ProjectSite }      from '../../../types/db';
 
@@ -30,13 +31,15 @@ async function nearestSite(lat: number, lng: number): Promise<{ site: ProjectSit
 
 router.post('/markAttendance', async c => {
   const actor = await requireUser(c);
-  const args  = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, MarkAttendanceSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const args = v.data;
   if (actor.username !== args.username && actor.role !== 'admin')
-    return c.json({ success: false, message: 'Forbidden' });
+    return c.json({ success: false, message: 'Forbidden' }, 403);
 
-  const action    = String(args.action ?? '');
-  const loc       = (args.location ?? {}) as Record<string, unknown>;
-  const lat       = num(loc.latitude), lng = num(loc.longitude), acc = num(loc.accuracy);
+  const action    = args.action;
+  const loc       = args.location;
+  const lat       = loc?.latitude ?? null, lng = loc?.longitude ?? null, acc = loc?.accuracy ?? null;
   const isCheckIn = action === 'CheckIn' || action === 'Project';
 
   if (isCheckIn && !args.siteId)
@@ -45,7 +48,7 @@ router.post('/markAttendance', async c => {
   let near: { site: ProjectSite; distance: number } | null = null;
 
   if (args.siteId) {
-    const { data: chosenSite } = await sb.from('project_sites').select('*').eq('id', args.siteId).maybeSingle<ProjectSite>();
+    const { data: chosenSite } = await sb.from('project_sites').select('*').eq('id', String(args.siteId)).maybeSingle<ProjectSite>();
     if (!chosenSite) return c.json({ success: false, message: 'Selected project site not found.' });
 
     if (isCheckIn && actor.role === 'employee') {
@@ -53,7 +56,7 @@ router.post('/markAttendance', async c => {
         .select('site_id').eq('site_id', args.siteId).eq('user_id', actor.id).maybeSingle();
       if (!assignment) {
         const { data: anyAssignment } = await sb.from('project_site_employees')
-          .select('site_id, project_sites(name)').eq('user_id', actor.id);
+          .select('site_id, project_sites(name)').eq('user_id', actor.id) as { data: any[] | null };
         if (anyAssignment && anyAssignment.length > 0) {
           const assignedNames = (anyAssignment as any[]).map(a => a.project_sites?.name).filter(Boolean).join(', ');
           return c.json({ success: false, message: `You are not assigned to "${chosenSite.name}". Your assigned site(s): ${assignedNames}.` });
@@ -87,7 +90,7 @@ router.post('/markAttendance', async c => {
       return c.json({ success: false, message: `Check-in is only allowed between ${wh.start} and ${wh.end}.` });
   }
 
-  const photo = args.photoBase64 ? await uploadBase64('attendance-photos', String(args.photoBase64), `${actor.username}_${action}_${work_date}`) : '';
+  const photo = args.photoBase64 ? await uploadBase64('attendance-photos', args.photoBase64, `${actor.username}_${action}_${work_date}`) : '';
   const { data: rec } = await sb.from('attendance').select('*').eq('user_id', actor.id).eq('work_date', work_date).maybeSingle();
   const lateThreshold = await setting('lateThresholdHHMM', '09:15');
   const late = hhmm24(now) > lateThreshold;
@@ -122,8 +125,9 @@ router.post('/markAttendance', async c => {
 
 router.post('/getMyStatus', async c => {
   const actor = await requireUser(c);
-  const { username } = (c.get('body').args ?? {}) as Record<string, string>;
-  const uname = actor.role === 'admin' && username ? username : actor.username;
+  const v = zv(c, GetMyStatusSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const uname = actor.role === 'admin' && v.data.username ? v.data.username : actor.username;
   const { data: rec } = await sb.from('attendance').select('*').eq('username', uname).eq('work_date', today()).maybeSingle();
 
   if (!rec) return c.json({ success: true, data: { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '', checkInPhotoUrl: '', checkOutPhotoUrl: '' } });
@@ -146,8 +150,9 @@ router.post('/getMyStatus', async c => {
 
 router.post('/getMyHistory', async c => {
   const actor = await requireUser(c);
-  const { days } = (c.get('body').args ?? {}) as { days?: number };
-  const since = new Date(); since.setDate(since.getDate() - Math.min(Number(days) || 30, 365));
+  const v = zv(c, GetMyHistorySchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const since = new Date(); since.setDate(since.getDate() - (v.data.days ?? 30));
   const { data } = await sb.from('attendance').select('*').eq('username', actor.username).gte('work_date', since.toISOString().slice(0, 10)).order('work_date', { ascending: false });
 
   const rows = await resolveAttendancePhotosBatch(((data ?? []) as any[]).map(a => ({
@@ -161,9 +166,10 @@ router.post('/getMyHistory', async c => {
 
 router.post('/getMyChart', async c => {
   const actor = await requireUser(c);
-  const { year, month } = (c.get('body').args ?? {}) as { year?: number; month?: number };
-  const y  = Number(year)  || new Date().getFullYear();
-  const m  = Number(month);
+  const v = zv(c, GetMyChartSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const y  = v.data.year  ?? new Date().getFullYear();
+  const m  = v.data.month ?? new Date().getMonth();
   const start = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);
   const end   = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0, 10);
   const { data } = await sb.from('attendance').select('work_date,check_in_time').eq('user_id', actor.id).gte('work_date', start).lte('work_date', end);
@@ -201,8 +207,9 @@ router.post('/getAdminStats', async c => {
 
 router.post('/getRecentAttendance', async c => {
   await requireRole(c, ['admin', 'manager']);
-  const { limit: lim } = (c.get('body').args ?? {}) as { limit?: number };
-  const limit    = Math.min(Number(lim) || 10, 50);
+  const v = zv(c, GetRecentAttendanceSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const limit    = v.data.limit ?? 10;
   const todayStr = today();
   const [{ data: att }, { data: users }, { data: depts }] = await Promise.all([
     sb.from('attendance').select('*').eq('work_date', todayStr).order('check_in_time', { ascending: false }).limit(limit),
@@ -226,10 +233,11 @@ router.post('/getRecentAttendance', async c => {
 
 router.post('/listAttendance', async c => {
   await requireRole(c, ['admin', 'manager']);
-  const args = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, ListAttendanceSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
   const now  = new Date();
-  const y    = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
-  const mo   = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
+  const y    = v.data.year  ?? now.getFullYear();
+  const mo   = v.data.month ?? now.getMonth();
   const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
   const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
   const todayStr = today();
@@ -270,15 +278,16 @@ router.post('/listAttendance', async c => {
 
 router.post('/listDailyLog', async c => {
   await requireRole(c, ['admin', 'manager']);
-  const args = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, ListDailyLogSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
   const now  = new Date();
   let start: string, end: string;
-  if (args.dateFrom) {
-    start = String(args.dateFrom).slice(0, 10);
-    end   = args.dateTo ? String(args.dateTo).slice(0, 10) : start;
+  if (v.data.dateFrom) {
+    start = v.data.dateFrom;
+    end   = v.data.dateTo ?? v.data.dateFrom;
   } else {
-    const y  = (args.year  != null && !isNaN(Number(args.year)))  ? Number(args.year)  : now.getFullYear();
-    const mo = (args.month != null && !isNaN(Number(args.month))) ? Number(args.month) : now.getMonth();
+    const y  = v.data.year  ?? now.getFullYear();
+    const mo = v.data.month ?? now.getMonth();
     start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
     end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
   }
@@ -354,8 +363,9 @@ router.post('/listDailyLog', async c => {
 
 router.post('/getLiveAttendance', async c => {
   const actor = await requireRole(c, ['admin', 'manager']);
-  const { scope } = (c.get('body').args ?? {}) as { scope?: string };
-  const deptScope = actor.role === 'manager' ? actor.department_id : scope;
+  const v = zv(c, GetLiveAttendanceSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const deptScope = actor.role === 'manager' ? actor.department_id : v.data.scope;
 
   const [{ data: users }, { data: depts }, { data: sites }, { data: att }] = await Promise.all([
     sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin'),
@@ -452,8 +462,9 @@ router.post('/getDashboardCharts', async c => {
 
 router.post('/getDeptStats', async c => {
   const actor = await requireRole(c, ['manager', 'admin']);
-  const { departmentId } = (c.get('body').args ?? {}) as { departmentId?: string };
-  const deptId = actor.role === 'manager' ? actor.department_id : departmentId;
+  const v = zv(c, GetDeptStatsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const deptId = actor.role === 'manager' ? actor.department_id : v.data.departmentId;
   const [{ data: users }, { data: att }, { data: leaves }] = await Promise.all([
     sb.from('app_users').select('*').eq('department_id', deptId).eq('status', 'active').neq('role', 'admin'),
     sb.from('attendance').select('*').eq('work_date', today()),
@@ -471,8 +482,9 @@ router.post('/getDeptStats', async c => {
 
 router.post('/getDeptEmployees', async c => {
   const actor = await requireRole(c, ['manager', 'admin']);
-  const { departmentId } = (c.get('body').args ?? {}) as { departmentId?: string };
-  const deptId = actor.role === 'manager' ? actor.department_id : departmentId;
+  const v = zv(c, GetDeptStatsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const deptId = actor.role === 'manager' ? actor.department_id : v.data.departmentId;
   const [{ data: users }, { data: att }] = await Promise.all([
     sb.from('app_users').select('*').eq('department_id', deptId).neq('role', 'admin').order('full_name'),
     sb.from('attendance').select('*').eq('work_date', today()),

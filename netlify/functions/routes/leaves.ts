@@ -3,6 +3,7 @@ import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
 import { today, dateOnly, cap }           from '../lib/helpers';
 import { setting }                         from '../lib/settings';
+import { zv, SubmitLeaveSchema, GetLeaveByIdSchema, UpdateLeaveSchema, DeleteLeaveSchema, DecideLeaveSchema } from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 import type { AppUser }                   from '../../../types/db';
 
@@ -10,7 +11,10 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 router.post('/submitLeave', async c => {
   const actor = await requireUser(c);
-  const { type, fromDate, toDate, reason } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, SubmitLeaveSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { type, fromDate, toDate, reason } = v.data;
+  if (fromDate > toDate) return c.json({ success: false, message: 'From date must be on or before to date.' });
   const days = Math.ceil((new Date(toDate).getTime() - new Date(fromDate).getTime()) / 86_400_000) + 1;
   const { data, error } = await sb.from('leave_requests').insert({
     user_id: actor.id, username: actor.username, department_id: actor.department_id,
@@ -29,11 +33,12 @@ router.post('/getMyLeaves', async c => {
 
 router.post('/getLeaveById', async c => {
   const actor = await requireUser(c);
-  const { leaveId } = (c.get('body').args ?? {}) as Record<string, string>;
-  const { data: l } = await sb.from('leave_requests').select('*').eq('id', leaveId).single<any>();
+  const v = zv(c, GetLeaveByIdSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { data: l } = await sb.from('leave_requests').select('*').eq('id', v.data.leaveId).single<any>();
   if (!l) return c.json({ success: false, message: 'Leave not found' });
   const allowed = actor.role === 'admin' || l.user_id === actor.id || (actor.role === 'manager' && l.department_id === actor.department_id);
-  if (!allowed) return c.json({ success: false, message: 'Not allowed' });
+  if (!allowed) return c.json({ success: false, message: 'Not allowed' }, 403);
 
   const [userRow, deptRow, reviewerRow, companyName, companyLogoUrl] = await Promise.all([
     l.user_id       ? sb.from('app_users').select('full_name,position,username').eq('id', l.user_id).maybeSingle<Pick<AppUser, 'full_name' | 'position' | 'username'>>().then(r => r.data)    : Promise.resolve(null),
@@ -54,25 +59,30 @@ router.post('/getLeaveById', async c => {
 
 router.post('/updateLeave', async c => {
   const actor = await requireUser(c);
-  const args  = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, UpdateLeaveSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const args = v.data;
   const { data: l } = await sb.from('leave_requests').select('*').eq('id', args.id).single<any>();
   if (!l) return c.json({ success: false, message: 'Leave not found' });
   if (l.status !== 'pending') return c.json({ success: false, message: 'Only pending leaves can be edited' });
-  if (actor.role !== 'admin' && l.user_id !== actor.id) return c.json({ success: false, message: 'Only the owner or admin can edit' });
-  const days = args.fromDate && args.toDate
-    ? Math.ceil((new Date(String(args.toDate)).getTime() - new Date(String(args.fromDate)).getTime()) / 86_400_000) + 1
-    : l.days;
-  await sb.from('leave_requests').update({ type: args.type ?? l.type, from_date: args.fromDate ?? l.from_date, to_date: args.toDate ?? l.to_date, reason: args.reason ?? l.reason, days }).eq('id', args.id);
-  await log_(actor, 'update', 'leave', String(args.id), '');
+  if (actor.role !== 'admin' && l.user_id !== actor.id) return c.json({ success: false, message: 'Only the owner or admin can edit' }, 403);
+  const fromDate = args.fromDate ?? l.from_date;
+  const toDate   = args.toDate   ?? l.to_date;
+  if (fromDate > toDate) return c.json({ success: false, message: 'From date must be on or before to date.' });
+  const days = Math.ceil((new Date(toDate).getTime() - new Date(fromDate).getTime()) / 86_400_000) + 1;
+  await sb.from('leave_requests').update({ type: args.type ?? l.type, from_date: fromDate, to_date: toDate, reason: args.reason ?? l.reason, days }).eq('id', args.id);
+  await log_(actor, 'update', 'leave', args.id, '');
   return c.json({ success: true });
 });
 
 router.post('/deleteLeave', async c => {
   const actor = await requireUser(c);
-  const { leaveId } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, DeleteLeaveSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { leaveId } = v.data;
   const { data: l } = await sb.from('leave_requests').select('*').eq('id', leaveId).single<any>();
   if (!l) return c.json({ success: false, message: 'Leave not found' });
-  if (actor.role !== 'admin' && !(l.user_id === actor.id && l.status === 'pending')) return c.json({ success: false, message: 'Cannot delete this leave' });
+  if (actor.role !== 'admin' && !(l.user_id === actor.id && l.status === 'pending')) return c.json({ success: false, message: 'Cannot delete this leave' }, 403);
   await sb.from('leave_requests').delete().eq('id', leaveId);
   await log_(actor, 'delete', 'leave', leaveId, l.type);
   return c.json({ success: true });
@@ -80,10 +90,12 @@ router.post('/deleteLeave', async c => {
 
 async function _decideLeave(c: any, status: string) {
   const actor = await requireRole(c, ['admin', 'manager']);
-  const { leaveId, notes } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, DecideLeaveSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { leaveId, notes } = v.data;
   const { data: l } = await sb.from('leave_requests').select('*').eq('id', leaveId).single<any>();
   if (!l) return c.json({ success: false, message: 'Leave not found' });
-  if (actor.role === 'manager' && l.department_id !== actor.department_id) return c.json({ success: false, message: 'Forbidden' });
+  if (actor.role === 'manager' && l.department_id !== actor.department_id) return c.json({ success: false, message: 'Forbidden' }, 403);
   const { error } = await sb.from('leave_requests')
     .update({ status, reviewed_by: actor.id, reviewed_at: new Date().toISOString(), review_notes: notes ?? '' })
     .eq('id', leaveId).eq('status', 'pending');

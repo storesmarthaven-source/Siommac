@@ -5,6 +5,7 @@ import { requireUser, requireRole, log_ } from '../lib/auth';
 import { getProfileSignedUrl } from '../lib/photos';
 import { uploadBase64 }        from '../lib/upload';
 import { today, dateOnly }     from '../lib/helpers';
+import { zv, AddEmployeeSchema, UpdateEmployeeSchema, DeleteEmployeeSchema, GetEmployeeSchema } from '../lib/validate';
 import type { HonoVariables }  from '../../../types/api';
 import type { AppUser }        from '../../../types/db';
 
@@ -56,11 +57,13 @@ router.post('/listEmployees', async c => {
 
 router.post('/addEmployee', async c => {
   const actor = await requireRole(c, ['admin']);
-  const args  = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, AddEmployeeSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const args = v.data;
 
-  const password_hash = await bcrypt.hash(String(args.password ?? ''), 12);
+  const password_hash = await bcrypt.hash(args.password, 12);
   const employee_number = args.employeeNumber
-    ? String(args.employeeNumber).trim().toUpperCase()
+    ? args.employeeNumber.trim().toUpperCase()
     : await _nextEmployeeNumber();
 
   if (employee_number) {
@@ -70,15 +73,15 @@ router.post('/addEmployee', async c => {
 
   const { data, error } = await sb.from('app_users').insert({
     username: args.username, password_hash, full_name: args.fullName, role: args.role,
-    department_id: args.department, position: args.position, status: 'active',
+    department_id: args.department ?? null, position: args.position ?? null, status: 'active',
     employee_number,
-    email:  args.email ? String(args.email).trim() : null,
-    phone:  args.phone ? String(args.phone).trim() : null,
+    email:  args.email   ? args.email.trim()   : null,
+    phone:  args.phone   ? args.phone.trim()   : null,
     pay_cycle:                   args.payCycle                  ?? 'monthly',
     pay_basis:                   args.payBasis                  ?? 'salary',
-    hourly_rate:                 parseFloat(String(args.hourlyRate   ?? '0')) || 0,
-    monthly_salary:              parseFloat(String(args.monthlySalary ?? '0')) || 0,
-    standard_hours_per_day:      parseFloat(String(args.standardHoursPerDay ?? '8')) || 8,
+    hourly_rate:                 args.hourlyRate                ?? 0,
+    monthly_salary:              args.monthlySalary             ?? 0,
+    standard_hours_per_day:      args.standardHoursPerDay       ?? 8,
     nis_applicable:              args.nisApplicable             !== false,
     health_surcharge_applicable: args.healthSurchargeApplicable !== false,
     tax_resident:                args.taxResident               !== false,
@@ -92,40 +95,43 @@ router.post('/addEmployee', async c => {
     return c.json({ success: false, message: error.message });
   }
 
-  await log_(actor, 'create', 'user', data.id, String(args.fullName ?? ''));
+  await log_(actor, 'create', 'user', data.id, args.fullName);
   return c.json({ success: true, id: data.id, employeeNumber: employee_number });
 });
 
 router.post('/updateEmployee', async c => {
   const actor = await requireRole(c, ['admin']);
-  const args  = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, UpdateEmployeeSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const args = v.data;
 
-  const patch: Record<string, unknown> = {
-    full_name: args.fullName, department_id: args.department, position: args.position,
-    role: args.role, status: args.status, updated_at: new Date().toISOString(),
-    email: args.email !== undefined ? (String(args.email).trim() || null) : undefined,
-    phone: args.phone !== undefined ? (String(args.phone).trim() || null) : undefined,
-    ...(args.payCycle                  !== undefined && { pay_cycle:                   args.payCycle }),
-    ...(args.payBasis                  !== undefined && { pay_basis:                   args.payBasis }),
-    ...(args.hourlyRate                !== undefined && { hourly_rate:                 parseFloat(String(args.hourlyRate)) || 0 }),
-    ...(args.monthlySalary             !== undefined && { monthly_salary:              parseFloat(String(args.monthlySalary)) || 0 }),
-    ...(args.standardHoursPerDay       !== undefined && { standard_hours_per_day:      parseFloat(String(args.standardHoursPerDay)) || 8 }),
-    ...(args.nisApplicable             !== undefined && { nis_applicable:              args.nisApplicable }),
-    ...(args.healthSurchargeApplicable !== undefined && { health_surcharge_applicable: args.healthSurchargeApplicable }),
-    ...(args.taxResident               !== undefined && { tax_resident:               args.taxResident }),
-  };
-  Object.keys(patch).forEach(k => { if (patch[k] == null || patch[k] === '') delete patch[k]; });
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (args.fullName  !== undefined) patch.full_name     = args.fullName;
+  if (args.department !== undefined) patch.department_id = args.department || null;
+  if (args.position   !== undefined) patch.position      = args.position || null;
+  if (args.role       !== undefined) patch.role          = args.role;
+  if (args.status     !== undefined) patch.status        = args.status;
+  if (args.email      !== undefined) patch.email         = args.email?.trim() || null;
+  if (args.phone      !== undefined) patch.phone         = args.phone?.trim() || null;
+  if (args.payCycle   !== undefined) patch.pay_cycle     = args.payCycle;
+  if (args.payBasis   !== undefined) patch.pay_basis     = args.payBasis;
+  if (args.hourlyRate !== undefined) patch.hourly_rate   = args.hourlyRate;
+  if (args.monthlySalary            !== undefined) patch.monthly_salary              = args.monthlySalary;
+  if (args.standardHoursPerDay      !== undefined) patch.standard_hours_per_day      = args.standardHoursPerDay;
+  if (args.nisApplicable            !== undefined) patch.nis_applicable              = args.nisApplicable;
+  if (args.healthSurchargeApplicable !== undefined) patch.health_surcharge_applicable = args.healthSurchargeApplicable;
+  if (args.taxResident              !== undefined) patch.tax_resident                = args.taxResident;
 
-  if (args.password) patch.password_hash = await bcrypt.hash(String(args.password), 12);
+  if (args.password) patch.password_hash = await bcrypt.hash(args.password, 12);
 
   if (args.removeProfileImage) {
     patch.profile_image = '__removed__';
   } else if (args.profileImageBase64) {
-    patch.profile_image = await uploadBase64('profile-photos', String(args.profileImageBase64), `profile_${args.username}`);
+    patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${args.username}`);
   }
 
   if (args.employeeNumber !== undefined) {
-    const empNum = String(args.employeeNumber ?? '').trim().toUpperCase();
+    const empNum = args.employeeNumber?.trim().toUpperCase() ?? '';
     if (empNum) {
       const { data: existing } = await sb.from('app_users').select('id').eq('employee_number', empNum).neq('username', args.username).maybeSingle();
       if (existing) return c.json({ success: false, message: `Employee ID "${empNum}" is already in use.` });
@@ -141,13 +147,15 @@ router.post('/updateEmployee', async c => {
       return c.json({ success: false, message: `Employee ID "${patch.employee_number}" is already in use.` });
     return c.json({ success: false, message: error.message });
   }
-  await log_(actor, 'update', 'user', String(args.username), String(args.fullName ?? args.username));
+  await log_(actor, 'update', 'user', args.username, args.fullName ?? args.username);
   return c.json({ success: true });
 });
 
 router.post('/deleteEmployee', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { username } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, DeleteEmployeeSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { username } = v.data;
 
   if (actor.username === username) return c.json({ success: false, message: 'You cannot delete your own account' });
 
@@ -175,7 +183,9 @@ router.post('/deleteEmployee', async c => {
 
 router.post('/getEmployeeByUsername', async c => {
   const actor = await requireUser(c);
-  const { username } = (c.get('body').args ?? {}) as Record<string, string>;
+  const v = zv(c, GetEmployeeSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { username } = v.data;
   if (actor.role === 'employee' && actor.username !== username) return c.json(null);
 
   const { data: u } = await sb.from('app_users').select('*').eq('username', username).maybeSingle<AppUser>();

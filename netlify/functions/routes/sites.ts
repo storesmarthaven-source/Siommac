@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
+import { zv, AddSiteSchema, UpdateSiteSchema, DeleteSiteSchema, AssignSiteEmployeesSchema } from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -68,45 +69,55 @@ router.post('/listProjectSites', async c => {
 
 router.post('/addProjectSite', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { name, address, latitude, longitude, radius, description } = (c.get('body').args ?? {}) as Record<string, unknown>;
+  const v = zv(c, AddSiteSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { name, address, latitude, longitude, radius, status } = v.data;
   const { data, error } = await sb.from('project_sites')
-    .insert({ name, address: address ?? '', latitude, longitude, radius, description: description ?? '' })
+    .insert({ name, address: address ?? '', latitude, longitude, radius: radius ?? 200, status: status ?? 'active' })
     .select('id').single<{ id: string }>();
   if (error) return c.json({ success: false, message: error.message });
-  await log_(actor, 'create', 'site', data.id, String(name));
+  await log_(actor, 'create', 'site', data.id, name);
   return c.json({ success: true, id: data.id });
 });
 
 router.post('/updateProjectSite', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { id, name, address, latitude, longitude, radius, description } = (c.get('body').args ?? {}) as Record<string, unknown>;
-  const { error } = await sb.from('project_sites')
-    .update({ name, address: address ?? '', latitude, longitude, radius, description: description ?? '', updated_at: new Date().toISOString() })
-    .eq('id', id);
+  const v = zv(c, UpdateSiteSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { id, ...fields } = v.data;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (fields.name      !== undefined) patch.name      = fields.name;
+  if (fields.address   !== undefined) patch.address   = fields.address ?? '';
+  if (fields.latitude  !== undefined) patch.latitude  = fields.latitude;
+  if (fields.longitude !== undefined) patch.longitude = fields.longitude;
+  if (fields.radius    !== undefined) patch.radius    = fields.radius;
+  if (fields.status    !== undefined) patch.status    = fields.status;
+  const { error } = await sb.from('project_sites').update(patch).eq('id', id);
   if (error) return c.json({ success: false, message: error.message });
-  await log_(actor, 'update', 'site', String(id), String(name));
+  await log_(actor, 'update', 'site', id, fields.name ?? id);
   return c.json({ success: true });
 });
 
 router.post('/deleteProjectSite', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { id } = (c.get('body').args ?? {}) as Record<string, string>;
-  const { error } = await sb.from('project_sites').delete().eq('id', id);
+  const v = zv(c, DeleteSiteSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { error } = await sb.from('project_sites').delete().eq('id', v.data.id);
   if (error) return c.json({ success: false, message: error.message });
-  await log_(actor, 'delete', 'site', id, '');
+  await log_(actor, 'delete', 'site', v.data.id, '');
   return c.json({ success: true });
 });
 
 router.post('/assignSiteEmployees', async c => {
   await requireRole(c, ['admin']);
-  const { siteId, userIds } = (c.get('body').args ?? {}) as { siteId?: string; userIds?: unknown[] };
-  if (!siteId) return c.json({ success: false, message: 'Missing siteId' });
-  const ids = Array.isArray(userIds) ? userIds.map(String) : [];
+  const v = zv(c, AssignSiteEmployeesSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { siteId, employeeIds } = v.data;
 
   await sb.from('project_site_employees').delete().eq('site_id', siteId);
-  if (ids.length) {
+  if (employeeIds.length) {
     const { error } = await sb.from('project_site_employees')
-      .insert(ids.map(uid => ({ site_id: siteId, user_id: uid })));
+      .insert(employeeIds.map(uid => ({ site_id: siteId, user_id: uid })));
     if (error) return c.json({ success: false, message: error.message });
   }
   return c.json({ success: true });

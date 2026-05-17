@@ -4,6 +4,7 @@ import { requireUser, requireRole, log_ }               from '../lib/auth';
 import { getAllSettings, setting, invalidateSettingsCache } from '../lib/settings';
 import { uploadBase64 }                                  from '../lib/upload';
 import { getSignedUrl }                                  from '../lib/photos';
+import { zv, UpdateSettingSchema, SaveWorkHoursSchema, UploadLogoSchema } from '../lib/validate';
 import type { HonoVariables }                            from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -20,8 +21,10 @@ router.post('/getSettings', async c => {
 
 router.post('/updateSetting', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { key, value } = (c.get('body').args ?? {}) as Record<string, string>;
-  const { error } = await sb.from('settings').upsert({ key, value: String(value ?? ''), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  const v = zv(c, UpdateSettingSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { key, value } = v.data;
+  const { error } = await sb.from('settings').upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) return c.json({ success: false, message: error.message });
   invalidateSettingsCache();
   await log_(actor, 'update', 'setting', key, '');
@@ -38,11 +41,10 @@ router.post('/getWorkHours', async c => {
 
 router.post('/saveWorkHours', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { start, end } = (c.get('body').args ?? {}) as Record<string, string>;
-  const s = (start ?? '').trim(), e = (end ?? '').trim();
-  if (!/^\d{2}:\d{2}$/.test(s) || !/^\d{2}:\d{2}$/.test(e)) return c.json({ success: false, message: 'Invalid time format. Use HH:MM.' });
-  if (s >= e) return c.json({ success: false, message: 'Work start must be before end time.' });
-  const value = JSON.stringify({ start: s, end: e });
+  const v = zv(c, SaveWorkHoursSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { start, end } = v.data;
+  const value = JSON.stringify({ start, end });
   const { error } = await sb.from('settings').upsert({ key: 'workHours', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) return c.json({ success: false, message: error.message });
   invalidateSettingsCache();
@@ -52,8 +54,9 @@ router.post('/saveWorkHours', async c => {
 
 router.post('/uploadLogo', async c => {
   const actor = await requireRole(c, ['admin']);
-  const { base64 } = (c.get('body').args ?? {}) as Record<string, string>;
-  const url = await uploadBase64('branding', base64, 'company_logo');
+  const v = zv(c, UploadLogoSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const url = await uploadBase64('branding', v.data.imageBase64, 'company_logo');
   const { error } = await sb.from('settings').upsert({ key: 'companyLogoUrl', value: url, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) return c.json({ success: false, message: error.message });
   invalidateSettingsCache();
@@ -65,7 +68,9 @@ router.post('/getSignedUrls', async c => {
   await requireUser(c);
   const args = (c.get('body').args ?? {}) as Record<string, unknown>;
   if (args.paths) {
-    const urls = await Promise.all((args.paths as Array<{ bucket: string; path: string }>).map(({ bucket, path: p }) => getSignedUrl(bucket, p)));
+    const paths = args.paths as Array<{ bucket: string; path: string }>;
+    if (!Array.isArray(paths) || paths.length > 100) return c.json({ success: false, message: 'Invalid paths array' }, 400);
+    const urls = await Promise.all(paths.map(({ bucket, path: p }) => getSignedUrl(String(bucket), String(p))));
     return c.json({ success: true, data: urls });
   }
   const url = await getSignedUrl(String(args.bucket ?? ''), String(args.path ?? ''));

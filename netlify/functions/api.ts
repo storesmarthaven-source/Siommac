@@ -39,6 +39,20 @@ function isAllowedOrigin(origin: string): boolean {
 // ── Build the Hono app ────────────────────────────────────────────────────────
 const app = new Hono<{ Variables: HonoVariables }>();
 
+// Security headers — applied to every response
+app.use('*', async (c, next) => {
+  await next();
+  c.header('X-Content-Type-Options',  'nosniff');
+  c.header('X-Frame-Options',         'DENY');
+  c.header('Referrer-Policy',         'strict-origin-when-cross-origin');
+  c.header('Permissions-Policy',      'geolocation=(), camera=(), microphone=()');
+  c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  // Tight CSP: API only returns JSON — no scripts, no frames, no embeds
+  c.header('Content-Security-Policy',
+    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  );
+});
+
 // CORS — echo the origin back only if it is in the allowlist
 app.use('*', async (c, next) => {
   const origin  = c.req.header('origin') ?? '';
