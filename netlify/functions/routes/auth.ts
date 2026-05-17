@@ -1,18 +1,19 @@
 import { Hono }   from 'hono';
 import bcrypt      from 'bcryptjs';
 import { sb }      from '../lib/db';
-import { signUser, requireUser, log_ } from '../lib/auth';
+import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, log_ } from '../lib/auth';
 import { getProfileSignedUrl }         from '../lib/photos';
-import { setting, invalidateSettingsCache } from '../lib/settings';
+import { setting }                     from '../lib/settings';
 import { checkLoginLimit }             from '../lib/ratelimit';
 import { uploadBase64 }                from '../lib/upload';
 import { noPhoto }                     from '../lib/photos';
-import { zv, LoginSchema, UpdateColorSchemeSchema, UpdateLayoutModeSchema, UpdateMyProfileSchema, VerifyPasswordSchema } from '../lib/validate';
+import { zv, LoginSchema, UpdateColorSchemeSchema, UpdateLayoutModeSchema, UpdateMyProfileSchema, VerifyPasswordSchema, z } from '../lib/validate';
 import type { HonoVariables }          from '../../../types/api';
 import type { AppUser }                from '../../../types/db';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
+// ── Login — issues access token (15 min) + refresh token (7 days) ─────────────
 router.post('/login', async c => {
   const v = zv(c, LoginSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
@@ -26,6 +27,7 @@ router.post('/login', async c => {
 
   const { data: u } = await sb.from('app_users').select('*').ilike('username', username).maybeSingle<AppUser>();
   if (!u || u.status !== 'active') {
+    // Constant-time comparison even on miss — prevents username enumeration
     await bcrypt.compare(password, '$2a$12$invalidhashpadding.......................................enough');
     return c.json({ success: false, message: 'Invalid username or password' });
   }
@@ -33,15 +35,18 @@ router.post('/login', async c => {
   if (!passOk) return c.json({ success: false, message: 'Invalid username or password' });
 
   await log_(u, 'login', 'user', u.id, 'login ok');
-  const [profileImage, companyLogoUrl, companyName] = await Promise.all([
+
+  const [profileImage, companyLogoUrl, companyName, refreshToken] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
+    issueRefreshToken(u.id),
   ]);
 
   return c.json({
-    success: true,
-    token:        signUser(u),
+    success:      true,
+    token:        signUser(u),       // 15-minute access token
+    refreshToken,                    // 7-day rotating refresh token
     userId:       u.id,
     username:     u.username,
     fullName:     u.full_name,
@@ -56,11 +61,46 @@ router.post('/login', async c => {
   });
 });
 
+// ── Refresh — rotate refresh token, issue new access token ────────────────────
+const RefreshSchema = z.object({
+  refreshToken: z.string().min(1).max(256),
+});
+
+router.post('/refreshToken', async c => {
+  const v = zv(c, RefreshSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+
+  const result = await rotateRefreshToken(v.data.refreshToken);
+  if (!result) {
+    return c.json({ success: false, message: 'Invalid or expired refresh token. Please log in again.' }, 401);
+  }
+
+  await log_(result.user, 'tokenRefresh', 'user', result.user.id, '');
+
+  return c.json({
+    success:      true,
+    token:        result.accessToken,
+    refreshToken: result.refreshToken,
+  });
+});
+
+// ── Logout — revoke access token JTI + delete refresh token ──────────────────
 router.post('/logout', async c => {
-  const u = await requireUser(c);
-  await log_(u, 'logout', 'user', u.id, '');
+  const u    = await requireUser(c);
+  const auth = c.get('auth');
+
+  await Promise.all([
+    // Revoke the current access token by JTI (prevents reuse until it expires)
+    auth?.jti ? revokeToken(auth.jti, auth.exp) : Promise.resolve(),
+    // Delete the refresh token so it cannot be used to get new access tokens
+    sb.from('refresh_tokens').delete().eq('user_id', u.id),
+    log_(u, 'logout', 'user', u.id, ''),
+  ]);
+
   return c.json({ success: true });
 });
+
+// ── Profile / preference routes ───────────────────────────────────────────────
 
 router.post('/updateColorScheme', async c => {
   const actor = await requireUser(c);
@@ -88,9 +128,9 @@ router.post('/updateMyProfile', async c => {
   if (actor.username !== args.username) return c.json({ success: false, message: 'Forbidden' }, 403);
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (args.fullName)           patch.full_name = args.fullName.trim();
-  if (args.email !== undefined) patch.email    = args.email.trim();
-  if (args.phone !== undefined) patch.phone    = args.phone.trim();
+  if (args.fullName)            patch.full_name = args.fullName.trim();
+  if (args.email !== undefined) patch.email     = args.email.trim();
+  if (args.phone !== undefined) patch.phone     = args.phone.trim();
 
   if (args.newPassword) {
     if (!args.oldPassword) return c.json({ success: false, message: 'Current password is required' });

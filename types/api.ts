@@ -20,7 +20,8 @@ export interface ApiError extends ApiResponse {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export interface LoginResponse extends ApiResponse {
-  token?:          string;
+  token?:          string;   // short-lived access token (15 min)
+  refreshToken?:   string;   // long-lived refresh token (7 days, rotating)
   userId?:         string;
   username?:       string;
   fullName?:       string;
@@ -40,6 +41,7 @@ export interface JwtPayload {
   username:     string;
   role:         string;
   departmentId: string;
+  jti:          string;   // unique token id — used for revocation checks
   iat:          number;
   exp:          number;
 }
