@@ -25,6 +25,10 @@ export interface AppUser {
   signed_url_expires_at:       string | null;
   color_scheme:                string | null;
   layout_mode:                 string | null;
+  totp_secret:                 string | null;   // AES-256-GCM encrypted
+  totp_enabled:                boolean;
+  totp_enrolled_at:            string | null;
+  backup_codes:                string[] | null;  // bcrypt-hashed, single-use
   pay_cycle:                   PayCycle | null;
   pay_basis:                   PayBasis | null;
   hourly_rate:                 number | null;

@@ -61,6 +61,28 @@ export const LoginSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+// 2FA — TOTP code (6 digits) or backup code (8 alphanumeric chars)
+export const zTotpCode   = z.string().regex(/^\d{6}$/, 'Must be a 6-digit code');
+export const zBackupCode = z.string().regex(/^[A-Z0-9]{8}$/i, 'Must be an 8-character backup code');
+
+export const Verify2faSchema = z.object({
+  preAuthToken: z.string().min(1).max(256),
+  code:         z.string().min(6).max(8),   // 6-digit TOTP or 8-char backup code
+});
+
+export const Setup2faInitSchema = z.object({
+  preAuthToken: z.string().min(1).max(256),
+});
+
+export const Setup2faConfirmSchema = z.object({
+  preAuthToken: z.string().min(1).max(256),
+  code:         zTotpCode,
+});
+
+export const Disable2faSchema = z.object({
+  password: z.string().min(1).max(128),
+});
+
 export const UpdateColorSchemeSchema = z.object({
   username: zUsername,
   scheme:   zShortStr(32),

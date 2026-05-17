@@ -343,3 +343,163 @@
     width: 260px;
   }
 }
+
+/* ─── Two-Factor Authentication panels ─── */
+
+.tfa-icon-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.tfa-shield-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(27, 45, 85, 0.1);
+  color: #1B2D55;
+  font-size: 1.6rem;
+}
+.tfa-shield-icon.tfa-shield-warn { background: rgba(255,183,18,0.15); color: #c98a00; }
+.tfa-shield-icon.tfa-shield-ok   { background: rgba(40,167,69,0.12);  color: #198754; }
+
+.tfa-desc {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* 6-digit OTP box row */
+.tfa-otp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tfa-otp-digit {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #fff;
+  color: #1B2D55;
+  caret-color: transparent;
+}
+.tfa-otp-digit:focus {
+  border-color: #1B2D55;
+  box-shadow: 0 0 0 3px rgba(27,45,85,0.15);
+}
+.tfa-otp-digit.is-error { border-color: #dc3545; }
+.tfa-otp-sep {
+  font-size: 1.4rem;
+  color: #9ca3af;
+  margin: 0 2px;
+  user-select: none;
+}
+
+/* Backup code */
+.tfa-backup-row, .tfa-back-row {
+  text-align: center;
+  margin-top: 12px;
+}
+.tfa-text-btn {
+  background: none;
+  border: none;
+  color: #1B2D55;
+  font-size: 0.84rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.tfa-text-btn:hover { color: #FFB712; }
+
+.tfa-backup-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 1.1rem;
+  letter-spacing: 3px;
+  text-align: center;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  text-transform: uppercase;
+}
+.tfa-backup-input:focus { border-color: #1B2D55; }
+
+/* QR code setup */
+.tfa-qr-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  padding: 12px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+}
+.tfa-qr-img {
+  width: 180px;
+  height: 180px;
+  image-rendering: pixelated;
+}
+.tfa-manual-label {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.tfa-manual-code {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #1B2D55;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 12px;
+  word-break: break-all;
+}
+
+/* Backup code list after enrolment */
+.tfa-backup-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+.tfa-backup-list code {
+  display: block;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 6px 4px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  color: #1B2D55;
+}
+
+/* Panel slide-in animation */
+#twoFaPanel, #twoFaSetupPanel {
+  animation: tfaSlideIn 0.25s ease;
+}
+@keyframes tfaSlideIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 480px) {
+  .tfa-otp-digit { width: 38px; height: 46px; font-size: 1.2rem; }
+  .tfa-qr-img    { width: 150px; height: 150px; }
+}

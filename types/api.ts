@@ -20,6 +20,7 @@ export interface ApiError extends ApiResponse {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export interface LoginResponse extends ApiResponse {
+  // ── Full session (2FA complete or not required) ──────────────────────────
   token?:          string;   // short-lived access token (15 min)
   refreshToken?:   string;   // long-lived refresh token (7 days, rotating)
   userId?:         string;
@@ -33,6 +34,40 @@ export interface LoginResponse extends ApiResponse {
   profileImage?:   string;
   companyLogoUrl?: string;
   companyName?:    string;
+  // ── 2FA intermediate states ──────────────────────────────────────────────
+  requiresTwoFactor?: boolean;  // enrolled, must enter TOTP code
+  requiresSetup?:     boolean;  // mandatory role, not yet enrolled
+  preAuthToken?:      string;   // short-lived, grants only /verify2fa or /setup2fa
+}
+
+export interface Setup2faResponse extends ApiResponse {
+  qrCode?:      string;   // data:image/png;base64,...
+  manualCode?:  string;   // base32 secret for manual entry
+  backupCodes?: string[]; // plaintext, shown ONCE at enrolment
+}
+
+export interface Verify2faResponse extends ApiResponse {
+  // On success, same full session fields as LoginResponse
+  token?:          string;
+  refreshToken?:   string;
+  userId?:         string;
+  username?:       string;
+  fullName?:       string;
+  role?:           string;
+  departmentId?:   string;
+  position?:       string;
+  colorScheme?:    string;
+  layoutMode?:     string;
+  profileImage?:   string;
+  companyLogoUrl?: string;
+  companyName?:    string;
+}
+
+export interface TwoFactorStatusResponse extends ApiResponse {
+  enabled?:      boolean;
+  enrolledAt?:   string | null;
+  mandatory?:    boolean;
+  codesRemaining?: number;
 }
 
 // ── JWT payload (decoded) ─────────────────────────────────────────────────────
