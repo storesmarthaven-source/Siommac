@@ -703,50 +703,12 @@ export function PayrollSection() {
     setDisplayTotals(sumTotals(base));
   }, [runData, cycleFilter, deptFilter, empSelected, reportsMode]);
 
-  // ── DataTables wiring ────────────────────────────────────────────────────────
-  const tableRef = useRef<HTMLTableElement>(null);
-  const dtRef    = useRef<unknown>(null);
-
-  useEffect(() => {
-    // Defer everything until after Preact has painted the new rows into the DOM.
-    // Destroying and re-initialising inside the same rAF callback guarantees
-    // DataTables always reads a fully-committed thead + tbody, preventing the
-    // "Incorrect column count" (TN/18) warning that occurs when destroy runs
-    // synchronously (seeing old DOM) while re-init runs in rAF (seeing new DOM
-    // before Preact has flushed it).
-    const raf = requestAnimationFrame(() => {
-      const win = window as unknown as Record<string, unknown>;
-      if (typeof win['$'] !== 'function') return;
-
-      const $ = win['$'] as (s: string) => Record<string, unknown>;
-
-      // 1. Destroy any live DataTable instance
-      try {
-        const tbl = $('#payrollRunTable') as Record<string, Function>;
-        if (tbl && typeof tbl['DataTable'] === 'function') {
-          const dt = tbl['DataTable']() as Record<string, Function>;
-          if (dt && typeof dt['destroy'] === 'function') dt['destroy']();
-        }
-      } catch { /* ignore — table may not have been initialised yet */ }
-
-      dtRef.current = null;
-      if (!displayRows.length) return;
-
-      // 2. Re-initialise on the freshly-painted rows
-      const PayrollShim = win['Payroll'] as Record<string, unknown> | undefined;
-      const initDT = PayrollShim?.['initDataTable'];
-      if (PayrollShim && typeof initDT === 'function') {
-        dtRef.current = (initDT as Function)('payrollRunTable', {
-          dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
-          searching: true,
-          order: [[0, 'asc']],
-          columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'dt-no-export' }],
-        });
-      }
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [displayRows]);
+  // NOTE: DataTables is intentionally NOT used for payrollRunTable.
+  // The tbody rows are owned by Preact (they carry onClick handlers for Payslip
+  // and Edit that need live Preact closures). Mixing Preact-managed tbody content
+  // with DataTables DOM ownership causes TN/18 "Incorrect column count" warnings
+  // because DT reads the column count at init time before Preact has committed the
+  // correct number of cells. Export buttons are TODO(phase-2g) via native Preact.
 
   // ── Run payroll ──────────────────────────────────────────────────────────────
   const runPayroll = async () => {
@@ -1036,7 +998,7 @@ export function PayrollSection() {
           </h2>
           <div class="section-actions"><div id="prTableBtns"></div></div>
         </div>
-        <table id="payrollRunTable" ref={tableRef} class="table align-middle">
+        <table id="payrollRunTable" class="table align-middle">
           <thead>
             <tr>
               <th>Employee</th>
