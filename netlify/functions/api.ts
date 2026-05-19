@@ -4,6 +4,7 @@
 
 import { Hono }   from 'hono';
 import { handle } from '@hono/node-server/netlify';
+import type { Context } from 'hono';
 
 import { jwtMiddleware }             from './lib/auth';
 import { globalRateLimitMiddleware } from './lib/ratelimit';
@@ -110,9 +111,11 @@ app.route('/api', notificationsRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.
-// This middleware intercepts any POST to /api (exact), reads the action field,
-// and internally re-dispatches to the matching /api/<action> route.
-app.post('/api', async c => {
+// Handles two entry points:
+//   POST /api            — same-origin production path via netlify.toml redirect
+//   POST /.netlify/functions/api — direct Netlify Dev path (dev only)
+// Both read the action field and re-dispatch to the matching /api/<action> route.
+async function _legacyDispatch(c: Context<{ Variables: HonoVariables }>): Promise<Response> {
   const body   = c.get('body') ?? {};
   const action = (body as Record<string, unknown>).action as string | undefined;
   if (!action) return c.json({ success: false, message: 'Missing action' }, 400);
@@ -126,9 +129,12 @@ app.post('/api', async c => {
     body:    JSON.stringify(body),
   });
 
-  const res = await app.fetch(syntheticReq, c.env, c.executionCtx);
-  return res;
-});
+  return app.fetch(syntheticReq, c.env, c.executionCtx);
+}
+
+app.post('/api', c => _legacyDispatch(c));
+// Dev: Netlify Dev calls the function directly at its native path
+app.post('/.netlify/functions/api', c => _legacyDispatch(c));
 
 // ── Netlify Lambda handler ────────────────────────────────────────────────────
 export const handler = handle(app);

@@ -5,6 +5,13 @@
   functions = "dist/netlify/functions"
   command = "npm install --legacy-peer-deps && npm run build"
 
+[dev]
+  # Functions-only dev server on 8888 — Vite runs separately on 5173 and
+  # proxies /api/* here. Setting targetPort prevents Netlify Dev from trying
+  # to auto-detect and start a second framework process on the same port.
+  port = 8888
+  functions = "dist/netlify/functions"
+
 [build.environment]
   # Vite 8 requires Node >=20.19.0 or >=22.12.0 — pin to 22 so Netlify's
   # build container satisfies the engine constraint.
@@ -12,6 +19,11 @@
 
 [[redirects]]
   from = "/api"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
   to = "/.netlify/functions/api"
   status = 200
 
