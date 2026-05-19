@@ -26,6 +26,7 @@ import { Modal }                               from '@shared/Modal';
 import { ConfirmDialog }                       from '@shared/ConfirmDialog';
 import { Spinner }                             from '@shared/Spinner';
 import { toast }                               from '@store';
+import { useSessionStore }                     from '@store/session';
 import {
   listProjectSites,
   getLiveAttendance,
@@ -753,7 +754,8 @@ function StatsRow({ total, activeGeofences, assigned, attendance }: StatsProps):
 // ── Main section ──────────────────────────────────────────────────────────────
 
 export function ProjectSitesSection(): VNode {
-  const qc = useQueryClient();
+  const qc              = useQueryClient();
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
 
   const [filter,       setFilter]       = useState<SiteFilter>('all');
   const [search,       setSearch]       = useState('');
@@ -767,6 +769,7 @@ export function ProjectSitesSection(): VNode {
   const sitesQuery = useQuery({
     queryKey: ['projectSites'],
     queryFn:  ({ signal }) => listProjectSites(signal),
+    enabled:  isAuthenticated,
   });
 
   const win   = window as unknown as Record<string, unknown>;
@@ -779,6 +782,7 @@ export function ProjectSitesSection(): VNode {
     queryFn:  ({ signal }) => getLiveAttendance(scope, signal),
     staleTime: 30_000,
     refetchInterval: 30_000,
+    enabled:  isAuthenticated,
   });
 
   const sites     = sitesQuery.data?.sites     || [];

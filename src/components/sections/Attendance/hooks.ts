@@ -10,6 +10,7 @@
  */
 
 import { useQuery, type UseQueryResult } from '@tanstack/preact-query';
+import { useSessionStore } from '@store/session';
 import { listDailyLog } from './api';
 import type { AttendanceData, MonthFilter, RangeFilter } from './types';
 
@@ -27,10 +28,11 @@ import type { AttendanceData, MonthFilter, RangeFilter } from './types';
 export function useAttendanceData(
   filter: MonthFilter | RangeFilter,
 ): UseQueryResult<AttendanceData> {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: ['attendance', 'log', filter],
     queryFn:  ({ signal }) => listDailyLog(filter, signal),
     staleTime: 60_000,
-    enabled:   true,
+    enabled:  isAuthenticated,
   });
 }

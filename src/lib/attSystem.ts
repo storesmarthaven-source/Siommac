@@ -1246,8 +1246,11 @@ export function init(): void {
     else sv?.['applyCompanyLogo']?.('');
   } catch (_) { _SettingsView()?.['applyCompanyLogo']?.(''); }
 
+  // Only fetch settings when a valid session exists — avoids a 401 on the
+  // login screen that would otherwise trigger the session-expiry handler.
   const rawApi = _rawApiW();
-  if (rawApi) {
+  const _hasSession = !!loadSession();
+  if (rawApi && _hasSession) {
     rawApi('getSettings', {}).then(res => {
       const s = (res['data'] as Record<string, unknown> | undefined) ?? (res as Record<string, unknown>);
       const logoUrl = (s['companyLogoUrl'] ?? s['logoUrl'] ?? '') as string;

@@ -132,12 +132,15 @@ export function DashboardController() {
     return def ? [{ id: id as string, title: def.title as string }] : [];
   });
 
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+
   // ── Queries — chart data ───────────────────────────────────────────────────
 
   useQuery({
     queryKey:  ['dashboard', 'charts'],
     queryFn:   ({ signal }) => getDashboardCharts(signal),
     staleTime: 60_000,
+    enabled:   isAuthenticated,
     select:    (data) => {
       // Delegate to SiomacCharts — it owns the canvas rendering
       const SC = (window as unknown as Record<string, unknown>)['SiomacCharts'] as
@@ -154,7 +157,7 @@ export function DashboardController() {
     queryKey:  ['dashboard', 'myChart', username],
     queryFn:   ({ signal }) => getMyChart(username ?? '', signal),
     staleTime: 60_000,
-    enabled:   !!username,
+    enabled:   isAuthenticated && !!username,
     select:    (data) => {
       const SC = (window as unknown as Record<string, unknown>)['SiomacCharts'] as
         Record<string, Function> | undefined;

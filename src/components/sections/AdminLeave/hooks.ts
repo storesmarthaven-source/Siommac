@@ -7,6 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/preact-query';
+import { useSessionStore } from '@store/session';
 import { listAllLeaves } from './api';
 import type { LeaveRecord, LeaveStats } from './types';
 
@@ -16,6 +17,7 @@ export interface AdminLeaveData {
 }
 
 export function useAdminLeaveData() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery<AdminLeaveData>({
     queryKey: ['admin', 'leaves'],
     queryFn:  async ({ signal }) => {
@@ -29,5 +31,6 @@ export function useAdminLeaveData() {
       return { records, stats };
     },
     staleTime: 60_000,
+    enabled:  isAuthenticated,
   });
 }

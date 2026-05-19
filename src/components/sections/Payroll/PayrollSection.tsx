@@ -615,13 +615,14 @@ export function PayrollSection() {
     queryKey: ['departments'],
     queryFn:  ({ signal }) => listDepartments(signal),
     staleTime: 5 * 60_000,
+    enabled:  session.isAuthenticated,
   });
 
   const { data: allEmployees = [] } = useQuery<EmployeeListItem[]>({
     queryKey: ['employees', 'list'],
     queryFn:  ({ signal }) => listEmployees(signal),
     staleTime: 5 * 60_000,
-    enabled:   reportsMode,
+    enabled:  session.isAuthenticated && reportsMode,
   });
 
   // ── flatpickr date inputs ────────────────────────────────────────────────────

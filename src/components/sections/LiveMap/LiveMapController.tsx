@@ -64,8 +64,9 @@ function useLiveListClick() {
 // ── Main controller ───────────────────────────────────────────────────────────
 
 export function LiveMapController() {
-  const role    = useSessionStore(s => s.role);
-  const scope   = role === 'admin' ? 'all' : 'all';  // manager scoping handled server-side
+  const role            = useSessionStore(s => s.role);
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  const scope           = role === 'admin' ? 'all' : 'all';  // manager scoping handled server-side
 
   useLiveListClick();
 
@@ -75,6 +76,7 @@ export function LiveMapController() {
     queryFn:        ({ signal }) => getLiveAttendance(scope, signal),
     staleTime:      30_000,
     refetchInterval: 30_000,
+    enabled:        isAuthenticated,
     select: (rows) => {
       const lm = getLiveMap();
       if (!lm) return rows;

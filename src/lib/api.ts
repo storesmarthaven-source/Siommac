@@ -266,8 +266,16 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
     return apiFetch<T>(path, opts, attempt + 1);
   }
 
-  // 3) Unrecoverable 401 — try one silent refresh then retry
+  // 3) Unrecoverable 401 — try one silent refresh then retry.
+  //    Only trigger session expiry if there was an active session to begin with.
+  //    Pre-login requests (no session stored) must return silently — never force
+  //    logout for unauthenticated users who haven't yet signed in.
   if (res.status === 401 && !opts.public && !opts._skipRefreshCheck) {
+    const hasSession = !!loadSession();
+    if (!hasSession) {
+      // No session was ever established — return a plain error, do NOT expire
+      return { success: false, message: 'Unauthorized' } as T;
+    }
     const newToken = await _refreshToken();
     if (newToken) {
       return apiFetch<T>(path, { ...opts, _skipRefreshCheck: true }, 0);
@@ -279,12 +287,17 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
   try {
     const json = await res.json();
     // Legacy protocol: backend returns { success: false, message: 'Unauthorized' }
+    // Same guard: only treat as session expiry if a session exists.
     if (
       json &&
       (json as ApiResponse).success === false &&
       (json as ApiResponse).message === 'Unauthorized' &&
       !opts.public
     ) {
+      const hasSession = !!loadSession();
+      if (!hasSession) {
+        return { success: false, message: 'Unauthorized' } as T;
+      }
       const newToken = await _refreshToken();
       if (newToken) {
         return apiFetch<T>(path, { ...opts, _skipRefreshCheck: true }, 0);

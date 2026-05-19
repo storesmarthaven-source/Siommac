@@ -28,6 +28,7 @@
 import { h, Fragment }        from 'preact';
 import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
+import { useSessionStore }    from '@store/session';
 import { getMyStatus, listProjectSites, markAttendance } from './api';
 import type {
   AttendanceStatus,
@@ -502,7 +503,8 @@ interface AttendanceDashboardProps {
 }
 
 export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
-  const qc = useQueryClient();
+  const qc              = useQueryClient();
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
 
   const [modalAction, setModalAction] = useState<AttendanceAction | null>(null);
 
@@ -511,7 +513,7 @@ export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
     queryKey:        ['myStatus', username],
     queryFn:         ({ signal }) => getMyStatus(username, signal),
     refetchInterval: 30_000,
-    enabled:         !!username,
+    enabled:         isAuthenticated && !!username,
   });
 
   // Prefetch sites in background so modal opens instantly
@@ -519,6 +521,7 @@ export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
     queryKey: ['projectSites', 'forCheckIn'],
     queryFn:  ({ signal }) => listProjectSites(signal),
     staleTime: 5 * 60_000,
+    enabled:  isAuthenticated,
   });
 
   // Sync status to DOM whenever it changes

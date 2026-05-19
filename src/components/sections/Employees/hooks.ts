@@ -22,6 +22,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { toast } from '@store/ui';
+import { useSessionStore } from '@store/session';
 import {
   listEmployees, getEmployee, addEmployee, updateEmployee, deleteEmployee,
   listDepartments, listManagers, addDepartment, updateDepartment, deleteDepartment,
@@ -39,10 +40,12 @@ import {
 // ── Employee queries ──────────────────────────────────────────────────────────
 
 export function useEmployeeList() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: employeeKeys.list(),
     queryFn:  ({ signal }) => listEmployees(signal),
     staleTime: 60_000,
+    enabled:  isAuthenticated,
   });
 }
 
@@ -103,18 +106,22 @@ export function useDeleteEmployee() {
 // ── Department queries ────────────────────────────────────────────────────────
 
 export function useDepartmentList() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: departmentKeys.list(),
     queryFn:  ({ signal }) => listDepartments(signal),
     staleTime: 60_000,
+    enabled:  isAuthenticated,
   });
 }
 
 export function useManagerList() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: departmentKeys.managers(),
     queryFn:  ({ signal }) => listManagers(signal),
     staleTime: 60_000,
+    enabled:  isAuthenticated,
   });
 }
 
@@ -169,10 +176,12 @@ export function useDeleteDepartment() {
 // ── Leave queries ─────────────────────────────────────────────────────────────
 
 export function useMyLeaves() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: leaveKeys.mine(),
     queryFn:  ({ signal }) => getMyLeaves(signal),
     staleTime: 30_000,
+    enabled:  isAuthenticated,
   });
 }
 
@@ -186,10 +195,12 @@ export function useManagerLeaves(managerUsername: string | null) {
 }
 
 export function useAdminLeaves() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: leaveKeys.admin(),
     queryFn:  ({ signal }) => listAllLeaves(signal),
     staleTime: 30_000,
+    enabled:  isAuthenticated,
   });
 }
 
@@ -270,40 +281,48 @@ export function useRejectLeave(managerUsername?: string) {
 // ── History query ─────────────────────────────────────────────────────────────
 
 export function useMyHistory(days = 30) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: historyKeys.mine(days),
     queryFn:  ({ signal }) => getMyHistory(days, signal),
     staleTime: 5 * 60_000,   // history doesn't change frequently
+    enabled:  isAuthenticated,
   });
 }
 
 // ── Payslips query ────────────────────────────────────────────────────────────
 
 export function useMyPayslips() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: payslipKeys.mine(),
     queryFn:  ({ signal }) => getMyPayslips(signal),
     staleTime: 5 * 60_000,
+    enabled:  isAuthenticated,
   });
 }
 
 // ── Dashboard queries ─────────────────────────────────────────────────────────
 
 export function useAdminStats() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: dashboardKeys.adminStats,
     queryFn:  ({ signal }) => getAdminStats(signal),
     staleTime: 60_000,
     refetchInterval: 5 * 60_000,   // poll every 5 min for live dashboard feel
+    enabled:  isAuthenticated,
   });
 }
 
 export function useRecentAttendance() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: dashboardKeys.recentAttendance,
     queryFn:  ({ signal }) => getRecentAttendance(10, signal),
     staleTime: 60_000,
     refetchInterval: 2 * 60_000,
+    enabled:  isAuthenticated,
   });
 }
 

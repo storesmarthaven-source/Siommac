@@ -13,6 +13,7 @@ import { h, Fragment }          from 'preact';
 import { useState, useMemo, useRef, useCallback } from 'preact/hooks';
 import { useQuery, useQueryClient } from '@tanstack/preact-query';
 import { toast }                from '@store';
+import { useSessionStore }      from '@store/session';
 import { ConfirmDialog }        from '@shared/ConfirmDialog';
 import {
   listHourlyRates,
@@ -249,12 +250,14 @@ function ImportModal({ open, onClose, onDone }: ImportModalProps) {
 // ── Main section ──────────────────────────────────────────────────────────────
 
 export function HourlyRatesSection() {
-  const queryClient = useQueryClient();
+  const queryClient     = useQueryClient();
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
 
   const { data: allRates = [], isLoading } = useQuery({
     queryKey: ['hourlyRates'],
     queryFn:  ({ signal }) => listHourlyRates(signal),
     staleTime: 60_000,
+    enabled:  isAuthenticated,
   });
 
   // Local overrides: { username -> rate } so edits survive re-renders
