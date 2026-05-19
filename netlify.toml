@@ -5,6 +5,11 @@
   functions = "dist/netlify/functions"
   command = "npm install && npm run build"
 
+[build.environment]
+  # Vite 8 requires Node >=20.19.0 or >=22.12.0 — pin to 22 so Netlify's
+  # build container satisfies the engine constraint.
+  NODE_VERSION = "22"
+
 [[redirects]]
   from = "/api"
   to = "/.netlify/functions/api"
