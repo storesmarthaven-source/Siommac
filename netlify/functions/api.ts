@@ -39,6 +39,16 @@ function isAllowedOrigin(origin: string): boolean {
 // ── Build the Hono app ────────────────────────────────────────────────────────
 const app = new Hono<{ Variables: HonoVariables }>();
 
+// ── Global error handler ──────────────────────────────────────────────────────
+// Catches errors thrown by requireUser / requireRole (status 401/403) and any
+// unhandled route errors, and returns a proper JSON response instead of letting
+// them bubble up as unhandled exceptions (which Netlify turns into 500s with no body).
+app.onError((err, c) => {
+  const status = (err as { status?: number }).status ?? 500;
+  const message = err.message || 'Internal server error';
+  return c.json({ success: false, message }, status as 200);
+});
+
 // Security headers — applied to every response
 app.use('*', async (c, next) => {
   await next();
@@ -128,7 +138,9 @@ async function _legacyDispatch(c: Context<{ Variables: HonoVariables }>): Promis
     body:    JSON.stringify(body),
   });
 
-  return app.fetch(syntheticReq, c.env, c.executionCtx);
+  // executionCtx is not available in lambda-local (Netlify Dev) — pass undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return app.fetch(syntheticReq, c.env, undefined as any);
 }
 
 app.post('/api', c => _legacyDispatch(c));
