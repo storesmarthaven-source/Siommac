@@ -72,7 +72,7 @@ async function _doRefresh(): Promise<string | null> {
   }
 
   try {
-    const res  = await fetch(`${API_URL}/auth/refresh`, {
+    const res  = await fetch(`${API_URL.replace(/\/$/, '')}/auth/refresh`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ refreshToken: rt }),
@@ -237,9 +237,14 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
     signal:  opts.signal,
   };
 
+  // Build the full URL: join API_URL and path, ensuring exactly one '/' between
+  // them. An empty path (legacy apiAction) stays as API_URL with no trailing slash.
+  const url = path === '' ? API_URL
+    : `${API_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, init);
+    res = await fetch(url, init);
   } catch (err) {
     if (opts.signal?.aborted) {
       return { success: false, message: 'Request cancelled' } as T;
