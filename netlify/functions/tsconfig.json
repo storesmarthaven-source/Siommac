@@ -10,7 +10,9 @@
     "outDir": "../../dist",
     "rootDir": "../..",
     "declaration": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "incremental": true,
+    "tsBuildInfoFile": "../../dist/.tsbuildinfo-functions"
   },
   "include": [
     "./**/*.ts",
