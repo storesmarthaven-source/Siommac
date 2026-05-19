@@ -305,28 +305,36 @@ export const apiGet = <T extends ApiResponse = ApiResponse>(
   opts?: Omit<ApiFetchOptions, 'method' | 'body'>,
 ): Promise<T> => apiFetch<T>(path, { method: 'GET', ...opts });
 
+/**
+ * Authenticated POST. Wraps body in { args } to match the server's
+ * validation convention: all routes call zv(c, Schema, body.args ?? {}).
+ */
 export const apiPost = <T extends ApiResponse = ApiResponse>(
   path:  string,
   body:  Record<string, unknown>,
   opts?: Omit<ApiFetchOptions, 'method' | 'body'>,
-): Promise<T> => apiFetch<T>(path, { method: 'POST', body, retryable: false, ...opts });
+): Promise<T> => apiFetch<T>(path, { method: 'POST', body: { args: body }, retryable: false, ...opts });
 
 export const apiPatch = <T extends ApiResponse = ApiResponse>(
   path:  string,
   body:  Record<string, unknown>,
   opts?: Omit<ApiFetchOptions, 'method' | 'body'>,
-): Promise<T> => apiFetch<T>(path, { method: 'PATCH', body, retryable: false, ...opts });
+): Promise<T> => apiFetch<T>(path, { method: 'PATCH', body: { args: body }, retryable: false, ...opts });
 
 export const apiDelete = <T extends ApiResponse = ApiResponse>(
   path:  string,
   opts?: Omit<ApiFetchOptions, 'method' | 'body'>,
 ): Promise<T> => apiFetch<T>(path, { method: 'DELETE', retryable: false, ...opts });
 
-/** Public endpoints — no JWT, no retry on 401 */
+/**
+ * Public endpoints — no JWT, no retry on 401.
+ * Wraps body in { args } to match the server's legacy action-dispatch
+ * validation convention: all routes call zv(c, Schema, body.args ?? {}).
+ */
 export const authPost = <T extends ApiResponse = ApiResponse>(
   path:  string,
   body:  Record<string, unknown>,
-): Promise<T> => apiFetch<T>(path, { method: 'POST', body, public: true, retryable: false });
+): Promise<T> => apiFetch<T>(path, { method: 'POST', body: { args: body }, public: true, retryable: false });
 
 // ── Legacy action-dispatch (backward compat only) ─────────────────────────────
 
