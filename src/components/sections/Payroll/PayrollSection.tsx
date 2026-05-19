@@ -707,35 +707,44 @@ export function PayrollSection() {
   const dtRef    = useRef<unknown>(null);
 
   useEffect(() => {
-    const win = window as unknown as Record<string, unknown>;
-    // Destroy any existing DataTable whenever displayRows changes
-    if (typeof win['$'] === 'function') {
+    // Defer everything until after Preact has painted the new rows into the DOM.
+    // Destroying and re-initialising inside the same rAF callback guarantees
+    // DataTables always reads a fully-committed thead + tbody, preventing the
+    // "Incorrect column count" (TN/18) warning that occurs when destroy runs
+    // synchronously (seeing old DOM) while re-init runs in rAF (seeing new DOM
+    // before Preact has flushed it).
+    const raf = requestAnimationFrame(() => {
+      const win = window as unknown as Record<string, unknown>;
+      if (typeof win['$'] !== 'function') return;
+
       const $ = win['$'] as (s: string) => Record<string, unknown>;
+
+      // 1. Destroy any live DataTable instance
       try {
         const tbl = $('#payrollRunTable') as Record<string, Function>;
         if (tbl && typeof tbl['DataTable'] === 'function') {
           const dt = tbl['DataTable']() as Record<string, Function>;
           if (dt && typeof dt['destroy'] === 'function') dt['destroy']();
         }
-      } catch { /* ignore */ }
-    }
-    if (!displayRows.length) { dtRef.current = null; return; }
-    // Re-init after a paint tick
-    requestAnimationFrame(() => {
-      const win2 = window as unknown as Record<string, unknown>;
-      if (typeof win2['$'] === 'function') {
-        const PayrollShim = win2['Payroll'] as Record<string, unknown> | undefined;
-        const initDT = PayrollShim?.['initDataTable'];
-        if (PayrollShim && typeof initDT === 'function') {
-          dtRef.current = (initDT as Function)('payrollRunTable', {
-            dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
-            searching: true,
-            order: [[0, 'asc']],
-            columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'dt-no-export' }],
-          });
-        }
+      } catch { /* ignore — table may not have been initialised yet */ }
+
+      dtRef.current = null;
+      if (!displayRows.length) return;
+
+      // 2. Re-initialise on the freshly-painted rows
+      const PayrollShim = win['Payroll'] as Record<string, unknown> | undefined;
+      const initDT = PayrollShim?.['initDataTable'];
+      if (PayrollShim && typeof initDT === 'function') {
+        dtRef.current = (initDT as Function)('payrollRunTable', {
+          dom: "<'dt-export-bar'B>rt<'dt-foot'<'dt-len'l><'dt-info'i><'dt-page'p>>",
+          searching: true,
+          order: [[0, 'asc']],
+          columnDefs: [{ targets: -1, orderable: false, searchable: false, className: 'dt-no-export' }],
+        });
       }
     });
+
+    return () => cancelAnimationFrame(raf);
   }, [displayRows]);
 
   // ── Run payroll ──────────────────────────────────────────────────────────────
