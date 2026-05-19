@@ -403,6 +403,60 @@ by `attSystem.ts` and other legacy callers. Will be retired in Phase 2a.
 - `attSystem.ts` owns session timer, warning, and expiry logic
 - Every API call attaches `Authorization: Bearer <token>` header
 
+### Auth-gate contract — non-negotiable rules
+
+**Rule 1 — All authenticated queries must be gated on `isAuthenticated`.**
+
+Every `useQuery` or `useInfiniteQuery` call that touches an authenticated endpoint
+**must** include `enabled: isAuthenticated` (or a stricter condition that implies it):
+
+```typescript
+// ✅ Required pattern — read isAuthenticated from session store
+const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+useQuery({
+  queryKey: employeeKeys.list(),
+  queryFn:  ({ signal }) => listEmployees(signal),
+  staleTime: 60_000,
+  enabled:  isAuthenticated,   // ← MANDATORY
+});
+
+// ❌ Forbidden — query fires before login, causing 401 noise and logout loop
+useQuery({
+  queryKey: employeeKeys.list(),
+  queryFn:  ({ signal }) => listEmployees(signal),
+  staleTime: 60_000,
+  // no enabled: ... → fires on page load before user logs in
+});
+```
+
+Additional param guards (e.g. `enabled: isAuthenticated && !!username`) are fine
+and encouraged, but `isAuthenticated` must be part of the condition on every
+authenticated query. Never hard-code `enabled: true` on an authenticated query.
+
+**Rule 2 — `apiFetch` only triggers session expiry when a session exists.**
+
+A 401 response means different things depending on context:
+- **No session exists** → caller is unauthenticated (e.g. a query that fired on
+  the login screen). Return `{ success: false, message: 'Unauthorized' }` silently.
+  Do NOT call `_onAuthExpired()`. Do NOT show a logout or expiry message.
+- **A session exists and the 401 is unexpected** → the token genuinely expired or
+  was revoked. Attempt one silent refresh; if that fails, call `_onAuthExpired()`.
+
+This contract is enforced in `src/lib/api.ts`. Do not bypass it.
+
+**Rule 3 — Boot-time API calls must check session presence first.**
+
+`attSystem.init()` and any other code that runs at page load **must not** call
+authenticated API endpoints unless `loadSession()` returns a non-null value.
+Pre-login fetches must be either:
+- Public endpoints (no auth needed), or
+- Deferred until `store/session.ts` emits `isAuthenticated = true`
+
+**Rationale:** Before these rules were codified, every pre-login query returned
+401, which triggered `_onAuthExpired()`, which triggered `expire()` in the session
+store, which logged the user out before they could log in — a self-reinforcing loop
+visible as repeated "Session expired — forcing logout" warnings in the console.
+
 ### Target (Phase 2b)
 
 - Auth token → Supabase session cookie (httpOnly, managed by Supabase JS client)

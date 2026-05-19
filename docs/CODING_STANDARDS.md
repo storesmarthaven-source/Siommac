@@ -403,6 +403,51 @@ useQuery({
 - Never pass `queryFn: async () => { ... }` inline for production queries; extract to a named fetcher.
 - Invalidate by key hierarchy, not by clearing the whole cache.
 
+### 7.4 Authentication guard on every query — mandatory
+
+**Every `useQuery` call for an authenticated endpoint must include `enabled: isAuthenticated`.**
+Read it from the session store, not from a prop or a local variable that could be undefined:
+
+```ts
+// ✅ Correct — query is dormant until the user is logged in
+export function useEmployeeList() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: employeeKeys.list(),
+    queryFn:  ({ signal }) => listEmployees(signal),
+    staleTime: 60_000,
+    enabled:  isAuthenticated,   // ← always required
+  });
+}
+
+// ❌ Wrong — fires on the login screen, generates 401s, triggers logout loop
+export function useEmployeeList() {
+  return useQuery({
+    queryKey: employeeKeys.list(),
+    queryFn:  ({ signal }) => listEmployees(signal),
+    staleTime: 60_000,
+    // missing enabled: isAuthenticated
+  });
+}
+
+// ❌ Wrong — hardcoded true is equivalent to no guard
+useQuery({ ..., enabled: true });
+
+// ✅ Acceptable — additional param guard is fine as long as isAuthenticated is included
+useQuery({ ..., enabled: isAuthenticated && !!username });
+```
+
+This rule exists because TanStack Query starts all queries as soon as the
+component mounts — which on the login screen means before any session exists.
+A 401 from an unauthenticated request triggers the session-expiry handler,
+which logs the user out before they can log in. See `docs/ARCHITECTURE.md §9`
+for the full auth-gate contract.
+
+**Checklist when writing a new `useQuery`:**
+1. Is this endpoint authenticated? → add `enabled: isAuthenticated`
+2. Does the query also require a specific value (username, id, etc.)? → `enabled: isAuthenticated && !!value`
+3. Is it a truly public endpoint (e.g. `/auth/login`, `/api/ping`)? → no guard needed, but mark with a comment: `// public endpoint — no auth guard required`
+
 ---
 
 ## 8. API & Data Fetching Rules
@@ -446,6 +491,40 @@ All network calls go through:
 - Supabase Realtime (subscriptions only)
 
 Components never call `fetch()` directly.
+
+### 8.4 The 401 / session-expiry contract
+
+`apiFetch` (in `@lib/api`) handles 401 responses according to a strict contract.
+**Do not add ad-hoc 401 handling in components or hooks.** Let the fetch layer own it.
+
+The contract:
+
+| Situation | What `apiFetch` does | What it does NOT do |
+|---|---|---|
+| 401 and no session in localStorage | Returns `{ success: false, message: 'Unauthorized' }` | Does NOT call `_onAuthExpired()` |
+| 401 and a session exists | Attempts one silent token refresh | Calls `_onAuthExpired()` only if refresh also fails |
+| Legacy JSON `{ success: false, message: 'Unauthorized' }` | Same as above — checks session first | Same |
+| Network error (no response) | Retries up to 2× with back-off | Does NOT treat as 401 |
+
+**Why this matters:** Without the session check, a 401 on the login screen
+(e.g. a background query that fired before the user logged in) would call
+`_onAuthExpired()` → `useSessionStore.expire()` → wipe session → show login screen
+even though the user was already on the login screen. This is a self-amplifying
+loop that produces repeated "Session expired — forcing logout" console warnings.
+
+**Boot-time calls** (anything in `attSystem.init()` or module-level code) must
+check `loadSession() !== null` before calling any authenticated endpoint:
+
+```ts
+// ✅ Correct — skip if no session
+const _hasSession = !!loadSession();
+if (rawApi && _hasSession) {
+  rawApi('getSettings', {}).then(res => { ... });
+}
+
+// ❌ Wrong — fires unconditionally, 401 on login screen triggers expiry loop
+rawApi('getSettings', {}).then(res => { ... });
+```
 
 ---
 
@@ -754,6 +833,13 @@ Use this when reviewing a PR:
 [ ] Coverage thresholds maintained
 [ ] Commit message follows Conventional Commits format
 [ ] PR description links to governing docs/
+
+Authentication-specific checks (§7.4, §8.4, docs/ARCHITECTURE.md §9):
+[ ] Every new useQuery on an authenticated endpoint has enabled: isAuthenticated
+[ ] No useQuery has enabled: true on an authenticated endpoint
+[ ] No boot-time / module-level code calls authenticated endpoints without
+    first checking loadSession() !== null
+[ ] No ad-hoc 401 handling in components — let apiFetch own it
 ```
 
 ---
