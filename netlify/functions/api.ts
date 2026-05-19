@@ -3,7 +3,7 @@
 // This file wires them together and adapts Hono to the Netlify Lambda handler.
 
 import { Hono }   from 'hono';
-import { handle } from '@hono/node-server/netlify';
+import { handle } from 'hono/netlify';
 import type { Context } from 'hono';
 
 import { jwtMiddleware }             from './lib/auth';
