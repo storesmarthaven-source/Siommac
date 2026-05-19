@@ -196,12 +196,33 @@ export interface Ticket {
   updated_at:  string | null;
 }
 
+export type NotificationType =
+  | 'attendance_late'
+  | 'attendance_absent'
+  | 'attendance_missed_checkout'
+  | 'leave_approved'
+  | 'leave_rejected'
+  | 'leave_pending'
+  | 'payroll_published'
+  | 'system_announcement'
+  | 'mention';
+
 export interface Notification {
   id:          string;
   user_id:     string;
+  type:        NotificationType;
   title:       string;
   body:        string;
   is_read:     boolean;
   link:        string | null;
   created_at:  string | null;
+}
+
+export interface NotificationPreference {
+  user_id:  string;
+  type:     NotificationType;
+  enabled:  boolean;
+  in_app:   boolean;
+  email:    boolean;
+  whatsapp: boolean;
 }

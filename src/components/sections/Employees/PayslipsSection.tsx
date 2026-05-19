@@ -1,0 +1,404 @@
+/**
+ * PayslipsSection.tsx
+ *
+ * Employee self-service payslips grid.
+ * Replaces: loadMyPayslips, _empOpenPayslip, _buildPayslipHtml, window._printPayslip
+ * from employees.js.
+ *
+ * Features:
+ *   ✓ Card grid with gross / net / deduction summary
+ *   ✓ View payslip in a Modal (replaces the legacy cpop.fire() popup)
+ *   ✓ Print to new window with full print CSS (mirrors legacy print function)
+ *   ✓ YTD totals strip
+ *   ✓ "Latest" badge on most recent payslip
+ *
+ * @see docs/ARCHITECTURE.md
+ * @see docs/CODING_STANDARDS.md
+ * @see docs/UI_DESIGN_SYSTEM.md
+ */
+
+import { type VNode }                         from 'preact';
+import { useState, useCallback }               from 'preact/hooks';
+import { Spinner }                             from '@shared/Spinner';
+import { Modal }                               from '@shared/Modal';
+import type { Payslip, CompanyInfo, StatutoryRates } from './types';
+import { useMyPayslips }                       from './hooks';
+import { fmtTTD, fmtAmount, PAY_CYCLE_LABEL } from './utils';
+
+// ── Company info defaults (read from legacy _companyInfo / _statutoryRates globals if present) ──
+
+function getCompanyInfo(): CompanyInfo {
+  // Try to read from legacy global if available (populated by settings-view.js)
+  const g = (window as unknown as Record<string, unknown>)._companyInfo as CompanyInfo | undefined;
+  return g ?? { name: 'My Company', address: '', phone: '', email: '', nis: '', bir: '', logoUrl: '' };
+}
+
+function getStatutoryRates(): StatutoryRates {
+  const g = (window as unknown as Record<string, unknown>)._statutoryRates as StatutoryRates | undefined;
+  return g ?? { nisRate: 5.4, allowanceAnnual: 84000 };
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export function PayslipsSection(): VNode {
+  const { data: payslips = [], isLoading, error, refetch } = useMyPayslips();
+  const [viewing, setViewing] = useState<Payslip | null>(null);
+
+  const ytd = payslips.reduce((s, p) => s + Number(p.net_pay ?? p.netPay ?? 0), 0);
+
+  if (error) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center', color: '#dc2626' }}>
+        <div>Failed to load payslips.</div>
+        <button type="button" onClick={() => void refetch()} style={{ marginTop: '10px', padding: '7px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '24px' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>My Payslips</h1>
+        <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>View and print your pay statements.</p>
+      </div>
+
+      {/* YTD strip */}
+      {payslips.length > 0 && (
+        <div style={{
+          display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px',
+          padding: '16px 20px', background: '#1b2d55', borderRadius: '12px', color: '#fff',
+        }}>
+          <YtdItem label="Total Payslips"  value={String(payslips.length)} />
+          <YtdItem label="Latest Net Pay"  value={fmtTTD(Number(payslips[0]?.net_pay ?? payslips[0]?.netPay ?? 0))} />
+          <YtdItem label="YTD Net Pay"     value={fmtTTD(ytd)} />
+        </div>
+      )}
+
+      {/* Grid */}
+      {isLoading ? (
+        <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
+          <Spinner size={36} label="Loading payslips…" />
+        </div>
+      ) : payslips.length === 0 ? (
+        <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
+          <i class="fas fa-file-invoice-dollar" style={{ fontSize: '36px', display: 'block', marginBottom: '12px', opacity: 0.4 }} />
+          <div style={{ fontWeight: '600' }}>No payslips yet</div>
+          <div style={{ fontSize: '13px', marginTop: '4px' }}>Your payslips will appear here once payroll has been processed.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+          {payslips.map((p, i) => (
+            <PayslipCard
+              key={p.id}
+              payslip={p}
+              isLatest={i === 0}
+              onView={() => setViewing(p)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* View payslip modal */}
+      {viewing && (
+        <PayslipViewModal
+          payslip={viewing}
+          onClose={() => setViewing(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Payslip card ──────────────────────────────────────────────────────────────
+
+function PayslipCard({ payslip: p, isLatest, onView }: { payslip: Payslip; isLatest: boolean; onView: () => void }): VNode {
+  const monthLabel = p.date_from
+    ? new Date(p.date_from + 'T12:00:00').toLocaleDateString('en-TT', { month: 'long', year: 'numeric' })
+    : '—';
+  const cycleLabel = PAY_CYCLE_LABEL[p.pay_cycle] ?? p.pay_cycle ?? '—';
+  const approvedDate = p.approved_at
+    ? new Date(p.approved_at).toLocaleDateString('en-TT', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  const net  = Number(p.net_pay ?? p.netPay ?? 0);
+  const gross = Number(p.gross_pay ?? p.grossPay ?? 0);
+  const ded   = Number(p.total_deductions ?? p.totalDeductions ?? 0);
+
+  return (
+    <div style={{
+      background:   '#fff',
+      borderRadius: '12px',
+      overflow:     'hidden',
+      boxShadow:    isLatest ? '0 0 0 2px #2563eb, 0 4px 12px rgba(37,99,235,.15)' : '0 1px 3px rgba(0,0,0,.08)',
+    }}>
+      {/* Top strip */}
+      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>{monthLabel}</div>
+          {isLatest && (
+            <span style={{ fontSize: '10px', fontWeight: '700', background: '#2563eb', color: '#fff', padding: '2px 7px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Latest</span>
+          )}
+        </div>
+        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{cycleLabel}</div>
+      </div>
+
+      {/* Net pay */}
+      <div style={{ padding: '14px 16px', background: '#f8fafe' }}>
+        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>Net Pay</div>
+        <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827' }}>TTD {fmtAmount(net)}</div>
+      </div>
+
+      {/* Breakdown */}
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <BreakRow label="Gross" value={`TTD ${fmtAmount(gross)}`} />
+        <BreakRow label="Deductions" value={`− TTD ${fmtAmount(ded)}`} accent="#dc2626" />
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '10px 16px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6' }}>
+        <span style={{ fontSize: '11px', color: '#9ca3af' }}>
+          <i class="fas fa-check-circle" style={{ marginRight: '4px', color: '#16a34a' }} aria-hidden="true" />
+          {approvedDate}
+        </span>
+        <button
+          type="button"
+          onClick={onView}
+          style={{
+            padding: '5px 12px', background: '#2563eb10', color: '#2563eb',
+            border: '1px solid #2563eb30', borderRadius: '6px',
+            cursor: 'pointer', fontSize: '12px', fontWeight: '500',
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+          }}
+        >
+          <i class="fas fa-eye" aria-hidden="true" /> View & Print
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BreakRow({ label, value, accent }: { label: string; value: string; accent?: string }): VNode {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+      <span style={{ color: '#6b7280' }}>{label}</span>
+      <span style={{ fontWeight: '600', color: accent ?? '#111827' }}>{value}</span>
+    </div>
+  );
+}
+
+function YtdItem({ label, value }: { label: string; value: string }): VNode {
+  return (
+    <div>
+      <div style={{ fontSize: '11px', opacity: 0.6, marginBottom: '2px' }}>{label}</div>
+      <div style={{ fontSize: '18px', fontWeight: '700' }}>{value}</div>
+    </div>
+  );
+}
+
+// ── Payslip view modal ────────────────────────────────────────────────────────
+
+function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: () => void }): VNode {
+  const ci     = getCompanyInfo();
+  const rates  = getStatutoryRates();
+  const cycleLabel = PAY_CYCLE_LABEL[p.pay_cycle] ?? p.pay_cycle;
+
+  const gross = Number(p.gross_pay ?? p.grossPay ?? 0);
+  const net   = Number(p.net_pay   ?? p.netPay   ?? 0);
+  const ded   = Number(p.total_deductions ?? p.totalDeductions ?? 0);
+  const paye  = Number(p.paye ?? 0);
+  const nis   = Number(p.nis  ?? 0);
+  const hs    = Number(p.health_surcharge ?? p.healthSurcharge ?? 0);
+  const hrs   = Number(p.hours_worked ?? p.hoursWorked ?? 0);
+
+  const handlePrint = useCallback(() => {
+    const printCss = `
+      @page { size: A4 landscape; margin: 10mm; }
+      body { margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#1b2d55; background:#fff; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      .ph { background:#1b2d55; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:16px 24px; }
+      .ph-name { font-size:18px; font-weight:700; }
+      .ph-role { font-size:11px; opacity:.7; margin-top:3px; }
+      .section { border-bottom:1px solid #dce2ef; }
+      .meta { display:grid; grid-template-columns:1fr 1fr; }
+      .meta-col { padding:12px 18px; }
+      .meta-col:first-child { border-right:1px solid #dce2ef; }
+      .row { display:flex; justify-content:space-between; padding:5px 0; font-size:11px; border-bottom:1px dotted #dce2ef; }
+      .row:last-child { border-bottom:none; }
+      .row span { color:#6b7a99; }
+      .row strong { color:#1b2d55; }
+      .tables { display:grid; grid-template-columns:1fr 1fr; }
+      .tbl-col { padding:10px 0; }
+      .tbl-col:first-child { border-right:1px solid #dce2ef; }
+      .tbl-title { padding:8px 18px 5px; font-size:9px; font-weight:700; text-transform:uppercase; color:#6b7a99; border-bottom:1px solid #dce2ef; }
+      table { width:100%; border-collapse:collapse; font-size:11px; }
+      th { padding:5px 18px; text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; color:#6b7a99; background:#f5f7fc; border-bottom:1px solid #dce2ef; print-color-adjust:exact; }
+      td { padding:6px 18px; border-bottom:1px solid rgba(0,0,0,.04); }
+      .subtotal { display:flex; justify-content:space-between; padding:7px 18px; font-size:11px; font-weight:700; color:#166534; background:rgba(22,101,52,.07); border-top:2px solid #dce2ef; print-color-adjust:exact; }
+      .subtotal-ded { color:#b91c1c; background:rgba(185,28,28,.07); }
+      .net { display:flex; justify-content:space-between; padding:11px 20px; font-size:15px; font-weight:700; background:#1b2d55; color:#fff; print-color-adjust:exact; }
+    `;
+
+    const printHeader = `
+      <div class="ph">
+        <div><div class="ph-name">${p.name ?? ''}</div><div class="ph-role">${p.position ?? ''} &bull; ${p.department ?? ''}</div></div>
+        <div style="text-align:right;font-size:10px;opacity:.88">
+          ${ci.address ? ci.address + '<br>' : ''}${ci.phone ? 'Tel: ' + ci.phone + '<br>' : ''}${ci.email ?? ''}
+        </div>
+        ${ci.logoUrl ? `<img src="${ci.logoUrl}" style="height:72px;object-fit:contain">` : ''}
+      </div>`;
+
+    const html = `
+      <div class="section meta">
+        <div class="meta-col">
+          <div class="row"><span>Pay Period</span><strong>${p.date_from} — ${p.date_to}</strong></div>
+          <div class="row"><span>Pay Cycle</span><strong>${cycleLabel}</strong></div>
+          <div class="row"><span>Pay Date</span><strong>${p.pay_date ?? '—'}</strong></div>
+        </div>
+        <div class="meta-col">
+          <div class="row"><span>Rate</span><strong>${p.pay_basis === 'hourly' ? `TTD ${fmtAmount(Number(p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount(Number(p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`}</strong></div>
+          <div class="row"><span>Hours</span><strong>${hrs}h</strong></div>
+          <div class="row"><span>Allowance</span><strong>TTD ${fmtAmount(rates.allowanceAnnual)} / yr</strong></div>
+        </div>
+      </div>
+      <div class="section tables">
+        <div class="tbl-col">
+          <div class="tbl-title">Earnings</div>
+          <table><thead><tr><th>Description</th><th>Amount</th></tr></thead>
+          <tbody><tr><td>${p.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td><td>TTD ${fmtAmount(gross)}</td></tr></tbody></table>
+          <div class="subtotal"><span>Gross Pay</span><span>TTD ${fmtAmount(gross)}</span></div>
+        </div>
+        <div class="tbl-col">
+          <div class="tbl-title">Deductions</div>
+          <table><thead><tr><th>Description</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Health Surcharge</td><td>${hs > 0 ? 'TTD ' + fmtAmount(hs) : 'N/A'}</td></tr>
+            <tr><td>NIS (${rates.nisRate}%)</td><td>${nis > 0 ? 'TTD ' + fmtAmount(nis) : 'N/A'}</td></tr>
+            <tr><td>PAYE</td><td>TTD ${fmtAmount(paye)}</td></tr>
+          </tbody></table>
+          <div class="subtotal subtotal-ded"><span>Total Deductions</span><span>TTD ${fmtAmount(ded)}</span></div>
+        </div>
+      </div>
+      <div class="net"><span>Net Pay</span><span>TTD ${fmtAmount(net)}</span></div>
+    `;
+
+    const win = window.open('', '_blank', 'width=1100,height=800');
+    if (!win) return;
+    const faUrl = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip</title><link rel="stylesheet" href="${faUrl}"><style>${printCss}</style></head><body>${printHeader}${html}</body></html>`);
+    win.document.close();
+    let printed = false;
+    const doPrint = () => { if (!printed) { printed = true; win.focus(); win.print(); } };
+    const fa = win.document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]');
+    if (fa) {
+      fa.onload  = () => setTimeout(doPrint, 200);
+      fa.onerror = () => setTimeout(doPrint, 200);
+    }
+    setTimeout(doPrint, 1500);
+  }, [p, ci, rates, cycleLabel]);
+
+  const footer = (
+    <>
+      <button type="button" onClick={handlePrint} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: '#1b2d55', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+        <i class="fas fa-print" aria-hidden="true" /> Print
+      </button>
+      <button type="button" onClick={onClose} style={{ padding: '8px 18px', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+        Close
+      </button>
+    </>
+  );
+
+  const monthLabel = p.date_from
+    ? new Date(p.date_from + 'T12:00:00').toLocaleDateString('en-TT', { month: 'long', year: 'numeric' })
+    : '—';
+
+  return (
+    <Modal open onClose={onClose} title={`Payslip — ${monthLabel}`} size="lg" footer={footer}>
+      <div style={{ fontFamily: "'Segoe UI', Arial, sans-serif", color: '#1b2d55' }}>
+
+        {/* Company brand */}
+        {ci.name && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0 16px', borderBottom: '1px solid #dce2ef', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '15px' }}>{ci.name}</div>
+              {ci.address && <div style={{ fontSize: '12px', color: '#6b7a99' }}>{ci.address}</div>}
+            </div>
+            {ci.logoUrl && <img src={ci.logoUrl} alt="Company logo" style={{ height: '48px', objectFit: 'contain' }} />}
+          </div>
+        )}
+
+        {/* Meta grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid #dce2ef', marginBottom: '16px' }}>
+          <MetaCol>
+            <MetaRow label="Pay Period"   value={`${p.date_from} — ${p.date_to}`} />
+            <MetaRow label="Pay Cycle"    value={cycleLabel} />
+            <MetaRow label="Pay Date"     value={p.pay_date ?? '—'} />
+          </MetaCol>
+          <MetaCol>
+            <MetaRow label="Rate"         value={p.pay_basis === 'hourly' ? `TTD ${fmtAmount(Number(p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount(Number(p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`} />
+            <MetaRow label="Hours Worked" value={`${hrs}h`} />
+            <MetaRow label="Allowance"    value={`TTD ${fmtAmount(rates.allowanceAnnual)} / yr`} />
+          </MetaCol>
+        </div>
+
+        {/* Earnings / Deductions */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', border: '1px solid #dce2ef', borderRadius: '8px', overflow: 'hidden', marginBottom: '12px' }}>
+          <div style={{ borderRight: '1px solid #dce2ef' }}>
+            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
+              <i class="fas fa-plus-circle" style={{ marginRight: '4px' }} aria-hidden="true" />Earnings
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <thead><tr style={{ background: '#f9fafb' }}><th style={thStyle}>Description</th><th style={thStyle}>Amount</th></tr></thead>
+              <tbody><tr><td style={tdStyle}>{p.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td><td style={tdStyle}>TTD {fmtAmount(gross)}</td></tr></tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: '700', fontSize: '12px', color: '#166534', background: 'rgba(22,101,52,.07)', borderTop: '2px solid #dce2ef' }}>
+              <span>Gross Pay</span><span>TTD {fmtAmount(gross)}</span>
+            </div>
+          </div>
+          <div>
+            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
+              <i class="fas fa-minus-circle" style={{ marginRight: '4px' }} aria-hidden="true" />Deductions
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <thead><tr style={{ background: '#f9fafb' }}><th style={thStyle}>Description</th><th style={thStyle}>Amount</th></tr></thead>
+              <tbody>
+                <tr><td style={tdStyle}>Health Surcharge</td><td style={tdStyle}>{hs > 0 ? 'TTD ' + fmtAmount(hs) : 'N/A'}</td></tr>
+                <tr><td style={tdStyle}>NIS ({rates.nisRate}%)</td><td style={tdStyle}>{nis > 0 ? 'TTD ' + fmtAmount(nis) : 'N/A'}</td></tr>
+                <tr><td style={tdStyle}>PAYE</td><td style={tdStyle}>TTD {fmtAmount(paye)}</td></tr>
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: '700', fontSize: '12px', color: '#b91c1c', background: 'rgba(185,28,28,.07)', borderTop: '2px solid #dce2ef' }}>
+              <span>Total Deductions</span><span>TTD {fmtAmount(ded)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Net pay */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 20px', fontWeight: '700', fontSize: '16px', background: '#1b2d55', color: '#fff', borderRadius: '8px' }}>
+          <span>Net Pay</span><span>TTD {fmtAmount(net)}</span>
+        </div>
+
+        <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '11px', color: '#9ca3af' }}>
+          This is a computer-generated payslip — Trinidad &amp; Tobago
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function MetaCol({ children }: { children: VNode | VNode[] }): VNode {
+  return <div style={{ padding: '12px 16px' }}>{children}</div>;
+}
+
+function MetaRow({ label, value }: { label: string; value: string }): VNode {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '4px 0', fontSize: '12px', borderBottom: '1px dotted #dce2ef' }}>
+      <span style={{ color: '#6b7a99' }}>{label}</span>
+      <strong style={{ fontWeight: '600', color: '#1b2d55' }}>{value}</strong>
+    </div>
+  );
+}
+
+const thStyle: Record<string, string> = { padding: '5px 16px', textAlign: 'left', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: '#6b7a99', letterSpacing: '0.04em' };
+const tdStyle: Record<string, string> = { padding: '6px 16px', borderBottom: '1px solid rgba(0,0,0,.04)', fontSize: '12px' };

@@ -124,8 +124,8 @@
     }
   </script>
 
+  <!-- Global error catcher — surfaces any JS crash as a visible banner -->
   <script>
-    // Global error catcher — surfaces any JS crash as a visible banner
     window.addEventListener('error', function (e) {
       console.error('GLOBAL ERROR:', e.message, 'at', e.filename, e.lineno, e.colno, e.error);
       var banner = document.getElementById('_errBanner');
@@ -139,37 +139,9 @@
         'JS ERROR: ' + e.message + ' (' + (e.filename || '').split('/').pop() + ':' + e.lineno + ')';
       document.body.style.visibility = '';
     });
-
-    (function () {
-      function loadScripts(paths) {
-        return paths.reduce(function (chain, src) {
-          return chain.then(function () {
-            return new Promise(function (resolve, reject) {
-              var script = document.createElement('script');
-              script.src = src;
-              script.onload = resolve;
-              script.onerror = function () { reject(new Error('Could not load ' + src)); };
-              document.body.appendChild(script);
-            });
-          });
-        }, Promise.resolve());
-      }
-      fetch('assets/partials/app-shell.html')
-        .then(function (res) { if (!res.ok) throw new Error('Could not load app shell'); return res.text(); })
-        .then(function (html) {
-          document.getElementById('app-root').innerHTML = html;
-          return loadScripts(['assets/js/popup.js', 'assets/js/cache.js', 'assets/js/api.js', 'assets/js/config.js', 'assets/js/charts.js', 'assets/js/realtime.js', 'assets/app.js']);
-        })
-        .then(function () {
-          // reveal only after init() has decided which screen to show — eliminates login flash
-          document.body.style.visibility = '';
-        })
-        .catch(function (err) {
-          document.body.style.visibility = '';
-          document.getElementById('app-root').innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#b00020;"><strong>Startup error:</strong> ' + err.message + '</div>';
-          console.error(err);
-        });
-    })();
   </script>
+
+  <!-- Vite entry point — replaces the old inline loadScripts chain -->
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

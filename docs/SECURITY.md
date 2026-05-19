@@ -283,3 +283,97 @@ Server        (leaks server info)
 4. **`SUPABASE_SERVICE_ROLE_KEY`** must never appear in frontend code or browser network requests.  
 5. **JWT keys**: `JWT_PRIVATE_KEY` is backend-only. `JWT_PUBLIC_KEY` can be public but should not be exposed without reason.  
 6. **Upstash credentials** have read/write access to the rate-limit Redis instance. Store only in backend env vars.
+
+---
+
+## 9. Phase 2b — Auth Layer & RBAC (Implemented)
+
+### 9.1 Auth service (`src/lib/auth.ts`)
+
+All authentication operations route through a single typed service module:
+
+| Function | Purpose |
+|---|---|
+| `signIn(payload)` | Username + password → session or 2FA challenge |
+| `verify2fa(payload)` | TOTP code → full session |
+| `begin2faSetup(preAuthToken)` | Fetch QR code for authenticator app enrollment |
+| `confirm2faSetup(payload)` | Verify first TOTP code, receive backup codes |
+| `signOut()` | Clear session, reset cache, teardown Realtime |
+| `getSession()` | Read current session from store (synchronous) |
+
+**Migration path to httpOnly cookies** (VULN-004 mitigation):  
+The public interface of `auth.ts` is backend-agnostic. When the Netlify Edge Functions for `auth/login`, `auth/refresh`, and `auth/logout` are wired to set httpOnly cookies, only the internals of each function change — no component code changes.
+
+### 9.2 RBAC system (`src/lib/permissions.ts`)
+
+**Resolution order** (first match wins — highest priority first):
+1. Per-user DB override (`user_permissions` table) — `granted: true` or `granted: false`
+2. Role default (defined in `ROLE_PERMISSIONS` map)
+3. Deny (safe default)
+
+**Role hierarchy** (ascending privilege):
+
+| Role | Level | Key capabilities |
+|---|---|---|
+| `employee` | 0 | Own attendance, own leaves, own payslips |
+| `manager` | 1 | View all attendance + leaves, approve leaves, see live map |
+| `admin` | 2 | Full HR access, payroll, settings, statutory rates |
+| `superadmin` | 3 | All admin access + permission overrides management |
+
+**Permission key format:** `resource.action` — e.g. `employees.add`, `leaves.approve`  
+Full catalogue: see `PERMISSION_KEYS` constant in `src/lib/permissions.ts`.
+
+**API:**
+```ts
+// Imperative (outside components):
+import { can } from '@lib/permissions';
+if (can('employees.add')) { ... }
+
+// Reactive hook (inside Preact components — re-renders on change):
+import { useCan } from '@lib/permissions';
+const canApprove = useCan('leaves.approve');
+
+// JSX guard:
+import { AuthGate } from '@shared/AuthGate';
+<AuthGate permission="employees.add">
+  <AddEmployeeButton />
+</AuthGate>
+```
+
+### 9.3 `user_permissions` table
+
+Migration: `database/migrations/001_user_permissions.sql`
+
+| Column | Type | Description |
+|---|---|---|
+| `user_id` | UUID FK | References `users.id` |
+| `permission` | TEXT | Key in `resource.action` format (CHECK constraint enforced) |
+| `granted` | BOOLEAN | `true` = grant, `false` = explicit revoke |
+| `set_by` | TEXT | Username of superadmin who set this |
+| `set_at` | TIMESTAMPTZ | Timestamp of the override |
+
+**RLS policies:**
+- Superadmins: full read + write
+- Users: read own overrides only (needed for frontend `can()` resolution)
+- Audit trigger: every INSERT/UPDATE/DELETE logs to `activity_logs`
+
+### 9.4 `<AuthGate>` component
+
+Guards UI sections behind auth + optional role / permission check. Evaluates
+synchronously from the Zustand session store — zero flicker, zero async.
+
+```tsx
+// Require authentication only:
+<AuthGate>...</AuthGate>
+
+// Require minimum role:
+<AuthGate require="admin">...</AuthGate>
+
+// Require specific permission (RBAC):
+<AuthGate permission="payroll.export">...</AuthGate>
+
+// With fallback:
+<AuthGate permission="leaves.approve" fallback={<ReadOnlyView />}>
+  <ApprovalButtons />
+</AuthGate>
+```

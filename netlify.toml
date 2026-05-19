@@ -1,4 +1,6 @@
 [build]
+  # "." serves index.html from the project root; Vite assets land in assets/
+  # during Phase 1 (shim mode).  When Phase 7 is complete, change to "dist".
   publish = "."
   functions = "dist/netlify/functions"
   command = "npm install && npm run build"
@@ -52,6 +54,17 @@
   for = "/assets/images/*"
   [headers.values]
     Cache-Control = "public, max-age=3600, must-revalidate"
+
+# ── Vite-built assets (hashed filenames — safe to cache forever) ──────────────
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 # ── Netlify function — no caching (dynamic API) ───────────────────────────────
 [[headers]]
