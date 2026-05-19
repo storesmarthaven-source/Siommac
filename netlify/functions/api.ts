@@ -3,7 +3,6 @@
 // This file wires them together and adapts Hono to the Netlify Lambda handler.
 
 import { Hono }   from 'hono';
-import { handle } from 'hono/netlify';
 import type { Context } from 'hono';
 
 import { jwtMiddleware }             from './lib/auth';
@@ -137,4 +136,62 @@ app.post('/api', c => _legacyDispatch(c));
 app.post('/.netlify/functions/api', c => _legacyDispatch(c));
 
 // ── Netlify Lambda handler ────────────────────────────────────────────────────
-export const handler = handle(app);
+// Netlify Dev (lambda-local) calls handlers with the v1 event shape:
+//   { path, httpMethod, headers, body, isBase64Encoded, ... }
+// hono/netlify's built-in handle() expects a v2 native Request object and
+// crashes with "Cannot read properties of undefined (reading 'indexOf')" when
+// given a v1 event. We bridge manually so the same code works in both
+// Netlify Dev (v1) and deployed Netlify Functions v2.
+
+interface NetlifyV1Event {
+  path:              string;
+  httpMethod:        string;
+  headers:           Record<string, string>;
+  queryStringParameters?: Record<string, string> | null;
+  body?:             string | null;
+  isBase64Encoded?:  boolean;
+}
+
+interface NetlifyV1Context {
+  awsRequestId?: string;
+}
+
+export const handler = async (
+  event:   NetlifyV1Event | Request,
+  context: NetlifyV1Context,
+): Promise<unknown> => {
+  // v2: event is already a native Request
+  if (event instanceof Request) {
+    return app.fetch(event, { context });
+  }
+
+  // v1: reconstruct a proper Request from the lambda event
+  const base = 'http://localhost';
+  const qs   = event.queryStringParameters
+    ? '?' + new URLSearchParams(
+        Object.entries(event.queryStringParameters).filter(([, v]) => v != null) as [string, string][]
+      ).toString()
+    : '';
+  const url  = `${base}${event.path}${qs}`;
+
+  const body = event.body
+    ? (event.isBase64Encoded
+        ? Buffer.from(event.body, 'base64')
+        : event.body)
+    : undefined;
+
+  const req = new Request(url, {
+    method:  event.httpMethod,
+    headers: new Headers(event.headers ?? {}),
+    body:    ['GET', 'HEAD'].includes(event.httpMethod) ? undefined : body,
+  });
+
+  const res  = await app.fetch(req, { context });
+  const text = await res.text();
+
+  return {
+    statusCode: res.status,
+    headers:    Object.fromEntries(res.headers.entries()),
+    body:       text,
+  };
+};
