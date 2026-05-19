@@ -44,18 +44,21 @@ export default defineConfig({
 
   build: {
     outDir:    'dist',
-    emptyOutDir: false,   // backend also writes to dist — don't wipe it
+    emptyOutDir: false,   // backend writes dist/netlify — only wipe assets manually
     target:    'es2020',
     sourcemap: true,
     rollupOptions: {
       output: {
-        // Code-split heavy sections into their own chunk
+        // Split each section directory into its own chunk to avoid a single
+        // 600 kB+ blob that causes OOM crashes on low-memory devices.
         manualChunks(id) {
-          if (id.includes('/sections/'))       return 'sections';
-          if (id.includes('@tanstack'))         return 'query';
-          if (id.includes('flatpickr'))         return 'flatpickr';
-          if (id.includes('sortablejs'))        return 'sortable';
-          if (id.includes('zustand'))           return 'zustand';
+          // Per-section chunks — extract the section folder name
+          const secMatch = id.match(/\/sections\/([^/]+)\//);
+          if (secMatch) return `sec-${secMatch[1].toLowerCase()}`;
+          if (id.includes('@tanstack'))  return 'query';
+          if (id.includes('flatpickr')) return 'flatpickr';
+          if (id.includes('sortablejs'))return 'sortable';
+          if (id.includes('zustand'))   return 'zustand';
         },
         entryFileNames: 'assets/bundle.[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
