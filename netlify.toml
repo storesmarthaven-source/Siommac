@@ -3,7 +3,7 @@
   # during Phase 1 (shim mode).  When Phase 7 is complete, change to "dist".
   publish = "."
   functions = "dist/netlify/functions"
-  command = "npm install && npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
 
 [build.environment]
   # Vite 8 requires Node >=20.19.0 or >=22.12.0 — pin to 22 so Netlify's

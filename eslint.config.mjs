@@ -16,7 +16,6 @@ import js              from '@eslint/js';
 import tsPlugin        from '@typescript-eslint/eslint-plugin';
 import tsParser        from '@typescript-eslint/parser';
 import reactHooks      from 'eslint-plugin-react-hooks';
-import importPlugin    from 'eslint-plugin-import';
 
 export default [
   // ── Global ignores ──────────────────────────────────────────────────────────
@@ -39,7 +38,6 @@ export default [
     plugins: {
       '@typescript-eslint': tsPlugin,
       'react-hooks':        reactHooks,
-      'import':             importPlugin,
     },
     languageOptions: {
       parser:        tsParser,
@@ -48,13 +46,6 @@ export default [
         tsconfigRootDir: import.meta.dirname,
         ecmaVersion:    2020,
         sourceType:     'module',
-      },
-    },
-    settings: {
-      'import/resolver': {
-        typescript: {
-          project: './tsconfig.frontend.json',
-        },
       },
     },
     rules: {
@@ -90,34 +81,6 @@ export default [
           ],
         },
       ],
-
-      // ── Import order ────────────────────────────────────────────────────────
-      'import/order': [
-        'warn',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-            'type',
-          ],
-          pathGroups: [
-            { pattern: '@cfg',      group: 'internal', position: 'before' },
-            { pattern: '@cfg/**',   group: 'internal', position: 'before' },
-            { pattern: '@lib/**',   group: 'internal', position: 'before' },
-            { pattern: '@store',    group: 'internal', position: 'before' },
-            { pattern: '@store/**', group: 'internal', position: 'before' },
-            { pattern: '@shared/**',   group: 'internal' },
-            { pattern: '@sections/**', group: 'internal' },
-          ],
-          pathGroupsExcludedImportTypes: ['type'],
-          'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true },
-        },
-      ],
-      'import/no-duplicates':     'error',
-      'import/no-cycle':          'error',   // prevents circular dependency bugs
 
       // ── General quality ─────────────────────────────────────────────────────
       'no-console':               ['warn', { allow: ['warn', 'error'] }],
