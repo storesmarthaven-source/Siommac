@@ -3,7 +3,7 @@
 // These are used by netlify/functions lib + routes and can be re-exported to
 // a future React frontend via a shared package.
 
-export type UserRole   = 'admin' | 'manager' | 'employee';
+export type UserRole   = 'superadmin' | 'admin' | 'manager' | 'employee';
 export type UserStatus = 'active' | 'inactive';
 export type PayCycle   = 'daily' | 'weekly' | 'fortnightly' | 'monthly';
 export type PayBasis   = 'salary' | 'hourly';
