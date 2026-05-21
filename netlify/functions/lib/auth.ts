@@ -225,7 +225,8 @@ async function requireRole(
   roles: string[],
 ): Promise<AppUser> {
   const u = await requireUser(c);
-  if (!roles.includes(u.role)) throw Object.assign(new Error('Forbidden'), { status: 403 });
+  // superadmin bypasses all role checks — has full access to every route.
+  if (u.role !== 'superadmin' && !roles.includes(u.role)) throw Object.assign(new Error('Forbidden'), { status: 403 });
   return u;
 }
 
