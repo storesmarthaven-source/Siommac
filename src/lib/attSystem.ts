@@ -430,6 +430,7 @@ interface SessionData {
   colorScheme:    string;
   layoutMode:     string;
   token:          string;
+  refreshToken:   string;
   companyName:    string;
   companyLogoUrl: string;
   profileImage:   string;
@@ -564,6 +565,7 @@ export function _completeLogin(result: Record<string, unknown>): void {
     colorScheme:    result['colorScheme']     as string ?? 'navy',
     layoutMode:     result['layoutMode']      as string ?? 'sidebar',
     token:          result['token']           as string ?? '',
+    refreshToken:   result['refreshToken']    as string ?? '',
     companyName:    result['companyName']     as string ?? '',
     companyLogoUrl: result['companyLogoUrl']  as string ?? '',
     profileImage:   result['profileImage']    as string ?? '',

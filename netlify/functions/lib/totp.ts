@@ -234,8 +234,6 @@ export async function consumeChallenge(challengeId: string): Promise<void> {
  * admin / manager → mandatory
  * employee        → optional
  */
-export function isTwoFactorMandatory(_role: string): boolean {
-  // 2FA enforcement disabled until totp_challenges table is provisioned in DB.
-  // Re-enable by returning: _role === 'admin' || _role === 'manager';
-  return false;
+export function isTwoFactorMandatory(role: string): boolean {
+  return role === 'admin' || role === 'manager';
 }
