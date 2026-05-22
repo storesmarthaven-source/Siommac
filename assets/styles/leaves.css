@@ -1,0 +1,177 @@
+/* ─── Leave Management ─── */
+
+/* ─── Leave Management ─── */
+
+/* Stats row */
+.lv-stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 24px;
+}
+.lv-stat-card {
+  background: var(--bg-card); border-radius: 24px; padding: 20px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+  transition: transform .2s, box-shadow .2s;
+}
+.lv-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+.lv-stat-icon {
+  width: 56px; height: 56px; flex-shrink: 0;
+  background: rgba(228,12,12,0.09);
+  border-radius: 28px; display: flex; align-items: center; justify-content: center;
+}
+.lv-stat-icon i { font-size: 26px; color: var(--siomac-red); }
+.lv-stat-icon.green   { background: rgba(46,125,50,0.1); }
+.lv-stat-icon.green i { color: #2E7D32; }
+.lv-stat-icon.red     { background: rgba(198,40,40,0.1); }
+.lv-stat-icon.red i   { color: #C62828; }
+.lv-stat-icon.navy    { background: rgba(27,45,85,0.1); }
+.lv-stat-icon.navy i  { color: var(--siomac-navy); }
+/* Leave balance icon colours */
+.lv-stat-icon.annual  { background: rgba(46,125,50,0.1); }
+.lv-stat-icon.annual i { color: #2E7D32; }
+.lv-stat-icon.sick    { background: rgba(198,40,40,0.1); }
+.lv-stat-icon.sick i  { color: #C62828; }
+.lv-stat-icon.casual  { background: rgba(21,101,192,0.1); }
+.lv-stat-icon.casual i { color: #1565C0; }
+.lv-stat-icon.medical { background: rgba(239,108,0,0.1); }
+.lv-stat-icon.medical i { color: #EF6C00; }
+.lv-stat-body { flex: 1; }
+.lv-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; }
+.lv-stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+/* Smaller second stats row */
+.lv-stats-row--sm { margin-top: -8px; margin-bottom: 16px; }
+.lv-stats-row--sm .lv-stat-card { padding: 14px 16px; }
+.lv-stats-row--sm .lv-stat-icon { width: 44px; height: 44px; border-radius: 22px; }
+.lv-stats-row--sm .lv-stat-icon i { font-size: 20px; }
+.lv-stats-row--sm .lv-stat-value { font-size: 1.5rem; }
+
+/* Filter bar */
+/* ─── Shared filter bar actions slot ─── */
+.lv-bar-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto;
+}
+.lv-bar-spacer { flex: 1; }
+
+.lv-filters-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 60px; padding: 8px 16px;
+  margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.lv-tabs { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+.lv-tab-btn {
+  background: transparent; border: none; padding: 7px 16px;
+  font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+  cursor: pointer; border-radius: 40px; transition: all .18s; font-family: inherit;
+}
+.lv-tab-btn:hover { color: var(--siomac-navy); background: rgba(27,45,85,.06); }
+.lv-tab-btn.active { background: var(--siomac-red); color: white; }
+
+/* Search + filter inputs in filter bar */
+.lv-search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle, #F8FAFE); border: 1.5px solid var(--border);
+  padding: 6px 14px; border-radius: 40px; max-width: 240px;
+}
+.lv-search-box i { color: var(--text-muted); font-size: 12px; }
+.lv-search-box input {
+  border: none; background: transparent; outline: none;
+  font-size: 0.82rem; color: var(--text-primary); font-family: inherit; width: 160px;
+}
+.lv-filter-select {
+  padding: 7px 14px; border-radius: 40px; border: 1.5px solid var(--border);
+  background: var(--bg-subtle, #F8FAFE); color: var(--text-primary);
+  font-size: 0.82rem; font-family: inherit; cursor: pointer;
+}
+
+/* Table container */
+.lv-table-container {
+  background: var(--bg-card); border-radius: 24px;
+  border: 1px solid var(--border); overflow-x: auto;
+}
+.lv-table {
+  width: 100%; border-collapse: collapse; min-width: 700px;
+}
+.lv-table thead th {
+  padding: 13px 16px;
+  background: #1A2C53;
+  border-bottom: none;
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: #fff; text-align: center;
+}
+.lv-table tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.84rem; color: var(--text-primary); vertical-align: middle;
+  text-align: center;
+}
+.lv-table tbody tr:last-child td { border-bottom: none; }
+.lv-table tbody tr:hover td { background: var(--bg-subtle, #F8FAFE); }
+
+/* Employee name in table */
+.lv-emp-name { font-weight: 700; color: var(--siomac-navy); font-size: 0.85rem; text-align: left; }
+.lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
+.lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+
+/* Days pill */
+.lv-days-pill {
+  background: rgba(27,45,85,.08); color: var(--siomac-navy);
+  padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+}
+
+/* Type badges */
+.lv-type-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 30px;
+  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+}
+.lv-type-sick    { background: #FFEBEE; color: #C62828; }
+.lv-type-casual  { background: #E3F2FD; color: #1565C0; }
+.lv-type-annual  { background: #E8F5E9; color: #2E7D32; }
+.lv-type-medical { background: #FFF3E0; color: #EF6C00; }
+
+/* Status badges */
+.lv-status-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 30px;
+  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+}
+.lv-status-pending  { background: #FFF8E1; color: #F57C00; }
+.lv-status-approved { background: #E8F5E9; color: #2E7D32; }
+.lv-status-rejected { background: #FFEBEE; color: #C62828; }
+
+/* Pill action buttons with labels */
+.lv-action-btns { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
+.lv-act-btn {
+  height: 30px; padding: 0 11px; border-radius: 40px; border: none;
+  cursor: pointer; font-size: 0.72rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: opacity .15s; font-family: inherit; white-space: nowrap;
+}
+.lv-act-btn:hover { opacity: .85; }
+.lv-act-view    { background: var(--siomac-navy); color: white; }
+.lv-act-print   { background: #455A64; color: white; }
+.lv-act-approve { background: #2E7D32; color: white; }
+.lv-act-reject  { background: #C62828; color: white; }
+.lv-act-edit    { background: #ED6C02; color: white; }
+.lv-act-delete  { background: #9E9E9E; color: white; }
+
+/* Empty row */
+.lv-table-container:has(.lv-empty-row) { overflow-x: hidden; }
+.lv-table-container:has(.lv-empty-row) .lv-table { min-width: unset !important; width: 100% !important; }
+.lv-empty-row {
+  text-align: center !important; padding: 64px 20px !important;
+  color: var(--text-muted);
+}
+.lv-empty-row i { font-size: 40px; opacity: .22; display: block; margin: 0 auto 14px; }
+.lv-empty-row p { margin: 0; font-size: 0.88rem; }
+
+@media (max-width: 700px) {
+  .lv-filters-bar { border-radius: 24px; padding: 10px 12px; }
+  .lv-stats-row { grid-template-columns: 1fr 1fr; }
+  .lv-stat-card { padding: 14px; gap: 12px; }
+  .lv-stat-icon { width: 46px; height: 46px; border-radius: 23px; }
+  .lv-stat-icon i { font-size: 20px; }
+  .lv-stat-value { font-size: 1.5rem; }
+  .lv-search-box { max-width: 100%; width: 100%; }
+  .lv-search-box input { width: 100%; }
+}
+

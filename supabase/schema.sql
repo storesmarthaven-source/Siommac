@@ -137,7 +137,18 @@ create table if not exists public.message_reads (
 alter table public.message_reads enable row level security;
 
 -- Add message_reads to realtime publication so both sides see instant updates
-alter publication supabase_realtime add table public.message_reads;
+-- (guarded so re-running schema.sql on an existing DB doesn't error)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename  = 'message_reads'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reads;
+  END IF;
+END $$;
 
 alter table public.app_users enable row level security;
 alter table public.departments enable row level security;

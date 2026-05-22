@@ -10,6 +10,8 @@ export type PayBasis   = 'salary' | 'hourly';
 
 export interface AppUser {
   id:                          string;
+  auth_id:                     string | null;   // Supabase Auth UUID (auth.users.id)
+  auth_email:                  string | null;   // Email from Supabase Auth
   username:                    string;
   password_hash:               string;
   full_name:                   string;

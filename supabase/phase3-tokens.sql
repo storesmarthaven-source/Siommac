@@ -8,7 +8,7 @@
 -- the plaintext is never persisted. One row per active session.
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid        NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+  user_id     text        NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,  -- text, not uuid (app_users.id is 'USR-XXXXXXXX')
   token_hash  text        NOT NULL UNIQUE,   -- SHA-256 of the plaintext token
   expires_at  timestamptz NOT NULL,
   created_at  timestamptz NOT NULL DEFAULT now()

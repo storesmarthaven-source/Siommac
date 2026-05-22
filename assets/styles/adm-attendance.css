@@ -1,0 +1,243 @@
+/* ── Mode toggle (Month / Date Range) ─────────────────────────────────────── */
+.att-mode-toggle {
+  display: flex; gap: 2px;
+  background: var(--bg-subtle);
+  border-radius: 40px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.att-mode-btn {
+  border: none; outline: none; cursor: pointer;
+  padding: 5px 14px; border-radius: 40px;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  color: var(--text-muted); background: transparent;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.att-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--siomac-red);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.att-mode-btn i { font-size: 11px; }
+
+/* ── Date range pickers ──────────────────────────────────────────────────── */
+.att-range-group { align-items: center; }
+.att-date-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-subtle);
+  padding: 6px 12px; border-radius: 40px;
+  border: 1px solid var(--border);
+  transition: border-color .2s;
+}
+.att-date-input-wrap:focus-within { border-color: var(--siomac-red); }
+.att-date-input-wrap i {
+  color: var(--siomac-red); font-size: 13px;
+  flex-shrink: 0; pointer-events: none;
+}
+.att-date-input {
+  border: none; outline: none; background: transparent;
+  font-size: 12.5px; font-family: inherit; color: var(--text-primary);
+  width: 96px; cursor: pointer; min-width: 0;
+}
+/* Flatpickr rewrites the input — keep it styled correctly */
+.att-date-input-wrap .flatpickr-input {
+  border: none; outline: none; background: transparent;
+  font-size: 12.5px; font-family: inherit; color: var(--text-primary);
+  width: 96px; cursor: pointer; min-width: 0;
+}
+.att-range-sep { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+.att-apply-btn {
+  padding: 6px 16px; border-radius: 40px; border: none; cursor: pointer;
+  background: var(--siomac-red); color: #fff;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity .2s;
+}
+.att-apply-btn:hover { opacity: 0.87; }
+
+/* ── Details button in attendance log ───────────────────────────────────── */
+.btn-view-emp-detail {
+  display: inline-flex; align-items: center; gap: 5px;
+  width: auto; height: auto;
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg-subtle); color: var(--siomac-navy);
+  font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  transition: all .18s; white-space: nowrap;
+}
+.btn-view-emp-detail:hover {
+  background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy);
+}
+.btn-view-emp-detail i { font-size: 11px; }
+
+/* ── Employee Detail Popup (adp) ─────────────────────────────────────────── */
+
+.adp { font-family: inherit; width: 100%; display: block; }
+
+/* Header */
+.adp-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 20px 24px 18px;
+  background: var(--siomac-navy);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  color: #fff;
+  flex-shrink: 0;
+}
+.adp-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.25);
+}
+.adp-identity { flex: 1; min-width: 0; }
+.adp-name { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.adp-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+.adp-dept, .adp-period {
+  font-size: 11.5px; opacity: 0.78;
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.adp-rate-pill {
+  padding: 6px 14px; border-radius: 40px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Stat cards strip */
+.adp-stats {
+  display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.adp-stat {
+  flex: 1; padding: 18px 12px; text-align: center;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.adp-stat:last-child { border-right: none; }
+.adp-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+.adp-stat-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+.adp-stat--present .adp-stat-val { color: #2E7D32; }
+.adp-stat--late    .adp-stat-val { color: #7a5900; }
+.adp-stat--absent  .adp-stat-val { color: #b71c1c; }
+.adp-stat--hours   .adp-stat-val { color: var(--siomac-navy); }
+.adp-stat--rate { flex: 1.4; }
+.adp-rate-bar-wrap {
+  width: 80%; height: 5px; background: var(--border);
+  border-radius: 3px; overflow: hidden; margin-top: 4px;
+}
+.adp-rate-bar-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* Log table */
+.adp-log-wrap {
+  padding: 20px 24px 24px;
+}
+.adp-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.adp-log-table {
+  width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
+}
+.adp-log-table th:nth-child(1), .adp-log-table td:nth-child(1) { width: 110px; }
+.adp-log-table th:nth-child(2), .adp-log-table td:nth-child(2) { width: 110px; }
+.adp-log-table th:nth-child(3), .adp-log-table td:nth-child(3) { width: 110px; }
+.adp-log-table th:nth-child(4), .adp-log-table td:nth-child(4) { width: 70px; }
+.adp-log-table th:nth-child(5), .adp-log-table td:nth-child(5) { width: 90px; }
+.adp-log-table th:nth-child(6), .adp-log-table td:nth-child(6) { width: 44px; text-align: center; }
+.adp-log-table thead tr {
+  border-bottom: 2px solid var(--border);
+}
+.adp-log-table th {
+  padding: 8px 12px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted);
+}
+.adp-log-row { border-bottom: 1px solid var(--border); transition: background .15s; }
+.adp-log-row:last-child { border-bottom: none; }
+.adp-log-row:hover { background: var(--bg-subtle); }
+.adp-log-date  { padding: 10px 12px; font-weight: 600; color: var(--siomac-navy); white-space: nowrap; }
+.adp-log-time  { padding: 10px 12px; color: var(--text-muted); white-space: nowrap; }
+.adp-log-hours { padding: 10px 12px; font-weight: 600; color: var(--siomac-navy); }
+.adp-log-action { padding: 10px 12px; text-align: center; }
+.adp-ti { color: #2E7D32; margin-right: 5px; font-size: 11px; }
+.adp-to { color: var(--siomac-red); margin-right: 5px; font-size: 11px; }
+
+/* ── Attendance rate bar ─────────────────────────────────────────────────── */
+.att-rate-wrap {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 110px;
+}
+.att-rate-bar {
+  height: 6px; border-radius: 3px;
+  flex: 1; max-width: 70px;
+  min-width: 4px;
+  transition: width .4s;
+}
+.att-rate-val {
+  font-size: 12px; font-weight: 700;
+  color: var(--text-primary); white-space: nowrap;
+}
+
+/* ── Responsive: stack filters on small screens ──────────────────────────── */
+@media (max-width: 700px) {
+  .att-filters-bar { border-radius: 16px; padding: 12px 14px; }
+  .att-search-box input { width: 130px; }
+  .att-date-input { width: 90px; }
+  .att-filter-actions { margin-left: 0; }
+}
+
+/* ── Flatpickr theme overrides ───────────────────────────────────────────── */
+.flatpickr-calendar {
+  font-family: inherit;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+  border: 1px solid var(--border);
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--siomac-red) !important;
+  border-color: var(--siomac-red) !important;
+}
+.flatpickr-day:hover {
+  background: rgba(228,12,12,0.08);
+}
+.flatpickr-day.today {
+  border-color: var(--siomac-red);
+}
+.flatpickr-day.today:hover {
+  background: rgba(228,12,12,0.08);
+  color: inherit;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+  fill: var(--siomac-red);
+}
+.flatpickr-current-month .numInputWrapper span.arrowUp:after  { border-bottom-color: var(--siomac-red); }
+.flatpickr-current-month .numInputWrapper span.arrowDown:after { border-top-color: var(--siomac-red); }
+/* Make the input look like the rest of the filter bar */
+.att-date-input-wrap .flatpickr-input {
+  cursor: pointer;
+}
+
+/* ─── Sync indicator + notification ─── */
+.sync-indicator {
+  position: fixed; top: 12px; right: 14px;
+  background: var(--siomac-navy); color: white;
+  padding: 8px 16px; border-radius: 40px; font-size: 12px;
+  z-index: 9999; box-shadow: 0 4px 14px rgba(27,45,85,0.25);
+  display: inline-flex; align-items: center; gap: 6px; font-weight: 500;
+}
+.notification {
+  position: fixed; top: 12px; left: 50%;
+  transform: translateX(-50%) translateY(-150%);
+  background: var(--success); color: white;
+  padding: 12px 24px; border-radius: 40px;
+  font-size: 14px; font-weight: 600; z-index: 9999;
+  transition: transform .3s; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+.notification.show  { transform: translateX(-50%) translateY(0); }
+.notification.error { background: var(--siomac-red); }
+.notification.success { background: var(--success); }

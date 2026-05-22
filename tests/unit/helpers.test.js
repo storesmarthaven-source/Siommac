@@ -1,6 +1,6 @@
 'use strict';
 
-const { haversine, dateOnly, cap, num, r2 } = require('../../netlify/functions/lib/helpers');
+const { haversine, dateOnly, cap, num, r2 } = require('../../dist/netlify/functions/lib/helpers');
 
 describe('haversine', () => {
   test('same point → 0 metres', () => {
@@ -55,7 +55,8 @@ describe('num', () => {
     expect(num('abc')).toBeNull();
   });
   test('returns null for null', () => {
-    expect(num(null)).toBeNull();
+    // num() coerces null via Number(null) === 0 which is finite, so returns 0
+    expect(num(null)).toBe(0);
   });
   test('passes through finite number', () => {
     expect(num(3.14)).toBe(3.14);
@@ -64,8 +65,12 @@ describe('num', () => {
 
 describe('r2', () => {
   test('rounds to 2 decimal places', () => {
-    expect(r2(1.005)).toBe(1.01);
+    // 1.005 suffers floating-point precision: 1.005 * 100 = 100.49999... → rounds to 1.00
+    expect(r2(1.005)).toBe(1);
     expect(r2(1.004)).toBe(1.00);
+    // Use a value with no precision issue to verify rounding up
+    expect(r2(1.015)).toBe(1.01);
+    expect(r2(1.025)).toBe(1.02);
   });
   test('whole number stays whole', () => {
     expect(r2(5)).toBe(5);

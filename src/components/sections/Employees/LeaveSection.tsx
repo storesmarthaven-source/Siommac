@@ -259,7 +259,7 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
                 {filtered.map(r => {
                   const isPending = r.status === 'pending';
                   const typeMeta  = LEAVE_TYPE_COLOR[r.type as LeaveType] ?? { bg: '#f3f4f6', text: '#374151' };
-                  const statusMeta = LEAVE_STATUS_COLOR[r.status];
+                  const statusMeta = LEAVE_STATUS_COLOR[r.status as LeaveStatus] ?? { bg: '#f3f4f6', text: '#374151' };
                   return (
                     <tr key={r.id} style={{ borderBottom: '1px solid #f9fafb' }}>
                       {showEmployee && (

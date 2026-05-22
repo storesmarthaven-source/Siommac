@@ -1,0 +1,271 @@
+/* ── Employee Profile Drawer ───────────────────────────────────────────────── */
+.emp-drawer-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(10,20,40,0.45);
+  backdrop-filter: blur(2px);
+}
+.emp-drawer-overlay.active { display: block; }
+
+.emp-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 380px; max-width: 96vw;
+  background: var(--bg-card);
+  display: flex; flex-direction: column;
+  box-shadow: -6px 0 40px rgba(0,0,0,0.22);
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+}
+.emp-drawer-overlay.active .emp-drawer { transform: translateX(0); }
+
+.emp-drawer-header {
+  background: #1b2d54;
+  padding: 28px 24px 24px;
+  display: flex; align-items: flex-start; gap: 16px;
+  flex-shrink: 0;
+}
+.emp-drawer-avatar-wrap { position: relative; flex-shrink: 0; }
+.emp-drawer-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 700; color: #fff;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.25);
+}
+.emp-drawer-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.emp-drawer-status-dot {
+  position: absolute; bottom: 3px; right: 3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #101D3B;
+  background: #888;
+}
+.emp-drawer-status-dot.is-active   { background: #2E7D32; }
+.emp-drawer-status-dot.is-inactive { background: #888; }
+
+.emp-drawer-title { flex: 1; min-width: 0; }
+.emp-drawer-name {
+  font-size: 1.15rem; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.emp-drawer-pos {
+  font-size: 0.78rem; color: rgba(255,255,255,0.72);
+  margin-bottom: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.emp-drawer-empid {
+  display: inline-block;
+  font-family: monospace; font-size: 12px; font-weight: 700;
+  color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.15);
+  padding: 2px 8px; border-radius: 6px;
+}
+.emp-drawer-close {
+  background: none; border: none; color: rgba(255,255,255,0.75);
+  font-size: 1.1rem; cursor: pointer; padding: 4px 6px;
+  border-radius: 6px; flex-shrink: 0; line-height: 1;
+  transition: color .15s, background .15s;
+}
+.emp-drawer-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+
+.emp-drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.emp-drawer-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.emp-drawer-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.875rem; color: var(--text-primary);
+}
+.emp-drawer-row:last-child { border-bottom: none; }
+.emp-drawer-row i { width: 18px; text-align: center; color: var(--siomac-red); font-size: 13px; flex-shrink: 0; }
+.emp-drawer-row span { word-break: break-word; }
+.emp-drawer-row.muted span { color: var(--text-muted); font-style: italic; }
+
+.emp-drawer-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex; gap: 10px; justify-content: flex-end;
+  flex-shrink: 0;
+  background: var(--bg-card);
+}
+
+/* Employee modal overlay */
+.emp-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,20,40,0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1050;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.emp-modal-overlay.active { display: flex; }
+.emp-modal-container {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  width: 100%; max-width: 580px;
+  overflow: hidden;
+  animation: modalSlideIn .22s ease;
+}
+.emp-modal-header {
+  background: #1b2d54;
+  padding: 20px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.emp-modal-header h5 {
+  color: white; font-size: 1rem; font-weight: 700; margin: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.emp-modal-header h5 i { color: var(--siomac-gold); }
+.emp-modal-close {
+  background: rgba(255,255,255,0.12); border: none; color: white;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.emp-modal-close:hover { background: rgba(255,255,255,0.22); }
+
+/* Employee modal tabs */
+.emp-modal-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+  background: var(--bg-card); padding: 0 24px; flex-shrink: 0;
+}
+.emp-tab-btn {
+  padding: 13px 20px; border: none; background: transparent;
+  border-bottom: 2px solid transparent;
+  font-size: 0.83rem; font-weight: 600;
+  color: var(--text-muted); cursor: pointer; transition: all .2s;
+  font-family: inherit; display: inline-flex; align-items: center; gap: 7px;
+  white-space: nowrap; border-radius: 0;
+}
+.emp-tab-btn:hover { color: var(--siomac-navy); }
+.emp-tab-btn.active {
+  color: var(--siomac-navy); border-bottom-color: var(--siomac-navy);
+}
+
+/* Tab panels */
+.emp-tab-panel { display: none; }
+.emp-tab-panel.active { display: block; }
+
+.emp-modal-body { padding: 24px; }
+.emp-modal-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* Form grid inside employee modal */
+.emp-form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.emp-form-full { grid-column: 1 / -1; }
+
+/* ═══════════════════════════════════════════
+   ATTENDANCE OVERVIEW PAGE
+═══════════════════════════════════════════ */
+
+/* Filters bar */
+.att-filters-bar {
+  display: flex; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 60px;
+  padding: 10px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.att-filters-bar .att-search-box { flex-shrink: 0; }
+.att-filters-bar .att-filter-actions { margin-left: auto; }
+.att-filter-group {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.att-filter-select {
+  padding: 7px 14px; border-radius: 40px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 0.8rem; font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.att-filter-select:focus { border-color: var(--siomac-red); }
+
+.att-search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle);
+  padding: 7px 16px; border-radius: 40px;
+  transition: box-shadow .2s;
+}
+.att-search-box:focus-within { box-shadow: 0 0 0 2px rgba(228,12,12,0.15); }
+.att-search-box i { color: var(--text-muted); font-size: 13px; }
+.att-search-box input {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; font-family: inherit; color: var(--text-primary);
+  width: 200px;
+}
+.att-search-box input::placeholder { color: var(--text-muted); }
+.att-filter-actions { display: flex; gap: 8px; }
+
+/* Chart container */
+.att-chart-container { height: 240px; position: relative; }
+
+/* Table decorations */
+.att-name { color: var(--siomac-navy); font-weight: 600; }
+.att-dept-pill {
+  font-size: 11.5px; color: var(--text-muted);
+  background: var(--bg-subtle); padding: 3px 10px; border-radius: 20px;
+}
+.att-date, .att-time { font-variant-numeric: tabular-nums; font-size: 13px; }
+.att-hours { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--siomac-navy); }
+
+/* Status badges */
+.att-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 40px;
+  font-size: 11.5px; font-weight: 600;
+}
+.att-badge i { font-size: 7px; }
+.att-present { background: rgba(46,125,50,0.1);  color: #1b5e20; }
+.att-late    { background: rgba(255,183,18,0.15); color: #7a5900; }
+.att-absent  { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
+
+/* Selfie thumbnail */
+.att-selfie-thumb {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  overflow: hidden; border: 2px solid var(--border);
+  background: var(--bg-subtle); cursor: pointer;
+  transition: border-color .2s;
+}
+.att-selfie-thumb:hover { border-color: var(--siomac-red); }
+.att-selfie-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.att-no-photo i { font-size: 13px; color: var(--text-muted); }
+
+/* Row action button */
+.att-action-btn {
+  background: transparent; border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all .2s;
+}
+.att-action-btn:hover { background: var(--bg-subtle); color: var(--siomac-red); }
+
+/* Log count badge */
+.att-log-count {
+  font-size: 12px; color: var(--text-muted);
+  background: var(--bg-subtle); padding: 3px 12px;
+  border-radius: 20px; font-weight: 500;
+}
+/* dt-buttons moved into section-header — hide the now-empty export bar */
+#attendanceTable_wrapper .dt-export-bar:empty { display: none; }
+.att-table-btns { display: flex; gap: 6px; margin-left: auto; }
+
+/* Error / empty states */
+.att-err   { color: var(--siomac-red); padding: 18px; font-weight: 600; text-align: center; }
+.att-empty { color: var(--text-muted); padding: 24px; text-align: center; font-size: 13.5px; }
+

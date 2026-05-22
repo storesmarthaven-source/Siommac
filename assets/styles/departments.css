@@ -1,0 +1,145 @@
+/* ── Stats strip ── */
+.emp-ps-stats {
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px 28px; margin-bottom: 24px;
+  box-shadow: var(--shadow-card);
+}
+.emp-ps-stat { flex: 1; text-align: center; }
+.emp-ps-stat-label {
+  display: block; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+.emp-ps-stat-val {
+  display: block; font-size: 1.35rem; font-weight: 800;
+  color: var(--siomac-navy); line-height: 1;
+}
+.emp-ps-stat-val.green { color: #16a34a; }
+.emp-ps-stat-divider {
+  width: 1px; height: 40px; background: var(--border); flex-shrink: 0; margin: 0 24px;
+}
+
+/* ── Empty state ── */
+.emp-payroll-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 20px; gap: 18px; text-align: center;
+}
+.emp-payroll-empty-icon {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: rgba(27,45,85,.06); color: var(--siomac-navy);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+}
+.emp-payroll-empty h3 {
+  margin: 0; font-size: 1.05rem; color: var(--text-primary);
+}
+.emp-payroll-empty p {
+  margin: 0; font-size: 0.85rem; color: var(--text-muted); max-width: 300px; line-height: 1.6;
+}
+
+/* ── Skeleton ── */
+.emp-payslip-skeleton {
+  background: var(--bg-card); border-radius: 20px;
+  border: 1px solid var(--border); height: 220px;
+  animation: empPsPulse 1.4s ease-in-out infinite;
+}
+@keyframes empPsPulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+
+/* ── Grid ── */
+.emp-payslip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* ── Card ── */
+.emp-payslip-card {
+  background: var(--bg-card); border-radius: 20px;
+  border: 1px solid var(--border); box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+}
+.emp-payslip-card:hover { box-shadow: 0 8px 32px rgba(16,29,59,.13); transform: translateY(-2px); }
+
+/* Latest payslip gets a navy accent top border */
+.emp-payslip-card--latest { border-top: 3px solid var(--siomac-navy); }
+
+/* Top row — month + cycle tag */
+.emp-payslip-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 0;
+}
+.emp-payslip-card-month {
+  font-size: 1rem; font-weight: 700; color: var(--text-primary);
+}
+.emp-payslip-card-cycle-tag {
+  background: rgba(27,45,85,.08); color: var(--siomac-navy);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: .3px;
+}
+
+/* Net pay hero */
+.emp-payslip-card-net {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.emp-payslip-net-label {
+  display: block; font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+.emp-payslip-net-val {
+  display: block; font-size: 1.75rem; font-weight: 800;
+  color: var(--siomac-navy); line-height: 1.1;
+}
+
+/* Breakdown rows */
+.emp-payslip-card-breakdown {
+  padding: 12px 20px; flex: 1; display: flex; flex-direction: column; gap: 7px;
+}
+.emp-payslip-brow {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; color: var(--text-secondary);
+}
+.emp-payslip-brow--ded { color: var(--siomac-red); }
+
+/* Footer */
+.emp-payslip-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  background: var(--bg-subtle, #f8fafe);
+}
+.emp-payslip-approved {
+  font-size: 0.73rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.emp-payslip-approved i { color: #16a34a; }
+.emp-payslip-view-btn {
+  background: var(--siomac-navy); color: #fff;
+  border: none; border-radius: 20px; padding: 7px 16px;
+  font-size: 0.78rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: opacity .2s;
+}
+.emp-payslip-view-btn:hover { opacity: 0.85; }
+
+@media (max-width: 768px) {
+  .emp-payslip-grid { grid-template-columns: 1fr; }
+  .emp-ps-stats { flex-wrap: wrap; gap: 16px; padding: 16px 20px; }
+  .emp-ps-stat { flex: 1 1 40%; text-align: left; }
+  .emp-ps-stat-divider { display: none; }
+  .emp-ps-stat-val { font-size: 1.1rem; }
+}
+
+/* ── Refresh button spin animation ───────────────────────────────────────── */
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+.btn-spinning .fa-sync-alt,
+.btn-spinning .fa-sync {
+  display: inline-block;
+  animation: btn-spin 0.7s linear infinite;
+}

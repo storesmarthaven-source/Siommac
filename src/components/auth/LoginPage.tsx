@@ -74,10 +74,42 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     rememberMe:   false,
   });
 
+  // ── Button loading helpers ─────────────────────────────────────────────────
+
+  function setLoginBtnLoading(loading: boolean) {
+    const btn  = document.getElementById('loginBtn') as HTMLButtonElement | null;
+    const span = document.getElementById('loginButton');
+    if (!btn) return;
+    btn.disabled = loading;
+    if (span) span.innerHTML = loading
+      ? '<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Signing in…'
+      : '<i class="fas fa-sign-in-alt" style="margin-right:6px"></i>Sign in to Dashboard';
+  }
+
+  function setTfaBtnLoading(loading: boolean) {
+    const btn = document.getElementById('tfaSubmitBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<i class="fas fa-spinner fa-spin"></i> Verifying…'
+      : '<i class="fas fa-lock-open"></i> Verify';
+  }
+
+  function setSetupBtnLoading(loading: boolean) {
+    const btn = document.getElementById('setupConfirmBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<i class="fas fa-spinner fa-spin"></i> Enabling…'
+      : '<i class="fas fa-check-circle"></i> Enable Two-Factor Auth';
+  }
+
   // ── login mutation ────────────────────────────────────────────────────────
 
   const loginMut = useMutation({
     mutationFn: loginApi,
+    onMutate: () => setLoginBtnLoading(true),
+    onSettled: () => setLoginBtnLoading(false),
     onSuccess: (result) => {
       if (!result.success) {
         const msg = result.message || 'Invalid username or password.';
@@ -120,6 +152,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   const verifyMut = useMutation({
     mutationFn: verify2faApi,
+    onMutate: () => setTfaBtnLoading(true),
+    onSettled: () => setTfaBtnLoading(false),
     onSuccess: (result) => {
       if (!result.success) {
         setErrorBanner('tfaErrorBanner', result.message || 'Invalid code. Try again.');
@@ -159,6 +193,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   const confirmSetupMut = useMutation({
     mutationFn: confirm2faSetupApi,
+    onMutate: () => setSetupBtnLoading(true),
+    onSettled: () => setSetupBtnLoading(false),
     onSuccess: (result) => {
       if (!result.success) {
         setErrorBanner('setupErrorBanner', result.message || 'Invalid code. Try again.');

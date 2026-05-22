@@ -1,0 +1,287 @@
+/* ─── Dashboard layout editor ─── */
+/* old bar kept for reference but replaced by overview panel */
+.dash-layout-bar { display: none; }
+
+/* ── Today's Overview header row (no container) ── */
+.dash-overview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 20px;
+}
+.dash-overview-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1.25rem; font-weight: 700; color: #1b2d55;
+}
+.dash-overview-title i { font-size: 1.15rem; color: #1b2d55; }
+.dash-overview-actions {
+  display: flex; align-items: center; gap: 12px;
+}
+
+/* Navy pill that groups the icon buttons + profile */
+.hdr-icon-group {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--siomac-navy);
+  border-radius: 60px;
+  padding: 4px 6px;
+}
+/* Divider before profile avatar inside the pill */
+.hdr-icon-group .hdr-profile-btn--pill {
+  margin-left: 16px;
+  border-left: 1px solid rgba(255,255,255,.2) !important;
+  padding-left: 14px !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+}
+.hdr-icon-group .hdr-icon-btn {
+  border: none !important;
+  background: transparent !important;
+  color: rgba(255,255,255,.85) !important;
+  box-shadow: none !important;
+}
+.hdr-icon-group .hdr-icon-btn:not(.hdr-profile-btn--pill):hover {
+  background: rgba(255,255,255,.12) !important;
+  color: #fff !important;
+}
+.hdr-icon-group .hdr-icon-btn i { color: inherit !important; }
+
+/* Larger icon buttons */
+.hdr-icon-btn--lg {
+  width: 46px !important; height: 46px !important; font-size: 1.2rem !important;
+}
+
+/* Profile avatar button */
+.hdr-profile-btn {
+  padding: 0 !important; overflow: hidden;
+}
+/* When profile avatar is inside the navy pill, size it to match the pill height */
+.hdr-profile-btn--pill { width: 38px !important; height: 38px !important; border-radius: 50% !important; }
+.hdr-profile-btn--pill .hdr-profile-avatar { width: 38px; height: 38px; }
+.hdr-profile-avatar {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--siomac-red);
+  color: white; font-weight: 700; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: .5px;
+}
+
+/* Edit Layout row — below stat cards, right-aligned */
+.dash-edit-row {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 14px; margin-bottom: 4px;
+}
+
+.dash-hidden-list {
+  display: flex; gap: 8px; flex-wrap: wrap; flex: 1;
+}
+.dash-restore-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 40px; font-size: 0.75rem;
+  font-weight: 600; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.12); color: #fff;
+  font-family: inherit; transition: background .18s, color .18s, border-color .18s;
+}
+.dash-restore-btn:hover { background: var(--siomac-red); color: #fff; border-color: var(--siomac-red); }
+.dash-layout-actions { display: flex; gap: 8px; }
+.dash-layout-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 18px; border-radius: 40px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-primary);
+  font-family: inherit; transition: background .18s, color .18s, border-color .18s;
+}
+.dash-layout-btn:hover { border-color: var(--siomac-red); color: var(--siomac-red); }
+.dash-layout-btn.active {
+  background: var(--siomac-red); color: #fff; border-color: var(--siomac-red);
+}
+.dash-layout-btn-primary {
+  background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy);
+}
+.dash-layout-btn-primary:hover { background: var(--siomac-navy-light); border-color: var(--siomac-navy-light); color: #fff; }
+
+/* Drag handle — hidden until edit mode */
+.dash-drag-handle {
+  display: none; cursor: grab; color: var(--text-muted);
+  margin-right: 8px; font-size: 0.9rem;
+}
+.dash-drag-handle:active { cursor: grabbing; }
+
+/* Hide button — hidden until edit mode */
+.dash-hide-btn {
+  display: none; background: transparent; border: none;
+  color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.85rem;
+  padding: 2px 5px; border-radius: 6px; transition: color .15s;
+  flex-shrink: 0;
+}
+.dash-hide-btn:hover { color: #FFB712; }
+
+/* Edit mode: show handles + hide buttons, highlight widgets */
+.dash-edit-mode .dash-drag-handle { display: inline-block; }
+.dash-edit-mode .dash-hide-btn { display: inline-flex; align-items: center; }
+.dash-edit-mode .dash-widget {
+  border: 2px dashed var(--siomac-gold, #FFB712) !important;
+  cursor: grab;
+  user-select: none;
+}
+.dash-edit-mode .dash-widget:active { cursor: grabbing; }
+/* Keep interactive elements clickable inside edit mode */
+.dash-edit-mode .dash-widget button,
+.dash-edit-mode .dash-widget a,
+.dash-edit-mode .dash-widget canvas { cursor: pointer; }
+
+/* Widget grid — 2-column, all widgets draggable */
+.dash-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+.dash-widget-full { grid-column: 1 / -1; }
+
+/* Hidden widget */
+.dash-widget-hidden { display: none !important; }
+
+/* Sortable drag states */
+.dash-sortable-ghost { opacity: 0.3; background: var(--bg-subtle); }
+.dash-sortable-drag  { opacity: 0.85; box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important; }
+
+/* ─── Chart card header (matches design: title left, badge right) ─── */
+.chart-card-section { padding: 0; }
+.chart-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px;
+  background: #1A2C53;
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+}
+.chart-card-header h3 {
+  font-size: 0.92rem; font-weight: 700; color: #fff;
+  display: flex; align-items: center; margin: 0;
+}
+.chart-card-header h3 i {
+  color: #fff !important;
+}
+.chart-card-section .chart-container-md {
+  padding: 18px 20px 20px;
+  position: relative;
+  height: 300px;
+}
+.dash-chart-split .chart-container-md {
+  flex: 1; padding: 0; min-width: 0;
+  position: relative;
+  height: 260px;
+}
+
+/* ─── Chart loading spinner ─── */
+.chart-spinner-wrap {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 2;
+}
+.chart-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--siomac-red);
+  border-radius: 50%;
+  animation: chartSpin .7s linear infinite;
+}
+@keyframes chartSpin { to { transform: rotate(360deg); } }
+.chart-badge {
+  font-size: 0.72rem; font-weight: 700;
+  color: #fff; background: rgba(255,255,255,0.18);
+  padding: 4px 12px; border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* ─── Chart split: stats left, canvas right ─── */
+.dash-chart-split {
+  display: flex; align-items: center;
+  padding: 16px 20px 20px;
+  gap: 20px;
+}
+.dash-chart-stats {
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 148px; flex-shrink: 0;
+}
+.dash-chart-stat-item {
+  display: flex; align-items: center; gap: 8px;
+}
+.dash-stat-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.dash-stat-label {
+  font-size: 0.8rem; color: var(--text-muted); flex: 1; white-space: nowrap;
+}
+.dash-stat-pct {
+  font-size: 0.77rem; color: var(--text-muted); min-width: 30px; text-align: right;
+}
+.dash-stat-val {
+  font-size: 0.92rem; font-weight: 700; color: var(--siomac-navy);
+  min-width: 22px; text-align: right;
+}
+.dash-stat-rate {
+  color: var(--siomac-red);
+}
+.dash-stat-divider {
+  border-top: 1px solid var(--border-color, #e5e9f0);
+  margin: 2px 0;
+}
+.dash-stat-summary .dash-stat-label {
+  font-size: 0.77rem;
+}
+.dash-stat-summary .dash-stat-val {
+  font-size: 0.88rem;
+}
+/* stat-card-animate kept as a no-op class (values animate via _countUp, not the card) */
+
+/* ─── Stat cards ─── */
+.stat-card {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  transition: transform .2s, box-shadow .2s;
+  display: flex; flex-direction: row; align-items: center; gap: 16px;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+.stat-card-icon {
+  width: 56px; height: 56px; border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  background: rgba(228,12,12,0.09); color: var(--siomac-red);
+}
+.stat-card-icon.blue   { background: rgba(27,45,85,0.09);   color: var(--siomac-navy); }
+.stat-card-icon.green  { background: rgba(46,125,50,0.09);  color: var(--success); }
+.stat-card-icon.gold   { background: rgba(255,183,18,0.14); color: #c67c00; }
+.stat-card-icon.red    { background: rgba(228,12,12,0.09);  color: var(--siomac-red); }
+.stat-card-body { flex: 1; min-width: 0; }
+.stat-card-value { font-size: 1.9rem; font-weight: 600; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; min-height: 1.8rem; font-family: "Inter","Poppins",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+.stat-card-value:empty { min-height: 1.8rem; }
+.stat-card-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+
+/* ─── Grids ─── */
+.dashboard-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+.dashboard-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.dashboard-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+
+/* ─── Tables in data-section ─── */
+.data-section table { width: 100% !important; border-collapse: collapse; background: var(--bg-card); }
+.data-section table thead th {
+  background: var(--siomac-navy) !important;
+  color: white !important;
+  padding: 12px 14px !important;
+  text-align: left; font-weight: 600; font-size: 12.5px; border: none;
+  letter-spacing: 0.3px;
+}
+.data-section table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.data-section table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
+.data-section table tbody td {
+  padding: 11px 14px !important; font-size: 13px;
+  color: var(--text-primary); border-bottom: 1px solid var(--border);
+  vertical-align: middle; background: var(--bg-card);
+}
+.data-section table tbody tr:last-child td { border-bottom: none; }
+.data-section table tbody tr:hover td { background: var(--bg-subtle) !important; }
+

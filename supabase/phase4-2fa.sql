@@ -21,7 +21,7 @@ ALTER TABLE app_users
 -- /verify2fa or /setup2fa endpoints.
 CREATE TABLE IF NOT EXISTS totp_challenges (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       uuid        NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+  user_id       text        NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,  -- text, not uuid (app_users.id is 'USR-XXXXXXXX')
   token_hash    text        NOT NULL UNIQUE,   -- SHA-256 of the plaintext challenge token
   type          text        NOT NULL CHECK (type IN ('verify', 'setup')),
   attempt_count int         NOT NULL DEFAULT 0,

@@ -1,0 +1,400 @@
+/* ─── Project Sites ─── */
+/* Dashboard 3×3 stat grid */
+.dash-stats-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Project Sites 4-col stat grid */
+.ps-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.ps-stat-card {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  transition: transform .2s, box-shadow .2s;
+  display: flex; flex-direction: row; align-items: center; gap: 16px;
+}
+.ps-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+.ps-stat-icon {
+  width: 56px; height: 56px; border-radius: 28px;
+  background: rgba(27,45,85,0.09);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ps-stat-icon i { font-size: 22px; color: var(--siomac-navy); }
+.ps-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; margin-bottom: 4px; }
+.ps-stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+
+/* Filters bar — same pill style as emp/dept */
+.ps-filters-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 60px; padding: 10px 20px;
+  margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.ps-filters-bar .ps-search-box { flex: 1; max-width: 320px; }
+.ps-search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle); padding: 7px 16px; border-radius: 40px;
+  flex: 1; min-width: 180px; max-width: 320px; transition: box-shadow .2s;
+}
+.ps-search-box:focus-within { box-shadow: 0 0 0 2px rgba(228,12,12,0.15); }
+.ps-search-box i { color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
+.ps-search-box input {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; font-family: inherit; color: var(--text-primary); width: 100%;
+}
+.ps-search-box input::placeholder { color: var(--text-muted); }
+
+
+/* Section wrapper */
+.ps-section { margin-bottom: 56px; }
+.ps-section.hidden { display: none; }
+
+/* Unified container — wraps header + grid cards together */
+.ps-section-container {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* Section header — bold coloured banner inside the container */
+.ps-section-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 24px;
+  position: relative; overflow: hidden;
+}
+.ps-section--active   .ps-section-header { background: var(--siomac-navy); }
+.ps-section--inactive .ps-section-header { background: #4b5563; }
+
+
+.ps-section-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  background: rgba(255,255,255,0.22); color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.25);
+}
+
+.ps-section-label { flex: 1; }
+.ps-section-title {
+  font-size: 1.25rem; font-weight: 700;
+  color: #fff; margin: 0; line-height: 1.2;
+}
+.ps-section-sub {
+  font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-top: 3px;
+}
+.ps-section-stats {
+  display: flex; align-items: center; gap: 0;
+  background: rgba(255,255,255,0.12); border-radius: 12px;
+  padding: 8px 16px; flex-shrink: 0;
+}
+.ps-section-stat {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 14px;
+}
+.ps-section-stat-val {
+  font-size: 1.15rem; font-weight: 800; color: #fff; line-height: 1;
+}
+.ps-section-stat-lbl {
+  font-size: 0.62rem; font-weight: 600; color: rgba(255,255,255,0.65);
+  text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; white-space: nowrap;
+}
+.ps-section-stat-divider {
+  width: 1px; height: 28px; background: rgba(255,255,255,0.2); flex-shrink: 0;
+}
+/* keep old count id working if referenced */
+.ps-section-count { display: none; }
+
+/* Status badge on card */
+.ps-status-badge {
+  font-size: 0.68rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 40px; white-space: nowrap;
+}
+.ps-status-badge.active   { background: rgba(46,125,50,0.18); color: #2E7D32; }
+.ps-status-badge.inactive { background: rgba(158,158,158,0.18); color: #757575; }
+
+/* Cards grid — sits inside .ps-section-container below the header */
+.ps-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+  background: none;
+  padding: 20px;
+}
+.ps-card {
+  background: white; border-radius: 28px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  overflow: hidden;
+  transition: transform .22s, box-shadow .22s;
+}
+.ps-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12);
+}
+.ps-card-header {
+  background: #47904a;
+  padding: 16px 20px; color: white;
+  display: flex; align-items: center; gap: 10px;
+}
+.ps-card.ps-card--inactive .ps-card-header { background: #8b919d; }
+.ps-card.ps-card--inactive { opacity: 0.82; }
+.ps-card-header h3 {
+  font-size: 1rem; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  text-transform: capitalize; flex: 1; min-width: 0;
+}
+/* shared overlay action buttons — used on ps-card, dept-card, emp-card */
+.card-overlay-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.card-overlay-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; transition: background .18s, transform .15s, box-shadow .18s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+/* on dark headers — white ghost buttons */
+.ps-card-header .card-overlay-btn,
+.dept-card-header .card-overlay-btn {
+  background: rgba(255,255,255,0.18); color: white;
+}
+.ps-card-header .card-overlay-btn:hover,
+.dept-card-header .card-overlay-btn.edit:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-1px);
+}
+.dept-card-header .card-overlay-btn.delete:hover {
+  background: var(--siomac-red);
+  transform: translateY(-1px);
+}
+/* emp-card header uses same dark background — same white ghost button style */
+.emp-card-header .card-overlay-btn {
+  background: rgba(255,255,255,0.18); color: white;
+}
+.emp-card-header .card-overlay-btn.edit:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-1px);
+}
+.emp-card-header .card-overlay-btn.delete:hover {
+  background: var(--siomac-red);
+  transform: translateY(-1px);
+}
+.ps-card.ps-card--inactive .ps-detail-row i { color: #8b919d; }
+
+.ps-card-body { padding: 20px; }
+.ps-detail-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 0 0 10px; margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.83rem; color: var(--text-primary);
+}
+.ps-detail-row:last-of-type { border-bottom: none; margin-bottom: 4px; }
+.ps-detail-row--last { border-bottom: none !important; margin-bottom: 4px; }
+.ps-detail-row i { color: #47904A; width: 16px; flex-shrink: 0; margin-top: 2px; }
+
+/* Selected card */
+.ps-card--selected {
+  border: 1px solid #47904a !important;
+  box-shadow: none !important;
+}
+
+/* Assigned employee avatars on card */
+.ps-assigned-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0 4px; margin-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem; color: var(--text-muted);
+}
+.ps-assigned-empty { color: var(--text-primary); font-style: normal; gap: 6px; }
+.ps-assigned-empty i { color: #47904A; }
+.ps-assigned-lbl { white-space: nowrap; flex-shrink: 0; }
+.ps-assigned-lbl i { color: #47904A; }
+.ps-assigned-avatars { display: flex; align-items: center; gap: -4px; flex: 1; }
+
+/* ── Site on-site badge  e.g. "● 1 / 3 on site" ──────────────────────── */
+.ps-presence-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #16a34a; color: #fff;
+  border-radius: 20px; padding: 4px 11px;
+  font-size: 0.72rem; font-weight: 700;
+  white-space: nowrap;
+  margin-left: auto; flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(22,163,74,0.25);
+  letter-spacing: 0.01em;
+}
+.ps-presence-badge .ps-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #fff; flex-shrink: 0;
+}
+.ps-presence-badge__count { font-weight: 800; }
+.ps-presence-badge__total { font-weight: 600; opacity: 0.8; }
+.ps-presence-badge__label { font-weight: 600; opacity: 0.9; }
+
+/* Muted state when 0 on site */
+.ps-presence-badge--empty {
+  background: #6b7280;
+  box-shadow: none;
+}
+.ps-presence-badge--empty .ps-live-dot {
+  animation: none;
+  opacity: 0.5;
+}
+
+@keyframes psPulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.72); }
+}
+.ps-emp-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid white; object-fit: cover;
+  margin-left: -6px; flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.ps-emp-avatar:first-child { margin-left: 0; }
+.ps-emp-avatar--initials {
+  background: var(--siomac-navy); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.ps-emp-avatar--more {
+  background: var(--bg-subtle); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+
+/* Mini map */
+.ps-mini-map {
+  height: 140px; background: #eef2f9;
+  border-radius: 16px; margin-top: 14px; overflow: hidden;
+}
+
+/* ── Add/Edit Project Site modal — two-column layout ────────────────────── */
+.ps-modal-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 72vh;
+  min-height: 0;
+}
+.ps-modal-left {
+  padding: 24px 20px 24px 24px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+.ps-modal-right {
+  padding: 24px 24px 24px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  min-height: 0;
+}
+.ps-picker-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.ps-picker-title {
+  font-size: 13px; font-weight: 700; color: var(--text-primary);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Employee picker (modal) ─────────────────────────────────────────────── */
+.ps-picker-count-lbl {
+  font-size: 11px; font-weight: 500; color: var(--siomac-red);
+  margin-left: 8px;
+}
+.ps-picker-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0;
+}
+.ps-picker-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--siomac-navy); color: white;
+  border-radius: 20px; padding: 3px 10px 3px 4px;
+  font-size: 12px; font-weight: 500;
+}
+.ps-picker-chip-photo {
+  width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+}
+.ps-picker-chip-photo--initials {
+  background: rgba(255,255,255,0.25); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+.ps-picker-chip-remove {
+  background: none; border: none; color: rgba(255,255,255,0.7);
+  cursor: pointer; padding: 0; line-height: 1; font-size: 11px;
+  display: flex; align-items: center;
+}
+.ps-picker-chip-remove:hover { color: white; }
+.ps-picker-search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle); border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 12px; flex-shrink: 0;
+}
+.ps-picker-search-wrap i { color: var(--text-muted); flex-shrink: 0; }
+.ps-picker-search {
+  border: none; background: transparent; outline: none;
+  font-size: 13px; width: 100%; color: var(--text-primary);
+}
+.ps-picker-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px; overflow-y: auto; flex: 1; min-height: 0;
+  padding: 4px 2px; align-content: start;
+}
+.ps-picker-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 6px; border-radius: 12px; cursor: pointer;
+  border: 2px solid transparent; transition: all .15s; position: relative;
+  background: var(--bg-subtle);
+}
+.ps-picker-item:hover { border-color: var(--siomac-navy); background: white; }
+.ps-picker-item--selected {
+  border-color: var(--siomac-navy) !important;
+  background: rgba(27,45,84,0.06) !important;
+}
+.ps-picker-photo {
+  width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+  border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.ps-picker-photo--initials {
+  background: var(--siomac-navy); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.ps-picker-name {
+  font-size: 10px; font-weight: 600; color: var(--text-primary);
+  text-align: center; line-height: 1.2;
+  word-break: break-word; max-width: 100%;
+}
+.ps-picker-check {
+  position: absolute; top: 4px; right: 4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--siomac-navy); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+}
+.ps-picker-empty {
+  grid-column: 1 / -1; text-align: center;
+  color: var(--text-muted); font-size: 13px; padding: 20px;
+}
+
+/* Empty state */
+.ps-empty {
+  grid-column: 1 / -1; text-align: center;
+  padding: 60px 20px; background: white;
+  border-radius: 28px; border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.ps-empty i { font-size: 48px; opacity: .3; display: block; margin-bottom: 14px; }
+
+@media (max-width: 700px) {
+  .ps-projects-grid { grid-template-columns: 1fr; }
+  .ps-filters-bar { border-radius: 24px; }
+}
+

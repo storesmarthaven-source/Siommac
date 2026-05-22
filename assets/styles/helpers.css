@@ -1,0 +1,18 @@
+
+/* ─── Generic helpers ─── */
+.location-map-link { color: var(--siomac-red); text-decoration: none; font-weight: 600; }
+.location-map-link:hover { text-decoration: underline; }
+.location-info { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.text-muted    { color: var(--text-muted) !important; }
+.text-success  { color: var(--success) !important; }
+.text-danger   { color: var(--danger) !important; }
+.text-warning  { color: var(--warning) !important; }
+.text-info     { color: var(--siomac-red) !important; }
+.text-secondary { color: #6c757d !important; }
+.fw-bold  { font-weight: 700; }
+.text-center { text-align: center; }
+
+/* ═══════════════════════════════════════════════════
+   EMPLOYEE PROFILE PAGE  (ep-*)
+   ═══════════════════════════════════════════════════ */
+

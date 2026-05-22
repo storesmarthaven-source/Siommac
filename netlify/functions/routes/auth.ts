@@ -1,6 +1,5 @@
-import { Hono }   from 'hono';
-import bcrypt      from 'bcryptjs';
-import { sb }      from '../lib/db';
+import { Hono }     from 'hono';
+import { sb, sbAnon } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, log_ } from '../lib/auth';
 import { getProfileSignedUrl }         from '../lib/photos';
 import { setting }                     from '../lib/settings';
@@ -50,7 +49,7 @@ async function buildSessionPayload(u: AppUser) {
   };
 }
 
-// ── Login — password check → 2FA gate → session ───────────────────────────────
+// ── Login — Supabase Auth → app_users lookup → 2FA gate → session ────────────
 router.post('/login', async c => {
   const v = zv(c, LoginSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
@@ -62,39 +61,54 @@ router.post('/login', async c => {
     return c.json({ success: false, message: `Too many login attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
 
+  // Step 1: look up the app_users row by username to get auth_email
   const { data: u } = await sb
     .from('app_users')
     .select('*')
     .ilike('username', username)
     .maybeSingle<AppUser>();
 
-  if (!u || u.status !== 'active') {
-    await bcrypt.compare(password, '$2a$12$invalidhashpadding.......................................enough');
+  if (!u || u.status !== 'active' || !u.auth_email) {
+    console.log('[login] user not found or inactive:', { found: !!u, status: u?.status, hasEmail: !!u?.auth_email });
     return c.json({ success: false, message: 'Invalid username or password' });
   }
-  const passOk = await bcrypt.compare(password, u.password_hash);
-  if (!passOk) return c.json({ success: false, message: 'Invalid username or password' });
+
+  // Step 2: authenticate via Supabase Auth using the stored email
+  const { error: authError } = await sbAnon.auth.signInWithPassword({
+    email:    u.auth_email,
+    password,
+  });
+
+  if (authError) {
+    console.log('[login] supabase auth failed:', authError.message);
+    return c.json({ success: false, message: 'Invalid username or password' });
+  }
 
   // ── 2FA gate ──────────────────────────────────────────────────────────────
   const mandatory = isTwoFactorMandatory(u.role);
 
   if (mandatory && !u.totp_enabled) {
-    // Admin/manager hasn't enrolled yet — force setup before granting access
     const setupToken = await issueChallenge(u.id, 'setup');
     await log_(u, 'login_requires_setup', 'user', u.id, '2FA setup required');
     return c.json({ success: true, requiresSetup: true, preAuthToken: setupToken });
   }
 
   if (u.totp_enabled) {
-    // User has 2FA enrolled — require TOTP verification
     const preAuthToken = await issueChallenge(u.id, 'verify');
     await log_(u, 'login_requires_2fa', 'user', u.id, '');
     return c.json({ success: true, requiresTwoFactor: true, preAuthToken });
   }
 
-  // No 2FA required (employee, opted out) — issue full session
-  await log_(u, 'login', 'user', u.id, 'login ok');
-  return c.json(await buildSessionPayload(u));
+  // No 2FA required — issue full session
+  console.log('[login] building session for', u.username);
+  try {
+    const payload = await buildSessionPayload(u);
+    await log_(u, 'login', 'user', u.id, 'login ok');
+    return c.json(payload);
+  } catch (e) {
+    console.error('[login] buildSessionPayload failed:', e);
+    return c.json({ success: false, message: 'Login failed. Please try again.' }, 500);
+  }
 });
 
 // ── Verify 2FA — consume pre-auth token + TOTP/backup code ───────────────────
@@ -249,8 +263,9 @@ router.post('/disable2fa', async c => {
     return c.json({ success: false, message: '2FA cannot be disabled for your role.' }, 403);
   }
 
-  if (!await bcrypt.compare(v.data.password, u.password_hash)) {
-    return c.json({ success: false, message: 'Incorrect password.' }, 403);
+  if (u.auth_email) {
+    const { error: pwErr } = await sbAnon.auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
+    if (pwErr) return c.json({ success: false, message: 'Incorrect password.' }, 403);
   }
 
   await sb.from('app_users').update({
@@ -335,9 +350,11 @@ router.post('/updateMyProfile', async c => {
 
   if (args.newPassword) {
     if (!args.oldPassword) return c.json({ success: false, message: 'Current password is required' });
-    if (!await bcrypt.compare(args.oldPassword, actor.password_hash))
-      return c.json({ success: false, message: 'Current password is incorrect' });
-    patch.password_hash = await bcrypt.hash(args.newPassword, 12);
+    if (!actor.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
+    const { error: pwErr } = await sbAnon.auth.signInWithPassword({ email: actor.auth_email, password: args.oldPassword });
+    if (pwErr) return c.json({ success: false, message: 'Current password is incorrect' });
+    const { error: upErr } = await sbAnon.auth.updateUser({ password: args.newPassword });
+    if (upErr) return c.json({ success: false, message: 'Failed to update password.' });
   }
 
   if (args.removeProfileImage) {
@@ -359,10 +376,9 @@ router.post('/verifyPassword', async c => {
   const u = await requireUser(c);
   const v = zv(c, VerifyPasswordSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { data: row } = await sb.from('app_users').select('password_hash').eq('id', u.id).single<Pick<AppUser, 'password_hash'>>();
-  if (!row) return c.json({ success: false, message: 'User not found.' });
-  const ok = await bcrypt.compare(v.data.password, row.password_hash);
-  return c.json(ok ? { success: true } : { success: false, message: 'Incorrect password.' });
+  if (!u.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
+  const { error } = await sbAnon.auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
+  return error ? c.json({ success: false, message: 'Incorrect password.' }) : c.json({ success: true });
 });
 
 export default router;

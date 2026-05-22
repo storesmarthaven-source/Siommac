@@ -1,0 +1,122 @@
+/**
+ * src/lib/superadminApi.ts
+ *
+ * Typed API calls for the superadmin module permissions system.
+ *
+ * Two-layer model:
+ *   • Role-level  — getModulesApi / setModuleApi / resetModulesApi  (admin role)
+ *   • User-level  — getManagersApi / setManagerModuleApi / resetManagerModulesApi
+ *
+ * @see docs/ARCHITECTURE.md
+ * @see docs/CODING_STANDARDS.md
+ */
+
+import { apiFetch } from '@lib/api';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export type ModuleKey  = 'dashboard' | 'employees' | 'payroll' | 'live_map' | 'attendance';
+export type ModuleRole = 'admin' | 'manager';
+
+/** Full role-level matrix returned by getModules */
+export type ModuleMatrix = Record<ModuleKey, { admin: boolean; manager: boolean }>;
+
+/** Per-user module map returned for managers at login */
+export type UserModuleMap = Record<ModuleKey, boolean>;
+
+/** Manager entry returned by getManagers */
+export interface ManagerEntry {
+  id:       string;
+  username: string;
+  fullName: string;
+  modules:  UserModuleMap;
+}
+
+// ── Role-level API ────────────────────────────────────────────────────────────
+
+/**
+ * Fetch the module permission matrix.
+ * Called at login time for all authenticated users to filter the sidebar.
+ * Managers also receive `userModules` — their personal module set.
+ */
+export async function getModulesApi(): Promise<{
+  success:      boolean;
+  modules?:     ModuleMatrix;
+  userModules?: UserModuleMap;
+}> {
+  return apiFetch('superadmin/getModules', {
+    method: 'POST',
+    body:   { args: {} },
+  });
+}
+
+/**
+ * Enable or disable a module for the admin role globally.
+ * Superadmin only.
+ */
+export async function setModuleApi(
+  module:  ModuleKey,
+  role:    ModuleRole,
+  enabled: boolean,
+): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/setModule', {
+    method: 'POST',
+    body:   { args: { module, role, enabled } },
+  });
+}
+
+/**
+ * Reset role-level module permissions to system defaults.
+ * Superadmin only.
+ */
+export async function resetModulesApi(): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/resetModules', {
+    method: 'POST',
+    body:   { args: {} },
+  });
+}
+
+// ── Per-manager API ───────────────────────────────────────────────────────────
+
+/**
+ * Fetch all managers with their effective module access.
+ * Superadmin only.
+ */
+export async function getManagersApi(): Promise<{
+  success:   boolean;
+  managers?: ManagerEntry[];
+  message?:  string;
+}> {
+  return apiFetch('superadmin/getManagers', {
+    method: 'POST',
+    body:   { args: {} },
+  });
+}
+
+/**
+ * Toggle one module for one specific manager (user-level override).
+ * Superadmin only.
+ */
+export async function setManagerModuleApi(
+  userId:  string,
+  module:  ModuleKey,
+  enabled: boolean,
+): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/setManagerModule', {
+    method: 'POST',
+    body:   { args: { userId, module, enabled } },
+  });
+}
+
+/**
+ * Remove all personal module overrides for a manager — reverts to role defaults.
+ * Superadmin only.
+ */
+export async function resetManagerModulesApi(
+  userId: string,
+): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/resetManagerModules', {
+    method: 'POST',
+    body:   { args: { userId } },
+  });
+}
