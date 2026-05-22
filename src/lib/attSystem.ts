@@ -708,8 +708,8 @@ function handleLogout(): void {
   const lmSel = document.getElementById('lmSiteSelect') as HTMLSelectElement | null;
   if (lmSel) { lmSel.innerHTML = '<option value="">— Select a project site —</option>'; lmSel.value = ''; }
 
-  if (_attFpFrom) { _attFpFrom.destroy(); _attFpFrom = null; }
-  if (_attFpTo)   { _attFpTo.destroy();   _attFpTo   = null; }
+  if (_attFpFrom && typeof _attFpFrom.destroy === 'function') { _attFpFrom.destroy(); } _attFpFrom = null;
+  if (_attFpTo   && typeof _attFpTo.destroy   === 'function') { _attFpTo.destroy();   } _attFpTo   = null;
 
   const stopNotif  = w()['_stopNotifPolling']  as (() => void) | undefined;
   const stopMsg    = w()['_stopMsgSystem']      as (() => void) | undefined;
