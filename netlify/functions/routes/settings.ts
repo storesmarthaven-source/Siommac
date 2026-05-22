@@ -9,6 +9,15 @@ import type { HonoVariables }                            from '../../../types/ap
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
+// Public — no auth required. Returns only branding fields needed for the login screen.
+router.post('/getPublicBranding', async c => {
+  const [logoUrl, companyName] = await Promise.all([
+    setting('companyLogoUrl', ''),
+    setting('companyName', ''),
+  ]);
+  return c.json({ success: true, companyLogoUrl: logoUrl, companyName });
+});
+
 router.post('/getSettings', async c => {
   await requireUser(c);
   const s = await getAllSettings();
