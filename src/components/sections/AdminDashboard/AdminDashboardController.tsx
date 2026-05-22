@@ -139,7 +139,7 @@ export function AdminRecentTable(): VNode {
 // ── Row sub-component ─────────────────────────────────────────────────────────
 
 function RecentRow({ row }: { row: RecentAttendanceRow }): VNode {
-  const color = statusColor(row.status);
+  const color = statusColor(row.status ?? '');
   return (
     <tr>
       <td style="font-weight:600;">{row.name ?? '—'}</td>

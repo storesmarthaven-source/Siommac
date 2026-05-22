@@ -19,7 +19,7 @@ import { useState, useMemo, useCallback }            from 'preact/hooks';
 import { Modal }                                     from '@shared/Modal';
 import { Spinner }                                   from '@shared/Spinner';
 import { confirm }                                   from '@shared/ConfirmDialog';
-import type { LeaveRequest, LeaveType, UserRole }    from './types';
+import type { LeaveRequest, LeaveType, LeaveStatus, UserRole } from './types';
 import {
   useMyLeaves, useManagerLeaves, useAdminLeaves,
   useSubmitLeave, useUpdateLeave, useDeleteLeave,

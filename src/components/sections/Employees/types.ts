@@ -240,17 +240,29 @@ export interface DeptEmployee {
 
 export interface AdminStats {
   totalEmployees:  number;
-  activeEmployees: number;
-  checkedIn:       number;
-  departments:     number;
+  presentToday:    number;
+  absentToday:     number;
+  onLeaveToday:    number;
+  lateToday:       number;
+  activeLocations: number;
+  // Legacy aliases (kept for backward compat)
+  activeEmployees?: number;
+  checkedIn?:       number;
+  departments?:     number;
 }
 
 export interface RecentAttendanceRow {
-  username:   string;
-  fullName:   string;
-  action:     string;
-  time:       string;
-  profileImage?: string;
+  name:        string;
+  department:  string;
+  checkIn?:    string;
+  checkOut?:   string;
+  status?:     string;
+  // Legacy aliases (kept for backward compat)
+  username?:      string;
+  fullName?:      string;
+  action?:        string;
+  time?:          string;
+  profileImage?:  string;
 }
 
 // ── Company info (read from settings, used by payslip) ───────────────────────
