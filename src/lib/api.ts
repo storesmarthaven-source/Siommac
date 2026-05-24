@@ -72,10 +72,10 @@ async function _doRefresh(): Promise<string | null> {
   }
 
   try {
-    const res  = await fetch(`${API_URL.replace(/\/$/, '')}/auth/refresh`, {
+    const res  = await fetch(`${API_URL.replace(/\/$/, '')}/refreshToken`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ refreshToken: rt }),
+      body:    JSON.stringify({ args: { refreshToken: rt } }),
     });
 
     const json = await res.json() as {
