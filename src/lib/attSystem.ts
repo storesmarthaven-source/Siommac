@@ -571,6 +571,14 @@ export function _completeLogin(result: Record<string, unknown>): void {
     profileImage:   result['profileImage']    as string ?? '',
   }, rememberMe);
 
+  // Sync the Zustand session store so Preact components see isAuthenticated=true
+  // immediately after login (without requiring a page refresh).
+  try {
+    const store = (w() as Record<string, unknown>)['__siomacSessionStore'] as
+      { getState: () => { login: (r: Record<string, unknown>) => void } } | undefined;
+    store?.getState().login(result as Record<string, unknown>);
+  } catch (_) {}
+
   applySession(result, true);
 }
 
@@ -733,6 +741,13 @@ function handleLogout(): void {
   if (pwEl) pwEl.value = '';
   const loginForm = document.getElementById('loginForm') as HTMLFormElement | null;
   loginForm?.reset();
+
+  // Sync Zustand session store on logout
+  try {
+    const store = (w() as Record<string, unknown>)['__siomacSessionStore'] as
+      { getState: () => { logout: () => void } } | undefined;
+    store?.getState().logout();
+  } catch (_) {}
 }
 
 // ── Camera ────────────────────────────────────────────────────────────────────

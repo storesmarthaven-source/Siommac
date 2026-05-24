@@ -80,6 +80,7 @@ import { render }              from 'preact';
 import { AppShell }            from '@shell';
 import { mountLoginPage }      from '@components/auth';
 import { mountNavController }  from '@components/nav';
+import { useSessionStore }     from '@store/session';
 import '@cfg/index';            // registers window.SiomacConfig before any legacy script reads it
 import '@lib/popup';            // registers window.cpop / window.Swal before any legacy script reads it
 import '@lib/charts';           // registers window.SiomacCharts; needs Chart.js CDN global on window
@@ -89,6 +90,11 @@ import '@lib/cache';            // registers SiomacDB / SwCacheManager, patches 
 import '@components/realtime';  // registers window._initRealtime / _teardownRealtime
 import '@components/livemap';   // registers window.LiveMap before any legacy script reads it
 import { AttendanceSystem }     from '@lib/attSystem';  // registers window.AttendanceSystem (AFTER all its deps)
+
+// ── Register session store on window so attSystem.ts can sync it ──────────────
+// attSystem._completeLogin() calls window.__siomacSessionStore to update the
+// Zustand store so all Preact components see isAuthenticated=true immediately.
+(window as unknown as Record<string, unknown>)['__siomacSessionStore'] = useSessionStore;
 
 // ── TanStack Query client ─────────────────────────────────────────────────────
 
