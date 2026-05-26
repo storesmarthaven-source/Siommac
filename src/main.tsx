@@ -76,6 +76,10 @@ import {
   mountAttendanceDashboard,
   unmountAttendanceDashboard,
 } from '@sections/AttendanceDashboard';
+import {
+  mountSuperadminModulesSection,
+  unmountSuperadminModulesSection,
+} from '@sections/SuperadminModules';
 import { render }              from 'preact';
 import { AppShell }            from '@shell';
 import { mountLoginPage }      from '@components/auth';
@@ -403,6 +407,12 @@ async function bootApp(): Promise<void> {
     displayEmployeeCards:         () => undefined,
     loadLeaveApplications:        () => { void queryClient.invalidateQueries({ queryKey: ['leaves'] }); },
   };
+
+  // Superadmin Modules section
+  const superadminModulesRoot = document.getElementById('preact-superadmin-modules-root');
+  if (superadminModulesRoot) {
+    mountSuperadminModulesSection(superadminModulesRoot, { queryClient });
+  }
 
   // Profile section (replaces profile.js)
   const profileRoot = document.getElementById('preact-profile-root');

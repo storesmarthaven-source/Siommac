@@ -230,6 +230,18 @@ export default function SharedSections() {
     <>
       <LiveMapSection />
 
+      {/* Superadmin Modules — superadmin only */}
+      <section class="app-section" id="s-superadmin-modules">
+        <ProfilePill ids={{
+          profileBtn: 'sadmModProfileBtn', avatar: 'sadmModProfileAvatar',
+          profileName: 'sadmModProfileName', profileRole: 'sadmModProfileRole',
+          notifBtn: 'sadmModNotifBtn', notifBadge: 'sadmModNotifBadge',
+          msgBtn: 'sadmModMsgBtn', msgBadge: 'sadmModMsgBadge',
+          ticketBtn: 'sadmModTicketBtn', ticketBadge: 'sadmModTicketBadge',
+        }} />
+        <div id="preact-superadmin-modules-root" />
+      </section>
+
       {/* Payroll — admin + manager */}
       <section class="app-section" id="s-payroll">
         <ProfilePill ids={{

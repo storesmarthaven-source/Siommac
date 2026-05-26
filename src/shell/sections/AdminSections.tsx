@@ -21,6 +21,8 @@
  * @see docs/CODING_STANDARDS.md
  */
 
+import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
+
 // ── Shared admin profile pill factory ────────────────────────────────────────
 
 interface AdminPillIds {
@@ -504,24 +506,9 @@ function AdminDashboardSection() {
             </div>
           </div>
 
-          {/* Stat cards */}
+          {/* Stat cards — live data from AdminStatCards Preact component */}
           <div class="dash-stats-row">
-            {[
-              { icon: 'fa-users',         value: 'totalEmployees',  label: 'totalEmployeesLabel',  defaultLabel: 'Employees',     color: 'blue' },
-              { icon: 'fa-map-marker-alt', value: 'activeLocations', label: 'activeLocationsLabel', defaultLabel: 'Locations',     color: 'blue' },
-              { icon: 'fa-user-check',    value: 'presentToday',    label: 'presentTodayLabel',    defaultLabel: 'Present Today', color: 'green' },
-              { icon: 'fa-user-times',    value: 'absentToday',     label: 'absentTodayLabel',     defaultLabel: 'Absent Today',  color: 'red' },
-              { icon: 'fa-calendar-minus', value: 'onLeaveToday',   label: 'onLeaveTodayLabel',    defaultLabel: 'On Leave Today',color: 'gold' },
-              { icon: 'fa-clock',         value: 'lateToday',       label: 'lateTodayLabel',       defaultLabel: 'Late Today',    color: 'gold' },
-            ].map(card => (
-              <div class="stat-card" key={card.value}>
-                <div class={`stat-card-icon ${card.color}`}><i class={`fas ${card.icon}`} /></div>
-                <div class="stat-card-content">
-                  <div class="stat-card-value" id={card.value} />
-                  <div class="stat-card-label" id={card.label}>{card.defaultLabel}</div>
-                </div>
-              </div>
-            ))}
+            <AdminStatCards />
           </div>
         </div>
 
@@ -641,9 +628,7 @@ function AdminDashboardSection() {
                 </tr>
               </thead>
               <tbody id="recentAttendanceTbody">
-                <tr>
-                  <td colSpan={5} class="text-center text-muted" style="padding:28px;">Loading…</td>
-                </tr>
+                <AdminRecentTable />
               </tbody>
             </table>
           </div>
