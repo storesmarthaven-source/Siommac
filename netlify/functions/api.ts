@@ -21,6 +21,7 @@ import settingsRouter      from './routes/settings';
 import messagesRouter      from './routes/messages';
 import ticketsRouter       from './routes/tickets';
 import notificationsRouter from './routes/notifications';
+import { superadminRouter } from './routes/superadmin';
 
 // ── Allowed frontend origins ──────────────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
@@ -117,6 +118,7 @@ app.route('/api', settingsRouter);
 app.route('/api', messagesRouter);
 app.route('/api', ticketsRouter);
 app.route('/api', notificationsRouter);
+app.route('/api/superadmin', superadminRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.
