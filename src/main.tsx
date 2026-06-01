@@ -80,7 +80,8 @@ import {
   mountSuperadminModulesSection,
   unmountSuperadminModulesSection,
 } from '@sections/SuperadminModules';
-import { render }              from 'preact';
+import { h, render }           from 'preact';
+import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
 import { mountLoginPage }      from '@components/auth';
 import { mountNavController }  from '@components/nav';
@@ -158,7 +159,14 @@ async function bootApp(): Promise<void> {
   // No network fetch — all HTML is compiled into the bundle via src/shell/.
   const root = document.getElementById('app-root');
   if (!root) throw new Error('#app-root element not found in DOM');
-  render(<AppShell />, root);
+  // Wrap AppShell in QueryClientProvider so slot components (AdminStatCards,
+  // AdminRecentTable, etc.) that use useQuery have access to the client.
+  render(
+    h(QueryClientProvider, { client: queryClient },
+      h(AppShell, null),
+    ),
+    root,
+  );
 
   await loadScripts(SCRIPTS);  // no-op — all scripts ported to TS
 
