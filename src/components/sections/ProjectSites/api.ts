@@ -11,7 +11,7 @@
  */
 
 import { apiPost } from '@lib/api';
-import type { ProjectSite, EmployeeListItem, LiveRow } from './types';
+import type { ProjectSite, EmployeeListItem, LiveRow, DeptOption } from './types';
 
 // ── Response shapes ───────────────────────────────────────────────────────────
 
@@ -48,6 +48,15 @@ export async function listProjectSites(signal?: AbortSignal): Promise<{
   };
 }
 
+interface DeptListResponse { success: boolean; data?: DeptOption[]; }
+
+/** Department options for the site form's owning-department selector. Read-only
+ *  for any authenticated user (CRUD is superadmin-only). */
+export async function listDepartmentOptions(signal?: AbortSignal): Promise<DeptOption[]> {
+  const res = await apiPost<DeptListResponse>('listDepartments', {}, { signal });
+  return (res.success && Array.isArray(res.data)) ? res.data : [];
+}
+
 export async function getLiveAttendance(scope: string, signal?: AbortSignal): Promise<LiveRow[]> {
   const res = await apiPost<LiveResponse>('getLiveAttendance', { scope }, { signal });
   if (!res.success) return [];
@@ -62,6 +71,7 @@ export async function addProjectSiteApi(
     longitude:   number;
     radius:      number;
     description: string;
+    departmentId?: string | null;
     actorId:     string;
     actorUsername: string;
   },
@@ -83,6 +93,7 @@ export async function updateProjectSiteApi(
     longitude:   number;
     radius:      number;
     description: string;
+    departmentId?: string | null;
     actorId:     string;
     actorUsername: string;
   },

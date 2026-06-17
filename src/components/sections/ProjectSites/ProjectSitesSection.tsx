@@ -35,6 +35,7 @@ import {
   updateProjectSiteApi,
   deleteProjectSiteApi,
   assignSiteEmployeesApi,
+  listDepartmentOptions,
 } from './api';
 import type {
   ProjectSite,
@@ -509,6 +510,20 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
   const [saving,       setSaving]       = useState(false);
   const [errors,       setErrors]       = useState<Partial<SiteFormValues>>({});
 
+  // Org-wide actors (superadmin/admin, scope='all') may assign a site to any
+  // department; scoped actors are auto-pinned to their own dept by the server,
+  // so we hide the selector for them.
+  const AppSt    = (window as unknown as Record<string, unknown>)['AppState'] as { get: (k: string) => string } | undefined;
+  const isOrgWide = (AppSt?.get('currentRoleScope') ?? 'own') === 'all';
+
+  const deptQuery = useQuery({
+    queryKey: ['projectSites', 'departments'],
+    queryFn:  ({ signal }) => listDepartmentOptions(signal),
+    enabled:  open && isOrgWide,
+    staleTime: 5 * 60 * 1000,
+  });
+  const departments = deptQuery.data ?? [];
+
   // Reset form whenever modal opens
   useEffect(() => {
     if (!open) return;
@@ -516,12 +531,13 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
     setErrors({});
     if (editingSite) {
       setForm({
-        name:        editingSite.name,
-        address:     editingSite.address,
-        latitude:    String(editingSite.latitude  || ''),
-        longitude:   String(editingSite.longitude || ''),
-        radius:      String(editingSite.radius    || 200),
-        description: editingSite.description || '',
+        name:         editingSite.name,
+        address:      editingSite.address,
+        latitude:     String(editingSite.latitude  || ''),
+        longitude:    String(editingSite.longitude || ''),
+        radius:       String(editingSite.radius    || 200),
+        description:  editingSite.description || '',
+        departmentId: editingSite.departmentId || '',
       });
       setPickerSel(new Set((editingSite.assignedEmployees || []).map(e => e.id)));
     } else {
@@ -571,6 +587,9 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
         longitude:   parseFloat(form.longitude),
         radius:      parseInt(form.radius),
         description: form.description.trim(),
+        // Org-wide actors choose the owning department ('' = unassigned/org-wide);
+        // scoped actors omit it so the server pins the site to their own dept.
+        ...(isOrgWide ? { departmentId: form.departmentId || null } : {}),
         actorId,
         actorUsername,
       };
@@ -674,6 +693,21 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
               onInput={(e) => setForm(prev => ({ ...prev, description: (e.target as HTMLTextAreaElement).value }))}
             />
           </div>
+          {isOrgWide && (
+            <div class="col-12">
+              <label class="form-label">Department</label>
+              <select
+                class="form-control"
+                id="projectDepartment"
+                value={form.departmentId}
+                onChange={(e) => setForm(prev => ({ ...prev, departmentId: (e.target as HTMLSelectElement).value }))}
+              >
+                <option value="">Org-wide (all departments)</option>
+                {departments.map(d => <option value={d.id}>{d.name}</option>)}
+              </select>
+              <small class="text-muted">Scoped roles only see sites in their own department plus org-wide ones.</small>
+            </div>
+          )}
         </div>
 
         {/* Coord display badge */}

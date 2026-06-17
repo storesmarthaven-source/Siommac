@@ -627,6 +627,7 @@ export function _completeLogin(result: Record<string, unknown>): void {
     profileImage:   result['profileImage']    as string ?? '',
     idleTimeoutMs:  Number(result['sessionIdleTimeoutMs']) || 0,
     isEmployee:     result['isEmployee'] !== false,
+    roleScope:      (result['roleScope'] as 'own' | 'all') ?? 'own',
   }, rememberMe);
 
   // Sync the Zustand session store so Preact components see isAuthenticated=true
@@ -651,6 +652,8 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
   as?.set('currentRole',     result['role']);
   // Whether this role gets the self-service Personal nav (default true if absent).
   as?.set('currentIsEmployee', result['isEmployee'] !== false);
+  // Data scope hint: 'all' = org-wide, 'own' = own department only (default own).
+  as?.set('currentRoleScope', (result['roleScope'] as string) ?? 'own');
 
   const nav = _Nav();
   currentColorScheme = (result['colorScheme'] as string) || 'navy';

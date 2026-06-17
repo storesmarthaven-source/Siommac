@@ -20,6 +20,8 @@ export interface ProjectSite {
   longitude:         number | string;
   radius:            number;
   description?:      string;
+  /** Owning department id; '' = org-wide / unassigned. */
+  departmentId?:     string;
   assignedEmployees: AssignedEmployee[];
   /** Derived client-side from liveData */
   isActive?:         boolean;
@@ -32,22 +34,29 @@ export interface EmployeeListItem {
 }
 
 export interface SiteFormValues {
-  name:        string;
-  address:     string;
-  latitude:    string;
-  longitude:   string;
-  radius:      string;
-  description: string;
+  name:         string;
+  address:      string;
+  latitude:     string;
+  longitude:    string;
+  radius:       string;
+  description:  string;
+  departmentId: string;
 }
 
 export const EMPTY_FORM: SiteFormValues = {
-  name:        '',
-  address:     '',
-  latitude:    '',
-  longitude:   '',
-  radius:      '200',
-  description: '',
+  name:         '',
+  address:      '',
+  latitude:     '',
+  longitude:    '',
+  radius:       '200',
+  description:  '',
+  departmentId: '',
 };
+
+export interface DeptOption {
+  id:   string;
+  name: string;
+}
 
 export type SiteFilter = 'all' | 'active' | 'inactive';
 

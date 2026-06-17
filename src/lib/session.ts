@@ -35,6 +35,8 @@ export interface PersistedSession {
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
   /** Whether the role is a clocking employee (gets self-service nav) */
   isEmployee?:          boolean;
+  /** Data scope: 'all' (org-wide) or 'own' (own department only). UI hint only. */
+  roleScope?:           'own' | 'all';
 }
 
 /** Read and validate the persisted session.  Returns null if missing/expired/corrupt. */
