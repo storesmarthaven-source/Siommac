@@ -604,7 +604,8 @@ function SecurityPanel(): VNode {
 
 export function SettingsSection(): VNode {
   const role    = useSessionStore(s => s.role);
-  const isAdmin = role === 'admin';
+  // Company/admin settings are available to admin AND superadmin.
+  const isAdmin = role === 'admin' || role === 'superadmin';
 
   const [activeTab,    setActiveTab]    = useState<StgTab>(isAdmin ? 'company' : 'appearance');
   const [settings,     setSettings]     = useState<AppSettings | null>(null);

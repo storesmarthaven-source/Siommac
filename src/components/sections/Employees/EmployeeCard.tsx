@@ -25,9 +25,10 @@ interface EmployeeCardProps {
 }
 
 const ROLE_LABEL: Record<UserRole, string> = {
-  admin:    'Admin',
-  manager:  'Manager',
-  employee: 'Employee',
+  superadmin: 'Superadmin',
+  admin:      'Admin',
+  manager:    'Manager',
+  employee:   'Employee',
 };
 
 /** Maps the today-status enum to the branded badge class. */

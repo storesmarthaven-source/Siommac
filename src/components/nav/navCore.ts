@@ -210,7 +210,7 @@ export function refreshSection(id: string): void {
 
   switch (id) {
     case 's-settings':
-      win['SettingsView']?.['_stgActivatePanel']?.(role === 'admin' ? 'company' : 'appearance');
+      win['SettingsView']?.['_stgActivatePanel']?.((role === 'admin' || role === 'superadmin') ? 'company' : 'appearance');
       renderPalettes(); renderLayouts();
       win['SettingsView']?.['loadAdminBrandingSettings']?.();
       break;

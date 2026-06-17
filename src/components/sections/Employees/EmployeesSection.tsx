@@ -27,6 +27,7 @@ import { DataTable }                                 from '@shared/DataTable';
 import { Avatar }                                    from '@shared/Avatar';
 import { Badge }                                     from '@shared/Badge';
 import { confirm }                                   from '@shared/ConfirmDialog';
+import { useCan }                                     from '@lib/permissions';
 import type { EmployeeListItem, UserRole }            from './types';
 import { useEmployeeList, useDeleteEmployee, useEmployee } from './hooks';
 import { StatCard }                                  from './StatCard';
@@ -102,7 +103,13 @@ interface EmployeesSectionProps {
 }
 
 export function EmployeesSection({ currentRole, currentUsername }: EmployeesSectionProps): VNode {
-  const isAdmin = currentRole === 'admin';
+  // Capability-based gating (includes superadmin via ROLE_PERMISSIONS, and any
+  // per-user grant/override) instead of a raw role === 'admin' check.
+  const canAdd    = useCan('employees.add');
+  const canEdit   = useCan('employees.edit');
+  const canDelete = useCan('employees.delete');
+  // Card/drawer show their edit+delete overlay when the user can do either.
+  const canManage = canEdit || canDelete;
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const { data: employees = [], isLoading, error, refetch } = useEmployeeList();
@@ -196,7 +203,7 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
             Manage your workforce
           </p>
         </div>
-        {isAdmin && (
+        {canAdd && (
           <button
             type="button"
             class="btn btn-danger-primary btn-sm"
@@ -293,7 +300,7 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
             <EmployeeCard
               key={emp.id}
               emp={emp}
-              isAdmin={isAdmin}
+              isAdmin={canManage}
               onClick={setDrawerEmp}
               onEdit={handleEdit}
               onDelete={emp => void handleDelete(emp)}
@@ -312,7 +319,7 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
       {/* ── Profile drawer ── */}
       <EmployeeDrawer
         emp={drawerEmp}
-        isAdmin={isAdmin}
+        isAdmin={canManage}
         onClose={() => setDrawerEmp(null)}
         onEdit={emp => { setDrawerEmp(null); handleEdit(emp); }}
         onDelete={emp => { setDrawerEmp(null); void handleDelete(emp); }}

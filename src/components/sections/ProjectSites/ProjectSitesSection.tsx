@@ -27,6 +27,7 @@ import { ConfirmDialog }                       from '@shared/ConfirmDialog';
 import { Spinner }                             from '@shared/Spinner';
 import { toast }                               from '@store';
 import { useSessionStore }                     from '@store/session';
+import { useCan }                               from '@lib/permissions';
 import {
   listProjectSites,
   getLiveAttendance,
@@ -775,7 +776,7 @@ export function ProjectSitesSection(): VNode {
   const win   = window as unknown as Record<string, unknown>;
   const AppSt = win['AppState'] as { get: (k: string) => string } | undefined;
   const role  = AppSt?.get('currentRole') || 'admin';
-  const scope = role === 'admin' ? 'all' : (AppSt?.get('currentDeptId') || 'all');
+  const scope = (role === 'admin' || role === 'superadmin') ? 'all' : (AppSt?.get('currentDeptId') || 'all');
 
   const liveQuery = useQuery({
     queryKey: ['liveAttendance'],
@@ -788,7 +789,8 @@ export function ProjectSitesSection(): VNode {
   const sites     = sitesQuery.data?.sites     || [];
   const employees = sitesQuery.data?.employees || [];
   const liveRows  = liveQuery.data             || [];
-  const isAdmin   = role === 'admin';
+  // Capability gate — includes superadmin and any per-user grant, not just admin.
+  const isAdmin   = useCan('sites.edit');
 
   // ── Derive isActive from liveData ───────────────────────────────────────────
   const checkedInSiteIds = useMemo(() => {

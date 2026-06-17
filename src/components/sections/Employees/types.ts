@@ -12,7 +12,7 @@
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
-export type UserRole        = 'admin' | 'manager' | 'employee';
+export type UserRole        = 'superadmin' | 'admin' | 'manager' | 'employee';
 export type UserStatus      = 'active' | 'inactive';
 export type TodayStatus     = 'checkedin' | 'checkedout' | 'notchecked';
 export type PayCycle        = 'daily' | 'weekly' | 'fortnightly' | 'monthly';

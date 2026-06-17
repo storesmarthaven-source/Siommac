@@ -616,9 +616,11 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
   sv?.['refreshCompanySettings']?.();
 
   const currentRole = as?.get('currentRole') as string;
-  document.querySelectorAll<HTMLElement>('.admin-only').forEach(el => { el.style.display = currentRole === 'admin' ? '' : 'none'; });
-  document.querySelectorAll<HTMLElement>('.non-admin-only').forEach(el => { el.style.display = currentRole !== 'admin' ? '' : 'none'; });
-  sv?.['_stgActivatePanel']?.(currentRole === 'admin' ? 'company' : 'appearance');
+  // superadmin is treated as admin for all admin-gated UI affordances.
+  const isAdminish  = currentRole === 'admin' || currentRole === 'superadmin';
+  document.querySelectorAll<HTMLElement>('.admin-only').forEach(el => { el.style.display = isAdminish ? '' : 'none'; });
+  document.querySelectorAll<HTMLElement>('.non-admin-only').forEach(el => { el.style.display = !isAdminish ? '' : 'none'; });
+  sv?.['_stgActivatePanel']?.(isAdminish ? 'company' : 'appearance');
 
   nav?.['buildSidebar']?.(currentRole);
   nav?.['buildTopTabs']?.(currentRole);

@@ -23,6 +23,7 @@ import { useState, useMemo, useCallback }            from 'preact/hooks';
 import { Modal }                                     from '@shared/Modal';
 import { Spinner }                                   from '@shared/Spinner';
 import { confirm }                                   from '@shared/ConfirmDialog';
+import { useCan }                                     from '@lib/permissions';
 import type { LeaveRequest, LeaveType, LeaveStatus, UserRole } from './types';
 import {
   useMyLeaves, useManagerLeaves, useAdminLeaves,
@@ -68,11 +69,12 @@ const LV_STAT_ICON_CLASS: Record<string, string> = {
 
 export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps): VNode {
   // Load the right data set based on role
+  const canApprove = useCan('leaves.approve');
   const empQuery  = useMyLeaves();
   const mgrQuery  = useManagerLeaves(currentRole === 'manager' ? currentUsername : null);
   const admQuery  = useAdminLeaves();
 
-  const query = currentRole === 'admin' ? admQuery
+  const query = (currentRole === 'admin' || currentRole === 'superadmin') ? admQuery
               : currentRole === 'manager' ? mgrQuery
               : empQuery;
 
@@ -304,8 +306,8 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
                       </td>
                       <td>
                         <div class="lv-action-btns">
-                          {/* Manager / Admin: approve / reject */}
-                          {(currentRole === 'manager' || currentRole === 'admin') && isPending && (
+                          {/* Approvers (manager / admin / superadmin via leaves.approve) */}
+                          {canApprove && isPending && (
                             <>
                               <button type="button" class="lv-act-btn lv-act-approve" aria-label="Approve" title="Approve" onClick={() => void handleApprove(r.id)}>
                                 <i class="fas fa-check" aria-hidden="true" /> Approve
