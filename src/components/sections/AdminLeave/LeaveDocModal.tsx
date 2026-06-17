@@ -59,39 +59,10 @@ export function LeaveDocModal({ detail, onClose }: Props): VNode {
       size="lg"
       footer={
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={handlePrint}
-            style={{
-              padding:      '8px 18px',
-              background:   '#1B2D55',
-              color:        '#fff',
-              border:       'none',
-              borderRadius: '7px',
-              cursor:       'pointer',
-              fontWeight:   '600',
-              fontSize:     '13px',
-              display:      'flex',
-              alignItems:   'center',
-              gap:          '6px',
-            }}
-          >
-            <i class="fas fa-print" /> Print A4
+          <button type="button" class="btn btn-primary" onClick={handlePrint}>
+            <i class="fas fa-print" aria-hidden="true" /> Print A4
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding:      '8px 18px',
-              background:   '#f3f4f6',
-              color:        '#374151',
-              border:       '1px solid #e5e7eb',
-              borderRadius: '7px',
-              cursor:       'pointer',
-              fontWeight:   '500',
-              fontSize:     '13px',
-            }}
-          >
+          <button type="button" class="btn btn-outline-secondary has-label" onClick={onClose}>
             Close
           </button>
         </div>

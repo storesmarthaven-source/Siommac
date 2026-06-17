@@ -8,6 +8,11 @@
  * Admin-only panels: Company & Branding, Attendance Rules.
  * All-roles panels: Appearance, Layout & Navigation, Notifications, Security.
  *
+ * Reskinned to use the branded `.stg-*` design-system classes defined in
+ * assets/styles/settings.css instead of ad-hoc inline styles. All logic,
+ * state, mutations, validation, handlers and conditional rendering are
+ * unchanged — only presentation moved to branded classes.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/UI_DESIGN_SYSTEM.md
@@ -31,46 +36,7 @@ import { NotificationPreferences } from '@components/notifications';
 
 type StgTab = 'company' | 'attendance-rules' | 'appearance' | 'layout' | 'notifications' | 'security';
 
-// ── Shared style helpers ──────────────────────────────────────────────────────
-
-const card: React.CSSProperties = {
-  background:   '#fff',
-  borderRadius: '12px',
-  boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-  padding:      '24px',
-  marginBottom: '20px',
-};
-
-const inputSt = (readonly?: boolean): React.CSSProperties => ({
-  width:        '100%',
-  padding:      '9px 12px',
-  border:       '1px solid #e5e7eb',
-  borderRadius: '8px',
-  fontSize:     '14px',
-  background:   readonly ? '#f9fafb' : '#fff',
-  color:        '#374151',
-  outline:      'none',
-  boxSizing:    'border-box',
-  cursor:       readonly ? 'default' : 'text',
-});
-
-const labelSt: React.CSSProperties = {
-  display:      'block',
-  fontSize:     '13px',
-  fontWeight:   600,
-  color:        '#374151',
-  marginBottom: '5px',
-};
-
-const smallSt: React.CSSProperties = {
-  fontSize:  '11px',
-  color:     '#9CA3AF',
-  marginTop: '4px',
-  display:   'block',
-};
-
-const fgSt: React.CSSProperties = { display: 'flex', gap: '16px', flexWrap: 'wrap' };
-const fgItem: React.CSSProperties = { flex: '1 1 0', minWidth: '180px' };
+// ── Shared presentational helpers ──────────────────────────────────────────────
 
 function SaveBtn({ loading, label, icon, onClick }: {
   loading: boolean; label: string; icon: string; onClick: () => void;
@@ -78,22 +44,9 @@ function SaveBtn({ loading, label, icon, onClick }: {
   return (
     <button
       type="button"
+      class="stg-btn-save"
       onClick={onClick}
       disabled={loading}
-      style={{
-        padding:      '9px 20px',
-        background:   '#1B2D55',
-        color:        '#fff',
-        border:       'none',
-        borderRadius: '8px',
-        fontSize:     '13px',
-        fontWeight:   600,
-        cursor:       loading ? 'not-allowed' : 'pointer',
-        display:      'inline-flex',
-        alignItems:   'center',
-        gap:          '7px',
-        opacity:      loading ? 0.7 : 1,
-      }}
     >
       <i class={loading ? 'fas fa-spinner fa-spin' : `fas ${icon}`} />
       {loading ? 'Saving…' : label}
@@ -103,7 +56,7 @@ function SaveBtn({ loading, label, icon, onClick }: {
 
 function CardLabel({ icon, text }: { icon: string; text: string }): VNode {
   return (
-    <div style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '7px' }}>
+    <div class="stg-card-label">
       <i class={`fas ${icon}`} />
       {text}
     </div>
@@ -238,71 +191,58 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
   return (
     <div>
       {/* Company info */}
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-id-card" text="Company Information" />
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelSt}>Company Name</label>
-          <input type="text" value={name} onInput={e => setName((e.target as HTMLInputElement).value)} maxLength={80} placeholder="My Company" style={inputSt()} />
-          <small style={smallSt}>Shown in sidebar, About, payroll documents, and leave applications</small>
+        <div class="stg-form-group">
+          <label>Company Name</label>
+          <input type="text" value={name} onInput={e => setName((e.target as HTMLInputElement).value)} maxLength={80} placeholder="My Company" />
+          <small>Shown in sidebar, About, payroll documents, and leave applications</small>
         </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelSt}>Address</label>
-          <input type="text" value={addr} onInput={e => setAddr((e.target as HTMLInputElement).value)} maxLength={160} placeholder="e.g. #64-70 Lady Hailes Avenue, San Fernando" style={inputSt()} />
+        <div class="stg-form-group">
+          <label>Address</label>
+          <input type="text" value={addr} onInput={e => setAddr((e.target as HTMLInputElement).value)} maxLength={160} placeholder="e.g. #64-70 Lady Hailes Avenue, San Fernando" />
         </div>
-        <div style={{ ...fgSt, marginBottom: '16px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>Phone</label>
-            <input type="text" value={phone} onInput={e => setPhone((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 657-2457" style={inputSt()} />
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>Phone</label>
+            <input type="text" value={phone} onInput={e => setPhone((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 657-2457" />
           </div>
-          <div style={fgItem}>
-            <label style={labelSt}>Email</label>
-            <input type="email" value={email} onInput={e => setEmail((e.target as HTMLInputElement).value)} maxLength={100} placeholder="e.g. info@company.tt" style={inputSt()} />
-          </div>
-        </div>
-        <div style={{ ...fgSt, marginBottom: '16px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>NIS Registration No.</label>
-            <input type="text" value={nis} onInput={e => setNis((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 1234567" style={inputSt()} />
-          </div>
-          <div style={fgItem}>
-            <label style={labelSt}>BIR File No.</label>
-            <input type="text" value={bir} onInput={e => setBir((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 100123456" style={inputSt()} />
+          <div class="stg-form-group">
+            <label>Email</label>
+            <input type="email" value={email} onInput={e => setEmail((e.target as HTMLInputElement).value)} maxLength={100} placeholder="e.g. info@company.tt" />
           </div>
         </div>
-        <div style={{ ...fgSt, marginBottom: '20px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>Currency</label>
-            <input type="text" value="TT" readonly style={inputSt(true)} />
-            <small style={smallSt}>Fixed to TT — contact your administrator to change</small>
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>NIS Registration No.</label>
+            <input type="text" value={nis} onInput={e => setNis((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 1234567" />
           </div>
-          <div style={fgItem}>
-            <label style={labelSt}>Time Zone</label>
-            <select disabled style={{ ...inputSt(true), cursor: 'not-allowed' }}><option>America/Port_of_Spain</option></select>
-            <small style={smallSt}>Contact your administrator to change</small>
+          <div class="stg-form-group">
+            <label>BIR File No.</label>
+            <input type="text" value={bir} onInput={e => setBir((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 100123456" />
+          </div>
+        </div>
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>Currency</label>
+            <input type="text" value="TT" readonly class="stg-readonly" />
+            <small>Fixed to TT — contact your administrator to change</small>
+          </div>
+          <div class="stg-form-group">
+            <label>Time Zone</label>
+            <select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select>
+            <small>Contact your administrator to change</small>
           </div>
         </div>
         <SaveBtn loading={saving} label="Save Changes" icon="fa-check" onClick={() => void handleSaveInfo()} />
       </div>
 
       {/* Logo & Branding */}
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-image" text="Logo & Branding" />
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div class="stg-logo-row">
           {/* Preview */}
-          <div
-            style={{
-              width:          '96px',
-              height:         '96px',
-              border:         '2px solid #e5e7eb',
-              borderRadius:   '12px',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              overflow:       'hidden',
-              flexShrink:     0,
-              background:     '#f9fafb',
-            }}
-          >
+          <div class="stg-logo-preview-wrap">
             {logoPreview ? (
               <img
                 ref={logoImgRef}
@@ -312,45 +252,45 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
                 style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: logoRadius }}
               />
             ) : (
-              <i class="fas fa-image" style={{ fontSize: '28px', color: '#D1D5DB' }} />
+              <i class="fas fa-image" style={{ fontSize: '28px', color: 'var(--text-muted)' }} />
             )}
           </div>
           {/* Controls */}
           <div style={{ flex: 1, minWidth: '0' }}>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            <div class="stg-card-actions" style={{ justifyContent: 'flex-start', marginBottom: '8px' }}>
               <button
                 type="button"
+                class="stg-btn-outline"
                 onClick={() => fileRef.current?.click()}
-                style={{ padding: '8px 16px', border: '1px solid #1B2D55', borderRadius: '7px', background: '#fff', color: '#1B2D55', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <i class="fas fa-upload" /> Choose Logo
               </button>
               <button
                 type="button"
+                class="stg-btn-save"
                 onClick={() => void handleSaveLogo()}
                 disabled={!logoB64 || uploadingLogo}
-                style={{ padding: '8px 16px', border: 'none', borderRadius: '7px', background: logoB64 ? '#1B2D55' : '#e5e7eb', color: logoB64 ? '#fff' : '#9CA3AF', fontSize: '13px', fontWeight: 600, cursor: logoB64 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <i class={uploadingLogo ? 'fas fa-spinner fa-spin' : 'fas fa-check'} />
                 {uploadingLogo ? 'Uploading…' : 'Save Logo'}
               </button>
             </div>
-            {logoFileName && <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '6px' }}>{logoFileName}</div>}
-            <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: 1.5, margin: 0 }}>PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page.</p>
+            {logoFileName && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>{logoFileName}</div>}
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page.</p>
           </div>
         </div>
       </div>
 
       {/* Reset + Save all row */}
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div class="stg-card-actions" style={{ justifyContent: 'flex-start' }}>
         <button
           type="button"
+          class="stg-btn-outline"
           onClick={() => {
             setName('My Company'); setAddr(''); setPhone(''); setEmail(''); setNis(''); setBir('');
             toast.info('Fields reset — click Save Changes to apply.');
           }}
-          style={{ padding: '9px 18px', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: '#374151', display: 'flex', alignItems: 'center', gap: '7px' }}
         >
           <i class="fas fa-rotate-left" /> Reset Defaults
         </button>
@@ -411,64 +351,63 @@ function AttendanceRulesPanel({ settings }: { settings: AppSettings }): VNode {
   }, [workStart, workEnd]);
 
   const prefixInput = (value: string, onChange: (v: string) => void, prefix: string, suffix?: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
-      <span style={{ padding: '9px 10px', background: '#f9fafb', borderRight: '1px solid #e5e7eb', fontSize: '13px', color: '#6B7280', flexShrink: 0 }}>{prefix}</span>
+    <div class={prefix ? 'stg-input-prefix-wrap' : suffix ? 'stg-input-suffix-wrap' : undefined}>
+      {prefix && <span class="stg-input-prefix">{prefix}</span>}
       <input
         type="number"
         value={value}
         onInput={e => onChange((e.target as HTMLInputElement).value)}
         min="0"
         step="0.01"
-        style={{ flex: 1, padding: '9px 10px', border: 'none', outline: 'none', fontSize: '14px', color: '#374151', background: 'transparent' }}
       />
-      {suffix && <span style={{ padding: '9px 10px', background: '#f9fafb', borderLeft: '1px solid #e5e7eb', fontSize: '13px', color: '#6B7280', flexShrink: 0 }}>{suffix}</span>}
+      {suffix && <span class="stg-input-suffix">{suffix}</span>}
     </div>
   );
 
   return (
     <div>
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-triangle-exclamation" text="Late & Absence Penalties" />
-        <div style={{ ...fgSt, marginBottom: '20px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>Late Penalty (per late day)</label>
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>Late Penalty (per late day)</label>
             {prefixInput(latePenalty, setLatePenalty, '$')}
-            <small style={smallSt}>Deducted for each late check-in during payroll</small>
+            <small>Deducted for each late check-in during payroll</small>
           </div>
-          <div style={fgItem}>
-            <label style={labelSt}>Absent / Leave Fine (per day)</label>
+          <div class="stg-form-group">
+            <label>Absent / Leave Fine (per day)</label>
             {prefixInput(leaveFine, setLeaveFine, '$')}
-            <small style={smallSt}>Deducted for each absent day in the period</small>
+            <small>Deducted for each absent day in the period</small>
           </div>
         </div>
         <CardLabel icon="fa-map-pin" text="Check-In Thresholds" />
-        <div style={{ ...fgSt, marginBottom: '20px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>Late Check-In Time</label>
-            <input type="time" value={lateThresh} onInput={e => setLateThresh((e.target as HTMLInputElement).value)} style={inputSt()} />
-            <small style={smallSt}>Check-ins after this time are flagged late</small>
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>Late Check-In Time</label>
+            <input type="time" value={lateThresh} onInput={e => setLateThresh((e.target as HTMLInputElement).value)} />
+            <small>Check-ins after this time are flagged late</small>
           </div>
-          <div style={fgItem}>
-            <label style={labelSt}>Max Geofence Distance</label>
+          <div class="stg-form-group">
+            <label>Max Geofence Distance</label>
             {prefixInput(maxDist, setMaxDist, '', 'm')}
-            <small style={smallSt}>Max metres from a site to allow check-in</small>
+            <small>Max metres from a site to allow check-in</small>
           </div>
         </div>
         <SaveBtn loading={savingRules} label="Save Rules" icon="fa-check" onClick={() => void handleSaveRules()} />
       </div>
 
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-business-time" text="Work Hours" />
-        <div style={{ ...fgSt, marginBottom: '20px' }}>
-          <div style={fgItem}>
-            <label style={labelSt}>Work Start Time</label>
-            <input type="time" value={workStart} onInput={e => setWorkStart((e.target as HTMLInputElement).value)} style={inputSt()} />
-            <small style={smallSt}>Earliest allowed check-in time</small>
+        <div class="stg-form-row">
+          <div class="stg-form-group">
+            <label>Work Start Time</label>
+            <input type="time" value={workStart} onInput={e => setWorkStart((e.target as HTMLInputElement).value)} />
+            <small>Earliest allowed check-in time</small>
           </div>
-          <div style={fgItem}>
-            <label style={labelSt}>Work End Time</label>
-            <input type="time" value={workEnd} onInput={e => setWorkEnd((e.target as HTMLInputElement).value)} style={inputSt()} />
-            <small style={smallSt}>Employees are auto signed-out at this time</small>
+          <div class="stg-form-group">
+            <label>Work End Time</label>
+            <input type="time" value={workEnd} onInput={e => setWorkEnd((e.target as HTMLInputElement).value)} />
+            <small>Employees are auto signed-out at this time</small>
           </div>
         </div>
         <SaveBtn loading={savingHours} label="Save Work Hours" icon="fa-business-time" onClick={() => void handleSaveHours()} />
@@ -484,7 +423,7 @@ function AppearancePanel(): VNode {
   const setColorScheme = useSessionStore(s => s.setColorScheme);
 
   return (
-    <div style={card}>
+    <div class="stg-card">
       <CardLabel icon="fa-swatchbook" text="Colour Theme" />
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         {COLOUR_THEMES.map(t => {
@@ -500,15 +439,15 @@ function AppearancePanel(): VNode {
                 alignItems:     'center',
                 gap:            '8px',
                 padding:        '12px 16px',
-                border:         active ? `2px solid ${t.swatch}` : '2px solid #e5e7eb',
-                borderRadius:   '10px',
-                background:     active ? `${t.swatch}12` : '#fff',
+                border:         active ? `2px solid ${t.swatch}` : '2px solid var(--border)',
+                borderRadius:   '14px',
+                background:     active ? `${t.swatch}12` : 'var(--bg-card)',
                 cursor:         'pointer',
                 minWidth:       '80px',
               }}
             >
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: t.swatch, boxShadow: active ? `0 0 0 3px ${t.swatch}44` : 'none' }} />
-              <span style={{ fontSize: '12px', fontWeight: 600, color: active ? t.swatch : '#6B7280' }}>{t.label}</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: active ? t.swatch : 'var(--text-secondary)' }}>{t.label}</span>
             </button>
           );
         })}
@@ -525,7 +464,7 @@ function LayoutPanel(): VNode {
 
   return (
     <div>
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-sidebar" text="Navigation Style" />
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           {LAYOUT_MODES.map(m => {
@@ -539,44 +478,44 @@ function LayoutPanel(): VNode {
                   flex:           '1 1 0',
                   minWidth:       '140px',
                   padding:        '16px',
-                  border:         active ? '2px solid #1B2D55' : '2px solid #e5e7eb',
-                  borderRadius:   '10px',
-                  background:     active ? '#EFF6FF' : '#fff',
+                  border:         active ? '2px solid var(--siomac-navy)' : '2px solid var(--border)',
+                  borderRadius:   '14px',
+                  background:     active ? 'var(--bg-subtle, #f5f7fb)' : 'var(--bg-card)',
                   cursor:         'pointer',
                   textAlign:      'left',
                 }}
               >
-                <i class={`fas ${m.icon}`} style={{ fontSize: '20px', color: active ? '#1B2D55' : '#9CA3AF', display: 'block', marginBottom: '8px' }} />
-                <div style={{ fontSize: '13px', fontWeight: 700, color: active ? '#1B2D55' : '#374151' }}>{m.label}</div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{m.desc}</div>
+                <i class={`fas ${m.icon}`} style={{ fontSize: '20px', color: active ? 'var(--siomac-navy)' : 'var(--text-muted)', display: 'block', marginBottom: '8px' }} />
+                <div style={{ fontSize: '0.83rem', fontWeight: 700, color: active ? 'var(--siomac-navy)' : 'var(--text-primary)' }}>{m.label}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{m.desc}</div>
               </button>
             );
           })}
         </div>
       </div>
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-gauge" text="Dashboard Preferences" />
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelSt}>Default Dashboard View</label>
-          <select disabled style={{ ...inputSt(true), cursor: 'not-allowed', opacity: 0.6 }}>
+        <div class="stg-form-group">
+          <label>Default Dashboard View</label>
+          <select disabled class="stg-readonly" style={{ opacity: 0.6 }}>
             <option>Operations Overview</option>
             <option>Attendance Analytics</option>
             <option>Live Map</option>
           </select>
-          <small style={smallSt}>Coming soon</small>
+          <small>Coming soon</small>
         </div>
         {[
           { label: 'Auto-refresh dashboard',  desc: 'Refresh stats every 30 seconds — coming soon', checked: true  },
           { label: 'Compact table rows',      desc: 'Reduce row height in all data tables — coming soon', checked: false },
         ].map(sw => (
-          <div key={sw.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #f3f4f6' }}>
+          <div key={sw.label} class="stg-switch-group">
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>{sw.label}</div>
-              <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{sw.desc}</div>
+              <div class="stg-switch-label">{sw.label}</div>
+              <div class="stg-switch-desc">{sw.desc}</div>
             </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px', flexShrink: 0 }}>
-              <input type="checkbox" checked={sw.checked} disabled style={{ opacity: 0, width: 0, height: 0 }} />
-              <span style={{ position: 'absolute', inset: 0, background: sw.checked ? '#1B2D55' : '#D1D5DB', borderRadius: '11px', opacity: 0.5, cursor: 'not-allowed' }} />
+            <label class="stg-toggle">
+              <input type="checkbox" checked={sw.checked} disabled />
+              <span class="stg-slider" />
             </label>
           </div>
         ))}
@@ -590,9 +529,9 @@ function LayoutPanel(): VNode {
 
 function NotificationsPanel(): VNode {
   return (
-    <div style={card}>
+    <div class="stg-card">
       <CardLabel icon="fa-bell" text="Notification Preferences" />
-      <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px', lineHeight: 1.6 }}>
+      <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
         Choose which types of in-app notifications you receive. Email and WhatsApp
         delivery will be available in a future update.
       </p>
@@ -615,44 +554,44 @@ function SecurityPanel(): VNode {
 
   return (
     <div>
-      <div style={card}>
+      <div class="stg-card">
         <CardLabel icon="fa-lock" text="Access & Session" />
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelSt}>Session Timeout</label>
-          <select disabled style={{ ...inputSt(true), cursor: 'not-allowed', opacity: 0.6 }}>
+        <div class="stg-form-group">
+          <label>Session Timeout</label>
+          <select disabled class="stg-readonly" style={{ opacity: 0.6 }}>
             <option value="60">60 minutes</option>
             <option value="30">30 minutes</option>
             <option value="120">2 hours</option>
           </select>
-          <small style={smallSt}>Contact your administrator to change the session duration</small>
+          <small>Contact your administrator to change the session duration</small>
         </div>
         {[
           { label: 'Two-Factor Authentication', desc: 'Require a one-time code at login — coming soon',     checked: false },
           { label: 'Login alerts via email',    desc: 'Notify when a new device logs in — coming soon',     checked: false },
-        ].map((sw, i) => (
-          <div key={sw.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: i >= 0 ? '1px solid #f3f4f6' : 'none' }}>
+        ].map(sw => (
+          <div key={sw.label} class="stg-switch-group">
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>{sw.label}</div>
-              <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>{sw.desc}</div>
+              <div class="stg-switch-label">{sw.label}</div>
+              <div class="stg-switch-desc">{sw.desc}</div>
             </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px', flexShrink: 0 }}>
-              <input type="checkbox" checked={sw.checked} disabled style={{ opacity: 0, width: 0, height: 0 }} />
-              <span style={{ position: 'absolute', inset: 0, background: '#D1D5DB', borderRadius: '11px', opacity: 0.5, cursor: 'not-allowed' }} />
+            <label class="stg-toggle">
+              <input type="checkbox" checked={sw.checked} disabled />
+              <span class="stg-slider" />
             </label>
           </div>
         ))}
       </div>
 
       {/* Danger zone */}
-      <div style={{ ...card, border: '1px solid #FECDD3' }}>
+      <div class="stg-card stg-danger-zone">
         <CardLabel icon="fa-triangle-exclamation" text="Danger Zone" />
-        <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
           Clear all locally cached preferences, theme choices, and session tokens, then reload the page. Your server-side data is not affected.
         </p>
         <button
           type="button"
+          class="stg-btn-outline stg-danger-label"
           onClick={handleClearCache}
-          style={{ padding: '9px 18px', background: '#fff', border: '1px solid #FECDD3', borderRadius: '8px', color: '#BE123C', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '7px' }}
         >
           <i class="fas fa-trash-can" /> Clear Local Settings
         </button>
@@ -702,51 +641,40 @@ export function SettingsSection(): VNode {
     <div style={{ padding: '24px' }}>
 
       {/* Page hero */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <i class="fas fa-sliders" style={{ fontSize: '20px', color: '#1B2D55' }} />
+      <div class="stg-page-hero">
+        <div class="stg-page-hero-icon">
+          <i class="fas fa-sliders" />
         </div>
         <div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>Settings</div>
-          <div style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>Manage your workspace, appearance, and account preferences</div>
+          <div class="stg-page-hero-title">Settings</div>
+          <div class="stg-page-hero-sub">Manage your workspace, appearance, and account preferences</div>
         </div>
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+      <div class="stg-layout">
 
         {/* Left nav */}
-        <nav
-          style={{
-            width:        '220px',
-            flexShrink:   0,
-            background:   '#fff',
-            borderRadius: '12px',
-            boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-            padding:      '12px',
-            position:     'sticky',
-            top:          '16px',
-          }}
-        >
+        <nav class="stg-nav">
           {/* Group: Workspace (admin only) */}
           {isAdmin && (
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', padding: '4px 8px', marginBottom: '4px' }}>Workspace</div>
+            <div class="stg-nav-group">
+              <div class="stg-nav-group-label">Workspace</div>
               {navItems.filter(n => n.adminOnly).map(n => (
                 <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
               ))}
             </div>
           )}
           {/* Group: Personal */}
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', padding: '4px 8px', marginBottom: '4px' }}>Personal</div>
+          <div class="stg-nav-group">
+            <div class="stg-nav-group-label">Personal</div>
             {navItems.filter(n => !n.adminOnly && ['appearance','layout','notifications'].includes(n.id)).map(n => (
               <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
             ))}
           </div>
           {/* Group: System */}
-          <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.8px', padding: '4px 8px', marginBottom: '4px' }}>System</div>
+          <div class="stg-nav-group">
+            <div class="stg-nav-group-label">System</div>
             {navItems.filter(n => n.id === 'security').map(n => (
               <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
             ))}
@@ -754,29 +682,18 @@ export function SettingsSection(): VNode {
         </nav>
 
         {/* Right content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div class="stg-content">
           {/* Panel header */}
-          <div
-            style={{
-              background:   '#fff',
-              borderRadius: '12px',
-              boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-              padding:      '16px 20px',
-              marginBottom: '16px',
-              display:      'flex',
-              alignItems:   'center',
-              gap:          '12px',
-            }}
-          >
+          <div class="stg-panel-header">
             {(() => {
               const n = NAV_ITEMS.find(x => x.id === activeTab)!;
               return (
                 <>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: n.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <i class={`fas ${n.icon}`} style={{ color: n.iconColor, fontSize: '15px' }} />
+                  <div class="stg-panel-icon" style={{ background: n.iconBg }}>
+                    <i class={`fas ${n.icon}`} style={{ color: n.iconColor }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>{PANEL_LABEL[activeTab]}</div>
+                    <div class="stg-panel-title">{PANEL_LABEL[activeTab]}</div>
                   </div>
                 </>
               );
@@ -808,26 +725,14 @@ function NavBtn({ item, active, onClick }: { item: NavItem; active: boolean; onC
   return (
     <button
       type="button"
+      class={active ? 'stg-nav-item active' : 'stg-nav-item'}
       onClick={onClick}
-      style={{
-        width:        '100%',
-        display:      'flex',
-        alignItems:   'center',
-        gap:          '10px',
-        padding:      '9px 10px',
-        border:       'none',
-        borderRadius: '8px',
-        background:   active ? '#EFF6FF' : 'transparent',
-        cursor:       'pointer',
-        textAlign:    'left',
-        marginBottom: '2px',
-      }}
     >
-      <span style={{ width: '28px', height: '28px', borderRadius: '7px', background: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <i class={`fas ${item.icon}`} style={{ fontSize: '12px', color: item.iconColor }} />
+      <span class="stg-nav-icon" style={{ background: item.iconBg }}>
+        <i class={`fas ${item.icon}`} style={{ color: item.iconColor }} />
       </span>
-      <span style={{ flex: 1, fontSize: '13px', fontWeight: active ? 700 : 500, color: active ? '#1B2D55' : '#374151' }}>{item.label}</span>
-      <i class="fas fa-chevron-right" style={{ fontSize: '10px', color: active ? '#1B2D55' : '#D1D5DB' }} />
+      <span class="stg-nav-label">{item.label}</span>
+      <i class="fas fa-chevron-right stg-nav-arrow" />
     </button>
   );
 }
@@ -836,11 +741,11 @@ function NavBtn({ item, active, onClick }: { item: NavItem; active: boolean; onC
 
 function LoadingSkeleton(): VNode {
   return (
-    <div style={card}>
+    <div class="stg-card">
       {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} style={{ marginBottom: '16px' }}>
-          <div style={{ height: '13px', width: '120px', background: '#f3f4f6', borderRadius: '4px', marginBottom: '8px' }} />
-          <div style={{ height: '38px', background: '#f3f4f6', borderRadius: '8px' }} />
+        <div key={i} class="stg-form-group">
+          <div style={{ height: '13px', width: '120px', background: 'var(--bg-subtle, #f5f7fb)', borderRadius: '4px', marginBottom: '8px' }} />
+          <div style={{ height: '38px', background: 'var(--bg-subtle, #f5f7fb)', borderRadius: '14px' }} />
         </div>
       ))}
     </div>

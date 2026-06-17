@@ -9,6 +9,10 @@
  * After a successful save, calls setProfileImage / updates fullName in the
  * session store so all pnp pills auto-update via reactive subscriptions.
  *
+ * Presentation uses the branded `.profile-*` design system defined in
+ * assets/styles/profile.css (navy banner, avatar section, detail sections,
+ * branded form groups + save button) rather than ad-hoc inline styles.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/UI_DESIGN_SYSTEM.md
@@ -307,199 +311,76 @@ export function MyProfileSection(): VNode {
     }
   }, [username, profile.fullName, oldPwd, newPwd, confirmPwd]);
 
-  // ── Shared input style ────────────────────────────────────────────────────
-  const inputStyle = (readonly?: boolean) => ({
-    width:        '100%',
-    padding:      '9px 12px',
-    border:       '1px solid #e5e7eb',
-    borderRadius: '8px',
-    fontSize:     '14px',
-    background:   readonly ? '#f9fafb' : '#fff',
-    color:        '#374151',
-    outline:      'none',
-    boxSizing:    'border-box' as const,
-    cursor:       readonly ? 'default' : 'text',
-  });
-
-  const labelStyle = {
-    display:      'block',
-    fontSize:     '13px',
-    fontWeight:   '600' as const,
-    color:        '#374151',
-    marginBottom: '5px',
-  };
-
-  const formGroupStyle = {
-    flex:     '1 1 0',
-    minWidth: '200px',
-  };
-
-  const saveBtn = (loading: boolean, label: string, icon: string) => (
-    <button
-      type="button"
-      onClick={label === 'Save Changes' ? () => void handleSavePersonal() : () => void handleSavePassword()}
-      disabled={loading}
-      style={{
-        padding:      '10px 22px',
-        background:   '#1B2D55',
-        color:        '#fff',
-        border:       'none',
-        borderRadius: '8px',
-        fontSize:     '14px',
-        fontWeight:   '600',
-        cursor:       loading ? 'not-allowed' : 'pointer',
-        display:      'flex',
-        alignItems:   'center',
-        gap:          '7px',
-        opacity:      loading ? 0.7 : 1,
-      }}
-    >
-      <i class={loading ? 'fas fa-spinner fa-spin' : `fas ${icon}`} />
-      {loading ? 'Saving…' : label}
-    </button>
-  );
-
   return (
-    <div style={{ padding: '24px' }}>
+    <div class="data-section">
+
+      {/* Page header */}
+      <div class="profile-page-header">
+        <div>
+          <h1 class="profile-page-title">My Profile</h1>
+          <p class="profile-page-sub">Manage your personal information, security and activity.</p>
+        </div>
+      </div>
 
       {/* Hero card */}
-      <div
-        style={{
-          background:   '#fff',
-          borderRadius: '16px',
-          boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-          overflow:     'hidden',
-          marginBottom: '24px',
-        }}
-      >
-        {/* Cover */}
-        <div
-          style={{
-            height:     '100px',
-            background: 'linear-gradient(135deg, #1B2D55 0%, #2563EB 100%)',
-          }}
-        />
+      <div class="profile-card">
+        {/* Cover banner */}
+        <div class="profile-banner" />
 
-        {/* Avatar + info row */}
-        <div style={{ padding: '0 24px 24px', position: 'relative' }}>
-          {/* Avatar overlapping cover */}
-          <div
-            style={{
-              display:     'flex',
-              alignItems:  'flex-end',
-              gap:         '16px',
-              marginTop:   '-40px',
-              flexWrap:    'wrap',
-            }}
-          >
-            <div style={{ position: 'relative' }}>
-              <ProfileAvatar
-                src={previewUrl}
-                initial={initial}
-                size={88}
-                onPick={handlePickPhoto}
-              />
-              {/* Camera badge */}
-              <div
-                onClick={handlePickPhoto}
-                style={{
-                  position:       'absolute',
-                  bottom:         0,
-                  right:          0,
-                  width:          '26px',
-                  height:         '26px',
-                  borderRadius:   '50%',
-                  background:     '#fff',
-                  border:         '2px solid #e5e7eb',
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  cursor:         'pointer',
-                  fontSize:       '11px',
-                  color:          '#1B2D55',
-                }}
-              >
-                <i class="fas fa-camera" />
-              </div>
+        {/* Avatar overlapping cover */}
+        <div class="profile-avatar-section">
+          <div class="profile-avatar-wrapper" onClick={handlePickPhoto}>
+            <ProfileAvatar
+              src={previewUrl}
+              initial={initial}
+              size={88}
+              onPick={handlePickPhoto}
+            />
+            {/* Camera badge */}
+            <div class="profile-avatar-edit">
+              <i class="fas fa-camera" />
             </div>
+          </div>
+        </div>
 
-            <div style={{ paddingBottom: '4px', flex: 1, minWidth: '0' }}>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#111827' }}>
-                {loadingProfile ? '—' : profile.fullName}
-              </div>
-              <div style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>
-                {capRole(role)}
-                {profile.department ? ` · ${profile.department}` : ''}
-              </div>
-              <span
-                style={{
-                  display:      'inline-flex',
-                  alignItems:   'center',
-                  gap:          '4px',
-                  marginTop:    '6px',
-                  padding:      '2px 10px',
-                  borderRadius: '999px',
-                  background:   '#DCFCE7',
-                  color:        '#166534',
-                  fontSize:     '12px',
-                  fontWeight:   '600',
-                }}
-              >
-                <i class="fas fa-check-circle" /> Active
-              </span>
-            </div>
-
-            {/* Remove photo button */}
-            {previewUrl && (
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                style={{
-                  padding:      '7px 14px',
-                  border:       '1px solid #fca5a5',
-                  borderRadius: '8px',
-                  background:   '#fff',
-                  color:        '#DC2626',
-                  fontSize:     '12px',
-                  fontWeight:   '500',
-                  cursor:       'pointer',
-                  display:      'flex',
-                  alignItems:   'center',
-                  gap:          '5px',
-                  alignSelf:    'flex-end',
-                  marginBottom: '4px',
-                }}
-              >
-                <i class="fas fa-trash" /> Remove Photo
-              </button>
-            )}
+        {/* Identity + meta */}
+        <div class="profile-info-block">
+          <div class="profile-display-name">
+            {loadingProfile ? '—' : profile.fullName}
+          </div>
+          <div>
+            <span class="profile-display-role">
+              {capRole(role)}
+              {profile.department ? ` · ${profile.department}` : ''}
+            </span>
           </div>
 
           {/* Contact chips */}
-          <div
-            style={{
-              display:   'flex',
-              gap:       '20px',
-              flexWrap:  'wrap',
-              marginTop: '16px',
-            }}
-          >
+          <div class="profile-display-meta">
             {[
-              { icon: 'fa-envelope', value: profile.email        || '—' },
-              { icon: 'fa-phone',    value: profile.phone        || '—' },
-              { icon: 'fa-building', value: profile.department   || '—' },
-              { icon: 'fa-id-badge', value: profile.username     || '—' },
-              { icon: 'fa-briefcase',value: profile.position     || '—' },
+              { icon: 'fa-envelope',  value: profile.email      || '—' },
+              { icon: 'fa-phone',     value: profile.phone      || '—' },
+              { icon: 'fa-building',  value: profile.department || '—' },
+              { icon: 'fa-id-badge',  value: profile.username   || '—' },
+              { icon: 'fa-briefcase', value: profile.position   || '—' },
             ].map(c => (
-              <div
-                key={c.icon}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#6B7280' }}
-              >
-                <i class={`fas ${c.icon}`} style={{ color: '#9CA3AF' }} />
+              <div key={c.icon} class="profile-meta-item">
+                <i class={`fas ${c.icon}`} />
                 {c.value}
               </div>
             ))}
           </div>
+
+          {/* Remove photo button */}
+          {previewUrl && (
+            <button
+              type="button"
+              class="profile-remove-photo-btn"
+              onClick={handleRemovePhoto}
+            >
+              <i class="fas fa-trash" /> Remove Photo
+            </button>
+          )}
         </div>
       </div>
 
@@ -513,257 +394,192 @@ export function MyProfileSection(): VNode {
       />
 
       {/* Tabs bar */}
-      <div
-        style={{
-          display:      'flex',
-          gap:          '4px',
-          marginBottom: '20px',
-          background:   '#fff',
-          borderRadius: '10px',
-          padding:      '4px',
-          boxShadow:    '0 1px 4px rgba(0,0,0,0.06)',
-          overflowX:    'auto',
-        }}
-      >
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            style={{
-              padding:      '8px 18px',
-              border:       'none',
-              borderRadius: '7px',
-              fontSize:     '13px',
-              fontWeight:   '600',
-              cursor:       'pointer',
-              background:   tab === t.id ? '#1B2D55' : 'transparent',
-              color:        tab === t.id ? '#fff'    : '#6B7280',
-              display:      'flex',
-              alignItems:   'center',
-              gap:          '7px',
-              whiteSpace:   'nowrap',
-              transition:   'background 0.15s',
-            }}
-          >
-            <i class={`fas ${t.icon}`} />
-            {t.label}
-          </button>
-        ))}
+      <div class="section-header" style={{ marginTop: '20px' }}>
+        <div class="section-actions">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              class={tab === t.id ? 'profile-btn-save' : 'profile-remove-photo-btn'}
+              style={{
+                width:     'auto',
+                marginTop: 0,
+                ...(tab === t.id ? {} : { borderColor: 'var(--border)', color: 'var(--text-muted)' }),
+              }}
+              onClick={() => setTab(t.id)}
+            >
+              <i class={`fas ${t.icon}`} />
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab content card */}
-      <div
-        style={{
-          background:   '#fff',
-          borderRadius: '12px',
-          boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-          padding:      '24px',
-        }}
-      >
+      <div class="profile-card" style={{ borderRadius: '24px' }}>
+        <div class="profile-detail-section" style={{ background: 'white', borderRadius: '24px' }}>
 
-        {/* ── Personal Info ─────────────────────────────────────────────────── */}
-        {tab === 'personal' && (
-          <div>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Full Name</label>
-                <input
-                  type="text"
-                  value={formName}
-                  onInput={e => setFormName((e.target as HTMLInputElement).value)}
-                  placeholder="Full name"
-                  style={inputStyle()}
-                />
+          {/* ── Personal Info ─────────────────────────────────────────────────── */}
+          {tab === 'personal' && (
+            <div>
+              <div class="profile-section-title">
+                <i class="fas fa-user" /> Personal Information
               </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Employee ID</label>
-                <input
-                  type="text"
-                  value={profile.employeeNumber}
-                  readonly
-                  style={{ ...inputStyle(true), fontFamily: 'monospace' }}
-                />
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    value={formName}
+                    onInput={e => setFormName((e.target as HTMLInputElement).value)}
+                    placeholder="Full name"
+                  />
+                </div>
+                <div class="profile-form-group">
+                  <label>Employee ID</label>
+                  <input
+                    type="text"
+                    value={profile.employeeNumber}
+                    readonly
+                    class="profile-input-readonly"
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Email Address</label>
-                <input
-                  type="email"
-                  value={formEmail}
-                  onInput={e => setFormEmail((e.target as HTMLInputElement).value)}
-                  placeholder="your@email.com"
-                  style={inputStyle()}
-                />
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onInput={e => setFormEmail((e.target as HTMLInputElement).value)}
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <div class="profile-form-group">
+                  <label>Phone Number</label>
+                  <input
+                    type="tel"
+                    value={formPhone}
+                    onInput={e => setFormPhone((e.target as HTMLInputElement).value)}
+                    placeholder="(868) xxx-xxxx"
+                  />
+                </div>
               </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Phone Number</label>
-                <input
-                  type="tel"
-                  value={formPhone}
-                  onInput={e => setFormPhone((e.target as HTMLInputElement).value)}
-                  placeholder="(868) xxx-xxxx"
-                  style={inputStyle()}
-                />
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>Department</label>
+                  <input type="text" value={profile.department} readonly class="profile-input-readonly" />
+                </div>
+                <div class="profile-form-group">
+                  <label>Position</label>
+                  <input type="text" value={profile.position} readonly class="profile-input-readonly" />
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Department</label>
-                <input type="text" value={profile.department} readonly style={inputStyle(true)} />
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>Username</label>
+                  <input type="text" value={profile.username} readonly class="profile-input-readonly" />
+                </div>
+                <div class="profile-form-group" />
               </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Position</label>
-                <input type="text" value={profile.position} readonly style={inputStyle(true)} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '24px' }}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Username</label>
-                <input type="text" value={profile.username} readonly style={inputStyle(true)} />
-              </div>
-              <div style={formGroupStyle} />
-            </div>
-            {saveBtn(saving, 'Save Changes', 'fa-save')}
-          </div>
-        )}
-
-        {/* ── Security ──────────────────────────────────────────────────────── */}
-        {tab === 'security' && (
-          <div>
-            <div style={{ maxWidth: '420px', marginBottom: '20px' }}>
-              <label style={labelStyle}>Current Password</label>
-              <input
-                type="password"
-                value={oldPwd}
-                onInput={e => setOldPwd((e.target as HTMLInputElement).value)}
-                placeholder="Required to change password"
-                style={inputStyle()}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', maxWidth: '860px', marginBottom: '20px' }}>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>New Password</label>
-                <input
-                  type="password"
-                  value={newPwd}
-                  onInput={e => setNewPwd((e.target as HTMLInputElement).value)}
-                  placeholder="Min. 6 characters"
-                  style={inputStyle()}
-                />
-              </div>
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Confirm New Password</label>
-                <input
-                  type="password"
-                  value={confirmPwd}
-                  onInput={e => setConfirmPwd((e.target as HTMLInputElement).value)}
-                  placeholder="Confirm new password"
-                  style={inputStyle()}
-                />
-              </div>
-            </div>
-            <div style={{ maxWidth: '420px', marginBottom: '24px' }}>
-              <label style={labelStyle}>Two-Factor Authentication</label>
-              <select
-                disabled
-                style={{ ...inputStyle(true), opacity: 0.6, cursor: 'not-allowed' }}
+              <button
+                type="button"
+                class="profile-btn-save"
+                onClick={() => void handleSavePersonal()}
+                disabled={saving}
+                style={saving ? { opacity: 0.7, cursor: 'not-allowed' } : undefined}
               >
-                <option value="disabled">Disabled (coming soon)</option>
-              </select>
+                <i class={saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'} />
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => void handleSavePassword()}
-              disabled={savingPwd}
-              style={{
-                padding:      '10px 22px',
-                background:   '#1B2D55',
-                color:        '#fff',
-                border:       'none',
-                borderRadius: '8px',
-                fontSize:     '14px',
-                fontWeight:   '600',
-                cursor:       savingPwd ? 'not-allowed' : 'pointer',
-                display:      'flex',
-                alignItems:   'center',
-                gap:          '7px',
-                opacity:      savingPwd ? 0.7 : 1,
-              }}
-            >
-              <i class={savingPwd ? 'fas fa-spinner fa-spin' : 'fas fa-shield-alt'} />
-              {savingPwd ? 'Updating…' : 'Update Security'}
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* ── Activity ──────────────────────────────────────────────────────── */}
-        {tab === 'activity' && (
-          <div>
-            {loadingActivity ? (
-              Array.from({ length: 5 }, (_, i) => (
-                <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f3f4f6', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ height: '14px', background: '#f3f4f6', borderRadius: '4px', marginBottom: '6px', width: '60%' }} />
-                    <div style={{ height: '12px', background: '#f3f4f6', borderRadius: '4px', width: '40%' }} />
-                  </div>
-                </div>
-              ))
-            ) : activity.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 24px', color: '#9CA3AF' }}>
-                <i class="fas fa-history" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', color: '#D1D5DB' }} />
-                No recent activity
+          {/* ── Security ──────────────────────────────────────────────────────── */}
+          {tab === 'security' && (
+            <div>
+              <div class="profile-section-title">
+                <i class="fas fa-lock" /> Security
               </div>
-            ) : (
-              activity.map((ev, i) => (
-                <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '16px' }}>
-                  <div
-                    style={{
-                      width:          '36px',
-                      height:         '36px',
-                      borderRadius:   '50%',
-                      background:     '#EFF6FF',
-                      display:        'flex',
-                      alignItems:     'center',
-                      justifyContent: 'center',
-                      flexShrink:     0,
-                    }}
-                  >
-                    <i class={`fas ${ev.icon}`} style={{ fontSize: '14px', color: '#1E40AF' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{ev.title}</div>
-                    <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>{ev.date}</div>
-                  </div>
+              <div class="profile-form-group">
+                <label>Current Password</label>
+                <input
+                  type="password"
+                  value={oldPwd}
+                  onInput={e => setOldPwd((e.target as HTMLInputElement).value)}
+                  placeholder="Required to change password"
+                />
+              </div>
+              <div class="profile-form-row">
+                <div class="profile-form-group">
+                  <label>New Password</label>
+                  <input
+                    type="password"
+                    value={newPwd}
+                    onInput={e => setNewPwd((e.target as HTMLInputElement).value)}
+                    placeholder="Min. 6 characters"
+                  />
+                  <div class="profile-pwd-hint">Use at least 6 characters.</div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+                <div class="profile-form-group">
+                  <label>Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPwd}
+                    onInput={e => setConfirmPwd((e.target as HTMLInputElement).value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              </div>
+              <div class="profile-form-group">
+                <label>Two-Factor Authentication</label>
+                <select disabled class="profile-input-readonly" style={{ opacity: 0.6 }}>
+                  <option value="disabled">Disabled (coming soon)</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                class="profile-btn-save"
+                onClick={() => void handleSavePassword()}
+                disabled={savingPwd}
+                style={savingPwd ? { opacity: 0.7, cursor: 'not-allowed' } : undefined}
+              >
+                <i class={savingPwd ? 'fas fa-spinner fa-spin' : 'fas fa-shield-alt'} />
+                {savingPwd ? 'Updating…' : 'Update Security'}
+              </button>
+            </div>
+          )}
 
-        {/* ── Documents ─────────────────────────────────────────────────────── */}
-        {tab === 'documents' && (
-          <div>
-            {role === 'employee' ? (
-              <>
-                {STATIC_DOCS.map(doc => (
-                  <div
-                    key={doc.name}
-                    style={{
-                      display:      'flex',
-                      alignItems:   'center',
-                      gap:          '14px',
-                      padding:      '14px 0',
-                      borderBottom: '1px solid #f3f4f6',
-                    }}
-                  >
+          {/* ── Activity ──────────────────────────────────────────────────────── */}
+          {tab === 'activity' && (
+            <div class="recent-activity-section">
+              <div class="profile-section-title">
+                <i class="fas fa-history" /> Recent Activity
+              </div>
+              {loadingActivity ? (
+                Array.from({ length: 5 }, (_, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f3f4f6', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: '14px', background: '#f3f4f6', borderRadius: '4px', marginBottom: '6px', width: '60%' }} />
+                      <div style={{ height: '12px', background: '#f3f4f6', borderRadius: '4px', width: '40%' }} />
+                    </div>
+                  </div>
+                ))
+              ) : activity.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)' }}>
+                  <i class="fas fa-history" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', color: '#D1D5DB' }} />
+                  No recent activity
+                </div>
+              ) : (
+                activity.map((ev, i) => (
+                  <div key={i} class="profile-meta-item" style={{ alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
                     <div
                       style={{
-                        width:          '40px',
-                        height:         '40px',
-                        borderRadius:   '8px',
+                        width:          '36px',
+                        height:         '36px',
+                        borderRadius:   '50%',
                         background:     '#EFF6FF',
                         display:        'flex',
                         alignItems:     'center',
@@ -771,62 +587,84 @@ export function MyProfileSection(): VNode {
                         flexShrink:     0,
                       }}
                     >
-                      <i class={`fas ${doc.icon}`} style={{ color: '#1E40AF', fontSize: '16px' }} />
+                      <i class={`fas ${ev.icon}`} style={{ fontSize: '14px', color: 'var(--siomac-navy)' }} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827' }}>{doc.name}</div>
-                      <div style={{ fontSize: '12px', color: '#9CA3AF' }}>{doc.size}</div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--siomac-navy)' }}>{ev.title}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{ev.date}</div>
                     </div>
-                    <button
-                      type="button"
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* ── Documents ─────────────────────────────────────────────────────── */}
+          {tab === 'documents' && (
+            <div>
+              <div class="profile-section-title">
+                <i class="fas fa-folder" /> Documents
+              </div>
+              {role === 'employee' ? (
+                <>
+                  {STATIC_DOCS.map(doc => (
+                    <div
+                      key={doc.name}
                       style={{
-                        padding:      '6px 14px',
-                        border:       '1px solid #e5e7eb',
-                        borderRadius: '7px',
-                        background:   '#fff',
-                        fontSize:     '12px',
-                        fontWeight:   '500',
-                        cursor:       'pointer',
-                        color:        '#374151',
                         display:      'flex',
                         alignItems:   'center',
-                        gap:          '5px',
+                        gap:          '14px',
+                        padding:      '14px 0',
+                        borderBottom: '1px solid var(--border)',
                       }}
                     >
-                      <i class="fas fa-download" /> Download
+                      <div
+                        style={{
+                          width:          '40px',
+                          height:         '40px',
+                          borderRadius:   '8px',
+                          background:     '#EFF6FF',
+                          display:        'flex',
+                          alignItems:     'center',
+                          justifyContent: 'center',
+                          flexShrink:     0,
+                        }}
+                      >
+                        <i class={`fas ${doc.icon}`} style={{ color: 'var(--siomac-navy)', fontSize: '16px' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--siomac-navy)' }}>{doc.name}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{doc.size}</div>
+                      </div>
+                      <button
+                        type="button"
+                        class="profile-remove-photo-btn"
+                        style={{ marginTop: 0, borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                      >
+                        <i class="fas fa-download" /> Download
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      class="profile-btn-save"
+                      style={{ width: 'auto', display: 'inline-flex' }}
+                    >
+                      <i class="fas fa-upload" /> Upload New Document
                     </button>
                   </div>
-                ))}
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    style={{
-                      padding:      '10px 22px',
-                      border:       '2px solid #1B2D55',
-                      borderRadius: '8px',
-                      background:   '#fff',
-                      color:        '#1B2D55',
-                      fontSize:     '14px',
-                      fontWeight:   '600',
-                      cursor:       'pointer',
-                      display:      'inline-flex',
-                      alignItems:   'center',
-                      gap:          '7px',
-                    }}
-                  >
-                    <i class="fas fa-upload" /> Upload New Document
-                  </button>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)' }}>
+                  <i class="fas fa-folder-open" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', color: '#D1D5DB' }} />
+                  Documents are available for employee accounts.
                 </div>
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px 24px', color: '#9CA3AF' }}>
-                <i class="fas fa-folder-open" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', color: '#D1D5DB' }} />
-                Documents are available for employee accounts.
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
+        </div>
       </div>
     </div>
   );

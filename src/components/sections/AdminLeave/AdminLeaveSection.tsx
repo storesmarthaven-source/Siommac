@@ -5,6 +5,10 @@
  * Replaces leave.js — admin side only.
  * Employee-/manager-leave (LeaveSection.tsx) was ported separately in Phase 4.
  *
+ * Reskinned to use the branded `.lv-*` design system from assets/styles/leaves.css
+ * (stat cards, filter bar, table, type/status badges, action pills, empty row)
+ * plus the shared `.btn`/`.page-header` classes — instead of ad-hoc inline styles.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/UI_DESIGN_SYSTEM.md
@@ -20,10 +24,6 @@ import { ConfirmDialog }   from '@shared/ConfirmDialog';
 import { toast }           from '@store';
 import {
   fmtLeaveDate,
-  leaveTypeBg,
-  leaveTypeFg,
-  leaveStatusBg,
-  leaveStatusFg,
   capStr,
 } from './utils';
 import type { LeaveDetail, LeaveRecord, LeaveTabFilter, LeaveType } from './types';
@@ -37,6 +37,27 @@ function esc(s: string | null | undefined): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/** Branded type-badge class from leaves.css. */
+function lvTypeClass(type: string): string {
+  const map: Record<string, string> = {
+    sick:    'lv-type-sick',
+    casual:  'lv-type-casual',
+    annual:  'lv-type-annual',
+    medical: 'lv-type-medical',
+  };
+  return map[type.toLowerCase()] ?? 'lv-type-casual';
+}
+
+/** Branded status-badge class from leaves.css. */
+function lvStatusClass(status: string): string {
+  const map: Record<string, string> = {
+    pending:  'lv-status-pending',
+    approved: 'lv-status-approved',
+    rejected: 'lv-status-rejected',
+  };
+  return map[status.toLowerCase()] ?? 'lv-status-pending';
 }
 
 const LEAVE_TYPES: Array<{ value: string; label: string }> = [
@@ -66,57 +87,22 @@ interface StatCardsProps {
 
 function LeaveStatCards({ pending, approved, rejected, total, loading }: StatCardsProps): VNode {
   const cards = [
-    { label: 'Pending',  value: pending,  icon: 'fas fa-clock',        bg: '#FFFBEB', fg: '#B45309', iconBg: '#FEF3C7' },
-    { label: 'Approved', value: approved, icon: 'fas fa-check-circle', bg: '#F0FDF4', fg: '#15803D', iconBg: '#DCFCE7' },
-    { label: 'Rejected', value: rejected, icon: 'fas fa-times-circle', bg: '#FFF1F2', fg: '#BE123C', iconBg: '#FFE4E6' },
-    { label: 'Total',    value: total,    icon: 'fas fa-chart-line',    bg: '#EFF6FF', fg: '#1E40AF', iconBg: '#DBEAFE' },
+    { label: 'Pending',  value: pending,  icon: 'fas fa-clock',        tone: 'medical' },
+    { label: 'Approved', value: approved, icon: 'fas fa-check-circle', tone: 'green'   },
+    { label: 'Rejected', value: rejected, icon: 'fas fa-times-circle', tone: 'red'     },
+    { label: 'Total',    value: total,    icon: 'fas fa-chart-line',   tone: 'navy'    },
   ];
 
   return (
-    <div
-      style={{
-        display:             'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-        gap:                 '16px',
-        marginBottom:        '24px',
-      }}
-    >
+    <div class="lv-stats-row">
       {cards.map(c => (
-        <div
-          key={c.label}
-          style={{
-            background:   '#fff',
-            borderRadius: '12px',
-            boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-            padding:      '20px',
-            display:      'flex',
-            alignItems:   'center',
-            gap:          '14px',
-          }}
-        >
-          <div
-            style={{
-              width:        '44px',
-              height:       '44px',
-              borderRadius: '10px',
-              background:   c.iconBg,
-              display:      'flex',
-              alignItems:   'center',
-              justifyContent: 'center',
-              flexShrink:   0,
-            }}
-          >
-            <i class={c.icon} style={{ fontSize: '18px', color: c.fg }} />
+        <div key={c.label} class="lv-stat-card">
+          <div class={`lv-stat-icon ${c.tone}`}>
+            <i class={c.icon} aria-hidden="true" />
           </div>
-          <div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827', lineHeight: 1 }}>
-              {loading ? (
-                <div style={{ width: '40px', height: '24px', background: '#f3f4f6', borderRadius: '4px' }} />
-              ) : (
-                c.value
-              )}
-            </div>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>{c.label}</div>
+          <div class="lv-stat-body">
+            <div class="lv-stat-value">{loading ? '—' : c.value}</div>
+            <div class="lv-stat-label">{c.label}</div>
           </div>
         </div>
       ))}
@@ -134,93 +120,49 @@ interface LeaveRowProps {
 }
 
 function LeaveRow({ record, onView, onPrint, onDelete }: LeaveRowProps): VNode {
-  const typeBg  = leaveTypeBg(record.type);
-  const typeFg  = leaveTypeFg(record.type);
-  const statBg  = leaveStatusBg(record.status);
-  const statFg  = leaveStatusFg(record.status);
-
-  const badgeStyle = (bg: string, fg: string) => ({
-    display:      'inline-block',
-    padding:      '2px 10px',
-    borderRadius: '999px',
-    fontSize:     '11px',
-    fontWeight:   '600' as const,
-    background:   bg,
-    color:        fg,
-    whiteSpace:   'nowrap' as const,
-  });
-
-  const btnStyle = (primary?: boolean) => ({
-    padding:      '4px 10px',
-    border:       primary ? 'none' : '1px solid #e5e7eb',
-    borderRadius: '6px',
-    background:   primary ? '#1B2D55' : '#fff',
-    color:        primary ? '#fff'    : '#374151',
-    cursor:       'pointer',
-    fontSize:     '11px',
-    fontWeight:   '500' as const,
-    display:      'flex' as const,
-    alignItems:   'center',
-    gap:          '4px',
-  });
-
   return (
-    <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+    <tr>
       {/* Employee */}
-      <td style={{ padding: '12px 16px', fontWeight: '600', color: '#111827', fontSize: '13px' }}>
-        {esc(record.employee)}
+      <td>
+        <div class="lv-emp-name">{esc(record.employee)}</div>
       </td>
       {/* Department */}
-      <td style={{ padding: '12px 16px' }}>
-        <span style={{ ...badgeStyle('#EFF6FF', '#1E40AF') }}>{esc(record.department)}</span>
+      <td>
+        <span class="lv-dept-label">{esc(record.department)}</span>
       </td>
       {/* Leave Type */}
-      <td style={{ padding: '12px 16px' }}>
-        <span style={{ ...badgeStyle(typeBg, typeFg) }}>{capStr(record.type)}</span>
+      <td>
+        <span class={`lv-type-badge ${lvTypeClass(record.type)}`}>{capStr(record.type)}</span>
       </td>
       {/* From */}
-      <td style={{ padding: '12px 16px', color: '#374151', fontSize: '13px' }}>
-        {fmtLeaveDate(record.fromDate)}
-      </td>
+      <td>{fmtLeaveDate(record.fromDate)}</td>
       {/* To */}
-      <td style={{ padding: '12px 16px', color: '#374151', fontSize: '13px' }}>
-        {fmtLeaveDate(record.toDate)}
-      </td>
+      <td>{fmtLeaveDate(record.toDate)}</td>
       {/* Days */}
-      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-        <span
-          style={{
-            display:      'inline-block',
-            padding:      '2px 10px',
-            borderRadius: '999px',
-            background:   '#F3F4F6',
-            color:        '#374151',
-            fontSize:     '12px',
-            fontWeight:   '600',
-          }}
-        >
-          {record.days}d
-        </span>
+      <td>
+        <span class="lv-days-pill">{record.days}d</span>
       </td>
       {/* Status */}
-      <td style={{ padding: '12px 16px' }}>
-        <span style={{ ...badgeStyle(statBg, statFg) }}>{record.status.toUpperCase()}</span>
+      <td>
+        <span class={`lv-status-badge ${lvStatusClass(record.status)}`}>{record.status.toUpperCase()}</span>
       </td>
       {/* Actions */}
-      <td style={{ padding: '12px 16px' }}>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          <button type="button" style={btnStyle(true)} onClick={() => onView(record.id)}>
-            <i class="fas fa-eye" /> View
+      <td>
+        <div class="lv-action-btns">
+          <button type="button" class="lv-act-btn lv-act-view" onClick={() => onView(record.id)}>
+            <i class="fas fa-eye" aria-hidden="true" /> View
           </button>
-          <button type="button" style={btnStyle()} onClick={() => onPrint(record.id)}>
-            <i class="fas fa-print" /> Print
+          <button type="button" class="lv-act-btn lv-act-print" onClick={() => onPrint(record.id)}>
+            <i class="fas fa-print" aria-hidden="true" /> Print
           </button>
           <button
             type="button"
-            style={{ ...btnStyle(), color: '#BE123C', borderColor: '#fecdd3' }}
+            class="lv-act-btn lv-act-delete"
+            aria-label="Delete"
+            title="Delete"
             onClick={() => onDelete(record.id, record.employee)}
           >
-            <i class="fas fa-trash" />
+            <i class="fas fa-trash" aria-hidden="true" />
           </button>
         </div>
       </td>
@@ -307,7 +249,7 @@ export function AdminLeaveSection(): VNode {
   const stats = data?.stats;
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div class="admin-leave-section">
 
       {/* Stat cards */}
       <LeaveStatCards
@@ -319,222 +261,98 @@ export function AdminLeaveSection(): VNode {
       />
 
       {/* Filters bar */}
-      <div
-        style={{
-          display:        'flex',
-          alignItems:     'center',
-          gap:            '12px',
-          flexWrap:       'wrap',
-          marginBottom:   '20px',
-          background:     '#fff',
-          borderRadius:   '10px',
-          padding:        '12px 16px',
-          boxShadow:      '0 1px 4px rgba(0,0,0,0.06)',
-        }}
-      >
-        {/* Search */}
-        <div style={{ position: 'relative', flexGrow: 1, minWidth: '180px' }}>
-          <i
-            class="fas fa-search"
-            style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', fontSize: '13px' }}
-          />
-          <input
-            type="text"
-            value={search}
-            onInput={e => setSearch((e.target as HTMLInputElement).value)}
-            placeholder="Search employee…"
-            style={{
-              paddingLeft:  '32px',
-              paddingRight: '10px',
-              paddingTop:   '7px',
-              paddingBottom:'7px',
-              border:       '1px solid #e5e7eb',
-              borderRadius: '7px',
-              fontSize:     '13px',
-              width:        '100%',
-              outline:      'none',
-            }}
-          />
-        </div>
-
+      <div class="lv-filters-bar">
         {/* Status tabs */}
-        <div style={{ display: 'flex', gap: '4px', background: '#f3f4f6', borderRadius: '8px', padding: '3px' }}>
+        <div class="lv-tabs">
           {TAB_LABELS.map(t => (
             <button
               key={t.id}
               type="button"
+              class={`lv-tab-btn${tab === t.id ? ' active' : ''}`}
               onClick={() => setTab(t.id)}
-              style={{
-                padding:      '5px 14px',
-                border:       'none',
-                borderRadius: '6px',
-                fontSize:     '12px',
-                fontWeight:   '600',
-                cursor:       'pointer',
-                background:   tab === t.id ? '#1B2D55' : 'transparent',
-                color:        tab === t.id ? '#fff'    : '#6B7280',
-                transition:   'background 0.15s',
-              }}
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        {/* Leave type filter */}
-        <select
-          value={leaveType}
-          onChange={e => setLeaveType((e.target as HTMLSelectElement).value)}
-          style={{
-            padding:      '7px 10px',
-            border:       '1px solid #e5e7eb',
-            borderRadius: '7px',
-            fontSize:     '13px',
-            background:   '#fff',
-            cursor:       'pointer',
-            outline:      'none',
-          }}
-        >
-          {LEAVE_TYPES.map(lt => (
-            <option key={lt.value} value={lt.value}>{lt.label}</option>
-          ))}
-        </select>
+        <div class="lv-bar-actions">
+          {/* Search */}
+          <div class="lv-search-box">
+            <i class="fas fa-search" aria-hidden="true" />
+            <input
+              type="text"
+              value={search}
+              onInput={e => setSearch((e.target as HTMLInputElement).value)}
+              placeholder="Search employee…"
+              aria-label="Search by employee"
+            />
+          </div>
 
-        {/* Refresh */}
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={isLoading}
-          style={{
-            padding:      '7px 12px',
-            border:       '1px solid #e5e7eb',
-            borderRadius: '7px',
-            background:   '#fff',
-            cursor:       isLoading ? 'not-allowed' : 'pointer',
-            color:        '#374151',
-            fontSize:     '13px',
-          }}
-          title="Refresh"
-        >
-          <i class={`fas fa-sync-alt${isLoading ? ' fa-spin' : ''}`} />
-        </button>
+          {/* Leave type filter */}
+          <select
+            class="lv-filter-select"
+            value={leaveType}
+            onChange={e => setLeaveType((e.target as HTMLSelectElement).value)}
+            aria-label="Filter by leave type"
+          >
+            {LEAVE_TYPES.map(lt => (
+              <option key={lt.value} value={lt.value}>{lt.label}</option>
+            ))}
+          </select>
+
+          {/* Refresh */}
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <i class={`fas fa-sync-alt${isLoading ? ' fa-spin' : ''}`} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       {/* Table card */}
-      <div
-        style={{
-          background:   '#fff',
-          borderRadius: '12px',
-          boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-          overflow:     'hidden',
-        }}
-      >
-        {/* Card header */}
-        <div
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'space-between',
-            padding:        '16px 20px',
-            borderBottom:   '1px solid #f3f4f6',
-          }}
-        >
-          <span style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>
-            Leave Applications
-          </span>
-          {!isLoading && (
-            <span
-              style={{
-                padding:      '2px 10px',
-                borderRadius: '999px',
-                background:   '#EFF6FF',
-                color:        '#1E40AF',
-                fontSize:     '12px',
-                fontWeight:   '600',
-              }}
-            >
-              {filteredRows.length} {filteredRows.length === 1 ? 'record' : 'records'}
-            </span>
-          )}
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table
-            style={{
-              width:           '100%',
-              borderCollapse:  'collapse',
-              fontSize:        '13px',
-            }}
-          >
-            <thead>
-              <tr style={{ background: '#F9FAFB' }}>
-                {['Employee', 'Department', 'Leave Type', 'From', 'To', 'Days', 'Status', 'Actions'].map(h => (
-                  <th
-                    key={h}
-                    style={{
-                      padding:     '10px 16px',
-                      textAlign:   h === 'Days' ? 'center' : 'left',
-                      fontWeight:  '600',
-                      fontSize:    '12px',
-                      color:       '#6B7280',
-                      borderBottom:'1px solid #f3f4f6',
-                      whiteSpace:  'nowrap',
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
+      <div class="lv-table-container">
+        <table class="lv-table">
+          <thead>
+            <tr>
+              {['Employee', 'Department', 'Leave Type', 'From', 'To', 'Days', 'Status', 'Actions'].map(h => (
+                <th key={h}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} class="lv-empty-row">
+                  <i class="fas fa-spinner fa-spin" aria-hidden="true" />
+                  <p>Loading leave applications…</p>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }, (_, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    {Array.from({ length: 8 }, (__, j) => (
-                      <td key={j} style={{ padding: '14px 16px' }}>
-                        <div
-                          style={{
-                            height:      '14px',
-                            background:  '#f3f4f6',
-                            borderRadius:'3px',
-                            width:       j === 7 ? '80px' : '100%',
-                            animation:   'pulse 1.5s ease-in-out infinite',
-                          }}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : filteredRows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    style={{
-                      textAlign:  'center',
-                      padding:    '48px 24px',
-                      color:      '#9CA3AF',
-                      fontSize:   '14px',
-                    }}
-                  >
-                    <i class="fas fa-calendar-check" style={{ fontSize: '32px', marginBottom: '12px', display: 'block', color: '#D1D5DB' }} />
-                    No leave applications found.
-                  </td>
-                </tr>
-              ) : (
-                filteredRows.map(r => (
-                  <LeaveRow
-                    key={r.id}
-                    record={r}
-                    onView={id => void handleView(id, false)}
-                    onPrint={id => void handleView(id, true)}
-                    onDelete={(id, name) => setDeleteTarget({ id, name })}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : filteredRows.length === 0 ? (
+              <tr>
+                <td colSpan={8} class="lv-empty-row">
+                  <i class="fas fa-calendar-check" aria-hidden="true" />
+                  <p>No leave applications found.</p>
+                </td>
+              </tr>
+            ) : (
+              filteredRows.map(r => (
+                <LeaveRow
+                  key={r.id}
+                  record={r}
+                  onView={id => void handleView(id, false)}
+                  onPrint={id => void handleView(id, true)}
+                  onDelete={(id, name) => setDeleteTarget({ id, name })}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Loading overlay for doc fetch */}
@@ -552,17 +370,17 @@ export function AdminLeaveSection(): VNode {
         >
           <div
             style={{
-              background:   '#fff',
+              background:   'var(--bg-card)',
               borderRadius: '12px',
               padding:      '24px 32px',
               fontSize:     '14px',
-              color:        '#374151',
+              color:        'var(--text-primary)',
               display:      'flex',
               alignItems:   'center',
               gap:          '12px',
             }}
           >
-            <i class="fas fa-spinner fa-spin" style={{ color: '#1B2D55' }} />
+            <i class="fas fa-spinner fa-spin" style={{ color: 'var(--siomac-navy)' }} aria-hidden="true" />
             Loading document…
           </div>
         </div>

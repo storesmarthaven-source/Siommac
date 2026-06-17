@@ -19,7 +19,6 @@
 
 import { type VNode }                         from 'preact';
 import { useState, useCallback }               from 'preact/hooks';
-import { Spinner }                             from '@shared/Spinner';
 import { Modal }                               from '@shared/Modal';
 import type { Payslip, CompanyInfo, StatutoryRates } from './types';
 import { useMyPayslips }                       from './hooks';
@@ -50,7 +49,7 @@ export function PayslipsSection(): VNode {
     return (
       <div style={{ padding: '32px', textAlign: 'center', color: '#dc2626' }}>
         <div>Failed to load payslips.</div>
-        <button type="button" onClick={() => void refetch()} style={{ marginTop: '10px', padding: '7px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+        <button type="button" class="btn btn-primary btn-sm" onClick={() => void refetch()} style={{ marginTop: '10px' }}>
           Retry
         </button>
       </div>
@@ -68,29 +67,30 @@ export function PayslipsSection(): VNode {
 
       {/* YTD strip */}
       {payslips.length > 0 && (
-        <div style={{
-          display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px',
-          padding: '16px 20px', background: '#1b2d55', borderRadius: '12px', color: '#fff',
-        }}>
+        <div class="emp-ps-stats">
           <YtdItem label="Total Payslips"  value={String(payslips.length)} />
+          <div class="emp-ps-stat-divider" />
           <YtdItem label="Latest Net Pay"  value={fmtTTD(Number(payslips[0]?.net_pay ?? payslips[0]?.netPay ?? 0))} />
-          <YtdItem label="YTD Net Pay"     value={fmtTTD(ytd)} />
+          <div class="emp-ps-stat-divider" />
+          <YtdItem label="YTD Net Pay"     value={fmtTTD(ytd)} green />
         </div>
       )}
 
       {/* Grid */}
       {isLoading ? (
-        <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
-          <Spinner size={36} label="Loading payslips…" />
+        <div class="emp-payslip-grid">
+          {[0, 1, 2].map(n => <div key={n} class="emp-payslip-skeleton" />)}
         </div>
       ) : payslips.length === 0 ? (
-        <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
-          <i class="fas fa-file-invoice-dollar" style={{ fontSize: '36px', display: 'block', marginBottom: '12px', opacity: 0.4 }} />
-          <div style={{ fontWeight: '600' }}>No payslips yet</div>
-          <div style={{ fontSize: '13px', marginTop: '4px' }}>Your payslips will appear here once payroll has been processed.</div>
+        <div class="emp-payroll-empty">
+          <div class="emp-payroll-empty-icon">
+            <i class="fas fa-file-invoice-dollar" aria-hidden="true" />
+          </div>
+          <h3>No payslips yet</h3>
+          <p>Your payslips will appear here once payroll has been processed.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+        <div class="emp-payslip-grid">
           {payslips.map((p, i) => (
             <PayslipCard
               key={p.id}
@@ -128,72 +128,53 @@ function PayslipCard({ payslip: p, isLatest, onView }: { payslip: Payslip; isLat
   const ded   = Number(p.total_deductions ?? p.totalDeductions ?? 0);
 
   return (
-    <div style={{
-      background:   '#fff',
-      borderRadius: '12px',
-      overflow:     'hidden',
-      boxShadow:    isLatest ? '0 0 0 2px #2563eb, 0 4px 12px rgba(37,99,235,.15)' : '0 1px 3px rgba(0,0,0,.08)',
-    }}>
-      {/* Top strip */}
-      <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #f3f4f6' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>{monthLabel}</div>
-          {isLatest && (
-            <span style={{ fontSize: '10px', fontWeight: '700', background: '#2563eb', color: '#fff', padding: '2px 7px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Latest</span>
-          )}
-        </div>
-        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{cycleLabel}</div>
+    <div class={`emp-payslip-card${isLatest ? ' emp-payslip-card--latest' : ''}`}>
+      {/* Top strip — month + cycle tag */}
+      <div class="emp-payslip-card-top">
+        <div class="emp-payslip-card-month">{monthLabel}</div>
+        <span class="emp-payslip-card-cycle-tag">{cycleLabel}</span>
       </div>
 
-      {/* Net pay */}
-      <div style={{ padding: '14px 16px', background: '#f8fafe' }}>
-        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>Net Pay</div>
-        <div style={{ fontSize: '22px', fontWeight: '700', color: '#111827' }}>TTD {fmtAmount(net)}</div>
+      {/* Net pay hero */}
+      <div class="emp-payslip-card-net">
+        <span class="emp-payslip-net-label">Net Pay</span>
+        <span class="emp-payslip-net-val">TTD {fmtAmount(net)}</span>
       </div>
 
       {/* Breakdown */}
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div class="emp-payslip-card-breakdown">
         <BreakRow label="Gross" value={`TTD ${fmtAmount(gross)}`} />
-        <BreakRow label="Deductions" value={`− TTD ${fmtAmount(ded)}`} accent="#dc2626" />
+        <BreakRow label="Deductions" value={`− TTD ${fmtAmount(ded)}`} ded />
       </div>
 
       {/* Footer */}
-      <div style={{ padding: '10px 16px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f3f4f6' }}>
-        <span style={{ fontSize: '11px', color: '#9ca3af' }}>
-          <i class="fas fa-check-circle" style={{ marginRight: '4px', color: '#16a34a' }} aria-hidden="true" />
+      <div class="emp-payslip-card-footer">
+        <span class="emp-payslip-approved">
+          <i class="fas fa-check-circle" aria-hidden="true" />
           {approvedDate}
         </span>
-        <button
-          type="button"
-          onClick={onView}
-          style={{
-            padding: '5px 12px', background: '#2563eb10', color: '#2563eb',
-            border: '1px solid #2563eb30', borderRadius: '6px',
-            cursor: 'pointer', fontSize: '12px', fontWeight: '500',
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-          }}
-        >
-          <i class="fas fa-eye" aria-hidden="true" /> View & Print
+        <button type="button" class="emp-payslip-view-btn" onClick={onView}>
+          <i class="fas fa-eye" aria-hidden="true" /> View &amp; Print
         </button>
       </div>
     </div>
   );
 }
 
-function BreakRow({ label, value, accent }: { label: string; value: string; accent?: string }): VNode {
+function BreakRow({ label, value, ded }: { label: string; value: string; ded?: boolean }): VNode {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-      <span style={{ color: '#6b7280' }}>{label}</span>
-      <span style={{ fontWeight: '600', color: accent ?? '#111827' }}>{value}</span>
+    <div class={`emp-payslip-brow${ded ? ' emp-payslip-brow--ded' : ''}`}>
+      <span>{label}</span>
+      <span>{value}</span>
     </div>
   );
 }
 
-function YtdItem({ label, value }: { label: string; value: string }): VNode {
+function YtdItem({ label, value, green }: { label: string; value: string; green?: boolean }): VNode {
   return (
-    <div>
-      <div style={{ fontSize: '11px', opacity: 0.6, marginBottom: '2px' }}>{label}</div>
-      <div style={{ fontSize: '18px', fontWeight: '700' }}>{value}</div>
+    <div class="emp-ps-stat">
+      <span class="emp-ps-stat-label">{label}</span>
+      <span class={`emp-ps-stat-val${green ? ' green' : ''}`}>{value}</span>
     </div>
   );
 }
@@ -300,10 +281,10 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
 
   const footer = (
     <>
-      <button type="button" onClick={handlePrint} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: '#1b2d55', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+      <button type="button" class="btn btn-primary" onClick={handlePrint}>
         <i class="fas fa-print" aria-hidden="true" /> Print
       </button>
-      <button type="button" onClick={onClose} style={{ padding: '8px 18px', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+      <button type="button" class="btn btn-outline-secondary" onClick={onClose}>
         Close
       </button>
     </>

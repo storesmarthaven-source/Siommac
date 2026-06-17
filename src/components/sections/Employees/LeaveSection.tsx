@@ -6,6 +6,10 @@
  *   - Manager:  view department leaves, approve/reject pending requests
  *   - Admin:    view all leaves, approve/reject any, filter by type/search
  *
+ * Reskinned to use the branded `.lv-*` design system from assets/styles/leaves.css
+ * (stat cards, filter bar, table, type/status badges, action pills) plus the shared
+ * `.page-header`, `.btn` and `.form-*` classes — instead of ad-hoc inline styles.
+ *
  * Replaces: loadLeaveRequests, loadManagerLeaveApplications, loadAdminLeaves,
  *           submitLeaveRequest, approveLeave, rejectLeave, and all _lv* helpers.
  *
@@ -25,11 +29,10 @@ import {
   useSubmitLeave, useUpdateLeave, useDeleteLeave,
   useApproveLeave, useRejectLeave,
 } from './hooks';
-import { StatCard }  from './StatCard';
 import {
   fmtDate, todayISO,
-  LEAVE_STATUS_COLOR, LEAVE_STATUS_LABEL,
-  LEAVE_TYPE_COLOR, LEAVE_TYPE_LABEL,
+  LEAVE_STATUS_LABEL,
+  LEAVE_TYPE_LABEL,
 } from './utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,6 +41,28 @@ interface LeaveSectionProps {
   currentRole:     UserRole;
   currentUsername: string;
 }
+
+// ── Branded badge-class maps ──────────────────────────────────────────────────
+
+const LV_TYPE_CLASS: Record<string, string> = {
+  sick:    'lv-type-sick',
+  casual:  'lv-type-casual',
+  annual:  'lv-type-annual',
+  medical: 'lv-type-medical',
+};
+
+const LV_STATUS_CLASS: Record<string, string> = {
+  pending:  'lv-status-pending',
+  approved: 'lv-status-approved',
+  rejected: 'lv-status-rejected',
+};
+
+const LV_STAT_ICON_CLASS: Record<string, string> = {
+  total:    'navy',
+  pending:  'medical',
+  approved: 'green',
+  rejected: 'red',
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -126,187 +151,189 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
   const showEmployee = currentRole !== 'employee';
   const canSubmit    = currentRole === 'employee';
 
+  // Column count for the empty-row colspan
+  const colCount = 6 + (showEmployee ? 1 : 0) + (showEmployee ? 2 : 0);
+
   return (
-    <div style={{ padding: '24px' }}>
+    <div class="leave-section">
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>
-            {currentRole === 'employee' ? 'My Leave Requests' : 'Leave Management'}
-          </h1>
-          <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>
-            {currentRole === 'employee' ? 'View and manage your leave applications.' : 'Review and process leave requests.'}
-          </p>
+      <div class="page-header" style={{ marginBottom: '24px' }}>
+        <div class="page-header-left">
+          <div id="pageTitleBlock">
+            <h1>
+              <i class="fas fa-calendar-alt" aria-hidden="true" />
+              {currentRole === 'employee' ? 'My Leave Requests' : 'Leave Management'}
+            </h1>
+            <p id="pageTitleSub">
+              {currentRole === 'employee' ? 'View and manage your leave applications.' : 'Review and process leave requests.'}
+            </p>
+          </div>
         </div>
         {canSubmit && (
-          <button
-            type="button"
-            onClick={() => setModalLeave(null)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '9px 18px', background: '#2563eb', color: '#fff',
-              border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500',
-            }}
-          >
-            <i class="fas fa-plus" aria-hidden="true" /> Request Leave
-          </button>
+          <div class="page-header-right">
+            <button type="button" class="btn btn-primary" onClick={() => setModalLeave(null)}>
+              <i class="fas fa-plus" aria-hidden="true" /> Request Leave
+            </button>
+          </div>
         )}
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
-        <StatCard icon="fa-calendar-alt"   label="Total"    value={stats.total}    color="#2563eb" loading={query.isLoading} />
-        <StatCard icon="fa-clock"          label="Pending"  value={stats.pending}  color="#d97706" loading={query.isLoading} />
-        <StatCard icon="fa-check-circle"   label="Approved" value={stats.approved} color="#16a34a" loading={query.isLoading} />
-        <StatCard icon="fa-times-circle"   label="Rejected" value={stats.rejected} color="#dc2626" loading={query.isLoading} />
+      <div class="lv-stats-row">
+        <StatCard icon="fa-calendar-alt" tone="navy"    label="Total"    value={stats.total}    loading={query.isLoading} />
+        <StatCard icon="fa-clock"        tone="medical" label="Pending"  value={stats.pending}  loading={query.isLoading} />
+        <StatCard icon="fa-check-circle" tone="green"   label="Approved" value={stats.approved} loading={query.isLoading} />
+        <StatCard icon="fa-times-circle" tone="red"     label="Rejected" value={stats.rejected} loading={query.isLoading} />
       </div>
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+      <div class="lv-filters-bar">
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '4px', background: '#f3f4f6', borderRadius: '8px', padding: '3px' }}>
+        <div class="lv-tabs">
           {TABS.map(t => (
             <button
               key={t.id}
               type="button"
+              class={`lv-tab-btn${tab === t.id ? ' active' : ''}`}
               onClick={() => setTab(t.id)}
-              style={{
-                padding:      '5px 14px',
-                borderRadius: '6px',
-                border:       'none',
-                background:   tab === t.id ? '#fff' : 'transparent',
-                color:        tab === t.id ? '#111827' : '#6b7280',
-                fontWeight:   tab === t.id ? '600' : '400',
-                fontSize:     '13px',
-                cursor:       'pointer',
-                boxShadow:    tab === t.id ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
-              }}
             >
               {t.label}
-              {t.id !== 'all' && (
-                <span style={{ marginLeft: '5px', fontSize: '11px', opacity: 0.7 }}>
-                  ({leaves.filter(r => r.status === t.id).length})
-                </span>
-              )}
+              {t.id !== 'all' && ` (${leaves.filter(r => r.status === t.id).length})`}
             </button>
           ))}
         </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative', flex: '1 1 200px' }}>
-          <i class="fas fa-search" style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '12px' }} />
-          <input
-            type="search"
-            value={search}
-            onInput={e => setSearch((e.target as HTMLInputElement).value)}
-            placeholder="Search…"
-            aria-label="Search leave requests"
-            style={{ width: '100%', padding: '7px 10px 7px 30px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
-          />
-        </div>
+        <div class="lv-bar-actions">
+          {/* Search */}
+          <div class="lv-search-box">
+            <i class="fas fa-search" aria-hidden="true" />
+            <input
+              type="search"
+              value={search}
+              onInput={e => setSearch((e.target as HTMLInputElement).value)}
+              placeholder="Search…"
+              aria-label="Search leave requests"
+            />
+          </div>
 
-        {/* Type filter */}
-        <select
-          value={typeFilter}
-          onChange={e => setTypeFilter((e.target as HTMLSelectElement).value as '' | LeaveType)}
-          aria-label="Filter by leave type"
-          style={{ padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', background: '#fff', cursor: 'pointer' }}
-        >
-          <option value="">All Types</option>
-          <option value="sick">Sick</option>
-          <option value="casual">Casual</option>
-          <option value="annual">Annual</option>
-          <option value="medical">Medical</option>
-        </select>
+          {/* Type filter */}
+          <select
+            class="lv-filter-select"
+            value={typeFilter}
+            onChange={e => setTypeFilter((e.target as HTMLSelectElement).value as '' | LeaveType)}
+            aria-label="Filter by leave type"
+          >
+            <option value="">All Types</option>
+            <option value="sick">Sick</option>
+            <option value="casual">Casual</option>
+            <option value="annual">Annual</option>
+            <option value="medical">Medical</option>
+          </select>
+        </div>
       </div>
 
       {/* Table */}
       {query.isLoading ? (
-        <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
-          <Spinner size={36} label="Loading leave requests…" />
+        <div class="lv-table-container">
+          <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
+            <Spinner size={36} label="Loading leave requests…" />
+          </div>
         </div>
       ) : query.error ? (
-        <div style={{ padding: '32px', textAlign: 'center', color: '#dc2626' }}>
-          Failed to load leave requests.
-          <button type="button" onClick={() => void query.refetch()} style={{ marginLeft: '10px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}>
-            Retry
-          </button>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
-          <i class="fas fa-calendar-check" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', opacity: 0.4 }} />
-          <div style={{ fontWeight: '600' }}>No leave requests found</div>
+        <div class="lv-table-container">
+          <div class="lv-empty-row" style={{ color: 'var(--danger)' }}>
+            <i class="fas fa-triangle-exclamation" aria-hidden="true" />
+            <p>Failed to load leave requests.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm" onClick={() => void query.refetch()}>
+              Retry
+            </button>
+          </div>
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,.06)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ background: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
-                  {showEmployee && <Th>Employee</Th>}
-                  <Th>Type</Th>
-                  <Th>From</Th>
-                  <Th>To</Th>
-                  <Th>Days</Th>
-                  {!showEmployee && <Th>Reason</Th>}
-                  {!showEmployee && <Th>Applied</Th>}
-                  <Th>Status</Th>
-                  <Th>Actions</Th>
+        <div class="lv-table-container">
+          <table class="lv-table">
+            <thead>
+              <tr>
+                {showEmployee && <th>Employee</th>}
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Days</th>
+                {!showEmployee && <th>Reason</th>}
+                {!showEmployee && <th>Applied</th>}
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={colCount} class="lv-empty-row">
+                    <i class="fas fa-calendar-check" aria-hidden="true" />
+                    <p>No leave requests found</p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filtered.map(r => {
-                  const isPending = r.status === 'pending';
-                  const typeMeta  = LEAVE_TYPE_COLOR[r.type as LeaveType] ?? { bg: '#f3f4f6', text: '#374151' };
-                  const statusMeta = LEAVE_STATUS_COLOR[r.status as LeaveStatus] ?? { bg: '#f3f4f6', text: '#374151' };
+              ) : (
+                filtered.map(r => {
+                  const isPending  = r.status === 'pending';
+                  const typeClass  = LV_TYPE_CLASS[r.type] ?? 'lv-type-casual';
+                  const statusClass = LV_STATUS_CLASS[r.status] ?? 'lv-status-pending';
                   return (
-                    <tr key={r.id} style={{ borderBottom: '1px solid #f9fafb' }}>
+                    <tr key={r.id}>
                       {showEmployee && (
-                        <Td>
-                          <div style={{ fontWeight: '600' }}>{r.employee ?? '—'}</div>
-                          <div style={{ fontSize: '11px', color: '#9ca3af' }}>{r.department ?? ''}</div>
-                        </Td>
+                        <td>
+                          <div class="lv-emp-name">{r.employee ?? '—'}</div>
+                          <div class="lv-dept-label">{r.department ?? ''}</div>
+                        </td>
                       )}
-                      <Td>
-                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: '600', background: typeMeta.bg, color: typeMeta.text }}>
+                      <td>
+                        <span class={`lv-type-badge ${typeClass}`}>
                           {LEAVE_TYPE_LABEL[r.type as LeaveType] ?? r.type}
                         </span>
-                      </Td>
-                      <Td>{fmtDate(r.from ?? r.fromDate)}</Td>
-                      <Td>{fmtDate(r.to ?? r.toDate)}</Td>
-                      <Td><span style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: '999px', fontSize: '12px' }}>{r.days ?? '?'}d</span></Td>
-                      {!showEmployee && <Td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || '—'}</Td>}
-                      {!showEmployee && <Td>{fmtDate(r.appliedOn)}</Td>}
-                      <Td>
-                        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: '600', background: statusMeta.bg, color: statusMeta.text }}>
-                          {LEAVE_STATUS_LABEL[r.status]}
+                      </td>
+                      <td>{fmtDate(r.from ?? r.fromDate)}</td>
+                      <td>{fmtDate(r.to ?? r.toDate)}</td>
+                      <td><span class="lv-days-pill">{r.days ?? '?'}d</span></td>
+                      {!showEmployee && <td class="lv-reason-cell">{r.reason || '—'}</td>}
+                      {!showEmployee && <td>{fmtDate(r.appliedOn)}</td>}
+                      <td>
+                        <span class={`lv-status-badge ${statusClass}`}>
+                          {LEAVE_STATUS_LABEL[r.status as LeaveStatus]}
                         </span>
-                      </Td>
-                      <Td>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      </td>
+                      <td>
+                        <div class="lv-action-btns">
                           {/* Manager / Admin: approve / reject */}
                           {(currentRole === 'manager' || currentRole === 'admin') && isPending && (
                             <>
-                              <ActionBtn color="#16a34a" icon="fa-check" label="Approve" onClick={() => void handleApprove(r.id)} />
-                              <ActionBtn color="#dc2626" icon="fa-times" label="Reject"  onClick={() => void handleReject(r.id)} />
+                              <button type="button" class="lv-act-btn lv-act-approve" aria-label="Approve" title="Approve" onClick={() => void handleApprove(r.id)}>
+                                <i class="fas fa-check" aria-hidden="true" /> Approve
+                              </button>
+                              <button type="button" class="lv-act-btn lv-act-reject" aria-label="Reject" title="Reject" onClick={() => void handleReject(r.id)}>
+                                <i class="fas fa-times" aria-hidden="true" /> Reject
+                              </button>
                             </>
                           )}
                           {/* Employee: edit / delete own pending leaves */}
                           {currentRole === 'employee' && isPending && (
                             <>
-                              <ActionBtn color="#2563eb" icon="fa-edit"  label="Edit"   onClick={() => setModalLeave(r)} />
-                              <ActionBtn color="#dc2626" icon="fa-trash" label="Delete" onClick={() => void handleDelete(r)} />
+                              <button type="button" class="lv-act-btn lv-act-edit" aria-label="Edit" title="Edit" onClick={() => setModalLeave(r)}>
+                                <i class="fas fa-edit" aria-hidden="true" /> Edit
+                              </button>
+                              <button type="button" class="lv-act-btn lv-act-delete" aria-label="Delete" title="Delete" onClick={() => void handleDelete(r)}>
+                                <i class="fas fa-trash" aria-hidden="true" /> Delete
+                              </button>
                             </>
                           )}
                         </div>
-                      </Td>
+                      </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -325,6 +352,24 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
         }}
         isSubmitting={submitMutation.isPending || updateMutation.isPending}
       />
+    </div>
+  );
+}
+
+// ── Branded stat card (matches .lv-stat-card markup) ───────────────────────────
+
+function StatCard({ icon, tone, label, value, loading }: {
+  icon: string; tone: string; label: string; value: number; loading: boolean;
+}): VNode {
+  return (
+    <div class="lv-stat-card">
+      <div class={`lv-stat-icon ${tone}`}>
+        <i class={`fas ${icon}`} aria-hidden="true" />
+      </div>
+      <div class="lv-stat-body">
+        <div class="lv-stat-value">{loading ? '—' : value}</div>
+        <div class="lv-stat-label">{label}</div>
+      </div>
     </div>
   );
 }
@@ -383,10 +428,10 @@ function LeaveRequestModal({
 
   const footer = (
     <>
-      <button type="button" onClick={onClose} disabled={isSubmitting} style={{ padding: '8px 18px', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+      <button type="button" class="btn btn-outline-secondary has-label" onClick={onClose} disabled={isSubmitting}>
         Cancel
       </button>
-      <button type="button" onClick={() => void handleSubmit()} disabled={isSubmitting} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: isSubmitting ? '#9ca3af' : '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '14px', minWidth: '120px', justifyContent: 'center' }}>
+      <button type="button" class="btn btn-primary" onClick={() => void handleSubmit()} disabled={isSubmitting} style={{ minWidth: '120px' }}>
         {isSubmitting ? <Spinner size={14} color="#fff" label="Saving…" /> : (leave ? 'Save Changes' : 'Submit Request')}
       </button>
     </>
@@ -396,9 +441,9 @@ function LeaveRequestModal({
     <Modal open={open} onClose={onClose} title={leave ? 'Edit Leave Request' : 'Request Leave'} size="sm" footer={footer} closeOnBackdrop={!isSubmitting} closeOnEscape={!isSubmitting}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-        <div>
-          <label style={lbl}>Leave Type <span style={{ color: '#dc2626' }}>*</span></label>
-          <select value={form.type} onChange={e => set('type', (e.target as HTMLSelectElement).value)} disabled={isSubmitting} style={inp(false)}>
+        <div class="form-group">
+          <label class="form-label">Leave Type <span style={{ color: 'var(--danger)' }}>*</span></label>
+          <select class="form-select" value={form.type} onChange={e => set('type', (e.target as HTMLSelectElement).value)} disabled={isSubmitting}>
             <option value="annual">Annual</option>
             <option value="sick">Sick</option>
             <option value="casual">Casual</option>
@@ -407,80 +452,33 @@ function LeaveRequestModal({
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={lbl}>From <span style={{ color: '#dc2626' }}>*</span></label>
-            <input type="date" value={form.fromDate} min={today} onInput={e => set('fromDate', (e.target as HTMLInputElement).value)} disabled={isSubmitting} style={inp(!!errors.fromDate)} />
-            {errors.fromDate && <Err>{errors.fromDate}</Err>}
+          <div class="form-group" style={{ flex: 1, marginBottom: 0 }}>
+            <label class="form-label">From <span style={{ color: 'var(--danger)' }}>*</span></label>
+            <input type="date" class={`form-control${errors.fromDate ? ' field-invalid' : ''}`} value={form.fromDate} min={today} onInput={e => set('fromDate', (e.target as HTMLInputElement).value)} disabled={isSubmitting} />
+            {errors.fromDate && <div class="field-error-msg" role="alert">{errors.fromDate}</div>}
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={lbl}>To <span style={{ color: '#dc2626' }}>*</span></label>
-            <input type="date" value={form.toDate} min={form.fromDate || today} onInput={e => set('toDate', (e.target as HTMLInputElement).value)} disabled={isSubmitting} style={inp(!!errors.toDate)} />
-            {errors.toDate && <Err>{errors.toDate}</Err>}
+          <div class="form-group" style={{ flex: 1, marginBottom: 0 }}>
+            <label class="form-label">To <span style={{ color: 'var(--danger)' }}>*</span></label>
+            <input type="date" class={`form-control${errors.toDate ? ' field-invalid' : ''}`} value={form.toDate} min={form.fromDate || today} onInput={e => set('toDate', (e.target as HTMLInputElement).value)} disabled={isSubmitting} />
+            {errors.toDate && <div class="field-error-msg" role="alert">{errors.toDate}</div>}
           </div>
         </div>
 
-        <div>
-          <label style={lbl}>Reason <span style={{ color: '#dc2626' }}>*</span></label>
+        <div class="form-group" style={{ marginBottom: 0 }}>
+          <label class="form-label">Reason <span style={{ color: 'var(--danger)' }}>*</span></label>
           <textarea
+            class={`form-control${errors.reason ? ' field-invalid' : ''}`}
             value={form.reason}
             onInput={e => set('reason', (e.target as HTMLTextAreaElement).value)}
             disabled={isSubmitting}
             placeholder="Brief reason for leave…"
             rows={3}
-            style={{ ...inp(!!errors.reason), resize: 'vertical', minHeight: '80px' }}
+            style={{ resize: 'vertical', minHeight: '80px' }}
           />
-          {errors.reason && <Err>{errors.reason}</Err>}
+          {errors.reason && <div class="field-error-msg" role="alert">{errors.reason}</div>}
         </div>
 
       </div>
     </Modal>
   );
-}
-
-// ── Table helpers ─────────────────────────────────────────────────────────────
-
-function Th({ children }: { children: string }): VNode {
-  return (
-    <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', whiteSpace: 'nowrap' }}>
-      {children}
-    </th>
-  );
-}
-
-function Td({ children, style }: { children: VNode | VNode[] | string | null; style?: Record<string, string> }): VNode {
-  return (
-    <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...style }}>
-      {children}
-    </td>
-  );
-}
-
-function ActionBtn({ color, icon, label, onClick }: { color: string; icon: string; label: string; onClick: () => void }): VNode {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      style={{
-        padding: '4px 10px', background: `${color}12`, color,
-        border: `1px solid ${color}30`, borderRadius: '5px',
-        cursor: 'pointer', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px',
-      }}
-    >
-      <i class={`fas ${icon}`} aria-hidden="true" />
-      {label}
-    </button>
-  );
-}
-
-// ── Inline form style helpers ─────────────────────────────────────────────────
-
-const lbl: Record<string, string> = { display: 'block', fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '4px' };
-const inp = (err: boolean): Record<string, string> => ({
-  width: '100%', padding: '8px 10px', fontSize: '13px', boxSizing: 'border-box',
-  border: `1px solid ${err ? '#dc2626' : '#d1d5db'}`, borderRadius: '6px', color: '#111827', background: '#fff',
-});
-function Err({ children }: { children: string }): VNode {
-  return <div role="alert" style={{ fontSize: '11px', color: '#dc2626', marginTop: '3px' }}>{children}</div>;
 }
