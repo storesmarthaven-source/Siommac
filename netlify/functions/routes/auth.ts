@@ -1,7 +1,7 @@
 import { Hono }     from 'hono';
 import { sb, sbAnon } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
-import { loadRolePermissions }         from '../lib/permissions';
+import { loadRolePermissions, loadRoleIsEmployee } from '../lib/permissions';
 import { getProfileSignedUrl }         from '../lib/photos';
 import { setting }                     from '../lib/settings';
 import { checkLoginLimit }             from '../lib/ratelimit';
@@ -51,7 +51,7 @@ function deviceFrom(c: { req: { header: (k: string) => string | undefined }; get
 
 // ── Shared helper: build full session payload after successful auth ────────────
 async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip?: string }) {
-  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs, roleSet] = await Promise.all([
+  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs, roleSet, isEmployee] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
@@ -62,6 +62,7 @@ async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip
       : loadUserOverrides(u.id),
     resolveIdleTimeoutMs(u.role),
     loadRolePermissions(u.role),
+    loadRoleIsEmployee(u.role),
   ]);
   return {
     success:      true as const,
@@ -83,6 +84,8 @@ async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip
     // The role's resolved default permission set — drives the client's can()/useCan()
     // (replaces the previously hardcoded ROLE_PERMISSIONS on the frontend).
     rolePermissions: [...roleSet],
+    // Whether this role is a clocking employee → gets the self-service Personal nav.
+    isEmployee,
     // Per-user RBAC grants/denials — consumed by the session store + can()/useCan().
     permissionOverrides: overrides.map(o => ({
       user_id:    u.id,

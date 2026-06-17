@@ -222,4 +222,24 @@ router.post('/listManagers', async c => {
   return c.json({ success: true, data: ((data ?? []) as { id: string; full_name: string }[]).map(u => ({ id: u.id, name: u.full_name })) });
 });
 
+// Roles assignable in the employee form. Anyone who can edit employees may read
+// the role list; superadmin is excluded (not an assignable role).
+router.post('/listAssignableRoles', async c => {
+  await requirePermission(c, 'employees.edit');
+  const { data, error } = await sb
+    .from('roles')
+    .select('name, label')
+    .neq('name', 'superadmin')
+    .order('sort_order');
+  if (error) {
+    // Roles table not provisioned yet — fall back to the built-ins.
+    return c.json({ success: true, roles: [
+      { name: 'employee', label: 'Employee' },
+      { name: 'manager',  label: 'Manager' },
+      { name: 'admin',    label: 'Admin' },
+    ] });
+  }
+  return c.json({ success: true, roles: (data ?? []).map(r => ({ name: r.name, label: r.label })) });
+});
+
 export default router;

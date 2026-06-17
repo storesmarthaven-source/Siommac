@@ -55,13 +55,23 @@ export interface SectionDef {
 
 export type UserRole = 'superadmin' | 'admin' | 'manager' | 'employee';
 
+/**
+ * Self-service sections EVERY authenticated user gets — the employee baseline.
+ * "Admins and managers are also employees": these are prepended to every role's
+ * sidebar, so an admin sees their own attendance/leaves/payslips alongside the
+ * management sections their role adds.
+ */
+export const BASELINE_SECTIONS: SectionDef[] = [
+  { id: 's-emp-attendance', label: 'My Attendance', icon: 'fa-calendar-check',      sub: "Today's check-in status and work hours" },
+  { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',             sub: 'Your attendance log for the past 30 days' },
+  { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status' },
+  { id: 's-emp-payroll',    label: 'My Payslips',   icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips' },
+];
+
+// Per-role ADDITIONAL sections (stacked on top of BASELINE_SECTIONS). A custom
+// role not listed here gets only the baseline + whatever its modules grant.
 export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
-  employee: [
-    { id: 's-emp-attendance', label: 'Attendance',   icon: 'fa-calendar-check',      sub: "Today's check-in status and work hours" },
-    { id: 's-emp-history',    label: 'My History',   icon: 'fa-history',             sub: 'Your attendance log for the past 30 days' },
-    { id: 's-emp-leave',      label: 'My Leaves',    icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status' },
-    { id: 's-emp-payroll',    label: 'My Payslips',  icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips' },
-  ],
+  employee: [],   // employee is the pure baseline — no extra sections
   manager: [
     { id: 's-adm-dashboard',  label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now" },
     { id: 's-adm-employees',  label: 'Employees',    icon: 'fa-users',               sub: 'View the workforce' },
@@ -147,6 +157,7 @@ export type Theme       = 'light' | 'dark';
 // The shape matches what config.js previously set: { SECTION_DEFS, COMMON_ITEMS, PALETTES, LAYOUTS }.
 (window as unknown as Record<string, unknown>)['SiomacConfig'] = {
   SECTION_DEFS,
+  BASELINE_SECTIONS,               // self-service sections every role gets
   COMMON_ITEMS: COMMON_SECTIONS,   // legacy name was COMMON_ITEMS
   PALETTES,
   LAYOUTS,

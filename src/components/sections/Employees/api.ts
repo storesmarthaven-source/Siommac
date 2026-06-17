@@ -88,6 +88,14 @@ export async function listManagers(signal?: AbortSignal): Promise<Manager[]> {
   return unwrap(res);
 }
 
+export interface AssignableRole { name: string; label: string; }
+
+/** Roles selectable in the employee form (excludes superadmin). */
+export async function listAssignableRoles(signal?: AbortSignal): Promise<AssignableRole[]> {
+  const res = await apiPost<{ success: boolean; roles?: AssignableRole[] }>('listAssignableRoles', {}, signal ? { signal } : undefined);
+  return res.success && res.roles ? res.roles : [];
+}
+
 export async function addDepartment(payload: AddDepartmentPayload): Promise<{ id: string }> {
   const res = await apiPost<ApiResult<{ id: string }>>('addDepartment', payload as unknown as Record<string, unknown>);
   return unwrap(res);

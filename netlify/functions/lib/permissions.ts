@@ -152,3 +152,18 @@ export async function loadRolePermissions(roleName: string): Promise<Set<string>
   _roleCache.set(roleName, { set, at: Date.now() });
   return set;
 }
+
+/**
+ * Whether a role is a "clocking employee" (gets the self-service Personal
+ * sections). superadmin is never an employee. Defaults true if the row is
+ * missing, so existing users keep their self-service.
+ */
+export async function loadRoleIsEmployee(roleName: string): Promise<boolean> {
+  if (roleName === 'superadmin') return false;
+  try {
+    const { data } = await sb.from('roles').select('is_employee').eq('name', roleName).maybeSingle<{ is_employee: boolean }>();
+    return data ? data.is_employee : true;
+  } catch {
+    return true;
+  }
+}

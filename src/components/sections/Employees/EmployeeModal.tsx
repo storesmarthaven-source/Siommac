@@ -38,7 +38,7 @@ import type {
   Department,
 } from './types';
 import { fileToBase64 } from './utils';
-import { useAddEmployee, useUpdateEmployee, useDepartmentList } from './hooks';
+import { useAddEmployee, useUpdateEmployee, useDepartmentList, useAssignableRoles } from './hooks';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -108,6 +108,7 @@ export function EmployeeModal({ mode, employee, listItem, open, onClose }: Emplo
   const [removePhoto,   setRemovePhoto]   = useState(false);
 
   const { data: departments = [], isLoading: deptsLoading } = useDepartmentList();
+  const { data: roles = [] } = useAssignableRoles();
   const addMutation    = useAddEmployee();
   const updateMutation = useUpdateEmployee();
 
@@ -369,9 +370,9 @@ export function EmployeeModal({ mode, employee, listItem, open, onClose }: Emplo
                 disabled={isSubmitting}
                 style={inputStyle(false)}
               >
-                <option value="employee">Employee</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                {roles.length === 0
+                  ? <option value={form.role}>{form.role}</option>
+                  : roles.map(r => <option key={r.name} value={r.name}>{r.label}</option>)}
               </select>
             </Field>
             <Field label="Department">

@@ -33,6 +33,8 @@ export interface PersistedSession {
   /** RBAC snapshot — persisted so can()/useCan() work immediately on refresh */
   rolePermissions?:     string[];
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
+  /** Whether the role is a clocking employee (gets self-service nav) */
+  isEmployee?:          boolean;
 }
 
 /** Read and validate the persisted session.  Returns null if missing/expired/corrupt. */

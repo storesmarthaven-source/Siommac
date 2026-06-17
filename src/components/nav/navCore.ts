@@ -18,8 +18,8 @@ function cfg(): SiomacConfig {
 }
 
 export function allSectionItems(): SectionItem[] {
-  const { SECTION_DEFS, COMMON_ITEMS } = cfg();
-  return ([] as SectionItem[]).concat(...Object.values(SECTION_DEFS), COMMON_ITEMS);
+  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
+  return ([] as SectionItem[]).concat(BASELINE_SECTIONS, ...Object.values(SECTION_DEFS), COMMON_ITEMS);
 }
 
 // ── AppState helpers ──────────────────────────────────────────────────────────
@@ -45,24 +45,55 @@ export function esc(s: unknown): string {
 
 // ── Sidebar / top-tabs ────────────────────────────────────────────────────────
 
+/** Whether the current role is a clocking employee (gets the Personal group). */
+function isEmployeeRole(): boolean {
+  const as = (window as unknown as { AppState?: { get(k: string): unknown } }).AppState;
+  return as?.get('currentIsEmployee') !== false;   // default true if unknown
+}
+
+const renderNavItem = (it: SectionItem) =>
+  `<li><button data-section="${esc(it.id)}" title="${esc(it.label)}">` +
+  `<i class="fas ${esc(it.icon)}"></i><span>${esc(it.label)}</span></button></li>`;
+
+const groupTitle = (label: string) =>
+  `<li class="sidebar-menu-title" aria-hidden="true">${esc(label)}</li>`;
+
+/**
+ * Build the grouped sidebar (ERP IA):
+ *   - pure employee (no management sections): self-service is the main nav.
+ *   - role WITH management sections + is_employee: MANAGE group, then a PERSONAL
+ *     group with the self-service items, then ACCOUNT.
+ *   - non-employee role (e.g. superadmin): MANAGE only, no self-service.
+ */
 export function buildSidebar(role: string): void {
-  const { SECTION_DEFS, COMMON_ITEMS } = cfg();
-  const main   = SECTION_DEFS[role] ?? [];
-  const common = COMMON_ITEMS;
-  const renderItem = (it: SectionItem) =>
-    `<li><button data-section="${esc(it.id)}" title="${esc(it.label)}">` +
-    `<i class="fas ${esc(it.icon)}"></i><span>${esc(it.label)}</span></button></li>`;
-  const html = main.map(renderItem).join('')
-    + (main.length ? '<li class="sidebar-menu-divider" aria-hidden="true"></li>' : '')
-    + common.map(renderItem).join('');
+  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
+  const main      = SECTION_DEFS[role] ?? [];
+  const personal  = isEmployeeRole() ? BASELINE_SECTIONS : [];
+
+  let html = '';
+  if (main.length === 0 && personal.length > 0) {
+    // Pure employee: self-service IS the main nav (no group header needed).
+    html = personal.map(renderNavItem).join('');
+  } else {
+    if (main.length) {
+      html += groupTitle('Manage') + main.map(renderNavItem).join('');
+    }
+    if (personal.length) {
+      html += groupTitle('Personal') + personal.map(renderNavItem).join('');
+    }
+  }
+  html += groupTitle('Account') + COMMON_ITEMS.map(renderNavItem).join('');
+
   const menu = document.getElementById('sidebarMenu');
   if (menu) menu.innerHTML = html;
   refreshNavBadges(0);
 }
 
 export function buildTopTabs(role: string): void {
-  const { SECTION_DEFS, COMMON_ITEMS } = cfg();
-  const items = (SECTION_DEFS[role] ?? []).concat(COMMON_ITEMS);
+  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
+  const personal = isEmployeeRole() ? BASELINE_SECTIONS : [];
+  // Top-tabs are flat: management first, then personal, then account.
+  const items = (SECTION_DEFS[role] ?? []).concat(personal, COMMON_ITEMS);
   const tabs = document.getElementById('topTabs');
   if (tabs) {
     tabs.innerHTML = items.map(it =>

@@ -25,7 +25,7 @@ import { toast } from '@store/ui';
 import { useSessionStore } from '@store/session';
 import {
   listEmployees, getEmployee, addEmployee, updateEmployee, deleteEmployee,
-  listDepartments, listManagers, addDepartment, updateDepartment, deleteDepartment,
+  listDepartments, listManagers, listAssignableRoles, addDepartment, updateDepartment, deleteDepartment,
   getMyLeaves, getPendingLeavesForManager, listAllLeaves,
   submitLeave, updateLeave, deleteLeave, approveLeave, rejectLeave,
   getMyHistory, getMyPayslips,
@@ -120,6 +120,16 @@ export function useManagerList() {
   return useQuery({
     queryKey: departmentKeys.managers(),
     queryFn:  ({ signal }) => listManagers(signal),
+    staleTime: 60_000,
+    enabled:  isAuthenticated,
+  });
+}
+
+export function useAssignableRoles() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: ['employees', 'assignableRoles'] as const,
+    queryFn:  ({ signal }) => listAssignableRoles(signal),
     staleTime: 60_000,
     enabled:  isAuthenticated,
   });

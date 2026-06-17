@@ -21,12 +21,18 @@ CREATE TABLE IF NOT EXISTS public.roles (
   description text        NOT NULL DEFAULT '',
   is_system   boolean     NOT NULL DEFAULT false,     -- superadmin / employee — built-in
   protected   boolean     NOT NULL DEFAULT false,     -- cannot be deleted / core perms stripped
+  is_employee boolean     NOT NULL DEFAULT true,      -- "is a clocking employee" — gets the
+                                                      -- self-service Personal sections. false
+                                                      -- for system/owner roles (superadmin).
   sort_order  int         NOT NULL DEFAULT 100,        -- stable ordering in the UI
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   updated_by  text        NOT NULL DEFAULT 'system',
   CONSTRAINT roles_name_format CHECK (name ~ '^[a-z][a-z0-9_]*$')
 );
+
+-- For re-runs on an existing table.
+ALTER TABLE public.roles ADD COLUMN IF NOT EXISTS is_employee boolean NOT NULL DEFAULT true;
 
 -- ── 2. role_permissions ──────────────────────────────────────
 -- A role's DEFAULT capability grants (resource.action). Per-USER overrides live
@@ -40,11 +46,11 @@ CREATE TABLE IF NOT EXISTS public.role_permissions (
 CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON public.role_permissions (role_name);
 
 -- ── 3. Seed system + initial roles ───────────────────────────
-INSERT INTO public.roles (name, label, description, is_system, protected, sort_order) VALUES
-  ('superadmin', 'Superadmin', 'Full, unrestricted access. Permanent.',        true,  true,  0),
-  ('employee',   'Employee',   'Baseline self-service every user has. Permanent.', true,  true,  10),
-  ('admin',      'Admin',      'Organisation administrator.',                   false, false, 20),
-  ('manager',    'Manager',    'Department / team manager.',                    false, false, 30)
+INSERT INTO public.roles (name, label, description, is_system, protected, is_employee, sort_order) VALUES
+  ('superadmin', 'Superadmin', 'Full, unrestricted access. Permanent.',           true,  true,  false, 0),
+  ('employee',   'Employee',   'Baseline self-service every user has. Permanent.', true,  true,  true,  10),
+  ('admin',      'Admin',      'Organisation administrator.',                      false, false, true,  20),
+  ('manager',    'Manager',    'Department / team manager.',                       false, false, true,  30)
 ON CONFLICT (name) DO UPDATE
   SET label       = EXCLUDED.label,
       is_system   = EXCLUDED.is_system,

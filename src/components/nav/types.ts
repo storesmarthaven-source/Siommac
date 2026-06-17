@@ -30,10 +30,11 @@ export interface LayoutItem {
 }
 
 export interface SiomacConfig {
-  SECTION_DEFS: Record<string, SectionItem[]>;
-  COMMON_ITEMS: SectionItem[];
-  PALETTES:     PaletteItem[];
-  LAYOUTS:      LayoutItem[];
+  SECTION_DEFS:      Record<string, SectionItem[]>;
+  BASELINE_SECTIONS: SectionItem[];
+  COMMON_ITEMS:      SectionItem[];
+  PALETTES:          PaletteItem[];
+  LAYOUTS:           LayoutItem[];
 }
 
 // Header badge counts from getHeaderCounts
