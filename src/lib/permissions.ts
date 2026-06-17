@@ -124,7 +124,7 @@ export type PermissionKey = typeof PERMISSION_KEYS[number];
  *
  * Convention: list what the role CAN do, not what it cannot.
  */
-const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
+export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
 
   employee: new Set<PermissionKey>([
     'attendance.view_own',
@@ -272,6 +272,39 @@ export function resolvePermission(
   // 2. Check role defaults
   const roleSet = ROLE_PERMISSIONS[ctx.role];
   return roleSet?.has(key as PermissionKey) ?? false;
+}
+
+/** Whether a role grants a permission by default (ignoring per-user overrides). */
+export function roleDefaultGranted(role: UserRole, key: string): boolean {
+  return ROLE_PERMISSIONS[role]?.has(key as PermissionKey) ?? false;
+}
+
+/** Tri-state source of a permission for the grant-matrix UI. */
+export type PermissionState = 'default' | 'grant' | 'deny';
+
+/**
+ * Classify a permission for one user as default (no override), explicit grant,
+ * or explicit deny — used by the superadmin permission matrix.
+ */
+export function permissionState(
+  key: string,
+  overrides: PermissionOverride[],
+): PermissionState {
+  const override = overrides.find(o => o.permission === key);
+  if (override === undefined) return 'default';
+  return override.granted ? 'grant' : 'deny';
+}
+
+/** Permission keys grouped by their `resource` prefix, in catalogue order. */
+export function permissionGroups(): { resource: string; keys: PermissionKey[] }[] {
+  const groups: { resource: string; keys: PermissionKey[] }[] = [];
+  for (const key of PERMISSION_KEYS) {
+    const resource = key.split('.')[0] ?? key;
+    let group = groups.find(g => g.resource === resource);
+    if (!group) { group = { resource, keys: [] }; groups.push(group); }
+    group.keys.push(key);
+  }
+  return groups;
 }
 
 // ── Store-integrated shorthand ────────────────────────────────────────────────

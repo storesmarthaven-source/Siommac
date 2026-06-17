@@ -81,9 +81,9 @@ import {
   unmountAttendanceDashboard,
 } from '@sections/AttendanceDashboard';
 import {
-  mountSuperadminModulesSection,
-  unmountSuperadminModulesSection,
-} from '@sections/SuperadminModules';
+  mountSuperadminConsoleSection,
+  unmountSuperadminConsoleSection,
+} from '@sections/SuperadminConsole';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
@@ -420,10 +420,10 @@ async function bootApp(): Promise<void> {
     loadLeaveApplications:        () => { void queryClient.invalidateQueries({ queryKey: ['leaves'] }); },
   };
 
-  // Superadmin Modules section
-  const superadminModulesRoot = document.getElementById('preact-superadmin-modules-root');
-  if (superadminModulesRoot) {
-    mountSuperadminModulesSection(superadminModulesRoot, { queryClient });
+  // Superadmin Console section
+  const superadminConsoleRoot = document.getElementById('preact-superadmin-console-root');
+  if (superadminConsoleRoot) {
+    mountSuperadminConsoleSection(superadminConsoleRoot, { queryClient });
   }
 
   // Profile section (replaces profile.js)

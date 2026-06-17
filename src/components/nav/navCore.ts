@@ -350,7 +350,7 @@ function _setSbBadge(btn: HTMLButtonElement, count: number) {
 }
 
 // ── Module matrix (Superadmin) ────────────────────────────────────────────────
-// Called by SuperadminModulesSection after toggling a module permission.
+// Called by the superadmin console Modules tab after toggling a module permission.
 // In a future phase this will rebuild the sidebar live; for now it's a no-op
 // stub so the section can import it without errors.
 export function setModuleMatrix(_matrix: unknown): void {

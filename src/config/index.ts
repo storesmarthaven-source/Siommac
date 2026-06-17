@@ -92,7 +92,7 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications' },
     { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration' },
     { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports' },
-    { id: 's-superadmin-modules', label: 'Modules',   icon: 'fa-th-large',            sub: 'Enable or disable feature modules per role and manager' },
+    { id: 's-superadmin-console', label: 'Console',   icon: 'fa-shield-halved',       sub: 'Modules, permissions and administration tools' },
   ],
 };
 

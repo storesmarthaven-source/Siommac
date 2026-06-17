@@ -24,7 +24,8 @@
 
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
+import { PERMISSION_KEYS } from '../lib/permissions';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 
@@ -336,6 +337,104 @@ router.post('/resetManagerModules', async c => {
   await log_(actor, 'manager_module_reset', 'user', userId,
     `manager ${userId} modules reset to role defaults`);
 
+  return c.json({ success: true });
+});
+
+// ── Permissions: per-user RBAC grant matrix ───────────────────────────────────
+// All gated by the 'permissions.manage' capability (superadmin by default).
+
+const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
+
+const GetUserPermsSchema = z.object({ userId: z.string().min(1) });
+const SetUserPermSchema  = z.object({
+  userId:     z.string().min(1),
+  permission: z.string().refine(p => PERMISSION_KEY_SET.has(p), 'Unknown permission key'),
+  granted:    z.boolean(),
+});
+const ClearUserPermSchema = z.object({
+  userId:     z.string().min(1),
+  permission: z.string().min(1),
+});
+
+// POST /superadmin/listUsers — all non-superadmin active users (for the matrix).
+router.post('/listUsers', async c => {
+  await requirePermission(c, 'permissions.manage');
+  const { data, error } = await sb
+    .from('app_users')
+    .select('id, username, full_name, role')
+    .neq('role', 'superadmin')
+    .eq('status', 'active')
+    .order('role')
+    .order('full_name');
+  if (error) {
+    console.error('[superadmin/listUsers] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load users.' }, 500);
+  }
+  const users = (data ?? []).map(u => ({
+    id:       u.id,
+    username: u.username,
+    fullName: u.full_name,
+    role:     u.role,
+  }));
+  return c.json({ success: true, users });
+});
+
+// POST /superadmin/getUserPermissions — override rows for one user.
+router.post('/getUserPermissions', async c => {
+  await requirePermission(c, 'permissions.manage');
+  const v = zv(c, GetUserPermsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { data, error } = await sb
+    .from('user_permissions')
+    .select('permission, granted')
+    .eq('user_id', v.data.userId);
+  if (error) {
+    console.error('[superadmin/getUserPermissions] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load permissions.' }, 500);
+  }
+  return c.json({ success: true, permissions: data ?? [] });
+});
+
+// POST /superadmin/setUserPermission — upsert an explicit grant/deny override.
+router.post('/setUserPermission', async c => {
+  const actor = await requirePermission(c, 'permissions.manage');
+  const v = zv(c, SetUserPermSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { userId, permission, granted } = v.data;
+
+  const { error } = await sb
+    .from('user_permissions')
+    .upsert(
+      { user_id: userId, permission, granted, set_by: actor.username, set_at: new Date().toISOString() },
+      { onConflict: 'user_id,permission' },
+    );
+  if (error) {
+    console.error('[superadmin/setUserPermission] error:', error.message);
+    return c.json({ success: false, message: 'Failed to set permission.' }, 500);
+  }
+  await log_(actor, granted ? 'permission_grant' : 'permission_deny', 'user', userId,
+    `${permission} ${granted ? 'granted to' : 'denied for'} user ${userId}`);
+  return c.json({ success: true });
+});
+
+// POST /superadmin/clearUserPermission — remove an override (revert to role default).
+router.post('/clearUserPermission', async c => {
+  const actor = await requirePermission(c, 'permissions.manage');
+  const v = zv(c, ClearUserPermSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { userId, permission } = v.data;
+
+  const { error } = await sb
+    .from('user_permissions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('permission', permission);
+  if (error) {
+    console.error('[superadmin/clearUserPermission] error:', error.message);
+    return c.json({ success: false, message: 'Failed to clear permission.' }, 500);
+  }
+  await log_(actor, 'permission_clear', 'user', userId,
+    `${permission} override removed for user ${userId} (reverted to role default)`);
   return c.json({ success: true });
 });
 
