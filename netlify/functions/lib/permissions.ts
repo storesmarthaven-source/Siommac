@@ -167,3 +167,63 @@ export async function loadRoleIsEmployee(roleName: string): Promise<boolean> {
     return true;
   }
 }
+
+// ── Department data-scoping (phase 13) ────────────────────────────────────────
+
+export type RoleScope = 'own' | 'all';
+const _scopeCache = new Map<string, { scope: RoleScope; at: number }>();
+
+/** Invalidate a role's cached scope (call after editing it). */
+export function invalidateRoleScope(roleName?: string): void {
+  if (roleName) _scopeCache.delete(roleName);
+  else _scopeCache.clear();
+}
+
+/**
+ * A role's data scope: 'all' (org-wide) or 'own' (own department only).
+ * superadmin/admin default to 'all'; everything else defaults to 'own' — the
+ * safe default if the column/row is missing.
+ */
+export async function loadRoleScope(roleName: string): Promise<RoleScope> {
+  if (roleName === 'superadmin' || roleName === 'admin') return 'all';
+  const cached = _scopeCache.get(roleName);
+  if (cached && Date.now() - cached.at < ROLE_CACHE_TTL_MS) return cached.scope;
+  let scope: RoleScope = 'own';
+  try {
+    const { data } = await sb.from('roles').select('scope').eq('name', roleName).maybeSingle<{ scope: string }>();
+    scope = data?.scope === 'all' ? 'all' : 'own';
+  } catch { /* default own */ }
+  _scopeCache.set(roleName, { scope, at: Date.now() });
+  return scope;
+}
+
+export type DeptScope = { all: true } | { all: false; departmentId: string };
+
+/**
+ * Resolve the caller's department scope for a request. The single source of
+ * truth for "whose records can this user see". Org-wide roles → { all: true };
+ * department-bound roles → { all: false, departmentId }. A scoped user with no
+ * department is restricted to an impossible id (sees nothing but their own).
+ */
+export async function deptScopeFilter(actor: { role: string; department_id?: string | null }): Promise<DeptScope> {
+  const scope = await loadRoleScope(actor.role);
+  if (scope === 'all') return { all: true };
+  return { all: false, departmentId: actor.department_id ?? '__none__' };
+}
+
+/**
+ * Throw 403 if a scoped caller tries to act on a record outside their
+ * department. Org-wide callers always pass. A null target dept (unassigned)
+ * is treated as in-scope for everyone (e.g. unassigned project sites).
+ */
+export async function assertInScope(
+  actor: { role: string; department_id?: string | null },
+  targetDepartmentId: string | null | undefined,
+): Promise<void> {
+  const s = await deptScopeFilter(actor);
+  if (s.all) return;
+  if (targetDepartmentId == null) return;            // unassigned → visible to all
+  if (targetDepartmentId !== s.departmentId) {
+    throw Object.assign(new Error('Forbidden: outside your department'), { status: 403 });
+  }
+}
