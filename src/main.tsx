@@ -88,7 +88,7 @@ import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
 import { mountLoginPage }      from '@components/auth';
-import { mountNavController }  from '@components/nav';
+import { mountNavController, mountCommandPalette }  from '@components/nav';
 import { useSessionStore }     from '@store/session';
 import '@cfg/index';            // registers window.SiomacConfig before any legacy script reads it
 import '@lib/popup';            // registers window.cpop / window.Swal before any legacy script reads it
@@ -208,6 +208,12 @@ async function bootApp(): Promise<void> {
   const navCtrlRoot = document.getElementById('preact-nav-ctrl');
   if (navCtrlRoot) {
     mountNavController(navCtrlRoot);
+  }
+
+  // ⌘K command palette (jump-to-section overlay)
+  const cmdkRoot = document.getElementById('preact-cmdk-root');
+  if (cmdkRoot) {
+    mountCommandPalette(cmdkRoot);
   }
 
   // Attendance section (replaces attendance-view.js)

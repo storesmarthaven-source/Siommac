@@ -5,11 +5,21 @@
  * @see docs/CODING_STANDARDS.md
  */
 
+export type NavGroupId =
+  | 'overview' | 'workforce' | 'operations' | 'finance'
+  | 'administration' | 'personal' | 'account';
+
 export interface SectionItem {
   id:    string;
   label: string;
   icon:  string;
   sub?:  string;
+  group?: NavGroupId;
+}
+
+export interface NavGroupItem {
+  id:    NavGroupId;
+  label: string;
 }
 
 export interface PaletteItem {
@@ -33,6 +43,7 @@ export interface SiomacConfig {
   SECTION_DEFS:      Record<string, SectionItem[]>;
   BASELINE_SECTIONS: SectionItem[];
   COMMON_ITEMS:      SectionItem[];
+  NAV_GROUPS:        NavGroupItem[];
   PALETTES:          PaletteItem[];
   LAYOUTS:           LayoutItem[];
 }

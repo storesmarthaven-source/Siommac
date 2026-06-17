@@ -8,7 +8,7 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-import type { SiomacConfig, SectionItem } from './types';
+import type { SiomacConfig, SectionItem, NavGroupItem, NavGroupId } from './types';
 import { updateColorScheme, updateLayoutMode } from './api';
 
 // ── Config access (loaded by config.js before main.tsx) ──────────────────────
@@ -58,35 +58,112 @@ const renderNavItem = (it: SectionItem) =>
 const groupTitle = (label: string) =>
   `<li class="sidebar-menu-title" aria-hidden="true">${esc(label)}</li>`;
 
+// ── Accordion sidebar (Meridian-style IA, H) ──────────────────────────────────
+
+const NAV_EXPAND_KEY = (role: string) => `siomac_nav_groups_${role}`;
+
+/** Read which accordion groups are expanded (persisted per role). */
+function loadExpandedGroups(role: string): Set<string> | null {
+  try {
+    const raw = localStorage.getItem(NAV_EXPAND_KEY(role));
+    if (!raw) return null;
+    const arr = JSON.parse(raw) as string[];
+    return Array.isArray(arr) ? new Set(arr) : null;
+  } catch { return null; }
+}
+
+function saveExpandedGroups(role: string, expanded: Set<string>): void {
+  try { localStorage.setItem(NAV_EXPAND_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
+}
+
+/** The currently-active section id (from localStorage last-section or the DOM). */
+function activeSectionId(role: string): string {
+  const active = document.querySelector<HTMLElement>('.app-section.active');
+  if (active?.id) return active.id;
+  try { return localStorage.getItem('siomac_last_section_' + role) ?? ''; } catch { return ''; }
+}
+
 /**
- * Build the grouped sidebar (ERP IA):
- *   - pure employee (no management sections): self-service is the main nav.
- *   - role WITH management sections + is_employee: MANAGE group, then a PERSONAL
- *     group with the self-service items, then ACCOUNT.
- *   - non-employee role (e.g. superadmin): MANAGE only, no self-service.
+ * Build the accordion sidebar grouped by NAV_GROUPS:
+ *   - 'overview' (and any label-less group) renders its items flat — no header.
+ *   - other groups render a collapsible header (label + count + chevron) over an
+ *     indented list of items.
+ *   - the 'personal' group is included only for clocking-employee roles.
+ *   - groups with no items for the role are skipped.
+ * Multiple groups may be open at once; expanded state is persisted per role, and
+ * the group containing the active section is always expanded.
  */
 export function buildSidebar(role: string): void {
-  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
-  const main      = SECTION_DEFS[role] ?? [];
-  const personal  = isEmployeeRole() ? BASELINE_SECTIONS : [];
+  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS, NAV_GROUPS } = cfg();
+  const main     = SECTION_DEFS[role] ?? [];
+  const personal = isEmployeeRole() ? BASELINE_SECTIONS : [];
+  const all: SectionItem[] = ([] as SectionItem[]).concat(main, personal, COMMON_ITEMS);
+
+  // Bucket items by group, preserving definition order within each group.
+  const byGroup = new Map<NavGroupId, SectionItem[]>();
+  for (const it of all) {
+    const g = (it.group ?? 'overview') as NavGroupId;
+    (byGroup.get(g) ?? byGroup.set(g, []).get(g)!).push(it);
+  }
+
+  const groups = (NAV_GROUPS as NavGroupItem[]).filter(g => (byGroup.get(g.id)?.length ?? 0) > 0);
+
+  // Resolve expanded state: persisted, else default open everything; the active
+  // section's group is forced open so the current page is always visible.
+  let expanded = loadExpandedGroups(role);
+  if (!expanded) expanded = new Set(groups.map(g => g.id));
+  const activeId   = activeSectionId(role);
+  const activeItem = all.find(i => i.id === activeId);
+  if (activeItem?.group) expanded.add(activeItem.group);
 
   let html = '';
-  if (main.length === 0 && personal.length > 0) {
-    // Pure employee: self-service IS the main nav (no group header needed).
-    html = personal.map(renderNavItem).join('');
-  } else {
-    if (main.length) {
-      html += groupTitle('Manage') + main.map(renderNavItem).join('');
+  for (const g of groups) {
+    const items = byGroup.get(g.id) ?? [];
+    if (!g.label) {
+      // Flat group (overview): items with no collapsible header.
+      html += `<li class="sb-group sb-group--flat" data-group="${esc(g.id)}"><ul class="sb-group-items">`
+        + items.map(renderNavItem).join('') + `</ul></li>`;
+      continue;
     }
-    if (personal.length) {
-      html += groupTitle('Personal') + personal.map(renderNavItem).join('');
-    }
+    const isOpen = expanded.has(g.id);
+    html += `<li class="sb-group${isOpen ? ' open' : ''}" data-group="${esc(g.id)}">`
+      + `<button type="button" class="sb-group-header" data-group-toggle="${esc(g.id)}" aria-expanded="${isOpen}">`
+      + `<span class="sb-group-label">${esc(g.label)}</span>`
+      + `<span class="sb-group-count">${items.length}</span>`
+      + `<i class="fas fa-chevron-down sb-group-chevron"></i>`
+      + `</button>`
+      + `<ul class="sb-group-items">` + items.map(renderNavItem).join('') + `</ul>`
+      + `</li>`;
   }
-  html += groupTitle('Account') + COMMON_ITEMS.map(renderNavItem).join('');
 
   const menu = document.getElementById('sidebarMenu');
-  if (menu) menu.innerHTML = html;
+  if (menu) {
+    menu.innerHTML = html;
+    saveExpandedGroups(role, expanded);
+    _wireGroupToggles(menu, role);
+  }
+  // Reflect the active item's highlight + ensure its group is open.
+  if (activeId) {
+    menu?.querySelectorAll<HTMLButtonElement>('button[data-section]').forEach(b =>
+      b.classList.toggle('active', b.dataset['section'] === activeId));
+  }
   refreshNavBadges(0);
+}
+
+/** Wire accordion group headers to expand/collapse + persist (idempotent). */
+function _wireGroupToggles(menu: HTMLElement, role: string): void {
+  menu.querySelectorAll<HTMLButtonElement>('button[data-group-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const li = btn.closest<HTMLElement>('.sb-group');
+      if (!li) return;
+      const open = li.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(open));
+      const expanded = loadExpandedGroups(role) ?? new Set<string>();
+      const id = li.dataset['group'] ?? '';
+      if (open) expanded.add(id); else expanded.delete(id);
+      saveExpandedGroups(role, expanded);
+    });
+  });
 }
 
 export function buildTopTabs(role: string): void {
@@ -223,10 +300,22 @@ export function showSection(id: string): void {
 
   try { localStorage.setItem('siomac_last_section_' + getRole(), id); } catch (_) {}
 
-  document.querySelectorAll('.sidebar-menu button').forEach(b =>
+  document.querySelectorAll('.sidebar-menu button[data-section]').forEach(b =>
     b.classList.toggle('active', (b as HTMLButtonElement).dataset['section'] === id));
   document.querySelectorAll('#topTabs button').forEach(b =>
     b.classList.toggle('active', (b as HTMLButtonElement).dataset['section'] === id));
+
+  // Ensure the active item's accordion group is expanded so it stays visible.
+  const activeBtn = document.querySelector<HTMLButtonElement>(`#sidebarMenu button[data-section="${id}"]`);
+  const grp = activeBtn?.closest<HTMLElement>('.sb-group');
+  if (grp && !grp.classList.contains('sb-group--flat') && !grp.classList.contains('open')) {
+    grp.classList.add('open');
+    grp.querySelector('[data-group-toggle]')?.setAttribute('aria-expanded', 'true');
+    const role = getRole();
+    const expanded = loadExpandedGroups(role) ?? new Set<string>();
+    expanded.add(grp.dataset['group'] ?? '');
+    saveExpandedGroups(role, expanded);
+  }
 
   document.getElementById('sidebar')?.classList.remove('mobile-open');
   document.getElementById('sidebarBackdrop')?.classList.remove('active');

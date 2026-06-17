@@ -218,6 +218,14 @@ function _syncPillAvatars(result: Record<string, unknown>): void {
   const hdrAv = document.getElementById('hdrProfileAvatar');
   if (hdrAv) { if (img) _swapAvatarImg(hdrAv, img, initial, 'hdr'); else hdrAv.textContent = initial; }
 
+  // Pinned sidebar user card (Meridian-style, H).
+  const cardAv = document.getElementById('sidebarUserCardAvatar');
+  if (cardAv) { if (img) _swapAvatarImg(cardAv, img, initial, 'hdr'); else cardAv.textContent = initial; }
+  const cardNm = document.getElementById('sidebarUserCardName');
+  if (cardNm) cardNm.textContent = fullName !== '?' ? fullName : (username || 'User');
+  const cardRl = document.getElementById('sidebarUserCardRole');
+  if (cardRl) cardRl.textContent = roleLabel;
+
   _pill('dash', 'Admin');
   _pill('emp',  'Employee');
   _pill('mgr',  'Manager');
@@ -1314,6 +1322,14 @@ function setupEventListeners(): void {
   document.getElementById('sidebarMenu')?.addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLElement>('button[data-section]');
     if (btn) nav?.['showSection']?.(btn.dataset['section']);
+  });
+
+  // Pinned user card → My Profile
+  document.getElementById('sidebarUserCard')?.addEventListener('click', () => nav?.['showSection']?.('s-profile'));
+
+  // Sidebar search button → open the command palette (⌘K)
+  document.getElementById('sidebarSearchBtn')?.addEventListener('click', () => {
+    (w()['openCommandPalette'] as (() => void) | undefined)?.();
   });
 }
 

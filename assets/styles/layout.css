@@ -142,8 +142,31 @@
   display: inline-block; text-transform: uppercase; letter-spacing: 0.6px;
 }
 
+/* ── Sidebar search (⌘K command-palette launcher) ── */
+.sidebar-search {
+  margin: 14px 14px 4px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; width: calc(100% - 28px);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px; cursor: pointer;
+  color: #8ea0c0; font-size: 0.82rem; font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sidebar-search:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
+.sidebar-search i { font-size: 0.8rem; }
+.sidebar-search-text { flex: 1; text-align: left; }
+.sidebar-search-kbd {
+  font-size: 0.66rem; font-weight: 600; color: #9fb0cf;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px; padding: 1px 6px; font-family: inherit;
+}
+.sidebar.collapsed .sidebar-search-text,
+.sidebar.collapsed .sidebar-search-kbd { display: none; }
+.sidebar.collapsed .sidebar-search { justify-content: center; width: 46px; margin: 14px auto 6px; padding: 11px; }
+
 /* ── Nav menu ── */
-.sidebar-menu-section { flex: 1; padding: 16px 12px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
+.sidebar-menu-section { flex: 1; padding: 10px 12px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
 .sidebar-menu-section::-webkit-scrollbar { display: none; }
 .sidebar-menu-title {
   font-size: 0.65rem; font-weight: 700; letter-spacing: 1.2px;
@@ -151,22 +174,92 @@
   margin: 0 0 10px 4px; padding: 0 8px;
 }
 .sidebar-menu, #sidebarMenu { list-style: none !important; padding: 0 !important; margin: 0 !important; }
-.sidebar-menu li { margin-bottom: 3px; position: relative; }
+.sidebar-menu li { margin-bottom: 2px; position: relative; }
 .sidebar-menu-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 4px 8px; }
-.sidebar-menu button {
-  width: 100%; text-align: left; padding: 11px 14px;
-  background: transparent; border: none; color: rgba(255,255,255,0.8);
-  cursor: pointer; border-radius: var(--radius-md);
-  font-size: 0.85rem; font-weight: 500;
+
+/* Accordion group (Meridian-style) */
+.sb-group { list-style: none; margin-bottom: 2px; }
+.sb-group--flat { margin-bottom: 6px; }
+.sb-group-header {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px 7px; margin-top: 4px;
+  background: transparent; border: none; cursor: pointer; font-family: inherit;
+}
+.sb-group-label {
+  flex: 1; text-align: left;
+  /* Meridian nav token: section label 11px / 600 / +13% tracking / uppercase */
+  font-size: 11px; font-weight: 600; letter-spacing: 0.13em;
+  text-transform: uppercase; color: rgba(255,255,255,0.42);
+}
+.sb-group-count {
+  /* Meridian nav token: count badge — mono 10.5 / 500 / pill */
+  font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.06); border-radius: 9px; padding: 1px 7px; min-width: 18px; text-align: center;
+}
+.sb-group-chevron { font-size: 0.62rem; color: rgba(255,255,255,0.40); transition: transform 0.2s ease; }
+.sb-group:not(.open) .sb-group-chevron { transform: rotate(-90deg); }
+.sb-group-header:hover .sb-group-label,
+.sb-group-header:hover .sb-group-chevron { color: rgba(255,255,255,0.72); }
+
+.sb-group-items { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.sb-group:not(.open) .sb-group-items { display: none; }
+
+.sidebar-menu button[data-section] {
+  width: 100%; text-align: left; padding: 9px 14px;
+  background: transparent; border: none; color: #6b7a94;
+  cursor: pointer; border-radius: 8px;
+  /* Meridian nav token: group item 13.5px / 600 */
+  font-size: 13.5px; font-weight: 600;
   display: flex; align-items: center; gap: 12px;
-  transition: all 0.2s; font-family: inherit;
+  position: relative;
+  transition: background 0.15s ease, color 0.15s ease; font-family: var(--font-sans);
 }
-.sidebar-menu button:hover { background: transparent; color: #f7b20c; }
-.sidebar-menu button.active {
-  background: #f8b30d;
-  color: white; font-weight: 600;
+/* hover: 4.5% white wash, white text (Meridian spec) */
+.sidebar-menu button[data-section]:hover { background: rgba(255,255,255,0.045); color: #fff; }
+/* active: 3px red accent bar + 13% red fill, white 600 (sub-item active #fff) */
+.sidebar-menu button[data-section].active {
+  background: rgba(228,12,12,0.13);
+  color: #fff; font-weight: 600;
 }
-.sidebar-menu i { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; }
+.sidebar-menu button[data-section].active::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 0 3px 3px 0; background: var(--siomac-red);
+}
+/* Meridian nav token: 19px icon */
+.sidebar-menu i { width: 19px; text-align: center; font-size: 19px; line-height: 1; flex-shrink: 0; }
+
+/* Hide group headers + counts when collapsed */
+.sidebar.collapsed .sb-group-label,
+.sidebar.collapsed .sb-group-count,
+.sidebar.collapsed .sb-group-chevron { display: none; }
+.sidebar.collapsed .sb-group-header { padding: 4px 0; min-height: 6px; }
+.sidebar.collapsed .sb-group:not(.open) .sb-group-items { display: block; } /* always show icons when collapsed */
+
+/* ── Pinned user card (Meridian-style) ── */
+.sidebar-user-card {
+  margin: 6px 12px 4px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; width: calc(100% - 24px);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; cursor: pointer; font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sidebar-user-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.16); }
+.sidebar-user-card-avatar {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 9px;
+  background: linear-gradient(135deg, var(--siomac-red), var(--siomac-red-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; text-transform: uppercase; overflow: hidden;
+}
+.sidebar-user-card-info { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+.sidebar-user-card-name { font-size: 0.82rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-card-role { font-size: 0.68rem; color: #8ea0c0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-card-chev { font-size: 0.7rem; color: #6b7a94; flex-shrink: 0; }
+.sidebar.collapsed .sidebar-user-card { width: 46px; margin: 6px auto 4px; padding: 5px; justify-content: center; }
+.sidebar.collapsed .sidebar-user-card-info,
+.sidebar.collapsed .sidebar-user-card-chev { display: none; }
 
 /* ── Session timer ── */
 .sidebar-session {

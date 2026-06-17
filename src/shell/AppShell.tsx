@@ -46,11 +46,29 @@ function Sidebar() {
         <i class="fas fa-building" />
         <span class="sidebar-brand-text" id="companyName">My Company</span>
       </div>
+
+      {/* Command-palette launcher (⌘K) — opens CommandPalette overlay */}
+      <button class="sidebar-search" id="sidebarSearchBtn" type="button" title="Search & jump to (Ctrl/⌘K)">
+        <i class="fas fa-search" />
+        <span class="sidebar-search-text">Search</span>
+        <kbd class="sidebar-search-kbd">⌘K</kbd>
+      </button>
+
       <div class="sidebar-avatar" id="sidebarAvatar" style="display:none;">U</div>
       <div class="sidebar-menu-section">
-        <div class="sidebar-menu-title" id="sidebarNavTitle">Navigation</div>
         <ul class="sidebar-menu" id="sidebarMenu" />
       </div>
+
+      {/* Pinned user card (Meridian-style) — populated by attSystem after login */}
+      <button class="sidebar-user-card" id="sidebarUserCard" type="button" data-section="s-profile" title="My Profile">
+        <span class="sidebar-user-card-avatar" id="sidebarUserCardAvatar">U</span>
+        <span class="sidebar-user-card-info">
+          <span class="sidebar-user-card-name" id="sidebarUserCardName">User</span>
+          <span class="sidebar-user-card-role" id="sidebarUserCardRole">Role</span>
+        </span>
+        <i class="fas fa-chevron-right sidebar-user-card-chev" />
+      </button>
+
       <div class="sidebar-session hidden" id="sessionTimer" title="Session time remaining">
         <i class="fas fa-clock" />
         <span class="sidebar-session-label">Session</span>
@@ -124,6 +142,9 @@ export default function AppShell() {
       {/* Full-screen overlays (outside #appShell to avoid stacking-context clipping) */}
       <EmployeeModals />
       <ProjectSiteModal />
+
+      {/* ⌘K command palette mount root */}
+      <div id="preact-cmdk-root" />
     </>
   );
 }

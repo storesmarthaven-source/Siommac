@@ -46,11 +46,42 @@ export const TOKEN_REFRESH_HEADROOM_MS = 60 * 1000;
 
 // ── Navigation / sections ─────────────────────────────────────────────────────
 
+/** Sidebar accordion groups, in display order (Meridian-style IA). */
+export type NavGroup =
+  | 'overview'
+  | 'workforce'
+  | 'operations'
+  | 'finance'
+  | 'administration'
+  | 'personal'
+  | 'account';
+
+export interface NavGroupDef {
+  id:    NavGroup;
+  label: string;   // uppercase group header text ('' = no header, render flat)
+}
+
+/**
+ * Group order + labels for the accordion sidebar. The 'overview' group renders
+ * its single item flat (no collapsible header), matching Meridian's pinned
+ * Dashboard row. Groups with no items for the current role are skipped.
+ */
+export const NAV_GROUPS: NavGroupDef[] = [
+  { id: 'overview',       label: '' },
+  { id: 'workforce',      label: 'Workforce' },
+  { id: 'operations',     label: 'Operations' },
+  { id: 'finance',        label: 'Finance' },
+  { id: 'administration', label: 'Administration' },
+  { id: 'personal',       label: 'Personal' },
+  { id: 'account',        label: 'Account' },
+];
+
 export interface SectionDef {
   id:    string;
   label: string;
   icon:  string;   // Font Awesome class, e.g. 'fa-tachometer-alt'
   sub:   string;   // subtitle shown in nav
+  group?: NavGroup; // accordion group; defaults applied in nav builder
 }
 
 export type UserRole = 'superadmin' | 'admin' | 'manager' | 'employee';
@@ -62,10 +93,10 @@ export type UserRole = 'superadmin' | 'admin' | 'manager' | 'employee';
  * management sections their role adds.
  */
 export const BASELINE_SECTIONS: SectionDef[] = [
-  { id: 's-emp-attendance', label: 'My Attendance', icon: 'fa-calendar-check',      sub: "Today's check-in status and work hours" },
-  { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',             sub: 'Your attendance log for the past 30 days' },
-  { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status' },
-  { id: 's-emp-payroll',    label: 'My Payslips',   icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips' },
+  { id: 's-emp-attendance', label: 'My Attendance', icon: 'fa-calendar-check',      sub: "Today's check-in status and work hours",  group: 'personal' },
+  { id: 's-emp-history',    label: 'My History',    icon: 'fa-history',             sub: 'Your attendance log for the past 30 days', group: 'personal' },
+  { id: 's-emp-leave',      label: 'My Leaves',     icon: 'fa-umbrella-beach',      sub: 'Submit requests and track approval status', group: 'personal' },
+  { id: 's-emp-payroll',    label: 'My Payslips',   icon: 'fa-file-invoice-dollar', sub: 'View and print your approved payslips',     group: 'personal' },
 ];
 
 // Per-role ADDITIONAL sections (stacked on top of BASELINE_SECTIONS). A custom
@@ -73,42 +104,42 @@ export const BASELINE_SECTIONS: SectionDef[] = [
 export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
   employee: [],   // employee is the pure baseline — no extra sections
   manager: [
-    { id: 's-adm-dashboard',  label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now" },
-    { id: 's-adm-employees',  label: 'Employees',    icon: 'fa-users',               sub: 'View the workforce' },
-    { id: 's-adm-projects',   label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations and site details' },
-    { id: 's-projectMap',     label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in' },
-    { id: 's-adm-attendance', label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status' },
+    { id: 's-adm-dashboard',  label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now", group: 'overview' },
+    { id: 's-adm-employees',  label: 'Employees',    icon: 'fa-users',               sub: 'View the workforce',                            group: 'workforce' },
+    { id: 's-adm-attendance', label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
+    { id: 's-adm-projects',   label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations and site details',              group: 'operations' },
+    { id: 's-projectMap',     label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
   ],
   admin: [
-    { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now" },
-    { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce' },
-    { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details' },
-    { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in' },
-    { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status' },
-    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications' },
-    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration' },
-    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports' },
+    { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now", group: 'overview' },
+    { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce',            group: 'workforce' },
+    { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
+    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications',    group: 'workforce' },
+    { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details',  group: 'operations' },
+    { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
+    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
+    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
   ],
   // Superadmin has the same nav as admin — permission management is via a
   // dedicated settings panel, not a separate section.
   superadmin: [
-    { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now" },
-    { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce' },
-    { id: 's-adm-departments', label: 'Departments',  icon: 'fa-building',            sub: 'Structure your organisation and assign leads' },
-    { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details' },
-    { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in' },
-    { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status' },
-    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications' },
-    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration' },
-    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports' },
-    { id: 's-superadmin-console', label: 'Console',   icon: 'fa-shield-halved',       sub: 'Modules, permissions and administration tools' },
+    { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now", group: 'overview' },
+    { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce',            group: 'workforce' },
+    { id: 's-adm-departments', label: 'Departments',  icon: 'fa-building',            sub: 'Structure your organisation and assign leads',  group: 'workforce' },
+    { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
+    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications',    group: 'workforce' },
+    { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details',  group: 'operations' },
+    { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
+    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
+    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
+    { id: 's-superadmin-console', label: 'Console',   icon: 'fa-shield-halved',       sub: 'Modules, permissions and administration tools', group: 'administration' },
   ],
 };
 
 export const COMMON_SECTIONS: SectionDef[] = [
-  { id: 's-profile',  label: 'My Profile', icon: 'fa-user-circle', sub: 'Your account details, photo and contact info' },
-  { id: 's-settings', label: 'Settings',   icon: 'fa-palette',     sub: 'Themes, layout, security and company branding' },
-  { id: 's-about',    label: 'About',      icon: 'fa-info-circle', sub: 'Version, credits and system information' },
+  { id: 's-profile',  label: 'My Profile', icon: 'fa-user-circle', sub: 'Your account details, photo and contact info', group: 'account' },
+  { id: 's-settings', label: 'Settings',   icon: 'fa-palette',     sub: 'Themes, layout, security and company branding', group: 'account' },
+  { id: 's-about',    label: 'About',      icon: 'fa-info-circle', sub: 'Version, credits and system information',      group: 'account' },
 ];
 
 // ── Theming ───────────────────────────────────────────────────────────────────
@@ -158,6 +189,7 @@ export type Theme       = 'light' | 'dark';
   SECTION_DEFS,
   BASELINE_SECTIONS,               // self-service sections every role gets
   COMMON_ITEMS: COMMON_SECTIONS,   // legacy name was COMMON_ITEMS
+  NAV_GROUPS,                      // accordion group order + labels (H)
   PALETTES,
   LAYOUTS,
 };

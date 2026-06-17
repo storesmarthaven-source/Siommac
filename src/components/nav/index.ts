@@ -6,6 +6,7 @@
  */
 
 export { mountNavController, unmountNavController } from './mount';
+export { mountCommandPalette }                       from './CommandPalette';
 export { scheduleHdrBadgeSync, doHdrBadgeSync }     from './badgeSync';
 export {
   buildSidebar, buildTopTabs,
