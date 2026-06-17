@@ -10,6 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { toast } from '@store/ui';
+import { useSessionStore } from '@store/session';
 import {
   getModulesApi, setModuleApi, resetModulesApi,
   getManagersApi, setManagerModuleApi, resetManagerModulesApi,
@@ -27,8 +28,10 @@ import { consoleKeys } from './queryKeys';
 // ── Modules tab ───────────────────────────────────────────────────────────────
 
 export function useModuleMatrix() {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.modules(),
+    enabled:  isAuthenticated,   // don't fetch until a session exists (avoids 401 race)
     queryFn:  async () => {
       const res = await getModulesApi();
       if (!res.success || !res.modules) throw new Error('Failed to load modules');
@@ -73,9 +76,10 @@ export function useResetAdminModules() {
 }
 
 export function useManagers(enabled: boolean) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.managers(),
-    enabled,
+    enabled:  enabled && isAuthenticated,
     queryFn:  async () => {
       const res = await getManagersApi();
       if (!res.success || !res.managers) throw new Error(res.message ?? 'Failed to load managers');
@@ -119,9 +123,10 @@ export function useResetManagerModules() {
 // ── Permissions tab ───────────────────────────────────────────────────────────
 
 export function useConsoleUsers(enabled: boolean) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.users(),
-    enabled,
+    enabled:  enabled && isAuthenticated,
     queryFn:  async () => {
       const res = await listUsersApi();
       if (!res.success || !res.users) throw new Error(res.message ?? 'Failed to load users');
@@ -131,9 +136,10 @@ export function useConsoleUsers(enabled: boolean) {
 }
 
 export function useUserPermissions(userId: string | null) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.userPerms(userId ?? ''),
-    enabled:  !!userId,
+    enabled:  !!userId && isAuthenticated,
     queryFn:  async () => {
       const res = await getUserPermissionsApi(userId!);
       if (!res.success) throw new Error(res.message ?? 'Failed to load permissions');
@@ -175,9 +181,10 @@ export function useClearUserPermission() {
 // ── Sessions tab ──────────────────────────────────────────────────────────────
 
 export function useActiveSessions(enabled: boolean) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.sessions(),
-    enabled,
+    enabled:  enabled && isAuthenticated,
     refetchInterval: 30_000,   // keep the live-session view reasonably fresh
     queryFn: async () => {
       const res = await getActiveSessionsApi();
@@ -204,9 +211,10 @@ export function useRevokeSession() {
 // ── Audit log tab ─────────────────────────────────────────────────────────────
 
 export function useAuditLogs(filters: AuditLogFilters, enabled: boolean) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.audit(filters),
-    enabled,
+    enabled:  enabled && isAuthenticated,
     placeholderData: prev => prev,   // keep previous page visible while fetching next
     queryFn: async () => {
       const res = await getAuditLogsApi(filters);
@@ -224,9 +232,10 @@ export function useAuditLogs(filters: AuditLogFilters, enabled: boolean) {
 // ── Roles tab ─────────────────────────────────────────────────────────────────
 
 export function useRoles(enabled: boolean) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.roles(),
-    enabled,
+    enabled:  enabled && isAuthenticated,
     queryFn: async () => {
       const res = await listRolesApi();
       if (!res.success || !res.roles) throw new Error(res.message ?? 'Failed to load roles');
@@ -236,9 +245,10 @@ export function useRoles(enabled: boolean) {
 }
 
 export function useRolePermissions(roleName: string | null) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
   return useQuery({
     queryKey: consoleKeys.rolePerms(roleName ?? ''),
-    enabled:  !!roleName,
+    enabled:  !!roleName && isAuthenticated,
     queryFn: async () => {
       const res = await getRolePermissionsApi(roleName!);
       if (!res.success) throw new Error(res.message ?? 'Failed to load role permissions');
