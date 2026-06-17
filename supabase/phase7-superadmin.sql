@@ -57,6 +57,7 @@ ALTER TABLE public.module_permissions ENABLE ROW LEVEL SECURITY;
 
 -- All authenticated users can read module permissions (needed at login to
 -- build the sidebar). Service-role key bypasses RLS for writes.
+DROP POLICY IF EXISTS "module_permissions_read" ON public.module_permissions;
 CREATE POLICY "module_permissions_read"
   ON public.module_permissions
   FOR SELECT

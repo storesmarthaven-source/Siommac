@@ -44,7 +44,8 @@
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
   <!-- CSS Libraries -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap CSS is bundled via npm into @layer bootstrap (see src/styles/index.css);
+       only the Bootstrap JS bundle is loaded from CDN below. -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
   <!-- Inter variable font — preconnect hints speed up font negotiation -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,33 +64,10 @@
   <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet"/>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="assets/styles/base.css" />
-  <link rel="stylesheet" href="assets/styles/login.css" />
-  <link rel="stylesheet" href="assets/styles/layout.css" />
-  <link rel="stylesheet" href="assets/styles/helpers.css" />
-  <link rel="stylesheet" href="assets/styles/views.css" />
-  <link rel="stylesheet" href="assets/styles/components.css" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css" />
-  <link rel="stylesheet" href="assets/styles/dashboard-panel.css" />
-  <link rel="stylesheet" href="assets/styles/attendance.css" />
-  <link rel="stylesheet" href="assets/styles/adm-attendance.css" />
-  <link rel="stylesheet" href="assets/styles/departments.css" />
-  <link rel="stylesheet" href="assets/styles/emp-drawer.css" />
-  <link rel="stylesheet" href="assets/styles/emp-sections.css" />
-  <link rel="stylesheet" href="assets/styles/leaves.css" />
-  <link rel="stylesheet" href="assets/styles/profile.css" />
-  <link rel="stylesheet" href="assets/styles/profile-ep.css" />
-  <link rel="stylesheet" href="assets/styles/project-sites.css" />
-  <link rel="stylesheet" href="assets/styles/settings.css" />
-  <link rel="stylesheet" href="assets/styles/adm-rates.css" />
-  <link rel="stylesheet" href="assets/styles/live-map.css" />
-  <link rel="stylesheet" href="assets/styles/preferences.css" />
-  <link rel="stylesheet" href="assets/styles/payroll.css" />
-  <link rel="stylesheet" href="assets/styles/tables.css" />
-  <link rel="stylesheet" href="assets/styles/popup.css" />
-  <link rel="stylesheet" href="assets/styles/print.css" />
-  <link rel="stylesheet" href="assets/styles/loading.css" />
-  <link rel="stylesheet" href="assets/styles/responsive.css" />
+  <!-- All first-party CSS is bundled via Vite from src/styles/index.css
+       (imported in src/main.tsx) using an explicit @layer cascade.
+       Do NOT add raw <link> tags for app stylesheets here — they load
+       unlayered and would override the layered cascade. -->
 </head>
 <body style="visibility:hidden;">
   <div id="app-root"></div>

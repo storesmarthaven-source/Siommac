@@ -742,6 +742,15 @@ function handleLogout(): void {
   const loginForm = document.getElementById('loginForm') as HTMLFormElement | null;
   loginForm?.reset();
 
+  // Reset login panels back to the credentials form. The LoginPage component
+  // is not remounted on logout, so the 2FA verify/setup panels stay visible
+  // unless we restore the default panel visibility here.
+  if (loginForm) loginForm.style.display = '';
+  const twoFaPanel      = document.getElementById('twoFaPanel');
+  const twoFaSetupPanel = document.getElementById('twoFaSetupPanel');
+  if (twoFaPanel)      twoFaPanel.style.display      = 'none';
+  if (twoFaSetupPanel) twoFaSetupPanel.style.display = 'none';
+
   // Sync Zustand session store on logout
   try {
     const store = (w() as Record<string, unknown>)['__siomacSessionStore'] as

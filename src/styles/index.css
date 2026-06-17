@@ -1,0 +1,54 @@
+/**
+ * src/styles/index.css — single CSS entry point (imported first in main.tsx)
+ *
+ * Owns the cascade layer order for the whole app. Declaring the @layer order
+ * here once makes precedence deterministic and independent of import/bundle
+ * order: later layers always win, regardless of source position.
+ *
+ *   bootstrap  — vendor reset/components (lowest priority)
+ *   base       — design tokens (:root) + layout primitives
+ *   components — shared component styles (buttons, tables, popups, …)
+ *   sections   — per-section styles + responsive @media overrides (highest)
+ *
+ * Per-section CSS files live beside their Preact component and self-wrap their
+ * body in `@layer sections { … }` (a TS `import './x.css'` cannot carry a
+ * layer() token, so the file wraps itself).
+ *
+ * @see docs/ARCHITECTURE.md
+ */
+
+@layer bootstrap, base, components, sections;
+
+/* ── Vendor (lowest priority) ─────────────────────────────────────────────── */
+@import 'bootstrap/dist/css/bootstrap.min.css' layer(bootstrap);
+
+/* ── Base: tokens + layout primitives ─────────────────────────────────────── */
+@import '../../assets/styles/base.css'   layer(base);
+@import '../../assets/styles/layout.css' layer(base);
+
+/* ── Shared component styles ──────────────────────────────────────────────── */
+@import '../../assets/styles/components.css'  layer(components);
+@import '../../assets/styles/tables.css'      layer(components);
+@import '../../assets/styles/popup.css'       layer(components);
+@import '../../assets/styles/preferences.css' layer(components);
+@import '../../assets/styles/print.css'       layer(components);
+@import '../../assets/styles/loading.css'     layer(components);
+@import '../../assets/styles/helpers.css'     layer(components);
+@import '../../assets/styles/login.css'       layer(components);
+
+/* ── views.css monolith — TEMPORARY during Phase 2 carving. ───────────────────
+   Each section block is progressively moved out of views.css into a
+   component-owned file. When views.css is empty this import is swapped for
+   the globals.css remainder. Kept in `sections` so its section rules retain
+   their current (post-components) precedence while carving is in progress. */
+@import '../../assets/styles/views.css' layer(sections);
+
+/* ── Standalone section styles NOT contained in views.css ─────────────────────
+   live-map.css and payroll.css are genuine standalone stylesheets (not
+   duplicates of views.css). They will be relocated beside their components in
+   Phase 2; imported here in the meantime so nothing is lost. */
+@import '../../assets/styles/live-map.css' layer(sections);
+@import '../../assets/styles/payroll.css'  layer(sections);
+
+/* ── Responsive @media overrides — must win over section base rules ───────── */
+@import '../../assets/styles/responsive.css' layer(sections);

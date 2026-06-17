@@ -27,6 +27,10 @@
 // ① Env validation — must be first import; throws on missing required vars
 import '@lib/env';
 
+// ② Global CSS entry — declares the @layer cascade order before any component
+//    imports its own (section) stylesheet. Must precede all section imports.
+import './styles/index.css';
+
 import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';

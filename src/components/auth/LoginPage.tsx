@@ -271,6 +271,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   // ── Wire DOM events ───────────────────────────────────────────────────────
 
   useEffect(() => {
+    // Reset to credentials panel on every mount (handles logout → remount case)
+    showPanel('credentials');
+    showSetupStep('qr');
+
     // ── Login form ──────────────────────────────────────────────────────────
     function handleLoginSubmit(e: Event) {
       e.preventDefault();

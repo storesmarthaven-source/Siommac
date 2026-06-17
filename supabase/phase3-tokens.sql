@@ -59,8 +59,8 @@ ALTER TABLE token_revocations ENABLE ROW LEVEL SECURITY;
 --   SQL:      DELETE FROM token_revocations WHERE revoked_until < now();
 
 -- ── 5. Verify ────────────────────────────────────────────────
-SELECT table_name, row_security
+SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN ('refresh_tokens', 'token_revocations');
--- Expected: both rows show row_security = 'ENABLED'
+-- Expected: 2 rows

@@ -57,8 +57,8 @@ WHERE table_schema = 'public'
   AND column_name IN ('totp_secret', 'totp_enabled', 'totp_enrolled_at', 'backup_codes')
 ORDER BY column_name;
 
-SELECT table_name, row_security
+SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name   = 'totp_challenges';
--- Expected: row_security = 'ENABLED'
+-- Expected: 1 row

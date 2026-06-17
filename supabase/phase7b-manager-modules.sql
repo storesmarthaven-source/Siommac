@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.manager_module_permissions (
 ALTER TABLE public.manager_module_permissions ENABLE ROW LEVEL SECURITY;
 
 -- All authenticated users can read (needed at login to build the sidebar).
+DROP POLICY IF EXISTS "manager_module_permissions_read" ON public.manager_module_permissions;
 CREATE POLICY "manager_module_permissions_read"
   ON public.manager_module_permissions
   FOR SELECT

@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "dev:netlify": "npm run build:backend && npx netlify-cli dev",
+    "dev:netlify": "npm run build:backend:clean && npx netlify-cli dev",
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "tsc -p netlify/functions/tsconfig.json",
+    "clean:backend": "node -e \"const fs=require('fs');for(const p of ['dist/netlify','dist/.tsbuildinfo-functions'])fs.rmSync(p,{recursive:true,force:true})\"",
+    "build:backend:clean": "npm run clean:backend && tsc -p netlify/functions/tsconfig.json",
     "build:frontend": "vite build",
     "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
     "typecheck:backend": "tsc -p netlify/functions/tsconfig.json --noEmit",
@@ -26,14 +28,17 @@
       "**/tests/**/*.test.ts"
     ],
     "transform": {
-      "^.+\\.tsx?$": ["ts-jest", {
-        "tsconfig": {
-          "module": "CommonJS",
-          "esModuleInterop": true,
-          "strict": true,
-          "skipLibCheck": true
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "module": "CommonJS",
+            "esModuleInterop": true,
+            "strict": true,
+            "skipLibCheck": true
+          }
         }
-      }]
+      ]
     },
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
@@ -51,6 +56,7 @@
     "@tanstack/query-core": "^5.100.10",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.2",
     "flatpickr": "^4.6.13",
     "hono": "^4.7.10",
     "jsonwebtoken": "^9.0.2",
