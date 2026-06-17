@@ -7,6 +7,7 @@ import type { Context } from 'hono';
 
 import { jwtMiddleware }             from './lib/auth';
 import { globalRateLimitMiddleware } from './lib/ratelimit';
+import { runWithReqContext }         from './lib/reqContext';
 import type { HonoVariables }        from '../../types/api';
 
 // Route modules
@@ -97,8 +98,16 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// Global rate limiting
+// Global rate limiting (also sets clientIp)
 app.use('*', globalRateLimitMiddleware);
+
+// Bind request-scoped context (IP + user-agent) for the downstream chain so the
+// audit logger can record them without threading the context everywhere.
+app.use('*', async (c, next) => {
+  const ip = (c.get('clientIp') as string | undefined) ?? undefined;
+  const userAgent = (c.req.header('user-agent') ?? '').slice(0, 400) || undefined;
+  await runWithReqContext({ ip, userAgent }, () => next());
+});
 
 // JWT parsing — extracts and verifies the token; does not block unauthenticated requests.
 app.use('*', jwtMiddleware);

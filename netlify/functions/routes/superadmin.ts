@@ -506,6 +506,61 @@ router.post('/revokeSession', async c => {
   return c.json({ success: true });
 });
 
+// ── Audit log viewer ──────────────────────────────────────────────────────────
+// Gated by 'audit.view' (superadmin by default). Append-only table; read-only here.
+
+const GetAuditLogsSchema = z.object({
+  search:   z.string().optional(),
+  action:   z.string().optional(),
+  entity:   z.string().optional(),
+  username: z.string().optional(),
+  from:     z.string().optional(),   // ISO date
+  to:       z.string().optional(),   // ISO date
+  limit:    z.number().int().min(1).max(500).optional(),
+  offset:   z.number().int().min(0).optional(),
+});
+
+// POST /superadmin/getAuditLogs — filtered, paginated audit records (+ distinct
+// actions/entities for the filter dropdowns on the first page).
+router.post('/getAuditLogs', async c => {
+  await requirePermission(c, 'audit.view');
+  const v = zv(c, GetAuditLogsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { search, action, entity, username, from, to } = v.data;
+  const limit  = v.data.limit  ?? 50;
+  const offset = v.data.offset ?? 0;
+
+  let q = sb
+    .from('activity_logs')
+    .select('id, created_at, user_id, username, action, entity, entity_id, details, ip_address, user_agent', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (action)   q = q.eq('action', action);
+  if (entity)   q = q.eq('entity', entity);
+  if (username) q = q.ilike('username', `%${username}%`);
+  if (from)     q = q.gte('created_at', from);
+  if (to)       q = q.lte('created_at', to);
+  if (search)   q = q.or(`details.ilike.%${search}%,entity_id.ilike.%${search}%,username.ilike.%${search}%`);
+
+  const { data, error, count } = await q;
+  if (error) {
+    console.error('[superadmin/getAuditLogs] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load audit log.' }, 500);
+  }
+
+  // Filter option lists (distinct actions/entities) — only on the first page.
+  let actions: string[] = [];
+  let entities: string[] = [];
+  if (offset === 0) {
+    const { data: distinct } = await sb.from('activity_logs').select('action, entity').limit(2000);
+    actions  = [...new Set((distinct ?? []).map(r => r.action).filter(Boolean))].sort();
+    entities = [...new Set((distinct ?? []).map(r => r.entity).filter(Boolean))].sort();
+  }
+
+  return c.json({ success: true, logs: data ?? [], total: count ?? 0, actions, entities });
+});
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 export {

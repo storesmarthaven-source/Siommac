@@ -22,6 +22,7 @@ import { useState } from 'preact/hooks';
 import { ModulesTab }     from './tabs/ModulesTab';
 import { PermissionsTab } from './tabs/PermissionsTab';
 import { SessionsTab }    from './tabs/SessionsTab';
+import { AuditLogTab }    from './tabs/AuditLogTab';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -59,6 +60,13 @@ const TABS: ConsoleTab[] = [
     icon:  'fa-user-clock',
     desc:  'See who is logged in and from which device. Revoking a session signs the user out immediately; they must re-authenticate (including 2FA).',
     body:  SessionsTab,
+  },
+  {
+    id:    'audit',
+    label: 'Audit Log',
+    icon:  'fa-clipboard-list',
+    desc:  'A tamper-evident, append-only record of every privileged action — who did what, when, and from where. Filter, search and export to CSV.',
+    body:  AuditLogTab,
   },
 ];
 

@@ -15,8 +15,10 @@ import {
   getManagersApi, setManagerModuleApi, resetManagerModulesApi,
   listUsersApi, getUserPermissionsApi, setUserPermissionApi, clearUserPermissionApi,
   getActiveSessionsApi, revokeSessionApi,
+  getAuditLogsApi,
   type ModuleKey, type ModuleMatrix, type ManagerEntry,
   type ConsoleUser, type UserPermissionRow, type ActiveSession,
+  type AuditLogFilters,
 } from '@lib/superadminApi';
 import { setModuleMatrix } from '@components/nav/navCore';
 import { consoleKeys } from './queryKeys';
@@ -195,5 +197,25 @@ export function useRevokeSession() {
       void qc.invalidateQueries({ queryKey: consoleKeys.sessions() });
     },
     onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+// ── Audit log tab ─────────────────────────────────────────────────────────────
+
+export function useAuditLogs(filters: AuditLogFilters, enabled: boolean) {
+  return useQuery({
+    queryKey: consoleKeys.audit(filters),
+    enabled,
+    placeholderData: prev => prev,   // keep previous page visible while fetching next
+    queryFn: async () => {
+      const res = await getAuditLogsApi(filters);
+      if (!res.success) throw new Error(res.message ?? 'Failed to load audit log');
+      return {
+        logs:     res.logs ?? [],
+        total:    res.total ?? 0,
+        actions:  res.actions ?? [],
+        entities: res.entities ?? [],
+      };
+    },
   });
 }

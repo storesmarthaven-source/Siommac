@@ -202,3 +202,41 @@ export async function getActiveSessionsApi(): Promise<{
 export async function revokeSessionApi(userId: string): Promise<{ success: boolean; message?: string }> {
   return apiFetch('superadmin/revokeSession', { method: 'POST', body: { args: { userId } } });
 }
+
+// ── Audit log ─────────────────────────────────────────────────────────────────
+
+export interface AuditLogRow {
+  id:         string;
+  created_at: string;
+  user_id:    string;
+  username:   string;
+  action:     string;
+  entity:     string;
+  entity_id:  string;
+  details:    string;
+  ip_address: string | null;
+  user_agent: string | null;
+}
+
+export interface AuditLogFilters {
+  search?:   string;
+  action?:   string;
+  entity?:   string;
+  username?: string;
+  from?:     string;
+  to?:       string;
+  limit?:    number;
+  offset?:   number;
+}
+
+/** Fetch filtered, paginated audit records (+ filter option lists on page 1). */
+export async function getAuditLogsApi(filters: AuditLogFilters = {}): Promise<{
+  success:   boolean;
+  logs?:     AuditLogRow[];
+  total?:    number;
+  actions?:  string[];
+  entities?: string[];
+  message?:  string;
+}> {
+  return apiFetch('superadmin/getAuditLogs', { method: 'POST', body: { args: filters } });
+}

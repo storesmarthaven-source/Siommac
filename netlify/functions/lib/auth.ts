@@ -14,6 +14,7 @@ import crypto               from 'crypto';
 import type { Context, Next } from 'hono';
 import { sb }               from './db';
 import { resolvePermission, type PermissionOverrideRow } from './permissions';
+import { getReqContext }    from './reqContext';
 import type { AppUser }     from '../../../types/db';
 import type { JwtPayload, HonoVariables } from '../../../types/api';
 
@@ -307,13 +308,18 @@ async function log_(
   details: string,
 ): Promise<void> {
   try {
+    // IP + user-agent come from the request-scoped context (set in api.ts), so
+    // every existing call site gets audit context for free.
+    const { ip, userAgent } = getReqContext();
     await sb.from('activity_logs').insert({
-      user_id:   user?.id       ?? '',
-      username:  user?.username ?? '',
+      user_id:    user?.id       ?? '',
+      username:   user?.username ?? '',
       action,
       entity,
-      entity_id: entityId ?? '',
-      details:   details  ?? '',
+      entity_id:  entityId ?? '',
+      details:    details  ?? '',
+      ip_address: ip        ?? null,
+      user_agent: userAgent ?? null,
     });
   } catch {
     // best-effort; never let logging crash a request

@@ -36,6 +36,7 @@ export const PERMISSION_KEYS = [
   'settings.view', 'settings.edit', 'settings.statutory_rates',
   'permissions.manage',
   'sessions.manage',
+  'audit.view',
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];

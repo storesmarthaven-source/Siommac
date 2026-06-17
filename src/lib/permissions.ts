@@ -112,6 +112,7 @@ export const PERMISSION_KEYS = [
   // ── User management (superadmin) ─────────────────────────────────────────────
   'permissions.manage',     // grant / revoke per-user overrides
   'sessions.manage',        // view active sessions and force-revoke them
+  'audit.view',             // view the audit log
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -236,6 +237,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'settings.statutory_rates',
     'permissions.manage',
     'sessions.manage',
+    'audit.view',
   ]),
 };
 
