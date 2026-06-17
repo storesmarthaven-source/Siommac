@@ -60,36 +60,22 @@ interface ToggleProps {
 
 function Toggle({ enabled, busy, locked, label, onToggle }: ToggleProps): VNode {
   return (
-    <button
-      type="button"
-      disabled={locked || busy}
-      onClick={onToggle}
-      title={label}
-      style={{
-        position: 'relative', width: '48px', height: '26px',
-        borderRadius: '13px', border: 'none',
-        background: locked ? '#d1d5db' : enabled ? '#16a34a' : '#d1d5db',
-        cursor:  locked || busy ? 'not-allowed' : 'pointer',
-        transition: 'background 0.2s',
-        opacity: busy ? 0.7 : 1,
-        flexShrink: 0,
-      }}
-      aria-label={label}
-      aria-checked={enabled}
-      role="switch"
-    >
-      {busy ? (
-        <i class="fas fa-spinner fa-spin" style={{ color: '#fff', fontSize: '11px', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
-      ) : (
-        <span style={{
-          position: 'absolute', top: '3px',
-          left: enabled ? '25px' : '3px',
-          width: '20px', height: '20px', borderRadius: '50%',
-          background: '#fff', transition: 'left 0.2s',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        }} />
+    <label class="stg-toggle" title={label} style={{ opacity: busy ? 0.7 : 1 }}>
+      <input
+        type="checkbox"
+        checked={enabled}
+        disabled={locked || busy}
+        onChange={onToggle}
+        aria-label={label}
+      />
+      <span class="stg-slider" />
+      {busy && (
+        <i
+          class="fas fa-spinner fa-spin"
+          style={{ color: '#fff', fontSize: '11px', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}
+        />
       )}
-    </button>
+    </label>
   );
 }
 
@@ -107,30 +93,28 @@ interface ModuleRowProps {
 function ModuleRow({ mod, enabled, busy, idx, total, onToggle }: ModuleRowProps): VNode {
   const locked = !mod.lockable;
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '14px 20px',
-      borderBottom: idx < total - 1 ? '1px solid #f3f4f6' : 'none',
-      background: idx % 2 === 0 ? '#fff' : '#fafafa',
-    }}>
+    <div
+      class="stg-switch-group"
+      style={{ padding: '14px 20px', borderBottom: idx < total - 1 ? '1px solid var(--border)' : 'none' }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          background: '#1B2D5512', display: 'flex', alignItems: 'center',
+          width: '36px', height: '36px', borderRadius: 'var(--radius-sm)',
+          background: 'rgba(27,45,84,0.07)', display: 'flex', alignItems: 'center',
           justifyContent: 'center', flexShrink: 0,
         }}>
-          <i class={`fas ${mod.icon}`} style={{ fontSize: '14px', color: '#1B2D55' }} />
+          <i class={`fas ${mod.icon}`} style={{ fontSize: '14px', color: 'var(--siomac-navy)' }} />
         </div>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+          <div class="stg-switch-label">
             {mod.label}
             {!mod.lockable && (
-              <span style={{ marginLeft: '8px', fontSize: '11px', background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
+              <span style={{ marginLeft: '8px', fontSize: '11px', background: 'rgba(255,183,18,0.18)', color: 'var(--siomac-gold)', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>
                 Always on
               </span>
             )}
           </div>
-          <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{mod.desc}</div>
+          <div class="stg-switch-desc">{mod.desc}</div>
         </div>
       </div>
       <Toggle
@@ -148,8 +132,8 @@ function ModuleRow({ mod, enabled, busy, idx, total, onToggle }: ModuleRowProps)
 
 function LoadingBox(): VNode {
   return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-      <i class="fas fa-spinner fa-spin" style={{ fontSize: '28px', marginBottom: '12px', display: 'block' }} />
+    <div class="emp-loading">
+      <i class="fas fa-spinner fa-spin" />
       Loading…
     </div>
   );
@@ -157,10 +141,10 @@ function LoadingBox(): VNode {
 
 function ErrorBox({ onRetry }: { onRetry: () => void }): VNode {
   return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444' }}>
-      <i class="fas fa-exclamation-triangle" style={{ fontSize: '28px', marginBottom: '12px', display: 'block' }} />
+    <div class="emp-loading emp-err">
+      <i class="fas fa-exclamation-triangle" />
       Failed to load.{' '}
-      <button type="button" onClick={onRetry} style={{ color: '#1B2D55', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>
+      <button type="button" onClick={onRetry} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>
         Retry
       </button>
     </div>
@@ -181,33 +165,26 @@ function AdminTab({ matrix, toggling, resetting, onToggle, onReset }: AdminTabPr
   return (
     <div>
       {/* Sub-header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-        <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+      <div class="section-header" style={{ marginBottom: '16px' }}>
+        <p class="stg-switch-desc" style={{ margin: 0 }}>
           Controls which modules all admins can access. Applies globally to the admin role.
         </p>
         <button
           type="button"
+          class="btn btn-sm btn-outline-secondary has-label"
           onClick={onReset}
           disabled={resetting}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '7px 14px', fontSize: '13px', fontWeight: '500',
-            background: '#f3f4f6', color: '#374151',
-            border: '1px solid #d1d5db', borderRadius: '8px',
-            cursor: resetting ? 'not-allowed' : 'pointer',
-            opacity: resetting ? 0.6 : 1,
-          }}
         >
           <i class={resetting ? 'fas fa-spinner fa-spin' : 'fas fa-undo'} />
           Reset defaults
         </button>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', overflow: 'hidden' }}>
         {/* Column header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', padding: '10px 20px' }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Module</div>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)', padding: '10px 20px' }}>
+          <div class="stg-switch-desc" style={{ fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 0 }}>Module</div>
+          <div class="stg-switch-desc" style={{ fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', marginTop: 0 }}>
             <i class="fas fa-user-shield" style={{ marginRight: '4px' }} />Admin
           </div>
         </div>
@@ -259,9 +236,9 @@ function ManagerTab({
   if (error)   return <ErrorBox onRetry={onRetry} />;
   if (managers.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#9ca3af' }}>
-        <i class="fas fa-user-tie" style={{ fontSize: '32px', marginBottom: '12px', display: 'block', opacity: 0.4 }} />
-        No managers found. Add a manager to configure their module access.
+      <div class="emp-empty">
+        <i class="fas fa-user-tie" />
+        <p>No managers found. Add a manager to configure their module access.</p>
       </div>
     );
   }
@@ -278,13 +255,12 @@ function ManagerTab({
       {/* Left: manager list */}
       <div style={{
         width: '220px', flexShrink: 0,
-        background: '#fff', borderRadius: '12px',
-        border: '1px solid #e5e7eb', overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        background: 'var(--bg-card)', borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border)', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
       }}>
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
+          <div class="stg-switch-desc" style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 0 }}>
             Managers ({managers.length})
           </div>
         </div>
@@ -300,9 +276,9 @@ function ManagerTab({
                 onClick={() => setSelectedId(m.id)}
                 style={{
                   width: '100%', textAlign: 'left', padding: '12px 14px',
-                  background: isSel ? '#EEF2FF' : 'transparent',
-                  borderBottom: '1px solid #f3f4f6', border: 'none',
-                  borderLeft: isSel ? '3px solid #1B2D55' : '3px solid transparent',
+                  background: isSel ? 'rgba(27,45,84,0.06)' : 'transparent',
+                  borderBottom: '1px solid var(--border)', border: 'none',
+                  borderLeft: isSel ? '3px solid var(--siomac-navy)' : '3px solid transparent',
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '10px',
                   transition: 'background 0.15s',
@@ -311,18 +287,18 @@ function ManagerTab({
                 {/* Avatar */}
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
-                  background: isSel ? '#1B2D55' : '#e5e7eb',
+                  background: isSel ? 'var(--siomac-navy)' : 'var(--border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '12px', fontWeight: '700',
-                  color: isSel ? '#fff' : '#6b7280',
+                  color: isSel ? '#fff' : 'var(--text-muted)',
                 }}>
                   {initials(m.fullName)}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: isSel ? '700' : '500', color: isSel ? '#1B2D55' : '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '13px', fontWeight: isSel ? '700' : '500', color: isSel ? 'var(--siomac-navy)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {m.fullName}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px' }}>
+                  <div class="stg-switch-desc" style={{ marginTop: '1px' }}>
                     {enabledCount}/{MODULES.length} modules
                   </div>
                 </div>
@@ -335,32 +311,25 @@ function ManagerTab({
       {/* Right: module toggles for selected manager */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {!selected ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
             Select a manager to configure their modules
           </div>
         ) : (
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', overflow: 'hidden' }}>
             {/* Manager header */}
-            <div style={{ padding: '12px 20px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div class="stg-switch-group" style={{ padding: '12px 20px', background: 'var(--bg-subtle)' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#111827' }}>
-                  <i class="fas fa-user-tie" style={{ marginRight: '7px', color: '#1B2D55' }} />
+                <div class="stg-switch-label">
+                  <i class="fas fa-user-tie" style={{ marginRight: '7px', color: 'var(--siomac-navy)' }} />
                   {selected.fullName}
                 </div>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>@{selected.username}</div>
+                <div class="stg-switch-desc">@{selected.username}</div>
               </div>
               <button
                 type="button"
+                class="btn btn-sm btn-outline-secondary has-label"
                 onClick={() => onReset(selected.id)}
                 disabled={isResetting}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 12px', fontSize: '12px', fontWeight: '500',
-                  background: '#f3f4f6', color: '#374151',
-                  border: '1px solid #d1d5db', borderRadius: '8px',
-                  cursor: isResetting ? 'not-allowed' : 'pointer',
-                  opacity: isResetting ? 0.6 : 1,
-                }}
               >
                 <i class={isResetting ? 'fas fa-spinner fa-spin' : 'fas fa-undo'} />
                 Reset to defaults
@@ -544,19 +513,19 @@ export function SuperadminModulesSection(): VNode {
     <div style={{ padding: '24px', maxWidth: '960px', margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#111827', margin: '0 0 4px' }}>
-          <i class="fas fa-th-large" style={{ marginRight: '10px', color: '#1B2D55' }} />
+      <div class="section-header" style={{ display: 'block' }}>
+        <h2>
+          <i class="fas fa-th-large" />
           Module Permissions
         </h2>
-        <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+        <p class="stg-switch-desc" style={{ margin: '6px 0 0' }}>
           Control which feature modules are visible to each role and individual manager.
           Changes take effect at next login. Superadmin always sees all modules.
         </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0', borderBottom: '2px solid #e5e7eb', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
         {([
           { key: 'admin',    label: 'Admin Modules',   icon: 'fa-user-shield' },
           { key: 'managers', label: 'Manager Modules', icon: 'fa-user-tie'    },
@@ -564,15 +533,9 @@ export function SuperadminModulesSection(): VNode {
           <button
             key={t.key}
             type="button"
+            class={`emp-tab-btn ${tab === t.key ? 'active' : ''}`}
             onClick={() => setTab(t.key)}
-            style={{
-              padding: '10px 20px', fontSize: '14px', fontWeight: '600',
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: tab === t.key ? '#1B2D55' : '#6b7280',
-              borderBottom: tab === t.key ? '2px solid #1B2D55' : '2px solid transparent',
-              marginBottom: '-2px', transition: 'color 0.15s',
-              display: 'inline-flex', alignItems: 'center', gap: '7px',
-            }}
+            style={{ marginBottom: '-1px' }}
           >
             <i class={`fas ${t.icon}`} />
             {t.label}
@@ -607,8 +570,8 @@ export function SuperadminModulesSection(): VNode {
       )}
 
       {/* Info footer */}
-      <div style={{ marginTop: '20px', padding: '12px 16px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', fontSize: '13px', color: '#0369a1', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-        <i class="fas fa-info-circle" style={{ marginTop: '1px', flexShrink: 0 }} />
+      <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(27,45,84,0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+        <i class="fas fa-info-circle" style={{ marginTop: '1px', flexShrink: 0, color: 'var(--siomac-navy)' }} />
         <span>
           Module changes apply to the sidebar at next login.
           Manager overrides take priority over role defaults.
