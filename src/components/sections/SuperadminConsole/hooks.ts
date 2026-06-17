@@ -14,8 +14,9 @@ import {
   getModulesApi, setModuleApi, resetModulesApi,
   getManagersApi, setManagerModuleApi, resetManagerModulesApi,
   listUsersApi, getUserPermissionsApi, setUserPermissionApi, clearUserPermissionApi,
+  getActiveSessionsApi, revokeSessionApi,
   type ModuleKey, type ModuleMatrix, type ManagerEntry,
-  type ConsoleUser, type UserPermissionRow,
+  type ConsoleUser, type UserPermissionRow, type ActiveSession,
 } from '@lib/superadminApi';
 import { setModuleMatrix } from '@components/nav/navCore';
 import { consoleKeys } from './queryKeys';
@@ -163,6 +164,35 @@ export function useClearUserPermission() {
       if (!res.success) { toast.error(res.message ?? 'Failed to clear override.'); return; }
       toast.success(`${vars.permission} reverted to role default.`);
       void qc.invalidateQueries({ queryKey: consoleKeys.userPerms(vars.userId) });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+// ── Sessions tab ──────────────────────────────────────────────────────────────
+
+export function useActiveSessions(enabled: boolean) {
+  return useQuery({
+    queryKey: consoleKeys.sessions(),
+    enabled,
+    refetchInterval: 30_000,   // keep the live-session view reasonably fresh
+    queryFn: async () => {
+      const res = await getActiveSessionsApi();
+      if (!res.success) throw new Error(res.message ?? 'Failed to load sessions');
+      return (res.sessions ?? []) as ActiveSession[];
+    },
+  });
+}
+
+export function useRevokeSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => revokeSessionApi(userId),
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to revoke session.'); return; }
+      toast.success('Session revoked — the user must log in again.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.sessions() });
     },
     onError: () => toast.error('Network error. Try again.'),
   });

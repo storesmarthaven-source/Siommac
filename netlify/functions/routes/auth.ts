@@ -40,13 +40,21 @@ async function resolveIdleTimeoutMs(role: string): Promise<number> {
   return safe * 60 * 1000;
 }
 
+/** Extract device/context (user-agent + client IP) from the request for session records. */
+function deviceFrom(c: { req: { header: (k: string) => string | undefined }; get: (k: string) => unknown }): { userAgent?: string; ip?: string } {
+  return {
+    userAgent: (c.req.header('user-agent') ?? '').slice(0, 400) || undefined,
+    ip:        (c.get('clientIp') as string | undefined) ?? undefined,
+  };
+}
+
 // ── Shared helper: build full session payload after successful auth ────────────
-async function buildSessionPayload(u: AppUser) {
+async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip?: string }) {
   const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
-    issueRefreshToken(u.id),
+    issueRefreshToken(u.id, device),
     // superadmin needs no overrides (role default already grants everything)
     u.role === 'superadmin'
       ? Promise.resolve([] as { permission: string; granted: boolean }[])
@@ -134,7 +142,7 @@ router.post('/login', async c => {
   // No 2FA required — issue full session
   console.log('[login] building session for', u.username);
   try {
-    const payload = await buildSessionPayload(u);
+    const payload = await buildSessionPayload(u, deviceFrom(c));
     await log_(u, 'login', 'user', u.id, 'login ok');
     return c.json(payload);
   } catch (e) {
@@ -184,7 +192,7 @@ router.post('/verify2fa', async c => {
 
   await consumeChallenge(challenge.id);
   await log_(u, 'login', 'user', u.id, usedBackup ? 'login ok (backup code)' : 'login ok (2FA)');
-  return c.json(await buildSessionPayload(u));
+  return c.json(await buildSessionPayload(u, deviceFrom(c)));
 });
 
 // ── Setup 2FA (step 1) — generate secret + QR code ───────────────────────────
@@ -268,7 +276,7 @@ router.post('/confirm2faSetup', async c => {
 
   await log_(uFull, '2fa_enrolled', 'user', uFull.id, '');
 
-  const session = await buildSessionPayload(uFull);
+  const session = await buildSessionPayload(uFull, deviceFrom(c));
   return c.json({ ...session, backupCodes: plains });  // plaintext shown ONCE
 });
 

@@ -174,3 +174,31 @@ export async function clearUserPermissionApi(
     body:   { args: { userId, permission } },
   });
 }
+
+// ── Active sessions ───────────────────────────────────────────────────────────
+
+/** An active session shown in the Sessions tab. */
+export interface ActiveSession {
+  userId:     string;
+  username:   string;
+  fullName:   string;
+  role:       string;
+  userAgent:  string;
+  ipAddress:  string;
+  lastSeenAt: string;
+  createdAt:  string;
+}
+
+/** List every active session with its device context. */
+export async function getActiveSessionsApi(): Promise<{
+  success:   boolean;
+  sessions?: ActiveSession[];
+  message?:  string;
+}> {
+  return apiFetch('superadmin/getActiveSessions', { method: 'POST', body: { args: {} } });
+}
+
+/** Force-logout a user — their tokens are invalidated; they must log in again (fresh 2FA). */
+export async function revokeSessionApi(userId: string): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/revokeSession', { method: 'POST', body: { args: { userId } } });
+}

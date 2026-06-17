@@ -70,7 +70,10 @@ function _generateRefreshToken(): [string, string] {
  * Stores the hash in the DB; returns the plaintext to send to the client.
  * Any previous refresh tokens for this user are deleted (single active session).
  */
-async function issueRefreshToken(userId: string): Promise<string> {
+async function issueRefreshToken(
+  userId: string,
+  device?: { userAgent?: string; ip?: string },
+): Promise<string> {
   const [plain, hash] = _generateRefreshToken();
   const expiresAt     = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString();
 
@@ -78,9 +81,12 @@ async function issueRefreshToken(userId: string): Promise<string> {
   await sb.from('refresh_tokens').delete().eq('user_id', userId);
 
   await sb.from('refresh_tokens').insert({
-    user_id:    userId,
-    token_hash: hash,
-    expires_at: expiresAt,
+    user_id:      userId,
+    token_hash:   hash,
+    expires_at:   expiresAt,
+    user_agent:   device?.userAgent ?? null,
+    ip_address:   device?.ip ?? null,
+    last_seen_at: new Date().toISOString(),
   });
 
   return plain;
@@ -162,6 +168,36 @@ async function isTokenRevoked(jti: string): Promise<boolean> {
   return !!data;
 }
 
+/**
+ * Returns true if the user has a revocation epoch newer than this token's iat —
+ * i.e. a superadmin force-revoked their sessions after the token was issued.
+ * `iat` is in seconds (JWT standard).
+ */
+async function isSessionRevoked(userId: string, iat: number): Promise<boolean> {
+  const { data } = await sb
+    .from('session_revocations')
+    .select('revoked_at')
+    .eq('user_id', userId)
+    .maybeSingle<{ revoked_at: string }>();
+  if (!data) return false;
+  return new Date(data.revoked_at).getTime() > iat * 1000;
+}
+
+/**
+ * Force-revoke ALL of a user's sessions (superadmin action). Sets the revocation
+ * epoch (so existing access tokens are rejected) and deletes their refresh token
+ * (so they cannot silently refresh). The user must log in again — which requires
+ * a fresh 2FA code for mandatory-2FA roles.
+ */
+async function revokeUserSessions(userId: string, revokedBy: string): Promise<void> {
+  const nowIso = new Date().toISOString();
+  await sb.from('session_revocations').upsert(
+    { user_id: userId, revoked_at: nowIso, revoked_by: revokedBy },
+    { onConflict: 'user_id' },
+  );
+  await sb.from('refresh_tokens').delete().eq('user_id', userId);
+}
+
 // ── Token extraction ──────────────────────────────────────────────────────────
 
 /** Extract bearer token from Authorization header (preferred) or legacy body token. */
@@ -203,8 +239,11 @@ async function requireUser(c: Context<{ Variables: HonoVariables }>): Promise<Ap
   const auth = c.get('auth');
   if (!auth) throw Object.assign(new Error('Unauthorized'), { status: 401 });
 
-  // Revocation check — only costs one DB round-trip per authenticated request
+  // Revocation checks — per-JTI (logout) and per-user epoch (superadmin revoke).
   if (auth.jti && await isTokenRevoked(auth.jti)) {
+    throw Object.assign(new Error('Unauthorized'), { status: 401 });
+  }
+  if (auth.iat && await isSessionRevoked(auth.sub, auth.iat)) {
     throw Object.assign(new Error('Unauthorized'), { status: 401 });
   }
 
@@ -293,5 +332,6 @@ export {
   requireRole,
   requirePermission,
   loadUserOverrides,
+  revokeUserSessions,
   log_,
 };

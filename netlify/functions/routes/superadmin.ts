@@ -24,7 +24,7 @@
 
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
-import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
+import { requireUser, requireRole, requirePermission, revokeUserSessions, log_ } from '../lib/auth';
 import { PERMISSION_KEYS } from '../lib/permissions';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
@@ -435,6 +435,74 @@ router.post('/clearUserPermission', async c => {
   }
   await log_(actor, 'permission_clear', 'user', userId,
     `${permission} override removed for user ${userId} (reverted to role default)`);
+  return c.json({ success: true });
+});
+
+// ── Active sessions: visibility + remote revoke ───────────────────────────────
+// Gated by 'sessions.manage' (superadmin by default).
+
+const RevokeSessionSchema = z.object({ userId: z.string().min(1) });
+
+// POST /superadmin/getActiveSessions — every active session with device context.
+router.post('/getActiveSessions', async c => {
+  await requirePermission(c, 'sessions.manage');
+
+  const { data: tokens, error } = await sb
+    .from('refresh_tokens')
+    .select('user_id, user_agent, ip_address, last_seen_at, created_at, expires_at')
+    .order('last_seen_at', { ascending: false });
+  if (error) {
+    console.error('[superadmin/getActiveSessions] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load sessions.' }, 500);
+  }
+
+  const rows = (tokens ?? []) as Array<{
+    user_id: string; user_agent: string | null; ip_address: string | null;
+    last_seen_at: string; created_at: string; expires_at: string;
+  }>;
+  if (rows.length === 0) return c.json({ success: true, sessions: [] });
+
+  // Join user identity in one query.
+  const ids = [...new Set(rows.map(r => r.user_id))];
+  const { data: users } = await sb
+    .from('app_users')
+    .select('id, username, full_name, role')
+    .in('id', ids);
+  const userMap = new Map((users ?? []).map(u => [u.id, u]));
+
+  const sessions = rows
+    .filter(r => new Date(r.expires_at) > new Date())   // active only
+    .map(r => {
+      const u = userMap.get(r.user_id);
+      return {
+        userId:     r.user_id,
+        username:   u?.username ?? '—',
+        fullName:   u?.full_name ?? 'Unknown user',
+        role:       u?.role ?? '—',
+        userAgent:  r.user_agent ?? '',
+        ipAddress:  r.ip_address ?? '',
+        lastSeenAt: r.last_seen_at,
+        createdAt:  r.created_at,
+      };
+    });
+
+  return c.json({ success: true, sessions });
+});
+
+// POST /superadmin/revokeSession — force-logout a user (epoch + delete refresh token).
+router.post('/revokeSession', async c => {
+  const actor = await requirePermission(c, 'sessions.manage');
+  const v = zv(c, RevokeSessionSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { userId } = v.data;
+
+  if (userId === actor.id) {
+    return c.json({ success: false, message: 'You cannot revoke your own active session here.' }, 400);
+  }
+
+  await revokeUserSessions(userId, actor.username);
+  await log_(actor, 'session_revoke', 'user', userId,
+    `forced logout of user ${userId}; re-authentication (incl. 2FA) required`);
   return c.json({ success: true });
 });
 

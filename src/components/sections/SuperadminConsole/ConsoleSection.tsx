@@ -21,6 +21,7 @@ import { type VNode, type ComponentType } from 'preact';
 import { useState } from 'preact/hooks';
 import { ModulesTab }     from './tabs/ModulesTab';
 import { PermissionsTab } from './tabs/PermissionsTab';
+import { SessionsTab }    from './tabs/SessionsTab';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -51,6 +52,13 @@ const TABS: ConsoleTab[] = [
     icon:  'fa-user-lock',
     desc:  'Grant or revoke individual capabilities per user. Overrides take priority over role defaults; clearing an override reverts to the role default.',
     body:  PermissionsTab,
+  },
+  {
+    id:    'sessions',
+    label: 'Sessions',
+    icon:  'fa-user-clock',
+    desc:  'See who is logged in and from which device. Revoking a session signs the user out immediately; they must re-authenticate (including 2FA).',
+    body:  SessionsTab,
   },
 ];
 

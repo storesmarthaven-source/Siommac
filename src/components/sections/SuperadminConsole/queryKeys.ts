@@ -15,4 +15,6 @@ export const consoleKeys = {
 
   users:      () => [...consoleKeys.all, 'users'] as const,
   userPerms:  (userId: string) => [...consoleKeys.all, 'userPerms', userId] as const,
+
+  sessions:   () => [...consoleKeys.all, 'sessions'] as const,
 };
