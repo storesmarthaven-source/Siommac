@@ -267,13 +267,13 @@ export async function signOut(): Promise<void> {
  */
 export function getSession(): FullSession | null {
   // Dynamic import to avoid circular dep at module-load time
-  // This is synchronous because Zustand stores are eagerly initialised
+  // Read synchronously via the window-bridged store (registered in main.tsx).
+  // Avoids a static import cycle while staying browser-safe (no require()).
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { useSessionStore } = require('@store/session') as {
-      useSessionStore: { getState(): import('@store/session').SessionState }
-    };
-    const s = useSessionStore.getState();
+    const store = (globalThis as unknown as Record<string, unknown>)['__siomacSessionStore'] as
+      { getState(): import('@store/session').SessionState } | undefined;
+    if (!store) return null;
+    const s = store.getState();
     if (!s.isAuthenticated || !s.token || !s.userId || !s.username || !s.role) {
       return null;
     }

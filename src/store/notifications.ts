@@ -26,6 +26,7 @@
 
 import { create }          from 'zustand';
 import { logger }          from '@lib/logger';
+import { getQueryClient }  from '@lib/queryClient';
 import { notificationKeys } from '@api/queryKeys';
 import type { NotificationRow } from '@api/schemas/notification';
 
@@ -76,7 +77,6 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
 
     // Invalidate TanStack Query so the panel list refreshes automatically
     try {
-      const { getQueryClient } = require('@lib/queryClient') as typeof import('@lib/queryClient');
       void getQueryClient().invalidateQueries({ queryKey: notificationKeys.mine() });
       void getQueryClient().invalidateQueries({ queryKey: notificationKeys.unread() });
     } catch (err) {
@@ -93,8 +93,7 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
         set({ unreadCount: 0 });
         // Invalidate so the panel re-fetches with is_read: true on all items
         try {
-          const { getQueryClient } = require('@lib/queryClient') as typeof import('@lib/queryClient');
-          void getQueryClient().invalidateQueries({ queryKey: notificationKeys.mine() });
+              void getQueryClient().invalidateQueries({ queryKey: notificationKeys.mine() });
           void getQueryClient().invalidateQueries({ queryKey: notificationKeys.unread() });
         } catch { /* ignore */ }
       }).catch((err: unknown) => {

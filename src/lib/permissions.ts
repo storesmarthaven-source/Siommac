@@ -39,6 +39,7 @@
  */
 
 import { logger } from '@lib/logger';
+import { useSessionStore } from '@store/session';
 import type { UserRole, PermissionOverride } from '@api/schemas/auth';
 
 // ── Permission key catalogue ──────────────────────────────────────────────────
@@ -319,21 +320,10 @@ export function permissionGroups(): { resource: string; keys: PermissionKey[] }[
  * This is the preferred API for components:
  *   import { can } from '@lib/permissions';
  *   if (can('employees.add')) { ... }
- *
- * The session store must be imported lazily to avoid circular dependencies
- * (permissions.ts ← store/session.ts ← permissions.ts).
  */
 export function can(key: string): boolean {
-  // Lazy import to break the circular dep cycle
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { useSessionStore } = require('@store/session') as {
-    useSessionStore: { getState(): { role: UserRole | null; permissionOverrides: PermissionOverride[] } }
-  };
-
   const state = useSessionStore.getState();
-
   if (!state.role) return false;
-
   return resolvePermission(key, {
     role:      state.role,
     overrides: state.permissionOverrides,
@@ -347,10 +337,6 @@ export function can(key: string): boolean {
  *   const canApprove = useCan('leaves.approve');
  */
 export function useCan(key: string): boolean {
-  const { useSessionStore } = require('@store/session') as {
-    useSessionStore: (sel: (s: { role: UserRole | null; permissionOverrides: PermissionOverride[] }) => boolean) => boolean
-  };
-
   return useSessionStore((s) => {
     if (!s.role) return false;
     return resolvePermission(key, { role: s.role, overrides: s.permissionOverrides });
