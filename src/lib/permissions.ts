@@ -181,10 +181,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'employees.edit',
     'employees.delete',
     'employees.view_pay',
-    'departments.view',
-    'departments.add',
-    'departments.edit',
-    'departments.delete',
+    'departments.view',   // departments.add/edit/delete are superadmin-only (Console)
     'sites.view',
     'sites.add',
     'sites.edit',

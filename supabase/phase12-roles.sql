@@ -102,9 +102,7 @@ INSERT INTO public.role_permissions (role_name, permission) VALUES
   ('admin', 'employees.delete'),
   ('admin', 'employees.view_pay'),
   ('admin', 'departments.view'),
-  ('admin', 'departments.add'),
-  ('admin', 'departments.edit'),
-  ('admin', 'departments.delete'),
+  -- departments.add/edit/delete are SUPERADMIN-ONLY (managed in the Console).
   ('admin', 'sites.view'),
   ('admin', 'sites.add'),
   ('admin', 'sites.edit'),

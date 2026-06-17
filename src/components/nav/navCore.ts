@@ -274,7 +274,6 @@ export function refreshSection(id: string): void {
       (win['Dashboard'] as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.initDashboardLayoutEditor?.();
       break;
     case 's-adm-employees':   win['Employees']?.['loadEmployeeList']?.();             break;
-    case 's-adm-departments': win['Employees']?.['loadDepartments']?.();              break;
     case 's-adm-projects':    win['Sites']?.['loadProjectSites']?.();                 break;
     case 's-adm-attendance':  win['AttendanceView']?.['loadAttendanceData']?.();      break;
     case 's-adm-leaves':      win['LeaveView']?.['loadLeaveApplications']?.();        break;

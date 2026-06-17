@@ -388,7 +388,7 @@ async function bootApp(): Promise<void> {
 
   // Admin sections
   _mountEmp('preact-adm-employees-root',   'employees');
-  _mountEmp('preact-adm-departments-root', 'departments');
+  // Departments management now lives in the Superadmin Console (Departments tab).
 
   // Manager sections
   _mountEmp('preact-mgr-overview-root',   'manager-overview');

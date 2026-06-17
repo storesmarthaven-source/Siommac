@@ -66,7 +66,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hourly_rates.view', 'hourly_rates.edit',
     'employees.view', 'employees.view_detail', 'employees.add', 'employees.edit',
     'employees.delete', 'employees.view_pay',
-    'departments.view', 'departments.add', 'departments.edit', 'departments.delete',
+    'departments.view',   // departments.add/edit/delete are superadmin-only (Console)
     'sites.view', 'sites.add', 'sites.edit', 'sites.delete', 'sites.assign_employees',
     'map.view', 'dashboard.view', 'reports.export',
     'settings.view', 'settings.edit', 'settings.statutory_rates',

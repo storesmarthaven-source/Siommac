@@ -4,7 +4,6 @@
  * HTML shells for admin-role section panels:
  *   • s-adm-dashboard    — rich inline dashboard (stat cards, charts, widget grid)
  *   • s-adm-employees    — employees CRUD (profile pill + Preact mount)
- *   • s-adm-departments  — departments CRUD (profile pill + Preact mount)
  *   • s-adm-projects     — project sites (profile pill + Preact mount)
  *   • s-adm-attendance   — attendance records (profile pill + Preact mount)
  *   • s-adm-leaves       — leave applications (profile pill + Preact mount)
@@ -652,11 +651,7 @@ export default function AdminSections() {
         <div id="preact-adm-employees-root" />
       </section>
 
-      {/* Admin — Departments CRUD */}
-      <section class="app-section" id="s-adm-departments" data-role="admin">
-        <AdminProfilePill ids={{ profileBtn: 'admDeptProfileBtn', avatar: 'admDeptProfileAvatar', profileName: 'admDeptProfileName', profileRole: 'admDeptProfileRole', notifBtn: 'admDeptNotifBtn', notifBadge: 'admDeptNotifBadge', msgBtn: 'admDeptMsgBtn', msgBadge: 'admDeptMsgBadge', ticketBtn: 'admDeptTicketBtn', ticketBadge: 'admDeptTicketBadge' }} />
-        <div id="preact-adm-departments-root" />
-      </section>
+      {/* Departments management moved into the Superadmin Console (s-superadmin-console). */}
 
       {/* Admin — Project Sites CRUD */}
       <section class="app-section" id="s-adm-projects" data-role="admin">

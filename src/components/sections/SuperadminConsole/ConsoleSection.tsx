@@ -19,11 +19,12 @@
 
 import { type VNode, type ComponentType } from 'preact';
 import { useState } from 'preact/hooks';
-import { ModulesTab }     from './tabs/ModulesTab';
-import { RolesTab }       from './tabs/RolesTab';
-import { PermissionsTab } from './tabs/PermissionsTab';
-import { SessionsTab }    from './tabs/SessionsTab';
-import { AuditLogTab }    from './tabs/AuditLogTab';
+import { ModulesTab }      from './tabs/ModulesTab';
+import { RolesTab }        from './tabs/RolesTab';
+import { DepartmentsTab }  from './tabs/DepartmentsTab';
+import { PermissionsTab }  from './tabs/PermissionsTab';
+import { SessionsTab }     from './tabs/SessionsTab';
+import { AuditLogTab }     from './tabs/AuditLogTab';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -47,6 +48,13 @@ const TABS: ConsoleTab[] = [
     icon:  'fa-user-shield',
     desc:  'Create and manage roles and their default permission sets. System roles (superadmin, employee) are permanent; build custom roles like HSE Manager or Finance Officer on top.',
     body:  RolesTab,
+  },
+  {
+    id:    'departments',
+    label: 'Departments',
+    icon:  'fa-building',
+    desc:  'Define the organisation structure. Departments group people (the “where”); roles define what they can do (the “what”).',
+    body:  DepartmentsTab,
   },
   {
     id:    'modules',
