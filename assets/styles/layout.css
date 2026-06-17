@@ -226,8 +226,9 @@
   content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
   width: 3px; border-radius: 0 3px 3px 0; background: var(--siomac-red);
 }
-/* Meridian nav token: 19px icon */
-.sidebar-menu i { width: 19px; text-align: center; font-size: 19px; line-height: 1; flex-shrink: 0; }
+/* Meridian nav token: 19px row icon — scope to item buttons so it doesn't
+   inflate the small group-header chevron / count badge. */
+.sidebar-menu button[data-section] > i { width: 19px; text-align: center; font-size: 19px; line-height: 1; flex-shrink: 0; }
 
 /* Hide group headers + counts when collapsed */
 .sidebar.collapsed .sb-group-label,
