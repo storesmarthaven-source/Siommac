@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
+import { deptScopeFilter, assertInScope }  from '../lib/permissions';
 import { dateOnly, r2 }                   from '../lib/helpers';
 import { setting, getAllSettings, invalidateSettingsCache } from '../lib/settings';
 import { zv, z, zPayCycle, zPayBasis, zDateStr } from '../lib/validate';
@@ -219,8 +220,9 @@ router.post('/getPayrollEmployees', async c => {
   if (uErr) throw new Error('Failed to load employees: ' + uErr.message);
   if (dErr) throw new Error('Failed to load departments: ' + dErr.message);
   const deptMap = Object.fromEntries(((depts ?? []) as any[]).map(d => [d.id, d.name]));
+  const scope = await deptScopeFilter(actor);
   let list = (users ?? []) as any[];
-  if (actor.role === 'manager') list = list.filter(u => u.department_id === actor.department_id);
+  if (!scope.all) list = list.filter(u => u.department_id === scope.departmentId);
   return c.json({ success: true, data: list.map(u => ({ username: u.username, fullName: u.full_name, department: deptMap[u.department_id] || '—', position: u.position || '—' })) });
 });
 
@@ -229,7 +231,7 @@ router.post('/getPayroll', async c => {
   const { username, year, month } = (c.get('body').args ?? {}) as Record<string, unknown>;
   const { data: emp } = await sb.from('app_users').select('*').eq('username', username).single<AppUser>();
   if (!emp) return c.json({ success: false, message: 'Employee not found' });
-  if (actor.role === 'manager' && emp.department_id !== actor.department_id) return c.json({ success: false, message: 'Employee not in your department' });
+  await assertInScope(actor, emp.department_id);
 
   const y  = Number(year), mo = Number(month);
   const start = new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 10);
@@ -276,7 +278,8 @@ router.post('/getPayroll', async c => {
 });
 
 router.post('/listPayrollRun', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const { dateFrom: rawFrom, dateTo: rawTo, cycle: cycleFilter = 'all', overrides = {} } = (c.get('body').args ?? {}) as Record<string, unknown>;
   const dateFrom = String(rawFrom ?? '').slice(0, 10);
   const dateTo   = String(rawTo   ?? '').slice(0, 10);
@@ -289,6 +292,7 @@ router.post('/listPayrollRun', async c => {
     .select('id, username, full_name, department_id, position, pay_cycle, pay_basis, hourly_rate, monthly_salary, standard_hours_per_day, nis_applicable, health_surcharge_applicable, tax_resident')
     .eq('status', 'active').neq('role', 'admin').order('full_name');
   if (cycleFilter !== 'all') empQuery = empQuery.eq('pay_cycle', cycleFilter);
+  if (!scope.all) empQuery = empQuery.eq('department_id', scope.departmentId);
 
   const [{ data: emps }, { data: depts }, { data: attRecs }] = await Promise.all([
     empQuery,

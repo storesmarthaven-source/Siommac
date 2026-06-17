@@ -181,22 +181,24 @@ export const DeleteDepartmentSchema = z.object({
 // ── Site schemas ──────────────────────────────────────────────────────────────
 
 export const AddSiteSchema = z.object({
-  name:      zShortStr(128),
-  address:   zOptStr(256),
-  latitude:  zLat,
-  longitude: zLng,
-  radius:    z.number().min(10).max(10_000).optional(),
-  status:    z.enum(['active', 'inactive']).optional(),
+  name:         zShortStr(128),
+  address:      zOptStr(256),
+  latitude:     zLat,
+  longitude:    zLng,
+  radius:       z.number().min(10).max(10_000).optional(),
+  status:       z.enum(['active', 'inactive']).optional(),
+  departmentId: zShortStr(64).nullish(),   // null/omitted = org-wide (unassigned)
 });
 
 export const UpdateSiteSchema = z.object({
-  id:        zShortStr(64),
-  name:      zShortStr(128).optional(),
-  address:   zOptStr(256),
-  latitude:  zLat.optional(),
-  longitude: zLng.optional(),
-  radius:    z.number().min(10).max(10_000).optional(),
-  status:    z.enum(['active', 'inactive']).optional(),
+  id:           zShortStr(64),
+  name:         zShortStr(128).optional(),
+  address:      zOptStr(256),
+  latitude:     zLat.optional(),
+  longitude:    zLng.optional(),
+  radius:       z.number().min(10).max(10_000).optional(),
+  status:       z.enum(['active', 'inactive']).optional(),
+  departmentId: zShortStr(64).nullish(),   // null = clear (org-wide)
 });
 
 export const DeleteSiteSchema = z.object({

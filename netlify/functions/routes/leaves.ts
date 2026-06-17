@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
+import { deptScopeFilter, assertInScope } from '../lib/permissions';
 import { today, dateOnly, cap }           from '../lib/helpers';
 import { setting }                         from '../lib/settings';
 import { zv, SubmitLeaveSchema, GetLeaveByIdSchema, UpdateLeaveSchema, DeleteLeaveSchema, DecideLeaveSchema } from '../lib/validate';
@@ -95,7 +96,8 @@ async function _decideLeave(c: any, status: string) {
   const { leaveId, notes } = v.data;
   const { data: l } = await sb.from('leave_requests').select('*').eq('id', leaveId).single<any>();
   if (!l) return c.json({ success: false, message: 'Leave not found' });
-  if (actor.role === 'manager' && l.department_id !== actor.department_id) return c.json({ success: false, message: 'Forbidden' }, 403);
+  // Department-scoped approvers may only decide leaves within their department.
+  await assertInScope(actor, l.department_id);
   const { error } = await sb.from('leave_requests')
     .update({ status, reviewed_by: actor.id, reviewed_at: new Date().toISOString(), review_notes: notes ?? '' })
     .eq('id', leaveId).eq('status', 'pending');
@@ -108,9 +110,12 @@ router.post('/approveLeave', c => _decideLeave(c, 'approved'));
 router.post('/rejectLeave',  c => _decideLeave(c, 'rejected'));
 
 router.post('/listAllLeaves', async c => {
-  await requireRole(c, ['admin']);
+  const actor = await requireRole(c, ['admin']);
+  const scope = await deptScopeFilter(actor);
+  let leavesQ = sb.from('leave_requests').select('*').order('applied_at', { ascending: false });
+  if (!scope.all) leavesQ = leavesQ.eq('department_id', scope.departmentId);
   const [{ data: leaves, error: lErr }, { data: users, error: uErr }] = await Promise.all([
-    sb.from('leave_requests').select('*').order('applied_at', { ascending: false }),
+    leavesQ,
     sb.from('app_users').select('id, full_name'),
   ]);
   if (lErr) throw new Error('Failed to load leaves: ' + lErr.message);
@@ -126,8 +131,9 @@ router.post('/listAllLeaves', async c => {
 
 router.post('/getPendingLeavesForManager', async c => {
   const actor = await requireRole(c, ['manager', 'admin']);
+  const scope = await deptScopeFilter(actor);
   let leavesQ = sb.from('leave_requests').select('*').eq('status', 'pending').order('applied_at', { ascending: false });
-  if (actor.role === 'manager') leavesQ = leavesQ.eq('department_id', actor.department_id);
+  if (!scope.all) leavesQ = leavesQ.eq('department_id', scope.departmentId);
   const [{ data: leaves, error: lErr }, { data: users, error: uErr }] = await Promise.all([
     leavesQ,
     sb.from('app_users').select('id, full_name'),

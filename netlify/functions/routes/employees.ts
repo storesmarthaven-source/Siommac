@@ -2,6 +2,7 @@ import { Hono }  from 'hono';
 import bcrypt     from 'bcryptjs';
 import { sb }     from '../lib/db';
 import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
+import { deptScopeFilter, assertInScope } from '../lib/permissions';
 import { getProfileSignedUrl } from '../lib/photos';
 import { uploadBase64 }        from '../lib/upload';
 import { today, dateOnly }     from '../lib/helpers';
@@ -23,10 +24,14 @@ async function _nextEmployeeNumber(): Promise<string> {
 }
 
 router.post('/listEmployees', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
   const t = today();
+  // Department-scoped roles see only their own department's employees.
+  const scope = await deptScopeFilter(actor);
+  let usersQ = sb.from('app_users').select('*').order('full_name');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
   const [{ data: users, error: uErr }, { data: depts, error: dErr }, { data: att }] = await Promise.all([
-    sb.from('app_users').select('*').order('full_name'),
+    usersQ,
     sb.from('departments').select('id,name'),
     sb.from('attendance').select('*').eq('work_date', t),
   ]);
@@ -105,6 +110,11 @@ router.post('/updateEmployee', async c => {
   if (!v.ok) return v.response;
   const args = v.data;
 
+  // Department-scoped actors may only edit employees in their own department.
+  const { data: tgt } = await sb.from('app_users').select('department_id').eq('username', args.username).maybeSingle<{ department_id: string | null }>();
+  if (!tgt) return c.json({ success: false, message: 'Employee not found' });
+  await assertInScope(actor, tgt.department_id);
+
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (args.fullName  !== undefined) patch.full_name     = args.fullName;
   if (args.department !== undefined) patch.department_id = args.department || null;
@@ -159,8 +169,11 @@ router.post('/deleteEmployee', async c => {
 
   if (actor.username === username) return c.json({ success: false, message: 'You cannot delete your own account' });
 
-  const { data: target } = await sb.from('app_users').select('id,role').eq('username', username).maybeSingle<Pick<AppUser, 'id' | 'role'>>();
+  const { data: target } = await sb.from('app_users').select('id,role,department_id').eq('username', username).maybeSingle<Pick<AppUser, 'id' | 'role' | 'department_id'>>();
   if (!target) return c.json({ success: false, message: 'Employee not found' });
+
+  // Department-scoped actors may only delete employees in their own department.
+  await assertInScope(actor, target.department_id);
 
   if (target.role === 'admin') {
     const { count } = await sb.from('app_users').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('status', 'active') as unknown as { count: number };

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
+import { deptScopeFilter, loadRoleScope }   from '../lib/permissions';
 import { today, hhmm24, dateOnly, num }   from '../lib/helpers';
 import { setting }                         from '../lib/settings';
 import { getSignedUrl, getProfileSignedUrl, resolveAttendancePhotosBatch } from '../lib/photos';
@@ -186,16 +187,23 @@ router.post('/getMyChart', async c => {
 });
 
 router.post('/getAdminStats', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const todayStr = today();
-  const [{ data: users }, { data: att }, { data: leaves }] = await Promise.all([
-    sb.from('app_users').select('id').eq('status', 'active').neq('role', 'admin'),
-    sb.from('attendance').select('check_in_time,check_in_site_id,status').eq('work_date', todayStr),
-    sb.from('leave_requests').select('id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr),
+  // Department-scoped actors only count their own department's people.
+  let usersQ = sb.from('app_users').select('id,username').eq('status', 'active').neq('role', 'admin');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
+  const [{ data: users }, { data: attAll }, { data: leaves }] = await Promise.all([
+    usersQ,
+    sb.from('attendance').select('username,check_in_time,check_in_site_id,status').eq('work_date', todayStr),
+    sb.from('leave_requests').select('id,department_id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr),
   ]);
+  const scopedUsernames = new Set(((users ?? []) as any[]).map(u => u.username));
+  const att = scope.all ? (attAll ?? []) : ((attAll ?? []) as any[]).filter(a => scopedUsernames.has(a.username));
+  const scopedLeaves = scope.all ? (leaves ?? []) : ((leaves ?? []) as any[]).filter(l => l.department_id === scope.departmentId);
   const totalEmployees = (users ?? []).length;
-  const presentToday   = ((att ?? []) as any[]).filter(a => a.check_in_time).length;
-  const onLeaveToday   = (leaves ?? []).length;
+  const presentToday   = (att as any[]).filter(a => a.check_in_time).length;
+  const onLeaveToday   = scopedLeaves.length;
   return c.json({ success: true, data: {
     totalEmployees, presentToday,
     absentToday:     Math.max(0, totalEmployees - presentToday - onLeaveToday),
@@ -206,19 +214,24 @@ router.post('/getAdminStats', async c => {
 });
 
 router.post('/getRecentAttendance', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const v = zv(c, GetRecentAttendanceSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const limit    = v.data.limit ?? 10;
   const todayStr = today();
-  const [{ data: att }, { data: users }, { data: depts }] = await Promise.all([
-    sb.from('attendance').select('*').eq('work_date', todayStr).order('check_in_time', { ascending: false }).limit(limit),
-    sb.from('app_users').select('id,username,full_name,department_id'),
+  let usersQ = sb.from('app_users').select('id,username,full_name,department_id');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
+  const [{ data: attAll }, { data: users }, { data: depts }] = await Promise.all([
+    sb.from('attendance').select('*').eq('work_date', todayStr).order('check_in_time', { ascending: false }),
+    usersQ,
     sb.from('departments').select('id,name'),
   ]);
   const userMap = Object.fromEntries(((users ?? []) as any[]).map(u => [u.username, u]));
   const deptMap = Object.fromEntries(((depts ?? []) as any[]).map(d => [d.id, d.name]));
-  return c.json({ success: true, data: ((att ?? []) as any[]).map(a => {
+  // Restrict to the scoped user set, then apply the limit.
+  const att = (scope.all ? (attAll ?? []) : ((attAll ?? []) as any[]).filter(a => userMap[a.username])).slice(0, limit);
+  return c.json({ success: true, data: (att as any[]).map(a => {
     const u = userMap[a.username] ?? {};
     return {
       name:       u.full_name || a.username,
@@ -232,7 +245,8 @@ router.post('/getRecentAttendance', async c => {
 });
 
 router.post('/listAttendance', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const v = zv(c, ListAttendanceSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const now  = new Date();
@@ -242,8 +256,10 @@ router.post('/listAttendance', async c => {
   const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
   const todayStr = today();
 
+  let usersQ = sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin').order('full_name');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
   const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
-    sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin').order('full_name'),
+    usersQ,
     sb.from('departments').select('id,name'),
     sb.from('attendance').select('*').gte('work_date', start).lte('work_date', end),
   ]);
@@ -277,7 +293,8 @@ router.post('/listAttendance', async c => {
 });
 
 router.post('/listDailyLog', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const v = zv(c, ListDailyLogSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const now  = new Date();
@@ -292,15 +309,19 @@ router.post('/listDailyLog', async c => {
     end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
   }
 
-  const [{ data: users }, { data: depts }, { data: att }] = await Promise.all([
-    sb.from('app_users').select('id,username,full_name,department_id').eq('status', 'active').neq('role', 'admin').order('full_name'),
+  let usersQ = sb.from('app_users').select('id,username,full_name,department_id').eq('status', 'active').neq('role', 'admin').order('full_name');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
+  const [{ data: users }, { data: depts }, { data: attAll }] = await Promise.all([
+    usersQ,
     sb.from('departments').select('id,name'),
     sb.from('attendance').select('*').gte('work_date', start).lte('work_date', end).order('work_date', { ascending: false }),
   ]);
   const deptMap = Object.fromEntries(((depts ?? []) as any[]).map(d => [d.id, d.name]));
   const userMap = Object.fromEntries(((users ?? []) as any[]).map(u => [u.username, u]));
+  // Restrict log rows to the scoped user set (rows align 1:1 with photoUrls below).
+  const att = scope.all ? (attAll ?? []) : ((attAll ?? []) as any[]).filter(a => userMap[a.username]);
 
-  const photoUrls = await Promise.all(((att ?? []) as any[]).map(a => Promise.all([
+  const photoUrls = await Promise.all((att as any[]).map(a => Promise.all([
     getSignedUrl('attendance-photos', a.check_in_photo_url  ?? ''),
     getSignedUrl('attendance-photos', a.check_out_photo_url ?? ''),
   ])));
@@ -365,7 +386,10 @@ router.post('/getLiveAttendance', async c => {
   const actor = await requireRole(c, ['admin', 'manager']);
   const v = zv(c, GetLiveAttendanceSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const deptScope = actor.role === 'manager' ? actor.department_id : v.data.scope;
+  // Department-scoped actors are pinned to their own department; org-wide actors
+  // honour the requested scope filter.
+  const actorScope = await loadRoleScope(actor.role);
+  const deptScope  = actorScope === 'own' ? actor.department_id : v.data.scope;
 
   const [{ data: users }, { data: depts }, { data: sites }, { data: att }] = await Promise.all([
     sb.from('app_users').select('*').eq('status', 'active').neq('role', 'admin'),
@@ -414,18 +438,30 @@ router.post('/getLiveAttendance', async c => {
 });
 
 router.post('/getDashboardCharts', async c => {
-  await requireRole(c, ['admin', 'manager']);
+  const actor = await requireRole(c, ['admin', 'manager']);
+  const scope = await deptScopeFilter(actor);
   const todayStr   = today();
   const cutoff     = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
   const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString().slice(0, 10);
 
-  const [{ data: users }, { data: depts }, { data: att }, { data: allLeaves }, { data: activeLeaves }] = await Promise.all([
-    sb.from('app_users').select('id,department_id').eq('status', 'active').neq('role', 'admin'),
+  let usersQ = sb.from('app_users').select('id,username,department_id').eq('status', 'active').neq('role', 'admin');
+  if (!scope.all) usersQ = usersQ.eq('department_id', scope.departmentId);
+  let allLeavesQ    = sb.from('leave_requests').select('type,department_id').gte('from_date', monthStart);
+  let activeLeavesQ = sb.from('leave_requests').select('id,department_id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr);
+  if (!scope.all) {
+    allLeavesQ    = allLeavesQ.eq('department_id', scope.departmentId);
+    activeLeavesQ = activeLeavesQ.eq('department_id', scope.departmentId);
+  }
+  const [{ data: users }, { data: depts }, { data: attAll }, { data: allLeaves }, { data: activeLeaves }] = await Promise.all([
+    usersQ,
     sb.from('departments').select('id,name'),
-    sb.from('attendance').select('work_date,check_in_time,status').gte('work_date', cutoff),
-    sb.from('leave_requests').select('type').gte('from_date', monthStart),
-    sb.from('leave_requests').select('id').eq('status', 'approved').lte('from_date', todayStr).gte('to_date', todayStr),
+    sb.from('attendance').select('username,work_date,check_in_time,status').gte('work_date', cutoff),
+    allLeavesQ,
+    activeLeavesQ,
   ]);
+  // Restrict attendance to the scoped user set.
+  const scopedUsernames = new Set(((users ?? []) as any[]).map(u => u.username));
+  const att = scope.all ? (attAll ?? []) : ((attAll ?? []) as any[]).filter(a => scopedUsernames.has(a.username));
 
   const byDate: Record<string, { date: string; present: number; late: number }> = {};
   for (const a of (att ?? []) as any[]) {
@@ -464,7 +500,8 @@ router.post('/getDeptStats', async c => {
   const actor = await requireRole(c, ['manager', 'admin']);
   const v = zv(c, GetDeptStatsSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const deptId = actor.role === 'manager' ? actor.department_id : v.data.departmentId;
+  const actorScope = await loadRoleScope(actor.role);
+  const deptId = actorScope === 'own' ? actor.department_id : v.data.departmentId;
   const [{ data: users }, { data: att }, { data: leaves }] = await Promise.all([
     sb.from('app_users').select('*').eq('department_id', deptId).eq('status', 'active').neq('role', 'admin'),
     sb.from('attendance').select('*').eq('work_date', today()),
@@ -484,7 +521,8 @@ router.post('/getDeptEmployees', async c => {
   const actor = await requireRole(c, ['manager', 'admin']);
   const v = zv(c, GetDeptStatsSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const deptId = actor.role === 'manager' ? actor.department_id : v.data.departmentId;
+  const actorScope = await loadRoleScope(actor.role);
+  const deptId = actorScope === 'own' ? actor.department_id : v.data.departmentId;
   const [{ data: users }, { data: att }] = await Promise.all([
     sb.from('app_users').select('*').eq('department_id', deptId).neq('role', 'admin').order('full_name'),
     sb.from('attendance').select('*').eq('work_date', today()),
