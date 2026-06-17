@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requirePermission, log_ } from '../lib/auth';
 import { zv, AddSiteSchema, UpdateSiteSchema, DeleteSiteSchema, AssignSiteEmployeesSchema } from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
@@ -68,7 +68,7 @@ router.post('/listProjectSites', async c => {
 });
 
 router.post('/addProjectSite', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'sites.add');
   const v = zv(c, AddSiteSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { name, address, latitude, longitude, radius, status } = v.data;
@@ -81,7 +81,7 @@ router.post('/addProjectSite', async c => {
 });
 
 router.post('/updateProjectSite', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'sites.edit');
   const v = zv(c, UpdateSiteSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { id, ...fields } = v.data;
@@ -99,7 +99,7 @@ router.post('/updateProjectSite', async c => {
 });
 
 router.post('/deleteProjectSite', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'sites.delete');
   const v = zv(c, DeleteSiteSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { error } = await sb.from('project_sites').delete().eq('id', v.data.id);
@@ -109,7 +109,7 @@ router.post('/deleteProjectSite', async c => {
 });
 
 router.post('/assignSiteEmployees', async c => {
-  await requireRole(c, ['admin']);
+  await requirePermission(c, 'sites.assign_employees');
   const v = zv(c, AssignSiteEmployeesSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { siteId, employeeIds } = v.data;

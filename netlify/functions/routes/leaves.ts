@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { today, dateOnly, cap }           from '../lib/helpers';
 import { setting }                         from '../lib/settings';
 import { zv, SubmitLeaveSchema, GetLeaveByIdSchema, UpdateLeaveSchema, DeleteLeaveSchema, DecideLeaveSchema } from '../lib/validate';
@@ -89,7 +89,7 @@ router.post('/deleteLeave', async c => {
 });
 
 async function _decideLeave(c: any, status: string) {
-  const actor = await requireRole(c, ['admin', 'manager']);
+  const actor = await requirePermission(c, 'leaves.approve');
   const v = zv(c, DecideLeaveSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { leaveId, notes } = v.data;

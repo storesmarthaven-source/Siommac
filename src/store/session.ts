@@ -114,6 +114,7 @@ function payloadToState(p: LoginResponse | Verify2faResponse): Partial<SessionSt
     layoutMode:      (p.layoutMode   as LayoutMode)  ?? 'sidebar',
     companyName:     p.companyName   ?? null,
     companyLogoUrl:  p.companyLogoUrl ?? null,
+    permissionOverrides: p.permissionOverrides ?? [],
     preAuthToken:    null,
   };
 }

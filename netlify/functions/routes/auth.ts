@@ -1,6 +1,6 @@
 import { Hono }     from 'hono';
 import { sb, sbAnon } from '../lib/db';
-import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, log_ } from '../lib/auth';
+import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
 import { getProfileSignedUrl }         from '../lib/photos';
 import { setting }                     from '../lib/settings';
 import { checkLoginLimit }             from '../lib/ratelimit';
@@ -25,11 +25,15 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 // ── Shared helper: build full session payload after successful auth ────────────
 async function buildSessionPayload(u: AppUser) {
-  const [profileImage, companyLogoUrl, companyName, refreshToken] = await Promise.all([
+  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
     issueRefreshToken(u.id),
+    // superadmin needs no overrides (role default already grants everything)
+    u.role === 'superadmin'
+      ? Promise.resolve([] as { permission: string; granted: boolean }[])
+      : loadUserOverrides(u.id),
   ]);
   return {
     success:      true as const,
@@ -46,6 +50,14 @@ async function buildSessionPayload(u: AppUser) {
     profileImage,
     companyLogoUrl,
     companyName,
+    // Per-user RBAC grants/denials — consumed by the session store + can()/useCan().
+    permissionOverrides: overrides.map(o => ({
+      user_id:    u.id,
+      permission: o.permission,
+      granted:    o.granted,
+      set_by:     '',
+      set_at:     new Date(0).toISOString(),
+    })),
   };
 }
 

@@ -34,6 +34,7 @@ export interface LoginResponse extends ApiResponse {
   profileImage?:   string;
   companyLogoUrl?: string;
   companyName?:    string;
+  permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
   // ── 2FA intermediate states ──────────────────────────────────────────────
   requiresTwoFactor?: boolean;  // enrolled, must enter TOTP code
   requiresSetup?:     boolean;  // mandatory role, not yet enrolled
@@ -61,6 +62,7 @@ export interface Verify2faResponse extends ApiResponse {
   profileImage?:   string;
   companyLogoUrl?: string;
   companyName?:    string;
+  permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
 }
 
 export interface TwoFactorStatusResponse extends ApiResponse {

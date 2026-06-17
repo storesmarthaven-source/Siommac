@@ -1,7 +1,7 @@
 import { Hono }  from 'hono';
 import bcrypt     from 'bcryptjs';
 import { sb }     from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { getProfileSignedUrl } from '../lib/photos';
 import { uploadBase64 }        from '../lib/upload';
 import { today, dateOnly }     from '../lib/helpers';
@@ -56,7 +56,7 @@ router.post('/listEmployees', async c => {
 });
 
 router.post('/addEmployee', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'employees.add');
   const v = zv(c, AddEmployeeSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const args = v.data;
@@ -100,7 +100,7 @@ router.post('/addEmployee', async c => {
 });
 
 router.post('/updateEmployee', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'employees.edit');
   const v = zv(c, UpdateEmployeeSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const args = v.data;
@@ -152,7 +152,7 @@ router.post('/updateEmployee', async c => {
 });
 
 router.post('/deleteEmployee', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'employees.delete');
   const v = zv(c, DeleteEmployeeSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { username } = v.data;

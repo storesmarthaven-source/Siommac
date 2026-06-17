@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requirePermission, log_ } from '../lib/auth';
 import { zv, AddDepartmentSchema, UpdateDepartmentSchema, DeleteDepartmentSchema } from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
@@ -49,7 +49,7 @@ router.post('/listDepartments', async c => {
 });
 
 router.post('/addDepartment', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'departments.add');
   const v = zv(c, AddDepartmentSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { name, managerId } = v.data;
@@ -62,7 +62,7 @@ router.post('/addDepartment', async c => {
 });
 
 router.post('/updateDepartment', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'departments.edit');
   const v = zv(c, UpdateDepartmentSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { id, name, managerId } = v.data;
@@ -76,7 +76,7 @@ router.post('/updateDepartment', async c => {
 });
 
 router.post('/deleteDepartment', async c => {
-  const actor = await requireRole(c, ['admin']);
+  const actor = await requirePermission(c, 'departments.delete');
   const v = zv(c, DeleteDepartmentSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { error } = await sb.from('departments').delete().eq('id', v.data.id);

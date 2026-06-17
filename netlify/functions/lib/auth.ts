@@ -13,6 +13,7 @@ import jwt                  from 'jsonwebtoken';
 import crypto               from 'crypto';
 import type { Context, Next } from 'hono';
 import { sb }               from './db';
+import { resolvePermission, type PermissionOverrideRow } from './permissions';
 import type { AppUser }     from '../../../types/db';
 import type { JwtPayload, HonoVariables } from '../../../types/api';
 
@@ -230,6 +231,33 @@ async function requireRole(
   return u;
 }
 
+/** Load a user's per-user permission overrides (best-effort; [] if table absent). */
+async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[]> {
+  const { data, error } = await sb
+    .from('user_permissions')
+    .select('permission, granted')
+    .eq('user_id', userId);
+  if (error || !data) return [];
+  return data as PermissionOverrideRow[];
+}
+
+/**
+ * Like requireUser but enforces a permission key (resource.action).
+ * Resolution: per-user override → role default → deny. superadmin always passes
+ * (ROLE_PERMISSIONS.superadmin contains every key). Throws 403 if denied.
+ */
+async function requirePermission(
+  c: Context<{ Variables: HonoVariables }>,
+  key: string,
+): Promise<AppUser> {
+  const u = await requireUser(c);
+  const overrides = u.role === 'superadmin' ? [] : await loadUserOverrides(u.id);
+  if (!resolvePermission(key, u.role, overrides)) {
+    throw Object.assign(new Error('Forbidden'), { status: 403 });
+  }
+  return u;
+}
+
 // ── Activity logging ──────────────────────────────────────────────────────────
 
 async function log_(
@@ -263,5 +291,7 @@ export {
   jwtMiddleware,
   requireUser,
   requireRole,
+  requirePermission,
+  loadUserOverrides,
   log_,
 };
