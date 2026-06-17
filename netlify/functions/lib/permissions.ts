@@ -57,7 +57,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
     'payroll.view_own', 'employees.view', 'employees.view_detail',
-    'departments.view', 'sites.view', 'map.view', 'dashboard.view', 'reports.export',
+    'sites.view', 'map.view', 'dashboard.view', 'reports.export',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -66,7 +66,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hourly_rates.view', 'hourly_rates.edit',
     'employees.view', 'employees.view_detail', 'employees.add', 'employees.edit',
     'employees.delete', 'employees.view_pay',
-    'departments.view',   // departments.add/edit/delete are superadmin-only (Console)
+    // departments.* are superadmin-only — no admin/manager department access.
     'sites.view', 'sites.add', 'sites.edit', 'sites.delete', 'sites.assign_employees',
     'map.view', 'dashboard.view', 'reports.export',
     'settings.view', 'settings.edit', 'settings.statutory_rates',

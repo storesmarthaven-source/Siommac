@@ -651,7 +651,11 @@ export default function AdminSections() {
         <div id="preact-adm-employees-root" />
       </section>
 
-      {/* Departments management moved into the Superadmin Console (s-superadmin-console). */}
+      {/* Departments CRUD — superadmin only (nav entry only in superadmin SECTION_DEFS) */}
+      <section class="app-section" id="s-adm-departments" data-role="superadmin">
+        <AdminProfilePill ids={{ profileBtn: 'admDeptProfileBtn', avatar: 'admDeptProfileAvatar', profileName: 'admDeptProfileName', profileRole: 'admDeptProfileRole', notifBtn: 'admDeptNotifBtn', notifBadge: 'admDeptNotifBadge', msgBtn: 'admDeptMsgBtn', msgBadge: 'admDeptMsgBadge', ticketBtn: 'admDeptTicketBtn', ticketBadge: 'admDeptTicketBadge' }} />
+        <div id="preact-adm-departments-root" />
+      </section>
 
       {/* Admin — Project Sites CRUD */}
       <section class="app-section" id="s-adm-projects" data-role="admin">

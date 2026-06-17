@@ -74,7 +74,6 @@ INSERT INTO public.role_permissions (role_name, permission) VALUES
   ('manager', 'payroll.view_own'),
   ('manager', 'employees.view'),
   ('manager', 'employees.view_detail'),
-  ('manager', 'departments.view'),
   ('manager', 'sites.view'),
   ('manager', 'map.view'),
   ('manager', 'dashboard.view'),
@@ -101,8 +100,7 @@ INSERT INTO public.role_permissions (role_name, permission) VALUES
   ('admin', 'employees.edit'),
   ('admin', 'employees.delete'),
   ('admin', 'employees.view_pay'),
-  ('admin', 'departments.view'),
-  -- departments.add/edit/delete are SUPERADMIN-ONLY (managed in the Console).
+  -- departments.* are SUPERADMIN-ONLY (admins/managers have no department access).
   ('admin', 'sites.view'),
   ('admin', 'sites.add'),
   ('admin', 'sites.edit'),

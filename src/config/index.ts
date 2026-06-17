@@ -94,6 +94,7 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
   superadmin: [
     { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now" },
     { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce' },
+    { id: 's-adm-departments', label: 'Departments',  icon: 'fa-building',            sub: 'Structure your organisation and assign leads' },
     { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details' },
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in' },
     { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status' },

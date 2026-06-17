@@ -150,7 +150,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'payroll.view_own',
     'employees.view',
     'employees.view_detail',
-    'departments.view',
     'sites.view',
     'map.view',
     'dashboard.view',
@@ -181,7 +180,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'employees.edit',
     'employees.delete',
     'employees.view_pay',
-    'departments.view',   // departments.add/edit/delete are superadmin-only (Console)
+    // departments.* are superadmin-only — no admin/manager department access.
     'sites.view',
     'sites.add',
     'sites.edit',
