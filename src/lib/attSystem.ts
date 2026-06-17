@@ -61,6 +61,9 @@ let _sessExpTimer:  ReturnType<typeof setTimeout>  | null = null;
 let _sessWarnTimer: ReturnType<typeof setTimeout>  | null = null;
 let _sessTickTimer: ReturnType<typeof setInterval> | null = null;
 let _sessWarned = false;
+// Idle-timeout activity tracking
+let _lastActivityReset = 0;
+let _activityHandler: (() => void) | null = null;
 
 const _sectionLoaded: Record<string, boolean> = {};
 function _resetLoadedState(): void { Object.keys(_sectionLoaded).forEach(k => delete _sectionLoaded[k]); }
@@ -70,9 +73,14 @@ const _photoCache: Record<string, string> = {};
 // ── Session constants ─────────────────────────────────────────────────────────
 
 const SESSION_KEY           = 'siomac_session_v1';
-const SESSION_DURATION      = 8 * 60 * 60 * 1000;
-const SESSION_DURATION_LONG = 7 * 24 * 60 * 60 * 1000;
-const SESSION_WARN_AT       = 5 * 60 * 1000;
+// Idle-timeout model: the session expires after this much INACTIVITY. The
+// deadline slides forward on user activity (see _resetIdleDeadline). The value
+// is per-role and superadmin-configurable; the server sends the resolved window
+// in the login payload (sessionIdleTimeoutMs). These are fallbacks only.
+const SESSION_DEFAULT_IDLE  = 8 * 60 * 60 * 1000;       // 8h if the server sends nothing
+const SESSION_REMEMBER_IDLE = 7 * 24 * 60 * 60 * 1000;  // "Remember me" widens the idle window
+const SESSION_WARN_AT       = 5 * 60 * 1000;            // warn 5 min before idle expiry
+const SESSION_ACTIVITY_THROTTLE = 30 * 1000;           // at most one deadline reset per 30s
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 
@@ -434,15 +442,25 @@ interface SessionData {
   companyName:    string;
   companyLogoUrl: string;
   profileImage:   string;
-  expiresAt:      number;
+  expiresAt:      number;   // sliding idle deadline (unix ms)
+  idleTimeoutMs:  number;   // the role's configured idle window
   rememberMe:     boolean;
   [key: string]:  unknown;
 }
 
 function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
   try {
-    const duration = rememberMe ? SESSION_DURATION_LONG : SESSION_DURATION;
-    const data = Object.assign({}, payload, { expiresAt: Date.now() + duration, rememberMe: !!rememberMe });
+    // Idle window: explicit per-role value from the server, widened if "remember
+    // me" is on, else the safe default.
+    const serverIdle = Number(payload['idleTimeoutMs']) || 0;
+    const idleTimeoutMs = rememberMe
+      ? Math.max(serverIdle, SESSION_REMEMBER_IDLE)
+      : (serverIdle || SESSION_DEFAULT_IDLE);
+    const data = Object.assign({}, payload, {
+      idleTimeoutMs,
+      expiresAt:  Date.now() + idleTimeoutMs,
+      rememberMe: !!rememberMe,
+    });
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch (_) {}
 }
@@ -467,34 +485,72 @@ function loadSession(): SessionData | null {
 
 function clearSession(): void {
   try { localStorage.removeItem(SESSION_KEY); } catch (_) {}
-  if (_sessExpTimer)  { clearTimeout(_sessExpTimer);   _sessExpTimer  = null; }
-  if (_sessWarnTimer) { clearTimeout(_sessWarnTimer);  _sessWarnTimer = null; }
-  if (_sessTickTimer) { clearInterval(_sessTickTimer); _sessTickTimer = null; }
+  stopSessionTimer();            // clears timers + detaches activity listeners
   _sessWarned = false;
+  _lastActivityReset = 0;
 }
 
-function startSessionTimer(): void {
+/** (Re)arm the expiry + warning timers from the current stored deadline. */
+function _armSessionTimers(): void {
   const s = loadSession();
   if (!s) return;
   const msLeft = s.expiresAt - Date.now();
   if (msLeft <= 0) { handleSessionExpired(); return; }
   if (_sessExpTimer)  clearTimeout(_sessExpTimer);
   if (_sessWarnTimer) clearTimeout(_sessWarnTimer);
-  if (_sessTickTimer) clearInterval(_sessTickTimer);
   _sessExpTimer = setTimeout(handleSessionExpired, msLeft);
   if (msLeft > SESSION_WARN_AT) {
     _sessWarnTimer = setTimeout(handleSessionWarning, msLeft - SESSION_WARN_AT);
   } else if (!_sessWarned) {
     handleSessionWarning();
   }
+}
+
+/**
+ * Slide the idle deadline forward on user activity. Throttled so a burst of
+ * mouse/key events costs at most one localStorage write + timer re-arm per
+ * SESSION_ACTIVITY_THROTTLE. Once the warning has fired we stop auto-extending
+ * so a warned-then-idle user still logs out (activity after the warning that
+ * lands before expiry will still extend — intentional: they came back).
+ */
+function _resetIdleDeadline(): void {
+  const now = Date.now();
+  if (now - _lastActivityReset < SESSION_ACTIVITY_THROTTLE) return;
+  const s = loadSession();
+  if (!s) return;
+  _lastActivityReset = now;
+  const idle = Number(s.idleTimeoutMs) || SESSION_DEFAULT_IDLE;
+  updateStoredSession({ expiresAt: now + idle });
+  _sessWarned = false;            // fresh activity clears a prior warning
+  _armSessionTimers();
+}
+
+function startSessionTimer(): void {
+  const s = loadSession();
+  if (!s) return;
+  if (s.expiresAt - Date.now() <= 0) { handleSessionExpired(); return; }
+  if (_sessTickTimer) clearInterval(_sessTickTimer);
+  _armSessionTimers();
   updateSessionWidget();
   _sessTickTimer = setInterval(updateSessionWidget, 30000);
+
+  // Attach throttled activity listeners that slide the idle deadline forward.
+  if (!_activityHandler) {
+    _activityHandler = () => _resetIdleDeadline();
+    const evs: (keyof DocumentEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    for (const ev of evs) document.addEventListener(ev, _activityHandler, { passive: true });
+  }
 }
 
 function stopSessionTimer(): void {
   if (_sessExpTimer)  { clearTimeout(_sessExpTimer);   _sessExpTimer  = null; }
   if (_sessWarnTimer) { clearTimeout(_sessWarnTimer);  _sessWarnTimer = null; }
   if (_sessTickTimer) { clearInterval(_sessTickTimer); _sessTickTimer = null; }
+  if (_activityHandler) {
+    const evs: (keyof DocumentEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    for (const ev of evs) document.removeEventListener(ev, _activityHandler);
+    _activityHandler = null;
+  }
 }
 
 function handleSessionWarning(): void {
@@ -569,6 +625,7 @@ export function _completeLogin(result: Record<string, unknown>): void {
     companyName:    result['companyName']     as string ?? '',
     companyLogoUrl: result['companyLogoUrl']  as string ?? '',
     profileImage:   result['profileImage']    as string ?? '',
+    idleTimeoutMs:  Number(result['sessionIdleTimeoutMs']) || 0,
   }, rememberMe);
 
   // Sync the Zustand session store so Preact components see isAuthenticated=true

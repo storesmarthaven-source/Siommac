@@ -27,7 +27,11 @@ import {
   updateSetting,
   saveWorkHoursApi,
   uploadLogoApi,
+  fetchSessionTimeouts,
+  setSessionTimeout,
+  SESSION_TIMEOUT_DEFAULTS,
   type AppSettings,
+  type TimeoutRole,
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
 import { NotificationPreferences } from '@components/notifications';
@@ -542,7 +546,86 @@ function NotificationsPanel(): VNode {
 
 // ── Security panel ────────────────────────────────────────────────────────────
 
+// Idle-timeout options offered in the dropdowns (minutes).
+const TIMEOUT_OPTIONS: { value: number; label: string }[] = [
+  { value: 15,   label: '15 minutes' },
+  { value: 30,   label: '30 minutes' },
+  { value: 60,   label: '1 hour' },
+  { value: 120,  label: '2 hours' },
+  { value: 240,  label: '4 hours' },
+  { value: 480,  label: '8 hours' },
+  { value: 720,  label: '12 hours' },
+  { value: 1440, label: '24 hours' },
+];
+
+const TIMEOUT_ROLE_LABEL: Record<TimeoutRole, string> = {
+  superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
+};
+
+/** Per-role idle-timeout configuration. Superadmin can edit; others see read-only. */
+function SessionTimeoutCard({ canEdit }: { canEdit: boolean }): VNode {
+  const [timeouts, setTimeouts] = useState<Record<TimeoutRole, number> | null>(null);
+  const [saving, setSaving]     = useState<TimeoutRole | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchSessionTimeouts()
+      .then(t => { if (alive) setTimeouts(t); })
+      .catch(() => { if (alive) setTimeouts(SESSION_TIMEOUT_DEFAULTS); });
+    return () => { alive = false; };
+  }, []);
+
+  const handleChange = useCallback(async (role: TimeoutRole, minutes: number) => {
+    setTimeouts(prev => prev ? { ...prev, [role]: minutes } : prev);
+    setSaving(role);
+    try {
+      await setSessionTimeout(role, minutes);
+      toast.success(`${TIMEOUT_ROLE_LABEL[role]} session timeout set to ${minutes} min.`);
+    } catch {
+      toast.error('Failed to save timeout. Try again.');
+    } finally {
+      setSaving(null);
+    }
+  }, []);
+
+  return (
+    <div class="stg-card">
+      <CardLabel icon="fa-clock" text="Session Timeout (by role)" />
+      <p class="stg-switch-desc" style={{ marginBottom: '14px' }}>
+        Users are signed out after this much inactivity. Higher-privilege roles should
+        use shorter windows. {canEdit ? 'Changes apply at each user’s next login.' : 'Only a superadmin can change these.'}
+      </p>
+      {!timeouts ? (
+        <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading…</div>
+      ) : (
+        (Object.keys(TIMEOUT_ROLE_LABEL) as TimeoutRole[]).map(role => (
+          <div key={role} class="stg-form-row">
+            <div class="stg-form-group">
+              <label>{TIMEOUT_ROLE_LABEL[role]}</label>
+              <select
+                value={String(timeouts[role])}
+                disabled={!canEdit || saving === role}
+                class={canEdit ? '' : 'stg-readonly'}
+                onChange={e => void handleChange(role, Number((e.target as HTMLSelectElement).value))}
+              >
+                {/* Ensure the current value is selectable even if non-standard. */}
+                {!TIMEOUT_OPTIONS.some(o => o.value === timeouts[role]) && (
+                  <option value={String(timeouts[role])}>{timeouts[role]} minutes</option>
+                )}
+                {TIMEOUT_OPTIONS.map(o => <option key={o.value} value={String(o.value)}>{o.label}</option>)}
+              </select>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 function SecurityPanel(): VNode {
+  const role = useSessionStore(s => s.role);
+  const isSuperadmin = role === 'superadmin';
+
   const handleClearCache = useCallback(() => {
     try {
       localStorage.clear();
@@ -554,17 +637,10 @@ function SecurityPanel(): VNode {
 
   return (
     <div>
+      <SessionTimeoutCard canEdit={isSuperadmin} />
+
       <div class="stg-card">
-        <CardLabel icon="fa-lock" text="Access & Session" />
-        <div class="stg-form-group">
-          <label>Session Timeout</label>
-          <select disabled class="stg-readonly" style={{ opacity: 0.6 }}>
-            <option value="60">60 minutes</option>
-            <option value="30">30 minutes</option>
-            <option value="120">2 hours</option>
-          </select>
-          <small>Contact your administrator to change the session duration</small>
-        </div>
+        <CardLabel icon="fa-lock" text="Access & Security" />
         {[
           { label: 'Two-Factor Authentication', desc: 'Require a one-time code at login — coming soon',     checked: false },
           { label: 'Login alerts via email',    desc: 'Notify when a new device logs in — coming soon',     checked: false },

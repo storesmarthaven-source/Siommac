@@ -35,6 +35,7 @@ export interface LoginResponse extends ApiResponse {
   companyLogoUrl?: string;
   companyName?:    string;
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
+  sessionIdleTimeoutMs?: number;  // resolved per-role idle window (ms)
   // ── 2FA intermediate states ──────────────────────────────────────────────
   requiresTwoFactor?: boolean;  // enrolled, must enter TOTP code
   requiresSetup?:     boolean;  // mandatory role, not yet enrolled
@@ -63,6 +64,7 @@ export interface Verify2faResponse extends ApiResponse {
   companyLogoUrl?: string;
   companyName?:    string;
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
+  sessionIdleTimeoutMs?: number;
 }
 
 export interface TwoFactorStatusResponse extends ApiResponse {

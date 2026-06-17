@@ -89,6 +89,34 @@ export async function updateSetting(
   if (!res.success) throw new Error(res.message ?? `Failed to save ${key}`);
 }
 
+// ── Per-role session idle timeout (minutes) ───────────────────────────────────
+
+export type TimeoutRole = 'superadmin' | 'admin' | 'manager' | 'employee';
+
+/** Default idle-timeout (minutes) per role — mirrors the server fallback. */
+export const SESSION_TIMEOUT_DEFAULTS: Record<TimeoutRole, number> = {
+  superadmin: 60, admin: 240, manager: 240, employee: 480,
+};
+
+/** Read the configured per-role idle timeouts (minutes) from settings. */
+export async function fetchSessionTimeouts(signal?: AbortSignal): Promise<Record<TimeoutRole, number>> {
+  const res = await apiPost<{ success: boolean; data: Record<string, string> }>(
+    'getSettings', {}, signal ? { signal } : undefined,
+  );
+  const raw = res.data ?? {};
+  const out = { ...SESSION_TIMEOUT_DEFAULTS };
+  (Object.keys(out) as TimeoutRole[]).forEach(role => {
+    const v = Number(raw[`sessionIdleTimeout.${role}`]);
+    if (Number.isFinite(v) && v > 0) out[role] = v;
+  });
+  return out;
+}
+
+/** Persist one role's idle timeout (minutes). */
+export async function setSessionTimeout(role: TimeoutRole, minutes: number, signal?: AbortSignal): Promise<void> {
+  await updateSetting(`sessionIdleTimeout.${role}`, String(minutes), signal);
+}
+
 export async function saveWorkHoursApi(
   start: string,
   end: string,

@@ -23,9 +23,26 @@ import type { AppUser }                from '../../../types/db';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
+// Per-role idle-timeout defaults (minutes). Higher-privilege roles get shorter
+// idle windows. Superadmin can override these in Settings → stored as
+// settings key `sessionIdleTimeout.<role>`.
+const IDLE_DEFAULT_MIN: Record<string, number> = {
+  superadmin: 60, admin: 240, manager: 240, employee: 480,
+};
+
+/** Resolve a role's idle-timeout window in ms (configurable setting → default). */
+async function resolveIdleTimeoutMs(role: string): Promise<number> {
+  const fallback = String(IDLE_DEFAULT_MIN[role] ?? 240);
+  const raw = await setting(`sessionIdleTimeout.${role}`, fallback);
+  const mins = Number(raw);
+  // Clamp to a sane range: 5 min … 30 days.
+  const safe = Number.isFinite(mins) && mins > 0 ? Math.min(Math.max(mins, 5), 43200) : Number(fallback);
+  return safe * 60 * 1000;
+}
+
 // ── Shared helper: build full session payload after successful auth ────────────
 async function buildSessionPayload(u: AppUser) {
-  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides] = await Promise.all([
+  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
@@ -34,6 +51,7 @@ async function buildSessionPayload(u: AppUser) {
     u.role === 'superadmin'
       ? Promise.resolve([] as { permission: string; granted: boolean }[])
       : loadUserOverrides(u.id),
+    resolveIdleTimeoutMs(u.role),
   ]);
   return {
     success:      true as const,
@@ -50,6 +68,8 @@ async function buildSessionPayload(u: AppUser) {
     profileImage,
     companyLogoUrl,
     companyName,
+    // Resolved per-role idle-timeout window (ms) — drives the client idle timer.
+    sessionIdleTimeoutMs,
     // Per-user RBAC grants/denials — consumed by the session store + can()/useCan().
     permissionOverrides: overrides.map(o => ({
       user_id:    u.id,
