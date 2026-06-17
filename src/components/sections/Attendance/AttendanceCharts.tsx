@@ -24,18 +24,6 @@ const COLOR_PRESENT = '#2E7D32';
 const COLOR_LATE    = '#FFB712';
 const COLOR_ABSENT  = '#E40C0C';
 
-const CARD_STYLE: Record<string, string | number> = {
-  background:   '#fff',
-  borderRadius: '12px',
-  boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-  padding:      '16px',
-  minHeight:    '280px',
-  flex:         '1',
-  minWidth:     '280px',
-  display:      'flex',
-  flexDirection: 'column',
-};
-
 // ── ChartJS global type shim ──────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -142,19 +130,15 @@ function TrendChart({ trend, loading }: { trend: DailyTrend[]; loading: boolean 
   }, [trend, loading]);
 
   return (
-    <div style={CARD_STYLE as unknown as Record<string, string>}>
-      <div style={{ fontWeight: '600', fontSize: '14px', color: '#374151', marginBottom: '12px' }}>
-        Daily Attendance Trend
-      </div>
-      <div style={{ flex: 1, position: 'relative', height: '240px' }}>
+    <div class="ea-chart-card">
+      <div class="ea-section-title">Daily Attendance Trend</div>
+      <div class="att-chart-container">
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <Spinner size={36} label="Loading trend chart…" />
           </div>
         ) : trend.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: '13px' }}>
-            No trend data available.
-          </div>
+          <div class="att-empty">No trend data available.</div>
         ) : (
           <canvas ref={canvasRef} style={{ width: '100%', height: '240px' }} />
         )}
@@ -230,19 +214,15 @@ function DistributionChart({ rows, loading }: { rows: AttendanceRow[]; loading: 
   }, [rows, loading]);
 
   return (
-    <div style={{ ...CARD_STYLE, minWidth: '220px', maxWidth: '340px' } as unknown as Record<string, string>}>
-      <div style={{ fontWeight: '600', fontSize: '14px', color: '#374151', marginBottom: '12px' }}>
-        Status Distribution
-      </div>
-      <div style={{ flex: 1, position: 'relative', height: '240px' }}>
+    <div class="ea-chart-card" style={{ minWidth: '220px', maxWidth: '340px' }}>
+      <div class="ea-section-title">Status Distribution</div>
+      <div class="att-chart-container">
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <Spinner size={36} label="Loading distribution chart…" />
           </div>
         ) : rows.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#9ca3af', fontSize: '13px' }}>
-            No data.
-          </div>
+          <div class="att-empty">No data.</div>
         ) : (
           <canvas ref={canvasRef} style={{ width: '100%', height: '240px' }} />
         )}
@@ -255,7 +235,7 @@ function DistributionChart({ rows, loading }: { rows: AttendanceRow[]; loading: 
 
 export function AttendanceCharts({ trend, rows, loading }: AttendanceChartsProps): VNode {
   return (
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+    <div class="ea-charts-row">
       <TrendChart trend={trend} loading={loading} />
       <DistributionChart rows={rows} loading={loading} />
     </div>

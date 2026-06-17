@@ -22,8 +22,6 @@ import {
   fmtLocalTime,
   currentMonth,
   currentYear,
-  statusColor,
-  statusBgColor,
 } from './utils';
 import type { AttendanceRow, FilterMode, MonthFilter, RangeFilter } from './types';
 
@@ -38,6 +36,17 @@ function esc(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+// ── Status → branded badge class ──────────────────────────────────────────────
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case 'Present': return 'att-badge att-present';
+    case 'Late':    return 'att-badge att-late';
+    case 'Absent':  return 'att-badge att-absent';
+    default:        return 'att-badge';
+  }
+}
+
 // ── DataTable column definitions ──────────────────────────────────────────────
 
 const LOG_COLUMNS: DataTableColumn<AttendanceRow>[] = [
@@ -45,13 +54,13 @@ const LOG_COLUMNS: DataTableColumn<AttendanceRow>[] = [
     title: 'Employee',
     data:  'name',
     render: (_val, _type, row) =>
-      `<span style="font-weight:600;color:#111827">${esc(row.name)}</span>`,
+      `<span class="att-name">${esc(row.name)}</span>`,
   },
   {
     title: 'Department',
     data:  'department',
     render: (_val, _type, row) =>
-      `<span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;background:#EFF6FF;color:#1E40AF;font-weight:500">${esc(row.department)}</span>`,
+      `<span class="att-dept-pill">${esc(row.department)}</span>`,
   },
   {
     title: 'Date',
@@ -75,11 +84,8 @@ const LOG_COLUMNS: DataTableColumn<AttendanceRow>[] = [
   {
     title: 'Status',
     data:  'status',
-    render: (_val, _type, row) => {
-      const fg = statusColor(row.status);
-      const bg = statusBgColor(row.status);
-      return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:${bg};color:${fg};white-space:nowrap">${esc(row.status)}</span>`;
-    },
+    render: (_val, _type, row) =>
+      `<span class="${statusBadgeClass(row.status)}">${esc(row.status)}</span>`,
   },
   {
     title:      'Actions',
@@ -87,7 +93,7 @@ const LOG_COLUMNS: DataTableColumn<AttendanceRow>[] = [
     orderable:  false,
     searchable: false,
     render: (_val, _type, row) =>
-      `<button type="button" data-username="${esc(row.username)}" style="padding:4px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:500;color:#1B2D55" aria-label="View details for ${esc(row.name)}">Details</button>`,
+      `<button type="button" class="btn-view-emp-detail" data-username="${esc(row.username)}" aria-label="View details for ${esc(row.name)}"><i class="fas fa-eye" aria-hidden="true"></i> Details</button>`,
   },
 ];
 
@@ -191,47 +197,22 @@ export function AttendanceSection(): VNode {
       />
 
       {/* Attendance log card */}
-      <div
-        style={{
-          background:   '#fff',
-          borderRadius: '12px',
-          boxShadow:    '0 1px 4px rgba(0,0,0,0.08)',
-          overflow:     'hidden',
-        }}
-      >
+      <div class="data-section">
         {/* Card header */}
-        <div
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'space-between',
-            padding:        '16px 20px',
-            borderBottom:   '1px solid #f3f4f6',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>
-              Attendance Log
-            </span>
+        <div class="section-header">
+          <h2>
+            <i class="fas fa-clipboard-list" aria-hidden="true" />
+            Attendance Log
             {!isLoading && (
-              <span
-                style={{
-                  padding:      '2px 10px',
-                  borderRadius: '999px',
-                  background:   '#EFF6FF',
-                  color:        '#1E40AF',
-                  fontSize:     '12px',
-                  fontWeight:   '600',
-                }}
-              >
+              <span class="att-log-count">
                 {recordCount} {recordCount === 1 ? 'record' : 'records'}
               </span>
             )}
-          </div>
+          </h2>
         </div>
 
         {/* DataTable — click delegation wrapper */}
-        <div onClick={handleTableClick} style={{ padding: '0 4px 4px' }}>
+        <div onClick={handleTableClick}>
           <DataTable<AttendanceRow>
             id="att-log-table"
             columns={LOG_COLUMNS}

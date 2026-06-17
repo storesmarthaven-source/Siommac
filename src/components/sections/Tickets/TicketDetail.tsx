@@ -207,6 +207,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <textarea
           rows={3}
+          class="form-control"
           placeholder={
             isDeleted ? 'This ticket has been deleted.' :
             closed    ? 'This ticket is closed and can no longer be replied to.' :
@@ -217,9 +218,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
           onInput={e => setReplyText((e.target as HTMLTextAreaElement).value)}
           onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSendReply(); }}
           style={{
-            width: '100%', border: '1px solid var(--border)', borderRadius: 8,
-            padding: '8px 10px', fontSize: '0.82rem', fontFamily: 'inherit',
-            resize: 'none', outline: 'none',
+            resize: 'none',
             background: closed ? 'var(--bg-subtle,#f8fafe)' : undefined,
             color:      closed ? 'var(--text-muted)' : undefined,
           }}
@@ -233,9 +232,10 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
             {isAdmin && !isDeleted && (
               <>
                 <select
+                  class="form-select"
                   value={pendingStatus}
                   onChange={e => setPendingStatus((e.target as HTMLSelectElement).value as TicketStatus)}
-                  style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', fontSize: '0.78rem', fontFamily: 'inherit', outline: 'none' }}
+                  style={{ width: 'auto', padding: '4px 28px 4px 8px', fontSize: '0.78rem' }}
                 >
                   {TICKET_STATUSES.filter(s => s !== 'deleted').map(s => (
                     <option key={s} value={s}>{TICKET_STATUS_LABEL[s]}</option>

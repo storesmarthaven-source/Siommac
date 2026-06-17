@@ -86,12 +86,6 @@ function MsgRow({ msg: m, isAdmin, username, onOpen, onDeleted }: RowProps) {
     <div
       class={`hdr-msg-item${hasUnread ? ' unread' : ''}`}
       style={{
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
-        padding: '10px 14px',
-        borderBottom: '1px solid var(--border)',
         borderLeft: hasUnread ? '3px solid var(--siomac-red)' : '3px solid transparent',
         paddingLeft: 11,
         opacity: isDeleted ? 0.6 : undefined,
@@ -104,7 +98,8 @@ function MsgRow({ msg: m, isAdmin, username, onOpen, onDeleted }: RowProps) {
             src={otherPhoto}
             alt={inits}
             crossOrigin="anonymous"
-            style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${isDeleted ? '#eee' : 'var(--border,#eee)'}`, filter: isDeleted ? 'grayscale(1)' : undefined }}
+            class="hdr-msg-avatar"
+            style={{ objectFit: 'cover', border: `2px solid ${isDeleted ? 'var(--border)' : 'var(--border,#eee)'}`, filter: isDeleted ? 'grayscale(1)' : undefined }}
           />
         : <div
             class="hdr-msg-avatar"
@@ -122,11 +117,11 @@ function MsgRow({ msg: m, isAdmin, username, onOpen, onDeleted }: RowProps) {
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             {isDeleted && (
-              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#999', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap' }}>
                 Removed
               </span>
             )}
-            <span class="hdr-msg-time" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+            <span class="hdr-msg-time" style={{ whiteSpace: 'nowrap' }}>
               {timeAgoShort(latestTime)}
             </span>
           </div>
@@ -134,7 +129,7 @@ function MsgRow({ msg: m, isAdmin, username, onOpen, onDeleted }: RowProps) {
         <div style={{ fontSize: '0.78rem', fontWeight: hasUnread ? 700 : 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {m.subject}
         </div>
-        <div class="hdr-msg-preview" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div class="hdr-msg-preview">
           <em>{previewBy}:</em>{' '}{previewBody}
         </div>
       </div>

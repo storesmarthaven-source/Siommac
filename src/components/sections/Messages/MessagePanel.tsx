@@ -126,7 +126,6 @@ export function MessagePanel() {
               class="hdr-foot-link hdr-compose-btn"
               id="msgComposeBtn"
               title="New Message"
-              style={{ padding: '4px 10px', fontSize: '0.78rem' }}
               onClick={handleCompose}
             >
               <i class="fas fa-plus" />

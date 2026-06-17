@@ -128,7 +128,7 @@ export function ConversationView({ msg: m, onBack }: ConversationViewProps) {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div id="msgDetailPane" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Thread header */}
       <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle,#f8fafe)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -136,7 +136,7 @@ export function ConversationView({ msg: m, onBack }: ConversationViewProps) {
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
               {fromLabel}: <strong>{otherName}</strong>
               {isDeleted && (
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#999', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, padding: '1px 7px' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 4, padding: '1px 7px' }}>
                   Employee Removed
                 </span>
               )}
@@ -157,7 +157,7 @@ export function ConversationView({ msg: m, onBack }: ConversationViewProps) {
       </div>
 
       {/* Chat bubbles */}
-      <div ref={bodyRef} class="hdr-modal-body" style={{ flex: 1, overflowY: 'auto' }}>
+      <div ref={bodyRef} id="msgDetailBody" class="hdr-modal-body" style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
           {entries.map(({ key, ...bubble }) => <Bubble key={key} {...bubble} />)}
         </div>
@@ -166,17 +166,12 @@ export function ConversationView({ msg: m, onBack }: ConversationViewProps) {
       {/* Reply input */}
       <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <textarea
+          id="msgReplyInput"
+          class="form-control"
           rows={3}
           placeholder={isDeleted ? 'This employee has been removed — replies are disabled.' : 'Write your reply… (Ctrl+Enter to send)'}
           style={{
-            width: '100%',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            padding: '8px 10px',
-            fontSize: '0.82rem',
-            fontFamily: 'inherit',
             resize: 'none',
-            outline: 'none',
             background: isDeleted ? 'var(--bg-subtle,#f8fafe)' : undefined,
             color: isDeleted ? 'var(--text-muted)' : undefined,
           }}

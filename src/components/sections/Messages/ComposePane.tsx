@@ -42,7 +42,8 @@ export function ComposePane({ onBack, onSuccess }: ComposePaneProps) {
       {isAdmin && (
         <div>
           <select
-            style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', fontSize: '0.83rem', fontFamily: 'inherit', outline: 'none' }}
+            id="msgComposeTo"
+            class="form-select"
             value={toUsername}
             onChange={(e: Event) => setToUsername((e.target as HTMLSelectElement).value)}
           >
@@ -58,19 +59,22 @@ export function ComposePane({ onBack, onSuccess }: ComposePaneProps) {
 
       {/* Subject */}
       <input
+        id="msgComposeSubject"
+        class="form-control"
         type="text"
         placeholder="Subject"
         maxLength={120}
-        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', fontSize: '0.83rem', fontFamily: 'inherit', outline: 'none' }}
         value={subject}
         onInput={(e: Event) => setSubject((e.target as HTMLInputElement).value)}
       />
 
       {/* Body */}
       <textarea
+        id="msgComposeBody"
+        class="form-control"
         rows={4}
         placeholder="Write your message…"
-        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', fontSize: '0.82rem', fontFamily: 'inherit', resize: 'none', outline: 'none' }}
+        style={{ resize: 'none' }}
         value={body}
         onInput={(e: Event) => setBody((e.target as HTMLTextAreaElement).value)}
       />

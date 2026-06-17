@@ -87,11 +87,6 @@ function TicketRowItem({ ticket: t, isAdmin, username, seenIds, onOpen, onDelete
       onClick={() => !isDeleted || isAdmin ? onOpen(t.id) : undefined}
       style={{
         cursor:       (!isDeleted || isAdmin) ? 'pointer' : 'default',
-        display:      'flex',
-        alignItems:   'flex-start',
-        gap:          '10px',
-        padding:      '10px 14px',
-        borderBottom: '1px solid var(--border)',
         borderLeft:   hasNew ? '3px solid var(--siomac-red)' : '3px solid transparent',
         paddingLeft:  '11px',
         opacity:      isDeleted ? 0.6 : 1,
@@ -137,10 +132,10 @@ function TicketRowItem({ ticket: t, isAdmin, username, seenIds, onOpen, onDelete
           </div>
         </div>
 
-        <div style={{ fontSize: '0.78rem', fontWeight: hasNew ? 700 : 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div class="hdr-ticket-title" style={{ fontWeight: hasNew ? 700 : 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {t.subject}
         </div>
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div class="hdr-ticket-sub" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           <span style={{ fontStyle: 'italic' }}>{previewBy}:</span> {previewBody || '—'}
         </div>
       </div>

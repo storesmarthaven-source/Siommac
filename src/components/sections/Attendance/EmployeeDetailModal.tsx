@@ -14,12 +14,21 @@ import { Modal } from '@shared/Modal';
 import {
   fmtDate,
   fmtLocalTime,
-  statusColor,
-  statusBgColor,
   rateColor,
   buildConsistencyFromRows,
 } from './utils';
 import type { AttendanceRow, DateRange } from './types';
+
+// ── Status → branded badge class ──────────────────────────────────────────────
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case 'Present': return 'att-badge att-present';
+    case 'Late':    return 'att-badge att-late';
+    case 'Absent':  return 'att-badge att-absent';
+    default:        return 'att-badge';
+  }
+}
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -35,39 +44,25 @@ interface EmployeeDetailModalProps {
 function StatChip({
   label,
   value,
-  color,
+  variant,
+  valueColor,
 }: {
-  label: string;
-  value: string | number;
-  color?: string;
+  label:       string;
+  value:       string | number;
+  /** Branded colour modifier for the value. */
+  variant?:    'present' | 'late' | 'absent' | 'hours';
+  /** Dynamic inline colour (e.g. rate gradient) when no fixed variant applies. */
+  valueColor?: string;
 }): VNode {
   return (
-    <div
-      style={{
-        display:       'flex',
-        flexDirection: 'column',
-        alignItems:    'center',
-        gap:           '2px',
-        padding:       '10px 16px',
-        background:    '#f9fafb',
-        borderRadius:  '10px',
-        minWidth:      '80px',
-        flex:          '1',
-      }}
-    >
+    <div class={`adp-stat ${variant ? `adp-stat--${variant}` : ''}`}>
       <span
-        style={{
-          fontSize:   '18px',
-          fontWeight: '700',
-          color:      color ?? '#111827',
-          lineHeight: '1',
-        }}
+        class="adp-stat-val"
+        style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </span>
-      <span style={{ fontSize: '11px', color: '#6b7280', textAlign: 'center', marginTop: '2px' }}>
-        {label}
-      </span>
+      <span class="adp-stat-lbl">{label}</span>
     </div>
   );
 }
@@ -115,91 +110,50 @@ export function EmployeeDetailModal({
       size="lg"
     >
       {emp === null ? (
-        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px', padding: '32px 0' }}>
-          No records in this period.
-        </div>
+        <div class="att-empty">No records in this period.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Header: avatar + name + dept + period */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {/* Avatar circle */}
-            <div
-              style={{
-                width:          '56px',
-                height:         '56px',
-                borderRadius:   '50%',
-                background:     '#1B2D55',
-                color:          '#fff',
-                display:        'flex',
-                alignItems:     'center',
-                justifyContent: 'center',
-                fontSize:       '20px',
-                fontWeight:     '700',
-                flexShrink:     0,
-              }}
-            >
-              {initials}
-            </div>
-
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '17px', color: '#111827' }}>{emp.name}</div>
-              <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>{emp.department}</div>
-              <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{periodLabel}</div>
+          <div class="adp-header">
+            <div class="adp-avatar">{initials}</div>
+            <div class="adp-identity">
+              <div class="adp-name">{emp.name}</div>
+              <div class="adp-meta">
+                <span class="adp-dept">
+                  <i class="fas fa-building" aria-hidden="true" /> {emp.department}
+                </span>
+                <span class="adp-period">
+                  <i class="fas fa-calendar-alt" aria-hidden="true" /> {periodLabel}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Stat chips */}
           {consistency !== null && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <StatChip label="Present" value={consistency.presentDays} color="#2E7D32" />
-              <StatChip label="Late"    value={consistency.lateDays}    color="#D97706" />
-              <StatChip label="Absent"  value={consistency.absentDays}  color="#DC2626" />
-              <StatChip label="Avg Hrs" value={`${consistency.avgHours}h`} />
+            <div class="adp-stats">
+              <StatChip label="Present" value={consistency.presentDays} variant="present" />
+              <StatChip label="Late"    value={consistency.lateDays}    variant="late" />
+              <StatChip label="Absent"  value={consistency.absentDays}  variant="absent" />
+              <StatChip label="Avg Hrs" value={`${consistency.avgHours}h`} variant="hours" />
               <StatChip
                 label="Rate"
                 value={`${consistency.attendanceRate}%`}
-                color={rateColor(consistency.attendanceRate)}
+                valueColor={rateColor(consistency.attendanceRate)}
               />
             </div>
           )}
 
           {/* Day-by-day log table */}
           {empRows.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '13px', padding: '16px 0' }}>
-              No records in this period.
-            </div>
+            <div class="att-empty">No records in this period.</div>
           ) : (
-            <div style={{ overflowX: 'auto', maxHeight: '320px', overflowY: 'auto' }}>
-              <table
-                style={{
-                  width:          '100%',
-                  borderCollapse: 'collapse',
-                  fontSize:       '13px',
-                }}
-              >
+            <div class="adp-log-wrap" style={{ maxHeight: '320px', overflowY: 'auto', padding: 0 }}>
+              <table class="adp-log-table">
                 <thead>
-                  <tr
-                    style={{
-                      background:   '#f9fafb',
-                      position:     'sticky',
-                      top:          0,
-                      zIndex:       1,
-                    }}
-                  >
+                  <tr>
                     {['Date', 'Check In', 'Check Out', 'Hours', 'Status'].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          padding:    '8px 12px',
-                          textAlign:  'left',
-                          fontWeight: '600',
-                          color:      '#374151',
-                          borderBottom: '1px solid #e5e7eb',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {h}
-                      </th>
+                      <th key={h}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -208,31 +162,15 @@ export function EmployeeDetailModal({
                     .slice()
                     .sort((a, b) => a.date.localeCompare(b.date))
                     .map((row) => (
-                      <tr
-                        key={`${row.username}-${row.date}`}
-                        style={{ borderBottom: '1px solid #f3f4f6' }}
-                      >
-                        <td style={{ padding: '8px 12px', color: '#374151' }}>{fmtDate(row.date)}</td>
-                        <td style={{ padding: '8px 12px', color: '#374151' }}>{fmtLocalTime(row.checkIn)}</td>
-                        <td style={{ padding: '8px 12px', color: '#374151' }}>{fmtLocalTime(row.checkOut)}</td>
-                        <td style={{ padding: '8px 12px', color: '#374151' }}>
+                      <tr key={`${row.username}-${row.date}`} class="adp-log-row">
+                        <td class="adp-log-date">{fmtDate(row.date)}</td>
+                        <td class="adp-log-time">{fmtLocalTime(row.checkIn)}</td>
+                        <td class="adp-log-time">{fmtLocalTime(row.checkOut)}</td>
+                        <td class="adp-log-hours">
                           {row.hours > 0 ? `${row.hours}h` : '—'}
                         </td>
-                        <td style={{ padding: '8px 12px' }}>
-                          <span
-                            style={{
-                              display:      'inline-block',
-                              padding:      '2px 10px',
-                              borderRadius: '999px',
-                              fontSize:     '12px',
-                              fontWeight:   '600',
-                              background:   statusBgColor(row.status),
-                              color:        statusColor(row.status),
-                              whiteSpace:   'nowrap',
-                            }}
-                          >
-                            {row.status}
-                          </span>
+                        <td class="adp-log-action" style={{ textAlign: 'left' }}>
+                          <span class={statusBadgeClass(row.status)}>{row.status}</span>
                         </td>
                       </tr>
                     ))}

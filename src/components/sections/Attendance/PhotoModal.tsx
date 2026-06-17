@@ -40,17 +40,7 @@ function PhotoPane({
         minWidth:       '160px',
       }}
     >
-      <div
-        style={{
-          fontSize:   '12px',
-          fontWeight: '600',
-          color:      '#6b7280',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-        }}
-      >
-        {label}
-      </div>
+      <div class="adp-section-title">{label}</div>
 
       {url !== null && url !== '' ? (
         <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${label} selfie in new tab`}>
@@ -60,8 +50,8 @@ function PhotoPane({
             style={{
               maxWidth:     '240px',
               width:        '100%',
-              borderRadius: '12px',
-              boxShadow:    '0 2px 8px rgba(0,0,0,0.12)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow:    'var(--shadow-card)',
               display:      'block',
               cursor:       'pointer',
               transition:   'transform 0.15s ease',
@@ -75,14 +65,14 @@ function PhotoPane({
           style={{
             width:          '200px',
             height:         '200px',
-            border:         '2px dashed #d1d5db',
-            borderRadius:   '12px',
+            border:         '2px dashed var(--border)',
+            borderRadius:   'var(--radius-md)',
             display:        'flex',
             flexDirection:  'column',
             alignItems:     'center',
             justifyContent: 'center',
             gap:            '8px',
-            color:          '#9ca3af',
+            color:          'var(--text-muted)',
             fontSize:       '13px',
           }}
         >
@@ -98,20 +88,7 @@ function PhotoPane({
 
 export function PhotoModal({ inUrl, outUrl, name, onClose }: PhotoModalProps): VNode {
   const footer: VNode = (
-    <button
-      type="button"
-      onClick={onClose}
-      style={{
-        padding:      '8px 20px',
-        background:   '#f3f4f6',
-        border:       '1px solid #e5e7eb',
-        borderRadius: '8px',
-        cursor:       'pointer',
-        fontSize:     '14px',
-        fontWeight:   '500',
-        color:        '#374151',
-      }}
-    >
+    <button type="button" class="btn btn-secondary" onClick={onClose}>
       Close
     </button>
   );

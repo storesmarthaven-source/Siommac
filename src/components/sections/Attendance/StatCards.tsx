@@ -3,6 +3,9 @@
  *
  * Four summary stat cards for the Attendance section.
  *
+ * Uses the branded `.stat-card*` design system (navy values, coloured icon
+ * chips) defined in views.css rather than ad-hoc inline styles.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/UI_DESIGN_SYSTEM.md
@@ -23,90 +26,38 @@ interface AttendanceStatCardsProps {
 
 function SkeletonCard(): VNode {
   return (
-    <div
-      style={{
-        flex:            '1',
-        minWidth:        '160px',
-        background:      '#fff',
-        borderRadius:    '12px',
-        boxShadow:       '0 1px 4px rgba(0,0,0,0.08)',
-        padding:         '20px',
-        display:         'flex',
-        flexDirection:   'column',
-        gap:             '10px',
-      }}
-    >
-      <style>{`
-        @keyframes siomac-pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-        .siomac-skel { animation: siomac-pulse 1.4s ease-in-out infinite; background: #e5e7eb; border-radius: 6px; }
-      `}</style>
-      <div class="siomac-skel" style={{ height: '16px', width: '60%' }} />
-      <div class="siomac-skel" style={{ height: '32px', width: '40%' }} />
-      <div class="siomac-skel" style={{ height: '12px', width: '50%' }} />
+    <div class="stat-card">
+      <div class="stat-card-icon" />
+      <div class="stat-card-body">
+        <div class="stat-card-value" />
+        <div class="stat-card-label" />
+      </div>
     </div>
   );
 }
 
 // ── Single card ───────────────────────────────────────────────────────────────
 
+/** Branded icon-chip colour variants. */
+type StatColor = 'green' | 'gold' | 'red' | 'blue';
+
 interface StatCardProps {
-  label:     string;
-  value:     string | number;
-  icon:      string;
-  accentColor: string;
-  subtitle?: string;
+  label:    string;
+  value:    string | number;
+  icon:     string;
+  color:    StatColor;
 }
 
-function StatCard({ label, value, icon, accentColor, subtitle }: StatCardProps): VNode {
+function StatCard({ label, value, icon, color }: StatCardProps): VNode {
   return (
-    <div
-      style={{
-        flex:          '1',
-        minWidth:      '160px',
-        background:    '#fff',
-        borderRadius:  '12px',
-        boxShadow:     '0 1px 4px rgba(0,0,0,0.08)',
-        padding:       '20px',
-        display:       'flex',
-        flexDirection: 'column',
-        gap:           '8px',
-      }}
-    >
-      {/* Icon + label row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div
-          style={{
-            width:          '32px',
-            height:         '32px',
-            borderRadius:   '8px',
-            background:     `${accentColor}18`,
-            display:        'flex',
-            alignItems:     'center',
-            justifyContent: 'center',
-            flexShrink:     0,
-          }}
-        >
-          <i
-            class={`fas ${icon}`}
-            aria-hidden="true"
-            style={{ color: accentColor, fontSize: '14px' }}
-          />
-        </div>
-        <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>{label}</span>
+    <div class="stat-card">
+      <div class={`stat-card-icon ${color}`}>
+        <i class={`fas ${icon}`} aria-hidden="true" />
       </div>
-
-      {/* Value */}
-      <div style={{ fontSize: '28px', fontWeight: '700', color: '#111827', lineHeight: '1' }}>
-        {value}
+      <div class="stat-card-body">
+        <div class="stat-card-value">{value}</div>
+        <div class="stat-card-label">{label}</div>
       </div>
-
-      {/* Optional subtitle */}
-      {subtitle !== undefined && (
-        <div style={{ fontSize: '12px', color: '#9ca3af' }}>{subtitle}</div>
-      )}
     </div>
   );
 }
@@ -120,7 +71,7 @@ export function AttendanceStatCards({
 }: AttendanceStatCardsProps): VNode {
   if (loading) {
     return (
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+      <div class="dashboard-grid-4">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -130,30 +81,30 @@ export function AttendanceStatCards({
   }
 
   return (
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+    <div class="dashboard-grid-4">
       <StatCard
         label={isSingleDay ? 'Present Today' : 'Check-ins'}
         value={stats?.present ?? 0}
         icon="fa-user-check"
-        accentColor="#2E7D32"
+        color="green"
       />
       <StatCard
         label="Late Arrivals"
         value={stats?.late ?? 0}
         icon="fa-clock"
-        accentColor="#D97706"
+        color="gold"
       />
       <StatCard
         label="Absent / Leave"
         value={stats?.absent ?? 0}
         icon="fa-user-slash"
-        accentColor="#DC2626"
+        color="red"
       />
       <StatCard
         label={isSingleDay ? 'Attendance Rate' : 'Avg Daily Rate'}
         value={`${stats?.rate ?? 0}%`}
         icon="fa-chart-line"
-        accentColor="#2563EB"
+        color="blue"
       />
     </div>
   );

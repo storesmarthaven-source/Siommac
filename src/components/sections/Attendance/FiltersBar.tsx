@@ -10,6 +10,10 @@
  *   - Refresh button
  *   - Export placeholder button
  *
+ * Uses the branded `.att-*` filter-bar classes (pill search box, mode toggle,
+ * date-input wraps, action buttons) defined in views.css / adm-attendance.css
+ * rather than ad-hoc inline styles.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/UI_DESIGN_SYSTEM.md
@@ -46,20 +50,7 @@ interface AttendanceFiltersBarProps {
   isLoading:   boolean;
 }
 
-// ── Shared input style ────────────────────────────────────────────────────────
-
-const INPUT_STYLE: Record<string, string | number> = {
-  padding:      '6px 10px',
-  border:       '1px solid #e5e7eb',
-  borderRadius: '8px',
-  fontSize:     '13px',
-  color:        '#374151',
-  background:   '#fff',
-  outline:      'none',
-  height:       '34px',
-};
-
-// ── Toggle button ─────────────────────────────────────────────────────────────
+// ── Mode toggle button ────────────────────────────────────────────────────────
 
 function ToggleBtn({
   active,
@@ -73,18 +64,8 @@ function ToggleBtn({
   return (
     <button
       type="button"
+      class={`att-mode-btn ${active ? 'active' : ''}`}
       onClick={onClick}
-      style={{
-        padding:      '5px 14px',
-        border:       'none',
-        borderRadius: '6px',
-        cursor:       'pointer',
-        fontSize:     '13px',
-        fontWeight:   '500',
-        background:   active ? '#1B2D55' : '#f3f4f6',
-        color:        active ? '#fff'    : '#374151',
-        transition:   'background 0.15s, color 0.15s',
-      }}
     >
       {children}
     </button>
@@ -115,47 +96,24 @@ export function AttendanceFiltersBar({
   const yearOptions = getYearOptions();
 
   return (
-    <div
-      style={{
-        display:      'flex',
-        flexWrap:     'wrap',
-        gap:          '10px',
-        alignItems:   'center',
-        background:   '#fff',
-        borderRadius: '12px',
-        padding:      '12px 16px',
-        boxShadow:    '0 1px 4px rgba(0,0,0,0.06)',
-        marginBottom: '16px',
-      }}
-    >
+    <div class="att-filters-bar">
       {/* 1. Search */}
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-        <i
-          class="fas fa-search"
-          aria-hidden="true"
-          style={{
-            position:  'absolute',
-            left:      '9px',
-            color:     '#9ca3af',
-            fontSize:  '13px',
-            pointerEvents: 'none',
-          }}
-        />
+      <div class="att-search-box">
+        <i class="fas fa-search" aria-hidden="true" />
         <input
           type="search"
           placeholder="Search employee…"
           value={search}
           onInput={(e) => onSearch((e.target as HTMLInputElement).value)}
-          style={{ ...INPUT_STYLE, paddingLeft: '30px', minWidth: '180px' } as Record<string, string | number>}
           aria-label="Search employees"
         />
       </div>
 
       {/* 2. Department select */}
       <select
+        class="att-filter-select"
         value={dept}
         onChange={(e) => onDept((e.target as HTMLSelectElement).value)}
-        style={INPUT_STYLE as Record<string, string>}
         aria-label="Filter by department"
       >
         <option value="all">All Departments</option>
@@ -165,15 +123,7 @@ export function AttendanceFiltersBar({
       </select>
 
       {/* 3. Mode toggle */}
-      <div
-        style={{
-          display:      'flex',
-          gap:          '4px',
-          background:   '#f3f4f6',
-          borderRadius: '8px',
-          padding:      '3px',
-        }}
-      >
+      <div class="att-mode-toggle">
         <ToggleBtn active={mode === 'month'} onClick={() => onMode('month')}>
           Month
         </ToggleBtn>
@@ -186,9 +136,9 @@ export function AttendanceFiltersBar({
       {mode === 'month' && (
         <>
           <select
+            class="att-filter-select"
             value={month}
             onChange={(e) => onMonth(Number((e.target as HTMLSelectElement).value))}
-            style={INPUT_STYLE as Record<string, string>}
             aria-label="Select month"
           >
             {Array.from({ length: 12 }, (_, i) => (
@@ -197,9 +147,9 @@ export function AttendanceFiltersBar({
           </select>
 
           <select
+            class="att-filter-select"
             value={year}
             onChange={(e) => onYear(Number((e.target as HTMLSelectElement).value))}
-            style={INPUT_STYLE as Record<string, string>}
             aria-label="Select year"
           >
             {yearOptions.map((y) => (
@@ -211,95 +161,60 @@ export function AttendanceFiltersBar({
 
       {/* 4b. Range mode filters */}
       {mode === 'range' && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label style={{ fontSize: '12px', color: '#6b7280', whiteSpace: 'nowrap' }}>From</label>
+        <div class="att-filter-group att-range-group">
+          <div class="att-date-input-wrap">
+            <i class="fas fa-calendar-alt" aria-hidden="true" />
             <input
               type="date"
+              class="att-date-input"
               value={dateFrom}
               onInput={(e) => onDateFrom((e.target as HTMLInputElement).value)}
-              style={INPUT_STYLE as Record<string, string>}
               aria-label="Date from"
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label style={{ fontSize: '12px', color: '#6b7280', whiteSpace: 'nowrap' }}>To</label>
+          <span class="att-range-sep">→</span>
+          <div class="att-date-input-wrap">
+            <i class="fas fa-calendar-alt" aria-hidden="true" />
             <input
               type="date"
+              class="att-date-input"
               value={dateTo}
               min={dateFrom || undefined}
               onInput={(e) => onDateTo((e.target as HTMLInputElement).value)}
-              style={INPUT_STYLE as Record<string, string>}
               aria-label="Date to"
             />
           </div>
-          {dateFrom && (
-            <span style={{ fontSize: '12px', color: '#9ca3af', whiteSpace: 'nowrap' }}>
-              {dateFrom}{dateTo && dateTo !== dateFrom ? ` → ${dateTo}` : ''}
-            </span>
-          )}
-        </>
+        </div>
       )}
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      {/* Action buttons (pushed right via .att-filter-actions margin-left:auto) */}
+      <div class="att-filter-actions">
+        {/* Refresh */}
+        <button
+          type="button"
+          class="att-action-btn"
+          onClick={onRefresh}
+          disabled={isLoading}
+          aria-label="Refresh attendance data"
+          title="Refresh"
+        >
+          <i
+            class={`fas fa-sync-alt ${isLoading ? 'fa-spin' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
 
-      {/* 6. Refresh button */}
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={isLoading}
-        aria-label="Refresh attendance data"
-        title="Refresh"
-        style={{
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'center',
-          width:          '34px',
-          height:         '34px',
-          border:         '1px solid #e5e7eb',
-          borderRadius:   '8px',
-          background:     '#fff',
-          cursor:         isLoading ? 'not-allowed' : 'pointer',
-          color:          '#374151',
-          opacity:        isLoading ? 0.6 : 1,
-        }}
-      >
-        <i
-          class="fas fa-sync-alt"
-          aria-hidden="true"
-          style={{
-            fontSize:  '13px',
-            animation: isLoading ? 'siomac-spin 0.75s linear infinite' : 'none',
-          }}
-        />
-      </button>
-
-      {/* 7. Export placeholder */}
-      <button
-        type="button"
-        disabled
-        title="Use DataTable export buttons"
-        aria-label="Export (use DataTable export buttons below)"
-        style={{
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'center',
-          gap:            '6px',
-          height:         '34px',
-          padding:        '0 12px',
-          border:         '1px solid #e5e7eb',
-          borderRadius:   '8px',
-          background:     '#f9fafb',
-          cursor:         'not-allowed',
-          color:          '#9ca3af',
-          fontSize:       '13px',
-          opacity:        0.7,
-        }}
-      >
-        <i class="fas fa-download" aria-hidden="true" style={{ fontSize: '12px' }} />
-        Export
-      </button>
+        {/* Export placeholder */}
+        <button
+          type="button"
+          class="att-action-btn"
+          disabled
+          title="Use DataTable export buttons"
+          aria-label="Export (use DataTable export buttons below)"
+        >
+          <i class="fas fa-download" aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

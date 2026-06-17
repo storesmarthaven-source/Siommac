@@ -55,9 +55,9 @@ export function TicketCompose({ onBack, onSuccess }: TicketComposeProps) {
 
       {/* Category */}
       <select
+        class="form-select"
         value={category}
         onChange={e => setCategory((e.target as HTMLSelectElement).value)}
-        style={{ width: '100%', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', fontSize: '0.83rem', fontFamily: 'inherit', outline: 'none' }}
       >
         {TICKET_CATEGORIES.map(c => (
           <option key={c.value} value={c.value}>{c.label}</option>
@@ -68,17 +68,14 @@ export function TicketCompose({ onBack, onSuccess }: TicketComposeProps) {
       <div>
         <input
           type="text"
+          class={`form-control${errors.subject ? ' field-invalid' : ''}`}
           placeholder="Subject"
           maxLength={120}
           value={subject}
           onInput={e => { setSubject((e.target as HTMLInputElement).value); setErrors(p => ({ ...p, subject: undefined })); }}
-          style={{
-            width: '100%', border: `1px solid ${errors.subject ? 'var(--siomac-red)' : 'var(--border)'}`,
-            borderRadius: 8, padding: '8px 10px', fontSize: '0.83rem', fontFamily: 'inherit', outline: 'none',
-          }}
         />
         {errors.subject && (
-          <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--siomac-red)' }}>{errors.subject}</p>
+          <p class="field-error-msg">{errors.subject}</p>
         )}
       </div>
 
@@ -86,17 +83,14 @@ export function TicketCompose({ onBack, onSuccess }: TicketComposeProps) {
       <div>
         <textarea
           rows={5}
+          class={`form-control${errors.body ? ' field-invalid' : ''}`}
           placeholder="Describe your issue…"
           value={body}
           onInput={e => { setBody((e.target as HTMLTextAreaElement).value); setErrors(p => ({ ...p, body: undefined })); }}
-          style={{
-            width: '100%', border: `1px solid ${errors.body ? 'var(--siomac-red)' : 'var(--border)'}`,
-            borderRadius: 8, padding: '8px 10px', fontSize: '0.82rem', fontFamily: 'inherit',
-            resize: 'none', outline: 'none',
-          }}
+          style={{ resize: 'none' }}
         />
         {errors.body && (
-          <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--siomac-red)' }}>{errors.body}</p>
+          <p class="field-error-msg">{errors.body}</p>
         )}
       </div>
 
