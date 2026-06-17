@@ -67,10 +67,17 @@ export interface SessionState {
   // ── RBAC — per-user permission overrides (Phase 2b) ───────────────────────
   /**
    * Per-user overrides loaded from the `user_permissions` table at login.
-   * Empty array = use role defaults from src/lib/permissions.ts.
+   * Empty array = use role defaults (rolePermissions below).
    * @see docs/PHASE_PLAN.md §Phase-2b
    */
   permissionOverrides: PermissionOverride[];
+
+  /**
+   * The role's resolved default permission set, loaded from the DB at login
+   * (phase 12, roles-as-data). Replaces the previously hardcoded ROLE_PERMISSIONS
+   * on the frontend so can()/useCan() stay synchronous against this snapshot.
+   */
+  rolePermissions: string[];
 
   // ── Actions ────────────────────────────────────────────────────────────────
   /** Called after password check succeeds — full session (2FA not required) */
@@ -115,6 +122,7 @@ function payloadToState(p: LoginResponse | Verify2faResponse): Partial<SessionSt
     companyName:     p.companyName   ?? null,
     companyLogoUrl:  p.companyLogoUrl ?? null,
     permissionOverrides: p.permissionOverrides ?? [],
+    rolePermissions:     p.rolePermissions ?? [],
     preAuthToken:    null,
   };
 }
@@ -136,6 +144,8 @@ function stateFromPersisted(s: PersistedSession): Partial<SessionState> {
     layoutMode:      s.layoutMode as LayoutMode,
     companyName:     s.companyName,
     companyLogoUrl:  s.companyLogoUrl,
+    rolePermissions:     s.rolePermissions ?? [],
+    permissionOverrides: s.permissionOverrides ?? [],
   };
 }
 
@@ -156,6 +166,7 @@ const LOGGED_OUT: Partial<SessionState> = {
   preAuthToken:        null,
   totpEnabled:         null,
   permissionOverrides: [],
+  rolePermissions:     [],
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -183,6 +194,7 @@ export const useSessionStore = create<SessionState>()((set) => ({
   preAuthToken:        null,
   totpEnabled:         null,
   permissionOverrides: [],
+  rolePermissions:     [],
 
   // Apply persisted session if available
   ...(_persisted ? stateFromPersisted(_persisted) : {}),
@@ -210,6 +222,8 @@ export const useSessionStore = create<SessionState>()((set) => ({
         companyLogoUrl: payload.companyLogoUrl ?? '',
         companyName:    payload.companyName ?? '',
         expiresAt:      Date.now() + 15 * 60 * 1000,
+        rolePermissions:     payload.rolePermissions ?? [],
+        permissionOverrides: payload.permissionOverrides ?? [],
       });
       logger.info('Session established', { userId: payload.userId, role: payload.role });
     }

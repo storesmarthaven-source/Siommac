@@ -240,3 +240,47 @@ export async function getAuditLogsApi(filters: AuditLogFilters = {}): Promise<{
 }> {
   return apiFetch('superadmin/getAuditLogs', { method: 'POST', body: { args: filters } });
 }
+
+// ── Roles (roles-as-data) ─────────────────────────────────────────────────────
+
+export interface RoleRow {
+  name:        string;
+  label:       string;
+  description: string;
+  isSystem:    boolean;
+  protected:   boolean;
+  sortOrder:   number;
+  userCount:   number;
+}
+
+/** List all roles (system + custom) with their user counts. */
+export async function listRolesApi(): Promise<{ success: boolean; roles?: RoleRow[]; message?: string }> {
+  return apiFetch('superadmin/listRoles', { method: 'POST', body: { args: {} } });
+}
+
+/** Get a role's default permission set. */
+export async function getRolePermissionsApi(roleName: string): Promise<{
+  success: boolean; permissions?: string[]; message?: string;
+}> {
+  return apiFetch('superadmin/getRolePermissions', { method: 'POST', body: { args: { roleName } } });
+}
+
+/** Create a new custom role. */
+export async function createRoleApi(role: { name: string; label: string; description?: string }): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/createRole', { method: 'POST', body: { args: role } });
+}
+
+/** Update a role's label/description/protected flag. */
+export async function updateRoleApi(roleName: string, patch: { label?: string; description?: string; protected?: boolean }): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/updateRole', { method: 'POST', body: { args: { roleName, ...patch } } });
+}
+
+/** Delete a custom role (blocked for system/protected roles or roles in use). */
+export async function deleteRoleApi(roleName: string): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/deleteRole', { method: 'POST', body: { args: { roleName } } });
+}
+
+/** Grant or revoke a single permission in a role's default set. */
+export async function setRolePermissionApi(roleName: string, permission: string, granted: boolean): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/setRolePermission', { method: 'POST', body: { args: { roleName, permission, granted } } });
+}

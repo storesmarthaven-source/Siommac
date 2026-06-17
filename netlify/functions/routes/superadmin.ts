@@ -25,7 +25,7 @@
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
 import { requireUser, requireRole, requirePermission, revokeUserSessions, log_ } from '../lib/auth';
-import { PERMISSION_KEYS } from '../lib/permissions';
+import { PERMISSION_KEYS, invalidateRolePermissions } from '../lib/permissions';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 
@@ -559,6 +559,161 @@ router.post('/getAuditLogs', async c => {
   }
 
   return c.json({ success: true, logs: data ?? [], total: count ?? 0, actions, entities });
+});
+
+// ── Roles (roles-as-data) ─────────────────────────────────────────────────────
+// Gated by 'roles.manage' (superadmin by default).
+
+const RoleNameSchema  = z.string().regex(/^[a-z][a-z0-9_]*$/, 'lowercase letters, digits, underscore');
+const CreateRoleSchema = z.object({
+  name:        RoleNameSchema,
+  label:       z.string().min(1).max(60),
+  description: z.string().max(300).optional(),
+});
+const UpdateRoleSchema = z.object({
+  roleName:    z.string().min(1),
+  label:       z.string().min(1).max(60).optional(),
+  description: z.string().max(300).optional(),
+  protected:   z.boolean().optional(),
+});
+const GetRolePermsSchema = z.object({ roleName: z.string().min(1) });
+const SetRolePermSchema  = z.object({
+  roleName:   z.string().min(1),
+  permission: z.string().refine(p => PERMISSION_KEY_SET.has(p), 'Unknown permission key'),
+  granted:    z.boolean(),
+});
+const DeleteRoleSchema = z.object({ roleName: z.string().min(1) });
+
+// POST /superadmin/listRoles — all roles + user counts.
+router.post('/listRoles', async c => {
+  await requirePermission(c, 'roles.manage');
+  const { data: roles, error } = await sb
+    .from('roles')
+    .select('name, label, description, is_system, protected, sort_order')
+    .order('sort_order');
+  if (error) {
+    console.error('[superadmin/listRoles] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load roles.' }, 500);
+  }
+  // User count per role (one grouped query).
+  const { data: users } = await sb.from('app_users').select('role').eq('status', 'active');
+  const counts = new Map<string, number>();
+  for (const u of (users ?? []) as { role: string }[]) counts.set(u.role, (counts.get(u.role) ?? 0) + 1);
+
+  const out = (roles ?? []).map(r => ({
+    name: r.name, label: r.label, description: r.description,
+    isSystem: r.is_system, protected: r.protected, sortOrder: r.sort_order,
+    userCount: counts.get(r.name) ?? 0,
+  }));
+  return c.json({ success: true, roles: out });
+});
+
+// POST /superadmin/getRolePermissions — a role's default permission set.
+router.post('/getRolePermissions', async c => {
+  await requirePermission(c, 'roles.manage');
+  const v = zv(c, GetRolePermsSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  if (v.data.roleName === 'superadmin') {
+    return c.json({ success: true, permissions: [...PERMISSION_KEYS] });
+  }
+  const { data, error } = await sb
+    .from('role_permissions')
+    .select('permission')
+    .eq('role_name', v.data.roleName);
+  if (error) {
+    console.error('[superadmin/getRolePermissions] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load role permissions.' }, 500);
+  }
+  return c.json({ success: true, permissions: (data ?? []).map(r => r.permission) });
+});
+
+// POST /superadmin/createRole
+router.post('/createRole', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, CreateRoleSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { name, label, description } = v.data;
+  const { error } = await sb.from('roles').insert({
+    name, label, description: description ?? '', is_system: false, protected: false,
+    sort_order: 100, updated_by: actor.username,
+  });
+  if (error) {
+    if (error.code === '23505') return c.json({ success: false, message: 'A role with that name already exists.' }, 409);
+    console.error('[superadmin/createRole] error:', error.message);
+    return c.json({ success: false, message: 'Failed to create role.' }, 500);
+  }
+  await log_(actor, 'role_create', 'role', name, `created role "${label}"`);
+  return c.json({ success: true });
+});
+
+// POST /superadmin/updateRole
+router.post('/updateRole', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, UpdateRoleSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { roleName, label, description } = v.data;
+
+  const { data: role } = await sb.from('roles').select('is_system').eq('name', roleName).maybeSingle<{ is_system: boolean }>();
+  if (!role) return c.json({ success: false, message: 'Role not found.' }, 404);
+
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString(), updated_by: actor.username };
+  if (label       !== undefined) patch.label       = label;
+  if (description !== undefined) patch.description = description;
+  // protected flag editable for non-system roles; superadmin/employee stay protected.
+  if (v.data.protected !== undefined && !role.is_system) patch.protected = v.data.protected;
+
+  const { error } = await sb.from('roles').update(patch).eq('name', roleName);
+  if (error) {
+    console.error('[superadmin/updateRole] error:', error.message);
+    return c.json({ success: false, message: 'Failed to update role.' }, 500);
+  }
+  await log_(actor, 'role_update', 'role', roleName, JSON.stringify(patch));
+  return c.json({ success: true });
+});
+
+// POST /superadmin/deleteRole — blocked for system/protected roles and roles in use.
+router.post('/deleteRole', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, DeleteRoleSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { roleName } = v.data;
+
+  const { data: role } = await sb.from('roles').select('is_system, protected').eq('name', roleName).maybeSingle<{ is_system: boolean; protected: boolean }>();
+  if (!role) return c.json({ success: false, message: 'Role not found.' }, 404);
+  if (role.is_system || role.protected) return c.json({ success: false, message: 'This role is protected and cannot be deleted.' }, 400);
+
+  const { count } = await sb.from('app_users').select('id', { count: 'exact', head: true }).eq('role', roleName) as unknown as { count: number };
+  if (count && count > 0) return c.json({ success: false, message: `Cannot delete: ${count} user(s) still have this role. Reassign them first.` }, 400);
+
+  const { error } = await sb.from('roles').delete().eq('name', roleName);
+  if (error) {
+    console.error('[superadmin/deleteRole] error:', error.message);
+    return c.json({ success: false, message: 'Failed to delete role.' }, 500);
+  }
+  invalidateRolePermissions(roleName);
+  await log_(actor, 'role_delete', 'role', roleName, `deleted role`);
+  return c.json({ success: true });
+});
+
+// POST /superadmin/setRolePermission — grant/revoke one permission in a role's default set.
+router.post('/setRolePermission', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, SetRolePermSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { roleName, permission, granted } = v.data;
+
+  if (roleName === 'superadmin') return c.json({ success: false, message: 'Superadmin permissions cannot be changed.' }, 400);
+
+  if (granted) {
+    const { error } = await sb.from('role_permissions').upsert({ role_name: roleName, permission }, { onConflict: 'role_name,permission' });
+    if (error) { console.error('[superadmin/setRolePermission] error:', error.message); return c.json({ success: false, message: 'Failed to update.' }, 500); }
+  } else {
+    const { error } = await sb.from('role_permissions').delete().eq('role_name', roleName).eq('permission', permission);
+    if (error) { console.error('[superadmin/setRolePermission] error:', error.message); return c.json({ success: false, message: 'Failed to update.' }, 500); }
+  }
+  invalidateRolePermissions(roleName);
+  await log_(actor, granted ? 'role_perm_grant' : 'role_perm_revoke', 'role', roleName, `${permission} ${granted ? 'granted' : 'revoked'}`);
+  return c.json({ success: true });
 });
 
 // ── Exports ───────────────────────────────────────────────────────────────────

@@ -16,9 +16,10 @@ import {
   listUsersApi, getUserPermissionsApi, setUserPermissionApi, clearUserPermissionApi,
   getActiveSessionsApi, revokeSessionApi,
   getAuditLogsApi,
+  listRolesApi, getRolePermissionsApi, createRoleApi, updateRoleApi, deleteRoleApi, setRolePermissionApi,
   type ModuleKey, type ModuleMatrix, type ManagerEntry,
   type ConsoleUser, type UserPermissionRow, type ActiveSession,
-  type AuditLogFilters,
+  type AuditLogFilters, type RoleRow,
 } from '@lib/superadminApi';
 import { setModuleMatrix } from '@components/nav/navCore';
 import { consoleKeys } from './queryKeys';
@@ -217,5 +218,89 @@ export function useAuditLogs(filters: AuditLogFilters, enabled: boolean) {
         entities: res.entities ?? [],
       };
     },
+  });
+}
+
+// ── Roles tab ─────────────────────────────────────────────────────────────────
+
+export function useRoles(enabled: boolean) {
+  return useQuery({
+    queryKey: consoleKeys.roles(),
+    enabled,
+    queryFn: async () => {
+      const res = await listRolesApi();
+      if (!res.success || !res.roles) throw new Error(res.message ?? 'Failed to load roles');
+      return res.roles as RoleRow[];
+    },
+  });
+}
+
+export function useRolePermissions(roleName: string | null) {
+  return useQuery({
+    queryKey: consoleKeys.rolePerms(roleName ?? ''),
+    enabled:  !!roleName,
+    queryFn: async () => {
+      const res = await getRolePermissionsApi(roleName!);
+      if (!res.success) throw new Error(res.message ?? 'Failed to load role permissions');
+      return (res.permissions ?? []) as string[];
+    },
+  });
+}
+
+export function useCreateRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (role: { name: string; label: string; description?: string }) => createRoleApi(role),
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to create role.'); return; }
+      toast.success('Role created.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.roles() });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useUpdateRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roleName, patch }: { roleName: string; patch: { label?: string; description?: string; protected?: boolean } }) =>
+      updateRoleApi(roleName, patch),
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to update role.'); return; }
+      toast.success('Role updated.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.roles() });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useDeleteRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (roleName: string) => deleteRoleApi(roleName),
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to delete role.'); return; }
+      toast.success('Role deleted.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.roles() });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useSetRolePermission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roleName, permission, granted }: { roleName: string; permission: string; granted: boolean }) =>
+      setRolePermissionApi(roleName, permission, granted),
+    retry: false,
+    onSuccess: (res, vars) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to update permission.'); return; }
+      toast.success(`${vars.permission} ${vars.granted ? 'granted' : 'revoked'} for role.`);
+      void qc.invalidateQueries({ queryKey: consoleKeys.rolePerms(vars.roleName) });
+    },
+    onError: () => toast.error('Network error. Try again.'),
   });
 }

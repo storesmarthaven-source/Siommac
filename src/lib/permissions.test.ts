@@ -16,17 +16,20 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { resolvePermission, PERMISSION_KEYS }   from './permissions';
+import { resolvePermission, PERMISSION_KEYS, ROLE_PERMISSIONS } from './permissions';
 import type { PermissionContext }                from './permissions';
 import type { PermissionOverride }               from '@api/schemas/auth';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// rolePermissions is now DB-loaded at runtime; in tests we seed it from the
+// canonical ROLE_PERMISSIONS reference so these still verify the seed's grants.
 function ctx(
   role: PermissionContext['role'],
   overrides: PermissionOverride[] = [],
 ): PermissionContext {
-  return { role, overrides };
+  const rolePermissions = [...(ROLE_PERMISSIONS[role] ?? [])];
+  return { role, rolePermissions, overrides };
 }
 
 function override(

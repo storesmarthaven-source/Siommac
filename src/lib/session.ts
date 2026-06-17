@@ -30,6 +30,9 @@ export interface PersistedSession {
   companyName:    string;
   /** unix ms — when the access token expires */
   expiresAt:      number;
+  /** RBAC snapshot — persisted so can()/useCan() work immediately on refresh */
+  rolePermissions?:     string[];
+  permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
 }
 
 /** Read and validate the persisted session.  Returns null if missing/expired/corrupt. */

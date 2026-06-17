@@ -25,6 +25,7 @@ import type { UserRole, PermissionOverride } from '@api/schemas/auth';
 import type { ConsoleUser, UserPermissionRow } from '@lib/superadminApi';
 import {
   useConsoleUsers, useUserPermissions, useSetUserPermission, useClearUserPermission,
+  useRolePermissions,
 } from '../hooks';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -76,15 +77,17 @@ function StateCell({ state, roleDefault, busy, onCycle }: {
 // ── Matrix for one user ───────────────────────────────────────────────────────
 
 function UserMatrix({ user }: { user: ConsoleUser }): VNode {
-  const permsQ  = useUserPermissions(user.id);
-  const setPerm = useSetUserPermission();
+  const permsQ    = useUserPermissions(user.id);
+  const roleQ     = useRolePermissions(user.role);
+  const setPerm   = useSetUserPermission();
   const clearPerm = useClearUserPermission();
-  const groups  = useMemo(() => permissionGroups(), []);
-  const role    = user.role as UserRole;
+  const groups    = useMemo(() => permissionGroups(), []);
+  const role      = user.role as UserRole;
 
-  if (permsQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading permissions…</div>;
+  if (permsQ.isLoading || roleQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading permissions…</div>;
   if (permsQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load permissions.</div>;
 
+  const roleSet   = roleQ.data ?? [];
   const overrides = toOverrides(user.id, permsQ.data ?? []);
   const pendingKey = (setPerm.isPending && setPerm.variables?.permission)
     || (clearPerm.isPending && clearPerm.variables?.permission) || null;
@@ -113,7 +116,7 @@ function UserMatrix({ user }: { user: ConsoleUser }): VNode {
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
             {group.keys.map((key, idx) => {
               const st  = permissionState(key, overrides);
-              const def = roleDefaultGranted(role, key);
+              const def = roleDefaultGranted(roleSet, key, role);
               const action = (key.split('.')[1] ?? key).replace(/_/g, ' ');
               return (
                 <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 16px', borderBottom: idx < group.keys.length - 1 ? '1px solid var(--border)' : 'none' }}>

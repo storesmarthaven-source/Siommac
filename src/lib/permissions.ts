@@ -114,6 +114,7 @@ export const PERMISSION_KEYS = [
   'permissions.manage',     // grant / revoke per-user overrides
   'sessions.manage',        // view active sessions and force-revoke them
   'audit.view',             // view the audit log
+  'roles.manage',           // create / edit / delete roles + their permission sets
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -239,14 +240,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'permissions.manage',
     'sessions.manage',
     'audit.view',
+    'roles.manage',
   ]),
 };
 
 // ── Context type ──────────────────────────────────────────────────────────────
 
 export interface PermissionContext {
-  role:      UserRole;
-  overrides: PermissionOverride[];
+  role:            UserRole;
+  /** The role's default permission set, loaded from the DB at login (phase 12). */
+  rolePermissions: readonly string[];
+  overrides:       PermissionOverride[];
 }
 
 // ── Core resolver ─────────────────────────────────────────────────────────────
@@ -255,9 +259,14 @@ export interface PermissionContext {
  * Resolve whether a permission is granted for a given context.
  *
  * Resolution order (first match wins):
- *   1. DB override (granted: true → allow, granted: false → deny)
- *   2. Role default
- *   3. Deny
+ *   1. superadmin → always allow
+ *   2. per-user override (granted true → allow, false → deny)
+ *   3. role default (the rolePermissions set loaded at login)
+ *   4. deny
+ *
+ * The role→permissions mapping is DB-driven (roles-as-data). This resolver is
+ * pure/synchronous: it reads the pre-loaded `rolePermissions` snapshot from the
+ * session rather than any hardcoded table.
  */
 export function resolvePermission(
   key: string,
@@ -268,20 +277,26 @@ export function resolvePermission(
     logger.warn(`[permissions] Unknown permission key: "${key}"`, { key, role: ctx.role });
   }
 
-  // 1. Check per-user overrides first (highest priority)
+  // 1. superadmin is allow-all by definition.
+  if (ctx.role === 'superadmin') return true;
+
+  // 2. Per-user override wins.
   const override = ctx.overrides.find((o) => o.permission === key);
   if (override !== undefined) {
     return override.granted;
   }
 
-  // 2. Check role defaults
-  const roleSet = ROLE_PERMISSIONS[ctx.role];
-  return roleSet?.has(key as PermissionKey) ?? false;
+  // 3. Role default (DB-loaded set).
+  return ctx.rolePermissions.includes(key);
 }
 
-/** Whether a role grants a permission by default (ignoring per-user overrides). */
-export function roleDefaultGranted(role: UserRole, key: string): boolean {
-  return ROLE_PERMISSIONS[role]?.has(key as PermissionKey) ?? false;
+/**
+ * Whether a role grants a permission by default — DB-driven: pass the role's
+ * permission set (fetched from the backend, roles-as-data). superadmin = allow-all.
+ */
+export function roleDefaultGranted(roleSet: readonly string[], key: string, role?: UserRole): boolean {
+  if (role === 'superadmin') return true;
+  return roleSet.includes(key);
 }
 
 /** Tri-state source of a permission for the grant-matrix UI. */
@@ -325,8 +340,9 @@ export function can(key: string): boolean {
   const state = useSessionStore.getState();
   if (!state.role) return false;
   return resolvePermission(key, {
-    role:      state.role,
-    overrides: state.permissionOverrides,
+    role:            state.role,
+    rolePermissions: state.rolePermissions,
+    overrides:       state.permissionOverrides,
   });
 }
 
@@ -339,6 +355,10 @@ export function can(key: string): boolean {
 export function useCan(key: string): boolean {
   return useSessionStore((s) => {
     if (!s.role) return false;
-    return resolvePermission(key, { role: s.role, overrides: s.permissionOverrides });
+    return resolvePermission(key, {
+      role:            s.role,
+      rolePermissions: s.rolePermissions,
+      overrides:       s.permissionOverrides,
+    });
   });
 }

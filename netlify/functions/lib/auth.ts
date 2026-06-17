@@ -13,7 +13,7 @@ import jwt                  from 'jsonwebtoken';
 import crypto               from 'crypto';
 import type { Context, Next } from 'hono';
 import { sb }               from './db';
-import { resolvePermission, type PermissionOverrideRow } from './permissions';
+import { resolveWithSet, loadRolePermissions, type PermissionOverrideRow } from './permissions';
 import { getReqContext }    from './reqContext';
 import type { AppUser }     from '../../../types/db';
 import type { JwtPayload, HonoVariables } from '../../../types/api';
@@ -291,8 +291,12 @@ async function requirePermission(
   key: string,
 ): Promise<AppUser> {
   const u = await requireUser(c);
-  const overrides = u.role === 'superadmin' ? [] : await loadUserOverrides(u.id);
-  if (!resolvePermission(key, u.role, overrides)) {
+  if (u.role === 'superadmin') return u;   // allow-all, no DB round-trips
+  const [roleSet, overrides] = await Promise.all([
+    loadRolePermissions(u.role),
+    loadUserOverrides(u.id),
+  ]);
+  if (!resolveWithSet(key, roleSet, overrides)) {
     throw Object.assign(new Error('Forbidden'), { status: 403 });
   }
   return u;
