@@ -199,23 +199,10 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
         {isAdmin && (
           <button
             type="button"
+            class="btn btn-danger-primary btn-sm"
             onClick={() => setAddOpen(true)}
-            style={{
-              display:    'inline-flex',
-              alignItems: 'center',
-              gap:        '6px',
-              padding:    '9px 18px',
-              background: '#2563eb',
-              color:      '#fff',
-              border:     'none',
-              borderRadius: '8px',
-              cursor:     'pointer',
-              fontSize:   '14px',
-              fontWeight: '500',
-            }}
           >
-            <i class="fas fa-plus" aria-hidden="true" />
-            Add Employee
+            <i class="fas fa-plus" aria-hidden="true" /> Add Employee
           </button>
         )}
       </div>
@@ -229,98 +216,79 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
       </div>
 
       {/* ── Toolbar ── */}
-      <div style={{
-        display:       'flex',
-        alignItems:    'center',
-        gap:           '10px',
-        marginBottom:  '16px',
-        flexWrap:      'wrap',
-        background:    '#fff',
-        padding:       '12px 16px',
-        borderRadius:  '10px',
-        boxShadow:     '0 1px 3px rgba(0,0,0,.06)',
-      }}>
+      <div class="emp-filters-bar">
         {/* Search */}
-        <div style={{ position: 'relative', flex: '1 1 220px' }}>
-          <i class="fas fa-search" aria-hidden="true" style={{
-            position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)',
-            color: '#9ca3af', fontSize: '13px',
-          }} />
+        <div class="emp-search-box">
+          <i class="fas fa-search" aria-hidden="true" />
           <input
             type="search"
             value={search}
             onInput={e => setSearch((e.target as HTMLInputElement).value)}
-            placeholder="Search employees…"
+            placeholder="Search by name, position…"
             aria-label="Search employees"
-            style={{
-              width: '100%', padding: '7px 10px 7px 32px',
-              border: '1px solid #e5e7eb', borderRadius: '6px',
-              fontSize: '13px', color: '#111827', boxSizing: 'border-box',
-            }}
           />
         </div>
 
-        {/* Role filter */}
-        <select
-          value={roleFilter}
-          onChange={e => setRoleFilter((e.target as HTMLSelectElement).value as '' | UserRole)}
-          aria-label="Filter by role"
-          style={filterSelectStyle}
-        >
-          <option value="">All Roles</option>
-          <option value="employee">Employee</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
-        </select>
+        {/* Filters */}
+        <div class="emp-filter-group">
+          <select
+            class="emp-filter-select"
+            value={roleFilter}
+            onChange={e => setRoleFilter((e.target as HTMLSelectElement).value as '' | UserRole)}
+            aria-label="Filter by role"
+          >
+            <option value="">All Roles</option>
+            <option value="employee">Employee</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
 
-        {/* Status filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter((e.target as HTMLSelectElement).value as '' | 'Active' | 'Inactive')}
-          aria-label="Filter by status"
-          style={filterSelectStyle}
-        >
-          <option value="">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+          <select
+            class="emp-filter-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter((e.target as HTMLSelectElement).value as '' | 'Active' | 'Inactive')}
+            aria-label="Filter by status"
+          >
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
 
         {/* View toggle */}
-        <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
-          <ViewToggleBtn
-            icon="fa-th-large"
-            label="Card view"
-            active={cardView}
-            onClick={() => setCardView(true)}
-          />
-          <ViewToggleBtn
-            icon="fa-table"
-            label="Table view"
-            active={!cardView}
-            onClick={() => setCardView(false)}
-          />
+        <div class="emp-filter-actions">
+          <div class="emp-view-toggle">
+            <ViewToggleBtn
+              icon="fa-th-large"
+              label="Card view"
+              active={cardView}
+              onClick={() => setCardView(true)}
+            />
+            <ViewToggleBtn
+              icon="fa-list"
+              label="Table view"
+              active={!cardView}
+              onClick={() => setCardView(false)}
+            />
+          </div>
         </div>
       </div>
 
       {/* ── Employee list ── */}
       {isLoading ? (
-        <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
+        <div class="emp-loading">
           <Spinner size={40} label="Loading employees…" />
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 24px', textAlign: 'center', color: '#6b7280' }}>
-          <i class="fas fa-users-slash" style={{ fontSize: '36px', display: 'block', marginBottom: '12px', opacity: 0.4 }} />
+        <div class="emp-empty">
+          <i class="fas fa-users-slash" aria-hidden="true" />
           <div style={{ fontWeight: '600' }}>No employees found</div>
-          <div style={{ fontSize: '13px', marginTop: '4px' }}>
+          <p>
             {search || roleFilter || statusFilter ? 'Try adjusting your filters.' : 'Add your first employee to get started.'}
-          </div>
+          </p>
         </div>
       ) : cardView ? (
-        <div style={{
-          display:             'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap:                 '16px',
-        }}>
+        <div class="emp-cards-grid">
           {filtered.map(emp => (
             <EmployeeCard
               key={emp.id}
@@ -380,36 +348,13 @@ function ViewToggleBtn({
   return (
     <button
       type="button"
+      class={`emp-view-btn${active ? ' active' : ''}`}
       onClick={onClick}
       title={label}
       aria-label={label}
       aria-pressed={active}
-      style={{
-        width:          '34px',
-        height:         '34px',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        border:         '1px solid #e5e7eb',
-        borderRadius:   '6px',
-        background:     active ? '#2563eb' : '#fff',
-        color:          active ? '#fff' : '#6b7280',
-        cursor:         'pointer',
-        fontSize:       '14px',
-        transition:     'background 0.15s, color 0.15s',
-      }}
     >
       <i class={`fas ${icon}`} aria-hidden="true" />
     </button>
   );
 }
-
-const filterSelectStyle: Record<string, string> = {
-  padding:      '7px 10px',
-  border:       '1px solid #e5e7eb',
-  borderRadius: '6px',
-  fontSize:     '13px',
-  color:        '#374151',
-  background:   '#fff',
-  cursor:       'pointer',
-};

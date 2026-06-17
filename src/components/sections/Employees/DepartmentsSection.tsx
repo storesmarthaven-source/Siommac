@@ -78,13 +78,8 @@ export function DepartmentsSection(): VNode {
         </div>
         <button
           type="button"
+          class="btn btn-danger-primary btn-sm"
           onClick={() => setModalDept(null)}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '9px 18px', background: '#2563eb', color: '#fff',
-            border: 'none', borderRadius: '8px', cursor: 'pointer',
-            fontSize: '14px', fontWeight: '500',
-          }}
         >
           <i class="fas fa-plus" aria-hidden="true" /> Add Department
         </button>
@@ -98,31 +93,32 @@ export function DepartmentsSection(): VNode {
       </div>
 
       {/* Search */}
-      <div style={{ position: 'relative', maxWidth: '320px', marginBottom: '20px' }}>
-        <i class="fas fa-search" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '13px' }} />
-        <input
-          type="search"
-          value={search}
-          onInput={e => setSearch((e.target as HTMLInputElement).value)}
-          placeholder="Search departments…"
-          aria-label="Search departments"
-          style={{ width: '100%', padding: '8px 10px 8px 32px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
-        />
+      <div class="dept-filters-bar">
+        <div class="dept-search-box">
+          <i class="fas fa-search" aria-hidden="true" />
+          <input
+            type="search"
+            value={search}
+            onInput={e => setSearch((e.target as HTMLInputElement).value)}
+            placeholder="Search by name or manager…"
+            aria-label="Search departments"
+          />
+        </div>
       </div>
 
       {/* Cards grid */}
       {isLoading ? (
-        <div style={{ padding: '60px', display: 'flex', justifyContent: 'center' }}>
+        <div class="dept-loading">
           <Spinner size={36} label="Loading departments…" />
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px', textAlign: 'center', color: '#6b7280' }}>
-          <i class="fas fa-sitemap" style={{ fontSize: '32px', display: 'block', marginBottom: '12px', opacity: 0.4 }} />
+        <div class="dept-empty">
+          <i class="fas fa-sitemap" aria-hidden="true" />
           <div style={{ fontWeight: '600' }}>No departments found</div>
-          {search && <div style={{ fontSize: '13px', marginTop: '4px' }}>Try adjusting your search.</div>}
+          {search && <p>Try adjusting your search.</p>}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+        <div class="dept-cards-grid">
           {filtered.map(dept => (
             <DepartmentCard
               key={dept.id}
@@ -154,69 +150,63 @@ function DepartmentCard({
   onEdit:   () => void;
   onDelete: () => void;
 }): VNode {
+  const hasManager = !!dept.managerId;
   return (
-    <div style={{
-      background:   '#fff',
-      borderRadius: '12px',
-      padding:      '20px',
-      boxShadow:    '0 1px 3px rgba(0,0,0,.08)',
-      position:     'relative',
-    }}>
-      {/* Action overlay */}
-      <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px' }}>
-        <OverlayBtn icon="fa-pencil-alt" color="#2563eb" label={`Edit ${dept.name}`} onClick={onEdit} />
-        <OverlayBtn icon="fa-trash"      color="#dc2626" label={`Delete ${dept.name}`} onClick={onDelete} />
+    <div class="dept-card">
+      {/* Header — navy with icon + action overlay */}
+      <div class="dept-card-header">
+        <div class="dept-card-icon">
+          <i class="fas fa-building" aria-hidden="true" />
+        </div>
+        <div class="dept-card-title-block">
+          <div class="dept-card-name">{dept.name}</div>
+          <div class="dept-card-id-tag">{dept.id}</div>
+        </div>
+        <div class="card-overlay-actions" onClick={e => e.stopPropagation()}>
+          <button
+            type="button"
+            class="card-overlay-btn edit"
+            aria-label={`Edit ${dept.name}`}
+            title={`Edit ${dept.name}`}
+            onClick={onEdit}
+          >
+            <i class="fas fa-pencil-alt" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="card-overlay-btn delete"
+            aria-label={`Delete ${dept.name}`}
+            title={`Delete ${dept.name}`}
+            onClick={onDelete}
+          >
+            <i class="fas fa-trash" aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
-      {/* Icon */}
-      <div style={{
-        width: '44px', height: '44px', borderRadius: '10px',
-        background: '#7c3aed18', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: '12px',
-      }}>
-        <i class="fas fa-building" style={{ color: '#7c3aed', fontSize: '18px' }} aria-hidden="true" />
-      </div>
-
-      <div style={{ fontSize: '16px', fontWeight: '700', color: '#111827', marginBottom: '4px', paddingRight: '64px' }}>
-        {dept.name}
-      </div>
-
-      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
-        <i class="fas fa-user-tie" aria-hidden="true" style={{ marginRight: '5px' }} />
-        {dept.manager}
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <Pill icon="fa-users" label={`${dept.employeeCount} employees`} />
+      {/* Body — manager + description + stat badges */}
+      <div class="dept-card-body">
+        <div class="dept-info-row">
+          <i class="fas fa-user-tie" aria-hidden="true" />
+          <span>{hasManager ? dept.manager : 'No manager assigned'}</span>
+        </div>
+        {dept.description && (
+          <div class="dept-info-row">
+            <i class="fas fa-align-left" aria-hidden="true" />
+            <span>{dept.description}</span>
+          </div>
+        )}
+        <div class="dept-stats-badges">
+          <span class="dept-badge blue">
+            <i class="fas fa-users" aria-hidden="true" />
+            {dept.employeeCount} {dept.employeeCount === 1 ? 'employee' : 'employees'}
+          </span>
+          <span class={`dept-badge ${hasManager ? 'green' : 'gold'}`}>
+            <i class={`fas ${hasManager ? 'fa-user-check' : 'fa-user-slash'}`} aria-hidden="true" />
+            {hasManager ? 'Managed' : 'Unmanaged'}
+          </span>
+        </div>
       </div>
     </div>
-  );
-}
-
-function OverlayBtn({ icon, color, label, onClick }: { icon: string; color: string; label: string; onClick: () => void }): VNode {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      style={{
-        width: '28px', height: '28px', borderRadius: '6px',
-        background: '#fff', border: `1px solid ${color}40`,
-        color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '12px',
-      }}
-    >
-      <i class={`fas ${icon}`} aria-hidden="true" />
-    </button>
-  );
-}
-
-function Pill({ icon, label }: { icon: string; label: string }): VNode {
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#6b7280' }}>
-      <i class={`fas ${icon}`} aria-hidden="true" />
-      {label}
-    </span>
   );
 }

@@ -19,8 +19,19 @@ interface StatCardProps {
   icon:     string;   // Font Awesome class e.g. 'fa-users'
   label:    string;
   value:    number;
-  color?:   string;   // icon background tint (hex)
+  color?:   string;   // icon tint — hex (mapped to a branded variant) or a variant name
   loading?: boolean;
+}
+
+/** Map an arbitrary hex tint (or variant name) to a branded .stat-card-icon variant. */
+function iconVariant(color: string): 'blue' | 'green' | 'gold' | 'red' {
+  switch (color.toLowerCase()) {
+    case 'blue': case '#2563eb': case '#1b2d54': case '#1b2d55': return 'blue';
+    case 'green': case '#16a34a': case '#2e7d32': return 'green';
+    case 'gold': case '#d97706': case '#c67c00': case '#7c3aed': return 'gold';
+    case 'red': case '#dc2626': case '#e40c0c': return 'red';
+    default: return 'blue';
+  }
 }
 
 function useCountUp(target: number, duration = 600): number {
@@ -55,50 +66,18 @@ function useCountUp(target: number, duration = 600): number {
   return current;
 }
 
-export function StatCard({ icon, label, value, color = '#6366f1', loading = false }: StatCardProps): VNode {
+export function StatCard({ icon, label, value, color = 'blue', loading = false }: StatCardProps): VNode {
   const displayed = useCountUp(loading ? 0 : value);
+  const variant   = iconVariant(color);
 
   return (
-    <div
-      style={{
-        background:   '#fff',
-        borderRadius: '12px',
-        padding:      '20px 24px',
-        display:      'flex',
-        alignItems:   'center',
-        gap:          '16px',
-        boxShadow:    '0 1px 3px rgba(0,0,0,.08)',
-        flex:         '1 1 180px',
-        minWidth:     '160px',
-      }}
-    >
-      <div
-        style={{
-          width:          '48px',
-          height:         '48px',
-          borderRadius:   '12px',
-          background:     `${color}18`,
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'center',
-          flexShrink:     0,
-        }}
-      >
-        <i
-          class={`fas ${icon}`}
-          style={{ color, fontSize: '20px' }}
-          aria-hidden="true"
-        />
+    <div class="stat-card" style={{ flex: '1 1 180px', minWidth: '160px' }}>
+      <div class={`stat-card-icon ${variant}`}>
+        <i class={`fas ${icon}`} aria-hidden="true" />
       </div>
-      <div>
-        {loading ? (
-          <div style={{ width: '48px', height: '28px', background: '#f3f4f6', borderRadius: '4px', marginBottom: '4px' }} />
-        ) : (
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#111827', lineHeight: 1 }}>
-            {displayed}
-          </div>
-        )}
-        <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>{label}</div>
+      <div class="stat-card-body">
+        <div class="stat-card-value">{loading ? '' : displayed}</div>
+        <div class="stat-card-label">{label}</div>
       </div>
     </div>
   );

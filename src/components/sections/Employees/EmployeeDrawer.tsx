@@ -2,10 +2,12 @@
  * EmployeeDrawer.tsx
  *
  * Slide-in profile drawer shown when clicking an employee card or row.
- * Mirrors the legacy #empProfileDrawer DOM panel.
+ * Uses the branded `.emp-drawer*` design system (navy header, avatar with
+ * status dot, sectioned detail rows, footer actions) defined in the section
+ * CSS, rather than ad-hoc inline styles.
  *
  * Enterprise features:
- *   ✓ Keyboard accessible (Escape closes, focus trap within drawer)
+ *   ✓ Keyboard accessible (Escape closes, focus moves into drawer)
  *   ✓ ARIA: role="dialog", aria-modal, aria-label
  *   ✓ Body scroll lock while open
  *   ✓ Displays all employee fields including today's check-in status
@@ -18,12 +20,8 @@
 import { type VNode }            from 'preact';
 import { useEffect, useRef }     from 'preact/hooks';
 import { Avatar }                from '@shared/Avatar';
-import { Badge }                 from '@shared/Badge';
 import type { EmployeeListItem } from './types';
-import {
-  TODAY_STATUS_COLOR,
-  TODAY_STATUS_LABEL,
-} from './utils';
+import { TODAY_STATUS_LABEL }    from './utils';
 
 interface EmployeeDrawerProps {
   emp:      EmployeeListItem | null;
@@ -32,6 +30,10 @@ interface EmployeeDrawerProps {
   onEdit:   (emp: EmployeeListItem) => void;
   onDelete: (emp: EmployeeListItem) => void;
 }
+
+const ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin', manager: 'Manager', employee: 'Employee',
+};
 
 export function EmployeeDrawer({ emp, isAdmin, onClose, onEdit, onDelete }: EmployeeDrawerProps): VNode {
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -58,227 +60,109 @@ export function EmployeeDrawer({ emp, isAdmin, onClose, onEdit, onDelete }: Empl
     if (open) setTimeout(() => drawerRef.current?.focus(), 50);
   }, [open]);
 
-  const todayColor = emp ? TODAY_STATUS_COLOR[emp.todayStatus] : '#9ca3af';
+  const isActive   = emp?.status === 'Active';
   const todayLabel = emp ? TODAY_STATUS_LABEL[emp.todayStatus] : '';
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        style={{
-          position:   'fixed',
-          inset:      0,
-          background: 'rgba(0,0,0,0.35)',
-          zIndex:     1040,
-          opacity:    open ? 1 : 0,
-          pointerEvents: open ? 'auto' : 'none',
-          transition: 'opacity 0.25s',
-        }}
-      />
-
-      {/* Drawer panel */}
+    <div
+      class={`emp-drawer-overlay${open ? ' active' : ''}`}
+      aria-hidden={open ? undefined : 'true'}
+      onClick={onClose}
+    >
       <div
         ref={drawerRef}
+        class="emp-drawer"
         role="dialog"
         aria-modal="true"
         aria-label={emp ? `${emp.fullName} profile` : 'Employee profile'}
         tabIndex={-1}
-        style={{
-          position:    'fixed',
-          top:         0,
-          right:       0,
-          bottom:      0,
-          width:       '360px',
-          maxWidth:    '100vw',
-          background:  '#fff',
-          boxShadow:   '-4px 0 24px rgba(0,0,0,.15)',
-          zIndex:      1041,
-          transform:   open ? 'translateX(0)' : 'translateX(100%)',
-          transition:  'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
-          overflowY:   'auto',
-          display:     'flex',
-          flexDirection: 'column',
-        }}
+        onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{
-          display:        'flex',
-          alignItems:     'center',
-          justifyContent: 'space-between',
-          padding:        '16px 20px',
-          borderBottom:   '1px solid #f3f4f6',
-          position:       'sticky',
-          top:            0,
-          background:     '#fff',
-          zIndex:         1,
-        }}>
-          <span style={{ fontWeight: '600', fontSize: '15px', color: '#111827' }}>
-            Employee Profile
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close employee profile"
-            style={{
-              background: 'none',
-              border:     'none',
-              cursor:     'pointer',
-              color:      '#6b7280',
-              fontSize:   '20px',
-              lineHeight: 1,
-              padding:    '4px',
-            }}
-          >
-            <i class="fas fa-times" aria-hidden="true" />
-          </button>
-        </div>
-
         {emp && (
-          <div style={{ padding: '24px 20px', flex: 1 }}>
-            {/* Avatar + name block */}
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                <Avatar
-                  src={emp.profileImage}
-                  name={emp.fullName}
-                  size={80}
-                />
+          <>
+            {/* Header — navy with avatar, name, role pill */}
+            <div class="emp-drawer-header">
+              <div class="emp-drawer-avatar-wrap">
+                <div class="emp-drawer-avatar">
+                  <Avatar src={emp.profileImage} name={emp.fullName} size={72} />
+                </div>
+                <span class={`emp-drawer-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} />
+              </div>
+              <div class="emp-drawer-title">
+                <div class="emp-drawer-name">{emp.fullName}</div>
+                <div class="emp-drawer-pos">{emp.position || '—'}</div>
+                {emp.employeeNumber && (
+                  <span class="emp-drawer-empid">{emp.employeeNumber}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                class="emp-drawer-close"
+                onClick={onClose}
+                aria-label="Close employee profile"
+              >
+                <i class="fas fa-times" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Body — detail rows */}
+            <div class="emp-drawer-body">
+              <div class="emp-drawer-section-label">Details</div>
+
+              <div class="emp-drawer-row">
+                <i class="fas fa-at" aria-hidden="true" />
+                <span>{emp.username}</span>
+              </div>
+              <div class="emp-drawer-row">
+                <i class="fas fa-building" aria-hidden="true" />
+                <span>{emp.department || '—'}</span>
+              </div>
+              <div class="emp-drawer-row">
+                <i class="fas fa-user-tag" aria-hidden="true" />
+                <span>{ROLE_LABEL[emp.role] ?? emp.role}</span>
+              </div>
+              <div class={`emp-drawer-row${emp.email ? '' : ' muted'}`}>
+                <i class="fas fa-envelope" aria-hidden="true" />
+                <span>{emp.email || 'No email on file'}</span>
+              </div>
+              <div class={`emp-drawer-row${emp.phone ? '' : ' muted'}`}>
+                <i class="fas fa-phone" aria-hidden="true" />
+                <span>{emp.phone || 'No phone on file'}</span>
               </div>
 
-              {/* Status dot */}
-              <div style={{
-                display:      'inline-flex',
-                alignItems:   'center',
-                gap:          '6px',
-                marginBottom: '8px',
-              }}>
-                <span style={{
-                  width: '8px', height: '8px',
-                  borderRadius: '50%',
-                  background: emp.status === 'Active' ? '#16a34a' : '#9ca3af',
-                  display: 'inline-block',
-                }} />
-                <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                  {emp.status}
-                </span>
+              <div class="emp-drawer-section-label" style={{ marginTop: '20px' }}>Today</div>
+              <div class="emp-drawer-row">
+                <i class={`fas ${isActive ? 'fa-circle-check' : 'fa-circle'}`} aria-hidden="true" />
+                <span>{todayLabel}</span>
               </div>
-
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>
-                {emp.fullName}
-              </div>
-              <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                {emp.position || '—'}
+              <div class="emp-drawer-row">
+                <i class="fas fa-signal" aria-hidden="true" />
+                <span>{emp.status}</span>
               </div>
             </div>
 
-            {/* Info fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <DrawerField icon="fa-id-badge"   label="Employee ID"  value={emp.employeeNumber || '—'} />
-              <DrawerField icon="fa-user"        label="Username"     value={emp.username} />
-              <DrawerField icon="fa-building"    label="Department"   value={emp.department || '—'} />
-              <DrawerField icon="fa-shield-alt"  label="Role"         value={emp.role.charAt(0).toUpperCase() + emp.role.slice(1)} />
-              {emp.email && <DrawerField icon="fa-envelope" label="Email" value={emp.email} />}
-              {emp.phone && <DrawerField icon="fa-phone"    label="Phone" value={emp.phone} />}
-            </div>
-
-            {/* Today's status */}
-            <div style={{
-              marginTop:    '20px',
-              padding:      '12px 16px',
-              borderRadius: '8px',
-              background:   `${todayColor}12`,
-              border:       `1px solid ${todayColor}30`,
-              display:      'flex',
-              alignItems:   'center',
-              gap:          '8px',
-            }}>
-              <span style={{
-                width: '10px', height: '10px',
-                borderRadius: '50%',
-                background: todayColor,
-                flexShrink: 0,
-              }} />
-              <span style={{ fontSize: '13px', fontWeight: '500', color: todayColor }}>
-                Today: {todayLabel}
-              </span>
-            </div>
-
-            {/* Badges */}
-            <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Badge status={emp.status === 'Active' ? 'active' : 'inactive'} />
-            </div>
-
-            {/* Admin actions */}
+            {/* Footer — admin actions */}
             {isAdmin && (
-              <div style={{ marginTop: '28px', display: 'flex', gap: '10px' }}>
+              <div class="emp-drawer-footer">
                 <button
                   type="button"
+                  class="btn btn-outline-secondary btn-sm"
                   onClick={() => { onClose(); onEdit(emp); }}
-                  style={actionBtnStyle('#2563eb')}
                 >
-                  <i class="fas fa-pencil-alt" aria-hidden="true" />
-                  Edit Employee
+                  <i class="fas fa-pencil-alt" aria-hidden="true" /> Edit
                 </button>
                 <button
                   type="button"
+                  class="btn btn-danger btn-sm"
                   onClick={() => { onClose(); onDelete(emp); }}
-                  style={actionBtnStyle('#dc2626')}
                 >
-                  <i class="fas fa-trash" aria-hidden="true" />
-                  Delete
+                  <i class="fas fa-trash" aria-hidden="true" /> Delete
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
-      </div>
-    </>
-  );
-}
-
-function DrawerField({ icon, label, value }: { icon: string; label: string; value: string }): VNode {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div style={{
-        width:          '32px',
-        height:         '32px',
-        borderRadius:   '8px',
-        background:     '#f3f4f6',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        flexShrink:     0,
-      }}>
-        <i class={`fas ${icon}`} style={{ fontSize: '13px', color: '#6b7280' }} aria-hidden="true" />
-      </div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          {label}
-        </div>
-        <div style={{ fontSize: '13px', color: '#111827', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {value}
-        </div>
       </div>
     </div>
   );
-}
-
-function actionBtnStyle(color: string): Record<string, string | number> {
-  return {
-    flex:           1,
-    display:        'inline-flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            '6px',
-    padding:        '9px 16px',
-    background:     `${color}12`,
-    color:          color,
-    border:         `1px solid ${color}30`,
-    borderRadius:   '8px',
-    cursor:         'pointer',
-    fontSize:       '13px',
-    fontWeight:     '500',
-  };
 }
