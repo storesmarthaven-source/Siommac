@@ -71,15 +71,16 @@ function DashboardTab(): VNode {
         <StatCard icon="fa-box-open"      label="Critical Stock" value={6} color="#dc2626" />
       </div>
 
-      {/* Live control signals — horizontal row under the summary cards. */}
-      <div class="ppe-signals">
-        <div class="ppe-signals-head"><i class="fas fa-satellite-dish" /> Live Control Signals</div>
+      {/* Live control signals — navy panel under the summary cards, white
+          record cards laid out horizontally (no teal/green accent). */}
+      <aside class="ppe-signals-panel">
+        <h4><i class="fas fa-satellite-dish" /> Live Control Signals</h4>
         <div class="ppe-signals-row">
           <div class="ppe-signal"><i class="fas fa-triangle-exclamation" /><div><strong>Respirator evidence gap</strong><span>2 employees require fit-test evidence before issue.</span></div><span class="ppe-signal-tag is-high">High</span></div>
           <div class="ppe-signal"><i class="fas fa-warehouse" /><div><strong>Warehouse stock action</strong><span>Ear protection and gloves below reorder threshold.</span></div><span class="ppe-signal-tag is-stock">Stock</span></div>
           <div class="ppe-signal"><i class="fas fa-clipboard-check" /><div><strong>Inspection cadence</strong><span>Harness checks are due this week for Site B.</span></div><span class="ppe-signal-tag is-due">Due</span></div>
         </div>
-      </div>
+      </aside>
       <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
         <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
         <div>

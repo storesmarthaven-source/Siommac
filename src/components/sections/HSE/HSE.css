@@ -315,33 +315,38 @@
 .ppe-hero-panel .stat-card-icon.red   { background: rgba(255,80,80,.28);  color: #ffc0c0; }
 .ppe-hero-panel .stat-card-icon.gold  { background: rgba(255,183,18,.32); color: #ffe6b3; }
 
-/* Live control signals — horizontal row in the page body, under the summary
-   cards. Blue surface (the design they had before): tinted blue cards, blue
-   icon chips, with red High / amber Stock/Due tags. */
-.ppe-signals { margin-bottom: 18px; }
-.ppe-signals-head {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-  color: var(--siomac-navy); font-size: 0.86rem; font-weight: 700;
+/* Live control signals — navy panel under the summary cards (the design from
+   hse-document-control-pro.html), but solid navy: NO teal/green gradient. White
+   record cards inside, blue icon chips, red High / amber Stock·Due tags. */
+.ppe-signals-panel {
+  margin-bottom: 18px; padding: 18px; border-radius: 20px;
+  background: var(--siomac-navy); color: #fff;
+  box-shadow: 0 18px 42px rgba(15,23,42,.16);
 }
-.ppe-signals-head i { color: #2563eb; }
+.ppe-signals-panel h4 {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  color: #fff; font-size: 0.94rem; font-weight: 700;
+}
+.ppe-signals-panel h4 i { color: #8fb6ff; }
 .ppe-signals-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .ppe-signal {
-  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 11px; align-items: center;
-  padding: 12px 14px; border-radius: 13px;
-  background: #eef4ff; border: 1px solid #d6e4ff;
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 11px; align-items: center;
+  padding: 12px 13px; border-radius: 13px;
+  background: #fff; border: 1px solid var(--border);
 }
 .ppe-signal > i {
-  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 10px; background: #2563eb; color: #fff; font-size: 0.85rem; line-height: 1;
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 11px; background: rgba(37,99,235,.1); color: #2563eb; font-size: 0.9rem; line-height: 1;
 }
 .ppe-signal strong { display: block; color: var(--siomac-navy); font-size: 0.8rem; }
-.ppe-signal span { display: block; color: #4a5d80; font-size: 0.72rem; line-height: 1.35; }
+.ppe-signal span { display: block; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; }
 .ppe-signal-tag {
-  font-size: 0.66rem; font-weight: 700; border-radius: 20px; padding: 3px 10px; white-space: nowrap;
+  font-size: 0.66rem; font-weight: 700; border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+  border: 1px solid var(--border); background: var(--bg-subtle, #F1F4F8); color: var(--text-muted);
 }
-.ppe-signal-tag.is-high  { background: rgba(228,12,12,.12);  color: var(--siomac-red); }
-.ppe-signal-tag.is-stock { background: rgba(217,119,6,.14);  color: #b45309; }
-.ppe-signal-tag.is-due   { background: rgba(217,119,6,.14);  color: #b45309; }
+.ppe-signal-tag.is-high  { background: rgba(228,12,12,.10); border-color: rgba(228,12,12,.18);  color: var(--siomac-red); }
+.ppe-signal-tag.is-stock,
+.ppe-signal-tag.is-due   { background: rgba(217,119,6,.12); border-color: rgba(217,119,6,.22); color: #b45309; }
 @media (max-width: 900px) { .ppe-signals-row { grid-template-columns: 1fr; } }
 
 /* Breadcrumb + edit button sit in the panel footer. */
