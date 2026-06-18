@@ -115,7 +115,7 @@
   background: var(--bg-subtle, #F8FAFE); border-bottom: 1px solid var(--border);
 }
 .hse-card-head h3 { font-size: 0.94rem; font-weight: 750; color: var(--siomac-navy); display: flex; align-items: center; gap: 8px; }
-.hse-card-head h3 i { color: var(--siomac-red); }
+.hse-card-head h3 i { color: var(--siomac-navy); }
 .hse-card-head span { font-size: 0.74rem; color: var(--text-muted); }
 .hse-card-body { padding: 16px; }
 .hse-muted { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
@@ -215,8 +215,8 @@
 .hse-progress { height: 8px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0); overflow: hidden; margin-bottom: 6px; }
 .hse-progress > i { display: block; height: 100%; border-radius: inherit; background: #2E7D32; }
 .hse-progress--danger  > i { background: var(--siomac-red); }
-.hse-progress--warning > i { background: #d97706; }
-.hse-progress--success > i { background: #16a34a; }
+.hse-progress--warning > i { background: #e8a73b; }
+.hse-progress--success > i { background: #2E7D32; }
 
 /* ── Drilldown drawer ── */
 .hse-drawer-backdrop { position: fixed; inset: 0; z-index: 50; display: none; background: rgba(27,45,84,.38); }
