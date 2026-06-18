@@ -130,6 +130,8 @@ export interface ConsoleUser {
   fullName:      string;
   role:          string;
   email:         string;
+  /** Job title / position (shown under the name). */
+  position:      string;
   active:        boolean;
   /** Derived access label: 'Role default' | 'Extended' | 'Restricted'. */
   access:        string;

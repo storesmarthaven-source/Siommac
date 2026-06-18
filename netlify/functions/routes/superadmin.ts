@@ -367,7 +367,7 @@ router.post('/listUsers', async c => {
   // accounts/permissions view, which is for configurable roles only.
   const [{ data, error }, { data: overrides }] = await Promise.all([
     sb.from('app_users')
-      .select('id, username, full_name, role, email, status, profile_image')
+      .select('id, username, full_name, role, email, position, status, profile_image')
       .not('role', 'in', '("superadmin","employee")')
       .order('role')
       .order('full_name'),
@@ -385,7 +385,7 @@ router.post('/listUsers', async c => {
     tally.set(o.user_id, t);
   }
   // Resolve profile photo signed URLs in parallel.
-  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; status: string; profile_image: string | null }[];
+  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; position: string | null; status: string; profile_image: string | null }[];
   const photos = await Promise.all(rows.map(u => getProfileSignedUrl(u.id, u.profile_image)));
   const users = rows.map((u, i) => {
     const t = tally.get(u.id) ?? { grants: 0, denials: 0 };
@@ -396,6 +396,7 @@ router.post('/listUsers', async c => {
       fullName: u.full_name,
       role:     u.role,
       email:    u.email ?? '',
+      position: u.position ?? '',
       active:   u.status === 'active',
       access,
       overrideCount: t.grants + t.denials,

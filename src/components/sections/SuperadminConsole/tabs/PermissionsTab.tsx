@@ -173,7 +173,7 @@ function RoleSummaryCard({ label, isSystem, members, onSeeAll, onManage }: {
               <Avatar name={m.fullName} src={m.profileImage} cls="vt-member-avatar" />
               <span class="vt-member-info">
                 <span class="vt-member-name">{m.fullName}</span>
-                {m.email && <span class="vt-member-email">{m.email}</span>}
+                {m.position && <span class="vt-member-email">{m.position}</span>}
               </span>
               <span class={`vt-pill ${m.active ? 'is-on' : 'is-off'}`}>{m.active ? 'Enabled' : 'Disabled'}</span>
             </div>
@@ -357,7 +357,10 @@ export function PermissionsTab(): VNode {
                   <td>
                     <span class="vt-cell-account">
                       <Avatar name={u.fullName} src={u.profileImage} cls="vt-cell-avatar" />
-                      <span class="vt-cell-name">{u.fullName}</span>
+                      <span class="vt-cell-account-text">
+                        <span class="vt-cell-name">{u.fullName}</span>
+                        {u.position && <span class="vt-cell-subtext">{u.position}</span>}
+                      </span>
                     </span>
                   </td>
                   <td style={{ color: 'var(--text-muted)' }}>{u.email || '—'}</td>
