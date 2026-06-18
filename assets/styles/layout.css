@@ -8,6 +8,7 @@
   width: 272px;
   background: #1b2d54;
   color: white;
+  font-family: var(--font-nav);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;

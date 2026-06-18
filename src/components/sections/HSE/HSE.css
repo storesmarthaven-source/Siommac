@@ -238,16 +238,33 @@
 .hse-drawer-card span { color: var(--text-muted); font-size: 0.62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .hse-drawer-card strong { display: block; margin-top: 5px; color: var(--siomac-navy); font-size: 0.84rem; line-height: 1.35; }
 
-@media (max-width: 1180px) {
-  .hse-perf-grid, .hse-bottom-grid { grid-template-columns: 1fr; }
+/* The app's content area is narrowed by the 272px sidebar, so these queries fire
+   on the *content* width (via the .hse-dash container query below) rather than the
+   raw viewport — keeping the multi-column layout on normal laptops. */
+.hse-dash { container-type: inline-size; container-name: hse; }
+
+@container hse (max-width: 1080px) {
+  .hse-perf-grid { grid-template-columns: 1fr; }
+  .hse-bottom-grid { grid-template-columns: 1fr 1fr; }
+}
+@container hse (max-width: 720px) {
+  .hse-bottom-grid { grid-template-columns: 1fr; }
   .hse-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 640px) {
+@container hse (max-width: 560px) {
   .hse-hero-body { flex-direction: column; align-items: stretch; }
   .hse-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hse-filters { grid-template-columns: 1fr; }
+  .hse-filters { grid-template-columns: 1fr 1fr; }
   .hse-topbar-actions, .hse-search-box { width: 100%; }
   .hse-drawer-grid { grid-template-columns: 1fr; }
+}
+
+/* Fallback for browsers without container-query support: plain viewport queries. */
+@supports not (container-type: inline-size) {
+  @media (max-width: 1180px) {
+    .hse-perf-grid, .hse-bottom-grid { grid-template-columns: 1fr; }
+    .hse-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 }
 
 /* ── KPI rows + charts ── */

@@ -30,9 +30,11 @@
   --warning:       #C67C00;
   --danger:        #C62828;
 
-  /* Type system (Meridian-derived): IBM Plex Sans for UI, IBM Plex Mono for
-     numerics/IDs/badges so figures stay tabular-aligned. */
-  --font-sans: 'IBM Plex Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Type system: Inter for UI (matches the HSE command mockup), IBM Plex Mono
+     for numerics/IDs/badges so figures stay tabular-aligned. The sidebar keeps
+     its own IBM Plex Sans face via --font-nav. */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-nav:  'IBM Plex Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', 'Cascadia Code', Menlo, Consolas, monospace;
 
   /* Radius */
