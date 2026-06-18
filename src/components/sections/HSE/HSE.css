@@ -316,25 +316,26 @@
 .ppe-hero-panel .stat-card-icon.gold  { background: rgba(255,183,18,.32); color: #ffe6b3; }
 
 /* Live control signals — horizontal row in the page body, under the summary
-   cards. Light surface (same accent colors as before: red High, amber Stock/Due). */
+   cards. Blue surface (the design they had before): tinted blue cards, blue
+   icon chips, with red High / amber Stock/Due tags. */
 .ppe-signals { margin-bottom: 18px; }
 .ppe-signals-head {
   display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
   color: var(--siomac-navy); font-size: 0.86rem; font-weight: 700;
 }
-.ppe-signals-head i { color: var(--siomac-red); }
+.ppe-signals-head i { color: #2563eb; }
 .ppe-signals-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .ppe-signal {
-  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 11px; align-items: center;
   padding: 12px 14px; border-radius: 13px;
-  background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-card);
+  background: #eef4ff; border: 1px solid #d6e4ff;
 }
 .ppe-signal > i {
-  width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px;
-  background: var(--bg-subtle, #F1F4F8); color: var(--siomac-navy); font-size: 0.85rem;
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: #2563eb; color: #fff; font-size: 0.85rem; line-height: 1;
 }
 .ppe-signal strong { display: block; color: var(--siomac-navy); font-size: 0.8rem; }
-.ppe-signal span { display: block; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; }
+.ppe-signal span { display: block; color: #4a5d80; font-size: 0.72rem; line-height: 1.35; }
 .ppe-signal-tag {
   font-size: 0.66rem; font-weight: 700; border-radius: 20px; padding: 3px 10px; white-space: nowrap;
 }
