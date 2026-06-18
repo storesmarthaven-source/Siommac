@@ -16,7 +16,8 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
+import { Modal } from '@shared/Modal';
 import {
   permissionGroups, roleDefaultGranted, permissionState,
   type PermissionState,
@@ -25,12 +26,16 @@ import type { UserRole, PermissionOverride } from '@api/schemas/auth';
 import type { ConsoleUser, UserPermissionRow } from '@lib/superadminApi';
 import {
   useConsoleUsers, useUserPermissions, useSetUserPermission, useClearUserPermission,
-  useRolePermissions,
+  useRolePermissions, useRoles,
 } from '../hooks';
 
 const ROLE_LABEL: Record<string, string> = {
-  admin: 'Admin', manager: 'Manager', employee: 'Employee',
+  superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
 };
+
+function initialsOf(name: string): string {
+  return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
 
 const RESOURCE_LABEL: Record<string, string> = {
   employees: 'Employees', departments: 'Departments', attendance: 'Attendance',
@@ -135,58 +140,198 @@ function UserMatrix({ user }: { user: ConsoleUser }): VNode {
   );
 }
 
-// ── Tab root ──────────────────────────────────────────────────────────────────
+// ── Role-summary card ─────────────────────────────────────────────────────────
+
+function RoleSummaryCard({ label, isSystem, members, onSeeAll, onManage }: {
+  label: string; isSystem: boolean; members: ConsoleUser[];
+  onSeeAll: () => void; onManage: () => void;
+}): VNode {
+  const top = members.slice(0, 3);
+  return (
+    <div class="vt-rolecard">
+      <div class="vt-rolecard-head">
+        <span class="vt-rolecard-title">
+          {label}
+          {isSystem && <span class="vt-rolecard-sys">system</span>}
+        </span>
+        <button type="button" class="vt-rolecard-seeall" onClick={onSeeAll}>See All</button>
+      </div>
+      <div class="vt-rolecard-members">
+        {top.length === 0
+          ? <div class="vt-rolecard-empty">No users with this role.</div>
+          : top.map(m => (
+            <div class="vt-member" key={m.id}>
+              <span class="vt-member-avatar">{initialsOf(m.fullName)}</span>
+              <span class="vt-member-info">
+                <span class="vt-member-name">{m.fullName}</span>
+                <span class="vt-member-email">{m.email || '@' + m.username}</span>
+              </span>
+              <span class={`vt-pill ${m.active ? 'is-on' : 'is-off'}`}>{m.active ? 'Enabled' : 'Disabled'}</span>
+            </div>
+          ))}
+      </div>
+      <button type="button" class="vt-rolecard-manage" onClick={onManage}>
+        <i class="fas fa-gear" /> Manage
+      </button>
+    </div>
+  );
+}
+
+// ── Row actions menu ──────────────────────────────────────────────────────────
+
+function RowMenu({ onManage }: { onManage: () => void }): VNode {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+  return (
+    <div class="vt-row-actions" ref={ref}>
+      <button type="button" class="vt-row-actions-btn" aria-label="Row actions" onClick={() => setOpen(o => !o)}><i class="fas fa-ellipsis-vertical" /></button>
+      {open && (
+        <div class="vt-row-menu">
+          <div class="vt-row-menu-label">Actions</div>
+          <button type="button" onClick={() => { setOpen(false); onManage(); }}><i class="fas fa-user-lock" /> Manage permissions</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tab root (VANTUS Administrators layout) ───────────────────────────────────
 
 export function PermissionsTab(): VNode {
   const usersQ = useConsoleUsers(true);
-  const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const rolesQ = useRoles(true);
+  const [search, setSearch]     = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [manageUser, setManageUser] = useState<ConsoleUser | null>(null);
 
   const users = usersQ.data ?? [];
+  const roles = rolesQ.data ?? [];
+
+  // Users grouped by role (for the summary cards), in role sort order.
+  const byRole = useMemo(() => {
+    const m = new Map<string, ConsoleUser[]>();
+    for (const u of users) (m.get(u.role) ?? m.set(u.role, []).get(u.role)!).push(u);
+    return m;
+  }, [users]);
+
+  // Roles that actually have members, ordered by the roles table (fallback: name).
+  const summaryRoles = useMemo(() => {
+    const present = [...byRole.keys()];
+    const known = roles.filter(r => r.name !== 'superadmin' && present.includes(r.name))
+      .map(r => ({ name: r.name, label: r.label, isSystem: r.isSystem }));
+    const knownNames = new Set(known.map(r => r.name));
+    const extra = present.filter(n => !knownNames.has(n)).map(n => ({ name: n, label: ROLE_LABEL[n] ?? n, isSystem: false }));
+    return [...known, ...extra];
+  }, [byRole, roles]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return users.filter(u => !q || u.fullName.toLowerCase().includes(q) || u.username.toLowerCase().includes(q));
-  }, [users, search]);
-  const selected = users.find(u => u.id === selectedId) ?? null;
+    return users.filter(u =>
+      (roleFilter === 'all' || u.role === roleFilter) &&
+      (!q || u.fullName.toLowerCase().includes(q) || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
+  }, [users, search, roleFilter]);
 
   if (usersQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading users…</div>;
   if (usersQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load users. <button type="button" onClick={() => void usersQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
 
   return (
-    <div style={{ display: 'flex', gap: '16px', minHeight: '420px' }}>
-      {/* User list */}
-      <div style={{ width: '240px', flexShrink: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-          <div class="emp-search-box" style={{ margin: 0 }}>
-            <i class="fas fa-search" aria-hidden="true" />
-            <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search users…" aria-label="Search users" />
+    <div>
+      {/* Role-summary cards */}
+      <div class="vt-section">
+        <div class="vt-section-head">
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-user-shield" /></span>
+            <div>
+              <div class="vt-section-title">Accounts by role</div>
+              <div class="vt-section-sub">Access is based on role. Each role unlocks specific sections and permissions; per-user overrides take priority.</div>
+            </div>
           </div>
         </div>
-        <div style={{ overflowY: 'auto', flex: 1 }}>
-          {filtered.length === 0 ? (
-            <div class="stg-switch-desc" style={{ padding: '16px', textAlign: 'center' }}>No users match.</div>
-          ) : filtered.map(u => {
-            const isSel = u.id === selectedId;
-            const initials = (u.fullName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-            return (
-              <button key={u.id} type="button" onClick={() => setSelectedId(u.id)} style={{ width: '100%', textAlign: 'left', padding: '11px 12px', background: isSel ? 'rgba(27,45,84,0.06)' : 'transparent', borderBottom: '1px solid var(--border)', border: 'none', borderLeft: isSel ? '3px solid var(--siomac-navy)' : '3px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0, background: isSel ? 'var(--siomac-navy)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: isSel ? '#fff' : 'var(--text-muted)' }}>{initials}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: isSel ? '700' : '500', color: isSel ? 'var(--siomac-navy)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.fullName}</div>
-                  <div class="stg-switch-desc" style={{ marginTop: 0, textTransform: 'capitalize' }}>{ROLE_LABEL[u.role] ?? u.role}</div>
-                </div>
-              </button>
-            );
-          })}
+        <div class="vt-rolecards">
+          {summaryRoles.map(r => (
+            <RoleSummaryCard
+              key={r.name}
+              label={r.label}
+              isSystem={r.isSystem}
+              members={byRole.get(r.name) ?? []}
+              onSeeAll={() => { setRoleFilter(r.name); }}
+              onManage={() => { setRoleFilter(r.name); }}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Matrix */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {!selected
-          ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>Select a user to manage their permissions</div>
-          : <UserMatrix key={selected.id} user={selected} />}
+      {/* Accounts table */}
+      <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
+        <span class="vt-section-icon"><i class="fas fa-users-gear" /></span>
+        <div>
+          <div class="vt-section-title">User accounts</div>
+          <div class="vt-section-sub">Manage each user's effective permissions.</div>
+        </div>
       </div>
+
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ flex: '1 1 260px' }}>
+          <i class="fas fa-search" aria-hidden="true" />
+          <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search by name, username or email…" aria-label="Search users" />
+        </div>
+      </div>
+
+      {/* Tab-count filters */}
+      <div class="vt-tabs">
+        <button type="button" class={`vt-tab${roleFilter === 'all' ? ' active' : ''}`} onClick={() => setRoleFilter('all')}>
+          All <span class="vt-tab-count">{users.length}</span>
+        </button>
+        {summaryRoles.map(r => (
+          <button key={r.name} type="button" class={`vt-tab${roleFilter === r.name ? ' active' : ''}`} onClick={() => setRoleFilter(r.name)}>
+            {r.label} <span class="vt-tab-count">{byRole.get(r.name)?.length ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      <div class="vt-result-count">Showing {filtered.length} of {users.length} account{users.length === 1 ? '' : 's'}</div>
+
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th>Account</th><th>Email Address</th><th>Role</th><th>Access</th><th>Status</th><th aria-label="Actions" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colspan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px' }}>No accounts match.</td></tr>
+              ) : filtered.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <span class="vt-cell-account">
+                      <span class="vt-cell-avatar">{initialsOf(u.fullName)}</span>
+                      <span class="vt-cell-name">{u.fullName}</span>
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text-muted)' }}>{u.email || <span class="vt-cell-mono">@{u.username}</span>}</td>
+                  <td style={{ textTransform: 'capitalize' }}>{ROLE_LABEL[u.role] ?? u.role}</td>
+                  <td>{u.access}{u.overrideCount > 0 ? <span class="vt-cell-mono" style={{ marginLeft: '6px' }}>({u.overrideCount})</span> : null}</td>
+                  <td><span class={`vt-pill ${u.active ? 'is-on' : 'is-off'}`}>{u.active ? 'Enabled' : 'Disabled'}</span></td>
+                  <td style={{ textAlign: 'right' }}><RowMenu onManage={() => setManageUser(u)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Per-user override editor */}
+      <Modal open={!!manageUser} onClose={() => setManageUser(null)} title={manageUser ? `Permissions — ${manageUser.fullName}` : 'Permissions'} size="lg">
+        {manageUser && <UserMatrix key={manageUser.id} user={manageUser} />}
+      </Modal>
     </div>
   );
 }

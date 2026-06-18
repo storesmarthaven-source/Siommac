@@ -356,26 +356,44 @@ const ClearUserPermSchema = z.object({
   permission: z.string().min(1),
 });
 
-// POST /superadmin/listUsers — all non-superadmin active users (for the matrix).
+// POST /superadmin/listUsers — all non-superadmin users (for the accounts view).
+// Includes inactive accounts so the UI can show Enabled/Disabled status, plus a
+// per-user override count so it can label "Access" (Full / Limited / Read-Only).
 router.post('/listUsers', async c => {
   await requirePermission(c, 'permissions.manage');
-  const { data, error } = await sb
-    .from('app_users')
-    .select('id, username, full_name, role')
-    .neq('role', 'superadmin')
-    .eq('status', 'active')
-    .order('role')
-    .order('full_name');
+  const [{ data, error }, { data: overrides }] = await Promise.all([
+    sb.from('app_users')
+      .select('id, username, full_name, role, email, status')
+      .neq('role', 'superadmin')
+      .order('role')
+      .order('full_name'),
+    sb.from('user_permissions').select('user_id, granted'),
+  ]);
   if (error) {
     console.error('[superadmin/listUsers] error:', error.message);
     return c.json({ success: false, message: 'Failed to load users.' }, 500);
   }
-  const users = (data ?? []).map(u => ({
-    id:       u.id,
-    username: u.username,
-    fullName: u.full_name,
-    role:     u.role,
-  }));
+  // Tally per-user grant/deny overrides to derive an access label.
+  const tally = new Map<string, { grants: number; denials: number }>();
+  for (const o of (overrides ?? []) as { user_id: string; granted: boolean }[]) {
+    const t = tally.get(o.user_id) ?? { grants: 0, denials: 0 };
+    if (o.granted) t.grants++; else t.denials++;
+    tally.set(o.user_id, t);
+  }
+  const users = (data ?? []).map(u => {
+    const t = tally.get(u.id) ?? { grants: 0, denials: 0 };
+    const access = t.denials > 0 ? 'Restricted' : t.grants > 0 ? 'Extended' : 'Role default';
+    return {
+      id:       u.id,
+      username: u.username,
+      fullName: u.full_name,
+      role:     u.role,
+      email:    u.email ?? '',
+      active:   u.status === 'active',
+      access,
+      overrideCount: t.grants + t.denials,
+    };
+  });
   return c.json({ success: true, users });
 });
 

@@ -125,10 +125,16 @@ export async function resetManagerModulesApi(
 
 /** A user shown in the permission matrix (non-superadmin). */
 export interface ConsoleUser {
-  id:       string;
-  username: string;
-  fullName: string;
-  role:     string;
+  id:            string;
+  username:      string;
+  fullName:      string;
+  role:          string;
+  email:         string;
+  active:        boolean;
+  /** Derived access label: 'Role default' | 'Extended' | 'Restricted'. */
+  access:        string;
+  /** Number of explicit per-user permission overrides. */
+  overrideCount: number;
 }
 
 /** An explicit per-user override row. */
