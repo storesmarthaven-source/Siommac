@@ -13,6 +13,7 @@ import { updateColorScheme, updateLayoutMode } from './api';
 import { navIconSvg } from './navIcons';
 import { getModulesForRole, getModuleForSection } from '@lib/moduleRegistry';
 import { resolveVisible } from '@lib/navVisibility';
+import { setActivePanel } from '../../shell/sections/useActiveSection';
 
 // ── Config access (loaded by config.js before main.tsx) ──────────────────────
 
@@ -444,6 +445,11 @@ export function showSection(id: string): void {
   const mod = getModuleForSection(id);
   const panelId = mod ? mod.mount.sectionId : id;
 
+  // Publish the active panel to the shared store: Preact renders each panel's
+  // `active` class from it, so shell re-renders can't drop it (see
+  // shell/sections/useActiveSection.ts). The imperative toggle below stays as a
+  // first-paint fallback for any non-Preact panels.
+  setActivePanel(panelId);
   document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
   document.getElementById(panelId)?.classList.add('active');
 

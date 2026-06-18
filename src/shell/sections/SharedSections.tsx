@@ -16,6 +16,7 @@
  */
 
 import { ProfilePill as SharedProfilePill } from '@shared/ProfilePill';
+import { AppSection } from './AppSection';
 
 // ── Right-aligned wrapper over the reusable, self-populating pill ─────────────
 // (`ids` is ignored — the shared pill is id-free; kept so call sites are stable)
@@ -34,7 +35,7 @@ function ProfilePill(_props: { ids?: PillIds }) {
 
 function LiveMapSection() {
   return (
-    <section class="app-section lm-section" id="s-projectMap">
+    <AppSection id="s-projectMap" class="lm-section">
 
       {/* LiveMapController — headless Preact controller */}
       <div id="preact-live-map-ctrl" style="display:none" aria-hidden="true" />
@@ -102,7 +103,7 @@ function LiveMapSection() {
           </div>
         </div>
       </div>
-    </section>
+    </AppSection>
   );
 }
 
@@ -110,7 +111,7 @@ function LiveMapSection() {
 
 function AboutSection() {
   return (
-    <section class="app-section" id="s-about">
+    <AppSection id="s-about">
 
       <ProfilePill ids={{
         profileBtn: 'admAbtProfileBtn', avatar: 'admAbtProfileAvatar',
@@ -188,7 +189,7 @@ function AboutSection() {
         ))}
       </div>
 
-    </section>
+    </AppSection>
   );
 }
 
@@ -200,7 +201,7 @@ export default function SharedSections() {
       <LiveMapSection />
 
       {/* Superadmin Console — superadmin only */}
-      <section class="app-section" id="s-superadmin-console">
+      <AppSection id="s-superadmin-console">
         <ProfilePill ids={{
           profileBtn: 'sadmModProfileBtn', avatar: 'sadmModProfileAvatar',
           profileName: 'sadmModProfileName', profileRole: 'sadmModProfileRole',
@@ -209,10 +210,10 @@ export default function SharedSections() {
           ticketBtn: 'sadmModTicketBtn', ticketBadge: 'sadmModTicketBadge',
         }} />
         <div id="preact-superadmin-console-root" />
-      </section>
+      </AppSection>
 
       {/* Payroll — admin + manager */}
-      <section class="app-section" id="s-payroll">
+      <AppSection id="s-payroll">
         <ProfilePill ids={{
           profileBtn: 'admPayProfileBtn', avatar: 'admPayProfileAvatar',
           profileName: 'admPayProfileName', profileRole: 'admPayProfileRole',
@@ -221,10 +222,10 @@ export default function SharedSections() {
           ticketBtn: 'admPayTicketBtn', ticketBadge: 'admPayTicketBadge',
         }} />
         <div id="preact-payroll-root" />
-      </section>
+      </AppSection>
 
       {/* My Profile — every role */}
-      <section class="app-section" id="s-profile">
+      <AppSection id="s-profile">
         <ProfilePill ids={{
           profileBtn: 'admProfProfileBtn', avatar: 'admProfProfileAvatar',
           profileName: 'admProfProfileName', profileRole: 'admProfProfileRole',
@@ -233,10 +234,10 @@ export default function SharedSections() {
           ticketBtn: 'admProfTicketBtn', ticketBadge: 'admProfTicketBadge',
         }} />
         <div id="preact-profile-root" />
-      </section>
+      </AppSection>
 
       {/* Settings */}
-      <section class="app-section" id="s-settings">
+      <AppSection id="s-settings">
         <ProfilePill ids={{
           profileBtn: 'admStgProfileBtn', avatar: 'admStgProfileAvatar',
           profileName: 'admStgProfileName', profileRole: 'admStgProfileRole',
@@ -350,7 +351,7 @@ export default function SharedSections() {
             </div>
           </div>
         </div>
-      </section>
+      </AppSection>
 
       <AboutSection />
     </>

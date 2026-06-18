@@ -13,6 +13,7 @@
  */
 
 import { ProfilePill } from '@shared/ProfilePill';
+import { AppSection } from './AppSection';
 
 /** Right-aligned wrapper over the reusable, self-populating pill. */
 function MgrProfilePill() {
@@ -27,21 +28,21 @@ export default function ManagerSections() {
   return (
     <>
       {/* Manager — Department Overview */}
-      <section class="app-section" id="s-mgr-overview" data-role="manager">
+      <AppSection id="s-mgr-overview" role="manager">
         {/* NOTE: profile pill must stay in HTML — wired by nav.js badge system */}
         <MgrProfilePill />
         <div id="preact-mgr-overview-root" />
-      </section>
+      </AppSection>
 
       {/* Manager — Department Employees */}
-      <section class="app-section" id="s-mgr-employees" data-role="manager">
+      <AppSection id="s-mgr-employees" role="manager">
         <div id="preact-mgr-employees-root" />
-      </section>
+      </AppSection>
 
       {/* Manager — Pending Leaves */}
-      <section class="app-section" id="s-mgr-leaves" data-role="manager">
+      <AppSection id="s-mgr-leaves" role="manager">
         <div id="preact-mgr-leaves-root" />
-      </section>
+      </AppSection>
     </>
   );
 }

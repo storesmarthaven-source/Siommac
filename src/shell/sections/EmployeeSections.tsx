@@ -17,6 +17,7 @@
  */
 
 import { ProfilePill } from '@shared/ProfilePill';
+import { AppSection } from './AppSection';
 
 /** Right-aligned wrapper over the reusable, self-populating pill. */
 function EmpProfilePill() {
@@ -30,7 +31,7 @@ function EmpProfilePill() {
 /** Employee attendance home — the main employee dashboard. */
 function EmpAttendanceSection() {
   return (
-    <section class="app-section" id="s-emp-attendance" data-role="employee">
+    <AppSection id="s-emp-attendance" role="employee">
 
       {/* AttendanceDashboard Preact controller — headless */}
       <div id="preact-att-dashboard-ctrl" style="display:none;" aria-hidden="true" />
@@ -168,7 +169,7 @@ function EmpAttendanceSection() {
         </button>
       </div>
 
-    </section>
+    </AppSection>
   );
 }
 
@@ -178,19 +179,19 @@ export default function EmployeeSections() {
       <EmpAttendanceSection />
 
       {/* Employee — Leave */}
-      <section class="app-section" id="s-emp-leave" data-role="employee">
+      <AppSection id="s-emp-leave" role="employee">
         <div id="preact-emp-leave-root" />
-      </section>
+      </AppSection>
 
       {/* Employee — My History */}
-      <section class="app-section" id="s-emp-history" data-role="employee">
+      <AppSection id="s-emp-history" role="employee">
         <div id="preact-emp-history-root" />
-      </section>
+      </AppSection>
 
       {/* Employee — My Payslips */}
-      <section class="app-section" id="s-emp-payroll" data-role="employee">
+      <AppSection id="s-emp-payroll" role="employee">
         <div id="preact-emp-payroll-root" />
-      </section>
+      </AppSection>
     </>
   );
 }

@@ -21,6 +21,7 @@
  */
 
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
+import { AppSection } from './AppSection';
 import { ProfilePill } from '@shared/ProfilePill';
 
 // ── Admin profile pill — thin right-aligned wrapper over the reusable pill ────
@@ -437,7 +438,7 @@ function PayrollSettingsModal() {
 
 function AdminDashboardSection() {
   return (
-    <section class="app-section" id="s-adm-dashboard" data-role="admin">
+    <AppSection id="s-adm-dashboard" role="admin">
 
       <div class="dash-overview-panel">
         <div class="dash-panel-content">
@@ -579,7 +580,7 @@ function AdminDashboardSection() {
         </div>
 
       </div>{/* /.dash-widget-grid */}
-    </section>
+    </AppSection>
   );
 }
 
@@ -591,46 +592,46 @@ export default function AdminSections() {
       <AdminDashboardSection />
 
       {/* Admin — Employees CRUD */}
-      <section class="app-section" id="s-adm-employees" data-role="admin">
+      <AppSection id="s-adm-employees" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admEmpProfileBtn', avatar: 'admEmpProfileAvatar', profileName: 'admEmpProfileName', profileRole: 'admEmpProfileRole', notifBtn: 'admEmpNotifBtn', notifBadge: 'admEmpNotifBadge', msgBtn: 'admEmpMsgBtn', msgBadge: 'admEmpMsgBadge', ticketBtn: 'admEmpTicketBtn', ticketBadge: 'admEmpTicketBadge' }} />
         <div id="preact-adm-employees-root" />
-      </section>
+      </AppSection>
 
       {/* Departments CRUD — superadmin only (nav entry only in superadmin SECTION_DEFS) */}
-      <section class="app-section" id="s-adm-departments" data-role="superadmin">
+      <AppSection id="s-adm-departments" role="superadmin">
         <AdminProfilePill ids={{ profileBtn: 'admDeptProfileBtn', avatar: 'admDeptProfileAvatar', profileName: 'admDeptProfileName', profileRole: 'admDeptProfileRole', notifBtn: 'admDeptNotifBtn', notifBadge: 'admDeptNotifBadge', msgBtn: 'admDeptMsgBtn', msgBadge: 'admDeptMsgBadge', ticketBtn: 'admDeptTicketBtn', ticketBadge: 'admDeptTicketBadge' }} />
         <div id="preact-adm-departments-root" />
-      </section>
+      </AppSection>
 
       {/* Admin — Project Sites CRUD */}
-      <section class="app-section" id="s-adm-projects" data-role="admin">
+      <AppSection id="s-adm-projects" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admProjProfileBtn', avatar: 'admProjProfileAvatar', profileName: 'admProjProfileName', profileRole: 'admProjProfileRole', notifBtn: 'admProjNotifBtn', notifBadge: 'admProjNotifBadge', msgBtn: 'admProjMsgBtn', msgBadge: 'admProjMsgBadge', ticketBtn: 'admProjTicketBtn', ticketBadge: 'admProjTicketBadge' }} />
         <div id="preact-project-sites-root" />
-      </section>
+      </AppSection>
 
       {/* HSE — incidents + PPE Manager (admin/manager/superadmin). The HSE module
           renders the profile pill inside its own page header (hse* ids). */}
-      <section class="app-section" id="s-hse" data-role="admin">
+      <AppSection id="s-hse" role="admin">
         <div id="preact-hse-root" />
-      </section>
+      </AppSection>
 
       {/* Admin — Attendance Records */}
-      <section class="app-section" id="s-adm-attendance" data-role="admin">
+      <AppSection id="s-adm-attendance" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admAttProfileBtn', avatar: 'admAttProfileAvatar', profileName: 'admAttProfileName', profileRole: 'admAttProfileRole', notifBtn: 'admAttNotifBtn', notifBadge: 'admAttNotifBadge', msgBtn: 'admAttMsgBtn', msgBadge: 'admAttMsgBadge', ticketBtn: 'admAttTicketBtn', ticketBadge: 'admAttTicketBadge' }} />
         <div id="preact-attendance-root" />
-      </section>
+      </AppSection>
 
       {/* Admin — Leave Applications */}
-      <section class="app-section" id="s-adm-leaves" data-role="admin">
+      <AppSection id="s-adm-leaves" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admLvProfileBtn', avatar: 'admLvProfileAvatar', profileName: 'admLvProfileName', profileRole: 'admLvProfileRole', notifBtn: 'admLvNotifBtn', notifBadge: 'admLvNotifBadge', msgBtn: 'admLvMsgBtn', msgBadge: 'admLvMsgBadge', ticketBtn: 'admLvTicketBtn', ticketBadge: 'admLvTicketBadge' }} />
         <div id="preact-admin-leave-root" />
-      </section>
+      </AppSection>
 
       {/* Admin — Hourly Rates */}
-      <section class="app-section" id="s-adm-rates" data-role="admin">
+      <AppSection id="s-adm-rates" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admRatesProfileBtn', avatar: 'admRatesProfileAvatar', profileName: 'admRatesProfileName', profileRole: 'admRatesProfileRole', notifBtn: 'admRatesNotifBtn', notifBadge: 'admRatesNotifBadge', msgBtn: 'admRatesMsgBtn', msgBadge: 'admRatesMsgBadge', ticketBtn: 'admRatesTicketBtn', ticketBadge: 'admRatesTicketBadge' }} />
         <div id="preact-hourly-rates-root" />
-      </section>
+      </AppSection>
 
       {/* Payroll-related modals — included here as they are wired by admin sections */}
       <StatutoryRatesModal />
