@@ -43,7 +43,10 @@
   font-size: 1.4rem; color: var(--siomac-red);
   background: rgba(228,12,12,0.07);
   width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  /* !important: FontAwesome (unlayered) sets display:var(--fa-display) and wins
+     over any @layer, so the hat would render top-left. Layered !important
+     reverses that and centers the glyph. */
+  display: flex !important; align-items: center !important; justify-content: center !important;
 }
 .overview-title-section h2 {
   font-size: 1.35rem; font-weight: 700; color: var(--siomac-navy); letter-spacing: -0.2px;

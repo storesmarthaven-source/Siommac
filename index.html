@@ -47,6 +47,24 @@
   <!-- Bootstrap CSS is bundled via npm into @layer bootstrap (see src/styles/index.css);
        only the Bootstrap JS bundle is loaded from CDN below. -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+  <!-- Global FontAwesome icon-chip centering. FA's all.min.css is UNLAYERED and
+       sets `display: var(--fa-display, inline-block)`, which beats every @layer
+       rule in the app cascade (unlayered always wins over layered). This block
+       is also unlayered AND loads after FA, so it wins by normal source order —
+       making it the single place that guarantees any sized FA icon chip centers
+       its glyph, app-wide, with no per-component overrides. -->
+  <style>
+    .overview-title-section i,
+    .ppe-signal > i, .ppe-insight i, .ppe-record > i, .ppe-step i,
+    .ppe-mini-card i, .ppe-matrix-card i, .ppe-title-icon i,
+    .stat-card-icon, .icon-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1;
+    }
+  </style>
   <!-- App type system: Inter (UI) + IBM Plex Mono (numerics/IDs). IBM Plex Sans retained for the sidebar nav. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
