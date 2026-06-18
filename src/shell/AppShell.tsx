@@ -59,6 +59,11 @@ function Sidebar() {
         <ul class="sidebar-menu" id="sidebarMenu" />
       </div>
 
+      <div class="sidebar-session hidden" id="sessionTimer" title="Session time remaining">
+        <i class="fas fa-clock" />
+        <span class="sidebar-session-label">Session</span>
+        <span class="sidebar-session-time" id="sessionTimerText">--</span>
+      </div>
       <div class="sidebar-logout">
         <button id="logoutBtn" title="Logout">
           <i class="fas fa-sign-out-alt" /> <span id="logoutText">Logout</span>
