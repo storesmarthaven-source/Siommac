@@ -91,6 +91,8 @@ export default defineConfig({
       { find: '@lib/permissions',   replacement: resolve(__dirname, 'src/lib/permissions')   },
       { find: '@lib/moduleRegistry', replacement: resolve(__dirname, 'src/lib/moduleRegistry') },
       { find: '@lib/navVisibility',  replacement: resolve(__dirname, 'src/lib/navVisibility')  },
+      { find: /^@lib\/workflow$/,    replacement: resolve(__dirname, 'src/lib/workflow/index.ts') },
+      { find: /^@lib\/workflow\/(.+)$/, replacement: resolve(__dirname, 'src/lib/workflow/$1') },
 
       // ── @store sub-paths (BEFORE bare @store) ─────────────────────────────
       { find: '@store/data',          replacement: resolve(__dirname, 'src/store/data')          },

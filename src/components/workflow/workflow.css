@@ -1,0 +1,78 @@
+/**
+ * src/components/workflow/workflow.css — reusable workflow UI primitives.
+ * Siomac navy/red, wrapped in @layer sections. Reuses .hse-drawer*/.hse-btn/
+ * .vt-pill from the HSE module; adds the .wf-* surfaces (inbox, audit, handoffs,
+ * stages, route).
+ */
+@layer sections {
+
+/* ── Generic list rows (inbox / audit / handoffs share the shape) ── */
+.wf-task, .wf-audit-row, .wf-handoff {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 11px; align-items: center;
+  padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card);
+}
+.wf-task { cursor: pointer; transition: border-color .15s, background .15s; }
+.wf-task:hover { border-color: var(--siomac-navy); background: var(--bg-subtle, #F8FAFE); }
+.wf-task > i, .wf-audit-row > i, .wf-handoff > i {
+  width: 34px; height: 34px; display: grid; place-items: center !important;
+  border-radius: 10px; background: rgba(37,99,235,.1); color: #2563eb; font-size: 0.85rem;
+}
+.wf-handoff > i { background: rgba(228,12,12,.08); color: var(--siomac-red); }
+.wf-task-text, .wf-audit-text, .wf-handoff-text { min-width: 0; }
+.wf-task strong, .wf-audit-text strong, .wf-handoff-text strong { display: block; color: var(--siomac-navy); font-size: 0.8rem; }
+.wf-task span:not(.vt-pill), .wf-audit-text span, .wf-handoff-text span { display: block; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; }
+.wf-audit-meta { color: var(--text-muted); font-size: 0.68rem; white-space: nowrap; }
+
+.wf-inbox, .wf-audit, .wf-handoffs { display: grid; gap: 10px; }
+
+/* ── Empty states ── */
+.wf-empty {
+  display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center;
+  padding: 18px; border: 1px dashed var(--border); border-radius: 12px; color: var(--text-muted);
+}
+.wf-empty > i { font-size: 1.3rem; color: var(--text-muted); }
+.wf-empty strong { display: block; color: var(--siomac-navy); font-size: 0.84rem; }
+.wf-empty p { font-size: 0.74rem; }
+
+/* ── Decision panel (inline approve/return/reject) ── */
+.wf-decision { border: 1px solid var(--border); border-radius: 14px; background: var(--bg-subtle, #F8FAFE); padding: 14px; display: grid; gap: 12px; }
+.wf-decision-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.wf-decision-head strong { display: block; color: var(--siomac-navy); font-size: 0.84rem; }
+.wf-decision-head span { color: var(--text-muted); font-size: 0.72rem; }
+.wf-x { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; }
+.wf-decision-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ── Evidence checklist ── */
+.wf-evidence-list { display: grid; gap: 8px; }
+.wf-evidence-row {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer;
+}
+.wf-evidence-row input { accent-color: var(--siomac-navy); width: 16px; height: 16px; }
+.wf-evidence-row strong { display: block; color: var(--siomac-navy); font-size: 0.76rem; }
+.wf-evidence-row em { color: var(--text-muted); font-size: 0.68rem; font-style: normal; }
+
+.wf-comment {
+  width: 100%; min-height: 64px; resize: vertical; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font: inherit; font-size: 0.8rem; color: var(--siomac-navy); background: var(--bg-card); outline: none;
+}
+.wf-comment:focus { border-color: var(--siomac-navy); }
+
+/* ── Drawer sections (stages + route) ── */
+.wf-section { display: grid; gap: 8px; }
+.wf-section-title { display: flex; align-items: center; gap: 7px; color: var(--siomac-navy); font-size: 0.78rem; font-weight: 700; }
+.wf-section-title i { color: var(--siomac-red); }
+.wf-stages { display: grid; gap: 6px; }
+.wf-stage { padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }
+.wf-stage.active { border-color: var(--siomac-navy); background: rgba(27,45,84,.04); }
+.wf-stage b { display: block; color: var(--siomac-navy); font-size: 0.76rem; }
+.wf-stage span { color: var(--text-muted); font-size: 0.68rem; }
+.wf-route { display: grid; gap: 6px; }
+.wf-route-step {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center;
+  padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card);
+}
+.wf-route-step b { color: var(--siomac-navy); font-size: 0.76rem; }
+.wf-route-step span:not(.vt-pill) { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.68rem; }
+
+}
