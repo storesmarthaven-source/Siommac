@@ -365,13 +365,14 @@ router.post('/listUsers', async c => {
   // Pure employees have the fixed self-service baseline (no configurable access)
   // and are managed on their own page — exclude them, and superadmin, from the
   // accounts/permissions view, which is for configurable roles only.
-  const [{ data, error }, { data: overrides }] = await Promise.all([
+  const [{ data, error }, { data: overrides }, { data: depts }] = await Promise.all([
     sb.from('app_users')
-      .select('id, username, full_name, role, email, position, status, profile_image')
+      .select('id, username, full_name, role, email, position, status, profile_image, department_id')
       .not('role', 'in', '("superadmin","employee")')
       .order('role')
       .order('full_name'),
     sb.from('user_permissions').select('user_id, granted'),
+    sb.from('departments').select('id, name'),
   ]);
   if (error) {
     console.error('[superadmin/listUsers] error:', error.message);
@@ -385,22 +386,24 @@ router.post('/listUsers', async c => {
     tally.set(o.user_id, t);
   }
   // Resolve profile photo signed URLs in parallel.
-  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; position: string | null; status: string; profile_image: string | null }[];
+  const deptMap = Object.fromEntries(((depts ?? []) as { id: string; name: string }[]).map(d => [d.id, d.name]));
+  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; position: string | null; status: string; profile_image: string | null; department_id: string | null }[];
   const photos = await Promise.all(rows.map(u => getProfileSignedUrl(u.id, u.profile_image)));
   const users = rows.map((u, i) => {
     const t = tally.get(u.id) ?? { grants: 0, denials: 0 };
     const access = t.denials > 0 ? 'Restricted' : t.grants > 0 ? 'Extended' : 'Role default';
     return {
-      id:       u.id,
-      username: u.username,
-      fullName: u.full_name,
-      role:     u.role,
-      email:    u.email ?? '',
-      position: u.position ?? '',
-      active:   u.status === 'active',
+      id:         u.id,
+      username:   u.username,
+      fullName:   u.full_name,
+      role:       u.role,
+      email:      u.email ?? '',
+      position:   u.position ?? '',
+      department: deptMap[u.department_id ?? ''] ?? '',
+      active:     u.status === 'active',
       access,
       overrideCount: t.grants + t.denials,
-      profileImage: photos[i] ?? '',
+      profileImage:  photos[i] ?? '',
     };
   });
   return c.json({ success: true, users });

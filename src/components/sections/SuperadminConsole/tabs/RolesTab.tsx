@@ -10,15 +10,20 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo, useEffect } from 'preact/hooks';
-import { StatCard } from '../../Employees/StatCard';
+import { useState, useMemo } from 'preact/hooks';
+import { Modal } from '@shared/Modal';
 import { confirm } from '@shared/ConfirmDialog';
 import { toast } from '@store/ui';
 import { permissionGroups } from '@lib/permissions';
-import type { RoleRow } from '@lib/superadminApi';
+import type { RoleRow, ConsoleUser } from '@lib/superadminApi';
 import {
   useRoles, useRolePermissions, useCreateRole, useDeleteRole, useSetRolePermission,
+  useConsoleUsers,
 } from '../hooks';
+
+function initialsOf(name: string): string {
+  return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
 
 const RESOURCE_LABEL: Record<string, string> = {
   employees: 'Employees', departments: 'Departments', attendance: 'Attendance',
@@ -119,86 +124,177 @@ function RolePermMatrix({ role }: { role: RoleRow }): VNode {
 
 // ── Tab root ──────────────────────────────────────────────────────────────────
 
+// ── Role-summary card ─────────────────────────────────────────────────────────
+
+function RoleSummaryCard({ role, members, onManage }: {
+  role: RoleRow; members: ConsoleUser[]; onManage: () => void;
+}): VNode {
+  const top = members.slice(0, 2);
+  return (
+    <div class="vt-rolecard">
+      <div class="vt-rolecard-head">
+        <span class="vt-rolecard-title">
+          {role.label}
+          {role.isSystem && <span class="vt-rolecard-sys">system</span>}
+        </span>
+        <button type="button" class="vt-rolecard-seeall" onClick={onManage}>See all</button>
+      </div>
+      <div class="vt-rolecard-members">
+        {top.length === 0
+          ? <div class="vt-rolecard-empty">No users with this role.</div>
+          : top.map(m => (
+            <div class="vt-member" key={m.id}>
+              <span class="vt-member-avatar">{m.profileImage ? <img src={m.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsOf(m.fullName)}</span>
+              <span class="vt-member-info"><span class="vt-member-name">{m.fullName}</span></span>
+              <span class={`vt-pill ${m.active ? 'is-on' : 'is-off'}`}>{m.active ? 'Enabled' : 'Disabled'}</span>
+            </div>
+          ))}
+      </div>
+      <button type="button" class="vt-rolecard-manage" onClick={onManage}>
+        <i class="fas fa-gear" /> Manage
+      </button>
+    </div>
+  );
+}
+
+// ── Tab root (VANTUS Roles layout) ────────────────────────────────────────────
+
 export function RolesTab(): VNode {
   const rolesQ = useRoles(true);
+  const usersQ = useConsoleUsers(true);
   const del = useDeleteRole();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating]     = useState(false);
+  const [manageRole, setManageRole] = useState<RoleRow | null>(null);
+  const [search, setSearch]         = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  // 'employee' is the fixed self-service baseline — it has no configurable
-  // permission set, so it never appears in the Roles tab.
-  const roles = (rolesQ.data ?? []).filter(r => r.name !== 'employee');
-  useEffect(() => { if (roles.length && !selected) setSelected(roles[0]?.name ?? null); }, [roles, selected]);
-  const role = roles.find(r => r.name === selected) ?? null;
+  // 'employee' is the fixed self-service baseline — never shown as a role here.
+  const roles = (rolesQ.data ?? []).filter(r => r.name !== 'employee' && r.name !== 'superadmin');
+  const users = usersQ.data ?? [];
 
-  const stats = useMemo(() => {
-    const total  = roles.length;
-    const system = roles.filter(r => r.isSystem).length;
-    const users  = roles.reduce((s, r) => s + (r.userCount || 0), 0);
-    return { total, system, custom: total - system, users };
-  }, [roles]);
+  const byRole = useMemo(() => {
+    const m = new Map<string, ConsoleUser[]>();
+    for (const u of users) (m.get(u.role) ?? m.set(u.role, []).get(u.role)!).push(u);
+    return m;
+  }, [users]);
+
+  const roleLabel = (name: string) => roles.find(r => r.name === name)?.label ?? name;
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return users.filter(u =>
+      (roleFilter === 'all' || u.role === roleFilter) &&
+      (!q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.department.toLowerCase().includes(q)));
+  }, [users, search, roleFilter]);
 
   if (rolesQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading roles…</div>;
   if (rolesQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load roles. <button type="button" onClick={() => void rolesQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
 
   return (
     <div>
-    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
-      <StatCard icon="fa-user-shield" label="Total Roles"    value={stats.total}  color="#2563eb" loading={rolesQ.isLoading} />
-      <StatCard icon="fa-lock"        label="System Roles"   value={stats.system} color="#7c3aed" loading={rolesQ.isLoading} />
-      <StatCard icon="fa-pen-ruler"   label="Custom Roles"   value={stats.custom} color="#16a34a" loading={rolesQ.isLoading} />
-      <StatCard icon="fa-users"       label="Assigned Users" value={stats.users}  color="#d97706" loading={rolesQ.isLoading} />
-    </div>
-    <div style={{ display: 'flex', gap: '16px', minHeight: '440px' }}>
-      {/* Roles list */}
-      <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-        <button type="button" class="btn btn-danger-primary btn-sm" style={{ marginBottom: '10px' }} onClick={() => setCreating(v => !v)}>
-          <i class="fas fa-plus" /> New role
-        </button>
-        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', overflow: 'hidden', flex: 1 }}>
-          {roles.map(r => {
-            const isSel = r.name === selected;
-            return (
-              <button key={r.name} type="button" onClick={() => setSelected(r.name)} style={{ width: '100%', textAlign: 'left', padding: '11px 14px', background: isSel ? 'rgba(27,45,84,0.06)' : 'transparent', borderBottom: '1px solid var(--border)', border: 'none', borderLeft: isSel ? '3px solid var(--siomac-navy)' : '3px solid transparent', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: isSel ? '700' : '500', color: isSel ? 'var(--siomac-navy)' : 'var(--text-primary)' }}>{r.label}</span>
-                  {r.isSystem && <span style={{ fontSize: '10px', background: 'rgba(27,45,84,0.1)', color: 'var(--siomac-navy)', padding: '1px 6px', borderRadius: '8px' }}>system</span>}
-                  {r.protected && !r.isSystem && <i class="fas fa-lock" style={{ fontSize: '10px', color: 'var(--text-muted)' }} title="Protected" />}
-                </div>
-                <div class="stg-switch-desc" style={{ marginTop: '1px' }}>{r.userCount} user{r.userCount === 1 ? '' : 's'}</div>
-              </button>
-            );
-          })}
+      {creating && <div style={{ marginBottom: '16px' }}><CreateRoleForm onDone={() => setCreating(false)} /></div>}
+
+      {/* Roles & members */}
+      <div class="vt-section">
+        <div class="vt-section-head">
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-user-shield" /></span>
+            <div>
+              <div class="vt-section-title">Roles &amp; members</div>
+              <div class="vt-section-sub">Each role unlocks specific menus and permissions. System roles are permanent.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger-primary btn-sm" onClick={() => setCreating(v => !v)}>
+            <i class="fas fa-plus" /> New role
+          </button>
+        </div>
+        <div class="vt-rolecards">
+          {roles.map(r => (
+            <RoleSummaryCard key={r.name} role={r} members={byRole.get(r.name) ?? []}
+              onManage={() => { setRoleFilter(r.name); setManageRole(r); }} />
+          ))}
         </div>
       </div>
 
-      {/* Detail / matrix */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {creating && <CreateRoleForm onDone={() => setCreating(false)} />}
-        {!role ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>Select a role</div>
-        ) : (
-          <>
-            <div class="stg-switch-group" style={{ padding: '12px 0', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
+      {/* User accounts */}
+      <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
+        <span class="vt-section-icon"><i class="fas fa-users-gear" /></span>
+        <div>
+          <div class="vt-section-title">User accounts</div>
+          <div class="vt-section-sub">Everyone with a configurable role.</div>
+        </div>
+      </div>
+
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ flex: '1 1 260px' }}>
+          <i class="fas fa-search" aria-hidden="true" />
+          <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search by name, email or department…" aria-label="Search accounts" />
+        </div>
+      </div>
+
+      <div class="vt-tabs">
+        <button type="button" class={`vt-tab${roleFilter === 'all' ? ' active' : ''}`} onClick={() => setRoleFilter('all')}>
+          All <span class="vt-tab-count">{users.length}</span>
+        </button>
+        {roles.map(r => (
+          <button key={r.name} type="button" class={`vt-tab${roleFilter === r.name ? ' active' : ''}`} onClick={() => setRoleFilter(r.name)}>
+            {r.label} <span class="vt-tab-count">{byRole.get(r.name)?.length ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      <div class="vt-result-count">Showing {filtered.length} of {users.length} account{users.length === 1 ? '' : 's'}</div>
+
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr><th>Account</th><th>Role</th><th>Department</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colspan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px' }}>No accounts match.</td></tr>
+              ) : filtered.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <span class="vt-cell-account-text">
+                      <span class="vt-cell-name">{u.fullName}</span>
+                      {u.position && <span class="vt-cell-subtext">{u.position}</span>}
+                    </span>
+                  </td>
+                  <td>{roleLabel(u.role)}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{u.department || '—'}</td>
+                  <td><span class={`vt-pill ${u.active ? 'is-on' : 'is-off'}`}>{u.active ? 'Enabled' : 'Disabled'}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Manage role permissions */}
+      <Modal open={!!manageRole} onClose={() => setManageRole(null)} title={manageRole ? `Manage — ${manageRole.label}` : 'Manage role'} size="lg">
+        {manageRole && (
+          <div>
+            <div class="stg-switch-group" style={{ padding: '0 0 12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
               <div>
-                <div class="stg-switch-label">{role.label} {role.isSystem && <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>(system)</span>}</div>
-                <div class="stg-switch-desc">{role.description || 'No description'} · {role.userCount} user{role.userCount === 1 ? '' : 's'}</div>
+                <div class="stg-switch-label">{manageRole.label} {manageRole.isSystem && <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>(system)</span>}</div>
+                <div class="stg-switch-desc">{manageRole.description || 'No description'} · {manageRole.userCount} user{manageRole.userCount === 1 ? '' : 's'}</div>
               </div>
-              {!role.isSystem && !role.protected && (
+              {!manageRole.isSystem && !manageRole.protected && (
                 <button type="button" class="btn btn-sm btn-danger has-label" disabled={del.isPending}
                   onClick={async () => {
-                    const ok = await confirm({ title: `Delete "${role.label}"?`, message: role.userCount > 0 ? `${role.userCount} user(s) still have this role — reassign them first.` : 'This permanently deletes the role.', variant: 'danger', confirmLabel: 'Delete role' });
-                    if (ok) del.mutate(role.name, { onSuccess: r => { if (r.success) setSelected(null); } });
+                    const ok = await confirm({ title: `Delete "${manageRole.label}"?`, message: manageRole.userCount > 0 ? `${manageRole.userCount} user(s) still have this role — reassign them first.` : 'This permanently deletes the role.', variant: 'danger', confirmLabel: 'Delete role' });
+                    if (ok) del.mutate(manageRole.name, { onSuccess: r => { if (r.success) setManageRole(null); } });
                   }}>
                   <i class={del.isPending ? 'fas fa-spinner fa-spin' : 'fas fa-trash'} /> Delete
                 </button>
               )}
             </div>
-            <RolePermMatrix role={role} />
-          </>
+            <RolePermMatrix role={manageRole} />
+          </div>
         )}
-      </div>
-    </div>
+      </Modal>
     </div>
   );
 }

@@ -132,6 +132,8 @@ export interface ConsoleUser {
   email:         string;
   /** Job title / position (shown under the name). */
   position:      string;
+  /** Department name ('' if unassigned). */
+  department:    string;
   active:        boolean;
   /** Derived access label: 'Role default' | 'Extended' | 'Restricted'. */
   access:        string;
