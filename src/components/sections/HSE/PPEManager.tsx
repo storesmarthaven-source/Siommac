@@ -71,44 +71,48 @@ function DashboardTab(): VNode {
         <StatCard icon="fa-box-open"      label="Critical Stock" value={6} color="#dc2626" />
       </div>
 
-      {/* Live control signals — navy panel under the summary cards, white
-          record cards laid out horizontally (no teal/green accent). */}
-      <aside class="ppe-signals-panel">
-        <h4><i class="fas fa-satellite-dish" /> Live Control Signals</h4>
-        <div class="ppe-signals-row">
-          <div class="ppe-signal"><i class="fas fa-triangle-exclamation" /><div><strong>Respirator evidence gap</strong><span>2 employees require fit-test evidence before issue.</span></div><span class="ppe-signal-tag is-high">High</span></div>
-          <div class="ppe-signal"><i class="fas fa-warehouse" /><div><strong>Warehouse stock action</strong><span>Ear protection and gloves below reorder threshold.</span></div><span class="ppe-signal-tag is-stock">Stock</span></div>
-          <div class="ppe-signal"><i class="fas fa-clipboard-check" /><div><strong>Inspection cadence</strong><span>Harness checks are due this week for Site B.</span></div><span class="ppe-signal-tag is-due">Due</span></div>
+      {/* Compliance Overview (left) + Live Control Signals as a right sidebar. */}
+      <div class="ppe-screen-grid">
+        <div class="ppe-screen-main">
+          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
+            <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
+            <div>
+              <div class="vt-section-title">Compliance Overview</div>
+              <div class="vt-section-sub">Required vs. assigned PPE per employee, with compliance status.</div>
+            </div>
+          </div>
+          <div class="vt-table-card">
+            <div class="vt-table-scroll">
+              <table class="vt-table">
+                <thead><tr><th>Employee</th><th>Role</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
+                <tbody>
+                  {mockPpeEmployees.map(emp => {
+                    const req = required(emp.role);
+                    return (
+                      <tr key={emp.id}>
+                        <td><span class="vt-cell-name">{emp.name}</span></td>
+                        <td>{emp.role}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>{req.join(', ') || '—'}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>—</td>
+                        <td>{req.join(', ') || 'None'}</td>
+                        <td><span class={ppePillClass(req.length ? 'missing' : 'compliant')}>{req.length ? 'Missing PPE' : 'Compliant'}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </aside>
-      <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-        <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
-        <div>
-          <div class="vt-section-title">Compliance Overview</div>
-          <div class="vt-section-sub">Required vs. assigned PPE per employee, with compliance status.</div>
-        </div>
-      </div>
-      <div class="vt-table-card">
-        <div class="vt-table-scroll">
-          <table class="vt-table">
-            <thead><tr><th>Employee</th><th>Role</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
-            <tbody>
-              {mockPpeEmployees.map(emp => {
-                const req = required(emp.role);
-                return (
-                  <tr key={emp.id}>
-                    <td><span class="vt-cell-name">{emp.name}</span></td>
-                    <td>{emp.role}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>{req.join(', ') || '—'}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>—</td>
-                    <td>{req.join(', ') || 'None'}</td>
-                    <td><span class={ppePillClass(req.length ? 'missing' : 'compliant')}>{req.length ? 'Missing PPE' : 'Compliant'}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+
+        <aside class="ppe-signals-panel">
+          <h4><i class="fas fa-satellite-dish" /> Live Control Signals</h4>
+          <div class="ppe-signals-list">
+            <div class="ppe-signal"><i class="fas fa-triangle-exclamation" /><div><strong>Respirator evidence gap</strong><span>2 employees require fit-test evidence before issue.</span></div><span class="ppe-signal-tag is-high">High</span></div>
+            <div class="ppe-signal"><i class="fas fa-warehouse" /><div><strong>Warehouse stock action</strong><span>Ear protection and gloves below reorder threshold.</span></div><span class="ppe-signal-tag is-stock">Stock</span></div>
+            <div class="ppe-signal"><i class="fas fa-clipboard-check" /><div><strong>Inspection cadence</strong><span>Harness checks are due this week for Site B.</span></div><span class="ppe-signal-tag is-due">Due</span></div>
+          </div>
+        </aside>
       </div>
     </div>
   );
