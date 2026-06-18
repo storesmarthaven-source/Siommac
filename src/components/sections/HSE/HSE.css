@@ -315,32 +315,33 @@
 .ppe-hero-panel .stat-card-icon.red   { background: rgba(255,80,80,.28);  color: #ffc0c0; }
 .ppe-hero-panel .stat-card-icon.gold  { background: rgba(255,183,18,.32); color: #ffe6b3; }
 
-/* Live control signals — full-width row inside the dark hero, below the cards. */
-.ppe-hero-signals { position: relative; z-index: 2; margin-top: 18px; }
-.ppe-hero-signals-head {
+/* Live control signals — horizontal row in the page body, under the summary
+   cards. Light surface (same accent colors as before: red High, amber Stock/Due). */
+.ppe-signals { margin-bottom: 18px; }
+.ppe-signals-head {
   display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-  color: #fff; font-size: 0.86rem; font-weight: 700;
+  color: var(--siomac-navy); font-size: 0.86rem; font-weight: 700;
 }
-.ppe-hero-signals-head i { color: #ffb4b4; }
-.ppe-hero-signals-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ppe-signals-head i { color: var(--siomac-red); }
+.ppe-signals-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .ppe-signal {
   display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center;
-  padding: 11px 13px; border-radius: 13px;
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  padding: 12px 14px; border-radius: 13px;
+  background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-card);
 }
 .ppe-signal > i {
   width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px;
-  background: rgba(255,255,255,.12); color: #fff; font-size: 0.85rem;
+  background: var(--bg-subtle, #F1F4F8); color: var(--siomac-navy); font-size: 0.85rem;
 }
-.ppe-signal strong { display: block; color: #fff; font-size: 0.8rem; }
-.ppe-signal span { display: block; color: rgba(255,255,255,.66); font-size: 0.72rem; line-height: 1.35; }
+.ppe-signal strong { display: block; color: var(--siomac-navy); font-size: 0.8rem; }
+.ppe-signal span { display: block; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; }
 .ppe-signal-tag {
   font-size: 0.66rem; font-weight: 700; border-radius: 20px; padding: 3px 10px; white-space: nowrap;
 }
-.ppe-signal-tag.is-high  { background: rgba(228,12,12,.22);  color: #ffc0c0; }
-.ppe-signal-tag.is-stock { background: rgba(255,183,18,.22); color: #ffe6b3; }
-.ppe-signal-tag.is-due   { background: rgba(255,183,18,.22); color: #ffe6b3; }
-@media (max-width: 1180px) { .ppe-hero-signals-list { grid-template-columns: 1fr; } }
+.ppe-signal-tag.is-high  { background: rgba(228,12,12,.12);  color: var(--siomac-red); }
+.ppe-signal-tag.is-stock { background: rgba(217,119,6,.14);  color: #b45309; }
+.ppe-signal-tag.is-due   { background: rgba(217,119,6,.14);  color: #b45309; }
+@media (max-width: 900px) { .ppe-signals-row { grid-template-columns: 1fr; } }
 
 /* Breadcrumb + edit button sit in the panel footer. */
 .ppe-hero-crumb { margin-bottom: 0; }
