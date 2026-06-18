@@ -197,39 +197,14 @@ function _swapAvatarImg(el: HTMLElement | ProfileAvEl, url: string, initial: str
 
 // ── _syncPillAvatars ──────────────────────────────────────────────────────────
 
-function _syncPillAvatars(result: Record<string, unknown>): void {
-  const as       = _AppState();
-  const fullName = (as?.get('currentFullName') ?? as?.get('currentUser') ?? '?') as string;
-  const username = (as?.get('currentUser') ?? '') as string;
-  const role     = (as?.get('currentRole') ?? 'admin') as string;
-  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-  const initial   = fullName.trim().charAt(0).toUpperCase();
-  const img       = (result['profileImage'] as string) || '';
-
-  function _pill(pfx: string, fallbackName: string): void {
-    const av = document.getElementById(pfx + 'ProfileAvatar');
-    if (av) { if (img) _swapAvatarImg(av, img, initial, 'hdr'); else av.textContent = initial; }
-    const nm = document.getElementById(pfx + 'ProfileName');
-    if (nm) nm.textContent = fullName !== '?' ? fullName : (username || fallbackName);
-    const rl = document.getElementById(pfx + 'ProfileRole');
-    if (rl) rl.textContent = roleLabel;
-  }
-
-  const hdrAv = document.getElementById('hdrProfileAvatar');
-  if (hdrAv) { if (img) _swapAvatarImg(hdrAv, img, initial, 'hdr'); else hdrAv.textContent = initial; }
-
-  // Pinned sidebar user card (Meridian-style, H).
-  const cardAv = document.getElementById('sidebarUserCardAvatar');
-  if (cardAv) { if (img) _swapAvatarImg(cardAv, img, initial, 'hdr'); else cardAv.textContent = initial; }
-  const cardNm = document.getElementById('sidebarUserCardName');
-  if (cardNm) cardNm.textContent = fullName !== '?' ? fullName : (username || 'User');
-  const cardRl = document.getElementById('sidebarUserCardRole');
-  if (cardRl) cardRl.textContent = roleLabel;
-
-  _pill('dash', 'Admin');
-  _pill('emp',  'Employee');
-  _pill('mgr',  'Manager');
-  ['admEmp','admDept','admProj','admAtt','admLv','admRates','admPay','admProf','admStg','admAbt'].forEach(pfx => _pill(pfx, 'Admin'));
+/**
+ * Profile pills are now the self-populating reusable <ProfilePill> component
+ * (src/components/shared/ProfilePill.tsx), which reads the session store
+ * directly — so there is no per-section avatar/name population to do here.
+ * Kept as a no-op so the applySession call site stays stable.
+ */
+function _syncPillAvatars(_result: Record<string, unknown>): void {
+  /* intentionally empty — ProfilePill self-populates from the session store */
 }
 
 // ── _setAttendanceAvatar ──────────────────────────────────────────────────────

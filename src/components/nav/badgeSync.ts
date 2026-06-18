@@ -12,10 +12,6 @@
 import { getHeaderCounts } from './api';
 import { setHdrBadge, refreshNavBadges, getUser, getRole } from './navCore';
 
-// All badge element IDs grouped by type
-const NOTIF_BADGE_IDS  = ['hdrNotifBadge','empNotifBadge','mgrNotifBadge','admEmpNotifBadge','admDeptNotifBadge','admProjNotifBadge','admAttNotifBadge','admLvNotifBadge','admRatesNotifBadge','admPayNotifBadge','admProfNotifBadge','admStgNotifBadge','admAbtNotifBadge'];
-const MSG_BADGE_IDS    = ['hdrMsgBadge','empMsgBadge','mgrMsgBadge','admEmpMsgBadge','admDeptMsgBadge','admProjMsgBadge','admAttMsgBadge','admLvMsgBadge','admRatesMsgBadge','admPayMsgBadge','admProfMsgBadge','admStgMsgBadge','admAbtMsgBadge'];
-const TICKET_BADGE_IDS = ['hdrTicketBadge','empTicketBadge','mgrTicketBadge','admEmpTicketBadge','admDeptTicketBadge','admProjTicketBadge','admAttTicketBadge','admLvTicketBadge','admRatesTicketBadge','admPayTicketBadge','admProfTicketBadge','admStgTicketBadge','admAbtTicketBadge'];
 
 let _timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -44,11 +40,7 @@ export async function doHdrBadgeSync(): Promise<void> {
     const unreadNotifs = (c.notificationIds ?? [])
       .filter(id => !readIds.has(id) && !clearedIds.has(id)).length;
 
-    NOTIF_BADGE_IDS.forEach(id  => setHdrBadge(document.getElementById(id), unreadNotifs));
-    MSG_BADGE_IDS.forEach(id    => setHdrBadge(document.getElementById(id), c.messages ?? 0));
-    TICKET_BADGE_IDS.forEach(id => setHdrBadge(document.getElementById(id), c.tickets  ?? 0));
-
-    // Reusable <ProfilePill> badges — id-free, matched by data-pill-badge.
+    // Profile-pill badges — id-free, matched by data-pill-badge on every pill.
     document.querySelectorAll('[data-pill-badge="notif"]').forEach(el  => setHdrBadge(el, unreadNotifs));
     document.querySelectorAll('[data-pill-badge="msg"]').forEach(el    => setHdrBadge(el, c.messages ?? 0));
     document.querySelectorAll('[data-pill-badge="ticket"]').forEach(el => setHdrBadge(el, c.tickets  ?? 0));

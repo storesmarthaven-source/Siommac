@@ -29,16 +29,9 @@ import { setHdrBadge, refreshNavBadges, getRole, esc } from './navCore';
 import { showSection } from './navCore';
 import type { NotificationRow, NotificationType } from '@api/schemas/notification';
 
-// All notification badge element IDs (mirrors badgeSync.ts NOTIF_BADGE_IDS)
-const NOTIF_BADGE_IDS = [
-  'hdrNotifBadge','empNotifBadge','mgrNotifBadge',
-  'admEmpNotifBadge','admDeptNotifBadge','admProjNotifBadge',
-  'admAttNotifBadge','admLvNotifBadge','admRatesNotifBadge',
-  'admPayNotifBadge','admProfNotifBadge','admStgNotifBadge','admAbtNotifBadge',
-];
-
 function updateNotifBadges(count: number): void {
-  NOTIF_BADGE_IDS.forEach(id => setHdrBadge(document.getElementById(id), count));
+  // Profile-pill notif badges are id-free (data-pill-badge), set on every pill.
+  document.querySelectorAll('[data-pill-badge="notif"]').forEach(el => setHdrBadge(el, count));
 }
 
 // ── Notification type → section mapping ──────────────────────────────────────

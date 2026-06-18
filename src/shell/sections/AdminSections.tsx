@@ -23,48 +23,15 @@
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
 import { ProfilePill } from '@shared/ProfilePill';
 
-// ── Shared admin profile pill factory ────────────────────────────────────────
+// ── Admin profile pill — thin right-aligned wrapper over the reusable pill ────
+// (the `ids` arg is ignored; the shared ProfilePill is self-populating + id-free)
 
-interface AdminPillIds {
-  profileBtn:   string;
-  avatar:       string;
-  profileName:  string;
-  profileRole:  string;
-  notifBtn:     string;
-  notifBadge:   string;
-  msgBtn:       string;
-  msgBadge:     string;
-  ticketBtn:    string;
-  ticketBadge:  string;
-}
+interface AdminPillIds { [k: string]: string }
 
-function AdminProfilePill({ ids }: { ids: AdminPillIds }) {
+function AdminProfilePill(_props: { ids?: AdminPillIds }) {
   return (
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <div class="profile-notif-pill">
-        <div class="pnp-profile" id={ids.profileBtn}>
-          <div class="pnp-avatar" id={ids.avatar}>A</div>
-          <div class="pnp-info">
-            <span class="pnp-name" id={ids.profileName}>Admin</span>
-            <span class="pnp-role" id={ids.profileRole}>Administrator</span>
-          </div>
-        </div>
-        <div class="pnp-divider" />
-        <div class="pnp-icons">
-          <button class="pnp-icon-btn" id={ids.notifBtn} title="Notifications">
-            <i class="fas fa-bell" />
-            <span class="pnp-badge" id={ids.notifBadge} style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id={ids.msgBtn} title="Messages">
-            <i class="fas fa-comment-dots" />
-            <span class="pnp-badge" id={ids.msgBadge} style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id={ids.ticketBtn} title="Support Tickets">
-            <i class="fas fa-ticket-alt" />
-            <span class="pnp-badge pnp-badge-gold" id={ids.ticketBadge} style="display:none" />
-          </button>
-        </div>
-      </div>
+      <ProfilePill />
     </div>
   );
 }

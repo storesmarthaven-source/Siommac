@@ -29,49 +29,9 @@ import { mountNotificationsPanel } from './NotificationsPanel';
 import { mountMessagesPanel }      from './MessagesPanel';
 import { mountTicketsPanel }       from './TicketsPanel';
 
-// ── Header-icon / modal pairs ─────────────────────────────────────────────────
+// ── Shared header modals (one set, shared by every profile pill) ─────────────
 
-const HDR_PAIRS: Array<{ btn: string; modal: string }> = [
-  { btn: 'hdrNotifBtn',        modal: 'hdrNotifModal'   },
-  { btn: 'hdrMsgBtn',          modal: 'hdrMsgModal'     },
-  { btn: 'hdrTicketBtn',       modal: 'hdrTicketModal'  },
-  { btn: 'empNotifBtn',        modal: 'hdrNotifModal'   },
-  { btn: 'empMsgBtn',          modal: 'hdrMsgModal'     },
-  { btn: 'empTicketBtn',       modal: 'hdrTicketModal'  },
-  { btn: 'mgrNotifBtn',        modal: 'hdrNotifModal'   },
-  { btn: 'mgrMsgBtn',          modal: 'hdrMsgModal'     },
-  { btn: 'mgrTicketBtn',       modal: 'hdrTicketModal'  },
-  { btn: 'admEmpNotifBtn',     modal: 'hdrNotifModal'   },
-  { btn: 'admEmpMsgBtn',       modal: 'hdrMsgModal'     },
-  { btn: 'admEmpTicketBtn',    modal: 'hdrTicketModal'  },
-  { btn: 'admDeptNotifBtn',    modal: 'hdrNotifModal'   },
-  { btn: 'admDeptMsgBtn',      modal: 'hdrMsgModal'     },
-  { btn: 'admDeptTicketBtn',   modal: 'hdrTicketModal'  },
-  { btn: 'admProjNotifBtn',    modal: 'hdrNotifModal'   },
-  { btn: 'admProjMsgBtn',      modal: 'hdrMsgModal'     },
-  { btn: 'admProjTicketBtn',   modal: 'hdrTicketModal'  },
-  { btn: 'admAttNotifBtn',     modal: 'hdrNotifModal'   },
-  { btn: 'admAttMsgBtn',       modal: 'hdrMsgModal'     },
-  { btn: 'admAttTicketBtn',    modal: 'hdrTicketModal'  },
-  { btn: 'admLvNotifBtn',      modal: 'hdrNotifModal'   },
-  { btn: 'admLvMsgBtn',        modal: 'hdrMsgModal'     },
-  { btn: 'admLvTicketBtn',     modal: 'hdrTicketModal'  },
-  { btn: 'admRatesNotifBtn',   modal: 'hdrNotifModal'   },
-  { btn: 'admRatesMsgBtn',     modal: 'hdrMsgModal'     },
-  { btn: 'admRatesTicketBtn',  modal: 'hdrTicketModal'  },
-  { btn: 'admPayNotifBtn',     modal: 'hdrNotifModal'   },
-  { btn: 'admPayMsgBtn',       modal: 'hdrMsgModal'     },
-  { btn: 'admPayTicketBtn',    modal: 'hdrTicketModal'  },
-  { btn: 'admProfNotifBtn',    modal: 'hdrNotifModal'   },
-  { btn: 'admProfMsgBtn',      modal: 'hdrMsgModal'     },
-  { btn: 'admProfTicketBtn',   modal: 'hdrTicketModal'  },
-  { btn: 'admStgNotifBtn',     modal: 'hdrNotifModal'   },
-  { btn: 'admStgMsgBtn',       modal: 'hdrMsgModal'     },
-  { btn: 'admStgTicketBtn',    modal: 'hdrTicketModal'  },
-  { btn: 'admAbtNotifBtn',     modal: 'hdrNotifModal'   },
-  { btn: 'admAbtMsgBtn',       modal: 'hdrMsgModal'     },
-  { btn: 'admAbtTicketBtn',    modal: 'hdrTicketModal'  },
-];
+const HDR_MODALS = ['hdrNotifModal', 'hdrMsgModal', 'hdrTicketModal'] as const;
 
 type Win = Record<string, unknown>;
 
@@ -169,10 +129,8 @@ export function NavController(): h.JSX.Element {
     // ── 7. Header-icon modal open / close ────────────────────────────────────
 
     function closeAllModals(): void {
-      HDR_PAIRS.forEach(({ btn, modal }) => {
-        document.getElementById(modal)?.classList.remove('open');
-        document.getElementById(btn)?.classList.remove('active');
-      });
+      HDR_MODALS.forEach(modal => document.getElementById(modal)?.classList.remove('open'));
+      document.querySelectorAll('[data-pill-action].active').forEach(b => b.classList.remove('active'));
     }
 
     type HdrKind = 'notif' | 'msg' | 'ticket';
@@ -213,10 +171,9 @@ export function NavController(): h.JSX.Element {
     }
 
     /**
-     * Toggle a shared header modal, positioned under `triggerEl`. This is the
-     * single open/position routine reused by BOTH the legacy id-registered pill
-     * buttons (HDR_PAIRS) and any reusable <ProfilePill> (via data-pill-action),
-     * so new pills work with no id registration.
+     * Toggle a shared header modal, positioned under `triggerEl`. Driven by the
+     * delegated [data-pill-action] handler, so every <ProfilePill> works with no
+     * id registration.
      */
     function toggleHdrModal(triggerEl: HTMLElement, kind: HdrKind): void {
       const m = document.getElementById(MODAL_FOR[kind]);
@@ -240,30 +197,8 @@ export function NavController(): h.JSX.Element {
       afterOpen(kind);
     }
 
-    /** Infer the kind from a legacy button id (…Notif/Msg/Ticket…). */
-    function kindForBtnId(id: string): HdrKind | null {
-      if (/Notif/.test(id))  return 'notif';
-      if (/Msg/.test(id))    return 'msg';
-      if (/Ticket/.test(id)) return 'ticket';
-      return null;
-    }
-
-    const hdrBtnListeners: Array<{ el: HTMLElement; fn: (e: Event) => void }> = [];
-
-    // Legacy id-registered pill buttons.
-    HDR_PAIRS.forEach(({ btn }) => {
-      const b = document.getElementById(btn);
-      const kind = kindForBtnId(btn);
-      if (!b || !kind) return;
-      function onHdrBtnClick(e: Event): void { e.stopPropagation(); toggleHdrModal(b!, kind!); }
-      b.addEventListener('click', onHdrBtnClick);
-      hdrBtnListeners.push({ el: b, fn: onHdrBtnClick });
-    });
-    cleanups.push(() => {
-      hdrBtnListeners.forEach(({ el, fn }) => el.removeEventListener('click', fn));
-    });
-
-    // Reusable <ProfilePill> icons — delegated, id-free. Any element with
+    // Every profile pill (one shared <ProfilePill> component) drives the shared
+    // modals via delegated, id-free clicks. Any element with
     // data-pill-action="notif|msg|ticket" opens the matching shared modal.
     function onPillActionClick(e: Event): void {
       const trigger = (e.target as Element).closest<HTMLElement>('[data-pill-action]');
@@ -277,36 +212,27 @@ export function NavController(): h.JSX.Element {
     cleanups.push(() => document.removeEventListener('click', onPillActionClick));
 
     // ── 8. Global click — close modals when clicking outside ─────────────────
+    const CLOSE_CB: Record<string, string> = {
+      hdrMsgModal: '_msgModalClosed', hdrTicketModal: '_ticketModalClosed', hdrNotifModal: '_notifModalClosed',
+    };
     function onDocClickForModals(e: Event): void {
       const target = e.target as Element;
-      // Find which modal (if any) is currently open — check `open` class
-      const openPair = HDR_PAIRS.find(p => document.getElementById(p.modal)?.classList.contains('open'));
+      const openModal = HDR_MODALS.find(id => document.getElementById(id)?.classList.contains('open'));
 
       if (target.closest('.hdr-modal-close')) {
         closeAllModals();
-      } else if (!target.closest('.hdr-icon-group') && !target.closest('.hdr-modal')) {
+      } else if (!target.closest('[data-pill-action]') && !target.closest('.hdr-icon-group') && !target.closest('.hdr-modal')) {
         closeAllModals();
       } else {
-        return; // click was inside an open modal or icon group — do nothing
+        return; // click was inside an open modal or a pill icon — do nothing
       }
 
-      if (openPair) {
-        const { btn } = openPair;
-        if (btn === 'hdrMsgBtn'    || btn === 'empMsgBtn'    || btn === 'mgrMsgBtn')    callWin('_msgModalClosed');
-        if (btn === 'hdrTicketBtn' || btn === 'empTicketBtn' || btn === 'mgrTicketBtn') callWin('_ticketModalClosed');
-        if (btn === 'hdrNotifBtn'  || btn === 'empNotifBtn'  || btn === 'mgrNotifBtn')  callWin('_notifModalClosed');
-      }
+      if (openModal && CLOSE_CB[openModal]) callWin(CLOSE_CB[openModal]);
     }
     document.addEventListener('click', onDocClickForModals);
     cleanups.push(() => document.removeEventListener('click', onDocClickForModals));
 
-    // ── 9. Profile button → profile section ──────────────────────────────────
-    const profileBtn = document.getElementById('hdrProfileBtn');
-    function onProfileClick(): void { showSection('s-profile'); }
-    profileBtn?.addEventListener('click', onProfileClick);
-    cleanups.push(() => profileBtn?.removeEventListener('click', onProfileClick));
-
-    // ── 10. Dashboard today date ──────────────────────────────────────────────
+    // ── 9. Dashboard today date ──────────────────────────────────────────────
     const dashDate = document.getElementById('dashTodayDate');
     const dashDay  = document.getElementById('dashTodayDay');
     if (dashDate) {

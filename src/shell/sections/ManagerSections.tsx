@@ -12,34 +12,13 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-/** Profile + notification pill used in manager sections. */
+import { ProfilePill } from '@shared/ProfilePill';
+
+/** Right-aligned wrapper over the reusable, self-populating pill. */
 function MgrProfilePill() {
   return (
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <div class="profile-notif-pill">
-        <div class="pnp-profile" id="mgrProfileBtn">
-          <div class="pnp-avatar" id="mgrProfileAvatar">M</div>
-          <div class="pnp-info">
-            <span class="pnp-name" id="mgrProfileName">Manager</span>
-            <span class="pnp-role" id="mgrProfileRole">Manager</span>
-          </div>
-        </div>
-        <div class="pnp-divider" />
-        <div class="pnp-icons">
-          <button class="pnp-icon-btn" id="mgrNotifBtn" title="Notifications">
-            <i class="fas fa-bell" />
-            <span class="pnp-badge" id="mgrNotifBadge" style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id="mgrMsgBtn" title="Messages">
-            <i class="fas fa-comment-dots" />
-            <span class="pnp-badge" id="mgrMsgBadge" style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id="mgrTicketBtn" title="Support Tickets">
-            <i class="fas fa-ticket-alt" />
-            <span class="pnp-badge pnp-badge-gold" id="mgrTicketBadge" style="display:none" />
-          </button>
-        </div>
-      </div>
+      <ProfilePill />
     </div>
   );
 }

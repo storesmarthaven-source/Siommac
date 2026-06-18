@@ -16,34 +16,13 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-/** Profile + notification pill used in employee sections. */
+import { ProfilePill } from '@shared/ProfilePill';
+
+/** Right-aligned wrapper over the reusable, self-populating pill. */
 function EmpProfilePill() {
   return (
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <div class="profile-notif-pill">
-        <div class="pnp-profile" id="empProfileBtn">
-          <div class="pnp-avatar" id="empProfileAvatar">U</div>
-          <div class="pnp-info">
-            <span class="pnp-name" id="empProfileName">Employee</span>
-            <span class="pnp-role" id="empProfileRole">Employee</span>
-          </div>
-        </div>
-        <div class="pnp-divider" />
-        <div class="pnp-icons">
-          <button class="pnp-icon-btn" id="empNotifBtn" title="Notifications">
-            <i class="fas fa-bell" />
-            <span class="pnp-badge" id="empNotifBadge" style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id="empMsgBtn" title="Messages">
-            <i class="fas fa-comment-dots" />
-            <span class="pnp-badge" id="empMsgBadge" style="display:none" />
-          </button>
-          <button class="pnp-icon-btn" id="empTicketBtn" title="Support Tickets">
-            <i class="fas fa-ticket-alt" />
-            <span class="pnp-badge pnp-badge-gold" id="empTicketBadge" style="display:none" />
-          </button>
-        </div>
-      </div>
+      <ProfilePill />
     </div>
   );
 }
