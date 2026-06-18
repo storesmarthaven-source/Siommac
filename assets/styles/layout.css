@@ -229,6 +229,8 @@
 /* Meridian nav token: 19px row icon — scope to item buttons so it doesn't
    inflate the small group-header chevron / count badge. */
 .sidebar-menu button[data-section] > i { width: 19px; text-align: center; font-size: 19px; line-height: 1; flex-shrink: 0; }
+/* Lucide line-icon SVGs (sidebar nav only) — thin, currentColor stroke. */
+.sidebar-menu button[data-section] > .sb-ico { width: 19px; height: 19px; flex-shrink: 0; stroke-width: 1.75; }
 
 /* Hide group headers + counts when collapsed */
 .sidebar.collapsed .sb-group-label,

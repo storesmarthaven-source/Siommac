@@ -10,6 +10,7 @@
 
 import type { SiomacConfig, SectionItem, NavGroupItem, NavGroupId } from './types';
 import { updateColorScheme, updateLayoutMode } from './api';
+import { navIconSvg } from './navIcons';
 
 // ── Config access (loaded by config.js before main.tsx) ──────────────────────
 
@@ -56,7 +57,7 @@ function isEmployeeRole(): boolean {
 
 const renderNavItem = (it: SectionItem) =>
   `<li><button data-section="${esc(it.id)}" title="${esc(it.label)}">` +
-  `<i class="fas ${esc(it.icon)}"></i><span>${esc(it.label)}</span></button></li>`;
+  `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button></li>`;
 
 const groupTitle = (label: string) =>
   `<li class="sidebar-menu-title" aria-hidden="true">${esc(label)}</li>`;
