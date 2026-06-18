@@ -46,16 +46,18 @@ export const TOKEN_REFRESH_HEADROOM_MS = 60 * 1000;
 
 // ── Navigation / sections ─────────────────────────────────────────────────────
 
-/** Sidebar accordion groups, in display order (Meridian-style IA). */
+/** Built-in sidebar accordion groups, in display order (Meridian-style IA).
+ *  Feature modules may introduce additional groups via the module registry, so
+ *  this type also accepts arbitrary module group ids (`| string`). */
 export type NavGroup =
   | 'overview'
   | 'workforce'
   | 'operations'
   | 'finance'
-  | 'hse'
   | 'administration'
   | 'personal'
-  | 'account';
+  | 'account'
+  | (string & {});
 
 export interface NavGroupDef {
   id:    NavGroup;
@@ -72,7 +74,6 @@ export const NAV_GROUPS: NavGroupDef[] = [
   { id: 'workforce',      label: 'Workforce' },
   { id: 'operations',     label: 'Operations' },
   { id: 'finance',        label: 'Finance' },
-  { id: 'hse',            label: 'HSE' },
   { id: 'administration', label: 'Administration' },
   { id: 'personal',       label: 'Personal' },
   { id: 'account',        label: 'Account' },
@@ -84,6 +85,7 @@ export interface SectionDef {
   icon:  string;   // Font Awesome class, e.g. 'fa-tachometer-alt'
   sub:   string;   // subtitle shown in nav
   group?: NavGroup; // accordion group; defaults applied in nav builder
+  parent?: string;  // if set, a collapsible child nested under this parent id
 }
 
 export type UserRole = 'superadmin' | 'admin' | 'manager' | 'employee';
@@ -111,7 +113,6 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-adm-attendance', label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
     { id: 's-adm-projects',   label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations and site details',              group: 'operations' },
     { id: 's-projectMap',     label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
-    { id: 's-hse',            label: 'HSE',          icon: 'fa-hard-hat',            sub: 'Health, Safety & Environment — incidents and PPE', group: 'hse' },
   ],
   admin: [
     { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now", group: 'overview' },
@@ -122,7 +123,6 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
     { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
     { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
-    { id: 's-hse',             label: 'HSE',          icon: 'fa-hard-hat',            sub: 'Health, Safety & Environment — incidents and PPE', group: 'hse' },
   ],
   // Superadmin has the same nav as admin — permission management is via a
   // dedicated settings panel, not a separate section.
@@ -136,7 +136,6 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
     { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
     { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
-    { id: 's-hse',             label: 'HSE',          icon: 'fa-hard-hat',            sub: 'Health, Safety & Environment — incidents and PPE', group: 'hse' },
     { id: 's-superadmin-console', label: 'Console',   icon: 'fa-shield-halved',       sub: 'Modules, permissions and administration tools', group: 'administration' },
   ],
 };

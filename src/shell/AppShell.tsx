@@ -145,6 +145,9 @@ export default function AppShell() {
 
       {/* ⌘K command palette mount root */}
       <div id="preact-cmdk-root" />
+
+      {/* Reusable nav sub-menu customizer mount root */}
+      <div id="preact-navcust-root" />
     </>
   );
 }

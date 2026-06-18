@@ -84,12 +84,13 @@ import {
   mountSuperadminConsoleSection,
   unmountSuperadminConsoleSection,
 } from '@sections/SuperadminConsole';
-import { mountHSESection } from '@sections/HSE';
+import '@sections/HSE';                 // self-registers the HSE module
+import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
 import { mountLoginPage }      from '@components/auth';
-import { mountNavController, mountCommandPalette }  from '@components/nav';
+import { mountNavController, mountCommandPalette, mountNavCustomizer }  from '@components/nav';
 import { useSessionStore }     from '@store/session';
 import '@cfg/index';            // registers window.SiomacConfig before any legacy script reads it
 import '@lib/popup';            // registers window.cpop / window.Swal before any legacy script reads it
@@ -215,6 +216,12 @@ async function bootApp(): Promise<void> {
   const cmdkRoot = document.getElementById('preact-cmdk-root');
   if (cmdkRoot) {
     mountCommandPalette(cmdkRoot);
+  }
+
+  // Reusable nav sub-menu customizer (gear on collapsible parents)
+  const navcustRoot = document.getElementById('preact-navcust-root');
+  if (navcustRoot) {
+    mountNavCustomizer(navcustRoot);
   }
 
   // Attendance section (replaces attendance-view.js)
@@ -433,10 +440,11 @@ async function bootApp(): Promise<void> {
     mountSuperadminConsoleSection(superadminConsoleRoot, { queryClient });
   }
 
-  // HSE / PPE Manager section (UI-only)
-  const hseRoot = document.getElementById('preact-hse-root');
-  if (hseRoot) {
-    mountHSESection(hseRoot, { queryClient });
+  // Registered feature modules (HSE, and future modules) — each mounts into the
+  // panel root it declares. Additive: existing sections above are unaffected.
+  for (const mod of getModules()) {
+    const root = document.getElementById(mod.mount.rootId);
+    if (root) mod.mount.mount(root, { sectionId: mod.mount.rootId, queryClient });
   }
 
   // Profile section (replaces profile.js)

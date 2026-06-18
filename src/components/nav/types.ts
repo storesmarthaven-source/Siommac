@@ -5,9 +5,13 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-export type NavGroupId =
+/** Built-in nav groups. Feature modules may introduce additional group ids
+ *  (hence the `| string`), so registering a new module never requires editing
+ *  this union. */
+export type KnownNavGroupId =
   | 'overview' | 'workforce' | 'operations' | 'finance'
   | 'administration' | 'personal' | 'account';
+export type NavGroupId = KnownNavGroupId | (string & {});
 
 export interface SectionItem {
   id:    string;
@@ -15,6 +19,8 @@ export interface SectionItem {
   icon:  string;
   sub?:  string;
   group?: NavGroupId;
+  /** If set, this item is a collapsible child nested under the parent item id. */
+  parent?: string;
 }
 
 export interface NavGroupItem {

@@ -1,56 +1,60 @@
 /**
  * src/components/sections/HSE/HSESection.tsx
  *
- * HSE module shell. Two areas behind a top sub-nav:
- *   • Dashboard   — incident KPIs, charts, and recent incidents
- *   • PPE Manager — its own 14-tab ppeSubNav (inventory, assign, matrix, …)
- *
- * UI-only build: all data is static (see types.ts mock*). Structure mirrors the
- * other Preact sections (Console/Employees) so a backend can be wired later.
+ * HSE module shell. One panel serves every HSE nav item: the active section id
+ * (broadcast by the sidebar via the 'siomac:section' event) selects the page —
+ * the HSE Dashboard or one of the PPE Manager tabs. Navigation lives entirely in
+ * the sidebar (HSE group → Dashboard + collapsible PPE Manager → sub-items), so
+ * there is no in-page tab bar.
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { HSEDashboard } from './HSEDashboard';
-import { PPEManager }   from './PPEManager';
+import { PpeBody } from './PPEManager';
+import { ppeTabForSection, PPE_PARENT_ID } from './nav';
 import './HSE.css';
 
-type HseTab = 'dashboard' | 'ppe';
+const HSE_DASHBOARD_ID = 's-hse-dashboard';
 
-const HSE_TABS: { id: HseTab; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'HSE Dashboard', icon: 'fa-gauge-high' },
-  { id: 'ppe',       label: 'PPE Manager',   icon: 'fa-hard-hat' },
-];
+/** Resolve which page to show from a logical section id. */
+function pageFor(sectionId: string): { kind: 'dashboard' } | { kind: 'ppe'; tab: string } {
+  const tab = ppeTabForSection(sectionId);
+  if (tab) return { kind: 'ppe', tab };
+  if (sectionId === PPE_PARENT_ID) return { kind: 'ppe', tab: 'dashboard' };
+  return { kind: 'dashboard' };
+}
 
 export function HSESection(): VNode {
-  const [tab, setTab] = useState<HseTab>('dashboard');
+  // Seed from the persisted last section so a reload lands on the right page.
+  const [sectionId, setSectionId] = useState<string>(() => {
+    try { return localStorage.getItem('siomac_hse_section') ?? HSE_DASHBOARD_ID; } catch { return HSE_DASHBOARD_ID; }
+  });
+
+  useEffect(() => {
+    function onSection(e: Event) {
+      const id = (e as CustomEvent<string>).detail;
+      // Only react to HSE sections.
+      if (id === HSE_DASHBOARD_ID || id === PPE_PARENT_ID || ppeTabForSection(id)) {
+        setSectionId(id);
+        try { localStorage.setItem('siomac_hse_section', id); } catch (_) {}
+      }
+    }
+    window.addEventListener('siomac:section', onSection);
+    return () => window.removeEventListener('siomac:section', onSection);
+  }, []);
+
+  const page = pageFor(sectionId);
 
   return (
     <div class="hse-module">
-      {/* Breadcrumb + title */}
       <nav class="page-breadcrumb" aria-label="Breadcrumb">
         <span class="page-breadcrumb-root">HSE</span>
         <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
-        <span class="page-breadcrumb-current">{HSE_TABS.find(t => t.id === tab)?.label}</span>
+        <span class="page-breadcrumb-current">{page.kind === 'dashboard' ? 'Dashboard' : 'PPE Manager'}</span>
       </nav>
 
-      {/* Module sub-nav (Dashboard | PPE Manager) */}
-      <div class="hse-subnav" role="tablist" aria-label="HSE sections">
-        {HSE_TABS.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={t.id === tab}
-            class={`hse-subnav-btn${t.id === tab ? ' active' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
-            <i class={`fas ${t.icon}`} aria-hidden="true" /> {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'dashboard' ? <HSEDashboard /> : <PPEManager />}
+      {page.kind === 'dashboard' ? <HSEDashboard /> : <PpeBody tab={page.tab} />}
     </div>
   );
 }

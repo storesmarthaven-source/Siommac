@@ -1,41 +1,24 @@
 /**
  * src/components/sections/HSE/PPEManager.tsx
  *
- * PPE Manager — hosts the ppeSubNav (14 sub-tabs). UI-only: every tab renders
- * static layouts from types.ts mock data in Siomac navy/red. Each tab is a small
- * presentational function; the active one is chosen by the sub-nav.
+ * PPE Manager tab bodies. Each PPE area is a small presentational function;
+ * the active one is chosen by the section id (the sidebar drives navigation, so
+ * there is no in-page sub-nav). UI-only: static data from types.ts.
+ *
+ * Exports PPE_TAB_BODIES (tab key → component) + PpeBody (hero + active tab),
+ * consumed by PpeShell.tsx which maps the active section id to a tab.
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
 } from './types';
 
-// ── Sub-nav definition ────────────────────────────────────────────────────────
-
 type PpeTab =
   | 'dashboard' | 'inventory' | 'assign' | 'employees' | 'renewals' | 'returns'
   | 'requests' | 'inspections' | 'fitTesting' | 'procurement' | 'kits' | 'matrix'
   | 'reports' | 'settings';
-
-const PPE_TABS: { id: PpeTab; label: string; icon: string }[] = [
-  { id: 'dashboard',   label: 'Dashboard',   icon: 'fa-gauge-high' },
-  { id: 'inventory',   label: 'Inventory',   icon: 'fa-boxes-stacked' },
-  { id: 'assign',      label: 'Assign PPE',  icon: 'fa-user-plus' },
-  { id: 'employees',   label: 'Employees',   icon: 'fa-users' },
-  { id: 'renewals',    label: 'Renewals',    icon: 'fa-clock-rotate-left' },
-  { id: 'returns',     label: 'Returns',     icon: 'fa-rotate-left' },
-  { id: 'requests',    label: 'Requests',    icon: 'fa-clipboard-list' },
-  { id: 'inspections', label: 'Inspections', icon: 'fa-magnifying-glass-chart' },
-  { id: 'fitTesting',  label: 'Fit Testing', icon: 'fa-lungs' },
-  { id: 'procurement', label: 'Procurement', icon: 'fa-cart-shopping' },
-  { id: 'kits',        label: 'Site Kits',   icon: 'fa-briefcase-medical' },
-  { id: 'matrix',      label: 'Role Matrix', icon: 'fa-table-cells' },
-  { id: 'reports',     label: 'Reports',     icon: 'fa-chart-simple' },
-  { id: 'settings',    label: 'Settings',    icon: 'fa-sliders' },
-];
 
 // ── Shared presentational helpers ─────────────────────────────────────────────
 
@@ -590,9 +573,9 @@ function SettingsTab(): VNode {
   );
 }
 
-// ── Tab dispatch ──────────────────────────────────────────────────────────────
+// ── Tab body registry (tab key → component) ───────────────────────────────────
 
-const TAB_BODY: Record<PpeTab, () => VNode> = {
+export const PPE_TAB_BODIES: Record<PpeTab, () => VNode> = {
   dashboard:   DashboardTab,
   inventory:   InventoryTab,
   assign:      AssignTab,
@@ -609,13 +592,11 @@ const TAB_BODY: Record<PpeTab, () => VNode> = {
   settings:    SettingsTab,
 };
 
-export function PPEManager(): VNode {
-  const [tab, setTab] = useState<PpeTab>('dashboard');
-  const Body = TAB_BODY[tab];
-
+/** PPE Manager body: hero + the requested tab. Navigation is via the sidebar. */
+export function PpeBody({ tab }: { tab: string }): VNode {
+  const Body = PPE_TAB_BODIES[(tab as PpeTab)] ?? PPE_TAB_BODIES.dashboard;
   return (
     <div class="ppe-console">
-      {/* Hero */}
       <section class="ppe-hero">
         <div>
           <span class="ppe-eyebrow"><i class="fas fa-shield-halved" /> Enterprise PPE Control Center</span>
@@ -628,24 +609,6 @@ export function PPEManager(): VNode {
           <div class="ppe-command-metric"><span>Critical Stock</span><strong>6</strong></div>
         </div>
       </section>
-
-      {/* ppeSubNav */}
-      <div class="ppe-subnav" id="ppeSubNav" role="tablist" aria-label="PPE sections">
-        {PPE_TABS.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={t.id === tab}
-            class={`ppe-subnav-btn${t.id === tab ? ' active' : ''}`}
-            data-tab={t.id}
-            onClick={() => setTab(t.id)}
-          >
-            <i class={`fas ${t.icon}`} aria-hidden="true" /> {t.label}
-          </button>
-        ))}
-      </div>
-
       <Body />
     </div>
   );

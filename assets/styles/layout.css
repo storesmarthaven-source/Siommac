@@ -207,6 +207,37 @@
    have no .open state and must always show their items. */
 .sb-group:not(.sb-group--flat):not(.open) .sb-group-items { display: none; }
 
+/* ── Collapsible parent item (module sub-menu, e.g. PPE Manager) ── */
+.sb-parent { list-style: none; }
+.sb-parent > button[data-section] { position: relative; }
+/* Customize-sub-menu gear (appears on hover of a customizable parent row). */
+.sb-parent-gear {
+  margin-left: auto; background: none; border: none; cursor: pointer; padding: 4px 6px;
+  color: rgba(255,255,255,0.38); font-size: 0.72rem; border-radius: 6px;
+  opacity: 0; transition: opacity .15s, color .15s, background .15s;
+}
+.sb-parent > button:hover .sb-parent-gear,
+.sb-parent-gear:focus-visible { opacity: 1; }
+.sb-parent-gear:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.sb-parent-gear + .sb-parent-chevron { margin-left: 4px; }
+.sb-parent-chevron {
+  font-size: 0.62rem; color: rgba(255,255,255,0.42);
+  transition: transform 0.2s ease; padding: 4px; border-radius: 4px;
+}
+.sb-parent > button[data-section] { display: flex; align-items: center; }
+.sb-parent > button[data-section] > span:not(.sb-parent-gear):not(.sb-parent-chevron) { margin-right: auto; }
+.sb-parent > button:hover .sb-parent-chevron { color: rgba(255,255,255,0.75); }
+.sb-parent:not(.open) .sb-parent-chevron { transform: rotate(-90deg); }
+.sb-children {
+  list-style: none; margin: 2px 0 4px; padding: 0 0 0 18px;
+  border-left: 1px solid rgba(255,255,255,0.08); margin-left: 16px;
+}
+.sb-parent:not(.open) .sb-children { display: none; }
+/* Child rows are slightly smaller/dimmer than top-level rows. */
+.sb-children button[data-section] { font-size: 12.75px; padding: 7px 12px; }
+.sb-children button[data-section] > .sb-ico { width: 16px; height: 16px; }
+.sidebar.collapsed .sb-children { display: none; }
+
 .sidebar-menu button[data-section] {
   width: 100%; text-align: left; padding: 9px 14px;
   background: transparent; border: none; color: #6b7a94;

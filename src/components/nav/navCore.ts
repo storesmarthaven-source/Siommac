@@ -11,11 +11,54 @@
 import type { SiomacConfig, SectionItem, NavGroupItem, NavGroupId } from './types';
 import { updateColorScheme, updateLayoutMode } from './api';
 import { navIconSvg } from './navIcons';
+import { getModulesForRole, getModuleForSection } from '@lib/moduleRegistry';
+import { resolveVisible } from '@lib/navVisibility';
 
 // ── Config access (loaded by config.js before main.tsx) ──────────────────────
 
 function cfg(): SiomacConfig {
   return (window as unknown as { SiomacConfig: SiomacConfig }).SiomacConfig;
+}
+
+/**
+ * Nav items contributed by registered feature modules for a role — flattened
+ * to SectionItem[]. Toggleable children (with defaultVisible) are filtered by
+ * the per-module visibility store, so the sidebar shows only the chosen subset.
+ */
+export function moduleSectionItems(role: string): SectionItem[] {
+  const out: SectionItem[] = [];
+  for (const mod of getModulesForRole(role)) {
+    const ns = mod.visibilityNamespace;
+    // Children that opt into visibility (have a defaultVisible flag).
+    const toggleable = mod.navItems.filter(i => i.defaultVisible !== undefined);
+    const visibleIds = ns && toggleable.length
+      ? new Set(resolveVisible(ns, toggleable.map(i => ({ id: i.id, defaultVisible: i.defaultVisible! }))))
+      : null;
+    for (const it of mod.navItems) {
+      if (visibleIds && it.defaultVisible !== undefined && !visibleIds.has(it.id)) continue;
+      out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent });
+    }
+  }
+  return out;
+}
+
+/**
+ * Merge module-declared nav groups into the built-in ordered group list for a
+ * role. New module groups are inserted just before 'administration' (or
+ * appended if that group is absent), so a module owns its group without editing
+ * config. Duplicate ids are ignored.
+ */
+export function mergeModuleGroups(builtin: NavGroupItem[], role: string): NavGroupItem[] {
+  const present = new Set(builtin.map(g => g.id));
+  const moduleGroups: NavGroupItem[] = [];
+  for (const mod of getModulesForRole(role)) {
+    const g = mod.navGroup;
+    if (g && !present.has(g.id)) { present.add(g.id); moduleGroups.push({ id: g.id, label: g.label }); }
+  }
+  if (moduleGroups.length === 0) return builtin;
+  const adminIdx = builtin.findIndex(g => g.id === 'administration');
+  if (adminIdx === -1) return [...builtin, ...moduleGroups];
+  return [...builtin.slice(0, adminIdx), ...moduleGroups, ...builtin.slice(adminIdx)];
 }
 
 export function allSectionItems(): SectionItem[] {
@@ -59,6 +102,49 @@ const renderNavItem = (it: SectionItem) =>
   `<li><button data-section="${esc(it.id)}" title="${esc(it.label)}">` +
   `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button></li>`;
 
+/**
+ * Whether a parent item's children are visibility-managed (its owning module
+ * declares a visibilityNamespace + has toggleable children). Such parents get a
+ * "customize" gear so the user can choose which sub-items show. Generic — any
+ * module with a sub-menu gets this, no per-module code.
+ */
+function parentIsCustomizable(parentId: string): boolean {
+  const mod = getModuleForSection(parentId);
+  return !!mod?.visibilityNamespace && mod.navItems.some(i => i.parent === parentId && i.defaultVisible !== undefined);
+}
+
+/**
+ * Render a top-level item that may own collapsible children. A parent with
+ * children gets a chevron toggle (data-parent-toggle), an optional "customize"
+ * gear (data-nav-customize) when its children are visibility-managed, and a
+ * nested indented <ul>. Leaf items render as normal. One level of nesting.
+ */
+function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boolean): string {
+  if (children.length === 0) return renderNavItem(it);
+  const gear = parentIsCustomizable(it.id)
+    ? `<button type="button" class="sb-parent-gear" data-nav-customize="${esc(it.id)}" title="Customize ${esc(it.label)} menu" aria-label="Customize ${esc(it.label)} menu"><i class="fas fa-gear"></i></button>`
+    : '';
+  return `<li class="sb-parent${open ? ' open' : ''}" data-parent="${esc(it.id)}">`
+    + `<button data-section="${esc(it.id)}" data-parent-toggle="${esc(it.id)}" title="${esc(it.label)}">`
+    + `${navIconSvg(it.icon)}<span>${esc(it.label)}</span>`
+    + gear
+    + `<i class="fas fa-chevron-down sb-parent-chevron"></i></button>`
+    + `<ul class="sb-children">` + children.map(renderNavItem).join('') + `</ul>`
+    + `</li>`;
+}
+
+/** Render a group's items, nesting children under their parent. */
+function renderGroupItems(items: SectionItem[], expandedParents: Set<string>): string {
+  const childrenOf = new Map<string, SectionItem[]>();
+  for (const it of items) {
+    if (it.parent) (childrenOf.get(it.parent) ?? childrenOf.set(it.parent, []).get(it.parent)!).push(it);
+  }
+  return items
+    .filter(it => !it.parent)   // top-level only; children are emitted under their parent
+    .map(it => renderNavTreeItem(it, childrenOf.get(it.id) ?? [], expandedParents.has(it.id)))
+    .join('');
+}
+
 const groupTitle = (label: string) =>
   `<li class="sidebar-menu-title" aria-hidden="true">${esc(label)}</li>`;
 
@@ -78,6 +164,55 @@ function loadExpandedGroups(role: string): Set<string> | null {
 
 function saveExpandedGroups(role: string, expanded: Set<string>): void {
   try { localStorage.setItem(NAV_EXPAND_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
+}
+
+// Collapsible parent (sub-menu) expansion — persisted per role, like groups.
+const NAV_PARENT_KEY = (role: string) => `siomac_nav_parents_${role}`;
+
+function loadExpandedParents(role: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(NAV_PARENT_KEY(role));
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
+}
+
+function saveExpandedParents(role: string, expanded: Set<string>): void {
+  try { localStorage.setItem(NAV_PARENT_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
+}
+
+/** Wire collapsible parent (sub-menu) toggles — chevron expands/collapses + persists. */
+function _wireParentToggles(menu: HTMLElement, role: string): void {
+  menu.querySelectorAll<HTMLButtonElement>('button[data-parent-toggle]').forEach(btn => {
+    const chevron = btn.querySelector('.sb-parent-chevron');
+    btn.addEventListener('click', (e) => {
+      // Chevron toggles the sub-menu; the rest of the row still navigates.
+      const onChevron = chevron && (e.target === chevron || (e.target as Element).closest?.('.sb-parent-chevron'));
+      const li = btn.closest<HTMLElement>('.sb-parent');
+      if (!li) return;
+      if (onChevron) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      // Navigating to a collapsed parent also opens it; chevron just toggles.
+      const willOpen = onChevron ? !li.classList.contains('open') : true;
+      li.classList.toggle('open', willOpen);
+      const expanded = loadExpandedParents(role);
+      const id = li.dataset['parent'] ?? '';
+      if (willOpen) expanded.add(id); else expanded.delete(id);
+      saveExpandedParents(role, expanded);
+    });
+  });
+
+  // "Customize sub-menu" gear → open the reusable NavCustomizer for that parent.
+  menu.querySelectorAll<HTMLButtonElement>('button[data-nav-customize]').forEach(gear => {
+    gear.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const parentId = gear.dataset['navCustomize'] ?? '';
+      (window as unknown as { openNavCustomizer?: (p: string) => void }).openNavCustomizer?.(parentId);
+    });
+  });
 }
 
 /** The currently-active section id (from localStorage last-section or the DOM). */
@@ -101,7 +236,8 @@ export function buildSidebar(role: string): void {
   const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS, NAV_GROUPS } = cfg();
   const main     = SECTION_DEFS[role] ?? [];
   const personal = isEmployeeRole() ? BASELINE_SECTIONS : [];
-  const all: SectionItem[] = ([] as SectionItem[]).concat(main, personal, COMMON_ITEMS);
+  // Static config sections + sections contributed by registered feature modules.
+  const all: SectionItem[] = ([] as SectionItem[]).concat(main, personal, COMMON_ITEMS, moduleSectionItems(role));
 
   // Bucket items by group, preserving definition order within each group.
   const byGroup = new Map<NavGroupId, SectionItem[]>();
@@ -110,15 +246,26 @@ export function buildSidebar(role: string): void {
     (byGroup.get(g) ?? byGroup.set(g, []).get(g)!).push(it);
   }
 
-  const groups = (NAV_GROUPS as NavGroupItem[]).filter(g => (byGroup.get(g.id)?.length ?? 0) > 0);
+  // Effective group order = built-in groups + any groups declared by registered
+  // modules (inserted before 'administration'), so a module can introduce its
+  // own group without editing config.
+  const orderedGroups = mergeModuleGroups(NAV_GROUPS as NavGroupItem[], role);
+  const groups = orderedGroups.filter(g => (byGroup.get(g.id)?.length ?? 0) > 0);
+  // Count only top-level items per group (children render nested under a parent).
+  const topCount = (g: NavGroupId) => (byGroup.get(g)?.filter(i => !i.parent).length ?? 0);
 
-  // Resolve expanded state: persisted, else default open everything; the active
-  // section's group is forced open so the current page is always visible.
+  // Resolve expanded GROUP state: persisted, else default open everything; the
+  // active section's group is forced open so the current page is always visible.
   let expanded = loadExpandedGroups(role);
   if (!expanded) expanded = new Set(groups.map(g => g.id));
   const activeId   = activeSectionId(role);
   const activeItem = all.find(i => i.id === activeId);
   if (activeItem?.group) expanded.add(activeItem.group);
+
+  // Expanded PARENT state (collapsible sub-menus). The active child's parent is
+  // always open so the current page is visible.
+  const expandedParents = loadExpandedParents(role);
+  if (activeItem?.parent) expandedParents.add(activeItem.parent);
 
   let html = '';
   for (const g of groups) {
@@ -126,17 +273,17 @@ export function buildSidebar(role: string): void {
     if (!g.label) {
       // Flat group (overview): items with no collapsible header.
       html += `<li class="sb-group sb-group--flat" data-group="${esc(g.id)}"><ul class="sb-group-items">`
-        + items.map(renderNavItem).join('') + `</ul></li>`;
+        + renderGroupItems(items, expandedParents) + `</ul></li>`;
       continue;
     }
     const isOpen = expanded.has(g.id);
     html += `<li class="sb-group${isOpen ? ' open' : ''}" data-group="${esc(g.id)}">`
       + `<button type="button" class="sb-group-header" data-group-toggle="${esc(g.id)}" aria-expanded="${isOpen}">`
       + `<span class="sb-group-label">${esc(g.label)}</span>`
-      + `<span class="sb-group-count">${items.length}</span>`
+      + `<span class="sb-group-count">${topCount(g.id)}</span>`
       + `<i class="fas fa-chevron-down sb-group-chevron"></i>`
       + `</button>`
-      + `<ul class="sb-group-items">` + items.map(renderNavItem).join('') + `</ul>`
+      + `<ul class="sb-group-items">` + renderGroupItems(items, expandedParents) + `</ul>`
       + `</li>`;
   }
 
@@ -145,6 +292,7 @@ export function buildSidebar(role: string): void {
     menu.innerHTML = html;
     saveExpandedGroups(role, expanded);
     _wireGroupToggles(menu, role);
+    _wireParentToggles(menu, role);
   }
   // Reflect the active item's highlight + ensure its group is open.
   if (activeId) {
@@ -288,8 +436,18 @@ export function showSection(id: string): void {
   if (id !== 's-adm-dashboard' && win['Dashboard']?.getDashEditMode?.()) {
     win['Dashboard'].toggleEditMode?.();
   }
+
+  // Registered modules serve every one of their nav items from a single panel
+  // (declared as mount.sectionId). Route the logical id to that panel; the
+  // module's shell renders the matching page from the 'siomac:section' event.
+  const mod = getModuleForSection(id);
+  const panelId = mod ? mod.mount.sectionId : id;
+
   document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
+  document.getElementById(panelId)?.classList.add('active');
+
+  // Broadcast the logical section id so module shells can render the right page.
+  try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: id })); } catch (_) {}
 
   if (id === 's-adm-projects') {
     setTimeout(() => {
