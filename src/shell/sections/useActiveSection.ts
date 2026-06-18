@@ -27,8 +27,18 @@ import { useEffect, useState } from 'preact/hooks';
 
 type Listener = (panelId: string) => void;
 
-let currentPanelId = readPersisted();
-const listeners = new Set<Listener>();
+/**
+ * Store state lives on `window` (not plain module-level vars) so it survives
+ * Vite HMR. When a file is edited in dev, Vite hot-swaps modules and re-runs the
+ * Preact render; module-scoped state would reset to the persisted seed, but the
+ * live navigation since boot would normally be fine since showSection persists.
+ * Pinning to window also keeps the *same* listener set + value across a hot-swap
+ * of this very module, so an edit cannot blank the active panel.
+ */
+interface ActiveSectionStore { panelId: string; listeners: Set<Listener>; }
+const store: ActiveSectionStore =
+  ((window as unknown as { __siomacActiveSection?: ActiveSectionStore }).__siomacActiveSection ??=
+    { panelId: readPersisted(), listeners: new Set<Listener>() });
 
 /** Seed from the persisted last section so a reload lands on the right panel. */
 function readPersisted(): string {
@@ -42,14 +52,14 @@ function readPersisted(): string {
 
 /** Publish the active *panel* id (called by showSection). Idempotent. */
 export function setActivePanel(panelId: string): void {
-  if (!panelId || panelId === currentPanelId) return;
-  currentPanelId = panelId;
-  for (const fn of listeners) fn(panelId);
+  if (!panelId || panelId === store.panelId) return;
+  store.panelId = panelId;
+  for (const fn of store.listeners) fn(panelId);
 }
 
 /** Current active panel id (non-reactive read). */
 export function getActivePanel(): string {
-  return currentPanelId;
+  return store.panelId;
 }
 
 /**
@@ -57,15 +67,22 @@ export function getActivePanel(): string {
  * `active` class. Re-renders the caller whenever the active panel changes.
  */
 export function useActiveSection(): (panelId: string) => boolean {
-  const [active, setActive] = useState<string>(currentPanelId);
+  const [active, setActive] = useState<string>(store.panelId);
 
   useEffect(() => {
     const fn: Listener = id => setActive(id);
-    listeners.add(fn);
-    // Re-sync in case the active panel changed between render and effect.
-    if (currentPanelId !== active) setActive(currentPanelId);
-    return () => { listeners.delete(fn); };
+    store.listeners.add(fn);
+    // Re-sync in case the active panel changed between render and effect (e.g.
+    // a Vite HMR re-render after the store already advanced).
+    if (store.panelId !== active) setActive(store.panelId);
+    return () => { store.listeners.delete(fn); };
   }, []);
 
   return (panelId: string) => panelId === active;
+}
+
+// Keep the window-backed store across hot updates of this module: accept the
+// HMR update without resetting state, so editing files never blanks the page.
+if (import.meta.hot) {
+  import.meta.hot.accept();
 }
