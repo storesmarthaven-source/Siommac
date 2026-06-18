@@ -61,7 +61,7 @@
 .ppe-hero:hover::before { opacity: 0.15; transform: rotate(-8deg) scale(1.02); }
 .ppe-hero-content { padding: 24px 28px; position: relative; z-index: 2; }
 .ppe-hero-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
 }
 .ppe-hero-title { display: flex; align-items: center; gap: 14px; }
 .ppe-hero-title-icon {
@@ -70,16 +70,20 @@
   background: rgba(255,255,255,.12); color: #fff; font-size: 1.3rem;
 }
 .ppe-hero-title h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; color: #fff; line-height: 1.1; }
-.ppe-hero-title p { color: rgba(255,255,255,.7); font-size: 0.8rem; line-height: 1.45; margin-top: 4px; max-width: 520px; }
-.ppe-command-metrics { display: grid; grid-template-columns: repeat(3, minmax(104px, 1fr)); gap: 10px; }
-.ppe-command-metric {
-  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 16px; padding: 12px 14px;
+.ppe-hero-title p { color: rgba(255,255,255,.7); font-size: 0.8rem; line-height: 1.45; margin-top: 4px; max-width: 640px; }
+
+/* Summary stat cards inside the dark hero (white cards on navy, like the
+   admin overview panel). */
+.ppe-hero-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;
+  margin-top: 22px;
 }
-.ppe-command-metric--alert { background: rgba(228,12,12,.18); border-color: rgba(228,12,12,.32); }
-.ppe-command-metric span { display: block; color: rgba(255,255,255,.62); font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
-.ppe-command-metric strong { display: block; color: #fff; font-size: 1.5rem; line-height: 1.1; margin-top: 5px; font-family: var(--font-mono); }
-.ppe-command-metric--alert strong { color: #ffb4b4; }
+.ppe-hero-stats .stat-card {
+  flex: none; min-width: 0;
+  background: rgba(255,255,255,.97);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
 
 /* ── ppeSubNav ── */
 .ppe-subnav {

@@ -68,11 +68,9 @@ function DashboardTab(): VNode {
         sub="Compliance overview across active assignments, coverage, stock health, and renewal risk."
         actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-download" /> Export</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-bolt" /> Run Audit</button></>} />
       <div class="hse-kpi-row">
-        <StatCard icon="fa-helmet-safety"     label="Total Issued"    value={6}  color="#2563eb" />
-        <StatCard icon="fa-circle-check"      label="Fully Compliant" value={2}  color="#16a34a" />
-        <StatCard icon="fa-triangle-exclamation" label="Missing PPE"  value={3}  color="#d97706" />
-        <StatCard icon="fa-clock"             label="Expiring Soon"   value={1}  color="#dc2626" />
-        <StatCard icon="fa-box"               label="Low Stock Items" value={3}  color="#7c3aed" />
+        <StatCard icon="fa-shield-halved" label="Compliance"    value={94} color="#16a34a" />
+        <StatCard icon="fa-list-check"    label="Open Actions"  value={18} color="#2563eb" />
+        <StatCard icon="fa-box-open"      label="Critical Stock" value={6} color="#dc2626" />
       </div>
       <div class="ppe-screen-grid">
         <div class="vt-table-card">
@@ -597,7 +595,8 @@ export function PpeBody({ tab }: { tab: string }): VNode {
   const Body = PPE_TAB_BODIES[(tab as PpeTab)] ?? PPE_TAB_BODIES.dashboard;
   return (
     <div class="ppe-console">
-      {/* Dark overview-style hero (hard-hat watermark), tailored to PPE. */}
+      {/* Dark overview-style hero (hard-hat watermark) with the PPE summary
+          stat cards inside, mirroring the admin "Today's Overview" panel. */}
       <section class="ppe-hero">
         <div class="ppe-hero-content">
           <div class="ppe-hero-top">
@@ -608,11 +607,13 @@ export function PpeBody({ tab }: { tab: string }): VNode {
                 <p>Inventory, issue records, role requirements, inspections, renewals and site kits — one workspace.</p>
               </div>
             </div>
-            <div class="ppe-command-metrics">
-              <div class="ppe-command-metric"><span>Compliance</span><strong>94%</strong></div>
-              <div class="ppe-command-metric"><span>Open Actions</span><strong>18</strong></div>
-              <div class="ppe-command-metric ppe-command-metric--alert"><span>Critical Stock</span><strong>6</strong></div>
-            </div>
+          </div>
+          <div class="ppe-hero-stats">
+            <StatCard icon="fa-helmet-safety"        label="Total Issued"    value={6} color="#2563eb" />
+            <StatCard icon="fa-circle-check"         label="Fully Compliant" value={2} color="#16a34a" />
+            <StatCard icon="fa-triangle-exclamation" label="Missing PPE"     value={3} color="#d97706" />
+            <StatCard icon="fa-clock"                label="Expiring Soon"   value={1} color="#dc2626" />
+            <StatCard icon="fa-box"                  label="Low Stock Items" value={3} color="#7c3aed" />
           </div>
         </div>
       </section>
