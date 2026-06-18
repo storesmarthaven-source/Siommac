@@ -203,7 +203,9 @@
 .sb-group-header:hover .sb-group-chevron { color: rgba(255,255,255,0.72); }
 
 .sb-group-items { list-style: none; margin: 0; padding: 0; overflow: hidden; }
-.sb-group:not(.open) .sb-group-items { display: none; }
+/* Collapse only applies to labeled (toggleable) groups — flat groups (overview)
+   have no .open state and must always show their items. */
+.sb-group:not(.sb-group--flat):not(.open) .sb-group-items { display: none; }
 
 .sidebar-menu button[data-section] {
   width: 100%; text-align: left; padding: 9px 14px;
