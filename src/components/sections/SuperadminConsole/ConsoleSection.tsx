@@ -109,6 +109,13 @@ export function ConsoleSection(): VNode {
 
       {/* Content pane */}
       <div class="stg-content">
+        {/* VANTUS breadcrumb */}
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+          <span class="page-breadcrumb-root">Console</span>
+          <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
+          <span class="page-breadcrumb-current">{active.label}</span>
+        </nav>
+
         <div class="stg-panel-header">
           <span class="stg-panel-icon"><i class={`fas ${active.icon}`} aria-hidden="true" /></span>
           <div>

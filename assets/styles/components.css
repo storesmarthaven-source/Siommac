@@ -1,3 +1,237 @@
+/* ═══════════════════════════════════════════
+   VANTUS content layout — breadcrumb + page header (H)
+═══════════════════════════════════════════ */
+.page-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; margin-bottom: 14px;
+}
+.page-breadcrumb-root { color: var(--text-muted); font-weight: 500; }
+.page-breadcrumb-sep { font-size: 0.62rem; color: #b8c2d4; }
+.page-breadcrumb-current { color: var(--siomac-navy); font-weight: 700; }
+
+/* Page header: title/subtitle on the left, action buttons on the right */
+.page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.page-head-titles { min-width: 0; }
+.page-head-title {
+  font-size: 1.55rem; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--siomac-navy); line-height: 1.15;
+}
+.page-head-sub { font-size: 0.86rem; color: var(--text-muted); margin-top: 4px; }
+.page-head-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   VANTUS / Ride4Health table pattern — toolbar, filter chips, tab counts,
+   status pills, row ••• menu (H). Framework-agnostic classes usable by both
+   DataTables tables and lightweight Preact lists.
+═══════════════════════════════════════════ */
+
+/* Toolbar row: search + filter chips + actions */
+.vt-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.vt-toolbar-spacer { flex: 1; }
+
+/* Search box */
+.vt-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-subtle, #F8FAFE);
+  border: 1.5px solid var(--border); border-radius: 40px;
+  padding: 8px 14px; min-width: 240px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.vt-search:focus-within { border-color: var(--siomac-red); box-shadow: 0 0 0 3px rgba(228,12,12,.08); }
+.vt-search i { color: #98a4bb; font-size: 0.85rem; }
+.vt-search input {
+  border: none; outline: none; background: transparent; flex: 1;
+  font-size: 0.85rem; color: var(--text-primary); font-family: inherit; min-width: 0;
+}
+.vt-search input::placeholder { color: #aab4c8; }
+
+/* Filter chip (bordered pill with icon + label + chevron) */
+.vt-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1.5px solid var(--border);
+  border-radius: 40px; padding: 8px 14px; cursor: pointer;
+  font-size: 0.82rem; font-weight: 500; color: var(--text-primary);
+  font-family: inherit; transition: border-color .2s, background .15s;
+  white-space: nowrap;
+}
+.vt-chip:hover { border-color: #c3ccdb; }
+.vt-chip.active { border-color: var(--siomac-red); color: var(--siomac-red); background: rgba(228,12,12,.04); }
+.vt-chip i.vt-chip-icon { color: #6b7794; font-size: 0.8rem; }
+.vt-chip.active i.vt-chip-icon { color: var(--siomac-red); }
+.vt-chip i.vt-chip-chev { font-size: 0.6rem; color: #9aa6bd; margin-left: 2px; }
+.vt-chip-divider { width: 1px; height: 24px; background: var(--border); margin: 0 2px; }
+
+/* "More filters" popover */
+.vt-popover {
+  position: absolute; z-index: 1200; margin-top: 10px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 16px 44px rgba(12,20,38,.18);
+  padding: 16px; min-width: 300px;
+}
+/* Upward caret notch pointing at the trigger chip (offset from right). */
+.vt-popover::before {
+  content: ''; position: absolute; top: -7px; right: 28px;
+  width: 13px; height: 13px; background: var(--bg-card);
+  border-left: 1px solid var(--border); border-top: 1px solid var(--border);
+  transform: rotate(45deg); border-radius: 3px 0 0 0;
+}
+.vt-popover.align-left::before { right: auto; left: 28px; }
+.vt-popover-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.vt-popover-title { font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy); }
+.vt-popover-clear {
+  font-size: 0.76rem; font-weight: 600; color: #2563eb;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+}
+.vt-popover-clear:hover { text-decoration: underline; }
+
+/* Full-width labeled select rows inside the popover (icon + label + chevron). */
+.vt-popover-field { position: relative; margin-bottom: 10px; }
+.vt-popover-field > i.vt-field-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: #6b7794; font-size: 0.82rem; pointer-events: none;
+}
+.vt-popover-field select,
+.vt-popover-field .vt-field-control {
+  width: 100%; appearance: none; -webkit-appearance: none;
+  background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 11px 34px 11px 36px; font-size: 0.85rem; font-family: inherit;
+  color: var(--text-primary); cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.vt-popover-field select:focus { outline: none; border-color: var(--siomac-red); box-shadow: 0 0 0 3px rgba(228,12,12,.08); }
+.vt-popover-field > i.vt-field-chev {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: #9aa6bd; font-size: 0.66rem; pointer-events: none;
+}
+.vt-popover-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+/* Tab-count filters (Broker 12 · Facility 30 …) */
+.vt-tabs {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.vt-tab {
+  position: relative; background: none; border: none; cursor: pointer;
+  padding: 10px 2px 12px; font-family: inherit;
+  font-size: 0.88rem; font-weight: 600; color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: color .15s;
+}
+.vt-tab:hover { color: var(--siomac-navy); }
+.vt-tab.active { color: var(--siomac-navy); }
+.vt-tab.active::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: var(--siomac-red); border-radius: 2px;
+}
+.vt-tab-count {
+  font-family: var(--font-mono); font-size: 0.74rem; font-weight: 500;
+  color: var(--text-muted); background: var(--bg-subtle, #F8FAFE);
+  border-radius: 9px; padding: 0 7px;
+}
+.vt-tab.active .vt-tab-count { color: var(--siomac-red); background: rgba(228,12,12,.08); }
+
+/* Result count line */
+.vt-result-count { font-size: 0.8rem; color: var(--text-muted); margin: 12px 0; }
+
+/* Table shell (card-wrapped, VANTUS spacing) */
+.vt-table-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-md); overflow: hidden;
+}
+.vt-table-scroll { overflow-x: auto; }
+.vt-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.vt-table thead th {
+  text-align: left; padding: 12px 16px; white-space: nowrap;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text-muted); background: var(--bg-subtle, #F8FAFE);
+  border-bottom: 1px solid var(--border);
+}
+.vt-table thead th.sortable { cursor: pointer; user-select: none; }
+.vt-table thead th.sortable:hover { color: var(--siomac-navy); }
+.vt-table thead th .vt-sort { margin-left: 5px; font-size: 0.62rem; color: #b8c2d4; }
+.vt-table thead th.sorted .vt-sort { color: var(--siomac-red); }
+.vt-table tbody td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; }
+.vt-table tbody tr:last-child td { border-bottom: none; }
+.vt-table tbody tr { transition: background .12s; }
+.vt-table tbody tr:hover { background: var(--bg-subtle, #F8FAFE); }
+.vt-table tbody tr.selected { background: rgba(228,12,12,.05); }
+/* Account cell (avatar + name) */
+.vt-cell-account { display: flex; align-items: center; gap: 11px; }
+.vt-cell-avatar {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
+  background: var(--siomac-navy); color: #fff; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+}
+.vt-cell-name { font-weight: 600; color: var(--siomac-navy); }
+.vt-cell-mono { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); }
+
+/* Status pill (green Enabled / grey Disabled / etc.) */
+.vt-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.74rem; font-weight: 600; border-radius: 20px; padding: 3px 11px;
+}
+.vt-pill.is-on   { background: rgba(22,163,74,.12);  color: #15803d; }
+.vt-pill.is-off  { background: rgba(100,116,139,.12); color: #64748b; }
+.vt-pill.is-warn { background: rgba(198,124,0,.12);  color: #b45309; }
+.vt-pill.is-info { background: rgba(27,45,84,.10);   color: var(--siomac-navy); }
+
+/* Row ••• actions menu */
+.vt-row-actions { position: relative; display: inline-flex; }
+.vt-row-actions-btn {
+  background: none; border: none; cursor: pointer; color: #6b7794;
+  width: 30px; height: 30px; border-radius: 8px; font-size: 1rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.vt-row-actions-btn:hover { background: var(--bg-subtle, #F8FAFE); color: var(--siomac-navy); }
+.vt-row-menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 1100;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(12,20,38,.16);
+  padding: 6px; min-width: 168px;
+}
+.vt-row-menu-label {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: #98a4bb; padding: 7px 10px 5px;
+}
+.vt-row-menu button {
+  width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 8px 10px; border-radius: 8px; font-size: 0.84rem; color: var(--text-primary);
+  font-family: inherit; display: flex; align-items: center; gap: 9px; transition: background .12s;
+}
+.vt-row-menu button:hover { background: var(--bg-subtle, #F8FAFE); }
+.vt-row-menu button.danger { color: var(--siomac-red); }
+.vt-row-menu button.danger:hover { background: rgba(228,12,12,.07); }
+
+/* Pagination (PREVIOUS [n] out of N NEXT) */
+.vt-pagination {
+  display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+  margin-top: 18px; font-size: 0.8rem; color: var(--text-muted);
+}
+.vt-pagination button {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 0.78rem; font-weight: 600; color: var(--siomac-navy); text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.vt-pagination button:disabled { color: #b8c2d4; cursor: default; }
+.vt-pagination button i { color: var(--siomac-red); }
+.vt-pagination button:disabled i { color: #b8c2d4; }
+.vt-pagination-page {
+  font-family: var(--font-mono); font-weight: 600; color: var(--siomac-navy);
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 3px 10px;
+}
+
 /* ─── Action icons ─── */
 .action-icon {
   background: transparent; border: none; cursor: pointer;

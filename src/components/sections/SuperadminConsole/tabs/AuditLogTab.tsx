@@ -20,12 +20,12 @@ function fmtWhen(iso: string): string {
   try { return new Date(iso).toLocaleString(); } catch { return iso; }
 }
 
-/** A coloured chip for the action verb. */
-function actionTone(action: string): { bg: string; color: string } {
-  if (/delete|revoke|deny|reject/.test(action))        return { bg: 'rgba(228,12,12,0.10)', color: 'var(--siomac-red)' };
-  if (/create|add|grant|approve|login|checkin/.test(action)) return { bg: 'rgba(46,125,50,0.12)', color: '#1b5e20' };
-  if (/update|change|edit|reset|checkout/.test(action)) return { bg: 'rgba(255,183,18,0.16)', color: '#7a5900' };
-  return { bg: 'var(--bg-subtle)', color: 'var(--text-muted)' };
+/** Map an action verb to a VANTUS status-pill tone class. */
+function actionPill(action: string): string {
+  if (/delete|revoke|deny|reject/.test(action))              return 'vt-pill is-off';
+  if (/create|add|grant|approve|login|checkin/.test(action)) return 'vt-pill is-on';
+  if (/update|change|edit|reset|checkout/.test(action))      return 'vt-pill is-warn';
+  return 'vt-pill is-info';
 }
 
 export function AuditLogTab(): VNode {
@@ -90,9 +90,9 @@ export function AuditLogTab(): VNode {
 
   return (
     <div>
-      {/* Filter bar */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '14px' }}>
-        <div class="emp-search-box" style={{ margin: 0, flex: '1 1 200px' }}>
+      {/* Toolbar */}
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ flex: '1 1 240px' }}>
           <i class="fas fa-search" aria-hidden="true" />
           <input type="search" value={search} onInput={e => onFilter(setSearch)((e.target as HTMLInputElement).value)} placeholder="Search details, user, ID…" aria-label="Search audit log" />
         </div>
@@ -118,43 +118,44 @@ export function AuditLogTab(): VNode {
       ) : data.logs.length === 0 ? (
         <div class="emp-empty"><i class="fas fa-clipboard-list" /><p>No audit records match the current filters.</p></div>
       ) : (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+        <div class="vt-table-card">
+          <div class="vt-table-scroll">
+            <table class="vt-table">
               <thead>
-                <tr style={{ background: 'var(--bg-subtle)', textAlign: 'left' }}>
-                  {['When', 'User', 'Action', 'Entity', 'Details', 'IP'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
+                <tr>
+                  {['When', 'User', 'Action', 'Entity', 'Details', 'IP'].map(h => <th key={h}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {data.logs.map(r => {
-                  const tone = actionTone(r.action);
-                  return (
-                    <tr key={r.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '9px 14px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{fmtWhen(r.created_at)}</td>
-                      <td style={{ padding: '9px 14px', whiteSpace: 'nowrap', fontWeight: '600' }}>{r.username || '—'}</td>
-                      <td style={{ padding: '9px 14px' }}><span style={{ background: tone.bg, color: tone.color, padding: '2px 9px', borderRadius: '40px', fontSize: '11.5px', fontWeight: '600', whiteSpace: 'nowrap' }}>{r.action}</span></td>
-                      <td style={{ padding: '9px 14px', color: 'var(--text-muted)' }}>{r.entity}{r.entity_id ? <span style={{ fontFamily: 'monospace', marginLeft: '6px', fontSize: '11px' }}>{r.entity_id}</span> : null}</td>
-                      <td style={{ padding: '9px 14px', maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.details}>{r.details}</td>
-                      <td style={{ padding: '9px 14px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '11px' }}>{r.ip_address ?? '—'}</td>
-                    </tr>
-                  );
-                })}
+                {data.logs.map(r => (
+                  <tr key={r.id}>
+                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{fmtWhen(r.created_at)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}><span class="vt-cell-name">{r.username || '—'}</span></td>
+                    <td><span class={actionPill(r.action)}>{r.action}</span></td>
+                    <td style={{ color: 'var(--text-muted)' }}>{r.entity}{r.entity_id ? <span class="vt-cell-mono" style={{ marginLeft: '6px' }}>{r.entity_id}</span> : null}</td>
+                    <td style={{ maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.details}>{r.details}</td>
+                    <td class="vt-cell-mono" style={{ whiteSpace: 'nowrap' }}>{r.ip_address ?? '—'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderTop: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-            <span class="stg-switch-desc" style={{ margin: 0 }}>
-              {data.total.toLocaleString()} record{data.total === 1 ? '' : 's'} · page {page + 1} of {totalPages}
+          <div class="vt-pagination" style={{ justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid var(--border)', marginTop: 0 }}>
+            <span class="vt-result-count" style={{ margin: 0 }}>
+              {data.total.toLocaleString()} record{data.total === 1 ? '' : 's'}
             </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button type="button" class="btn btn-sm btn-outline-secondary" disabled={page === 0 || q.isFetching} onClick={() => setPage(p => Math.max(0, p - 1))} aria-label="Previous page"><i class="fas fa-chevron-left" /></button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" disabled={page >= totalPages - 1 || q.isFetching} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} aria-label="Next page"><i class="fas fa-chevron-right" /></button>
-            </div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '14px' }}>
+              <button type="button" disabled={page === 0 || q.isFetching} onClick={() => setPage(p => Math.max(0, p - 1))}>
+                <i class="fas fa-chevron-left" /> Previous
+              </button>
+              <span class="vt-pagination-page">{page + 1}</span>
+              <span style={{ color: 'var(--text-muted)' }}>out of {totalPages}</span>
+              <button type="button" disabled={page >= totalPages - 1 || q.isFetching} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>
+                Next <i class="fas fa-chevron-right" />
+              </button>
+            </span>
           </div>
         </div>
       )}

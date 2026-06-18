@@ -59,7 +59,7 @@ function SessionRow({ s, busy, onRevoke }: { s: ActiveSession; busy: boolean; on
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
           {s.fullName}
-          <span style={{ marginLeft: '8px', fontSize: '11px', background: 'rgba(27,45,84,0.08)', color: 'var(--siomac-navy)', padding: '2px 8px', borderRadius: '10px', fontWeight: '600' }}>{ROLE_LABEL[s.role] ?? s.role}</span>
+          <span class="vt-pill is-info" style={{ marginLeft: '8px' }}>{ROLE_LABEL[s.role] ?? s.role}</span>
         </div>
         <div class="stg-switch-desc" style={{ marginTop: '2px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <span><i class={`fas ${dev.icon}`} style={{ marginRight: '5px' }} />{dev.label}</span>
@@ -92,11 +92,12 @@ export function SessionsTab(): VNode {
 
   return (
     <div>
-      <div class="section-header" style={{ marginBottom: '14px' }}>
-        <div class="emp-search-box" style={{ margin: 0, maxWidth: '280px' }}>
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ maxWidth: '280px' }}>
           <i class="fas fa-search" aria-hidden="true" />
           <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search by name or IP…" aria-label="Search sessions" />
         </div>
+        <div class="vt-toolbar-spacer" />
         <button type="button" class="btn btn-sm btn-outline-secondary has-label" onClick={() => void sessionsQ.refetch()}>
           <i class={sessionsQ.isFetching ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'} /> Refresh
         </button>
