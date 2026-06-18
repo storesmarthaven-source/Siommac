@@ -62,6 +62,18 @@ html.app-active,
 body.app-active { overflow: hidden; height: 100%; }
 input, select, textarea { font-size: 16px !important; touch-action: manipulation; font-family: inherit; }
 
+/* ── Global FontAwesome icon centering ──────────────────────────────────────
+   FontAwesome 6 renders glyphs via a ::before pseudo-element with the font's
+   own ascender/descender padding, so an icon dropped into a flex/grid "chip"
+   box won't sit dead-center on its own. Normalizing line-height to 1 removes
+   that vertical bias; any element using display:flex/grid/inline-flex with
+   center alignment then centers the glyph perfectly. This keeps every current
+   and future icon chip (.ppe-signal i, .overview-title-section i, .stat-card
+   icons, etc.) centered without per-component tweaks. */
+.fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-light, .fa-brands {
+  line-height: 1;
+}
+
 /* Kill browser autofill yellow background globally */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
