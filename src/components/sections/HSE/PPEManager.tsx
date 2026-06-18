@@ -11,6 +11,7 @@
 
 import { type VNode } from 'preact';
 import { StatCard } from '../Employees/StatCard';
+import { ProfilePill } from '@shared/ProfilePill';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
 } from './types';
@@ -599,23 +600,8 @@ export function PpeBody({ tab }: { tab: string }): VNode {
               <i class="fas fa-hard-hat" />
               <h2>PPE Manager</h2>
             </div>
-            {/* Profile-notif-pill INSIDE the hero (same hse* ids the shell
-                populates with the real user/role), blended into the dark panel. */}
-            <div class="profile-notif-pill">
-              <div class="pnp-profile" id="hseProfileBtn">
-                <div class="pnp-avatar" id="hseProfileAvatar">A</div>
-                <div class="pnp-info">
-                  <span class="pnp-name" id="hseProfileName">Admin</span>
-                  <span class="pnp-role" id="hseProfileRole">Administrator</span>
-                </div>
-              </div>
-              <div class="pnp-divider" />
-              <div class="pnp-icons">
-                <button class="pnp-icon-btn" id="hseNotifBtn" title="Notifications"><i class="fas fa-bell" /><span class="pnp-badge" id="hseNotifBadge" style="display:none" /></button>
-                <button class="pnp-icon-btn" id="hseMsgBtn" title="Messages"><i class="fas fa-comment-dots" /><span class="pnp-badge" id="hseMsgBadge" style="display:none" /></button>
-                <button class="pnp-icon-btn" id="hseTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" id="hseTicketBadge" style="display:none" /></button>
-              </div>
-            </div>
+            {/* Reusable, self-populating profile pill (id-free). */}
+            <ProfilePill variant="onDark" />
           </div>
 
           <div class="dash-stats-row">

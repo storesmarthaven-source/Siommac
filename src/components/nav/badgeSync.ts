@@ -48,6 +48,11 @@ export async function doHdrBadgeSync(): Promise<void> {
     MSG_BADGE_IDS.forEach(id    => setHdrBadge(document.getElementById(id), c.messages ?? 0));
     TICKET_BADGE_IDS.forEach(id => setHdrBadge(document.getElementById(id), c.tickets  ?? 0));
 
+    // Reusable <ProfilePill> badges — id-free, matched by data-pill-badge.
+    document.querySelectorAll('[data-pill-badge="notif"]').forEach(el  => setHdrBadge(el, unreadNotifs));
+    document.querySelectorAll('[data-pill-badge="msg"]').forEach(el    => setHdrBadge(el, c.messages ?? 0));
+    document.querySelectorAll('[data-pill-badge="ticket"]').forEach(el => setHdrBadge(el, c.tickets  ?? 0));
+
     refreshNavBadges(c.pendingLeaves ?? 0);
 
     // Live map badge

@@ -3312,8 +3312,18 @@
   padding: 4px 14px 4px 6px;
   border-radius: 60px; cursor: pointer;
   transition: background 0.2s;
+  background: none; border: none; font-family: inherit; text-align: left;  /* reusable pill uses a <button> */
 }
 .pnp-profile:hover { background: rgba(255,255,255,0.08); }
+
+/* onDark variant — for pills sitting on a dark (navy) hero panel: lift the pill
+   off the matching background while keeping the red avatar. Reusable anywhere. */
+.profile-notif-pill.pnp-on-dark {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+}
+.profile-notif-pill.pnp-on-dark:hover { background: rgba(255,255,255,0.13); }
 .pnp-avatar {
   width: 44px; height: 44px; border-radius: 50%;
   background: linear-gradient(145deg, var(--siomac-red), #8b0000);
