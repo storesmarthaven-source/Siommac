@@ -78,14 +78,15 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .fa-solid, .fa-regular, .fa-light, .fa-brands { line-height: 1; }
 
 /* Reusable icon-chip: a fixed-size FA icon badge whose glyph is always centered.
-   FA sets `display: var(--fa-display, inline-block)`, so overriding the variable
-   (rather than `display` directly) makes FA's own rule resolve to a flex box we
-   then center. Authoring contract: add `.icon-chip` to any FA <i> you size as a
-   badge — works app-wide with zero per-component CSS. */
+   FontAwesome's all.min.css is loaded UNLAYERED, so its
+   `display: var(--fa-display, inline-block)` beats any layered `display` (this
+   file is in @layer base). Layered `!important` is what reverses that, so the
+   chip is forced to a centered flex box regardless of FA. Authoring contract:
+   add `.icon-chip` to any FA <i> you size as a badge — works app-wide. */
 .icon-chip {
-  --fa-display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center;
 }
 

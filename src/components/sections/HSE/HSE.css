@@ -6,12 +6,12 @@
 
 .hse-module { max-width: 1480px; }
 
-/* FontAwesome sets `display: var(--fa-display, inline-block)`, which overrides
-   the `display: grid` on our icon chips and leaves the glyph top-left. Setting
-   --fa-display: grid here makes FA's own rule resolve to grid, so the chips'
-   `place-items: center` actually centers the glyph. One rule covers every HSE/
-   PPE icon chip. */
-.hse-score-ring strong,
+/* FontAwesome's `all.min.css` is loaded UNLAYERED, so its
+   `display: var(--fa-display, inline-block)` beats our layered `display: grid`
+   (unlayered always wins over any @layer). The glyph then renders inline-block,
+   top-left, ignoring the chip's `place-items: center`.
+   `!important` from inside a layer is the one thing that reverses this: layered
+   !important beats unlayered normal. So force the chip to be a centered grid. */
 .ppe-signal > i,
 .ppe-mini-card i,
 .ppe-insight i,
@@ -20,7 +20,10 @@
 .ppe-matrix-card i,
 .ppe-title-icon i,
 .hse-card-head h3 i,
-.ppe-dot { --fa-display: grid; }
+.ppe-dot {
+  display: grid !important;
+  place-items: center !important;
+}
 
 /* ── HSE module sub-nav (Dashboard | PPE Manager) ── */
 .hse-subnav {
