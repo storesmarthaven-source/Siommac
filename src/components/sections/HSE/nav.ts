@@ -31,7 +31,6 @@ export interface PpeNavItem extends VisibilityItem {
  * the sidebar (the superadmin can reveal the rest via the inline customizer).
  */
 export const PPE_NAV_ITEMS: PpeNavItem[] = [
-  { id: 's-hse-ppe-dashboard',   tab: 'dashboard',   label: 'PPE Dashboard', icon: 'fa-gauge-high',              defaultVisible: true  },
   { id: 's-hse-ppe-inventory',   tab: 'inventory',   label: 'Inventory',     icon: 'fa-boxes-stacked',           defaultVisible: true  },
   { id: 's-hse-ppe-assign',      tab: 'assign',      label: 'Assign PPE',    icon: 'fa-user-plus',               defaultVisible: true  },
   { id: 's-hse-ppe-matrix',      tab: 'matrix',      label: 'Role Matrix',   icon: 'fa-table-cells',             defaultVisible: true  },

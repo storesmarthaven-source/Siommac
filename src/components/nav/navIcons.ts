@@ -30,6 +30,20 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-user-shield':         'ShieldCheck',
   'fa-user-tie':            'UserCog',
   'fa-hard-hat':            'HardHat',
+  // HSE / PPE Manager sub-items
+  'fa-gauge-high':              'Gauge',
+  'fa-boxes-stacked':           'Boxes',
+  'fa-user-plus':               'UserPlus',
+  'fa-table-cells':             'Table',
+  'fa-clock-rotate-left':       'RotateCcw',
+  'fa-rotate-left':             'Undo2',
+  'fa-clipboard-list':          'ClipboardList',
+  'fa-magnifying-glass-chart':  'ScanSearch',
+  'fa-lungs':                   'Wind',
+  'fa-cart-shopping':           'ShoppingCart',
+  'fa-briefcase-medical':       'BriefcaseMedical',
+  'fa-chart-simple':            'ChartColumn',
+  'fa-sliders':                 'Sliders',
 };
 
 const FALLBACK: keyof typeof lucide = 'Circle';

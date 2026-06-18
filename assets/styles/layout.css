@@ -209,25 +209,29 @@
 
 /* ── Collapsible parent item (module sub-menu, e.g. PPE Manager) ── */
 .sb-parent { list-style: none; }
-.sb-parent > button[data-section] { position: relative; }
+/* Row = navigating main button + (gear) + chevron toggle, on one line. */
+.sb-parent-row { display: flex; align-items: center; }
+.sb-parent-main { flex: 1; min-width: 0; }   /* inherits .sidebar-menu button[data-section] */
+
 /* Customize-sub-menu gear (appears on hover of a customizable parent row). */
 .sb-parent-gear {
-  margin-left: auto; background: none; border: none; cursor: pointer; padding: 4px 6px;
+  flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 5px 7px;
   color: rgba(255,255,255,0.38); font-size: 0.72rem; border-radius: 6px;
   opacity: 0; transition: opacity .15s, color .15s, background .15s;
 }
-.sb-parent > button:hover .sb-parent-gear,
+.sb-parent-row:hover .sb-parent-gear,
 .sb-parent-gear:focus-visible { opacity: 1; }
 .sb-parent-gear:hover { color: #fff; background: rgba(255,255,255,0.12); }
-.sb-parent-gear + .sb-parent-chevron { margin-left: 4px; }
-.sb-parent-chevron {
-  font-size: 0.62rem; color: rgba(255,255,255,0.42);
-  transition: transform 0.2s ease; padding: 4px; border-radius: 4px;
+
+/* Chevron toggle button — sits at the trailing edge, always visible. */
+.sb-parent-toggle {
+  flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 6px 9px;
+  border-radius: 6px; color: rgba(255,255,255,0.5); transition: color .15s, background .15s;
 }
-.sb-parent > button[data-section] { display: flex; align-items: center; }
-.sb-parent > button[data-section] > span:not(.sb-parent-gear):not(.sb-parent-chevron) { margin-right: auto; }
-.sb-parent > button:hover .sb-parent-chevron { color: rgba(255,255,255,0.75); }
+.sb-parent-toggle:hover { color: #fff; background: rgba(255,255,255,0.10); }
+.sb-parent-chevron { font-size: 0.66rem; transition: transform 0.2s ease; display: block; }
 .sb-parent:not(.open) .sb-parent-chevron { transform: rotate(-90deg); }
+
 .sb-children {
   list-style: none; margin: 2px 0 4px; padding: 0 0 0 18px;
   border-left: 1px solid rgba(255,255,255,0.08); margin-left: 16px;

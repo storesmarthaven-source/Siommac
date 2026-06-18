@@ -124,11 +124,17 @@ function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boole
   const gear = parentIsCustomizable(it.id)
     ? `<button type="button" class="sb-parent-gear" data-nav-customize="${esc(it.id)}" title="Customize ${esc(it.label)} menu" aria-label="Customize ${esc(it.label)} menu"><i class="fas fa-gear"></i></button>`
     : '';
+  // The main button navigates (icon + label); the chevron is a SEPARATE button
+  // that toggles open/closed. Keeping them separate fixes the "expands but won't
+  // collapse" issue (the nav click no longer forces-open) and lets the chevron
+  // sit cleanly at the row's trailing edge.
   return `<li class="sb-parent${open ? ' open' : ''}" data-parent="${esc(it.id)}">`
-    + `<button data-section="${esc(it.id)}" data-parent-toggle="${esc(it.id)}" title="${esc(it.label)}">`
-    + `${navIconSvg(it.icon)}<span>${esc(it.label)}</span>`
+    + `<div class="sb-parent-row">`
+    + `<button class="sb-parent-main" data-section="${esc(it.id)}" title="${esc(it.label)}">`
+    + `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button>`
     + gear
-    + `<i class="fas fa-chevron-down sb-parent-chevron"></i></button>`
+    + `<button type="button" class="sb-parent-toggle" data-parent-toggle="${esc(it.id)}" aria-expanded="${open}" aria-label="${open ? 'Collapse' : 'Expand'} ${esc(it.label)}"><i class="fas fa-chevron-down sb-parent-chevron"></i></button>`
+    + `</div>`
     + `<ul class="sb-children">` + children.map(renderNavItem).join('') + `</ul>`
     + `</li>`;
 }
@@ -181,22 +187,17 @@ function saveExpandedParents(role: string, expanded: Set<string>): void {
   try { localStorage.setItem(NAV_PARENT_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
 }
 
-/** Wire collapsible parent (sub-menu) toggles — chevron expands/collapses + persists. */
+/** Wire collapsible parent (sub-menu) toggles — chevron button expands/collapses + persists. */
 function _wireParentToggles(menu: HTMLElement, role: string): void {
   menu.querySelectorAll<HTMLButtonElement>('button[data-parent-toggle]').forEach(btn => {
-    const chevron = btn.querySelector('.sb-parent-chevron');
     btn.addEventListener('click', (e) => {
-      // Chevron toggles the sub-menu; the rest of the row still navigates.
-      const onChevron = chevron && (e.target === chevron || (e.target as Element).closest?.('.sb-parent-chevron'));
+      e.preventDefault();
+      e.stopPropagation();
       const li = btn.closest<HTMLElement>('.sb-parent');
       if (!li) return;
-      if (onChevron) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      // Navigating to a collapsed parent also opens it; chevron just toggles.
-      const willOpen = onChevron ? !li.classList.contains('open') : true;
+      const willOpen = !li.classList.contains('open');
       li.classList.toggle('open', willOpen);
+      btn.setAttribute('aria-expanded', String(willOpen));
       const expanded = loadExpandedParents(role);
       const id = li.dataset['parent'] ?? '';
       if (willOpen) expanded.add(id); else expanded.delete(id);
