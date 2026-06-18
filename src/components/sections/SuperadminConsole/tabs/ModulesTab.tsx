@@ -9,7 +9,8 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { confirm } from '@shared/ConfirmDialog';
 import type { ModuleKey, ModuleMatrix, ManagerEntry } from '@lib/superadminApi';
 import {
@@ -187,8 +188,27 @@ export function ModulesTab(): VNode {
   const matrixQ   = useModuleMatrix();
   const managersQ = useManagers(view === 'managers');
 
+  const stats = useMemo(() => {
+    const m = matrixQ.data;
+    const adminEnabled = m
+      ? MODULES.filter(mod => (m[mod.key] as Record<string, boolean> | undefined)?.admin ?? true).length
+      : MODULES.length;
+    return {
+      total:    MODULES.length,
+      lockable: MODULES.filter(mod => mod.lockable).length,
+      enabled:  adminEnabled,
+    };
+  }, [matrixQ.data]);
+
   return (
     <div>
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <StatCard icon="fa-th-large"   label="Total Modules"     value={stats.total}    color="#2563eb" loading={matrixQ.isLoading} />
+        <StatCard icon="fa-toggle-on"  label="Enabled (Admin)"   value={stats.enabled}  color="#16a34a" loading={matrixQ.isLoading} />
+        <StatCard icon="fa-lock-open"  label="Lockable"          value={stats.lockable} color="#d97706" loading={matrixQ.isLoading} />
+      </div>
+
       <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
         {([
           { key: 'admin',    label: 'Admin Modules',   icon: 'fa-user-shield' },

@@ -11,6 +11,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { confirm } from '@shared/ConfirmDialog';
 import { toast } from '@store/ui';
 import { permissionGroups } from '@lib/permissions';
@@ -128,10 +129,24 @@ export function RolesTab(): VNode {
   useEffect(() => { if (roles.length && !selected) setSelected(roles[0]?.name ?? null); }, [roles, selected]);
   const role = roles.find(r => r.name === selected) ?? null;
 
+  const stats = useMemo(() => {
+    const total  = roles.length;
+    const system = roles.filter(r => r.isSystem).length;
+    const users  = roles.reduce((s, r) => s + (r.userCount || 0), 0);
+    return { total, system, custom: total - system, users };
+  }, [roles]);
+
   if (rolesQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading roles…</div>;
   if (rolesQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load roles. <button type="button" onClick={() => void rolesQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
 
   return (
+    <div>
+    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      <StatCard icon="fa-user-shield" label="Total Roles"    value={stats.total}  color="#2563eb" loading={rolesQ.isLoading} />
+      <StatCard icon="fa-lock"        label="System Roles"   value={stats.system} color="#7c3aed" loading={rolesQ.isLoading} />
+      <StatCard icon="fa-pen-ruler"   label="Custom Roles"   value={stats.custom} color="#16a34a" loading={rolesQ.isLoading} />
+      <StatCard icon="fa-users"       label="Assigned Users" value={stats.users}  color="#d97706" loading={rolesQ.isLoading} />
+    </div>
     <div style={{ display: 'flex', gap: '16px', minHeight: '440px' }}>
       {/* Roles list */}
       <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
@@ -181,6 +196,7 @@ export function RolesTab(): VNode {
           </>
         )}
       </div>
+    </div>
     </div>
   );
 }

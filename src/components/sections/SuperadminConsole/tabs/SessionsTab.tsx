@@ -9,6 +9,7 @@
 
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { confirm } from '@shared/ConfirmDialog';
 import type { ActiveSession } from '@lib/superadminApi';
 import { useActiveSessions, useRevokeSession } from '../hooks';
@@ -85,6 +86,12 @@ export function SessionsTab(): VNode {
     return sessions.filter(s => !q || s.fullName.toLowerCase().includes(q) || s.username.toLowerCase().includes(q) || (s.ipAddress ?? '').includes(q));
   }, [sessions, search]);
 
+  const stats = useMemo(() => {
+    const uniqueUsers = new Set(sessions.map(s => s.userId)).size;
+    const mobile = sessions.filter(s => /Mobile|Android|iPhone|iPad/.test(s.userAgent)).length;
+    return { active: sessions.length, uniqueUsers, mobile };
+  }, [sessions]);
+
   if (sessionsQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading sessions…</div>;
   if (sessionsQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load sessions. <button type="button" onClick={() => void sessionsQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
 
@@ -92,6 +99,13 @@ export function SessionsTab(): VNode {
 
   return (
     <div>
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <StatCard icon="fa-user-clock"     label="Active Sessions" value={stats.active}      color="#2563eb" loading={sessionsQ.isLoading} />
+        <StatCard icon="fa-users"          label="Unique Users"    value={stats.uniqueUsers} color="#16a34a" loading={sessionsQ.isLoading} />
+        <StatCard icon="fa-mobile-screen"  label="Mobile Devices"  value={stats.mobile}      color="#7c3aed" loading={sessionsQ.isLoading} />
+      </div>
+
       <div class="vt-toolbar">
         <div class="vt-search" style={{ maxWidth: '280px' }}>
           <i class="fas fa-search" aria-hidden="true" />

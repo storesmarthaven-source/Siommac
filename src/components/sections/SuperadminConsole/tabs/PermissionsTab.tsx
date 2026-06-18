@@ -17,6 +17,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { Modal } from '@shared/Modal';
 import {
   permissionGroups, roleDefaultGranted, permissionState,
@@ -237,11 +238,26 @@ export function PermissionsTab(): VNode {
       (!q || u.fullName.toLowerCase().includes(q) || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
   }, [users, search, roleFilter]);
 
+  const stats = useMemo(() => ({
+    total:     users.length,
+    enabled:   users.filter(u => u.active).length,
+    overrides: users.filter(u => u.overrideCount > 0).length,
+    roles:     summaryRoles.length,
+  }), [users, summaryRoles]);
+
   if (usersQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading users…</div>;
   if (usersQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load users. <button type="button" onClick={() => void usersQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
 
   return (
     <div>
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <StatCard icon="fa-users"          label="Total Accounts" value={stats.total}     color="#2563eb" loading={usersQ.isLoading} />
+        <StatCard icon="fa-user-check"     label="Enabled"        value={stats.enabled}   color="#16a34a" loading={usersQ.isLoading} />
+        <StatCard icon="fa-user-lock"      label="With Overrides" value={stats.overrides} color="#d97706" loading={usersQ.isLoading} />
+        <StatCard icon="fa-user-shield"    label="Roles in Use"   value={stats.roles}     color="#7c3aed" loading={usersQ.isLoading} />
+      </div>
+
       {/* Role-summary cards */}
       <div class="vt-section">
         <div class="vt-section-head">

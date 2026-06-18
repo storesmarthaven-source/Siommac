@@ -9,6 +9,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { toast } from '@store/ui';
 import { downloadCsv } from '@lib/csv';
 import { getAuditLogsApi, type AuditLogRow, type AuditLogFilters } from '@lib/superadminApi';
@@ -90,6 +91,13 @@ export function AuditLogTab(): VNode {
 
   return (
     <div>
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <StatCard icon="fa-clipboard-list" label="Total Events"  value={data.total}            color="#2563eb" loading={q.isLoading} />
+        <StatCard icon="fa-bolt"           label="Action Types"  value={data.actions.length}   color="#d97706" loading={q.isLoading} />
+        <StatCard icon="fa-cubes"          label="Entity Types"  value={data.entities.length}  color="#7c3aed" loading={q.isLoading} />
+      </div>
+
       {/* Toolbar */}
       <div class="vt-toolbar">
         <div class="vt-search" style={{ flex: '1 1 240px' }}>
