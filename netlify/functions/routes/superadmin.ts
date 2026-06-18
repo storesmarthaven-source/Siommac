@@ -26,6 +26,7 @@ import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
 import { requireUser, requireRole, requirePermission, revokeUserSessions, log_ } from '../lib/auth';
 import { PERMISSION_KEYS, invalidateRolePermissions } from '../lib/permissions';
+import { getProfileSignedUrl }            from '../lib/photos';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 
@@ -363,7 +364,7 @@ router.post('/listUsers', async c => {
   await requirePermission(c, 'permissions.manage');
   const [{ data, error }, { data: overrides }] = await Promise.all([
     sb.from('app_users')
-      .select('id, username, full_name, role, email, status')
+      .select('id, username, full_name, role, email, status, profile_image')
       .neq('role', 'superadmin')
       .order('role')
       .order('full_name'),
@@ -380,7 +381,10 @@ router.post('/listUsers', async c => {
     if (o.granted) t.grants++; else t.denials++;
     tally.set(o.user_id, t);
   }
-  const users = (data ?? []).map(u => {
+  // Resolve profile photo signed URLs in parallel.
+  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; status: string; profile_image: string | null }[];
+  const photos = await Promise.all(rows.map(u => getProfileSignedUrl(u.id, u.profile_image)));
+  const users = rows.map((u, i) => {
     const t = tally.get(u.id) ?? { grants: 0, denials: 0 };
     const access = t.denials > 0 ? 'Restricted' : t.grants > 0 ? 'Extended' : 'Role default';
     return {
@@ -392,6 +396,7 @@ router.post('/listUsers', async c => {
       active:   u.status === 'active',
       access,
       overrideCount: t.grants + t.denials,
+      profileImage: photos[i] ?? '',
     };
   });
   return c.json({ success: true, users });

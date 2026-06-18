@@ -135,6 +135,8 @@ export interface ConsoleUser {
   access:        string;
   /** Number of explicit per-user permission overrides. */
   overrideCount: number;
+  /** Signed profile-photo URL ('' if none). */
+  profileImage:  string;
 }
 
 /** An explicit per-user override row. */

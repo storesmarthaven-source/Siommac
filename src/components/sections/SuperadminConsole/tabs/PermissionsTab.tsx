@@ -34,8 +34,16 @@ const ROLE_LABEL: Record<string, string> = {
   superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
 };
 
+type SortKey = 'name' | 'role' | 'status';
+
 function initialsOf(name: string): string {
   return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+/** Avatar: shows the profile photo if present, else initials. */
+function Avatar({ name, src, cls }: { name: string; src: string; cls: string }): VNode {
+  if (src) return <span class={cls}><img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></span>;
+  return <span class={cls}>{initialsOf(name)}</span>;
 }
 
 const RESOURCE_LABEL: Record<string, string> = {
@@ -162,10 +170,10 @@ function RoleSummaryCard({ label, isSystem, members, onSeeAll, onManage }: {
           ? <div class="vt-rolecard-empty">No users with this role.</div>
           : top.map(m => (
             <div class="vt-member" key={m.id}>
-              <span class="vt-member-avatar">{initialsOf(m.fullName)}</span>
+              <Avatar name={m.fullName} src={m.profileImage} cls="vt-member-avatar" />
               <span class="vt-member-info">
                 <span class="vt-member-name">{m.fullName}</span>
-                <span class="vt-member-email">{m.email || '@' + m.username}</span>
+                {m.email && <span class="vt-member-email">{m.email}</span>}
               </span>
               <span class={`vt-pill ${m.active ? 'is-on' : 'is-off'}`}>{m.active ? 'Enabled' : 'Disabled'}</span>
             </div>
@@ -209,6 +217,7 @@ export function PermissionsTab(): VNode {
   const rolesQ = useRoles(true);
   const [search, setSearch]     = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [sortBy, setSortBy]     = useState<SortKey>('name');
   const [manageUser, setManageUser] = useState<ConsoleUser | null>(null);
 
   const users = usersQ.data ?? [];
@@ -233,10 +242,16 @@ export function PermissionsTab(): VNode {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return users.filter(u =>
+    const rows = users.filter(u =>
       (roleFilter === 'all' || u.role === roleFilter) &&
       (!q || u.fullName.toLowerCase().includes(q) || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
-  }, [users, search, roleFilter]);
+    const cmp: Record<SortKey, (a: ConsoleUser, b: ConsoleUser) => number> = {
+      name:   (a, b) => a.fullName.localeCompare(b.fullName),
+      role:   (a, b) => a.role.localeCompare(b.role) || a.fullName.localeCompare(b.fullName),
+      status: (a, b) => Number(b.active) - Number(a.active) || a.fullName.localeCompare(b.fullName),
+    };
+    return [...rows].sort(cmp[sortBy]);
+  }, [users, search, roleFilter, sortBy]);
 
   const stats = useMemo(() => ({
     total:     users.length,
@@ -297,6 +312,19 @@ export function PermissionsTab(): VNode {
           <i class="fas fa-search" aria-hidden="true" />
           <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search by name, username or email…" aria-label="Search users" />
         </div>
+        <label class="vt-chip" style={{ cursor: 'default' }}>
+          <i class="fas fa-arrow-down-short-wide vt-chip-icon" />
+          <select
+            value={sortBy}
+            onChange={e => setSortBy((e.target as HTMLSelectElement).value as SortKey)}
+            aria-label="Sort accounts"
+            style={{ border: 'none', background: 'transparent', font: 'inherit', color: 'inherit', cursor: 'pointer', outline: 'none' }}
+          >
+            <option value="name">Sort by: Name</option>
+            <option value="role">Sort by: Role</option>
+            <option value="status">Sort by: Status</option>
+          </select>
+        </label>
       </div>
 
       {/* Tab-count filters */}
@@ -328,11 +356,11 @@ export function PermissionsTab(): VNode {
                 <tr key={u.id}>
                   <td>
                     <span class="vt-cell-account">
-                      <span class="vt-cell-avatar">{initialsOf(u.fullName)}</span>
+                      <Avatar name={u.fullName} src={u.profileImage} cls="vt-cell-avatar" />
                       <span class="vt-cell-name">{u.fullName}</span>
                     </span>
                   </td>
-                  <td style={{ color: 'var(--text-muted)' }}>{u.email || <span class="vt-cell-mono">@{u.username}</span>}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{u.email || '—'}</td>
                   <td style={{ textTransform: 'capitalize' }}>{ROLE_LABEL[u.role] ?? u.role}</td>
                   <td>{u.access}{u.overrideCount > 0 ? <span class="vt-cell-mono" style={{ marginLeft: '6px' }}>({u.overrideCount})</span> : null}</td>
                   <td><span class={`vt-pill ${u.active ? 'is-on' : 'is-off'}`}>{u.active ? 'Enabled' : 'Disabled'}</span></td>
