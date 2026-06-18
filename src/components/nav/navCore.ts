@@ -48,6 +48,9 @@ export function esc(s: unknown): string {
 /** Whether the current role is a clocking employee (gets the Personal group). */
 function isEmployeeRole(): boolean {
   const as = (window as unknown as { AppState?: { get(k: string): unknown } }).AppState;
+  // superadmin is never a clocking employee — guard against a stale/missing flag
+  // (e.g. an old persisted session) so it never gets the self-service Personal group.
+  if (as?.get('currentRole') === 'superadmin') return false;
   return as?.get('currentIsEmployee') !== false;   // default true if unknown
 }
 

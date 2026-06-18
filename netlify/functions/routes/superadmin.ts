@@ -362,10 +362,13 @@ const ClearUserPermSchema = z.object({
 // per-user override count so it can label "Access" (Full / Limited / Read-Only).
 router.post('/listUsers', async c => {
   await requirePermission(c, 'permissions.manage');
+  // Pure employees have the fixed self-service baseline (no configurable access)
+  // and are managed on their own page — exclude them, and superadmin, from the
+  // accounts/permissions view, which is for configurable roles only.
   const [{ data, error }, { data: overrides }] = await Promise.all([
     sb.from('app_users')
       .select('id, username, full_name, role, email, status, profile_image')
-      .neq('role', 'superadmin')
+      .not('role', 'in', '("superadmin","employee")')
       .order('role')
       .order('full_name'),
     sb.from('user_permissions').select('user_id, granted'),

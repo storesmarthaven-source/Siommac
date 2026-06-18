@@ -125,7 +125,9 @@ export function RolesTab(): VNode {
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const roles = rolesQ.data ?? [];
+  // 'employee' is the fixed self-service baseline — it has no configurable
+  // permission set, so it never appears in the Roles tab.
+  const roles = (rolesQ.data ?? []).filter(r => r.name !== 'employee');
   useEffect(() => { if (roles.length && !selected) setSelected(roles[0]?.name ?? null); }, [roles, selected]);
   const role = roles.find(r => r.name === selected) ?? null;
 
