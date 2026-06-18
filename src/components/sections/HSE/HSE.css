@@ -42,48 +42,39 @@
 /* ── PPE console ── */
 .ppe-console { display: grid; gap: 16px; }
 
-/* Dark "Today's Overview"-style hero with a giant hard-hat watermark.
-   Always dark (navy) regardless of theme, positioned at the top of PPE Manager. */
-.ppe-hero {
-  background: #1A2C53; color: #fff;
-  border-radius: 28px; margin-bottom: 22px;
-  box-shadow: 0 20px 35px -12px rgba(0,0,0,.35);
-  position: relative; overflow: hidden; isolation: isolate;
+/* PPE overview panel: reuse the admin .dash-overview-panel skin, but FORCE the
+   dark (navy) treatment regardless of the app theme, and swap the gear
+   watermark for a hard hat. Stat cards keep their normal colored look (no white
+   override) just like the dashboard's. */
+.ppe-hero-panel {
+  background: #1A2C53 !important;
+  border-color: transparent !important;
+  box-shadow: 0 20px 35px -12px rgba(0,0,0,.35) !important;
 }
-/* Giant faint hard-hat watermark (bottom-right), like the overview panel's gear. */
-.ppe-hero::before {
-  content: "\f807";                 /* fa-hard-hat */
-  font-family: "Font Awesome 6 Free"; font-weight: 900;
-  position: absolute; bottom: -70px; right: -60px;
-  font-size: 360px; opacity: 0.10; color: #fff; pointer-events: none; z-index: 0;
-  transition: opacity .4s, transform .5s;
+.ppe-hero-panel::before {
+  content: "\f807" !important;       /* fa-hard-hat instead of the gear */
+  color: #fff !important; opacity: 0.10 !important;
 }
-.ppe-hero:hover::before { opacity: 0.15; transform: rotate(-8deg) scale(1.02); }
-.ppe-hero-content { padding: 24px 28px; position: relative; z-index: 2; }
-.ppe-hero-top {
-  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
-}
-.ppe-hero-title { display: flex; align-items: center; gap: 14px; }
-.ppe-hero-title-icon {
-  flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.12); color: #fff; font-size: 1.3rem;
-}
-.ppe-hero-title h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; color: #fff; line-height: 1.1; }
-.ppe-hero-title p { color: rgba(255,255,255,.7); font-size: 0.8rem; line-height: 1.45; margin-top: 4px; max-width: 640px; }
+.ppe-hero-panel:hover::before { opacity: 0.15 !important; transform: rotate(-8deg) scale(1.02); }
+.ppe-hero-panel .overview-title-section i { color: #fff; background: rgba(255,255,255,.12); }
+.ppe-hero-panel .overview-title-section h2 { color: #fff; }
 
-/* Summary stat cards inside the dark hero (white cards on navy, like the
-   admin overview panel). */
-.ppe-hero-stats {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;
-  margin-top: 22px;
-}
-.ppe-hero-stats .stat-card {
-  flex: none; min-width: 0;
-  background: rgba(255,255,255,.97);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: 0 8px 18px rgba(0,0,0,.18);
-}
+/* Stat cards on the always-dark panel use the dark-mode treatment (translucent
+   cards, white values, tinted icons) so they read correctly even in light app
+   theme — matching the dashboard's dark overview cards. */
+.ppe-hero-panel .stat-card { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12); box-shadow: none; }
+.ppe-hero-panel .stat-card:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.25); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+.ppe-hero-panel .stat-card-value { color: #fff; }
+.ppe-hero-panel .stat-card-label { color: rgba(255,255,255,.68); }
+.ppe-hero-panel .stat-card-icon.blue  { background: rgba(255,255,255,.18); color: #fff; }
+.ppe-hero-panel .stat-card-icon.green { background: rgba(46,199,90,.28);  color: #d0ffdd; }
+.ppe-hero-panel .stat-card-icon.red   { background: rgba(255,80,80,.28);  color: #ffc0c0; }
+.ppe-hero-panel .stat-card-icon.gold  { background: rgba(255,183,18,.32); color: #ffe6b3; }
+
+/* Breadcrumb + edit button sit in the panel footer. */
+.ppe-hero-crumb { margin-bottom: 0; }
+.ppe-hero-crumb .page-breadcrumb-root,
+.ppe-hero-crumb .page-breadcrumb-current { color: var(--text-muted); }
 
 /* ── ppeSubNav ── */
 .ppe-subnav {

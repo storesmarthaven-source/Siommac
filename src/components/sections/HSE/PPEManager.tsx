@@ -64,9 +64,6 @@ function DashboardTab(): VNode {
   const required = (role: string) => mockRoleMatrix.find(r => r.role === role)?.required ?? [];
   return (
     <div class="ppe-tab-content">
-      <SectionHead icon="fa-gauge-high" title="PPE Command Dashboard"
-        sub="Compliance overview across active assignments, coverage, stock health, and renewal risk."
-        actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-download" /> Export</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-bolt" /> Run Audit</button></>} />
       <div class="hse-kpi-row">
         <StatCard icon="fa-shield-halved" label="Compliance"    value={94} color="#16a34a" />
         <StatCard icon="fa-list-check"    label="Open Actions"  value={18} color="#2563eb" />
@@ -595,20 +592,34 @@ export function PpeBody({ tab }: { tab: string }): VNode {
   const Body = PPE_TAB_BODIES[(tab as PpeTab)] ?? PPE_TAB_BODIES.dashboard;
   return (
     <div class="ppe-console">
-      {/* Dark overview-style hero (hard-hat watermark) with the PPE summary
-          stat cards inside, mirroring the admin "Today's Overview" panel. */}
-      <section class="ppe-hero">
-        <div class="ppe-hero-content">
-          <div class="ppe-hero-top">
-            <div class="ppe-hero-title">
-              <span class="ppe-hero-title-icon"><i class="fas fa-hard-hat" /></span>
-              <div>
-                <h2>PPE Manager</h2>
-                <p>Inventory, issue records, role requirements, inspections, renewals and site kits — one workspace.</p>
+      {/* PPE overview panel — same structure/skin as the admin "Today's Overview"
+          (always dark via .ppe-hero-panel), hard-hat watermark, profile pill,
+          summary stat cards, and a footer with breadcrumb + Edit Layout. */}
+      <div class="dash-overview-panel ppe-hero-panel">
+        <div class="dash-panel-content">
+          <div class="overview-top-bar">
+            <div class="overview-title-section">
+              <i class="fas fa-hard-hat" />
+              <h2>PPE Manager</h2>
+            </div>
+            <div class="profile-notif-pill">
+              <div class="pnp-profile" id="hseProfileBtn">
+                <div class="pnp-avatar" id="hseProfileAvatar">S</div>
+                <div class="pnp-info">
+                  <span class="pnp-name" id="hseProfileName">Admin</span>
+                  <span class="pnp-role" id="hseProfileRole">Administrator</span>
+                </div>
+              </div>
+              <div class="pnp-divider" />
+              <div class="pnp-icons">
+                <button class="pnp-icon-btn" id="hseNotifBtn" title="Notifications"><i class="fas fa-bell" /><span class="pnp-badge" id="hseNotifBadge" style="display:none" /></button>
+                <button class="pnp-icon-btn" id="hseMsgBtn" title="Messages"><i class="fas fa-comment-dots" /><span class="pnp-badge" id="hseMsgBadge" style="display:none" /></button>
+                <button class="pnp-icon-btn" id="hseTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" id="hseTicketBadge" style="display:none" /></button>
               </div>
             </div>
           </div>
-          <div class="ppe-hero-stats">
+
+          <div class="dash-stats-row">
             <StatCard icon="fa-helmet-safety"        label="Total Issued"    value={6} color="#2563eb" />
             <StatCard icon="fa-circle-check"         label="Fully Compliant" value={2} color="#16a34a" />
             <StatCard icon="fa-triangle-exclamation" label="Missing PPE"     value={3} color="#d97706" />
@@ -616,7 +627,16 @@ export function PpeBody({ tab }: { tab: string }): VNode {
             <StatCard icon="fa-box"                  label="Low Stock Items" value={3} color="#7c3aed" />
           </div>
         </div>
-      </section>
+
+        <div class="dash-panel-footer">
+          <nav class="page-breadcrumb ppe-hero-crumb" aria-label="Breadcrumb">
+            <span class="page-breadcrumb-root">HSE</span>
+            <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
+            <span class="page-breadcrumb-current">PPE Manager</span>
+          </nav>
+          <button class="dash-layout-btn admin-only" type="button"><i class="fas fa-edit" /> Edit Layout</button>
+        </div>
+      </div>
       <Body />
     </div>
   );

@@ -48,11 +48,15 @@ export function HSESection(): VNode {
 
   return (
     <div class="hse-module">
-      <nav class="page-breadcrumb" aria-label="Breadcrumb">
-        <span class="page-breadcrumb-root">HSE</span>
-        <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
-        <span class="page-breadcrumb-current">{page.kind === 'dashboard' ? 'Dashboard' : 'PPE Manager'}</span>
-      </nav>
+      {/* The HSE Dashboard shows a top breadcrumb; PPE Manager renders its own
+          panel (with the breadcrumb in its footer), so none here for PPE. */}
+      {page.kind === 'dashboard' && (
+        <nav class="page-breadcrumb" aria-label="Breadcrumb">
+          <span class="page-breadcrumb-root">HSE</span>
+          <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
+          <span class="page-breadcrumb-current">Dashboard</span>
+        </nav>
+      )}
 
       {page.kind === 'dashboard' ? <HSEDashboard /> : <PpeBody tab={page.tab} />}
     </div>

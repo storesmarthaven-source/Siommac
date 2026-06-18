@@ -229,6 +229,7 @@ function _syncPillAvatars(result: Record<string, unknown>): void {
   _pill('dash', 'Admin');
   _pill('emp',  'Employee');
   _pill('mgr',  'Manager');
+  _pill('hse',  'Admin');   // PPE Manager overview-panel profile pill
   ['admEmp','admDept','admProj','admAtt','admLv','admRates','admPay','admProf','admStg','admAbt'].forEach(pfx => _pill(pfx, 'Admin'));
 }
 
