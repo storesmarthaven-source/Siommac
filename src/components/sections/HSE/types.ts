@@ -126,6 +126,30 @@ export function hseSeverityColor(s: HseSeverity): string {
   }
 }
 
+/**
+ * Status text → `.status-badge` tone class (mirrors the source `statusClass`).
+ * critical/blocked/overdue → critical · hold/pending/due/high → pending ·
+ * live/ready/complete → live · everything else → review.
+ */
+export function hseStatusClass(text: string): 'critical' | 'pending' | 'live' | 'review' {
+  if (/critical|blocked|overdue|stopped/i.test(text)) return 'critical';
+  if (/hold|pending|due|high/i.test(text))            return 'pending';
+  if (/live|ready|complete|open/i.test(text))         return 'live';
+  return 'review';
+}
+
+/** Dropdown options for the dashboard filter bar (mirrors the source <select>s). */
+export const HSE_SITE_OPTIONS   = ['Point Lisas Plant', 'La Brea Yard', 'Piarco Logistics', 'Port of Spain Office', 'Galeota Marine Base'];
+export const HSE_PERIOD_OPTIONS = ['Month to date', 'Quarter to date', 'Year to date'];
+export const HSE_RISK_OPTIONS   = ['Critical', 'High', 'Medium'];
+export const HSE_OWNER_OPTIONS  = ['HSE', 'Operations', 'Maintenance', 'Contractors'];
+
+/** Split a "Site · detail" queue string into its parts. */
+export function splitSiteDetail(text: string): { site: string; detail: string } {
+  const [site, detail] = text.split('·').map(x => x.trim());
+  return { site: site || 'All locations', detail: detail || text };
+}
+
 // ── PPE inventory ─────────────────────────────────────────────────────────────
 
 export type PpeStatus = 'available' | 'low' | 'expired' | 'quarantined';
