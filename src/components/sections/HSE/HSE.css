@@ -42,26 +42,44 @@
 /* ── PPE console ── */
 .ppe-console { display: grid; gap: 16px; }
 
+/* Dark "Today's Overview"-style hero with a giant hard-hat watermark.
+   Always dark (navy) regardless of theme, positioned at the top of PPE Manager. */
 .ppe-hero {
-  background: linear-gradient(135deg, var(--siomac-navy) 0%, #24407a 100%);
-  color: #fff; border-radius: var(--radius-md); padding: 22px 24px;
-  display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
-  box-shadow: 0 12px 30px rgba(15,23,42,.16); position: relative; overflow: hidden;
+  background: #1A2C53; color: #fff;
+  border-radius: 28px; margin-bottom: 22px;
+  box-shadow: 0 20px 35px -12px rgba(0,0,0,.35);
+  position: relative; overflow: hidden; isolation: isolate;
 }
-.ppe-hero::after {
-  content: ''; position: absolute; right: -40px; bottom: -70px; width: 220px; height: 220px;
-  border-radius: 999px; background: rgba(228,12,12,.16); pointer-events: none;
+/* Giant faint hard-hat watermark (bottom-right), like the overview panel's gear. */
+.ppe-hero::before {
+  content: "\f807";                 /* fa-hard-hat */
+  font-family: "Font Awesome 6 Free"; font-weight: 900;
+  position: absolute; bottom: -70px; right: -60px;
+  font-size: 360px; opacity: 0.10; color: #fff; pointer-events: none; z-index: 0;
+  transition: opacity .4s, transform .5s;
 }
-.ppe-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px; color: #ffb4b4;
-  font-size: 0.7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px;
+.ppe-hero:hover::before { opacity: 0.15; transform: rotate(-8deg) scale(1.02); }
+.ppe-hero-content { padding: 24px 28px; position: relative; z-index: 2; }
+.ppe-hero-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
 }
-.ppe-hero h2 { font-size: 1.6rem; margin-bottom: 8px; letter-spacing: -0.02em; }
-.ppe-hero p { max-width: 760px; color: rgba(255,255,255,.78); font-size: 0.82rem; line-height: 1.5; }
-.ppe-command-metrics { display: grid; grid-template-columns: repeat(3, minmax(108px, 1fr)); gap: 10px; z-index: 1; }
-.ppe-command-metric { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 12px; }
-.ppe-command-metric span { display: block; color: rgba(255,255,255,.66); font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
-.ppe-command-metric strong { display: block; color: #fff; font-size: 1.4rem; line-height: 1.1; margin-top: 6px; font-family: var(--font-mono); }
+.ppe-hero-title { display: flex; align-items: center; gap: 14px; }
+.ppe-hero-title-icon {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.12); color: #fff; font-size: 1.3rem;
+}
+.ppe-hero-title h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; color: #fff; line-height: 1.1; }
+.ppe-hero-title p { color: rgba(255,255,255,.7); font-size: 0.8rem; line-height: 1.45; margin-top: 4px; max-width: 520px; }
+.ppe-command-metrics { display: grid; grid-template-columns: repeat(3, minmax(104px, 1fr)); gap: 10px; }
+.ppe-command-metric {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px; padding: 12px 14px;
+}
+.ppe-command-metric--alert { background: rgba(228,12,12,.18); border-color: rgba(228,12,12,.32); }
+.ppe-command-metric span { display: block; color: rgba(255,255,255,.62); font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.ppe-command-metric strong { display: block; color: #fff; font-size: 1.5rem; line-height: 1.1; margin-top: 5px; font-family: var(--font-mono); }
+.ppe-command-metric--alert strong { color: #ffb4b4; }
 
 /* ── ppeSubNav ── */
 .ppe-subnav {

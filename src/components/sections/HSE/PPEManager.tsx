@@ -597,16 +597,23 @@ export function PpeBody({ tab }: { tab: string }): VNode {
   const Body = PPE_TAB_BODIES[(tab as PpeTab)] ?? PPE_TAB_BODIES.dashboard;
   return (
     <div class="ppe-console">
+      {/* Dark overview-style hero (hard-hat watermark), tailored to PPE. */}
       <section class="ppe-hero">
-        <div>
-          <span class="ppe-eyebrow"><i class="fas fa-shield-halved" /> Enterprise PPE Control Center</span>
-          <h2>PPE Manager</h2>
-          <p>Control PPE inventory, issue records, role requirements, inspections, renewals, returns, fit testing, supplier planning, and site kits from one workspace.</p>
-        </div>
-        <div class="ppe-command-metrics">
-          <div class="ppe-command-metric"><span>Compliance</span><strong>94%</strong></div>
-          <div class="ppe-command-metric"><span>Open Actions</span><strong>18</strong></div>
-          <div class="ppe-command-metric"><span>Critical Stock</span><strong>6</strong></div>
+        <div class="ppe-hero-content">
+          <div class="ppe-hero-top">
+            <div class="ppe-hero-title">
+              <span class="ppe-hero-title-icon"><i class="fas fa-hard-hat" /></span>
+              <div>
+                <h2>PPE Manager</h2>
+                <p>Inventory, issue records, role requirements, inspections, renewals and site kits — one workspace.</p>
+              </div>
+            </div>
+            <div class="ppe-command-metrics">
+              <div class="ppe-command-metric"><span>Compliance</span><strong>94%</strong></div>
+              <div class="ppe-command-metric"><span>Open Actions</span><strong>18</strong></div>
+              <div class="ppe-command-metric ppe-command-metric--alert"><span>Critical Stock</span><strong>6</strong></div>
+            </div>
+          </div>
         </div>
       </section>
       <Body />
