@@ -257,9 +257,12 @@ export function RolesTab(): VNode {
               ) : filtered.map(u => (
                 <tr key={u.id}>
                   <td>
-                    <span class="vt-cell-account-text">
-                      <span class="vt-cell-name">{u.fullName}</span>
-                      {u.position && <span class="vt-cell-subtext">{u.position}</span>}
+                    <span class="vt-cell-account">
+                      <span class="vt-cell-avatar">{u.profileImage ? <img src={u.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsOf(u.fullName)}</span>
+                      <span class="vt-cell-account-text">
+                        <span class="vt-cell-name">{u.fullName}</span>
+                        {u.position && <span class="vt-cell-subtext">{u.position}</span>}
+                      </span>
                     </span>
                   </td>
                   <td>{roleLabel(u.role)}</td>
