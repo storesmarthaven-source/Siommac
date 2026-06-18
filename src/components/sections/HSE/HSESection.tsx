@@ -10,7 +10,6 @@
 
 import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { ProfilePill } from '@shared/ProfilePill';
 import { HSEDashboard } from './HSEDashboard';
 import { PpeBody } from './PPEManager';
 import { ppeTabForSection, PPE_PARENT_ID } from './nav';
@@ -49,22 +48,7 @@ export function HSESection(): VNode {
 
   return (
     <div class="hse-module">
-      {/* HSE Dashboard: floating breadcrumb + profile pill (same hse* ids the
-          PPE hero uses; only one HSE page renders at a time, so no id clash).
-          PPE Manager renders its own breadcrumb (footer) + in-hero pill. */}
-      {page.kind === 'dashboard' && (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
-            <nav class="page-breadcrumb" aria-label="Breadcrumb" style={{ marginBottom: 0 }}>
-              <span class="page-breadcrumb-root">HSE</span>
-              <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
-              <span class="page-breadcrumb-current">Dashboard</span>
-            </nav>
-            <ProfilePill />
-          </div>
-        </>
-      )}
-
+      {/* Both pages render their own dark hero (with the profile pill inside). */}
       {page.kind === 'dashboard' ? <HSEDashboard /> : <PpeBody tab={page.tab} />}
     </div>
   );

@@ -7,27 +7,124 @@
  * replace the mock arrays with query hooks returning the same shapes.
  */
 
-// ── Incidents (HSE Dashboard) ─────────────────────────────────────────────────
+// ── HSE Dashboard (T&T HSE command view) ──────────────────────────────────────
 
-export type IncidentSeverity = 'high' | 'medium' | 'low';
-export type IncidentStatus   = 'open' | 'investigating' | 'review' | 'resolved';
+/** Severity tone used across HSE cards/pills. */
+export type HseSeverity = 'danger' | 'warning' | 'info' | 'success';
 
-export interface Incident {
-  id:       string;
-  title:    string;
-  site:     string;
-  severity: IncidentSeverity;
-  status:   IncidentStatus;
+/** Hero summary stat (inside the dark overview panel). */
+export interface HeroStat { label: string; value: string; }
+
+export const mockHeroStats: HeroStat[] = [
+  { label: 'Workers & contractors', value: '418' },
+  { label: 'Open HSE work',         value: '72' },
+  { label: 'OSH/EMA blockers',      value: '6' },
+  { label: 'PTW active',            value: '11' },
+];
+
+/** Overall HSE health score shown in the hero ring. */
+export const HSE_HEALTH_SCORE = 82;
+
+/** Rich KPI card (value + label + subtitle + status note + severity). */
+export interface HseKpi {
+  label:    string;
+  value:    string;
+  subtitle: string;
+  note:     string;
+  severity: HseSeverity;
 }
 
-export const mockIncidents: Incident[] = [
-  { id: 'INC-1042', title: 'Chemical spill in Lab A',        site: 'Houston',   severity: 'high',   status: 'open' },
-  { id: 'INC-1038', title: 'Fall from height (scaffold)',    site: 'Dubai',     severity: 'high',   status: 'investigating' },
-  { id: 'INC-1029', title: 'Electrical shock - minor',       site: 'London',    severity: 'medium', status: 'review' },
-  { id: 'INC-1021', title: 'Gas leak detected',              site: 'Singapore', severity: 'high',   status: 'open' },
-  { id: 'INC-1015', title: 'Slip & trip injury',             site: 'Houston',   severity: 'low',    status: 'resolved' },
-  { id: 'INC-1008', title: 'Near miss: crane swing',         site: 'Dubai',     severity: 'medium', status: 'investigating' },
+export const mockHseKpis: HseKpi[] = [
+  { label: 'OSH Recordables', value: '3',   subtitle: 'Cases under OSH classification and notification review', note: '1 pending',    severity: 'danger' },
+  { label: 'Lost Time Cases', value: '1',   subtitle: 'Days away / restricted work case tracking',              note: 'Under review', severity: 'warning' },
+  { label: 'HiPo Events',     value: '4',   subtitle: 'High-potential near misses at T&T operating sites',      note: '+1 open',      severity: 'danger' },
+  { label: 'CAPA Closure',    value: '87%', subtitle: 'Corrective actions closed on time',                      note: 'Target 95%',   severity: 'warning' },
+  { label: 'HSE Training',    value: '94%', subtitle: 'PTW, confined space, fire watch, first aid',             note: '22 due',       severity: 'info' },
+  { label: 'PPE Compliance',  value: '91%', subtitle: 'Assignment, renewal, and field observations',           note: '3 hot spots',  severity: 'warning' },
 ];
+
+/** Monthly safety-performance trend point. */
+export interface TrendPoint { month: string; incidents: number; nearMisses: number; capaClosure: number; }
+
+export const mockTrend: TrendPoint[] = [
+  { month: 'Jan', incidents: 18, nearMisses: 42, capaClosure: 72 },
+  { month: 'Feb', incidents: 14, nearMisses: 55, capaClosure: 78 },
+  { month: 'Mar', incidents: 20, nearMisses: 68, capaClosure: 74 },
+  { month: 'Apr', incidents: 11, nearMisses: 61, capaClosure: 81 },
+  { month: 'May', incidents: 9,  nearMisses: 73, capaClosure: 88 },
+  { month: 'Jun', incidents: 7,  nearMisses: 64, capaClosure: 87 },
+];
+
+/** Critical work-queue item (escalate today). */
+export interface QueueItem { title: string; detail: string; status: string; severity: HseSeverity; }
+
+export const mockQueue: QueueItem[] = [
+  { title: 'Diesel spill near drain',          detail: 'Point Lisas Plant · EMA evidence and cleanup closeout pending',          status: 'Critical', severity: 'danger' },
+  { title: 'Confined space permit hold',       detail: 'Galeota Marine Base · Gas test and rescue plan not attached',            status: 'Blocked',  severity: 'danger' },
+  { title: 'Contractor HSE file expired',      detail: 'La Brea Yard · Insurance, induction, and STOW-style evidence due',       status: 'Pending',  severity: 'warning' },
+  { title: 'Roof edge maintenance exposure',   detail: 'Port of Spain Office · Work at height control required',                 status: 'Critical', severity: 'danger' },
+];
+
+/** Recent incident register row. */
+export interface HseIncident {
+  ref: string; date: string; site: string; event: string; klass: string; status: string; action: string; owner: string;
+}
+
+export const mockHseIncidents: HseIncident[] = [
+  { ref: 'INC-2026-041', date: '18 Jun 2026', site: 'Point Lisas Plant',  event: 'Diesel sheen observed near storm drain during transfer line cleanup',              klass: 'Environmental Spill', status: 'Critical',  action: 'EMA evidence pending',     owner: 'HSE Lead' },
+  { ref: 'NM-2026-118',  date: '18 Jun 2026', site: 'Galeota Marine Base', event: 'Confined space entry stopped before work due to missing gas test and rescue',        klass: 'Near Miss',           status: 'Blocked',   action: 'Permit hold active',       owner: 'Permit Controller' },
+  { ref: 'INC-2026-039', date: '17 Jun 2026', site: 'La Brea Yard',        event: 'Contractor hand laceration during manual handling of sharp-edged material',          klass: 'First Aid',           status: 'Open',      action: 'Supervisor investigation', owner: 'Site HSE Officer' },
+  { ref: 'OBS-2026-226', date: '16 Jun 2026', site: 'Piarco Logistics',    event: 'Forklift crossed pedestrian route without spotter during loading bay activity',      klass: 'Unsafe Act',          status: 'In Review', action: 'Traffic plan update',      owner: 'Warehouse Manager' },
+  { ref: 'INC-2026-037', date: '15 Jun 2026', site: 'Port of Spain Office', event: 'Roof-edge maintenance task identified without completed work-at-height control pack', klass: 'Unsafe Condition',   status: 'Critical',  action: 'Work stopped',             owner: 'Facilities Lead' },
+];
+
+/** Site risk summary. */
+export interface SiteRisk { site: string; level: string; detail: string; score: number; open: number; overdue: number; severity: HseSeverity; }
+
+export const mockSiteRisk: SiteRisk[] = [
+  { site: 'Point Lisas Plant',  level: 'High',     detail: 'Hot work, chemicals, process maintenance, lifting', score: 76, open: 19, overdue: 4, severity: 'warning' },
+  { site: 'Galeota Marine Base', level: 'Critical', detail: 'Marine transfer, confined space, spill response',    score: 69, open: 8,  overdue: 2, severity: 'danger' },
+  { site: 'Piarco Logistics',   level: 'Medium',   detail: 'Forklifts, pedestrians, loading bay traffic',        score: 81, open: 11, overdue: 1, severity: 'success' },
+];
+
+/** Active permit-to-work row. */
+export interface Permit { ref: string; site: string; gate: string; status: string; }
+
+export const mockPermits: Permit[] = [
+  { ref: 'PTW-0033', site: 'Galeota Marine Base',  gate: 'Confined space: gas test / rescue plan', status: 'Blocked' },
+  { ref: 'PTW-0032', site: 'Point Lisas Plant',    gate: 'Hot work: fire watch / gas free cert',   status: 'Overdue' },
+  { ref: 'PTW-0038', site: 'Port of Spain Office',  gate: 'Work at height: harness / edge control', status: 'Live' },
+  { ref: 'PTW-0040', site: 'Point Lisas Plant',    gate: 'Electrical isolation: LOTO verification', status: 'Hold' },
+];
+
+/** Readiness control row. */
+export interface ReadinessRow { label: string; value: string; detail: string; severity: HseSeverity; }
+
+export const mockReadiness: ReadinessRow[] = [
+  { label: 'Contractor HSE readiness', value: '88%', detail: 'STOW-style evidence, insurance, induction, competency files',        severity: 'warning' },
+  { label: 'PPE compliance',           value: '91%', detail: 'Eye, hand, FR clothing, harness renewal hot spots',                   severity: 'warning' },
+  { label: 'Inspection completion',    value: '92%', detail: 'Fire, housekeeping, lifting gear, chemical storage, PTW checks',      severity: 'warning' },
+  { label: 'Emergency readiness',      value: '97%', detail: 'TTFS/fire certificate evidence, eyewash, spill kits, AEDs',           severity: 'success' },
+];
+
+/** HSE status text → Siomac .vt-pill variant. */
+export function hsePill(text: string): string {
+  const t = text.toLowerCase();
+  if (/critical|blocked|overdue|stopped/.test(t)) return 'vt-pill is-off';
+  if (/hold|pending|due|high|review/.test(t))     return 'vt-pill is-warn';
+  if (/live|ready|complete|open/.test(t))         return 'vt-pill is-on';
+  return 'vt-pill is-info';
+}
+
+/** Severity → left-accent color (for KPI/readiness cards). */
+export function hseSeverityColor(s: HseSeverity): string {
+  switch (s) {
+    case 'danger':  return 'var(--siomac-red)';
+    case 'warning': return '#d97706';
+    case 'success': return '#16a34a';
+    default:        return '#2563eb';
+  }
+}
 
 // ── PPE inventory ─────────────────────────────────────────────────────────────
 
