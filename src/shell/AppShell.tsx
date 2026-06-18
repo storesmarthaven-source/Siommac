@@ -59,21 +59,6 @@ function Sidebar() {
         <ul class="sidebar-menu" id="sidebarMenu" />
       </div>
 
-      {/* Pinned user card (Meridian-style) — populated by attSystem after login */}
-      <button class="sidebar-user-card" id="sidebarUserCard" type="button" data-section="s-profile" title="My Profile">
-        <span class="sidebar-user-card-avatar" id="sidebarUserCardAvatar">U</span>
-        <span class="sidebar-user-card-info">
-          <span class="sidebar-user-card-name" id="sidebarUserCardName">User</span>
-          <span class="sidebar-user-card-role" id="sidebarUserCardRole">Role</span>
-        </span>
-        <i class="fas fa-chevron-right sidebar-user-card-chev" />
-      </button>
-
-      <div class="sidebar-session hidden" id="sessionTimer" title="Session time remaining">
-        <i class="fas fa-clock" />
-        <span class="sidebar-session-label">Session</span>
-        <span class="sidebar-session-time" id="sessionTimerText">--</span>
-      </div>
       <div class="sidebar-logout">
         <button id="logoutBtn" title="Logout">
           <i class="fas fa-sign-out-alt" /> <span id="logoutText">Logout</span>
