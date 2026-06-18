@@ -21,6 +21,7 @@
  */
 
 import { AdminStatCards, AdminRecentTable } from '@sections/AdminDashboard';
+import { ProfilePill } from '@shared/ProfilePill';
 
 // ── Shared admin profile pill factory ────────────────────────────────────────
 
@@ -478,31 +479,8 @@ function AdminDashboardSection() {
               <i class="fas fa-chart-pie" />
               <h2>Today's Overview</h2>
             </div>
-            {/* Admin profile + notification pill */}
-            <div class="profile-notif-pill">
-              <div class="pnp-profile" id="hdrProfileBtn">
-                <div class="pnp-avatar" id="hdrProfileAvatar">S</div>
-                <div class="pnp-info">
-                  <span class="pnp-name" id="dashProfileName">Admin</span>
-                  <span class="pnp-role" id="dashProfileRole">Administrator</span>
-                </div>
-              </div>
-              <div class="pnp-divider" />
-              <div class="pnp-icons">
-                <button class="pnp-icon-btn" id="hdrNotifBtn" title="Notifications">
-                  <i class="fas fa-bell" />
-                  <span class="pnp-badge" id="hdrNotifBadge" style="display:none" />
-                </button>
-                <button class="pnp-icon-btn" id="hdrMsgBtn" title="Messages">
-                  <i class="fas fa-comment-dots" />
-                  <span class="pnp-badge" id="hdrMsgBadge" style="display:none" />
-                </button>
-                <button class="pnp-icon-btn" id="hdrTicketBtn" title="Support Tickets">
-                  <i class="fas fa-ticket-alt" />
-                  <span class="pnp-badge pnp-badge-gold" id="hdrTicketBadge" style="display:none" />
-                </button>
-              </div>
-            </div>
+            {/* Admin profile + notification pill (reusable, self-populating) */}
+            <ProfilePill />
           </div>
 
           {/* Stat cards — live data from AdminStatCards Preact component */}
