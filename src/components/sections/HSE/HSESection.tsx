@@ -48,14 +48,34 @@ export function HSESection(): VNode {
 
   return (
     <div class="hse-module">
-      {/* The HSE Dashboard shows a top breadcrumb; PPE Manager renders its own
-          panel (with the breadcrumb in its footer), so none here for PPE. */}
+      {/* HSE Dashboard: floating breadcrumb + profile pill (same hse* ids the
+          PPE hero uses; only one HSE page renders at a time, so no id clash).
+          PPE Manager renders its own breadcrumb (footer) + in-hero pill. */}
       {page.kind === 'dashboard' && (
-        <nav class="page-breadcrumb" aria-label="Breadcrumb">
-          <span class="page-breadcrumb-root">HSE</span>
-          <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
-          <span class="page-breadcrumb-current">Dashboard</span>
-        </nav>
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <nav class="page-breadcrumb" aria-label="Breadcrumb" style={{ marginBottom: 0 }}>
+              <span class="page-breadcrumb-root">HSE</span>
+              <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
+              <span class="page-breadcrumb-current">Dashboard</span>
+            </nav>
+            <div class="profile-notif-pill">
+              <div class="pnp-profile" id="hseProfileBtn">
+                <div class="pnp-avatar" id="hseProfileAvatar">A</div>
+                <div class="pnp-info">
+                  <span class="pnp-name" id="hseProfileName">Admin</span>
+                  <span class="pnp-role" id="hseProfileRole">Administrator</span>
+                </div>
+              </div>
+              <div class="pnp-divider" />
+              <div class="pnp-icons">
+                <button class="pnp-icon-btn" id="hseNotifBtn" title="Notifications"><i class="fas fa-bell" /><span class="pnp-badge" id="hseNotifBadge" style="display:none" /></button>
+                <button class="pnp-icon-btn" id="hseMsgBtn" title="Messages"><i class="fas fa-comment-dots" /><span class="pnp-badge" id="hseMsgBadge" style="display:none" /></button>
+                <button class="pnp-icon-btn" id="hseTicketBtn" title="Support Tickets"><i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" id="hseTicketBadge" style="display:none" /></button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {page.kind === 'dashboard' ? <HSEDashboard /> : <PpeBody tab={page.tab} />}

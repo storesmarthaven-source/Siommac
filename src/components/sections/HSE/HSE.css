@@ -59,6 +59,17 @@
 .ppe-hero-panel .overview-title-section i { color: #fff; background: rgba(255,255,255,.12); }
 .ppe-hero-panel .overview-title-section h2 { color: #fff; }
 
+/* Profile-notif pill blended into the dark panel (matches dashboard dark mode). */
+.ppe-hero-panel .overview-top-bar { align-items: center; }
+.ppe-hero-panel .profile-notif-pill {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 8px 18px rgba(0,0,0,.2);
+}
+.ppe-hero-panel .profile-notif-pill:hover { background: rgba(255,255,255,.14); }
+.ppe-hero-panel .pnp-icon-btn:hover { background: rgba(255,255,255,.2); }
+.ppe-hero-panel .pnp-badge { border-color: rgba(255,255,255,.85); }
+
 /* Stat cards on the always-dark panel use the dark-mode treatment (translucent
    cards, white values, tinted icons) so they read correctly even in light app
    theme — matching the dashboard's dark overview cards. */

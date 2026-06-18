@@ -663,9 +663,9 @@ export default function AdminSections() {
         <div id="preact-project-sites-root" />
       </section>
 
-      {/* HSE — incidents + PPE Manager (admin/manager/superadmin) */}
+      {/* HSE — incidents + PPE Manager (admin/manager/superadmin). The HSE module
+          renders the profile pill inside its own page header (hse* ids). */}
       <section class="app-section" id="s-hse" data-role="admin">
-        <AdminProfilePill ids={{ profileBtn: 'hseProfileBtn', avatar: 'hseProfileAvatar', profileName: 'hseProfileName', profileRole: 'hseProfileRole', notifBtn: 'hseNotifBtn', notifBadge: 'hseNotifBadge', msgBtn: 'hseMsgBtn', msgBadge: 'hseMsgBadge', ticketBtn: 'hseTicketBtn', ticketBadge: 'hseTicketBadge' }} />
         <div id="preact-hse-root" />
       </section>
 
