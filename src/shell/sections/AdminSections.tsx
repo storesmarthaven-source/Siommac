@@ -663,6 +663,12 @@ export default function AdminSections() {
         <div id="preact-project-sites-root" />
       </section>
 
+      {/* HSE — incidents + PPE Manager (admin/manager/superadmin) */}
+      <section class="app-section" id="s-hse" data-role="admin">
+        <AdminProfilePill ids={{ profileBtn: 'hseProfileBtn', avatar: 'hseProfileAvatar', profileName: 'hseProfileName', profileRole: 'hseProfileRole', notifBtn: 'hseNotifBtn', notifBadge: 'hseNotifBadge', msgBtn: 'hseMsgBtn', msgBadge: 'hseMsgBadge', ticketBtn: 'hseTicketBtn', ticketBadge: 'hseTicketBadge' }} />
+        <div id="preact-hse-root" />
+      </section>
+
       {/* Admin — Attendance Records */}
       <section class="app-section" id="s-adm-attendance" data-role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admAttProfileBtn', avatar: 'admAttProfileAvatar', profileName: 'admAttProfileName', profileRole: 'admAttProfileRole', notifBtn: 'admAttNotifBtn', notifBadge: 'admAttNotifBadge', msgBtn: 'admAttMsgBtn', msgBadge: 'admAttMsgBadge', ticketBtn: 'admAttTicketBtn', ticketBadge: 'admAttTicketBadge' }} />

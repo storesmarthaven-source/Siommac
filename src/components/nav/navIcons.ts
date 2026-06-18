@@ -29,6 +29,7 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-info-circle':         'Info',
   'fa-user-shield':         'ShieldCheck',
   'fa-user-tie':            'UserCog',
+  'fa-hard-hat':            'HardHat',
 };
 
 const FALLBACK: keyof typeof lucide = 'Circle';

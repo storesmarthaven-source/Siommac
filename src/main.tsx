@@ -84,6 +84,7 @@ import {
   mountSuperadminConsoleSection,
   unmountSuperadminConsoleSection,
 } from '@sections/SuperadminConsole';
+import { mountHSESection } from '@sections/HSE';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
@@ -430,6 +431,12 @@ async function bootApp(): Promise<void> {
   const superadminConsoleRoot = document.getElementById('preact-superadmin-console-root');
   if (superadminConsoleRoot) {
     mountSuperadminConsoleSection(superadminConsoleRoot, { queryClient });
+  }
+
+  // HSE / PPE Manager section (UI-only)
+  const hseRoot = document.getElementById('preact-hse-root');
+  if (hseRoot) {
+    mountHSESection(hseRoot, { queryClient });
   }
 
   // Profile section (replaces profile.js)
