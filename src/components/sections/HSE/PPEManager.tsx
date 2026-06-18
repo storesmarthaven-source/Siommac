@@ -69,37 +69,34 @@ function DashboardTab(): VNode {
         <StatCard icon="fa-list-check"    label="Open Actions"  value={18} color="#2563eb" />
         <StatCard icon="fa-box-open"      label="Critical Stock" value={6} color="#dc2626" />
       </div>
-      <div class="ppe-screen-grid">
-        <div class="vt-table-card">
-          <div class="vt-table-scroll">
-            <table class="vt-table">
-              <thead><tr><th>Employee</th><th>Role</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
-              <tbody>
-                {mockPpeEmployees.map(emp => {
-                  const req = required(emp.role);
-                  return (
-                    <tr key={emp.id}>
-                      <td><span class="vt-cell-name">{emp.name}</span></td>
-                      <td>{emp.role}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{req.join(', ') || '—'}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>—</td>
-                      <td>{req.join(', ') || 'None'}</td>
-                      <td><span class={ppePillClass(req.length ? 'missing' : 'compliant')}>{req.length ? 'Missing PPE' : 'Compliant'}</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
+        <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
+        <div>
+          <div class="vt-section-title">Compliance Overview</div>
+          <div class="vt-section-sub">Required vs. assigned PPE per employee, with compliance status.</div>
         </div>
-        <aside class="ppe-visual-panel">
-          <h4><i class="fas fa-satellite-dish" /> Live Control Signals</h4>
-          <div class="ppe-record-list">
-            <Record icon="fa-triangle-exclamation" title="Respirator evidence gap" sub="2 employees require fit-test evidence before issue." pill="High" pillClass="vt-pill is-off" />
-            <Record icon="fa-warehouse" title="Warehouse stock action" sub="Ear protection and gloves below reorder threshold." pill="Stock" pillClass="vt-pill is-warn" />
-            <Record icon="fa-clipboard-check" title="Inspection cadence" sub="Harness checks are due this week for Site B." pill="Due" pillClass="vt-pill is-warn" />
-          </div>
-        </aside>
+      </div>
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead><tr><th>Employee</th><th>Role</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
+            <tbody>
+              {mockPpeEmployees.map(emp => {
+                const req = required(emp.role);
+                return (
+                  <tr key={emp.id}>
+                    <td><span class="vt-cell-name">{emp.name}</span></td>
+                    <td>{emp.role}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>{req.join(', ') || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>—</td>
+                    <td>{req.join(', ') || 'None'}</td>
+                    <td><span class={ppePillClass(req.length ? 'missing' : 'compliant')}>{req.length ? 'Missing PPE' : 'Compliant'}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -612,6 +609,16 @@ export function PpeBody({ tab }: { tab: string }): VNode {
             <StatCard icon="fa-triangle-exclamation" label="Missing PPE"     value={3} color="#d97706" />
             <StatCard icon="fa-clock"                label="Expiring Soon"   value={1} color="#dc2626" />
             <StatCard icon="fa-box"                  label="Low Stock Items" value={3} color="#7c3aed" />
+          </div>
+
+          {/* Live control signals — full-width row inside the dark hero. */}
+          <div class="ppe-hero-signals">
+            <div class="ppe-hero-signals-head"><i class="fas fa-satellite-dish" /> Live Control Signals</div>
+            <div class="ppe-hero-signals-list">
+              <div class="ppe-signal"><i class="fas fa-triangle-exclamation" /><div><strong>Respirator evidence gap</strong><span>2 employees require fit-test evidence before issue.</span></div><span class="ppe-signal-tag is-high">High</span></div>
+              <div class="ppe-signal"><i class="fas fa-warehouse" /><div><strong>Warehouse stock action</strong><span>Ear protection and gloves below reorder threshold.</span></div><span class="ppe-signal-tag is-stock">Stock</span></div>
+              <div class="ppe-signal"><i class="fas fa-clipboard-check" /><div><strong>Inspection cadence</strong><span>Harness checks are due this week for Site B.</span></div><span class="ppe-signal-tag is-due">Due</span></div>
+            </div>
           </div>
         </div>
 
