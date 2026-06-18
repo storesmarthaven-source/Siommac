@@ -62,16 +62,31 @@ html.app-active,
 body.app-active { overflow: hidden; height: 100%; }
 input, select, textarea { font-size: 16px !important; touch-action: manipulation; font-family: inherit; }
 
-/* ── Global FontAwesome icon centering ──────────────────────────────────────
-   FontAwesome 6 renders glyphs via a ::before pseudo-element with the font's
-   own ascender/descender padding, so an icon dropped into a flex/grid "chip"
-   box won't sit dead-center on its own. Normalizing line-height to 1 removes
-   that vertical bias; any element using display:flex/grid/inline-flex with
-   center alignment then centers the glyph perfectly. This keeps every current
-   and future icon chip (.ppe-signal i, .overview-title-section i, .stat-card
-   icons, etc.) centered without per-component tweaks. */
-.fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-light, .fa-brands {
-  line-height: 1;
+/* ── Global FontAwesome icon-chip centering ─────────────────────────────────
+   FontAwesome sets `display: var(--fa-display, inline-block)` on its icon
+   classes, so a sized "chip" <i> (fixed width/height + grid/flex) doesn't
+   reliably center its glyph: the inline-block default and the glyph's own line
+   box fight the container's alignment. The robust, future-proof fix is to make
+   any FA icon that has been given chip dimensions flex-center its own glyph.
+
+   We scope this to icon CHIPS only (an FA <i> that an author sized via width),
+   never inline icons sitting next to text. Authoring contract: give the icon
+   element the `.icon-chip` class OR a width — the rules below then center it.
+   This covers .ppe-insight i, .ppe-signal > i, .overview-title-section i,
+   stat-card icons, and any future chip with zero per-component CSS. */
+.fa, .fas, .far, .fal, .fab,
+.fa-solid, .fa-regular, .fa-light, .fa-brands { line-height: 1; }
+
+/* Reusable icon-chip: a fixed-size FA icon badge whose glyph is always centered.
+   FA sets `display: var(--fa-display, inline-block)`, so overriding the variable
+   (rather than `display` directly) makes FA's own rule resolve to a flex box we
+   then center. Authoring contract: add `.icon-chip` to any FA <i> you size as a
+   badge — works app-wide with zero per-component CSS. */
+.icon-chip {
+  --fa-display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 /* Kill browser autofill yellow background globally */
