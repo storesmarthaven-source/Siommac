@@ -73,52 +73,57 @@ const drill = (value: string): [string, string][] => [
   ['Next action',   'Review controls, attach evidence, assign owner'],
 ];
 
-// ── SVG donut ring (for % KPIs) ───────────────────────────────────────────────
+// ── SVG donut ring (Dropify thin-ring style, with centred value text) ────────
 
-function DonutRing({ pct, color, size = 44 }: { pct: number; color: string; size?: number }): VNode {
-  const r  = (size - 6) / 2;
-  const c  = size / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-  // start from top (−90°)
-  const offset = circ * 0.25;
+function DonutRing({ pct, color, trackColor, size = 52 }: {
+  pct: number; color: string; trackColor: string; size?: number;
+}): VNode {
+  const r     = (size - 7) / 2;
+  const cx    = size / 2;
+  const circ  = 2 * Math.PI * r;
+  const dash  = (pct / 100) * circ;
+  const off   = circ * 0.25; // start from top
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
-      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--bg-subtle,#e2e8f0)" stroke-width="5" />
-      <circle cx={c} cy={c} r={r} fill="none" stroke={color} stroke-width="5"
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={trackColor} stroke-width="5.5" />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={color} stroke-width="5.5"
         stroke-dasharray={`${dash} ${circ - dash}`}
-        stroke-dashoffset={offset}
+        stroke-dashoffset={off}
         stroke-linecap="round"
-        style="transition:stroke-dasharray .4s ease"
       />
+      <text x={cx} y={cx + 4} text-anchor="middle" font-size="11" font-weight="700" fill={color}>
+        {pct}%
+      </text>
     </svg>
   );
 }
 
-// ── tiny sparkline (for count KPIs) ──────────────────────────────────────────
+// ── bar sparkline (Dropify: thin bars, tallest = accent colour) ───────────────
 
-const SP_W = 80, SP_H = 26;
-function MiniSpark({ vals, color }: { vals: number[]; color: string }): VNode {
+function BarSpark({ vals, color }: { vals: number[]; color: string }): VNode {
   const max = Math.max(...vals, 1);
-  const pts = vals.map((v, i) =>
-    `${(i / (vals.length - 1)) * SP_W},${SP_H - 2 - (v / max) * (SP_H - 4)}`
-  ).join(' L');
-  const last = vals[vals.length - 1]!;
-  const lx = SP_W;
-  const ly = SP_H - 2 - (last / max) * (SP_H - 4);
+  const maxIdx = vals.indexOf(Math.max(...vals));
   return (
-    <svg viewBox={`0 0 ${SP_W} ${SP_H}`} width={SP_W} height={SP_H}
-      style={{ display: 'block', overflow: 'visible', marginTop: '8px' }}>
-      <path d={`M${pts}`} fill="none" stroke={color} stroke-width="1.5"
-        stroke-linecap="round" stroke-linejoin="round" />
-      <circle cx={lx} cy={ly} r="3" fill={color} stroke="var(--bg-card)" stroke-width="1.5" />
-    </svg>
+    <div class="hse-bar-spark">
+      {vals.map((v, i) => (
+        <span key={i}
+          style={{
+            height: `${Math.max(20, (v / max) * 100)}%`,
+            background: i === maxIdx ? color : 'var(--hse-spark-bar-base)',
+            borderRadius: '3px 3px 0 0',
+            flex: 1,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
-// ── KPI row ───────────────────────────────────────────────────────────────────
+// ── KPI row — Dropify card anatomy ───────────────────────────────────────────
+// Top row: label (tiny caps) left · tinted icon circle right
+// Middle: huge value (count) OR donut ring (%) · delta chip
+// Bottom: bar sparkline (counts) OR thin track bar (%)
 
-// mini trend vals per KPI (month-by-month)
 const KPI_TRENDS: Record<string, number[]> = {
   'OSH Recordables': [1, 2, 3, 2, 3, 3],
   'Lost Time Cases': [0, 1, 0, 1, 0, 1],
@@ -137,39 +142,75 @@ const KPI_ICON: Record<string, string> = {
   'PPE Compliance':  'fa-helmet-safety',
 };
 
+// Dropify uses same-family tints for the icon circle bg
+const SEV_TINT: Record<string, { bg: string; text: string; track: string }> = {
+  danger:  { bg: 'var(--hse-red-tint)',   text: 'var(--hse-red)',   track: 'var(--hse-red-tint)'   },
+  warning: { bg: 'var(--hse-amber-tint)', text: 'var(--hse-amber)', track: 'var(--hse-amber-tint)' },
+  success: { bg: 'var(--hse-green-tint)', text: 'var(--hse-green)', track: 'var(--hse-green-tint)' },
+  info:    { bg: 'var(--hse-blue-tint)',  text: 'var(--hse-blue)',  track: 'var(--hse-blue-tint)'  },
+};
+
 const SEV_COL = (sev: string) =>
   sev === 'danger' ? C.red : sev === 'warning' ? C.amber : sev === 'success' ? C.green : C.blue;
+
+function deltaChip(vals: number[], goodDown = false): VNode | null {
+  if (vals.length < 2) return null;
+  const d = vals[vals.length - 1]! - vals[vals.length - 2]!;
+  if (d === 0) return null;
+  const isGood = goodDown ? d < 0 : d > 0;
+  return (
+    <span class={`hse-delta-chip ${isGood ? 'good' : 'bad'}`}>
+      <i class={`fas ${d < 0 ? 'fa-arrow-down' : 'fa-arrow-up'}`} />
+      {Math.abs(d)}{vals[0]! > 10 ? '%' : ''}
+    </span>
+  );
+}
 
 function KpiRow({ onOpen }: { onOpen: (d: DD) => void }): VNode {
   return (
     <div class="hse-kpi-row">
       {mockHseKpis.map(k => {
-        const col   = SEV_COL(k.severity);
-        const isPct = k.value.includes('%');
-        const pct   = isPct ? parseInt(k.value, 10) : 0;
-        const tvals = KPI_TRENDS[k.label] ?? [0];
+        const tint   = SEV_TINT[k.severity] ?? SEV_TINT.info!;
+        const col    = tint.text;
+        const isPct  = k.value.includes('%');
+        const pct    = isPct ? parseInt(k.value, 10) : 0;
+        const tvals  = KPI_TRENDS[k.label] ?? [0];
+        const isDown = k.severity === 'danger'; // lower is better for count KPIs
+
         return (
           <article key={k.label}
-            class={`hse-kpi-card hse-kpi-card--${k.severity}`}
+            class="hse-kpi-card"
             onClick={() => onOpen({ title: k.label, subtitle: k.subtitle, rows: drill(k.value) })}>
-            <div class="hse-kpi-card-top">
-              <div class={`hse-kpi-icon hse-kpi-icon--${k.severity}`}>
+
+            {/* top row — label + tinted circle icon */}
+            <div class="hse-kpi-top-row">
+              <span class="hse-kpi-label">{k.label}</span>
+              <div class="hse-kpi-icon-circle" style={{ background: tint.bg, color: col }}>
                 <i class={`fas ${KPI_ICON[k.label] ?? 'fa-chart-simple'}`} />
               </div>
+            </div>
+
+            {/* value row — huge number OR donut, with delta chip */}
+            <div class="hse-kpi-value-row">
               {isPct
-                ? <DonutRing pct={pct} color={col} size={44} />
+                ? <DonutRing pct={pct} color={col} trackColor={tint.track} size={52} />
                 : <div class="hse-kpi-big" style={{ color: col }}>{k.value}</div>
               }
+              {deltaChip(tvals, isDown)}
             </div>
-            {isPct && <div class="hse-kpi-big" style={{ color: col }}>{k.value}</div>}
-            <div class="hse-kpi-label">{k.label}</div>
+
+            {/* note */}
             <div class="hse-kpi-note">{k.note}</div>
-            {!isPct && <MiniSpark vals={tvals} color={col} />}
-            {isPct && (
-              <div class="hse-kpi-bar-track">
-                <div class="hse-kpi-bar-fill" style={{ width: `${pct}%`, background: col }} />
-              </div>
-            )}
+
+            {/* bottom chart — bar spark (counts) or thin track bar (%) */}
+            {!isPct
+              ? <BarSpark vals={tvals} color={col} />
+              : (
+                <div class="hse-kpi-track">
+                  <div class="hse-kpi-track-fill" style={{ width: `${pct}%`, background: col }} />
+                </div>
+              )
+            }
           </article>
         );
       })}

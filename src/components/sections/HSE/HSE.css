@@ -1408,12 +1408,18 @@
    HSE DASHBOARD REDESIGN — semantic colour tokens + new components
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* Semantic colour tokens — use these everywhere instead of raw hex */
+/* Semantic colour tokens + Dropify-style tint tokens */
 .hse-dash {
-  --hse-red:   var(--siomac-red, #e40c0c);
-  --hse-amber: #d97706;
-  --hse-green: #16a34a;
-  --hse-blue:  #2563eb;
+  --hse-red:         var(--siomac-red, #e40c0c);
+  --hse-amber:       #d97706;
+  --hse-green:       #16a34a;
+  --hse-blue:        #2563eb;
+  /* tint = same-family bg for icon circles (Dropify pattern) */
+  --hse-red-tint:    rgba(228,12,12,.09);
+  --hse-amber-tint:  rgba(217,119,6,.09);
+  --hse-green-tint:  rgba(22,163,74,.09);
+  --hse-blue-tint:   rgba(37,99,235,.09);
+  --hse-spark-bar-base: var(--bg-subtle, #e2e8f0);
 }
 
 /* ── Filter bar ── */
@@ -1485,7 +1491,10 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   KPI ROW — donut rings for %, sparklines for count KPIs
+   KPI ROW — Dropify card anatomy
+   Top: label (tiny caps) · tinted icon circle
+   Mid: huge number (counts) or donut ring (%) · delta chip
+   Bot: bar sparkline (counts) or thin track bar (%)
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .hse-kpi-row {
@@ -1493,45 +1502,71 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
+
 .hse-kpi-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 14px 14px 12px;
-  box-shadow: var(--shadow-card); cursor: pointer;
-  transition: transform .15s, box-shadow .15s;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 16px 14px;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
   display: flex; flex-direction: column; gap: 0;
+  transition: transform .15s, box-shadow .15s;
 }
 .hse-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
 
-.hse-kpi-card-top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 8px;
-}
-.hse-kpi-icon {
-  width: 34px; height: 34px; border-radius: 9px;
-  display: grid; place-items: center; flex-shrink: 0;
-}
-.hse-kpi-icon i { display: grid !important; place-items: center !important; font-size: 0.88rem; }
-.hse-kpi-icon--danger  { background: rgba(228,12,12,.1);  color: var(--hse-red);   }
-.hse-kpi-icon--warning { background: rgba(217,119,6,.1);  color: var(--hse-amber); }
-.hse-kpi-icon--success { background: rgba(22,163,74,.1);  color: var(--hse-green); }
-.hse-kpi-icon--info    { background: rgba(37,99,235,.1);  color: var(--hse-blue);  }
-
-.hse-kpi-big {
-  font-size: 1.7rem; font-weight: 800; line-height: 1;
-  letter-spacing: -.02em; margin: 4px 0;
+/* top row */
+.hse-kpi-top-row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
+  margin-bottom: 10px;
 }
 .hse-kpi-label {
-  font-size: 0.68rem; font-weight: 800; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: .05em; margin-top: 2px;
+  font-size: 0.65rem; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .06em; line-height: 1.3;
 }
+
+/* tinted circle icon — Dropify signature */
+.hse-kpi-icon-circle {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.hse-kpi-icon-circle i { display: grid !important; place-items: center !important; font-size: 0.85rem; }
+
+/* value row */
+.hse-kpi-value-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 4px;
+}
+.hse-kpi-big {
+  font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -.03em;
+}
+
+/* delta chip — Dropify: same-family tinted bg */
+.hse-delta-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.65rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;
+}
+.hse-delta-chip i { display: grid !important; place-items: center !important; font-size: 0.6rem; }
+.hse-delta-chip.good { background: var(--hse-green-tint); color: var(--hse-green); }
+.hse-delta-chip.bad  { background: var(--hse-red-tint);   color: var(--hse-red);   }
+
+/* note */
 .hse-kpi-note {
-  font-size: 0.68rem; color: var(--text-muted); margin-top: 4px;
+  font-size: 0.68rem; color: var(--text-muted); margin-bottom: 10px;
 }
-.hse-kpi-bar-track {
+
+/* bar sparkline (Dropify: thin bars, accent on max) */
+.hse-bar-spark {
+  display: flex; align-items: flex-end; gap: 3px; height: 34px; margin-top: auto;
+}
+
+/* thin track bar for % KPIs */
+.hse-kpi-track {
   height: 3px; border-radius: 999px;
-  background: var(--bg-subtle, #e2e8f0); overflow: hidden; margin-top: 8px;
+  background: var(--hse-spark-bar-base); overflow: hidden; margin-top: auto;
 }
-.hse-kpi-bar-fill { height: 100%; border-radius: inherit; transition: width .4s ease; }
+.hse-kpi-track-fill { height: 100%; border-radius: inherit; transition: width .4s ease; }
 
 @container hse (max-width: 1100px) {
   .hse-kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
