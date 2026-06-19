@@ -1404,4 +1404,84 @@
 .wf-submitted p { font-size: 0.84rem; color: var(--text-muted); max-width: 400px; line-height: 1.6; margin: 0; }
 .wf-submitted-actions { display: flex; gap: 10px; margin-top: 8px; }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   HSE DASHBOARD REDESIGN — semantic colour tokens + new components
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Semantic colour tokens — use these everywhere instead of raw hex */
+.hse-dash {
+  --hse-red:   var(--siomac-red, #e40c0c);
+  --hse-amber: #d97706;
+  --hse-green: #16a34a;
+  --hse-blue:  #2563eb;
+}
+
+/* ── Filter bar ── */
+.hse-filter-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 10px 14px; box-shadow: var(--shadow-card);
+}
+.hse-live-pulse {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.72rem; font-weight: 700; color: var(--hse-green);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.hse-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--hse-green); flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(22,163,74,.16);
+}
+.hse-filter-sel {
+  min-height: 36px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--bg-card); color: var(--text-default, #334155);
+  padding: 0 10px; outline: 0; font-size: 0.8rem; font-family: inherit;
+  cursor: pointer; box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
+}
+.hse-filter-sel:focus { border-color: var(--siomac-navy); }
+
+/* ── KPI card enhancements ── */
+.hse-kpi-top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+.hse-kpi-icon {
+  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.hse-kpi-icon i { display: grid !important; place-items: center !important; font-size: 0.95rem; }
+.hse-kpi-icon--danger  { background: rgba(228,12,12,.1);  color: var(--hse-red);   }
+.hse-kpi-icon--warning { background: rgba(217,119,6,.1);  color: var(--hse-amber); }
+.hse-kpi-icon--success { background: rgba(22,163,74,.1);  color: var(--hse-green); }
+.hse-kpi-icon--info    { background: rgba(37,99,235,.1);  color: var(--hse-blue);  }
+
+/* Bottom accent bar on KPI cards */
+.hse-kpi-accent {
+  height: 3px; border-radius: 999px; margin-top: 14px;
+  background: var(--border); overflow: hidden;
+}
+.hse-kpi-accent--danger  { background: var(--hse-red);   }
+.hse-kpi-accent--warning { background: var(--hse-amber); }
+.hse-kpi-accent--success { background: var(--hse-green); }
+.hse-kpi-accent--info    { background: var(--hse-blue);  }
+
+/* Make KPI cards clickable */
+.hse-kpi-card { cursor: pointer; }
+
+/* ── Progress bar (new variant, no class modifier needed) ── */
+.hse-progress-new { /* same structure as .hse-progress — colour passed via inline style on <i> */
+  height: 6px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0); overflow: hidden; margin: 6px 0;
+}
+.hse-progress-new > i { display: block; height: 100%; border-radius: inherit; transition: width .4s ease; }
+
+/* ── Trend chart — use colour tokens ── */
+.hse-trend-svg .line-closure { stroke: var(--hse-green); }
+.hse-trend-svg .dot-closure  { fill: var(--hse-green); }
+.hse-trend-card.closure strong { color: var(--hse-green); }
+
+/* ── Responsive: filter bar wraps on small screens ── */
+@container hse (max-width: 760px) {
+  .hse-filter-bar { gap: 8px; }
+  .hse-filter-sel  { flex: 1 1 120px; }
+}
+
 }

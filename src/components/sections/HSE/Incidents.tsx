@@ -644,7 +644,7 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
   incident: IncidentRecord | null; onClose: () => void; onInvestigate: () => void;
 }): VNode {
   const open = !!i;
-  const sev  = i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info;
+  const sev  = (i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info)!;
 
   const isInvestigating = /investigation/i.test(i?.status ?? '');
   const isClosed        = /closed/i.test(i?.status ?? '');
