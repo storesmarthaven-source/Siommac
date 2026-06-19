@@ -568,7 +568,6 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
 }): VNode {
   const open = !!i;
   const sev  = i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info;
-  const det  = INCIDENT_DETAIL.default;
 
   const isInvestigating = /investigation/i.test(i?.status ?? '');
   const isClosed        = /closed/i.test(i?.status ?? '');
@@ -612,7 +611,7 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
         {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
 
-          {/* 3-col info grid */}
+          {/* 3-cell info row */}
           <div class="hse-idrawer-grid">
             <div class="hse-idrawer-cell">
               <i class="fas fa-circle-dot" />
@@ -629,52 +628,12 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
               <span>Reporter</span>
               <strong>{i?.reporter ?? '—'}</strong>
             </div>
-            <div class="hse-idrawer-cell">
-              <i class="fas fa-map-pin" />
-              <span>Location</span>
-              <strong>{det.location}</strong>
-            </div>
-            <div class="hse-idrawer-cell">
-              <i class="fas fa-users" />
-              <span>People involved</span>
-              <strong>{det.peopleInvolved}</strong>
-            </div>
-            <div class="hse-idrawer-cell">
-              <i class="fas fa-stopwatch" />
-              <span>Response time</span>
-              <strong>{det.responseTime}</strong>
-            </div>
           </div>
 
           {/* What happened */}
           <div class="hse-idrawer-section">
             <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> What happened</div>
-            <div class="hse-idrawer-osh-tag"><i class="fas fa-gavel" /> {det.oshClass}</div>
             <p class="hse-idrawer-body-text">{i?.description ?? '—'}</p>
-            <div class="hse-idrawer-factors">
-              {det.keyFactors.map(f => (
-                <span class="hse-idrawer-factor" key={f}><i class="fas fa-diamond" /> {f}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* Immediate actions */}
-          <div class="hse-idrawer-section hse-idrawer-section--alert">
-            <div class="hse-idrawer-section-head"><i class="fas fa-bolt" /> Immediate actions taken</div>
-            <div class="hse-idrawer-actions">
-              {det.actionsTaken.map(a => (
-                <div class="hse-idrawer-action" key={a.label}>
-                  <i class="fas fa-circle-check" />
-                  <span>{a.label}</span>
-                  <em>{a.by} · {a.time}</em>
-                </div>
-              ))}
-            </div>
-            <div class="hse-idrawer-escalation">
-              <i class="fas fa-share-nodes" />
-              <span>Escalated to:</span>
-              <strong>{det.escalatedTo}</strong>
-            </div>
           </div>
 
           {/* Investigation workflow timeline */}
@@ -684,7 +643,7 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
               {steps.map((step, idx) => (
                 <div class={`hse-idrawer-step${step.done ? ' done' : step.active ? ' active' : ''}`} key={idx}>
                   <div class="hse-idrawer-step-dot">
-                    <i class={`fas ${step.done ? 'fa-check' : step.active ? step.icon : step.icon}`} />
+                    <i class={`fas ${step.done ? 'fa-check' : step.icon}`} />
                   </div>
                   <div class="hse-idrawer-step-body">
                     <strong>{step.label}</strong>
