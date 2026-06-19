@@ -139,6 +139,17 @@ export const HSE_AREAS: HseArea[] = [
       sub('documents', 'sds',  'SDS Library', 'fa-flask'),
     ],
   },
+  {
+    key: 'workflows', parentId: 's-hse-workflows', label: 'Workflows', icon: 'fa-diagram-project',
+    sub: 'Approvals, register, audit trail and wizard', visNamespace: 'hse-workflows', defaultTab: 'approvals',
+    items: [
+      sub('workflows', 'approvals', 'Approvals',         'fa-inbox',               true),
+      sub('workflows', 'register',  'Workflow Register',  'fa-list-check',          true),
+      sub('workflows', 'audit',     'Audit Log',          'fa-shield-halved',       true),
+      sub('workflows', 'handoffs',  'Handoffs',           'fa-handshake',           false),
+      sub('workflows', 'wizard',    'New Workflow',        'fa-wand-magic-sparkles', true),
+    ],
+  },
 ];
 
 /** Resolve which area + tab a section id belongs to (null if not an HSE area). */

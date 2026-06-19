@@ -16,6 +16,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { ProfilePill } from '@shared/ProfilePill';
+import { useWorkflow } from '@lib/workflow';
 import {
   mockHeroStats, HSE_HEALTH_SCORE, mockHseKpis, mockTrend, mockQueue,
   mockHseIncidents, mockSiteRisk, mockPermits, mockReadiness,
@@ -212,6 +213,99 @@ function IncidentRow({ i, onOpen }: { i: HseIncident; onOpen: (d: DrawerData) =>
   );
 }
 
+// ── Workflow / approvals strip ────────────────────────────────────────────────
+
+function ApprovalsStrip(): VNode {
+  const wf = useWorkflow();
+  const pending   = wf.state.approvals.filter(a => a.status === 'pending').length;
+  const workflows = wf.openCount;
+  const audits    = wf.state.audit.length;
+  const recent    = wf.state.audit.slice(0, 4);
+
+  return (
+    <div class="hse-approvals-strip">
+      {/* Live counts */}
+      <div class="hse-approvals-kpis">
+        <div class={`hse-appr-tile${pending > 0 ? ' urgent' : ''}`}>
+          <i class="fas fa-inbox" />
+          <div>
+            <strong>{pending}</strong>
+            <span>Pending approvals</span>
+          </div>
+        </div>
+        <div class="hse-appr-tile">
+          <i class="fas fa-diagram-project" />
+          <div>
+            <strong>{workflows}</strong>
+            <span>Open workflows</span>
+          </div>
+        </div>
+        <div class="hse-appr-tile">
+          <i class="fas fa-shield-check" />
+          <div>
+            <strong>{audits}</strong>
+            <span>Audit events logged</span>
+          </div>
+        </div>
+        <div class="hse-appr-tile">
+          <i class="fas fa-handshake" />
+          <div>
+            <strong>{wf.state.handoffs.length}</strong>
+            <span>Cross-module handoffs</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pending approvals queue */}
+      {pending > 0 && (
+        <div class="hse-appr-queue">
+          <div class="hse-appr-queue-head"><i class="fas fa-bell" /> Awaiting your decision</div>
+          {wf.state.approvals.filter(a => a.status === 'pending').map(a => (
+            <div class="hse-appr-item" key={a.id}>
+              <div class="hse-appr-item-icon">
+                <i class="fas fa-file-circle-check" />
+              </div>
+              <div class="hse-appr-item-body">
+                <strong>{a.title}</strong>
+                <span>{a.recordRef} · {a.approverRole}</span>
+              </div>
+              <div class="hse-appr-item-actions">
+                <button class="hse-appr-btn approve" onClick={() => wf.decide(a.id, 'approve', 'Approved via dashboard')}>
+                  <i class="fas fa-check" /> Approve
+                </button>
+                <button class="hse-appr-btn return" onClick={() => wf.decide(a.id, 'return', 'Returned for review')}>
+                  <i class="fas fa-rotate-left" /> Return
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Audit feed */}
+      {recent.length > 0 && (
+        <div class="hse-audit-feed">
+          <div class="hse-appr-queue-head"><i class="fas fa-shield-halved" /> Recent audit events</div>
+          {recent.map((ev, i) => (
+            <div class="hse-audit-row" key={i}>
+              <span class="hse-audit-ts">{new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span class="hse-audit-event">{ev.event}</span>
+              <span class="hse-audit-user">{ev.actor}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {pending === 0 && recent.length === 0 && (
+        <div class="hse-appr-empty">
+          <i class="fas fa-circle-check" />
+          <span>No pending approvals · Submit an incident, permit, or document to see workflow activity here.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Dashboard ───────────────────────────────────────────────────────────────────
 
 export function HSEDashboard(): VNode {
@@ -312,6 +406,9 @@ export function HSEDashboard(): VNode {
       <div class="hse-kpi-grid">
         {mockHseKpis.map(k => <HseKpiCard key={k.label} kpi={k} onOpen={open} />)}
       </div>
+
+      {/* Live workflow / approvals strip */}
+      <ApprovalsStrip />
 
       {/* Trend + critical work queue */}
       <div class="hse-perf-grid">

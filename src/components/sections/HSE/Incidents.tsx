@@ -769,8 +769,8 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
 
 function TrendSparkline(): VNode {
   const pts  = mockTrend;
-  const last = pts[pts.length - 1];
-  const prev = pts[pts.length - 2];
+  const last = pts[pts.length - 1]!;
+  const prev = pts[pts.length - 2]!;
   const W = 160, H = 36;
 
   function xi(i: number) { return (i / (pts.length - 1)) * W; }

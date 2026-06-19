@@ -16,6 +16,7 @@ import { InspectionsArea } from './Inspections';
 import { TrainingArea }    from './Training';
 import { ToolboxArea }     from './Toolbox';
 import { DocumentsArea }   from './Documents';
+import { WorkflowsArea }  from './Workflows';
 import '@components/workflow';   // registers workflow.css for area workflow UI
 
 /** Placeholder body — replaced per area as each is implemented. */
@@ -52,6 +53,7 @@ export function AreaRouter({ area, tab }: { area: string; tab: string }): VNode 
     case 'training':     return <TrainingArea tab={tab} />;
     case 'toolbox':      return <ToolboxArea tab={tab} />;
     case 'documents':    return <DocumentsArea tab={tab} />;
+    case 'workflows':    return <WorkflowsArea tab={tab} />;
     default:             return <AreaPlaceholder areaKey={area} tab={tab} />;
   }
 }
