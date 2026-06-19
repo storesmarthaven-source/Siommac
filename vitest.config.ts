@@ -140,6 +140,7 @@ export default defineConfig({
       { find: '@components/nav',      replacement: resolve(__dirname, 'src/components/nav')      },
       { find: '@components/realtime', replacement: resolve(__dirname, 'src/components/realtime') },
       { find: '@components/livemap',  replacement: resolve(__dirname, 'src/components/livemap')  },
+      { find: '@components/workflow', replacement: resolve(__dirname, 'src/components/workflow') },
 
       // ── Bare aliases (LAST — fallback for index-file imports) ─────────────
       { find: '@store',    replacement: resolve(__dirname, 'src/store/index.ts')         },

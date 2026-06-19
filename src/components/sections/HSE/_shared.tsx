@@ -54,6 +54,29 @@ export function AreaHero({ icon, title, sub, crumb, stats, actions }: {
   );
 }
 
+// ── In-page tab bar (area sub-views) ──────────────────────────────────────────
+
+export interface AreaTab { key: string; label: string; icon: string; }
+
+/** Pill-style tab bar for an area's sub-views (Register / Report / …). */
+export function AreaTabs({ tabs, active, onSelect }: {
+  tabs: AreaTab[]; active: string; onSelect: (key: string) => void;
+}): VNode {
+  return (
+    <div class="hse-area-tabs" role="tablist">
+      {tabs.map(t => (
+        <button
+          key={t.key} role="tab" aria-selected={t.key === active}
+          class={`hse-area-tab${t.key === active ? ' active' : ''}`}
+          onClick={() => onSelect(t.key)}
+        >
+          <i class={`fas ${t.icon}`} /> {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── Section head (icon + title + sub + actions) ───────────────────────────────
 
 export function SectionHead({ icon, title, sub, actions }: {

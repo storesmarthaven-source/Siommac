@@ -287,6 +287,30 @@
 .hse-textarea { min-height: 76px; padding: 10px 12px; resize: vertical; line-height: 1.4; }
 @media (max-width: 560px) { .hse-form-grid { grid-template-columns: 1fr; } }
 
+/* ── In-page area tab bar (sub-views of an HSE area) ── */
+.hse-area-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 6px; box-shadow: var(--shadow-card);
+}
+.hse-area-tab {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-family: inherit;
+  background: transparent; border: none; padding: 9px 15px; border-radius: 10px;
+  font-size: 0.82rem; font-weight: 600; color: var(--text-muted); transition: background .15s, color .15s;
+}
+.hse-area-tab i { font-size: 0.82rem; }
+.hse-area-tab:hover { background: var(--bg-subtle, #F8FAFE); color: var(--siomac-navy); }
+.hse-area-tab.active { background: var(--siomac-navy); color: #fff; }
+
+/* ── 5-Whys chain (investigation drawer) ── */
+.hse-whys { display: grid; gap: 8px; }
+.hse-why { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+.hse-why b {
+  width: 26px; height: 26px; display: grid; place-items: center !important; border-radius: 8px;
+  background: var(--siomac-navy); color: #fff; font-size: 0.72rem;
+}
+.hse-why span { color: var(--text-muted); font-size: 0.78rem; line-height: 1.4; padding-top: 3px; }
+
 /* The app's content area is narrowed by the 272px sidebar, so these queries fire
    on the *content* width (via the .hse-dash container query below) rather than the
    raw viewport — keeping the multi-column layout on normal laptops. */

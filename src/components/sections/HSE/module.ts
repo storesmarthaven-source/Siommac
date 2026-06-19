@@ -21,20 +21,20 @@ const HSE_ROOT_ID = 'preact-hse-root';
 // collapsible parent gets the customize gear via the generic navCore logic.
 const HSE_VIS_NAMESPACE = 'hse';
 
-// HSE Dashboard always leads the group.
+const HSE_DASHBOARD_ID = 's-hse-dashboard';
+
+// HSE Dashboard is the collapsible parent for every functional area. Clicking it
+// routes to the dashboard page; its chevron expands the area list.
 const DASHBOARD_ITEM: ModuleNavItem = {
-  id: 's-hse-dashboard', label: 'HSE Dashboard', icon: 'fa-gauge-high', sub: 'Incident KPIs, trends and recent events',
+  id: HSE_DASHBOARD_ID, label: 'HSE Dashboard', icon: 'fa-gauge-high', sub: 'Incident KPIs, trends and recent events',
 };
 
-// Each HSE area contributes a parent nav item; areas with sub-tabs also
-// contribute nested (visibility-toggleable) children. Built from HSE_AREAS so
-// adding an area needs no edits here.
-const AREA_ITEMS: ModuleNavItem[] = HSE_AREAS.flatMap(area => [
-  { id: area.parentId, label: area.label, icon: area.icon, sub: area.sub },
-  ...area.items.map(i => ({
-    id: i.id, label: i.label, icon: i.icon, parent: area.parentId, defaultVisible: i.defaultVisible,
-  })),
-]);
+// Each HSE area is a child of HSE Dashboard (one sidebar level). The area's own
+// sub-tabs are rendered IN-PAGE, not in the sidebar — so areas carry no
+// defaultVisible flag and therefore get no customize gear.
+const AREA_ITEMS: ModuleNavItem[] = HSE_AREAS.map(area => ({
+  id: area.parentId, label: area.label, icon: area.icon, parent: HSE_DASHBOARD_ID,
+}));
 
 // PPE Manager parent + its 13 sub-items (kept as-is) close out the group.
 const PPE_PARENT_ITEM: ModuleNavItem = {

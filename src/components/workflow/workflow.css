@@ -1,8 +1,8 @@
 /**
  * src/components/workflow/workflow.css — reusable workflow UI primitives.
- * Siomac navy/red, wrapped in @layer sections. Reuses .hse-drawer*/.hse-btn/
- * .vt-pill from the HSE module; adds the .wf-* surfaces (inbox, audit, handoffs,
- * stages, route).
+ * Siomac navy/red, wrapped in @layer sections. Reuses the .hse-drawer, .hse-btn
+ * and .vt-pill primitives from the HSE module; adds the .wf-* surfaces (inbox,
+ * audit, handoffs, stages, route).
  */
 @layer sections {
 
