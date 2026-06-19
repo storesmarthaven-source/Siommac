@@ -238,3 +238,224 @@ export function ppePillClass(status: string): string {
     default:            return 'vt-pill is-info';
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HSE areas — shared roster + per-area models and mock data (UI-only, ~25 staff,
+// Trinidad & Tobago sites). All `mock*` arrays stand in for a future backend.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Shared HSE workforce roster (reused by training/JSA/toolbox attendance). */
+export interface HseWorker { id: string; name: string; role: string; department: string; site: string; }
+
+export const HSE_SITES = ['Point Lisas Plant', 'La Brea Yard', 'Piarco Logistics', 'Port of Spain Office', 'Galeota Marine Base'] as const;
+
+export const mockHseWorkers: HseWorker[] = [
+  { id: 'EMP-0418', name: 'Andre Williams',     role: 'Maintenance Technician', department: 'Maintenance', site: 'Point Lisas Plant' },
+  { id: 'EMP-0216', name: 'Jamal Lewis',         role: 'Mechanical Fitter',      department: 'Operations',  site: 'La Brea Yard' },
+  { id: 'EMP-0301', name: 'Kavita Persad',       role: 'Process Operator',       department: 'Operations',  site: 'Point Lisas Plant' },
+  { id: 'EMP-0088', name: 'Sarah Chen',          role: 'HSE Manager',            department: 'HSE',         site: 'Port of Spain Office' },
+  { id: 'EMP-0142', name: 'Marlon Joseph',       role: 'Rigger',                 department: 'Construction', site: 'Galeota Marine Base' },
+  { id: 'EMP-0177', name: 'Anya Mohammed',       role: 'Site HSE Officer',       department: 'HSE',         site: 'La Brea Yard' },
+  { id: 'EMP-0220', name: 'Dwayne Charles',      role: 'Forklift Operator',      department: 'Logistics',   site: 'Piarco Logistics' },
+  { id: 'EMP-0255', name: 'Reza Khan',           role: 'Confined Space Attendant', department: 'Operations', site: 'Galeota Marine Base' },
+  { id: 'EMP-0309', name: 'Lisa Ramnarine',      role: 'Warehouse Lead',         department: 'Logistics',   site: 'Piarco Logistics' },
+  { id: 'EMP-0344', name: 'Terrence Baptiste',   role: 'Electrician',            department: 'Maintenance', site: 'Point Lisas Plant' },
+];
+
+// ── Incidents ──────────────────────────────────────────────────────────────────
+
+export type IncidentType = 'Injury' | 'Near Miss' | 'Environmental' | 'Property Damage' | 'Unsafe Act' | 'Unsafe Condition';
+
+export interface IncidentRecord {
+  ref: string; date: string; type: IncidentType; severity: HseSeverity;
+  site: string; status: string; reporter: string; description: string; immediateActions: string;
+}
+
+export const mockIncidents: IncidentRecord[] = [
+  { ref: 'INC-2026-041', date: '18 Jun 2026', type: 'Environmental', severity: 'danger',  site: 'Point Lisas Plant',  status: 'Investigation', reporter: 'A. Mohammed', description: 'Diesel sheen near storm drain during transfer-line cleanup.', immediateActions: 'Drain blocked, spill kit deployed, EMA notified.' },
+  { ref: 'NM-2026-118',  date: '18 Jun 2026', type: 'Near Miss',     severity: 'danger',  site: 'Galeota Marine Base', status: 'Open',          reporter: 'R. Khan',      description: 'Confined space entry stopped — gas test and rescue plan missing.', immediateActions: 'Entry halted, permit suspended.' },
+  { ref: 'INC-2026-039', date: '17 Jun 2026', type: 'Injury',        severity: 'warning', site: 'La Brea Yard',        status: 'Investigation', reporter: 'A. Mohammed', description: 'Contractor hand laceration during manual handling of sharp material.', immediateActions: 'First aid given, task paused for review.' },
+  { ref: 'OBS-2026-226', date: '16 Jun 2026', type: 'Unsafe Act',    severity: 'warning', site: 'Piarco Logistics',    status: 'In Review',     reporter: 'L. Ramnarine', description: 'Forklift crossed pedestrian route without a spotter.', immediateActions: 'Operator coached, route segregation reviewed.' },
+  { ref: 'INC-2026-037', date: '15 Jun 2026', type: 'Unsafe Condition', severity: 'danger', site: 'Port of Spain Office', status: 'Closed',       reporter: 'S. Chen',      description: 'Roof-edge maintenance task without a work-at-height control pack.', immediateActions: 'Work stopped, control pack raised.' },
+];
+
+/** Investigation (5-Whys) linked to an incident. */
+export interface Investigation {
+  ref: string; incidentRef: string; method: string; status: string; lead: string;
+  whys: string[]; rootCause: string;
+}
+
+export const mockInvestigations: Investigation[] = [
+  { ref: 'INV-041', incidentRef: 'INC-2026-041', method: '5-Whys', status: 'Open', lead: 'S. Chen',
+    whys: [
+      'Why did diesel reach the drain? Transfer hose coupling leaked.',
+      'Why did the coupling leak? Seal was past its inspection date.',
+      'Why was it past date? Coupling not in the PM schedule.',
+      'Why not scheduled? Asset register missing the transfer skid.',
+      'Why missing? Skid added after last register review.',
+    ], rootCause: 'Asset register gap — temporary skid omitted from PM scheduling.' },
+  { ref: 'INV-039', incidentRef: 'INC-2026-039', method: '5-Whys', status: 'In Review', lead: 'A. Mohammed',
+    whys: ['Why the laceration? Bare-hand handling of sharp stock.', 'Why bare-hand? Cut-resistant gloves out of stock.'], rootCause: 'PPE stock-out at point of work.' },
+];
+
+/** Corrective / preventive action (CAPA). */
+export interface CapaItem {
+  ref: string; title: string; source: string; owner: string; due: string; status: string; priority: HseSeverity;
+}
+
+export const mockCapa: CapaItem[] = [
+  { ref: 'CA-301', title: 'Add transfer skid to PM asset register', source: 'INC-2026-041', owner: 'S. Chen',           due: '24 Jun 2026', status: 'Open',            priority: 'danger'  },
+  { ref: 'CA-302', title: 'Run spill-response toolbox talk',        source: 'INC-2026-041', owner: 'Ops Supervisor',    due: '21 Jun 2026', status: 'Pending Evidence', priority: 'warning' },
+  { ref: 'CA-303', title: 'Replenish cut-resistant glove stock',    source: 'INC-2026-039', owner: 'L. Ramnarine',      due: '19 Jun 2026', status: 'Overdue',         priority: 'danger'  },
+  { ref: 'CA-304', title: 'Install pedestrian barriers at bay 3',   source: 'OBS-2026-226', owner: 'Warehouse Lead',    due: '28 Jun 2026', status: 'Open',            priority: 'warning' },
+];
+
+// ── Risk & JSA ──────────────────────────────────────────────────────────────────
+
+export interface HazardRow {
+  ref: string; hazard: string; category: string; site: string; likelihood: number; severity: number; controls: string;
+}
+
+export const mockHazards: HazardRow[] = [
+  { ref: 'HAZ-01', hazard: 'Diesel / chemical spill to ground',     category: 'Environmental', site: 'Point Lisas Plant',  likelihood: 3, severity: 4, controls: 'Bunding, spill kits, transfer checklist' },
+  { ref: 'HAZ-02', hazard: 'Confined space atmosphere',             category: 'Health',        site: 'Galeota Marine Base', likelihood: 2, severity: 5, controls: 'Gas test, PTW, standby + rescue plan' },
+  { ref: 'HAZ-03', hazard: 'Forklift / pedestrian interaction',     category: 'Safety',        site: 'Piarco Logistics',    likelihood: 4, severity: 3, controls: 'Segregation, spotters, traffic plan' },
+  { ref: 'HAZ-04', hazard: 'Work at height (roof edge)',            category: 'Safety',        site: 'Port of Spain Office', likelihood: 2, severity: 4, controls: 'Edge protection, harness, control pack' },
+  { ref: 'HAZ-05', hazard: 'Hot work / fire',                       category: 'Safety',        site: 'Point Lisas Plant',  likelihood: 2, severity: 4, controls: 'Hot-work permit, fire watch, gas-free cert' },
+];
+
+export interface RiskAssessmentRow {
+  ref: string; title: string; site: string; likelihood: number; severity: number; status: string; assessor: string;
+}
+
+export const mockRiskAssessments: RiskAssessmentRow[] = [
+  { ref: 'RA-2026-12', title: 'Transfer-line cleanup', site: 'Point Lisas Plant',  likelihood: 3, severity: 4, status: 'Active',   assessor: 'S. Chen' },
+  { ref: 'RA-2026-13', title: 'Vessel confined entry', site: 'Galeota Marine Base', likelihood: 2, severity: 5, status: 'Review',   assessor: 'A. Mohammed' },
+  { ref: 'RA-2026-14', title: 'Loading bay operations', site: 'Piarco Logistics',   likelihood: 4, severity: 3, status: 'Active',   assessor: 'L. Ramnarine' },
+];
+
+export interface JsaRow { ref: string; task: string; site: string; steps: number; status: string; reviewed: string; }
+
+export const mockJsas: JsaRow[] = [
+  { ref: 'JSA-018', task: 'Diesel transfer & line flush', site: 'Point Lisas Plant',  steps: 7, status: 'Active', reviewed: '12 Jun 2026' },
+  { ref: 'JSA-022', task: 'Confined space vessel entry',  site: 'Galeota Marine Base', steps: 9, status: 'Active', reviewed: '08 Jun 2026' },
+  { ref: 'JSA-025', task: 'Forklift load / unload',       site: 'Piarco Logistics',    steps: 6, status: 'Review', reviewed: '02 Jun 2026' },
+];
+
+/** Map a likelihood (1–5) × severity (1–5) to a risk rating band. */
+export function riskRating(likelihood: number, severity: number): { score: number; band: 'Low' | 'Medium' | 'High' | 'Critical'; severity: HseSeverity } {
+  const score = likelihood * severity;
+  if (score >= 15) return { score, band: 'Critical', severity: 'danger' };
+  if (score >= 10) return { score, band: 'High',     severity: 'danger' };
+  if (score >= 5)  return { score, band: 'Medium',   severity: 'warning' };
+  return { score, band: 'Low', severity: 'success' };
+}
+
+// ── Permits to Work ──────────────────────────────────────────────────────────────
+
+export interface PermitRow {
+  ref: string; type: string; site: string; gate: string; status: string; holder: string; expiry: string;
+}
+
+export const mockPermitRows: PermitRow[] = [
+  { ref: 'PTW-0033', type: 'Confined Space', site: 'Galeota Marine Base', gate: 'Gas test / rescue plan',     status: 'Blocked', holder: 'R. Khan',          expiry: 'Today 18:00' },
+  { ref: 'PTW-0032', type: 'Hot Work',       site: 'Point Lisas Plant',  gate: 'Fire watch / gas-free cert', status: 'Overdue', holder: 'T. Baptiste',      expiry: 'Today 16:00' },
+  { ref: 'PTW-0038', type: 'Work at Height', site: 'Port of Spain Office', gate: 'Harness / edge control',    status: 'Live',    holder: 'M. Joseph',        expiry: 'Tomorrow 12:00' },
+  { ref: 'PTW-0040', type: 'Electrical',     site: 'Point Lisas Plant',  gate: 'LOTO verification',          status: 'Hold',    holder: 'T. Baptiste',      expiry: 'Today 20:00' },
+];
+
+export const PERMIT_TYPES = ['Confined Space', 'Hot Work', 'Work at Height', 'Electrical (LOTO)', 'Excavation', 'Lifting'] as const;
+
+// ── Inspections & Audits ─────────────────────────────────────────────────────────
+
+export interface InspectionRow {
+  ref: string; title: string; type: string; site: string; due: string; status: string; assignee: string;
+}
+
+export const mockInspections: InspectionRow[] = [
+  { ref: 'INSP-201', title: 'Monthly fire equipment check', type: 'Fire',         site: 'Point Lisas Plant',  due: '20 Jun 2026', status: 'Due',       assignee: 'A. Mohammed' },
+  { ref: 'INSP-202', title: 'Lifting gear inspection',      type: 'Equipment',    site: 'Galeota Marine Base', due: '22 Jun 2026', status: 'Scheduled', assignee: 'M. Joseph' },
+  { ref: 'INSP-203', title: 'Housekeeping audit',           type: 'Housekeeping', site: 'Piarco Logistics',    due: '19 Jun 2026', status: 'Overdue',   assignee: 'L. Ramnarine' },
+  { ref: 'INSP-204', title: 'Chemical storage audit',       type: 'Chemical',     site: 'Point Lisas Plant',  due: '25 Jun 2026', status: 'Scheduled', assignee: 'S. Chen' },
+];
+
+export interface FindingRow {
+  ref: string; inspection: string; finding: string; severity: HseSeverity; status: string; site: string;
+}
+
+export const mockFindings: FindingRow[] = [
+  { ref: 'FND-051', inspection: 'INSP-203', finding: 'Blocked emergency exit in bay 3',        severity: 'danger',  status: 'Open',  site: 'Piarco Logistics' },
+  { ref: 'FND-052', inspection: 'INSP-203', finding: 'Spill pallet at capacity, not emptied',  severity: 'warning', status: 'Open',  site: 'Piarco Logistics' },
+  { ref: 'FND-053', inspection: 'INSP-201', finding: 'Extinguisher overdue for service',       severity: 'warning', status: 'Closed', site: 'Point Lisas Plant' },
+];
+
+// ── Training & Competency ────────────────────────────────────────────────────────
+
+export const TRAINING_COURSES = ['Confined Space', 'Work at Height', 'Fire Watch', 'First Aid', 'Spill Response', 'Forklift'] as const;
+
+export type CompetencyStatus = 'current' | 'due' | 'expired' | 'none';
+
+export interface CompetencyCell { course: string; status: CompetencyStatus; expiry?: string; }
+export interface CompetencyRow { worker: HseWorker; cells: CompetencyCell[]; }
+
+export const mockCompetency: CompetencyRow[] = mockHseWorkers.slice(0, 8).map((w, i) => ({
+  worker: w,
+  cells: TRAINING_COURSES.map((course, c) => {
+    const seed = (i + c) % 4;
+    const status: CompetencyStatus = seed === 0 ? 'expired' : seed === 1 ? 'due' : seed === 3 ? 'none' : 'current';
+    return { course, status, expiry: status === 'none' ? undefined : `${10 + ((i + c) % 18)} ${['Jul', 'Aug', 'Sep', 'Oct'][(i + c) % 4]} 2026` };
+  }),
+}));
+
+export interface CertificationRow {
+  ref: string; worker: string; course: string; issued: string; expiry: string; status: string;
+}
+
+export const mockCertifications: CertificationRow[] = [
+  { ref: 'CERT-1101', worker: 'Reza Khan',         course: 'Confined Space', issued: '12 Jul 2025', expiry: '12 Jul 2026', status: 'Due'     },
+  { ref: 'CERT-1102', worker: 'Marlon Joseph',     course: 'Work at Height', issued: '03 Sep 2025', expiry: '03 Sep 2026', status: 'Current' },
+  { ref: 'CERT-1103', worker: 'Andre Williams',    course: 'First Aid',      issued: '20 Jan 2024', expiry: '20 Jan 2026', status: 'Expired' },
+  { ref: 'CERT-1104', worker: 'Dwayne Charles',    course: 'Forklift',       issued: '15 Mar 2025', expiry: '15 Mar 2027', status: 'Current' },
+  { ref: 'CERT-1105', worker: 'Kavita Persad',     course: 'Spill Response', issued: '08 Jun 2025', expiry: '08 Jun 2026', status: 'Due'     },
+];
+
+// ── Toolbox Talks ────────────────────────────────────────────────────────────────
+
+export interface ToolboxTalkRow {
+  ref: string; topic: string; date: string; site: string; presenter: string; attendees: number; status: string;
+}
+
+export const mockToolboxTalks: ToolboxTalkRow[] = [
+  { ref: 'TBT-088', topic: 'Spill response & EMA reporting', date: '18 Jun 2026', site: 'Point Lisas Plant',  presenter: 'S. Chen',      attendees: 9,  status: 'Complete' },
+  { ref: 'TBT-087', topic: 'Confined space rescue refresh',  date: '17 Jun 2026', site: 'Galeota Marine Base', presenter: 'A. Mohammed', attendees: 6,  status: 'Complete' },
+  { ref: 'TBT-086', topic: 'Pedestrian / forklift safety',   date: '16 Jun 2026', site: 'Piarco Logistics',    presenter: 'L. Ramnarine', attendees: 7,  status: 'Complete' },
+  { ref: 'TBT-089', topic: 'Hot work & fire watch',          date: '20 Jun 2026', site: 'Point Lisas Plant',  presenter: 'T. Baptiste',  attendees: 0,  status: 'Scheduled' },
+];
+
+export const TOOLBOX_TOPICS = ['Spill Response', 'Confined Space', 'Work at Height', 'Manual Handling', 'Traffic Management', 'Hot Work', 'PPE Use', 'Emergency Response'] as const;
+
+// ── Documents & SDS ──────────────────────────────────────────────────────────────
+
+export interface HseDocRow {
+  ref: string; title: string; type: string; owner: string; version: string; status: string; review: string;
+}
+
+export const mockHseDocs: HseDocRow[] = [
+  { ref: 'DOC-HSE-0142', title: 'Chemical Handling Procedure', type: 'SOP',       owner: 'HSE',         version: 'v2.1', status: 'Published',  review: '15 Oct 2026' },
+  { ref: 'DOC-HSE-0118', title: 'Permit to Work Standard',     type: 'Procedure', owner: 'HSE',         version: 'v3.0', status: 'Published',  review: '30 Sep 2026' },
+  { ref: 'DOC-HSE-0205', title: 'Emergency Response Plan',     type: 'Plan',      owner: 'HSE',         version: 'v1.4', status: 'Review Due', review: '30 Jun 2026' },
+  { ref: 'DOC-HSE-0090', title: 'HSE Policy Statement',        type: 'Policy',    owner: 'Management',  version: 'v4.2', status: 'Draft',      review: '01 Dec 2026' },
+];
+
+export const HSE_DOC_TYPES = ['Policy', 'Procedure', 'SOP', 'Plan', 'Form', 'Register'] as const;
+
+export interface SdsRow {
+  ref: string; chemical: string; supplier: string; hazardClass: string; revision: string; status: string;
+}
+
+export const mockSds: SdsRow[] = [
+  { ref: 'SDS-001', chemical: 'Diesel (Automotive)',        supplier: 'NP Trinidad',   hazardClass: 'Flammable Liquid 3',  revision: '2025-04', status: 'Current' },
+  { ref: 'SDS-002', chemical: 'Sodium Hydroxide 50%',       supplier: 'Caribbean Chem', hazardClass: 'Corrosive 8',         revision: '2024-11', status: 'Review' },
+  { ref: 'SDS-003', chemical: 'Acetylene',                  supplier: 'Industrial Gases', hazardClass: 'Flammable Gas 2',    revision: '2025-01', status: 'Current' },
+  { ref: 'SDS-004', chemical: 'Hydraulic Oil ISO 46',       supplier: 'Lubricants Ltd', hazardClass: 'Not classified',      revision: '2023-08', status: 'Expired' },
+];

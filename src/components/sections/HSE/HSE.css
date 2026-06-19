@@ -257,6 +257,36 @@
 .hse-drawer-card span { color: var(--text-muted); font-size: 0.62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .hse-drawer-card strong { display: block; margin-top: 5px; color: var(--siomac-navy); font-size: 0.84rem; line-height: 1.35; }
 
+/* ── Modal (create/edit dialogs) ── */
+.hse-modal-backdrop { position: fixed; inset: 0; z-index: 60; display: none; background: rgba(27,45,84,.42); }
+.hse-modal-backdrop.show { display: block; }
+.hse-modal {
+  position: fixed; z-index: 61; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(15,23,42,.28); display: grid; grid-template-rows: auto 1fr auto; opacity: 0;
+}
+.hse-modal.show { opacity: 1; }
+.hse-modal-head, .hse-modal-foot { padding: 16px 18px; background: var(--bg-subtle, #F8FAFE); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.hse-modal-head { border-bottom: 1px solid var(--border); }
+.hse-modal-foot { border-top: 1px solid var(--border); justify-content: flex-end; gap: 8px; }
+.hse-modal-head h3 { color: var(--siomac-navy); font-size: 1.05rem; }
+.hse-modal-head p { color: var(--text-muted); font-size: 0.78rem; margin-top: 3px; line-height: 1.4; }
+.hse-modal-body { padding: 18px; overflow: auto; }
+
+/* ── Form grid + controls ── */
+.hse-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.hse-form-group { display: grid; gap: 5px; min-width: 0; }
+.hse-form-group.wide { grid-column: 1 / -1; }
+.hse-form-group label { color: var(--siomac-navy); font-size: 0.72rem; font-weight: 700; }
+.hse-input {
+  width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card);
+  padding: 0 12px; font: inherit; font-size: 0.82rem; color: var(--siomac-navy); outline: none;
+}
+.hse-input:focus { border-color: var(--siomac-navy); }
+.hse-textarea { min-height: 76px; padding: 10px 12px; resize: vertical; line-height: 1.4; }
+@media (max-width: 560px) { .hse-form-grid { grid-template-columns: 1fr; } }
+
 /* The app's content area is narrowed by the 272px sidebar, so these queries fire
    on the *content* width (via the .hse-dash container query below) rather than the
    raw viewport — keeping the multi-column layout on normal laptops. */
