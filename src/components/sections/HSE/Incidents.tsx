@@ -543,17 +543,51 @@ const TYPE_ICONS: Record<string, string> = {
   'Unsafe Condition': 'fa-triangle-exclamation',
 };
 
+// Per-incident static detail overlays (simulate structured data a real API would return)
+const INCIDENT_DETAIL: Record<string, {
+  location: string; peopleInvolved: string; oshClass: string;
+  keyFactors: string[]; actionsTaken: Array<{ label: string; by: string; time: string }>;
+  escalatedTo: string; responseTime: string;
+}> = {
+  default: {
+    location: 'Site perimeter / Field area', peopleInvolved: '2 workers + 1 supervisor',
+    oshClass: 'OSH Act S.19 — Notification Required',
+    keyFactors: ['Inadequate pre-task risk assessment', 'Missing permits', 'No gas test performed', 'Rescue plan absent'],
+    actionsTaken: [
+      { label: 'Work stopped immediately and area isolated', by: 'Supervisor on site', time: '09:15' },
+      { label: 'Permit suspended and HSE Manager notified', by: 'J. Mohammed', time: '09:18' },
+      { label: 'Personnel accounted for and made safe', by: 'Safety Officer', time: '09:22' },
+      { label: 'Incident entered into HSE register', by: 'HSE Clerk', time: '09:45' },
+    ],
+    escalatedTo: 'HSE Manager · Site OIM', responseTime: '< 30 min',
+  },
+};
+
 function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
   incident: IncidentRecord | null; onClose: () => void; onInvestigate: () => void;
 }): VNode {
   const open = !!i;
   const sev  = i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info;
+  const det  = INCIDENT_DETAIL.default;
+
+  const isInvestigating = /investigation/i.test(i?.status ?? '');
+  const isClosed        = /closed/i.test(i?.status ?? '');
+  const isCapaRaised    = /capa|action/i.test(i?.status ?? '') || isClosed;
+
+  const steps: Array<{ icon: string; label: string; sub: string; done: boolean; active: boolean }> = [
+    { icon: 'fa-file-circle-check', label: 'Incident recorded',     sub: `Reported by ${i?.reporter ?? '—'} · ${i?.date ?? ''}`, done: true,             active: false },
+    { icon: 'fa-route',             label: 'Routed to HSE Manager', sub: 'Auto-routed · SLA 24 hrs',                               done: true,             active: false },
+    { icon: 'fa-magnifying-glass',  label: 'Investigation opened',  sub: 'Root cause analysis · 5-Whys method',                    done: isInvestigating,  active: !isInvestigating && !isClosed },
+    { icon: 'fa-list-check',        label: 'CAPA raised',           sub: 'Corrective & preventive actions assigned',               done: isCapaRaised,     active: isInvestigating && !isCapaRaised },
+    { icon: 'fa-circle-check',      label: 'Closed out',            sub: 'Verified by HSE Manager · Audit trail locked',           done: isClosed,         active: isCapaRaised && !isClosed },
+  ];
 
   return (
     <>
       <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={onClose} />
       <aside class={`hse-drawer hse-drawer--rich${open ? ' show' : ''}`} role="dialog" aria-modal="true" aria-hidden={!open}>
-        {/* ── Dark hero header ── */}
+
+        {/* ── Dark navy hero ── */}
         <div class="hse-idrawer-hero">
           <div class="hse-idrawer-hero-left">
             <div class="hse-idrawer-type-chip" style={{ background: sev.bg }}>
@@ -575,9 +609,10 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
           </div>
         </div>
 
-        {/* ── Body ── */}
+        {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
-          {/* Info grid */}
+
+          {/* 3-col info grid */}
           <div class="hse-idrawer-grid">
             <div class="hse-idrawer-cell">
               <i class="fas fa-circle-dot" />
@@ -585,49 +620,81 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
               <strong><span class={hsePill(i?.status ?? '')}>{i?.status ?? '—'}</span></strong>
             </div>
             <div class="hse-idrawer-cell">
-              <i class="fas fa-calendar" />
+              <i class="fas fa-calendar-day" />
               <span>Date</span>
               <strong>{i?.date ?? '—'}</strong>
             </div>
             <div class="hse-idrawer-cell">
-              <i class="fas fa-user" />
+              <i class="fas fa-user-tie" />
               <span>Reporter</span>
               <strong>{i?.reporter ?? '—'}</strong>
             </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-map-pin" />
+              <span>Location</span>
+              <strong>{det.location}</strong>
+            </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-users" />
+              <span>People involved</span>
+              <strong>{det.peopleInvolved}</strong>
+            </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-stopwatch" />
+              <span>Response time</span>
+              <strong>{det.responseTime}</strong>
+            </div>
           </div>
 
-          {/* Description */}
+          {/* What happened */}
           <div class="hse-idrawer-section">
             <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> What happened</div>
+            <div class="hse-idrawer-osh-tag"><i class="fas fa-gavel" /> {det.oshClass}</div>
             <p class="hse-idrawer-body-text">{i?.description ?? '—'}</p>
+            <div class="hse-idrawer-factors">
+              {det.keyFactors.map(f => (
+                <span class="hse-idrawer-factor" key={f}><i class="fas fa-diamond" /> {f}</span>
+              ))}
+            </div>
           </div>
 
           {/* Immediate actions */}
           <div class="hse-idrawer-section hse-idrawer-section--alert">
             <div class="hse-idrawer-section-head"><i class="fas fa-bolt" /> Immediate actions taken</div>
-            <p class="hse-idrawer-body-text">{i?.immediateActions ?? '—'}</p>
+            <div class="hse-idrawer-actions">
+              {det.actionsTaken.map(a => (
+                <div class="hse-idrawer-action" key={a.label}>
+                  <i class="fas fa-circle-check" />
+                  <span>{a.label}</span>
+                  <em>{a.by} · {a.time}</em>
+                </div>
+              ))}
+            </div>
+            <div class="hse-idrawer-escalation">
+              <i class="fas fa-share-nodes" />
+              <span>Escalated to:</span>
+              <strong>{det.escalatedTo}</strong>
+            </div>
           </div>
 
-          {/* Workflow timeline */}
+          {/* Investigation workflow timeline */}
           <div class="hse-idrawer-section">
             <div class="hse-idrawer-section-head"><i class="fas fa-diagram-project" /> Investigation workflow</div>
             <div class="hse-idrawer-timeline">
-              {[
-                { icon: 'fa-file-circle-check', label: 'Incident recorded',       done: true },
-                { icon: 'fa-route',             label: 'Routed to HSE Manager',   done: true },
-                { icon: 'fa-magnifying-glass',  label: 'Investigation opened',    done: /investigation/i.test(i?.status ?? '') },
-                { icon: 'fa-list-check',        label: 'CAPA raised',             done: false },
-                { icon: 'fa-circle-check',      label: 'Closed out',              done: /closed/i.test(i?.status ?? '') },
-              ].map((step, idx) => (
-                <div class={`hse-idrawer-step${step.done ? ' done' : ''}`} key={idx}>
+              {steps.map((step, idx) => (
+                <div class={`hse-idrawer-step${step.done ? ' done' : step.active ? ' active' : ''}`} key={idx}>
                   <div class="hse-idrawer-step-dot">
-                    <i class={`fas ${step.done ? 'fa-check' : step.icon}`} />
+                    <i class={`fas ${step.done ? 'fa-check' : step.active ? step.icon : step.icon}`} />
                   </div>
-                  <span>{step.label}</span>
+                  <div class="hse-idrawer-step-body">
+                    <strong>{step.label}</strong>
+                    <em>{step.sub}</em>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
 
         {/* ── Footer ── */}
@@ -642,39 +709,118 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
   );
 }
 
-// ── Mini trend sparkline (Register tab) ───────────────────────────────────────
+// ── Trend dashboard strip (Register tab) ─────────────────────────────────────
 
 function TrendSparkline(): VNode {
   const pts  = mockTrend;
-  const maxI = Math.max(...pts.map(p => p.incidents));
-  const maxN = Math.max(...pts.map(p => p.nearMisses));
-  const W = 120, H = 32;
-  const xi = (i: number) => (i / (pts.length - 1)) * W;
-  const yi = (v: number, max: number) => H - (v / max) * H;
-  const poly = (vals: number[], max: number) =>
-    pts.map((_, i) => `${xi(i)},${yi(vals[i], max)}`).join(' ');
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2];
+  const W = 160, H = 36;
+
+  function xi(i: number) { return (i / (pts.length - 1)) * W; }
+  function yi(v: number, max: number) { return H - 4 - ((v / max) * (H - 8)); }
+
+  function linePath(vals: number[]): string {
+    const max = Math.max(...vals, 1);
+    return vals.map((v, i) => `${i === 0 ? 'M' : 'L'}${xi(i).toFixed(1)},${yi(v, max).toFixed(1)}`).join(' ');
+  }
+  function areaPath(vals: number[]): string {
+    const max = Math.max(...vals, 1);
+    const line = vals.map((v, i) => `${xi(i).toFixed(1)},${yi(v, max).toFixed(1)}`).join(' ');
+    return `M0,${H} L${line} L${W},${H} Z`;
+  }
+
+  const iDelta = last.incidents - prev.incidents;
+  const nDelta = last.nearMisses - prev.nearMisses;
+  const cDelta = last.capaClosure - prev.capaClosure;
+  const iVals  = pts.map(p => p.incidents);
+  const nVals  = pts.map(p => p.nearMisses);
+  const months = pts.map(p => p.month);
+  const ytdInc = pts.reduce((s, p) => s + p.incidents, 0);
 
   return (
     <div class="hse-spark-row">
-      {[
-        { label: 'Incidents',   color: '#ef4444', vals: pts.map(p => p.incidents),   max: maxI },
-        { label: 'Near Misses', color: '#f59e0b', vals: pts.map(p => p.nearMisses),  max: maxN },
-      ].map(s => (
-        <div class="hse-spark" key={s.label}>
-          <div class="hse-spark-label">{s.label}</div>
-          <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: 'block' }}>
-            <polyline points={poly(s.vals, s.max)} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx={xi(pts.length - 1)} cy={yi(s.vals[pts.length - 1], s.max)} r="3" fill={s.color} />
-          </svg>
-          <div class="hse-spark-val" style={{ color: s.color }}>{s.vals[s.vals.length - 1]}</div>
-        </div>
-      ))}
+      {/* Incidents this month */}
       <div class="hse-spark">
-        <div class="hse-spark-label">CAPA Closure</div>
-        <div class="hse-spark-bar-track">
-          <div class="hse-spark-bar-fill" style={{ width: `${pts[pts.length - 1].capaClosure}%` }} />
+        <div class="hse-spark-header">
+          <span class="hse-spark-label">Incidents MTD</span>
+          <span class={`hse-spark-delta ${iDelta < 0 ? 'down' : iDelta > 0 ? 'up' : 'flat'}`}>
+            <i class={`fas ${iDelta < 0 ? 'fa-arrow-down' : iDelta > 0 ? 'fa-arrow-up' : 'fa-minus'}`} />
+            {Math.abs(iDelta)}
+          </span>
         </div>
-        <div class="hse-spark-val" style={{ color: '#22c55e' }}>{pts[pts.length - 1].capaClosure}%</div>
+        <div class="hse-spark-val">{last.incidents}</div>
+        <div class="hse-spark-sub">YTD total: {ytdInc} · Target ≤3/mo</div>
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H}>
+          <path d={areaPath(iVals)} fill="rgba(239,68,68,.08)" />
+          <path d={linePath(iVals)} fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx={xi(pts.length - 1)} cy={yi(last.incidents, Math.max(...iVals))} r="3.5" fill="#ef4444" stroke="#fff" stroke-width="1.5" />
+        </svg>
+        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
+      </div>
+
+      {/* Near misses */}
+      <div class="hse-spark">
+        <div class="hse-spark-header">
+          <span class="hse-spark-label">Near Misses MTD</span>
+          <span class={`hse-spark-delta ${nDelta > 0 ? 'up' : nDelta < 0 ? 'down' : 'flat'}`}>
+            <i class={`fas ${nDelta > 0 ? 'fa-arrow-up' : nDelta < 0 ? 'fa-arrow-down' : 'fa-minus'}`} />
+            {Math.abs(nDelta)}
+          </span>
+        </div>
+        <div class="hse-spark-val">{last.nearMisses}</div>
+        <div class="hse-spark-sub">Near misses should exceed incidents — leading indicator</div>
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H}>
+          <path d={areaPath(nVals)} fill="rgba(245,158,11,.08)" />
+          <path d={linePath(nVals)} fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx={xi(pts.length - 1)} cy={yi(last.nearMisses, Math.max(...nVals))} r="3.5" fill="#f59e0b" stroke="#fff" stroke-width="1.5" />
+        </svg>
+        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
+      </div>
+
+      {/* CAPA closure rate */}
+      <div class="hse-spark">
+        <div class="hse-spark-header">
+          <span class="hse-spark-label">CAPA Closure</span>
+          <span class={`hse-spark-delta ${cDelta >= 0 ? 'down' : 'up'}`}>
+            <i class={`fas ${cDelta >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'}`} />
+            {Math.abs(cDelta)}%
+          </span>
+        </div>
+        <div class="hse-spark-val" style={{ color: last.capaClosure >= 90 ? '#16a34a' : '#d97706' }}>
+          {last.capaClosure}%
+        </div>
+        <div class="hse-spark-sub">Target 95% · {last.capaClosure >= 95 ? 'On target' : `${95 - last.capaClosure}% below target`}</div>
+        <div class="hse-spark-bar-track" style={{ marginTop: '10px' }}>
+          <div class="hse-spark-bar-fill" style={{ width: `${last.capaClosure}%`, background: last.capaClosure >= 90 ? '#16a34a' : '#d97706' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <span>0%</span><span style={{ color: '#d97706' }}>Target 95%</span><span>100%</span>
+        </div>
+      </div>
+
+      {/* Severity breakdown */}
+      <div class="hse-spark">
+        <div class="hse-spark-header">
+          <span class="hse-spark-label">Severity Mix · YTD</span>
+        </div>
+        <div style={{ display: 'grid', gap: '5px', marginTop: '4px' }}>
+          {[
+            { label: 'Critical / High', count: 3, color: '#ef4444', pct: 43 },
+            { label: 'Medium',          count: 2, color: '#f59e0b', pct: 29 },
+            { label: 'Low',             count: 2, color: '#22c55e', pct: 28 },
+          ].map(b => (
+            <div key={b.label}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', color: 'var(--text-muted)', marginBottom: '3px' }}>
+                <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
+              </div>
+              <div class="hse-spark-bar-track">
+                <div class="hse-spark-bar-fill" style={{ width: `${b.pct}%`, background: b.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div class="hse-spark-sub" style={{ marginTop: '6px' }}>YTD: {ytdInc} total incidents across all sites</div>
       </div>
     </div>
   );
