@@ -2,7 +2,16 @@
  * src/components/sections/HSE/HSEDashboard.tsx
  *
  * HSE Dashboard — T&T command view.
- * Layout: AreaHero (dark) → spark-row → approvals strip → chart+queue → incidents → bottom grid
+ *
+ * Layout:
+ *   AreaHero (dark navy)
+ *   → filter bar
+ *   → KPI row (donuts for %, sparklines for counts)
+ *   → spark-row (Incidents MTD / Near Misses / CAPA / Severity Mix)
+ *   → approvals strip  (light left | dark navy right sidebar)
+ *   → [trend chart (light card)]  [dark right panel: critical queue]
+ *   → incidents table (light card)
+ *   → [site risk (light)]  [permits (light)]  [readiness (light)]
  */
 
 import { type VNode } from 'preact';
@@ -10,7 +19,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { useWorkflow } from '@lib/workflow';
 import { AreaHero } from './_shared';
 import {
-  mockTrend, mockQueue,
+  mockHseKpis, mockTrend, mockQueue,
   mockHseIncidents, mockSiteRisk, mockPermits, mockReadiness,
   HSE_HEALTH_SCORE,
   hseStatusClass, splitSiteDetail,
@@ -18,16 +27,17 @@ import {
   type Permit, type QueueItem, type ReadinessRow, type SiteRisk,
 } from './types';
 
-// ── Colour tokens ─────────────────────────────────────────────────────────────
+// ── colour tokens ─────────────────────────────────────────────────────────────
 
 const C = {
   red:   'var(--hse-red)',
   amber: 'var(--hse-amber)',
   green: 'var(--hse-green)',
   blue:  'var(--hse-blue)',
+  navy:  '#1b2d54',
 };
 
-// ── Drilldown drawer ──────────────────────────────────────────────────────────
+// ── drilldown drawer ──────────────────────────────────────────────────────────
 
 interface DD { title: string; subtitle: string; rows: [string, string][]; }
 
@@ -56,14 +66,118 @@ function Drawer({ data, onClose }: { data: DD | null; onClose: () => void }): VN
   );
 }
 
-const drillRows = (value: string): [string, string][] => [
-  ['Current value',  value],
-  ['Owner',          'HSE / Site Manager'],
-  ['Evidence',       'OSH log, PTW, EMA/CEC file, contractor records'],
-  ['Next action',    'Review controls, attach evidence, assign owner'],
+const drill = (value: string): [string, string][] => [
+  ['Current value', value],
+  ['Owner',         'HSE / Site Manager'],
+  ['Evidence',      'OSH log, PTW, EMA/CEC file, contractor records'],
+  ['Next action',   'Review controls, attach evidence, assign owner'],
 ];
 
-// ── Tiny sparkline helpers ────────────────────────────────────────────────────
+// ── SVG donut ring (for % KPIs) ───────────────────────────────────────────────
+
+function DonutRing({ pct, color, size = 44 }: { pct: number; color: string; size?: number }): VNode {
+  const r  = (size - 6) / 2;
+  const c  = size / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  // start from top (−90°)
+  const offset = circ * 0.25;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--bg-subtle,#e2e8f0)" stroke-width="5" />
+      <circle cx={c} cy={c} r={r} fill="none" stroke={color} stroke-width="5"
+        stroke-dasharray={`${dash} ${circ - dash}`}
+        stroke-dashoffset={offset}
+        stroke-linecap="round"
+        style="transition:stroke-dasharray .4s ease"
+      />
+    </svg>
+  );
+}
+
+// ── tiny sparkline (for count KPIs) ──────────────────────────────────────────
+
+const SP_W = 80, SP_H = 26;
+function MiniSpark({ vals, color }: { vals: number[]; color: string }): VNode {
+  const max = Math.max(...vals, 1);
+  const pts = vals.map((v, i) =>
+    `${(i / (vals.length - 1)) * SP_W},${SP_H - 2 - (v / max) * (SP_H - 4)}`
+  ).join(' L');
+  const last = vals[vals.length - 1]!;
+  const lx = SP_W;
+  const ly = SP_H - 2 - (last / max) * (SP_H - 4);
+  return (
+    <svg viewBox={`0 0 ${SP_W} ${SP_H}`} width={SP_W} height={SP_H}
+      style={{ display: 'block', overflow: 'visible', marginTop: '8px' }}>
+      <path d={`M${pts}`} fill="none" stroke={color} stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx={lx} cy={ly} r="3" fill={color} stroke="var(--bg-card)" stroke-width="1.5" />
+    </svg>
+  );
+}
+
+// ── KPI row ───────────────────────────────────────────────────────────────────
+
+// mini trend vals per KPI (month-by-month)
+const KPI_TRENDS: Record<string, number[]> = {
+  'OSH Recordables': [1, 2, 3, 2, 3, 3],
+  'Lost Time Cases': [0, 1, 0, 1, 0, 1],
+  'HiPo Events':     [2, 3, 4, 3, 4, 4],
+  'CAPA Closure':    [72, 78, 74, 81, 88, 87],
+  'HSE Training':    [88, 90, 91, 92, 93, 94],
+  'PPE Compliance':  [88, 90, 89, 91, 90, 91],
+};
+
+const KPI_ICON: Record<string, string> = {
+  'OSH Recordables': 'fa-triangle-exclamation',
+  'Lost Time Cases': 'fa-person-walking-arrow-right',
+  'HiPo Events':     'fa-bolt',
+  'CAPA Closure':    'fa-list-check',
+  'HSE Training':    'fa-graduation-cap',
+  'PPE Compliance':  'fa-helmet-safety',
+};
+
+const SEV_COL = (sev: string) =>
+  sev === 'danger' ? C.red : sev === 'warning' ? C.amber : sev === 'success' ? C.green : C.blue;
+
+function KpiRow({ onOpen }: { onOpen: (d: DD) => void }): VNode {
+  return (
+    <div class="hse-kpi-row">
+      {mockHseKpis.map(k => {
+        const col   = SEV_COL(k.severity);
+        const isPct = k.value.includes('%');
+        const pct   = isPct ? parseInt(k.value, 10) : 0;
+        const tvals = KPI_TRENDS[k.label] ?? [0];
+        return (
+          <article key={k.label}
+            class={`hse-kpi-card hse-kpi-card--${k.severity}`}
+            onClick={() => onOpen({ title: k.label, subtitle: k.subtitle, rows: drill(k.value) })}>
+            <div class="hse-kpi-card-top">
+              <div class={`hse-kpi-icon hse-kpi-icon--${k.severity}`}>
+                <i class={`fas ${KPI_ICON[k.label] ?? 'fa-chart-simple'}`} />
+              </div>
+              {isPct
+                ? <DonutRing pct={pct} color={col} size={44} />
+                : <div class="hse-kpi-big" style={{ color: col }}>{k.value}</div>
+              }
+            </div>
+            {isPct && <div class="hse-kpi-big" style={{ color: col }}>{k.value}</div>}
+            <div class="hse-kpi-label">{k.label}</div>
+            <div class="hse-kpi-note">{k.note}</div>
+            {!isPct && <MiniSpark vals={tvals} color={col} />}
+            {isPct && (
+              <div class="hse-kpi-bar-track">
+                <div class="hse-kpi-bar-fill" style={{ width: `${pct}%`, background: col }} />
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── spark-row (4 panels) ──────────────────────────────────────────────────────
 
 const SW = 110, SH = 30;
 function sparkPath(vals: number[], close = false): string {
@@ -72,18 +186,13 @@ function sparkPath(vals: number[], close = false): string {
   if (close) return `M0,${SH} L${pts.join(' L')} L${SW},${SH} Z`;
   return `M${pts.join(' L')}`;
 }
-function sparkDot(vals: number[], color: string): VNode {
-  const max  = Math.max(...vals, 1);
-  const i    = vals.length - 1;
-  const v    = vals[i]!;
-  const cx   = SW;
-  const cy   = SH - 3 - (v / max) * (SH - 6);
-  return <circle cx={cx} cy={cy} r="3.5" fill={color} stroke="var(--bg-card)" stroke-width="1.5" />;
+function SparkDot({ vals, color }: { vals: number[]; color: string }): VNode {
+  const max = Math.max(...vals, 1);
+  const cy  = SH - 3 - (vals[vals.length - 1]! / max) * (SH - 6);
+  return <circle cx={SW} cy={cy} r="3.5" fill={color} stroke="var(--bg-card)" stroke-width="1.5" />;
 }
-
-function DeltaChip({ d, goodDown = false }: { d: number; goodDown?: boolean }): VNode {
-  const good = goodDown ? d <= 0 : d >= 0;
-  const cls  = d === 0 ? 'flat' : (goodDown ? (d < 0 ? 'down' : 'up') : (d > 0 ? 'down' : 'up'));
+function Delta({ d, goodDown = false }: { d: number; goodDown?: boolean }): VNode {
+  const cls = d === 0 ? 'flat' : (goodDown ? (d < 0 ? 'down' : 'up') : (d > 0 ? 'down' : 'up'));
   return (
     <span class={`hse-spark-delta ${cls}`}>
       <i class={`fas ${d === 0 ? 'fa-minus' : d < 0 ? 'fa-arrow-down' : 'fa-arrow-up'}`} />
@@ -91,8 +200,6 @@ function DeltaChip({ d, goodDown = false }: { d: number; goodDown?: boolean }): 
     </span>
   );
 }
-
-// ── Unified spark-row (KPIs + trends in one strip) ────────────────────────────
 
 function SparkRow(): VNode {
   const pts    = mockTrend;
@@ -103,59 +210,57 @@ function SparkRow(): VNode {
   const nVals  = pts.map(p => p.nearMisses);
   const cVals  = pts.map(p => p.capaClosure);
   const ytd    = pts.reduce((s, p) => s + p.incidents, 0);
-
   const sevMix = [
     { label: 'Critical / High', count: 3, color: C.red   },
     { label: 'Medium',          count: 2, color: C.amber  },
     { label: 'Low',             count: 2, color: C.green  },
   ];
-
   return (
     <div class="hse-spark-row">
-
-      {/* 1 — Incidents MTD */}
       <div class="hse-spark">
         <div class="hse-spark-header">
           <span class="hse-spark-label">Incidents MTD</span>
-          <DeltaChip d={last.incidents - prev.incidents} goodDown />
+          <Delta d={last.incidents - prev.incidents} goodDown />
         </div>
         <div class="hse-spark-val" style={{ color: C.red }}>{last.incidents}</div>
         <div class="hse-spark-sub">YTD: {ytd} · Target ≤3/mo</div>
-        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH} style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
+        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH}
+          style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
           <path d={sparkPath(iVals, true)} fill="rgba(228,12,12,.08)" />
-          <path d={sparkPath(iVals)} fill="none" stroke={C.red} stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          {sparkDot(iVals, C.red)}
+          <path d={sparkPath(iVals)} fill="none" stroke={C.red} stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <SparkDot vals={iVals} color={C.red} />
         </svg>
         <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
       </div>
 
-      {/* 2 — Near Misses MTD */}
       <div class="hse-spark">
         <div class="hse-spark-header">
           <span class="hse-spark-label">Near Misses MTD</span>
-          <DeltaChip d={last.nearMisses - prev.nearMisses} />
+          <Delta d={last.nearMisses - prev.nearMisses} />
         </div>
         <div class="hse-spark-val" style={{ color: C.amber }}>{last.nearMisses}</div>
         <div class="hse-spark-sub">Near misses should exceed incidents</div>
-        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH} style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
+        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH}
+          style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
           <path d={sparkPath(nVals, true)} fill="rgba(245,158,11,.08)" />
-          <path d={sparkPath(nVals)} fill="none" stroke={C.amber} stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          {sparkDot(nVals, C.amber)}
+          <path d={sparkPath(nVals)} fill="none" stroke={C.amber} stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <SparkDot vals={nVals} color={C.amber} />
         </svg>
         <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
       </div>
 
-      {/* 3 — CAPA Closure */}
       <div class="hse-spark">
         <div class="hse-spark-header">
           <span class="hse-spark-label">CAPA Closure</span>
-          <DeltaChip d={last.capaClosure - prev.capaClosure} />
+          <Delta d={last.capaClosure - prev.capaClosure} />
         </div>
         <div class="hse-spark-val" style={{ color: last.capaClosure >= 90 ? C.green : C.amber }}>
           {last.capaClosure}%
         </div>
         <div class="hse-spark-sub">
-          Target 95% · {last.capaClosure >= 95 ? 'On target' : `${95 - last.capaClosure}% below target`}
+          Target 95% · {last.capaClosure >= 95 ? 'On target' : `${95 - last.capaClosure}% below`}
         </div>
         <div class="hse-spark-bar-track" style={{ marginTop: 10 }}>
           <div class="hse-spark-bar-fill"
@@ -168,13 +273,12 @@ function SparkRow(): VNode {
         <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
       </div>
 
-      {/* 4 — Severity Mix YTD */}
       <div class="hse-spark">
         <div class="hse-spark-header">
           <span class="hse-spark-label">Severity Mix · YTD</span>
         </div>
         <div class="hse-spark-val" style={{ color: 'var(--siomac-navy)' }}>{ytd}</div>
-        <div class="hse-spark-sub">Total incidents across all T&T sites</div>
+        <div class="hse-spark-sub">Total incidents · all T&T sites</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
           {sevMix.map(s => (
             <div key={s.label}>
@@ -182,7 +286,7 @@ function SparkRow(): VNode {
                 <span style={{ color: 'var(--text-muted)' }}>{s.label}</span>
                 <span style={{ color: s.color, fontWeight: 700 }}>{s.count}</span>
               </div>
-              <div style={{ height: 4, borderRadius: 999, background: 'var(--bg-subtle, #e2e8f0)' }}>
+              <div style={{ height: 4, borderRadius: 999, background: 'var(--bg-subtle,#e2e8f0)' }}>
                 <div style={{ width: `${(s.count / 7) * 100}%`, height: '100%', borderRadius: 'inherit', background: s.color }} />
               </div>
             </div>
@@ -190,88 +294,92 @@ function SparkRow(): VNode {
         </div>
         <div class="hse-spark-sub" style={{ marginTop: 6 }}>OSH Recordables: 3 under review</div>
       </div>
-
     </div>
   );
 }
 
-// ── Approvals strip ───────────────────────────────────────────────────────────
+// ── approvals strip  (light left | dark navy right) ──────────────────────────
 
 function ApprovalsStrip(): VNode {
   const wf      = useWorkflow();
   const pending = wf.state.approvals.filter(a => /pending|in_review/.test(a.status));
-  const recent  = wf.state.audit.slice(0, 4);
+  const recent  = wf.state.audit.slice(0, 5);
 
   return (
-    <div class="hse-approvals-strip">
-      <div class="hse-approvals-kpis">
-        <div class={`hse-appr-tile${pending.length > 0 ? ' urgent' : ''}`}>
+    <div class="hse-appr-split">
+      {/* left — inbox */}
+      <div class="hse-appr-left">
+        <div class="hse-appr-left-head">
           <i class="fas fa-inbox" />
-          <div><strong>{pending.length}</strong><span>Pending approvals</span></div>
+          <strong>Approvals inbox</strong>
+          {pending.length > 0 && <span class="hse-appr-count-badge">{pending.length}</span>}
         </div>
-        <div class="hse-appr-tile">
-          <i class="fas fa-diagram-project" />
-          <div><strong>{wf.openCount}</strong><span>Open workflows</span></div>
-        </div>
-        <div class="hse-appr-tile">
-          <i class="fas fa-shield-halved" />
-          <div><strong>{wf.state.audit.length}</strong><span>Audit events</span></div>
-        </div>
-        <div class="hse-appr-tile">
-          <i class="fas fa-handshake" />
-          <div><strong>{wf.state.handoffs.length}</strong><span>Handoffs</span></div>
-        </div>
+        {pending.length === 0 ? (
+          <div class="hse-appr-empty">
+            <i class="fas fa-circle-check" />
+            <span>No pending approvals. Submit an incident, permit, or document to create workflow activity.</span>
+          </div>
+        ) : pending.map(a => (
+          <div class="hse-appr-item" key={a.id}>
+            <div class="hse-appr-item-icon"><i class="fas fa-file-circle-check" /></div>
+            <div class="hse-appr-item-body">
+              <strong>{a.title}</strong>
+              <span>{a.recordRef} · {a.approverRole}</span>
+            </div>
+            <div class="hse-appr-item-actions">
+              <button class="hse-appr-btn approve"
+                onClick={() => wf.decide(a.id, 'approve', 'Approved via dashboard')}>
+                <i class="fas fa-check" /> Approve
+              </button>
+              <button class="hse-appr-btn return"
+                onClick={() => wf.decide(a.id, 'return', 'Returned for review')}>
+                <i class="fas fa-rotate-left" /> Return
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {pending.length > 0 && (
-        <div class="hse-appr-queue">
-          <div class="hse-appr-queue-head"><i class="fas fa-bell" /> Awaiting your decision</div>
-          {pending.map(a => (
-            <div class="hse-appr-item" key={a.id}>
-              <div class="hse-appr-item-icon"><i class="fas fa-file-circle-check" /></div>
-              <div class="hse-appr-item-body">
-                <strong>{a.title}</strong>
-                <span>{a.recordRef} · {a.approverRole}</span>
-              </div>
-              <div class="hse-appr-item-actions">
-                <button class="hse-appr-btn approve" onClick={() => wf.decide(a.id, 'approve', 'Approved via dashboard')}>
-                  <i class="fas fa-check" /> Approve
-                </button>
-                <button class="hse-appr-btn return" onClick={() => wf.decide(a.id, 'return', 'Returned for review')}>
-                  <i class="fas fa-rotate-left" /> Return
-                </button>
-              </div>
+      {/* right — dark navy sidebar */}
+      <aside class="hse-appr-right">
+        <div class="hse-appr-right-kpis">
+          <div class={`hse-appr-right-tile${pending.length > 0 ? ' urgent' : ''}`}>
+            <strong>{pending.length}</strong><span>Pending approvals</span>
+          </div>
+          <div class="hse-appr-right-tile">
+            <strong>{wf.openCount}</strong><span>Open workflows</span>
+          </div>
+          <div class="hse-appr-right-tile">
+            <strong>{wf.state.audit.length}</strong><span>Audit events</span>
+          </div>
+          <div class="hse-appr-right-tile">
+            <strong>{wf.state.handoffs.length}</strong><span>Handoffs</span>
+          </div>
+        </div>
+        {recent.length > 0 && (
+          <>
+            <div class="hse-appr-right-head">
+              <i class="fas fa-shield-halved" /> Recent audit
             </div>
-          ))}
-        </div>
-      )}
-
-      {recent.length > 0 && (
-        <div class="hse-audit-feed">
-          <div class="hse-appr-queue-head"><i class="fas fa-shield-halved" /> Recent audit events</div>
-          {recent.map((ev, i) => (
-            <div class="hse-audit-row" key={i}>
-              <span class="hse-audit-ts">{new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
-              <span class="hse-audit-event">{ev.event}</span>
-              <span class="hse-audit-user">{ev.actor}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {pending.length === 0 && recent.length === 0 && (
-        <div class="hse-appr-empty">
-          <i class="fas fa-circle-check" />
-          <span>No pending approvals · Submit an incident, permit, or document to create workflow activity.</span>
-        </div>
-      )}
+            {recent.map((ev, i) => (
+              <div class="hse-appr-right-row" key={i}>
+                <span class="hse-appr-right-ts">
+                  {new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span class="hse-appr-right-evt">{ev.event}</span>
+                <span class="hse-appr-right-who">{ev.actor}</span>
+              </div>
+            ))}
+          </>
+        )}
+      </aside>
     </div>
   );
 }
 
-// ── Trend chart (full SVG) ────────────────────────────────────────────────────
+// ── trend chart ───────────────────────────────────────────────────────────────
 
-const T_W = 720, T_H = 200, T_PAD = 24;
+const T_W = 680, T_H = 180, T_PAD = 20;
 type Pt = [number, number, number];
 function tPts(vals: number[], max: number): Pt[] {
   return vals.map((v, i) => [
@@ -293,27 +401,27 @@ function TrendChart(): VNode {
   const nearPts = tPts(mockTrend.map(t => t.nearMisses),  80);
   const closPts = tPts(mockTrend.map(t => t.capaClosure), 100);
   const last    = mockTrend[mockTrend.length - 1] ?? { incidents: 0, nearMisses: 0, capaClosure: 0 };
-
   return (
     <div class="hse-trend-chart">
       <div class="hse-trend-summary">
-        <div class="hse-trend-card incident"><span>Incidents</span><strong style={{ color: C.red }}>{last.incidents}</strong></div>
-        <div class="hse-trend-card near"><span>Near Misses</span><strong style={{ color: C.amber }}>{last.nearMisses}</strong></div>
-        <div class="hse-trend-card closure"><span>CAPA Closure</span><strong style={{ color: C.green }}>{last.capaClosure}%</strong></div>
+        <div class="hse-trend-card incident"><span>Incidents</span><strong>{last.incidents}</strong></div>
+        <div class="hse-trend-card near"><span>Near Misses</span><strong>{last.nearMisses}</strong></div>
+        <div class="hse-trend-card closure"><span>CAPA Closure</span><strong>{last.capaClosure}%</strong></div>
       </div>
-      <svg class="hse-trend-svg" viewBox={`0 0 ${T_W} ${T_H}`} preserveAspectRatio="none" role="img" aria-label="Safety trend">
+      <svg class="hse-trend-svg" viewBox={`0 0 ${T_W} ${T_H}`} preserveAspectRatio="none">
         {[20, 40, 60, 80].map(pct => {
           const y = T_H - T_PAD - (pct / 100) * (T_H - T_PAD * 2);
-          return <line key={pct} x1={T_PAD} y1={y} x2={T_W - T_PAD} y2={y} stroke="var(--border)" stroke-width="1" opacity="0.5" />;
+          return <line key={pct} x1={T_PAD} y1={y} x2={T_W - T_PAD} y2={y}
+            stroke="var(--border)" stroke-width="1" opacity="0.5" />;
         })}
         <path class="area-near"      d={aPath(nearPts)} />
         <path class="area-incidents" d={aPath(incPts)} />
         <path class="line-near"      d={lPath(nearPts)} />
         <path class="line-incidents" d={lPath(incPts)} />
         <path class="line-closure"   d={lPath(closPts)} />
-        {incPts.map( (p, i) => <circle key={`i${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-incidents"><title>{months[i]} incidents: {p[2]}</title></circle>)}
-        {nearPts.map((p, i) => <circle key={`n${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-near"><title>{months[i]} near misses: {p[2]}</title></circle>)}
-        {closPts.map((p, i) => <circle key={`c${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-closure"><title>{months[i]} closure: {p[2]}%</title></circle>)}
+        {incPts.map( (p, i) => <circle key={`i${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-incidents"><title>{months[i]}: {p[2]}</title></circle>)}
+        {nearPts.map((p, i) => <circle key={`n${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-near"><title>{months[i]}: {p[2]}</title></circle>)}
+        {closPts.map((p, i) => <circle key={`c${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-closure"><title>{months[i]}: {p[2]}%</title></circle>)}
       </svg>
       <div class="hse-trend-axis">{months.map(m => <span key={m}>{m}</span>)}</div>
       <div class="hse-legend">
@@ -325,62 +433,74 @@ function TrendChart(): VNode {
   );
 }
 
-// ── Critical work queue ───────────────────────────────────────────────────────
+// ── critical work queue (dark panel) ─────────────────────────────────────────
 
-function QueueCard({ q, onOpen }: { q: QueueItem; onOpen: (d: DD) => void }): VNode {
-  const { site, detail } = splitSiteDetail(q.detail);
+function QueuePanel({ items, onOpen }: { items: QueueItem[]; onOpen: (d: DD) => void }): VNode {
   return (
-    <article class={`hse-queue-item hse-queue-item--${q.severity}`}
-      onClick={() => onOpen({ title: q.title, subtitle: q.detail, rows: drillRows(q.status) })}>
-      <header>
-        <div><strong>{q.title}</strong><p>{detail}</p></div>
-        <span class={`hse-status-badge ${hseStatusClass(q.status)}`}>{q.status}</span>
-      </header>
-      <div class="hse-queue-meta">
-        <span><i class="fas fa-location-dot" />{site}</span>
-        <span><i class="fas fa-clock" />{q.status === 'Pending' ? '7 days' : 'Today'}</span>
+    <aside class="hse-queue-dark">
+      <div class="hse-queue-dark-head">
+        <i class="fas fa-circle-exclamation" />
+        <span>Critical Work Queue</span>
+        <small>Escalate today</small>
       </div>
-    </article>
+      <div class="hse-queue-dark-body">
+        {items.map(q => {
+          const { site, detail } = splitSiteDetail(q.detail);
+          return (
+            <div key={q.title} class={`hse-qdark-item hse-qdark-item--${q.severity}`}
+              onClick={() => onOpen({ title: q.title, subtitle: q.detail, rows: drill(q.status) })}>
+              <div class="hse-qdark-title">{q.title}</div>
+              <div class="hse-qdark-detail">{detail}</div>
+              <div class="hse-qdark-chips">
+                <span class={`hse-qdark-chip hse-qdark-chip--${q.severity}`}>{q.status}</span>
+                <span class="hse-qdark-chip">{site}</span>
+                <span class="hse-qdark-chip">{q.status === 'Pending' ? '7 days' : 'Today'}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
   );
 }
 
-// ── Site risk card ────────────────────────────────────────────────────────────
+// ── site risk ─────────────────────────────────────────────────────────────────
 
 function SiteCard({ s, onOpen }: { s: SiteRisk; onOpen: (d: DD) => void }): VNode {
-  const col = s.severity === 'danger' ? C.red : s.severity === 'warning' ? C.amber : C.green;
+  const col = SEV_COL(s.severity);
   return (
-    <article class={`hse-site-item hse-site-item--${s.severity}`}
-      onClick={() => onOpen({ title: s.site, subtitle: s.detail, rows: drillRows(s.level) })}>
-      <header>
+    <div class={`hse-site-item hse-site-item--${s.severity}`}
+      onClick={() => onOpen({ title: s.site, subtitle: s.detail, rows: drill(s.level) })}>
+      <div class="hse-site-item-head">
         <strong>{s.site}</strong>
         <span class={`hse-status-badge ${hseStatusClass(s.level)}`}>{s.level}</span>
-      </header>
+      </div>
       <p>{s.detail}</p>
       <div class="hse-progress"><i style={{ width: `${s.score}%`, background: col }} /></div>
       <div class="hse-kpi-sub">{s.open} open · {s.overdue} overdue</div>
-    </article>
+    </div>
   );
 }
 
-// ── Readiness card ────────────────────────────────────────────────────────────
+// ── readiness ─────────────────────────────────────────────────────────────────
 
 function ReadyCard({ r, onOpen }: { r: ReadinessRow; onOpen: (d: DD) => void }): VNode {
   const pct = parseInt(r.value, 10) || 0;
-  const col = r.severity === 'danger' ? C.red : r.severity === 'warning' ? C.amber : r.severity === 'success' ? C.green : C.blue;
+  const col = SEV_COL(r.severity);
   return (
-    <article class={`hse-ready-item hse-ready-item--${r.severity}`}
-      onClick={() => onOpen({ title: r.label, subtitle: r.detail, rows: drillRows(r.value) })}>
-      <header>
+    <div class={`hse-ready-item hse-ready-item--${r.severity}`}
+      onClick={() => onOpen({ title: r.label, subtitle: r.detail, rows: drill(r.value) })}>
+      <div class="hse-ready-item-head">
         <strong>{r.label}</strong>
         <span class="hse-ready-value" style={{ color: col }}>{r.value}</span>
-      </header>
+      </div>
       <p>{r.detail}</p>
       <div class="hse-progress"><i style={{ width: `${pct}%`, background: col }} /></div>
-    </article>
+    </div>
   );
 }
 
-// ── Main dashboard ────────────────────────────────────────────────────────────
+// ── main dashboard ────────────────────────────────────────────────────────────
 
 export function HSEDashboard(): VNode {
   const [drawer, setDrawer] = useState<DD | null>(null);
@@ -408,7 +528,6 @@ export function HSEDashboard(): VNode {
   return (
     <div class="hse-tab hse-dash">
 
-      {/* Dark area hero */}
       <AreaHero
         icon="fa-helmet-safety"
         areaIcon="fa-shield-halved"
@@ -437,21 +556,25 @@ export function HSEDashboard(): VNode {
         ]}
       />
 
-      {/* Filter bar */}
+      {/* filter bar */}
       <div class="hse-filter-bar">
         <div class="hse-live-pulse"><span class="hse-live-dot" /><span>Live</span></div>
         <label class="hse-search-box" style={{ flex: '1 1 200px' }}>
           <i class="fas fa-search" />
-          <input value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search records, sites, owners…" />
+          <input value={search}
+            onInput={e => setSearch((e.target as HTMLInputElement).value)}
+            placeholder="Search records, sites, owners…" />
         </label>
-        <select class="hse-filter-sel" value={site} onChange={e => setSite((e.target as HTMLSelectElement).value)}>
+        <select class="hse-filter-sel" value={site}
+          onChange={e => setSite((e.target as HTMLSelectElement).value)}>
           <option value="all">All T&amp;T sites</option>
           {HSE_SITE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
         <select class="hse-filter-sel">
           {HSE_PERIOD_OPTIONS.map(o => <option key={o}>{o}</option>)}
         </select>
-        <select class="hse-filter-sel" value={risk} onChange={e => setRisk((e.target as HTMLSelectElement).value)}>
+        <select class="hse-filter-sel" value={risk}
+          onChange={e => setRisk((e.target as HTMLSelectElement).value)}>
           <option value="all">All risk levels</option>
           {HSE_RISK_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -461,35 +584,32 @@ export function HSEDashboard(): VNode {
         </select>
       </div>
 
-      {/* Unified spark-row — KPIs + sparklines in one strip */}
+      {/* KPI row — donuts for %, sparklines for counts */}
+      <KpiRow onOpen={d => setDrawer(d)} />
+
+      {/* spark-row */}
       <SparkRow />
 
-      {/* Workflow approvals */}
-      <ApprovalsStrip />
+      {/* approvals — light inbox left, dark kpis/audit right */}
+      <div class="hse-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <ApprovalsStrip />
+      </div>
 
-      {/* Trend chart + critical queue */}
+      {/* trend chart (light) + critical queue (dark) */}
       <div class="hse-perf-grid">
         <article class="hse-card">
           <div class="hse-card-head">
             <h3><i class="fas fa-chart-line" /> Safety Performance Trend</h3>
             <span>Jan – Jun 2026</span>
           </div>
-          <div class="hse-card-body"><TrendChart /></div>
+          <div class="hse-card-body">
+            <TrendChart />
+          </div>
         </article>
-        <aside class="hse-card">
-          <div class="hse-card-head">
-            <h3><i class="fas fa-circle-exclamation" /> Critical Work Queue</h3>
-            <span>Escalate today</span>
-          </div>
-          <div class="hse-card-body hse-queue-list">
-            {queue.length === 0
-              ? <div class="hse-appr-empty"><i class="fas fa-circle-check" /><span>No critical items.</span></div>
-              : queue.map(x => <QueueCard key={x.title} q={x} onOpen={d => setDrawer(d)} />)}
-          </div>
-        </aside>
+        <QueuePanel items={queue} onOpen={d => setDrawer(d)} />
       </div>
 
-      {/* Recent incidents register */}
+      {/* incidents table */}
       <section class="hse-card">
         <div class="hse-card-head">
           <h3><i class="fas fa-clipboard-list" /> Recent Incidents</h3>
@@ -504,7 +624,8 @@ export function HSEDashboard(): VNode {
               {incidents.length === 0
                 ? <tr><td colspan={6} class="hse-empty">No incidents match filter.</td></tr>
                 : incidents.map(i => (
-                  <tr key={i.ref} onClick={() => setDrawer({ title: `${i.ref} · ${i.klass}`, subtitle: i.event, rows: drillRows(i.status) })}>
+                  <tr key={i.ref}
+                    onClick={() => setDrawer({ title: `${i.ref} · ${i.klass}`, subtitle: i.event, rows: drill(i.status) })}>
                     <td class="hse-rec-cell"><strong>{i.ref}</strong><span>{i.date}</span></td>
                     <td>{i.site}</td>
                     <td class="hse-event-cell">{i.event}<span class="hse-incident-detail">{i.action}</span></td>
@@ -518,7 +639,7 @@ export function HSEDashboard(): VNode {
         </div>
       </section>
 
-      {/* Bottom grid — site risk / permits / readiness */}
+      {/* bottom grid — site risk / permits / readiness (all light) */}
       <div class="hse-bottom-grid">
         <article class="hse-card">
           <div class="hse-card-head"><h3><i class="fas fa-location-dot" /> Site Risk</h3><span>T&T locations</span></div>
@@ -533,7 +654,8 @@ export function HSEDashboard(): VNode {
               <thead><tr><th>Permit</th><th>Site</th><th>Control Gate</th><th>Status</th></tr></thead>
               <tbody>
                 {permits.map((p: Permit) => (
-                  <tr key={p.ref} onClick={() => setDrawer({ title: p.ref, subtitle: p.gate, rows: drillRows(p.status) })}>
+                  <tr key={p.ref}
+                    onClick={() => setDrawer({ title: p.ref, subtitle: p.gate, rows: drill(p.status) })}>
                     <td><strong>{p.ref}</strong></td>
                     <td>{p.site}</td>
                     <td class="hse-muted">{p.gate}</td>
