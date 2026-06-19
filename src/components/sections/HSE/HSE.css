@@ -806,6 +806,39 @@
 .hse-guide-row div strong { display: block; color: var(--siomac-navy); font-size: 0.76rem; font-weight: 500; }
 .hse-guide-row div span   { display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: 400; line-height: 1.35; }
 
+/* ── Hero badges (scope / period chips) ─────────────────────────────────── */
+.hse-hero-badges {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+.hse-hero-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  font-size: 0.66rem; font-weight: 500; color: rgba(255,255,255,.75);
+}
+.hse-hero-badge i { font-size: 0.6rem; color: rgba(255,255,255,.5); }
+
+/* ── Hero metric strip (sits below stat cards, above footer) ─────────────── */
+.hse-hero-metrics {
+  display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,.1); margin-top: 16px; padding-top: 14px;
+}
+.hse-hero-metric {
+  display: flex; align-items: baseline; gap: 7px; padding: 0 20px 0 0;
+}
+.hse-hero-metric:first-child { padding-left: 0; }
+.hse-hero-metric-sep {
+  width: 1px; height: 20px; background: rgba(255,255,255,.14); margin-right: 20px; flex-shrink: 0;
+}
+.hse-hero-metric-val {
+  font-size: 1.15rem; font-weight: 700; color: rgba(255,255,255,.9);
+  font-family: var(--font-mono); line-height: 1;
+}
+.hse-hero-metric-val.highlight { color: #4ade80; }
+.hse-hero-metric-label {
+  font-size: 0.65rem; font-weight: 400; color: rgba(255,255,255,.45); white-space: nowrap;
+}
+
 /* ── Responsive breakpoints for area layout ── */
 @container hse (max-width: 960px) {
   .hse-area-split { grid-template-columns: 1fr; }

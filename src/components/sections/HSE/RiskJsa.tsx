@@ -52,6 +52,9 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
     { icon: 'fa-list-ol',             label: 'JSAs',             value: mockJsas.length,      color: 'green' },
   ];
 
+  const acceptableRisk = mockHazards.filter(h => riskRating(h.likelihood, h.severity).score < 6).length;
+  const overdue        = assessments.filter(a => /overdue/i.test(a.status ?? '')).length;
+
   return (
     <div class="hse-tab hse-dash">
       <AreaHero
@@ -60,7 +63,18 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         title="Risk & JSA"
         crumb="Risk & JSA"
         context={['Hazard Register · Risk Assessments · JSA Library', 'Trinidad & Tobago Operations']}
+        badges={[
+          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
+          { icon: 'fa-location-dot', label: '5 Active Sites' },
+          { icon: 'fa-scale-balanced', label: 'Risk Matrix 5×5' },
+        ]}
         stats={stats}
+        metrics={[
+          { label: 'High / critical risks', value: String(highRisk) },
+          { label: 'Acceptable risk', value: `${acceptableRisk} hazards` },
+          { label: 'Assessments overdue', value: String(overdue) },
+          { label: 'JSAs reviewed YTD', value: String(mockJsas.length) },
+        ]}
       />
       <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 

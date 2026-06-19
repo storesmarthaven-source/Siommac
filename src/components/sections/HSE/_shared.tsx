@@ -19,6 +19,8 @@ import { ProfilePill } from '@shared/ProfilePill';
 // ── Hero ──────────────────────────────────────────────────────────────────────
 
 export interface HeroStatDef { icon: string; label: string; value: number; color?: string; }
+export interface HeroMetric  { label: string; value: string; highlight?: boolean; }
+export interface HeroBadge   { icon: string; label: string; }
 
 /**
  * Dark area hero — same skin as the PPE Manager / dashboard overview. Each HSE
@@ -29,11 +31,13 @@ export interface HeroStatDef { icon: string; label: string; value: number; color
  * `context`   — two short strings shown below the title as a subtitle + note
  *               (e.g. ["Trinidad & Tobago Operations", "2026 HSE Programme"]).
  */
-export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, context }: {
+export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, context, metrics, badges }: {
   icon: string; title: string; sub?: string; crumb: string;
   stats: HeroStatDef[]; actions?: VNode;
   areaIcon?: string;
   context?: [string, string?];
+  metrics?: HeroMetric[];
+  badges?: HeroBadge[];
 }): VNode {
   return (
     <div class="dash-overview-panel ppe-hero-panel hse-area-hero">
@@ -49,6 +53,13 @@ export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, co
                   {context[1] && <><i class="fas fa-circle" style={{ fontSize: '4px', opacity: .5 }} /><span>{context[1]}</span></>}
                 </div>
               )}
+              {badges && badges.length > 0 && (
+                <div class="hse-hero-badges">
+                  {badges.map(b => (
+                    <span class="hse-hero-badge" key={b.label}><i class={`fas ${b.icon}`} />{b.label}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div class="hse-hero-right">
@@ -59,6 +70,17 @@ export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, co
         <div class="dash-stats-row">
           {stats.map(s => <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} color={s.color} />)}
         </div>
+        {metrics && metrics.length > 0 && (
+          <div class="hse-hero-metrics">
+            {metrics.map((m, i) => (
+              <div class="hse-hero-metric" key={m.label}>
+                {i > 0 && <div class="hse-hero-metric-sep" />}
+                <span class={`hse-hero-metric-val${m.highlight ? ' highlight' : ''}`}>{m.value}</span>
+                <span class="hse-hero-metric-label">{m.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div class="dash-panel-footer">
         <nav class="page-breadcrumb ppe-hero-crumb" aria-label="Breadcrumb">

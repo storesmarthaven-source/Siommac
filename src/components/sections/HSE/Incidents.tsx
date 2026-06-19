@@ -53,15 +53,30 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
     { icon: 'fa-list-check',           label: 'Open CAPA',        value: openCapa,         color: 'green' },
   ];
 
+  const ltiFreeDays = 47;
+  const ltifr       = 1.8;
+  const activeSites = HSE_SITES.length;
+
   return (
     <div class="hse-tab hse-dash">
       <AreaHero
         icon="fa-triangle-exclamation"
-        areaIcon="fa-shield-exclamation"
+        areaIcon="fa-person-falling-burst"
         title="Incidents"
         crumb="Incidents"
         context={['Trinidad & Tobago Operations', '2026 HSE Programme']}
+        badges={[
+          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
+          { icon: 'fa-location-dot', label: `${activeSites} Active Sites` },
+          { icon: 'fa-gavel', label: 'OSH Act 2004 Compliance' },
+        ]}
         stats={stats}
+        metrics={[
+          { label: 'LTI-free days', value: String(ltiFreeDays), highlight: ltiFreeDays > 30 },
+          { label: 'LTIFR (per 200k hrs)', value: String(ltifr) },
+          { label: 'Avg. response time', value: '< 30 min' },
+          { label: 'CAPA closure rate', value: '78%' },
+        ]}
       />
       <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 

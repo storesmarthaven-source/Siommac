@@ -9,7 +9,13 @@
 import { type VNode } from 'preact';
 import { AreaHero } from './_shared';
 import { HSE_AREAS } from './nav';
-import { IncidentsArea } from './Incidents';
+import { IncidentsArea }   from './Incidents';
+import { RiskJsaArea }     from './RiskJsa';
+import { PermitsArea }     from './Permits';
+import { InspectionsArea } from './Inspections';
+import { TrainingArea }    from './Training';
+import { ToolboxArea }     from './Toolbox';
+import { DocumentsArea }   from './Documents';
 import '@components/workflow';   // registers workflow.css for area workflow UI
 
 /** Placeholder body — replaced per area as each is implemented. */
@@ -39,7 +45,13 @@ function AreaPlaceholder({ areaKey, tab }: { areaKey: string; tab: string }): VN
 export function AreaRouter({ area, tab }: { area: string; tab: string }): VNode {
   // Area bodies register here as they are implemented (Steps 4–10).
   switch (area) {
-    case 'incidents': return <IncidentsArea tab={tab} />;
-    default:          return <AreaPlaceholder areaKey={area} tab={tab} />;
+    case 'incidents':    return <IncidentsArea tab={tab} />;
+    case 'risk':         return <RiskJsaArea tab={tab} />;
+    case 'permits':      return <PermitsArea tab={tab} />;
+    case 'inspections':  return <InspectionsArea tab={tab} />;
+    case 'training':     return <TrainingArea tab={tab} />;
+    case 'toolbox':      return <ToolboxArea tab={tab} />;
+    case 'documents':    return <DocumentsArea tab={tab} />;
+    default:             return <AreaPlaceholder areaKey={area} tab={tab} />;
   }
 }
