@@ -50,3 +50,103 @@ export const PPE_NAV_ITEMS: PpeNavItem[] = [
 export function ppeTabForSection(sectionId: string): string | null {
   return PPE_NAV_ITEMS.find(i => i.id === sectionId)?.tab ?? null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HSE area registry — the single source of truth for every HSE functional area.
+// Each area is a top-level sidebar item; areas with sub-tabs collapse like PPE.
+// Adding an area or a sub-tab is a one-line edit here; module.ts + HSESection.tsx
+// read this registry, so neither needs touching per area.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface HseSubItem {
+  /** Section id — also the route target. Convention: 's-hse-<area>-<tab>'. */
+  id:    string;
+  tab:   string;
+  label: string;
+  icon:  string;
+  defaultVisible?: boolean;
+}
+
+export interface HseArea {
+  /** Logical area key (matches the shell's area switch). */
+  key:      string;
+  /** Parent nav id. For single-page areas this IS the route target. */
+  parentId: string;
+  label:    string;
+  icon:     string;
+  sub:      string;             // sidebar parent subtitle
+  /** localStorage visibility namespace for the area's sub-items. */
+  visNamespace: string;
+  /** Sub-tabs. Empty ⇒ a single-page area (the parent itself routes). */
+  items:    HseSubItem[];
+  /** Default sub-tab when the parent (collapsed) is opened. */
+  defaultTab: string;
+}
+
+/** Helper to build a sub-item with the id convention. */
+const sub = (area: string, tab: string, label: string, icon: string, defaultVisible = true): HseSubItem =>
+  ({ id: `s-hse-${area}-${tab}`, tab, label, icon, defaultVisible });
+
+export const HSE_AREAS: HseArea[] = [
+  {
+    key: 'incidents', parentId: 's-hse-incidents', label: 'Incidents', icon: 'fa-triangle-exclamation',
+    sub: 'Report, investigate and close incidents', visNamespace: 'hse-incidents', defaultTab: 'register',
+    items: [
+      sub('incidents', 'register',       'Incident Register', 'fa-clipboard-list'),
+      sub('incidents', 'report',         'Report Incident',   'fa-circle-plus'),
+      sub('incidents', 'investigations', 'Investigations',    'fa-magnifying-glass-chart'),
+      sub('incidents', 'capa',           'CAPA / Actions',    'fa-list-check'),
+    ],
+  },
+  {
+    key: 'risk', parentId: 's-hse-risk', label: 'Risk & JSA', icon: 'fa-triangle-exclamation',
+    sub: 'Hazards, risk assessments and JSAs', visNamespace: 'hse-risk', defaultTab: 'hazards',
+    items: [
+      sub('risk', 'hazards',     'Hazard Register',   'fa-radiation'),
+      sub('risk', 'assessments', 'Risk Assessments',  'fa-table-cells-large'),
+      sub('risk', 'jsa',         'JSA Library',       'fa-list-ol'),
+    ],
+  },
+  {
+    key: 'permits', parentId: 's-hse-permits', label: 'Permits (PTW)', icon: 'fa-id-badge',
+    sub: 'Permit to work control gates', visNamespace: 'hse-permits', defaultTab: 'register', items: [],
+  },
+  {
+    key: 'inspections', parentId: 's-hse-inspections', label: 'Inspections', icon: 'fa-clipboard-check',
+    sub: 'Scheduled inspections and findings', visNamespace: 'hse-inspections', defaultTab: 'schedule',
+    items: [
+      sub('inspections', 'schedule', 'Schedule', 'fa-calendar-check'),
+      sub('inspections', 'findings', 'Findings', 'fa-flag'),
+    ],
+  },
+  {
+    key: 'training', parentId: 's-hse-training', label: 'Training', icon: 'fa-graduation-cap',
+    sub: 'Competency matrix and certifications', visNamespace: 'hse-training', defaultTab: 'matrix',
+    items: [
+      sub('training', 'matrix', 'Competency Matrix', 'fa-table-cells'),
+      sub('training', 'certs',  'Certifications',    'fa-certificate'),
+    ],
+  },
+  {
+    key: 'toolbox', parentId: 's-hse-toolbox', label: 'Toolbox Talks', icon: 'fa-people-group',
+    sub: 'Daily safety talks and attendance', visNamespace: 'hse-toolbox', defaultTab: 'log', items: [],
+  },
+  {
+    key: 'documents', parentId: 's-hse-documents', label: 'Documents & SDS', icon: 'fa-folder-open',
+    sub: 'HSE documents and safety data sheets', visNamespace: 'hse-documents', defaultTab: 'docs',
+    items: [
+      sub('documents', 'docs', 'Documents',   'fa-file-lines'),
+      sub('documents', 'sds',  'SDS Library', 'fa-flask'),
+    ],
+  },
+];
+
+/** Resolve which area + tab a section id belongs to (null if not an HSE area). */
+export function sectionToArea(sectionId: string): { area: HseArea; tab: string } | null {
+  for (const area of HSE_AREAS) {
+    if (sectionId === area.parentId) return { area, tab: area.defaultTab };
+    const item = area.items.find(i => i.id === sectionId);
+    if (item) return { area, tab: item.tab };
+  }
+  return null;
+}

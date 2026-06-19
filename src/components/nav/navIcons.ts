@@ -44,6 +44,22 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-briefcase-medical':       'BriefcaseMedical',
   'fa-chart-simple':            'ChartColumn',
   'fa-sliders':                 'Sliders',
+  // HSE functional areas
+  'fa-triangle-exclamation':    'TriangleAlert',
+  'fa-circle-plus':             'CirclePlus',
+  'fa-list-check':              'ListChecks',
+  'fa-radiation':               'Radiation',
+  'fa-table-cells-large':       'Grid2x2',
+  'fa-list-ol':                 'ListOrdered',
+  'fa-id-badge':                'IdCard',
+  'fa-clipboard-check':         'ClipboardCheck',
+  'fa-flag':                    'Flag',
+  'fa-graduation-cap':          'GraduationCap',
+  'fa-certificate':             'Award',
+  'fa-people-group':            'UsersRound',
+  'fa-folder-open':             'FolderOpen',
+  'fa-file-lines':              'FileText',
+  'fa-flask':                   'FlaskConical',
 };
 
 const FALLBACK: keyof typeof lucide = 'Circle';
