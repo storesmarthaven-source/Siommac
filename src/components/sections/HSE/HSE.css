@@ -45,7 +45,7 @@
 @keyframes hseFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* ═══ HSE Dashboard (T&T command view) ═══ */
-.hse-dash { display: grid; gap: 18px; }
+.hse-dash { display: grid; gap: 22px; }
 .hse-hero-sub { font-size: 0.78rem; font-weight: 500; color: rgba(255,255,255,.6); margin-left: 6px; }
 
 /* Hero body: 4 summary stats (left) + health ring (right) */
@@ -278,7 +278,7 @@
 .hse-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
 .hse-form-group { display: grid; gap: 5px; min-width: 0; }
 .hse-form-group.wide { grid-column: 1 / -1; }
-.hse-form-group label { color: var(--siomac-navy); font-size: 0.72rem; font-weight: 700; }
+.hse-form-group label { color: var(--text-muted); font-size: 0.72rem; font-weight: 500; }
 .hse-input {
   width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card);
   padding: 0 12px; font: inherit; font-size: 0.82rem; color: var(--siomac-navy); outline: none;
@@ -310,6 +310,31 @@
   background: var(--siomac-navy); color: #fff; font-size: 0.72rem;
 }
 .hse-why span { color: var(--text-muted); font-size: 0.78rem; line-height: 1.4; padding-top: 3px; }
+
+/* ── Risk & JSA: assessments + 5×5 matrix ── */
+.hse-risk-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .9fr); gap: 18px; align-items: start; }
+.hse-matrix-card { overflow: hidden; }
+.hse-matrix {
+  display: grid; grid-template-columns: 40px repeat(5, 1fr); gap: 4px; padding: 14px;
+}
+.hse-matrix-corner { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); display: grid; place-items: center; }
+.hse-matrix-axis { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); display: grid; place-items: center; min-height: 30px; }
+.hse-matrix-cell { aspect-ratio: 1 / 1; min-height: 30px; border-radius: 7px; display: grid; place-items: center; }
+.hse-matrix-cell.tone-success { background: #d6efd9; }
+.hse-matrix-cell.tone-warning { background: #fbe6bf; }
+.hse-matrix-cell.tone-danger  { background: #f4c4c4; }
+.hse-matrix-dot {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center !important;
+  background: var(--siomac-navy); color: #fff; font-size: 0.68rem; font-weight: 800;
+}
+.hse-matrix-legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 14px 14px; color: var(--text-muted); font-size: 0.7rem; font-weight: 700; }
+.hse-matrix-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.hse-matrix-legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.hse-matrix-legend i.tone-success { background: #d6efd9; }
+.hse-matrix-legend i.tone-warning { background: #fbe6bf; }
+.hse-matrix-legend i.tone-danger  { background: #f4c4c4; }
+.hse-rating-preview { min-height: 40px; display: flex; align-items: center; }
+@media (max-width: 980px) { .hse-risk-layout { grid-template-columns: 1fr; } }
 
 /* The app's content area is narrowed by the 272px sidebar, so these queries fire
    on the *content* width (via the .hse-dash container query below) rather than the
@@ -395,39 +420,85 @@
 }
 .ppe-screen-main { min-width: 0; }
 
-/* Live control signals — navy panel sidebar (from hse-document-control-pro.html),
-   solid navy: NO teal/green gradient. White record cards stacked vertically,
-   blue icon chips, red High / amber Stock·Due tags. */
+/* ── Area hero extensions ──────────────────────────────────────────────────── */
+.hse-hero-right {
+  display: flex; align-items: center; gap: 16px; position: relative;
+}
+.hse-hero-area-icon {
+  font-size: 4.5rem; color: rgba(255,255,255,.07); position: absolute;
+  right: 52px; top: 50%; transform: translateY(-50%); pointer-events: none;
+  line-height: 1;
+}
+.hse-hero-context {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;
+}
+.hse-hero-context span {
+  font-size: 0.76rem; font-weight: 400; color: rgba(255,255,255,.55);
+}
+.hse-hero-context i { color: rgba(255,255,255,.3); }
+
+/* Live control signals — navy panel sidebar.
+   Narrower than before so the main table gets more width. */
 .ppe-signals-panel {
-  padding: 18px; border-radius: 20px;
-  background: var(--siomac-navy); color: #fff;
-  box-shadow: 0 18px 42px rgba(15,23,42,.16);
+  padding: 16px; border-radius: 16px;
+  background: #1b2d54; color: #fff;
+  box-shadow: 0 12px 32px rgba(15,23,42,.2);
+  min-width: 0;
 }
 .ppe-signals-panel h4 {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-  color: #fff; font-size: 0.94rem; font-weight: 700;
+  display: flex; align-items: center; gap: 7px; margin-bottom: 8px;
+  color: rgba(255,255,255,.5); font-size: 0.62rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .07em;
 }
-.ppe-signals-panel h4 i { color: #8fb6ff; }
-.ppe-signals-list { display: grid; gap: 10px; }
+.ppe-signals-panel h4 i { font-size: 0.72rem; }
+/* Section dividers inside the panel */
+.ppe-signals-panel .hse-panel-divider {
+  border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 16px 0;
+}
+.ppe-signals-list { display: grid; gap: 5px; }
+
+/* Queue row — slightly lighter than the navy panel, blends in */
 .ppe-signal {
-  display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; align-items: center;
-  padding: 12px 14px; border-radius: 14px;
-  background: #fff; border: 1px solid var(--border);
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 10px 11px; border-radius: 10px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  transition: background .12s, border-color .12s;
 }
+.ppe-signal:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.16); cursor: pointer; }
+
+/* Icon chip — translucent tint that reads clearly on the dark bg */
 .ppe-signal > i {
-  width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px;
-  background: rgba(37,99,235,.1); color: #2563eb; font-size: 0.95rem;
+  width: 36px; height: 36px; display: grid !important; place-items: center !important;
+  border-radius: 9px; font-size: 0.9rem; flex-shrink: 0;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
 }
+.ppe-signal > i.is-danger { background: rgba(239,68,68,.2);  color: #fca5a5; }
+.ppe-signal > i.is-warn   { background: rgba(245,158,11,.2); color: #fcd34d; }
+.ppe-signal > i.is-ok     { background: rgba(34,197,94,.2);  color: #86efac; }
+.ppe-signal > i.is-info   { background: rgba(96,165,250,.2); color: #93c5fd; }
+
 .ppe-signal-text { min-width: 0; }
-.ppe-signal strong { display: block; color: var(--siomac-navy); font-size: 0.82rem; font-weight: 700; line-height: 1.2; }
-.ppe-signal span { display: block; color: var(--text-muted); font-size: 0.74rem; line-height: 1.35; margin-top: 2px; }
-.ppe-signal-tag {
-  font-size: 0.66rem; font-weight: 800; border-radius: 999px; padding: 4px 11px; white-space: nowrap;
-  border: 1px solid var(--border); background: var(--bg-subtle, #F1F4F8); color: var(--text-muted);
+.ppe-signal strong {
+  display: block; color: rgba(255,255,255,.9); font-size: 0.76rem;
+  font-weight: 500; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.ppe-signal-tag.is-high  { background: rgba(228,12,12,.10); border-color: rgba(228,12,12,.18);  color: var(--siomac-red); }
+.ppe-signal span {
+  display: block; color: rgba(255,255,255,.4); font-size: 0.65rem;
+  font-weight: 400; line-height: 1.35; margin-top: 2px;
+}
+
+/* Tags — translucent, same palette as the icon chips */
+.ppe-signal-tag {
+  font-size: 0.6rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; white-space: nowrap;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.6); border: none;
+}
+.ppe-signal-tag.is-high  { background: rgba(239,68,68,.22);  color: #fca5a5; }
 .ppe-signal-tag.is-stock,
-.ppe-signal-tag.is-due   { background: rgba(217,119,6,.12); border-color: rgba(217,119,6,.22); color: #b45309; }
+.ppe-signal-tag.is-due   { background: rgba(245,158,11,.22); color: #fcd34d; }
+.ppe-signal-tag.is-ok    { background: rgba(34,197,94,.22);  color: #86efac; }
+.ppe-signal-tag.is-info  { background: rgba(96,165,250,.22); color: #93c5fd; }
+
 @media (max-width: 900px) { .ppe-screen-grid { grid-template-columns: 1fr; } }
 
 /* Breadcrumb + edit button sit in the panel footer. */
@@ -452,7 +523,7 @@
 .ppe-subnav-btn.active { background: var(--siomac-navy); color: #fff; }
 .ppe-subnav-btn.active i { color: #fff; }
 
-.ppe-tab-content { animation: hseFade .2s ease; }
+.ppe-tab-content { animation: hseFade .2s ease; display: grid; gap: 20px; }
 
 /* ── Section head ── */
 .ppe-section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -467,7 +538,7 @@
 .ppe-section-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
 /* ── Grids ── */
-.ppe-screen-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .85fr); gap: 16px; align-items: start; }
+.ppe-screen-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
 .ppe-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .ppe-three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .ppe-four-col { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
@@ -570,6 +641,313 @@
 @media (max-width: 768px) {
   .ppe-four-col, .ppe-three-col, .ppe-process, .ppe-matrix-summary, .ppe-insight-strip, .ppe-form-grid { grid-template-columns: 1fr; }
   .ppe-hero { flex-direction: column; align-items: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   HSE AREA LAYOUT SYSTEM
+   Each area (Incidents, Risk, Permits, Inspections, Training, Toolbox, Documents)
+   uses the same composition:
+     1. .hse-area-kpi-strip — row of MiniCards (reuses .ppe-mini-card)
+     2. .hse-area-split     — main panel (table/content) + aside panel
+     3. .hse-aside-card     — white card blocks in the aside
+   This produces the same density as the Dashboard + PPE Manager.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* KPI mini-card strip — horizontal row of ppe-mini-cards */
+.hse-area-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Main split: content (60-65%) + aside (35-40%) */
+.hse-area-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, .85fr);
+  gap: 16px;
+  align-items: start;
+}
+.hse-area-main { min-width: 0; display: grid; gap: 14px; }
+.hse-area-aside { display: grid; gap: 14px; }
+
+/* Aside card — white bordered panel (matches the ppe-signals-panel record cards) */
+.hse-aside-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card);
+}
+.hse-aside-head {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: var(--bg-subtle, #F8FAFE); border-bottom: 1px solid var(--border);
+  color: var(--siomac-navy); font-size: 0.8rem; font-weight: 600;
+}
+.hse-aside-head i { color: var(--siomac-red); font-size: 0.84rem; }
+.hse-aside-head span { flex: 1; }
+.hse-aside-head.is-danger { background: #fef2f2; border-bottom-color: #f2cdcd; color: var(--siomac-red); }
+.hse-aside-head.is-danger i { color: var(--siomac-red); }
+
+/* Row list within an aside card */
+.hse-aside-list { display: grid; gap: 0; padding: 6px 0; }
+.hse-aside-row {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 10px; align-items: center;
+  padding: 9px 14px; cursor: pointer; transition: background .12s;
+}
+.hse-aside-row:hover { background: var(--bg-subtle, #F8FAFE); }
+.hse-aside-dot { font-size: 7px; }
+.hse-aside-dot.is-danger { color: var(--siomac-red); }
+.hse-aside-dot.is-warn   { color: #d97706; }
+.hse-aside-dot.is-ok     { color: #16a34a; }
+.hse-aside-text strong { display: block; color: var(--siomac-navy); font-size: 0.78rem; font-weight: 500; }
+.hse-aside-text span   { display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: 400; line-height: 1.35; }
+.hse-aside-empty {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px; color: var(--text-muted); font-size: 0.78rem;
+}
+.hse-aside-empty i { color: #16a34a; }
+
+/* Meta row (pill + muted text) below aside head */
+.hse-aside-meta { display: flex; align-items: center; gap: 8px; padding: 8px 14px; flex-wrap: wrap; }
+
+/* Alert card variant */
+.hse-aside-alert .hse-aside-head { background: #fef2f2; border-bottom-color: #f2cdcd; }
+
+/* Stats 3-cell grid inside aside */
+.hse-aside-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 14px;
+}
+.hse-aside-stat { text-align: center; }
+.hse-aside-stat + .hse-aside-stat { border-left: 1px solid var(--border); }
+.hse-aside-stat strong { display: block; color: var(--siomac-navy); font-size: 1.5rem; font-weight: 700; line-height: 1; font-family: var(--font-mono); }
+.hse-aside-stat span   { display: block; color: var(--text-muted); font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; }
+
+/* Hint (empty state) inside aside */
+.hse-aside-hint {
+  display: grid; gap: 6px; padding: 20px; text-align: center;
+}
+.hse-aside-hint i { font-size: 1.5rem; color: var(--text-muted); margin: 0 auto 4px; }
+.hse-aside-hint strong { color: var(--siomac-navy); font-size: 0.84rem; }
+.hse-aside-hint p { color: var(--text-muted); font-size: 0.74rem; line-height: 1.4; }
+
+/* Detail row (icon + label/value pair) inside aside */
+.hse-aside-detail-row {
+  display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: start;
+  padding: 8px 14px;
+}
+.hse-aside-detail-row > i {
+  width: 32px; height: 32px; display: grid; place-items: center !important;
+  border-radius: 9px; background: rgba(27,45,84,.08); color: var(--siomac-navy);
+  font-size: 0.8rem;
+}
+.hse-aside-detail-row div strong { display: block; color: var(--siomac-navy); font-size: 0.72rem; font-weight: 500; }
+.hse-aside-detail-row div span   { display: block; color: var(--text-muted); font-size: 0.74rem; font-weight: 400; line-height: 1.35; }
+
+/* Priority bar (label + progress track) */
+.hse-priority-bar { padding: 8px 14px; }
+.hse-priority-bar:not(:last-child) { border-bottom: 1px solid var(--border); }
+.hse-priority-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.72rem; font-weight: 500; }
+.hse-priority-name { color: var(--siomac-navy); text-transform: capitalize; }
+.hse-priority-label > span:last-child { color: var(--text-muted); }
+
+/* Overdue date highlight */
+.hse-overdue-date { color: var(--siomac-red); font-weight: 500; }
+
+/* Link button (looks like a text link) */
+.hse-link-btn {
+  background: none; border: none; padding: 0; cursor: pointer; font: inherit;
+  color: var(--siomac-navy); font-size: 0.8rem; font-weight: 500;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.hse-link-btn:hover { color: var(--siomac-red); }
+
+/* Active row highlight in tables */
+.vt-row-active td { background: rgba(27,45,84,.04); }
+
+/* ── Report intake panel (full-width call-to-action in the Report tab) ── */
+.hse-report-intake {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px; box-shadow: var(--shadow-card);
+}
+.hse-report-intake-steps { display: grid; gap: 16px; margin-bottom: 20px; }
+.hse-intake-step {
+  display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start;
+}
+.hse-intake-num {
+  width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px;
+  background: var(--siomac-navy); color: #fff; font-size: 0.88rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.hse-intake-step > div strong { display: block; color: var(--siomac-navy); font-size: 0.84rem; font-weight: 600; margin-bottom: 3px; }
+.hse-intake-step > div p { color: var(--text-muted); font-size: 0.78rem; font-weight: 400; line-height: 1.4; }
+.hse-intake-cta { width: 100%; min-height: 48px; font-size: 0.9rem; }
+
+/* Inline report form card (used in Report tab) */
+.hse-intake-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; box-shadow: var(--shadow-card);
+}
+.hse-intake-foot {
+  display: flex; justify-content: flex-end; padding-top: 16px;
+  border-top: 1px solid var(--border); margin-top: 20px;
+}
+
+/* ── Reporting guide rows ── */
+.hse-guide-row {
+  display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center;
+  padding: 8px 14px;
+}
+.hse-guide-row > i {
+  width: 34px; height: 34px; display: grid; place-items: center !important;
+  border-radius: 10px; background: rgba(27,45,84,.08); color: var(--siomac-navy);
+  font-size: 0.82rem;
+}
+.hse-guide-row div strong { display: block; color: var(--siomac-navy); font-size: 0.76rem; font-weight: 500; }
+.hse-guide-row div span   { display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: 400; line-height: 1.35; }
+
+/* ── Responsive breakpoints for area layout ── */
+@container hse (max-width: 960px) {
+  .hse-area-split { grid-template-columns: 1fr; }
+  .hse-area-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container hse (max-width: 560px) {
+  .hse-area-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hse-aside-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── Incident detail drawer (rich bespoke design) ─────────────────────────── */
+
+.hse-drawer--rich {
+  width: min(520px, 100vw);
+}
+
+/* Navy hero at the top */
+.hse-idrawer-hero {
+  background: var(--siomac-navy);
+  padding: 22px 20px 18px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  flex-shrink: 0;
+}
+.hse-idrawer-hero-left { display: flex; align-items: flex-start; gap: 16px; min-width: 0; }
+.hse-idrawer-type-chip {
+  width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px;
+  display: grid; place-items: center;
+}
+.hse-idrawer-type-chip i { font-size: 1.4rem; }
+.hse-idrawer-ref {
+  color: #fff; font-size: 1.05rem; font-weight: 600; line-height: 1.2;
+  font-family: var(--font-mono);
+}
+.hse-idrawer-type {
+  color: rgba(255,255,255,.6); font-size: 0.78rem; font-weight: 400; margin-top: 3px;
+}
+.hse-idrawer-site {
+  display: flex; align-items: center; gap: 5px; margin-top: 8px;
+  color: rgba(255,255,255,.45); font-size: 0.72rem; font-weight: 400;
+}
+.hse-idrawer-site i { font-size: 0.66rem; }
+
+.hse-idrawer-hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex-shrink: 0; }
+.hse-idrawer-sev-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 600;
+}
+.hse-idrawer-sev-badge i { font-size: 0.78rem; }
+.hse-idrawer-close {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); cursor: pointer;
+  display: grid; place-items: center; font-size: 0.82rem;
+}
+.hse-idrawer-close:hover { background: rgba(255,255,255,.16); color: #fff; }
+
+/* 3-col info grid */
+.hse-idrawer-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+}
+.hse-idrawer-cell {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--bg-subtle, #F8FAFE); display: grid; gap: 3px;
+}
+.hse-idrawer-cell > i {
+  font-size: 0.78rem; color: var(--siomac-navy); opacity: .5; margin-bottom: 2px;
+}
+.hse-idrawer-cell > span {
+  font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text-muted);
+}
+.hse-idrawer-cell > strong {
+  display: block; font-size: 0.8rem; font-weight: 500; color: var(--siomac-navy);
+  margin-top: 2px; line-height: 1.3;
+}
+
+/* Content sections */
+.hse-idrawer-section {
+  padding: 16px; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--bg-card);
+}
+.hse-idrawer-section--alert {
+  background: #fffaf0; border-color: #f0dfba;
+}
+.hse-idrawer-section-head {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
+  color: var(--siomac-navy); font-size: 0.76rem; font-weight: 600;
+}
+.hse-idrawer-section-head i { color: var(--siomac-red); }
+.hse-idrawer-section--alert .hse-idrawer-section-head i { color: #d97706; }
+.hse-idrawer-body-text {
+  color: var(--text-muted); font-size: 0.8rem; font-weight: 400; line-height: 1.6;
+}
+
+/* Investigation timeline */
+.hse-idrawer-timeline {
+  display: flex; flex-direction: column; gap: 0;
+}
+.hse-idrawer-step {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center;
+  padding: 8px 0; position: relative;
+}
+.hse-idrawer-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 13px; top: 28px;
+  width: 2px; height: calc(100% - 12px); background: var(--border);
+}
+.hse-idrawer-step.done:not(:last-child)::after { background: #22c55e; }
+.hse-idrawer-step-dot {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+  background: var(--bg-card); display: grid; place-items: center;
+  font-size: 0.7rem; color: var(--text-muted); z-index: 1;
+}
+.hse-idrawer-step.done .hse-idrawer-step-dot {
+  background: #22c55e; border-color: #22c55e; color: #fff;
+}
+.hse-idrawer-step > span {
+  font-size: 0.76rem; font-weight: 400; color: var(--text-muted);
+}
+.hse-idrawer-step.done > span { color: var(--siomac-navy); font-weight: 500; }
+
+/* ── Trend sparkline strip (Register tab header) ─────────────────────────── */
+
+.hse-spark-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 18px; box-shadow: var(--shadow-card);
+}
+.hse-spark {
+  display: flex; align-items: center; gap: 10px;
+}
+.hse-spark-label {
+  font-size: 0.68rem; font-weight: 500; color: var(--text-muted);
+  white-space: nowrap;
+}
+.hse-spark-val {
+  font-size: 0.86rem; font-weight: 600; font-family: var(--font-mono); white-space: nowrap;
+}
+.hse-spark-bar-track {
+  width: 80px; height: 6px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0); overflow: hidden;
+}
+.hse-spark-bar-fill {
+  height: 100%; border-radius: inherit; background: #22c55e;
 }
 
 }

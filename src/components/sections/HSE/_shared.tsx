@@ -23,20 +23,38 @@ export interface HeroStatDef { icon: string; label: string; value: number; color
 /**
  * Dark area hero — same skin as the PPE Manager / dashboard overview. Each HSE
  * page renders one at the top with its own icon, title, stat cards and crumb.
+ *
+ * `areaIcon`  — a second large FA icon rendered faded on the right as a visual
+ *               motif. Defaults to the same `icon` if omitted.
+ * `context`   — two short strings shown below the title as a subtitle + note
+ *               (e.g. ["Trinidad & Tobago Operations", "2026 HSE Programme"]).
  */
-export function AreaHero({ icon, title, sub, crumb, stats, actions }: {
+export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, context }: {
   icon: string; title: string; sub?: string; crumb: string;
   stats: HeroStatDef[]; actions?: VNode;
+  areaIcon?: string;
+  context?: [string, string?];
 }): VNode {
   return (
-    <div class="dash-overview-panel ppe-hero-panel">
+    <div class="dash-overview-panel ppe-hero-panel hse-area-hero">
       <div class="dash-panel-content">
         <div class="overview-top-bar">
           <div class="overview-title-section">
             <i class={`fas ${icon}`} />
-            <h2>{title}{sub && <span class="hse-hero-sub">{sub}</span>}</h2>
+            <div>
+              <h2 style={{ lineHeight: 1.1 }}>{title}{sub && <span class="hse-hero-sub">{sub}</span>}</h2>
+              {context && (
+                <div class="hse-hero-context">
+                  <span>{context[0]}</span>
+                  {context[1] && <><i class="fas fa-circle" style={{ fontSize: '4px', opacity: .5 }} /><span>{context[1]}</span></>}
+                </div>
+              )}
+            </div>
           </div>
-          <ProfilePill variant="onDark" />
+          <div class="hse-hero-right">
+            <i class={`fas ${areaIcon ?? icon} hse-hero-area-icon`} aria-hidden="true" />
+            <ProfilePill variant="onDark" />
+          </div>
         </div>
         <div class="dash-stats-row">
           {stats.map(s => <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} color={s.color} />)}
