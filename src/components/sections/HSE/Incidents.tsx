@@ -290,38 +290,48 @@ function ReportTab({ onSubmit }: {
           </div>
         </div>
 
-        {/* Guide sidebar */}
+        {/* Analytics + guide sidebar */}
         <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-circle-info" /> Reporting Guide</h4>
+          {/* Type breakdown chart */}
+          <h4><i class="fas fa-chart-bar" /> Incidents by Type · YTD</h4>
+          <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
+            {[
+              { label: 'Near Miss',        count: 9, color: '#f59e0b' },
+              { label: 'Unsafe Condition', count: 6, color: '#60a5fa' },
+              { label: 'Injury',           count: 4, color: '#ef4444' },
+              { label: 'Unsafe Act',       count: 3, color: '#a78bfa' },
+              { label: 'Environmental',    count: 2, color: '#34d399' },
+              { label: 'Property Damage',  count: 1, color: '#94a3b8' },
+            ].map(b => {
+              const pct = Math.round((b.count / 25) * 100);
+              return (
+                <div key={b.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
+                    <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
+                  </div>
+                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: b.color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div class="hse-panel-divider" />
+
+          {/* What happens next */}
+          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-diagram-project" /> What happens next</h4>
           <div class="ppe-signals-list">
             {[
-              { icon: 'fa-person-falling', label: 'Injury / First Aid',  note: 'All injuries — from first aid to lost-time cases' },
-              { icon: 'fa-eye',            label: 'Near Miss',            note: 'Events that could have caused harm but did not' },
-              { icon: 'fa-droplet',        label: 'Environmental',        note: 'Spills, discharges, emissions — notify EMA where required' },
-              { icon: 'fa-helmet-safety',  label: 'Unsafe Act',           note: 'Observed deviation from safe work practice' },
-              { icon: 'fa-construction',   label: 'Unsafe Condition',     note: 'Hazardous physical condition identified at site' },
-            ].map(g => (
-              <div class="ppe-signal" key={g.label}>
-                <i class={`fas ${g.icon}`} />
-                <div class="ppe-signal-text"><strong>{g.label}</strong><span>{g.note}</span></div>
+              { icon: 'fa-file-circle-check', label: 'Incident record created',   note: 'Auto-assigned reference number' },
+              { icon: 'fa-route',             label: 'Routed to HSE Manager',     note: 'Appears in their approval inbox' },
+              { icon: 'fa-magnifying-glass',  label: 'Investigation opened',      note: '5-Whys or RCA process begins' },
+              { icon: 'fa-list-check',        label: 'CAPA raised on approval',   note: 'Corrective actions tracked to closure' },
+            ].map(s => (
+              <div class="ppe-signal" key={s.label}>
+                <i class={`fas ${s.icon} is-info`} />
+                <div class="ppe-signal-text"><strong>{s.label}</strong><span>{s.note}</span></div>
               </div>
             ))}
-          </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: '12px', paddingTop: '12px' }}>
-            <h4 style={{ marginBottom: '8px' }}><i class="fas fa-diagram-project" /> What happens next</h4>
-            <div class="ppe-signals-list">
-              {[
-                { icon: 'fa-file-circle-check', label: 'Incident record created',   note: 'Auto-assigned reference number' },
-                { icon: 'fa-route',             label: 'Routed to HSE Manager',     note: 'Appears in their approval inbox' },
-                { icon: 'fa-magnifying-glass',  label: 'Investigation opened',      note: '5-Whys or RCA process begins' },
-                { icon: 'fa-list-check',        label: 'CAPA raised on approval',   note: 'Corrective actions tracked to closure' },
-              ].map(s => (
-                <div class="ppe-signal" key={s.label}>
-                  <i class={`fas ${s.icon}`} />
-                  <div class="ppe-signal-text"><strong>{s.label}</strong><span>{s.note}</span></div>
-                </div>
-              ))}
-            </div>
           </div>
         </aside>
       </div>
@@ -376,8 +386,41 @@ function InvestigationsTab(): VNode {
           </div>
         </div>
 
-        {/* 5-Whys detail panel */}
+        {/* Analytics + 5-Whys panel */}
         <aside class="ppe-signals-panel">
+          {/* Status breakdown */}
+          <h4><i class="fas fa-chart-pie" /> Investigation Status</h4>
+          <div style={{ display: 'grid', gap: '7px', marginTop: '6px', marginBottom: '14px' }}>
+            {[
+              { label: 'In Progress', color: '#60a5fa', count: mockInvestigations.filter(i => /progress/i.test(i.status)).length },
+              { label: 'Open',        color: '#f59e0b', count: mockInvestigations.filter(i => /open/i.test(i.status)).length },
+              { label: 'Closed',      color: '#4ade80', count: mockInvestigations.filter(i => /closed/i.test(i.status)).length },
+            ].map(b => {
+              const pct = Math.round((b.count / Math.max(mockInvestigations.length, 1)) * 100);
+              return (
+                <div key={b.label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
+                    <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
+                  </div>
+                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: b.color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>14d</div>
+              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>Avg. time to close</div>
+            </div>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#4ade80', lineHeight: 1 }}>82%</div>
+              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>Root cause found</div>
+            </div>
+          </div>
+          <div class="hse-panel-divider" />
+
           {selected ? (
             <>
               <h4><i class="fas fa-list-ol" /> {selected.ref} · {selected.method}</h4>
@@ -482,13 +525,52 @@ function CapaTab(): VNode {
 
         {/* Right sidebar */}
         <aside class="ppe-signals-panel">
+          {/* Summary KPIs */}
+          <h4><i class="fas fa-gauge-high" /> CAPA Summary</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
+            {[
+              { val: open.length,    label: 'Open actions',    color: '#f59e0b' },
+              { val: overdue.length, label: 'Overdue',         color: '#ef4444' },
+              { val: mockCapa.filter(c => /closed/i.test(c.status)).length, label: 'Closed', color: '#4ade80' },
+              { val: mockCapa.filter(c => c.priority === 'danger').length,  label: 'Critical priority', color: '#ef4444' },
+            ].map(k => (
+              <div key={k.label} style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Priority breakdown bars */}
+          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-chart-bar" /> By Priority</h4>
+          <div style={{ display: 'grid', gap: '8px', marginBottom: '14px' }}>
+            {(['danger', 'warning', 'info', 'success'] as const).map(p => {
+              const label = p === 'danger' ? 'Critical' : p === 'warning' ? 'High' : p === 'info' ? 'Medium' : 'Low';
+              const count = mockCapa.filter(c => c.priority === p).length;
+              const pct   = Math.round((count / Math.max(mockCapa.length, 1)) * 100);
+              const color = p === 'danger' ? '#ef4444' : p === 'warning' ? '#f59e0b' : p === 'info' ? '#60a5fa' : '#4ade80';
+              return (
+                <div key={p}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
+                    <span>{label}</span><span style={{ color }}>{count}</span>
+                  </div>
+                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div class="hse-panel-divider" />
+
+          {/* Overdue queue */}
           {overdue.length > 0 && (
             <>
-              <h4><i class="fas fa-triangle-exclamation" /> {overdue.length} Overdue</h4>
-              <div class="ppe-signals-list" style={{ marginBottom: '14px' }}>
+              <h4 style={{ marginBottom: '8px' }}><i class="fas fa-clock" /> Overdue Actions</h4>
+              <div class="ppe-signals-list">
                 {overdue.map(c => (
                   <div class="ppe-signal" key={c.ref}>
-                    <i class="fas fa-clock is-danger" />
+                    <i class="fas fa-triangle-exclamation is-danger" />
                     <div class="ppe-signal-text">
                       <strong>{c.title}</strong>
                       <span>{c.owner} · Due {c.due}</span>
@@ -497,28 +579,8 @@ function CapaTab(): VNode {
                   </div>
                 ))}
               </div>
-              <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', paddingTop: '12px' }} />
             </>
           )}
-          <h4><i class="fas fa-chart-bar" /> By Priority</h4>
-          <div style={{ display: 'grid', gap: '10px', marginTop: '8px' }}>
-            {(['danger', 'warning', 'info', 'success'] as const).map(p => {
-              const label = p === 'danger' ? 'Critical' : p === 'warning' ? 'High' : p === 'info' ? 'Medium' : 'Low';
-              const count = mockCapa.filter(c => c.priority === p).length;
-              const pct   = Math.round((count / mockCapa.length) * 100);
-              const color = p === 'danger' ? '#ef4444' : p === 'warning' ? '#f59e0b' : p === 'info' ? '#60a5fa' : '#4ade80';
-              return (
-                <div key={p}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: 'rgba(255,255,255,.7)', marginBottom: '5px' }}>
-                    <span>{label}</span><span>{count}</span>
-                  </div>
-                  <div style={{ height: '6px', borderRadius: '999px', background: 'rgba(255,255,255,.14)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: color }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </aside>
       </div>
     </div>
@@ -611,7 +673,7 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
         {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
 
-          {/* 3-cell info row */}
+          {/* 6-cell info grid */}
           <div class="hse-idrawer-grid">
             <div class="hse-idrawer-cell">
               <i class="fas fa-circle-dot" />
@@ -628,12 +690,32 @@ function IncidentDrawer({ incident: i, onClose, onInvestigate }: {
               <span>Reporter</span>
               <strong>{i?.reporter ?? '—'}</strong>
             </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-map-pin" />
+              <span>Site</span>
+              <strong>{i?.site ?? '—'}</strong>
+            </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-users" />
+              <span>People involved</span>
+              <strong>2 workers · 1 supervisor</strong>
+            </div>
+            <div class="hse-idrawer-cell">
+              <i class="fas fa-stopwatch" />
+              <span>Response time</span>
+              <strong>&lt; 30 min</strong>
+            </div>
           </div>
 
           {/* What happened */}
           <div class="hse-idrawer-section">
             <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> What happened</div>
             <p class="hse-idrawer-body-text">{i?.description ?? '—'}</p>
+            {i?.immediateActions && i.immediateActions !== '—' && (
+              <div class="hse-idrawer-action-note">
+                <i class="fas fa-bolt" /> <strong>Immediate action:</strong> {i.immediateActions}
+              </div>
+            )}
           </div>
 
           {/* Investigation workflow timeline */}

@@ -862,9 +862,9 @@
 }
 .hse-idrawer-close:hover { background: rgba(255,255,255,.16); color: #fff; }
 
-/* 3-col info grid */
+/* 3-col info grid (auto-flows to 2 rows for 6 cells) */
 .hse-idrawer-grid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
 }
 .hse-idrawer-cell {
   padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
@@ -899,6 +899,13 @@
 .hse-idrawer-body-text {
   color: var(--text-muted); font-size: 0.8rem; font-weight: 400; line-height: 1.6;
 }
+.hse-idrawer-action-note {
+  display: flex; align-items: flex-start; gap: 7px; margin-top: 10px; padding: 10px 12px;
+  border-radius: 9px; background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.18);
+  font-size: 0.75rem; color: var(--siomac-navy); line-height: 1.5;
+}
+.hse-idrawer-action-note i { color: #d97706; flex-shrink: 0; margin-top: 2px; }
+.hse-idrawer-action-note strong { font-weight: 600; }
 
 /* Investigation timeline */
 .hse-idrawer-timeline { display: flex; flex-direction: column; }
@@ -908,26 +915,25 @@
 }
 /* Connector line between steps */
 .hse-idrawer-step:not(:last-child)::after {
-  content: ''; position: absolute; left: 15px; top: 34px;
-  width: 2px; height: calc(100% - 12px);
+  content: ''; position: absolute; left: 13px; top: 30px;
+  width: 1.5px; height: calc(100% - 10px);
   background: var(--border);
 }
-.hse-idrawer-step.done:not(:last-child)::after { background: #16a34a; }
+.hse-idrawer-step.done:not(:last-child)::after { background: rgba(22,163,74,.4); }
 .hse-idrawer-step.active:not(:last-child)::after { background: var(--border); }
 
-/* Step dot */
+/* Step dot — ring style */
 .hse-idrawer-step-dot {
-  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
   flex-shrink: 0; z-index: 1; position: relative;
-  border: 2px solid var(--border); background: var(--bg-card);
-  font-size: 0.72rem; color: var(--text-muted);
+  border: 1.5px solid var(--border); background: transparent;
+  font-size: 0.68rem; color: var(--text-muted);
 }
 .hse-idrawer-step.done .hse-idrawer-step-dot {
-  background: #16a34a; border-color: #16a34a; color: #fff; font-size: 0.78rem;
+  border-color: #16a34a; background: transparent; color: #16a34a;
 }
 .hse-idrawer-step.active .hse-idrawer-step-dot {
-  background: var(--siomac-navy); border-color: var(--siomac-navy); color: #fff;
-  box-shadow: 0 0 0 4px rgba(27,45,84,.12);
+  border-color: var(--siomac-navy); background: var(--siomac-navy); color: #fff;
 }
 
 /* Step label + sublabel */
