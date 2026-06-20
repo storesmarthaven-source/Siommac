@@ -39,6 +39,23 @@ export const PERMISSION_KEYS = [
   'sessions.manage',
   'audit.view',
   'roles.manage',
+  // ── HSE module ──────────────────────────────────────────────────────────────
+  'hse.incidents.view',    'hse.incidents.manage',
+  'hse.risk.view',         'hse.risk.manage',
+  'hse.permits.view',      'hse.permits.manage',
+  'hse.inspections.view',  'hse.inspections.manage',
+  'hse.training.view',     'hse.training.manage',
+  'hse.toolbox.view',      'hse.toolbox.manage',
+  'hse.documents.view',    'hse.documents.manage',
+  'hse.contractors.view',  'hse.contractors.manage',
+  'hse.legal.view',        'hse.legal.manage',
+  'hse.emergency.view',    'hse.emergency.manage',
+  'hse.environmental.view','hse.environmental.manage',
+  'hse.ppe.view',          'hse.ppe.manage',
+  'hse.dashboard.view',
+  'hse.workflows.view',    'hse.workflows.manage',
+  // ── Platform workflow ────────────────────────────────────────────────────────
+  'workflow.submit', 'workflow.approve', 'workflow.audit',
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
