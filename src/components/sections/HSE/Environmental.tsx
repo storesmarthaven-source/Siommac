@@ -410,6 +410,7 @@ export function EnvironmentalArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-earth-americas"
         title="Environmental Management"
         crumb="Environmental Mgmt"
+        watermarkClass="hse-wm-environmental"
         context={['Spill register · waste manifests · EMA notifications · env monitoring', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

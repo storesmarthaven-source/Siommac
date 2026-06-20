@@ -381,6 +381,7 @@ export function LegalComplianceArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-gavel"
         title="Legal & Compliance"
         crumb="Legal & Compliance"
+        watermarkClass="hse-wm-compliance"
         context={['OSH Act 2004 · EMA permits · breach log · regulatory calendar', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

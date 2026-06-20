@@ -280,6 +280,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-magnifying-glass-chart"
         title="Inspections & Audits"
         crumb="Inspections"
+        watermarkClass="hse-wm-inspections"
         context={['Schedule · Findings · Non-conformances', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

@@ -931,6 +931,7 @@ export function HSEDashboard(): VNode {
         areaIcon="fa-shield-halved"
         title="HSE Dashboard"
         crumb="Dashboard"
+        watermarkClass="hse-dashboard-hero"
         context={['Trinidad & Tobago Operations', '2026 HSE Programme']}
         badges={[
           { icon: 'fa-calendar',     label: 'Jan – Jun 2026' },

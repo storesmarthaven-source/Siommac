@@ -292,6 +292,7 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-book-bookmark"
         title="Documents & SDS"
         crumb="Documents"
+        watermarkClass="hse-wm-documents"
         context={['Controlled documents · Safety Data Sheets', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

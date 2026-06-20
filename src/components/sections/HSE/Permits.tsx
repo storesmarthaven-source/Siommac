@@ -285,6 +285,7 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-file-contract"
         title="Permits to Work"
         crumb="Permits (PTW)"
+        watermarkClass="hse-wm-permits"
         context={['Evidence-gated work authorisation', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

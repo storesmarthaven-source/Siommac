@@ -392,6 +392,7 @@ export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-siren-on"
         title="Emergency Response"
         crumb="Emergency Response"
+        watermarkClass="hse-wm-emergency"
         context={['Emergency plans · muster points · drill log · ERT register', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

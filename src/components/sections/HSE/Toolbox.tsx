@@ -56,6 +56,7 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-people-group"
         title="Toolbox Talks"
         crumb="Toolbox Talks"
+        watermarkClass="hse-wm-toolbox"
         context={['Daily pre-task safety briefings', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

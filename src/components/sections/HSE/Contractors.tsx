@@ -364,6 +364,7 @@ export function ContractorsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-hard-hat"
         title="Contractor Management"
         crumb="Contractor Mgmt"
+        watermarkClass="hse-wm-contractors"
         context={['STOW induction · HSE files · site access gate', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

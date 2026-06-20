@@ -62,6 +62,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-shield-halved"
         title="Risk & JSA"
         crumb="Risk & JSA"
+        watermarkClass="hse-wm-risk"
         context={['Hazard Register · Risk Assessments · JSA Library', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

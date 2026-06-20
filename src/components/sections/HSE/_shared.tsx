@@ -31,16 +31,17 @@ export interface HeroBadge   { icon: string; label: string; }
  * `context`   — two short strings shown below the title as a subtitle + note
  *               (e.g. ["Trinidad & Tobago Operations", "2026 HSE Programme"]).
  */
-export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, context, metrics, badges }: {
+export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, context, metrics, badges, watermarkClass }: {
   icon: string; title: string; sub?: string; crumb: string;
   stats: HeroStatDef[]; actions?: VNode;
   areaIcon?: string;
   context?: [string, string?];
   metrics?: HeroMetric[];
   badges?: HeroBadge[];
+  watermarkClass?: string;
 }): VNode {
   return (
-    <div class="dash-overview-panel ppe-hero-panel hse-area-hero">
+    <div class={`dash-overview-panel ppe-hero-panel hse-area-hero${watermarkClass ? ` ${watermarkClass}` : ''}`}>
       <div class="dash-panel-content">
         <div class="overview-top-bar">
           <div class="overview-title-section">
@@ -81,14 +82,6 @@ export function AreaHero({ icon, title, sub, crumb, stats, actions, areaIcon, co
             ))}
           </div>
         )}
-      </div>
-      <div class="dash-panel-footer">
-        <nav class="page-breadcrumb ppe-hero-crumb" aria-label="Breadcrumb">
-          <span class="page-breadcrumb-root">HSE</span>
-          <i class="fas fa-chevron-right page-breadcrumb-sep" aria-hidden="true" />
-          <span class="page-breadcrumb-current">{crumb}</span>
-        </nav>
-        {actions ?? <button class="dash-layout-btn admin-only" type="button"><i class="fas fa-edit" /> Edit Layout</button>}
       </div>
     </div>
   );

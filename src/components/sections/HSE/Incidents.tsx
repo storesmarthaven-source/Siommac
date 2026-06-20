@@ -64,6 +64,7 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-person-falling-burst"
         title="Incidents"
         crumb="Incidents"
+        watermarkClass="hse-wm-incidents"
         context={['Trinidad & Tobago Operations', '2026 HSE Programme']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

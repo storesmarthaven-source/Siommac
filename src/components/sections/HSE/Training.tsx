@@ -230,6 +230,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-user-graduate"
         title="Training & Competency"
         crumb="Training"
+        watermarkClass="hse-wm-training"
         context={['Competency Matrix · Certifications · Renewals', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },

@@ -865,6 +865,7 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
         areaIcon="fa-wand-magic-sparkles"
         title="Workflow Management"
         crumb="Workflows"
+        watermarkClass="hse-wm-workflows"
         context={['Governed approvals · Evidence gates · Audit trail', 'Trinidad & Tobago Operations']}
         badges={[
           { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
