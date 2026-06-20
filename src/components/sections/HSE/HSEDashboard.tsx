@@ -1,17 +1,13 @@
 /**
  * src/components/sections/HSE/HSEDashboard.tsx
  *
- * HSE Dashboard — T&T command view.
+ * HSE Dashboard — ERP-style 5-layer T&T command view.
  *
- * Layout:
- *   AreaHero (dark navy)
- *   → filter bar
- *   → KPI row (donuts for %, sparklines for counts)
- *   → spark-row (Incidents MTD / Near Misses / CAPA / Severity Mix)
- *   → approvals strip  (light left | dark navy right sidebar)
- *   → [trend chart (light card)]  [dark right panel: critical queue]
- *   → incidents table (light card)
- *   → [site risk (light)]  [permits (light)]  [readiness (light)]
+ *  Layer 1 — Command KPIs (dark navy hero, calculated from module data)
+ *  Layer 2 — Alerts & Approvals (escalation list + workflow inbox)
+ *  Layer 3 — Module Health (rich horizontal rows: status · metric · progress · alerts · counts)
+ *  Layer 4 — Analytics (safety trend line chart + open-actions donut)
+ *  Layer 5 — Site Intelligence (per-site risk table)
  */
 
 import { type VNode } from 'preact';
@@ -21,13 +17,15 @@ import { AreaHero } from './_shared';
 import {
   mockHseKpis, mockTrend, mockQueue,
   mockHseIncidents, mockSiteRisk, mockPermits, mockReadiness,
+  mockIncidents, mockCapa, mockPermitRows, mockInspections, mockFindings,
+  mockCertifications, mockToolboxTalks, mockHseDocs, mockSds, mockPpeItems,
   HSE_HEALTH_SCORE,
-  hseStatusClass, splitSiteDetail,
+  hseStatusClass, splitSiteDetail, riskRating,
   HSE_SITE_OPTIONS, HSE_PERIOD_OPTIONS, HSE_RISK_OPTIONS, HSE_OWNER_OPTIONS,
-  type Permit, type QueueItem, type ReadinessRow, type SiteRisk,
+  type Permit, type QueueItem, type SiteRisk, type ReadinessRow,
 } from './types';
 
-// ── colour tokens ─────────────────────────────────────────────────────────────
+// ── colour tokens ──────────────────────────────────────────────────────────────
 
 const C = {
   red:   'var(--hse-red)',
@@ -37,7 +35,7 @@ const C = {
   navy:  '#1b2d54',
 };
 
-// ── drilldown drawer ──────────────────────────────────────────────────────────
+// ── drilldown drawer ───────────────────────────────────────────────────────────
 
 interface DD { title: string; subtitle: string; rows: [string, string][]; }
 
@@ -73,16 +71,16 @@ const drill = (value: string): [string, string][] => [
   ['Next action',   'Review controls, attach evidence, assign owner'],
 ];
 
-// ── SVG donut ring (Dropify thin-ring style, with centred value text) ────────
+// ── SVG donut ring ─────────────────────────────────────────────────────────────
 
 function DonutRing({ pct, color, trackColor, size = 52 }: {
   pct: number; color: string; trackColor: string; size?: number;
 }): VNode {
-  const r     = (size - 7) / 2;
-  const cx    = size / 2;
-  const circ  = 2 * Math.PI * r;
-  const dash  = (pct / 100) * circ;
-  const off   = circ * 0.25; // start from top
+  const r    = (size - 7) / 2;
+  const cx   = size / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  const off  = circ * 0.25;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
       <circle cx={cx} cy={cx} r={r} fill="none" stroke={trackColor} stroke-width="5.5" />
@@ -98,31 +96,25 @@ function DonutRing({ pct, color, trackColor, size = 52 }: {
   );
 }
 
-// ── bar sparkline (Dropify: thin bars, tallest = accent colour) ───────────────
+// ── bar sparkline ──────────────────────────────────────────────────────────────
 
 function BarSpark({ vals, color }: { vals: number[]; color: string }): VNode {
-  const max = Math.max(...vals, 1);
+  const max    = Math.max(...vals, 1);
   const maxIdx = vals.indexOf(Math.max(...vals));
   return (
     <div class="hse-bar-spark">
       {vals.map((v, i) => (
-        <span key={i}
-          style={{
-            height: `${Math.max(20, (v / max) * 100)}%`,
-            background: i === maxIdx ? color : 'var(--hse-spark-bar-base)',
-            borderRadius: '3px 3px 0 0',
-            flex: 1,
-          }}
-        />
+        <span key={i} style={{
+          height:     `${Math.max(20, (v / max) * 100)}%`,
+          background: i === maxIdx ? color : 'var(--hse-spark-bar-base)',
+          borderRadius: '3px 3px 0 0', flex: 1,
+        }} />
       ))}
     </div>
   );
 }
 
-// ── KPI row — Dropify card anatomy ───────────────────────────────────────────
-// Top row: label (tiny caps) left · tinted icon circle right
-// Middle: huge value (count) OR donut ring (%) · delta chip
-// Bottom: bar sparkline (counts) OR thin track bar (%)
+// ── Dropify KPI card anatomy ───────────────────────────────────────────────────
 
 const KPI_TRENDS: Record<string, number[]> = {
   'OSH Recordables': [1, 2, 3, 2, 3, 3],
@@ -142,16 +134,12 @@ const KPI_ICON: Record<string, string> = {
   'PPE Compliance':  'fa-helmet-safety',
 };
 
-// Dropify uses same-family tints for the icon circle bg
 const SEV_TINT: Record<string, { bg: string; text: string; track: string }> = {
   danger:  { bg: 'var(--hse-red-tint)',   text: 'var(--hse-red)',   track: 'var(--hse-red-tint)'   },
   warning: { bg: 'var(--hse-amber-tint)', text: 'var(--hse-amber)', track: 'var(--hse-amber-tint)' },
   success: { bg: 'var(--hse-green-tint)', text: 'var(--hse-green)', track: 'var(--hse-green-tint)' },
   info:    { bg: 'var(--hse-blue-tint)',  text: 'var(--hse-blue)',  track: 'var(--hse-blue-tint)'  },
 };
-
-const SEV_COL = (sev: string) =>
-  sev === 'danger' ? C.red : sev === 'warning' ? C.amber : sev === 'success' ? C.green : C.blue;
 
 function deltaChip(vals: number[], goodDown = false): VNode | null {
   if (vals.length < 2) return null;
@@ -166,31 +154,31 @@ function deltaChip(vals: number[], goodDown = false): VNode | null {
   );
 }
 
-function KpiRow({ onOpen }: { onOpen: (d: DD) => void }): VNode {
+function KpiRow({ onOpen, wf }: { onOpen: (d: DD) => void; wf: ReturnType<typeof useWorkflow> }): VNode {
+  const pendingApprovals = wf.state.approvals.filter(a => /pending|in_review/.test(a.status)).length;
+  const kpis = mockHseKpis.map(k => {
+    if (k.label === 'CAPA Closure')   return { ...k, note: `Target 95% · ${pendingApprovals} pending approvals` };
+    if (k.label === 'PPE Compliance') return { ...k, note: `${wf.openCount} workflows open` };
+    return k;
+  });
   return (
     <div class="hse-kpi-row">
-      {mockHseKpis.map(k => {
-        const tint   = SEV_TINT[k.severity] ?? SEV_TINT.info!;
-        const col    = tint.text;
-        const isPct  = k.value.includes('%');
-        const pct    = isPct ? parseInt(k.value, 10) : 0;
-        const tvals  = KPI_TRENDS[k.label] ?? [0];
-        const isDown = k.severity === 'danger'; // lower is better for count KPIs
-
+      {kpis.map(k => {
+        const tint  = SEV_TINT[k.severity] ?? SEV_TINT.info!;
+        const col   = tint.text;
+        const isPct = k.value.includes('%');
+        const pct   = isPct ? parseInt(k.value, 10) : 0;
+        const tvals = KPI_TRENDS[k.label] ?? [0];
+        const isDown = k.severity === 'danger';
         return (
-          <article key={k.label}
-            class="hse-kpi-card"
+          <article key={k.label} class="hse-kpi-card"
             onClick={() => onOpen({ title: k.label, subtitle: k.subtitle, rows: drill(k.value) })}>
-
-            {/* top row — label + tinted circle icon */}
             <div class="hse-kpi-top-row">
               <span class="hse-kpi-label">{k.label}</span>
               <div class="hse-kpi-icon-circle" style={{ background: tint.bg, color: col }}>
                 <i class={`fas ${KPI_ICON[k.label] ?? 'fa-chart-simple'}`} />
               </div>
             </div>
-
-            {/* value row — huge number OR donut, with delta chip */}
             <div class="hse-kpi-value-row">
               {isPct
                 ? <DonutRing pct={pct} color={col} trackColor={tint.track} size={52} />
@@ -198,18 +186,10 @@ function KpiRow({ onOpen }: { onOpen: (d: DD) => void }): VNode {
               }
               {deltaChip(tvals, isDown)}
             </div>
-
-            {/* note */}
             <div class="hse-kpi-note">{k.note}</div>
-
-            {/* bottom chart — bar spark (counts) or thin track bar (%) */}
             {!isPct
               ? <BarSpark vals={tvals} color={col} />
-              : (
-                <div class="hse-kpi-track">
-                  <div class="hse-kpi-track-fill" style={{ width: `${pct}%`, background: col }} />
-                </div>
-              )
+              : <div class="hse-kpi-track"><div class="hse-kpi-track-fill" style={{ width: `${pct}%`, background: col }} /></div>
             }
           </article>
         );
@@ -218,7 +198,512 @@ function KpiRow({ onOpen }: { onOpen: (d: DD) => void }): VNode {
   );
 }
 
-// ── spark-row (4 panels) ──────────────────────────────────────────────────────
+// ── Layer 2: Alerts & Approvals ────────────────────────────────────────────────
+
+interface AlertItem {
+  severity: 'red' | 'amber' | 'blue';
+  title: string;
+  sub: string;
+  chip: string;
+  chipClass: 'chip-red' | 'chip-amb' | 'chip-blue';
+}
+
+const ESCALATION_ALERTS: AlertItem[] = [
+  { severity: 'red',   title: 'Diesel spill · EMA notification overdue',              sub: 'INC-2026-041 · Point Lisas Plant · HSE Lead',       chip: 'Overdue',  chipClass: 'chip-red' },
+  { severity: 'red',   title: 'PTW-0032 hot work permit expired at 16:00',            sub: 'Point Lisas Plant · T. Baptiste',                    chip: 'Blocked',  chipClass: 'chip-red' },
+  { severity: 'amber', title: 'CA-303 cut-resistant gloves — 3 days overdue',         sub: 'CAPA · La Brea Yard · L. Ramnarine',                 chip: 'Overdue',  chipClass: 'chip-amb' },
+  { severity: 'amber', title: 'INSP-203 housekeeping audit overdue',                  sub: 'Piarco Logistics · L. Ramnarine',                    chip: 'Overdue',  chipClass: 'chip-amb' },
+  { severity: 'amber', title: 'CERT-1103 First Aid — Andre Williams expired',         sub: 'Training · Point Lisas Plant',                       chip: 'Expired',  chipClass: 'chip-amb' },
+  { severity: 'blue',  title: 'DOC-HSE-0205 Emergency Response Plan — review due',   sub: 'Documents · Review date: 30 Jun 2026',               chip: 'Due soon', chipClass: 'chip-blue' },
+];
+
+function AlertsLayer({ wf, onOpen }: { wf: ReturnType<typeof useWorkflow>; onOpen: (d: DD) => void }): VNode {
+  const pending = wf.state.approvals.filter(a => /pending|in_review/.test(a.status));
+  const recent  = wf.state.audit.slice(0, 5);
+
+  return (
+    <div class="hse-alerts-grid">
+      {/* escalation panel */}
+      <div class="hse-alert-panel">
+        <div class="hse-alert-panel-head">
+          <i class="fas fa-triangle-exclamation" style={{ color: C.red }} />
+          <span class="hse-alert-panel-title">Escalations — needs action today</span>
+          <span class="hse-panel-count hse-panel-count--red">{ESCALATION_ALERTS.filter(a => a.severity === 'red').length} critical</span>
+        </div>
+        {ESCALATION_ALERTS.map((a, i) => (
+          <div class="hse-alert-row" key={i}
+            onClick={() => onOpen({ title: a.title, subtitle: a.sub, rows: drill(a.chip) })}>
+            <div class={`hse-alert-bar hse-alert-bar--${a.severity}`} />
+            <div>
+              <div class="hse-alert-title">{a.title}</div>
+              <div class="hse-alert-sub">{a.sub}</div>
+            </div>
+            <span class={`hse-alert-chip ${a.chipClass}`}>{a.chip}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* approvals inbox — ppe-signals-panel style */}
+      <aside class="ppe-signals-panel hse-appr-signals">
+        <h4><i class="fas fa-inbox" /> Approvals inbox
+          {pending.length > 0 && <span class="hse-appr-count-badge">{pending.length}</span>}
+        </h4>
+        <div class="ppe-signals-list">
+          {pending.length === 0 ? (
+            <div class="ppe-signal">
+              <i class="fas fa-circle-check is-ok" />
+              <div class="ppe-signal-text"><strong>All clear</strong><span>No pending approvals.</span></div>
+            </div>
+          ) : pending.map(a => (
+            <div class="ppe-signal" key={a.id}>
+              <i class="fas fa-file-circle-check is-info" />
+              <div class="ppe-signal-text">
+                <strong>{a.title}</strong>
+                <span>{a.recordRef} · {a.approverRole}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                <button class="hse-appr-inline-btn hse-appr-inline-btn--ok"
+                  onClick={e => { e.stopPropagation(); wf.decide(a.id, 'approve', 'Approved via dashboard'); }}>
+                  Approve
+                </button>
+                <button class="hse-appr-inline-btn hse-appr-inline-btn--ret"
+                  onClick={e => { e.stopPropagation(); wf.decide(a.id, 'return', 'Returned for review'); }}>
+                  Return
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {recent.length > 0 && (
+          <>
+            <div class="hse-panel-divider" />
+            <h4><i class="fas fa-shield-halved" /> Recent audit</h4>
+            <div class="ppe-signals-list">
+              {recent.slice(0, 4).map((ev, i) => (
+                <div class="ppe-signal" key={i}>
+                  <i class="fas fa-clock-rotate-left is-info" />
+                  <div class="ppe-signal-text">
+                    <strong>{ev.event}</strong>
+                    <span>{ev.actor} · {new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <div class="hse-panel-divider" />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <span class="ppe-signal-tag is-info">{wf.openCount} workflows</span>
+          <span class="ppe-signal-tag">{wf.state.audit.length} audit events</span>
+          <span class="ppe-signal-tag">{wf.state.handoffs.length} handoffs</span>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+// ── Layer 3: Module Health Rows ────────────────────────────────────────────────
+
+interface ModAlertItem { color: 'red' | 'amber' | 'blue'; text: string; ref: string; }
+interface ModStat      { label: string; value: string | number; color?: string; }
+interface ProgItem     { label: string; pct: number; color: string; valueLabel: string; }
+
+interface ModuleHealthProps {
+  icon:    string;
+  iconBg:  string;
+  iconCol: string;
+  name:    string;
+  desc:    string;
+  statusLabel: string;
+  statusClass: 'sp-crit' | 'sp-warn' | 'sp-ok' | 'sp-info';
+  headlineLabel: string;
+  headlineVal: string | number;
+  headlineColor: string;
+  headlineSub: string;
+  headlineDelta?: { dir: 'up' | 'down' | 'flat'; label: string; good: boolean };
+  progress: ProgItem[];
+  alerts: ModAlertItem[];
+  stats: ModStat[];
+  openLabel: string;
+  onOpen?: () => void;
+}
+
+function ModuleHealthRow(p: ModuleHealthProps): VNode {
+  return (
+    <div class="hse-mod-row">
+      {/* identity strip */}
+      <div class="hse-mod-id">
+        <div>
+          <div class="hse-mod-id-top">
+            <div class="hse-mod-icon" style={{ background: p.iconBg, color: p.iconCol }}>
+              <i class={`fas ${p.icon}`} />
+            </div>
+            <div>
+              <div class="hse-mod-name">{p.name}</div>
+              <div class="hse-mod-desc">{p.desc}</div>
+            </div>
+          </div>
+          <div class={`hse-mod-status-pill ${p.statusClass}`}>
+            <span class="hse-mod-status-dot" />{p.statusLabel}
+          </div>
+        </div>
+      </div>
+
+      {/* headline metric */}
+      <div class="hse-mod-metric">
+        <div class="hse-mod-metric-label">{p.headlineLabel}</div>
+        <div>
+          <div class="hse-mod-metric-big" style={{ color: p.headlineColor }}>{p.headlineVal}</div>
+          <div class="hse-mod-metric-sub">{p.headlineSub}</div>
+          {p.headlineDelta && (
+            <span class={`hse-mod-delta ${p.headlineDelta.good ? 'good' : p.headlineDelta.dir === 'flat' ? 'flat' : 'bad'}`}>
+              <i class={`fas ${p.headlineDelta.dir === 'up' ? 'fa-arrow-up' : p.headlineDelta.dir === 'down' ? 'fa-arrow-down' : 'fa-minus'}`} />
+              {p.headlineDelta.label}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* progress bars */}
+      <div class="hse-mod-prog">
+        <div class="hse-mod-prog-label">Progress</div>
+        {p.progress.map((pr, i) => (
+          <div class="hse-mod-prog-row" key={i}>
+            <div class="hse-mod-prog-head">
+              <span class="hse-mod-prog-lbl">{pr.label}</span>
+              <span class="hse-mod-prog-val" style={{ color: pr.color }}>{pr.valueLabel}</span>
+            </div>
+            <div class="hse-mod-prog-track">
+              <div class="hse-mod-prog-fill" style={{ width: `${pr.pct}%`, background: pr.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* alert list */}
+      <div class="hse-mod-alerts">
+        <div class="hse-mod-alerts-label">Critical items</div>
+        {p.alerts.map((a, i) => (
+          <div class="hse-mod-alert-item" key={i}>
+            <div class={`hse-mod-alert-dot hse-mod-alert-dot--${a.color}`} />
+            <div>
+              <div class="hse-mod-alert-text">{a.text}</div>
+              <div class="hse-mod-alert-ref">{a.ref}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* action counts + open button */}
+      <div class="hse-mod-action">
+        <div class="hse-mod-action-counts">
+          {p.stats.map((s, i) => (
+            <div class="hse-mod-ac-row" key={i}>
+              <span class="hse-mod-ac-lbl">{s.label}</span>
+              <span class="hse-mod-ac-val" style={s.color ? { color: s.color } : {}}>{s.value}</span>
+            </div>
+          ))}
+        </div>
+        <button class="hse-mod-open-btn" onClick={p.onOpen}>
+          <i class="fas fa-arrow-right" /> {p.openLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ModuleHealthLayer(): VNode {
+  // derive counts from real mock data
+  const openIncidents   = mockIncidents.filter(x => x.status !== 'Closed').length;
+  const openCapas       = mockCapa.filter(x => x.status !== 'Closed').length;
+  const overdueCapas    = mockCapa.filter(x => x.status === 'Overdue').length;
+  const hipoCount       = mockIncidents.filter(x => x.type === 'Near Miss' && x.severity === 'danger').length;
+  const blockedPermits  = mockPermitRows.filter(x => x.status === 'Blocked').length;
+  const overduePermits  = mockPermitRows.filter(x => x.status === 'Overdue').length;
+  const overdueInsp     = mockInspections.filter(x => x.status === 'Overdue').length;
+  const openFindings    = mockFindings.filter(x => x.status === 'Open').length;
+  const expiredCerts    = mockCertifications.filter(x => x.status === 'Expired').length;
+  const dueCerts        = mockCertifications.filter(x => x.status === 'Due').length;
+  const talksThisWeek   = mockToolboxTalks.filter(x => x.status === 'Complete').length;
+  const reviewDueDocs   = mockHseDocs.filter(x => x.status === 'Review Due').length;
+  const expiredSds      = mockSds.filter(x => x.status === 'Expired').length;
+  const lowStockPpe     = mockPpeItems.filter(x => x.status === 'low').length;
+  const expiredPpe      = mockPpeItems.filter(x => x.status === 'expired').length;
+
+  return (
+    <div class="hse-mod-health">
+      <ModuleHealthRow
+        icon="fa-triangle-exclamation"
+        iconBg="var(--hse-red-tint)" iconCol="var(--hse-red)"
+        name="Incidents" desc="OSH recordables, near misses, HiPo events"
+        statusLabel="Critical — action required" statusClass="sp-crit"
+        headlineLabel="OSH recordables YTD" headlineVal={3} headlineColor={C.red}
+        headlineSub="Target: 0 · 1 pending EMA notification"
+        headlineDelta={{ dir: 'up', label: '+2 vs last yr', good: false }}
+        progress={[
+          { label: 'CAPA closure',        pct: 87,  color: C.amber, valueLabel: '87%' },
+          { label: 'Investigations open', pct: 100, color: C.red,   valueLabel: '2 of 2' },
+          { label: 'Near miss ratio',     pct: 75,  color: C.green, valueLabel: '9:1' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'EMA notification overdue — diesel spill',     ref: 'INC-2026-041 · Point Lisas' },
+          { color: 'red',   text: 'Confined space near miss — no rescue plan',    ref: 'NM-2026-118 · Galeota' },
+          { color: 'amber', text: 'CA-303 glove restock overdue 3 days',          ref: 'CAPA · La Brea Yard' },
+        ]}
+        stats={[
+          { label: 'Open incidents',  value: openIncidents, color: C.red   },
+          { label: 'Open CAPAs',      value: openCapas,     color: C.amber },
+          { label: 'Overdue CAPAs',   value: overdueCapas,  color: C.red   },
+          { label: 'HiPo events',     value: hipoCount,     color: C.red   },
+        ]}
+        openLabel="Open Incidents"
+      />
+
+      <ModuleHealthRow
+        icon="fa-id-badge"
+        iconBg="var(--hse-amber-tint)" iconCol="var(--hse-amber)"
+        name="Permits to Work" desc="Hot work, confined space, height, electrical"
+        statusLabel="Blocked — permits held" statusClass="sp-crit"
+        headlineLabel="Active permits today" headlineVal={mockPermitRows.length} headlineColor={C.amber}
+        headlineSub={`${mockPermitRows.filter(x => x.status === 'Live').length} live · ${blockedPermits} blocked · ${overduePermits} overdue`}
+        headlineDelta={{ dir: 'up', label: `${blockedPermits + overduePermits} require action`, good: false }}
+        progress={[
+          { label: 'Gas test / rescue plan', pct: 0,   color: C.red,   valueLabel: 'Missing' },
+          { label: 'Fire watch / gas-free',  pct: 20,  color: C.red,   valueLabel: 'Overdue' },
+          { label: 'Harness / edge control', pct: 100, color: C.green, valueLabel: 'Complete' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'PTW-0033 confined space — gas test missing',    ref: 'Galeota Marine Base · expires today 18:00' },
+          { color: 'red',   text: 'PTW-0032 hot work — expired at 16:00',           ref: 'Point Lisas Plant · T. Baptiste' },
+          { color: 'amber', text: 'PTW-0040 LOTO verification on hold',             ref: 'Point Lisas Plant · T. Baptiste' },
+        ]}
+        stats={[
+          { label: 'Live permits', value: mockPermitRows.filter(x => x.status === 'Live').length,   color: C.green },
+          { label: 'Blocked',      value: blockedPermits,  color: C.red   },
+          { label: 'Overdue',      value: overduePermits,  color: C.red   },
+          { label: 'On hold',      value: mockPermitRows.filter(x => x.status === 'Hold').length,   color: C.amber },
+        ]}
+        openLabel="Open Permits"
+      />
+
+      <ModuleHealthRow
+        icon="fa-school"
+        iconBg="var(--hse-green-tint)" iconCol="var(--hse-green)"
+        name="Training & Competency" desc="Certifications, competency matrix, renewals"
+        statusLabel="Watch — renewals due" statusClass="sp-warn"
+        headlineLabel="Workforce compliance" headlineVal="94%" headlineColor={C.green}
+        headlineSub="75 of 80 required certs current"
+        headlineDelta={{ dir: 'up', label: '+2% vs last month', good: true }}
+        progress={[
+          { label: 'Confined space', pct: 88, color: C.amber, valueLabel: '88%' },
+          { label: 'Work at height', pct: 95, color: C.green, valueLabel: '95%' },
+          { label: 'First aid',      pct: 78, color: C.red,   valueLabel: '78%' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'CERT-1103 First Aid — Andre Williams expired',  ref: 'Expired 20 Jan 2026 · Point Lisas' },
+          { color: 'amber', text: 'CERT-1101 Confined Space — Reza Khan due',       ref: 'Due 12 Jul 2026 · Galeota' },
+          { color: 'amber', text: 'CERT-1105 Spill Response — K. Persad due',       ref: 'Due 08 Jun 2026 · Point Lisas' },
+        ]}
+        stats={[
+          { label: 'Compliant certs', value: 75,           color: C.green },
+          { label: 'Due this month',  value: dueCerts,     color: C.amber },
+          { label: 'Expired',         value: expiredCerts, color: C.red   },
+          { label: 'Workers at gap',  value: 2,            color: C.amber },
+        ]}
+        openLabel="Open Training"
+      />
+
+      <ModuleHealthRow
+        icon="fa-helmet-safety"
+        iconBg="var(--hse-amber-tint)" iconCol="var(--hse-amber)"
+        name="PPE Manager" desc="Inventory, compliance, assignments, renewals"
+        statusLabel="Watch — 3 stock outs" statusClass="sp-warn"
+        headlineLabel="Field compliance" headlineVal="91%" headlineColor={C.amber}
+        headlineSub="3 hot spots · 9 item types tracked"
+        headlineDelta={{ dir: 'flat', label: 'Flat vs last month', good: false }}
+        progress={[
+          { label: 'Leather gloves (8 units)', pct: 28,  color: C.red,   valueLabel: 'Low' },
+          { label: 'Fall harness (5 units)',    pct: 45,  color: C.amber, valueLabel: 'Low' },
+          { label: 'Ear muffs (0 units)',       pct: 0,   color: C.red,   valueLabel: 'Expired' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'Ear muffs — 0 units, item expired Aug 2026',     ref: 'Vehicle 12 · 3M brand' },
+          { color: 'red',   text: 'Leather gloves below threshold (8 vs 15 min)',    ref: 'Site B · Ironclad' },
+          { color: 'amber', text: 'Welding shields low — 3 of 5 threshold',          ref: 'Warehouse A · Fibre-Metal' },
+        ]}
+        stats={[
+          { label: 'Available items', value: mockPpeItems.filter(x => x.status === 'available').length, color: C.green },
+          { label: 'Low stock',       value: lowStockPpe,  color: C.amber },
+          { label: 'Expired',         value: expiredPpe,   color: C.red   },
+          { label: 'Compliance %',    value: '91%',        color: C.amber },
+        ]}
+        openLabel="Open PPE"
+      />
+
+      <ModuleHealthRow
+        icon="fa-clipboard-check"
+        iconBg="var(--hse-amber-tint)" iconCol="var(--hse-amber)"
+        name="Inspections & Risk" desc="Audits, findings, hazard register, JSAs"
+        statusLabel="Overdue items" statusClass="sp-warn"
+        headlineLabel="Inspection completion" headlineVal="75%" headlineColor={C.amber}
+        headlineSub="3 of 4 scheduled this month done"
+        headlineDelta={{ dir: 'down', label: `${overdueInsp} overdue`, good: false }}
+        progress={[
+          { label: 'Inspections complete',        pct: 75,  color: C.amber, valueLabel: '75%' },
+          { label: 'Findings closed',             pct: 33,  color: C.red,   valueLabel: '33%' },
+          { label: 'Critical hazards controlled', pct: 100, color: C.green, valueLabel: '100%' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'INSP-203 housekeeping — 2 open findings',       ref: 'Piarco Logistics · overdue' },
+          { color: 'red',   text: 'FND-051 emergency exit blocked in bay 3',        ref: 'Piarco Logistics · danger' },
+          { color: 'amber', text: 'RA-2026-13 vessel entry — still in review',      ref: 'Risk assessment · Galeota' },
+        ]}
+        stats={[
+          { label: 'Inspections overdue', value: overdueInsp,   color: C.red   },
+          { label: 'Open findings',       value: openFindings,  color: C.red   },
+          { label: 'Active hazards',      value: 5,             color: C.amber },
+          { label: 'High/critical risk',  value: 2,             color: C.red   },
+        ]}
+        openLabel="Open Inspections"
+      />
+
+      <ModuleHealthRow
+        icon="fa-files"
+        iconBg="var(--hse-blue-tint)" iconCol="var(--hse-blue)"
+        name="Documents & Toolbox" desc="Controlled docs, SDS library, talks log"
+        statusLabel="Review due" statusClass="sp-info"
+        headlineLabel="Toolbox talks this week" headlineVal={talksThisWeek} headlineColor={C.green}
+        headlineSub="22 attendees · 1 scheduled tomorrow"
+        headlineDelta={{ dir: 'up', label: 'All major sites covered', good: true }}
+        progress={[
+          { label: 'Docs published',     pct: 50, color: C.green, valueLabel: '2 of 4' },
+          { label: 'SDS current',        pct: 75, color: C.amber, valueLabel: '75%' },
+          { label: 'Talk site coverage', pct: 80, color: C.amber, valueLabel: '80%' },
+        ]}
+        alerts={[
+          { color: 'amber', text: 'DOC-HSE-0205 Emergency Response Plan — review due 30 Jun', ref: 'Documents · HSE · v1.4' },
+          { color: 'amber', text: 'SDS-004 Hydraulic Oil — expired revision 2023',             ref: 'SDS Library · Lubricants Ltd' },
+          { color: 'blue',  text: 'Galeota Marine Base — no toolbox talk this week',           ref: 'Toolbox Talks · coverage gap' },
+        ]}
+        stats={[
+          { label: 'Docs review due',      value: reviewDueDocs, color: C.amber },
+          { label: 'Draft pending approval', value: mockHseDocs.filter(x => x.status === 'Draft').length, color: C.amber },
+          { label: 'SDS expired',          value: expiredSds,    color: C.red   },
+          { label: 'Site coverage gap',    value: 1,             color: C.blue  },
+        ]}
+        openLabel="Open Documents"
+      />
+
+      <ModuleHealthRow
+        icon="fa-id-card-clip"
+        iconBg="var(--hse-blue-tint)" iconCol="var(--hse-blue)"
+        name="Contractor Management" desc="STOW induction, HSE files, site access gates"
+        statusLabel="Watch — files expiring" statusClass="sp-warn"
+        headlineLabel="Active contractors" headlineVal={6} headlineColor={C.blue}
+        headlineSub="STOW passports · insurance · medicals"
+        headlineDelta={{ dir: 'flat', label: 'Stable this quarter', good: true }}
+        progress={[
+          { label: 'STOW passport current',  pct: 83, color: C.green, valueLabel: '5 of 6' },
+          { label: 'Insurance valid',         pct: 100,color: C.green, valueLabel: '6 of 6' },
+          { label: 'Medical clearance',       pct: 83, color: C.amber, valueLabel: '5 of 6' },
+        ]}
+        alerts={[
+          { color: 'amber', text: 'Caribbean Scaffold — STOW passport expires 30 Jun', ref: 'CTR-2026-006 · Galeota' },
+          { color: 'amber', text: 'TI Consulting — medical clearance lapsed',          ref: 'CTR-2026-005 · PoS Office' },
+        ]}
+        stats={[
+          { label: 'Active contractors', value: 6,   color: C.blue  },
+          { label: 'Files expiring',      value: 2,   color: C.amber },
+          { label: 'Site access denials', value: 1,   color: C.red   },
+          { label: 'Inductions this mth', value: 4,   color: C.green },
+        ]}
+        openLabel="Open Contractors"
+      />
+
+      <ModuleHealthRow
+        icon="fa-scale-balanced"
+        iconBg="var(--hse-green-tint)" iconCol="var(--hse-green)"
+        name="Legal & Compliance" desc="OSH Act obligations, EMA permits, breach log"
+        statusLabel="On track — minor gaps" statusClass="sp-ok"
+        headlineLabel="OSH obligations compliant" headlineVal="87%" headlineColor={C.green}
+        headlineSub="EMA permits current · 1 active breach"
+        headlineDelta={{ dir: 'up', label: '+5% vs Q1', good: true }}
+        progress={[
+          { label: 'OSH Act obligations',   pct: 87,  color: C.green, valueLabel: '7 of 8' },
+          { label: 'EMA permits current',   pct: 80,  color: C.amber, valueLabel: '4 of 5' },
+          { label: 'Breach log closed',     pct: 67,  color: C.amber, valueLabel: '2 of 3' },
+        ]}
+        alerts={[
+          { color: 'amber', text: 'EMA trade effluent permit — La Brea expires Aug 2026', ref: 'EMA-TT-00441 · La Brea Yard' },
+          { color: 'amber', text: 'Breach #3 safety officer absence — action in progress', ref: 'BRE-003 · OSH Act S.18' },
+        ]}
+        stats={[
+          { label: 'OSH obligations',  value: 8,    color: C.blue  },
+          { label: 'EMA permits',       value: 5,    color: C.green },
+          { label: 'Open breaches',     value: 1,    color: C.red   },
+          { label: 'Calendar events',   value: 6,    color: C.blue  },
+        ]}
+        openLabel="Open Compliance"
+      />
+
+      <ModuleHealthRow
+        icon="fa-truck-medical"
+        iconBg="var(--hse-red-tint)" iconCol="var(--hse-red)"
+        name="Emergency Response" desc="Plans, muster points, drills, ERT members"
+        statusLabel="Watch — review due" statusClass="sp-warn"
+        headlineLabel="Drills completed YTD" headlineVal={4} headlineColor={C.green}
+        headlineSub="Avg score 88% · SOPEP & MOB current at Galeota"
+        headlineDelta={{ dir: 'up', label: 'On schedule', good: true }}
+        progress={[
+          { label: 'Emergency plans current',    pct: 71,  color: C.amber, valueLabel: '5 of 7' },
+          { label: 'Drill score ≥ 85%',          pct: 75,  color: C.green, valueLabel: '3 of 4' },
+          { label: 'ERT members active',          pct: 80,  color: C.amber, valueLabel: '4 of 5' },
+        ]}
+        alerts={[
+          { color: 'amber', text: 'La Brea — Medical Emergency Plan review due',         ref: 'ERP-005 · due 20 Nov 2026' },
+          { color: 'amber', text: 'L. Ramnarine ERT first aid cert expired',             ref: 'ERT-005 · Piarco Logistics' },
+          { color: 'blue',  text: 'Piarco evacuation drill scheduled 25 Jun 2026',       ref: 'DRL-026 · Full loading bay' },
+        ]}
+        stats={[
+          { label: 'Emergency plans',  value: 7,  color: C.blue  },
+          { label: 'Muster points',     value: 7,  color: C.blue  },
+          { label: 'Plans review due',  value: 2,  color: C.amber },
+          { label: 'ERT renewal req.',  value: 1,  color: C.red   },
+        ]}
+        openLabel="Open Emergency"
+      />
+
+      <ModuleHealthRow
+        icon="fa-leaf"
+        iconBg="var(--hse-green-tint)" iconCol="var(--hse-green)"
+        name="Environmental Management" desc="Spills, waste manifests, EMA notifications, monitoring"
+        statusLabel="Watch — open spill" statusClass="sp-warn"
+        headlineLabel="Spills YTD" headlineVal={4} headlineColor={C.amber}
+        headlineSub="1 open · Tier 2 EMA notification submitted"
+        headlineDelta={{ dir: 'down', label: '-1 vs H1 2025', good: true }}
+        progress={[
+          { label: 'Waste manifested',          pct: 60,  color: C.amber, valueLabel: '3 of 5' },
+          { label: 'Monitoring compliant',       pct: 67,  color: C.amber, valueLabel: '4 of 6' },
+          { label: 'EMA notifications on time',  pct: 100, color: C.green, valueLabel: '2 of 2' },
+        ]}
+        alerts={[
+          { color: 'red',   text: 'SPI-2026-001 diesel spill to storm drain — open',    ref: 'Point Lisas Plant · EMA submitted' },
+          { color: 'amber', text: 'Air particulate monitoring sample due Q3',            ref: 'MON-004 · Point Lisas Plant' },
+          { color: 'amber', text: 'Battery acid waste manifest pending',                 ref: 'WST-004 · Piarco Logistics' },
+        ]}
+        stats={[
+          { label: 'Spills YTD',          value: 4, color: C.amber },
+          { label: 'Open spills',          value: 1, color: C.red   },
+          { label: 'Waste records',        value: 5, color: C.blue  },
+          { label: 'Monitoring due',       value: 2, color: C.amber },
+        ]}
+        openLabel="Open Environmental"
+      />
+    </div>
+  );
+}
+
+// ── Layer 4: Analytics ─────────────────────────────────────────────────────────
 
 const SW = 110, SH = 30;
 function sparkPath(vals: number[], close = false): string {
@@ -242,306 +727,192 @@ function Delta({ d, goodDown = false }: { d: number; goodDown?: boolean }): VNod
   );
 }
 
-function SparkRow(): VNode {
-  const pts    = mockTrend;
-  const last   = pts[pts.length - 1]!;
-  const prev   = pts[pts.length - 2]!;
+function AnalyticsLayer(): VNode {
+  const pts   = mockTrend;
+  const last  = pts[pts.length - 1]!;
+  const prev  = pts[pts.length - 2]!;
   const months = pts.map(p => p.month);
   const iVals  = pts.map(p => p.incidents);
   const nVals  = pts.map(p => p.nearMisses);
   const cVals  = pts.map(p => p.capaClosure);
-  const ytd    = pts.reduce((s, p) => s + p.incidents, 0);
-  const sevMix = [
-    { label: 'Critical / High', count: 3, color: C.red   },
-    { label: 'Medium',          count: 2, color: C.amber  },
-    { label: 'Low',             count: 2, color: C.green  },
+
+  // open actions donut segments (approximate ring from chart)
+  const T_W = 520, T_H = 160, T_PAD = 16;
+  type Pt3 = [number, number, number];
+  const tPts = (vals: number[], max: number): Pt3[] =>
+    vals.map((v, i) => [
+      Math.round(T_PAD + i * ((T_W - T_PAD * 2) / (vals.length - 1))),
+      Math.round(T_H - T_PAD - (v / max) * (T_H - T_PAD * 2)),
+      v,
+    ]);
+  const lPath = (pts: Pt3[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join(' ');
+  const aPath = (pts: Pt3[]) => {
+    const f = pts[0], l = pts[pts.length - 1];
+    if (!f || !l) return '';
+    return `${lPath(pts)} L${l[0]} ${T_H - T_PAD} L${f[0]} ${T_H - T_PAD} Z`;
+  };
+
+  const incPts  = tPts(iVals, 80);
+  const nearPts = tPts(nVals, 80);
+  const closPts = tPts(cVals, 100);
+
+  const donutSlices = [
+    { color: C.red,   label: 'Incidents / CAPA', val: 34, pct: 47 },
+    { color: C.amber, label: 'Permits / Inspections', val: 21, pct: 29 },
+    { color: C.blue,  label: 'Training / Certs', val: 11, pct: 15 },
+    { color: C.green, label: 'Docs / PPE', val: 6, pct: 8 },
   ];
-  return (
-    <div class="hse-spark-row">
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">Incidents MTD</span>
-          <Delta d={last.incidents - prev.incidents} goodDown />
-        </div>
-        <div class="hse-spark-val" style={{ color: C.red }}>{last.incidents}</div>
-        <div class="hse-spark-sub">YTD: {ytd} · Target ≤3/mo</div>
-        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH}
-          style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
-          <path d={sparkPath(iVals, true)} fill="rgba(228,12,12,.08)" />
-          <path d={sparkPath(iVals)} fill="none" stroke={C.red} stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" />
-          <SparkDot vals={iVals} color={C.red} />
-        </svg>
-        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">Near Misses MTD</span>
-          <Delta d={last.nearMisses - prev.nearMisses} />
-        </div>
-        <div class="hse-spark-val" style={{ color: C.amber }}>{last.nearMisses}</div>
-        <div class="hse-spark-sub">Near misses should exceed incidents</div>
-        <svg viewBox={`0 0 ${SW} ${SH}`} width={SW} height={SH}
-          style={{ marginTop: 8, overflow: 'visible', display: 'block' }}>
-          <path d={sparkPath(nVals, true)} fill="rgba(245,158,11,.08)" />
-          <path d={sparkPath(nVals)} fill="none" stroke={C.amber} stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" />
-          <SparkDot vals={nVals} color={C.amber} />
-        </svg>
-        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">CAPA Closure</span>
-          <Delta d={last.capaClosure - prev.capaClosure} />
-        </div>
-        <div class="hse-spark-val" style={{ color: last.capaClosure >= 90 ? C.green : C.amber }}>
-          {last.capaClosure}%
-        </div>
-        <div class="hse-spark-sub">
-          Target 95% · {last.capaClosure >= 95 ? 'On target' : `${95 - last.capaClosure}% below`}
-        </div>
-        <div class="hse-spark-bar-track" style={{ marginTop: 10 }}>
-          <div class="hse-spark-bar-fill"
-            style={{ width: `${last.capaClosure}%`, background: last.capaClosure >= 90 ? C.green : C.amber }} />
-        </div>
-        <div style={{ position: 'relative', height: 14, marginTop: 2 }}>
-          <div style={{ position: 'absolute', left: '95%', top: 0, width: 1.5, height: 8, background: C.red }} />
-          <span style={{ position: 'absolute', left: 'calc(95% + 3px)', top: 1, fontSize: '0.55rem', color: C.red, fontWeight: 700 }}>95%</span>
-        </div>
-        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">Severity Mix · YTD</span>
-        </div>
-        <div class="hse-spark-val" style={{ color: 'var(--siomac-navy)' }}>{ytd}</div>
-        <div class="hse-spark-sub">Total incidents · all T&T sites</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
-          {sevMix.map(s => (
-            <div key={s.label}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: 2 }}>
-                <span style={{ color: 'var(--text-muted)' }}>{s.label}</span>
-                <span style={{ color: s.color, fontWeight: 700 }}>{s.count}</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 999, background: 'var(--bg-subtle,#e2e8f0)' }}>
-                <div style={{ width: `${(s.count / 7) * 100}%`, height: '100%', borderRadius: 'inherit', background: s.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div class="hse-spark-sub" style={{ marginTop: 6 }}>OSH Recordables: 3 under review</div>
-      </div>
-    </div>
-  );
-}
-
-// ── approvals strip  (light left | dark navy right) ──────────────────────────
-
-function ApprovalsStrip(): VNode {
-  const wf      = useWorkflow();
-  const pending = wf.state.approvals.filter(a => /pending|in_review/.test(a.status));
-  const recent  = wf.state.audit.slice(0, 5);
 
   return (
-    <div class="hse-appr-split">
-      {/* left — inbox */}
-      <div class="hse-appr-left">
-        <div class="hse-appr-left-head">
-          <i class="fas fa-inbox" />
-          <strong>Approvals inbox</strong>
-          {pending.length > 0 && <span class="hse-appr-count-badge">{pending.length}</span>}
+    <div class="hse-analytics-row">
+      {/* safety trend */}
+      <div class="hse-chart-card">
+        <div class="hse-chart-head">
+          <h3><i class="fas fa-chart-line" /> Safety Performance Trend</h3>
+          <span>Jan – Jun 2026</span>
         </div>
-        {pending.length === 0 ? (
-          <div class="hse-appr-empty">
-            <i class="fas fa-circle-check" />
-            <span>No pending approvals. Submit an incident, permit, or document to create workflow activity.</span>
+        <div class="hse-analytics-summaries">
+          <div class="hse-analytics-summary hse-analytics-summary--inc">
+            <span>Incidents MTD</span>
+            <strong style={{ color: C.red }}>{last.incidents}</strong>
+            <Delta d={last.incidents - prev.incidents} goodDown />
           </div>
-        ) : pending.map(a => (
-          <div class="hse-appr-item" key={a.id}>
-            <div class="hse-appr-item-icon"><i class="fas fa-file-circle-check" /></div>
-            <div class="hse-appr-item-body">
-              <strong>{a.title}</strong>
-              <span>{a.recordRef} · {a.approverRole}</span>
-            </div>
-            <div class="hse-appr-item-actions">
-              <button class="hse-appr-btn approve"
-                onClick={() => wf.decide(a.id, 'approve', 'Approved via dashboard')}>
-                <i class="fas fa-check" /> Approve
-              </button>
-              <button class="hse-appr-btn return"
-                onClick={() => wf.decide(a.id, 'return', 'Returned for review')}>
-                <i class="fas fa-rotate-left" /> Return
-              </button>
-            </div>
+          <div class="hse-analytics-summary hse-analytics-summary--near">
+            <span>Near Misses MTD</span>
+            <strong style={{ color: C.amber }}>{last.nearMisses}</strong>
+            <Delta d={last.nearMisses - prev.nearMisses} />
           </div>
-        ))}
+          <div class="hse-analytics-summary hse-analytics-summary--capa">
+            <span>CAPA Closure</span>
+            <strong style={{ color: C.green }}>{last.capaClosure}%</strong>
+            <Delta d={last.capaClosure - prev.capaClosure} />
+          </div>
+        </div>
+        <svg class="hse-analytics-svg" viewBox={`0 0 ${T_W} ${T_H}`} preserveAspectRatio="none">
+          {[20, 40, 60, 80].map(pct => {
+            const y = T_H - T_PAD - (pct / 100) * (T_H - T_PAD * 2);
+            return <line key={pct} x1={T_PAD} y1={y} x2={T_W - T_PAD} y2={y}
+              stroke="var(--border)" stroke-width="1" opacity="0.5" />;
+          })}
+          <path d={aPath(nearPts)} fill="rgba(217,119,6,.07)" />
+          <path d={aPath(incPts)}  fill="rgba(228,12,12,.08)" />
+          <path d={lPath(nearPts)} fill="none" stroke={C.amber} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d={lPath(incPts)}  fill="none" stroke={C.red}   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d={lPath(closPts)} fill="none" stroke={C.green} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 3" />
+          {incPts.map( (p, i) => <circle key={`i${i}`} cx={p[0]} cy={p[1]} r={3.5} fill={C.red}   stroke="var(--bg-card)" stroke-width="1.5"><title>{months[i]}: {p[2]}</title></circle>)}
+          {nearPts.map((p, i) => <circle key={`n${i}`} cx={p[0]} cy={p[1]} r={3.5} fill={C.amber} stroke="var(--bg-card)" stroke-width="1.5"><title>{months[i]}: {p[2]}</title></circle>)}
+          {closPts.map((p, i) => <circle key={`c${i}`} cx={p[0]} cy={p[1]} r={3.5} fill={C.green} stroke="var(--bg-card)" stroke-width="1.5"><title>{months[i]}: {p[2]}%</title></circle>)}
+        </svg>
+        <div class="hse-trend-axis">{months.map(m => <span key={m}>{m}</span>)}</div>
+        <div class="hse-legend">
+          <span><i style={{ background: C.red }}   />Incidents</span>
+          <span><i style={{ background: C.amber }} />Near misses</span>
+          <span><i style={{ background: C.green }} />CAPA closure</span>
+        </div>
       </div>
 
-      {/* right — dark navy sidebar */}
-      <aside class="hse-appr-right">
-        <div class="hse-appr-right-kpis">
-          <div class={`hse-appr-right-tile${pending.length > 0 ? ' urgent' : ''}`}>
-            <strong>{pending.length}</strong><span>Pending approvals</span>
-          </div>
-          <div class="hse-appr-right-tile">
-            <strong>{wf.openCount}</strong><span>Open workflows</span>
-          </div>
-          <div class="hse-appr-right-tile">
-            <strong>{wf.state.audit.length}</strong><span>Audit events</span>
-          </div>
-          <div class="hse-appr-right-tile">
-            <strong>{wf.state.handoffs.length}</strong><span>Handoffs</span>
-          </div>
+      {/* open actions donut */}
+      <div class="hse-chart-card">
+        <div class="hse-chart-head">
+          <h3><i class="fas fa-circle-half-stroke" /> Open actions by module</h3>
+          <span>72 total</span>
         </div>
-        {recent.length > 0 && (
-          <>
-            <div class="hse-appr-right-head">
-              <i class="fas fa-shield-halved" /> Recent audit
-            </div>
-            {recent.map((ev, i) => (
-              <div class="hse-appr-right-row" key={i}>
-                <span class="hse-appr-right-ts">
-                  {new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-                <span class="hse-appr-right-evt">{ev.event}</span>
-                <span class="hse-appr-right-who">{ev.actor}</span>
+        <div class="hse-donut-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border)" stroke-width="14" />
+            {/* stacked ring segments */}
+            <circle cx="50" cy="50" r="38" fill="none" stroke={C.red}   stroke-width="14" stroke-dasharray="112 227" stroke-dashoffset="56.75"  stroke-linecap="butt" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke={C.amber} stroke-width="14" stroke-dasharray="66 227"  stroke-dashoffset="-55.25" stroke-linecap="butt" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke={C.blue}  stroke-width="14" stroke-dasharray="34 227"  stroke-dashoffset="-121.25" stroke-linecap="butt" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke={C.green} stroke-width="14" stroke-dasharray="18 227"  stroke-dashoffset="-155.25" stroke-linecap="butt" />
+            <text x="50" y="45" text-anchor="middle" font-size="18" font-weight="800" fill="var(--siomac-navy)">72</text>
+            <text x="50" y="59" text-anchor="middle" font-size="9"  fill="var(--text-muted)">open</text>
+          </svg>
+          <div class="hse-donut-legend">
+            {donutSlices.map(s => (
+              <div class="hse-donut-row" key={s.label}>
+                <div class="hse-donut-dot" style={{ background: s.color }} />
+                <span class="hse-donut-lbl">{s.label}</span>
+                <span class="hse-donut-val">{s.val}</span>
               </div>
             ))}
-          </>
-        )}
-      </aside>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ── trend chart ───────────────────────────────────────────────────────────────
+// ── Layer 5: Site Intelligence ─────────────────────────────────────────────────
 
-const T_W = 680, T_H = 180, T_PAD = 20;
-type Pt = [number, number, number];
-function tPts(vals: number[], max: number): Pt[] {
-  return vals.map((v, i) => [
-    Math.round(T_PAD + i * ((T_W - T_PAD * 2) / (vals.length - 1))),
-    Math.round(T_H - T_PAD - (v / max) * (T_H - T_PAD * 2)),
-    v,
-  ]);
-}
-const lPath = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join(' ');
-const aPath = (pts: Pt[]) => {
-  const f = pts[0], l = pts[pts.length - 1];
-  if (!f || !l) return '';
-  return `${lPath(pts)} L${l[0]} ${T_H - T_PAD} L${f[0]} ${T_H - T_PAD} Z`;
+const SITE_DATA = [
+  { name: 'Galeota Marine Base',  sub: 'Marine transfer · confined space', chip: 'Critical', chipClass: 'chip-red',  riskPct: 88, incidents: 2, ptw: '1 blocked', capas: 3, readiness: 74,  readColor: C.amber },
+  { name: 'Point Lisas Plant',    sub: 'Hot work · chemicals · process',   chip: 'High',     chipClass: 'chip-amb',  riskPct: 72, incidents: 2, ptw: '2 active',  capas: 4, readiness: 81,  readColor: C.amber },
+  { name: 'Piarco Logistics',     sub: 'Forklifts · pedestrian traffic',   chip: 'Medium',   chipClass: 'chip-amb',  riskPct: 55, incidents: 1, ptw: '—',         capas: 2, readiness: 88,  readColor: C.green },
+  { name: 'La Brea Yard',         sub: 'Manual handling · chemicals',      chip: 'Medium',   chipClass: 'chip-amb',  riskPct: 48, incidents: 1, ptw: '—',         capas: 1, readiness: 91,  readColor: C.green },
+  { name: 'Port of Spain Office', sub: 'Work at height · facilities',      chip: 'Low',      chipClass: 'chip-blue', riskPct: 28, incidents: 1, ptw: '1 live',    capas: 0, readiness: 96,  readColor: C.green },
+] as const;
+
+const RISK_COLOR: Record<string, string> = {
+  'chip-red':  C.red,
+  'chip-amb':  C.amber,
+  'chip-blue': C.blue,
 };
 
-function TrendChart(): VNode {
-  const months  = mockTrend.map(t => t.month);
-  const incPts  = tPts(mockTrend.map(t => t.incidents),   80);
-  const nearPts = tPts(mockTrend.map(t => t.nearMisses),  80);
-  const closPts = tPts(mockTrend.map(t => t.capaClosure), 100);
-  const last    = mockTrend[mockTrend.length - 1] ?? { incidents: 0, nearMisses: 0, capaClosure: 0 };
+function SiteIntelligenceLayer({ onOpen }: { onOpen: (d: DD) => void }): VNode {
   return (
-    <div class="hse-trend-chart">
-      <div class="hse-trend-summary">
-        <div class="hse-trend-card incident"><span>Incidents</span><strong>{last.incidents}</strong></div>
-        <div class="hse-trend-card near"><span>Near Misses</span><strong>{last.nearMisses}</strong></div>
-        <div class="hse-trend-card closure"><span>CAPA Closure</span><strong>{last.capaClosure}%</strong></div>
+    <section class="hse-site-table">
+      <div class="hse-site-thead">
+        <div class="hse-site-th">Site</div>
+        <div class="hse-site-th">Risk level</div>
+        <div class="hse-site-th" style={{ textAlign: 'center' }}>Incidents</div>
+        <div class="hse-site-th" style={{ textAlign: 'center' }}>PTWs</div>
+        <div class="hse-site-th" style={{ textAlign: 'center' }}>CAPAs</div>
+        <div class="hse-site-th">Readiness</div>
+        <div class="hse-site-th" />
       </div>
-      <svg class="hse-trend-svg" viewBox={`0 0 ${T_W} ${T_H}`} preserveAspectRatio="none">
-        {[20, 40, 60, 80].map(pct => {
-          const y = T_H - T_PAD - (pct / 100) * (T_H - T_PAD * 2);
-          return <line key={pct} x1={T_PAD} y1={y} x2={T_W - T_PAD} y2={y}
-            stroke="var(--border)" stroke-width="1" opacity="0.5" />;
-        })}
-        <path class="area-near"      d={aPath(nearPts)} />
-        <path class="area-incidents" d={aPath(incPts)} />
-        <path class="line-near"      d={lPath(nearPts)} />
-        <path class="line-incidents" d={lPath(incPts)} />
-        <path class="line-closure"   d={lPath(closPts)} />
-        {incPts.map( (p, i) => <circle key={`i${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-incidents"><title>{months[i]}: {p[2]}</title></circle>)}
-        {nearPts.map((p, i) => <circle key={`n${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-near"><title>{months[i]}: {p[2]}</title></circle>)}
-        {closPts.map((p, i) => <circle key={`c${i}`} cx={p[0]} cy={p[1]} r={4} class="dot-closure"><title>{months[i]}: {p[2]}%</title></circle>)}
-      </svg>
-      <div class="hse-trend-axis">{months.map(m => <span key={m}>{m}</span>)}</div>
-      <div class="hse-legend">
-        <span><i style={{ background: C.red }}   />Incidents</span>
-        <span><i style={{ background: C.amber }} />Near misses</span>
-        <span><i style={{ background: C.green }} />CAPA closure</span>
-      </div>
-    </div>
-  );
-}
-
-// ── critical work queue (dark panel) ─────────────────────────────────────────
-
-function QueuePanel({ items, onOpen }: { items: QueueItem[]; onOpen: (d: DD) => void }): VNode {
-  return (
-    <aside class="hse-queue-dark">
-      <div class="hse-queue-dark-head">
-        <i class="fas fa-circle-exclamation" />
-        <span>Critical Work Queue</span>
-        <small>Escalate today</small>
-      </div>
-      <div class="hse-queue-dark-body">
-        {items.map(q => {
-          const { site, detail } = splitSiteDetail(q.detail);
-          return (
-            <div key={q.title} class={`hse-qdark-item hse-qdark-item--${q.severity}`}
-              onClick={() => onOpen({ title: q.title, subtitle: q.detail, rows: drill(q.status) })}>
-              <div class="hse-qdark-title">{q.title}</div>
-              <div class="hse-qdark-detail">{detail}</div>
-              <div class="hse-qdark-chips">
-                <span class={`hse-qdark-chip hse-qdark-chip--${q.severity}`}>{q.status}</span>
-                <span class="hse-qdark-chip">{site}</span>
-                <span class="hse-qdark-chip">{q.status === 'Pending' ? '7 days' : 'Today'}</span>
-              </div>
+      {SITE_DATA.map(s => (
+        <div class="hse-site-row" key={s.name}
+          onClick={() => onOpen({ title: s.name, subtitle: s.sub, rows: [
+            ['Risk level', s.chip],
+            ['Open incidents', String(s.incidents)],
+            ['Active PTWs', s.ptw],
+            ['Open CAPAs', String(s.capas)],
+            ['Readiness score', `${s.readiness}%`],
+          ] })}>
+          <div>
+            <div class="hse-site-name">{s.name}</div>
+            <div class="hse-site-loc">{s.sub}</div>
+          </div>
+          <div>
+            <span class={`hse-alert-chip ${s.chipClass}`} style={{ marginBottom: 5, display: 'inline-flex' }}>{s.chip}</span>
+            <div class="hse-site-risk-bar-wrap">
+              <div class="hse-site-risk-bar" style={{ width: `${s.riskPct}%`, background: RISK_COLOR[s.chipClass] ?? C.amber }} />
             </div>
-          );
-        })}
-      </div>
-    </aside>
+          </div>
+          <div class="hse-site-num" style={{ color: s.incidents >= 2 ? C.red : 'var(--text-default)' }}>{s.incidents}</div>
+          <div class="hse-site-num" style={{ color: s.ptw.includes('blocked') ? C.red : 'var(--text-default)' }}>{s.ptw}</div>
+          <div class="hse-site-num" style={{ color: s.capas >= 3 ? C.red : s.capas >= 1 ? C.amber : C.green }}>{s.capas}</div>
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: s.readColor }}>{s.readiness}%</div>
+            <div class="hse-site-risk-bar-wrap" style={{ marginTop: 3 }}>
+              <div class="hse-site-risk-bar" style={{ width: `${s.readiness}%`, background: s.readColor }} />
+            </div>
+          </div>
+          <button class="hse-site-go-btn" onClick={e => e.stopPropagation()}>Open site ↗</button>
+        </div>
+      ))}
+    </section>
   );
 }
 
-// ── site risk ─────────────────────────────────────────────────────────────────
+// ── section heading ────────────────────────────────────────────────────────────
 
-function SiteCard({ s, onOpen }: { s: SiteRisk; onOpen: (d: DD) => void }): VNode {
-  const col = SEV_COL(s.severity);
-  return (
-    <div class={`hse-site-item hse-site-item--${s.severity}`}
-      onClick={() => onOpen({ title: s.site, subtitle: s.detail, rows: drill(s.level) })}>
-      <div class="hse-site-item-head">
-        <strong>{s.site}</strong>
-        <span class={`hse-status-badge ${hseStatusClass(s.level)}`}>{s.level}</span>
-      </div>
-      <p>{s.detail}</p>
-      <div class="hse-progress"><i style={{ width: `${s.score}%`, background: col }} /></div>
-      <div class="hse-kpi-sub">{s.open} open · {s.overdue} overdue</div>
-    </div>
-  );
+function LayerLabel({ children }: { children: string }): VNode {
+  return <div class="hse-layer-label">{children}</div>;
 }
 
-// ── readiness ─────────────────────────────────────────────────────────────────
-
-function ReadyCard({ r, onOpen }: { r: ReadinessRow; onOpen: (d: DD) => void }): VNode {
-  const pct = parseInt(r.value, 10) || 0;
-  const col = SEV_COL(r.severity);
-  return (
-    <div class={`hse-ready-item hse-ready-item--${r.severity}`}
-      onClick={() => onOpen({ title: r.label, subtitle: r.detail, rows: drill(r.value) })}>
-      <div class="hse-ready-item-head">
-        <strong>{r.label}</strong>
-        <span class="hse-ready-value" style={{ color: col }}>{r.value}</span>
-      </div>
-      <p>{r.detail}</p>
-      <div class="hse-progress"><i style={{ width: `${pct}%`, background: col }} /></div>
-    </div>
-  );
-}
-
-// ── main dashboard ────────────────────────────────────────────────────────────
+// ── main dashboard ─────────────────────────────────────────────────────────────
 
 export function HSEDashboard(): VNode {
   const [drawer, setDrawer] = useState<DD | null>(null);
@@ -549,20 +920,6 @@ export function HSEDashboard(): VNode {
   const [site,   setSite]   = useState('all');
   const [risk,   setRisk]   = useState('all');
   const wf = useWorkflow();
-
-  const q = search.toLowerCase().trim();
-  const s = site.toLowerCase();
-  const r = risk.toLowerCase();
-  const match = (text: string) =>
-    (!q || text.toLowerCase().includes(q)) &&
-    (s === 'all' || text.toLowerCase().includes(s)) &&
-    (r === 'all' || text.toLowerCase().includes(r));
-
-  const queue     = useMemo(() => mockQueue.filter(x => match(`${x.title} ${x.detail} ${x.status}`)), [q, s, r]);
-  const incidents = useMemo(() => mockHseIncidents.filter(x => match(`${x.ref} ${x.site} ${x.event} ${x.klass} ${x.status} ${x.owner}`)), [q, s, r]);
-  const sites     = useMemo(() => mockSiteRisk.filter(x => match(`${x.site} ${x.level} ${x.detail}`)), [q, s, r]);
-  const permits   = useMemo(() => mockPermits.filter(x => match(`${x.ref} ${x.site} ${x.gate} ${x.status}`)), [q, s, r]);
-  const readiness = useMemo(() => mockReadiness.filter(x => match(`${x.label} ${x.detail}`)), [q, s, r]);
 
   const pendingCount = wf.state.approvals.filter(a => /pending|in_review/.test(a.status)).length;
 
@@ -625,95 +982,25 @@ export function HSEDashboard(): VNode {
         </select>
       </div>
 
-      {/* KPI row — donuts for %, sparklines for counts */}
-      <KpiRow onOpen={d => setDrawer(d)} />
+      {/* Layer 1 — Command KPIs */}
+      <LayerLabel>Command KPIs</LayerLabel>
+      <KpiRow onOpen={d => setDrawer(d)} wf={wf} />
 
-      {/* spark-row */}
-      <SparkRow />
+      {/* Layer 2 — Alerts & Approvals */}
+      <LayerLabel>Real-time Alerts & Approvals</LayerLabel>
+      <AlertsLayer wf={wf} onOpen={d => setDrawer(d)} />
 
-      {/* approvals — light inbox left, dark kpis/audit right */}
-      <div class="hse-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <ApprovalsStrip />
-      </div>
+      {/* Layer 3 — Module Health */}
+      <LayerLabel>Module Health</LayerLabel>
+      <ModuleHealthLayer />
 
-      {/* trend chart (light) + critical queue (dark) */}
-      <div class="hse-perf-grid">
-        <article class="hse-card">
-          <div class="hse-card-head">
-            <h3><i class="fas fa-chart-line" /> Safety Performance Trend</h3>
-            <span>Jan – Jun 2026</span>
-          </div>
-          <div class="hse-card-body">
-            <TrendChart />
-          </div>
-        </article>
-        <QueuePanel items={queue} onOpen={d => setDrawer(d)} />
-      </div>
+      {/* Layer 4 — Analytics */}
+      <LayerLabel>Analytics & Trends</LayerLabel>
+      <AnalyticsLayer />
 
-      {/* incidents table */}
-      <section class="hse-card">
-        <div class="hse-card-head">
-          <h3><i class="fas fa-clipboard-list" /> Recent Incidents</h3>
-          <span>OSH recordables, near misses, environmental events</span>
-        </div>
-        <div class="hse-table-scroll">
-          <table class="hse-data-table">
-            <thead>
-              <tr><th>Record</th><th>Site</th><th>Event</th><th>Class</th><th>Status</th><th>Owner</th></tr>
-            </thead>
-            <tbody>
-              {incidents.length === 0
-                ? <tr><td colspan={6} class="hse-empty">No incidents match filter.</td></tr>
-                : incidents.map(i => (
-                  <tr key={i.ref}
-                    onClick={() => setDrawer({ title: `${i.ref} · ${i.klass}`, subtitle: i.event, rows: drill(i.status) })}>
-                    <td class="hse-rec-cell"><strong>{i.ref}</strong><span>{i.date}</span></td>
-                    <td>{i.site}</td>
-                    <td class="hse-event-cell">{i.event}<span class="hse-incident-detail">{i.action}</span></td>
-                    <td><span class={`hse-record-pill ${hseStatusClass(i.status)}`}><i />{i.klass}</span></td>
-                    <td><span class={`hse-status-badge ${hseStatusClass(i.status)}`}>{i.status}</span></td>
-                    <td class="hse-muted">{i.owner}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* bottom grid — site risk / permits / readiness (all light) */}
-      <div class="hse-bottom-grid">
-        <article class="hse-card">
-          <div class="hse-card-head"><h3><i class="fas fa-location-dot" /> Site Risk</h3><span>T&T locations</span></div>
-          <div class="hse-card-body hse-site-list">
-            {sites.map(x => <SiteCard key={x.site} s={x} onOpen={d => setDrawer(d)} />)}
-          </div>
-        </article>
-        <article class="hse-card">
-          <div class="hse-card-head"><h3><i class="fas fa-id-badge" /> Active Permits</h3><span>PTW control gates</span></div>
-          <div class="hse-table-scroll">
-            <table class="hse-data-table">
-              <thead><tr><th>Permit</th><th>Site</th><th>Control Gate</th><th>Status</th></tr></thead>
-              <tbody>
-                {permits.map((p: Permit) => (
-                  <tr key={p.ref}
-                    onClick={() => setDrawer({ title: p.ref, subtitle: p.gate, rows: drill(p.status) })}>
-                    <td><strong>{p.ref}</strong></td>
-                    <td>{p.site}</td>
-                    <td class="hse-muted">{p.gate}</td>
-                    <td><span class={`hse-status-badge ${hseStatusClass(p.status)}`}>{p.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
-        <article class="hse-card">
-          <div class="hse-card-head"><h3><i class="fas fa-user-check" /> Readiness</h3><span>Controls health</span></div>
-          <div class="hse-card-body hse-ready-list">
-            {readiness.map(x => <ReadyCard key={x.label} r={x} onOpen={d => setDrawer(d)} />)}
-          </div>
-        </article>
-      </div>
+      {/* Layer 5 — Site Intelligence */}
+      <LayerLabel>Site Intelligence</LayerLabel>
+      <SiteIntelligenceLayer onOpen={d => setDrawer(d)} />
 
       <Drawer data={drawer} onClose={() => setDrawer(null)} />
     </div>
