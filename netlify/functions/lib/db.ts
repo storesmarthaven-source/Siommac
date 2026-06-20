@@ -23,14 +23,32 @@ export const sb: SupabaseClient = createClient(
 );
 
 /**
- * sbAnon — anon-key client.
+ * sbAnon — anon-key client singleton.
  * Respects RLS policies. Use for:
  *   - public reads (settings, ping)
  *   - any query that should be scoped by RLS
  * Falls back to sb if SUPABASE_ANON_KEY is not configured.
+ *
+ * ⚠️  Do NOT call auth methods (signInWithPassword, updateUser) on this
+ * shared singleton — it holds shared session state and can bleed between
+ * concurrent requests in reused function instances. Use createAnonClient()
+ * for per-request auth operations instead.
  */
 export const sbAnon: SupabaseClient = SUPABASE_ANON_KEY
   ? createClient(SUPABASE_URL ?? 'http://localhost', SUPABASE_ANON_KEY, {
       auth: { persistSession: false },
     })
   : sb; // graceful fallback during migration
+
+/**
+ * createAnonClient — per-request anon client for auth operations.
+ * Each call returns a fresh client that holds no shared state between requests.
+ * Use this (not sbAnon) for signInWithPassword / updateUser calls.
+ */
+export function createAnonClient(): SupabaseClient {
+  return SUPABASE_ANON_KEY
+    ? createClient(SUPABASE_URL ?? 'http://localhost', SUPABASE_ANON_KEY, {
+        auth: { persistSession: false },
+      })
+    : sb;
+}

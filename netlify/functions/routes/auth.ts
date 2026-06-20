@@ -1,5 +1,5 @@
 import { Hono }     from 'hono';
-import { sb, sbAnon } from '../lib/db';
+import { sb, createAnonClient } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
 import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/permissions';
 import { getProfileSignedUrl }         from '../lib/photos';
@@ -108,7 +108,7 @@ router.post('/login', async c => {
   const { username, password } = v.data;
 
   const ip = c.get('clientIp') ?? 'unknown';
-  const rl = checkLoginLimit(ip);
+  const rl = checkLoginLimit.check(ip);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many login attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -125,8 +125,9 @@ router.post('/login', async c => {
     return c.json({ success: false, message: 'Invalid username or password' });
   }
 
-  // Step 2: authenticate via Supabase Auth using the stored email
-  const { error: authError } = await sbAnon.auth.signInWithPassword({
+  // Step 2: authenticate via Supabase Auth using the stored email.
+  // Use a per-request client to avoid session state bleeding between requests.
+  const { error: authError } = await createAnonClient().auth.signInWithPassword({
     email:    u.auth_email,
     password,
   });
@@ -316,7 +317,7 @@ router.post('/disable2fa', async c => {
   }
 
   if (u.auth_email) {
-    const { error: pwErr } = await sbAnon.auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
+    const { error: pwErr } = await createAnonClient().auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
     if (pwErr) return c.json({ success: false, message: 'Incorrect password.' }, 403);
   }
 
@@ -403,9 +404,15 @@ router.post('/updateMyProfile', async c => {
   if (args.newPassword) {
     if (!args.oldPassword) return c.json({ success: false, message: 'Current password is required' });
     if (!actor.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
-    const { error: pwErr } = await sbAnon.auth.signInWithPassword({ email: actor.auth_email, password: args.oldPassword });
+    // Verify old password and update new password via the Supabase Admin API to avoid
+    // shared-singleton session state on sbAnon leaking between concurrent requests.
+    const { error: pwErr } = await createAnonClient().auth.signInWithPassword({ email: actor.auth_email, password: args.oldPassword });
     if (pwErr) return c.json({ success: false, message: 'Current password is incorrect' });
-    const { error: upErr } = await sbAnon.auth.updateUser({ password: args.newPassword });
+    // Use admin API to update password — avoids needing a live session on a shared client.
+    const { data: authUser } = await sb.auth.admin.listUsers();
+    const match = authUser?.users?.find(u => u.email === actor.auth_email);
+    if (!match) return c.json({ success: false, message: 'Auth account not found.' });
+    const { error: upErr } = await sb.auth.admin.updateUserById(match.id, { password: args.newPassword });
     if (upErr) return c.json({ success: false, message: 'Failed to update password.' });
   }
 
@@ -429,7 +436,7 @@ router.post('/verifyPassword', async c => {
   const v = zv(c, VerifyPasswordSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   if (!u.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
-  const { error } = await sbAnon.auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
+  const { error } = await createAnonClient().auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
   return error ? c.json({ success: false, message: 'Incorrect password.' }) : c.json({ success: true });
 });
 

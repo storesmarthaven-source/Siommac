@@ -14,23 +14,33 @@ interface RateLimitOptions {
   prefix?:  string;
 }
 
-function rateLimit({ max, windowMs, prefix = 'rl' }: RateLimitOptions): (ip: string | null) => RateLimitResult {
-  return function check(ip: string | null): RateLimitResult {
-    const key    = `${prefix}:${ip ?? 'unknown'}`;
-    const now    = Date.now();
-    const cutoff = now - windowMs;
+interface RateLimiter {
+  check: (ip: string | null) => RateLimitResult;
+  reset: (ip: string) => void;
+}
 
-    let hits = _windows.get(key) ?? [];
-    hits = hits.filter(t => t > cutoff);
+function rateLimit({ max, windowMs, prefix = 'rl' }: RateLimitOptions): RateLimiter {
+  return {
+    check(ip: string | null): RateLimitResult {
+      const key    = `${prefix}:${ip ?? 'unknown'}`;
+      const now    = Date.now();
+      const cutoff = now - windowMs;
 
-    if (hits.length >= max) {
-      const retryAfter = Math.ceil(((hits[0] ?? now) - cutoff) / 1000);
-      return { ok: false, retryAfter };
-    }
+      let hits = _windows.get(key) ?? [];
+      hits = hits.filter(t => t > cutoff);
 
-    hits.push(now);
-    _windows.set(key, hits);
-    return { ok: true };
+      if (hits.length >= max) {
+        const retryAfter = Math.ceil(((hits[0] ?? now) - cutoff) / 1000);
+        return { ok: false, retryAfter };
+      }
+
+      hits.push(now);
+      _windows.set(key, hits);
+      return { ok: true };
+    },
+    reset(ip: string): void {
+      _windows.delete(`${prefix}:${ip}`);
+    },
   };
 }
 
@@ -52,7 +62,7 @@ async function globalRateLimitMiddleware(
 
   c.set('clientIp', ip);
 
-  const result = checkGlobalLimit(ip);
+  const result = checkGlobalLimit.check(ip);
   if (!result.ok) {
     return c.json({ success: false, message: 'Rate limit exceeded. Try again later.' }, 429);
   }

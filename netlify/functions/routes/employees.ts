@@ -76,10 +76,16 @@ router.post('/addEmployee', async c => {
     if (existing) return c.json({ success: false, message: `Employee ID "${employee_number}" is already in use.` });
   }
 
+  // Derive the internal auth email: use provided email if present, else username@siomac.internal
+  const auth_email = args.email?.trim()
+    ? args.email.trim().toLowerCase()
+    : `${args.username.toLowerCase()}@siomac.internal`;
+
   const { data, error } = await sb.from('app_users').insert({
     username: args.username, password_hash, full_name: args.fullName, role: args.role,
     department_id: args.department ?? null, position: args.position ?? null, status: 'active',
     employee_number,
+    auth_email,
     email:  args.email   ? args.email.trim()   : null,
     phone:  args.phone   ? args.phone.trim()   : null,
     pay_cycle:                   args.payCycle                  ?? 'monthly',
@@ -99,6 +105,23 @@ router.post('/addEmployee', async c => {
     }
     return c.json({ success: false, message: error.message });
   }
+
+  // Provision Supabase Auth account so the employee can log in.
+  // email_confirm: true skips the verification email for internal users.
+  const { data: authData, error: authErr } = await sb.auth.admin.createUser({
+    email:        auth_email,
+    password:     args.password,
+    email_confirm: true,
+    user_metadata: { appUserId: data.id, username: args.username },
+  });
+  if (authErr) {
+    // Roll back the app_users row so we don't leave an orphan that can never log in.
+    await sb.from('app_users').delete().eq('id', data.id);
+    return c.json({ success: false, message: 'Failed to create auth account: ' + authErr.message });
+  }
+
+  // Store the Supabase Auth user ID for future admin operations (password reset, etc.)
+  await sb.from('app_users').update({ auth_id: authData.user.id }).eq('id', data.id);
 
   await log_(actor, 'create', 'user', data.id, args.fullName);
   return c.json({ success: true, id: data.id, employeeNumber: employee_number });
@@ -132,7 +155,20 @@ router.post('/updateEmployee', async c => {
   if (args.healthSurchargeApplicable !== undefined) patch.health_surcharge_applicable = args.healthSurchargeApplicable;
   if (args.taxResident              !== undefined) patch.tax_resident                = args.taxResident;
 
-  if (args.password) patch.password_hash = await bcrypt.hash(args.password, 12);
+  if (args.password) {
+    // Update password via Supabase Auth Admin API — the auth system is authoritative,
+    // not the password_hash column (which is legacy and unused by the login path).
+    const { data: tgtUser } = await sb.from('app_users')
+      .select('auth_id, auth_email')
+      .eq('username', args.username)
+      .maybeSingle<{ auth_id: string | null; auth_email: string | null }>();
+    if (tgtUser?.auth_id) {
+      const { error: authPwErr } = await sb.auth.admin.updateUserById(tgtUser.auth_id, { password: args.password });
+      if (authPwErr) return c.json({ success: false, message: 'Failed to update password: ' + authPwErr.message });
+    }
+    // Keep password_hash in sync as a fallback (not used by login but avoids stale data)
+    patch.password_hash = await bcrypt.hash(args.password, 12);
+  }
 
   if (args.removeProfileImage) {
     patch.profile_image = '__removed__';
