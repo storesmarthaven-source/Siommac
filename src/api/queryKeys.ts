@@ -161,3 +161,17 @@ export const ticketKeys = {
   admin:    () => [...ticketKeys.all, 'admin']             as const,
   detail:   (id: string) => [...ticketKeys.all, 'detail', id] as const,
 } as const;
+
+// ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
+
+export const hseIncidentKeys = {
+  all:          ['hse-incidents']                                                      as const,
+  lists:        () => [...hseIncidentKeys.all, 'list']                                 as const,
+  list:         (f: Record<string, unknown>) => [...hseIncidentKeys.lists(), f]        as const,
+  details:      () => [...hseIncidentKeys.all, 'detail']                               as const,
+  detail:       (id: string) => [...hseIncidentKeys.details(), id]                     as const,
+  investigations: (incidentId: string) => [...hseIncidentKeys.all, 'inv', incidentId] as const,
+  capaLists:    () => [...hseIncidentKeys.all, 'capa']                                 as const,
+  capaList:     (f: Record<string, unknown>) => [...hseIncidentKeys.capaLists(), f]    as const,
+  kpis:         () => ['hse-kpis']                                                     as const,
+} as const;

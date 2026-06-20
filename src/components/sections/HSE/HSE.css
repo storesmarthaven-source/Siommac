@@ -459,6 +459,91 @@
 }
 .hse-hero-context i { color: rgba(255,255,255,.3); }
 
+/* ── Redesigned area hero layout ─────────────────────────────────────────── */
+
+/* Override dash-panel-content padding for tighter area heroes */
+.hse-area-hero .dash-panel-content {
+  padding: 18px 22px 20px;
+}
+
+/* Top bar: title block left · ProfilePill right */
+.hse-area-topbar {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 18px; position: relative;
+}
+
+/* Left side: icon chip + text */
+.hse-area-title-block {
+  display: flex; align-items: flex-start; gap: 14px; min-width: 0; flex: 1;
+}
+
+/* Square icon chip — same style as PPE section head */
+.hse-area-icon-chip {
+  width: 46px; height: 46px; flex-shrink: 0;
+  display: grid; place-items: center; border-radius: 13px;
+  background: rgba(255,255,255,.13);
+  border: 1px solid rgba(255,255,255,.18);
+}
+.hse-area-icon-chip i {
+  font-size: 1.15rem; color: #fff;
+  display: grid !important; place-items: center !important;
+}
+
+/* Text block */
+.hse-area-text { min-width: 0; flex: 1; }
+
+/* Title + badges on one line */
+.hse-area-title-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.hse-area-heading {
+  font-size: 1.35rem; font-weight: 700; color: #fff;
+  letter-spacing: -.01em; line-height: 1.15; margin: 0; white-space: nowrap;
+}
+
+/* Inline badge chips */
+.hse-area-badges {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+.hse-area-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14);
+  font-size: 0.62rem; font-weight: 500; color: rgba(255,255,255,.65);
+  white-space: nowrap;
+}
+.hse-area-badge i { font-size: 0.58rem; color: rgba(255,255,255,.4); }
+
+/* Subtitle / context line */
+.hse-area-context {
+  margin: 4px 0 0; font-size: 0.74rem; font-weight: 400;
+  color: rgba(255,255,255,.45); line-height: 1.4;
+}
+.hse-area-ctx-dot {
+  margin: 0 6px; color: rgba(255,255,255,.25);
+}
+
+/* Right side: watermark icon (positioned relative to topbar) + ProfilePill */
+.hse-area-pill-zone {
+  display: flex; align-items: center; gap: 0; flex-shrink: 0;
+}
+
+/* Watermark icon — large faded motif, centered behind the pill zone */
+.hse-area-topbar .hse-hero-area-icon {
+  position: absolute; right: 60px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 5rem; color: rgba(255,255,255,.06);
+  pointer-events: none; line-height: 1;
+}
+
+/* Stat cards row — tighter than the default dash-stats-row */
+.hse-area-stats-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.hse-area-stats-row .stat-card {
+  flex: 1 1 150px; min-width: 140px;
+}
+
 /* Live control signals — navy panel sidebar.
    Narrower than before so the main table gets more width. */
 .ppe-signals-panel {
@@ -2022,3 +2107,35 @@
 }
 
 }
+
+/* ── Enterprise incident form additions ──────────────────────────────────── */
+
+/* Standalone select that matches hse-input styling (for non-_shared.tsx usage) */
+.hse-select-input {
+  width: 100%; padding: 9px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text-primary); font-size: 0.82rem;
+  appearance: none; cursor: pointer;
+}
+.hse-select-input:focus {
+  outline: none; border-color: var(--siomac-navy);
+}
+
+/* Row wrapper for people-involved / witness repeat blocks */
+.hse-person-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 10px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 10px;
+}
+
+/* Small red remove button used inline in repeat blocks */
+.hse-btn-icon-remove {
+  flex-shrink: 0; width: 28px; height: 28px;
+  display: grid; place-items: center;
+  border: none; border-radius: 6px;
+  background: rgba(239,68,68,.12); color: #ef4444;
+  cursor: pointer; transition: background 0.15s;
+  margin-top: 2px;
+}
+.hse-btn-icon-remove:hover { background: rgba(239,68,68,.25); }
