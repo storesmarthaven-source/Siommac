@@ -16,7 +16,11 @@ import { InspectionsArea } from './Inspections';
 import { TrainingArea }    from './Training';
 import { ToolboxArea }     from './Toolbox';
 import { DocumentsArea }   from './Documents';
-import { WorkflowsArea }  from './Workflows';
+import { WorkflowsArea }        from './Workflows';
+import { ContractorsArea }       from './Contractors';
+import { LegalComplianceArea }   from './LegalCompliance';
+import { EmergencyResponseArea } from './EmergencyResponse';
+import { EnvironmentalArea }     from './Environmental';
 import '@components/workflow';   // registers workflow.css for area workflow UI
 
 /** Placeholder body — replaced per area as each is implemented. */
@@ -53,7 +57,11 @@ export function AreaRouter({ area, tab }: { area: string; tab: string }): VNode 
     case 'training':     return <TrainingArea tab={tab} />;
     case 'toolbox':      return <ToolboxArea tab={tab} />;
     case 'documents':    return <DocumentsArea tab={tab} />;
-    case 'workflows':    return <WorkflowsArea tab={tab} />;
-    default:             return <AreaPlaceholder areaKey={area} tab={tab} />;
+    case 'workflows':      return <WorkflowsArea tab={tab} />;
+    case 'contractors':    return <ContractorsArea tab={tab} />;
+    case 'compliance':     return <LegalComplianceArea tab={tab} />;
+    case 'emergency':      return <EmergencyResponseArea tab={tab} />;
+    case 'environmental':  return <EnvironmentalArea tab={tab} />;
+    default:               return <AreaPlaceholder areaKey={area} tab={tab} />;
   }
 }
