@@ -108,6 +108,7 @@ export interface Payslip {
   grossPay:        number;
   paye:            number;
   nis:             number;
+  nisEmployer:     number;   // employer NIS cost (10.8% NIBTT 2026) — not deducted from employee
   healthSurcharge: number;
   totalDeductions: number;
   netPay:          number;

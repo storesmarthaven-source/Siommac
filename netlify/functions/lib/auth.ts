@@ -20,13 +20,26 @@ import type { JwtPayload, HonoVariables } from '../../../types/api';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const JWT_SECRET           = process.env.JWT_SECRET ?? '';
-const ACCESS_TOKEN_TTL     = '15m';                        // short-lived
-const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;     // 7 days in ms
-const REVOCATION_TTL_DAYS  = 1;                            // keep revoked JTIs for 1 day (matches max access token age)
+// RS256 asymmetric signing (preferred). Private key signs; public key verifies.
+// A leaked public key cannot mint tokens — the private key stays server-only.
+const JWT_PRIVATE_KEY = (process.env.JWT_PRIVATE_KEY ?? '').replace(/\\n/g, '\n');
+const JWT_PUBLIC_KEY  = (process.env.JWT_PUBLIC_KEY  ?? '').replace(/\\n/g, '\n');
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.warn('[auth] JWT_SECRET is missing or shorter than 32 characters — this is insecure');
+// HS256 shared-secret fallback — kept during transition so existing sessions
+// remain valid. Remove JWT_SECRET from env once all active tokens have expired
+// (after 15 minutes on a rolling basis, or a forced logout of all users).
+const JWT_SECRET = process.env.JWT_SECRET ?? '';
+
+const USE_RS256            = Boolean(JWT_PRIVATE_KEY && JWT_PUBLIC_KEY);
+const ACCESS_TOKEN_TTL     = '15m';
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const REVOCATION_TTL_DAYS  = 1;
+
+if (!USE_RS256 && (!JWT_SECRET || JWT_SECRET.length < 32)) {
+  console.warn('[auth] Neither RS256 keys nor a 32-char JWT_SECRET are set — this is insecure');
+}
+if (USE_RS256) {
+  console.info('[auth] RS256 JWT signing active');
 }
 
 // ── Access token helpers ──────────────────────────────────────────────────────
@@ -34,27 +47,38 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
 /** Issue a short-lived signed access JWT for a user. */
 function signUser(u: AppUser): string {
   const jti = crypto.randomUUID();
-  return jwt.sign(
-    {
-      sub:          u.id,
-      username:     u.username,
-      role:         u.role,
-      departmentId: u.department_id ?? '',
-      jti,
-    },
-    JWT_SECRET,
-    { expiresIn: ACCESS_TOKEN_TTL },
-  );
+  const payload = {
+    sub:          u.id,
+    username:     u.username,
+    role:         u.role,
+    departmentId: u.department_id ?? '',
+    jti,
+  };
+  if (USE_RS256) {
+    return jwt.sign(payload, JWT_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: ACCESS_TOKEN_TTL });
+  }
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
 }
 
-/** Verify an access token. Returns payload or null (expired / invalid / revoked signature). */
+/** Verify an access token. Returns payload or null (expired / invalid / bad signature).
+ *  Tries RS256 first; falls back to HS256 to allow existing sessions to survive the migration. */
 function verifyToken(token: string): JwtPayload | null {
   if (!token) return null;
-  try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
-  } catch {
-    return null;
+  if (USE_RS256) {
+    try {
+      return jwt.verify(token, JWT_PUBLIC_KEY, { algorithms: ['RS256'] }) as JwtPayload;
+    } catch {
+      // Fall through to HS256 fallback for tokens issued before the migration.
+    }
   }
+  if (JWT_SECRET) {
+    try {
+      return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 // ── Refresh token helpers ─────────────────────────────────────────────────────
@@ -325,8 +349,8 @@ async function log_(
       ip_address: ip        ?? null,
       user_agent: userAgent ?? null,
     });
-  } catch {
-    // best-effort; never let logging crash a request
+  } catch (e) {
+    console.error('[audit] log_ failed:', e);
   }
 }
 

@@ -205,10 +205,9 @@ router.post('/deleteEmployee', async c => {
 
   if (actor.username === username) return c.json({ success: false, message: 'You cannot delete your own account' });
 
-  const { data: target } = await sb.from('app_users').select('id,role,department_id').eq('username', username).maybeSingle<Pick<AppUser, 'id' | 'role' | 'department_id'>>();
+  const { data: target } = await sb.from('app_users').select('id,role,department_id,auth_id').eq('username', username).maybeSingle<Pick<AppUser, 'id' | 'role' | 'department_id'> & { auth_id: string | null }>();
   if (!target) return c.json({ success: false, message: 'Employee not found' });
 
-  // Department-scoped actors may only delete employees in their own department.
   await assertInScope(actor, target.department_id);
 
   if (target.role === 'admin') {
@@ -216,15 +215,24 @@ router.post('/deleteEmployee', async c => {
     if (count <= 1) return c.json({ success: false, message: 'Cannot delete the last admin account' });
   }
 
-  await Promise.all([
-    sb.from('attendance').delete().eq('user_id', target.id),
-    sb.from('attendance').delete().eq('username', username),
-    sb.from('leave_requests').delete().eq('user_id', target.id),
-    sb.from('leave_requests').delete().eq('username', username),
-  ]);
-
-  const { error } = await sb.from('app_users').delete().eq('id', target.id);
+  // Soft-delete: anonymize PII, set status inactive. Attendance + leave history is
+  // preserved for payroll compliance (T&T 7-year retention) and audit integrity.
+  const { error } = await sb.from('app_users').update({
+    status:        'inactive',
+    full_name:     'Deleted Employee',
+    email:         null,
+    phone:         null,
+    profile_image: '__removed__',
+    updated_at:    new Date().toISOString(),
+  }).eq('id', target.id);
   if (error) return c.json({ success: false, message: error.message });
+
+  // Revoke Supabase Auth account so the deleted user cannot log in.
+  if (target.auth_id) {
+    await sb.auth.admin.deleteUser(target.auth_id).catch(e => {
+      console.error('[deleteEmployee] auth revoke failed:', e);
+    });
+  }
 
   await log_(actor, 'delete', 'user', username, username);
   return c.json({ success: true });

@@ -17,7 +17,9 @@ const TT_DEFAULTS = {
   PAYE_RATE_LOW:              0.25,
   PAYE_RATE_HIGH:             0.30,
   PAYE_HIGH_THRESHOLD_ANNUAL: 1_000_000,
-  NIS_RATE:                   0.06,
+  // NIBTT 2026 rates effective Jan 5, 2026 — employee 5.4%, employer 10.8%
+  NIS_EMPLOYEE_RATE:          0.054,
+  NIS_EMPLOYER_RATE:          0.108,
   NIS_MONTHLY_CAP:            13_600,
   HS_HIGH_DAILY:              1.65,
   HS_HIGH_WEEKLY:             8.25,
@@ -35,7 +37,8 @@ interface TtPayroll {
   PAYE_RATE_LOW:              number;
   PAYE_RATE_HIGH:             number;
   PAYE_HIGH_THRESHOLD_ANNUAL: number;
-  NIS_RATE:                   number;
+  NIS_EMPLOYEE_RATE:          number;
+  NIS_EMPLOYER_RATE:          number;
   NIS_MONTHLY_CAP:            number;
   NIS_CAP:  Record<PayCycle, number>;
   ALLOWANCE: Record<PayCycle, number>;
@@ -49,16 +52,18 @@ function _buildTtPayroll(settings: Record<string, string> | null): TtPayroll {
     const v = settings?.['payroll_' + key.toLowerCase()];
     return (v !== undefined && v !== '') ? Number(v) : def;
   };
-  const nisMonthly = n('nis_monthly_cap',              TT_DEFAULTS.NIS_MONTHLY_CAP);
-  const nisRate    = n('nis_rate',                     TT_DEFAULTS.NIS_RATE);
-  const hsThresh   = n('hs_threshold_weekly',          TT_DEFAULTS.HS_THRESHOLD_WEEKLY);
-  const allowAnn   = n('personal_allowance_annual',    TT_DEFAULTS.PERSONAL_ALLOWANCE_ANNUAL);
+  const nisMonthly     = n('nis_monthly_cap',              TT_DEFAULTS.NIS_MONTHLY_CAP);
+  const nisEmployeeRate = n('nis_employee_rate',           TT_DEFAULTS.NIS_EMPLOYEE_RATE);
+  const nisEmployerRate = n('nis_employer_rate',           TT_DEFAULTS.NIS_EMPLOYER_RATE);
+  const hsThresh        = n('hs_threshold_weekly',         TT_DEFAULTS.HS_THRESHOLD_WEEKLY);
+  const allowAnn        = n('personal_allowance_annual',   TT_DEFAULTS.PERSONAL_ALLOWANCE_ANNUAL);
   return {
     PERSONAL_ALLOWANCE_ANNUAL:  allowAnn,
     PAYE_RATE_LOW:              n('paye_rate_low',              TT_DEFAULTS.PAYE_RATE_LOW),
     PAYE_RATE_HIGH:             n('paye_rate_high',             TT_DEFAULTS.PAYE_RATE_HIGH),
     PAYE_HIGH_THRESHOLD_ANNUAL: n('paye_high_threshold_annual', TT_DEFAULTS.PAYE_HIGH_THRESHOLD_ANNUAL),
-    NIS_RATE: nisRate,
+    NIS_EMPLOYEE_RATE: nisEmployeeRate,
+    NIS_EMPLOYER_RATE: nisEmployerRate,
     NIS_MONTHLY_CAP: nisMonthly,
     NIS_CAP: {
       daily:       r2(nisMonthly / (52 / 12) / 5),
@@ -140,9 +145,12 @@ function calcPayslip(emp: PayrollEmp, hoursWorked: number): Payslip {
   }
 
   let nis = 0;
+  let nisEmployer = 0;
   if (nisApplicable) {
-    const nisCap = TT_PAYROLL.NIS_CAP[cycle] ?? TT_PAYROLL.NIS_CAP.monthly;
-    nis = r2(Math.min(grossPay, nisCap) * TT_PAYROLL.NIS_RATE);
+    const nisCap    = TT_PAYROLL.NIS_CAP[cycle] ?? TT_PAYROLL.NIS_CAP.monthly;
+    const nisBase   = Math.min(grossPay, nisCap);
+    nis             = r2(nisBase * TT_PAYROLL.NIS_EMPLOYEE_RATE);
+    nisEmployer     = r2(nisBase * TT_PAYROLL.NIS_EMPLOYER_RATE);
   }
 
   let healthSurcharge = 0;
@@ -152,7 +160,7 @@ function calcPayslip(emp: PayrollEmp, hoursWorked: number): Payslip {
 
   const totalDeductions = r2(paye + nis + healthSurcharge);
   const netPay          = r2(Math.max(0, grossPay - totalDeductions));
-  return { grossPay, paye, nis, healthSurcharge, totalDeductions, netPay };
+  return { grossPay, paye, nis, nisEmployer, healthSurcharge, totalDeductions, netPay };
 }
 
 function workingDaysInMonth(y: number, mo: number): number {
