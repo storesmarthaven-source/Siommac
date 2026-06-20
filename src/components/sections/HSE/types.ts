@@ -190,11 +190,13 @@ export interface PpeEmployee {
 }
 
 export const mockPpeEmployees: PpeEmployee[] = [
-  { id: 1, name: 'John Doe',       role: 'Welder',       department: 'Production',   site: 'Houston',   supervisor: 'Sarah Chen' },
-  { id: 2, name: 'Jane Smith',     role: 'Electrician',  department: 'Maintenance',  site: 'Dubai',     supervisor: 'Mike Okafor' },
-  { id: 3, name: 'Carlos Garcia',  role: 'Rigger',       department: 'Construction', site: 'London',    supervisor: 'Lisa Wang' },
-  { id: 4, name: 'Anna Kowalski',  role: 'HSE Officer',  department: 'HSE',          site: 'Singapore', supervisor: 'Sarah Chen' },
-  { id: 5, name: 'David Chen',     role: 'Site Manager', department: 'Management',    site: 'Houston',   supervisor: 'Sarah Chen' },
+  { id: 1, name: 'Andre Williams',   role: 'Maintenance Technician', department: 'Maintenance',  site: 'Point Lisas Plant',   supervisor: 'Sarah Chen' },
+  { id: 2, name: 'Jamal Lewis',      role: 'Mechanical Fitter',      department: 'Operations',   site: 'La Brea Yard',        supervisor: 'Sarah Chen' },
+  { id: 3, name: 'Marlon Joseph',    role: 'Rigger',                 department: 'Construction', site: 'Galeota Marine Base', supervisor: 'Anya Mohammed' },
+  { id: 4, name: 'Anya Mohammed',    role: 'HSE Officer',            department: 'HSE',          site: 'La Brea Yard',        supervisor: 'Sarah Chen' },
+  { id: 5, name: 'Kavita Persad',    role: 'Process Operator',       department: 'Operations',   site: 'Point Lisas Plant',   supervisor: 'Sarah Chen' },
+  { id: 6, name: 'Dwayne Charles',   role: 'Forklift Operator',      department: 'Logistics',    site: 'Piarco Logistics',    supervisor: 'Lisa Ramnarine' },
+  { id: 7, name: 'Terrence Baptiste',role: 'Electrician',            department: 'Maintenance',  site: 'Point Lisas Plant',   supervisor: 'Sarah Chen' },
 ];
 
 // ── Role → required-PPE matrix ────────────────────────────────────────────────
@@ -454,8 +456,116 @@ export interface SdsRow {
 }
 
 export const mockSds: SdsRow[] = [
-  { ref: 'SDS-001', chemical: 'Diesel (Automotive)',        supplier: 'NP Trinidad',   hazardClass: 'Flammable Liquid 3',  revision: '2025-04', status: 'Current' },
-  { ref: 'SDS-002', chemical: 'Sodium Hydroxide 50%',       supplier: 'Caribbean Chem', hazardClass: 'Corrosive 8',         revision: '2024-11', status: 'Review' },
+  { ref: 'SDS-001', chemical: 'Diesel (Automotive)',        supplier: 'NP Trinidad',      hazardClass: 'Flammable Liquid 3',  revision: '2025-04', status: 'Current' },
+  { ref: 'SDS-002', chemical: 'Sodium Hydroxide 50%',       supplier: 'Caribbean Chem',   hazardClass: 'Corrosive 8',         revision: '2024-11', status: 'Review' },
   { ref: 'SDS-003', chemical: 'Acetylene',                  supplier: 'Industrial Gases', hazardClass: 'Flammable Gas 2',    revision: '2025-01', status: 'Current' },
-  { ref: 'SDS-004', chemical: 'Hydraulic Oil ISO 46',       supplier: 'Lubricants Ltd', hazardClass: 'Not classified',      revision: '2023-08', status: 'Expired' },
+  { ref: 'SDS-004', chemical: 'Hydraulic Oil ISO 46',       supplier: 'Lubricants Ltd',   hazardClass: 'Not classified',      revision: '2023-08', status: 'Expired' },
+];
+
+// ── PPE Assignments ───────────────────────────────────────────────────────────
+
+export interface PpeAssignment {
+  id:       string;
+  empId:    number;
+  empName:  string;
+  ppeType:  string;
+  item:     string;
+  issued:   string;
+  expiry:   string;
+  status:   'active' | 'due' | 'expired';
+}
+
+export const mockPpeAssignments: PpeAssignment[] = [
+  { id: 'ASN-001', empId: 1, empName: 'Andre Williams',    ppeType: 'Helmet',    item: 'Hard Hat Type A',          issued: '10 Jan 2026', expiry: '10 Jan 2027', status: 'active'  },
+  { id: 'ASN-002', empId: 1, empName: 'Andre Williams',    ppeType: 'Gloves',    item: 'Leather Gloves',           issued: '10 Jan 2026', expiry: '01 Dec 2026', status: 'active'  },
+  { id: 'ASN-003', empId: 1, empName: 'Andre Williams',    ppeType: 'Boots',     item: 'Steel Toe Boots',          issued: '10 Jan 2026', expiry: '10 Jan 2027', status: 'active'  },
+  { id: 'ASN-004', empId: 2, empName: 'Jamal Lewis',       ppeType: 'Helmet',    item: 'Hard Hat Type A',          issued: '15 Feb 2026', expiry: '15 Feb 2027', status: 'active'  },
+  { id: 'ASN-005', empId: 2, empName: 'Jamal Lewis',       ppeType: 'Gloves',    item: 'Leather Gloves',           issued: '15 Feb 2026', expiry: '01 Dec 2026', status: 'due'     },
+  { id: 'ASN-006', empId: 3, empName: 'Marlon Joseph',     ppeType: 'Harness',   item: 'Fall Harness',             issued: '01 Mar 2026', expiry: '30 Sep 2026', status: 'due'     },
+  { id: 'ASN-007', empId: 3, empName: 'Marlon Joseph',     ppeType: 'Helmet',    item: 'Hard Hat Type A',          issued: '01 Mar 2026', expiry: '01 Mar 2027', status: 'active'  },
+  { id: 'ASN-008', empId: 4, empName: 'Anya Mohammed',     ppeType: 'Vest',      item: 'High-Vis Vest',            issued: '20 Jan 2026', expiry: '20 Jan 2027', status: 'active'  },
+  { id: 'ASN-009', empId: 5, empName: 'Kavita Persad',     ppeType: 'Helmet',    item: 'Hard Hat Type A',          issued: '08 Feb 2026', expiry: '08 Feb 2027', status: 'active'  },
+  { id: 'ASN-010', empId: 6, empName: 'Dwayne Charles',    ppeType: 'Boots',     item: 'Steel Toe Boots',          issued: '12 Mar 2026', expiry: '12 Mar 2027', status: 'active'  },
+  { id: 'ASN-011', empId: 7, empName: 'Terrence Baptiste', ppeType: 'Gloves',    item: 'Leather Gloves',           issued: '05 Jan 2026', expiry: '10 Aug 2026', status: 'expired' },
+  { id: 'ASN-012', empId: 7, empName: 'Terrence Baptiste', ppeType: 'Helmet',    item: 'Hard Hat Type A',          issued: '05 Jan 2026', expiry: '05 Jan 2027', status: 'active'  },
+];
+
+// ── PPE Renewals ───────────────────────────────────────────────────────────────
+
+export interface PpeRenewalRow {
+  ref:     string;
+  empName: string;
+  site:    string;
+  item:    string;
+  issued:  string;
+  expiry:  string;
+  status:  'active' | 'upcoming' | 'overdue';
+}
+
+export const mockPpeRenewals: PpeRenewalRow[] = [
+  { ref: 'RNW-001', empName: 'Andre Williams',    site: 'Point Lisas Plant',   item: 'Hard Hat Type A',  issued: '10 Jan 2026', expiry: '10 Jan 2027', status: 'active'   },
+  { ref: 'RNW-002', empName: 'Jamal Lewis',       site: 'La Brea Yard',        item: 'Leather Gloves',   issued: '15 Feb 2026', expiry: '01 Dec 2026', status: 'upcoming' },
+  { ref: 'RNW-003', empName: 'Marlon Joseph',     site: 'Galeota Marine Base', item: 'Fall Harness',     issued: '01 Mar 2026', expiry: '30 Sep 2026', status: 'overdue'  },
+  { ref: 'RNW-004', empName: 'Terrence Baptiste', site: 'Point Lisas Plant',   item: 'Leather Gloves',   issued: '05 Jan 2026', expiry: '10 Aug 2026', status: 'overdue'  },
+  { ref: 'RNW-005', empName: 'Kavita Persad',     site: 'Point Lisas Plant',   item: 'Safety Goggles',   issued: '08 Feb 2026', expiry: '20 Jun 2027', status: 'active'   },
+  { ref: 'RNW-006', empName: 'Dwayne Charles',    site: 'Piarco Logistics',    item: 'High-Vis Vest',    issued: '12 Mar 2026', expiry: '15 Mar 2027', status: 'active'   },
+];
+
+// ── PPE Returns ────────────────────────────────────────────────────────────────
+
+export interface PpeReturnRow {
+  ref:         string;
+  item:        string;
+  empName:     string;
+  site:        string;
+  returnDate:  string;
+  condition:   string;
+  disposition: string;
+  status:      string;
+}
+
+export const mockPpeReturns: PpeReturnRow[] = [
+  { ref: 'RET-001', item: 'Ear Muffs',      empName: 'Jamal Lewis',    site: 'La Brea Yard',        returnDate: '01 Jun 2026', condition: 'Damaged',  disposition: 'Disposal',        status: 'closed'  },
+  { ref: 'RET-002', item: 'Fall Harness',   empName: 'Marlon Joseph',  site: 'Galeota Marine Base', returnDate: '15 May 2026', condition: 'Good',     disposition: 'Return to Stock', status: 'closed'  },
+  { ref: 'RET-003', item: 'Leather Gloves', empName: 'Terrence Baptiste', site: 'Point Lisas Plant', returnDate: '10 Jun 2026', condition: 'Worn',   disposition: 'Quarantine',      status: 'pending' },
+];
+
+// ── PPE Requests ───────────────────────────────────────────────────────────────
+
+export interface PpeRequestRow {
+  ref:       string;
+  type:      string;
+  item:      string;
+  empName:   string;
+  site:      string;
+  reason:    string;
+  submitted: string;
+  status:    string;
+  priority:  'urgent' | 'pending' | 'review' | 'ready';
+}
+
+export const mockPpeRequests: PpeRequestRow[] = [
+  { ref: 'REQ-1048', type: 'New Issue',     item: 'Confined Space Kit',  empName: 'Reza Khan',         site: 'Galeota Marine Base', reason: 'New site assignment',          submitted: '17 Jun 2026', status: 'Review',  priority: 'review'  },
+  { ref: 'REQ-1049', type: 'Replacement',   item: 'Chemical Gloves',     empName: 'Andre Williams',    site: 'Point Lisas Plant',   reason: 'Chemical contamination damage', submitted: '18 Jun 2026', status: 'Urgent',  priority: 'urgent'  },
+  { ref: 'REQ-1050', type: 'Role Kit',      item: 'Steel Toe Boots',     empName: 'Dwayne Charles',    site: 'Piarco Logistics',    reason: 'New site assignment kit',       submitted: '16 Jun 2026', status: 'Ready',   priority: 'ready'   },
+  { ref: 'REQ-1051', type: 'Replacement',   item: 'Hard Hat Type A',     empName: 'Kavita Persad',     site: 'Point Lisas Plant',   reason: 'Impact damage during lifting',  submitted: '19 Jun 2026', status: 'Pending', priority: 'pending' },
+];
+
+// ── PPE Site Kits ──────────────────────────────────────────────────────────────
+
+export interface PpeKitRow {
+  site:       string;
+  kit:        string;
+  custodian:  string;
+  lastAudit:  string;
+  status:     string;
+  missing:    number;
+}
+
+export const mockPpeKits: PpeKitRow[] = [
+  { site: 'Galeota Marine Base', kit: 'Confined Space Kit',     custodian: 'Reza Khan',          lastAudit: '01 Jun 2026', status: 'Missing item', missing: 1 },
+  { site: 'Point Lisas Plant',   kit: 'Hot Work Kit',           custodian: 'Terrence Baptiste',  lastAudit: '07 Jun 2026', status: 'Ready',        missing: 0 },
+  { site: 'La Brea Yard',        kit: 'Chemical Handling Kit',  custodian: 'Jamal Lewis',        lastAudit: '29 May 2026', status: 'Ready',        missing: 0 },
+  { site: 'Piarco Logistics',    kit: 'Traffic Safety Kit',     custodian: 'Dwayne Charles',     lastAudit: '03 Jun 2026', status: 'Missing item', missing: 2 },
+  { site: 'Port of Spain Office',kit: 'First Aid Kit',          custodian: 'Anya Mohammed',      lastAudit: '10 Jun 2026', status: 'Ready',        missing: 0 },
 ];

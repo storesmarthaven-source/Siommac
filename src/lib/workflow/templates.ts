@@ -109,6 +109,22 @@ export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
       { target: 'hr', summary: 'Policy acknowledgement campaign distribution' },
     ],
   },
+  {
+    id: 'ppe-request',
+    label: 'PPE Request',
+    sourceModule: 'hse',
+    targetModule: 'hse',
+    defaultPriority: 'normal',
+    stages: STAGES,
+    approvalRoute: [
+      { role: 'Site HSE Officer', label: 'Validate role requirement and stock availability' },
+      { role: 'HSE Manager',      label: 'Approve issue and cost allocation' },
+    ],
+    evidence: [
+      { key: 'reason', label: 'Request justification / hazard exposure', required: true },
+    ],
+    handoffsOnApproval: [],
+  },
 ];
 
 /** Lookup a template by id (undefined if unknown). */

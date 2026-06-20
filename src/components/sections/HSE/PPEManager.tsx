@@ -3,17 +3,23 @@
  *
  * PPE Manager tab bodies. Each PPE area is a small presentational function;
  * the active one is chosen by the section id (the sidebar drives navigation, so
- * there is no in-page sub-nav). UI-only: static data from types.ts.
+ * there is no in-page sub-nav). UI-only: data from types.ts.
  *
  * Exports PPE_TAB_BODIES (tab key → component) + PpeBody (hero + active tab),
  * consumed by PpeShell.tsx which maps the active section id to a tab.
  */
 
 import { type VNode } from 'preact';
+import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
 import { ProfilePill } from '@shared/ProfilePill';
+import { useWorkflow } from '@lib/workflow/useWorkflow';
+import { HseModal, Field, SelectInput, TextInput, TextareaInput } from './_shared';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
+  mockPpeAssignments, mockPpeRenewals, mockPpeReturns, mockPpeRequests, mockPpeKits,
+  type PpeAssignment, type PpeRequestRow,
+  HSE_SITES,
 } from './types';
 
 type PpeTab =
@@ -62,16 +68,18 @@ function Record({ icon, title, sub, pill, pillClass }: {
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
 function DashboardTab(): VNode {
+  const assignments = mockPpeAssignments;
   const required = (role: string) => mockRoleMatrix.find(r => r.role === role)?.required ?? [];
+
   return (
     <div class="ppe-tab-content">
       <div class="hse-kpi-row">
-        <StatCard icon="fa-shield-halved" label="Compliance"    value={94} color="#16a34a" />
-        <StatCard icon="fa-list-check"    label="Open Actions"  value={18} color="#2563eb" />
-        <StatCard icon="fa-box-open"      label="Critical Stock" value={6} color="#dc2626" />
+        <StatCard icon="fa-shield-halved" label="Compliance"     value={94}                                        color="#16a34a" />
+        <StatCard icon="fa-list-check"    label="Active Assigns"  value={assignments.filter(a => a.status === 'active').length} color="#2563eb" />
+        <StatCard icon="fa-clock"         label="Due / Overdue"   value={assignments.filter(a => a.status !== 'active').length}  color="#d97706" />
+        <StatCard icon="fa-box-open"      label="Critical Stock"  value={mockPpeItems.filter(i => i.status === 'low' || i.stock === 0).length} color="#dc2626" />
       </div>
 
-      {/* Compliance Overview (left) + Live Control Signals as a right sidebar. */}
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
           <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
@@ -84,18 +92,22 @@ function DashboardTab(): VNode {
           <div class="vt-table-card">
             <div class="vt-table-scroll">
               <table class="vt-table">
-                <thead><tr><th>Employee</th><th>Role</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
+                <thead><tr><th>Employee</th><th>Role</th><th>Site</th><th>Required Items</th><th>Assigned</th><th>Missing</th><th>Status</th></tr></thead>
                 <tbody>
                   {mockPpeEmployees.map(emp => {
-                    const req = required(emp.role);
+                    const req   = required(emp.role);
+                    const asnd  = assignments.filter(a => a.empId === emp.id).map(a => a.ppeType);
+                    const miss  = req.filter(r => !asnd.some(a => a.toLowerCase().includes(r.toLowerCase())));
+                    const compliant = miss.length === 0;
                     return (
                       <tr key={emp.id}>
                         <td><span class="vt-cell-name">{emp.name}</span></td>
-                        <td>{emp.role}</td>
-                        <td style={{ color: 'var(--text-muted)' }}>{req.join(', ') || '—'}</td>
-                        <td style={{ color: 'var(--text-muted)' }}>—</td>
-                        <td>{req.join(', ') || 'None'}</td>
-                        <td><span class={ppePillClass(req.length ? 'missing' : 'compliant')}>{req.length ? 'Missing PPE' : 'Compliant'}</span></td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{emp.role}</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{emp.site}</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{req.join(', ') || '—'}</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{asnd.length ? asnd.join(', ') : '—'}</td>
+                        <td style={{ color: miss.length ? 'var(--siomac-red)' : 'var(--text-muted)', fontSize: '0.75rem' }}>{miss.length ? miss.join(', ') : 'None'}</td>
+                        <td><span class={ppePillClass(compliant ? 'compliant' : 'missing')}>{compliant ? 'Compliant' : 'Missing PPE'}</span></td>
                       </tr>
                     );
                   })}
@@ -108,9 +120,24 @@ function DashboardTab(): VNode {
         <aside class="ppe-signals-panel">
           <h4><i class="fas fa-satellite-dish" /> Live Control Signals</h4>
           <div class="ppe-signals-list">
-            <div class="ppe-signal"><i class="fas fa-triangle-exclamation" /><div class="ppe-signal-text"><strong>Respirator evidence gap</strong><span>2 employees require fit-test evidence before issue.</span></div><span class="ppe-signal-tag is-high">High</span></div>
-            <div class="ppe-signal"><i class="fas fa-warehouse" /><div class="ppe-signal-text"><strong>Warehouse stock action</strong><span>Ear protection and gloves below reorder threshold.</span></div><span class="ppe-signal-tag is-stock">Stock</span></div>
-            <div class="ppe-signal"><i class="fas fa-clipboard-check" /><div class="ppe-signal-text"><strong>Inspection cadence</strong><span>Harness checks are due this week for Site B.</span></div><span class="ppe-signal-tag is-due">Due</span></div>
+            {mockPpeAssignments.filter(a => a.status !== 'active').map(a => (
+              <div class="ppe-signal" key={a.id}>
+                <i class={`fas fa-helmet-safety ${a.status === 'expired' ? 'is-danger' : 'is-warn'}`} />
+                <div class="ppe-signal-text">
+                  <strong>{a.empName}</strong>
+                  <span>{a.item} · {a.status === 'expired' ? 'Expired' : 'Due for renewal'}</span>
+                </div>
+                <span class={`ppe-signal-tag ${a.status === 'expired' ? 'is-high' : 'is-due'}`}>{a.status === 'expired' ? 'Expired' : 'Due'}</span>
+              </div>
+            ))}
+            <div class="ppe-signal">
+              <i class="fas fa-warehouse is-info" />
+              <div class="ppe-signal-text">
+                <strong>Stock alert</strong>
+                <span>{mockPpeItems.filter(i => i.status === 'low' || i.stock === 0).length} items below reorder threshold.</span>
+              </div>
+              <span class="ppe-signal-tag is-stock">Stock</span>
+            </div>
           </div>
         </aside>
       </div>
@@ -132,6 +159,7 @@ function InventoryTab(): VNode {
       </div>
       <div class="vt-toolbar">
         <div class="vt-search" style={{ flex: '1 1 260px' }}><i class="fas fa-search" /><input type="search" placeholder="Search item, brand, or model…" /></div>
+        <select class="emp-filter-select"><option>All sites</option>{HSE_SITES.map(s => <option key={s}>{s}</option>)}</select>
       </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
@@ -157,43 +185,113 @@ function InventoryTab(): VNode {
   );
 }
 
+const PPE_ZONES: [string, number, number][] = [
+  ['Helmet',    8,  50],
+  ['Glasses',  18,  36],
+  ['Hi-vis vest', 44, 50],
+  ['Harness',  56,  52],
+  ['Gloves',   12,  14],
+  ['Coveralls',52,  30],
+  ['Boots',    88,  48],
+];
+
 function AssignTab(): VNode {
+  const [selectedZones, setZones] = useState<Set<string>>(new Set());
+  const [empId, setEmpId]         = useState<number>(mockPpeEmployees[0]?.id ?? 1);
+  const [issueDate, setIssueDate] = useState('2026-06-19');
+  const [renewal, setRenewal]     = useState('Auto renew after 12 months');
+  const [notes, setNotes]         = useState('');
+  const [assignments, setAssignments] = useState<PpeAssignment[]>(mockPpeAssignments);
+  const [success, setSuccess]     = useState(false);
+
+  const toggleZone = (label: string) => {
+    setZones(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      return next;
+    });
+  };
+
+  const emp = mockPpeEmployees.find(e => e.id === empId)!;
+
+  const handleAssign = () => {
+    if (!selectedZones.size) return;
+    const newItems: PpeAssignment[] = Array.from(selectedZones).map((z, i) => ({
+      id:      `ASN-${100 + assignments.length + i}`,
+      empId:   emp.id,
+      empName: emp.name,
+      ppeType: z,
+      item:    z,
+      issued:  issueDate,
+      expiry:  '19 Jun 2027',
+      status:  'active',
+    }));
+    setAssignments(prev => [...prev, ...newItems]);
+    setZones(new Set());
+    setNotes('');
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
   return (
     <div class="ppe-tab-content">
       <SectionHead icon="fa-user-plus" title="Visual PPE Assignment"
         sub="Select PPE on the worker diagram, then assign it to an employee with date, notes, acknowledgement, and renewal tracking."
-        actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-wand-magic-sparkles" /> Load Role Kit</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-check" /> Assign Selected</button></>} />
+        actions={<>
+          <button class="btn btn-outline-secondary btn-sm has-label" onClick={() => { const req = mockRoleMatrix.find(r => r.role === emp.role)?.required ?? []; setZones(new Set(req)); }}><i class="fas fa-wand-magic-sparkles" /> Load Role Kit</button>
+          <button class="btn btn-danger-primary btn-sm" disabled={!selectedZones.size} onClick={handleAssign}><i class="fas fa-check" /> Assign Selected{selectedZones.size ? ` (${selectedZones.size})` : ''}</button>
+        </>} />
+      {success && <div style={{ background: 'rgba(34,197,94,.12)', border: '1px solid #4ade80', borderRadius: '8px', padding: '10px 16px', marginBottom: '14px', color: '#4ade80', fontSize: '0.82rem' }}><i class="fas fa-circle-check" style={{ marginRight: '8px' }} />PPE assigned to {emp.name} — {mockRoleMatrix.find(r => r.role === emp.role)?.required.length ?? 0} items recorded.</div>}
       <div class="ppe-assign-layout">
         <article class="ppe-panel">
-          <div class="ppe-panel-head"><h4><i class="fas fa-person" /> Interactive Worker Picker</h4><span class="ppe-panel-tag">Hover + select</span></div>
+          <div class="ppe-panel-head"><h4><i class="fas fa-person" /> Interactive Worker Picker</h4><span class="ppe-panel-tag">Click zones to select</span></div>
           <div class="ppe-panel-body">
             <div class="ppe-worker-map">
               <span class="ppe-map-title">Trace PPE Zones</span>
-              {[['Helmet', 8, 50], ['Glasses', 18, 36], ['Hi-vis vest', 44, 50], ['Harness', 56, 52], ['Gloves', 12, 14], ['Coveralls', 52, 30], ['Boots', 88, 48]].map(([label, top, left]) => (
-                <button type="button" class="ppe-zone" style={{ top: `${top}%`, left: `${left}%` }} key={label as string}>{label}</button>
+              {PPE_ZONES.map(([label, top, left]) => (
+                <button
+                  type="button"
+                  class={`ppe-zone${selectedZones.has(label) ? ' is-selected' : ''}`}
+                  style={{ top: `${top}%`, left: `${left}%` }}
+                  key={label}
+                  onClick={() => toggleZone(label)}
+                >{label}</button>
               ))}
             </div>
-            <div class="ppe-selected-strip"><span class="text-muted">Select traced PPE zones on the image.</span></div>
+            <div class="ppe-selected-strip">
+              {selectedZones.size
+                ? <span style={{ color: 'var(--siomac-navy)', fontWeight: 600, fontSize: '0.8rem' }}>Selected: {Array.from(selectedZones).join(', ')}</span>
+                : <span class="text-muted">Click PPE zones on the diagram to select them.</span>}
+            </div>
           </div>
         </article>
         <div class="ppe-assign-side">
           <article class="ppe-panel">
             <div class="ppe-panel-head"><h4><i class="fas fa-clipboard-check" /> Issue Record</h4></div>
             <div class="ppe-panel-body ppe-form-grid">
-              <div class="form-group"><label>Employee</label><select>{mockPpeEmployees.map(e => <option key={e.id}>{e.name} ({e.role})</option>)}</select></div>
-              <div class="form-group"><label>Issue Date</label><input type="date" /></div>
-              <div class="form-group"><label>Renewal Rule</label><select><option>Auto renew after 12 months</option><option>Inspect after 6 months</option><option>One-time issue</option></select></div>
+              <div class="form-group">
+                <label>Employee</label>
+                <select value={empId} onChange={(e) => setEmpId(Number((e.target as HTMLSelectElement).value))}>
+                  {mockPpeEmployees.map(e => <option key={e.id} value={e.id}>{e.name} ({e.role})</option>)}
+                </select>
+              </div>
+              <div class="form-group"><label>Issue Date</label><input type="date" value={issueDate} onInput={(e) => setIssueDate((e.target as HTMLInputElement).value)} /></div>
+              <div class="form-group"><label>Renewal Rule</label><select value={renewal} onChange={(e) => setRenewal((e.target as HTMLSelectElement).value)}><option>Auto renew after 12 months</option><option>Inspect after 6 months</option><option>One-time issue</option></select></div>
               <div class="form-group"><label>Cost Center</label><select><option>HSE Operations</option><option>Maintenance</option><option>Construction</option></select></div>
-              <div class="form-group" style={{ gridColumn: '1 / -1' }}><label>Issue Notes</label><textarea rows={3} placeholder="Condition, serials, hazard task, training evidence…" /></div>
+              <div class="form-group" style={{ gridColumn: '1 / -1' }}><label>Issue Notes</label><textarea rows={3} value={notes} onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)} placeholder="Condition, serials, hazard task, training evidence…" /></div>
             </div>
           </article>
           <aside class="ppe-panel">
-            <div class="ppe-panel-head"><h4><i class="fas fa-user-shield" /> Assignment Controls</h4></div>
+            <div class="ppe-panel-head"><h4><i class="fas fa-user-shield" /> Recent Assignments</h4></div>
             <div class="ppe-panel-body">
               <div class="ppe-record-list">
-                <Record icon="fa-user" title="Select employee" sub="Role requirements appear here." pill="Pending" pillClass="vt-pill is-warn" />
-                <Record icon="fa-box" title="Stock validation" sub="Checks available inventory before assignment." pill="Auto" />
-                <Record icon="fa-signature" title="Acknowledgement" sub="Employee signature required for issue record." pill="On" pillClass="vt-pill is-on" />
+                {assignments.slice(-4).reverse().map(a => (
+                  <div class="ppe-record" key={a.id}>
+                    <i class="fas fa-helmet-safety" />
+                    <div><strong>{a.empName}</strong><span>{a.item} · Issued {a.issued}</span></div>
+                    <span class={`vt-pill ${a.status === 'active' ? 'is-on' : a.status === 'due' ? 'is-warn' : 'is-off'}`}>{a.status}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </aside>
@@ -205,27 +303,35 @@ function AssignTab(): VNode {
 
 function EmployeesTab(): VNode {
   const required = (role: string) => mockRoleMatrix.find(r => r.role === role)?.required ?? [];
+  const assigned = (id: number) => mockPpeAssignments.filter(a => a.empId === id).map(a => a.ppeType);
   return (
     <div class="ppe-tab-content">
       <SectionHead icon="fa-users" title="Employee PPE Profiles"
         sub="Track role, department, site, assigned PPE, missing PPE, supervisor ownership, and compliance readiness."
         actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-id-badge" /> Import HR</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-user-plus" /> Add Employee</button></>} />
-      <div class="vt-toolbar"><div class="vt-search" style={{ flex: '1 1 260px' }}><i class="fas fa-search" /><input type="search" placeholder="Search employee, role, or site…" /></div></div>
+      <div class="vt-toolbar"><div class="vt-search" style={{ flex: '1 1 260px' }}><i class="fas fa-search" /><input type="search" placeholder="Search employee, role, or site…" /></div>
+        <select class="emp-filter-select"><option>All sites</option>{HSE_SITES.map(s => <option key={s}>{s}</option>)}</select>
+      </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
-            <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Site</th><th>Assigned PPE</th><th>Missing PPE</th></tr></thead>
+            <thead><tr><th>Name</th><th>Role</th><th>Site</th><th>Assigned PPE</th><th>Missing PPE</th><th>Status</th></tr></thead>
             <tbody>
-              {mockPpeEmployees.map(emp => (
-                <tr key={emp.id}>
-                  <td><span class="vt-cell-name">{emp.name}</span></td>
-                  <td>{emp.role}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{emp.department}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{emp.site}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>—</td>
-                  <td>{required(emp.role).join(', ') || 'None'}</td>
-                </tr>
-              ))}
+              {mockPpeEmployees.map(emp => {
+                const req  = required(emp.role);
+                const asnd = assigned(emp.id);
+                const miss = req.filter(r => !asnd.some(a => a.toLowerCase().includes(r.toLowerCase())));
+                return (
+                  <tr key={emp.id}>
+                    <td><span class="vt-cell-name">{emp.name}</span></td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{emp.role}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{emp.site}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{asnd.length ? asnd.join(', ') : '—'}</td>
+                    <td style={{ color: miss.length ? 'var(--siomac-red)' : 'var(--text-muted)', fontSize: '0.75rem' }}>{miss.length ? miss.join(', ') : 'None'}</td>
+                    <td><span class={ppePillClass(miss.length ? 'missing' : 'compliant')}>{miss.length ? 'Missing PPE' : 'Compliant'}</span></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -235,27 +341,32 @@ function EmployeesTab(): VNode {
 }
 
 function RenewalsTab(): VNode {
-  const rows = [
-    { emp: 'John Doe', item: 'Hard Hat Type A', issue: '2026-01-10', expiry: '2027-01-10', status: 'active' },
-    { emp: 'Jane Smith', item: 'Leather Gloves', issue: '2026-02-15', expiry: '2026-12-01', status: 'upcoming' },
-    { emp: 'Carlos Garcia', item: 'Fall Harness', issue: '2026-03-01', expiry: '2026-09-30', status: 'overdue' },
-  ];
+  const overdue  = mockPpeRenewals.filter(r => r.status === 'overdue').length;
+  const upcoming = mockPpeRenewals.filter(r => r.status === 'upcoming').length;
   return (
     <div class="ppe-tab-content">
       <SectionHead icon="fa-clock-rotate-left" title="Renewal Automation"
         sub="Review overdue and upcoming PPE replacement cycles with automatic task generation and stock reservation."
         actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-envelope" /> Send Reminders</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-sync" /> Auto-Renew</button></>} />
+      <div class="hse-spark-row" style={{ marginBottom: '14px' }}>
+        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Tracked</span></div><div class="hse-spark-val">{mockPpeRenewals.length}</div><div class="hse-spark-sub">PPE renewal records</div></div>
+        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{overdue}</div><div class="hse-spark-sub">Immediate action required</div></div>
+        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due Soon</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{upcoming}</div><div class="hse-spark-sub">Within 90 days</div></div>
+        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockPpeRenewals.filter(r => r.status === 'active').length}</div><div class="hse-spark-sub">No action needed</div></div>
+      </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
-            <thead><tr><th>Employee</th><th>Item</th><th>Issue Date</th><th>Expiry Date</th><th>Status</th></tr></thead>
+            <thead><tr><th>Ref</th><th>Employee</th><th>Site</th><th>Item</th><th>Issue Date</th><th>Expiry Date</th><th>Status</th></tr></thead>
             <tbody>
-              {rows.map(r => (
-                <tr key={r.emp + r.item}>
-                  <td><span class="vt-cell-name">{r.emp}</span></td>
+              {mockPpeRenewals.map(r => (
+                <tr key={r.ref}>
+                  <td><span class="vt-cell-mono">{r.ref}</span></td>
+                  <td><span class="vt-cell-name">{r.empName}</span></td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{r.site}</td>
                   <td>{r.item}</td>
-                  <td class="vt-cell-mono">{r.issue}</td>
-                  <td class="vt-cell-mono">{r.expiry}</td>
+                  <td class="vt-cell-mono">{r.issued}</td>
+                  <td class="vt-cell-mono" style={{ color: r.status === 'overdue' ? 'var(--siomac-red)' : r.status === 'upcoming' ? '#d97706' : 'inherit', fontWeight: r.status !== 'active' ? 600 : 400 }}>{r.expiry}</td>
                   <td><span class={ppePillClass(r.status)} style={{ textTransform: 'capitalize' }}>{r.status}</span></td>
                 </tr>
               ))}
@@ -268,10 +379,6 @@ function RenewalsTab(): VNode {
 }
 
 function ReturnsTab(): VNode {
-  const rows = [
-    { item: 'Ear Muffs', emp: 'Jane Smith', date: '2026-06-01', condition: 'Damaged', disposition: 'Disposal' },
-    { item: 'Fall Harness', emp: 'Carlos Garcia', date: '2026-05-15', condition: 'Good', disposition: 'Return to Stock' },
-  ];
   return (
     <div class="ppe-tab-content">
       <SectionHead icon="fa-rotate-left" title="Returns, Disposal & Quarantine"
@@ -280,15 +387,18 @@ function ReturnsTab(): VNode {
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
-            <thead><tr><th>Item</th><th>Employee</th><th>Return Date</th><th>Condition</th><th>Disposition</th></tr></thead>
+            <thead><tr><th>Ref</th><th>Item</th><th>Employee</th><th>Site</th><th>Return Date</th><th>Condition</th><th>Disposition</th><th>Status</th></tr></thead>
             <tbody>
-              {rows.map(r => (
-                <tr key={r.item + r.emp}>
+              {mockPpeReturns.map(r => (
+                <tr key={r.ref}>
+                  <td><span class="vt-cell-mono">{r.ref}</span></td>
                   <td><span class="vt-cell-name">{r.item}</span></td>
-                  <td>{r.emp}</td>
-                  <td class="vt-cell-mono">{r.date}</td>
+                  <td>{r.empName}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{r.site}</td>
+                  <td class="vt-cell-mono">{r.returnDate}</td>
                   <td>{r.condition}</td>
                   <td style={{ color: 'var(--text-muted)' }}>{r.disposition}</td>
+                  <td><span class={ppePillClass(r.status)} style={{ textTransform: 'capitalize' }}>{r.status}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -300,18 +410,66 @@ function ReturnsTab(): VNode {
 }
 
 function RequestsTab(): VNode {
+  const wf = useWorkflow();
+  const [requests, setRequests] = useState<PpeRequestRow[]>(mockPpeRequests);
+  const [modalOpen, setModal]   = useState(false);
+  const [reqType, setReqType]   = useState('New Issue');
+  const [reqItem, setReqItem]   = useState('');
+  const [reqEmp, setReqEmp]     = useState(mockPpeEmployees[0]?.name ?? '');
+  const [reqSite, setReqSite]   = useState<string>(HSE_SITES[0]);
+  const [reqReason, setReason]  = useState('');
+
+  const open   = requests.filter(r => r.status !== 'closed').length;
+  const urgent = requests.filter(r => r.priority === 'urgent').length;
+  const ready  = requests.filter(r => r.priority === 'ready').length;
+
+  const handleSubmit = () => {
+    const ref = `REQ-${1060 + requests.length}`;
+    const row: PpeRequestRow = {
+      ref, type: reqType, item: reqItem || 'PPE Item', empName: reqEmp,
+      site: reqSite, reason: reqReason, submitted: '19 Jun 2026',
+      status: 'Pending', priority: 'pending',
+    };
+    setRequests(prev => [row, ...prev]);
+    wf.submit({ templateId: 'ppe-request', recordRef: ref, reason: `${reqType}: ${reqItem} for ${reqEmp} at ${reqSite} — ${reqReason || 'See request record'}` });
+    setModal(false);
+    setReqItem(''); setReason('');
+  };
+
   return (
     <div class="ppe-tab-content">
       <SectionHead icon="fa-clipboard-list" title="PPE Request Management"
         sub="Manage new issue, replacement, lost, damaged, role kit, and urgent safety-critical requests."
-        actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-filter" /> My Queue</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-plus" /> New Request</button></>} />
+        actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-filter" /> My Queue</button><button class="btn btn-danger-primary btn-sm" onClick={() => setModal(true)}><i class="fas fa-plus" /> New Request</button></>} />
       <div class="ppe-four-col">
-        <MiniCard icon="fa-clipboard-list" value="12" label="Open requests for new issue, replacement, or lost PPE." />
-        <MiniCard icon="fa-user-check" value="5" label="Supervisor approvals awaiting decision." />
-        <MiniCard icon="fa-triangle-exclamation" value="3" label="Urgent safety-critical requests." />
-        <MiniCard icon="fa-truck-ramp-box" value="7" label="Ready for warehouse issue." />
+        <MiniCard icon="fa-clipboard-list" value={String(open)}   label="Open requests for new issue, replacement, or lost PPE." />
+        <MiniCard icon="fa-triangle-exclamation" value={String(urgent)} label="Urgent safety-critical requests." />
+        <MiniCard icon="fa-truck-ramp-box" value={String(ready)}  label="Ready for warehouse issue." />
+        <MiniCard icon="fa-inbox"          value={String(wf.pendingApprovals.length)} label="Pending approvals in workflow." />
       </div>
       <div class="ppe-screen-grid">
+        <div class="ppe-screen-main">
+          <div class="vt-table-card">
+            <div class="vt-table-scroll">
+              <table class="vt-table">
+                <thead><tr><th>Ref</th><th>Type</th><th>Item</th><th>Employee</th><th>Site</th><th>Submitted</th><th>Status</th></tr></thead>
+                <tbody>
+                  {requests.map(r => (
+                    <tr key={r.ref}>
+                      <td><span class="vt-cell-mono">{r.ref}</span></td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{r.type}</td>
+                      <td><span class="vt-cell-name">{r.item}</span></td>
+                      <td>{r.empName}</td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{r.site}</td>
+                      <td class="vt-cell-mono">{r.submitted}</td>
+                      <td><span class={ppePillClass(r.priority)}>{r.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <article class="ppe-panel">
           <div class="ppe-panel-head"><h4><i class="fas fa-route" /> PPE Request Workflow</h4></div>
           <div class="ppe-panel-body">
@@ -326,15 +484,22 @@ function RequestsTab(): VNode {
             </div>
           </div>
         </article>
-        <article class="ppe-panel">
-          <div class="ppe-panel-head"><h4><i class="fas fa-inbox" /> Active Requests</h4></div>
-          <div class="ppe-panel-body"><div class="ppe-record-list">
-            <Record icon="fa-helmet-safety" title="REQ-PPE-1048 · Confined Space Kit" sub="Jane Smith · Maintenance · Dubai · approval due today." pill="Review" pillClass="vt-pill is-warn" />
-            <Record icon="fa-hand" title="REQ-PPE-1049 · Chemical Gloves" sub="John Doe · replacement due to contamination." pill="Urgent" pillClass="vt-pill is-off" />
-            <Record icon="fa-shoe-prints" title="REQ-PPE-1050 · Steel Toe Boots" sub="Carlos Garcia · new site assignment kit." pill="Ready" pillClass="vt-pill is-on" />
-          </div></div>
-        </article>
       </div>
+
+      <HseModal
+        open={modalOpen} onClose={() => setModal(false)}
+        title="New PPE Request" sub="Submit a request for new, replacement, or urgent PPE."
+        submitLabel="Submit Request"
+        onSubmit={handleSubmit}
+      >
+        <div class="hse-form-grid">
+          <Field label="Request type"><SelectInput value={reqType} onInput={setReqType} options={['New Issue', 'Replacement', 'Role Kit', 'Urgent Safety-Critical', 'Lost Item']} /></Field>
+          <Field label="PPE item"><TextInput value={reqItem} onInput={setReqItem} placeholder="e.g. Chemical Gloves, Fall Harness" /></Field>
+          <Field label="Employee"><SelectInput value={reqEmp} onInput={setReqEmp} options={mockPpeEmployees.map(e => e.name)} /></Field>
+          <Field label="Site"><SelectInput value={reqSite} onInput={setReqSite} options={[...HSE_SITES]} /></Field>
+          <Field label="Reason" wide><TextareaInput value={reqReason} onInput={setReason} placeholder="Explain the need, hazard exposure, or replacement reason…" /></Field>
+        </div>
+      </HseModal>
     </div>
   );
 }
@@ -377,9 +542,9 @@ function InspectionsTab(): VNode {
 
 function FitTestingTab(): VNode {
   const rows = [
-    { emp: 'Jane Smith', req: 'Half-mask respirator', last: '2026-02-12', next: '2027-02-12', status: 'current' },
-    { emp: 'John Doe', req: 'Welding shield training', last: '2025-08-01', next: '2026-08-01', status: 'upcoming' },
-    { emp: 'Carlos Garcia', req: 'Harness competency', last: '2025-05-15', next: '2026-05-15', status: 'expired' },
+    { emp: 'Reza Khan',         req: 'Half-mask respirator',   last: '2026-02-12', next: '2027-02-12', status: 'current'  },
+    { emp: 'Terrence Baptiste', req: 'Welding shield training', last: '2025-08-01', next: '2026-08-01', status: 'upcoming' },
+    { emp: 'Marlon Joseph',     req: 'Harness competency',     last: '2025-05-15', next: '2026-05-15', status: 'expired'  },
   ];
   return (
     <div class="ppe-tab-content">
@@ -427,16 +592,16 @@ function ProcurementTab(): VNode {
           <div class="ppe-panel-body"><div class="vt-table-scroll"><table class="vt-table">
             <thead><tr><th>Item</th><th>Stock</th><th>Min</th><th>Recommendation</th></tr></thead>
             <tbody>
-              <tr><td>Leather Gloves</td><td class="vt-cell-mono">8</td><td class="vt-cell-mono">15</td><td><span class="vt-pill is-off">Order 50</span></td></tr>
-              <tr><td>Welding Shield</td><td class="vt-cell-mono">3</td><td class="vt-cell-mono">5</td><td><span class="vt-pill is-warn">Order 10</span></td></tr>
-              <tr><td>Ear Muffs</td><td class="vt-cell-mono">0</td><td class="vt-cell-mono">5</td><td><span class="vt-pill is-off">Emergency PO</span></td></tr>
+              {mockPpeItems.filter(i => i.status === 'low' || i.stock === 0).map(i => (
+                <tr key={i.id}><td>{i.name}</td><td class="vt-cell-mono">{i.stock}</td><td class="vt-cell-mono">{i.threshold}</td><td><span class={ppePillClass(i.stock === 0 ? 'expired' : 'upcoming')}>Order {i.threshold * 3}</span></td></tr>
+              ))}
             </tbody>
           </table></div></div>
         </article>
         <article class="ppe-panel">
           <div class="ppe-panel-head"><h4><i class="fas fa-handshake" /> Supplier Controls</h4></div>
           <div class="ppe-panel-body"><div class="ppe-record-list">
-            <Record icon="fa-star" title="3M Safety" sub="Helmets, goggles, ear protection. Contract active." pill="Approved" pillClass="vt-pill is-on" />
+            <Record icon="fa-star" title="3M Safety T&T" sub="Helmets, goggles, ear protection. Contract active." pill="Approved" pillClass="vt-pill is-on" />
             <Record icon="fa-star" title="Guardian Fall" sub="Harness and lanyard systems. Certification required." pill="Approved" pillClass="vt-pill is-on" />
             <Record icon="fa-circle-info" title="Ironclad" sub="Gloves. Price review due next quarter." pill="Review" pillClass="vt-pill is-warn" />
           </div></div>
@@ -447,10 +612,10 @@ function ProcurementTab(): VNode {
 }
 
 function KitsTab(): VNode {
-  const kits = [
-    { icon: 'fa-briefcase-medical', title: 'Confined Space Kit', desc: 'Respirator, gloves, eye protection, rescue harness, gas monitor.', chips: ['Houston', '3 assigned', '1 missing'] },
-    { icon: 'fa-person-falling', title: 'Working at Height Kit', desc: 'Harness, lanyard, helmet chin strap, gloves, boots.', chips: ['Singapore', '6 assigned', '2 due inspection'] },
-    { icon: 'fa-flask', title: 'Chemical Handling Kit', desc: 'Chemical gloves, goggles, face shield, apron, spill response PPE.', chips: ['Dubai', '4 assigned', 'Current'] },
+  const kitCards = [
+    { icon: 'fa-briefcase-medical', title: 'Confined Space Kit',    desc: 'Respirator, gloves, eye protection, rescue harness, gas monitor.', site: 'Galeota Marine Base' },
+    { icon: 'fa-person-falling',    title: 'Working at Height Kit', desc: 'Harness, lanyard, helmet chin strap, gloves, boots.',              site: 'Point Lisas Plant' },
+    { icon: 'fa-flask',             title: 'Chemical Handling Kit', desc: 'Chemical gloves, goggles, face shield, apron, spill response PPE.', site: 'La Brea Yard' },
   ];
   return (
     <div class="ppe-tab-content">
@@ -458,22 +623,36 @@ function KitsTab(): VNode {
         sub="Bundle PPE by hazard task, site, custodian, audit cadence, missing-item alerts, and deployment readiness."
         actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-map-location-dot" /> Site View</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-plus" /> Build Kit</button></>} />
       <div class="ppe-three-col">
-        {kits.map(k => (
-          <div class="ppe-kit-card" key={k.title}>
-            <h4><i class={`fas ${k.icon}`} /> {k.title}</h4>
-            <p class="text-muted">{k.desc}</p>
-            <div class="ppe-chip-row">{k.chips.map(c => <span class="ppe-chip" key={c}>{c}</span>)}</div>
-          </div>
-        ))}
+        {kitCards.map(k => {
+          const kitRow = mockPpeKits.find(r => r.site === k.site);
+          return (
+            <div class="ppe-kit-card" key={k.title}>
+              <h4><i class={`fas ${k.icon}`} /> {k.title}</h4>
+              <p class="text-muted">{k.desc}</p>
+              <div class="ppe-chip-row">
+                <span class="ppe-chip">{k.site}</span>
+                {kitRow && <span class={`ppe-chip ${kitRow.missing > 0 ? 'is-warn' : ''}`}>{kitRow.missing > 0 ? `${kitRow.missing} missing` : 'All items present'}</span>}
+                <span class={`ppe-chip ${kitRow?.status === 'Ready' ? 'is-ok' : 'is-warn'}`}>{kitRow?.status ?? 'Unknown'}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <article class="ppe-panel">
         <div class="ppe-panel-head"><h4><i class="fas fa-map-location-dot" /> Site Kit Deployment</h4></div>
         <div class="ppe-panel-body"><div class="vt-table-scroll"><table class="vt-table">
-          <thead><tr><th>Site</th><th>Kit</th><th>Custodian</th><th>Last Audit</th><th>Status</th></tr></thead>
+          <thead><tr><th>Site</th><th>Kit</th><th>Custodian</th><th>Last Audit</th><th>Missing</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>Houston</td><td>Confined Space</td><td>Jane Smith</td><td class="vt-cell-mono">2026-06-01</td><td><span class="vt-pill is-warn">Missing item</span></td></tr>
-            <tr><td>Singapore</td><td>Working at Height</td><td>Carlos Garcia</td><td class="vt-cell-mono">2026-06-07</td><td><span class="vt-pill is-on">Ready</span></td></tr>
-            <tr><td>Dubai</td><td>Chemical Handling</td><td>Mike Okafor</td><td class="vt-cell-mono">2026-05-29</td><td><span class="vt-pill is-on">Ready</span></td></tr>
+            {mockPpeKits.map(k => (
+              <tr key={k.site + k.kit}>
+                <td>{k.site}</td>
+                <td>{k.kit}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{k.custodian}</td>
+                <td class="vt-cell-mono">{k.lastAudit}</td>
+                <td class="vt-cell-mono" style={{ color: k.missing > 0 ? 'var(--siomac-red)' : 'inherit' }}>{k.missing > 0 ? k.missing : '—'}</td>
+                <td><span class={ppePillClass(k.status === 'Ready' ? 'ready' : 'pending')}>{k.status}</span></td>
+              </tr>
+            ))}
           </tbody>
         </table></div></div>
       </article>
@@ -540,10 +719,20 @@ function ReportsTab(): VNode {
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
-            <thead><tr><th>Employee</th><th>Items Issued</th><th>Total Value</th></tr></thead>
-            <tbody>{mockPpeEmployees.map((e, i) => (
-              <tr key={e.id}><td><span class="vt-cell-name">{e.name}</span></td><td class="vt-cell-mono">{[2, 1, 1, 1, 1][i]}</td><td class="vt-cell-mono">${[300, 150, 150, 150, 150][i]}</td></tr>
-            ))}</tbody>
+            <thead><tr><th>Employee</th><th>Site</th><th>Items Issued</th><th>Active</th><th>Overdue</th></tr></thead>
+            <tbody>{mockPpeEmployees.map(e => {
+              const asnd    = mockPpeAssignments.filter(a => a.empId === e.id);
+              const overdue = asnd.filter(a => a.status === 'expired').length;
+              return (
+                <tr key={e.id}>
+                  <td><span class="vt-cell-name">{e.name}</span></td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{e.site}</td>
+                  <td class="vt-cell-mono">{asnd.length}</td>
+                  <td class="vt-cell-mono">{asnd.filter(a => a.status === 'active').length}</td>
+                  <td class="vt-cell-mono" style={{ color: overdue ? 'var(--siomac-red)' : 'inherit' }}>{overdue || '—'}</td>
+                </tr>
+              );
+            })}</tbody>
           </table>
         </div>
       </div>
@@ -570,10 +759,9 @@ function SettingsTab(): VNode {
           </div>
         </article>
         <article class="ppe-panel padded">
-          <div class="ppe-panel-head"><h4><i class="fas fa-building" /> Locations</h4></div>
+          <div class="ppe-panel-head"><h4><i class="fas fa-building" /> T&T Sites</h4></div>
           <div class="ppe-record-list">
-            <Record icon="fa-warehouse" title="Warehouse A" sub="Main controlled stock and quarantine cage." pill="HQ" />
-            <Record icon="fa-location-dot" title="Site B" sub="Field issue and return station." pill="Site" />
+            {HSE_SITES.map(s => <Record key={s} icon="fa-location-dot" title={s} sub="Field issue and return station." pill="Active" pillClass="vt-pill is-on" />)}
           </div>
         </article>
       </div>
@@ -603,11 +791,10 @@ export const PPE_TAB_BODIES: Record<PpeTab, () => VNode> = {
 /** PPE Manager body: hero + the requested tab. Navigation is via the sidebar. */
 export function PpeBody({ tab }: { tab: string }): VNode {
   const Body = PPE_TAB_BODIES[(tab as PpeTab)] ?? PPE_TAB_BODIES.dashboard;
+  const active  = mockPpeAssignments.filter(a => a.status === 'active').length;
+  const overdue = mockPpeAssignments.filter(a => a.status !== 'active').length;
   return (
     <div class="ppe-console">
-      {/* PPE overview panel — same structure/skin as the admin "Today's Overview"
-          (always dark via .ppe-hero-panel), hard-hat watermark, profile pill,
-          summary stat cards, and a footer with breadcrumb + Edit Layout. */}
       <div class="dash-overview-panel ppe-hero-panel">
         <div class="dash-panel-content">
           <div class="overview-top-bar">
@@ -615,16 +802,15 @@ export function PpeBody({ tab }: { tab: string }): VNode {
               <i class="fas fa-hard-hat" />
               <h2>PPE Manager</h2>
             </div>
-            {/* Reusable, self-populating profile pill (id-free). */}
             <ProfilePill variant="onDark" />
           </div>
 
           <div class="dash-stats-row">
-            <StatCard icon="fa-helmet-safety"        label="Total Issued"    value={6} color="#2563eb" />
-            <StatCard icon="fa-circle-check"         label="Fully Compliant" value={2} color="#16a34a" />
-            <StatCard icon="fa-triangle-exclamation" label="Missing PPE"     value={3} color="#d97706" />
-            <StatCard icon="fa-clock"                label="Expiring Soon"   value={1} color="#dc2626" />
-            <StatCard icon="fa-box"                  label="Low Stock Items" value={3} color="#7c3aed" />
+            <StatCard icon="fa-helmet-safety"        label="Active Assigned"  value={active}  color="#2563eb" />
+            <StatCard icon="fa-circle-check"         label="Compliant"        value={mockPpeEmployees.filter(e => { const req = mockRoleMatrix.find(r => r.role === e.role)?.required ?? []; const asnd = mockPpeAssignments.filter(a => a.empId === e.id).map(a => a.ppeType); return req.every(r => asnd.some(a => a.toLowerCase().includes(r.toLowerCase()))); }).length} color="#16a34a" />
+            <StatCard icon="fa-clock"                label="Due / Expired"    value={overdue} color="#d97706" />
+            <StatCard icon="fa-clipboard-list"       label="Open Requests"    value={mockPpeRequests.filter(r => r.status !== 'closed').length}  color="#7c3aed" />
+            <StatCard icon="fa-box"                  label="Low Stock Items"  value={mockPpeItems.filter(i => i.status === 'low' || i.stock === 0).length} color="#dc2626" />
           </div>
         </div>
 
