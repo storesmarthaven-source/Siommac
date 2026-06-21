@@ -21,3 +21,6 @@ export { Drawer } from './components/Drawer';
 
 // ── Layouts ──
 export { RegisterLayout } from './layouts/RegisterLayout';
+
+// ── Utilities ──
+export { exportCsv, toCsv, type CsvColumn } from './lib/exportCsv';

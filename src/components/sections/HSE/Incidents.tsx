@@ -25,6 +25,7 @@ import {
 } from './types';
 import { useWorkflow } from '@lib/workflow';
 import { toneClass } from '@ui/status/statusTokens';
+import { exportCsv } from '@ui/lib/exportCsv';
 import {
   useHseIncidents, useHseInvestigations, useHseCapa,
   useCreateIncident, useUpdateIncident,
@@ -166,12 +167,6 @@ function daysOpen(dateStr: string): number {
   const t = Date.parse(dateStr);
   if (Number.isNaN(t)) return 0;
   return Math.max(0, Math.round((Date.now() - t) / 86_400_000));
-}
-
-/** Days until a date string (negative = past due). */
-function daysUntil(dateStr: string): number {
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? 0 : Math.round((d.getTime() - Date.now()) / 86400e3);
 }
 
 // ── OWQ Panel ─────────────────────────────────────────────────────────────────
@@ -947,143 +942,6 @@ function CapaHealthCard({ capa, onViewAll, closurePct, overdueCapa, avgDaysToClo
   );
 }
 
-// ── Incident Charts ───────────────────────────────────────────────────────────
-
-function IncidentCharts({ incidents, capa }: { incidents: IncidentRecord[]; capa: CapaItem[] }): VNode {
-  // 6-month trend (mock monthly splits)
-  const trendData = [
-    { month:'Jan', total:5,  nearMiss:2 },
-    { month:'Feb', total:8,  nearMiss:3 },
-    { month:'Mar', total:4,  nearMiss:1 },
-    { month:'Apr', total:7,  nearMiss:4 },
-    { month:'May', total:6,  nearMiss:2 },
-    { month:'Jun', total:incidents.filter(i => new Date(i.date) > new Date(Date.now() - 30*86400e3)).length, nearMiss:1 },
-  ];
-  const maxTrend = Math.max(...trendData.map(d => d.total), 1);
-
-  // Type mix
-  const typeCounts = [
-    { label:'Injury',           count: incidents.filter(i => i.type==='Injury').length,           color:'#ef4444' },
-    { label:'Near Miss',        count: incidents.filter(i => i.type==='Near Miss').length,        color:'#f59e0b' },
-    { label:'Environmental',    count: incidents.filter(i => i.type==='Environmental').length,    color:'#3b82f6' },
-    { label:'Property Damage',  count: incidents.filter(i => i.type==='Property Damage').length,  color:'#8b5cf6' },
-    { label:'Unsafe Act/Cond',  count: incidents.filter(i => i.type==='Unsafe Act'||i.type==='Unsafe Condition').length, color:'#ec4899' },
-  ];
-  const maxType = Math.max(...typeCounts.map(t => t.count), 1);
-
-  // CAPA aging buckets
-  const agingBuckets = [
-    { label:'0–7 days',  count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) >= -7 && daysUntil(c.due) >= 0).length, color:'#16a34a' },
-    { label:'8–14 days', count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < 0 && daysUntil(c.due) >= -14).length, color:'#d97706' },
-    { label:'15–30',     count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < -14 && daysUntil(c.due) >= -30).length, color:'#f59e0b' },
-    { label:'30+ days',  count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < -30).length, color:'#ef4444' },
-  ];
-  const maxAging = Math.max(...agingBuckets.map(b => b.count), 1);
-
-  // Severity by site (top 4 sites)
-  const sites = ['Galeota','Point Lisas','Piarco','La Brea'];
-  const sevBySite = sites.map(site => ({
-    site,
-    critical: incidents.filter(i => i.site.includes(site) && i.severity==='danger').length,
-    high:     incidents.filter(i => i.site.includes(site) && i.severity==='warning').length,
-    medium:   incidents.filter(i => i.site.includes(site) && i.severity==='info').length,
-    low:      incidents.filter(i => i.site.includes(site) && i.severity==='success').length,
-  }));
-
-  return (
-    <div class="inc-charts-section">
-      <div class="inc-charts-header">
-        <span class="inc-charts-title"><i class="fas fa-chart-line" /> Incident Intelligence</span>
-        <span class="inc-charts-sub">Analytics · Jan – Jun 2026 · All sites</span>
-      </div>
-      <div class="inc-charts-grid">
-
-        {/* 6-Month Trend */}
-        <div class="inc-chart-card inc-chart-wide">
-          <div class="inc-chart-head"><h4><i class="fas fa-chart-area" /> 6-Month Incident Trend</h4></div>
-          <div class="inc-trend-chart">
-            {trendData.map(d => (
-              <div key={d.month} class="inc-trend-col">
-                <div class="inc-trend-bars">
-                  <div class="inc-trend-bar inc-trend-bar-miss"  style={{ height: `${(d.nearMiss/maxTrend)*100}%` }} title={`Near Miss: ${d.nearMiss}`} />
-                  <div class="inc-trend-bar inc-trend-bar-total" style={{ height: `${((d.total-d.nearMiss)/maxTrend)*100}%` }} title={`Incidents: ${d.total-d.nearMiss}`} />
-                </div>
-                <div class="inc-trend-val">{d.total}</div>
-                <div class="inc-trend-lbl">{d.month}</div>
-              </div>
-            ))}
-          </div>
-          <div class="inc-chart-legend">
-            <span><i style={{ background:'#ef4444' }} />Incidents</span>
-            <span><i style={{ background:'#f59e0b' }} />Near Miss</span>
-          </div>
-        </div>
-
-        {/* Incident Type Mix */}
-        <div class="inc-chart-card">
-          <div class="inc-chart-head"><h4><i class="fas fa-chart-bar" /> Incident Type Mix</h4></div>
-          <div class="inc-hbar-chart">
-            {typeCounts.map(t => (
-              <div key={t.label} class="inc-hbar-row">
-                <span class="inc-hbar-label">{t.label}</span>
-                <div class="inc-hbar-track">
-                  <div class="inc-hbar-fill" style={{ width:`${(t.count/maxType)*100}%`, background: t.color }} />
-                </div>
-                <span class="inc-hbar-val">{t.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CAPA Aging */}
-        <div class="inc-chart-card">
-          <div class="inc-chart-head"><h4><i class="fas fa-hourglass-half" /> CAPA Aging</h4></div>
-          <div class="inc-hbar-chart">
-            {agingBuckets.map(b => (
-              <div key={b.label} class="inc-hbar-row">
-                <span class="inc-hbar-label">{b.label}</span>
-                <div class="inc-hbar-track">
-                  <div class="inc-hbar-fill" style={{ width:`${(b.count/maxAging)*100}%`, background: b.color }} />
-                </div>
-                <span class="inc-hbar-val">{b.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Severity by Site */}
-        <div class="inc-chart-card inc-chart-wide">
-          <div class="inc-chart-head"><h4><i class="fas fa-location-dot" /> Severity by Site</h4></div>
-          <div class="inc-site-sev-chart">
-            {sevBySite.map(s => {
-              const total = s.critical + s.high + s.medium + s.low || 1;
-              return (
-                <div key={s.site} class="inc-site-row">
-                  <span class="inc-site-name">{s.site}</span>
-                  <div class="inc-site-bar">
-                    {s.critical > 0 && <div class="inc-sev-seg" style={{ flex:s.critical, background:'#ef4444' }} title={`Critical: ${s.critical}`} />}
-                    {s.high     > 0 && <div class="inc-sev-seg" style={{ flex:s.high,     background:'#f59e0b' }} title={`High: ${s.high}`} />}
-                    {s.medium   > 0 && <div class="inc-sev-seg" style={{ flex:s.medium,   background:'#3b82f6' }} title={`Medium: ${s.medium}`} />}
-                    {s.low      > 0 && <div class="inc-sev-seg" style={{ flex:s.low,      background:'#22c55e' }} title={`Low: ${s.low}`} />}
-                  </div>
-                  <span class="inc-site-total">{s.critical+s.high+s.medium+s.low}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div class="inc-chart-legend">
-            <span><i style={{ background:'#ef4444' }} />Critical</span>
-            <span><i style={{ background:'#f59e0b' }} />High</span>
-            <span><i style={{ background:'#3b82f6' }} />Medium</span>
-            <span><i style={{ background:'#22c55e' }} />Low</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
 // ── Root component ────────────────────────────────────────────────────────────
 
 export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
@@ -1162,12 +1020,13 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   // Wizard open state — Report Incident is now a modal wizard, not a tab
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  // Page-level tabs: Incidents | Investigations | CAPA Actions | Intelligence
+  // Page-level tabs: Incidents | Investigations | CAPA Actions.
+  // Analytics/trends live in the (future) HSE Reports page, kept separate from
+  // this operational workspace — not as a tab here.
   const PAGE_TABS: AreaTab[] = [
     { key: 'incidents',      label: 'Incidents',        sublabel: 'Table & queue',   icon: 'fa-list-ul',                count: incidents.length },
     { key: 'investigations', label: 'Investigations',   sublabel: 'Root cause',      icon: 'fa-magnifying-glass-chart', count: investigations.length },
     { key: 'capa',           label: 'CAPA Actions',     sublabel: 'Corrective work', icon: 'fa-list-check',             count: openCapa },
-    { key: 'intel',          label: 'Intelligence',     sublabel: 'Charts & trends', icon: 'fa-chart-line' },
   ];
 
   // Status filter chips for Incidents tab
@@ -1227,7 +1086,6 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         )}
         {pageTab === 'investigations' && <InvestigationsTab investigations={investigations} capa={capa} />}
         {pageTab === 'capa' && <CapaTab capa={capa} closurePct={closurePct} avgDaysToClose={avgDaysToClose} />}
-        {pageTab === 'intel' && <IncidentCharts incidents={incidents} capa={capa} />}
       </div>
 
       {/* Report Incident wizard modal */}
@@ -1330,7 +1188,17 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
               <option>All sites</option>
               {HSE_SITES.map(s => <option key={s}>{s}</option>)}
             </select>
-            <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
+            <button class="inc-action-btn blue" onClick={() => exportCsv(filtered, [
+              { header: 'Ref',                value: i => i.ref },
+              { header: 'Date',               value: i => i.date },
+              { header: 'Type',               value: i => i.type },
+              { header: 'Severity',           value: i => SEVERITY_META[i.severity]?.label ?? i.severity },
+              { header: 'Site',               value: i => i.site },
+              { header: 'Reporter',           value: i => i.reporter },
+              { header: 'Status',             value: i => i.status },
+              { header: 'Description',        value: i => i.description },
+              { header: 'Immediate Actions',  value: i => i.immediateActions },
+            ], 'incident-register')}><i class="fas fa-download" /> Export</button>
           </div>
         </div>
         <div class="vt-table-scroll">
@@ -2413,7 +2281,18 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
               </div>
             </div>
             <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
-              <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
+              <button class="inc-action-btn blue" onClick={() => exportCsv(investigations, [
+                { header: 'Ref',           value: v => v.ref },
+                { header: 'Incident',      value: v => v.incidentRef },
+                { header: 'Severity',      value: v => SEVERITY_META[v.severity]?.label ?? v.severity },
+                { header: 'Method',        value: v => v.method },
+                { header: 'Lead',          value: v => v.lead },
+                { header: 'Evidence',      value: v => `${v.evidenceDone}/${v.evidenceTotal}` },
+                { header: 'Root Cause',    value: v => v.rcaCategory || v.rootCause },
+                { header: 'CAPA Count',    value: v => v.capaCount },
+                { header: 'Status',        value: v => v.status },
+                { header: 'Due',           value: v => v.due },
+              ], 'investigation-register')}><i class="fas fa-download" /> Export</button>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom:0, marginTop:'12px' }}>
@@ -2797,7 +2676,15 @@ function CapaTab({ capa, closurePct, avgDaysToClose }: { capa: CapaItem[]; closu
             </div>
             <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
               <button class="inc-action-btn secondary" onClick={() => setNewCapa(true)}><i class="fas fa-plus" /> Raise CAPA</button>
-              <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
+              <button class="inc-action-btn blue" onClick={() => exportCsv(filtered, [
+                { header: 'Ref',       value: c => c.ref },
+                { header: 'Action',    value: c => c.title },
+                { header: 'Source',    value: c => c.source },
+                { header: 'Priority',  value: c => priLabel(c.priority) },
+                { header: 'Owner',     value: c => c.owner },
+                { header: 'Due',       value: c => c.due },
+                { header: 'Status',    value: c => c.status },
+              ], 'capa-register')}><i class="fas fa-download" /> Export</button>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom:0, marginTop:'12px' }}>

@@ -91,9 +91,10 @@ export const HSE_AREAS: HseArea[] = [
   {
     key: 'incidents', parentId: 's-hse-incidents', label: 'Incidents', icon: 'fa-triangle-exclamation',
     sub: 'Report, investigate and close incidents', visNamespace: 'hse-incidents', defaultTab: 'register',
+    // Report Incident is a modal action (the "+ Report" button), not a tab.
+    // Analytics live in the future HSE Reports page, not in this workspace.
     items: [
       sub('incidents', 'register',       'Incident Register', 'fa-clipboard-list'),
-      sub('incidents', 'report',         'Report Incident',   'fa-circle-plus'),
       sub('incidents', 'investigations', 'Investigations',    'fa-magnifying-glass-chart'),
       sub('incidents', 'capa',           'CAPA / Actions',    'fa-list-check'),
     ],
@@ -148,6 +149,46 @@ export const HSE_AREAS: HseArea[] = [
       sub('workflows', 'audit',     'Audit Log',          'fa-shield-halved',       true),
       sub('workflows', 'handoffs',  'Handoffs',           'fa-handshake',           false),
       sub('workflows', 'wizard',    'New Workflow',        'fa-wand-magic-sparkles', true),
+    ],
+  },
+  {
+    key: 'contractors', parentId: 's-hse-contractors', label: 'Contractor Mgmt', icon: 'fa-id-card-clip',
+    sub: 'STOW induction, HSE file, site access and expired-file gates', visNamespace: 'hse-contractors', defaultTab: 'register',
+    items: [
+      sub('contractors', 'register',  'Contractor Register', 'fa-clipboard-list',    true),
+      sub('contractors', 'induction', 'Induction Log',       'fa-person-chalkboard', true),
+      sub('contractors', 'files',     'HSE Files',           'fa-folder-open',       true),
+      sub('contractors', 'access',    'Site Access',         'fa-door-open',         false),
+    ],
+  },
+  {
+    key: 'compliance', parentId: 's-hse-compliance', label: 'Legal & Compliance', icon: 'fa-scale-balanced',
+    sub: 'OSH Act obligations, EMA permits, breach log, regulatory calendar', visNamespace: 'hse-compliance', defaultTab: 'obligations',
+    items: [
+      sub('compliance', 'obligations', 'OSH Obligations',    'fa-list-check',           true),
+      sub('compliance', 'permits',     'EMA Permits',         'fa-file-contract',        true),
+      sub('compliance', 'breaches',    'Breach Log',          'fa-triangle-exclamation', true),
+      sub('compliance', 'calendar',    'Regulatory Calendar', 'fa-calendar-days',        false),
+    ],
+  },
+  {
+    key: 'emergency', parentId: 's-hse-emergency', label: 'Emergency Response', icon: 'fa-truck-medical',
+    sub: 'Emergency plans, muster points, drill log, ERT member register', visNamespace: 'hse-emergency', defaultTab: 'plans',
+    items: [
+      sub('emergency', 'plans',  'Emergency Plans', 'fa-map-location-dot', true),
+      sub('emergency', 'muster', 'Muster Points',   'fa-people-group',     true),
+      sub('emergency', 'drills', 'Drill Log',        'fa-stopwatch',        true),
+      sub('emergency', 'ert',    'ERT Register',     'fa-shield-halved',    false),
+    ],
+  },
+  {
+    key: 'environmental', parentId: 's-hse-environmental', label: 'Environmental Mgmt', icon: 'fa-leaf',
+    sub: 'Spill register, waste manifests, EMA notifications, monitoring log', visNamespace: 'hse-environmental', defaultTab: 'spills',
+    items: [
+      sub('environmental', 'spills',     'Spill Register',    'fa-droplet',    true),
+      sub('environmental', 'waste',      'Waste Manifests',   'fa-trash-can',  true),
+      sub('environmental', 'ema',        'EMA Notifications', 'fa-file-lines', true),
+      sub('environmental', 'monitoring', 'Env Monitoring',    'fa-chart-line', false),
     ],
   },
 ];
