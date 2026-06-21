@@ -15,16 +15,16 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field,
+  AreaHero, AreaTabs, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput,
   type AreaTab,
 } from './_shared';
-import { mockTrend } from './types';
 import {
   mockIncidents, mockInvestigations, mockCapa, hsePill, HSE_SITES,
   type IncidentRecord, type Investigation, type CapaItem, type IncidentType,
 } from './types';
 import { useWorkflow } from '@lib/workflow';
+import { toneClass } from '@ui/status/statusTokens';
 import {
   useHseIncidents, useHseInvestigations, useHseCapa,
   useCreateIncident, useUpdateIncident,
@@ -105,10 +105,10 @@ function dbToCapa(c: HseCapa): CapaItem {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS: AreaTab[] = [
-  { key: 'register',       label: 'Register',        icon: 'fa-clipboard-list' },
-  { key: 'report',         label: 'Report Incident',  icon: 'fa-circle-plus' },
-  { key: 'investigations', label: 'Investigations',   icon: 'fa-magnifying-glass-chart' },
-  { key: 'capa',           label: 'CAPA / Actions',   icon: 'fa-list-check' },
+  { key: 'register',       label: 'Register',        sublabel: 'All incidents',   icon: 'fa-list-ul' },
+  { key: 'report',         label: 'Report Incident', sublabel: 'New case',        icon: 'fa-circle-plus' },
+  { key: 'investigations', label: 'Investigations',  sublabel: 'Root cause',      icon: 'fa-magnifying-glass-chart' },
+  { key: 'capa',           label: 'CAPA / Actions',  sublabel: 'Corrective plans', icon: 'fa-list-check' },
 ];
 
 const INCIDENT_TYPES: IncidentType[] = [
@@ -159,11 +159,935 @@ const TYPE_ICONS: Record<string, string> = {
   'Unsafe Condition': 'fa-triangle-exclamation',
 };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Whole-day count from a "DD Mon YYYY" date string to today; 0 if unparseable. */
+function daysOpen(dateStr: string): number {
+  const t = Date.parse(dateStr);
+  if (Number.isNaN(t)) return 0;
+  return Math.max(0, Math.round((Date.now() - t) / 86_400_000));
+}
+
+/** Days until a date string (negative = past due). */
+function daysUntil(dateStr: string): number {
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? 0 : Math.round((d.getTime() - Date.now()) / 86400e3);
+}
+
+// ── OWQ Panel ─────────────────────────────────────────────────────────────────
+
+type OWQFilter = 'all' | 'critical' | 'capa' | 'overdue';
+
+export function OWQPanel({ incidents, capa, onOpenIncident, onOpenCapa }: {
+  incidents: IncidentRecord[];
+  capa: CapaItem[];
+  onOpenIncident: (i: IncidentRecord) => void;
+  onOpenCapa: () => void;
+}): VNode {
+  const [owqFilter, setOwqFilter] = useState<OWQFilter>('all');
+
+  type OWQItem = {
+    key: string;
+    icon: string;
+    iconClass: string;
+    ref: string;
+    title: string;
+    site: string;
+    owner: string;
+    due: string;
+    status: string;
+    priority: 'critical' | 'overdue' | 'normal';
+    nextAction: string;
+    type: 'incident' | 'capa';
+    raw: IncidentRecord | CapaItem;
+  };
+
+  const allItems: OWQItem[] = [
+    // Critical unassigned incidents
+    ...incidents
+      .filter(i => i.severity === 'danger' && !/closed/i.test(i.status))
+      .map(i => ({
+        key: `inc-${i.ref}`,
+        icon: 'fa-triangle-exclamation',
+        iconClass: 'owq-icon-critical',
+        ref: i.ref,
+        title: i.type,
+        site: i.site,
+        owner: i.reporter,
+        due: `${daysOpen(i.date)}d open`,
+        status: i.status,
+        priority: 'critical' as const,
+        nextAction: 'Assign owner',
+        type: 'incident' as const,
+        raw: i,
+      })),
+    // Investigations missing root cause
+    ...incidents
+      .filter(i => /investigation/i.test(i.status))
+      .map(i => ({
+        key: `inv-${i.ref}`,
+        icon: 'fa-magnifying-glass',
+        iconClass: 'owq-icon-invest',
+        ref: i.ref,
+        title: 'Investigation pending',
+        site: i.site,
+        owner: i.reporter,
+        due: `${daysOpen(i.date)}d`,
+        status: 'Investigating',
+        priority: 'normal' as const,
+        nextAction: 'Root cause',
+        type: 'incident' as const,
+        raw: i,
+      })),
+    // Overdue CAPAs
+    ...capa
+      .filter(c => /overdue/i.test(c.status))
+      .map(c => ({
+        key: `capa-od-${c.ref}`,
+        icon: 'fa-clock',
+        iconClass: 'owq-icon-overdue',
+        ref: c.ref,
+        title: c.title,
+        site: '—',
+        owner: c.owner,
+        due: `Due ${c.due}`,
+        status: 'Overdue',
+        priority: 'overdue' as const,
+        nextAction: 'Escalate',
+        type: 'capa' as const,
+        raw: c,
+      })),
+    // Other open CAPAs (due soon)
+    ...capa
+      .filter(c => !/closed|verified|overdue/i.test(c.status))
+      .slice(0, 4)
+      .map(c => ({
+        key: `capa-${c.ref}`,
+        icon: 'fa-list-check',
+        iconClass: 'owq-icon-capa',
+        ref: c.ref,
+        title: c.title,
+        site: '—',
+        owner: c.owner,
+        due: `Due ${c.due}`,
+        status: c.status,
+        priority: 'normal' as const,
+        nextAction: 'Update',
+        type: 'capa' as const,
+        raw: c,
+      })),
+  ];
+
+  const filtered = allItems.filter(item => {
+    if (owqFilter === 'critical') return item.priority === 'critical';
+    if (owqFilter === 'capa')     return item.type === 'capa';
+    if (owqFilter === 'overdue')  return item.priority === 'overdue';
+    return true;
+  });
+
+  const totalCount    = allItems.length;
+  const critCount     = allItems.filter(i => i.priority === 'critical').length;
+  const capaCount     = allItems.filter(i => i.type === 'capa').length;
+  const overdueCount  = allItems.filter(i => i.priority === 'overdue').length;
+
+  return (
+    <div class="owq-panel owq-panel-navy">
+      <div class="owq-panel-header">
+        <div class="owq-panel-title">
+          <i class="fas fa-bell" />
+          <span>Open Work Queue</span>
+          <span class="owq-panel-count">{totalCount}</span>
+        </div>
+        <div class="owq-panel-tabs">
+          {([
+            { key: 'all',      label: 'All',      count: totalCount },
+            { key: 'critical', label: 'Critical', count: critCount },
+            { key: 'capa',     label: 'CAPA',     count: capaCount },
+            { key: 'overdue',  label: 'Overdue',  count: overdueCount },
+          ] as { key: OWQFilter; label: string; count: number }[]).map(t => (
+            <button
+              key={t.key}
+              class={`owq-tab ${owqFilter === t.key ? 'active' : ''}`}
+              onClick={() => setOwqFilter(t.key)}
+            >
+              {t.label}
+              {t.count > 0 && <span class="owq-tab-count">{t.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="owq-panel-list">
+        {filtered.length === 0 ? (
+          <div class="owq-panel-empty">
+            <i class="fas fa-circle-check" />
+            <span>No items in this view</span>
+          </div>
+        ) : filtered.map(item => (
+          <div
+            key={item.key}
+            class={`owq-item owq-item-${item.priority}`}
+            onClick={() => item.type === 'incident' ? onOpenIncident(item.raw as IncidentRecord) : onOpenCapa()}
+          >
+            <span class={`owq-item-icon ${item.iconClass}`}>
+              <i class={`fas ${item.icon}`} />
+            </span>
+            <div class="owq-item-body">
+              <div class="owq-item-ref">{item.ref} <span class="owq-item-title">{item.title}</span></div>
+              <div class="owq-item-meta">
+                <span><i class="fas fa-location-dot" />{item.site}</span>
+                <span><i class="fas fa-user" />{item.owner}</span>
+                <span><i class="fas fa-clock" />{item.due}</span>
+              </div>
+            </div>
+            <div class="owq-item-right">
+              <span class="owq-item-action">{item.nextAction}</span>
+              <i class="fas fa-chevron-right owq-item-chevron" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button class="owq-panel-footer" onClick={onOpenCapa}>
+        Open CAPA Register <i class="fas fa-arrow-right" />
+      </button>
+    </div>
+  );
+}
+
+// ── Investigation Pipeline ────────────────────────────────────────────────────
+
+function InvestigationPipeline({ incidents, investigations }: {
+  incidents: IncidentRecord[];
+  investigations: Investigation[];
+}): VNode {
+  const stages = [
+    { key: 'Reported',     icon: 'fa-file-circle-plus',    count: incidents.filter(i => i.status === 'Open').length },
+    { key: 'Assigned',     icon: 'fa-user-check',          count: incidents.filter(i => /assigned/i.test(i.status)).length },
+    { key: 'Investigation',icon: 'fa-magnifying-glass',    count: incidents.filter(i => /investigation/i.test(i.status)).length },
+    { key: 'Root Cause',   icon: 'fa-diagram-project',     count: investigations.filter(i => !i.rootCause).length },
+    { key: 'CAPA Raised',  icon: 'fa-list-check',          count: incidents.filter(i => /capa/i.test(i.status)).length },
+    { key: 'Verification', icon: 'fa-clipboard-check',     count: incidents.filter(i => /verif/i.test(i.status)).length },
+    { key: 'Closed',       icon: 'fa-circle-check',        count: incidents.filter(i => /closed/i.test(i.status)).length },
+  ];
+  return (
+    <div class="inc-pipeline">
+      {stages.map((s, idx) => (
+        <div key={s.key} class={`inc-pipeline-stage${s.count > 0 ? ' has-items' : ''}`}>
+          <div class="inc-pipeline-icon"><i class={`fas ${s.icon}`} /></div>
+          <div class="inc-pipeline-count">{s.count}</div>
+          <div class="inc-pipeline-label">{s.key}</div>
+          {idx < stages.length - 1 && <div class="inc-pipeline-arrow"><i class="fas fa-chevron-right" /></div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── CAPA Summary Strip (horizontal, shown above incident register) ─────────────
+
+function IncidentControlStrip({ incidents, investigations, capa, closurePct, avgDaysToClose, pageTab }: {
+  incidents: IncidentRecord[];
+  investigations: Investigation[];
+  capa: CapaItem[];
+  closurePct: number;
+  avgDaysToClose: number;
+  pageTab: string;
+}): VNode {
+  const activeInvest = incidents.filter(i => /investigation/i.test(i.status)).length;
+  const unassigned   = incidents.filter(i => /open/i.test(i.status)).length;
+  const linkedCapas  = capa.filter(c => !/closed|verified/i.test(c.status)).length;
+  const pendingEv    = capa.filter(c => /pending|evidence/i.test(c.status)).length;
+  const emaNotifs    = incidents.filter(i => i.type === 'Environmental' && !/closed/i.test(i.status));
+  const oshRequired  = incidents.filter(i => i.severity === 'danger' && !/closed/i.test(i.status));
+  const ltiCount     = incidents.filter(i => i.type === 'Injury' && i.severity === 'danger').length;
+  const overdueActs  = capa.filter(c => /overdue/i.test(c.status)).length;
+  const priority     = emaNotifs[0] ?? oshRequired[0] ?? null;
+
+  const sevCounts = {
+    danger:  incidents.filter(i => i.severity === 'danger').length,
+    warning: incidents.filter(i => i.severity === 'warning').length,
+    info:    incidents.filter(i => i.severity === 'info').length,
+    success: incidents.filter(i => i.severity === 'success').length,
+  };
+  const total = incidents.length || 1;
+  const SEV_COLORS  = { danger: '#ef4444', warning: '#f59e0b', info: '#60a5fa', success: '#4ade80' };
+  const SEV_FADED   = { danger: 'rgba(239,68,68,.15)', warning: 'rgba(245,158,11,.15)', info: 'rgba(96,165,250,.15)', success: 'rgba(74,222,128,.15)' };
+  const cx = 44, cy = 44, r = 34, circ = 2 * Math.PI * r;
+  let offset = 0;
+  const slices = (['danger','warning','info','success'] as const).map(k => {
+    const pct = sevCounts[k] / total;
+    const len = pct * circ;
+    const rot = offset;
+    offset += pct * 360;
+    return { k, len, dash: `${len} ${circ - len}`, rot, color: SEV_COLORS[k], faded: SEV_FADED[k] };
+  }).filter(s => s.len > 0);
+
+  // ── Investigation tab KPI derivations ──
+  const invOpen    = investigations.filter(i => /open/i.test(i.status)).length;
+  const invReview  = investigations.filter(i => /review/i.test(i.status)).length;
+  const invCrit    = investigations.filter(i => i.severity === 'danger').length;
+  const evTotal    = investigations.reduce((s, i) => s + i.evidenceTotal, 0);
+  const evDone     = investigations.reduce((s, i) => s + i.evidenceDone,  0);
+  const evPending  = evTotal - evDone;
+  const evPct      = evTotal > 0 ? Math.round((evDone / evTotal) * 100) : 0;
+  const rcaFound   = investigations.filter(i => i.rootCause && i.rootCause !== '(Not yet recorded)').length;
+  const rcaPct     = Math.round((rcaFound / Math.max(investigations.length, 1)) * 100);
+  const invRefs    = new Set(investigations.map(i => i.incidentRef));
+  const invCapa    = capa.filter(c => invRefs.has(c.source));
+  const capaOvd    = invCapa.filter(c => /overdue/i.test(c.status)).length;
+  const capaOpn    = invCapa.filter(c => /open/i.test(c.status)).length;
+  const capaOther  = invCapa.length - capaOvd - capaOpn;
+
+  if (pageTab === 'capa') {
+    const openActs     = capa.filter(c => !/closed|verified/i.test(c.status));
+    const overdueActs2 = capa.filter(c => /overdue/i.test(c.status));
+    const pendingEvActs= capa.filter(c => /pending|evidence/i.test(c.status));
+    const critActs     = capa.filter(c => c.priority === 'danger');
+    const firstOverdue = overdueActs2[0];
+    const firstPendEv  = pendingEvActs[0];
+    return (
+      <div class="capa-strip-four-cards">
+
+        {/* CAPA Card 1 — Open Actions */}
+        <div class="inc-mini-card">
+          <div class="inc-mini-card-header">
+            <i class="fas fa-list-check" />
+            <span>Open Actions</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
+              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{openActs.length}</span>
+              <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>open</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
+              {([
+                { val: critActs.length, label: 'Critical', color: '#ef4444' },
+                { val: capa.filter(c => c.priority==='warning' && !/closed|verified/i.test(c.status)).length, label: 'High', color: '#f59e0b' },
+                { val: capa.filter(c => c.priority==='info'    && !/closed|verified/i.test(c.status)).length, label: 'Medium', color: '#60a5fa' },
+              ] as const).map(d => d.val > 0 && (
+                <div key={d.label} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.72rem' }}>
+                  <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:d.color, flexShrink:0 }} />
+                  <span style={{ color:'var(--text-muted)' }}>{d.val} {d.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* CAPA Card 2 — Overdue */}
+        <div class="inc-mini-card">
+          <div class="inc-mini-card-header">
+            <i class="fas fa-clock" style={{ color:'#ef4444' }} />
+            <span>Overdue</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
+              <span style={{ fontSize:'2.4rem', fontWeight:800, color: overdueActs2.length > 0 ? '#ef4444' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{overdueActs2.length}</span>
+              <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>{overdueActs2.length === 1 ? 'action' : 'actions'}</span>
+            </div>
+            {firstOverdue ? (
+              <div style={{ background:'#fef2f2', border:'1px solid #fecaca', borderRadius:'8px', padding:'8px 10px' }}>
+                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#dc2626' }}>{firstOverdue.ref}</div>
+                <div style={{ fontSize:'0.65rem', color:'#ef4444', marginTop:'2px' }}>Due {firstOverdue.due}</div>
+              </div>
+            ) : (
+              <div style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>No overdue actions</div>
+            )}
+          </div>
+        </div>
+
+        {/* CAPA Card 3 — Verification Queue */}
+        <div class="inc-mini-card inc-mini-card-navy">
+          <div class="inc-mini-card-header inc-mini-card-header-navy">
+            <i class="fas fa-clipboard-check" />
+            <span>Verification Queue</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+            {(() => {
+              const ready   = capa.filter(c => /ready|complete/i.test(c.status) && !/closed|verified/i.test(c.status));
+              const pending = capa.filter(c => /pending|evidence/i.test(c.status));
+              const missing = capa.filter(c => !/closed|verified|pending|evidence|ready|complete/i.test(c.status) && !/closed|verified/i.test(c.status));
+              if (ready.length === 0 && pending.length === 0)
+                return <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,.45)' }}>No items in queue</div>;
+              return (
+                <>
+                  {([
+                    { count: ready.length,   label: 'Ready to verify', color: '#4ade80' },
+                    { count: pending.length, label: 'Pending evidence', color: '#fbbf24' },
+                    { count: missing.length, label: 'Evidence missing', color: '#ef4444' },
+                  ] as const).map(r => r.count > 0 && (
+                    <div key={r.label} style={{ display:'flex', alignItems:'center', gap:'8px', fontSize:'0.72rem' }}>
+                      <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:r.color, flexShrink:0 }} />
+                      <span style={{ color:'rgba(255,255,255,.7)', flex:1 }}>{r.label}</span>
+                      <span style={{ color:r.color, fontWeight:700 }}>{r.count}</span>
+                    </div>
+                  ))}
+                  {ready[0] && (
+                    <div style={{ background:'rgba(74,222,128,.1)', border:'1px solid rgba(74,222,128,.2)', borderRadius:'8px', padding:'7px 10px', marginTop:'2px' }}>
+                      <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#4ade80' }}>{ready[0].ref}</div>
+                      <div style={{ fontSize:'0.65rem', color:'rgba(255,255,255,.5)', marginTop:'2px' }}>Ready · {ready[0].owner}</div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* CAPA Card 4 — Ownership */}
+        <div class="inc-mini-card inc-mini-card-navy">
+          <div class="inc-mini-card-header inc-mini-card-header-navy">
+            <i class="fas fa-users" />
+            <span>Ownership</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+            {(() => {
+              const ownerMap = new Map<string, { open: number; overdue: number }>();
+              capa.filter(c => !/closed|verified/i.test(c.status)).forEach(c => {
+                const e = ownerMap.get(c.owner) ?? { open: 0, overdue: 0 };
+                e.open++;
+                if (/overdue/i.test(c.status)) e.overdue++;
+                ownerMap.set(c.owner, e);
+              });
+              if (ownerMap.size === 0)
+                return <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,.45)' }}>No open actions</div>;
+              return [...ownerMap.entries()].slice(0, 4).map(([owner, s]) => (
+                <div key={owner} style={{ display:'flex', alignItems:'center', gap:'7px', fontSize:'0.7rem' }}>
+                  <div style={{ width:'20px', height:'20px', borderRadius:'50%', background:'rgba(255,255,255,.12)', display:'grid', placeItems:'center', fontSize:'0.55rem', fontWeight:700, color:'rgba(255,255,255,.7)', flexShrink:0 }}>
+                    {owner.split(' ').map((n: string) => n[0]).join('').slice(0,2)}
+                  </div>
+                  <span style={{ flex:1, color:'rgba(255,255,255,.7)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{owner.split(' ')[0]}</span>
+                  <span style={{ color: s.overdue > 0 ? '#ef4444' : 'rgba(255,255,255,.45)', fontWeight: s.overdue > 0 ? 700 : 400, flexShrink:0 }}>
+                    {s.open}{s.overdue > 0 ? ` (${s.overdue}od)` : ''}
+                  </span>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
+  if (pageTab === 'investigations') {
+    return (
+      <div class="capa-strip-four-cards">
+
+        {/* Inv Card 1 — Open Investigations (white) */}
+        <div class="inc-mini-card">
+          <div class="inc-mini-card-header">
+            <i class="fas fa-magnifying-glass-chart" />
+            <span>Open Investigations</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
+              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{invOpen + invReview}</span>
+              <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>active</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
+              {invCrit > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.72rem' }}>
+                  <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#ef4444', flexShrink:0 }} />
+                  <span style={{ color:'var(--text-muted)' }}>{invCrit} Critical</span>
+                </div>
+              )}
+              <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.72rem' }}>
+                <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#f59e0b', flexShrink:0 }} />
+                <span style={{ color:'var(--text-muted)' }}>{invOpen} Open</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.72rem' }}>
+                <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#60a5fa', flexShrink:0 }} />
+                <span style={{ color:'var(--text-muted)' }}>{invReview} In Review</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Inv Card 2 — Evidence Pending (white) */}
+        <div class="inc-mini-card">
+          <div class="inc-mini-card-header">
+            <i class="fas fa-folder-open" />
+            <span>Evidence Pending</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
+              <span style={{ fontSize:'2.4rem', fontWeight:800, color: evPending > 0 ? '#d97706' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{evPending}</span>
+              <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>pending</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.67rem', color:'var(--text-muted)', marginBottom:'2px' }}>
+                <span>Evidence collected</span><span style={{ fontWeight:600, color:'var(--text-primary)' }}>{evPct}%</span>
+              </div>
+              <div style={{ height:'6px', borderRadius:'99px', background:'var(--border)', overflow:'hidden' }}>
+                <div style={{ width:`${evPct}%`, height:'100%', background: evPct===100 ? '#16a34a' : '#3b82f6', borderRadius:'99px', transition:'width .3s' }} />
+              </div>
+              <div style={{ display:'flex', gap:'10px', fontSize:'0.67rem', color:'var(--text-muted)', marginTop:'2px' }}>
+                <span><span style={{ color:'#16a34a', fontWeight:700 }}>{evDone}</span> collected</span>
+                <span><span style={{ color:'#d97706', fontWeight:700 }}>{evPending}</span> pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Inv Card 3 — Root Cause Complete (navy) */}
+        <div class="inc-mini-card inc-mini-card-navy">
+          <div class="inc-mini-card-header inc-mini-card-header-navy">
+            <i class="fas fa-bullseye" />
+            <span>Root Cause Complete</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', alignItems:'center', gap:'16px' }}>
+            <div style={{ position:'relative', flexShrink:0 }}>
+              <svg width="84" height="84" viewBox="0 0 84 84">
+                <circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="7" />
+                <circle cx="42" cy="42" r="34" fill="none"
+                  stroke={rcaPct === 100 ? '#4ade80' : '#60a5fa'} stroke-width="7"
+                  stroke-dasharray={`${(rcaPct / 100) * 213.6} 213.6`}
+                  stroke-linecap="round"
+                  transform="rotate(-90 42 42)" />
+              </svg>
+              <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1px' }}>
+                <span style={{ fontSize:'1.3rem', fontWeight:800, color: rcaPct===100 ? '#4ade80' : '#fff', lineHeight:1 }}>{rcaPct}%</span>
+              </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+              <div style={{ fontSize:'0.7rem', color:'rgba(255,255,255,.55)' }}>{rcaFound} of {investigations.length} confirmed</div>
+              <div style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.67rem', color:'rgba(255,255,255,.35)' }}>
+                <i class="fas fa-bullseye" style={{ fontSize:'0.6rem' }} /> Target 100%
+              </div>
+              {rcaPct < 100 && (
+                <div style={{ fontSize:'0.67rem', color:'#f59e0b', fontWeight:600 }}>{investigations.length - rcaFound} pending</div>
+              )}
+              {rcaPct === 100 && (
+                <div style={{ fontSize:'0.67rem', color:'#4ade80', fontWeight:600 }}><i class="fas fa-circle-check" style={{ marginRight:'4px' }} />All confirmed</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Inv Card 4 — CAPA Raised (navy) */}
+        <div class="inc-mini-card inc-mini-card-navy">
+          <div class="inc-mini-card-header inc-mini-card-header-navy">
+            <i class="fas fa-list-check" />
+            <span>CAPA Raised</span>
+          </div>
+          <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
+              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'#fff', lineHeight:1, letterSpacing:'-0.03em' }}>{invCapa.length}</span>
+              <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,.45)', textTransform:'uppercase', letterSpacing:'.05em' }}>actions</span>
+            </div>
+            {invCapa.length > 0 && (
+              <>
+                <div style={{ display:'flex', height:'7px', borderRadius:'4px', overflow:'hidden', gap:'2px' }}>
+                  {capaOvd   > 0 && <div style={{ flex:capaOvd,   background:'#ef4444' }} />}
+                  {capaOpn   > 0 && <div style={{ flex:capaOpn,   background:'#f59e0b' }} />}
+                  {capaOther > 0 && <div style={{ flex:capaOther, background:'rgba(74,222,128,.6)' }} />}
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+                  {capaOvd   > 0 && <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.7rem', color:'rgba(255,255,255,.65)' }}><span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#ef4444', flexShrink:0 }} />{capaOvd} overdue</div>}
+                  {capaOpn   > 0 && <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.7rem', color:'rgba(255,255,255,.65)' }}><span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#f59e0b', flexShrink:0 }} />{capaOpn} open</div>}
+                  {capaOther > 0 && <div style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.7rem', color:'rgba(255,255,255,.65)' }}><span style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#4ade80', flexShrink:0 }} />{capaOther} on track</div>}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
+  return (
+    <div class="capa-strip-four-cards">
+
+      {/* Card 1 — Severity Mix */}
+      <div class="inc-mini-card">
+        <div class="inc-mini-card-header">
+          <i class="fas fa-chart-pie" />
+          <span>Severity Mix</span>
+          <span style={{ marginLeft: 'auto', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 400 }}>MTD · {incidents.length} total</span>
+        </div>
+        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+          {/* Large donut — no blur, clean gaps */}
+          <div style={{ position: 'relative', flexShrink: 0, width: 140, height: 140 }}>
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              <circle cx="70" cy="70" r="56" fill="none" stroke="#eef0f5" stroke-width="14" />
+              {(() => {
+                const R = 56, C = 2 * Math.PI * R;
+                const GAP_DEG = 2.5;
+                let angleDeg = -90;
+                return (['danger','warning','info','success'] as const).map(k => {
+                  const pct = sevCounts[k] / total;
+                  if (pct === 0) return null;
+                  const segDeg  = pct * 360 - GAP_DEG;
+                  const segLen  = (segDeg / 360) * C;
+                  const startDeg = angleDeg + GAP_DEG / 2;
+                  angleDeg += pct * 360;
+                  return (
+                    <circle key={k} cx="70" cy="70" r={R} fill="none"
+                      stroke={SEV_COLORS[k]}
+                      stroke-width="14"
+                      stroke-linecap="butt"
+                      stroke-dasharray={`${segLen} ${C - segLen}`}
+                      stroke-dashoffset={-((startDeg + 90) / 360) * C + C * 0.25}
+                      transform={`rotate(${startDeg + 90} 70 70)`}
+                    />
+                  );
+                });
+              })()}
+            </svg>
+            {/* Center — total + open count */}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+              <span style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{incidents.length}</span>
+              <span style={{ fontSize: '0.52rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', fontWeight: 600 }}>Incidents</span>
+              <span style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 700, marginTop: '2px' }}>
+                {sevCounts.danger} critical
+              </span>
+            </div>
+          </div>
+          {/* Compact legend — 2 col grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', width: '100%' }}>
+            {(['danger','warning','info','success'] as const).map(k => {
+              const label = k === 'danger' ? 'Critical' : k === 'warning' ? 'High' : k === 'info' ? 'Medium' : 'Low';
+              const pct   = Math.round(sevCounts[k] / total * 100);
+              return (
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
+                  <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Card 2 — Report Incident (white) */}
+      <div class="inc-mini-card">
+        <div class="inc-mini-card-header">
+          <i class="fas fa-circle-plus" style={{ color: 'var(--siomac-orange)' }} />
+          <span>Report Incident</span>
+          <span class="inc-report-badge">New</span>
+        </div>
+        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Type buttons — 2×2 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
+            {[
+              { icon: 'fa-person-falling-burst', label: 'Injury',        sublabel: 'Personal harm',  color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+              { icon: 'fa-triangle-exclamation', label: 'Near Miss',     sublabel: 'Close call',     color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+              { icon: 'fa-leaf',                 label: 'Environmental', sublabel: 'Spill / release',color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+              { icon: 'fa-wrench',               label: 'Property',      sublabel: 'Asset damage',   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+            ].map(t => (
+              <button key={t.label} class="inc-report-type-btn" style={{ '--rtc': t.color, '--rtbg': t.bg, '--rtbd': t.border } as any}>
+                <span class="inc-rtype-icon"><i class={`fas ${t.icon}`} /></span>
+                <span class="inc-rtype-label">{t.label}</span>
+                <span class="inc-rtype-sub">{t.sublabel}</span>
+              </button>
+            ))}
+          </div>
+          {/* Quick stats row */}
+          <div style={{ display: 'flex', gap: '6px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+            {[
+              { val: incidents.filter(i => /open/i.test(i.status)).length,   label: 'Open',    color: '#d97706' },
+              { val: incidents.filter(i => /invest/i.test(i.status)).length, label: 'Active',  color: '#2563eb' },
+              { val: incidents.filter(i => /closed/i.test(i.status)).length, label: 'Closed',  color: '#16a34a' },
+            ].map(s => (
+              <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '6px 4px', borderRadius: '8px', background: 'var(--bg-subtle)' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.val}</div>
+                <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', marginTop: '2px' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Card 3 — Investigation Control (dark navy) */}
+      <div class="inc-mini-card inc-mini-card-navy">
+        <div class="inc-mini-card-header inc-mini-card-header-navy">
+          <i class="fas fa-magnifying-glass" />
+          <span>Investigation Control</span>
+        </div>
+        <div class="inc-mini-card-body">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '12px' }}>
+            {[
+              { val: activeInvest, label: 'Active investigations', color: '#60a5fa' },
+              { val: unassigned,   label: 'Unassigned',            color: '#f59e0b' },
+              { val: linkedCapas,  label: 'Linked CAPAs',          color: '#c4b5fd' },
+              { val: pendingEv,    label: 'Pending evidence',       color: '#fb923c' },
+            ].map(k => (
+              <div key={k.label} style={{ padding: '9px 8px', borderRadius: '9px', background: 'rgba(255,255,255,.07)', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,.45)', marginTop: '3px' }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.67rem', color: 'rgba(255,255,255,.5)', marginBottom: '5px' }}>
+              <span><i class="fas fa-circle-check" style={{ marginRight: '4px' }} />Closure</span>
+              <span style={{ fontWeight: 700, color: closurePct >= 95 ? '#4ade80' : '#f59e0b' }}>{closurePct}% · Target 95%</span>
+            </div>
+            <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.1)' }}>
+              <div style={{ width: `${closurePct}%`, height: '100%', borderRadius: '999px', background: closurePct >= 95 ? '#4ade80' : closurePct >= 70 ? '#f59e0b' : '#ef4444' }} />
+            </div>
+            <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>
+              Avg close {avgDaysToClose > 0 ? `${avgDaysToClose}d` : '—'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 3 — Regulatory Watch (dark navy) */}
+      <div class="inc-mini-card inc-mini-card-navy">
+        <div class="inc-mini-card-header inc-mini-card-header-navy">
+          <i class="fas fa-file-shield" />
+          <span>Regulatory Watch</span>
+        </div>
+        <div class="inc-mini-card-body">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '12px' }}>
+            {[
+              { val: emaNotifs.length,   label: 'EMA notifications',  urgent: emaNotifs.length > 0 },
+              { val: oshRequired.length, label: 'OSH review required', urgent: oshRequired.length > 0 },
+              { val: ltiCount,           label: 'LTI reportables',     urgent: ltiCount > 0 },
+              { val: overdueActs,        label: 'Overdue actions',     urgent: overdueActs > 0 },
+            ].map(k => (
+              <div key={k.label} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,.07)', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: k.urgent ? '#fca5a5' : '#4ade80', lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: '0.57rem', color: 'rgba(255,255,255,.45)', marginTop: '2px' }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+          {priority ? (
+            <div style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', borderRadius: '8px', padding: '8px 10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fca5a5' }}>{priority.ref}</span>
+                <span style={{ fontSize: '0.57rem', background: 'rgba(239,68,68,.3)', color: '#fca5a5', borderRadius: '4px', padding: '1px 5px' }}>Due today</span>
+              </div>
+              <div style={{ fontSize: '0.67rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.3, marginBottom: '2px' }}>
+                {priority.description.length > 50 ? priority.description.slice(0, 48) + '…' : priority.description}
+              </div>
+              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,.4)' }}>{priority.site} · {priority.type}</div>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.35)', paddingTop: '2px' }}>
+              <i class="fas fa-circle-check" style={{ color: '#4ade80', marginRight: '6px' }} />
+              No items requiring immediate action
+            </div>
+          )}
+        </div>
+      </div>
+
+
+    </div>
+  );
+}
+
+// ── CAPA Health Card ──────────────────────────────────────────────────────────
+
+function CapaHealthCard({ capa, onViewAll, closurePct, overdueCapa, avgDaysToClose, avgTarget }: {
+  capa: CapaItem[];
+  onViewAll: () => void;
+  closurePct: number;
+  overdueCapa: number;
+  avgDaysToClose: number;
+  avgTarget: number;
+}): VNode {
+  const openCount   = capa.filter(c => !/closed|verified/i.test(c.status)).length;
+  const pendingEv   = capa.filter(c => /pending|evidence/i.test(c.status)).length;
+  const closedMonth = capa.filter(c => /closed|verified/i.test(c.status)).length;
+  const highestRisk = capa.filter(c => c.priority === 'danger' && !/closed/i.test(c.status))[0];
+  const oldestOpen  = capa.filter(c => !/closed|verified/i.test(c.status))
+    .sort((a, b) => new Date(a.due).getTime() - new Date(b.due).getTime())[0];
+
+  const rows = [
+    { icon: 'fa-folder-open',  label: 'Open',             val: String(openCount),    cls: '' },
+    { icon: 'fa-clock',        label: 'Overdue',           val: String(overdueCapa),  cls: overdueCapa > 0 ? 'capa-row-warn' : '' },
+    { icon: 'fa-paperclip',    label: 'Pending Evidence',  val: String(pendingEv),    cls: '' },
+    { icon: 'fa-circle-check', label: 'Closed',            val: String(closedMonth),  cls: 'capa-row-good' },
+    { icon: 'fa-chart-line',   label: 'Closure Rate',      val: `${closurePct}%`,     cls: closurePct >= 95 ? 'capa-row-good' : 'capa-row-warn' },
+    { icon: 'fa-hourglass',    label: 'Avg Days to Close', val: avgDaysToClose > 0 ? `${avgDaysToClose}d` : '—', cls: avgDaysToClose > avgTarget ? 'capa-row-warn' : '' },
+  ];
+
+  return (
+    <div class="capa-health-card">
+      <div class="capa-health-header">
+        <span class="capa-health-title"><i class="fas fa-list-check" /> CAPA Health</span>
+      </div>
+      <div class="capa-health-rows">
+        {rows.map(r => (
+          <div key={r.label} class={`capa-health-row ${r.cls}`}>
+            <i class={`fas ${r.icon}`} />
+            <span class="capa-health-row-label">{r.label}</span>
+            <span class="capa-health-row-val">{r.val}</span>
+          </div>
+        ))}
+      </div>
+      <div class="capa-health-bar-row">
+        <div class="capa-health-bar-track">
+          <div class="capa-health-bar-fill" style={{ width: `${closurePct}%`, background: closurePct >= 95 ? '#16a34a' : closurePct >= 70 ? '#d97706' : '#ef4444' }} />
+        </div>
+        <span class="capa-health-bar-pct">{closurePct}% closure</span>
+      </div>
+      {(highestRisk || oldestOpen) && (
+        <div class="capa-health-alerts">
+          {highestRisk && (
+            <div class="capa-alert-row capa-alert-critical">
+              <i class="fas fa-triangle-exclamation" />
+              <span>Highest risk: <strong>{highestRisk.ref}</strong></span>
+            </div>
+          )}
+          {oldestOpen && (
+            <div class="capa-alert-row capa-alert-warn">
+              <i class="fas fa-clock" />
+              <span>Oldest: <strong>{oldestOpen.ref}</strong> · {oldestOpen.owner}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Incident Charts ───────────────────────────────────────────────────────────
+
+function IncidentCharts({ incidents, capa }: { incidents: IncidentRecord[]; capa: CapaItem[] }): VNode {
+  // 6-month trend (mock monthly splits)
+  const trendData = [
+    { month:'Jan', total:5,  nearMiss:2 },
+    { month:'Feb', total:8,  nearMiss:3 },
+    { month:'Mar', total:4,  nearMiss:1 },
+    { month:'Apr', total:7,  nearMiss:4 },
+    { month:'May', total:6,  nearMiss:2 },
+    { month:'Jun', total:incidents.filter(i => new Date(i.date) > new Date(Date.now() - 30*86400e3)).length, nearMiss:1 },
+  ];
+  const maxTrend = Math.max(...trendData.map(d => d.total), 1);
+
+  // Type mix
+  const typeCounts = [
+    { label:'Injury',           count: incidents.filter(i => i.type==='Injury').length,           color:'#ef4444' },
+    { label:'Near Miss',        count: incidents.filter(i => i.type==='Near Miss').length,        color:'#f59e0b' },
+    { label:'Environmental',    count: incidents.filter(i => i.type==='Environmental').length,    color:'#3b82f6' },
+    { label:'Property Damage',  count: incidents.filter(i => i.type==='Property Damage').length,  color:'#8b5cf6' },
+    { label:'Unsafe Act/Cond',  count: incidents.filter(i => i.type==='Unsafe Act'||i.type==='Unsafe Condition').length, color:'#ec4899' },
+  ];
+  const maxType = Math.max(...typeCounts.map(t => t.count), 1);
+
+  // CAPA aging buckets
+  const agingBuckets = [
+    { label:'0–7 days',  count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) >= -7 && daysUntil(c.due) >= 0).length, color:'#16a34a' },
+    { label:'8–14 days', count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < 0 && daysUntil(c.due) >= -14).length, color:'#d97706' },
+    { label:'15–30',     count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < -14 && daysUntil(c.due) >= -30).length, color:'#f59e0b' },
+    { label:'30+ days',  count: capa.filter(c => !/closed/i.test(c.status) && daysUntil(c.due) < -30).length, color:'#ef4444' },
+  ];
+  const maxAging = Math.max(...agingBuckets.map(b => b.count), 1);
+
+  // Severity by site (top 4 sites)
+  const sites = ['Galeota','Point Lisas','Piarco','La Brea'];
+  const sevBySite = sites.map(site => ({
+    site,
+    critical: incidents.filter(i => i.site.includes(site) && i.severity==='danger').length,
+    high:     incidents.filter(i => i.site.includes(site) && i.severity==='warning').length,
+    medium:   incidents.filter(i => i.site.includes(site) && i.severity==='info').length,
+    low:      incidents.filter(i => i.site.includes(site) && i.severity==='success').length,
+  }));
+
+  return (
+    <div class="inc-charts-section">
+      <div class="inc-charts-header">
+        <span class="inc-charts-title"><i class="fas fa-chart-line" /> Incident Intelligence</span>
+        <span class="inc-charts-sub">Analytics · Jan – Jun 2026 · All sites</span>
+      </div>
+      <div class="inc-charts-grid">
+
+        {/* 6-Month Trend */}
+        <div class="inc-chart-card inc-chart-wide">
+          <div class="inc-chart-head"><h4><i class="fas fa-chart-area" /> 6-Month Incident Trend</h4></div>
+          <div class="inc-trend-chart">
+            {trendData.map(d => (
+              <div key={d.month} class="inc-trend-col">
+                <div class="inc-trend-bars">
+                  <div class="inc-trend-bar inc-trend-bar-miss"  style={{ height: `${(d.nearMiss/maxTrend)*100}%` }} title={`Near Miss: ${d.nearMiss}`} />
+                  <div class="inc-trend-bar inc-trend-bar-total" style={{ height: `${((d.total-d.nearMiss)/maxTrend)*100}%` }} title={`Incidents: ${d.total-d.nearMiss}`} />
+                </div>
+                <div class="inc-trend-val">{d.total}</div>
+                <div class="inc-trend-lbl">{d.month}</div>
+              </div>
+            ))}
+          </div>
+          <div class="inc-chart-legend">
+            <span><i style={{ background:'#ef4444' }} />Incidents</span>
+            <span><i style={{ background:'#f59e0b' }} />Near Miss</span>
+          </div>
+        </div>
+
+        {/* Incident Type Mix */}
+        <div class="inc-chart-card">
+          <div class="inc-chart-head"><h4><i class="fas fa-chart-bar" /> Incident Type Mix</h4></div>
+          <div class="inc-hbar-chart">
+            {typeCounts.map(t => (
+              <div key={t.label} class="inc-hbar-row">
+                <span class="inc-hbar-label">{t.label}</span>
+                <div class="inc-hbar-track">
+                  <div class="inc-hbar-fill" style={{ width:`${(t.count/maxType)*100}%`, background: t.color }} />
+                </div>
+                <span class="inc-hbar-val">{t.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CAPA Aging */}
+        <div class="inc-chart-card">
+          <div class="inc-chart-head"><h4><i class="fas fa-hourglass-half" /> CAPA Aging</h4></div>
+          <div class="inc-hbar-chart">
+            {agingBuckets.map(b => (
+              <div key={b.label} class="inc-hbar-row">
+                <span class="inc-hbar-label">{b.label}</span>
+                <div class="inc-hbar-track">
+                  <div class="inc-hbar-fill" style={{ width:`${(b.count/maxAging)*100}%`, background: b.color }} />
+                </div>
+                <span class="inc-hbar-val">{b.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Severity by Site */}
+        <div class="inc-chart-card inc-chart-wide">
+          <div class="inc-chart-head"><h4><i class="fas fa-location-dot" /> Severity by Site</h4></div>
+          <div class="inc-site-sev-chart">
+            {sevBySite.map(s => {
+              const total = s.critical + s.high + s.medium + s.low || 1;
+              return (
+                <div key={s.site} class="inc-site-row">
+                  <span class="inc-site-name">{s.site}</span>
+                  <div class="inc-site-bar">
+                    {s.critical > 0 && <div class="inc-sev-seg" style={{ flex:s.critical, background:'#ef4444' }} title={`Critical: ${s.critical}`} />}
+                    {s.high     > 0 && <div class="inc-sev-seg" style={{ flex:s.high,     background:'#f59e0b' }} title={`High: ${s.high}`} />}
+                    {s.medium   > 0 && <div class="inc-sev-seg" style={{ flex:s.medium,   background:'#3b82f6' }} title={`Medium: ${s.medium}`} />}
+                    {s.low      > 0 && <div class="inc-sev-seg" style={{ flex:s.low,      background:'#22c55e' }} title={`Low: ${s.low}`} />}
+                  </div>
+                  <span class="inc-site-total">{s.critical+s.high+s.medium+s.low}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div class="inc-chart-legend">
+            <span><i style={{ background:'#ef4444' }} />Critical</span>
+            <span><i style={{ background:'#f59e0b' }} />High</span>
+            <span><i style={{ background:'#3b82f6' }} />Medium</span>
+            <span><i style={{ background:'#22c55e' }} />Low</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
-export function IncidentsArea({ tab }: { tab: string }): VNode {
+export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   const wf = useWorkflow();
-  const [active, setActive]             = useState(tab);
   const [openIncident, setOpenIncident] = useState<IncidentRecord | null>(null);
 
   const incidentsQ      = useHseIncidents({ limit: 200 });
@@ -187,12 +1111,17 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
   const critCount = incidents.filter(i => i.severity === 'danger').length;
   const openCapa  = capa.filter(c => !/closed/i.test(c.status)).length;
 
-  const stats = [
-    { icon: 'fa-clipboard-list',       label: 'Total Incidents',  value: incidents.length, color: 'blue'  },
-    { icon: 'fa-folder-open',          label: 'Open',             value: openCount,        color: 'gold'  },
-    { icon: 'fa-triangle-exclamation', label: 'Critical / High',  value: critCount,        color: 'red'   },
-    { icon: 'fa-list-check',           label: 'Open CAPA',        value: openCapa,         color: 'green' },
-  ];
+  const closedCount = incidents.filter(i => /closed/i.test(i.status)).length;
+  const closurePct  = incidents.length ? Math.round((closedCount / incidents.length) * 100) : 0;
+
+  const overdueCapa = capa.filter(c => /overdue/i.test(c.status)).length;
+
+  // Avg days to close — only closed incidents with a parseable date
+  const closedWithDate = incidents.filter(i => /closed/i.test(i.status) && i.date);
+  const avgDaysToClose = closedWithDate.length
+    ? Math.round(closedWithDate.reduce((sum, i) => sum + Math.max(1, Math.round((Date.now() - new Date(i.date).getTime()) / 86400e3)), 0) / closedWithDate.length)
+    : 0;
+  const avgTarget = 14; // target: close within 14 days
 
   async function handleReportSubmit(payload: {
     type: IncidentType; severity: string; site: string;
@@ -227,33 +1156,86 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
         priority: dbSeverity === 'critical' ? 'critical' : 'high',
       });
     } catch { /* non-fatal */ }
-    setActive('register');
+    setPageTab('incidents');
   }
 
-  return (
-    <div class="hse-tab hse-dash">
-      <AreaHero
-        icon="fa-triangle-exclamation"
-        areaIcon="fa-person-falling-burst"
-        title="Incidents"
-        crumb="Incidents"
-        watermarkClass="hse-wm-incidents"
-        context={['Trinidad & Tobago Operations', '2026 HSE Programme']}
-        badges={[{ icon: 'fa-gavel', label: 'OSH Act 2004' }]}
-        stats={stats}
-        metrics={[
-          { label: 'LTI-free days', value: String(ltiFreeDays), highlight: ltiFreeDays > 30 },
-          { label: 'LTIFR (per 200k hrs)', value: String(ltifr) },
-          { label: 'Avg. response time', value: '< 30 min' },
-          { label: 'CAPA closure rate', value: `${Math.round((capa.filter(c => /closed|verified/i.test(c.status)).length / Math.max(capa.length, 1)) * 100)}%` },
-        ]}
-      />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+  // Wizard open state — Report Incident is now a modal wizard, not a tab
+  const [wizardOpen, setWizardOpen] = useState(false);
 
-      {active === 'register'       && <RegisterTab incidents={incidents} capa={capa} onOpen={setOpenIncident} onReport={() => setActive('report')} />}
-      {active === 'report'         && <ReportTab onSubmit={handleReportSubmit} />}
-      {active === 'investigations' && <InvestigationsTab investigations={investigations} />}
-      {active === 'capa'           && <CapaTab capa={capa} />}
+  // Page-level tabs: Incidents | Investigations | CAPA Actions | Intelligence
+  const PAGE_TABS: AreaTab[] = [
+    { key: 'incidents',      label: 'Incidents',        sublabel: 'Table & queue',   icon: 'fa-list-ul',                count: incidents.length },
+    { key: 'investigations', label: 'Investigations',   sublabel: 'Root cause',      icon: 'fa-magnifying-glass-chart', count: investigations.length },
+    { key: 'capa',           label: 'CAPA Actions',     sublabel: 'Corrective work', icon: 'fa-list-check',             count: openCapa },
+    { key: 'intel',          label: 'Intelligence',     sublabel: 'Charts & trends', icon: 'fa-chart-line' },
+  ];
+
+  // Status filter chips for Incidents tab
+  const VIEWS = [
+    { key: 'all',      label: 'All',       count: incidents.length },
+    { key: 'open',     label: 'Open',      count: incidents.filter(i => /open/i.test(i.status)).length },
+    { key: 'critical', label: 'Critical',  count: incidents.filter(i => i.severity === 'danger').length },
+    { key: 'capa',     label: 'CAPA Open', count: openCapa },
+    { key: 'closed',   label: 'Closed',    count: closedCount },
+  ] as const;
+
+  const [pageTab,    setPageTab]    = useState<string>('incidents');
+  const [savedView,  setSavedView]  = useState<string>('all');
+
+  return (
+    <div class="hse-tab hse-dash inc-workspace">
+
+      {/* ── Page header ── */}
+      <div class="inc-page-header">
+        <div class="inc-page-header-left">
+          <div class="inc-page-title-wrap">
+            <span class="inc-page-icon"><i class="fas fa-triangle-exclamation" /></span>
+            <div>
+              <div class="inc-page-title">Incidents</div>
+              <div class="inc-page-sub">Jan – Jun 2026 · All sites · {incidents.length} records</div>
+            </div>
+          </div>
+        </div>
+        <div class="inc-page-header-right">
+        </div>
+      </div>
+
+      {/* ── Tab-aware summary cards ── */}
+      <IncidentControlStrip
+        incidents={incidents}
+        investigations={investigations}
+        capa={capa}
+        closurePct={closurePct}
+        avgDaysToClose={avgDaysToClose}
+        pageTab={pageTab}
+      />
+
+      {/* ── Tab workspace ── */}
+      <AreaTabs
+        icon="fa-clipboard-list"
+        title="Incident Management"
+        sub="Incidents · CAPA Actions · Intelligence"
+        tabs={PAGE_TABS}
+        active={pageTab}
+        onSelect={setPageTab}
+      />
+
+      {/* Tab content — consistent top gap below nav */}
+      <div style={{ marginTop: '20px' }}>
+        {pageTab === 'incidents' && (
+          <RegisterTab incidents={incidents} savedView={savedView} setSavedView={setSavedView} views={VIEWS} capa={capa} onOpen={setOpenIncident} onReport={() => setWizardOpen(true)} />
+        )}
+        {pageTab === 'investigations' && <InvestigationsTab investigations={investigations} capa={capa} />}
+        {pageTab === 'capa' && <CapaTab capa={capa} closurePct={closurePct} avgDaysToClose={avgDaysToClose} />}
+        {pageTab === 'intel' && <IncidentCharts incidents={incidents} capa={capa} />}
+      </div>
+
+      {/* Report Incident wizard modal */}
+      <IncidentReportWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
 
       <IncidentDrawer
         incident={openIncident}
@@ -262,7 +1244,7 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
         onInvestigate={() => {
           if (!openIncident) return;
           wf.submit({ templateId: 'incident-investigation', recordRef: openIncident.ref, reason: openIncident.description });
-          setOpenIncident(null); setActive('investigations');
+          setOpenIncident(null); setPageTab('investigations');
         }}
       />
     </div>
@@ -271,51 +1253,75 @@ export function IncidentsArea({ tab }: { tab: string }): VNode {
 
 // ── Register tab ──────────────────────────────────────────────────────────────
 
-function RegisterTab({ incidents, capa, onOpen, onReport }: {
-  incidents: IncidentRecord[]; capa: CapaItem[];
-  onOpen: (i: IncidentRecord) => void; onReport: () => void;
-}): VNode {
-  const [search,       setSearch]  = useState('');
-  const [typeFilter,   setType]    = useState('All types');
-  const [siteFilter,   setSite]    = useState('All sites');
-  const [sevFilter,    setSev]     = useState('All severities');
-  const [statusFilter, setStat]    = useState('All statuses');
+function nextStep(i: IncidentRecord): string {
+  if (/closed/i.test(i.status))      return 'Closed';
+  if (/capa/i.test(i.status))        return 'Verify CAPA';
+  if (/investigation/i.test(i.status)) return 'Root cause';
+  if (/review/i.test(i.status))      return 'HSE review';
+  return 'Assign owner';
+}
 
-  const open = incidents.filter(i => !/closed/i.test(i.status));
+
+
+function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, onReport }: {
+  incidents: IncidentRecord[];
+  savedView: string;
+  setSavedView: (v: string) => void;
+  views: ReadonlyArray<{ key: string; label: string; count: number }>;
+  capa: CapaItem[];
+  onOpen: (i: IncidentRecord) => void;
+  onReport: () => void;
+}): VNode {
+  const [search,     setSearch]   = useState('');
+  const [typeFilter, setType]     = useState('All types');
+  const [siteFilter, setSite]     = useState('All sites');
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return incidents.filter(i => {
+      // saved view filter
+      if (savedView === 'open'     && !/open/i.test(i.status))                                   return false;
+      if (savedView === 'critical' && i.severity !== 'danger')                                    return false;
+      if (savedView === 'overdue'  && (daysOpen(i.date) < 7 || /closed/i.test(i.status)))        return false;
+      if (savedView === 'invest'   && !/investigation/i.test(i.status))                           return false;
+      if (savedView === 'closed'   && !/closed/i.test(i.status))                                  return false;
+      // text + dropdown filters
       if (q && !i.ref.toLowerCase().includes(q) && !i.description.toLowerCase().includes(q)
-               && !i.site.toLowerCase().includes(q) && !i.reporter.toLowerCase().includes(q)) return false;
-      if (typeFilter   !== 'All types'      && i.type !== typeFilter)                              return false;
-      if (siteFilter   !== 'All sites'      && i.site !== siteFilter)                              return false;
-      if (sevFilter    !== 'All severities' && !matchSev(i.severity, sevFilter))                   return false;
-      if (statusFilter !== 'All statuses'   && !i.status.toLowerCase().startsWith(statusFilter.toLowerCase())) return false;
+             && !i.site.toLowerCase().includes(q) && !i.reporter.toLowerCase().includes(q))       return false;
+      if (typeFilter !== 'All types' && i.type !== typeFilter)                                    return false;
+      if (siteFilter !== 'All sites' && i.site !== siteFilter)                                    return false;
       return true;
     });
-  }, [incidents, search, typeFilter, siteFilter, sevFilter, statusFilter]);
+  }, [incidents, savedView, search, typeFilter, siteFilter]);
+
 
   return (
-    <div class="ppe-tab-content">
-      <TrendSparkline />
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-            <span class="vt-section-icon"><i class="fas fa-clipboard-list" /></span>
-            <div>
-              <div class="vt-section-title">Incident Register</div>
-              <div class="vt-section-sub">Click any row to open the incident detail, OSH notification status, and investigation workflow.</div>
+    <div>
+
+      {/* ── Main register ── */}
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-list-ul" /></span>
+              <div>
+                <div class="vt-section-title">Incident Register</div>
+                <div class="vt-section-sub">All reported incidents · click any row to open detail</div>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
+              <button class="inc-action-btn primary" onClick={onReport}><i class="fas fa-circle-plus" /> Report Incident</button>
             </div>
           </div>
-          <div class="vt-toolbar">
-            <div class="vt-search" style={{ flex: '1 1 220px' }}>
+          <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
+            <div class="vt-search" style={{ flex: '1 1 180px' }}>
               <i class="fas fa-search" />
-              <input
-                type="search" placeholder="Search ref, description, site, reporter…"
-                value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)}
-              />
+              <input type="search" placeholder="Search ref, site, reporter…"
+                value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} />
             </div>
+            <select class="emp-filter-select" value={savedView} onChange={e => setSavedView((e.target as HTMLSelectElement).value)}>
+              {views.map(v => <option key={v.key} value={v.key}>{v.label} ({v.count})</option>)}
+            </select>
             <select class="emp-filter-select" value={typeFilter} onChange={e => setType((e.target as HTMLSelectElement).value)}>
               <option>All types</option>
               {INCIDENT_TYPES.map(t => <option key={t}>{t}</option>)}
@@ -324,95 +1330,85 @@ function RegisterTab({ incidents, capa, onOpen, onReport }: {
               <option>All sites</option>
               {HSE_SITES.map(s => <option key={s}>{s}</option>)}
             </select>
-            <select class="emp-filter-select" value={sevFilter} onChange={e => setSev((e.target as HTMLSelectElement).value)}>
-              <option>All severities</option>
-              {['Critical / High', 'Moderate', 'Minor'].map(s => <option key={s}>{s}</option>)}
-            </select>
-            <select class="emp-filter-select" value={statusFilter} onChange={e => setStat((e.target as HTMLSelectElement).value)}>
-              <option>All statuses</option>
-              {['Open', 'Investigation', 'CAPA', 'Closed'].map(s => <option key={s}>{s}</option>)}
-            </select>
-            <button class="hse-btn primary" onClick={onReport}><i class="fas fa-circle-plus" /> Report Incident</button>
-          </div>
-
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr>
-                    <th>Record</th><th>Type</th><th>Site</th>
-                    <th>Description</th><th>Status</th><th>Reporter</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px' }}>No incidents match the current filters.</td></tr>
-                  ) : filtered.map(i => (
-                    <tr key={i.ref} onClick={() => onOpen(i)} style={{ cursor: 'pointer' }}>
-                      <td>
-                        <span class="vt-cell-mono">{i.ref}</span>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{i.date}</div>
-                      </td>
-                      <td>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <i class={`fas ${TYPE_ICONS[i.type] ?? 'fa-file-exclamation'}`} style={{ fontSize: '0.8rem', color: i.severity === 'danger' ? '#ef4444' : i.severity === 'warning' ? '#f59e0b' : '#60a5fa' }} />
-                          {i.type}
-                        </span>
-                      </td>
-                      <td style={{ color: 'var(--text-muted)' }}>{i.site}</td>
-                      <td style={{ maxWidth: '300px' }}>
-                        <span class="vt-cell-name" style={{ fontWeight: 500 }}>{i.description}</span>
-                      </td>
-                      <td><span class={hsePill(i.status)}>{i.status}</span></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{i.reporter}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{ padding: '8px 16px', borderTop: '1px solid rgba(255,255,255,.06)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Showing {filtered.length} of {incidents.length} incidents
-            </div>
+            <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
           </div>
         </div>
-
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-exclamation-circle" /> Open Work Queue</h4>
-          <div class="ppe-signals-list">
-            {open.slice(0, 5).map(i => (
-              <div class="ppe-signal" key={i.ref} onClick={() => onOpen(i)} style={{ cursor: 'pointer' }}>
-                <i class={`fas ${i.severity === 'danger' ? 'fa-triangle-exclamation is-danger' : 'fa-circle-dot is-warn'}`} />
-                <div class="ppe-signal-text">
-                  <strong>{i.ref}</strong>
-                  <span>{i.type} · {i.site}</span>
-                </div>
-                <span class={`ppe-signal-tag ${i.severity === 'danger' ? 'is-high' : 'is-due'}`}>{i.status}</span>
-              </div>
-            ))}
-            {open.length === 0 && (
-              <div class="ppe-signal">
-                <i class="fas fa-check-circle is-ok" />
-                <div class="ppe-signal-text"><strong>All clear</strong><span>No open incidents.</span></div>
-              </div>
-            )}
-          </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: '12px', paddingTop: '12px' }}>
-            <h4 style={{ marginBottom: '8px' }}><i class="fas fa-list-check" /> CAPA Snapshot</h4>
-            <div class="ppe-signals-list">
-              {capa.slice(0, 3).map(c => (
-                <div class="ppe-signal" key={c.ref}>
-                  <i class={`fas ${/overdue/i.test(c.status) ? 'fa-clock is-danger' : 'fa-circle-check is-info'}`} />
-                  <div class="ppe-signal-text">
-                    <strong>{c.title}</strong>
-                    <span>Owner: {c.owner} · Due {c.due}</span>
-                  </div>
-                  <span class={`ppe-signal-tag ${/overdue/i.test(c.status) ? 'is-high' : 'is-due'}`}>{c.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width: '110px' }}>Ref / Date</th>
+                <th style={{ width: '78px' }}>Severity</th>
+                <th style={{ width: '100px' }}>Type</th>
+                <th>Description</th>
+                <th style={{ width: '120px' }}>Reporter / Site</th>
+                <th style={{ width: '100px' }}>Status</th>
+                <th style={{ width: '52px' }}>SLA</th>
+                <th style={{ width: '80px' }}>Invest.</th>
+                <th style={{ width: '52px' }}>CAPA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={9} style={{ textAlign:'center', color:'var(--text-muted)', padding:'28px' }}>No incidents match.</td></tr>
+              ) : filtered.map(i => {
+                const days      = daysOpen(i.date);
+                const closed    = /closed/i.test(i.status);
+                const sev       = SEVERITY_META[i.severity] ?? SEVERITY_META['success']!;
+                const summary   = i.description.length > 55 ? i.description.slice(0, 53) + '…' : i.description;
+                const isInvest  = /investigation/i.test(i.status);
+                const capaCount = capa.filter(c => c.source === i.ref && !/closed|verified/i.test(c.status)).length;
+                return (
+                  <tr key={i.ref} onClick={() => onOpen(i)} style={{ cursor: 'pointer' }}>
+                    <td>
+                      <span class="vt-cell-mono">{i.ref}</span>
+                      <div class="vt-cell-subtext">{i.date}</div>
+                    </td>
+                    <td>
+                      <span class="inc-sev-chip" style={{ background: sev.bg, color: sev.color }}>
+                        <i class={`fas ${sev.icon}`} style={{ fontSize: '0.6rem' }} /> {sev.label}
+                      </span>
+                    </td>
+                    <td>{i.type}</td>
+                    <td>
+                      <span class="inc-summary-text" title={`${i.description}\n\nImmediate: ${i.immediateActions}`}>{summary}</span>
+                    </td>
+                    <td>
+                      <span class="vt-cell-name" style={{ fontSize: '0.78rem' }}>{i.reporter}</span>
+                      <div class="vt-cell-subtext">{i.site}</div>
+                    </td>
+                    <td><span class={incidentPill(i.status, i.severity)}>{i.status}</span></td>
+                    <td>
+                      <span class={`days-open${!closed && days >= 5 ? ' overdue' : ''}`}>
+                        {closed ? '—' : `${days}d`}
+                      </span>
+                    </td>
+                    <td>
+                      {isInvest
+                        ? <span class="inc-badge-invest"><i class="fas fa-magnifying-glass" /> Active</span>
+                        : closed
+                          ? <span class="inc-badge-done"><i class="fas fa-circle-check" /> Done</span>
+                          : <span style={{ color:'var(--text-muted)' }}>—</span>
+                      }
+                    </td>
+                    <td>
+                      {capaCount > 0
+                        ? <span class="inc-badge-capa">{capaCount}</span>
+                        : <span style={{ color:'var(--text-muted)' }}>—</span>
+                      }
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ padding:'7px 16px', borderTop:'1px solid var(--border)', fontSize:'0.68rem', color:'var(--text-muted)', display:'flex', justifyContent:'space-between' }}>
+          <span>Showing {filtered.length} of {incidents.length} incidents</span>
+          <span>Click any row to open detail · Esc to close</span>
+        </div>
       </div>
+
     </div>
   );
 }
@@ -424,7 +1420,29 @@ function matchSev(uiSeverity: string, filter: string): boolean {
   return true;
 }
 
-// ── Report tab ────────────────────────────────────────────────────────────────
+function priorityClass(sev: string): string {
+  if (sev === 'danger')  return 'high';
+  if (sev === 'warning') return 'high';
+  if (sev === 'info')    return 'medium';
+  return 'low';
+}
+function priorityLabel(sev: string): string {
+  if (sev === 'danger' || sev === 'warning') return 'High';
+  if (sev === 'info')  return 'Medium';
+  return 'Low';
+}
+/** vt-pill variant for incident status, with critical override for danger-severity open items. */
+function incidentPill(status: string, sev: string): string {
+  if (sev === 'danger' && !/closed/i.test(status)) return toneClass('critical');
+  return hsePill(status);
+}
+
+// ── Incident Report Wizard ────────────────────────────────────────────────────
+
+const HSE_AREAS   = ['Process Area', 'Storage / Tank Farm', 'Workshop', 'Offices', 'Marine Jetty', 'Construction Site', 'Control Room', 'Laboratory', 'Utility Area', 'Loading Bay'];
+const HSE_SHIFTS  = ['Day (06:00–18:00)', 'Night (18:00–06:00)', 'Morning (06:00–14:00)', 'Afternoon (14:00–22:00)'];
+const SPILL_TYPES = ['Oil / Hydrocarbon', 'Chemical', 'Produced Water', 'Drilling Fluid', 'Sewage', 'Other'];
+const SPILL_MEDIA = ['Soil / Ground', 'Storm Drain', 'Watercourse / River', 'Sea / Marine', 'Bund / Containment', 'Air / Atmosphere'];
 
 type ReportPayload = {
   type: IncidentType; severity: string; site: string;
@@ -434,25 +1452,99 @@ type ReportPayload = {
   peopleInvolved: PersonInvolved[]; witnesses: Witness[];
 };
 
-function ReportTab({ onSubmit }: { onSubmit: (p: ReportPayload) => void }): VNode {
+const WIZARD_STEPS = [
+  { label: 'Event Basics',    icon: 'fa-tag',            sub: 'Type, severity, site, date & location' },
+  { label: 'What Happened',   icon: 'fa-align-left',     sub: 'Description, controls, immediate actions' },
+  { label: 'People',          icon: 'fa-users',          sub: 'Involved persons, injury details, witnesses' },
+  { label: 'Work Controls',   icon: 'fa-gears',          sub: 'Equipment, contractor, permits, LOTO' },
+  { label: 'Regulatory',      icon: 'fa-gavel',          sub: 'OSH, EMA, emergency services, evidence' },
+  { label: 'Review',          icon: 'fa-circle-check',   sub: 'Summary, routing preview, submit' },
+] as const;
+
+function IncidentReportWizard({ open, onClose, onSubmit }: {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (p: ReportPayload) => void;
+}): VNode {
+  const [step, setStep] = useState(0);
+
+  // ── Core classification
   const [type,           setType]     = useState<IncidentType>('Near Miss');
   const [severity,       setSeverity] = useState('High');
-  const [site,           setSite]     = useState<string>(HSE_SITES[0]);
-  const [classification, setClass]    = useState<OshClass | ''>('');
-  const [injuryType,     setInjury]   = useState('');
+  const [site,           setSite]     = useState<string>(HSE_SITES[0] ?? '');
+  // ── Date / time / shift
+  const todayStr = new Date().toISOString().split('T')[0] ?? '';
+  const nowStr   = new Date().toTimeString().slice(0, 5);
+  const [incDate,   setIncDate]  = useState(todayStr);
+  const [incTime,   setIncTime]  = useState(nowStr);
+  const [repDate,   setRepDate]  = useState(todayStr);
+  const [shift,     setShift]    = useState('');
+  // ── Location detail
+  const [area,      setArea]     = useState('');
+  const [location,  setLoc]      = useState('');
+  const [workOrder, setWO]       = useState('');
+  const [ptwRef,    setPTW]      = useState('');
+  const [jsaRef,    setJSA]      = useState('');
+  // ── Reporter
+  const [repName,   setRepName]  = useState('');
+  const [repRole,   setRepRole]  = useState('');
+  const [repPhone,  setRepPhone] = useState('');
+  const [onBehalf,  setOnBehalf] = useState(false);
+  // ── Description
+  const [description, setDesc]   = useState('');
+  // ── Immediate controls
+  const [ctrlStop,   setCtrlStop]   = useState<boolean | null>(null);
+  const [ctrlIso,    setCtrlIso]    = useState<boolean | null>(null);
+  const [ctrlFA,     setCtrlFA]     = useState<boolean | null>(null);
+  const [ctrlSupv,   setCtrlSupv]   = useState<boolean | null>(null);
+  const [ctrlHSE,    setCtrlHSE]    = useState<boolean | null>(null);
+  const [ctrlEmg,    setCtrlEmg]    = useState<boolean | null>(null);
+  const [ctrlActions, setCtrlActions] = useState('');
+  // ── Injury (conditional)
+  const [classification, setClass]   = useState<OshClass | ''>('');
+  const [injuredName,    setInjName] = useState('');
+  const [injuryType,     setInjury]  = useState('');
   const [bodyPart,       setBodyPart] = useState('');
+  const [medLevel,       setMedLevel] = useState('');
+  const [sentToClinic,   setClinic]  = useState<boolean | null>(null);
+  const [rtwRestriction, setRTWR]    = useState<boolean | null>(null);
   const [lostDays,       setLostDays] = useState('0');
   const [returnToWork,   setRTW]      = useState('');
-  const [description,    setDesc]     = useState('');
-  const [actions,        setActions]  = useState('');
-  const [people,         setPeople]   = useState<PersonInvolved[]>([{ name: '' }]);
-  const [witnesses,      setWitnesses] = useState<Witness[]>([]);
-  const [submitting,     setSubmitting] = useState(false);
-  const [errors,         setErrors]   = useState<string[]>([]);
+  // ── Environmental (conditional)
+  const [spillType,  setSpillType] = useState('');
+  const [spillQty,   setSpillQty]  = useState('');
+  const [spillMedia, setSpillMedia] = useState('');
+  const [drainAffected, setDrain]  = useState<boolean | null>(null);
+  const [containmentOk, setContain] = useState<boolean | null>(null);
+  const [emaReqd,    setEmaReqd]   = useState<boolean | null>(null);
+  // ── Work controls
+  const [equipment,  setEquipment] = useState('');
+  const [lotoInvolved, setLOTO]   = useState<boolean | null>(null);
+  const [contractorCo, setConCo]  = useState('');
+  // ── Regulatory
+  const [oshReportable, setOshRep] = useState<'yes'|'no'|'unknown'>('unknown');
+  const [emaNotifReqd,  setEmaNot] = useState<'yes'|'no'|'unknown'>('unknown');
+  const [policeNotified, setPolice] = useState(false);
+  const [ambulance,      setAmb]   = useState(false);
+  const [fire,           setFire]  = useState(false);
+  // ── People / witnesses
+  const [people,    setPeople]    = useState<PersonInvolved[]>([{ name: '' }]);
+  const [witnesses, setWitnesses] = useState<Witness[]>([]);
+  // ── Submit state
+  const [submitting, setSubmitting] = useState(false);
+  const [errors,     setErrors]     = useState<string[]>([]);
 
-  const isInjury = type === 'Injury';
-  const isLTI    = classification === 'lost-time' || classification === 'fatality';
-  const needsOsh = severity === 'Critical' || severity === 'High' || isLTI || classification === 'dangerous-occurrence';
+  const isInjury   = type === 'Injury';
+  const isEnv      = type === 'Environmental';
+  const isLTI      = classification === 'lost-time' || classification === 'fatality';
+  const needsOsh   = severity === 'Critical' || severity === 'High' || isLTI || classification === 'dangerous-occurrence';
+  const isCritical = severity === 'Critical';
+  const routeTo    = [
+    'HSE Manager',
+    ...(isCritical ? ['Site Director', 'Corporate HSE'] : ['Site Supervisor']),
+    ...(isEnv ? ['Environmental Lead'] : []),
+    ...(isInjury && isLTI ? ['HR Manager'] : []),
+  ];
 
   function addPerson() { setPeople(p => [...p, { name: '' }]); }
   function removePerson(idx: number) { setPeople(p => p.filter((_, i) => i !== idx)); }
@@ -465,10 +1557,34 @@ function ReportTab({ onSubmit }: { onSubmit: (p: ReportPayload) => void }): VNod
     setWitnesses(w => w.map((x, i) => i === idx ? { ...x, [field]: val } : x));
   }
 
+  function validateStep(s: number): string[] {
+    const errs: string[] = [];
+    if (s === 0) {
+      if (!incDate) errs.push('Incident date is required.');
+    }
+    if (s === 1) {
+      if (!description.trim()) errs.push('Incident description is required.');
+    }
+    if (s === 2) {
+      if (people.some(p => !p.name.trim())) errs.push('All People Involved entries must have a name.');
+      if (isInjury && !classification) errs.push('OSH classification is required for injury incidents.');
+    }
+    return errs;
+  }
+
+  function next() {
+    const errs = validateStep(step);
+    if (errs.length) { setErrors(errs); return; }
+    setErrors([]);
+    setStep(s => Math.min(s + 1, WIZARD_STEPS.length - 1));
+  }
+  function back() { setErrors([]); setStep(s => Math.max(s - 1, 0)); }
+
   async function submit() {
     const errs: string[] = [];
-    if (!description.trim()) errs.push('Description of event is required.');
-    if (isInjury && !classification) errs.push('Injury classification is required for Injury type incidents.');
+    if (!incDate)           errs.push('Incident date is required.');
+    if (!description.trim()) errs.push('Incident description is required.');
+    if (isInjury && !classification) errs.push('OSH classification is required.');
     if (people.some(p => !p.name.trim())) errs.push('All People Involved entries must have a name.');
     if (errs.length) { setErrors(errs); return; }
     setErrors([]);
@@ -481,206 +1597,744 @@ function ReportTab({ onSubmit }: { onSubmit: (p: ReportPayload) => void }): VNod
         bodyPart: bodyPart || undefined,
         lostDays: parseInt(lostDays, 10) || 0,
         returnToWork: returnToWork || undefined,
-        description, immediateActions: actions,
+        description,
+        immediateActions: ctrlActions,
         peopleInvolved: people.filter(p => p.name.trim()),
         witnesses: witnesses.filter(w => w.name.trim()),
       });
+      onClose();
     } finally { setSubmitting(false); }
   }
 
-  return (
-    <div class="ppe-tab-content">
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '18px' }}>
-            <span class="vt-section-icon"><i class="fas fa-circle-plus" /></span>
-            <div>
-              <div class="vt-section-title">Report an Incident</div>
-              <div class="vt-section-sub">Submitting creates an incident record and opens a governed investigation workflow routed to the HSE Manager.</div>
-            </div>
-          </div>
+  function YNToggle({ value, onChange, labels = ['Yes', 'No'] }: { value: boolean | null; onChange: (v: boolean | null) => void; labels?: [string, string] }) {
+    return (
+      <div class="ir-yn-toggle">
+        <button class={`ir-yn-btn${value === true ? ' active-yes' : ''}`} onClick={() => onChange(value === true ? null : true)}>{labels[0]}</button>
+        <button class={`ir-yn-btn${value === false ? ' active-no' : ''}`} onClick={() => onChange(value === false ? null : false)}>{labels[1]}</button>
+      </div>
+    );
+  }
 
-          {errors.length > 0 && (
-            <div style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.35)', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
-              {errors.map((e, i) => <div key={i} style={{ color: '#ef4444', fontSize: '0.82rem' }}><i class="fas fa-circle-exclamation" style={{ marginRight: '6px' }} />{e}</div>)}
+  // Step content
+  function stepContent(): VNode {
+    if (step === 0) return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head">
+            <i class="fas fa-tag" /> Event Classification
+          </div>
+          <div class="hse-form-grid ir-grid-3">
+            <Field label="Incident type *">
+              <SelectInput value={type} onInput={v => setType(v as IncidentType)} options={INCIDENT_TYPES} />
+            </Field>
+            <Field label="Severity *">
+              <SelectInput value={severity} onInput={setSeverity} options={[...SEVERITIES]} />
+            </Field>
+            <Field label="Site *">
+              <SelectInput value={site} onInput={setSite} options={HSE_SITES} />
+            </Field>
+          </div>
+          {isCritical && (
+            <div class="ir-alert ir-alert--critical">
+              <i class="fas fa-triangle-exclamation" />
+              <span><strong>Critical severity</strong> — OSH Act 2004 s.46 requires immediate notification to Chief Inspector by phone/email and <strong>written notice within 48 hours</strong>.</span>
             </div>
           )}
+        </div>
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-calendar-days" /> Date, Time &amp; Shift</div>
+          <div class="hse-form-grid ir-grid-4">
+            <Field label="Incident date *">
+              <input type="date" class="hse-input" value={incDate} onInput={e => setIncDate((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Incident time">
+              <input type="time" class="hse-input" value={incTime} onInput={e => setIncTime((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Date reported">
+              <input type="date" class="hse-input" value={repDate} onInput={e => setRepDate((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Shift">
+              <select class="hse-input" value={shift} onChange={e => setShift((e.target as HTMLSelectElement).value)}>
+                <option value="">— Select —</option>
+                {HSE_SHIFTS.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </Field>
+          </div>
+        </div>
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-map-pin" /> Exact Location</div>
+          <div class="hse-form-grid ir-grid-3">
+            <Field label="Area / Unit">
+              <select class="hse-input" value={area} onChange={e => setArea((e.target as HTMLSelectElement).value)}>
+                <option value="">— Select —</option>
+                {HSE_AREAS.map(a => <option key={a}>{a}</option>)}
+              </select>
+            </Field>
+            <Field label="Specific location" wide>
+              <input type="text" class="hse-input" value={location} placeholder="e.g. Train 2 Separator, Pump P-201 area" onInput={e => setLoc((e.target as HTMLInputElement).value)} />
+            </Field>
+          </div>
+          <div class="hse-form-grid ir-grid-3" style={{ marginTop: '10px' }}>
+            <Field label="Work order / Job no.">
+              <input type="text" class="hse-input" value={workOrder} placeholder="WO-XXXXX" onInput={e => setWO((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Related PTW ref.">
+              <input type="text" class="hse-input" value={ptwRef} placeholder="PTW-2026-XXX" onInput={e => setPTW((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="JSA / Risk assessment ref.">
+              <input type="text" class="hse-input" value={jsaRef} placeholder="JSA-XXXX" onInput={e => setJSA((e.target as HTMLInputElement).value)} />
+            </Field>
+          </div>
+        </div>
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-user-tie" /> Reporter Details</div>
+          <div class="hse-form-grid ir-grid-3">
+            <Field label="Reported by">
+              <input type="text" class="hse-input" value={repName} placeholder="Full name" onInput={e => setRepName((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Role / Position">
+              <input type="text" class="hse-input" value={repRole} placeholder="e.g. HSE Officer, Supervisor" onInput={e => setRepRole((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Contact number">
+              <input type="tel" class="hse-input" value={repPhone} placeholder="+1 868 XXX XXXX" onInput={e => setRepPhone((e.target as HTMLInputElement).value)} />
+            </Field>
+          </div>
+          <div class="ir-yn-row" style={{ marginTop: '10px' }}>
+            <span class="ir-yn-label">Reporting on behalf of another person?</span>
+            <YNToggle value={onBehalf ? true : null} onChange={v => setOnBehalf(v === true)} />
+          </div>
+        </div>
+      </div>
+    );
 
-          <div class="hse-intake-card">
-            <FormSection icon="fa-tag" title="Event Classification">
-              <div class="hse-form-grid">
-                <Field label="Incident type *">
-                  <SelectInput value={type} onInput={v => setType(v as IncidentType)} options={INCIDENT_TYPES} />
+    if (step === 1) return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-align-left" /> Incident Description</div>
+          <Field label="What occurred? *" wide>
+            <TextareaInput value={description} onInput={setDesc}
+              placeholder="Describe the sequence of events, conditions at the time, contributing factors, and exact location within the site. Include what was happening immediately before the incident." />
+          </Field>
+        </div>
+        <div class="wz-section">
+          <div class="wz-section-head">
+            <i class="fas fa-shield-halved" /> Immediate Controls Taken
+          </div>
+          <div class="ir-checklist">
+            {([
+              ['Work stopped / area shut down?',    ctrlStop,  setCtrlStop],
+              ['Area isolated / barricaded?',       ctrlIso,   setCtrlIso],
+              ['First aid administered?',           ctrlFA,    setCtrlFA],
+              ['Supervisor notified?',              ctrlSupv,  setCtrlSupv],
+              ['HSE department notified?',          ctrlHSE,   setCtrlHSE],
+              ['Emergency response activated?',     ctrlEmg,   setCtrlEmg],
+            ] as Array<[string, boolean | null, (v: boolean | null) => void]>).map(([label, val, setter]) => (
+              <div class="ir-check-row" key={label}>
+                <span>{label}</span>
+                <YNToggle value={val} onChange={setter} />
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            <Field label="Additional immediate actions / notes" wide>
+              <TextareaInput value={ctrlActions} onInput={setCtrlActions}
+                placeholder="Containment measures, emergency services called, management chain notified…" />
+            </Field>
+          </div>
+        </div>
+      </div>
+    );
+
+    if (step === 2) return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-users" /> People Involved</div>
+          {people.map((p, idx) => (
+            <div key={idx} class="ir-person-card">
+              <div class="ir-person-num">{idx + 1}</div>
+              <div class="hse-form-grid ir-grid-4" style={{ flex: 1 }}>
+                <Field label="Full name *">
+                  <input type="text" class="hse-input" value={p.name} placeholder="Full name" onInput={e => updatePerson(idx, 'name', (e.target as HTMLInputElement).value)} />
                 </Field>
-                <Field label="Severity *">
-                  <SelectInput value={severity} onInput={setSeverity} options={[...SEVERITIES]} />
+                <Field label="Employee / Staff ID">
+                  <input type="text" class="hse-input" value={p.employeeId ?? ''} placeholder="EMP-0001" onInput={e => updatePerson(idx, 'employeeId', (e.target as HTMLInputElement).value)} />
                 </Field>
-                <Field label="Site / Location *">
-                  <SelectInput value={site} onInput={setSite} options={HSE_SITES} />
+                <Field label="Role at time of incident">
+                  <input type="text" class="hse-input" value={p.role ?? ''} placeholder="Welder, Supervisor…" onInput={e => updatePerson(idx, 'role', (e.target as HTMLInputElement).value)} />
+                </Field>
+                <Field label="Employee / Contractor">
+                  <select class="hse-input" value={p.contractor ? 'contractor' : 'employee'} onChange={e => updatePerson(idx, 'contractor', (e.target as HTMLSelectElement).value === 'contractor')}>
+                    <option value="employee">Employee</option>
+                    <option value="contractor">Contractor</option>
+                  </select>
                 </Field>
               </div>
-            </FormSection>
-
-            {isInjury && (
-              <FormSection icon="fa-person-falling" title="Injury Classification (OSH Act 2004)">
-                <div class="hse-form-grid">
-                  <Field label="OSH Classification *">
-                    <select
-                      class="hse-select-input" value={classification}
-                      onChange={e => setClass((e.target as HTMLSelectElement).value as OshClass | '')}
-                    >
-                      <option value="">— Select classification —</option>
-                      {OSH_CLASSES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Nature of injury">
-                    <select class="hse-select-input" value={injuryType} onChange={e => setInjury((e.target as HTMLSelectElement).value)}>
-                      <option value="">— Select —</option>
-                      {INJURY_TYPES.map(t => <option key={t}>{t}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Body part affected">
-                    <select class="hse-select-input" value={bodyPart} onChange={e => setBodyPart((e.target as HTMLSelectElement).value)}>
-                      <option value="">— Select —</option>
-                      {BODY_PARTS.map(b => <option key={b}>{b}</option>)}
-                    </select>
-                  </Field>
-                  {isLTI && (
-                    <>
-                      <Field label="Lost days">
-                        <input type="number" min="0" class="hse-text-input" value={lostDays} onInput={e => setLostDays((e.target as HTMLInputElement).value)} />
-                      </Field>
-                      <Field label="Expected return to work">
-                        <input type="date" class="hse-text-input" value={returnToWork} onInput={e => setRTW((e.target as HTMLInputElement).value)} />
-                      </Field>
-                    </>
-                  )}
-                </div>
-                {needsOsh && (
-                  <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', fontSize: '0.78rem', color: '#fca5a5' }}>
-                    <i class="fas fa-gavel" style={{ marginRight: '6px' }} />
-                    <strong>OSH Act 2004 — Notifiable Incident.</strong> Verbal notification to OSHA within <strong>24 hours</strong>. Written report within <strong>7 days</strong>. Retain record for <strong>5 years</strong>.
-                  </div>
-                )}
-              </FormSection>
-            )}
-
-            <FormSection icon="fa-align-left" title="Event Description">
-              <div class="hse-form-grid">
-                <Field label="What happened? *" wide>
-                  <TextareaInput value={description} onInput={setDesc}
-                    placeholder="Describe the event in detail — location, sequence of events, conditions at the time, contributing factors…" />
-                </Field>
-                <Field label="Immediate actions taken" wide>
-                  <TextareaInput value={actions} onInput={setActions}
-                    placeholder="Containment measures, first aid, area isolated, management notified, emergency services called…" />
-                </Field>
-              </div>
-            </FormSection>
-
-            <FormSection icon="fa-users" title="People Involved">
-              {people.map((p, idx) => (
-                <div key={idx} class="hse-person-row">
-                  <div class="hse-form-grid" style={{ flex: 1 }}>
-                    <Field label={`Person ${idx + 1} — Name *`}>
-                      <TextInput value={p.name} onInput={v => updatePerson(idx, 'name', v)} placeholder="Full name" />
-                    </Field>
-                    <Field label="Employee / Staff ID">
-                      <TextInput value={p.employeeId ?? ''} onInput={v => updatePerson(idx, 'employeeId', v)} placeholder="EMP-0001" />
-                    </Field>
-                    <Field label="Role at time of incident">
-                      <TextInput value={p.role ?? ''} onInput={v => updatePerson(idx, 'role', v)} placeholder="Welder, Supervisor…" />
-                    </Field>
-                    <Field label="Contractor?">
-                      <select class="hse-select-input" value={p.contractor ? 'yes' : 'no'}
-                        onChange={e => updatePerson(idx, 'contractor', (e.target as HTMLSelectElement).value === 'yes')}>
-                        <option value="no">No — Employee</option>
-                        <option value="yes">Yes — Contractor</option>
-                      </select>
-                    </Field>
-                  </div>
-                  {people.length > 1 && (
-                    <button class="hse-btn-icon-remove" onClick={() => removePerson(idx)} title="Remove"><i class="fas fa-xmark" /></button>
-                  )}
-                </div>
-              ))}
-              <button class="hse-btn" style={{ marginTop: '8px' }} onClick={addPerson}><i class="fas fa-plus" /> Add Person</button>
-            </FormSection>
-
-            <FormSection icon="fa-eye" title="Witnesses">
-              {witnesses.length === 0 && (
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '10px' }}>No witnesses added yet.</p>
+              {people.length > 1 && (
+                <button class="hse-btn-icon-remove" onClick={() => removePerson(idx)} title="Remove"><i class="fas fa-xmark" /></button>
               )}
-              {witnesses.map((w, idx) => (
-                <div key={idx} class="hse-person-row">
-                  <div class="hse-form-grid" style={{ flex: 1 }}>
-                    <Field label={`Witness ${idx + 1} — Name`}>
-                      <TextInput value={w.name} onInput={v => updateWitness(idx, 'name', v)} placeholder="Full name" />
-                    </Field>
-                    <Field label="Employee / Staff ID">
-                      <TextInput value={w.employeeId ?? ''} onInput={v => updateWitness(idx, 'employeeId', v)} placeholder="EMP-0001" />
-                    </Field>
-                    <Field label="Witness statement" wide>
-                      <TextareaInput value={w.statement ?? ''} onInput={v => updateWitness(idx, 'statement', v)}
-                        placeholder="What did the witness observe?" />
-                    </Field>
-                  </div>
-                  <button class="hse-btn-icon-remove" onClick={() => removeWitness(idx)} title="Remove"><i class="fas fa-xmark" /></button>
-                </div>
-              ))}
-              <button class="hse-btn" style={{ marginTop: '8px' }} onClick={addWitness}><i class="fas fa-plus" /> Add Witness</button>
-            </FormSection>
+            </div>
+          ))}
+          <button class="hse-btn" style={{ marginTop: '8px' }} onClick={addPerson}><i class="fas fa-plus" /> Add Person</button>
+        </div>
 
-            <div class="hse-intake-foot">
-              <button class="hse-btn primary" onClick={submit} disabled={submitting}>
-                {submitting
-                  ? <><i class="fas fa-spinner fa-spin" /> Submitting…</>
-                  : <><i class="fas fa-paper-plane" /> Submit &amp; Route to Investigation</>}
-              </button>
+        {isInjury && (
+          <div class="wz-section wz-section--conditional">
+            <div class="wz-section-head">
+              <i class="fas fa-person-falling" /> Injury Details
+              <span class="ir-section-badge">OSH Act 2004</span>
+            </div>
+            <div class="hse-form-grid ir-grid-3">
+              <Field label="Injured person's name">
+                <input type="text" class="hse-input" value={injuredName} placeholder="Full name" onInput={e => setInjName((e.target as HTMLInputElement).value)} />
+              </Field>
+              <Field label="OSH classification *">
+                <select class="hse-input" value={classification} onChange={e => setClass((e.target as HTMLSelectElement).value as OshClass | '')}>
+                  <option value="">— Select —</option>
+                  {OSH_CLASSES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </Field>
+              <Field label="Nature of injury">
+                <select class="hse-input" value={injuryType} onChange={e => setInjury((e.target as HTMLSelectElement).value)}>
+                  <option value="">— Select —</option>
+                  {INJURY_TYPES.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </Field>
+              <Field label="Body part affected">
+                <select class="hse-input" value={bodyPart} onChange={e => setBodyPart((e.target as HTMLSelectElement).value)}>
+                  <option value="">— Select —</option>
+                  {BODY_PARTS.map(b => <option key={b}>{b}</option>)}
+                </select>
+              </Field>
+              <Field label="Medical treatment level">
+                <select class="hse-input" value={medLevel} onChange={e => setMedLevel((e.target as HTMLSelectElement).value)}>
+                  <option value="">— Select —</option>
+                  {['First aid only', 'Medical treatment', 'Hospitalisation', 'Lost time', 'Fatality'].map(m => <option key={m}>{m}</option>)}
+                </select>
+              </Field>
+            </div>
+            <div class="ir-yn-grid" style={{ marginTop: '12px' }}>
+              <div class="ir-yn-row"><span class="ir-yn-label">Sent to clinic / hospital?</span><YNToggle value={sentToClinic} onChange={setClinic} /></div>
+              <div class="ir-yn-row"><span class="ir-yn-label">Return-to-work restriction?</span><YNToggle value={rtwRestriction} onChange={setRTWR} /></div>
+            </div>
+            {isLTI && (
+              <div class="hse-form-grid ir-grid-3" style={{ marginTop: '12px' }}>
+                <Field label="Estimated lost days">
+                  <input type="number" min="0" class="hse-input" value={lostDays} onInput={e => setLostDays((e.target as HTMLInputElement).value)} />
+                </Field>
+                <Field label="Expected return to work">
+                  <input type="date" class="hse-input" value={returnToWork} onInput={e => setRTW((e.target as HTMLInputElement).value)} />
+                </Field>
+              </div>
+            )}
+            {needsOsh && (
+              <div class="ir-alert ir-alert--osh">
+                <i class="fas fa-gavel" />
+                <span><strong>Notifiable under OSH Act 2004 (T&amp;T).</strong> Notify Chief Inspector <strong>forthwith</strong> (s.46). Written notice within <strong>48 hrs</strong>. Non-critical injury notice within <strong>4 days</strong> (s.46A). Retain register for <strong>5 years</strong> (s.46(5)).</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-eye" /> Witnesses</div>
+          {witnesses.length === 0 && (
+            <p class="ir-empty-note">No witnesses added. Click below if there were witnesses present.</p>
+          )}
+          {witnesses.map((w, idx) => (
+            <div key={idx} class="ir-person-card">
+              <div class="ir-person-num" style={{ background: 'var(--border)', color: 'var(--text-muted)' }}>{idx + 1}</div>
+              <div class="hse-form-grid ir-grid-3" style={{ flex: 1 }}>
+                <Field label="Witness name">
+                  <input type="text" class="hse-input" value={w.name} placeholder="Full name" onInput={e => updateWitness(idx, 'name', (e.target as HTMLInputElement).value)} />
+                </Field>
+                <Field label="Employee / Staff ID">
+                  <input type="text" class="hse-input" value={w.employeeId ?? ''} placeholder="EMP-0001" onInput={e => updateWitness(idx, 'employeeId', (e.target as HTMLInputElement).value)} />
+                </Field>
+                <Field label="Statement" wide>
+                  <TextareaInput value={w.statement ?? ''} onInput={v => updateWitness(idx, 'statement', v)} placeholder="What did this witness observe?" />
+                </Field>
+              </div>
+              <button class="hse-btn-icon-remove" onClick={() => removeWitness(idx)} title="Remove"><i class="fas fa-xmark" /></button>
+            </div>
+          ))}
+          <button class="hse-btn" style={{ marginTop: '8px' }} onClick={addWitness}><i class="fas fa-plus" /> Add Witness</button>
+        </div>
+      </div>
+    );
+
+    if (step === 3) return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-gears" /> Work Controls &amp; Equipment</div>
+          <div class="hse-form-grid ir-grid-3">
+            <Field label="Equipment / plant involved" wide>
+              <input type="text" class="hse-input" value={equipment} placeholder="e.g. Crane, Forklift, Compressor P-301" onInput={e => setEquipment((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Contractor company (if applicable)">
+              <input type="text" class="hse-input" value={contractorCo} placeholder="Company name" onInput={e => setConCo((e.target as HTMLInputElement).value)} />
+            </Field>
+          </div>
+          <div class="ir-yn-row" style={{ marginTop: '10px' }}>
+            <span class="ir-yn-label">LOTO (Lockout/Tagout) involved?</span>
+            <YNToggle value={lotoInvolved} onChange={setLOTO} />
+          </div>
+        </div>
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-file-shield" /> Permit &amp; Work Control References</div>
+          <div class="hse-form-grid ir-grid-3">
+            <Field label="Work order / Job no.">
+              <input type="text" class="hse-input" value={workOrder} placeholder="WO-XXXXX" onInput={e => setWO((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="Related PTW ref.">
+              <input type="text" class="hse-input" value={ptwRef} placeholder="PTW-2026-XXX" onInput={e => setPTW((e.target as HTMLInputElement).value)} />
+            </Field>
+            <Field label="JSA / Risk assessment ref.">
+              <input type="text" class="hse-input" value={jsaRef} placeholder="JSA-XXXX" onInput={e => setJSA((e.target as HTMLInputElement).value)} />
+            </Field>
+          </div>
+        </div>
+      </div>
+    );
+
+    if (step === 4) return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head">
+            <i class="fas fa-gavel" /> Regulatory Triggers
+          </div>
+          <div class="ir-reg-grid">
+            <div class="ir-reg-row">
+              <span>OSH Act 2004 — reportable incident?</span>
+              <div class="ir-yn-toggle">
+                {(['yes','no','unknown'] as const).map(v => (
+                  <button key={v} class={`ir-yn-btn${oshReportable === v ? ` active-${v === 'yes' ? 'yes' : v === 'no' ? 'no' : 'unk'}` : ''}`}
+                    onClick={() => setOshRep(v)}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>
+                ))}
+              </div>
+            </div>
+            <div class="ir-reg-row">
+              <span>EMA notification required?</span>
+              <div class="ir-yn-toggle">
+                {(['yes','no','unknown'] as const).map(v => (
+                  <button key={v} class={`ir-yn-btn${emaNotifReqd === v ? ` active-${v === 'yes' ? 'yes' : v === 'no' ? 'no' : 'unk'}` : ''}`}
+                    onClick={() => setEmaNot(v)}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div class="ir-services-row" style={{ marginTop: '14px' }}>
+            <span class="ir-yn-label">Emergency services notified:</span>
+            <div class="ir-services-chips">
+              {([['Police', policeNotified, setPolice], ['Ambulance', ambulance, setAmb], ['Fire Service', fire, setFire]] as Array<[string, boolean, (v: boolean) => void]>).map(([label, val, setter]) => (
+                <button key={label} class={`ir-service-chip${val ? ' active' : ''}`} onClick={() => setter(!val)}>
+                  <i class={`fas ${label === 'Police' ? 'fa-shield-halved' : label === 'Ambulance' ? 'fa-truck-medical' : 'fa-fire-extinguisher'}`} /> {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-chart-bar" /> Incidents by Type · YTD</h4>
-          <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
+        {isEnv && (
+          <div class="wz-section wz-section--conditional">
+            <div class="wz-section-head"><i class="fas fa-leaf" /> Environmental Details <span class="ir-section-badge">EMA Act</span></div>
+            <div class="hse-form-grid ir-grid-3">
+              <Field label="Spill / release type">
+                <select class="hse-input" value={spillType} onChange={e => setSpillType((e.target as HTMLSelectElement).value)}>
+                  <option value="">— Select —</option>
+                  {SPILL_TYPES.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </Field>
+              <Field label="Estimated quantity (litres)">
+                <input type="number" min="0" class="hse-input" value={spillQty} onInput={e => setSpillQty((e.target as HTMLInputElement).value)} />
+              </Field>
+              <Field label="Media affected">
+                <select class="hse-input" value={spillMedia} onChange={e => setSpillMedia((e.target as HTMLSelectElement).value)}>
+                  <option value="">— Select —</option>
+                  {SPILL_MEDIA.map(m => <option key={m}>{m}</option>)}
+                </select>
+              </Field>
+            </div>
+            <div class="ir-yn-grid" style={{ marginTop: '12px' }}>
+              <div class="ir-yn-row"><span class="ir-yn-label">Drain / watercourse affected?</span><YNToggle value={drainAffected} onChange={setDrain} /></div>
+              <div class="ir-yn-row"><span class="ir-yn-label">Containment complete?</span><YNToggle value={containmentOk} onChange={setContain} /></div>
+              <div class="ir-yn-row"><span class="ir-yn-label">EMA notification required?</span><YNToggle value={emaReqd} onChange={setEmaReqd} /></div>
+            </div>
+          </div>
+        )}
+
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-folder-open" /> Evidence &amp; Uploads</div>
+          <div class="wz-evidence-list">
+            {([
+              { label: 'Scene photographs',            note: 'Required before cleanup disturbance' },
+              { label: 'Witness statements',           note: 'Operator and supervisor statements' },
+              { label: 'Equipment / maintenance logs', note: 'Service records for involved plant' },
+              { label: 'PTW / JSA documentation',      note: 'Permit and risk assessment copies' },
+              ...(isEnv ? [{ label: 'EMA evidence file', note: 'Environmental closeout package' }] : []),
+            ]).map(e => (
+              <label class="wz-evidence-row" key={e.label}>
+                <input type="checkbox" />
+                <span><strong>{e.label}</strong><em>{e.note}</em></span>
+              </label>
+            ))}
+          </div>
+          <p class="ir-empty-note" style={{ marginTop: '10px' }}>File upload will be available after submission — attach documents to the created incident record.</p>
+        </div>
+      </div>
+    );
+
+    // Step 5: Review & Submit
+    const missing: string[] = [];
+    if (!incDate)              missing.push('Incident date');
+    if (!description.trim())   missing.push('Incident description');
+    if (isInjury && !classification) missing.push('OSH classification');
+    if (people.some(p => !p.name.trim())) missing.push('Name for all people involved');
+
+    return (
+      <div class="wz-step-body">
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-list-check" /> Summary</div>
+          <div class="wz-review-grid">
             {[
-              { label: 'Near Miss',        count: 9, color: '#f59e0b' },
-              { label: 'Unsafe Condition', count: 6, color: '#60a5fa' },
-              { label: 'Injury',           count: 4, color: '#ef4444' },
-              { label: 'Unsafe Act',       count: 3, color: '#a78bfa' },
-              { label: 'Environmental',    count: 2, color: '#34d399' },
-              { label: 'Property Damage',  count: 1, color: '#94a3b8' },
+              ['Type',         type],
+              ['Severity',     severity],
+              ['Site',         site],
+              ['Date',         incDate || '—'],
+              ['Time',         incTime || '—'],
+              ['Shift',        shift || '—'],
+              ['Area',         area || '—'],
+              ['Reporter',     repName || '—'],
+              ['People involved', `${people.filter(p => p.name.trim()).length}`],
+              ['Witnesses',    `${witnesses.filter(w => w.name.trim()).length}`],
+              ...(isInjury ? [['OSH class', OSH_CLASSES.find(o => o.value === classification)?.label || '—']] : []),
+              ...(isEnv    ? [['Spill type', spillType || '—']] : []),
+            ].map(([k, v]) => (
+              <div class="wz-review-row" key={k}>
+                <span class="wz-review-key">{k}</span>
+                <span class="wz-review-val">{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {missing.length > 0 && (
+          <div class="wz-missing-banner">
+            <i class="fas fa-circle-exclamation" /> <strong>Required fields missing:</strong>
+            <ul>{missing.map(m => <li key={m}>{m}</li>)}</ul>
+          </div>
+        )}
+
+        <div class="wz-section">
+          <div class="wz-section-head"><i class="fas fa-route" /> Routing Preview</div>
+          <div class="wz-route-chips">
+            {routeTo.map((r, i) => (
+              <div class="wz-route-chip" key={r}>
+                <span class="wz-route-num">{i + 1}</span>
+                <span>{r}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {errors.length > 0 && (
+          <div class="ir-error-banner">
+            {errors.map((e, i) => <div key={i}><i class="fas fa-circle-exclamation" /> {e}</div>)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Side panel content per step
+  function sideContent(): VNode {
+    const SEV_BY_LABEL: Record<string, { icon: string; color: string }> = {
+      'Critical': { icon: 'fa-triangle-exclamation', color: '#ef4444' },
+      'High':     { icon: 'fa-circle-exclamation',   color: '#f97316' },
+      'Medium':   { icon: 'fa-circle-info',           color: '#f59e0b' },
+      'Low':      { icon: 'fa-circle-check',          color: '#60a5fa' },
+    };
+    const sevMeta  = SEV_BY_LABEL[severity] ?? { icon: 'fa-circle', color: '#94a3b8' };
+    const typeIcon = TYPE_ICONS[type] ?? 'fa-triangle-exclamation';
+
+    // Shared: state summary — clean 2×2 grid, no watermarks
+    const stateCards = (
+      <>
+        <h4 style={{ display:'flex', alignItems:'center', gap:'7px', color:'rgba(255,255,255,.5)', fontSize:'0.62rem', fontWeight:600, textTransform:'uppercase', letterSpacing:'.07em', marginBottom:'6px' }}>
+          <i class="fas fa-circle-dot" style={{ fontSize:'0.72rem' }} /> Record State
+        </h4>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'4px' }}>
+          {[
+            { val: String(step + 1),  label: `of ${WIZARD_STEPS.length} steps`, color: '#fff'           },
+            { val: 'Draft',           label: 'Status',                           color: 'rgba(255,255,255,.75)' },
+            { val: type,              label: 'Type',                             color: 'rgba(255,255,255,.85)' },
+            { val: severity,          label: 'Severity',                         color: sevMeta.color    },
+          ].map(k => (
+            <div key={k.label} style={{ padding:'10px', borderRadius:'10px', background:'rgba(255,255,255,.08)', textAlign:'center' }}>
+              <div style={{ fontSize:'0.85rem', fontWeight:700, color:k.color, lineHeight:1.2 }}>{k.val}</div>
+              <div style={{ fontSize:'0.6rem', color:'rgba(255,255,255,.45)', marginTop:'3px' }}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop:'1px solid rgba(255,255,255,.08)', margin:'4px 0 2px' }} />
+      </>
+    );
+
+    // Shared: approval route preview
+    const approvalRoute = (
+      <div class="wz-side-panel">
+        <div class="wz-side-head"><i class="fas fa-route" /> Approval Route</div>
+        <div class="wz-approval-route">
+          {routeTo.map((r, i) => (
+            <div class="wz-approval-step" key={r}>
+              <b>{r}</b>
+              <span>{i === 0 ? 'Lead reviewer' : i === routeTo.length - 1 ? 'Final approver' : 'Reviewer'}</span>
+              <span class={`wz-badge wz-badge--${i === 0 ? 'draft' : 'pending'}`}>{i === 0 ? 'Draft' : 'Pending'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    if (step === 0) return (
+      <>
+        {stateCards}
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-lightbulb" /> Classification Guide</div>
+          <div class="wz-guide-list">
+            {([
+              ['Injury',            'Any physical harm to a person'],
+              ['Near Miss',         'Potential harm — no injury occurred'],
+              ['Unsafe Act',        'Behaviour breaching safe work rules'],
+              ['Unsafe Condition',  'Physical hazard in the workplace'],
+              ['Environmental',     'Spill, release or ecological impact'],
+              ['Property Damage',   'Damage to equipment or infrastructure'],
+            ] as [string, string][]).map(([t, d]) => (
+              <div class="wz-guide-row" key={t}><strong>{t}</strong><span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+
+    if (step === 1) return (
+      <>
+        {stateCards}
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-pen-to-square" /> Description Tips</div>
+          <ul class="wz-tip-list">
+            <li>State what, where, when, and who was involved</li>
+            <li>Describe conditions immediately before the event</li>
+            <li>Note contributing equipment or procedures</li>
+            <li>Include environmental conditions (weather, lighting)</li>
+            <li>Record facts and sequence — avoid assigning blame</li>
+          </ul>
+        </div>
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-shield-halved" /> Controls Priority Order</div>
+          <div class="wz-guide-list">
+            {([
+              ['1. Stop work',    'Prevent escalation immediately'],
+              ['2. Isolate area', 'Secure scene for investigation'],
+              ['3. First aid',    'Treat injured persons'],
+              ['4. Notify chain', 'Supervisor → HSE → Management'],
+            ] as [string, string][]).map(([t, d]) => (
+              <div class="wz-guide-row" key={t}><strong>{t}</strong><span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+
+    if (step === 2) return (
+      <>
+        {stateCards}
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-users" /> Who to Include</div>
+          <ul class="wz-tip-list">
+            <li>All persons present at or near the event</li>
+            <li>Injured parties and their direct supervisor</li>
+            <li>Contractors performing related work</li>
+            <li>Witnesses who observed the event or conditions</li>
+          </ul>
+        </div>
+        {isInjury && (
+          <div class="wz-side-panel wz-side-panel--alert">
+            <div class="wz-side-head"><i class="fas fa-gavel" /> OSH Classification</div>
+            <div class="wz-guide-list">
+              {OSH_CLASSES.map(o => (
+                <div class="wz-guide-row" key={o.value}><strong>{o.label}</strong></div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
+
+    if (step === 3) return (
+      <>
+        {stateCards}
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-gears" /> Work Control Tips</div>
+          <ul class="wz-tip-list">
+            <li>Link all active permits within scope of the work</li>
+            <li>Record equipment serial numbers and tag IDs</li>
+            <li>LOTO records will be required during investigation</li>
+            <li>Contractor information feeds the HSE–Finance handoff</li>
+          </ul>
+        </div>
+        {approvalRoute}
+      </>
+    );
+
+    if (step === 4) return (
+      <>
+        {stateCards}
+        <div class="wz-side-panel wz-side-panel--alert">
+          <div class="wz-side-head"><i class="fas fa-gavel" /> Statutory Deadlines</div>
+          <div class="ir-osh-items">
+            {[
+              { deadline: 'Forthwith', desc: 'Notify Chief Inspector — death or critical injury (OSH Act s.46(1))' },
+              { deadline: '48 hrs',    desc: 'Written notice to Chief Inspector in prescribed form (OSH Act s.46(1))' },
+              { deadline: '4 days',    desc: 'Written notice — non-critical injury requiring medical attention (OSH Act s.46A)' },
+              { deadline: '72 hrs',    desc: 'EMA notification for significant spill or release (Environmental Management Act)' },
+              { deadline: '5 yrs',     desc: 'Accident register retained on site (OSH Act s.46(5))' },
+            ].map(o => (
+              <div class="ir-osh-item" key={o.deadline}>
+                <span class="ir-osh-deadline">{o.deadline}</span>
+                <span class="ir-osh-desc">{o.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-folder-open" /> Evidence Requirements</div>
+          <ul class="wz-tip-list">
+            <li>Photograph scene before any cleanup or recovery</li>
+            <li>Preserve physical evidence (tools, PPE, materials)</li>
+            <li>Secure CCTV footage immediately</li>
+            <li>Collect witness statements while memories are fresh</li>
+          </ul>
+        </div>
+      </>
+    );
+
+    // Step 5: Review
+    return (
+      <>
+        {approvalRoute}
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-diagram-project" /> What Happens Next</div>
+          <div class="ir-next-steps">
+            {[
+              { icon: 'fa-file-circle-check', label: 'Record created',       note: 'Ref number auto-assigned' },
+              { icon: 'fa-route',             label: 'Routed for review',    note: 'HSE Manager notified' },
+              { icon: 'fa-magnifying-glass',  label: 'Investigation opens',  note: '5-Whys / RCA process' },
+              { icon: 'fa-list-check',        label: 'CAPA raised',          note: 'Corrective actions assigned' },
+              { icon: 'fa-circle-check',      label: 'Closed out',           note: 'Verified and audit-locked' },
+            ].map(s => (
+              <div class="ir-next-step" key={s.label}>
+                <div class="ir-next-icon"><i class={`fas ${s.icon}`} /></div>
+                <div><strong>{s.label}</strong><span>{s.note}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="wz-side-panel">
+          <div class="wz-side-head"><i class="fas fa-chart-bar" /> YTD by Type</div>
+          <div class="ir-ytd-bars">
+            {[
+              { label: 'Near Miss',        count: 9,  color: '#f59e0b' },
+              { label: 'Unsafe Condition', count: 6,  color: '#60a5fa' },
+              { label: 'Injury',           count: 4,  color: '#ef4444' },
+              { label: 'Unsafe Act',       count: 3,  color: '#a78bfa' },
+              { label: 'Environmental',    count: 2,  color: '#34d399' },
+              { label: 'Property Damage',  count: 1,  color: '#94a3b8' },
             ].map(b => {
               const pct = Math.round((b.count / 25) * 100);
               return (
-                <div key={b.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
-                    <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
-                  </div>
-                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: b.color }} />
-                  </div>
+                <div key={b.label} class="ir-ytd-bar-row">
+                  <div class="ir-ytd-bar-label"><span>{b.label}</span><span style={{ color: b.color, fontWeight: 700 }}>{b.count}</span></div>
+                  <div class="ir-ytd-bar-track"><div class="ir-ytd-bar-fill" style={{ width: `${pct}%`, background: b.color }} /></div>
                 </div>
               );
             })}
           </div>
-          <div class="hse-panel-divider" />
-          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-diagram-project" /> What happens next</h4>
-          <div class="ppe-signals-list">
-            {[
-              { icon: 'fa-file-circle-check', label: 'Incident record created',  note: 'Auto-assigned reference number' },
-              { icon: 'fa-route',             label: 'Routed to HSE Manager',    note: 'Appears in their approval inbox' },
-              { icon: 'fa-magnifying-glass',  label: 'Investigation opened',     note: '5-Whys or RCA process begins' },
-              { icon: 'fa-list-check',        label: 'CAPA raised on approval',  note: 'Corrective actions tracked to closure' },
-            ].map(s => (
-              <div class="ppe-signal" key={s.label}>
-                <i class={`fas ${s.icon} is-info`} />
-                <div class="ppe-signal-text"><strong>{s.label}</strong><span>{s.note}</span></div>
-              </div>
-            ))}
+        </div>
+      </>
+    );
+  }
+
+  if (!open) return <></>;
+
+  const isLast = step === WIZARD_STEPS.length - 1;
+
+  return (
+    <div class="wz-backdrop" onClick={e => { if ((e.target as HTMLElement).classList.contains('wz-backdrop')) onClose(); }}>
+      <div class="wz-modal" role="dialog" aria-modal="true" aria-label="Report Incident Wizard">
+
+        {/* ── Wizard header ── */}
+        <div class="wz-header">
+          <div class="wz-header-left">
+            <div class="wz-header-icon"><i class="fas fa-triangle-exclamation" /></div>
+            <div>
+              <div class="wz-header-title">Report Incident</div>
+              <div class="wz-header-sub">Incident reporting, investigation, corrective actions, HR impact, and regulatory closeout.</div>
+            </div>
           </div>
-        </aside>
+          <button class="wz-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
+        </div>
+
+        {/* ── Step bar — card-per-step (erp-suite wizard-steps pattern) ── */}
+        <div class="wz-step-bar">
+          {WIZARD_STEPS.map((s, i) => (
+            <div
+              key={i}
+              class={`wz-step-tab${i === step ? ' active' : i < step ? ' done' : ''}`}
+              onClick={() => { if (i < step) { setErrors([]); setStep(i); } }}
+            >
+              <b class="wz-step-num">{i < step ? <i class="fas fa-check" style={{ fontSize: '0.6rem' }} /> : i + 1}</b>
+              <strong class="wz-step-tab-label">{s.label}</strong>
+              <span class="wz-step-tab-sub">{s.sub}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Body: main + side ── */}
+        <div class="wz-body">
+          <div class="wz-main">
+            {errors.length > 0 && step !== 5 && (
+              <div class="wz-missing-banner" style={{ marginBottom: '12px' }}>
+                <strong><i class="fas fa-circle-exclamation" /> Required to continue</strong>
+                <ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+              </div>
+            )}
+            {stepContent()}
+          </div>
+          <aside class="wz-side">
+            {sideContent()}
+          </aside>
+        </div>
+
+        {/* ── Footer ── */}
+        <div class="wz-footer">
+          <button class="hse-btn" onClick={onClose}><i class="fas fa-xmark" /> Cancel</button>
+          <div class="wz-footer-nav">
+            {step > 0 && (
+              <button class="hse-btn" onClick={back}><i class="fas fa-arrow-left" /> Back</button>
+            )}
+            {!isLast && (
+              <button class="hse-btn primary" onClick={next}>Next <i class="fas fa-arrow-right" /></button>
+            )}
+            {isLast && (
+              <button class="hse-btn primary" onClick={submit} disabled={submitting}>
+                {submitting
+                  ? <><i class="fas fa-spinner fa-spin" /> Submitting…</>
+                  : <><i class="fas fa-paper-plane" /> Submit Incident Report</>}
+              </button>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -688,25 +2342,45 @@ function ReportTab({ onSubmit }: { onSubmit: (p: ReportPayload) => void }): VNod
 
 // ── Investigations tab ────────────────────────────────────────────────────────
 
-function InvestigationsTab({ investigations }: { investigations: Investigation[] }): VNode {
-  const [selected,  setSelected] = useState<Investigation | null>(null);
-  const [whyDraft,  setWhyDraft] = useState<Array<{ why: string; because: string }>>([]);
-  const [rootCause, setRootCause] = useState('');
-  const [editing,   setEditing]  = useState(false);
-  const [capaOpen,  setCapaOpen] = useState(false);
-  const [saving,    setSaving]   = useState(false);
+const INV_STAGES = [
+  { label: 'Scene documented',     icon: 'fa-camera' },
+  { label: 'Evidence collected',   icon: 'fa-folder-open' },
+  { label: 'Witness statements',   icon: 'fa-comments' },
+  { label: '5-Whys / RCA',         icon: 'fa-sitemap' },
+  { label: 'Root cause confirmed', icon: 'fa-bullseye' },
+  { label: 'CAPA raised',          icon: 'fa-list-check' },
+  { label: 'Verification',         icon: 'fa-circle-check' },
+] as const;
+
+const RCA_CATEGORIES = [
+  'Procedure gap', 'Training / Competency', 'Supervision',
+  'Equipment / Maintenance', 'PPE', 'Work Planning',
+  'Permit Control', 'Housekeeping', 'Human Factors',
+] as const;
+
+const INV_TABS = ['Progress', 'Overview', 'Evidence', '5-Whys', 'Root Cause', 'CAPA', 'Closeout'] as const;
+
+function InvestigationsTab({ investigations, capa }: { investigations: Investigation[]; capa: CapaItem[] }): VNode {
+  const [selected,    setSelected]    = useState<Investigation | null>(null);
+  const [invTab,      setInvTab]      = useState<typeof INV_TABS[number]>('Overview');
+  const [whyDraft,    setWhyDraft]    = useState<Array<{ why: string; because: string }>>([]);
+  const [rootCause,   setRootCause]   = useState('');
+  const [rcaCat,      setRcaCat]      = useState('');
+  const [capaOpen,    setCapaOpen]    = useState(false);
+  const [saving,      setSaving]      = useState(false);
 
   const updateInv  = useUpdateInvestigation();
   const createCapa = useCreateCapa();
 
   function openInv(inv: Investigation) {
     setSelected(inv);
+    setInvTab('Overview');
     setWhyDraft(inv.whys.map(w => {
       const parts = w.split(' → ');
       return { why: parts[0] ?? '', because: parts[1] ?? '' };
     }));
     setRootCause(inv.rootCause === '(Not yet recorded)' ? '' : inv.rootCause);
-    setEditing(false);
+    setRcaCat(inv.rcaCategory ?? '');
   }
 
   async function saveWhys() {
@@ -719,163 +2393,357 @@ function InvestigationsTab({ investigations }: { investigations: Investigation[]
         rootCause,
         status: rootCause ? 'closed' : 'in-progress',
       });
-      setEditing(false);
     } finally { setSaving(false); }
   }
 
-  const inProgress = investigations.filter(i => /progress/i.test(i.status)).length;
-  const open       = investigations.filter(i => /open/i.test(i.status)).length;
-  const closed     = investigations.filter(i => /closed/i.test(i.status)).length;
+  const linkedCapa = selected ? capa.filter(c => c.source === selected.incidentRef) : [];
 
   return (
-    <div class="ppe-tab-content">
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-            <span class="vt-section-icon"><i class="fas fa-magnifying-glass-chart" /></span>
-            <div>
-              <div class="vt-section-title">Investigations</div>
-              <div class="vt-section-sub">Root-cause analyses linked to open incidents. Select a row to edit the 5-Whys chain and raise CAPA.</div>
+    <div>
+
+      {/* ── Register ── */}
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-magnifying-glass-chart" /></span>
+              <div>
+                <div class="vt-section-title">Investigation Register</div>
+                <div class="vt-section-sub">All active investigations · click any row to open workspace</div>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
+              <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
             </div>
           </div>
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr><th>Ref</th><th>Incident</th><th>Method</th><th>Lead</th><th>Whys</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {investigations.map(inv => (
-                    <tr key={inv.ref} onClick={() => openInv(inv)} style={{ cursor: 'pointer' }}
-                      class={selected?.ref === inv.ref ? 'selected' : ''}>
-                      <td><span class="vt-cell-mono">{inv.ref}</span></td>
-                      <td><span class="vt-cell-mono">{inv.incidentRef}</span></td>
-                      <td>{inv.method}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{inv.lead}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{inv.whys.length} steps</td>
-                      <td><span class={hsePill(inv.status)}>{inv.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div class="vt-toolbar" style={{ marginBottom:0, marginTop:'12px' }}>
+            <div class="vt-search" style={{ flex:'1 1 220px' }}>
+              <i class="fas fa-search" />
+              <input type="search" placeholder="Search ref, incident, lead…" />
             </div>
+            <select class="emp-filter-select">
+              <option>All methods</option>
+              <option>5-Whys</option>
+              <option>RCA</option>
+              <option>Fishbone</option>
+            </select>
+            <select class="emp-filter-select">
+              <option>All statuses</option>
+              <option>Open</option>
+              <option>In Review</option>
+              <option>Closed</option>
+            </select>
           </div>
         </div>
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th>Ref</th><th>Incident</th><th>Sev</th><th>Method</th>
+                <th>Lead</th><th>Evidence</th><th>Root Cause</th>
+                <th>CAPA</th><th>Status</th><th>Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {investigations.map(inv => {
+                const sev   = SEVERITY_META[inv.severity];
+                const evPct = inv.evidenceTotal > 0 ? Math.round((inv.evidenceDone / inv.evidenceTotal) * 100) : 0;
+                return (
+                  <tr key={inv.ref} onClick={() => openInv(inv)} style={{ cursor: 'pointer' }}
+                    class={selected?.ref === inv.ref ? 'selected' : ''}>
+                    <td><span class="vt-cell-mono">{inv.ref}</span></td>
+                    <td>
+                      <div style={{ fontSize:'0.76rem', fontWeight:600, color:'var(--text-primary)' }}>{inv.incidentRef}</div>
+                      <div style={{ fontSize:'0.67rem', color:'var(--text-muted)', maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{inv.incidentDesc}</div>
+                    </td>
+                    <td>
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', fontSize:'0.7rem', fontWeight:700, color: sev?.color }}>
+                        <i class={`fas ${sev?.icon}`} style={{ fontSize:'0.6rem' }} /> {sev?.label ?? inv.severity}
+                      </span>
+                    </td>
+                    <td style={{ color:'var(--text-muted)', fontSize:'0.76rem' }}>{inv.method}</td>
+                    <td style={{ color:'var(--text-muted)', fontSize:'0.76rem' }}>{inv.lead}</td>
+                    <td>
+                      <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                        <div style={{ flex:1, height:'4px', background:'var(--border)', borderRadius:'99px' }}>
+                          <div style={{ width:`${evPct}%`, height:'100%', background: evPct===100 ? '#4ade80' : '#60a5fa', borderRadius:'99px' }} />
+                        </div>
+                        <span style={{ fontSize:'0.67rem', color:'var(--text-muted)', whiteSpace:'nowrap' }}>{inv.evidenceDone}/{inv.evidenceTotal}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {inv.rcaCategory
+                        ? <span style={{ fontSize:'0.7rem', color:'var(--text-primary)', fontWeight:500 }}>{inv.rcaCategory}</span>
+                        : <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>Pending</span>}
+                    </td>
+                    <td>
+                      {inv.capaCount > 0
+                        ? <span class="vt-pill is-info">{inv.capaCount} action{inv.capaCount > 1 ? 's' : ''}</span>
+                        : <span style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td><span class={hsePill(inv.status)}>{inv.status}</span></td>
+                    <td style={{ color:'var(--text-muted)', fontSize:'0.76rem', whiteSpace:'nowrap' }}>{inv.due}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>{/* /hse-table-card */}
 
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-chart-pie" /> Investigation Status</h4>
-          <div style={{ display: 'grid', gap: '7px', marginTop: '6px', marginBottom: '14px' }}>
-            {[
-              { label: 'In Progress', color: '#60a5fa', count: inProgress },
-              { label: 'Open',        color: '#f59e0b', count: open },
-              { label: 'Closed',      color: '#4ade80', count: closed },
-            ].map(b => {
-              const pct = Math.round((b.count / Math.max(investigations.length, 1)) * 100);
-              return (
-                <div key={b.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
-                    <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
+      {/* ── Investigation drawer ── */}
+      <div class={`hse-drawer-backdrop${selected ? ' show' : ''}`} onClick={() => setSelected(null)} />
+      <aside class={`hse-drawer inv-drawer${selected ? ' show' : ''}`} role="dialog" aria-modal="true" aria-hidden={!selected}>
+        {selected && (() => {
+          const sev = SEVERITY_META[selected.severity] ?? SEVERITY_META.info;
+          const evPct = selected.evidenceTotal > 0 ? Math.round((selected.evidenceDone / selected.evidenceTotal) * 100) : 0;
+          return (
+            <>
+              {/* ── Hero (matches IncidentDrawer) ── */}
+              <div class="hse-idrawer-hero">
+                <div class="hse-idrawer-hero-left">
+                  <div class="hse-idrawer-type-chip" style={{ background: sev?.bg }}>
+                    <i class="fas fa-magnifying-glass-chart" style={{ color: sev?.color }} />
                   </div>
-                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: b.color }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div class="hse-idrawer-ref">{selected.ref}</div>
+                    <div class="hse-idrawer-type">{selected.incidentRef} · <span style={{ opacity: .6 }}>{selected.method}</span></div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>14d</div>
-              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>Avg. time to close</div>
-            </div>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#4ade80', lineHeight: 1 }}>82%</div>
-              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>Root cause found</div>
-            </div>
-          </div>
-          <div class="hse-panel-divider" />
-
-          {selected ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <h4 style={{ margin: 0 }}><i class="fas fa-list-ol" /> {selected.ref} · {selected.method}</h4>
-                {!editing && (
-                  <button class="hse-btn" style={{ padding: '3px 10px', fontSize: '0.72rem' }} onClick={() => setEditing(true)}>
-                    <i class="fas fa-pen" /> Edit
-                  </button>
-                )}
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <span class={hsePill(selected.status)} style={{ marginRight: '8px' }}>{selected.status}</span>
-                <span style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,.6)' }}>Lead: {selected.lead}</span>
+                <div class="hse-idrawer-hero-right">
+                  <div class="hse-idrawer-sev-badge" style={{ background: sev?.bg, color: sev?.color }}>
+                    <i class={`fas ${sev?.icon}`} /> {sev?.label}
+                  </div>
+                </div>
               </div>
 
-              {editing ? (
-                <div>
-                  {whyDraft.map((w, i) => (
-                    <div key={i} style={{ marginBottom: '10px', padding: '10px', background: 'rgba(255,255,255,.06)', borderRadius: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#60a5fa' }}>WHY {i + 1}</span>
-                        <button class="hse-btn-icon-remove" style={{ padding: '2px 6px' }} onClick={() => setWhyDraft(d => d.filter((_, j) => j !== i))}>
-                          <i class="fas fa-xmark" style={{ fontSize: '0.7rem' }} />
-                        </button>
-                      </div>
-                      <input type="text" class="hse-text-input" style={{ marginBottom: '6px', fontSize: '0.78rem' }}
-                        placeholder={`Why ${i + 1}…`} value={w.why}
-                        onInput={e => setWhyDraft(d => d.map((x, j) => j === i ? { ...x, why: (e.target as HTMLInputElement).value } : x))} />
-                      <input type="text" class="hse-text-input" style={{ fontSize: '0.78rem' }}
-                        placeholder="Because…" value={w.because}
-                        onInput={e => setWhyDraft(d => d.map((x, j) => j === i ? { ...x, because: (e.target as HTMLInputElement).value } : x))} />
+              {/* ── Info grid (same as incident drawer) ── */}
+              <div class="hse-idrawer-grid inv-meta-grid">
+                <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span><strong><span class={hsePill(selected.status)}>{selected.status}</span></strong></div>
+                <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Lead</span><strong>{selected.lead}</strong></div>
+                <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Due Date</span><strong>{selected.due}</strong></div>
+                <div class="hse-idrawer-cell"><i class="fas fa-sitemap" /><span>Method</span><strong>{selected.method}</strong></div>
+              </div>
+
+              {/* ── Tab bar ── */}
+              <div class="inv-tab-bar">
+                {INV_TABS.map(t => (
+                  <button key={t} class={`inv-tab${invTab === t ? ' active' : ''}`} onClick={() => setInvTab(t)}>{t}</button>
+                ))}
+              </div>
+
+              {/* ── Scrollable body ── */}
+              <div class="inv-drawer-body">
+
+                {/* Progress — vertical rail */}
+                {invTab === 'Progress' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-rail">
+                      {INV_STAGES.map((s, idx) => {
+                        const done   = idx < selected.stage;
+                        const active = idx === selected.stage;
+                        const last   = idx === INV_STAGES.length - 1;
+                        return (
+                          <div key={s.label} class="inv-rail-step">
+                            <div class="inv-rail-col">
+                              <div class={`inv-rail-dot${done ? ' done' : active ? ' active' : ''}`}>
+                                {done ? <i class="fas fa-check" /> : <span>{idx + 1}</span>}
+                              </div>
+                              {!last && <div class={`inv-rail-line${done ? ' done' : ''}`} />}
+                            </div>
+                            <div class="inv-rail-body">
+                              <div class={`inv-rail-lbl${active ? ' active' : done ? ' done' : ' pend'}`}>{s.label}</div>
+                              {done   && <div class="inv-rail-sub">Completed</div>}
+                              {active && <div class="inv-rail-sub" style={{ color:'var(--siomac-navy)', fontWeight:600 }}>In progress</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                  <button class="hse-btn" style={{ marginBottom: '12px', width: '100%', fontSize: '0.75rem' }}
-                    onClick={() => setWhyDraft(d => [...d, { why: '', because: '' }])}>
-                    <i class="fas fa-plus" /> Add Why
-                  </button>
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.6)', marginBottom: '6px' }}>Root Cause</div>
-                  <textarea class="hse-text-input" rows={3}
-                    style={{ width: '100%', resize: 'vertical', fontSize: '0.78rem', marginBottom: '10px' }}
-                    placeholder="Summarise the root cause identified by the 5-Whys analysis…"
-                    value={rootCause} onInput={e => setRootCause((e.target as HTMLTextAreaElement).value)} />
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button class="hse-btn" onClick={() => setEditing(false)} style={{ flex: 1 }}>Cancel</button>
-                    <button class="hse-btn primary" onClick={saveWhys} disabled={saving} style={{ flex: 1 }}>
-                      {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-floppy-disk" /> Save</>}
+                  </div>
+                )}
+
+                {/* Overview */}
+                {invTab === 'Overview' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-stat-row">
+                      <div class="inv-stat-cell">
+                        <div class="inv-stat-val">{selected.evidenceDone}/{selected.evidenceTotal}</div>
+                        <div class="inv-stat-key">Evidence</div>
+                        <div class="inv-stat-bar"><div style={{ width:`${evPct}%`, background: evPct === 100 ? '#4ade80' : '#60a5fa' }} /></div>
+                      </div>
+                      <div class="inv-stat-cell">
+                        <div class="inv-stat-val">{selected.capaCount}</div>
+                        <div class="inv-stat-key">CAPAs raised</div>
+                      </div>
+                      <div class="inv-stat-cell">
+                        <div class="inv-stat-val" style={{ fontSize:'0.85rem' }}>{selected.rcaCategory || '—'}</div>
+                        <div class="inv-stat-key">Root cause</div>
+                      </div>
+                    </div>
+                    <div class="inv-field-block">
+                      <div class="inv-field-label"><i class="fas fa-triangle-exclamation" /> Problem Statement</div>
+                      <div class="inv-field-text">{selected.incidentDesc}</div>
+                    </div>
+                    <div class="inv-field-block">
+                      <div class="inv-field-label"><i class="fas fa-shield-halved" /> Immediate Controls</div>
+                      <div class="inv-field-text" style={{ color:'var(--text-muted)' }}>Area secured, work stopped pending investigation.</div>
+                    </div>
+                    {selected.regulatory.length > 0 && (
+                      <div class="inv-alert-block">
+                        <div class="inv-field-label"><i class="fas fa-scale-balanced" /> Regulatory Notifications</div>
+                        {selected.regulatory.map(r => (
+                          <div class="inv-alert-row" key={r}><i class="fas fa-gavel" />{r}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Evidence */}
+                {invTab === 'Evidence' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-field-label" style={{ marginBottom:'10px' }}><i class="fas fa-folder-open" /> Evidence Checklist</div>
+                    {[
+                      { label: 'Scene photographs',             done: true,  icon: 'fa-camera' },
+                      { label: 'Witness statement',             done: selected.witnesses.length > 0, icon: 'fa-comments' },
+                      { label: 'PTW / JSA copies',              done: true,  icon: 'fa-file-shield' },
+                      { label: 'Equipment maintenance records', done: true,  icon: 'fa-gears' },
+                      { label: 'Cleanup / disposal manifest',   done: false, icon: 'fa-trash-arrow-up' },
+                    ].map(e => (
+                      <div class={`inv-check-row${e.done ? ' done' : ''}`} key={e.label}>
+                        <i class={`fas ${e.done ? 'fa-circle-check' : 'fa-circle'}`} />
+                        <i class={`fas ${e.icon} inv-check-icon`} />
+                        <span>{e.label}</span>
+                        {e.done ? <span class="inv-badge inv-badge--ok">Collected</span> : <span class="inv-badge">Pending</span>}
+                      </div>
+                    ))}
+                    {selected.witnesses.length > 0 && (
+                      <>
+                        <div class="inv-field-label" style={{ marginTop:'16px', marginBottom:'8px' }}><i class="fas fa-users" /> Witnesses</div>
+                        {selected.witnesses.map(w => (
+                          <div class="inv-check-row done" key={w}>
+                            <i class="fas fa-circle-check" />
+                            <i class="fas fa-user inv-check-icon" />
+                            <span>{w}</span>
+                            <span class="inv-badge inv-badge--ok">Statement taken</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* 5-Whys */}
+                {invTab === '5-Whys' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-problem-stmt"><span>Problem:</span> {selected.incidentDesc}</div>
+                    <div class="inv-why-chain">
+                      {whyDraft.map((w, i) => (
+                        <div class="inv-why-row" key={i}>
+                          <div class="inv-why-num">{i + 1}</div>
+                          <div class="inv-why-fields">
+                            <input type="text" class="hse-input" placeholder={`Why ${i + 1}…`} value={w.why}
+                              onInput={e => setWhyDraft(d => d.map((x, j) => j === i ? { ...x, why: (e.target as HTMLInputElement).value } : x))} />
+                            <input type="text" class="hse-input inv-because" placeholder="Because…" value={w.because}
+                              onInput={e => setWhyDraft(d => d.map((x, j) => j === i ? { ...x, because: (e.target as HTMLInputElement).value } : x))} />
+                          </div>
+                          <button class="hse-btn-icon-remove" onClick={() => setWhyDraft(d => d.filter((_, j) => j !== i))}>
+                            <i class="fas fa-xmark" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display:'flex', gap:'8px', marginTop:'12px' }}>
+                      <button class="hse-btn" onClick={() => setWhyDraft(d => [...d, { why:'', because:'' }])}><i class="fas fa-plus" /> Add Why</button>
+                      <button class="hse-btn primary" onClick={saveWhys} disabled={saving} style={{ marginLeft:'auto' }}>
+                        {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-floppy-disk" /> Save</>}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Root Cause */}
+                {invTab === 'Root Cause' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-field-label" style={{ marginBottom:'8px' }}><i class="fas fa-bullseye" /> Root Cause Category</div>
+                    <div class="inv-rca-cats">
+                      {RCA_CATEGORIES.map(c => (
+                        <button key={c} class={`inv-rca-cat${rcaCat === c ? ' active' : ''}`} onClick={() => setRcaCat(c)}>{c}</button>
+                      ))}
+                    </div>
+                    <div class="inv-field-label" style={{ marginTop:'16px', marginBottom:'6px' }}><i class="fas fa-file-lines" /> Root Cause Statement</div>
+                    <textarea class="hse-input" rows={4} style={{ width:'100%', resize:'vertical' }}
+                      placeholder="Describe the confirmed root cause…"
+                      value={rootCause} onInput={e => setRootCause((e.target as HTMLTextAreaElement).value)} />
+                    <button class="hse-btn primary" style={{ marginTop:'10px' }} onClick={saveWhys} disabled={saving}>
+                      {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-circle-check" /> Confirm Root Cause</>}
                     </button>
                   </div>
-                </div>
-              ) : (
-                <div class="ppe-signals-list">
-                  {selected.whys.map((w, i) => (
-                    <div class="ppe-signal" key={i}>
-                      <i class="fas fa-circle-arrow-right" style={{ color: '#60a5fa' }} />
-                      <div class="ppe-signal-text"><strong>Why {i + 1}</strong><span>{w}</span></div>
-                    </div>
-                  ))}
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: '10px', paddingTop: '10px' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.5)', marginBottom: '4px' }}>Root Cause</div>
-                    <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,.85)', lineHeight: 1.5 }}>{selected.rootCause}</p>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {!editing && (
-                <button class="hse-btn primary" style={{ width: '100%', marginTop: '14px' }} onClick={() => setCapaOpen(true)}>
-                  <i class="fas fa-list-check" /> Raise CAPA from Investigation
+                {/* CAPA */}
+                {invTab === 'CAPA' && (
+                  <div class="inv-tab-content">
+                    {linkedCapa.length === 0
+                      ? <div class="inv-empty"><i class="fas fa-list-check" /><span>No CAPA items linked yet.</span></div>
+                      : linkedCapa.map(c => (
+                          <div class="inv-capa-card" key={c.ref}>
+                            <div class="inv-capa-card-top">
+                              <span class="vt-cell-mono">{c.ref}</span>
+                              <span class={hsePill(c.status)}>{c.status}</span>
+                            </div>
+                            <div class="inv-capa-card-title">{c.title}</div>
+                            <div class="inv-capa-card-meta">
+                              <span><i class="fas fa-user" /> {c.owner}</span>
+                              <span><i class="fas fa-calendar-day" /> {c.due}</span>
+                            </div>
+                            <button class="hse-btn" style={{ marginTop:'8px', fontSize:'0.72rem' }}>
+                              <i class="fas fa-circle-check" /> Verify
+                            </button>
+                          </div>
+                        ))
+                    }
+                  </div>
+                )}
+
+                {/* Closeout */}
+                {invTab === 'Closeout' && (
+                  <div class="inv-tab-content">
+                    <div class="inv-field-label" style={{ marginBottom:'10px' }}><i class="fas fa-circle-check" /> Closeout Checklist</div>
+                    {[
+                      { label: 'Investigation summary written', done: !!selected.rootCause },
+                      { label: 'Root cause confirmed',          done: !!selected.rcaCategory },
+                      { label: 'CAPA items raised',             done: selected.capaCount > 0 },
+                      { label: 'CAPA accepted by owner',        done: false },
+                      { label: 'Evidence pack complete',        done: selected.evidenceDone >= selected.evidenceTotal },
+                      { label: 'HSE Manager approval received', done: false },
+                    ].map(c => (
+                      <div class={`inv-check-row${c.done ? ' done' : ''}`} key={c.label}>
+                        <i class={`fas ${c.done ? 'fa-circle-check' : 'fa-circle'}`} />
+                        <span>{c.label}</span>
+                      </div>
+                    ))}
+                    <button class="hse-btn primary" style={{ marginTop:'16px', width:'100%' }} disabled>
+                      <i class="fas fa-lock" /> Submit for HSE Manager Approval
+                    </button>
+                  </div>
+                )}
+
+              </div>
+
+              {/* ── Footer ── */}
+              <div class="inv-drawer-foot">
+                <button class="hse-btn primary" onClick={() => setCapaOpen(true)}><i class="fas fa-plus" /> Raise CAPA</button>
+                <button class="hse-btn" style={{ marginLeft:'auto' }}>
+                  <i class="fas fa-paper-plane" /> Submit Review
                 </button>
-              )}
-            </>
-          ) : (
-            <>
-              <h4><i class="fas fa-list-ol" /> Why Chain</h4>
-              <div class="ppe-signal" style={{ opacity: 0.5 }}>
-                <i class="fas fa-arrow-pointer is-info" />
-                <div class="ppe-signal-text"><strong>Select a row</strong><span>Click any investigation to view and edit the 5-Whys chain.</span></div>
+                <button class="hse-btn" onClick={() => setSelected(null)}>Close</button>
               </div>
             </>
-          )}
-        </aside>
-      </div>
+          );
+        })()}
+      </aside>
 
       <CreateCapaModal
         open={capaOpen}
@@ -890,7 +2758,7 @@ function InvestigationsTab({ investigations }: { investigations: Investigation[]
 
 // ── CAPA tab ──────────────────────────────────────────────────────────────────
 
-function CapaTab({ capa }: { capa: CapaItem[] }): VNode {
+function CapaTab({ capa, closurePct, avgDaysToClose }: { capa: CapaItem[]; closurePct: number; avgDaysToClose: number }): VNode {
   const [search,     setSearch]  = useState('');
   const [statFilter, setStat]    = useState('All statuses');
   const [priFilter,  setPri]     = useState('All priorities');
@@ -902,7 +2770,6 @@ function CapaTab({ capa }: { capa: CapaItem[] }): VNode {
   const updateCapa = useUpdateCapa();
 
   const overdue = capa.filter(c => /overdue/i.test(c.status));
-  const open    = capa.filter(c => !/closed|verified/i.test(c.status));
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -915,20 +2782,28 @@ function CapaTab({ capa }: { capa: CapaItem[] }): VNode {
   }, [capa, search, statFilter, priFilter]);
 
   return (
-    <div class="ppe-tab-content">
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-            <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
-            <div>
-              <div class="vt-section-title">Corrective &amp; Preventive Actions</div>
-              <div class="vt-section-sub">CAPA items raised from incidents, inspections, and audits. Click Verify to close out an action.</div>
+    <div>
+
+      {/* ── CAPA register ── */}
+      <div class="vt-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-list-check" /></span>
+              <div>
+                <div class="vt-section-title">CAPA Register</div>
+                <div class="vt-section-sub">Corrective &amp; preventive actions · click a row to view details</div>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
+              <button class="inc-action-btn secondary" onClick={() => setNewCapa(true)}><i class="fas fa-plus" /> Raise CAPA</button>
+              <button class="inc-action-btn blue"><i class="fas fa-download" /> Export</button>
             </div>
           </div>
-          <div class="vt-toolbar">
-            <div class="vt-search" style={{ flex: '1 1 220px' }}>
+          <div class="vt-toolbar" style={{ marginBottom:0, marginTop:'12px' }}>
+            <div class="vt-search" style={{ flex:'1 1 180px' }}>
               <i class="fas fa-search" />
-              <input type="search" placeholder="Search ref, title, owner…" value={search}
+              <input type="search" placeholder="Search ref, action, owner…" value={search}
                 onInput={e => setSearch((e.target as HTMLInputElement).value)} />
             </div>
             <select class="emp-filter-select" value={statFilter} onChange={e => setStat((e.target as HTMLSelectElement).value)}>
@@ -939,103 +2814,69 @@ function CapaTab({ capa }: { capa: CapaItem[] }): VNode {
               <option>All priorities</option>
               {['Critical', 'High', 'Medium', 'Low'].map(p => <option key={p}>{p}</option>)}
             </select>
-            <button class="hse-btn primary" onClick={() => setNewCapa(true)}><i class="fas fa-circle-plus" /> New Action</button>
-          </div>
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr><th>Ref</th><th>Title</th><th>Source</th><th>Priority</th><th>Owner</th><th>Due</th><th>Status</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px' }}>No CAPA items match the current filters.</td></tr>
-                  ) : filtered.map((c: CapaItem) => (
-                    <tr key={c.ref}>
-                      <td><span class="vt-cell-mono">{c.ref}</span></td>
-                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{c.title}</span></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.source}</td>
-                      <td>
-                        <span class={`vt-pill ${c.priority === 'danger' ? 'is-off' : c.priority === 'warning' ? 'is-warn' : 'is-info'}`}>
-                          {priLabel(c.priority)}
-                        </span>
-                      </td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.owner}</td>
-                      <td>
-                        <span style={{ color: /overdue/i.test(c.status) ? 'var(--siomac-red)' : 'inherit', fontWeight: /overdue/i.test(c.status) ? 600 : 400 }}>
-                          {c.due}
-                        </span>
-                      </td>
-                      <td><span class={hsePill(c.status)}>{c.status}</span></td>
-                      <td>
-                        {!/closed|verified/i.test(c.status) && (
-                          <button class="hse-btn" style={{ padding: '3px 10px', fontSize: '0.72rem' }}
-                            onClick={() => { setVerifyItem(c); setVerify(true); }}>
-                            <i class="fas fa-circle-check" /> Verify
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{ padding: '8px 16px', borderTop: '1px solid rgba(255,255,255,.06)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Showing {filtered.length} of {capa.length} actions
-            </div>
           </div>
         </div>
-
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-gauge-high" /> CAPA Summary</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
-            {[
-              { val: open.length,                                                         label: 'Open actions',    color: '#f59e0b' },
-              { val: overdue.length,                                                      label: 'Overdue',         color: '#ef4444' },
-              { val: capa.filter(c => /closed|verified/i.test(c.status)).length,         label: 'Closed',          color: '#4ade80' },
-              { val: capa.filter(c => c.priority === 'danger').length,                   label: 'Critical prio',   color: '#ef4444' },
-            ].map(k => (
-              <div key={k.label} style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
-                <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-chart-bar" /> By Priority</h4>
-          <div style={{ display: 'grid', gap: '8px', marginBottom: '14px' }}>
-            {(['danger','warning','info','success'] as const).map(p => {
-              const label = priLabel(p);
-              const count = capa.filter(c => c.priority === p).length;
-              const pct   = Math.round((count / Math.max(capa.length, 1)) * 100);
-              const color = p === 'danger' ? '#ef4444' : p === 'warning' ? '#f59e0b' : p === 'info' ? '#60a5fa' : '#4ade80';
-              return (
-                <div key={p}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
-                    <span>{label}</span><span style={{ color }}>{count}</span>
-                  </div>
-                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: color }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {overdue.length > 0 && (
-            <>
-              <div class="hse-panel-divider" />
-              <h4 style={{ marginBottom: '8px' }}><i class="fas fa-clock" /> Overdue Actions</h4>
-              <div class="ppe-signals-list">
-                {overdue.map(c => (
-                  <div class="ppe-signal" key={c.ref}>
-                    <i class="fas fa-triangle-exclamation is-danger" />
-                    <div class="ppe-signal-text"><strong>{c.title}</strong><span>{c.owner} · Due {c.due}</span></div>
-                    <span class="ppe-signal-tag is-high">Overdue</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </aside>
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width:'88px' }}>Ref</th>
+                <th>Action</th>
+                <th style={{ width:'100px' }}>Source</th>
+                <th style={{ width:'78px' }}>Priority</th>
+                <th style={{ width:'120px' }}>Owner</th>
+                <th style={{ width:'86px' }}>Due</th>
+                <th style={{ width:'82px' }}>Evidence</th>
+                <th style={{ width:'92px' }}>Verification</th>
+                <th style={{ width:'88px' }}>Status</th>
+                <th style={{ width:'65px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={10} style={{ textAlign:'center', color:'var(--text-muted)', padding:'28px' }}>No CAPA items match the current filters.</td></tr>
+              ) : filtered.map((c: CapaItem) => {
+                const isOverdue = /overdue/i.test(c.status);
+                const evStatus  = /pending|evidence/i.test(c.status) ? 'Pending' : /closed|verified/i.test(c.status) ? 'Complete' : 'Missing';
+                const evColor   = evStatus === 'Complete' ? '#16a34a' : evStatus === 'Pending' ? '#d97706' : '#ef4444';
+                const verStatus = /verified/i.test(c.status) ? 'Verified' : /ready|complete/i.test(c.status) ? 'Ready' : 'Required';
+                const verColor  = verStatus === 'Verified' ? '#16a34a' : verStatus === 'Ready' ? '#2563eb' : 'var(--text-muted)';
+                return (
+                  <tr key={c.ref}>
+                    <td><span class="vt-cell-mono">{c.ref}</span></td>
+                    <td><span class="vt-cell-name" style={{ fontWeight:500 }}>{c.title}</span></td>
+                    <td><span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{c.source}</span></td>
+                    <td>
+                      <span class={`vt-pill ${c.priority === 'danger' ? 'is-off' : c.priority === 'warning' ? 'is-warn' : 'is-info'}`}>
+                        {priLabel(c.priority)}
+                      </span>
+                    </td>
+                    <td style={{ color:'var(--text-muted)', fontSize:'0.78rem' }}>{c.owner}</td>
+                    <td>
+                      <span style={{ color: isOverdue ? 'var(--siomac-red)' : 'inherit', fontWeight: isOverdue ? 600 : 400, fontSize:'0.78rem' }}>
+                        {c.due}
+                      </span>
+                    </td>
+                    <td><span style={{ fontSize:'0.72rem', fontWeight:600, color: evColor }}>{evStatus}</span></td>
+                    <td><span style={{ fontSize:'0.72rem', fontWeight:600, color: verColor }}>{verStatus}</span></td>
+                    <td><span class={hsePill(c.status)}>{c.status}</span></td>
+                    <td>
+                      {!/closed|verified/i.test(c.status) && (
+                        <button class="hse-btn" style={{ padding:'3px 10px', fontSize:'0.72rem' }}
+                          onClick={() => { setVerifyItem(c); setVerify(true); }}>
+                          <i class="fas fa-circle-check" /> Verify
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ padding:'8px 16px', borderTop:'1px solid var(--border)', fontSize:'0.72rem', color:'var(--text-muted)' }}>
+          Showing {filtered.length} of {capa.length} actions
+        </div>
       </div>
 
       {verifyItem && (
@@ -1067,55 +2908,271 @@ function priLabel(p: string): string {
 
 // ── Shared modals ─────────────────────────────────────────────────────────────
 
+const CAPA_STEPS = ['Action', 'Source', 'Ownership', 'Verification'] as const;
+type CapaStep = typeof CAPA_STEPS[number];
+
 function CreateCapaModal({ open, sourceRef, sourceType, onClose, createCapa }: {
   open: boolean; sourceRef: string; sourceType: string; onClose: () => void;
   createCapa: ReturnType<typeof useCreateCapa>;
 }): VNode | null {
-  const [title,    setTitle]    = useState('');
-  const [desc,     setDesc]     = useState('');
-  const [owner,    setOwner]    = useState('');
-  const [due,      setDue]      = useState('');
-  const [priority, setPriority] = useState('medium');
-  const [saving,   setSaving]   = useState(false);
+  const [step,        setStep]       = useState<CapaStep>('Action');
+  const [title,       setTitle]      = useState('');
+  const [desc,        setDesc]       = useState('');
+  const [capaType,    setCapaType]   = useState<'corrective'|'preventive'|'containment'>('corrective');
+  const [priority,    setPriority]   = useState<'critical'|'high'|'medium'|'low'>('medium');
+  const [linkedRef,   setLinkedRef]  = useState(sourceRef);
+  const [linkedType,  setLinkedType] = useState(sourceType || 'incident');
+  const [rootCauseCat,setRootCause]  = useState('');
+  const [owner,       setOwner]      = useState('');
+  const [dept,        setDept]       = useState('');
+  const [due,         setDue]        = useState('');
+  const [evidenceReq, setEvidReq]    = useState<string[]>([]);
+  const [verifier,    setVerifier]   = useState('');
+  const [verRequired, setVerReq]     = useState(true);
+  const [saving,      setSaving]     = useState(false);
 
   if (!open) return null;
+
+  const stepIdx = CAPA_STEPS.indexOf(step);
+  const isLast  = stepIdx === CAPA_STEPS.length - 1;
+
+  function toggleEvidence(val: string) {
+    setEvidReq(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
+  }
+
+  function canAdvance(): boolean {
+    if (step === 'Action')    return title.trim().length > 0;
+    if (step === 'Ownership') return due.length > 0;
+    return true;
+  }
+
+  function handleClose() {
+    setStep('Action');
+    setTitle(''); setDesc(''); setCapaType('corrective'); setPriority('medium');
+    setLinkedRef(sourceRef); setLinkedType(sourceType || 'incident'); setRootCause('');
+    setOwner(''); setDept(''); setDue(''); setEvidReq([]); setVerifier(''); setVerReq(true);
+    onClose();
+  }
 
   async function submit() {
     if (!title.trim() || !due) return;
     setSaving(true);
+    const descBlock = [
+      desc,
+      `CAPA Type: ${capaType}`,
+      rootCauseCat ? `Root Cause Category: ${rootCauseCat}` : '',
+      dept ? `Department/Site: ${dept}` : '',
+      verRequired ? `Verification Required: Yes · Verifier: ${verifier || 'TBD'}` : 'Verification Required: No',
+      evidenceReq.length ? `Evidence Required: ${evidenceReq.join(', ')}` : '',
+    ].filter(Boolean).join('\n');
     try {
       await createCapa.mutateAsync({
-        sourceRef: sourceRef || 'MANUAL', sourceType, title, description: desc,
-        ownerName: owner || undefined, dueDate: due,
-        priority: priority as 'critical' | 'high' | 'medium' | 'low',
+        sourceRef: linkedRef || 'MANUAL',
+        sourceType: linkedType,
+        title,
+        description: descBlock,
+        ownerName: owner || undefined,
+        dueDate: due,
+        priority,
       });
-      onClose();
+      handleClose();
     } finally { setSaving(false); }
   }
 
+  const SLA_DAYS: Record<string, number> = { critical: 3, high: 7, medium: 14, low: 30 };
+  function applySlaDue() {
+    const d = new Date();
+    d.setDate(d.getDate() + (SLA_DAYS[priority] ?? 14));
+    setDue(d.toISOString().slice(0, 10));
+  }
+
   return (
-    <HseModal open={open} title="Raise CAPA"
-      sub={sourceRef ? `Linked to ${sourceRef}` : 'Standalone corrective / preventive action'}
-      onClose={onClose} onSubmit={submit} submitLabel={saving ? 'Saving…' : 'Create CAPA'}>
-      <div class="hse-form-grid">
-        <Field label="Title *" wide><TextInput value={title} onInput={setTitle} placeholder="Corrective action title" /></Field>
-        <Field label="Description" wide>
-          <TextareaInput value={desc} onInput={setDesc} placeholder="Describe the corrective or preventive action required…" />
-        </Field>
-        <Field label="Action owner"><TextInput value={owner} onInput={setOwner} placeholder="Name or ID" /></Field>
-        <Field label="Due date *">
-          <input type="date" class="hse-text-input" value={due} onInput={e => setDue((e.target as HTMLInputElement).value)} />
-        </Field>
-        <Field label="Priority">
-          <select class="hse-select-input" value={priority} onChange={e => setPriority((e.target as HTMLSelectElement).value)}>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </Field>
-      </div>
-    </HseModal>
+    <>
+      <div class="hse-modal-backdrop show" onClick={handleClose} />
+      <section class="hse-modal capa-wizard show" role="dialog" aria-modal="true">
+
+        {/* ── Wizard header ── */}
+        <div class="capa-wizard-head">
+          <div class="capa-wizard-title">
+            <i class="fas fa-list-check" />
+            <div>
+              <h3>Raise CAPA</h3>
+              <p>{linkedRef ? `Linked to ${linkedRef}` : 'Standalone corrective / preventive action'}</p>
+            </div>
+          </div>
+          <button class="hse-icon-btn" onClick={handleClose} aria-label="Close"><i class="fas fa-xmark" /></button>
+        </div>
+
+        {/* ── Step rail ── */}
+        <div class="capa-wizard-rail">
+          {CAPA_STEPS.map((s, i) => (
+            <div key={s} class={`capa-wizard-step${s === step ? ' active' : i < stepIdx ? ' done' : ''}`}>
+              <div class="capa-wizard-step-dot">
+                {i < stepIdx ? <i class="fas fa-check" /> : <span>{i + 1}</span>}
+              </div>
+              <span>{s}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Step bodies ── */}
+        <div class="capa-wizard-body">
+
+          {step === 'Action' && (
+            <div class="capa-wizard-cols">
+              <div class="capa-wizard-col">
+                <Field label="Action title *" wide>
+                  <TextInput value={title} onInput={setTitle} placeholder="What corrective action is required?" />
+                </Field>
+                <Field label="Description" wide>
+                  <TextareaInput value={desc} onInput={setDesc} placeholder="Describe the action in detail, expected outcomes, and acceptance criteria…" />
+                </Field>
+              </div>
+              <div class="capa-wizard-col">
+                <Field label="CAPA type">
+                  <select class="hse-select-input" value={capaType} onChange={e => setCapaType((e.target as HTMLSelectElement).value as typeof capaType)}>
+                    <option value="corrective">Corrective — fix the root cause</option>
+                    <option value="preventive">Preventive — stop recurrence</option>
+                    <option value="containment">Containment — immediate interim fix</option>
+                  </select>
+                </Field>
+                <Field label="Risk / priority">
+                  <select class="hse-select-input" value={priority} onChange={e => setPriority((e.target as HTMLSelectElement).value as typeof priority)}>
+                    <option value="critical">Critical — complete within 3 days</option>
+                    <option value="high">High — complete within 7 days</option>
+                    <option value="medium">Medium — complete within 14 days</option>
+                    <option value="low">Low — complete within 30 days</option>
+                  </select>
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {step === 'Source' && (
+            <div class="capa-wizard-cols">
+              <div class="capa-wizard-col">
+                <Field label="Source type">
+                  <select class="hse-select-input" value={linkedType} onChange={e => setLinkedType((e.target as HTMLSelectElement).value)}>
+                    {['incident','investigation','audit','inspection','observation','permit','training-gap'].map(t => (
+                      <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1).replace(/-/g, ' ')}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Linked record ref">
+                  <TextInput value={linkedRef} onInput={setLinkedRef} placeholder="e.g. INC-2026-001" />
+                </Field>
+              </div>
+              <div class="capa-wizard-col">
+                <Field label="Root cause category">
+                  <select class="hse-select-input" value={rootCauseCat} onChange={e => setRootCause((e.target as HTMLSelectElement).value)}>
+                    <option value="">Select category…</option>
+                    {['Human error','Procedure gap','Equipment failure','Training gap','Communication failure','Environmental','Design deficiency','Management system gap'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {step === 'Ownership' && (
+            <div class="capa-wizard-cols">
+              <div class="capa-wizard-col">
+                <Field label="Action owner">
+                  <TextInput value={owner} onInput={setOwner} placeholder="Full name or employee ID" />
+                </Field>
+                <Field label="Department / site">
+                  <TextInput value={dept} onInput={setDept} placeholder="e.g. HSE · Point Lisas" />
+                </Field>
+              </div>
+              <div class="capa-wizard-col">
+                <Field label="Due date *">
+                  <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
+                    <input type="date" class="hse-text-input" style={{ flex:1 }} value={due}
+                      onInput={e => setDue((e.target as HTMLInputElement).value)} />
+                    <button type="button" class="hse-btn" style={{ whiteSpace:'nowrap', fontSize:'0.72rem' }}
+                      onClick={applySlaDue}>
+                      SLA default
+                    </button>
+                  </div>
+                </Field>
+                <div class="capa-sla-hint">
+                  <i class="fas fa-circle-info" />
+                  {priority === 'critical' ? 'Critical: must close within 3 days'
+                  : priority === 'high'    ? 'High: must close within 7 days'
+                  : priority === 'medium'  ? 'Medium: must close within 14 days'
+                  : 'Low: must close within 30 days'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 'Verification' && (
+            <div class="capa-wizard-cols">
+              <div class="capa-wizard-col">
+                <Field label="Verification required">
+                  <div style={{ display:'flex', gap:'10px' }}>
+                    {(['Yes','No'] as const).map(v => (
+                      <label key={v} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'0.82rem', cursor:'pointer' }}>
+                        <input type="radio" name="verReq" checked={verRequired === (v === 'Yes')}
+                          onChange={() => setVerReq(v === 'Yes')} />
+                        {v}
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+                {verRequired && (
+                  <Field label="Verifier role">
+                    <select class="hse-select-input" value={verifier} onChange={e => setVerifier((e.target as HTMLSelectElement).value)}>
+                      <option value="">Select verifier…</option>
+                      {['HSE Manager','HSE Officer','Operations Manager','Supervisor','Department Head'].map(r => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+              <div class="capa-wizard-col">
+                <div class="hse-form-field">
+                  <label class="hse-form-label">Evidence required</label>
+                  <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginTop:'4px' }}>
+                    {['Photo / video','Document / procedure update','Training record','Inspection sign-off','Supervisor sign-off','Test / measurement result'].map(ev => (
+                      <label key={ev} style={{ display:'flex', alignItems:'center', gap:'8px', fontSize:'0.8rem', cursor:'pointer' }}>
+                        <input type="checkbox" checked={evidenceReq.includes(ev)} onChange={() => toggleEvidence(ev)} />
+                        {ev}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* ── Footer ── */}
+        <div class="capa-wizard-foot">
+          <button class="hse-btn" onClick={handleClose}>Cancel</button>
+          <div style={{ display:'flex', gap:'8px' }}>
+            {stepIdx > 0 && (
+              <button class="hse-btn" onClick={() => setStep(CAPA_STEPS[stepIdx - 1]!)}>
+                <i class="fas fa-chevron-left" /> Back
+              </button>
+            )}
+            {isLast ? (
+              <button class="hse-btn primary" onClick={submit} disabled={saving || !title.trim() || !due}>
+                {saving ? 'Saving…' : 'Create CAPA'}
+              </button>
+            ) : (
+              <button class="hse-btn primary" onClick={() => canAdvance() && setStep(CAPA_STEPS[stepIdx + 1]!)} disabled={!canAdvance()}>
+                Next <i class="fas fa-chevron-right" />
+              </button>
+            )}
+          </div>
+        </div>
+
+      </section>
+    </>
   );
 }
 
@@ -1202,14 +3259,15 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
       <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={onClose} />
       <aside class={`hse-drawer hse-drawer--rich${open ? ' show' : ''}`} role="dialog" aria-modal="true" aria-hidden={!open}>
 
+        {/* ── Hero ── */}
         <div class="hse-idrawer-hero">
           <div class="hse-idrawer-hero-left">
             <div class="hse-idrawer-type-chip" style={{ background: sev.bg }}>
               <i class={`fas ${i ? (TYPE_ICONS[i.type] ?? 'fa-file-exclamation') : 'fa-file'}`} style={{ color: sev.color }} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div class="hse-idrawer-ref">{i?.ref ?? '—'}</div>
-              <div class="hse-idrawer-type">{i?.type ?? '—'}</div>
+              <div class="hse-idrawer-type">{i?.type ?? '—'} · <span style={{ opacity: .6 }}>{i?.date ?? ''}</span></div>
               <div class="hse-idrawer-site"><i class="fas fa-location-dot" /> {i?.site ?? '—'}</div>
             </div>
           </div>
@@ -1217,48 +3275,42 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             <div class="hse-idrawer-sev-badge" style={{ background: sev.bg, color: sev.color }}>
               <i class={`fas ${sev.icon}`} /> {sev.label}
             </div>
-            <button class="hse-idrawer-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
           </div>
         </div>
 
+        {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
 
-          {/* OSH notification banner */}
+          {/* OSH notification banners */}
           {oshDue && !oshNotified && (
-            <div style={{
-              padding: '10px 14px', borderRadius: '8px', marginBottom: '14px',
-              background: oshOverdue ? 'rgba(239,68,68,.15)' : 'rgba(245,158,11,.12)',
-              border: `1px solid ${oshOverdue ? 'rgba(239,68,68,.4)' : 'rgba(245,158,11,.35)'}`,
-              display: 'flex', alignItems: 'center', gap: '10px',
-            }}>
-              <i class={`fas ${oshOverdue ? 'fa-triangle-exclamation' : 'fa-gavel'}`}
-                style={{ color: oshOverdue ? '#ef4444' : '#f59e0b', fontSize: '1.1rem' }} />
-              <div style={{ flex: 1, fontSize: '0.78rem' }}>
-                <strong style={{ color: oshOverdue ? '#ef4444' : '#f59e0b' }}>
-                  {oshOverdue ? 'OSH Verbal Notification — OVERDUE' : 'OSH Verbal Notification Required'}
-                </strong>
-                <div style={{ color: 'rgba(255,255,255,.7)', marginTop: '2px' }}>
-                  Due: {new Date(oshDue).toLocaleString('en-GB')} · OSH Act 2004 s.19
-                </div>
+            <div class={`hse-idrawer-banner${oshOverdue ? ' hse-idrawer-banner--danger' : ' hse-idrawer-banner--warn'}`}>
+              <i class={`fas ${oshOverdue ? 'fa-triangle-exclamation' : 'fa-gavel'}`} />
+              <div class="hse-idrawer-banner-text">
+                <strong>{oshOverdue ? 'OSH Verbal Notification — OVERDUE' : 'OSH Verbal Notification Required'}</strong>
+                <span>Due: {new Date(oshDue).toLocaleString('en-GB')} · OSH Act 2004 s.19</span>
               </div>
-              <button class="hse-btn" style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+              <button class="hse-btn" style={{ padding: '4px 10px', fontSize: '0.72rem', flexShrink: 0 }}
                 onClick={markOshVerbal} disabled={markingOsh}>
                 {markingOsh ? 'Saving…' : 'Mark Notified'}
               </button>
             </div>
           )}
           {oshDue && oshNotified && !liveRecord?.osh_written_at && (
-            <div style={{ padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', fontSize: '0.78rem' }}>
-              <i class="fas fa-circle-check" style={{ color: '#f59e0b', marginRight: '8px' }} />
-              <strong style={{ color: '#f59e0b' }}>Verbal notification logged</strong>
-              <span style={{ color: 'rgba(255,255,255,.6)', marginLeft: '8px' }}>{new Date(oshNotified).toLocaleString('en-GB')}</span>
-              <div style={{ color: 'rgba(255,255,255,.5)', marginTop: '4px' }}>Written report due within 7 days of incident.</div>
+            <div class="hse-idrawer-banner hse-idrawer-banner--warn">
+              <i class="fas fa-circle-check" />
+              <div class="hse-idrawer-banner-text">
+                <strong>Verbal notification logged</strong>
+                <span>Written report due within 7 days · {new Date(oshNotified).toLocaleString('en-GB')}</span>
+              </div>
             </div>
           )}
           {oshNotified && liveRecord?.osh_written_at && (
-            <div style={{ padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.25)', fontSize: '0.78rem', color: '#4ade80' }}>
-              <i class="fas fa-circle-check" style={{ marginRight: '8px' }} />
-              OSH notifications complete — verbal and written report filed.
+            <div class="hse-idrawer-banner hse-idrawer-banner--ok">
+              <i class="fas fa-circle-check" />
+              <div class="hse-idrawer-banner-text">
+                <strong>OSH notifications complete</strong>
+                <span>Verbal and written report filed.</span>
+              </div>
             </div>
           )}
 
@@ -1269,7 +3321,6 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             </div>
             <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Date</span><strong>{i?.date ?? '—'}</strong></div>
             <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Reporter</span><strong>{i?.reporter ?? '—'}</strong></div>
-            <div class="hse-idrawer-cell"><i class="fas fa-map-pin" /><span>Site</span><strong>{i?.site ?? '—'}</strong></div>
             {liveRecord?.classification && (
               <div class="hse-idrawer-cell"><i class="fas fa-tag" /><span>Classification</span>
                 <strong>{OSH_CLASSES.find(o => o.value === liveRecord.classification)?.label ?? liveRecord.classification}</strong>
@@ -1280,9 +3331,9 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             )}
           </div>
 
-          {/* What happened */}
+          {/* Incident Description */}
           <div class="hse-idrawer-section">
-            <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> What happened</div>
+            <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> Incident Description</div>
             <p class="hse-idrawer-body-text">{i?.description ?? '—'}</p>
             {i?.immediateActions && i.immediateActions !== '—' && (
               <div class="hse-idrawer-action-note">
@@ -1326,34 +3377,41 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             <div class="hse-idrawer-section">
               <div class="hse-idrawer-section-head"><i class="fas fa-eye" /> Witnesses</div>
               {witnesses.map((w, idx) => (
-                <div key={idx} style={{ marginBottom: '10px', padding: '10px', background: 'rgba(255,255,255,.04)', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
+                <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
                     {w.name}{w.employeeId ? ` (${w.employeeId})` : ''}
                   </div>
-                  {w.statement && <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,.7)', lineHeight: 1.5 }}>{w.statement}</p>}
+                  {w.statement && <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{w.statement}</p>}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Timeline */}
+          {/* Investigation workflow */}
           <div class="hse-idrawer-section">
-            <div class="hse-idrawer-section-head"><i class="fas fa-diagram-project" /> Investigation workflow</div>
-            <div class="hse-idrawer-timeline">
+            <div class="hse-idrawer-section-head"><i class="fas fa-diagram-project" /> Investigation Workflow</div>
+            <div class="hse-idrawer-wf-steps">
               {steps.map((step, idx) => (
-                <div class={`hse-idrawer-step${step.done ? ' done' : step.active ? ' active' : ''}`} key={idx}>
-                  <div class="hse-idrawer-step-dot">
+                <div key={idx} class={`hse-idrawer-wf-step${step.done ? ' wf-done' : step.active ? ' wf-active' : ' wf-pending'}`}>
+                  {idx < steps.length - 1 && <div class="hse-idrawer-wf-line" />}
+                  <div class="hse-idrawer-wf-icon">
                     <i class={`fas ${step.done ? 'fa-check' : step.icon}`} />
                   </div>
-                  <div class="hse-idrawer-step-body">
-                    <strong>{step.label}</strong><em>{step.sub}</em>
+                  <div class="hse-idrawer-wf-card">
+                    <div class="hse-idrawer-wf-label">{step.label}</div>
+                    <div class="hse-idrawer-wf-sub">{step.sub}</div>
+                    {step.done && <span class="hse-idrawer-wf-badge wf-badge-done"><i class="fas fa-circle-check" /> Complete</span>}
+                    {step.active && <span class="hse-idrawer-wf-badge wf-badge-active"><i class="fas fa-circle-dot" /> In Progress</span>}
+                    {!step.done && !step.active && <span class="hse-idrawer-wf-badge wf-badge-pending"><i class="fas fa-clock" /> Pending</span>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
 
+        {/* ── Footer ── */}
         <div class="hse-drawer-foot">
           <button class="hse-btn" onClick={onClose}>Close</button>
           <button class="hse-btn primary" onClick={onInvestigate}>
@@ -1377,111 +3435,6 @@ function FormSection({ icon, title, children }: {
         <span style={{ fontWeight: 600, fontSize: '0.88rem', color: 'rgba(255,255,255,.9)' }}>{title}</span>
       </div>
       {children}
-    </div>
-  );
-}
-
-// ── Trend sparkline strip ─────────────────────────────────────────────────────
-
-function TrendSparkline(): VNode {
-  const pts  = mockTrend;
-  const last = pts[pts.length - 1]!;
-  const prev = pts[pts.length - 2]!;
-  const W = 160, H = 36;
-
-  function xi(i: number) { return (i / (pts.length - 1)) * W; }
-  function yi(v: number, max: number) { return H - 4 - ((v / max) * (H - 8)); }
-  function linePath(vals: number[]): string {
-    const max = Math.max(...vals, 1);
-    return vals.map((v, i) => `${i === 0 ? 'M' : 'L'}${xi(i).toFixed(1)},${yi(v, max).toFixed(1)}`).join(' ');
-  }
-  function areaPath(vals: number[]): string {
-    const max = Math.max(...vals, 1);
-    const line = vals.map((v, i) => `${xi(i).toFixed(1)},${yi(v, max).toFixed(1)}`).join(' ');
-    return `M0,${H} L${line} L${W},${H} Z`;
-  }
-
-  const iDelta = last.incidents  - prev.incidents;
-  const nDelta = last.nearMisses - prev.nearMisses;
-  const cDelta = last.capaClosure - prev.capaClosure;
-  const iVals  = pts.map(p => p.incidents);
-  const nVals  = pts.map(p => p.nearMisses);
-  const months = pts.map(p => p.month);
-  const ytdInc = pts.reduce((s, p) => s + p.incidents, 0);
-
-  return (
-    <div class="hse-spark-row">
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">Incidents MTD</span>
-          <span class={`hse-spark-delta ${iDelta < 0 ? 'down' : iDelta > 0 ? 'up' : 'flat'}`}>
-            <i class={`fas ${iDelta < 0 ? 'fa-arrow-down' : iDelta > 0 ? 'fa-arrow-up' : 'fa-minus'}`} />{Math.abs(iDelta)}
-          </span>
-        </div>
-        <div class="hse-spark-val">{last.incidents}</div>
-        <div class="hse-spark-sub">YTD total: {ytdInc} · Target ≤3/mo</div>
-        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H}>
-          <path d={areaPath(iVals)} fill="rgba(239,68,68,.08)" />
-          <path d={linePath(iVals)} fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx={xi(pts.length - 1)} cy={yi(last.incidents, Math.max(...iVals))} r="3.5" fill="#ef4444" stroke="#fff" stroke-width="1.5" />
-        </svg>
-        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">Near Misses MTD</span>
-          <span class={`hse-spark-delta ${nDelta > 0 ? 'up' : nDelta < 0 ? 'down' : 'flat'}`}>
-            <i class={`fas ${nDelta > 0 ? 'fa-arrow-up' : nDelta < 0 ? 'fa-arrow-down' : 'fa-minus'}`} />{Math.abs(nDelta)}
-          </span>
-        </div>
-        <div class="hse-spark-val">{last.nearMisses}</div>
-        <div class="hse-spark-sub">Near misses should exceed incidents — leading indicator</div>
-        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H}>
-          <path d={areaPath(nVals)} fill="rgba(245,158,11,.08)" />
-          <path d={linePath(nVals)} fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx={xi(pts.length - 1)} cy={yi(last.nearMisses, Math.max(...nVals))} r="3.5" fill="#f59e0b" stroke="#fff" stroke-width="1.5" />
-        </svg>
-        <div class="hse-spark-months">{months.map(m => <span key={m}>{m}</span>)}</div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label">CAPA Closure</span>
-          <span class={`hse-spark-delta ${cDelta >= 0 ? 'down' : 'up'}`}>
-            <i class={`fas ${cDelta >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'}`} />{Math.abs(cDelta)}%
-          </span>
-        </div>
-        <div class="hse-spark-val" style={{ color: last.capaClosure >= 90 ? '#16a34a' : '#d97706' }}>{last.capaClosure}%</div>
-        <div class="hse-spark-sub">Target 95% · {last.capaClosure >= 95 ? 'On target' : `${95 - last.capaClosure}% below target`}</div>
-        <div class="hse-spark-bar-track" style={{ marginTop: '10px' }}>
-          <div class="hse-spark-bar-fill" style={{ width: `${last.capaClosure}%`, background: last.capaClosure >= 90 ? '#16a34a' : '#d97706' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          <span>0%</span><span style={{ color: '#d97706' }}>Target 95%</span><span>100%</span>
-        </div>
-      </div>
-
-      <div class="hse-spark">
-        <div class="hse-spark-header"><span class="hse-spark-label">Severity Mix · YTD</span></div>
-        <div style={{ display: 'grid', gap: '5px', marginTop: '4px' }}>
-          {[
-            { label: 'Critical / High', count: 3, color: '#ef4444', pct: 43 },
-            { label: 'Medium',          count: 2, color: '#f59e0b', pct: 29 },
-            { label: 'Low',             count: 2, color: '#22c55e', pct: 28 },
-          ].map(b => (
-            <div key={b.label}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', color: 'var(--text-muted)', marginBottom: '3px' }}>
-                <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
-              </div>
-              <div class="hse-spark-bar-track">
-                <div class="hse-spark-bar-fill" style={{ width: `${b.pct}%`, background: b.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div class="hse-spark-sub" style={{ marginTop: '6px' }}>YTD: {ytdInc} total incidents across all sites</div>
-      </div>
     </div>
   );
 }

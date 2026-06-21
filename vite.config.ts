@@ -89,6 +89,7 @@ export default defineConfig({
       { find: /^@lib\/(.+)$/,        replacement: '/src/lib/$1'                 },
       { find: /^@shared\/(.+)$/,     replacement: '/src/components/shared/$1'   },
       { find: /^@sections\/(.+)$/,   replacement: '/src/components/sections/$1' },
+      { find: /^@ui\/(.+)$/,         replacement: '/src/ui/$1'                  },
       { find: /^@components\/(.+)$/, replacement: '/src/components/$1'          },
       { find: /^@cfg\/(.+)$/,        replacement: '/src/config/$1'              },
       { find: /^@shell\/(.+)$/,      replacement: '/src/shell/$1'               },

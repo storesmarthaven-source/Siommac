@@ -7,6 +7,13 @@
  * replace the mock arrays with query hooks returning the same shapes.
  */
 
+import {
+  toneClass,
+  toneFromText,
+  toneFromPpeStatus,
+  colorFromSeverity,
+} from '@ui/status/statusTokens';
+
 // ── HSE Dashboard (T&T HSE command view) ──────────────────────────────────────
 
 /** Severity tone used across HSE cards/pills. */
@@ -107,23 +114,15 @@ export const mockReadiness: ReadinessRow[] = [
   { label: 'Emergency readiness',      value: '97%', detail: 'TTFS/fire certificate evidence, eyewash, spill kits, AEDs',           severity: 'success' },
 ];
 
-/** HSE status text → Siomac .vt-pill variant. */
+/** HSE status text → Siomac .vt-pill variant. Delegates to the shared
+    status source of truth (@ui/status/statusTokens). */
 export function hsePill(text: string): string {
-  const t = text.toLowerCase();
-  if (/critical|blocked|overdue|stopped/.test(t)) return 'vt-pill is-off';
-  if (/hold|pending|due|high|review/.test(t))     return 'vt-pill is-warn';
-  if (/live|ready|complete|open/.test(t))         return 'vt-pill is-on';
-  return 'vt-pill is-info';
+  return toneClass(toneFromText(text));
 }
 
 /** Severity → left-accent color (for KPI/readiness cards). */
 export function hseSeverityColor(s: HseSeverity): string {
-  switch (s) {
-    case 'danger':  return 'var(--siomac-red)';
-    case 'warning': return '#d97706';
-    case 'success': return '#16a34a';
-    default:        return '#2563eb';
-  }
+  return colorFromSeverity(s);
 }
 
 /**
@@ -219,26 +218,10 @@ export const PPE_MATRIX_COLUMNS = ['Helmet', 'Gloves', 'Glasses', 'Ear', 'Vest',
 
 // ── Status-pill mapping (mock status → Siomac .vt-pill variant) ───────────────
 
+/** PPE enum status → Siomac .vt-pill variant. Delegates to the shared
+    status source of truth (@ui/status/statusTokens). */
 export function ppePillClass(status: string): string {
-  switch (status) {
-    case 'available':
-    case 'compliant':
-    case 'active':
-    case 'current':
-    case 'pass':
-    case 'ready':       return 'vt-pill is-on';
-    case 'low':
-    case 'upcoming':
-    case 'pending':
-    case 'review':
-    case 'due':         return 'vt-pill is-warn';
-    case 'expired':
-    case 'overdue':
-    case 'missing':
-    case 'fail':
-    case 'urgent':      return 'vt-pill is-off';
-    default:            return 'vt-pill is-info';
-  }
+  return toneClass(toneFromPpeStatus(status));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -281,23 +264,59 @@ export const mockIncidents: IncidentRecord[] = [
   { ref: 'INC-2026-037', date: '15 Jun 2026', type: 'Unsafe Condition', severity: 'danger', site: 'Port of Spain Office', status: 'Closed',       reporter: 'S. Chen',      description: 'Roof-edge maintenance task without a work-at-height control pack.', immediateActions: 'Work stopped, control pack raised.' },
 ];
 
-/** Investigation (5-Whys) linked to an incident. */
+/** Investigation (5-Whys / RCA) linked to an incident. */
 export interface Investigation {
-  ref: string; incidentRef: string; method: string; status: string; lead: string;
-  whys: string[]; rootCause: string;
+  ref:         string;
+  incidentRef: string;
+  incidentDesc: string;
+  severity:    HseSeverity;
+  method:      string;
+  status:      string;  // 'Open' | 'In Progress' | 'In Review' | 'Closed'
+  lead:        string;
+  due:         string;
+  evidenceTotal: number;
+  evidenceDone:  number;
+  capaCount:   number;
+  rcaCategory: string;  // '' until confirmed
+  stage:       number;  // 0-6 matching workflow steps
+  whys:        string[];
+  rootCause:   string;
+  witnesses:   string[];
+  regulatory:  string[];
 }
 
 export const mockInvestigations: Investigation[] = [
-  { ref: 'INV-041', incidentRef: 'INC-2026-041', method: '5-Whys', status: 'Open', lead: 'S. Chen',
+  {
+    ref: 'INV-041', incidentRef: 'INC-2026-041',
+    incidentDesc: 'Diesel sheen near storm drain during transfer-line cleanup',
+    severity: 'danger', method: '5-Whys', status: 'Open', lead: 'S. Chen',
+    due: '24 Jun 2026', evidenceTotal: 5, evidenceDone: 3, capaCount: 2,
+    rcaCategory: 'Equipment / Maintenance', stage: 3,
     whys: [
-      'Why did diesel reach the drain? Transfer hose coupling leaked.',
-      'Why did the coupling leak? Seal was past its inspection date.',
-      'Why was it past date? Coupling not in the PM schedule.',
-      'Why not scheduled? Asset register missing the transfer skid.',
-      'Why missing? Skid added after last register review.',
-    ], rootCause: 'Asset register gap — temporary skid omitted from PM scheduling.' },
-  { ref: 'INV-039', incidentRef: 'INC-2026-039', method: '5-Whys', status: 'In Review', lead: 'A. Mohammed',
-    whys: ['Why the laceration? Bare-hand handling of sharp stock.', 'Why bare-hand? Cut-resistant gloves out of stock.'], rootCause: 'PPE stock-out at point of work.' },
+      'Why did diesel reach the drain? → Transfer hose coupling leaked.',
+      'Why did the coupling leak? → Seal was past its inspection date.',
+      'Why was it past date? → Coupling not in the PM schedule.',
+      'Why not scheduled? → Asset register missing the transfer skid.',
+      'Why missing? → Skid added after last register review.',
+    ],
+    rootCause: 'Asset register gap — temporary skid omitted from PM scheduling.',
+    witnesses: ['B. Ramdial', 'C. Hosein'],
+    regulatory: ['EMA notification filed', 'OSH Act s.46 — forthwith notification sent'],
+  },
+  {
+    ref: 'INV-039', incidentRef: 'INC-2026-039',
+    incidentDesc: 'Contractor hand laceration during manual handling of sharp material',
+    severity: 'warning', method: '5-Whys', status: 'In Review', lead: 'A. Mohammed',
+    due: '27 Jun 2026', evidenceTotal: 3, evidenceDone: 3, capaCount: 1,
+    rcaCategory: 'PPE', stage: 5,
+    whys: [
+      'Why the laceration? → Bare-hand handling of sharp stock.',
+      'Why bare-hand? → Cut-resistant gloves out of stock.',
+    ],
+    rootCause: 'PPE stock-out at point of work.',
+    witnesses: ['Site Supervisor'],
+    regulatory: ['OSH Act s.46A — 4-day notice submitted'],
+  },
 ];
 
 /** Corrective / preventive action (CAPA). */

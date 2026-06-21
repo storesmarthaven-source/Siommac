@@ -31,6 +31,7 @@
       "@lib/*":      ["src/lib/*"],
       "@shared/*":   ["src/components/shared/*"],
       "@sections/*": ["src/components/sections/*"],
+      "@ui/*":       ["src/ui/*"],
       "@cfg":           ["src/config/index.ts"],
       "@cfg/*":         ["src/config/*"],
       "@components/*":  ["src/components/*"],

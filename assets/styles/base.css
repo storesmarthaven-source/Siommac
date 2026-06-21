@@ -30,6 +30,73 @@
   --warning:       #C67C00;
   --danger:        #C62828;
 
+  /* ─── Status colours (UI-bright family) ───────────────────────────────────
+     The bright status hues used across data-dense screens (severity chips,
+     KPI deltas, signal dots). These match the values previously hardcoded
+     inline across the HSE pages and the .hse-dash-scoped --hse-* set, now
+     promoted to :root so every module uses ONE source of truth.
+     `--st-*` = solid colour · `--st-*-tint` = same-family soft fill for
+     icon circles / chip backgrounds · `--st-*-strong` = darker text-on-light. */
+  --st-danger:         #ef4444;
+  --st-danger-strong:  #dc2626;
+  --st-danger-tint:    rgba(239,68,68,.10);
+  --st-warning:        #f59e0b;
+  --st-warning-strong: #d97706;
+  --st-warning-tint:   rgba(245,158,11,.10);
+  --st-success:        #16a34a;
+  --st-success-strong: #15803d;
+  --st-success-tint:   rgba(22,163,74,.10);
+  --st-info:           #2563eb;
+  --st-info-strong:    #1d4ed8;
+  --st-info-tint:      rgba(37,99,235,.10);
+  --st-neutral:        #5E6F8D;          /* = --text-muted */
+  --st-neutral-tint:   rgba(94,111,141,.10);
+  --st-purple:         #7c3aed;          /* workflow/in-review accent */
+  --st-purple-tint:    rgba(124,58,237,.10);
+
+  /* ─── Spacing scale (4px base) ────────────────────────────────────────────
+     Use for gap / padding / margin so rhythm is consistent across pages. */
+  --space-0:   0;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+
+  /* ─── Radius (extends the legacy 10/16/24 set with component-scale sizes
+     the data-dense screens actually use: pills, chips, small cards) ──────── */
+  --radius-xs:  6px;
+  --radius-pill: 999px;
+
+  /* ─── Elevation scale ─────────────────────────────────────────────────────
+     Layered shadows for cards / panels / overlays. --shadow-card and
+     --shadow-hover above are kept; these add the full elevation ramp. */
+  --elev-1: 0 1px 2px rgba(16,29,59,.05);
+  --elev-2: 0 1px 3px rgba(16,29,59,.06), 0 1px 2px rgba(16,29,59,.04);
+  --elev-3: 0 4px 16px -4px rgba(16,29,59,.10);
+  --elev-4: 0 8px 24px -6px rgba(16,29,59,.14);
+  --elev-5: 0 18px 48px -12px rgba(16,29,59,.22);
+
+  /* ─── Z-index scale ───────────────────────────────────────────────────────
+     Names map to the hierarchy already in use (drawer 50/51, modal 60/61,
+     dropdown ~40/1100, tooltip 1200, loading 10001). Use tokens going forward
+     so no two components guess at numbers. */
+  --z-base:        1;
+  --z-sticky:      20;
+  --z-dropdown:    40;
+  --z-drawer-back: 50;
+  --z-drawer:      51;
+  --z-modal-back:  60;
+  --z-modal:       61;
+  --z-popover:     1100;
+  --z-tooltip:     1200;
+  --z-toast:       1300;
+  --z-loading:     10001;
+
   /* Type system: Inter for UI (matches the HSE command mockup), IBM Plex Mono
      for numerics/IDs/badges so figures stay tabular-aligned. The sidebar keeps
      its own IBM Plex Sans face via --font-nav. */
@@ -43,19 +110,25 @@
   --radius-lg:  24px;
 
   /* Shadow */
-  --shadow-card: 0 4px 12px rgba(0,0,0,0.04);
-  --shadow-hover: 0 12px 28px -8px rgba(0,0,0,0.12);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-hover: 0 4px 16px -4px rgba(0,0,0,0.08);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
   background: var(--bg-app);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   color: var(--text-primary);
 }
+/* Descriptive/body content text: p, li, and generic td should stay at regular
+   weight so screens don't read as all-bold. Headings, labels, and values keep
+   their explicit font-weight declarations which always win over this rule. */
+p, li, td { font-weight: 400; }
 /* Lock scroll to app container only — prevents double scrollbar in Chrome/Edge.
    Class applied to html+body once app shell is active; login scrolls naturally. */
 html.app-active,
