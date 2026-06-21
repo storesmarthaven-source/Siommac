@@ -235,7 +235,7 @@ export function NotificationPreferences(): h.JSX.Element {
                     ? <span style={{ ...styles.skeleton, width: '40px' }} />
                     : (
                       <Toggle
-                        checked={pref.in_app && pref.enabled}
+                        checked={pref.in_app && (pref.enabled ?? true)}
                         disabled={isSaving}
                         onChange={() => handleToggle(type, 'in_app', pref.in_app)}
                         title={pref.in_app ? 'Disable in-app notifications for this type' : 'Enable in-app notifications for this type'}

@@ -9,7 +9,13 @@
  */
 
 import { z } from 'zod';
-import { uuid, isoTimestamp } from './employee';
+import { isoTimestamp } from './employee';
+
+/**
+ * App user / record ids are TEXT (app_users.id like "USR-…"), not UUID. The old
+ * `uuid` validator rejected every real row — see docs/COMMUNICATIONS_BACKBONE.md.
+ */
+const appId = z.string().min(1).max(64);
 
 // ── Notification type enum ────────────────────────────────────────────────────
 
@@ -43,11 +49,15 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
 // ── Notification row ──────────────────────────────────────────────────────────
 
 export const NotificationRowSchema = z.object({
-  id:         uuid,
-  user_id:    uuid,
-  type:       NotificationTypeSchema,
+  id:         appId,
+  // Backend scopes to the JWT actor and omits user_id from the payload; keep it
+  // optional so server-scoped rows validate.
+  user_id:    appId.optional(),
+  // `type` is permissive: the persisted/synthetic notification stream may carry
+  // types beyond the curated enum. Validate as string; UI maps known types.
+  type:       z.string().min(1),
   title:      z.string().min(1),
-  body:       z.string(),
+  body:       z.string().nullable().default(''),
   is_read:    z.boolean(),
   link:       z.string().nullable(),
   created_at: isoTimestamp,
@@ -58,9 +68,11 @@ export type NotificationRow = z.infer<typeof NotificationRowSchema>;
 // ── Notification preference row ───────────────────────────────────────────────
 
 export const NotificationPreferenceSchema = z.object({
-  user_id:  uuid,
-  type:     NotificationTypeSchema,
-  enabled:  z.boolean(),
+  // user_id omitted by the server-scoped read; optional.
+  user_id:  appId.optional(),
+  type:     z.string().min(1),
+  // `enabled` is a legacy/derived field the backend may not return; optional.
+  enabled:  z.boolean().optional(),
   in_app:   z.boolean(),
   email:    z.boolean(),
   whatsapp: z.boolean(),
@@ -71,7 +83,7 @@ export type NotificationPreferenceRow = z.infer<typeof NotificationPreferenceSch
 // ── Send notification payload (used by backend / admin) ──────────────────────
 
 export const SendNotificationSchema = z.object({
-  user_id: uuid,
+  user_id: appId,
   type:    NotificationTypeSchema,
   title:   z.string().min(1).max(200),
   body:    z.string().max(1000).default(''),

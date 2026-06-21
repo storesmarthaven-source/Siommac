@@ -76,9 +76,12 @@ describe('NotificationRowSchema', () => {
     }
   });
 
-  it('rejects a row with an unknown type', () => {
-    const result = NotificationRowSchema.safeParse({ ...validRow, type: 'unknown_type' });
-    expect(result.success).toBe(false);
+  it('accepts a row with a type outside the curated enum', () => {
+    // `type` is intentionally permissive: the persisted/synthetic notification
+    // stream may carry types beyond the UI enum (e.g. hse.* workflow events).
+    // Rejecting them would silently drop real notifications. UI maps known types.
+    const result = NotificationRowSchema.safeParse({ ...validRow, type: 'hse_incident_submitted' });
+    expect(result.success).toBe(true);
   });
 
   it('rejects a row with an empty title', () => {
@@ -96,14 +99,24 @@ describe('NotificationRowSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects a row missing a required field', () => {
-    const { body: _omit, ...withoutBody } = validRow;
-    const result = NotificationRowSchema.safeParse(withoutBody);
+  it('rejects a row missing a genuinely required field', () => {
+    // is_read is required; omitting it must fail. (body defaults to '' and
+    // user_id is optional, since the server scopes/omits it — those are not
+    // required on the wire.)
+    const { is_read: _omit, ...withoutIsRead } = validRow;
+    const result = NotificationRowSchema.safeParse(withoutIsRead);
     expect(result.success).toBe(false);
   });
 
-  it('rejects a row with invalid UUID', () => {
-    const result = NotificationRowSchema.safeParse({ ...validRow, id: 'not-a-uuid' });
+  it('accepts a text (non-UUID) id', () => {
+    // Ids are text (app_users.id like "USR-…"), not UUID. A plain string id
+    // must validate — the old .uuid() check rejected every real row.
+    const result = NotificationRowSchema.safeParse({ ...validRow, id: 'NOTIF-2026-0001' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a row with an empty id', () => {
+    const result = NotificationRowSchema.safeParse({ ...validRow, id: '' });
     expect(result.success).toBe(false);
   });
 });

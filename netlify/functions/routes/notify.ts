@@ -33,12 +33,15 @@ const UpdatePrefSchema = z.object({
   whatsapp: z.boolean().optional(),
 });
 
+// Notification ids and user ids are TEXT (app_users.id like "USR-…"), not UUID.
+// Using .uuid() here would reject every valid id — the typing bug flagged in
+// docs/COMMUNICATIONS_BACKBONE.md. Bound length defensively instead.
 const MarkReadSchema = z.object({
-  notificationId: z.string().uuid(),
+  notificationId: z.string().min(1).max(64),
 });
 
 const SendNotifSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.string().min(1).max(64),
   type:   z.string().min(1),
   title:  z.string().min(1).max(200),
   body:   z.string().max(1000).optional(),
@@ -136,6 +139,52 @@ router.post('/updateMyPreference', async c => {
       type,
       ...fields,
     }, { onConflict: 'user_id,type' });
+
+  if (error) return c.json({ success: false, message: error.message });
+  return c.json({ success: true });
+});
+
+// ── Unread count (bell badge — hot path) ──────────────────────────────────────
+
+router.post('/getUnreadCount', async c => {
+  const actor = await requireUser(c);
+
+  const { count, error } = await sb
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', actor.id)
+    .eq('is_read', false);
+
+  if (error) return c.json({ success: false, message: error.message });
+  return c.json({ success: true, data: { count: count ?? 0 } });
+});
+
+// ── Delete one notification ───────────────────────────────────────────────────
+
+router.post('/deleteNotification', async c => {
+  const actor = await requireUser(c);
+  const v     = zv(c, MarkReadSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+
+  const { error } = await sb
+    .from('notifications')
+    .delete()
+    .eq('id', v.data.notificationId)
+    .eq('user_id', actor.id);   // scoped to current user — cannot delete others'
+
+  if (error) return c.json({ success: false, message: error.message });
+  return c.json({ success: true });
+});
+
+// ── Clear all notifications for current user ──────────────────────────────────
+
+router.post('/clearAllNotifications', async c => {
+  const actor = await requireUser(c);
+
+  const { error } = await sb
+    .from('notifications')
+    .delete()
+    .eq('user_id', actor.id);
 
   if (error) return c.json({ success: false, message: error.message });
   return c.json({ success: true });
