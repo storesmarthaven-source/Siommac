@@ -41,13 +41,13 @@ function seedState(): WorkflowState {
   const ctx: ActorContext = { actor: 'Sarah Chen', role: 'HSE Manager' };
   // One pre-existing incident workflow awaiting approval.
   applySubmit(s, ctx, {
-    templateId: 'incident-investigation',
+    templateId: 'hse_incident_investigation',
     recordRef: 'INC-2026-041',
     reason: 'Diesel sheen near storm drain — EMA evidence and cleanup closeout pending.',
     due: 'Today 4:00 PM',
   });
   applySubmit(s, ctx, {
-    templateId: 'permit-approval',
+    templateId: 'hse_permit_approval',
     recordRef: 'PTW-0033',
     reason: 'Confined space vessel entry — gas test and rescue plan required.',
     due: 'Today 3:30 PM',

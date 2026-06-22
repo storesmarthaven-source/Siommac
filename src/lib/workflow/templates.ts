@@ -21,11 +21,12 @@ const STAGES: readonly WorkflowStage[] = [
 
 export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
   {
-    id: 'incident-investigation',
+    id: 'hse_incident_investigation',
     label: 'Incident Investigation',
     sourceModule: 'hse',
     targetModule: 'hse',
     defaultPriority: 'critical',
+    seeded: true,
     stages: STAGES,
     approvalRoute: [
       { role: 'Site HSE Officer', label: 'Initial classification and immediate controls' },
@@ -42,29 +43,12 @@ export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
     ],
   },
   {
-    id: 'permit-approval',
-    label: 'Permit to Work Approval',
-    sourceModule: 'hse',
-    targetModule: 'hse',
-    defaultPriority: 'high',
-    stages: STAGES,
-    approvalRoute: [
-      { role: 'Permit Issuer',  label: 'Hazard controls and gas test verification' },
-      { role: 'HSE Manager',    label: 'High-risk permit authorisation' },
-    ],
-    evidence: [
-      { key: 'gas',    label: 'Gas test record',        required: true },
-      { key: 'rescue', label: 'Rescue / standby plan',   required: true },
-      { key: 'isolation', label: 'Isolation / LOTO certificate', required: false },
-    ],
-    handoffsOnApproval: [],
-  },
-  {
-    id: 'corrective-action',
+    id: 'hse_capa_closure',
     label: 'Corrective Action (CAPA)',
     sourceModule: 'hse',
     targetModule: 'hse',
     defaultPriority: 'high',
+    seeded: true,
     stages: STAGES,
     approvalRoute: [
       { role: 'Action Owner', label: 'Complete and submit verification evidence' },
@@ -75,15 +59,36 @@ export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
     ],
     handoffsOnApproval: [],
   },
+  // ── Below: not yet seeded in DB — hidden from Wizard until migration is added ─
   {
-    id: 'training-override',
+    id: 'hse_permit_approval',
+    label: 'Permit to Work Approval',
+    sourceModule: 'hse',
+    targetModule: 'hse',
+    defaultPriority: 'high',
+    seeded: false,
+    stages: STAGES,
+    approvalRoute: [
+      { role: 'Permit Issuer',  label: 'Hazard controls and gas test verification' },
+      { role: 'HSE Manager',    label: 'High-risk permit authorisation' },
+    ],
+    evidence: [
+      { key: 'gas',       label: 'Gas test record',               required: true  },
+      { key: 'rescue',    label: 'Rescue / standby plan',          required: true  },
+      { key: 'isolation', label: 'Isolation / LOTO certificate',   required: false },
+    ],
+    handoffsOnApproval: [],
+  },
+  {
+    id: 'hse_training_override',
     label: 'Training Expiry Override',
     sourceModule: 'hse',
     targetModule: 'hse',
     defaultPriority: 'high',
+    seeded: false,
     stages: STAGES,
     approvalRoute: [
-      { role: 'HSE Manager',     label: 'Temporary competency override decision' },
+      { role: 'HSE Manager',      label: 'Temporary competency override decision' },
       { role: 'Operations Owner', label: 'Operational acceptance of residual risk' },
     ],
     evidence: [
@@ -92,11 +97,12 @@ export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
     handoffsOnApproval: [],
   },
   {
-    id: 'document-approval',
+    id: 'hse_document_approval',
     label: 'Controlled Document Approval',
     sourceModule: 'documents',
     targetModule: 'documents',
     defaultPriority: 'normal',
+    seeded: false,
     stages: STAGES,
     approvalRoute: [
       { role: 'Document Controller', label: 'Technical and compliance review' },
@@ -110,11 +116,12 @@ export const WORKFLOW_TEMPLATES: readonly WorkflowTemplate[] = [
     ],
   },
   {
-    id: 'ppe-request',
+    id: 'hse_ppe_request',
     label: 'PPE Request',
     sourceModule: 'hse',
     targetModule: 'hse',
     defaultPriority: 'normal',
+    seeded: false,
     stages: STAGES,
     approvalRoute: [
       { role: 'Site HSE Officer', label: 'Validate role requirement and stock availability' },

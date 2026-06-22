@@ -28,7 +28,7 @@ describe('submitWorkflow', () => {
     const beforeAud = before.audit.length;
 
     const wf = submitWorkflow(CTX, {
-      templateId: 'corrective-action',
+      templateId: 'hse_capa_closure',
       recordRef: 'CA-999',
       reason: 'Test corrective action',
     });
@@ -55,7 +55,7 @@ describe('submitWorkflow', () => {
 
 describe('decide', () => {
   it('approving updates statuses and appends an audit event', () => {
-    const wf = submitWorkflow(CTX, { templateId: 'corrective-action', recordRef: 'CA-1', reason: 'r' })!;
+    const wf = submitWorkflow(CTX, { templateId: 'hse_capa_closure', recordRef: 'CA-1', reason: 'r' })!;
     const apr = getWorkflowState().approvals.find(a => a.workflowId === wf.id)!;
     const audBefore = getWorkflowState().audit.length;
 
@@ -68,7 +68,7 @@ describe('decide', () => {
   });
 
   it('rejecting records the mandatory comment', () => {
-    const wf = submitWorkflow(CTX, { templateId: 'permit-approval', recordRef: 'PTW-9', reason: 'r' })!;
+    const wf = submitWorkflow(CTX, { templateId: 'hse_permit_approval', recordRef: 'PTW-9', reason: 'r' })!;
     const apr = getWorkflowState().approvals.find(a => a.workflowId === wf.id)!;
 
     decide(CTX, apr.id, 'reject', 'Gas test missing');
@@ -79,8 +79,8 @@ describe('decide', () => {
   });
 
   it('approving a template with handoffs emits them', () => {
-    // incident-investigation declares finance + hr handoffs on approval.
-    const wf = submitWorkflow(CTX, { templateId: 'incident-investigation', recordRef: 'INC-99', reason: 'r' })!;
+    // hse_incident_investigation declares finance + hr handoffs on approval.
+    const wf = submitWorkflow(CTX, { templateId: 'hse_incident_investigation', recordRef: 'INC-99', reason: 'r' })!;
     const apr = getWorkflowState().approvals.find(a => a.workflowId === wf.id)!;
     const hoBefore = getWorkflowState().handoffs.length;
 
@@ -95,7 +95,7 @@ describe('decide', () => {
 
 describe('toggleEvidence', () => {
   it('flips an evidence item attached state', () => {
-    const wf = submitWorkflow(CTX, { templateId: 'permit-approval', recordRef: 'PTW-2', reason: 'r' })!;
+    const wf = submitWorkflow(CTX, { templateId: 'hse_permit_approval', recordRef: 'PTW-2', reason: 'r' })!;
     const apr = getWorkflowState().approvals.find(a => a.workflowId === wf.id)!;
     const key = apr.evidence[0]!.key;
     expect(apr.evidence[0]!.attached).toBe(false);

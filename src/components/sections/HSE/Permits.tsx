@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field, SelectInput, TextInput, TextareaInput,
+  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput, TextareaInput,
   type AreaTab,
 } from './_shared';
 import { useWorkflow } from '@lib/workflow';
@@ -16,8 +16,8 @@ import {
 } from './types';
 
 const TABS: AreaTab[] = [
-  { key: 'register', label: 'Permit Register',  icon: 'fa-clipboard-list' },
-  { key: 'new',      label: 'New Permit',       icon: 'fa-circle-plus' },
+  { key: 'register', label: 'Permit Register',  sublabel: 'Active & recent',  icon: 'fa-clipboard-list' },
+  { key: 'new',      label: 'New Permit',       sublabel: 'Request PTW',       icon: 'fa-circle-plus' },
 ];
 
 const TYPE_ICONS: Record<string, string> = {
@@ -272,11 +272,13 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
   const hold    = permits.filter(p => p.status === 'Hold').length;
 
   const stats = [
-    { icon: 'fa-file-signature',    label: 'Total Permits',      value: permits.length, color: 'blue' },
-    { icon: 'fa-circle-check',      label: 'Live',               value: live,           color: 'green' },
-    { icon: 'fa-triangle-exclamation', label: 'Blocked / Overdue', value: blocked,     color: 'red' },
-    { icon: 'fa-clock',             label: 'On Hold',            value: hold,           color: 'gold' },
+    { icon: 'fa-file-signature',    label: 'Total Permits',       value: permits.length, sub: 'on register',     color: 'blue'  as const },
+    { icon: 'fa-circle-check',      label: 'Live',                value: live,           sub: 'currently active',color: 'green' as const },
+    { icon: 'fa-triangle-exclamation', label: 'Blocked / Overdue', value: blocked,      sub: 'need action',     color: 'red'   as const },
+    { icon: 'fa-clock',             label: 'On Hold',             value: hold,           sub: 'pending clearance',color: 'gold' as const },
   ];
+
+  const tabsWithCounts = withCounts(TABS, { register: permits.length });
 
   return (
     <div class="hse-tab hse-dash">
@@ -284,36 +286,107 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         icon="fa-file-signature"
         areaIcon="fa-file-contract"
         title="Permits to Work"
-        crumb="Permits (PTW)"
         watermarkClass="hse-wm-permits"
-        context={['Evidence-gated work authorisation', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-          { icon: 'fa-shield-halved', label: 'PTW Standard v3.0' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Avg. issue time', value: '42 min' },
-          { label: 'Evidence compliance', value: '88%' },
-          { label: 'Permits issued YTD', value: '108' },
-          { label: 'Zero LTIs on permits', value: 'YTD', highlight: true },
+        footerItems={[
+          { icon: 'fa-circle-check', label: 'Live Permits', value: String(live), pill: '● Active', pillVariant: 'green' },
+          { icon: 'fa-stopwatch', label: 'Avg. Issue Time', value: '42 min', sub: ' from request to live', pill: '● PTW v3.0', pillVariant: 'green' },
+          { icon: 'fa-chart-pie', label: 'Evidence Compliance', value: '88%', progress: 88, trend: blocked > 0 ? `${blocked} blocked` : undefined, trendUp: false },
+          { icon: 'fa-calendar-alt', label: 'Permits Issued YTD', value: '108 permits', pill: '● 0 LTIs', pillVariant: 'green' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 
-      {active === 'register' && (
-        <RegisterTab permits={permits} onNew={() => setActive('new')} />
-      )}
-      {active === 'new' && (
-        <NewPermitTab
-          onSubmit={p => {
-            setPermits([p, ...permits]);
-            wf.submit({ templateId: 'permit-approval', recordRef: p.ref, reason: `${p.type} — ${p.site}`, priority: 'high' });
-            setActive('register');
-          }}
-        />
-      )}
+      <div class="hse-spark-grid">
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Active Permits</span></div>
+          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{live}</div>
+          <div class="hse-spark-sub">Currently live on-site</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Blocked / Overdue</span></div>
+          <div class="hse-spark-val" style={{ color: blocked > 0 ? '#ef4444' : '#4ade80' }}>{blocked}</div>
+          <div class="hse-spark-sub">Evidence gate not cleared</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Avg. Issue Time</span></div>
+          <div class="hse-spark-val">42 min</div>
+          <div class="hse-spark-sub">From request to live</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Permit Compliance</span></div>
+          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>88%</div>
+          <div class="hse-spark-sub">Evidence attached on issue</div>
+          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
+            <div class="hse-spark-bar-fill" style={{ width: '88%', background: '#f59e0b' }} />
+          </div>
+        </div>
+      </div>
+
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          <AreaTabs
+            icon="fa-file-signature"
+            title="Permit to Work Management"
+            sub="Evidence-gated work authorisation for high-risk tasks"
+            tabs={tabsWithCounts} active={active} onSelect={setActive}
+            actionLabel="New Permit" onAction={() => setActive('new')}
+          />
+
+          {active === 'register' && (
+            <RegisterTab permits={permits} onNew={() => setActive('new')} />
+          )}
+          {active === 'new' && (
+            <NewPermitTab
+              onSubmit={p => {
+                setPermits([p, ...permits]);
+                wf.submit({ templateId: 'hse_permit_approval', recordRef: p.ref, reason: `${p.type} — ${p.site}`, priority: 'high' });
+                setActive('register');
+              }}
+            />
+          )}
+        </div>
+
+        <div class="hse-right-col">
+          <div class="oq-dark-card">
+            <div class="oq-dark-header">
+              <i class="fas fa-triangle-exclamation" />
+              <span>Blocked / Overdue</span>
+              <span class="oq-dark-count">{blocked}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {permits.filter(p => /blocked|overdue/i.test(p.status)).slice(0, 5).map(p => (
+                <div class="oq-dark-item" key={p.ref}>
+                  <div class="icon-badge red"><i class={`fas ${TYPE_ICONS[p.type] ?? 'fa-file-signature'}`} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{p.ref} — {p.type}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{p.site} · Gate: {p.gate}</div>
+                  </div>
+                  <span class="oq-dark-tag danger">{p.status}</span>
+                </div>
+              ))}
+              {blocked === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No blocked permits</div>}
+            </div>
+            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
+              <i class="fas fa-circle-check" />
+              <span>Live Permits</span>
+              <span class="oq-dark-count">{live}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {permits.filter(p => p.status === 'Live').slice(0, 4).map(p => (
+                <div class="oq-dark-item" key={p.ref}>
+                  <div class="icon-badge green"><i class={`fas ${TYPE_ICONS[p.type] ?? 'fa-file-signature'}`} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{p.ref} — {p.type}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{p.holder} · Exp {p.expiry}</div>
+                  </div>
+                  <span class="oq-dark-tag ok">Live</span>
+                </div>
+              ))}
+              {live === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No active permits</div>}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

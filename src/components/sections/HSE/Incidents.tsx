@@ -1109,7 +1109,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       });
       const ref = result.ref ?? `INC-2026-${Math.floor(100 + Math.random() * 900)}`;
       wf.submit({
-        templateId: 'incident-investigation', recordRef: ref,
+        templateId: 'hse_incident_investigation', recordRef: ref,
         reason: payload.description,
         priority: dbSeverity === 'critical' ? 'critical' : 'high',
       });

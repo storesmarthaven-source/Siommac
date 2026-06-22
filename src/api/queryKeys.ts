@@ -179,6 +179,13 @@ export const workflowKeys = {
   tasks:  () => [...workflowKeys.all, 'tasks']                      as const,
 } as const;
 
+// ── Handoffs ──────────────────────────────────────────────────────────────────
+
+export const handoffKeys = {
+  all:  ['handoffs']                                                 as const,
+  list: (f: Record<string, unknown>) => ['handoffs', 'list', f]     as const,
+} as const;
+
 // ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
 
 export const hseIncidentKeys = {

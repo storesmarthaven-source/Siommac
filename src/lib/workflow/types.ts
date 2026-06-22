@@ -73,7 +73,7 @@ export interface HandoffSpec {
  * as data; the engine never hard-codes a process.
  */
 export interface WorkflowTemplate {
-  readonly id:            string;          // e.g. 'incident-investigation'
+  readonly id:            string;          // matches workflow_templates.key in DB
   readonly label:         string;          // 'Incident Investigation'
   readonly sourceModule:  ModuleKey;
   readonly targetModule:  ModuleKey;
@@ -83,6 +83,8 @@ export interface WorkflowTemplate {
   readonly evidence:      readonly EvidenceGate[];
   /** Handoffs emitted to downstream modules when the workflow is approved. */
   readonly handoffsOnApproval: readonly HandoffSpec[];
+  /** True when a matching row exists in DB workflow_templates. Wizard only shows seeded templates. */
+  readonly seeded:        boolean;
 }
 
 // ── Runtime instances (what the store holds) ──────────────────────────────────

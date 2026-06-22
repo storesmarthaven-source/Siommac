@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from './_shared';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 import { useWorkflow } from '@lib/workflow/useWorkflow';
 
@@ -125,7 +125,7 @@ function SpillsTab(): VNode {
       volume: newVolume || 'TBD', tier: 'Tier 1', media: newMedia,
       reporter: 'S. Chen', emaNotified: false, status: 'Open', severity: 'warning',
     }, ...spills]);
-    wf.submit({ templateId: 'incident-investigation', recordRef: ref, reason: `Environmental spill: ${newSubstance} at ${newSite} — ${newDesc || 'See spill register'}` });
+    wf.submit({ templateId: 'hse_incident_investigation', recordRef: ref, reason: `Environmental spill: ${newSubstance} at ${newSite} — ${newDesc || 'See spill register'}` });
     setModal(false);
     setSubstance(''); setVolume(''); setDesc('');
   };
@@ -397,10 +397,10 @@ export function EnvironmentalArea({ tab }: { tab: string }): VNode {
   const pendingWaste = mockWaste.filter(w => w.status === 'Pending').length;
 
   const stats = [
-    { icon: 'fa-droplet',    label: 'Spills YTD',       value: mockSpills.length,    color: 'blue'  },
-    { icon: 'fa-trash-can',  label: 'Waste Records',    value: mockWaste.length,     color: 'blue'  },
-    { icon: 'fa-file-lines', label: 'EMA Notifications',value: mockEmaNotifications.length, color: 'green' },
-    { icon: 'fa-triangle-exclamation', label: 'Open / Pending', value: openSpills + pendingWaste, color: 'gold' },
+    { icon: 'fa-droplet',    label: 'Spills YTD',       value: mockSpills.length,           sub: 'this year',     color: 'blue'  as const },
+    { icon: 'fa-trash-can',  label: 'Waste Records',    value: mockWaste.length,            sub: 'manifested',    color: 'blue'  as const },
+    { icon: 'fa-file-lines', label: 'EMA Notifications',value: mockEmaNotifications.length, sub: 'submitted',     color: 'green' as const },
+    { icon: 'fa-triangle-exclamation', label: 'Open / Pending', value: openSpills + pendingWaste, sub: 'need action', color: 'gold' as const },
   ];
 
   return (
@@ -409,23 +409,22 @@ export function EnvironmentalArea({ tab }: { tab: string }): VNode {
         icon="fa-leaf"
         areaIcon="fa-earth-americas"
         title="Environmental Management"
-        crumb="Environmental Mgmt"
         watermarkClass="hse-wm-environmental"
-        context={['Spill register · waste manifests · EMA notifications · env monitoring', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-leaf', label: 'EMA Act' },
-          { icon: 'fa-ship', label: 'SOPEP — Galeota' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Spills this year',          value: String(mockSpills.length) },
-          { label: 'Open spill events',          value: String(openSpills) },
-          { label: 'Waste manifests pending',    value: String(pendingWaste) },
-          { label: 'EMA 24-hr notification',     value: 'Compliant process', highlight: true },
+        footerItems={[
+          { icon: 'fa-droplet', label: 'Open Spill Events', value: String(openSpills), pill: openSpills > 0 ? '● Active' : '● Clear', pillVariant: openSpills > 0 ? 'red' : 'green' },
+          { icon: 'fa-trash-can', label: 'Waste Manifests Pending', value: String(pendingWaste), trend: pendingWaste > 0 ? 'pending' : undefined, trendUp: false },
+          { icon: 'fa-file-lines', label: 'EMA 24-hr Notification', value: 'Compliant', pill: '● Process', pillVariant: 'green' },
+          { icon: 'fa-ship', label: 'SOPEP — Galeota', value: 'Current', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+      <AreaTabs
+        icon="fa-leaf"
+        title="Environmental Management"
+        sub="Spill register, waste manifests, EMA notifications, and monitoring"
+        tabs={withCounts(TABS, { spills: mockSpills.length, waste: mockWaste.length, ema: mockEmaNotifications.length })}
+        active={active} onSelect={setActive}
+      />
       {active === 'spills'     && <SpillsTab />}
       {active === 'waste'      && <WasteTab />}
       {active === 'ema'        && <EmaTab />}
