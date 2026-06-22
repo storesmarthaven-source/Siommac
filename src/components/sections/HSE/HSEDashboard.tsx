@@ -11,9 +11,11 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
-import { useWorkflow } from '@lib/workflow';
+import { useState } from 'preact/hooks';
+import { useHseDashboardKpis, type HseDashboardKpis } from '@api/hse/incidents';
+import { useMyWorkflowTasks, useDecideWorkflowTask, type WorkflowTask } from '@api/workflows';
 import { AreaHero } from './_shared';
+import { OWQPanel } from './Incidents';
 import {
   mockHseKpis, mockTrend, mockQueue,
   mockHseIncidents, mockSiteRisk, mockPermits, mockReadiness,
@@ -154,11 +156,21 @@ function deltaChip(vals: number[], goodDown = false): VNode | null {
   );
 }
 
-function KpiRow({ onOpen, wf }: { onOpen: (d: DD) => void; wf: ReturnType<typeof useWorkflow> }): VNode {
-  const pendingApprovals = wf.state.approvals.filter(a => /pending|in_review/.test(a.status)).length;
+function KpiRow({ onOpen, kpisData, pendingApprovals, openWorkflows }: {
+  onOpen: (d: DD) => void;
+  kpisData: HseDashboardKpis | undefined;
+  pendingApprovals: number;
+  openWorkflows: number;
+}): VNode {
   const kpis = mockHseKpis.map(k => {
-    if (k.label === 'CAPA Closure')   return { ...k, note: `Target 95% · ${pendingApprovals} pending approvals` };
-    if (k.label === 'PPE Compliance') return { ...k, note: `${wf.openCount} workflows open` };
+    if (k.label === 'OSH Recordables' && kpisData)
+      return { ...k, value: String(kpisData.incidentsMtd), note: kpisData.oshNotificationsOverdue > 0 ? `${kpisData.oshNotificationsOverdue} OSH notif. overdue` : '1 pending' };
+    if (k.label === 'Lost Time Cases' && kpisData)
+      return { ...k, value: String(kpisData.ltiCasesYtd), note: kpisData.ltiFreeDays !== null ? `${kpisData.ltiFreeDays} LTI-free days` : 'Under review' };
+    if (k.label === 'CAPA Closure')
+      return { ...k, note: `Target 95% · ${pendingApprovals} pending approvals` };
+    if (k.label === 'PPE Compliance')
+      return { ...k, note: `${openWorkflows} workflows open` };
     return k;
   });
   return (
@@ -217,10 +229,12 @@ const ESCALATION_ALERTS: AlertItem[] = [
   { severity: 'blue',  title: 'DOC-HSE-0205 Emergency Response Plan — review due',   sub: 'Documents · Review date: 30 Jun 2026',               chip: 'Due soon', chipClass: 'chip-blue' },
 ];
 
-function AlertsLayer({ wf, onOpen }: { wf: ReturnType<typeof useWorkflow>; onOpen: (d: DD) => void }): VNode {
-  const pending = wf.state.approvals.filter(a => /pending|in_review/.test(a.status));
-  const recent  = wf.state.audit.slice(0, 5);
-
+function AlertsLayer({ pendingTasks, openWorkflows, onDecide, onOpen }: {
+  pendingTasks: WorkflowTask[];
+  openWorkflows: number;
+  onDecide: (taskId: string, decision: 'approved' | 'returned') => void;
+  onOpen: (d: DD) => void;
+}): VNode {
   return (
     <div class="hse-alerts-grid">
       {/* escalation panel */}
@@ -246,56 +260,37 @@ function AlertsLayer({ wf, onOpen }: { wf: ReturnType<typeof useWorkflow>; onOpe
       {/* approvals inbox — ppe-signals-panel style */}
       <aside class="ppe-signals-panel hse-appr-signals">
         <h4><i class="fas fa-inbox" /> Approvals inbox
-          {pending.length > 0 && <span class="hse-appr-count-badge">{pending.length}</span>}
+          {pendingTasks.length > 0 && <span class="hse-appr-count-badge">{pendingTasks.length}</span>}
         </h4>
         <div class="ppe-signals-list">
-          {pending.length === 0 ? (
+          {pendingTasks.length === 0 ? (
             <div class="ppe-signal">
               <i class="fas fa-circle-check is-ok" />
               <div class="ppe-signal-text"><strong>All clear</strong><span>No pending approvals.</span></div>
             </div>
-          ) : pending.map(a => (
-            <div class="ppe-signal" key={a.id}>
+          ) : pendingTasks.map(task => (
+            <div class="ppe-signal" key={task.id}>
               <i class="fas fa-file-circle-check is-info" />
               <div class="ppe-signal-text">
-                <strong>{a.title}</strong>
-                <span>{a.recordRef} · {a.approverRole}</span>
+                <strong>{task.step_key}</strong>
+                <span>{task.workflow_instances?.ref ?? task.workflow_id} · {task.assigned_role}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
                 <button class="hse-appr-inline-btn hse-appr-inline-btn--ok"
-                  onClick={e => { e.stopPropagation(); wf.decide(a.id, 'approve', 'Approved via dashboard'); }}>
+                  onClick={e => { e.stopPropagation(); onDecide(task.id, 'approved'); }}>
                   Approve
                 </button>
                 <button class="hse-appr-inline-btn hse-appr-inline-btn--ret"
-                  onClick={e => { e.stopPropagation(); wf.decide(a.id, 'return', 'Returned for review'); }}>
+                  onClick={e => { e.stopPropagation(); onDecide(task.id, 'returned'); }}>
                   Return
                 </button>
               </div>
             </div>
           ))}
         </div>
-        {recent.length > 0 && (
-          <>
-            <div class="hse-panel-divider" />
-            <h4><i class="fas fa-shield-halved" /> Recent audit</h4>
-            <div class="ppe-signals-list">
-              {recent.slice(0, 4).map((ev, i) => (
-                <div class="ppe-signal" key={i}>
-                  <i class="fas fa-clock-rotate-left is-info" />
-                  <div class="ppe-signal-text">
-                    <strong>{ev.event}</strong>
-                    <span>{ev.actor} · {new Date(ev.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
         <div class="hse-panel-divider" />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <span class="ppe-signal-tag is-info">{wf.openCount} workflows</span>
-          <span class="ppe-signal-tag">{wf.state.audit.length} audit events</span>
-          <span class="ppe-signal-tag">{wf.state.handoffs.length} handoffs</span>
+          <span class="ppe-signal-tag is-info">{openWorkflows} workflows</span>
         </div>
       </aside>
     </div>
@@ -919,9 +914,13 @@ export function HSEDashboard(): VNode {
   const [search, setSearch] = useState('');
   const [site,   setSite]   = useState('all');
   const [risk,   setRisk]   = useState('all');
-  const wf = useWorkflow();
 
-  const pendingCount = wf.state.approvals.filter(a => /pending|in_review/.test(a.status)).length;
+  const { data: kpis }       = useHseDashboardKpis();
+  const { data: tasks = [] } = useMyWorkflowTasks();
+  const decideTask            = useDecideWorkflowTask();
+
+  const pendingCount  = tasks.length;
+  const openWorkflows = kpis?.openWorkflows ?? 0;
 
   return (
     <div class="hse-tab hse-dash">
@@ -930,28 +929,20 @@ export function HSEDashboard(): VNode {
         icon="fa-helmet-safety"
         areaIcon="fa-shield-halved"
         title="HSE Dashboard"
-        crumb="Dashboard"
         watermarkClass="hse-dashboard-hero"
-        context={['Trinidad & Tobago Operations', '2026 HSE Programme']}
-        badges={[
-          { icon: 'fa-calendar',     label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-          { icon: 'fa-gavel',        label: 'OSH Act 2004'   },
-          { icon: 'fa-leaf',         label: 'EMA Compliance' },
-        ]}
         stats={[
-          { icon: 'fa-users',                label: 'Workers & contractors', value: 418,          color: 'blue'  },
-          { icon: 'fa-triangle-exclamation', label: 'Open HSE work',         value: 72,           color: 'gold'  },
-          { icon: 'fa-ban',                  label: 'OSH/EMA blockers',      value: 6,            color: 'red'   },
-          { icon: 'fa-id-badge',             label: 'PTW active',            value: 11,           color: 'blue'  },
-          { icon: 'fa-inbox',                label: 'Pending approvals',     value: pendingCount, color: pendingCount > 0 ? 'gold' : 'green' },
+          { icon: 'fa-users',                label: 'Workers & contractors', value: 418,          sub: '5 active sites',  color: 'blue'  as const },
+          { icon: 'fa-triangle-exclamation', label: 'Open HSE work',         value: 72,           sub: 'across modules',  color: 'gold'  as const },
+          { icon: 'fa-ban',                  label: 'OSH/EMA blockers',      value: 6,            sub: 'need clearance',  color: 'red'   as const },
+          { icon: 'fa-id-badge',             label: 'PTW active',            value: 11,           sub: 'live permits',    color: 'blue'  as const },
+          { icon: 'fa-inbox',                label: 'Pending approvals',     value: pendingCount, sub: 'awaiting action', color: (pendingCount > 0 ? 'gold' : 'green') as 'gold' | 'green' },
         ]}
-        metrics={[
-          { label: 'HSE Health Score',     value: `${HSE_HEALTH_SCORE}%`, highlight: HSE_HEALTH_SCORE >= 80 },
-          { label: 'LTI-free days',        value: '47',                   highlight: true },
-          { label: 'LTIFR (per 200k hrs)', value: '0.48' },
-          { label: 'CAPA closure',         value: '87%' },
-          { label: 'Avg. response',        value: '< 30 min' },
+        footerItems={[
+          { icon: 'fa-heart-pulse',  label: 'HSE Health Score', value: `${HSE_HEALTH_SCORE}%`, pill: HSE_HEALTH_SCORE >= 80 ? '● Healthy' : '● At Risk', pillVariant: HSE_HEALTH_SCORE >= 80 ? 'green' : 'amber' },
+          { icon: 'fa-calendar-check', label: 'LTI-free Days', value: kpis?.ltiFreeDays?.toString() ?? '…', sub: 'days', trend: 'improving', trendUp: true },
+          { icon: 'fa-calculator',   label: 'LTIFR (per 200k hrs)', value: '0.48', pill: '● On Target', pillVariant: 'green' },
+          { icon: 'fa-chart-pie',    label: 'CAPA Closure', value: '87%', progress: 87 },
+          { icon: 'fa-clock',        label: 'Avg. Response', value: '< 30 min', pill: '✓ Met SLA', pillVariant: 'green' },
         ]}
       />
 
@@ -985,11 +976,29 @@ export function HSEDashboard(): VNode {
 
       {/* Layer 1 — Command KPIs */}
       <LayerLabel>Command KPIs</LayerLabel>
-      <KpiRow onOpen={d => setDrawer(d)} wf={wf} />
+      <KpiRow
+        onOpen={d => setDrawer(d)}
+        kpisData={kpis}
+        pendingApprovals={pendingCount}
+        openWorkflows={openWorkflows}
+      />
 
       {/* Layer 2 — Alerts & Approvals */}
       <LayerLabel>Real-time Alerts & Approvals</LayerLabel>
-      <AlertsLayer wf={wf} onOpen={d => setDrawer(d)} />
+      <AlertsLayer
+        pendingTasks={tasks}
+        openWorkflows={openWorkflows}
+        onDecide={(taskId, decision) => decideTask.mutate({ taskId, decision })}
+        onOpen={d => setDrawer(d)}
+      />
+
+      {/* Open Work Queue — triage panel moved from Incidents page */}
+      <OWQPanel
+        incidents={mockIncidents}
+        capa={mockCapa}
+        onOpenIncident={() => {}}
+        onOpenCapa={() => {}}
+      />
 
       {/* Layer 3 — Module Health */}
       <LayerLabel>Module Health</LayerLabel>
