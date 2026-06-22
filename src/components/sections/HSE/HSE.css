@@ -5034,28 +5034,39 @@ body[data-theme="dark"] .hero-footer {
 /* ── Incident drawer tab bar ─────────────────────────────────────────────────── */
 .hse-idrawer-tabbar {
   display: flex;
+  justify-content: center;
   overflow-x: auto;
   scrollbar-width: none;
-  background: var(--siomac-navy);
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #fff;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  padding: 0 4px;
 }
 .hse-idrawer-tabbar::-webkit-scrollbar { display: none; }
 .hse-idrawer-tab {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 8px 12px 9px;
+  display: flex; align-items: center; gap: 5px;
+  padding: 10px 13px 11px;
   border: none; background: transparent;
-  color: rgba(255,255,255,.45);
+  color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em;
+  font-size: 0.71rem; font-weight: 500;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
   transition: color .15s, border-color .15s;
+  margin-bottom: -1px;
   flex-shrink: 0;
 }
-.hse-idrawer-tab i { font-size: 0.82rem; }
-.hse-idrawer-tab:hover { color: rgba(255,255,255,.75); }
-.hse-idrawer-tab.active { color: var(--siomac-gold); border-bottom-color: var(--siomac-gold); }
+.hse-idrawer-tab i { font-size: 0.74rem; }
+.hse-idrawer-tab:hover { color: var(--siomac-navy); }
+.hse-idrawer-tab.active { color: var(--siomac-navy); border-bottom-color: var(--siomac-navy); font-weight: 600; }
+
+/* ── Tab content wrapper ─────────────────────────────────────────────────────── */
+.hse-idrawer-tab-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 /* ── Empty state inside drawer tabs ──────────────────────────────────────────── */
 .hse-idrawer-empty {

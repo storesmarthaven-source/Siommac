@@ -3287,10 +3287,9 @@ function DrawerTabBar({ active, onChange }: { active: DrawerTab; onChange: (t: D
           key={t.key}
           class={`hse-idrawer-tab${active === t.key ? ' active' : ''}`}
           onClick={() => onChange(t.key)}
-          title={t.label}
         >
           <i class={`fas ${t.icon}`} />
-          <span>{t.label}</span>
+          {t.label}
         </button>
       ))}
     </div>
@@ -3764,16 +3763,18 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
 
         {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
-          {detailQ.isError && (
-            <div class="hse-idrawer-banner hse-idrawer-banner--danger">
-              <i class="fas fa-triangle-exclamation" />
-              <div class="hse-idrawer-banner-text">
-                <strong>Failed to load incident detail</strong>
-                <span>{(detailQ.error as Error)?.message ?? 'Unknown error'}</span>
+          <div class="hse-idrawer-tab-content">
+            {detailQ.isError && (
+              <div class="hse-idrawer-banner hse-idrawer-banner--danger">
+                <i class="fas fa-triangle-exclamation" />
+                <div class="hse-idrawer-banner-text">
+                  <strong>Failed to load incident detail</strong>
+                  <span>{(detailQ.error as Error)?.message ?? 'Unknown error'}</span>
+                </div>
               </div>
-            </div>
-          )}
-          {(TAB_RENDER[activeTab] ?? renderOverview)()}
+            )}
+            {(TAB_RENDER[activeTab] ?? renderOverview)()}
+          </div>
         </div>
 
         {/* ── Footer ── */}
