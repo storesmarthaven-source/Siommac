@@ -9,8 +9,8 @@
 import { type VNode }   from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, SectionHead,
-  type AreaTab, type SparkDef,
+  PageHeader, TabBar, withCounts, SectionHead,
+  type AreaTab,
 } from '@ui';
 import { HSE_SITES, riskRating, hsePill } from './types';
 import {
@@ -31,6 +31,7 @@ import { NewJsaWizard }        from './risk-jsa/dialogs/NewJsaWizard';
 import { HazardDrawer }        from './risk-jsa/drawers/HazardDrawer';
 import { RiskAssessmentDrawer } from './risk-jsa/drawers/RiskAssessmentDrawer';
 import { JsaDrawer }           from './risk-jsa/drawers/JsaDrawer';
+import { RiskJsaInsightCards } from './risk-jsa/RiskJsaInsightCards';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -100,30 +101,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const riskReductionPct   = summary?.riskReductionPct       ?? 0;
   const overdueAssessments = summary?.overdueAssessments     ?? 0;
 
-  const sparks: SparkDef[] = [
-    {
-      label: 'Hazard Register', value: String(totalHazards), sub: 'Total hazards on file',
-      delta: `${highCritical} high/critical`, deltaUp: highCritical > 0, color: '#60a5fa',
-      sparkPoints: [0, 0, 0, 0, 0, totalHazards], sparkColor: '#60a5fa',
-    },
-    {
-      label: 'High / Critical Risk', value: String(highCritical), sub: `${totalHazards > 0 ? Math.round((highCritical / totalHazards) * 100) : 0}% of register`,
-      delta: overdueAssessments > 0 ? `${overdueAssessments} overdue` : 'All reviewed',
-      deltaUp: overdueAssessments > 0, color: highCritical > 0 ? '#ef4444' : '#4ade80',
-      sparkPoints: [0, 0, 0, 0, 0, highCritical], sparkColor: '#ef4444',
-    },
-    {
-      label: 'Risk Reduction', value: `${riskReductionPct}%`, sub: 'Hazards at acceptable level',
-      progress: { pct: riskReductionPct, color: '#22c55e', target: 'Target: 80%' },
-    },
-    {
-      label: 'Open JSAs', value: String(openJsa), sub: 'Active / under review',
-      delta: openAssessments > 0 ? `${openAssessments} assessments open` : 'All current',
-      deltaUp: false, color: '#4ade80',
-      sparkPoints: [0, 0, 0, 0, 0, openJsa], sparkColor: '#4ade80',
-    },
-  ];
-
   const tabsWithCounts = withCounts(TABS, {
     hazards:     totalHazards,
     assessments: openAssessments,
@@ -145,7 +122,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
-      <MetricRow pageKey="hse.risk" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+      <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
