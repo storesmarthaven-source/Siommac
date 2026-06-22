@@ -779,13 +779,13 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           <span>Severity Mix</span>
           <span style={{ marginLeft: 'auto', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 400 }}>MTD · {mtdIncidents.length} total</span>
         </div>
-        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
           {/* Large donut — no blur, clean gaps */}
-          <div style={{ position: 'relative', flexShrink: 0, width: 140, height: 140 }}>
-            <svg width="140" height="140" viewBox="0 0 140 140">
-              <circle cx="70" cy="70" r="56" fill="none" stroke="#eef0f5" stroke-width="14" />
+          <div style={{ position: 'relative', flexShrink: 0, width: 168, height: 168 }}>
+            <svg width="168" height="168" viewBox="0 0 168 168">
+              <circle cx="84" cy="84" r="68" fill="none" stroke="#eef0f5" stroke-width="16" />
               {(() => {
-                const R = 56, C = 2 * Math.PI * R;
+                const R = 68, C = 2 * Math.PI * R;
                 const GAP_DEG = 2.5;
                 let angleDeg = -90;
                 return (['danger','warning','info','success'] as const).map(k => {
@@ -796,13 +796,13 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                   const startDeg = angleDeg + GAP_DEG / 2;
                   angleDeg += pct * 360;
                   return (
-                    <circle key={k} cx="70" cy="70" r={R} fill="none"
+                    <circle key={k} cx="84" cy="84" r={R} fill="none"
                       stroke={SEV_COLORS[k]}
-                      stroke-width="14"
+                      stroke-width="16"
                       stroke-linecap="butt"
                       stroke-dasharray={`${segLen} ${C - segLen}`}
                       stroke-dashoffset={-((startDeg + 90) / 360) * C + C * 0.25}
-                      transform={`rotate(${startDeg + 90} 70 70)`}
+                      transform={`rotate(${startDeg + 90} 84 84)`}
                     />
                   );
                 });
@@ -810,24 +810,24 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
             </svg>
             {/* Center — total + open count */}
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-              <span style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
-              <span style={{ fontSize: '0.52rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', fontWeight: 600 }}>Incidents</span>
-              <span style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 700, marginTop: '2px' }}>
+              <span style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
+              <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', fontWeight: 600 }}>Incidents</span>
+              <span style={{ fontSize: '0.68rem', color: '#ef4444', fontWeight: 700, marginTop: '3px' }}>
                 {sevCounts.danger} critical
               </span>
             </div>
           </div>
           {/* Compact legend — 2 col grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', width: '100%', marginTop: '4px' }}>
             {(['danger','warning','info','success'] as const).map(k => {
               const label = k === 'danger' ? 'Critical' : k === 'warning' ? 'High' : k === 'info' ? 'Medium' : 'Low';
               const pct   = Math.round(sevCounts[k] / total * 100);
               return (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                  <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
                   <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
-                  <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>{pct}%</span>
+                  <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>{pct}%</span>
                 </div>
               );
             })}
@@ -842,7 +842,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           <span>Report Incident</span>
           <span class="inc-report-badge">New</span>
         </div>
-        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
           {/* Type buttons — 2×2 */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
             {[
@@ -881,7 +881,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           <span>Investigation Control</span>
         </div>
         <div class="inc-mini-card-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '20px' }}>
             {[
               { val: activeInvest, label: 'Active investigations', color: '#60a5fa' },
               { val: needsTriage,  label: 'Needs Triage',          color: '#f59e0b' },
@@ -894,7 +894,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
               </div>
             ))}
           </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: '10px' }}>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: '26px', marginTop: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.67rem', color: 'rgba(255,255,255,.5)', marginBottom: '5px' }}>
               <span><i class="fas fa-circle-check" style={{ marginRight: '4px' }} />Closure</span>
               <span style={{ fontWeight: 700, color: closurePct >= 95 ? '#4ade80' : '#f59e0b' }}>{closurePct}% · Target 95%</span>
@@ -915,8 +915,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           <i class="fas fa-file-shield" />
           <span>Regulatory Watch</span>
         </div>
-        <div class="inc-mini-card-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '12px' }}>
+        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '20px' }}>
             {[
               { val: emaNotifs.length,   label: 'EMA notifications',  urgent: emaNotifs.length > 0 },
               { val: oshRequired.length, label: 'OSH review required', urgent: oshRequired.length > 0 },
@@ -930,7 +930,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
             ))}
           </div>
           {priority ? (
-            <div style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', borderRadius: '8px', padding: '8px 10px' }}>
+            <div style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', borderRadius: '8px', padding: '8px 10px', marginTop: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fca5a5' }}>{priority.ref}</span>
                 <span style={{ fontSize: '0.57rem', background: 'rgba(239,68,68,.3)', color: '#fca5a5', borderRadius: '4px', padding: '1px 5px' }}>Due today</span>
