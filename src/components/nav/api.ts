@@ -7,16 +7,12 @@
  */
 
 import { apiAction } from '@lib/api';
-import type { HeaderCounts, NotifItem, MsgItem, TicketItem } from './types';
+import type { NotifItem, MsgItem, TicketItem } from './types';
 
-interface HeaderCountsResponse { success: boolean; data?: HeaderCounts; }
 interface NotifResponse        { success: boolean; data?: NotifItem[]; }
 interface MsgResponse          { success: boolean; data?: MsgItem[]; unreadCount?: number; }
 interface TicketResponse       { success: boolean; data?: TicketItem[]; }
 interface BasicResponse        { success: boolean; message?: string; id?: string | number; ticketNumber?: string; count?: number; }
-
-export const getHeaderCounts = (args: { managerUsername: string; role: string; ticketSeenSince: string | null }) =>
-  apiAction<HeaderCountsResponse>('getHeaderCounts', args as unknown as Record<string, unknown>);
 
 export const getNotifications = () =>
   apiAction<NotifResponse>('getNotifications', {});

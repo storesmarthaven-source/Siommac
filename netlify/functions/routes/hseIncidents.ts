@@ -140,6 +140,8 @@ const CreateSchema = z.object({
   returnToWork:    z.string().nullable().optional(),
   recordable:      z.boolean().default(false),
   lostTime:        z.boolean().default(false),
+  costImpact:      z.boolean().default(false),
+  equipmentDamage: z.boolean().default(false),
   people:          z.array(PersonSchema).default([]),
   metadata:        z.record(z.string(), z.unknown()).optional(),
 });
@@ -214,11 +216,13 @@ router.post('/incidents/create', async c => {
     createdBy:         user.id,
     reason:            `Incident ${ref} reported: ${v.data.title}`,
     metadata:          {
-      lostTime:     v.data.lostTime,
-      recordable:   v.data.recordable,
-      severity:     v.data.severity,
-      incidentType: v.data.incidentType,
-      employeeId:   v.data.people.find(p => p.personType === 'injured')?.userId ?? null,
+      lostTime:        v.data.lostTime,
+      costImpact:      v.data.costImpact,
+      equipmentDamage: v.data.equipmentDamage,
+      recordable:      v.data.recordable,
+      severity:        v.data.severity,
+      incidentType:    v.data.incidentType,
+      employeeId:      v.data.people.find(p => p.personType === 'injured')?.userId ?? null,
     },
   });
 
@@ -276,6 +280,8 @@ const UpdateSchema = z.object({
   oshWrittenAt:    z.string().nullable().optional(),
   recordable:      z.boolean().optional(),
   lostTime:        z.boolean().optional(),
+  costImpact:      z.boolean().optional(),
+  equipmentDamage: z.boolean().optional(),
   metadata:        z.record(z.string(), z.unknown()).optional(),
 });
 

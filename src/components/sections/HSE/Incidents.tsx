@@ -1107,6 +1107,8 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         lostDays:        payload.lostDays ?? 0,
         returnToWork:    payload.returnToWork ?? null,
         lostTime:        (payload.lostDays ?? 0) > 0 || payload.classification === 'lost-time',
+        costImpact:      payload.costImpact,
+        equipmentDamage: payload.equipmentDamage,
         description:     payload.description,
         immediateAction: payload.immediateActions,
         people,
@@ -1433,6 +1435,7 @@ type ReportPayload = {
   lostDays?: number; returnToWork?: string;
   description: string; immediateActions: string;
   peopleInvolved: PersonInvolved[]; witnesses: Witness[];
+  costImpact: boolean; equipmentDamage: boolean;
 };
 
 const WIZARD_STEPS = [
@@ -1501,9 +1504,11 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
   const [containmentOk, setContain] = useState<boolean | null>(null);
   const [emaReqd,    setEmaReqd]   = useState<boolean | null>(null);
   // ── Work controls
-  const [equipment,  setEquipment] = useState('');
-  const [lotoInvolved, setLOTO]   = useState<boolean | null>(null);
-  const [contractorCo, setConCo]  = useState('');
+  const [equipment,      setEquipment]  = useState('');
+  const [lotoInvolved,   setLOTO]       = useState<boolean | null>(null);
+  const [equipmentDmg,   setEquipDmg]   = useState(false);
+  const [costImpact,     setCostImpact] = useState(false);
+  const [contractorCo,   setConCo]      = useState('');
   // ── Regulatory
   const [oshReportable, setOshRep] = useState<'yes'|'no'|'unknown'>('unknown');
   const [emaNotifReqd,  setEmaNot] = useState<'yes'|'no'|'unknown'>('unknown');
@@ -1584,6 +1589,8 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
         immediateActions: ctrlActions,
         peopleInvolved: people.filter(p => p.name.trim()),
         witnesses: witnesses.filter(w => w.name.trim()),
+        costImpact,
+        equipmentDamage: equipmentDmg,
       });
       onClose();
     } finally { setSubmitting(false); }
@@ -1860,6 +1867,14 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
           <div class="ir-yn-row" style={{ marginTop: '10px' }}>
             <span class="ir-yn-label">LOTO (Lockout/Tagout) involved?</span>
             <YNToggle value={lotoInvolved} onChange={setLOTO} />
+          </div>
+          <div class="ir-yn-row" style={{ marginTop: '8px' }}>
+            <span class="ir-yn-label">Equipment / asset damage incurred?</span>
+            <YNToggle value={equipmentDmg} onChange={v => setEquipDmg(v ?? false)} />
+          </div>
+          <div class="ir-yn-row" style={{ marginTop: '8px' }}>
+            <span class="ir-yn-label">Financial / cost impact to business?</span>
+            <YNToggle value={costImpact} onChange={v => setCostImpact(v ?? false)} />
           </div>
         </div>
         <div class="wz-section">

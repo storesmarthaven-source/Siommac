@@ -233,6 +233,8 @@ export interface CreateIncidentArgs extends Record<string, unknown> {
   returnToWork?:      string | null;
   recordable?:        boolean;
   lostTime?:          boolean;
+  costImpact?:        boolean;
+  equipmentDamage?:   boolean;
   people?:            IncidentPersonInput[];
   metadata?:          Record<string, unknown>;
 }
