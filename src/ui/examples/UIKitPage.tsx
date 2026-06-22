@@ -148,7 +148,6 @@ export function UIKitPage(): VNode {
               { icon: 'fa-location-dot', label: 'All sites' },
               { icon: 'fa-hashtag', label: '6 records' },
             ]}
-            actions={<><Button variant="secondary" icon="fa-download">Export</Button><Button variant="primary" icon="fa-circle-plus">New Incident</Button></>}
           />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />
