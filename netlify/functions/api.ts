@@ -26,6 +26,12 @@ import notifyRouter         from './routes/notify';
 import { superadminRouter } from './routes/superadmin';
 import hseRouter            from './routes/hse';
 import workflowRouter       from './routes/workflow';
+import workflowsRouter      from './routes/workflows';
+import communicationsRouter from './routes/communications';
+import handoffsRouter       from './routes/handoffs';
+import hseIncidentsRouter   from './routes/hseIncidents';
+import hseInvestigationsRouter from './routes/hseInvestigations';
+import hseCapaRouter        from './routes/hseCapa';
 
 // ── Allowed frontend origins ──────────────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
@@ -133,7 +139,13 @@ app.route('/api', notificationsRouter);
 app.route('/api', notifyRouter);
 app.route('/api/superadmin', superadminRouter);
 app.route('/api/hse',        hseRouter);
+app.route('/api/hse',        hseIncidentsRouter);
+app.route('/api/hse',        hseInvestigationsRouter);
+app.route('/api/hse',        hseCapaRouter);
 app.route('/api/workflow',   workflowRouter);
+app.route('/api',            workflowsRouter);
+app.route('/api',            communicationsRouter);
+app.route('/api',            handoffsRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.
