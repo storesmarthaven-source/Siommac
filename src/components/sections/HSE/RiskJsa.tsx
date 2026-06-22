@@ -32,6 +32,7 @@ import { HazardDrawer }        from './risk-jsa/drawers/HazardDrawer';
 import { RiskAssessmentDrawer } from './risk-jsa/drawers/RiskAssessmentDrawer';
 import { JsaDrawer }           from './risk-jsa/drawers/JsaDrawer';
 import { RiskJsaInsightCards } from './risk-jsa/RiskJsaInsightCards';
+import { RiskJsaRightPanel }  from './risk-jsa/RiskJsaRightPanel';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const [selectedHazard,  setSelectedHazard]  = useState<HazardRow | null>(null);
   const [selectedRa,      setSelectedRa]      = useState<AssessmentRow | null>(null);
   const [selectedJsa,     setSelectedJsa]     = useState<JsaRow | null>(null);
+  const [newMenuOpen,     setNewMenuOpen]     = useState(false);
 
   const { data: summaryRes, isLoading: summaryLoading } = useRiskJsaSummary();
   const summary = summaryRes?.data;
@@ -120,6 +122,30 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           { icon: 'fa-table-cells-large', label: '5×5 matrix' },
           ...(overdueAssessments > 0 ? [{ icon: 'fa-clock', label: `${overdueAssessments} overdue` }] : []),
         ]}
+        actions={
+          <div style={{ position: 'relative' }}>
+            <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
+              <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
+            </button>
+            {newMenuOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
+                <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '210px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
+                  {[
+                    { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
+                    { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
+                    { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
+                  ].map(it => (
+                    <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
+                      <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        }
       />
 
       <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
@@ -152,13 +178,13 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           )}
         </div>
 
-        {/* Right-side risk queue */}
+        {/* Right-side supporting panel — changes by tab */}
         <div class="hse-right-col">
-          <RiskQueuePanel
-            highRisk={summary?.highRiskQueue ?? []}
-            overdueDetail={summary?.overdueAssessmentsDetail ?? []}
-            loading={summaryLoading}
-            onHazardClick={setSelectedHazard}
+          <RiskJsaRightPanel
+            activeTab={active as 'hazards' | 'assessments' | 'jsa'}
+            onHazard={setSelectedHazard}
+            onAssessment={setSelectedRa}
+            onJsa={setSelectedJsa}
           />
         </div>
       </div>
@@ -270,8 +296,7 @@ function HazardTab({
   const highRisk = hazards.filter(h => h.risk_level === 'high' || h.risk_level === 'critical');
 
   return (
-    <div class="hse-area-split">
-      <div class="hse-area-main">
+    <div class="hse-area-main">
         <SectionHead icon="fa-radiation" title="Hazard Register" sub="Identified hazards with likelihood × severity risk ratings." actions={
           <button class="hse-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
         } />
@@ -329,36 +354,6 @@ function HazardTab({
           </div>
         </div>
       </div>
-
-      <aside class="hse-area-aside">
-        {highRisk.length > 0 && (
-          <div class="hse-aside-card hse-aside-alert">
-            <div class="hse-aside-head is-danger"><i class="fas fa-triangle-exclamation" /><span>{highRisk.length} High / Critical Hazards</span></div>
-            <div class="hse-aside-list">
-              {highRisk.slice(0, 6).map(h => (
-                <div class="hse-aside-row" key={h.id}>
-                  <i class="fas fa-circle hse-aside-dot is-danger" />
-                  <div class="hse-aside-text">
-                    <strong>{h.title}</strong>
-                    <span>{h.site_id ?? 'All sites'} · Score {h.initial_score}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        <div class="hse-aside-card">
-          <div class="hse-aside-head"><i class="fas fa-chart-bar" /><span>By Category</span></div>
-          {Object.entries(byCategory).map(([cat, count]) => (
-            <div class="hse-priority-bar" key={cat}>
-              <div class="hse-priority-label"><span class="hse-priority-name">{cat}</span><span>{count}</span></div>
-              <div class="hse-progress"><i style={{ width: `${hazards.length > 0 ? Math.round((count / hazards.length) * 100) : 0}%`, background: 'var(--siomac-navy)' }} /></div>
-            </div>
-          ))}
-          {Object.keys(byCategory).length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', padding: '8px 0' }}>No hazards registered</p>}
-        </div>
-      </aside>
-    </div>
   );
 }
 
@@ -384,8 +379,7 @@ function AssessmentsTab({
   const approved   = assessments.filter(a => a.status === 'approved' || a.status === 'active').length;
 
   return (
-    <div class="hse-area-split">
-      <div class="hse-area-main">
+    <div class="hse-area-main">
         <SectionHead icon="fa-table-cells-large" title="Risk Assessments" sub="Formal risk assessments with likelihood × severity matrix scoring." actions={
           <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
         } />
@@ -433,30 +427,6 @@ function AssessmentsTab({
           </div>
         </div>
       </div>
-
-      <aside class="hse-area-aside">
-        <RiskMatrixPanel assessments={assessments} />
-        <div class="hse-aside-card hse-aside-stats">
-          <div class="hse-aside-stat"><strong>{highCrit}</strong><span>High / Critical</span></div>
-          <div class="hse-aside-stat"><strong>{underRev}</strong><span>Under Review</span></div>
-          <div class="hse-aside-stat"><strong>{approved}</strong><span>Approved</span></div>
-        </div>
-        {selected?.status === 'draft' && (
-          <div class="hse-aside-card">
-            <div class="hse-aside-head"><i class="fas fa-paper-plane" /><span>Submit {selected.ref}</span></div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 10px' }}>Send for HSE review and approval.</p>
-            <button
-              class="hse-btn primary"
-              style={{ width: '100%' }}
-              disabled={submitAssessment.isPending}
-              onClick={() => submitAssessment.mutate({ assessmentId: selected.id })}
-            >
-              {submitAssessment.isPending ? 'Submitting…' : 'Submit for Review'}
-            </button>
-          </div>
-        )}
-      </aside>
-    </div>
   );
 }
 
@@ -481,8 +451,7 @@ function JsaTab({
   const draftCount    = jsas.filter(j => j.status === 'draft').length;
 
   return (
-    <div class="hse-area-split">
-      <div class="hse-area-main">
+    <div class="hse-area-main">
         <SectionHead icon="fa-list-ol" title="JSA Library" sub="Job Safety Analyses — step-by-step hazard identification per task." actions={
           <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
         } />
@@ -529,49 +498,6 @@ function JsaTab({
           </div>
         </div>
       </div>
-
-      <aside class="hse-area-aside">
-        {selected ? (
-          <div class="hse-aside-card">
-            <div class="hse-aside-head"><i class="fas fa-list-ol" /><span>{selected.ref}</span></div>
-            <div class="hse-aside-meta">
-              <span class={hsePill(selected.status)}>{selected.status.replace(/_/g, ' ')}</span>
-              {selected.review_due_at && <span class="hse-muted">Due: {new Date(selected.review_due_at).toLocaleDateString()}</span>}
-            </div>
-            <div style={{ padding: '10px 0 4px', display: 'grid', gap: '8px' }}>
-              <div class="hse-aside-detail-row"><i class="fas fa-tasks" /><div><strong>Task</strong><span>{selected.title}</span></div></div>
-              <div class="hse-aside-detail-row"><i class="fas fa-map-marker-alt" /><div><strong>Site</strong><span>{selected.site_id ?? '—'}</span></div></div>
-              <div class="hse-aside-detail-row"><i class="fas fa-list-ol" /><div><strong>Steps</strong><span>{selected.stepCount} documented</span></div></div>
-              <div class="hse-aside-detail-row"><i class="fas fa-shield-alt" /><div><strong>Risk Level</strong><span>{selected.risk_level}</span></div></div>
-            </div>
-            {selected.status === 'draft' && (
-              <button
-                class="hse-btn primary"
-                style={{ width: '100%', marginTop: '10px' }}
-                disabled={submitJsa.isPending}
-                onClick={() => submitJsa.mutate({ jsaId: selected.id })}
-              >
-                {submitJsa.isPending ? 'Submitting…' : 'Submit for Review'}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div class="hse-aside-card hse-aside-hint">
-            <i class="fas fa-arrow-pointer" />
-            <strong>Select a JSA</strong>
-            <p>Click a row to view the JSA detail in this panel.</p>
-          </div>
-        )}
-        <div class="hse-aside-card">
-          <div class="hse-aside-head"><i class="fas fa-chart-pie" /><span>JSA Status Summary</span></div>
-          <div class="hse-aside-stats">
-            <div class="hse-aside-stat"><strong>{approvedCount}</strong><span>Approved</span></div>
-            <div class="hse-aside-stat"><strong>{reviewCount}</strong><span>In Review</span></div>
-            <div class="hse-aside-stat"><strong>{draftCount}</strong><span>Draft</span></div>
-          </div>
-        </div>
-      </aside>
-    </div>
   );
 }
 
