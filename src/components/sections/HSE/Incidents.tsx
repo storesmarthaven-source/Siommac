@@ -27,63 +27,134 @@ import { useWorkflow } from '@lib/workflow';
 import { toneClass } from '@ui/status/statusTokens';
 import { exportCsv } from '@ui/lib/exportCsv';
 import {
-  useHseIncidents, useHseInvestigations, useHseCapa,
+  useHseIncidents, useHseIncident, useHseInvestigations, useHseCapa,
   useCreateIncident, useUpdateIncident,
   useCreateInvestigation, useUpdateInvestigation,
   useCreateCapa, useUpdateCapa,
   useHseDashboardKpis,
   type HseIncident, type HseInvestigation, type HseCapa,
-  type OshClass, type PersonInvolved, type Witness,
+  type IncidentSeverity, type IncidentType as DbIncidentType,
+  type IncidentPersonInput,
 } from '@api/hse/incidents';
 
+// ── UI-only form types ────────────────────────────────────────────────────────
+//
+// OSH classification, people, and witnesses are intake-form concerns. They are
+// persisted into hse_incidents.metadata / hse_incident_people on the backend,
+// not as first-class incident columns, so they live here as local UI types.
+
+type OshClass =
+  | 'first-aid' | 'medical-treatment' | 'restricted-duty' | 'lost-time'
+  | 'fatality' | 'property-damage' | 'environmental' | 'near-miss' | 'dangerous-occurrence';
+
+interface PersonInvolved {
+  name: string; employeeId?: string; role?: string; contractor?: boolean;
+}
+interface Witness {
+  name: string; employeeId?: string; statement?: string;
+}
+
 // ── DB → UI shape adapters ────────────────────────────────────────────────────
+//
+// The canonical backend stores OSH/injury data as first-class incident columns;
+// involved people and witnesses live in hse_incident_people (fetched alongside).
 
 function dbSeverityToUi(s: string): IncidentRecord['severity'] {
-  if (s === 'critical' || s === 'major') return 'danger';
+  if (s === 'critical' || s === 'high') return 'danger';
   if (s === 'moderate') return 'warning';
   return 'success';
 }
 
 function dbTypeToUi(t: string): IncidentType {
   const map: Record<string, IncidentType> = {
-    'injury':           'Injury',
-    'near-miss':        'Near Miss',
-    'environmental':    'Environmental',
-    'property-damage':  'Property Damage',
-    'unsafe-act':       'Unsafe Act',
-    'unsafe-condition': 'Unsafe Condition',
+    'injury':            'Injury',
+    'near_miss':         'Near Miss',
+    'environmental':     'Environmental',
+    'property_damage':   'Property Damage',
+    'unsafe_act':        'Unsafe Act',
+    'unsafe_condition':  'Unsafe Condition',
   };
   return map[t] ?? 'Near Miss';
+}
+
+function dbStatusToUi(s: string): string {
+  const map: Record<string, string> = {
+    open:             'Open',
+    triage:           'Triage',
+    investigation:    'Investigation',
+    capa:             'CAPA Raised',
+    awaiting_closure: 'In Review',
+    closed:           'Closed',
+    cancelled:        'Cancelled',
+  };
+  return map[s] ?? 'Open';
 }
 
 function dbToIncidentRecord(i: HseIncident): IncidentRecord {
   return {
     ref:              i.ref,
-    date:             new Date(i.occurred_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    type:             dbTypeToUi(i.type),
+    date:             new Date(i.incident_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    type:             dbTypeToUi(i.incident_type),
     severity:         dbSeverityToUi(i.severity),
-    site:             i.site_name ?? i.site_id ?? '—',
-    status:           i.status === 'reported'            ? 'Open'
-                    : i.status === 'under-investigation' ? 'Investigation'
-                    : i.status === 'capa-raised'         ? 'CAPA Raised'
-                    : 'Closed',
-    reporter:         i.reporter_name ?? '—',
+    site:             i.location_text ?? i.site_id ?? '—',
+    status:           dbStatusToUi(i.status),
+    reporter:         i.reported_by ?? '—',
     description:      i.description ?? '',
-    immediateActions: i.immediate_actions ?? '—',
+    immediateActions: i.immediate_action ?? '—',
   };
 }
 
-function dbToInvestigation(inv: HseInvestigation): Investigation {
-  const findings = Array.isArray(inv.findings) ? inv.findings : [];
-  return {
-    ref:         inv.id,
-    incidentRef: inv.incident_id,
-    method:      inv.method === '5-whys' ? '5-Whys' : inv.method,
-    status:      inv.status === 'in-progress' ? 'In Progress' : inv.status === 'closed' ? 'Closed' : 'Open',
-    lead:        inv.lead_name ?? '—',
-    whys:        findings.map(f => `${f.why ?? ''}${f.because ? ` → ${f.because}` : ''}`),
-    rootCause:   inv.root_cause ?? '(Not yet recorded)',
+function dbInvStatusToUi(s: string): string {
+  const map: Record<string, string> = {
+    assigned:            'Open',
+    collecting_evidence: 'In Progress',
+    root_cause:          'In Progress',
+    findings:            'In Review',
+    review:              'In Review',
+    closed:              'Closed',
+    overdue:             'Overdue',
   };
+  return map[s] ?? 'Open';
+}
+
+function dbToInvestigation(inv: HseInvestigation): Investigation {
+  return {
+    id:            inv.id,
+    ref:           inv.ref,
+    incidentRef:   inv.incident_id,
+    incidentDesc:  '',
+    severity:      'warning',
+    method:        inv.root_cause_method === '5why' ? '5-Whys'
+                 : inv.root_cause_method === 'fishbone' ? 'Fishbone'
+                 : inv.root_cause_method === 'taproot' ? 'TapRooT'
+                 : '5-Whys',
+    status:        dbInvStatusToUi(inv.status),
+    lead:          inv.investigator_user_id ?? '—',
+    due:           inv.due_at ? new Date(inv.due_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+    evidenceTotal: 0,
+    evidenceDone:  0,
+    capaCount:     0,
+    rcaCategory:   '',
+    stage:         0,
+    whys:          inv.findings ? [inv.findings] : [],
+    rootCause:     inv.summary ?? '(Not yet recorded)',
+    witnesses:     [],
+    regulatory:    [],
+  };
+}
+
+function dbCapaStatusToUi(s: string): string {
+  const map: Record<string, string> = {
+    open:          'Open',
+    in_progress:   'In Progress',
+    implemented:   'Pending Evidence',
+    verification:  'Pending Evidence',
+    returned:      'Returned',
+    closed:        'Closed',
+    overdue:       'Overdue',
+    cancelled:     'Cancelled',
+  };
+  return map[s] ?? 'Open';
 }
 
 function dbToCapa(c: HseCapa): CapaItem {
@@ -91,14 +162,13 @@ function dbToCapa(c: HseCapa): CapaItem {
     critical: 'danger', high: 'warning', medium: 'info', low: 'success',
   };
   return {
+    id:       c.id,
     ref:      c.ref,
     title:    c.title,
-    source:   c.source_ref,
-    owner:    c.owner_name ?? '—',
-    due:      new Date(c.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    status:   c.status === 'in-progress'
-                ? 'In Progress'
-                : c.status.charAt(0).toUpperCase() + c.status.slice(1),
+    source:   c.source_id,
+    owner:    c.owner_user_id ?? '—',
+    due:      c.due_at ? new Date(c.due_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+    status:   dbCapaStatusToUi(c.status),
     priority: pMap[c.priority] ?? 'info',
   };
 }
@@ -951,8 +1021,9 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   const incidentsQ      = useHseIncidents({ limit: 200 });
   const investigationsQ = useHseInvestigations();
   const capaQ           = useHseCapa({ limit: 200 });
-  const kpisQ           = useHseDashboardKpis();
-  const createIncident  = useCreateIncident();
+  const kpisQ              = useHseDashboardKpis();
+  const createIncident     = useCreateIncident();
+  const createInvestigation = useCreateInvestigation();
 
   const liveIncidents      = incidentsQ.data?.map(dbToIncidentRecord)      ?? null;
   const liveInvestigations = investigationsQ.data?.map(dbToInvestigation)  ?? null;
@@ -988,24 +1059,53 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
     description: string; immediateActions: string;
     peopleInvolved: PersonInvolved[]; witnesses: Witness[];
   }) {
-    const dbSeverity = payload.severity === 'Critical' ? 'critical'
-                     : payload.severity === 'High'     ? 'major'
-                     : payload.severity === 'Moderate' ? 'moderate'
-                     : 'minor';
-    const dbType = payload.type.toLowerCase().replace(/ /g, '-') as Parameters<typeof createIncident.mutateAsync>[0]['type'];
+    const dbSeverity: IncidentSeverity =
+        payload.severity === 'Critical' ? 'critical'
+      : payload.severity === 'High'     ? 'high'
+      : payload.severity === 'Moderate' ? 'moderate'
+      : 'minor';
+    const TYPE_TO_DB: Record<IncidentType, DbIncidentType> = {
+      'Injury':            'injury',
+      'Near Miss':         'near_miss',
+      'Environmental':     'environmental',
+      'Property Damage':   'property_damage',
+      'Unsafe Act':        'other',
+      'Unsafe Condition':  'other',
+    };
+    const dbType = TYPE_TO_DB[payload.type];
+
+    // Involved people and witnesses both persist to hse_incident_people.
+    const people: IncidentPersonInput[] = [
+      ...payload.peopleInvolved.map((p): IncidentPersonInput => ({
+        personType:    p.contractor ? 'contractor' : 'injured',
+        fullName:      p.name,
+        userId:        p.employeeId ?? null,
+        roleOrCompany: p.role ?? null,
+      })),
+      ...payload.witnesses.map((w): IncidentPersonInput => ({
+        personType:        'witness',
+        fullName:          w.name,
+        userId:            w.employeeId ?? null,
+        injuryDescription: w.statement ?? null,
+      })),
+    ];
+
     try {
       const result = await createIncident.mutateAsync({
-        type: dbType, severity: dbSeverity,
-        classification: payload.classification,
-        injuryType: payload.injuryType,
-        bodyPart: payload.bodyPart,
-        lostDays: payload.lostDays ?? 0,
-        returnToWork: payload.returnToWork,
-        siteName: payload.site,
-        description: payload.description,
-        immediateActions: payload.immediateActions,
-        peopleInvolved: payload.peopleInvolved,
-        witnesses: payload.witnesses,
+        title:           payload.description.slice(0, 120) || `${payload.type} incident`,
+        incidentType:    dbType,
+        severity:        dbSeverity,
+        incidentDate:    new Date().toISOString(),
+        locationText:    payload.site,
+        oshClassification: payload.classification ?? null,
+        injuryType:      payload.injuryType ?? null,
+        bodyPart:        payload.bodyPart ?? null,
+        lostDays:        payload.lostDays ?? 0,
+        returnToWork:    payload.returnToWork ?? null,
+        lostTime:        (payload.lostDays ?? 0) > 0 || payload.classification === 'lost-time',
+        description:     payload.description,
+        immediateAction: payload.immediateActions,
+        people,
       });
       const ref = result.ref ?? `INC-2026-${Math.floor(100 + Math.random() * 900)}`;
       wf.submit({
@@ -1097,11 +1197,17 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
 
       <IncidentDrawer
         incident={openIncident}
-        liveRecord={openIncident ? incidentsQ.data?.find(i => i.ref === openIncident.ref) ?? null : null}
+        incidentId={openIncident ? incidentsQ.data?.find(i => i.ref === openIncident.ref)?.id ?? null : null}
         onClose={() => setOpenIncident(null)}
-        onInvestigate={() => {
+        onInvestigate={async () => {
           if (!openIncident) return;
-          wf.submit({ templateId: 'incident-investigation', recordRef: openIncident.ref, reason: openIncident.description });
+          const dbId = incidentsQ.data?.find(i => i.ref === openIncident.ref)?.id;
+          // Create the investigation record on the backend (it links to the
+          // incident, advances status, and notifies the assigned investigator).
+          if (dbId) {
+            try { await createInvestigation.mutateAsync({ incidentId: dbId, rootCauseMethod: '5why' }); }
+            catch { /* non-fatal — surfaced via query error state */ }
+          }
           setOpenIncident(null); setPageTab('investigations');
         }}
       />
@@ -1332,7 +1438,7 @@ const WIZARD_STEPS = [
 function IncidentReportWizard({ open, onClose, onSubmit }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (p: ReportPayload) => void;
+  onSubmit: (p: ReportPayload) => void | Promise<void>;
 }): VNode {
   const [step, setStep] = useState(0);
 
@@ -2252,14 +2358,20 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
   }
 
   async function saveWhys() {
-    if (!selected) return;
+    if (!selected?.id) return;
     setSaving(true);
     try {
+      // Serialise the 5-Whys chain into the investigation's findings text and
+      // record the confirmed root cause as the summary.
+      const findingsText = whyDraft
+        .filter(w => w.why.trim())
+        .map((w, idx) => `${idx + 1}. ${w.why}${w.because ? ` → ${w.because}` : ''}`)
+        .join('\n');
       await updateInv.mutateAsync({
-        id: selected.ref,
-        findings: whyDraft,
-        rootCause,
-        status: rootCause ? 'closed' : 'in-progress',
+        investigationId: selected.id,
+        findings:        findingsText || null,
+        summary:         rootCause || null,
+        status:          rootCause ? 'closed' : 'root_cause',
       });
     } finally { setSaving(false); }
   }
@@ -2771,8 +2883,14 @@ function CapaTab({ capa, closurePct, avgDaysToClose }: { capa: CapaItem[]; closu
           open={verifyOpen}
           item={verifyItem}
           onClose={() => { setVerify(false); setVerifyItem(null); }}
-          onVerify={async (note) => {
-            await updateCapa.mutateAsync({ id: verifyItem.ref, status: 'verified', verificationNote: note });
+          onVerify={async (_note) => {
+            if (!verifyItem.id) return;
+            // Verification closes the CAPA and records effectiveness.
+            await updateCapa.mutateAsync({
+              capaId:              verifyItem.id,
+              status:              'closed',
+              effectivenessResult: 'effective',
+            });
             setVerify(false); setVerifyItem(null);
           }}
         />
@@ -2854,12 +2972,12 @@ function CreateCapaModal({ open, sourceRef, sourceType, onClose, createCapa }: {
     ].filter(Boolean).join('\n');
     try {
       await createCapa.mutateAsync({
-        sourceRef: linkedRef || 'MANUAL',
-        sourceType: linkedType,
+        sourceType:  linkedType,
+        sourceId:    linkedRef || 'MANUAL',
         title,
         description: descBlock,
-        ownerName: owner || undefined,
-        dueDate: due,
+        ownerUserId: owner || null,
+        dueAt:       due,
         priority,
       });
       handleClose();
@@ -3104,34 +3222,41 @@ function CapaVerifyModal({ open, item, onClose, onVerify }: {
 
 // ── Incident detail drawer ────────────────────────────────────────────────────
 
-function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
+function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
   incident: IncidentRecord | null;
-  liveRecord: HseIncident | null;
+  incidentId: string | null;
   onClose: () => void;
-  onInvestigate: () => void;
+  onInvestigate: () => void | Promise<void>;
 }): VNode {
   const open      = !!i;
   const sev       = (i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info)!;
   const updateInc = useUpdateIncident();
   const [markingOsh, setMarkingOsh] = useState(false);
 
+  // Single authoritative detail fetch: incident + its people in one response.
+  const detailQ    = useHseIncident(incidentId ?? '');
+  const liveRecord = detailQ.data?.incident ?? null;
+  const livePeople = detailQ.data?.people ?? [];
+
   const isInvestigating = /investigation/i.test(i?.status ?? '');
   const isClosed        = /closed/i.test(i?.status ?? '');
   const isCapaRaised    = /capa|action/i.test(i?.status ?? '') || isClosed;
 
-  const oshDue      = liveRecord?.osh_notification_due;
-  const oshNotified = liveRecord?.osh_notified_at;
+  // OSH dates and injury detail are first-class incident columns; people and
+  // witnesses come from the hse_incident_people rows fetched alongside.
+  const oshDue      = liveRecord?.osh_notification_due ?? null;
+  const oshNotified = liveRecord?.osh_notified_at ?? null;
   const oshOverdue  = oshDue && !oshNotified && new Date(oshDue) < new Date();
 
   async function markOshVerbal() {
     if (!liveRecord) return;
     setMarkingOsh(true);
-    try { await updateInc.mutateAsync({ id: liveRecord.id, oshNotifiedAt: new Date().toISOString() }); }
+    try { await updateInc.mutateAsync({ incidentId: liveRecord.id, oshNotifiedAt: new Date().toISOString() }); }
     finally { setMarkingOsh(false); }
   }
 
-  const people:   PersonInvolved[] = liveRecord?.people_involved ?? [];
-  const witnesses: Witness[]       = liveRecord?.witnesses       ?? [];
+  const people    = livePeople.filter(p => p.person_type !== 'witness');
+  const witnesses = livePeople.filter(p => p.person_type === 'witness');
 
   const steps = [
     { icon: 'fa-file-circle-check', label: 'Incident recorded',     sub: `Reported by ${i?.reporter ?? '—'} · ${i?.date ?? ''}`, done: true,             active: false },
@@ -3208,9 +3333,9 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             </div>
             <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Date</span><strong>{i?.date ?? '—'}</strong></div>
             <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Reporter</span><strong>{i?.reporter ?? '—'}</strong></div>
-            {liveRecord?.classification && (
+            {liveRecord?.osh_classification && (
               <div class="hse-idrawer-cell"><i class="fas fa-tag" /><span>Classification</span>
-                <strong>{OSH_CLASSES.find(o => o.value === liveRecord.classification)?.label ?? liveRecord.classification}</strong>
+                <strong>{OSH_CLASSES.find(o => o.value === liveRecord.osh_classification)?.label ?? liveRecord.osh_classification}</strong>
               </div>
             )}
             {liveRecord && liveRecord.lost_days > 0 && (
@@ -3230,7 +3355,7 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
           </div>
 
           {/* Injury details */}
-          {liveRecord && (liveRecord.injury_type || liveRecord.body_part) && (
+          {liveRecord && (!!liveRecord.injury_type || !!liveRecord.body_part) && (
             <div class="hse-idrawer-section">
               <div class="hse-idrawer-section-head"><i class="fas fa-person-falling" /> Injury Details</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
@@ -3246,15 +3371,18 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
             <div class="hse-idrawer-section">
               <div class="hse-idrawer-section-head"><i class="fas fa-users" /> People Involved</div>
               <div class="ppe-signals-list">
-                {people.map((p, idx) => (
-                  <div class="ppe-signal" key={idx}>
-                    <i class={`fas ${p.contractor ? 'fa-helmet-safety is-warn' : 'fa-user is-info'}`} />
-                    <div class="ppe-signal-text">
-                      <strong>{p.name}{p.employeeId ? ` (${p.employeeId})` : ''}</strong>
-                      <span>{p.role ?? (p.contractor ? 'Contractor' : 'Employee')}</span>
+                {people.map((p, idx) => {
+                  const isContractor = p.person_type === 'contractor';
+                  return (
+                    <div class="ppe-signal" key={idx}>
+                      <i class={`fas ${isContractor ? 'fa-helmet-safety is-warn' : 'fa-user is-info'}`} />
+                      <div class="ppe-signal-text">
+                        <strong>{p.full_name}{p.user_id ? ` (${p.user_id})` : ''}</strong>
+                        <span>{p.role_or_company ?? (isContractor ? 'Contractor' : p.person_type)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -3266,9 +3394,9 @@ function IncidentDrawer({ incident: i, liveRecord, onClose, onInvestigate }: {
               {witnesses.map((w, idx) => (
                 <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
-                    {w.name}{w.employeeId ? ` (${w.employeeId})` : ''}
+                    {w.full_name}{w.user_id ? ` (${w.user_id})` : ''}
                   </div>
-                  {w.statement && <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{w.statement}</p>}
+                  {w.injury_description && <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{w.injury_description}</p>}
                 </div>
               ))}
             </div>

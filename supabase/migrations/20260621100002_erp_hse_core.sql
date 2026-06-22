@@ -351,6 +351,7 @@ alter table public.hse_emergency_drills enable row level security;
 -- ── HSE permission seeding ────────────────────────────────────────────────────
 
 insert into public.role_permissions (role_name, permission) values
+  ('superadmin', 'hse.dashboard.view'),
   ('superadmin', 'hse.incidents.view'),
   ('superadmin', 'hse.incidents.create'),
   ('superadmin', 'hse.incidents.manage'),
@@ -361,6 +362,7 @@ insert into public.role_permissions (role_name, permission) values
   ('superadmin', 'hse.training.manage'),
   ('superadmin', 'hse.documents.manage'),
   ('superadmin', 'hse.environmental.manage'),
+  ('admin',      'hse.dashboard.view'),
   ('admin',      'hse.incidents.view'),
   ('admin',      'hse.incidents.create'),
   ('admin',      'hse.incidents.manage'),
@@ -371,6 +373,7 @@ insert into public.role_permissions (role_name, permission) values
   ('admin',      'hse.training.manage'),
   ('admin',      'hse.documents.manage'),
   ('admin',      'hse.environmental.manage'),
+  ('manager',    'hse.dashboard.view'),
   ('manager',    'hse.incidents.view'),
   ('manager',    'hse.incidents.create'),
   ('manager',    'hse.incidents.manage'),
@@ -381,6 +384,7 @@ insert into public.role_permissions (role_name, permission) values
   ('manager',    'hse.training.manage'),
   ('manager',    'hse.documents.manage'),
   ('manager',    'hse.environmental.manage'),
+  ('employee',   'hse.dashboard.view'),
   ('employee',   'hse.incidents.view'),
   ('employee',   'hse.incidents.create')
 on conflict (role_name, permission) do nothing;

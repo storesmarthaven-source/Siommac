@@ -266,6 +266,7 @@ export const mockIncidents: IncidentRecord[] = [
 
 /** Investigation (5-Whys / RCA) linked to an incident. */
 export interface Investigation {
+  id?:         string;  // DB uuid (absent for mock rows); required for live updates
   ref:         string;
   incidentRef: string;
   incidentDesc: string;
@@ -321,6 +322,7 @@ export const mockInvestigations: Investigation[] = [
 
 /** Corrective / preventive action (CAPA). */
 export interface CapaItem {
+  id?: string;  // DB uuid (absent for mock rows); required for live updates
   ref: string; title: string; source: string; owner: string; due: string; status: string; priority: HseSeverity;
 }
 

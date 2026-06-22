@@ -20,6 +20,24 @@ import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
+// ── OSH Act 2004 (T&T) statutory notification deadlines ───────────────────────
+// Notifiable incidents (severity high|critical) require verbal notification to
+// the OSH Authority within 24h and a written report within 7 days of the event.
+// Source: OSH Act 2004 s.19. Non-notifiable incidents carry no deadline.
+
+function oshDeadlines(incidentDate: string, severity: string): {
+  osh_notification_due: string | null;
+  osh_written_due:      string | null;
+} {
+  const notifiable = severity === 'high' || severity === 'critical';
+  if (!notifiable) return { osh_notification_due: null, osh_written_due: null };
+  const t = new Date(incidentDate).getTime();
+  return {
+    osh_notification_due: new Date(t + 24 * 3600_000).toISOString(),
+    osh_written_due:      new Date(t + 7 * 24 * 3600_000).toISOString(),
+  };
+}
+
 // ── POST /api/hse/incidents/list ──────────────────────────────────────────────
 
 const ListSchema = z.object({
@@ -40,7 +58,7 @@ router.post('/incidents/list', async c => {
 
   let q = sb
     .from('hse_incidents')
-    .select('id, ref, title, incident_date, incident_type, severity, status, site_id, department_id, reported_by, recordable, lost_time, workflow_id, created_at')
+    .select('id, ref, title, description, incident_date, incident_type, severity, status, site_id, department_id, location_text, reported_by, immediate_action, regulatory_class, osh_classification, injury_type, body_part, lost_days, return_to_work, osh_notification_due, osh_notified_at, osh_written_due, osh_written_at, recordable, lost_time, workflow_id, metadata, created_at, updated_at')
     .order('incident_date', { ascending: false })
     .limit(v.data.limit);
 
@@ -99,21 +117,31 @@ const PersonSchema = z.object({
   injuryDescription: z.string().nullable().optional(),
 });
 
+const OSH_CLASSES = [
+  'first-aid','medical-treatment','restricted-duty','lost-time',
+  'fatality','property-damage','environmental','near-miss','dangerous-occurrence',
+] as const;
+
 const CreateSchema = z.object({
-  title:          z.string().min(1).max(300),
-  description:    z.string().default(''),
-  incidentDate:   z.string().min(1),
-  siteId:         z.string().nullable().optional(),
-  departmentId:   z.string().nullable().optional(),
-  locationText:   z.string().nullable().optional(),
-  incidentType:   z.string().min(1),
-  severity:       z.enum(['minor','moderate','high','critical']),
+  title:           z.string().min(1).max(300),
+  description:     z.string().default(''),
+  incidentDate:    z.string().min(1),
+  siteId:          z.string().nullable().optional(),
+  departmentId:    z.string().nullable().optional(),
+  locationText:    z.string().nullable().optional(),
+  incidentType:    z.string().min(1),
+  severity:        z.enum(['minor','moderate','high','critical']),
   immediateAction: z.string().nullable().optional(),
   regulatoryClass: z.string().nullable().optional(),
-  recordable:     z.boolean().default(false),
-  lostTime:       z.boolean().default(false),
-  people:         z.array(PersonSchema).default([]),
-  metadata:       z.record(z.string(), z.unknown()).optional(),
+  oshClassification: z.enum(OSH_CLASSES).nullable().optional(),
+  injuryType:      z.string().nullable().optional(),
+  bodyPart:        z.string().nullable().optional(),
+  lostDays:        z.number().int().min(0).default(0),
+  returnToWork:    z.string().nullable().optional(),
+  recordable:      z.boolean().default(false),
+  lostTime:        z.boolean().default(false),
+  people:          z.array(PersonSchema).default([]),
+  metadata:        z.record(z.string(), z.unknown()).optional(),
 });
 
 router.post('/incidents/create', async c => {
@@ -123,6 +151,7 @@ router.post('/incidents/create', async c => {
   if (!v.ok) return v.response;
 
   const ref = await nextRef('INC');
+  const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
 
   const { data: incident, error: incErr } = await sb
     .from('hse_incidents')
@@ -140,6 +169,13 @@ router.post('/incidents/create', async c => {
       status:          'open',
       immediate_action: v.data.immediateAction ?? null,
       regulatory_class: v.data.regulatoryClass ?? null,
+      osh_classification: v.data.oshClassification ?? null,
+      injury_type:     v.data.injuryType ?? null,
+      body_part:       v.data.bodyPart ?? null,
+      lost_days:       v.data.lostDays,
+      return_to_work:  v.data.returnToWork ?? null,
+      osh_notification_due,
+      osh_written_due,
       recordable:      v.data.recordable,
       lost_time:       v.data.lostTime,
       metadata:        v.data.metadata ?? {},
@@ -231,6 +267,13 @@ const UpdateSchema = z.object({
   severity:        z.enum(['minor','moderate','high','critical']).optional(),
   immediateAction: z.string().nullable().optional(),
   regulatoryClass: z.string().nullable().optional(),
+  oshClassification: z.enum(OSH_CLASSES).nullable().optional(),
+  injuryType:      z.string().nullable().optional(),
+  bodyPart:        z.string().nullable().optional(),
+  lostDays:        z.number().int().min(0).optional(),
+  returnToWork:    z.string().nullable().optional(),
+  oshNotifiedAt:   z.string().nullable().optional(),
+  oshWrittenAt:    z.string().nullable().optional(),
   recordable:      z.boolean().optional(),
   lostTime:        z.boolean().optional(),
   metadata:        z.record(z.string(), z.unknown()).optional(),
@@ -245,15 +288,22 @@ router.post('/incidents/update', async c => {
   const { incidentId, ...fields } = v.data;
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-  if (fields.title !== undefined)           updates.title           = fields.title;
-  if (fields.description !== undefined)     updates.description     = fields.description;
-  if (fields.status !== undefined)          updates.status          = fields.status;
-  if (fields.severity !== undefined)        updates.severity        = fields.severity;
-  if (fields.immediateAction !== undefined) updates.immediate_action = fields.immediateAction;
-  if (fields.regulatoryClass !== undefined) updates.regulatory_class = fields.regulatoryClass;
-  if (fields.recordable !== undefined)      updates.recordable      = fields.recordable;
-  if (fields.lostTime !== undefined)        updates.lost_time       = fields.lostTime;
-  if (fields.metadata !== undefined)        updates.metadata        = fields.metadata;
+  if (fields.title !== undefined)             updates.title             = fields.title;
+  if (fields.description !== undefined)       updates.description       = fields.description;
+  if (fields.status !== undefined)            updates.status            = fields.status;
+  if (fields.severity !== undefined)          updates.severity          = fields.severity;
+  if (fields.immediateAction !== undefined)   updates.immediate_action  = fields.immediateAction;
+  if (fields.regulatoryClass !== undefined)   updates.regulatory_class  = fields.regulatoryClass;
+  if (fields.oshClassification !== undefined) updates.osh_classification = fields.oshClassification;
+  if (fields.injuryType !== undefined)        updates.injury_type       = fields.injuryType;
+  if (fields.bodyPart !== undefined)          updates.body_part         = fields.bodyPart;
+  if (fields.lostDays !== undefined)          updates.lost_days         = fields.lostDays;
+  if (fields.returnToWork !== undefined)      updates.return_to_work    = fields.returnToWork;
+  if (fields.oshNotifiedAt !== undefined)     updates.osh_notified_at   = fields.oshNotifiedAt;
+  if (fields.oshWrittenAt !== undefined)      updates.osh_written_at    = fields.oshWrittenAt;
+  if (fields.recordable !== undefined)        updates.recordable        = fields.recordable;
+  if (fields.lostTime !== undefined)          updates.lost_time         = fields.lostTime;
+  if (fields.metadata !== undefined)          updates.metadata          = fields.metadata;
 
   const { error } = await sb.from('hse_incidents').update(updates).eq('id', incidentId);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
@@ -270,6 +320,78 @@ router.post('/incidents/update', async c => {
   });
 
   return c.json({ success: true });
+});
+
+// ── POST /api/hse/dashboard/kpis ──────────────────────────────────────────────
+//
+// Aggregate HSE command-view KPIs from canonical tables.
+// LTI-free days = days since the most recent lost_time incident.
+
+router.post('/dashboard/kpis', async c => {
+  await requirePermission(c, 'hse.dashboard.view');
+
+  const now        = new Date().toISOString();
+  const yearStart  = `${new Date().getFullYear()}-01-01T00:00:00Z`;
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+  const [
+    incidentsMtd,
+    openIncidents,
+    openCapas,
+    overdueCapas,
+    openWorkflows,
+    oshOverdue,
+    ltiResult,
+    lostDaysResult,
+    lastLtiResult,
+  ] = await Promise.all([
+    sb.from('hse_incidents').select('id', { count: 'exact', head: true })
+      .gte('incident_date', monthStart),
+    sb.from('hse_incidents').select('id', { count: 'exact', head: true })
+      .not('status', 'in', '(closed,cancelled)'),
+    sb.from('hse_capa_actions').select('id', { count: 'exact', head: true })
+      .not('status', 'in', '(closed,cancelled)'),
+    sb.from('hse_capa_actions').select('id', { count: 'exact', head: true })
+      .not('status', 'in', '(closed,cancelled)').lt('due_at', now),
+    sb.from('workflow_instances').select('id', { count: 'exact', head: true })
+      .eq('source_module', 'hse').not('status', 'in', '(approved,rejected,closed)'),
+    // OSH verbal notifications past their statutory deadline and still unfulfilled
+    sb.from('hse_incidents').select('id', { count: 'exact', head: true })
+      .not('osh_notification_due', 'is', null)
+      .is('osh_notified_at', null)
+      .lt('osh_notification_due', now),
+    // Lost-time incidents YTD
+    sb.from('hse_incidents').select('id', { count: 'exact', head: true })
+      .eq('lost_time', true).gte('incident_date', yearStart),
+    // Sum of lost days YTD
+    sb.from('hse_incidents').select('lost_days')
+      .gte('incident_date', yearStart),
+    // Most recent lost-time incident (for LTI-free-days counter)
+    sb.from('hse_incidents').select('incident_date')
+      .eq('lost_time', true).order('incident_date', { ascending: false }).limit(1),
+  ]);
+
+  const lastLtiDate = (lastLtiResult.data ?? [])[0]?.incident_date as string | undefined;
+  const ltiFreeDays = lastLtiDate
+    ? Math.floor((Date.now() - new Date(lastLtiDate).getTime()) / 86_400_000)
+    : null;
+  const totalLostDays = ((lostDaysResult.data ?? []) as Array<{ lost_days: number | null }>)
+    .reduce((s, r) => s + (r.lost_days ?? 0), 0);
+
+  return c.json({
+    success: true,
+    data: {
+      incidentsMtd:            incidentsMtd.count  ?? 0,
+      openIncidents:           openIncidents.count ?? 0,
+      openCapas:               openCapas.count     ?? 0,
+      overdueCapas:            overdueCapas.count  ?? 0,
+      openWorkflows:           openWorkflows.count ?? 0,
+      oshNotificationsOverdue: oshOverdue.count    ?? 0,
+      ltiCasesYtd:             ltiResult.count     ?? 0,
+      totalLostDays,
+      ltiFreeDays,
+    },
+  });
 });
 
 export default router;

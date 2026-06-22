@@ -4,91 +4,145 @@
  * TanStack Query hooks for the HSE Incident → Investigation → CAPA vertical slice.
  * All mutations call authenticated POST endpoints via apiPost (JWT attached automatically).
  *
- * Phase 1A: replaces mockIncidents, mockInvestigations, mockCapa in Incidents.tsx.
+ * Types and request/response shapes mirror the canonical backend contract:
+ *   netlify/functions/routes/hseIncidents.ts
+ *   netlify/functions/routes/hseInvestigations.ts
+ *   netlify/functions/routes/hseCapa.ts
+ *
+ * Mock fallback (Incidents.tsx) renders when the live query returns an empty set.
  */
 
 import { useQuery, useMutation, useQueryClient, type QueryFunctionContext } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
 import { hseIncidentKeys } from '../queryKeys';
 
-// ── Types (API response shapes) ───────────────────────────────────────────────
+// ── Canonical enums (match DB CHECK constraints) ──────────────────────────────
 
-export type IncidentSeverity = 'critical' | 'major' | 'moderate' | 'minor';
-export type IncidentStatus   = 'reported' | 'under-investigation' | 'capa-raised' | 'closed';
-export type IncidentType     = 'injury' | 'near-miss' | 'property-damage' | 'environmental' | 'unsafe-act' | 'unsafe-condition';
+export type IncidentSeverity = 'minor' | 'moderate' | 'high' | 'critical';
+export type IncidentStatus   =
+  | 'open' | 'triage' | 'investigation' | 'capa'
+  | 'awaiting_closure' | 'closed' | 'cancelled';
+export type IncidentType     =
+  | 'injury' | 'near_miss' | 'property_damage' | 'environmental' | 'other';
 
-export type OshClass =
+export type PersonType = 'injured' | 'witness' | 'reporter' | 'supervisor' | 'contractor' | 'visitor';
+
+export type OshClassification =
   | 'first-aid' | 'medical-treatment' | 'restricted-duty' | 'lost-time'
   | 'fatality' | 'property-damage' | 'environmental' | 'near-miss' | 'dangerous-occurrence';
 
-export interface PersonInvolved {
-  name: string; employeeId?: string; role?: string; contractor?: boolean;
-}
-export interface Witness {
-  name: string; employeeId?: string; statement?: string;
+export type InvestigationStatus =
+  | 'assigned' | 'collecting_evidence' | 'root_cause'
+  | 'findings' | 'review' | 'closed' | 'overdue';
+export type RootCauseMethod = '5why' | 'fishbone' | 'taproot' | 'other';
+
+export type CapaPriority = 'low' | 'medium' | 'high' | 'critical';
+export type CapaStatus   =
+  | 'open' | 'in_progress' | 'implemented' | 'verification'
+  | 'returned' | 'closed' | 'overdue' | 'cancelled';
+
+// ── Response shapes (DB row columns) ──────────────────────────────────────────
+
+export interface IncidentPerson {
+  id:                 string;
+  incident_id:        string;
+  person_type:        PersonType;
+  user_id:            string | null;
+  full_name:          string;
+  role_or_company:    string | null;
+  injury_description: string | null;
+  created_at:         string;
 }
 
 export interface HseIncident {
-  id:                   string;
-  ref:                  string;
-  type:                 IncidentType;
-  severity:             IncidentSeverity;
-  classification:       OshClass | null;
+  id:               string;
+  ref:              string;
+  title:            string;
+  description:      string;
+  incident_date:    string;
+  reported_at:      string;
+  reported_by:      string | null;
+  site_id:          string | null;
+  department_id:    string | null;
+  location_text:    string | null;
+  incident_type:    IncidentType;
+  severity:         IncidentSeverity;
+  status:           IncidentStatus;
+  immediate_action: string | null;
+  regulatory_class: string | null;
+  osh_classification:   OshClassification | null;
   injury_type:          string | null;
   body_part:            string | null;
   lost_days:            number;
   return_to_work:       string | null;
-  site_id:              string | null;
-  site_name:            string | null;
-  status:               IncidentStatus;
-  reporter_id:          string | null;
-  reporter_name:        string | null;
-  description:          string | null;
-  immediate_actions:    string | null;
-  occurred_at:          string;
-  people_involved:      PersonInvolved[];
-  witnesses:            Witness[];
   osh_notification_due: string | null;
   osh_notified_at:      string | null;
   osh_written_due:      string | null;
   osh_written_at:       string | null;
-  osh_class:            string | null;
-  workflow_id:          string | null;
-  created_at:           string;
-  updated_at:           string;
+  recordable:       boolean;
+  lost_time:        boolean;
+  workflow_id:      string | null;
+  metadata:         Record<string, unknown>;
+  created_at:       string;
+  updated_at:       string | null;
 }
 
 export interface HseInvestigation {
-  id:          string;
-  incident_id: string;
-  method:      string;
-  findings:    Array<{ why: string; because: string }>;
-  root_cause:  string | null;
-  lead_id:     string | null;
-  lead_name:   string | null;
-  status:      'open' | 'in-progress' | 'closed';
-  closed_at:   string | null;
-  created_at:  string;
-  updated_at:  string;
+  id:                   string;
+  ref:                  string;
+  incident_id:          string;
+  investigator_user_id: string | null;
+  status:               InvestigationStatus;
+  due_at:               string | null;
+  root_cause_method:    RootCauseMethod | null;
+  summary?:             string | null;
+  findings?:            string | null;
+  recommendations?:     string | null;
+  created_at:           string;
+  closed_at:            string | null;
+  updated_at?:          string | null;
+}
+
+export interface HseRootCause {
+  id:                  string;
+  investigation_id:    string;
+  category:            string;
+  cause:               string;
+  contributing_factor: boolean;
+}
+
+export interface HseEvidence {
+  id:               string;
+  investigation_id: string;
+  evidence_type:    string;
+  title:            string;
+  description:      string | null;
+  attachment_id:    string | null;
+  collected_by:     string | null;
+  collected_at:     string | null;
+  status:           string;
 }
 
 export interface HseCapa {
-  id:               string;
-  ref:              string;
-  source_ref:       string;
-  source_type:      string;
-  title:            string;
-  description:      string;
-  owner_id:         string | null;
-  owner_name:       string | null;
-  due_date:         string;
-  priority:         'critical' | 'high' | 'medium' | 'low';
-  status:           'open' | 'in-progress' | 'overdue' | 'closed' | 'verified';
-  verification_note: string | null;
-  closed_at:        string | null;
-  workflow_id:      string | null;
-  created_at:       string;
-  updated_at:       string;
+  id:                   string;
+  ref:                  string;
+  source_type:          string;
+  source_id:            string;
+  title:                string;
+  description:          string;
+  owner_user_id:        string | null;
+  priority:             CapaPriority;
+  status:               CapaStatus;
+  due_at:               string | null;
+  completed_at:         string | null;
+  verified_by:          string | null;
+  verified_at:          string | null;
+  effectiveness_result: 'effective' | 'partially_effective' | 'ineffective' | null;
+  workflow_id:          string | null;
+  created_by:           string | null;
+  metadata:             Record<string, unknown>;
+  created_at:           string;
+  updated_at:           string | null;
 }
 
 export interface HseDashboardKpis {
@@ -98,31 +152,30 @@ export interface HseDashboardKpis {
   overdueCapas:            number;
   openWorkflows:           number;
   oshNotificationsOverdue: number;
-  ltiCasesYtd:            number;
-  totalLostDays:          number;
-  ltiFreeDays:            number | null;
+  ltiCasesYtd:             number;
+  totalLostDays:           number;
+  ltiFreeDays:             number | null;
 }
 
 // ── Filter types ──────────────────────────────────────────────────────────────
 
 export interface IncidentListFilters extends Record<string, unknown> {
-  status?:     IncidentStatus;
-  severity?:   IncidentSeverity;
-  siteId?:     string;
-  reporterId?: string;
-  from?:       string;
-  to?:         string;
-  limit?:      number;
-  offset?:     number;
+  siteId?:   string;
+  status?:   IncidentStatus;
+  severity?: IncidentSeverity;
+  dateFrom?: string;
+  dateTo?:   string;
+  limit?:    number;
+  cursor?:   string;
 }
 
 export interface CapaListFilters extends Record<string, unknown> {
-  status?:    'open' | 'in-progress' | 'overdue' | 'closed' | 'verified';
-  ownerId?:   string;
-  priority?:  'critical' | 'high' | 'medium' | 'low';
-  sourceRef?: string;
-  limit?:     number;
-  offset?:    number;
+  status?:   CapaStatus;
+  ownerId?:  string;
+  priority?: CapaPriority;
+  overdue?:  boolean;
+  limit?:    number;
+  cursor?:   string;
 }
 
 // ── Incidents ─────────────────────────────────────────────────────────────────
@@ -131,7 +184,7 @@ export function useHseIncidents(filters: IncidentListFilters = {}) {
   return useQuery({
     queryKey: hseIncidentKeys.list(filters),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HseIncident[]; total: number }>(
+      const res = await apiPost<{ success: boolean; data: HseIncident[] }>(
         'hse/incidents/list', filters, { signal },
       );
       if (!res.success) throw new Error((res as { message?: string }).message ?? 'Failed to load incidents');
@@ -140,64 +193,79 @@ export function useHseIncidents(filters: IncidentListFilters = {}) {
   });
 }
 
-export function useHseIncident(id: string) {
+export function useHseIncident(incidentId: string) {
   return useQuery({
-    queryKey: hseIncidentKeys.detail(id),
+    queryKey: hseIncidentKeys.detail(incidentId),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: { incident: HseIncident; investigations: HseInvestigation[]; capas: HseCapa[] } }>(
-        'hse/incidents/get', { id }, { signal },
+      const res = await apiPost<{ success: boolean; data: { incident: HseIncident; people: IncidentPerson[] } }>(
+        'hse/incidents/get', { incidentId }, { signal },
       );
       if (!res.success) throw new Error((res as { message?: string }).message ?? 'Failed to load incident');
       return res.data;
     },
-    enabled: !!id,
+    enabled: !!incidentId,
   });
 }
 
+export interface IncidentPersonInput {
+  personType:         PersonType;
+  userId?:            string | null;
+  fullName:           string;
+  roleOrCompany?:     string | null;
+  injuryDescription?: string | null;
+}
+
 export interface CreateIncidentArgs extends Record<string, unknown> {
-  type: IncidentType;
-  severity: IncidentSeverity;
-  classification?: OshClass;
-  injuryType?: string;
-  bodyPart?: string;
-  lostDays?: number;
-  returnToWork?: string;
-  siteId?: string;
-  siteName?: string;
-  description?: string;
-  immediateActions?: string;
-  occurredAt?: string;
-  peopleInvolved?: PersonInvolved[];
-  witnesses?: Witness[];
-  oshClass?: string;
-  workflowId?: string;
+  title:             string;
+  description?:       string;
+  incidentDate:       string;
+  siteId?:            string | null;
+  departmentId?:      string | null;
+  locationText?:      string | null;
+  incidentType:       IncidentType;
+  severity:           IncidentSeverity;
+  immediateAction?:   string | null;
+  regulatoryClass?:   string | null;
+  oshClassification?: OshClassification | null;
+  injuryType?:        string | null;
+  bodyPart?:          string | null;
+  lostDays?:          number;
+  returnToWork?:      string | null;
+  recordable?:        boolean;
+  lostTime?:          boolean;
+  people?:            IncidentPersonInput[];
+  metadata?:          Record<string, unknown>;
 }
 
 export function useCreateIncident() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateIncidentArgs) =>
-      apiPost<{ success: boolean; id: string; ref: string }>('hse/incidents/create', args, { retryable: false }),
+      apiPost<{ success: boolean; incidentId: string; ref: string; workflowId: string | null }>(
+        'hse/incidents/create', args, { retryable: false },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
   });
 }
 
 export interface UpdateIncidentArgs extends Record<string, unknown> {
-  id: string;
-  status?: IncidentStatus;
-  classification?: OshClass;
-  injuryType?: string;
-  bodyPart?: string;
-  lostDays?: number;
-  returnToWork?: string;
-  description?: string;
-  immediateActions?: string;
-  peopleInvolved?: PersonInvolved[];
-  witnesses?: Witness[];
-  oshNotifiedAt?: string;
-  oshWrittenAt?: string;
-  oshClass?: string;
-  workflowId?: string;
+  incidentId:         string;
+  title?:             string;
+  description?:        string;
+  status?:            IncidentStatus;
+  severity?:          IncidentSeverity;
+  immediateAction?:   string | null;
+  regulatoryClass?:   string | null;
+  oshClassification?: OshClassification | null;
+  injuryType?:        string | null;
+  bodyPart?:          string | null;
+  lostDays?:          number;
+  returnToWork?:      string | null;
+  oshNotifiedAt?:     string | null;
+  oshWrittenAt?:      string | null;
+  recordable?:        boolean;
+  lostTime?:          boolean;
+  metadata?:          Record<string, unknown>;
 }
 
 export function useUpdateIncident() {
@@ -207,7 +275,7 @@ export function useUpdateIncident() {
       apiPost<{ success: boolean }>('hse/incidents/update', args, { retryable: false }),
     onSuccess: (_r: unknown, vars: UpdateIncidentArgs) => {
       qc.invalidateQueries({ queryKey: hseIncidentKeys.all });
-      qc.invalidateQueries({ queryKey: hseIncidentKeys.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: hseIncidentKeys.detail(vars.incidentId) });
     },
   });
 }
@@ -224,28 +292,60 @@ export function useHseInvestigations(incidentId?: string) {
       if (!res.success) throw new Error((res as { message?: string }).message ?? 'Failed to load investigations');
       return res.data;
     },
-    enabled: !!incidentId,
+    // List all when no incidentId; scoped list when one is provided.
+    enabled: incidentId === undefined || !!incidentId,
   });
+}
+
+export interface CreateInvestigationArgs extends Record<string, unknown> {
+  incidentId:          string;
+  investigatorUserId?: string | null;
+  rootCauseMethod?:    RootCauseMethod | null;
+  dueAt?:              string | null;
 }
 
 export function useCreateInvestigation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { incidentId: string; method?: string; leadId?: string; leadName?: string }) =>
-      apiPost<{ success: boolean; id: string }>('hse/investigations/create', args, { retryable: false }),
+    mutationFn: (args: CreateInvestigationArgs) =>
+      apiPost<{ success: boolean; investigationId: string; ref: string }>(
+        'hse/investigations/create', args, { retryable: false },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
   });
+}
+
+export interface UpdateInvestigationArgs extends Record<string, unknown> {
+  investigationId:  string;
+  status?:          InvestigationStatus;
+  summary?:         string | null;
+  findings?:        string | null;
+  recommendations?: string | null;
+  rootCauseMethod?: RootCauseMethod | null;
+  dueAt?:           string | null;
 }
 
 export function useUpdateInvestigation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: {
-      id: string;
-      findings?: Array<{ why: string; because: string }>;
-      rootCause?: string;
-      status?: 'open' | 'in-progress' | 'closed';
-    }) => apiPost<{ success: boolean }>('hse/investigations/update', args, { retryable: false }),
+    mutationFn: (args: UpdateInvestigationArgs) =>
+      apiPost<{ success: boolean }>('hse/investigations/update', args, { retryable: false }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
+  });
+}
+
+export interface AddRootCauseArgs extends Record<string, unknown> {
+  investigationId:     string;
+  category:            string;
+  cause:               string;
+  contributingFactor?: boolean;
+}
+
+export function useAddRootCause() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: AddRootCauseArgs) =>
+      apiPost<{ success: boolean; rootCauseId: string }>('hse/investigations/addRootCause', args, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
   });
 }
@@ -265,33 +365,44 @@ export function useHseCapa(filters: CapaListFilters = {}) {
   });
 }
 
+export interface CreateCapaArgs extends Record<string, unknown> {
+  sourceType:   string;
+  sourceId:     string;
+  title:        string;
+  description:  string;
+  ownerUserId?: string | null;
+  priority?:    CapaPriority;
+  dueAt?:       string | null;
+  metadata?:    Record<string, unknown>;
+}
+
 export function useCreateCapa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: {
-      sourceRef: string;
-      sourceType: string;
-      title: string;
-      description: string;
-      ownerId?: string;
-      ownerName?: string;
-      dueDate: string;
-      priority?: 'critical' | 'high' | 'medium' | 'low';
-    }) => apiPost<{ success: boolean; id: string; ref: string }>('hse/capa/create', args, { retryable: false }),
+    mutationFn: (args: CreateCapaArgs) =>
+      apiPost<{ success: boolean; capaId: string; ref: string; workflowId: string | null }>(
+        'hse/capa/create', args, { retryable: false },
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
   });
+}
+
+export interface UpdateCapaArgs extends Record<string, unknown> {
+  capaId:               string;
+  status?:              CapaStatus;
+  priority?:            CapaPriority;
+  dueAt?:               string | null;
+  ownerUserId?:         string | null;
+  verifiedBy?:          string | null;
+  effectivenessResult?: 'effective' | 'partially_effective' | 'ineffective' | null;
+  metadata?:            Record<string, unknown>;
 }
 
 export function useUpdateCapa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: {
-      id: string;
-      status?: 'open' | 'in-progress' | 'overdue' | 'closed' | 'verified';
-      verificationNote?: string;
-      ownerId?: string;
-      dueDate?: string;
-    }) => apiPost<{ success: boolean }>('hse/capa/update', args, { retryable: false }),
+    mutationFn: (args: UpdateCapaArgs) =>
+      apiPost<{ success: boolean }>('hse/capa/update', args, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseIncidentKeys.all }),
   });
 }
