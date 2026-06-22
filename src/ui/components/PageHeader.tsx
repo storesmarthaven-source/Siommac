@@ -18,17 +18,21 @@ export interface PageMetaChip { icon?: string; label: string; }
 export interface PageHeaderProps {
   icon: string;
   title: string;
+  /** Short description shown under the title. */
+  sub?: string;
   /** Breadcrumb root (the module), e.g. 'HSE'. */
   module?: string;
-  /** Extra breadcrumb segments between the module and the title. */
+  /** Extra breadcrumb segments after the module (e.g. a parent area). */
   crumbs?: string[];
-  /** Meta shown as chips beneath the title. */
+  /** Meta shown as chips beneath the title/description. */
   meta?: PageMetaChip[];
   /** Right-aligned action buttons. */
   actions?: ComponentChildren;
 }
 
-export function PageHeader({ icon, title, module, crumbs = [], meta = [], actions }: PageHeaderProps): VNode {
+export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], actions }: PageHeaderProps): VNode {
+  // Breadcrumb = the parent trail only (module › crumbs). The title is the H1
+  // below it, so we don't repeat it as a crumb.
   const trail = [module, ...crumbs].filter(Boolean) as string[];
   return (
     <div class="ui-page-header">
@@ -40,14 +44,13 @@ export function PageHeader({ icon, title, module, crumbs = [], meta = [], action
               {trail.map((c, i) => (
                 <>
                   {i > 0 && <i class="fas fa-chevron-right ui-page-crumb-sep" />}
-                  <span key={c}>{c}</span>
+                  <span key={c} class={i === trail.length - 1 ? 'ui-page-crumb-current' : undefined}>{c}</span>
                 </>
               ))}
-              <i class="fas fa-chevron-right ui-page-crumb-sep" />
-              <span class="ui-page-crumb-current">{title}</span>
             </div>
           )}
           <div class="ui-page-title">{title}</div>
+          {sub && <div class="ui-page-sub">{sub}</div>}
           {meta.length > 0 && (
             <div class="ui-page-meta">
               {meta.map((m, i) => (

@@ -142,6 +142,7 @@ export function UIKitPage(): VNode {
         <Demo label="PageHeader — standard sub-module header (breadcrumb + meta chips + actions)" wide>
           <PageHeader
             icon="fa-triangle-exclamation" module="HSE" title="Incidents"
+            sub="Report, triage and investigate workplace incidents and near-misses."
             meta={[
               { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
               { icon: 'fa-location-dot', label: 'All sites' },

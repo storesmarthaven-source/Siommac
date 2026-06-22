@@ -172,6 +172,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         icon="fa-radiation"
         module="HSE"
         title="Risk & JSA"
+        sub="Hazard register, risk assessments, and job safety analyses — identify, rate, and control workplace risk."
         meta={[
           { icon: 'fa-radiation', label: `${totalHazards} hazards` },
           { icon: 'fa-triangle-exclamation', label: `${highCritical} high / critical` },
