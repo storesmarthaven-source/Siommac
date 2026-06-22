@@ -188,32 +188,32 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
       <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
 
-      <div class="hse-spark-row">
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
-          <div class="hse-spark-val">{totalHazards}</div>
-          <div class="hse-spark-sub">On the live register</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span></div>
-          <div class="hse-spark-val" style={{ color: '#ef4444' }}>{highCritical}</div>
-          <div class="hse-spark-sub">Priority for control</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{openAssessments}</div>
-          <div class="hse-spark-sub">{overdueAssessments > 0 ? `${overdueAssessments} overdue review` : 'All reviews current'}</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
-          <div class="hse-spark-sub">Initial → residual, controlled</div>
-        </div>
-      </div>
-
       <div class="hse-main-grid">
         <div class="hse-left-col">
           <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
+
+          <div class="hse-spark-row">
+            <div class="hse-spark">
+              <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
+              <div class="hse-spark-val">{totalHazards}</div>
+              <div class="hse-spark-sub">On the live register</div>
+            </div>
+            <div class="hse-spark">
+              <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span></div>
+              <div class="hse-spark-val" style={{ color: '#ef4444' }}>{highCritical}</div>
+              <div class="hse-spark-sub">Priority for control</div>
+            </div>
+            <div class="hse-spark">
+              <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span></div>
+              <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{openAssessments}</div>
+              <div class="hse-spark-sub">{overdueAssessments > 0 ? `${overdueAssessments} overdue review` : 'All reviews current'}</div>
+            </div>
+            <div class="hse-spark">
+              <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span></div>
+              <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
+              <div class="hse-spark-sub">Initial → residual, controlled</div>
+            </div>
+          </div>
 
           {active === 'hazards' && (
             <HazardTab

@@ -83,15 +83,6 @@ function HazardCards(): VNode {
 
   return (
     <div style={ROW}>
-      <InsightCard icon="fa-radiation" title="Hazard Profile" value={total} subtitle={`${critical} critical · ${high} high · ${medium} medium · ${low} low`}
-        variant="donut" data={{ segments: [{ value: critical, color: SEV_COLOR.critical }, { value: high, color: SEV_COLOR.high }, { value: medium, color: SEV_COLOR.medium }, { value: low, color: SEV_COLOR.low }] }}
-        footer="On the register" />
-      <InsightCard icon="fa-triangle-exclamation" title="High / Critical Hazards" value={`${highCrit}`} subtitle={overdueRev > 0 ? `${overdueRev} overdue reviews` : 'Need control verification'}
-        variant="bar" tone={highCrit > 0 ? 'danger' : 'neutral'} data={{ bars: byCat }}
-        footer={byCat.map(c => `${c.label} ${c.value}`).join(' · ') || 'No high-risk hazards'} />
-      <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
-        variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
-        footer="Approved / monitoring" />
       <SparkCard spark={{
         label: 'Review Cycle',
         value: `${overdueRev + dueWeek}`,
@@ -102,6 +93,15 @@ function HazardCards(): VNode {
         delta: `${dueWeek}`,
         deltaUp: overdueRev > 0,
       }} />
+      <InsightCard icon="fa-radiation" title="Hazard Profile" value={total} subtitle={`${critical} critical · ${high} high · ${medium} medium · ${low} low`}
+        variant="donut" data={{ segments: [{ value: critical, color: SEV_COLOR.critical }, { value: high, color: SEV_COLOR.high }, { value: medium, color: SEV_COLOR.medium }, { value: low, color: SEV_COLOR.low }] }}
+        footer="On the register" />
+      <InsightCard icon="fa-triangle-exclamation" title="High / Critical Hazards" value={`${highCrit}`} subtitle={overdueRev > 0 ? `${overdueRev} overdue reviews` : 'Need control verification'}
+        variant="bar" tone={highCrit > 0 ? 'danger' : 'neutral'} data={{ bars: byCat }}
+        footer={byCat.map(c => `${c.label} ${c.value}`).join(' · ') || 'No high-risk hazards'} />
+      <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
+        variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
+        footer="Approved / monitoring" />
     </div>
   );
 }
@@ -123,15 +123,6 @@ function AssessmentCards(): VNode {
 
   return (
     <div style={ROW}>
-      <InsightCard icon="fa-table-cells-large" title="Assessment Status" value={total} subtitle={`${active} active · ${underReview} under review · ${expired} expired`}
-        variant="donut" data={{ segments: [{ value: active, color: '#16a34a' }, { value: underReview, color: '#f59e0b' }, { value: expired, color: '#ef4444' }] }}
-        footer={`${underReview} pending approval`} />
-      <InsightCard icon="fa-arrow-down-wide-short" title="Residual Risk" value={`${highResidual}`} subtitle={`${acceptable}% acceptable after controls`}
-        variant="progress" tone={highResidual > 0 ? 'warning' : 'neutral'} data={{ pct: acceptable, color: acceptable >= 85 ? '#22c55e' : '#f59e0b', target: 'Target 85%' }}
-        footer="High residual remaining" />
-      <InsightCard icon="fa-clipboard-check" title="Approval Queue" value={`${underReview}`} subtitle={`${returned} returned · ${underReview} awaiting review`}
-        variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
-        footer="HSE review" />
       <SparkCard spark={{
         label: 'Reviews Due',
         value: `${dueMonth}`,
@@ -142,6 +133,15 @@ function AssessmentCards(): VNode {
         delta: `${dueWeek}`,
         deltaUp: dueWeek > 0,
       }} />
+      <InsightCard icon="fa-table-cells-large" title="Assessment Status" value={total} subtitle={`${active} active · ${underReview} under review · ${expired} expired`}
+        variant="donut" data={{ segments: [{ value: active, color: '#16a34a' }, { value: underReview, color: '#f59e0b' }, { value: expired, color: '#ef4444' }] }}
+        footer={`${underReview} pending approval`} />
+      <InsightCard icon="fa-arrow-down-wide-short" title="Residual Risk" value={`${highResidual}`} subtitle={`${acceptable}% acceptable after controls`}
+        variant="progress" tone={highResidual > 0 ? 'warning' : 'neutral'} data={{ pct: acceptable, color: acceptable >= 85 ? '#22c55e' : '#f59e0b', target: 'Target 85%' }}
+        footer="High residual remaining" />
+      <InsightCard icon="fa-clipboard-check" title="Approval Queue" value={`${underReview}`} subtitle={`${returned} returned · ${underReview} awaiting review`}
+        variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
+        footer="HSE review" />
     </div>
   );
 }
