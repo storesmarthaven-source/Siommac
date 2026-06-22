@@ -24,6 +24,7 @@ import { RolesTab }        from './tabs/RolesTab';
 import { PermissionsTab }  from './tabs/PermissionsTab';
 import { SessionsTab }     from './tabs/SessionsTab';
 import { AuditLogTab }     from './tabs/AuditLogTab';
+import { UIKitPage }       from '@ui/examples/UIKitPage';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -75,6 +76,13 @@ const TABS: ConsoleTab[] = [
     icon:  'fa-clipboard-list',
     desc:  'A tamper-evident, append-only record of every privileged action — who did what, when, and from where. Filter, search and export to CSV.',
     body:  AuditLogTab,
+  },
+  {
+    id:    'uikit',
+    label: 'UI Kit',
+    icon:  'fa-palette',
+    desc:  'The living catalog of the Siomac design system. Every shared @ui component with all its variants — the single reference for how the app looks. A token theme-editor will live here.',
+    body:  UIKitPage,
   },
 ];
 
