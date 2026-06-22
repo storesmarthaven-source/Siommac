@@ -5039,32 +5039,34 @@ body[data-theme="dark"] .hero-footer {
   gap: 2px;
 }
 
-/* ── Incident drawer tab bar ─────────────────────────────────────────────────── */
+/* ── Incident drawer tab bar — 4-column grid, 2 rows ────────────────────────── */
 .hse-idrawer-tabbar {
-  display: flex;
-  justify-content: center;
-  overflow-x: auto;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   background: #fff;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  padding: 0 4px;
 }
-.hse-idrawer-tabbar::-webkit-scrollbar { display: none; }
 .hse-idrawer-tab {
-  display: flex; align-items: center; gap: 5px;
-  padding: 10px 13px 11px;
-  border: none; background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 4px 10px;
+  border: none;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.71rem; font-weight: 500;
-  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
   border-bottom: 2px solid transparent;
   transition: color .15s, border-color .15s;
   margin-bottom: -1px;
-  flex-shrink: 0;
 }
-.hse-idrawer-tab i { font-size: 0.74rem; }
+.hse-idrawer-tab i { font-size: 0.82rem; }
 .hse-idrawer-tab:hover { color: var(--siomac-navy); }
 .hse-idrawer-tab.active { color: var(--siomac-navy); border-bottom-color: var(--siomac-navy); font-weight: 600; }
 
