@@ -206,7 +206,7 @@
 .hse-data-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-default, #334155); }
 .hse-data-table tr:last-child td { border-bottom: 0; }
 .hse-data-table tbody tr { cursor: pointer; }
-.hse-data-table tbody tr:hover td { background: var(--bg-subtle, #F8FAFE); }
+.hse-data-table tbody tr:hover td { background: var(--row-hover, #F8FAFE); }
 .hse-data-table .hse-empty { text-align: center; color: var(--text-muted); padding: 26px; }
 .hse-rec-cell strong { display: block; color: var(--siomac-navy); font-size: 0.82rem; }
 .hse-rec-cell span, .hse-incident-detail { display: block; color: var(--text-muted); font-size: 0.7rem; line-height: 1.35; margin-top: 3px; }
@@ -2693,7 +2693,7 @@ body[data-theme="dark"] .hero-footer {
 
 /* Dense table */
 .inc-table-dense td, .inc-table-dense th { padding: 8px 10px; }
-.inc-table-dense tbody tr:hover { background: var(--bg-subtle); }
+.inc-table-dense tbody tr:hover { background: var(--row-hover, #F8FAFE); }
 
 /* Severity chip */
 .inc-sev-chip {

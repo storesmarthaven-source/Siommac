@@ -19,8 +19,7 @@ import {
   readTokenValue, cacheTheme, type ThemeOverrides,
 } from '../theme/applyTheme';
 import { loadThemeTokens, saveThemeTokens } from '@api/theme';
-
-const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+import { ColorField } from './ColorField';
 
 export function ThemeEditor(): VNode {
   const [overrides, setOverrides] = useState<ThemeOverrides>({});
@@ -165,33 +164,39 @@ function TokenRow({ def, value, overridden, onChange, onRevert }: {
   def: TokenDef; value: string; overridden: boolean;
   onChange: (v: string) => void; onRevert: () => void;
 }): VNode {
-  const isColor = def.kind === 'color';
-  const colorVal = HEX_RE.test(value) ? value : '#000000';
-
   return (
     <div style={{
       border: `1px solid ${overridden ? 'var(--siomac-navy)' : 'var(--border)'}`,
       borderRadius: 'var(--radius-sm)', padding: '8px 10px', background: 'var(--bg-card)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '6px' }}>
-        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>{def.label}</span>
+        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{def.label}</span>
         {overridden && (
           <button title="Revert to default" onClick={onRevert}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.72rem' }}>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.72rem', flexShrink: 0 }}>
             <i class="fas fa-rotate-left" />
           </button>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {isColor && (
-          <input type="color" value={colorVal} onInput={e => onChange((e.target as HTMLInputElement).value)}
-            style={{ width: '32px', height: '32px', padding: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', background: 'none', cursor: 'pointer', flexShrink: 0 }} />
-        )}
+
+      {(def.kind === 'color' || def.kind === 'color-alpha') && (
+        <ColorField value={value} withAlpha={def.kind === 'color-alpha'} onChange={onChange} />
+      )}
+
+      {def.kind === 'select' && (
+        <select class="ui-select" value={value} onChange={e => onChange((e.target as HTMLSelectElement).value)}
+          style={{ minHeight: '32px', fontSize: '0.74rem' }}>
+          {def.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      )}
+
+      {def.kind === 'text' && (
         <input type="text" class="ui-input" value={value} placeholder={def.hint}
           onInput={e => onChange((e.target as HTMLInputElement).value)}
           style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', minHeight: '32px' }} />
-      </div>
-      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{def.name}</div>
+      )}
+
+      <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>{def.name}</div>
     </div>
   );
 }

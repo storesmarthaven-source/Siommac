@@ -3,22 +3,25 @@
  *
  * The manifest of design tokens the superadmin theme editor can change. These
  * mirror the `:root` variables in assets/styles/base.css — the ONE place the
- * whole app reads its colours, spacing, radius and type from. Changing a token
- * re-themes every component (and every hover/focus state, since those reference
- * the same tokens) consistently.
+ * whole app reads its colours, spacing, radius, type and interaction states
+ * from. Changing a token re-themes every component (and every hover/focus
+ * state, since those reference the same tokens) consistently.
  *
  * `kind`:
- *   'color' → rendered with a colour picker + hex field (solid hex tokens)
- *   'text'  → rendered with a text field (rgba tints, sizes, font stacks)
+ *   'color'       → colour picker (opaque hex)
+ *   'color-alpha' → colour picker WITH an opacity slider (rgba output)
+ *   'select'      → fixed set of options (e.g. font weights)
+ *   'text'        → free text (sizes, font stacks)
  */
 
-export type TokenKind = 'color' | 'text';
+export type TokenKind = 'color' | 'color-alpha' | 'select' | 'text';
 
 export interface TokenDef {
-  name:  string;   // CSS custom property, e.g. '--siomac-navy'
-  label: string;
-  kind:  TokenKind;
-  hint?: string;
+  name:     string;   // CSS custom property, e.g. '--siomac-navy'
+  label:    string;   // descriptive, says what it controls
+  kind:     TokenKind;
+  hint?:    string;
+  options?: ReadonlyArray<{ value: string; label: string }>;
 }
 
 export interface TokenGroup {
@@ -28,95 +31,118 @@ export interface TokenGroup {
   tokens: TokenDef[];
 }
 
+const WEIGHT_OPTIONS = [
+  { value: '400', label: '400 — Regular' },
+  { value: '500', label: '500 — Medium' },
+  { value: '600', label: '600 — Semibold' },
+  { value: '700', label: '700 — Bold' },
+] as const;
+
 export const TOKEN_GROUPS: TokenGroup[] = [
   {
-    id: 'brand', label: 'Brand', desc: 'Primary identity colours used for CTAs, headers and accents.',
+    id: 'brand', label: 'Brand colours', desc: 'Primary identity colours for buttons, headers, links and accents.',
     tokens: [
-      { name: '--siomac-red',        label: 'Red (primary CTA)', kind: 'color' },
-      { name: '--siomac-red-dark',   label: 'Red — dark/hover',  kind: 'color' },
-      { name: '--siomac-navy',       label: 'Navy (primary)',    kind: 'color' },
-      { name: '--siomac-navy-light', label: 'Navy — light',      kind: 'color' },
-      { name: '--siomac-gold',       label: 'Gold',              kind: 'color' },
-      { name: '--siomac-blue',       label: 'Blue',              kind: 'color' },
+      { name: '--siomac-red',        label: 'Primary action (buttons, key CTAs)', kind: 'color' },
+      { name: '--siomac-red-dark',   label: 'Primary action — hover/pressed',     kind: 'color' },
+      { name: '--siomac-navy',       label: 'Primary brand (sidebar, headings, icons)', kind: 'color' },
+      { name: '--siomac-navy-light', label: 'Brand — lighter accent',             kind: 'color' },
+      { name: '--siomac-gold',       label: 'Gold accent (highlights, badges)',   kind: 'color' },
+      { name: '--siomac-blue',       label: 'Secondary blue accent',              kind: 'color' },
     ],
   },
   {
-    id: 'surface', label: 'Surfaces', desc: 'Page, card, panel and border fills.',
+    id: 'surface', label: 'Surfaces & borders', desc: 'The page, card and panel fills, and the divider/border colour.',
     tokens: [
-      { name: '--bg-app',    label: 'App background',  kind: 'color' },
-      { name: '--bg-card',   label: 'Card background', kind: 'color' },
-      { name: '--bg-subtle', label: 'Subtle / header', kind: 'color' },
-      { name: '--border',    label: 'Border',          kind: 'color' },
+      { name: '--bg-app',    label: 'App background (behind everything)', kind: 'color' },
+      { name: '--bg-card',   label: 'Card / panel background',            kind: 'color' },
+      { name: '--bg-subtle', label: 'Subtle fill (headers, footers, wells)', kind: 'color' },
+      { name: '--border',    label: 'Borders & dividers',                 kind: 'color' },
     ],
   },
   {
-    id: 'text', label: 'Text', desc: 'Foreground text colours.',
+    id: 'text', label: 'Text colours', desc: 'Foreground colours for primary and secondary text.',
     tokens: [
-      { name: '--text-primary', label: 'Primary text', kind: 'color' },
-      { name: '--text-muted',   label: 'Muted text',   kind: 'color' },
+      { name: '--text-primary', label: 'Primary text (body, headings)',         kind: 'color' },
+      { name: '--text-muted',   label: 'Muted text (labels, captions, hints)',  kind: 'color' },
     ],
   },
   {
-    id: 'status', label: 'Status — solid', desc: 'The bright status family used for chips, deltas and signal dots.',
+    id: 'status', label: 'Status colours', desc: 'The bright status family used for chips, KPI deltas and signal dots.',
     tokens: [
-      { name: '--st-danger',  label: 'Danger',  kind: 'color' },
-      { name: '--st-warning', label: 'Warning', kind: 'color' },
-      { name: '--st-success', label: 'Success', kind: 'color' },
-      { name: '--st-info',    label: 'Info',    kind: 'color' },
-      { name: '--st-neutral', label: 'Neutral', kind: 'color' },
-      { name: '--st-purple',  label: 'Purple (workflow)', kind: 'color' },
+      { name: '--st-danger',  label: 'Danger / critical (red)',      kind: 'color' },
+      { name: '--st-warning', label: 'Warning / caution (amber)',    kind: 'color' },
+      { name: '--st-success', label: 'Success / positive (green)',   kind: 'color' },
+      { name: '--st-info',    label: 'Info / neutral-positive (blue)', kind: 'color' },
+      { name: '--st-neutral', label: 'Neutral (grey)',               kind: 'color' },
+      { name: '--st-purple',  label: 'Workflow / in-review (purple)', kind: 'color' },
     ],
   },
   {
-    id: 'status-strong', label: 'Status — strong', desc: 'Darker text-on-light variants of each status colour.',
+    id: 'status-strong', label: 'Status — strong text', desc: 'Darker variants used when status colour is text on a light fill.',
     tokens: [
-      { name: '--st-danger-strong',  label: 'Danger — strong',  kind: 'color' },
-      { name: '--st-warning-strong', label: 'Warning — strong', kind: 'color' },
-      { name: '--st-success-strong', label: 'Success — strong', kind: 'color' },
-      { name: '--st-info-strong',    label: 'Info — strong',    kind: 'color' },
+      { name: '--st-danger-strong',  label: 'Danger — strong text',  kind: 'color' },
+      { name: '--st-warning-strong', label: 'Warning — strong text', kind: 'color' },
+      { name: '--st-success-strong', label: 'Success — strong text', kind: 'color' },
+      { name: '--st-info-strong',    label: 'Info — strong text',    kind: 'color' },
     ],
   },
   {
-    id: 'status-tint', label: 'Status — tint', desc: 'Soft fills for icon circles and chip backgrounds (rgba — edit as text).',
+    id: 'status-tint', label: 'Status — soft fills', desc: 'Translucent fills behind status icons and chip backgrounds. Adjust the colour and its opacity.',
     tokens: [
-      { name: '--st-danger-tint',  label: 'Danger — tint',  kind: 'text', hint: 'rgba(…)' },
-      { name: '--st-warning-tint', label: 'Warning — tint', kind: 'text', hint: 'rgba(…)' },
-      { name: '--st-success-tint', label: 'Success — tint', kind: 'text', hint: 'rgba(…)' },
-      { name: '--st-info-tint',    label: 'Info — tint',    kind: 'text', hint: 'rgba(…)' },
-      { name: '--st-neutral-tint', label: 'Neutral — tint', kind: 'text', hint: 'rgba(…)' },
-      { name: '--st-purple-tint',  label: 'Purple — tint',  kind: 'text', hint: 'rgba(…)' },
+      { name: '--st-danger-tint',  label: 'Danger — chip/icon fill',  kind: 'color-alpha' },
+      { name: '--st-warning-tint', label: 'Warning — chip/icon fill', kind: 'color-alpha' },
+      { name: '--st-success-tint', label: 'Success — chip/icon fill', kind: 'color-alpha' },
+      { name: '--st-info-tint',    label: 'Info — chip/icon fill',    kind: 'color-alpha' },
+      { name: '--st-neutral-tint', label: 'Neutral — chip/icon fill', kind: 'color-alpha' },
+      { name: '--st-purple-tint',  label: 'Workflow — chip/icon fill', kind: 'color-alpha' },
     ],
   },
   {
-    id: 'spacing', label: 'Spacing', desc: 'The 4px spacing scale used for gaps, padding and margins.',
+    id: 'interaction', label: 'Interaction states', desc: 'Hover and focus feedback. These cascade to every table, list and input in the app.',
     tokens: [
-      { name: '--space-1',  label: 'space-1',  kind: 'text', hint: 'px' },
-      { name: '--space-2',  label: 'space-2',  kind: 'text', hint: 'px' },
-      { name: '--space-3',  label: 'space-3',  kind: 'text', hint: 'px' },
-      { name: '--space-4',  label: 'space-4',  kind: 'text', hint: 'px' },
-      { name: '--space-5',  label: 'space-5',  kind: 'text', hint: 'px' },
-      { name: '--space-6',  label: 'space-6',  kind: 'text', hint: 'px' },
-      { name: '--space-8',  label: 'space-8',  kind: 'text', hint: 'px' },
-      { name: '--space-10', label: 'space-10', kind: 'text', hint: 'px' },
-      { name: '--space-12', label: 'space-12', kind: 'text', hint: 'px' },
+      { name: '--row-hover',  label: 'Table / list row hover fill', kind: 'color' },
+      { name: '--focus-ring', label: 'Input focus ring (colour + opacity)', kind: 'color-alpha' },
     ],
   },
   {
-    id: 'radius', label: 'Radius', desc: 'Corner radii for chips, cards, panels and pills.',
+    id: 'weight', label: 'Font weights', desc: 'The emphasis ramp used by labels, titles and bold text.',
     tokens: [
-      { name: '--radius-xs',   label: 'radius-xs',   kind: 'text', hint: 'px' },
-      { name: '--radius-sm',   label: 'radius-sm',   kind: 'text', hint: 'px' },
-      { name: '--radius-md',   label: 'radius-md',   kind: 'text', hint: 'px' },
-      { name: '--radius-lg',   label: 'radius-lg',   kind: 'text', hint: 'px' },
-      { name: '--radius-pill', label: 'radius-pill', kind: 'text', hint: 'px' },
+      { name: '--font-weight-normal',   label: 'Body / regular text',       kind: 'select', options: WEIGHT_OPTIONS },
+      { name: '--font-weight-medium',   label: 'Medium emphasis',           kind: 'select', options: WEIGHT_OPTIONS },
+      { name: '--font-weight-semibold', label: 'Field labels / sub-headers', kind: 'select', options: WEIGHT_OPTIONS },
+      { name: '--font-weight-bold',     label: 'Titles / strong emphasis',  kind: 'select', options: WEIGHT_OPTIONS },
     ],
   },
   {
-    id: 'type', label: 'Typography', desc: 'Font stacks. UI text, navigation and tabular/mono numerics.',
+    id: 'spacing', label: 'Spacing scale', desc: 'The 4px rhythm used for gaps, padding and margins. Larger values loosen the whole UI.',
     tokens: [
-      { name: '--font-sans', label: 'UI font',   kind: 'text' },
-      { name: '--font-nav',  label: 'Nav font',  kind: 'text' },
-      { name: '--font-mono', label: 'Mono font', kind: 'text' },
+      { name: '--space-1',  label: 'Tightest — inline icon gaps (4px)',     kind: 'text', hint: 'px' },
+      { name: '--space-2',  label: 'Tight — chip/button padding (8px)',     kind: 'text', hint: 'px' },
+      { name: '--space-3',  label: 'Snug — control gaps (12px)',            kind: 'text', hint: 'px' },
+      { name: '--space-4',  label: 'Base — card padding (16px)',            kind: 'text', hint: 'px' },
+      { name: '--space-5',  label: 'Comfortable — section padding (20px)',  kind: 'text', hint: 'px' },
+      { name: '--space-6',  label: 'Roomy — between sections (24px)',       kind: 'text', hint: 'px' },
+      { name: '--space-8',  label: 'Large — block separation (32px)',       kind: 'text', hint: 'px' },
+      { name: '--space-10', label: 'X-large — major groups (40px)',         kind: 'text', hint: 'px' },
+      { name: '--space-12', label: 'Largest — page-level gaps (48px)',      kind: 'text', hint: 'px' },
+    ],
+  },
+  {
+    id: 'radius', label: 'Corner radius', desc: 'How rounded each element is, from small controls up to large panels.',
+    tokens: [
+      { name: '--radius-xs',   label: 'Extra-small — swatches, mini chips', kind: 'text', hint: 'px' },
+      { name: '--radius-sm',   label: 'Small — inputs, buttons, chips',     kind: 'text', hint: 'px' },
+      { name: '--radius-md',   label: 'Medium — cards, modals',            kind: 'text', hint: 'px' },
+      { name: '--radius-lg',   label: 'Large — hero panels',               kind: 'text', hint: 'px' },
+      { name: '--radius-pill', label: 'Pill — fully rounded (tabs, dots)',  kind: 'text', hint: 'px' },
+    ],
+  },
+  {
+    id: 'type', label: 'Typography', desc: 'Font stacks for UI text, the navigation rail and tabular/mono numerics.',
+    tokens: [
+      { name: '--font-sans', label: 'UI font (body & headings)',   kind: 'text' },
+      { name: '--font-nav',  label: 'Navigation rail font',        kind: 'text' },
+      { name: '--font-mono', label: 'Mono font (IDs, figures)',    kind: 'text' },
     ],
   },
 ];

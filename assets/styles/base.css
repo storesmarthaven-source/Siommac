@@ -112,6 +112,19 @@
   /* Shadow */
   --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
   --shadow-hover: 0 4px 16px -4px rgba(0,0,0,0.08);
+
+  /* ─── Interaction states ──────────────────────────────────────────────────
+     Tokens for the interactive states the theme editor exposes. Edit these to
+     re-tint table/list hovers and the input focus ring app-wide. */
+  --row-hover:   #F8FAFE;                 /* table & list row hover fill */
+  --focus-ring:  rgba(27, 45, 84, .08);   /* input/control focus ring */
+
+  /* ─── Font weights ────────────────────────────────────────────────────────
+     The weight ramp used by UI labels, titles and emphasis. */
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
