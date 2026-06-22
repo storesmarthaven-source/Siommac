@@ -486,6 +486,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 16px 0;
 }
 .ppe-signals-list { display: grid; gap: 5px; }
+.ppe-signal-empty { font-size: 0.7rem; color: rgba(255,255,255,.4); padding: 8px 2px; }
 
 /* Queue row — slightly lighter than the navy panel, blends in */
 .ppe-signal {
