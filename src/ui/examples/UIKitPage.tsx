@@ -139,16 +139,10 @@ export function UIKitPage(): VNode {
           />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />
-        <Grid min="320px">
-          <Demo label="SectionHead — variant='area' (default)">
-            <SectionHead icon="fa-radiation" title="Hazard Register" sub="Identified hazards with risk ratings."
-              actions={<Button variant="primary" icon="fa-circle-plus">New</Button>} />
-          </Demo>
-          <Demo label="SectionHead — variant='register'">
-            <SectionHead variant="register" icon="fa-list-ul" title="Incidents" sub="All reported incidents"
-              actions={<Button variant="secondary" icon="fa-download">Export</Button>} />
-          </Demo>
-        </Grid>
+        <Demo label="SectionHead — table/register header" wide>
+          <SectionHead variant="register" icon="fa-list-ul" title="Incidents" sub="All reported incidents"
+            actions={<Button variant="secondary" icon="fa-download">Export</Button>} />
+        </Demo>
       </Section>
 
       {/* BUTTONS -------------------------------------------------------------- */}
