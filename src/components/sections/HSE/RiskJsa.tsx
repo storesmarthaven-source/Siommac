@@ -9,7 +9,7 @@
 import { type VNode }   from 'preact';
 import { useState, useCallback } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, SparkCard, SectionHead,
+  PageHeader, MetricRow, TabBar, Button, withCounts, SparkCard, SectionHead,
   type AreaTab, type SparkDef,
 } from '@ui';
 import { HSE_SITES, riskRating, hsePill } from './types';
@@ -126,13 +126,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const riskReductionPct   = summary?.riskReductionPct       ?? 0;
   const overdueAssessments = summary?.overdueAssessments     ?? 0;
 
-  const stats: SparkDef['label'] extends string ? Array<{ icon: string; label: string; value: number | string; sub: string; color: 'blue' | 'gold' | 'red' | 'green' }> : never = [
-    { icon: 'fa-radiation',            label: 'Hazards',          value: totalHazards,    sub: 'on register',   color: 'blue'  },
-    { icon: 'fa-table-cells-large',    label: 'Assessments',      value: openAssessments, sub: 'open',          color: 'gold'  },
-    { icon: 'fa-triangle-exclamation', label: 'High / Critical',  value: highCritical,    sub: 'need controls', color: 'red'   },
-    { icon: 'fa-list-ol',              label: 'JSAs',             value: openJsa,         sub: 'active',        color: 'green' },
-  ] as const;
-
   const sparks: SparkDef[] = [
     {
       label: 'Hazard Register', value: String(totalHazards), sub: 'Total hazards on file',
@@ -175,33 +168,24 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-radiation"
-        areaIcon="fa-shield-halved"
+        module="HSE"
         title="Risk & JSA"
-        watermarkClass="hse-wm-risk"
-        stats={stats as never}
-        footerItems={[
-          { icon: 'fa-scale-balanced', label: 'Risk Matrix', value: '5×5 Standard', pill: '● Active', pillVariant: 'green' },
-          { icon: 'fa-triangle-exclamation', label: 'High / Critical Risks', value: String(highCritical), sub: ' hazards', trend: overdueAssessments > 0 ? `${overdueAssessments} overdue` : undefined, trendUp: false },
-          { icon: 'fa-chart-bar', label: 'Risk Reduction', value: `${riskReductionPct}% acceptable`, progress: riskReductionPct },
-          { icon: 'fa-calendar-alt', label: 'Review Cycle', value: 'Annual / On Change', pill: '● Monitoring', pillVariant: 'amber' },
+        meta={[
+          { icon: 'fa-radiation', label: `${totalHazards} hazards` },
+          { icon: 'fa-triangle-exclamation', label: `${highCritical} high / critical` },
+          { icon: 'fa-table-cells-large', label: '5×5 matrix' },
+          ...(overdueAssessments > 0 ? [{ icon: 'fa-clock', label: `${overdueAssessments} overdue` }] : []),
         ]}
+        actions={<Button variant="primary" icon="fa-circle-plus" onClick={handleTabAction}>{actionLabel}</Button>}
       />
 
-      <div class="hse-spark-grid">
-        {sparks.map((s, i) => <SparkCard key={i} spark={s} />)}
-      </div>
+      <MetricRow pageKey="hse.risk" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-shield-halved"
-            title="Risk & JSA Management"
-            sub="Hazard register, risk assessments, and job safety analyses"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel={actionLabel} onAction={handleTabAction}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
           {active === 'hazards' && (
             <HazardTab
