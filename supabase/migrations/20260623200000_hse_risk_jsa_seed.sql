@@ -220,37 +220,38 @@ BEGIN
 
   ON CONFLICT DO NOTHING;
 
-  -- ── Controls (source_type / source_id keyed by ref) ──────────────────────────
+  -- ── Controls ─────────────────────────────────────────────────────────────────
+  -- source_id is the parent record UUID (matches the create/detail query convention).
 
   INSERT INTO public.hse_controls (
     source_type, source_id, hazard_id, description, control_type, status, effectiveness, due_at
   ) VALUES
-  ('hazard', 'HAZ-2026-0001', h1, 'Fixed chlorine detection with audible/visual alarm', 'engineering',   'implemented', 'effective',           NULL),
-  ('hazard', 'HAZ-2026-0001', h1, 'Forced ventilation interlock on cylinder room',       'engineering',   'implemented', 'effective',           NULL),
-  ('hazard', 'HAZ-2026-0001', h1, 'SCBA staged at room entry; quarterly drill',          'ppe',           'verified',    'effective',           NULL),
-  ('hazard', 'HAZ-2026-0002', h2, 'Install fixed mesh guard at CV-04 tail drum',         'engineering',   'planned',     NULL,                  '2026-07-01 00:00:00+00'),
-  ('hazard', 'HAZ-2026-0002', h2, 'Interim LOTO before any belt-tracking work',          'administrative','implemented', 'partially_effective', NULL),
-  ('hazard', 'HAZ-2026-0003', h3, 'Replace dead-front cover on MCC; arc-flash labelling','engineering',   'planned',     NULL,                  '2026-07-15 00:00:00+00'),
-  ('hazard', 'HAZ-2026-0005', h5, 'Provide drum dolly and powered upender',              'engineering',   'implemented', 'effective',           NULL),
-  ('hazard', 'HAZ-2026-0005', h5, 'Manual handling training for store crew',             'administrative','verified',    'effective',           NULL),
-  ('hazard', 'HAZ-2026-0007', h7, 'Personal H2S monitors with stop-work alarm set',      'administrative','implemented', 'effective',           NULL),
-  ('hazard', 'HAZ-2026-0007', h7, 'SCBA and escape sets staged at wellhead',             'ppe',           'verified',    'effective',           NULL),
-  ('assessment', 'RA-2026-0004', NULL, 'Ground bearing assessment before crane set-up',  'administrative','implemented', 'effective',           NULL),
-  ('assessment', 'RA-2026-0004', NULL, 'Outrigger mats and exclusion zone',              'engineering',   'implemented', 'effective',           NULL),
-  ('jsa', 'JSA-2026-0002', NULL, 'Continuous atmospheric monitoring during entry',       'administrative','implemented', 'effective',           NULL),
-  ('jsa', 'JSA-2026-0003', NULL, 'Dedicated fire watch with 30-min post-work hold',      'administrative','implemented', 'effective',           NULL)
+  ('hazard', h1::text, h1, 'Fixed chlorine detection with audible/visual alarm', 'engineering',   'implemented', 'effective',           NULL),
+  ('hazard', h1::text, h1, 'Forced ventilation interlock on cylinder room',       'engineering',   'implemented', 'effective',           NULL),
+  ('hazard', h1::text, h1, 'SCBA staged at room entry; quarterly drill',          'ppe',           'verified',    'effective',           NULL),
+  ('hazard', h2::text, h2, 'Install fixed mesh guard at CV-04 tail drum',         'engineering',   'planned',     NULL,                  '2026-07-01 00:00:00+00'),
+  ('hazard', h2::text, h2, 'Interim LOTO before any belt-tracking work',          'administrative','implemented', 'partially_effective', NULL),
+  ('hazard', h3::text, h3, 'Replace dead-front cover on MCC; arc-flash labelling','engineering',   'planned',     NULL,                  '2026-07-15 00:00:00+00'),
+  ('hazard', h5::text, h5, 'Provide drum dolly and powered upender',              'engineering',   'implemented', 'effective',           NULL),
+  ('hazard', h5::text, h5, 'Manual handling training for store crew',             'administrative','verified',    'effective',           NULL),
+  ('hazard', h7::text, h7, 'Personal H2S monitors with stop-work alarm set',      'administrative','implemented', 'effective',           NULL),
+  ('hazard', h7::text, h7, 'SCBA and escape sets staged at wellhead',             'ppe',           'verified',    'effective',           NULL),
+  ('assessment', r4::text, NULL, 'Ground bearing assessment before crane set-up', 'administrative','implemented', 'effective',           NULL),
+  ('assessment', r4::text, NULL, 'Outrigger mats and exclusion zone',             'engineering',   'implemented', 'effective',           NULL),
+  ('jsa', j2::text, NULL, 'Continuous atmospheric monitoring during entry',       'administrative','implemented', 'effective',           NULL),
+  ('jsa', j3::text, NULL, 'Dedicated fire watch with 30-min post-work hold',      'administrative','implemented', 'effective',           NULL)
   ON CONFLICT DO NOTHING;
 
   -- ── PPE requirements ─────────────────────────────────────────────────────────
 
   INSERT INTO public.hse_ppe_requirements (source_type, source_id, ppe_item, required, notes) VALUES
-  ('jsa', 'JSA-2026-0002', 'Full-face respirator / SCBA', true, 'Confined space atmospheric protection.'),
-  ('jsa', 'JSA-2026-0002', 'Chemical-resistant coveralls', true, 'Sludge / chemical contact.'),
-  ('jsa', 'JSA-2026-0002', 'Confined space harness', true, 'For tripod/winch rescue.'),
-  ('jsa', 'JSA-2026-0003', 'Welding helmet (shade 10+)', true, 'UV / arc protection.'),
-  ('jsa', 'JSA-2026-0003', 'Flame-resistant coveralls', true, 'Hot-work protection.'),
-  ('jsa', 'JSA-2026-0001', 'Cut-resistant gloves (Level D)', true, 'Belt handling.'),
-  ('hazard', 'HAZ-2026-0007', 'H2S personal monitor', true, 'Worn at all times on platform.')
+  ('jsa', j2::text, 'Full-face respirator / SCBA', true, 'Confined space atmospheric protection.'),
+  ('jsa', j2::text, 'Chemical-resistant coveralls', true, 'Sludge / chemical contact.'),
+  ('jsa', j2::text, 'Confined space harness', true, 'For tripod/winch rescue.'),
+  ('jsa', j3::text, 'Welding helmet (shade 10+)', true, 'UV / arc protection.'),
+  ('jsa', j3::text, 'Flame-resistant coveralls', true, 'Hot-work protection.'),
+  ('jsa', j1::text, 'Cut-resistant gloves (Level D)', true, 'Belt handling.'),
+  ('hazard', h7::text, 'H2S personal monitor', true, 'Worn at all times on platform.')
   ON CONFLICT DO NOTHING;
 
   -- ── Training links ───────────────────────────────────────────────────────────
@@ -258,11 +259,11 @@ BEGIN
   INSERT INTO public.hse_training_links (
     source_type, source_id, requirement_description, certification_required, competency_verification, notes
   ) VALUES
-  ('jsa', 'JSA-2026-0002', 'Confined Space Entry & Rescue',  true,  true,  'Refresher within 24 months.'),
-  ('jsa', 'JSA-2026-0002', 'Atmospheric Gas Testing',        true,  true,  'Authorised gas tester only.'),
-  ('jsa', 'JSA-2026-0003', 'Hot Work / Fire Watch',          true,  false, 'Permit issuer and fire watch.'),
-  ('jsa', 'JSA-2026-0001', 'LOTO — Authorised Person',       true,  true,  'Machine-specific isolation.'),
-  ('hazard', 'HAZ-2026-0007', 'H2S Awareness & Escape',      true,  true,  'Sour-service certification.')
+  ('jsa', j2::text, 'Confined Space Entry & Rescue',  true,  true,  'Refresher within 24 months.'),
+  ('jsa', j2::text, 'Atmospheric Gas Testing',        true,  true,  'Authorised gas tester only.'),
+  ('jsa', j3::text, 'Hot Work / Fire Watch',          true,  false, 'Permit issuer and fire watch.'),
+  ('jsa', j1::text, 'LOTO — Authorised Person',       true,  true,  'Machine-specific isolation.'),
+  ('hazard', h7::text, 'H2S Awareness & Escape',      true,  true,  'Sour-service certification.')
   ON CONFLICT DO NOTHING;
 
 END $$;

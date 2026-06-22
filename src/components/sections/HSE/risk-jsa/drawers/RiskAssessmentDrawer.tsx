@@ -19,6 +19,8 @@ import { RiskScorePill } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
 import { useAssessmentDetail, type AssessmentRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
+import { DrawerActions } from './DrawerActions';
+import { VerifyControlButton } from '../dialogs/VerifyControlButton';
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
@@ -197,7 +199,10 @@ function ControlsTab({ controls }: { controls: unknown[] }): VNode {
             key={i}
             style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', display: 'grid', gap: '4px' }}
           >
-            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{desc}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
+              <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{desc}</div>
+              <VerifyControlButton controlId={(c['id'] as string) ?? ''} status={status} label={desc} />
+            </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', flexWrap: 'wrap' }}>
               {controlType && (
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -274,14 +279,14 @@ export function RiskAssessmentDrawer({
       sub={headerSub}
       onClose={onClose}
       foot={
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <RiskScorePill
-            band={assessment.risk_level}
-            score={assessment.initial_score ?? undefined}
-          />
-          <span style={{ flex: 1 }} />
-          <button class="hse-btn" onClick={onClose}>Close</button>
-        </div>
+        <DrawerActions
+          entityType="assessment"
+          entityId={assessment.id}
+          entityRef={assessment.ref}
+          entityTitle={assessment.title}
+          status={assessment.status}
+          onClose={onClose}
+        />
       }
     >
       <Tabs<DrawerTab>

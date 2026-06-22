@@ -15,7 +15,11 @@
  * POST /api/hse/risk-jsa/jsa/detail
  * POST /api/hse/risk-jsa/jsa/submit
  * POST /api/hse/risk-jsa/controls/create
+ * POST /api/hse/risk-jsa/controls/verify
  * POST /api/hse/risk-jsa/review
+ * POST /api/hse/risk-jsa/hazards/submit
+ * POST /api/hse/risk-jsa/templates/list
+ * POST /api/hse/risk-jsa/templates/duplicate
  */
 
 import { Hono }              from 'hono';
@@ -1071,6 +1075,178 @@ router.post('/risk-jsa/review', async c => {
   });
 
   return c.json({ success: true });
+});
+
+// ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────
+// Submit a hazard for review → status under_review + (create) hazard-review workflow.
+
+router.post('/risk-jsa/hazards/submit', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const args = body.args as { hazardId: string; note?: string } | undefined;
+  if (!args?.hazardId) return c.json({ success: false, message: 'hazardId required' }, 400 as 200);
+
+  const hzRes = await sb.from('hse_hazards')
+    .select('id, ref, title, status, risk_level, workflow_id, owner_user_id')
+    .eq('id', args.hazardId).maybeSingle<{
+      id: string; ref: string; title: string; status: string;
+      risk_level: string; workflow_id: string | null; owner_user_id: string | null;
+    }>();
+
+  if (!hzRes.data) return c.json({ success: false, message: 'Hazard not found' }, 404 as 200);
+  const hz = hzRes.data;
+
+  if (['under_review','approved','archived'].includes(hz.status)) {
+    return c.json({ success: false, message: `Cannot submit from status: ${hz.status}` }, 400 as 200);
+  }
+
+  await sb.from('hse_hazards')
+    .update({ status: 'under_review', updated_at: new Date().toISOString() })
+    .eq('id', hz.id);
+
+  let workflowId = hz.workflow_id;
+  if (!workflowId) {
+    const wfResult = await createWorkflow({
+      templateKey:      'hse_hazard_review',
+      sourceModule:     'hse',
+      sourceEntityType: 'hazard',
+      sourceEntityId:   hz.ref,
+      priority:         hz.risk_level === 'critical' ? 'critical' : hz.risk_level === 'high' ? 'high' : 'medium',
+      ownerUserId:      hz.owner_user_id ?? user.id,
+      createdBy:        user.id,
+      metadata:         { submittedBy: user.id, note: args.note },
+    });
+    workflowId = wfResult.workflowId ?? null;
+    if (workflowId) {
+      await sb.from('hse_hazards').update({ workflow_id: workflowId }).eq('id', hz.id);
+    }
+  }
+
+  void emitAppEvent({
+    eventType:        'hse.hazard.submitted',
+    sourceModule:     'hse',
+    sourceEntityType: 'hazard',
+    sourceEntityId:   hz.ref,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { title: hz.title, note: args.note },
+    notification: {
+      title: `Hazard submitted for review: ${hz.ref}`,
+      body:  hz.title,
+      actionRoute: 'hse/risk-jsa',
+      type:  'hse.hazard.submitted',
+    },
+  });
+
+  return c.json({ success: true, workflowId });
+});
+
+// ── POST /api/hse/risk-jsa/controls/verify ───────────────────────────────────
+// Mark a control verified with an effectiveness rating.
+
+const ControlVerifySchema = z.object({
+  controlId:     z.string().uuid(),
+  effectiveness: z.enum(['effective','partially_effective','ineffective']),
+  note:          z.string().nullable().optional(),
+});
+
+router.post('/risk-jsa/controls/verify', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ControlVerifySchema, body.args);
+  if (!v.ok) return v.response;
+
+  const now = new Date().toISOString();
+  const status = v.data.effectiveness === 'ineffective' ? 'ineffective' : 'verified';
+
+  const { data, error } = await sb.from('hse_controls')
+    .update({
+      status,
+      effectiveness: v.data.effectiveness,
+      verified_by:   user.id,
+      verified_at:   now,
+      updated_at:    now,
+    })
+    .eq('id', v.data.controlId)
+    .select('id, source_type, source_id, description')
+    .single<{ id: string; source_type: string; source_id: string; description: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Control not found' }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.control.verified',
+    sourceModule:     'hse',
+    sourceEntityType: data.source_type,
+    sourceEntityId:   data.source_id,
+    actorUserId:      user.id,
+    severity:         v.data.effectiveness === 'ineffective' ? 'warning' : 'success',
+    payload:          { controlId: data.id, effectiveness: v.data.effectiveness, note: v.data.note },
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/risk-jsa/templates/list ────────────────────────────────────
+// HSE workflow templates available for hazard / assessment / JSA flows.
+
+router.post('/risk-jsa/templates/list', async c => {
+  await requirePermission(c, 'hse.risk.manage');
+  const { data, error } = await sb.from('workflow_templates')
+    .select('id, module, key, name, description, is_active, definition, created_at')
+    .eq('module', 'hse')
+    .order('name');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/risk-jsa/templates/duplicate ───────────────────────────────
+// Clone a workflow template under a new key so it can be customised.
+
+const TemplateDuplicateSchema = z.object({
+  templateId: z.string().uuid(),
+  newName:    z.string().min(1).max(200).nullable().optional(),
+});
+
+router.post('/risk-jsa/templates/duplicate', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateDuplicateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const src = await sb.from('workflow_templates')
+    .select('module, key, name, description, definition')
+    .eq('id', v.data.templateId)
+    .maybeSingle<{ module: string; key: string; name: string; description: string; definition: unknown }>();
+  if (!src.data) return c.json({ success: false, message: 'Template not found' }, 404 as 200);
+
+  const newKey  = `${src.data.key}_copy_${Date.now().toString(36)}`;
+  const newName = v.data.newName ?? `${src.data.name} (copy)`;
+
+  const { data, error } = await sb.from('workflow_templates')
+    .insert({
+      module:      src.data.module,
+      key:         newKey,
+      name:        newName,
+      description: src.data.description,
+      is_active:   false,
+      definition:  src.data.definition ?? {},
+    })
+    .select('id, key, name')
+    .single<{ id: string; key: string; name: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Duplicate failed' }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.workflow_template.duplicated',
+    sourceModule:     'hse',
+    sourceEntityType: 'workflow_template',
+    sourceEntityId:   data.key,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { fromKey: src.data.key, newKey: data.key, name: data.name },
+  });
+
+  return c.json({ success: true, data });
 });
 
 export default router;

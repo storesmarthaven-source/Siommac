@@ -11,6 +11,7 @@ import { Drawer, Tabs, type TabDef } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useJsaDetail, type JsaRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
+import { DrawerActions } from './DrawerActions';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -43,7 +44,14 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
       sub={jsa.site_id ?? undefined}
       onClose={onClose}
       foot={
-        <button class="hse-btn" onClick={onClose}>Close</button>
+        <DrawerActions
+          entityType="jsa"
+          entityId={jsa.id}
+          entityRef={jsa.ref}
+          entityTitle={jsa.title}
+          status={jsa.status}
+          onClose={onClose}
+        />
       }
     >
       {/* Risk badge row */}

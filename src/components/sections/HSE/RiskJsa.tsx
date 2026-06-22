@@ -12,7 +12,6 @@ import {
   PageHeader, TabBar, withCounts, SectionHead,
   type AreaTab,
 } from '@ui';
-import { exportCsv } from '@ui/lib/exportCsv';
 import { HSE_SITES, hsePill } from './types';
 import {
   useRiskJsaSummary,
@@ -32,6 +31,9 @@ import { RiskAssessmentDrawer } from './risk-jsa/drawers/RiskAssessmentDrawer';
 import { JsaDrawer }           from './risk-jsa/drawers/JsaDrawer';
 import { RiskJsaInsightCards } from './risk-jsa/RiskJsaInsightCards';
 import { RiskJsaRightPanel }  from './risk-jsa/RiskJsaRightPanel';
+import { ExportDialog }       from './risk-jsa/dialogs/ExportDialog';
+import { TemplateDialog }     from './risk-jsa/dialogs/TemplateDialog';
+import { type CsvColumn }     from '@ui/lib/exportCsv';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -126,6 +128,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const [selectedRa,      setSelectedRa]      = useState<AssessmentRow | null>(null);
   const [selectedJsa,     setSelectedJsa]     = useState<JsaRow | null>(null);
   const [newMenuOpen,     setNewMenuOpen]     = useState(false);
+  const [templatesOpen,   setTemplatesOpen]   = useState(false);
 
   const { data: summaryRes, isLoading: summaryLoading } = useRiskJsaSummary();
   const summary = summaryRes?.data;
@@ -169,6 +172,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
                     { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
                     { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
                     { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
+                    { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
                   ].map(it => (
                     <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
                       style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
@@ -227,6 +231,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
       <NewHazardDialog open={hazardFormOpen} onClose={() => setHazardFormOpen(false)} />
       <NewAssessmentWizard open={raFormOpen} onClose={() => setRaFormOpen(false)} />
       <NewJsaWizard open={jsaFormOpen} onClose={() => setJsaFormOpen(false)} />
+      <TemplateDialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
 
       {/* Drawers */}
       {selectedHazard && (
@@ -244,6 +249,43 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
 // ── Hazard Register tab ───────────────────────────────────────────────────────
 
+// ── Export column specs (shared by the tab Export dialogs) ─────────────────────
+
+const HAZARD_EXPORT_COLS: CsvColumn<HazardRow>[] = [
+  { header: 'Ref',            value: h => h.ref },
+  { header: 'Hazard',         value: h => h.title },
+  { header: 'Category',       value: h => h.category },
+  { header: 'Site',           value: h => siteLabel(h) },
+  { header: 'Initial L×S',    value: h => `${h.initial_likelihood} × ${h.initial_severity}` },
+  { header: 'Initial Score',  value: h => h.initial_score },
+  { header: 'Residual Score', value: h => h.residual_score ?? '' },
+  { header: 'Risk Level',     value: h => h.risk_level },
+  { header: 'Status',         value: h => h.status },
+  { header: 'Review Due',     value: h => h.review_due_at ? fmtDate(h.review_due_at) : '' },
+];
+
+const ASSESSMENT_EXPORT_COLS: CsvColumn<AssessmentRow>[] = [
+  { header: 'Ref',            value: a => a.ref },
+  { header: 'Title',          value: a => a.title },
+  { header: 'Type',           value: a => a.assessment_type },
+  { header: 'Site',           value: a => siteLabel(a) },
+  { header: 'Initial Score',  value: a => a.initial_score ?? '' },
+  { header: 'Residual Score', value: a => a.residual_score ?? '' },
+  { header: 'Risk Level',     value: a => a.risk_level },
+  { header: 'Status',         value: a => a.status },
+  { header: 'Review Due',     value: a => a.review_due_at ? fmtDate(a.review_due_at) : '' },
+];
+
+const JSA_EXPORT_COLS: CsvColumn<JsaRow>[] = [
+  { header: 'Ref',        value: j => j.ref },
+  { header: 'Job / Task', value: j => j.title },
+  { header: 'Site',       value: j => siteLabel(j) },
+  { header: 'Steps',      value: j => j.stepCount },
+  { header: 'Risk Level', value: j => j.risk_level },
+  { header: 'Status',     value: j => j.status },
+  { header: 'Review Due', value: j => j.review_due_at ? fmtDate(j.review_due_at) : '' },
+];
+
 function HazardTab({
   onNewHazard, onSelect, selected,
 }: {
@@ -255,6 +297,7 @@ function HazardTab({
   const [category,  setCategory]  = useState('');
   const [siteId,    setSiteId]    = useState('');
   const [riskLevel, setRiskLevel] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { data, isLoading } = useHazards({
     search:    search || undefined,
@@ -290,19 +333,10 @@ function HazardTab({
           <option value="high">High</option>
           <option value="critical">Critical</option>
         </select>
-        <button class="inc-action-btn blue" onClick={() => exportCsv(hazards, [
-          { header: 'Ref',        value: h => h.ref },
-          { header: 'Hazard',     value: h => h.title },
-          { header: 'Category',   value: h => h.category },
-          { header: 'Site',       value: h => siteLabel(h) },
-          { header: 'Initial L×S',value: h => `${h.initial_likelihood} × ${h.initial_severity}` },
-          { header: 'Initial Score', value: h => h.initial_score },
-          { header: 'Residual Score', value: h => h.residual_score ?? '' },
-          { header: 'Risk Level', value: h => h.risk_level },
-          { header: 'Status',     value: h => h.status },
-          { header: 'Review Due', value: h => h.review_due_at ? fmtDate(h.review_due_at) : '' },
-        ], 'hazard-register')}><i class="fas fa-download" /> Export</button>
+        <button class="inc-action-btn blue" onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
       </div>
+      <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
+        registerLabel="Hazard Register" rows={hazards} columns={HAZARD_EXPORT_COLS} filenameBase="hazard-register" />
 
       <div class="vt-table-card">
         <div class="vt-table-scroll">
@@ -367,6 +401,7 @@ function AssessmentsTab({
 }): VNode {
   const [siteId, setSiteId] = useState('');
   const [status, setStatus] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { data, isLoading } = useAssessments({ status: status || undefined });
   const all         = data?.data ?? [];
@@ -392,18 +427,10 @@ function AssessmentsTab({
           <option value="">All sites</option>
           {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => exportCsv(assessments, [
-          { header: 'Ref',        value: a => a.ref },
-          { header: 'Title',      value: a => a.title },
-          { header: 'Type',       value: a => a.assessment_type },
-          { header: 'Site',       value: a => siteLabel(a) },
-          { header: 'Initial Score', value: a => a.initial_score ?? '' },
-          { header: 'Residual Score', value: a => a.residual_score ?? '' },
-          { header: 'Risk Level', value: a => a.risk_level },
-          { header: 'Status',     value: a => a.status },
-          { header: 'Review Due', value: a => a.review_due_at ? fmtDate(a.review_due_at) : '' },
-        ], 'risk-assessments')}><i class="fas fa-download" /> Export</button>
+        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
       </div>
+      <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
+        registerLabel="Risk Assessments" rows={assessments} columns={ASSESSMENT_EXPORT_COLS} filenameBase="risk-assessments" />
 
       <div class="vt-table-card">
         <div class="vt-table-scroll">
@@ -465,6 +492,7 @@ function JsaTab({
 }): VNode {
   const [siteId, setSiteId] = useState('');
   const [status, setStatus] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { data, isLoading } = useJsaList({ status: status || undefined });
   const all  = data?.data ?? [];
@@ -489,16 +517,10 @@ function JsaTab({
           <option value="">All sites</option>
           {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => exportCsv(jsas, [
-          { header: 'Ref',        value: j => j.ref },
-          { header: 'Job / Task', value: j => j.title },
-          { header: 'Site',       value: j => siteLabel(j) },
-          { header: 'Steps',      value: j => j.stepCount },
-          { header: 'Risk Level', value: j => j.risk_level },
-          { header: 'Status',     value: j => j.status },
-          { header: 'Review Due', value: j => j.review_due_at ? fmtDate(j.review_due_at) : '' },
-        ], 'jsa-library')}><i class="fas fa-download" /> Export</button>
+        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
       </div>
+      <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
+        registerLabel="JSA Library" rows={jsas} columns={JSA_EXPORT_COLS} filenameBase="jsa-library" />
 
       <div class="vt-table-card">
         <div class="vt-table-scroll">

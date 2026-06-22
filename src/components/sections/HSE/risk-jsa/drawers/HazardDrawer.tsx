@@ -11,6 +11,8 @@ import { Drawer, Tabs, type TabDef } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useHazardDetail, type HazardRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
+import { DrawerActions } from './DrawerActions';
+import { VerifyControlButton } from '../dialogs/VerifyControlButton';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -43,7 +45,14 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
       sub={hazard.category}
       onClose={onClose}
       foot={
-        <button class="hse-btn" onClick={onClose}>Close</button>
+        <DrawerActions
+          entityType="hazard"
+          entityId={hazard.id}
+          entityRef={hazard.ref}
+          entityTitle={hazard.title}
+          status={hazard.status}
+          onClose={onClose}
+        />
       }
     >
       {/* Risk badge row */}
@@ -145,8 +154,15 @@ function HazardControlsTab({ controls }: { controls: unknown[] }): VNode {
             border: '1px solid var(--border)',
           }}
         >
-          <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
-            {c['description'] as string}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
+              {c['description'] as string}
+            </div>
+            <VerifyControlButton
+              controlId={c['id'] as string}
+              status={c['status'] as string}
+              label={c['description'] as string}
+            />
           </div>
           <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             <span style={{ textTransform: 'capitalize' }}>
@@ -154,6 +170,7 @@ function HazardControlsTab({ controls }: { controls: unknown[] }): VNode {
             </span>
             <span>·</span>
             <span>{c['status'] as string}</span>
+            {c['effectiveness'] != null && (<><span>·</span><span style={{ textTransform: 'capitalize' }}>{(c['effectiveness'] as string).replace(/_/g, ' ')}</span></>)}
           </div>
         </div>
       ))}

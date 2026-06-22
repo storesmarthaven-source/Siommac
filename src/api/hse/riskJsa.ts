@@ -392,3 +392,84 @@ export function useRiskJsaReview() {
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });
 }
+
+// ── Submit for review ───────────────────────────────────────────────────────────
+
+/** Submit a hazard for review (registered → under_review + workflow). */
+export function useSubmitHazard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { hazardId: string; note?: string }) =>
+      apiPost<{ success: boolean; workflowId: string | null }>('hse/risk-jsa/hazards/submit', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Verify control ──────────────────────────────────────────────────────────────
+
+export interface VerifyControlArgs extends Record<string, unknown> {
+  controlId:     string;
+  effectiveness: 'effective' | 'partially_effective' | 'ineffective';
+  note?:         string | null;
+}
+
+export function useVerifyControl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: VerifyControlArgs) =>
+      apiPost<{ success: boolean }>('hse/risk-jsa/controls/verify', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Link CAPA (reuses the canonical CAPA create endpoint) ────────────────────────
+
+export interface LinkCapaArgs extends Record<string, unknown> {
+  sourceType:  'hazard' | 'assessment' | 'jsa';
+  sourceId:    string;
+  title:       string;
+  description: string;
+  priority?:   'low' | 'medium' | 'high' | 'critical';
+  dueAt?:      string | null;
+  ownerUserId?: string | null;
+}
+
+export function useLinkCapa() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: LinkCapaArgs) =>
+      apiPost<{ success: boolean; capaId: string; ref: string }>('hse/capa/create', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Workflow templates ───────────────────────────────────────────────────────────
+
+export interface WorkflowTemplate {
+  id:          string;
+  module:      string;
+  key:         string;
+  name:        string;
+  description: string;
+  is_active:   boolean;
+  definition:  { steps?: Array<{ key: string; label: string; role?: string; action?: string }> };
+  created_at:  string;
+}
+
+export function useWorkflowTemplates(enabled = true) {
+  return useQuery({
+    queryKey: ['hse', 'risk-jsa', 'templates'],
+    queryFn:  () => apiPost<{ success: boolean; data: WorkflowTemplate[] }>('hse/risk-jsa/templates/list', {}),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useDuplicateTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { templateId: string; newName?: string }) =>
+      apiPost<{ success: boolean; data: { id: string; key: string; name: string } }>('hse/risk-jsa/templates/duplicate', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hse', 'risk-jsa', 'templates'] }),
+  });
+}
