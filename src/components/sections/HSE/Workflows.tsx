@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, type AreaTab } from '@ui';
 import {
   useWorkflowList,
   useWorkflow,

@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -351,10 +351,10 @@ export function ContractorsArea({ tab }: { tab: string }): VNode {
   const fileIssues = mockHseFiles.filter(f => f.status !== 'Current').length;
 
   const stats = [
-    { icon: 'fa-id-card-clip',         label: 'Contractors',       value: mockContractors.length, color: 'blue'  },
-    { icon: 'fa-circle-check',         label: 'Files Current',     value: mockContractors.filter(c => c.status === 'Active').length, color: 'green' },
-    { icon: 'fa-triangle-exclamation', label: 'File Issues',       value: fileIssues,             color: 'gold'  },
-    { icon: 'fa-door-closed',          label: 'Access Blocked',    value: blocked,                color: 'red'   },
+    { icon: 'fa-id-card-clip',         label: 'Contractors',       value: mockContractors.length, sub: 'registered',  color: 'blue'  as const },
+    { icon: 'fa-circle-check',         label: 'Files Current',     value: mockContractors.filter(c => c.status === 'Active').length, sub: 'all clear', color: 'green' as const },
+    { icon: 'fa-triangle-exclamation', label: 'File Issues',       value: fileIssues,             sub: 'expired/due', color: 'gold'  as const },
+    { icon: 'fa-door-closed',          label: 'Access Blocked',    value: blocked,                sub: 'denied today',color: 'red'   as const },
   ];
 
   return (
@@ -363,23 +363,22 @@ export function ContractorsArea({ tab }: { tab: string }): VNode {
         icon="fa-id-card-clip"
         areaIcon="fa-hard-hat"
         title="Contractor Management"
-        crumb="Contractor Mgmt"
         watermarkClass="hse-wm-contractors"
-        context={['STOW induction · HSE files · site access gate', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-building', label: `${mockContractors.length} companies` },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Contractors registered', value: String(mockContractors.length) },
-          { label: 'File issues (expired/due)', value: String(fileIssues) },
-          { label: 'Site access blocked today', value: String(blocked) },
-          { label: 'OSH Act 2004 — T&T', value: 'Compliant framework', highlight: true },
+        footerItems={[
+          { icon: 'fa-building', label: 'Companies', value: `${mockContractors.length} registered`, pill: '● STOW required', pillVariant: 'green' },
+          { icon: 'fa-triangle-exclamation', label: 'File Issues', value: String(fileIssues), trend: fileIssues > 0 ? 'review' : undefined, trendUp: false },
+          { icon: 'fa-door-closed', label: 'Access Blocked Today', value: String(blocked), pill: blocked > 0 ? '● Action Required' : '● All Clear', pillVariant: blocked > 0 ? 'red' : 'green' },
+          { icon: 'fa-scale-balanced', label: 'OSH Act 2004 — T&T', value: 'Compliant', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+      <AreaTabs
+        icon="fa-id-card-clip"
+        title="Contractor Management"
+        sub="STOW induction, HSE files, and site access control"
+        tabs={withCounts(TABS, { register: mockContractors.length })}
+        active={active} onSelect={setActive}
+      />
       {active === 'register'  && <RegisterTab />}
       {active === 'induction' && <InductionTab />}
       {active === 'files'     && <FilesTab />}

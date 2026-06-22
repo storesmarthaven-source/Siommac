@@ -6,16 +6,16 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field, SelectInput, TextInput,
+  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
   type AreaTab,
-} from './_shared';
+} from '@ui';
 import {
   mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hsePill,
   type ToolboxTalkRow,
 } from './types';
 
 const TABS: AreaTab[] = [
-  { key: 'log', label: 'Talk Log', icon: 'fa-clipboard-list' },
+  { key: 'log', label: 'Talk Log', sublabel: 'All briefings', icon: 'fa-clipboard-list' },
 ];
 
 const TOPIC_ICONS: Record<string, string> = {
@@ -42,12 +42,16 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
   const totalAtt   = talks.filter(t => /complete/i.test(t.status)).reduce((s, t) => s + t.attendees, 0);
   const avgAtt     = completed > 0 ? Math.round(totalAtt / completed) : 0;
 
+  const completionRate = talks.length > 0 ? Math.round((completed / talks.length) * 100) : 0;
+
   const stats = [
-    { icon: 'fa-comments',       label: 'Total Talks',    value: talks.length,   color: 'blue'  },
-    { icon: 'fa-circle-check',   label: 'Completed',      value: completed,      color: 'green' },
-    { icon: 'fa-calendar-clock', label: 'Scheduled',      value: scheduled,      color: 'gold'  },
-    { icon: 'fa-users',          label: 'Total Attendees', value: totalAtt,      color: 'blue'  },
+    { icon: 'fa-comments',       label: 'Total Talks',     value: talks.length, sub: 'on record',      color: 'blue'  as const },
+    { icon: 'fa-circle-check',   label: 'Completed',       value: completed,    sub: 'delivered',      color: 'green' as const },
+    { icon: 'fa-calendar-clock', label: 'Scheduled',       value: scheduled,    sub: 'upcoming',       color: 'gold'  as const },
+    { icon: 'fa-users',          label: 'Total Attendees', value: totalAtt,     sub: 'workers briefed',color: 'blue'  as const },
   ];
+
+  const tabsWithCounts = withCounts(TABS, { log: talks.length });
 
   return (
     <div class="hse-tab hse-dash">
@@ -55,50 +59,54 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
         icon="fa-comments"
         areaIcon="fa-people-group"
         title="Toolbox Talks"
-        crumb="Toolbox Talks"
         watermarkClass="hse-wm-toolbox"
-        context={['Daily pre-task safety briefings', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-          { icon: 'fa-users', label: 'All crews' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Talks completed YTD', value: String(completed) },
-          { label: 'Avg. attendance', value: `${avgAtt} workers` },
-          { label: 'Total workers briefed', value: String(totalAtt) },
-          { label: 'Target: 3 talks/week', value: 'On track', highlight: true },
+        footerItems={[
+          { icon: 'fa-chart-pie', label: 'Completion Rate', value: `${completionRate}%`, progress: completionRate, pill: completionRate >= 80 ? '● On Track' : '● At Risk', pillVariant: completionRate >= 80 ? 'green' : 'amber' },
+          { icon: 'fa-users', label: 'Avg. Attendance', value: `${avgAtt} workers`, sub: ' per talk', trend: avgAtt >= 8 ? '+1 vs last month' : undefined, trendUp: true },
+          { icon: 'fa-calendar-check', label: 'Talks This Month', value: String(talks.filter(t => /jun/i.test(t.date)).length), sub: ' June 2026', pill: '● Target 12', pillVariant: 'amber' },
+          { icon: 'fa-calendar-alt', label: 'Target Frequency', value: '3 talks / week', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+
+      <div class="hse-spark-grid">
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Talks This Month</span></div>
+          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{talks.filter(t => /jun/i.test(t.date)).length}</div>
+          <div class="hse-spark-sub">June 2026 · Target 12/month</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Avg. Attendance</span></div>
+          <div class="hse-spark-val" style={{ color: avgAtt >= 8 ? '#22c55e' : '#f59e0b' }}>{avgAtt}</div>
+          <div class="hse-spark-sub">Workers per talk · target 8</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Most Common Topic</span></div>
+          <div class="hse-spark-val" style={{ fontSize: '0.85rem' }}>Spill Response</div>
+          <div class="hse-spark-sub">4 talks YTD on this topic</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
+          <div class="hse-spark-val" style={{ color: completionRate >= 80 ? '#22c55e' : '#f59e0b' }}>{completionRate}%</div>
+          <div class="hse-spark-sub">Scheduled talks delivered</div>
+          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
+            <div class="hse-spark-bar-fill" style={{ width: `${completionRate}%`, background: completionRate >= 80 ? '#22c55e' : '#f59e0b' }} />
+          </div>
+        </div>
+      </div>
+
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          <AreaTabs
+            icon="fa-comments"
+            title="Toolbox Talk Management"
+            sub="Daily pre-task safety briefings across all sites and crews"
+            tabs={tabsWithCounts} active={active} onSelect={setActive}
+            actionLabel="New Talk" onAction={() => setModal(true)}
+          />
 
       {active === 'log' && (
         <div class="ppe-tab-content">
-          {/* Analytics strip */}
-          <div class="hse-spark-row">
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Talks This Month</span></div>
-              <div class="hse-spark-val">{talks.filter(t => /jun/i.test(t.date)).length}</div>
-              <div class="hse-spark-sub">June 2026 · Target 12/month</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Avg. Attendance</span></div>
-              <div class="hse-spark-val">{avgAtt}</div>
-              <div class="hse-spark-sub">Workers per talk · target 8</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Most Common Topic</span></div>
-              <div class="hse-spark-val" style={{ fontSize: '0.9rem' }}>Spill Response</div>
-              <div class="hse-spark-sub">4 talks YTD on this topic</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
-              <div class="hse-spark-val" style={{ color: '#22c55e' }}>{completed > 0 ? Math.round((completed / talks.length) * 100) : 0}%</div>
-              <div class="hse-spark-sub">Scheduled talks delivered</div>
-            </div>
-          </div>
-
           <div class="ppe-screen-grid">
             <div class="ppe-screen-main">
               <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
@@ -198,6 +206,34 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
           </div>
         </div>
       )}
+        </div>
+
+        <div class="hse-right-col">
+          <div class="oq-dark-card">
+            <div class="oq-dark-header">
+              <i class="fas fa-comments" />
+              <span>Recent Talks Queue</span>
+              <span class="oq-dark-count">{talks.length}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {talks.slice(0, 6).map(t => (
+                <div class="oq-dark-item" key={t.ref}>
+                  <div class={`icon-badge ${/complete/i.test(t.status) ? 'green' : 'amber'}`}>
+                    <i class={`fas ${TOPIC_ICONS[t.topic] ?? 'fa-comments'}`} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{t.topic}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{t.site} · {t.date}</div>
+                  </div>
+                  <span class={`oq-dark-tag ${/complete/i.test(t.status) ? 'ok' : 'warning'}`}>
+                    {/complete/i.test(t.status) ? `${t.attendees}` : t.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <HseModal
         open={modalOpen} onClose={() => setModal(false)}

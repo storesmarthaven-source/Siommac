@@ -6,17 +6,17 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field, SelectInput, TextInput, TextareaInput,
+  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput, TextareaInput,
   type AreaTab,
-} from './_shared';
+} from '@ui';
 import {
   mockInspections, mockFindings, hsePill, HSE_SITES,
   type InspectionRow, type FindingRow,
 } from './types';
 
 const TABS: AreaTab[] = [
-  { key: 'schedule', label: 'Schedule',  icon: 'fa-calendar-check' },
-  { key: 'findings', label: 'Findings',  icon: 'fa-magnifying-glass' },
+  { key: 'schedule', label: 'Schedule',  sublabel: 'Upcoming & overdue', icon: 'fa-calendar-check' },
+  { key: 'findings', label: 'Findings',  sublabel: 'Non-conformances',   icon: 'fa-magnifying-glass' },
 ];
 
 const INSP_TYPES = ['Fire', 'Equipment', 'Housekeeping', 'Chemical', 'Emergency', 'PPE', 'Environmental'] as const;
@@ -262,16 +262,19 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
   const [newSite, setNewSite]       = useState<string>(HSE_SITES[0]);
   const [newTitle, setNewTitle]     = useState('');
 
-  const overdue   = inspections.filter(i => /overdue/i.test(i.status)).length;
-  const scheduled = inspections.filter(i => /scheduled/i.test(i.status)).length;
+  const overdue      = inspections.filter(i => /overdue/i.test(i.status)).length;
+  const scheduled    = inspections.filter(i => /scheduled/i.test(i.status)).length;
+  const openFindings = findings.filter(f => /open/i.test(f.status)).length;
   const critFindings = findings.filter(f => f.severity === 'danger' && /open/i.test(f.status)).length;
 
   const stats = [
-    { icon: 'fa-calendar-check',      label: 'Scheduled',       value: scheduled,      color: 'blue'  },
-    { icon: 'fa-triangle-exclamation', label: 'Overdue',         value: overdue,        color: 'red'   },
-    { icon: 'fa-magnifying-glass',     label: 'Open Findings',   value: findings.filter(f => /open/i.test(f.status)).length, color: 'gold' },
-    { icon: 'fa-circle-exclamation',   label: 'Critical Findings', value: critFindings, color: 'red'   },
+    { icon: 'fa-calendar-check',      label: 'Scheduled',         value: scheduled,    sub: 'upcoming',       color: 'blue'  as const },
+    { icon: 'fa-triangle-exclamation', label: 'Overdue',           value: overdue,      sub: 'need attention', color: 'red'   as const },
+    { icon: 'fa-magnifying-glass',     label: 'Open Findings',     value: openFindings, sub: 'to resolve',     color: 'gold'  as const },
+    { icon: 'fa-circle-exclamation',   label: 'Critical Findings', value: critFindings, sub: 'immediate',      color: 'red'   as const },
   ];
+
+  const tabsWithCounts = withCounts(TABS, { schedule: inspections.length, findings: findings.length });
 
   return (
     <div class="hse-tab hse-dash">
@@ -279,28 +282,99 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         icon="fa-clipboard-check"
         areaIcon="fa-magnifying-glass-chart"
         title="Inspections & Audits"
-        crumb="Inspections"
         watermarkClass="hse-wm-inspections"
-        context={['Schedule · Findings · Non-conformances', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-          { icon: 'fa-shield-check', label: 'ISO 45001 Aligned' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Completion rate YTD', value: '92%', highlight: true },
-          { label: 'Inspections completed', value: '65' },
-          { label: 'Avg. finding closure', value: '8 days' },
-          { label: 'Critical open findings', value: String(critFindings) },
+        footerItems={[
+          { icon: 'fa-chart-pie', label: 'Completion Rate YTD', value: '92%', pill: '● ISO 45001', pillVariant: 'green' },
+          { icon: 'fa-clock', label: 'Avg. Finding Closure', value: '8 days', trend: overdue > 0 ? `${overdue} overdue` : undefined, trendUp: false },
+          { icon: 'fa-circle-exclamation', label: 'Critical Open Findings', value: String(critFindings), progress: critFindings > 0 ? 100 : 0 },
+          { icon: 'fa-calendar-alt', label: 'Inspections Completed', value: '65 this year', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 
-      {active === 'schedule' && (
-        <ScheduleTab inspections={inspections} onNew={() => setModal(true)} />
-      )}
-      {active === 'findings' && <FindingsTab findings={findings} />}
+      <div class="hse-spark-grid">
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div>
+          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{scheduled}</div>
+          <div class="hse-spark-sub">Upcoming inspections</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div>
+          <div class="hse-spark-val" style={{ color: overdue > 0 ? '#ef4444' : '#4ade80' }}>{overdue}</div>
+          <div class="hse-spark-sub">Past due date</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
+          <div class="hse-spark-val" style={{ color: '#22c55e' }}>92%</div>
+          <div class="hse-spark-sub">YTD · Target 90%</div>
+          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
+            <div class="hse-spark-bar-fill" style={{ width: '92%', background: '#22c55e' }} />
+          </div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Open Findings</span></div>
+          <div class="hse-spark-val" style={{ color: openFindings > 0 ? '#f59e0b' : '#4ade80' }}>{openFindings}</div>
+          <div class="hse-spark-sub">{critFindings} critical · {openFindings - critFindings} minor</div>
+        </div>
+      </div>
+
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          <AreaTabs
+            icon="fa-clipboard-check"
+            title="Inspection Management"
+            sub="Schedule inspections, track findings, and manage non-conformances"
+            tabs={tabsWithCounts} active={active} onSelect={setActive}
+            actionLabel="Schedule Inspection" onAction={() => setModal(true)}
+          />
+
+          {active === 'schedule' && (
+            <ScheduleTab inspections={inspections} onNew={() => setModal(true)} />
+          )}
+          {active === 'findings' && <FindingsTab findings={findings} />}
+        </div>
+
+        <div class="hse-right-col">
+          <div class="oq-dark-card">
+            <div class="oq-dark-header">
+              <i class="fas fa-circle-exclamation" />
+              <span>Critical Findings</span>
+              <span class="oq-dark-count">{critFindings}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {findings.filter(f => f.severity === 'danger' && /open/i.test(f.status)).slice(0, 5).map(f => (
+                <div class="oq-dark-item" key={f.ref}>
+                  <div class="icon-badge red"><i class="fas fa-circle-exclamation" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{f.ref}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{f.finding?.slice(0, 50)}</div>
+                  </div>
+                  <span class="oq-dark-tag danger">Critical</span>
+                </div>
+              ))}
+              {critFindings === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No critical findings</div>}
+            </div>
+            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
+              <i class="fas fa-calendar-clock" />
+              <span>Overdue Inspections</span>
+              <span class="oq-dark-count">{overdue}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {inspections.filter(i => /overdue/i.test(i.status)).slice(0, 4).map(i => (
+                <div class="oq-dark-item" key={i.ref}>
+                  <div class="icon-badge amber"><i class="fas fa-clock" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{i.ref} — {i.type}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{i.site}</div>
+                  </div>
+                  <span class="oq-dark-tag warning">Overdue</span>
+                </div>
+              ))}
+              {overdue === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>Schedule on track</div>}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <HseModal
         open={modalOpen} onClose={() => setModal(false)}

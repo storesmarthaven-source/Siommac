@@ -18,7 +18,7 @@ import {
   AreaHero, AreaTabs, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput,
   type AreaTab,
-} from './_shared';
+} from '@ui';
 import {
   hsePill, HSE_SITES,
   type IncidentRecord, type Investigation, type CapaItem, type IncidentType,

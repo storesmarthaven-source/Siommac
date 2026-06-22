@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, HseModal, Field, TextInput, SelectInput, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, type AreaTab } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -368,10 +368,10 @@ export function LegalComplianceArea({ tab }: { tab: string }): VNode {
   const breaches = mockBreaches.filter(b => b.status !== 'Closed').length;
 
   const stats = [
-    { icon: 'fa-list-check',           label: 'Obligations tracked', value: mockObligations.length,                                                  color: 'blue'  },
-    { icon: 'fa-circle-check',         label: 'Compliant',           value: mockObligations.filter(o => o.status === 'Compliant').length,             color: 'green' },
-    { icon: 'fa-file-contract',        label: 'EMA Permits',         value: mockEmaPermits.length,                                                   color: 'blue'  },
-    { icon: 'fa-triangle-exclamation', label: 'Overdue / Expired',   value: overdue,                                                                  color: 'red'   },
+    { icon: 'fa-list-check',           label: 'Obligations',       value: mockObligations.length,                                      sub: 'tracked',     color: 'blue'  as const },
+    { icon: 'fa-circle-check',         label: 'Compliant',         value: mockObligations.filter(o => o.status === 'Compliant').length, sub: 'up to date',  color: 'green' as const },
+    { icon: 'fa-file-contract',        label: 'EMA Permits',       value: mockEmaPermits.length,                                       sub: 'on register', color: 'blue'  as const },
+    { icon: 'fa-triangle-exclamation', label: 'Overdue / Expired', value: overdue,                                                     sub: 'need action', color: 'red'   as const },
   ];
 
   return (
@@ -380,23 +380,22 @@ export function LegalComplianceArea({ tab }: { tab: string }): VNode {
         icon="fa-scale-balanced"
         areaIcon="fa-gavel"
         title="Legal & Compliance"
-        crumb="Legal & Compliance"
         watermarkClass="hse-wm-compliance"
-        context={['OSH Act 2004 · EMA permits · breach log · regulatory calendar', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-book-open', label: 'OSH Act 2004' },
-          { icon: 'fa-leaf', label: 'EMA Act' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'OSH obligations tracked',  value: String(mockObligations.length) },
-          { label: 'EMA permits active',        value: String(mockEmaPermits.filter(p => p.status === 'Current').length) },
-          { label: 'Open breaches / overdue',   value: String(overdue + breaches) },
-          { label: 'OSH annual return due',     value: '31 Jan 2027', highlight: true },
+        footerItems={[
+          { icon: 'fa-book-open', label: 'OSH Act 2004', value: 'Compliant', pill: '● Active', pillVariant: 'green' },
+          { icon: 'fa-file-contract', label: 'EMA Permits Active', value: String(mockEmaPermits.filter(p => p.status === 'Current').length), pill: '● EMA Act', pillVariant: 'green' },
+          { icon: 'fa-triangle-exclamation', label: 'Open Breaches / Overdue', value: String(overdue + breaches), trend: (overdue + breaches) > 0 ? 'review' : undefined, trendUp: false },
+          { icon: 'fa-calendar-alt', label: 'OSH Annual Return Due', value: '31 Jan 2027', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+      <AreaTabs
+        icon="fa-scale-balanced"
+        title="Legal & Compliance"
+        sub="OSH Act obligations, EMA permits, breach log, and regulatory calendar"
+        tabs={withCounts(TABS, { obligations: mockObligations.length, permits: mockEmaPermits.length })}
+        active={active} onSelect={setActive}
+      />
       {active === 'obligations' && <ObligationsTab />}
       {active === 'permits'     && <EmaPermitsTab />}
       {active === 'breaches'    && <BreachesTab />}

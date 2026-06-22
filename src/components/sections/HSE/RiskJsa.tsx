@@ -11,7 +11,7 @@ import { useState, useCallback } from 'preact/hooks';
 import {
   AreaHero, AreaTabs, withCounts, SparkCard, SectionHead,
   type AreaTab, type SparkDef,
-} from './_shared';
+} from '@ui';
 import { HSE_SITES, riskRating, hsePill } from './types';
 import {
   useRiskJsaSummary,

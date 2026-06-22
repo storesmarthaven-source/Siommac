@@ -8,7 +8,7 @@ import { useState } from 'preact/hooks';
 import {
   AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
   type AreaTab,
-} from './_shared';
+} from '@ui';
 import { useCreateWorkflow } from '@api/workflows';
 import {
   mockHseDocs, mockSds, hsePill, HSE_DOC_TYPES,

@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, HseModal, Field, TextInput, SelectInput, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, type AreaTab } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -379,10 +379,10 @@ export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
   const drillsDone = mockDrills.filter(d => d.status === 'Complete').length;
 
   const stats = [
-    { icon: 'fa-map-location-dot', label: 'Emergency Plans', value: mockPlans.length,                                             color: 'blue'  },
-    { icon: 'fa-people-group',     label: 'Muster Points',   value: mockMusterPoints.length,                                       color: 'blue'  },
-    { icon: 'fa-stopwatch',        label: 'Drills YTD',      value: drillsDone,                                                    color: 'green' },
-    { icon: 'fa-triangle-exclamation', label: 'Review Due',  value: reviewDue,                                                    color: 'gold'  },
+    { icon: 'fa-map-location-dot', label: 'Emergency Plans', value: mockPlans.length,        sub: 'on file',       color: 'blue'  as const },
+    { icon: 'fa-people-group',     label: 'Muster Points',   value: mockMusterPoints.length, sub: 'across sites',  color: 'blue'  as const },
+    { icon: 'fa-stopwatch',        label: 'Drills YTD',      value: drillsDone,              sub: 'completed',     color: 'green' as const },
+    { icon: 'fa-triangle-exclamation', label: 'Review Due',  value: reviewDue,               sub: 'plans to review',color: 'gold' as const },
   ];
 
   return (
@@ -391,23 +391,22 @@ export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
         icon="fa-truck-medical"
         areaIcon="fa-siren-on"
         title="Emergency Response"
-        crumb="Emergency Response"
         watermarkClass="hse-wm-emergency"
-        context={['Emergency plans · muster points · drill log · ERT register', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: '5 Active Sites' },
-          { icon: 'fa-ship', label: 'Galeota Marine — SOPEP/MOB' },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Emergency plans registered', value: String(mockPlans.length) },
-          { label: 'Drills completed YTD',       value: String(drillsDone) },
-          { label: 'ERT members active',          value: String(mockErtMembers.filter(m => m.status === 'Active').length) },
-          { label: 'SOPEP / MOB — Galeota',       value: 'Current', highlight: true },
+        footerItems={[
+          { icon: 'fa-stopwatch', label: 'Drills Completed YTD', value: String(drillsDone), pill: '● On Track', pillVariant: 'green' },
+          { icon: 'fa-people-group', label: 'ERT Members Active', value: String(mockErtMembers.filter(m => m.status === 'Active').length), pill: '● Certified', pillVariant: 'green' },
+          { icon: 'fa-triangle-exclamation', label: 'Plans Review Due', value: String(reviewDue), trend: reviewDue > 0 ? 'review' : undefined, trendUp: false },
+          { icon: 'fa-ship', label: 'SOPEP / MOB — Galeota', value: 'Current', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
+      <AreaTabs
+        icon="fa-truck-medical"
+        title="Emergency Response"
+        sub="Emergency plans, muster points, drills, and ERT register"
+        tabs={withCounts(TABS, { plans: mockPlans.length, muster: mockMusterPoints.length })}
+        active={active} onSelect={setActive}
+      />
       {active === 'plans'  && <PlansTab />}
       {active === 'muster' && <MusterTab />}
       {active === 'drills' && <DrillsTab />}

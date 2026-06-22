@@ -14,7 +14,7 @@ import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
 import { ProfilePill } from '@shared/ProfilePill';
 import { useCreateWorkflow, useMyWorkflowTasks } from '@api/workflows';
-import { HseModal, Field, SelectInput, TextInput, TextareaInput } from './_shared';
+import { HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
   mockPpeAssignments, mockPpeRenewals, mockPpeReturns, mockPpeRequests, mockPpeKits,

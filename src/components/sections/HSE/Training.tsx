@@ -6,17 +6,17 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field, SelectInput, TextInput,
+  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
   type AreaTab,
-} from './_shared';
+} from '@ui';
 import {
   mockCompetency, mockCertifications, TRAINING_COURSES, HSE_SITES,
   type CompetencyStatus, type CertificationRow,
 } from './types';
 
 const TABS: AreaTab[] = [
-  { key: 'matrix', label: 'Competency Matrix', icon: 'fa-table-cells-large' },
-  { key: 'certs',  label: 'Certifications',    icon: 'fa-certificate' },
+  { key: 'matrix', label: 'Competency Matrix', sublabel: 'Team overview',    icon: 'fa-table-cells-large' },
+  { key: 'certs',  label: 'Certifications',    sublabel: 'Individual certs', icon: 'fa-certificate' },
 ];
 
 const STATUS_STYLE: Record<CompetencyStatus, { bg: string; color: string; label: string }> = {
@@ -216,12 +216,16 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
   const expired    = certs.filter(c => /expired/i.test(c.status)).length;
   const due        = certs.filter(c => /due/i.test(c.status)).length;
 
+  const compliance = totalCells > 0 ? Math.round((current / totalCells) * 100) : 0;
+
   const stats = [
-    { icon: 'fa-users',          label: 'Workers tracked',  value: mockCompetency.length, color: 'blue'  },
-    { icon: 'fa-circle-check',   label: 'Current',          value: current,               color: 'green' },
-    { icon: 'fa-clock',          label: 'Due for renewal',  value: due,                   color: 'gold'  },
-    { icon: 'fa-circle-xmark',   label: 'Expired',          value: expired,               color: 'red'   },
+    { icon: 'fa-users',          label: 'Workers tracked',  value: mockCompetency.length, sub: 'in matrix',      color: 'blue'  as const },
+    { icon: 'fa-circle-check',   label: 'Current',          value: current,               sub: 'valid certs',    color: 'green' as const },
+    { icon: 'fa-clock',          label: 'Due for renewal',  value: due,                   sub: 'within 90 days', color: 'gold'  as const },
+    { icon: 'fa-circle-xmark',   label: 'Expired',          value: expired,               sub: 'must not work',  color: 'red'   as const },
   ];
+
+  const tabsWithCounts = withCounts(TABS, { matrix: mockCompetency.length, certs: certs.length });
 
   return (
     <div class="hse-tab hse-dash">
@@ -229,26 +233,97 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         icon="fa-graduation-cap"
         areaIcon="fa-user-graduate"
         title="Training & Competency"
-        crumb="Training"
         watermarkClass="hse-wm-training"
-        context={['Competency Matrix · Certifications · Renewals', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-users', label: `${mockCompetency.length} Workers` },
-          { icon: 'fa-book-open', label: `${TRAINING_COURSES.length} Courses` },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Overall compliance', value: `${Math.round((current / totalCells) * 100)}%`, highlight: Math.round((current / totalCells) * 100) >= 85 },
-          { label: 'Courses tracked', value: String(TRAINING_COURSES.length) },
-          { label: 'Expiring in 90 days', value: String(due) },
-          { label: 'Expired — must not work', value: String(expired) },
+        footerItems={[
+          { icon: 'fa-chart-pie', label: 'Overall Compliance', value: `${compliance}%`, progress: compliance, pill: compliance >= 85 ? '● Compliant' : '● At Risk', pillVariant: compliance >= 85 ? 'green' : 'amber' },
+          { icon: 'fa-book-open', label: 'Courses Tracked', value: `${TRAINING_COURSES.length} courses`, pill: '● Active', pillVariant: 'green' },
+          { icon: 'fa-clock', label: 'Expiring in 90 Days', value: String(due), trend: due > 0 ? 'renew soon' : undefined, trendUp: false },
+          { icon: 'fa-circle-xmark', label: 'Expired Certs', value: String(expired), pill: expired > 0 ? '● Action Required' : '● All Clear', pillVariant: expired > 0 ? 'red' : 'green' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 
-      {active === 'matrix' && <MatrixTab />}
-      {active === 'certs'  && <CertsTab certs={certs} onAdd={() => setModal(true)} />}
+      <div class="hse-spark-grid">
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Overall Compliance</span></div>
+          <div class="hse-spark-val" style={{ color: compliance >= 85 ? '#22c55e' : '#f59e0b' }}>{compliance}%</div>
+          <div class="hse-spark-sub">Current / total competency slots</div>
+          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
+            <div class="hse-spark-bar-fill" style={{ width: `${compliance}%`, background: compliance >= 85 ? '#22c55e' : '#f59e0b' }} />
+          </div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Current Certs</span></div>
+          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{current}</div>
+          <div class="hse-spark-sub">Valid competencies on file</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Due for Renewal</span></div>
+          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div>
+          <div class="hse-spark-sub">Within next 90 days</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div>
+          <div class="hse-spark-val" style={{ color: expired > 0 ? '#ef4444' : '#4ade80' }}>{expired}</div>
+          <div class="hse-spark-sub">Must not perform task</div>
+        </div>
+      </div>
+
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          <AreaTabs
+            icon="fa-graduation-cap"
+            title="Training & Competency"
+            sub="Competency matrix, certifications, and renewal tracking"
+            tabs={tabsWithCounts} active={active} onSelect={setActive}
+            actionLabel="Add Certificate" onAction={() => setModal(true)}
+          />
+
+          {active === 'matrix' && <MatrixTab />}
+          {active === 'certs'  && <CertsTab certs={certs} onAdd={() => setModal(true)} />}
+        </div>
+
+        <div class="hse-right-col">
+          <div class="oq-dark-card">
+            <div class="oq-dark-header">
+              <i class="fas fa-circle-xmark" />
+              <span>Expired Certificates</span>
+              <span class="oq-dark-count">{expired}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {certs.filter(c => /expired/i.test(c.status)).slice(0, 5).map(c => (
+                <div class="oq-dark-item" key={c.ref}>
+                  <div class="icon-badge red"><i class="fas fa-certificate" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{c.worker}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{c.course} · Expired {c.expiry}</div>
+                  </div>
+                  <span class="oq-dark-tag danger">Expired</span>
+                </div>
+              ))}
+              {expired === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No expired certificates</div>}
+            </div>
+            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
+              <i class="fas fa-clock" />
+              <span>Renewing Soon</span>
+              <span class="oq-dark-count">{due}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {certs.filter(c => /due/i.test(c.status)).slice(0, 4).map(c => (
+                <div class="oq-dark-item" key={c.ref}>
+                  <div class="icon-badge amber"><i class="fas fa-clock" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{c.worker}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{c.course} · Due {c.expiry}</div>
+                  </div>
+                  <span class="oq-dark-tag warning">Due</span>
+                </div>
+              ))}
+              {due === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>All current</div>}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <HseModal
         open={modalOpen} onClose={() => setModal(false)}

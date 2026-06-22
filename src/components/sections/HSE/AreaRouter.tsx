@@ -7,7 +7,7 @@
  */
 
 import { type VNode } from 'preact';
-import { AreaHero } from './_shared';
+import { AreaHero } from '@ui';
 import { HSE_AREAS } from './nav';
 import { IncidentsArea }   from './Incidents';
 import { RiskJsaArea }     from './RiskJsa';

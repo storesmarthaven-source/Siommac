@@ -14,7 +14,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useHseDashboardKpis, type HseDashboardKpis } from '@api/hse/incidents';
 import { useMyWorkflowTasks, useDecideWorkflowTask, type WorkflowTask } from '@api/workflows';
-import { AreaHero } from './_shared';
+import { AreaHero } from '@ui';
 import { OWQPanel } from './Incidents';
 import {
   mockHseKpis, mockTrend, mockQueue,

@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from './_shared';
+import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 import { useCreateWorkflow } from '@api/workflows';
 
