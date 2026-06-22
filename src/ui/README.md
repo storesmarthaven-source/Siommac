@@ -3,6 +3,11 @@
 The shared design system for the whole ERP. Pages define **data, content, actions, workflow**.
 This folder defines **look, spacing, layout, states, interaction patterns**.
 
+> **Building a page? Read [PAGE_GUIDE.md](./PAGE_GUIDE.md) first.** It's the standard every
+> page follows — the two page shapes, the non-negotiable rules (info-only headers, one
+> ProfilePill, all cards use `Card`, rearrangeable 4-card rows, standard window for overlays),
+> and a copy-paste skeleton.
+
 ## The page standard
 
 Two page shapes, applied uniformly across every module (HSE, HR, Finance, Operations):

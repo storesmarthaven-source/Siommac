@@ -111,6 +111,36 @@ export function UIKitPage(): VNode {
 
       {editing && <ThemeEditor />}
 
+      {/* PAGE GUIDE ----------------------------------------------------------- */}
+      <Section id="uikit-guide" title="Building a page — the standard" sub="Two page shapes. Build from these primitives only — see src/ui/PAGE_GUIDE.md for the full guide + skeleton.">
+        <Grid min="340px">
+          <Demo label="Module dashboard (one per module)">
+            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: 1.7 }}>
+              <li><strong>PageHero</strong> — dark hero, 4 rearrangeable stat cards (<code>pageKey</code>)</li>
+              <li>KPI footer + dashboard content</li>
+            </ul>
+          </Demo>
+          <Demo label="Sub-module page (Incidents, Risk &amp; JSA, …)">
+            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: 1.7 }}>
+              <li><strong>PageHeader</strong> — light, info-only (breadcrumb + title + sub + meta chips)</li>
+              <li><strong>MetricRow</strong> — 4 rearrangeable cards (<code>pageKey</code>)</li>
+              <li><strong>TabBar</strong> — bare tabs, then content</li>
+            </ul>
+          </Demo>
+        </Grid>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="The rules" wide>
+          <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: 1.8 }}>
+            <li>Headers are <strong>info-only</strong> — no action buttons (those go in the tab content)</li>
+            <li><strong>One ProfilePill</strong> per page (the app header) — never in a page/hero</li>
+            <li><strong>All cards use <code>&lt;Card&gt;</code></strong> — never hand-roll <code>.inc-mini-card</code></li>
+            <li>Four-card rows are <strong>rearrangeable</strong> (<code>pageKey</code>: <code>&lt;module&gt;.&lt;area&gt;</code>)</li>
+            <li>Overlays use <strong>Modal / Wizard / Drawer</strong>; forms use <strong>Field</strong> + inputs</li>
+            <li>Theme through <strong>tokens only</strong>; data through <strong>authenticated APIs</strong> + the module service adapter</li>
+          </ul>
+        </Demo>
+      </Section>
+
       {/* PAGE SHAPE ----------------------------------------------------------- */}
       <Section id="uikit-pageshape" title="Page shape" sub="The standard module page: hero (four stat cards) → optional spark row → navigation tabs → content.">
         <Demo label="PageHero — four stat cards + KPI footer" wide>
