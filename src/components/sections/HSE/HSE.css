@@ -5039,10 +5039,10 @@ body[data-theme="dark"] .hero-footer {
   gap: 2px;
 }
 
-/* ── Incident drawer tab bar — 4-column grid, 2 rows ────────────────────────── */
+/* ── Incident drawer tab bar — 3-column grid, 2 rows ────────────────────────── */
 .hse-idrawer-tabbar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   background: #fff;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;

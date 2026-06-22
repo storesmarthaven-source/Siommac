@@ -3231,11 +3231,10 @@ function CapaVerifyModal({ open, item, onClose, onVerify }: {
 
 // ── Incident detail drawer ────────────────────────────────────────────────────
 
-type DrawerTab = 'overview' | 'people' | 'evidence' | 'investigation' | 'capa' | 'workflow' | 'timeline';
+type DrawerTab = 'overview' | 'evidence' | 'investigation' | 'capa' | 'workflow' | 'timeline';
 
 const DRAWER_TABS: { key: DrawerTab; icon: string; label: string }[] = [
   { key: 'overview',     icon: 'fa-circle-info',          label: 'Overview'     },
-  { key: 'people',       icon: 'fa-users',                label: 'People'       },
   { key: 'evidence',     icon: 'fa-paperclip',            label: 'Evidence'     },
   { key: 'investigation',icon: 'fa-magnifying-glass-chart',label: 'Investigation'},
   { key: 'capa',         icon: 'fa-list-check',           label: 'CAPA'         },
@@ -3419,6 +3418,40 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
             </div>
           </div>
         )}
+
+        {/* People involved */}
+        {(() => {
+          const people = detail?.people ?? [];
+          if (!people.length) return null;
+          const grouped: Record<string, typeof people> = {};
+          for (const p of people) {
+            const k = p.person_type ?? 'other';
+            if (!grouped[k]) grouped[k] = [];
+            grouped[k]!.push(p);
+          }
+          return (
+            <div class="hse-idrawer-section">
+              <div class="hse-idrawer-section-head"><i class="fas fa-users" /> People Involved</div>
+              {Object.entries(grouped).map(([type, persons]) => (
+                <div key={type} style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', color: PERSON_TYPE_COLOR[type] ?? 'var(--text-muted)', marginBottom: '6px' }}>
+                    <i class={`fas ${PERSON_TYPE_ICON[type] ?? 'fa-user'}`} style={{ marginRight: '4px' }} />
+                    {type.charAt(0).toUpperCase() + type.slice(1)}{persons.length > 1 ? ` (${persons.length})` : ''}
+                  </div>
+                  {persons.map((p, idx) => (
+                    <div key={idx} style={{ marginBottom: '6px', padding: '8px 10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                        {p.full_name}{p.user_id ? <span style={{ fontWeight: 400, opacity: .6 }}> · {p.user_id}</span> : null}
+                      </div>
+                      {p.role_or_company && <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{p.role_or_company}</div>}
+                      {p.injury_description && <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{p.injury_description}</p>}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -3726,7 +3759,6 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
 
   const TAB_RENDER: Record<DrawerTab, () => VNode> = {
     overview:      renderOverview,
-    people:        renderPeople,
     evidence:      renderEvidence,
     investigation: renderInvestigation,
     capa:          renderCapa,
