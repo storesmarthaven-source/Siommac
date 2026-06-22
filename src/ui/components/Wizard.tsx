@@ -1,25 +1,30 @@
 /**
  * src/ui/components/Wizard.tsx
  *
- * A multi-step dialog built on the STANDARD WINDOW (`.ui-modal*`) plus a step
- * indicator bar (`.ui-wizard-steps`). Used for every "create" flow in the app
- * (New Hazard, New Assessment, New JSA, …) so they all look and behave the same:
- *   • header:  icon + title + auto "Step X of Y — <step name>" subtitle
- *   • body:    the current step's content (caller renders by `step`)
- *   • footer:  Back (left) · Cancel + Next/Submit (right)
+ * The app-wide STANDARD multi-step dialog — one design for every "create" flow
+ * (New Hazard, New Assessment, New JSA, Report Incident, …). Renders the `wz-*`
+ * shell (assets/styles/uikit-layout.css):
+ *   • header:   icon chip + title + description + close (top-right)
+ *   • step bar: numbered, labelled step tabs with done/active states; click a
+ *               completed step to jump back
+ *   • body:     the current step's content, with an optional dark side panel
+ *   • footer:   Cancel (left) · Back · Next / Submit (right)
  *
- * The wizard is controlled: the page owns `step` and renders the matching body.
- * `canAdvance(from)` optionally gates the Next button (return false to block).
+ * Controlled: the page owns `step` and renders the matching body.
+ * `canAdvance(from)` optionally gates Next (return false to block).
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { Button } from './Button';
+
+export type WizardStep = string | { label: string; sub?: string };
 
 export interface WizardProps {
   open: boolean;
   title: string;
   icon?: string;
-  steps: string[];
+  /** Header description line under the title. */
+  sub?: string;
+  steps: WizardStep[];
   step: number;
   onStepChange: (step: number) => void;
   onClose: () => void;
@@ -28,18 +33,21 @@ export interface WizardProps {
   submitDisabled?: boolean;
   /** Return false to block advancing from the given step index. */
   canAdvance?: (from: number) => boolean;
+  /** Optional dark side panel (guidance, live summary). */
+  side?: ComponentChildren;
   size?: 'sm' | 'md' | 'lg';
   children: ComponentChildren;
 }
 
+const WIDTH: Record<NonNullable<WizardProps['size']>, number> = { sm: 680, md: 880, lg: 1100 };
+
 export function Wizard({
-  open, title, icon, steps, step, onStepChange, onClose, onSubmit,
-  submitLabel = 'Submit', submitDisabled, canAdvance, size = 'lg', children,
+  open, title, icon, sub, steps, step, onStepChange, onClose, onSubmit,
+  submitLabel = 'Submit', submitDisabled, canAdvance, side, size = 'lg', children,
 }: WizardProps): VNode | null {
   if (!open) return null;
   const last = steps.length - 1;
   const isLast = step >= last;
-  const stepName = steps[step] ?? '';
 
   const next = () => {
     if (canAdvance && !canAdvance(step)) return;
@@ -48,37 +56,54 @@ export function Wizard({
   const back = () => onStepChange(Math.max(step - 1, 0));
 
   return (
-    <div class="ui-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <section class={`ui-modal${size !== 'md' ? ` ui-modal--${size}` : ''}`} role="dialog" aria-modal="true">
-        <header class="ui-modal-head">
-          <div class="ui-modal-headwrap">
-            {icon && <span class="ui-modal-icon"><i class={`fas ${icon}`} /></span>}
-            <div class="ui-modal-titles">
-              <h3 class="ui-modal-title">{title}</h3>
-              <p class="ui-modal-sub">Step {step + 1} of {steps.length} — {stepName}</p>
+    <div class="wz-backdrop" onClick={e => { if ((e.target as HTMLElement).classList.contains('wz-backdrop')) onClose(); }}>
+      <div class="wz-modal" role="dialog" aria-modal="true" aria-label={title} style={{ width: `min(${WIDTH[size]}px, 100%)` }}>
+
+        <div class="wz-header">
+          <div class="wz-header-left">
+            {icon && <div class="wz-header-icon"><i class={`fas ${icon}`} /></div>}
+            <div>
+              <div class="wz-header-title">{title}</div>
+              {sub && <div class="wz-header-sub">{sub}</div>}
             </div>
           </div>
-          <button class="ui-modal-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
-        </header>
-
-        <div class="ui-wizard-steps">
-          {steps.map((s, i) => <div key={s + i} class={`ui-wizard-step${i <= step ? ' is-done' : ''}`} />)}
+          <button class="wz-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
         </div>
 
-        <div class="ui-modal-body">{children}</div>
+        <div class="wz-step-bar" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+          {steps.map((s, i) => {
+            const label = typeof s === 'string' ? s : s.label;
+            const stepSub = typeof s === 'string' ? undefined : s.sub;
+            const state = i === step ? ' active' : i < step ? ' done' : '';
+            return (
+              <div key={i} class={`wz-step-tab${state}`} onClick={() => { if (i < step) onStepChange(i); }}>
+                <b class="wz-step-num">{i < step ? <i class="fas fa-check" style={{ fontSize: '0.6rem' }} /> : i + 1}</b>
+                <strong class="wz-step-tab-label">{label}</strong>
+                {stepSub && <span class="wz-step-tab-sub">{stepSub}</span>}
+              </div>
+            );
+          })}
+        </div>
 
-        <footer class="ui-modal-foot">
-          {step > 0 && (
-            <span class="ui-foot-left">
-              <Button variant="outline" icon="fa-arrow-left" onClick={back}>Back</Button>
-            </span>
-          )}
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          {isLast
-            ? <Button variant="primary" onClick={onSubmit} disabled={submitDisabled}>{submitLabel}</Button>
-            : <Button variant="blue" onClick={next}>Next</Button>}
-        </footer>
-      </section>
+        <div class="wz-body" style={side ? undefined : { gridTemplateColumns: '1fr' }}>
+          <div class="wz-main">{children}</div>
+          {side && <aside class="wz-side">{side}</aside>}
+        </div>
+
+        <div class="wz-footer">
+          <button class="hse-btn" onClick={onClose}><i class="fas fa-xmark" /> Cancel</button>
+          <div class="wz-footer-nav">
+            {step > 0 && <button class="hse-btn" onClick={back}><i class="fas fa-arrow-left" /> Back</button>}
+            {!isLast && <button class="hse-btn primary" onClick={next}>Next <i class="fas fa-arrow-right" /></button>}
+            {isLast && (
+              <button class="hse-btn primary" onClick={onSubmit} disabled={submitDisabled}>
+                <i class="fas fa-paper-plane" /> {submitLabel}
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
