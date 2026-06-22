@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 import { useCreateWorkflow } from '@api/workflows';
 
@@ -393,38 +393,50 @@ function MonitoringTab(): VNode {
 export function EnvironmentalArea({ tab }: { tab: string }): VNode {
   const [active, setActive] = useState(tab);
 
-  const openSpills = mockSpills.filter(s => s.status === 'Open').length;
+  const openSpills   = mockSpills.filter(s => s.status === 'Open').length;
   const pendingWaste = mockWaste.filter(w => w.status === 'Pending').length;
 
-  const stats = [
-    { icon: 'fa-droplet',    label: 'Spills YTD',       value: mockSpills.length,           sub: 'this year',     color: 'blue'  as const },
-    { icon: 'fa-trash-can',  label: 'Waste Records',    value: mockWaste.length,            sub: 'manifested',    color: 'blue'  as const },
-    { icon: 'fa-file-lines', label: 'EMA Notifications',value: mockEmaNotifications.length, sub: 'submitted',     color: 'green' as const },
-    { icon: 'fa-triangle-exclamation', label: 'Open / Pending', value: openSpills + pendingWaste, sub: 'need action', color: 'gold' as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Spills YTD', value: String(mockSpills.length), sub: 'All T&T sites this year',
+      delta: `${openSpills} open`, deltaUp: openSpills > 0, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockSpills.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Waste Records', value: String(mockWaste.length), sub: 'Hazardous waste movements',
+      delta: `${pendingWaste} pending manifest`, deltaUp: pendingWaste > 0, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockWaste.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'EMA Notifications', value: String(mockEmaNotifications.length), sub: 'Formal notifications submitted',
+      delta: `${mockEmaNotifications.filter(n => n.status === 'Submitted').length} open`, deltaUp: false, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, mockEmaNotifications.length], sparkColor: '#4ade80',
+    },
+    {
+      label: 'Open / Pending', value: String(openSpills + pendingWaste), sub: 'Spills and waste awaiting action',
+      delta: openSpills + pendingWaste > 0 ? 'Action required' : 'All clear', deltaUp: (openSpills + pendingWaste) > 0, color: (openSpills + pendingWaste) > 0 ? '#f59e0b' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, openSpills + pendingWaste], sparkColor: '#f59e0b',
+    },
   ];
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-leaf"
-        areaIcon="fa-earth-americas"
+        module="HSE"
         title="Environmental Management"
-        watermarkClass="hse-wm-environmental"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-droplet', label: 'Open Spill Events', value: String(openSpills), pill: openSpills > 0 ? '● Active' : '● Clear', pillVariant: openSpills > 0 ? 'red' : 'green' },
-          { icon: 'fa-trash-can', label: 'Waste Manifests Pending', value: String(pendingWaste), trend: pendingWaste > 0 ? 'pending' : undefined, trendUp: false },
-          { icon: 'fa-file-lines', label: 'EMA 24-hr Notification', value: 'Compliant', pill: '● Process', pillVariant: 'green' },
-          { icon: 'fa-ship', label: 'SOPEP — Galeota', value: 'Current', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="Spill register, waste manifests, EMA notifications, and environmental monitoring for all T&T sites."
+        meta={[
+          { icon: 'fa-droplet', label: `${mockSpills.length} spills YTD` },
+          { icon: 'fa-trash-can', label: `${mockWaste.length} waste records` },
+          { icon: 'fa-file-lines', label: `${mockEmaNotifications.length} EMA notifications` },
+          ...(openSpills + pendingWaste > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${openSpills + pendingWaste} open / pending` }] : []),
         ]}
       />
-      <AreaTabs
-        icon="fa-leaf"
-        title="Environmental Management"
-        sub="Spill register, waste manifests, EMA notifications, and monitoring"
-        tabs={withCounts(TABS, { spills: mockSpills.length, waste: mockWaste.length, ema: mockEmaNotifications.length })}
-        active={active} onSelect={setActive}
-      />
+
+      <MetricRow pageKey="hse.environmental" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+
+      <TabBar tabs={withCounts(TABS, { spills: mockSpills.length, waste: mockWaste.length, ema: mockEmaNotifications.length })} active={active} onSelect={setActive} />
       {active === 'spills'     && <SpillsTab />}
       {active === 'waste'      && <WasteTab />}
       {active === 'ema'        && <EmaTab />}

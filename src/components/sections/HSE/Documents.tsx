@@ -6,8 +6,8 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
-  type AreaTab,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type AreaTab, type SparkDef,
 } from '@ui';
 import { useCreateWorkflow } from '@api/workflows';
 import {
@@ -278,63 +278,51 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
   const reviewDue  = docs.filter(d => /review due|draft/i.test(d.status)).length;
   const expiredSds = sds.filter(s => /expired/i.test(s.status)).length;
 
-  const stats = [
-    { icon: 'fa-folder-open',    label: 'Total Documents', value: docs.length,    sub: 'on file',        color: 'blue'  as const },
-    { icon: 'fa-circle-check',   label: 'Published',       value: published,      sub: 'active/current', color: 'green' as const },
-    { icon: 'fa-clock',          label: 'Review / Draft',  value: reviewDue,      sub: 'need action',    color: 'gold'  as const },
-    { icon: 'fa-flask',          label: 'SDS in Library',  value: sds.length,     sub: 'chemicals',      color: 'blue'  as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Published', value: String(published), sub: 'Active controlled documents',
+      delta: 'Version-controlled', deltaUp: false, color: '#22c55e',
+      sparkPoints: [0, 0, 0, 0, 0, published], sparkColor: '#22c55e',
+    },
+    {
+      label: 'Review / Draft', value: String(reviewDue), sub: 'Require review or approval',
+      delta: reviewDue > 0 ? 'Review needed' : 'All current', deltaUp: reviewDue > 0, color: reviewDue > 0 ? '#f59e0b' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, reviewDue], sparkColor: '#f59e0b',
+    },
+    {
+      label: 'SDS Library', value: String(sds.length), sub: 'Chemicals registered on-site',
+      delta: `${expiredSds > 0 ? `${expiredSds} expired` : 'All current'}`, deltaUp: expiredSds > 0, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, sds.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Expired SDS', value: String(expiredSds), sub: 'Must not be used on-site',
+      delta: expiredSds > 0 ? 'Action required' : 'All clear', deltaUp: expiredSds > 0, color: expiredSds > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, expiredSds], sparkColor: '#ef4444',
+    },
   ];
 
   const tabsWithCounts = withCounts(TABS, { docs: docs.length, sds: sds.length });
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-folder-open"
-        areaIcon="fa-book-bookmark"
+        module="HSE"
         title="Documents & SDS"
-        watermarkClass="hse-wm-documents"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-circle-check', label: 'Published Documents', value: String(published), pill: '● Version-controlled', pillVariant: 'green' },
-          { icon: 'fa-clock', label: 'Pending Review', value: String(reviewDue), trend: reviewDue > 0 ? 'review needed' : undefined, trendUp: false },
-          { icon: 'fa-flask', label: 'Expired SDS', value: String(expiredSds), pill: expiredSds > 0 ? '● Action Required' : '● All Current', pillVariant: expiredSds > 0 ? 'red' : 'green' },
-          { icon: 'fa-calendar-alt', label: 'Next Critical Review', value: '30 Jun 2026', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="Controlled document library and Safety Data Sheet register for all chemicals on-site."
+        meta={[
+          { icon: 'fa-folder-open', label: `${docs.length} documents` },
+          { icon: 'fa-circle-check', label: `${published} published` },
+          { icon: 'fa-flask', label: `${sds.length} chemicals` },
+          ...(expiredSds > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${expiredSds} expired SDS` }] : []),
         ]}
       />
 
-      <div class="hse-spark-grid">
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Published</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{published}</div>
-          <div class="hse-spark-sub">Active controlled documents</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Review / Draft</span></div>
-          <div class="hse-spark-val" style={{ color: reviewDue > 0 ? '#f59e0b' : '#4ade80' }}>{reviewDue}</div>
-          <div class="hse-spark-sub">Require review or approval</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">SDS Library</span></div>
-          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{sds.length}</div>
-          <div class="hse-spark-sub">Chemicals registered on-site</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Expired SDS</span></div>
-          <div class="hse-spark-val" style={{ color: expiredSds > 0 ? '#ef4444' : '#4ade80' }}>{expiredSds}</div>
-          <div class="hse-spark-sub">Must not be used on-site</div>
-        </div>
-      </div>
+      <MetricRow pageKey="hse.documents" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-folder-open"
-            title="Documents & SDS"
-            sub="Controlled document library and Safety Data Sheet register"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel="Upload Document" onAction={() => setModal(true)}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
           {active === 'docs' && <DocsTab docs={docs} onUpload={() => setModal(true)} />}
           {active === 'sds'  && <SdsTab sds={sds} />}

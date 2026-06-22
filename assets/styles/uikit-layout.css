@@ -662,10 +662,9 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 }
 .ui-page-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
 .ui-page-head-icon {
-  width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center;
-  border-radius: 14px; color: #fff; font-size: 1.15rem;
-  background: linear-gradient(135deg, var(--siomac-navy), var(--siomac-red));
-  box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
+  width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 12px; font-size: 1rem;
+  background: var(--siomac-navy); color: #fff;
 }
 .ui-page-head-icon i { display: grid !important; place-items: center !important; }
 .ui-page-head-text { min-width: 0; }

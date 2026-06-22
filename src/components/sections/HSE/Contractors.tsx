@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -347,38 +347,51 @@ function AccessTab(): VNode {
 export function ContractorsArea({ tab }: { tab: string }): VNode {
   const [active, setActive] = useState(tab);
 
-  const blocked  = mockContractors.filter(c => c.status === 'Blocked').length;
+  const blocked    = mockContractors.filter(c => c.status === 'Blocked').length;
   const fileIssues = mockHseFiles.filter(f => f.status !== 'Current').length;
+  const activeCount = mockContractors.filter(c => c.status === 'Active').length;
 
-  const stats = [
-    { icon: 'fa-id-card-clip',         label: 'Contractors',       value: mockContractors.length, sub: 'registered',  color: 'blue'  as const },
-    { icon: 'fa-circle-check',         label: 'Files Current',     value: mockContractors.filter(c => c.status === 'Active').length, sub: 'all clear', color: 'green' as const },
-    { icon: 'fa-triangle-exclamation', label: 'File Issues',       value: fileIssues,             sub: 'expired/due', color: 'gold'  as const },
-    { icon: 'fa-door-closed',          label: 'Access Blocked',    value: blocked,                sub: 'denied today',color: 'red'   as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Contractors', value: String(mockContractors.length), sub: 'Registered with HSE file',
+      delta: `${activeCount} active`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockContractors.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Files Current', value: String(activeCount), sub: 'All compliance files clear',
+      delta: 'STOW + insurance + medicals', deltaUp: false, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, activeCount], sparkColor: '#4ade80',
+    },
+    {
+      label: 'File Issues', value: String(fileIssues), sub: 'Expired or due for renewal',
+      delta: fileIssues > 0 ? 'Action required' : 'All clear', deltaUp: fileIssues > 0, color: fileIssues > 0 ? '#f59e0b' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, fileIssues], sparkColor: '#f59e0b',
+    },
+    {
+      label: 'Access Blocked', value: String(blocked), sub: 'Denied — expired file',
+      delta: blocked > 0 ? 'Action required' : 'All clear', deltaUp: blocked > 0, color: blocked > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, blocked], sparkColor: '#ef4444',
+    },
   ];
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-id-card-clip"
-        areaIcon="fa-hard-hat"
+        module="HSE"
         title="Contractor Management"
-        watermarkClass="hse-wm-contractors"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-building', label: 'Companies', value: `${mockContractors.length} registered`, pill: '● STOW required', pillVariant: 'green' },
-          { icon: 'fa-triangle-exclamation', label: 'File Issues', value: String(fileIssues), trend: fileIssues > 0 ? 'review' : undefined, trendUp: false },
-          { icon: 'fa-door-closed', label: 'Access Blocked Today', value: String(blocked), pill: blocked > 0 ? '● Action Required' : '● All Clear', pillVariant: blocked > 0 ? 'red' : 'green' },
-          { icon: 'fa-scale-balanced', label: 'OSH Act 2004 — T&T', value: 'Compliant', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="STOW induction, HSE file register, and site access gate control for all contracted companies."
+        meta={[
+          { icon: 'fa-id-card-clip', label: `${mockContractors.length} contractors` },
+          { icon: 'fa-circle-check', label: `${activeCount} active` },
+          { icon: 'fa-triangle-exclamation', label: `${fileIssues} file issues` },
+          { icon: 'fa-door-closed', label: `${blocked} blocked` },
         ]}
       />
-      <AreaTabs
-        icon="fa-id-card-clip"
-        title="Contractor Management"
-        sub="STOW induction, HSE files, and site access control"
-        tabs={withCounts(TABS, { register: mockContractors.length })}
-        active={active} onSelect={setActive}
-      />
+
+      <MetricRow pageKey="hse.contractors" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+
+      <TabBar tabs={withCounts(TABS, { register: mockContractors.length })} active={active} onSelect={setActive} />
       {active === 'register'  && <RegisterTab />}
       {active === 'induction' && <InductionTab />}
       {active === 'files'     && <FilesTab />}

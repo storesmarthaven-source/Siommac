@@ -12,7 +12,6 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
-import { ProfilePill } from '@shared/ProfilePill';
 import { useCreateWorkflow, useMyWorkflowTasks } from '@api/workflows';
 import { HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
 import {
@@ -803,7 +802,6 @@ export function PpeBody({ tab }: { tab: string }): VNode {
               <i class="fas fa-hard-hat" />
               <h2>PPE Manager</h2>
             </div>
-            <ProfilePill variant="onDark" />
           </div>
 
           <div class="dash-stats-row">

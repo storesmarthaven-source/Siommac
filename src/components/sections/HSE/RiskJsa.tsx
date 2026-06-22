@@ -7,9 +7,9 @@
  */
 
 import { type VNode }   from 'preact';
-import { useState, useCallback } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, Button, withCounts, SparkCard, SectionHead,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, SectionHead,
   type AreaTab, type SparkDef,
 } from '@ui';
 import { HSE_SITES, riskRating, hsePill } from './types';
@@ -156,16 +156,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
     jsa:         openJsa,
   });
 
-  const handleTabAction = useCallback(() => {
-    if (active === 'hazards')     setHazardFormOpen(true);
-    if (active === 'assessments') setRaFormOpen(true);
-    if (active === 'jsa')         setJsaFormOpen(true);
-  }, [active]);
-
-  const actionLabel = active === 'hazards'     ? 'New Hazard'
-                    : active === 'assessments' ? 'New Assessment'
-                    : 'New JSA';
-
   return (
     <div class="hse-tab hse-dash">
       <PageHeader
@@ -179,7 +169,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           { icon: 'fa-table-cells-large', label: '5×5 matrix' },
           ...(overdueAssessments > 0 ? [{ icon: 'fa-clock', label: `${overdueAssessments} overdue` }] : []),
         ]}
-        actions={<Button variant="primary" icon="fa-circle-plus" onClick={handleTabAction}>{actionLabel}</Button>}
       />
 
       <MetricRow pageKey="hse.risk" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

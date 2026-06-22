@@ -6,8 +6,8 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput, TextareaInput,
-  type AreaTab,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, Field, SelectInput, TextInput, TextareaInput,
+  type AreaTab, type SparkDef,
 } from '@ui';
 import { useCreateWorkflow } from '@api/workflows';
 import {
@@ -265,72 +265,54 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
   const createWorkflow = useCreateWorkflow();
   const [active, setActive]   = useState(tab);
   const [permits, setPermits] = useState<PermitRow[]>(mockPermitRows);
-  const [modalOpen, setModal] = useState(false);
 
   const live    = permits.filter(p => p.status === 'Live').length;
   const blocked = permits.filter(p => /blocked|overdue/i.test(p.status)).length;
   const hold    = permits.filter(p => p.status === 'Hold').length;
 
-  const stats = [
-    { icon: 'fa-file-signature',    label: 'Total Permits',       value: permits.length, sub: 'on register',     color: 'blue'  as const },
-    { icon: 'fa-circle-check',      label: 'Live',                value: live,           sub: 'currently active',color: 'green' as const },
-    { icon: 'fa-triangle-exclamation', label: 'Blocked / Overdue', value: blocked,      sub: 'need action',     color: 'red'   as const },
-    { icon: 'fa-clock',             label: 'On Hold',             value: hold,           sub: 'pending clearance',color: 'gold' as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Active Permits', value: String(live), sub: 'Currently live on-site',
+      delta: live > 0 ? `${live} on-site` : 'None active', deltaUp: false, color: '#22c55e',
+      sparkPoints: [0, 0, 0, 0, 0, live], sparkColor: '#22c55e',
+    },
+    {
+      label: 'Blocked / Overdue', value: String(blocked), sub: 'Evidence gate not cleared',
+      delta: blocked > 0 ? 'Action required' : 'All clear', deltaUp: blocked > 0, color: blocked > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, blocked], sparkColor: '#ef4444',
+    },
+    {
+      label: 'Avg. Issue Time', value: '42 min', sub: 'From request to live',
+      color: '#60a5fa',
+    },
+    {
+      label: 'Permit Compliance', value: '88%', sub: 'Evidence attached on issue',
+      progress: { pct: 88, color: '#f59e0b', target: 'Target: 95%' },
+    },
   ];
 
   const tabsWithCounts = withCounts(TABS, { register: permits.length });
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-file-signature"
-        areaIcon="fa-file-contract"
+        module="HSE"
         title="Permits to Work"
-        watermarkClass="hse-wm-permits"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-circle-check', label: 'Live Permits', value: String(live), pill: '● Active', pillVariant: 'green' },
-          { icon: 'fa-stopwatch', label: 'Avg. Issue Time', value: '42 min', sub: ' from request to live', pill: '● PTW v3.0', pillVariant: 'green' },
-          { icon: 'fa-chart-pie', label: 'Evidence Compliance', value: '88%', progress: 88, trend: blocked > 0 ? `${blocked} blocked` : undefined, trendUp: false },
-          { icon: 'fa-calendar-alt', label: 'Permits Issued YTD', value: '108 permits', pill: '● 0 LTIs', pillVariant: 'green' },
+        sub="Evidence-gated work authorisation for high-risk tasks — confined space, hot work, electrical, and more."
+        meta={[
+          { icon: 'fa-file-signature', label: `${permits.length} permits` },
+          { icon: 'fa-circle-check', label: `${live} live` },
+          { icon: 'fa-triangle-exclamation', label: `${blocked} blocked` },
+          { icon: 'fa-clock', label: `${hold} on hold` },
         ]}
       />
 
-      <div class="hse-spark-grid">
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Active Permits</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{live}</div>
-          <div class="hse-spark-sub">Currently live on-site</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Blocked / Overdue</span></div>
-          <div class="hse-spark-val" style={{ color: blocked > 0 ? '#ef4444' : '#4ade80' }}>{blocked}</div>
-          <div class="hse-spark-sub">Evidence gate not cleared</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Avg. Issue Time</span></div>
-          <div class="hse-spark-val">42 min</div>
-          <div class="hse-spark-sub">From request to live</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Permit Compliance</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>88%</div>
-          <div class="hse-spark-sub">Evidence attached on issue</div>
-          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
-            <div class="hse-spark-bar-fill" style={{ width: '88%', background: '#f59e0b' }} />
-          </div>
-        </div>
-      </div>
+      <MetricRow pageKey="hse.permits" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-file-signature"
-            title="Permit to Work Management"
-            sub="Evidence-gated work authorisation for high-risk tasks"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel="New Permit" onAction={() => setActive('new')}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
           {active === 'register' && (
             <RegisterTab permits={permits} onNew={() => setActive('new')} />

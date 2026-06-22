@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, type AreaTab } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -375,38 +375,51 @@ function ErtTab(): VNode {
 export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
   const [active, setActive] = useState(tab);
 
-  const reviewDue = mockPlans.filter(p => p.status !== 'Current').length;
+  const reviewDue  = mockPlans.filter(p => p.status !== 'Current').length;
   const drillsDone = mockDrills.filter(d => d.status === 'Complete').length;
+  const ertActive  = mockErtMembers.filter(m => m.status === 'Active').length;
 
-  const stats = [
-    { icon: 'fa-map-location-dot', label: 'Emergency Plans', value: mockPlans.length,        sub: 'on file',       color: 'blue'  as const },
-    { icon: 'fa-people-group',     label: 'Muster Points',   value: mockMusterPoints.length, sub: 'across sites',  color: 'blue'  as const },
-    { icon: 'fa-stopwatch',        label: 'Drills YTD',      value: drillsDone,              sub: 'completed',     color: 'green' as const },
-    { icon: 'fa-triangle-exclamation', label: 'Review Due',  value: reviewDue,               sub: 'plans to review',color: 'gold' as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Emergency Plans', value: String(mockPlans.length), sub: 'Site-specific plans on file',
+      delta: `${reviewDue} review due`, deltaUp: reviewDue > 0, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockPlans.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Muster Points', value: String(mockMusterPoints.length), sub: 'Registered across all sites',
+      delta: `${mockMusterPoints.reduce((s, m) => s + m.capacity, 0)} total capacity`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockMusterPoints.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Drills YTD', value: String(drillsDone), sub: 'Completed across all sites',
+      delta: `${mockDrills.filter(d => d.status === 'Scheduled').length} scheduled`, deltaUp: false, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, drillsDone], sparkColor: '#4ade80',
+    },
+    {
+      label: 'ERT Members', value: String(ertActive), sub: 'Active and certified',
+      delta: `${mockErtMembers.filter(m => m.status !== 'Active').length} renewal required`, deltaUp: mockErtMembers.filter(m => m.status !== 'Active').length > 0, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, ertActive], sparkColor: '#4ade80',
+    },
   ];
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-truck-medical"
-        areaIcon="fa-siren-on"
+        module="HSE"
         title="Emergency Response"
-        watermarkClass="hse-wm-emergency"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-stopwatch', label: 'Drills Completed YTD', value: String(drillsDone), pill: '● On Track', pillVariant: 'green' },
-          { icon: 'fa-people-group', label: 'ERT Members Active', value: String(mockErtMembers.filter(m => m.status === 'Active').length), pill: '● Certified', pillVariant: 'green' },
-          { icon: 'fa-triangle-exclamation', label: 'Plans Review Due', value: String(reviewDue), trend: reviewDue > 0 ? 'review' : undefined, trendUp: false },
-          { icon: 'fa-ship', label: 'SOPEP / MOB — Galeota', value: 'Current', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="Emergency plans, muster points, drill log, and ERT register across all T&T sites."
+        meta={[
+          { icon: 'fa-map-location-dot', label: `${mockPlans.length} plans` },
+          { icon: 'fa-stopwatch', label: `${drillsDone} drills YTD` },
+          { icon: 'fa-people-group', label: `${ertActive} ERT active` },
+          ...(reviewDue > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${reviewDue} review due` }] : []),
         ]}
       />
-      <AreaTabs
-        icon="fa-truck-medical"
-        title="Emergency Response"
-        sub="Emergency plans, muster points, drills, and ERT register"
-        tabs={withCounts(TABS, { plans: mockPlans.length, muster: mockMusterPoints.length })}
-        active={active} onSelect={setActive}
-      />
+
+      <MetricRow pageKey="hse.emergency" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+
+      <TabBar tabs={withCounts(TABS, { plans: mockPlans.length, muster: mockMusterPoints.length })} active={active} onSelect={setActive} />
       {active === 'plans'  && <PlansTab />}
       {active === 'muster' && <MusterTab />}
       {active === 'drills' && <DrillsTab />}

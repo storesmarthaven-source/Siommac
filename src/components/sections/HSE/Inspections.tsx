@@ -6,8 +6,8 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput, TextareaInput,
-  type AreaTab,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type AreaTab, type SparkDef,
 } from '@ui';
 import {
   mockInspections, mockFindings, hsePill, HSE_SITES,
@@ -267,66 +267,50 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
   const openFindings = findings.filter(f => /open/i.test(f.status)).length;
   const critFindings = findings.filter(f => f.severity === 'danger' && /open/i.test(f.status)).length;
 
-  const stats = [
-    { icon: 'fa-calendar-check',      label: 'Scheduled',         value: scheduled,    sub: 'upcoming',       color: 'blue'  as const },
-    { icon: 'fa-triangle-exclamation', label: 'Overdue',           value: overdue,      sub: 'need attention', color: 'red'   as const },
-    { icon: 'fa-magnifying-glass',     label: 'Open Findings',     value: openFindings, sub: 'to resolve',     color: 'gold'  as const },
-    { icon: 'fa-circle-exclamation',   label: 'Critical Findings', value: critFindings, sub: 'immediate',      color: 'red'   as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Scheduled', value: String(scheduled), sub: 'Upcoming inspections',
+      delta: 'Confirmed', deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, scheduled], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Overdue', value: String(overdue), sub: 'Past due date',
+      delta: overdue > 0 ? 'Action required' : 'On track', deltaUp: overdue > 0, color: overdue > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, overdue], sparkColor: '#ef4444',
+    },
+    {
+      label: 'Completion Rate', value: '92%', sub: 'YTD · Target 90%',
+      progress: { pct: 92, color: '#22c55e', target: 'Target: 90%' },
+    },
+    {
+      label: 'Open Findings', value: String(openFindings), sub: `${critFindings} critical · ${openFindings - critFindings} minor`,
+      delta: critFindings > 0 ? `${critFindings} critical` : 'No critical', deltaUp: critFindings > 0, color: openFindings > 0 ? '#f59e0b' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, openFindings], sparkColor: '#f59e0b',
+    },
   ];
 
   const tabsWithCounts = withCounts(TABS, { schedule: inspections.length, findings: findings.length });
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-clipboard-check"
-        areaIcon="fa-magnifying-glass-chart"
+        module="HSE"
         title="Inspections & Audits"
-        watermarkClass="hse-wm-inspections"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-chart-pie', label: 'Completion Rate YTD', value: '92%', pill: '● ISO 45001', pillVariant: 'green' },
-          { icon: 'fa-clock', label: 'Avg. Finding Closure', value: '8 days', trend: overdue > 0 ? `${overdue} overdue` : undefined, trendUp: false },
-          { icon: 'fa-circle-exclamation', label: 'Critical Open Findings', value: String(critFindings), progress: critFindings > 0 ? 100 : 0 },
-          { icon: 'fa-calendar-alt', label: 'Inspections Completed', value: '65 this year', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="Schedule inspections, track findings, and manage non-conformances across all sites."
+        meta={[
+          { icon: 'fa-calendar-check', label: `${inspections.length} inspections` },
+          { icon: 'fa-triangle-exclamation', label: `${overdue} overdue` },
+          { icon: 'fa-circle-exclamation', label: `${critFindings} critical findings` },
+          { icon: 'fa-chart-pie', label: '92% completion rate' },
         ]}
       />
 
-      <div class="hse-spark-grid">
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div>
-          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{scheduled}</div>
-          <div class="hse-spark-sub">Upcoming inspections</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div>
-          <div class="hse-spark-val" style={{ color: overdue > 0 ? '#ef4444' : '#4ade80' }}>{overdue}</div>
-          <div class="hse-spark-sub">Past due date</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>92%</div>
-          <div class="hse-spark-sub">YTD · Target 90%</div>
-          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
-            <div class="hse-spark-bar-fill" style={{ width: '92%', background: '#22c55e' }} />
-          </div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Open Findings</span></div>
-          <div class="hse-spark-val" style={{ color: openFindings > 0 ? '#f59e0b' : '#4ade80' }}>{openFindings}</div>
-          <div class="hse-spark-sub">{critFindings} critical · {openFindings - critFindings} minor</div>
-        </div>
-      </div>
+      <MetricRow pageKey="hse.inspections" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-clipboard-check"
-            title="Inspection Management"
-            sub="Schedule inspections, track findings, and manage non-conformances"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel="Schedule Inspection" onAction={() => setModal(true)}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
           {active === 'schedule' && (
             <ScheduleTab inspections={inspections} onNew={() => setModal(true)} />

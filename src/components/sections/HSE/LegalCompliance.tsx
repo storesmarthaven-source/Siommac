@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, type AreaTab } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -364,38 +364,51 @@ function CalendarTab(): VNode {
 export function LegalComplianceArea({ tab }: { tab: string }): VNode {
   const [active, setActive] = useState(tab);
 
-  const overdue  = mockObligations.filter(o => o.status === 'Overdue').length + mockEmaPermits.filter(p => p.status === 'Expired').length;
-  const breaches = mockBreaches.filter(b => b.status !== 'Closed').length;
+  const compliantCount = mockObligations.filter(o => o.status === 'Compliant').length;
+  const overdue        = mockObligations.filter(o => o.status === 'Overdue').length + mockEmaPermits.filter(p => p.status === 'Expired').length;
+  const breaches       = mockBreaches.filter(b => b.status !== 'Closed').length;
 
-  const stats = [
-    { icon: 'fa-list-check',           label: 'Obligations',       value: mockObligations.length,                                      sub: 'tracked',     color: 'blue'  as const },
-    { icon: 'fa-circle-check',         label: 'Compliant',         value: mockObligations.filter(o => o.status === 'Compliant').length, sub: 'up to date',  color: 'green' as const },
-    { icon: 'fa-file-contract',        label: 'EMA Permits',       value: mockEmaPermits.length,                                       sub: 'on register', color: 'blue'  as const },
-    { icon: 'fa-triangle-exclamation', label: 'Overdue / Expired', value: overdue,                                                     sub: 'need action', color: 'red'   as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'OSH Obligations', value: String(mockObligations.length), sub: 'Tracked against T&T legislation',
+      delta: `${compliantCount} compliant`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockObligations.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Compliant', value: String(compliantCount), sub: 'No action required',
+      delta: `${mockObligations.length - compliantCount} need attention`, deltaUp: mockObligations.length - compliantCount > 0, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, compliantCount], sparkColor: '#4ade80',
+    },
+    {
+      label: 'EMA Permits', value: String(mockEmaPermits.length), sub: 'Environmental clearances on register',
+      delta: `${mockEmaPermits.filter(p => p.status === 'Current').length} current`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, mockEmaPermits.length], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Overdue / Expired', value: String(overdue), sub: 'Obligations and permits needing action',
+      delta: `${breaches} open breaches`, deltaUp: (overdue + breaches) > 0, color: overdue > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, overdue], sparkColor: '#ef4444',
+    },
   ];
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-scale-balanced"
-        areaIcon="fa-gavel"
+        module="HSE"
         title="Legal & Compliance"
-        watermarkClass="hse-wm-compliance"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-book-open', label: 'OSH Act 2004', value: 'Compliant', pill: '● Active', pillVariant: 'green' },
-          { icon: 'fa-file-contract', label: 'EMA Permits Active', value: String(mockEmaPermits.filter(p => p.status === 'Current').length), pill: '● EMA Act', pillVariant: 'green' },
-          { icon: 'fa-triangle-exclamation', label: 'Open Breaches / Overdue', value: String(overdue + breaches), trend: (overdue + breaches) > 0 ? 'review' : undefined, trendUp: false },
-          { icon: 'fa-calendar-alt', label: 'OSH Annual Return Due', value: '31 Jan 2027', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="OSH Act 2004 obligations tracker, EMA permit register, breach log, and regulatory calendar for T&T operations."
+        meta={[
+          { icon: 'fa-list-check', label: `${mockObligations.length} obligations` },
+          { icon: 'fa-circle-check', label: `${compliantCount} compliant` },
+          { icon: 'fa-file-contract', label: `${mockEmaPermits.length} EMA permits` },
+          ...(overdue > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${overdue} overdue / expired` }] : []),
         ]}
       />
-      <AreaTabs
-        icon="fa-scale-balanced"
-        title="Legal & Compliance"
-        sub="OSH Act obligations, EMA permits, breach log, and regulatory calendar"
-        tabs={withCounts(TABS, { obligations: mockObligations.length, permits: mockEmaPermits.length })}
-        active={active} onSelect={setActive}
-      />
+
+      <MetricRow pageKey="hse.legal" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+
+      <TabBar tabs={withCounts(TABS, { obligations: mockObligations.length, permits: mockEmaPermits.length })} active={active} onSelect={setActive} />
       {active === 'obligations' && <ObligationsTab />}
       {active === 'permits'     && <EmaPermitsTab />}
       {active === 'breaches'    && <BreachesTab />}

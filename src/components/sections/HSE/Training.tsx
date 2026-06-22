@@ -6,11 +6,11 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
-  type AreaTab,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type AreaTab, type SparkDef,
 } from '@ui';
 import {
-  mockCompetency, mockCertifications, TRAINING_COURSES, HSE_SITES,
+  mockCompetency, mockCertifications, TRAINING_COURSES,
   type CompetencyStatus, type CertificationRow,
 } from './types';
 
@@ -218,66 +218,50 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
 
   const compliance = totalCells > 0 ? Math.round((current / totalCells) * 100) : 0;
 
-  const stats = [
-    { icon: 'fa-users',          label: 'Workers tracked',  value: mockCompetency.length, sub: 'in matrix',      color: 'blue'  as const },
-    { icon: 'fa-circle-check',   label: 'Current',          value: current,               sub: 'valid certs',    color: 'green' as const },
-    { icon: 'fa-clock',          label: 'Due for renewal',  value: due,                   sub: 'within 90 days', color: 'gold'  as const },
-    { icon: 'fa-circle-xmark',   label: 'Expired',          value: expired,               sub: 'must not work',  color: 'red'   as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Overall Compliance', value: `${compliance}%`, sub: 'Current / total competency slots',
+      progress: { pct: compliance, color: compliance >= 85 ? '#22c55e' : '#f59e0b', target: 'Target: 85%' },
+    },
+    {
+      label: 'Current Certs', value: String(current), sub: 'Valid competencies on file',
+      delta: `${mockCompetency.length} workers tracked`, deltaUp: false, color: '#22c55e',
+      sparkPoints: [0, 0, 0, 0, 0, current], sparkColor: '#22c55e',
+    },
+    {
+      label: 'Due for Renewal', value: String(due), sub: 'Within next 90 days',
+      delta: due > 0 ? 'Renew soon' : 'All current', deltaUp: due > 0, color: '#f59e0b',
+      sparkPoints: [0, 0, 0, 0, 0, due], sparkColor: '#f59e0b',
+    },
+    {
+      label: 'Expired', value: String(expired), sub: 'Must not perform task',
+      delta: expired > 0 ? 'Action required' : 'All clear', deltaUp: expired > 0, color: expired > 0 ? '#ef4444' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, expired], sparkColor: '#ef4444',
+    },
   ];
 
   const tabsWithCounts = withCounts(TABS, { matrix: mockCompetency.length, certs: certs.length });
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-graduation-cap"
-        areaIcon="fa-user-graduate"
+        module="HSE"
         title="Training & Competency"
-        watermarkClass="hse-wm-training"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-chart-pie', label: 'Overall Compliance', value: `${compliance}%`, progress: compliance, pill: compliance >= 85 ? '● Compliant' : '● At Risk', pillVariant: compliance >= 85 ? 'green' : 'amber' },
-          { icon: 'fa-book-open', label: 'Courses Tracked', value: `${TRAINING_COURSES.length} courses`, pill: '● Active', pillVariant: 'green' },
-          { icon: 'fa-clock', label: 'Expiring in 90 Days', value: String(due), trend: due > 0 ? 'renew soon' : undefined, trendUp: false },
-          { icon: 'fa-circle-xmark', label: 'Expired Certs', value: String(expired), pill: expired > 0 ? '● Action Required' : '● All Clear', pillVariant: expired > 0 ? 'red' : 'green' },
+        sub="Competency matrix, certifications, and renewal tracking across all workers and courses."
+        meta={[
+          { icon: 'fa-users', label: `${mockCompetency.length} workers` },
+          { icon: 'fa-circle-check', label: `${compliance}% compliant` },
+          { icon: 'fa-clock', label: `${due} due for renewal` },
+          ...(expired > 0 ? [{ icon: 'fa-circle-xmark', label: `${expired} expired` }] : []),
         ]}
       />
 
-      <div class="hse-spark-grid">
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Overall Compliance</span></div>
-          <div class="hse-spark-val" style={{ color: compliance >= 85 ? '#22c55e' : '#f59e0b' }}>{compliance}%</div>
-          <div class="hse-spark-sub">Current / total competency slots</div>
-          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
-            <div class="hse-spark-bar-fill" style={{ width: `${compliance}%`, background: compliance >= 85 ? '#22c55e' : '#f59e0b' }} />
-          </div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Current Certs</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{current}</div>
-          <div class="hse-spark-sub">Valid competencies on file</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Due for Renewal</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div>
-          <div class="hse-spark-sub">Within next 90 days</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div>
-          <div class="hse-spark-val" style={{ color: expired > 0 ? '#ef4444' : '#4ade80' }}>{expired}</div>
-          <div class="hse-spark-sub">Must not perform task</div>
-        </div>
-      </div>
+      <MetricRow pageKey="hse.training" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-graduation-cap"
-            title="Training & Competency"
-            sub="Competency matrix, certifications, and renewal tracking"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel="Add Certificate" onAction={() => setModal(true)}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
           {active === 'matrix' && <MatrixTab />}
           {active === 'certs'  && <CertsTab certs={certs} onAdd={() => setModal(true)} />}

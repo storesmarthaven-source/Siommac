@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { AreaHero, AreaTabs, withCounts, type AreaTab } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef } from '@ui';
 import {
   useWorkflowList,
   useWorkflow,
@@ -915,35 +915,52 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
   const open    = (workflowQ.data ?? []).filter(w => isOpenStatus(w.status)).length;
   const total   = workflowQ.data?.length ?? 0;
 
-  const stats = [
-    { icon: 'fa-inbox',           label: 'Pending approvals', value: pending, sub: 'awaiting action', color: (pending > 0 ? 'gold' : 'green') as 'gold' | 'green' },
-    { icon: 'fa-diagram-project', label: 'Open workflows',    value: open,    sub: 'in progress',     color: 'blue' as const },
-    { icon: 'fa-shield-halved',   label: 'Total workflows',   value: total,   sub: 'tracked',         color: 'blue' as const },
-    { icon: 'fa-handshake',       label: 'Templates active',  value: SEEDED_TEMPLATES.length, sub: 'available',  color: 'blue' as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Pending Approvals', value: String(pending), sub: 'Awaiting your decision',
+      delta: pending > 0 ? 'Action required' : 'All clear', deltaUp: pending > 0, color: pending > 0 ? '#f59e0b' : '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, pending], sparkColor: '#f59e0b',
+    },
+    {
+      label: 'Open Workflows', value: String(open), sub: 'In progress — awaiting action',
+      delta: `${total} total tracked`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, open], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Total Workflows', value: String(total), sub: 'All governed processes tracked',
+      delta: `${total - open} closed / approved`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, total], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Templates Active', value: String(SEEDED_TEMPLATES.length), sub: 'Available workflow templates',
+      delta: 'Backbone connected', deltaUp: false, color: '#4ade80',
+      sparkPoints: [0, 0, 0, 0, 0, SEEDED_TEMPLATES.length], sparkColor: '#4ade80',
+    },
   ];
+
+  const handleTabAction = () => {
+    if (active === 'wizard') return; // wizard tab is self-contained
+    setActive('wizard');
+  };
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-diagram-project"
-        areaIcon="fa-wand-magic-sparkles"
-        title="Workflow Management"
-        watermarkClass="hse-wm-workflows"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-route',           label: 'Templates Available',    value: String(SEEDED_TEMPLATES.length), pill: '● Active',    pillVariant: 'green' },
-          { icon: 'fa-inbox',           label: 'Pending Approvals',      value: String(pending), trend: pending > 0 ? 'awaiting' : undefined, trendUp: false },
-          { icon: 'fa-diagram-project', label: 'Open Workflows',         value: String(open),    pill: open > 0 ? '● Active' : '● Clear', pillVariant: open > 0 ? 'amber' : 'green' },
-          { icon: 'fa-lock',            label: 'Backbone',               value: 'Live',          pill: '● Connected', pillVariant: 'green' },
+        module="HSE"
+        title="Workflows"
+        sub="Governed approvals, evidence gates, cross-module handoffs, and immutable audit trail."
+        meta={[
+          { icon: 'fa-inbox', label: `${pending} pending` },
+          { icon: 'fa-diagram-project', label: `${open} open` },
+          { icon: 'fa-shield-halved', label: `${total} total` },
+          { icon: 'fa-route', label: `${SEEDED_TEMPLATES.length} templates` },
         ]}
       />
-      <AreaTabs
-        icon="fa-diagram-project"
-        title="Workflow Management"
-        sub="Governed approvals, evidence gates, and immutable audit trail"
-        tabs={withCounts(TABS, { approvals: pending, register: open })}
-        active={active} onSelect={setActive}
-      />
+
+      <MetricRow pageKey="hse.workflows" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+
+      <TabBar tabs={withCounts(TABS, { approvals: pending, register: open })} active={active} onSelect={setActive} />
 
       {active === 'approvals' && <ApprovalsTab />}
       {active === 'register'  && <RegisterTab />}

@@ -15,7 +15,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, HseDrawer, Field,
+  PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput,
   type AreaTab,
 } from '@ui';
@@ -1157,19 +1157,17 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
     <div class="hse-tab hse-dash inc-workspace">
 
       {/* ── Page header ── */}
-      <div class="inc-page-header">
-        <div class="inc-page-header-left">
-          <div class="inc-page-title-wrap">
-            <span class="inc-page-icon"><i class="fas fa-triangle-exclamation" /></span>
-            <div>
-              <div class="inc-page-title">Incidents</div>
-              <div class="inc-page-sub">Jan – Jun 2026 · All sites · {incidents.length} records</div>
-            </div>
-          </div>
-        </div>
-        <div class="inc-page-header-right">
-        </div>
-      </div>
+      <PageHeader
+        icon="fa-triangle-exclamation"
+        module="HSE"
+        title="Incidents"
+        sub="Report, triage and investigate workplace incidents and near-misses, and track corrective actions."
+        meta={[
+          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
+          { icon: 'fa-location-dot', label: 'All sites' },
+          { icon: 'fa-hashtag', label: `${incidents.length} records` },
+        ]}
+      />
 
       {/* ── Tab-aware summary cards ── */}
       <IncidentControlStrip
@@ -1182,14 +1180,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       />
 
       {/* ── Tab workspace ── */}
-      <AreaTabs
-        icon="fa-clipboard-list"
-        title="Incident Management"
-        sub="Incidents · CAPA Actions · Intelligence"
-        tabs={PAGE_TABS}
-        active={pageTab}
-        onSelect={setPageTab}
-      />
+      <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
 
       {/* Tab content — consistent top gap below nav */}
       <div style={{ marginTop: '20px' }}>

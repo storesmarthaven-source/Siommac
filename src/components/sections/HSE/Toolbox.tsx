@@ -6,8 +6,8 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
-  type AreaTab,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  type AreaTab, type SparkDef,
 } from '@ui';
 import {
   mockToolboxTalks, TOOLBOX_TOPICS, HSE_SITES, hsePill,
@@ -43,67 +43,51 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
   const avgAtt     = completed > 0 ? Math.round(totalAtt / completed) : 0;
 
   const completionRate = talks.length > 0 ? Math.round((completed / talks.length) * 100) : 0;
+  const talksThisMonth = talks.filter(t => /jun/i.test(t.date)).length;
 
-  const stats = [
-    { icon: 'fa-comments',       label: 'Total Talks',     value: talks.length, sub: 'on record',      color: 'blue'  as const },
-    { icon: 'fa-circle-check',   label: 'Completed',       value: completed,    sub: 'delivered',      color: 'green' as const },
-    { icon: 'fa-calendar-clock', label: 'Scheduled',       value: scheduled,    sub: 'upcoming',       color: 'gold'  as const },
-    { icon: 'fa-users',          label: 'Total Attendees', value: totalAtt,     sub: 'workers briefed',color: 'blue'  as const },
+  const sparks: SparkDef[] = [
+    {
+      label: 'Talks This Month', value: String(talksThisMonth), sub: 'June 2026 · Target 12/month',
+      delta: `${talksThisMonth} of 12 target`, deltaUp: false, color: '#60a5fa',
+      sparkPoints: [0, 0, 0, 0, 0, talksThisMonth], sparkColor: '#60a5fa',
+    },
+    {
+      label: 'Avg. Attendance', value: String(avgAtt), sub: 'Workers per talk · target 8',
+      delta: avgAtt >= 8 ? 'On target' : 'Below target', deltaUp: avgAtt < 8, color: avgAtt >= 8 ? '#22c55e' : '#f59e0b',
+      sparkPoints: [0, 0, 0, 0, 0, avgAtt], sparkColor: '#22c55e',
+    },
+    {
+      label: 'Most Common Topic', value: 'Spill Response', sub: '4 talks YTD on this topic',
+      color: '#a78bfa',
+    },
+    {
+      label: 'Completion Rate', value: `${completionRate}%`, sub: 'Scheduled talks delivered',
+      progress: { pct: completionRate, color: completionRate >= 80 ? '#22c55e' : '#f59e0b', target: 'Target: 80%' },
+    },
   ];
 
   const tabsWithCounts = withCounts(TABS, { log: talks.length });
 
   return (
     <div class="hse-tab hse-dash">
-      <AreaHero
+      <PageHeader
         icon="fa-comments"
-        areaIcon="fa-people-group"
+        module="HSE"
         title="Toolbox Talks"
-        watermarkClass="hse-wm-toolbox"
-        stats={stats}
-        footerItems={[
-          { icon: 'fa-chart-pie', label: 'Completion Rate', value: `${completionRate}%`, progress: completionRate, pill: completionRate >= 80 ? '● On Track' : '● At Risk', pillVariant: completionRate >= 80 ? 'green' : 'amber' },
-          { icon: 'fa-users', label: 'Avg. Attendance', value: `${avgAtt} workers`, sub: ' per talk', trend: avgAtt >= 8 ? '+1 vs last month' : undefined, trendUp: true },
-          { icon: 'fa-calendar-check', label: 'Talks This Month', value: String(talks.filter(t => /jun/i.test(t.date)).length), sub: ' June 2026', pill: '● Target 12', pillVariant: 'amber' },
-          { icon: 'fa-calendar-alt', label: 'Target Frequency', value: '3 talks / week', pill: '● Monitoring', pillVariant: 'amber' },
+        sub="Daily pre-task safety briefings across all sites and crews — log, track, and report on toolbox talk delivery."
+        meta={[
+          { icon: 'fa-comments', label: `${talks.length} total talks` },
+          { icon: 'fa-circle-check', label: `${completed} completed` },
+          { icon: 'fa-users', label: `${totalAtt} attendees` },
+          { icon: 'fa-chart-pie', label: `${completionRate}% completion` },
         ]}
       />
 
-      <div class="hse-spark-grid">
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Talks This Month</span></div>
-          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{talks.filter(t => /jun/i.test(t.date)).length}</div>
-          <div class="hse-spark-sub">June 2026 · Target 12/month</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Avg. Attendance</span></div>
-          <div class="hse-spark-val" style={{ color: avgAtt >= 8 ? '#22c55e' : '#f59e0b' }}>{avgAtt}</div>
-          <div class="hse-spark-sub">Workers per talk · target 8</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Most Common Topic</span></div>
-          <div class="hse-spark-val" style={{ fontSize: '0.85rem' }}>Spill Response</div>
-          <div class="hse-spark-sub">4 talks YTD on this topic</div>
-        </div>
-        <div class="hse-spark-card">
-          <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
-          <div class="hse-spark-val" style={{ color: completionRate >= 80 ? '#22c55e' : '#f59e0b' }}>{completionRate}%</div>
-          <div class="hse-spark-sub">Scheduled talks delivered</div>
-          <div class="hse-spark-bar-track" style={{ marginTop: '8px' }}>
-            <div class="hse-spark-bar-fill" style={{ width: `${completionRate}%`, background: completionRate >= 80 ? '#22c55e' : '#f59e0b' }} />
-          </div>
-        </div>
-      </div>
+      <MetricRow pageKey="hse.toolbox" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <AreaTabs
-            icon="fa-comments"
-            title="Toolbox Talk Management"
-            sub="Daily pre-task safety briefings across all sites and crews"
-            tabs={tabsWithCounts} active={active} onSelect={setActive}
-            actionLabel="New Talk" onAction={() => setModal(true)}
-          />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
       {active === 'log' && (
         <div class="ppe-tab-content">
