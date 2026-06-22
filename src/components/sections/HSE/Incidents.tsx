@@ -1062,6 +1062,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
     lostDays?: number; returnToWork?: string;
     description: string; immediateActions: string;
     peopleInvolved: PersonInvolved[]; witnesses: Witness[];
+    costImpact: boolean; equipmentDamage: boolean;
   }) {
     const dbSeverity: IncidentSeverity =
         payload.severity === 'Critical' ? 'critical'

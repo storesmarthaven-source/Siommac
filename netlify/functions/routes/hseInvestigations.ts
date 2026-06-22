@@ -9,12 +9,13 @@
  * POST /api/hse/investigations/addRootCause
  */
 
-import { Hono }              from 'hono';
-import { z, zv }             from '../lib/validate';
-import { requirePermission } from '../lib/auth';
-import { sb }                from '../lib/db';
-import { nextRef }           from '../lib/refGenerator';
-import { emitAppEvent }      from '../lib/appEvents';
+import { Hono }               from 'hono';
+import { z, zv }              from '../lib/validate';
+import { requirePermission }  from '../lib/auth';
+import { sb }                 from '../lib/db';
+import { nextRef }            from '../lib/refGenerator';
+import { emitAppEvent }       from '../lib/appEvents';
+import { runModuleMutation }  from '../lib/moduleServiceAdapter';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -82,46 +83,67 @@ router.post('/investigations/create', async c => {
   const v = zv(c, CreateInvSchema, body.args);
   if (!v.ok) return v.response;
 
-  const ref = await nextRef('INV');
-
-  const { data: inv, error } = await sb
-    .from('hse_investigations')
-    .insert({
-      ref,
-      incident_id:          v.data.incidentId,
-      investigator_user_id: v.data.investigatorUserId ?? user.id,
-      status:               'assigned',
-      due_at:               v.data.dueAt ?? null,
-      root_cause_method:    v.data.rootCauseMethod ?? null,
-    })
-    .select('id')
-    .single<{ id: string }>();
-
-  if (error || !inv) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
-
-  // Update parent incident status
-  await sb.from('hse_incidents').update({ status: 'investigation', updated_at: new Date().toISOString() }).eq('id', v.data.incidentId);
-
   const investigatorId = v.data.investigatorUserId ?? user.id;
-  await emitAppEvent({
-    eventType:        'hse.investigation.assigned',
-    sourceModule:     'hse',
-    sourceEntityType: 'investigation',
-    sourceEntityId:   ref,
-    actorUserId:      user.id,
-    severity:         'info',
-    payload:          { investigationId: inv.id, investigatorId, incidentId: v.data.incidentId },
-    dedupeKey:        `hse.investigation.assigned:${ref}`,
-    explicitRecipients: [{ userId: investigatorId, reason: 'assignee' as const }],
-    notification: {
-      title: `Investigation assigned: ${ref}`,
-      body:  `You have been assigned to investigate ${ref}.`,
-      actionRoute: `hse/investigations/${ref}`,
-      type:  'hse.investigation.assigned',
-    },
-  } as Parameters<typeof emitAppEvent>[0]);
 
-  return c.json({ success: true, investigationId: inv.id, ref });
+  try {
+    const result = await runModuleMutation<{ id: string; ref: string }>({
+      context: { actorUserId: user.id },
+      options: {
+        module:         'hse',
+        operation:      'create',
+        entityType:     'investigation',
+        idempotencyKey: `hse.investigation.create:${user.id}:${v.data.incidentId}`,
+        eventType:      'hse.investigation.assigned',
+        eventSeverity:  'info',
+        eventPayload:   { investigatorId, incidentId: v.data.incidentId },
+        explicitRecipients: [{ userId: investigatorId, reason: 'assignee' as const }],
+        notification: {
+          title: 'Investigation assigned',
+          body:  `You have been assigned to lead this investigation.`,
+          actionRoute: 'hse/investigations',
+          type:  'hse.investigation.assigned',
+        },
+        getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
+        afterCommit: async ({ entityId: _entityId }) => {
+          await sb.from('hse_incidents')
+            .update({ status: 'investigation', updated_at: new Date().toISOString() })
+            .eq('id', v.data.incidentId);
+        },
+      },
+      writeRecord: async () => {
+        const ref = await nextRef('INV');
+        const { data: inv, error } = await sb
+          .from('hse_investigations')
+          .insert({
+            ref,
+            incident_id:          v.data.incidentId,
+            investigator_user_id: investigatorId,
+            status:               'assigned',
+            due_at:               v.data.dueAt ?? null,
+            root_cause_method:    v.data.rootCauseMethod ?? null,
+          })
+          .select('id, ref')
+          .single<{ id: string; ref: string }>();
+
+        if (error || !inv) throw error ?? new Error('Investigation insert failed');
+        return inv;
+      },
+    });
+
+    return c.json({
+      success:         true,
+      investigationId: result.entityId,
+      ref:             result.entityRef,
+      data: {
+        id:      result.entityId,
+        ref:     result.entityRef,
+        eventId: result.eventId ?? null,
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Create failed';
+    return c.json({ success: false, message: msg }, 500 as 200);
+  }
 });
 
 // ── POST /api/hse/investigations/update ───────────────────────────────────────

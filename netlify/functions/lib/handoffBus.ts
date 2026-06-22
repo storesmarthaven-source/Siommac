@@ -13,9 +13,10 @@
  * NEVER throws.
  */
 
-import { sb }           from './db';
-import { nextRef }      from './refGenerator';
-import { emitAppEvent } from './appEvents';
+import { sb }                  from './db';
+import { nextRef }             from './refGenerator';
+import { emitAppEvent }        from './appEvents';
+import { getModuleReceiver, hasModuleReceiver } from './moduleRegistry';
 
 export interface CreateHandoffInput {
   sourceModule:      string;
@@ -143,6 +144,67 @@ export async function getPendingHandoffs(targetModule: string): Promise<PendingH
     .limit(50) as { data: PendingHandoff[] | null };
 
   return data ?? [];
+}
+
+/**
+ * Process a single pending handoff by dispatching to the registered module
+ * receiver. Called from the handoffs route's /process endpoint.
+ * NEVER throws — updates status to completed or failed in-place.
+ */
+export async function processHandoff(handoffId: string): Promise<void> {
+  const { data: handoff, error: fetchErr } = await sb
+    .from('handoff_outbox')
+    .select('*')
+    .eq('id', handoffId)
+    .maybeSingle<{
+      id: string;
+      source_module: string;
+      target_module: string;
+      source_entity_type: string;
+      source_entity_id: string;
+      payload: Record<string, unknown>;
+      created_by: string | null;
+      attempts: number;
+    }>();
+
+  if (fetchErr || !handoff) {
+    console.error('[handoffBus] processHandoff: cannot fetch handoff', handoffId, fetchErr?.message);
+    return;
+  }
+
+  await sb
+    .from('handoff_outbox')
+    .update({ status: 'processing', attempts: (handoff.attempts ?? 0) + 1 })
+    .eq('id', handoffId);
+
+  if (!hasModuleReceiver(handoff.target_module)) {
+    await failHandoff(handoffId, `No receiver registered for module: ${handoff.target_module}`);
+    return;
+  }
+
+  try {
+    const receiver = getModuleReceiver(handoff.target_module);
+    const received = await receiver.receiveHandoff({
+      sourceModule:      handoff.source_module as never,
+      sourceEntityType:  handoff.source_entity_type,
+      sourceEntityId:    handoff.source_entity_id,
+      payload:           handoff.payload,
+      createdBy:         handoff.created_by ?? 'system',
+    });
+
+    await sb
+      .from('handoff_outbox')
+      .update({
+        status:             'completed',
+        target_entity_type: received.targetEntityType,
+        target_entity_id:   received.targetEntityId,
+        processed_at:       new Date().toISOString(),
+      })
+      .eq('id', handoffId);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    await failHandoff(handoffId, msg);
+  }
 }
 
 export interface PendingHandoff {

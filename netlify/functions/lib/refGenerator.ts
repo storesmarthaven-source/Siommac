@@ -23,7 +23,8 @@ export type RefPrefix =
   | 'PAY'   // Payroll Run
   | 'FCE'   // Finance Cost Entry
   | 'OWO'   // Operations Work Order
-  | 'PTW';  // Permit to Work
+  | 'PTW'   // Permit to Work
+  | 'HRC';  // HR Case
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.

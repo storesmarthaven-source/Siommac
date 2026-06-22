@@ -32,6 +32,10 @@ import hseIncidentsRouter   from './routes/hseIncidents';
 import hseInvestigationsRouter from './routes/hseInvestigations';
 import hseCapaRouter        from './routes/hseCapa';
 
+// Register module handoff receivers once at cold-start
+import { registerModulesOnce } from './lib/registerModules';
+registerModulesOnce();
+
 // ── Allowed frontend origins ──────────────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
   .split(',')

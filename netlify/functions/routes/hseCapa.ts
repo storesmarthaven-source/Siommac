@@ -7,13 +7,13 @@
  * POST /api/hse/capa/update
  */
 
-import { Hono }              from 'hono';
-import { z, zv }             from '../lib/validate';
-import { requirePermission } from '../lib/auth';
-import { sb }                from '../lib/db';
-import { nextRef }           from '../lib/refGenerator';
-import { emitAppEvent }      from '../lib/appEvents';
-import { createWorkflow }    from '../lib/workflowEngine';
+import { Hono }               from 'hono';
+import { z, zv }              from '../lib/validate';
+import { requirePermission }  from '../lib/auth';
+import { sb }                 from '../lib/db';
+import { nextRef }            from '../lib/refGenerator';
+import { emitAppEvent }       from '../lib/appEvents';
+import { runModuleMutation }  from '../lib/moduleServiceAdapter';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -97,67 +97,85 @@ router.post('/capa/create', async c => {
   const v = zv(c, CreateCapaSchema, body.args);
   if (!v.ok) return v.response;
 
-  const ref = await nextRef('CAPA');
   const ownerUserId = v.data.ownerUserId ?? user.id;
 
-  const { data: capa, error } = await sb
-    .from('hse_capa_actions')
-    .insert({
-      ref,
-      source_type:   v.data.sourceType,
-      source_id:     v.data.sourceId,
-      title:         v.data.title,
-      description:   v.data.description,
-      owner_user_id: ownerUserId,
-      priority:      v.data.priority,
-      status:        'open',
-      due_at:        v.data.dueAt ?? null,
-      created_by:    user.id,
-      metadata:      v.data.metadata ?? {},
-    })
-    .select('id')
-    .single<{ id: string }>();
+  try {
+    const result = await runModuleMutation<{ id: string; ref: string }>({
+      context: { actorUserId: user.id },
+      options: {
+        module:         'hse',
+        operation:      'create',
+        entityType:     'capa',
+        idempotencyKey: `hse.capa.create:${user.id}:${v.data.sourceType}:${v.data.sourceId}:${v.data.title}`,
+        eventType:      'hse.capa.assigned',
+        eventSeverity:  v.data.priority === 'critical' ? 'critical' as const : 'info' as const,
+        eventPayload:   { ownerUserId, priority: v.data.priority },
+        explicitRecipients: [{ userId: ownerUserId, reason: 'assignee' as const }],
+        notification: {
+          title: 'CAPA assigned',
+          body:  `${v.data.title} — due ${v.data.dueAt ?? 'TBD'}`,
+          actionRoute: 'hse/capa',
+          type:  'hse.capa.assigned',
+        },
+        workflow: {
+          templateKey: 'hse_capa_closure',
+          priority:    v.data.priority,
+          ownerUserId,
+          reason:      `CAPA: ${v.data.title}`,
+          condition:   true,
+          metadata:    { ownerUserId, sourceType: v.data.sourceType, sourceId: v.data.sourceId },
+        },
+        getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
+        afterCommit: async ({ entityId, workflowId }) => {
+          if (workflowId) {
+            await sb.from('hse_capa_actions')
+              .update({ workflow_id: workflowId })
+              .eq('id', entityId);
+          }
+        },
+      },
+      writeRecord: async () => {
+        const ref = await nextRef('CAPA');
+        const { data: capa, error } = await sb
+          .from('hse_capa_actions')
+          .insert({
+            ref,
+            source_type:   v.data.sourceType,
+            source_id:     v.data.sourceId,
+            title:         v.data.title,
+            description:   v.data.description,
+            owner_user_id: ownerUserId,
+            priority:      v.data.priority,
+            status:        'open',
+            due_at:        v.data.dueAt ?? null,
+            created_by:    user.id,
+            metadata:      v.data.metadata ?? {},
+          })
+          .select('id, ref')
+          .single<{ id: string; ref: string }>();
 
-  if (error || !capa) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
+        if (error || !capa) throw error ?? new Error('CAPA insert failed');
+        return capa;
+      },
+    });
 
-  // Create CAPA closure workflow
-  const wfResult = await createWorkflow({
-    templateKey:      'hse_capa_closure',
-    sourceModule:     'hse',
-    sourceEntityType: 'capa',
-    sourceEntityId:   ref,
-    priority:         v.data.priority,
-    ownerUserId,
-    createdBy:        user.id,
-    metadata:         { ownerUserId, sourceType: v.data.sourceType, sourceId: v.data.sourceId },
-  });
-
-  if (wfResult.ok && wfResult.workflowId) {
-    await sb.from('hse_capa_actions')
-      .update({ workflow_id: wfResult.workflowId })
-      .eq('id', capa.id);
+    return c.json({
+      success:    true,
+      capaId:     result.entityId,
+      ref:        result.entityRef,
+      workflowId: result.workflowId ?? null,
+      data: {
+        id:         result.entityId,
+        ref:        result.entityRef,
+        workflowId: result.workflowId  ?? null,
+        eventId:    result.eventId     ?? null,
+        handoffIds: result.handoffIds,
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Create failed';
+    return c.json({ success: false, message: msg }, 500 as 200);
   }
-
-  // Notify owner
-  await emitAppEvent({
-    eventType:        'hse.capa.assigned',
-    sourceModule:     'hse',
-    sourceEntityType: 'capa',
-    sourceEntityId:   ref,
-    actorUserId:      user.id,
-    severity:         v.data.priority === 'critical' ? 'critical' : 'info',
-    payload:          { capaId: capa.id, ownerUserId, priority: v.data.priority },
-    dedupeKey:        `hse.capa.assigned:${ref}`,
-    explicitRecipients: [{ userId: ownerUserId, reason: 'assignee' as const }],
-    notification: {
-      title: `CAPA assigned: ${ref}`,
-      body:  `${v.data.title} — due ${v.data.dueAt ?? 'TBD'}`,
-      actionRoute: `hse/capa/${ref}`,
-      type:  'hse.capa.assigned',
-    },
-  } as Parameters<typeof emitAppEvent>[0]);
-
-  return c.json({ success: true, capaId: capa.id, ref, workflowId: wfResult.workflowId ?? null });
 });
 
 // ── POST /api/hse/capa/update ─────────────────────────────────────────────────

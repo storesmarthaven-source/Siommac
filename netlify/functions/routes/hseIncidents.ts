@@ -9,13 +9,13 @@
  * POST /api/hse/incidents/update
  */
 
-import { Hono }              from 'hono';
-import { z, zv }             from '../lib/validate';
-import { requirePermission } from '../lib/auth';
-import { sb }                from '../lib/db';
-import { nextRef }           from '../lib/refGenerator';
-import { emitAppEvent }      from '../lib/appEvents';
-import { createWorkflow }    from '../lib/workflowEngine';
+import { Hono }               from 'hono';
+import { z, zv }              from '../lib/validate';
+import { requirePermission }  from '../lib/auth';
+import { sb }                 from '../lib/db';
+import { nextRef }            from '../lib/refGenerator';
+import { emitAppEvent }       from '../lib/appEvents';
+import { runModuleMutation }  from '../lib/moduleServiceAdapter';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -152,113 +152,162 @@ router.post('/incidents/create', async c => {
   const v = zv(c, CreateSchema, body.args);
   if (!v.ok) return v.response;
 
-  const ref = await nextRef('INC');
-  const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
+  const injuredEmployeeId = v.data.people.find(p => p.personType === 'injured')?.userId ?? null;
+  const wfPriority = v.data.severity === 'critical' ? 'critical' as const
+    : v.data.severity === 'high' ? 'high' as const : 'medium' as const;
+  const evSeverity = v.data.severity === 'critical' ? 'critical' as const
+    : v.data.severity === 'high' ? 'high' as const : 'info' as const;
 
-  const { data: incident, error: incErr } = await sb
-    .from('hse_incidents')
-    .insert({
-      ref,
-      title:           v.data.title,
-      description:     v.data.description,
-      incident_date:   v.data.incidentDate,
-      reported_by:     user.id,
-      site_id:         v.data.siteId ?? null,
-      department_id:   v.data.departmentId ?? null,
-      location_text:   v.data.locationText ?? null,
-      incident_type:   v.data.incidentType,
-      severity:        v.data.severity,
-      status:          'open',
-      immediate_action: v.data.immediateAction ?? null,
-      regulatory_class: v.data.regulatoryClass ?? null,
-      osh_classification: v.data.oshClassification ?? null,
-      injury_type:     v.data.injuryType ?? null,
-      body_part:       v.data.bodyPart ?? null,
-      lost_days:       v.data.lostDays,
-      return_to_work:  v.data.returnToWork ?? null,
-      osh_notification_due,
-      osh_written_due,
-      recordable:      v.data.recordable,
-      lost_time:       v.data.lostTime,
-      metadata:        v.data.metadata ?? {},
-    })
-    .select('id')
-    .single<{ id: string }>();
+  try {
+    const result = await runModuleMutation<{ id: string; ref: string }>({
+      context: {
+        actorUserId:  user.id,
+        siteId:       v.data.siteId ?? null,
+        departmentId: v.data.departmentId ?? null,
+      },
+      options: {
+        module:         'hse',
+        operation:      'create',
+        entityType:     'incident',
+        idempotencyKey: `hse.incident.create:${user.id}:${v.data.incidentDate}:${v.data.title}`,
+        eventType:      'hse.incident.submitted',
+        eventSeverity:  evSeverity,
+        eventPayload:   { title: v.data.title, severity: v.data.severity, lostTime: v.data.lostTime },
+        notification: {
+          title: `New incident reported`,
+          body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
+          actionRoute: 'hse/incidents',
+          type:  'hse.incident.submitted',
+        },
+        workflow: {
+          templateKey: 'hse_incident_investigation',
+          priority:    wfPriority,
+          reason:      `Incident reported: ${v.data.title}`,
+          condition:   true,
+          metadata: {
+            lostTime:        v.data.lostTime,
+            costImpact:      v.data.costImpact,
+            equipmentDamage: v.data.equipmentDamage,
+            recordable:      v.data.recordable,
+            severity:        v.data.severity,
+            incidentType:    v.data.incidentType,
+            employeeId:      injuredEmployeeId,
+          },
+        },
+        handoffs: [
+          {
+            targetModule: 'hr',
+            condition:    v.data.lostTime,
+            payload: {
+              reason:       'lost_time_incident',
+              severity:     v.data.severity,
+              incidentType: v.data.incidentType,
+              employeeId:   injuredEmployeeId,
+              lostDays:     v.data.lostDays,
+              title:        v.data.title,
+            },
+          },
+          {
+            targetModule: 'finance',
+            condition:    v.data.costImpact,
+            payload: {
+              reason:       'incident_cost_impact',
+              severity:     v.data.severity,
+              incidentType: v.data.incidentType,
+              title:        v.data.title,
+              siteId:       v.data.siteId ?? null,
+            },
+          },
+          {
+            targetModule: 'operations',
+            condition:    v.data.equipmentDamage,
+            payload: {
+              reason:       'equipment_damage',
+              severity:     v.data.severity,
+              incidentType: v.data.incidentType,
+              title:        `Equipment inspection: ${v.data.title}`,
+              description:  'Equipment damage reported in incident. Immediate inspection and repair assessment required.',
+              siteId:       v.data.siteId ?? null,
+              priority:     v.data.severity === 'critical' ? 'critical' : 'medium',
+            },
+          },
+        ],
+        getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
+        afterCommit: async ({ entityId, workflowId }) => {
+          if (workflowId) {
+            await sb.from('hse_incidents')
+              .update({ workflow_id: workflowId, status: 'triage' })
+              .eq('id', entityId);
+          }
+        },
+      },
+      writeRecord: async () => {
+        const ref = await nextRef('INC');
+        const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
 
-  if (incErr || !incident) {
-    return c.json({ success: false, message: incErr?.message ?? 'Insert failed' }, 500 as 200);
+        const { data: incident, error: incErr } = await sb
+          .from('hse_incidents')
+          .insert({
+            ref,
+            title:              v.data.title,
+            description:        v.data.description,
+            incident_date:      v.data.incidentDate,
+            reported_by:        user.id,
+            site_id:            v.data.siteId ?? null,
+            department_id:      v.data.departmentId ?? null,
+            location_text:      v.data.locationText ?? null,
+            incident_type:      v.data.incidentType,
+            severity:           v.data.severity,
+            status:             'open',
+            immediate_action:   v.data.immediateAction ?? null,
+            regulatory_class:   v.data.regulatoryClass ?? null,
+            osh_classification: v.data.oshClassification ?? null,
+            injury_type:        v.data.injuryType ?? null,
+            body_part:          v.data.bodyPart ?? null,
+            lost_days:          v.data.lostDays,
+            return_to_work:     v.data.returnToWork ?? null,
+            osh_notification_due,
+            osh_written_due,
+            recordable:         v.data.recordable,
+            lost_time:          v.data.lostTime,
+            metadata:           v.data.metadata ?? {},
+          })
+          .select('id, ref')
+          .single<{ id: string; ref: string }>();
+
+        if (incErr || !incident) throw incErr ?? new Error('Incident insert failed');
+
+        if (v.data.people.length > 0) {
+          await sb.from('hse_incident_people').insert(
+            v.data.people.map(p => ({
+              incident_id:        incident.id,
+              person_type:        p.personType,
+              user_id:            p.userId ?? null,
+              full_name:          p.fullName,
+              role_or_company:    p.roleOrCompany ?? null,
+              injury_description: p.injuryDescription ?? null,
+            })),
+          );
+        }
+
+        return incident;
+      },
+    });
+
+    return c.json({
+      success: true,
+      data: {
+        id:         result.entityId,
+        ref:        result.entityRef,
+        workflowId: result.workflowId  ?? null,
+        eventId:    result.eventId     ?? null,
+        handoffIds: result.handoffIds,
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Create failed';
+    return c.json({ success: false, message: msg }, 500 as 200);
   }
-
-  const incidentId = incident.id;
-
-  // Insert people (witnesses, injured parties)
-  if (v.data.people.length > 0) {
-    await sb.from('hse_incident_people').insert(
-      v.data.people.map(p => ({
-        incident_id:         incidentId,
-        person_type:         p.personType,
-        user_id:             p.userId ?? null,
-        full_name:           p.fullName,
-        role_or_company:     p.roleOrCompany ?? null,
-        injury_description:  p.injuryDescription ?? null,
-      })),
-    );
-  }
-
-  // Create investigation workflow
-  const wfResult = await createWorkflow({
-    templateKey:       'hse_incident_investigation',
-    sourceModule:      'hse',
-    sourceEntityType:  'incident',
-    sourceEntityId:    ref,
-    priority:          v.data.severity === 'critical' ? 'critical' : v.data.severity === 'high' ? 'high' : 'medium',
-    ownerUserId:       user.id,
-    createdBy:         user.id,
-    reason:            `Incident ${ref} reported: ${v.data.title}`,
-    metadata:          {
-      lostTime:        v.data.lostTime,
-      costImpact:      v.data.costImpact,
-      equipmentDamage: v.data.equipmentDamage,
-      recordable:      v.data.recordable,
-      severity:        v.data.severity,
-      incidentType:    v.data.incidentType,
-      employeeId:      v.data.people.find(p => p.personType === 'injured')?.userId ?? null,
-    },
-  });
-
-  // Link workflow to incident
-  if (wfResult.ok && wfResult.workflowId) {
-    await sb.from('hse_incidents')
-      .update({ workflow_id: wfResult.workflowId, status: 'triage' })
-      .eq('id', incidentId);
-  }
-
-  // Emit incident submitted event → notifies HSE managers
-  await emitAppEvent({
-    eventType:        'hse.incident.submitted',
-    sourceModule:     'hse',
-    sourceEntityType: 'incident',
-    sourceEntityId:   ref,
-    actorUserId:      user.id,
-    siteId:           v.data.siteId ?? null,
-    departmentId:     v.data.departmentId ?? null,
-    severity:         v.data.severity === 'critical' ? 'critical' : v.data.severity === 'high' ? 'high' : 'info',
-    payload:          { ref, title: v.data.title, severity: v.data.severity, lostTime: v.data.lostTime },
-    dedupeKey:        `hse.incident.submitted:${ref}`,
-    notification: {
-      title: `New incident reported: ${ref}`,
-      body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
-      actionRoute: `hse/incidents/${ref}`,
-      type:  'hse.incident.submitted',
-    },
-  });
-
-  return c.json({
-    success: true,
-    incidentId,
-    ref,
-    workflowId: wfResult.workflowId ?? null,
-  });
 });
 
 // ── POST /api/hse/incidents/update ────────────────────────────────────────────
