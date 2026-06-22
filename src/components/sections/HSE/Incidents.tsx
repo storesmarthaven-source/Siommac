@@ -20,10 +20,10 @@ import {
   type AreaTab,
 } from './_shared';
 import {
-  mockIncidents, mockInvestigations, mockCapa, hsePill, HSE_SITES,
+  hsePill, HSE_SITES,
   type IncidentRecord, type Investigation, type CapaItem, type IncidentType,
 } from './types';
-import { useWorkflow } from '@lib/workflow';
+import { useCreateWorkflow } from '@api/workflows';
 import { toneClass } from '@ui/status/statusTokens';
 import { exportCsv } from '@ui/lib/exportCsv';
 import {
@@ -1015,23 +1015,19 @@ function CapaHealthCard({ capa, onViewAll, closurePct, overdueCapa, avgDaysToClo
 // ── Root component ────────────────────────────────────────────────────────────
 
 export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
-  const wf = useWorkflow();
   const [openIncident, setOpenIncident] = useState<IncidentRecord | null>(null);
 
-  const incidentsQ      = useHseIncidents({ limit: 200 });
-  const investigationsQ = useHseInvestigations();
-  const capaQ           = useHseCapa({ limit: 200 });
-  const kpisQ              = useHseDashboardKpis();
-  const createIncident     = useCreateIncident();
+  const incidentsQ       = useHseIncidents({ limit: 200 });
+  const investigationsQ  = useHseInvestigations();
+  const capaQ            = useHseCapa({ limit: 200 });
+  const kpisQ            = useHseDashboardKpis();
+  const createIncident      = useCreateIncident();
   const createInvestigation = useCreateInvestigation();
+  const createWorkflow      = useCreateWorkflow();
 
-  const liveIncidents      = incidentsQ.data?.map(dbToIncidentRecord)      ?? null;
-  const liveInvestigations = investigationsQ.data?.map(dbToInvestigation)  ?? null;
-  const liveCapa           = capaQ.data?.map(dbToCapa)                     ?? null;
-
-  const incidents      = liveIncidents      && liveIncidents.length      > 0 ? liveIncidents      : mockIncidents;
-  const investigations = liveInvestigations && liveInvestigations.length > 0 ? liveInvestigations : mockInvestigations;
-  const capa           = liveCapa           && liveCapa.length           > 0 ? liveCapa           : mockCapa;
+  const incidents      = incidentsQ.data?.map(dbToIncidentRecord)     ?? [];
+  const investigations = investigationsQ.data?.map(dbToInvestigation) ?? [];
+  const capa           = capaQ.data?.map(dbToCapa)                    ?? [];
 
   const ltiFreeDays = kpisQ.data?.ltiFreeDays ?? 47;
   const ltifr       = 1.8;
@@ -1107,12 +1103,17 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         immediateAction: payload.immediateActions,
         people,
       });
-      const ref = result.ref ?? `INC-2026-${Math.floor(100 + Math.random() * 900)}`;
-      wf.submit({
-        templateId: 'hse_incident_investigation', recordRef: ref,
-        reason: payload.description,
-        priority: dbSeverity === 'critical' ? 'critical' : 'high',
-      });
+      const ref = result.ref;
+      if (ref) {
+        await createWorkflow.mutateAsync({
+          templateKey:      'hse_incident_investigation',
+          sourceModule:     'hse',
+          sourceEntityType: 'incident',
+          sourceEntityId:   ref,
+          priority:         dbSeverity === 'critical' ? 'critical' : 'high',
+          reason:           payload.description,
+        });
+      }
     } catch { /* non-fatal */ }
     setPageTab('incidents');
   }
