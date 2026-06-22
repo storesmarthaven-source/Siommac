@@ -1,29 +1,30 @@
 /**
  * src/components/workflow/WorkflowDrawer.tsx
  *
- * Slide-in detail for a single workflow instance: its template route (stages),
- * approval path, evidence and the decision controls. Driven by a workflow id;
- * resolves the live instance + its approval task from the store. Reused by any
- * module that wants to open a governed record.
+ * Slide-in detail for a single workflow instance: current status, tasks, and
+ * the decision controls for the active approver. Driven by a workflow id from
+ * the backend; reused by any module that needs to open a governed record.
  */
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { useWorkflow, templateById, statusPill, statusLabel, priorityPill } from '@lib/workflow';
-import type { Decision } from '@lib/workflow';
+import { useWorkflow, useDecideWorkflowTask } from '@api/workflows';
+import { statusPill, statusLabel, priorityPill } from '@lib/workflow';
 
 export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | null; onClose: () => void }): VNode {
-  const wf = useWorkflow();
+  const detailQ = useWorkflow(workflowId ?? '');
+  const decide  = useDecideWorkflowTask();
   const [comment, setComment] = useState('');
 
-  const instance = workflowId ? wf.state.workflows.find(w => w.id === workflowId) ?? null : null;
-  const task = instance ? wf.state.approvals.find(a => a.workflowId === instance.id) ?? null : null;
-  const tpl = instance ? templateById(instance.templateId) : undefined;
+  const detail   = detailQ.data ?? null;
+  const instance = detail?.workflow ?? null;
+  const tasks    = detail?.tasks ?? [];
+  const activeTask = tasks.find(t => /pending|in_review|returned/.test(t.status)) ?? null;
 
-  function act(decision: Decision) {
-    if (!task) return;
-    if ((decision === 'return' || decision === 'reject') && !comment.trim()) return;
-    wf.decide(task.id, decision, comment.trim() || undefined);
+  function act(decision: 'approved' | 'rejected' | 'returned') {
+    if (!activeTask) return;
+    if ((decision === 'returned' || decision === 'rejected') && !comment.trim()) return;
+    decide.mutate({ taskId: activeTask.id, decision, note: comment.trim() || undefined });
     setComment(''); onClose();
   }
 
@@ -33,48 +34,44 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
       <aside class={`hse-drawer${instance ? ' show' : ''}`} role="dialog" aria-modal="true" aria-hidden={!instance}>
         <div class="hse-drawer-head">
           <div>
-            <h3>{instance ? `${instance.id} · ${instance.label}` : 'Workflow'}</h3>
-            <p>{instance ? `${instance.recordRef} · ${instance.sourceModule.toUpperCase()} → ${instance.targetModule.toUpperCase()}` : ''}</p>
+            <h3>{instance ? `${instance.ref} · ${instance.template_id.replace(/_/g, ' ')}` : 'Workflow'}</h3>
+            <p>{instance ? `${instance.source_entity_id} · ${instance.source_module.toUpperCase()}` : ''}</p>
           </div>
           <button class="hse-icon-btn" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
         </div>
 
         <div class="hse-drawer-body">
+          {detailQ.isLoading && (
+            <div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading…</strong></div></div>
+          )}
           {instance && (
             <>
               <div class="hse-drawer-grid">
-                <div class="hse-drawer-card"><span>Status</span><strong><span class={statusPill(instance.status)}>{statusLabel(instance.status)}</span></strong></div>
-                <div class="hse-drawer-card"><span>Priority</span><strong><span class={priorityPill(instance.priority)}>{instance.priority}</span></strong></div>
-                <div class="hse-drawer-card"><span>Due</span><strong>{instance.due}</strong></div>
-                <div class="hse-drawer-card"><span>Created by</span><strong>{instance.createdBy}</strong></div>
+                <div class="hse-drawer-card"><span>Status</span><strong><span class={statusPill(instance.status as any)}>{statusLabel(instance.status as any)}</span></strong></div>
+                <div class="hse-drawer-card"><span>Priority</span><strong><span class={priorityPill(instance.priority as any)}>{instance.priority}</span></strong></div>
+                <div class="hse-drawer-card"><span>Due</span><strong>{instance.due_at ? new Date(instance.due_at).toLocaleDateString('en-GB') : '—'}</strong></div>
+                <div class="hse-drawer-card"><span>Step</span><strong>{instance.current_step}</strong></div>
               </div>
 
-              <section class="wf-section">
-                <div class="wf-section-title"><i class="fas fa-diagram-project" /> Stages</div>
-                <div class="wf-stages">
-                  {tpl?.stages.map(st => (
-                    <div class={`wf-stage${st.key === instance.stageKey ? ' active' : ''}`} key={st.key}>
-                      <b>{st.label}</b><span>{st.hint}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
+              {tasks.length > 0 && (
+                <section class="wf-section">
+                  <div class="wf-section-title"><i class="fas fa-list-check" /> Tasks</div>
+                  <div class="wf-stages">
+                    {tasks.map(t => (
+                      <div class={`wf-stage${t.id === activeTask?.id ? ' active' : ''}`} key={t.id}>
+                        <b>{t.step_key} · {t.task_type}</b>
+                        <span>
+                          {t.assigned_role ?? 'Unassigned'}
+                          {t.decision ? ` · ${t.decision}` : ''}
+                        </span>
+                        <span class={statusPill(t.status as any)}>{statusLabel(t.status as any)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-              <section class="wf-section">
-                <div class="wf-section-title"><i class="fas fa-route" /> Approval Route</div>
-                <div class="wf-route">
-                  {tpl?.approvalRoute.map((step, i) => (
-                    <div class="wf-route-step" key={i}>
-                      <b>{step.role}</b><span>{step.label}</span>
-                      <span class={statusPill(i === (tpl.approvalRoute.length - 1) ? instance.status : 'approved')}>
-                        {statusLabel(i === (tpl.approvalRoute.length - 1) ? instance.status : 'approved')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {task && /pending|in_review|returned/.test(task.status) && (
+              {activeTask && (
                 <section class="wf-section">
                   <div class="wf-section-title"><i class="fas fa-gavel" /> Decision</div>
                   <textarea class="wf-comment" placeholder="Comment (required to return or reject)…" value={comment} onInput={e => setComment((e.target as HTMLTextAreaElement).value)} />
@@ -85,11 +82,11 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
         </div>
 
         <div class="hse-drawer-foot">
-          {task && /pending|in_review|returned/.test(task.status) ? (
+          {activeTask ? (
             <>
-              <button class="hse-btn" onClick={() => act('reject')}>Reject</button>
-              <button class="hse-btn" onClick={() => act('return')}>Return</button>
-              <button class="hse-btn primary" onClick={() => act('approve')}>Approve</button>
+              <button class="hse-btn" onClick={() => act('rejected')} disabled={decide.isPending}>Reject</button>
+              <button class="hse-btn" onClick={() => act('returned')} disabled={decide.isPending}>Return</button>
+              <button class="hse-btn primary" onClick={() => act('approved')} disabled={decide.isPending}>Approve</button>
             </>
           ) : (
             <button class="hse-btn" onClick={onClose}>Close</button>

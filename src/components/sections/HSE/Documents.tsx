@@ -6,18 +6,18 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  AreaHero, AreaTabs, HseModal, Field, SelectInput, TextInput,
+  AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput,
   type AreaTab,
 } from './_shared';
-import { useWorkflow } from '@lib/workflow';
+import { useCreateWorkflow } from '@api/workflows';
 import {
   mockHseDocs, mockSds, hsePill, HSE_DOC_TYPES,
   type HseDocRow, type SdsRow,
 } from './types';
 
 const TABS: AreaTab[] = [
-  { key: 'docs', label: 'Documents',  icon: 'fa-folder-open' },
-  { key: 'sds',  label: 'SDS Library', icon: 'fa-flask' },
+  { key: 'docs', label: 'Documents',  sublabel: 'Controlled library', icon: 'fa-folder-open' },
+  { key: 'sds',  label: 'SDS Library', sublabel: 'Chemical register', icon: 'fa-flask' },
 ];
 
 const TYPE_ICONS: Record<string, string> = {
@@ -265,7 +265,7 @@ function SdsTab({ sds }: { sds: SdsRow[] }): VNode {
 }
 
 export function DocumentsArea({ tab }: { tab: string }): VNode {
-  const wf = useWorkflow();
+  const createWorkflow = useCreateWorkflow();
   const [active, setActive] = useState(tab);
   const [docs, setDocs]     = useState<HseDocRow[]>(mockHseDocs);
   const [sds]               = useState<SdsRow[]>(mockSds);
@@ -279,11 +279,13 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
   const expiredSds = sds.filter(s => /expired/i.test(s.status)).length;
 
   const stats = [
-    { icon: 'fa-folder-open',    label: 'Total Documents', value: docs.length,    color: 'blue'  },
-    { icon: 'fa-circle-check',   label: 'Published',       value: published,      color: 'green' },
-    { icon: 'fa-clock',          label: 'Review / Draft',  value: reviewDue,      color: 'gold'  },
-    { icon: 'fa-flask',          label: 'SDS in Library',  value: sds.length,     color: 'blue'  },
+    { icon: 'fa-folder-open',    label: 'Total Documents', value: docs.length,    sub: 'on file',        color: 'blue'  as const },
+    { icon: 'fa-circle-check',   label: 'Published',       value: published,      sub: 'active/current', color: 'green' as const },
+    { icon: 'fa-clock',          label: 'Review / Draft',  value: reviewDue,      sub: 'need action',    color: 'gold'  as const },
+    { icon: 'fa-flask',          label: 'SDS in Library',  value: sds.length,     sub: 'chemicals',      color: 'blue'  as const },
   ];
+
+  const tabsWithCounts = withCounts(TABS, { docs: docs.length, sds: sds.length });
 
   return (
     <div class="hse-tab hse-dash">
@@ -291,26 +293,94 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
         icon="fa-folder-open"
         areaIcon="fa-book-bookmark"
         title="Documents & SDS"
-        crumb="Documents"
         watermarkClass="hse-wm-documents"
-        context={['Controlled documents · Safety Data Sheets', 'Trinidad & Tobago Operations']}
-        badges={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-shield-check', label: 'Version-controlled' },
-          { icon: 'fa-flask', label: `${sds.length} chemicals registered` },
-        ]}
         stats={stats}
-        metrics={[
-          { label: 'Published documents', value: String(published) },
-          { label: 'Pending review', value: String(reviewDue) },
-          { label: 'Expired SDS', value: String(expiredSds) },
-          { label: 'Next critical review', value: '30 Jun 2026' },
+        footerItems={[
+          { icon: 'fa-circle-check', label: 'Published Documents', value: String(published), pill: '● Version-controlled', pillVariant: 'green' },
+          { icon: 'fa-clock', label: 'Pending Review', value: String(reviewDue), trend: reviewDue > 0 ? 'review needed' : undefined, trendUp: false },
+          { icon: 'fa-flask', label: 'Expired SDS', value: String(expiredSds), pill: expiredSds > 0 ? '● Action Required' : '● All Current', pillVariant: expiredSds > 0 ? 'red' : 'green' },
+          { icon: 'fa-calendar-alt', label: 'Next Critical Review', value: '30 Jun 2026', pill: '● Monitoring', pillVariant: 'amber' },
         ]}
       />
-      <AreaTabs tabs={TABS} active={active} onSelect={setActive} />
 
-      {active === 'docs' && <DocsTab docs={docs} onUpload={() => setModal(true)} />}
-      {active === 'sds'  && <SdsTab sds={sds} />}
+      <div class="hse-spark-grid">
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Published</span></div>
+          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{published}</div>
+          <div class="hse-spark-sub">Active controlled documents</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Review / Draft</span></div>
+          <div class="hse-spark-val" style={{ color: reviewDue > 0 ? '#f59e0b' : '#4ade80' }}>{reviewDue}</div>
+          <div class="hse-spark-sub">Require review or approval</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">SDS Library</span></div>
+          <div class="hse-spark-val" style={{ color: '#60a5fa' }}>{sds.length}</div>
+          <div class="hse-spark-sub">Chemicals registered on-site</div>
+        </div>
+        <div class="hse-spark-card">
+          <div class="hse-spark-header"><span class="hse-spark-label">Expired SDS</span></div>
+          <div class="hse-spark-val" style={{ color: expiredSds > 0 ? '#ef4444' : '#4ade80' }}>{expiredSds}</div>
+          <div class="hse-spark-sub">Must not be used on-site</div>
+        </div>
+      </div>
+
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          <AreaTabs
+            icon="fa-folder-open"
+            title="Documents & SDS"
+            sub="Controlled document library and Safety Data Sheet register"
+            tabs={tabsWithCounts} active={active} onSelect={setActive}
+            actionLabel="Upload Document" onAction={() => setModal(true)}
+          />
+
+          {active === 'docs' && <DocsTab docs={docs} onUpload={() => setModal(true)} />}
+          {active === 'sds'  && <SdsTab sds={sds} />}
+        </div>
+
+        <div class="hse-right-col">
+          <div class="oq-dark-card">
+            <div class="oq-dark-header">
+              <i class="fas fa-clock" />
+              <span>Docs for Review</span>
+              <span class="oq-dark-count">{reviewDue}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {docs.filter(d => /review due|draft/i.test(d.status)).slice(0, 5).map(d => (
+                <div class="oq-dark-item" key={d.ref}>
+                  <div class="icon-badge amber"><i class={`fas ${TYPE_ICONS[d.type] ?? 'fa-file'}`} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{d.title}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{d.version} · Review {d.review}</div>
+                  </div>
+                  <span class="oq-dark-tag warning">{d.status}</span>
+                </div>
+              ))}
+              {reviewDue === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>All documents current</div>}
+            </div>
+            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
+              <i class="fas fa-flask" />
+              <span>Expired SDS</span>
+              <span class="oq-dark-count">{expiredSds}</span>
+            </div>
+            <div class="oq-dark-vertical">
+              {sds.filter(s => /expired/i.test(s.status)).slice(0, 4).map(s => (
+                <div class="oq-dark-item" key={s.ref}>
+                  <div class="icon-badge red"><i class="fas fa-flask" /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{s.chemical}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{s.hazardClass} · Rev {s.revision}</div>
+                  </div>
+                  <span class="oq-dark-tag danger">Expired</span>
+                </div>
+              ))}
+              {expiredSds === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>All SDS current</div>}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <HseModal
         open={modalOpen} onClose={() => setModal(false)}
@@ -320,7 +390,7 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
           const ref = `DOC-HSE-${String(docs.length + 300).padStart(4, '0')}`;
           const newDoc: HseDocRow = { ref, title: newTitle || 'Untitled document', type: newType, owner: newOwner, version: 'v1.0', status: 'Draft', review: '19 Jun 2027' };
           setDocs([newDoc, ...docs]);
-          wf.submit({ templateId: 'document-approval', recordRef: ref, reason: newDoc.title, priority: 'high' });
+          void createWorkflow.mutate({ templateKey: 'hse_document_approval', sourceModule: 'hse', sourceEntityType: 'document', sourceEntityId: ref, reason: newDoc.title, priority: 'high' });
           setModal(false); setTitle('');
         }}
       >

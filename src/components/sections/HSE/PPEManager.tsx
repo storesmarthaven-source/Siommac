@@ -13,7 +13,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
 import { ProfilePill } from '@shared/ProfilePill';
-import { useWorkflow } from '@lib/workflow/useWorkflow';
+import { useCreateWorkflow, useMyWorkflowTasks } from '@api/workflows';
 import { HseModal, Field, SelectInput, TextInput, TextareaInput } from './_shared';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
@@ -410,7 +410,8 @@ function ReturnsTab(): VNode {
 }
 
 function RequestsTab(): VNode {
-  const wf = useWorkflow();
+  const createWorkflow = useCreateWorkflow();
+  const tasksQ = useMyWorkflowTasks();
   const [requests, setRequests] = useState<PpeRequestRow[]>(mockPpeRequests);
   const [modalOpen, setModal]   = useState(false);
   const [reqType, setReqType]   = useState('New Issue');
@@ -431,7 +432,7 @@ function RequestsTab(): VNode {
       status: 'Pending', priority: 'pending',
     };
     setRequests(prev => [row, ...prev]);
-    wf.submit({ templateId: 'ppe-request', recordRef: ref, reason: `${reqType}: ${reqItem} for ${reqEmp} at ${reqSite} — ${reqReason || 'See request record'}` });
+    void createWorkflow.mutate({ templateKey: 'ppe-request', sourceModule: 'hse', sourceEntityType: 'ppe_request', sourceEntityId: ref, reason: `${reqType}: ${reqItem} for ${reqEmp} at ${reqSite} — ${reqReason || 'See request record'}` });
     setModal(false);
     setReqItem(''); setReason('');
   };
@@ -445,7 +446,7 @@ function RequestsTab(): VNode {
         <MiniCard icon="fa-clipboard-list" value={String(open)}   label="Open requests for new issue, replacement, or lost PPE." />
         <MiniCard icon="fa-triangle-exclamation" value={String(urgent)} label="Urgent safety-critical requests." />
         <MiniCard icon="fa-truck-ramp-box" value={String(ready)}  label="Ready for warehouse issue." />
-        <MiniCard icon="fa-inbox"          value={String(wf.pendingApprovals.length)} label="Pending approvals in workflow." />
+        <MiniCard icon="fa-inbox"          value={String(tasksQ.data?.length ?? 0)} label="Pending approvals in workflow." />
       </div>
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

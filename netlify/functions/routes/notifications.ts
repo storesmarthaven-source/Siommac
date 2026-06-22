@@ -4,7 +4,6 @@ import { requireUser }         from '../lib/auth';
 import { today, cap }          from '../lib/helpers';
 import { getProfileSignedUrl } from '../lib/photos';
 import type { HonoVariables }  from '../../../types/api';
-import type { AppUser }        from '../../../types/db';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
@@ -142,90 +141,5 @@ router.post('/markNotificationsRead', async c => {
   return c.json({ success: true });
 });
 
-router.post('/getHeaderCounts', async c => {
-  const actor        = await requireUser(c);
-  const isAdminOrMgr = actor.role === 'admin' || actor.role === 'manager';
-  const todayStr     = today();
-  const args         = (c.get('body').args ?? {}) as Record<string, unknown>;
-
-  const [notifResult, msgThreadsRes, ticketRes, leaveRes, checkinRes] = await Promise.all([
-    _getNotificationsInline(actor, todayStr),
-    isAdminOrMgr
-      ? sb.from('messages').select('id, from_user_id, to_user_id, created_at').order('created_at', { ascending: false }).limit(100)
-      : sb.from('messages').select('id, from_user_id, to_user_id, created_at').or(`from_user_id.eq.${actor.id},to_user_id.eq.${actor.id}`).order('created_at', { ascending: false }).limit(50),
-    isAdminOrMgr
-      ? sb.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open')
-      : Promise.resolve({ count: 0 }),
-    isAdminOrMgr
-      ? (actor.role === 'manager'
-          ? sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').eq('department_id', actor.department_id)
-          : sb.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'))
-      : Promise.resolve({ count: 0 }),
-    isAdminOrMgr
-      ? sb.from('attendance').select('site_id').eq('date', todayStr).not('check_in', 'is', null).is('check_out', null).not('site_id', 'is', null)
-      : Promise.resolve({ data: [] }),
-  ]);
-
-  const _threads   = (msgThreadsRes.data ?? []) as any[];
-  const _threadIds = _threads.map(m => m.id);
-  let msgUnreadCount = 0;
-  if (_threadIds.length) {
-    const _otherUserIds = [...new Set(_threads.map(m => m.from_user_id === actor.id ? m.to_user_id : m.from_user_id).filter(Boolean))];
-    const [msgReadsRes, msgRepliesRes, existingUsersRes] = await Promise.all([
-      sb.from('message_reads').select('message_id, last_read_at').eq('user_id', actor.id).in('message_id', _threadIds),
-      sb.from('message_replies').select('message_id, from_user_id, created_at').in('message_id', _threadIds).order('created_at', { ascending: false }),
-      _otherUserIds.length ? sb.from('app_users').select('id').in('id', _otherUserIds) : Promise.resolve({ data: [] }),
-    ]);
-    const _readMap: Record<string, string> = {};
-    ((msgReadsRes.data ?? []) as any[]).forEach(r => { _readMap[r.message_id] = r.last_read_at; });
-    const _latestOtherReply: Record<string, string> = {};
-    ((msgRepliesRes.data ?? []) as any[]).forEach(r => { if (r.from_user_id !== actor.id && !_latestOtherReply[r.message_id]) _latestOtherReply[r.message_id] = r.created_at; });
-    const _existingUserIds = new Set(((existingUsersRes.data ?? []) as any[]).map(u => u.id));
-    msgUnreadCount = _threads.filter(m => {
-      const otherUserId = m.from_user_id === actor.id ? m.to_user_id : m.from_user_id;
-      if (otherUserId && !_existingUserIds.has(otherUserId)) return false;
-      const lastOtherAt = _latestOtherReply[m.id] ?? (m.from_user_id !== actor.id ? m.created_at : null);
-      if (!lastOtherAt) return false;
-      const myLastRead = _readMap[m.id] ?? null;
-      return !myLastRead || new Date(lastOtherAt) > new Date(myLastRead);
-    }).length;
-  }
-
-  let empTicketCount = 0;
-  if (!isAdminOrMgr) {
-    const { data: myTicketIds } = await sb.from('support_tickets').select('id').eq('from_user_id', actor.id);
-    if (myTicketIds && myTicketIds.length) {
-      const ids = (myTicketIds as any[]).map(t => t.id);
-      const seenSince = args.ticketSeenSince && !isNaN(new Date(String(args.ticketSeenSince)).getTime())
-        ? new Date(String(args.ticketSeenSince)).toISOString()
-        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { count } = await sb.from('ticket_replies').select('id', { count: 'exact', head: true }).in('ticket_id', ids).neq('from_username', actor.username).neq('from_username', '__system__').gte('created_at', seenSince) as unknown as { count: number };
-      empTicketCount = count ?? 0;
-    }
-  }
-
-  const activeSiteIds = new Set(((checkinRes.data ?? []) as any[]).map(r => r.site_id).filter(Boolean));
-
-  return c.json({ success: true, data: {
-    notificationIds: notifResult.map(n => n.id),
-    messages:        msgUnreadCount,
-    tickets:         isAdminOrMgr ? ((ticketRes as any).count ?? 0) : empTicketCount,
-    pendingLeaves:   (leaveRes as any).count ?? 0,
-    activeSites:     activeSiteIds.size,
-  } });
-});
-
-async function _getNotificationsInline(actor: AppUser, todayStr: string): Promise<Notif[]> {
-  const notifs: Notif[] = [];
-  if (actor.role === 'admin' || actor.role === 'manager') {
-    let leavesQ = sb.from('leave_requests').select('id, type, from_date, to_date, days, applied_at, username, user_id').eq('status', 'pending').order('applied_at', { ascending: false }).limit(20);
-    if (actor.role === 'manager') leavesQ = leavesQ.eq('department_id', actor.department_id);
-    const { data: leaves } = await leavesQ;
-    for (const l of (leaves ?? []) as any[]) {
-      notifs.push({ id: 'leave_' + l.id, type: 'leave', icon: 'fa-calendar-check', color: 'blue', title: 'Leave request pending approval', sub: l.username, time: l.applied_at, priority: 1 });
-    }
-  }
-  return notifs;
-}
 
 export default router;

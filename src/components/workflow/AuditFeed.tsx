@@ -1,29 +1,38 @@
 /**
  * src/components/workflow/AuditFeed.tsx
  *
- * Immutable audit event list. The engine only appends events; this renders them
- * newest-first. Reused anywhere a compliance trail is shown.
+ * Workflow audit feed — recent workflow instances in reverse-chronological order.
+ * Each row shows the workflow ref, status, source module and creation time.
  */
 
 import { type VNode } from 'preact';
-import { useWorkflow } from '@lib/workflow';
+import { useWorkflowList } from '@api/workflows';
+import { statusPill, statusLabel } from '@lib/workflow';
 
 export function AuditFeed({ limit }: { limit?: number }): VNode {
-  const { state } = useWorkflow();
-  const events = limit ? state.audit.slice(0, limit) : state.audit;
+  const listQ   = useWorkflowList({ limit: limit ?? 50 });
+  const workflows = listQ.data ?? [];
+  const rows    = limit ? workflows.slice(0, limit) : workflows;
+
+  if (listQ.isLoading) {
+    return <div class="wf-audit"><div class="wf-empty"><i class="fas fa-spinner fa-spin" /><div><strong>Loading audit log…</strong></div></div></div>;
+  }
 
   return (
     <div class="wf-audit">
-      {events.length === 0 ? (
+      {rows.length === 0 ? (
         <div class="wf-empty"><i class="fas fa-shield-halved" /><div><strong>No audit events yet</strong><p>Every workflow decision is logged here.</p></div></div>
-      ) : events.map(e => (
-        <article class="wf-audit-row" key={e.id}>
+      ) : rows.map(w => (
+        <article class="wf-audit-row" key={w.id}>
           <i class="fas fa-shield-halved" />
           <div class="wf-audit-text">
-            <strong>{e.event}</strong>
-            <span>{e.module.toUpperCase()} · {e.impact}</span>
+            <strong>{w.ref} · {w.template_id.replace(/_/g, ' ')}</strong>
+            <span>{w.source_module.toUpperCase()} · {w.source_entity_id}</span>
           </div>
-          <span class="wf-audit-meta">{new Date(e.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {e.actor}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <span class={statusPill(w.status as any)}>{statusLabel(w.status as any)}</span>
+            <span class="wf-audit-meta">{new Date(w.created_at).toLocaleDateString('en-GB')}</span>
+          </div>
         </article>
       ))}
     </div>

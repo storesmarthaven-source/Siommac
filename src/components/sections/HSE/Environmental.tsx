@@ -10,7 +10,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { AreaHero, AreaTabs, withCounts, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab } from './_shared';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
-import { useWorkflow } from '@lib/workflow/useWorkflow';
+import { useCreateWorkflow } from '@api/workflows';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ const TABS: AreaTab[] = [
 ];
 
 function SpillsTab(): VNode {
-  const wf = useWorkflow();
+  const createWorkflow = useCreateWorkflow();
   const [spills, setSpills]   = useState(mockSpills);
   const [modalOpen, setModal] = useState(false);
   const [newSite, setSite]    = useState<string>(HSE_SITES[0]);
@@ -125,7 +125,7 @@ function SpillsTab(): VNode {
       volume: newVolume || 'TBD', tier: 'Tier 1', media: newMedia,
       reporter: 'S. Chen', emaNotified: false, status: 'Open', severity: 'warning',
     }, ...spills]);
-    wf.submit({ templateId: 'hse_incident_investigation', recordRef: ref, reason: `Environmental spill: ${newSubstance} at ${newSite} — ${newDesc || 'See spill register'}` });
+    void createWorkflow.mutate({ templateKey: 'hse_incident_investigation', sourceModule: 'hse', sourceEntityType: 'environmental_spill', sourceEntityId: ref, reason: `Environmental spill: ${newSubstance} at ${newSite} — ${newDesc || 'See spill register'}` });
     setModal(false);
     setSubstance(''); setVolume(''); setDesc('');
   };

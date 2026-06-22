@@ -9,7 +9,7 @@ import {
   AreaHero, AreaTabs, withCounts, HseModal, Field, SelectInput, TextInput, TextareaInput,
   type AreaTab,
 } from './_shared';
-import { useWorkflow } from '@lib/workflow';
+import { useCreateWorkflow } from '@api/workflows';
 import {
   mockPermitRows, hsePill, HSE_SITES, PERMIT_TYPES,
   type PermitRow,
@@ -262,7 +262,7 @@ function NewPermitTab({ onSubmit }: { onSubmit: (p: PermitRow) => void }): VNode
 }
 
 export function PermitsArea({ tab }: { tab: string }): VNode {
-  const wf = useWorkflow();
+  const createWorkflow = useCreateWorkflow();
   const [active, setActive]   = useState(tab);
   const [permits, setPermits] = useState<PermitRow[]>(mockPermitRows);
   const [modalOpen, setModal] = useState(false);
@@ -339,7 +339,7 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
             <NewPermitTab
               onSubmit={p => {
                 setPermits([p, ...permits]);
-                wf.submit({ templateId: 'hse_permit_approval', recordRef: p.ref, reason: `${p.type} — ${p.site}`, priority: 'high' });
+                void createWorkflow.mutate({ templateKey: 'hse_permit_approval', sourceModule: 'hse', sourceEntityType: 'permit', sourceEntityId: p.ref, reason: `${p.type} — ${p.site}`, priority: 'high' });
                 setActive('register');
               }}
             />

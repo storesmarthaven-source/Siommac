@@ -9,7 +9,6 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { AreaHero, AreaTabs, withCounts, type AreaTab } from './_shared';
-import { WORKFLOW_TEMPLATES } from '@lib/workflow/templates';
 import {
   useWorkflowList,
   useWorkflow,
@@ -641,7 +640,70 @@ function HandoffsTab(): VNode {
 
 // ── Wizard tab ────────────────────────────────────────────────────────────────
 
-const SEEDED_TEMPLATES = WORKFLOW_TEMPLATES.filter(t => t.seeded);
+type SeededTemplate = {
+  id: string; label: string; sourceModule: string; defaultPriority: string;
+  approvalRoute: Array<{ role: string; label: string }>;
+  evidence: Array<{ key: string; label: string; required: boolean }>;
+  handoffsOnApproval: Array<{ target: string; summary: string }>;
+};
+
+const SEEDED_TEMPLATES: SeededTemplate[] = [
+  {
+    id: 'hse_incident_investigation', label: 'Incident Investigation', sourceModule: 'hse', defaultPriority: 'critical',
+    approvalRoute: [
+      { role: 'Site HSE Officer', label: 'Initial classification and immediate controls' },
+      { role: 'HSE Manager',      label: 'Investigation sign-off and closeout route' },
+    ],
+    evidence: [
+      { key: 'scene',   label: 'Scene photos / sketch',         required: true  },
+      { key: 'witness', label: 'Witness / supervisor statement', required: true  },
+    ],
+    handoffsOnApproval: [
+      { target: 'finance', summary: 'Cleanup / cost allocation for incident closeout' },
+      { target: 'hr',      summary: 'Employee impact review (injury / restricted work)' },
+    ],
+  },
+  {
+    id: 'hse_capa_closure', label: 'Corrective Action (CAPA)', sourceModule: 'hse', defaultPriority: 'high',
+    approvalRoute: [
+      { role: 'Action Owner', label: 'Complete and submit verification evidence' },
+      { role: 'HSE Manager',  label: 'Verify effectiveness and close' },
+    ],
+    evidence: [{ key: 'completion', label: 'Completion evidence', required: true }],
+    handoffsOnApproval: [],
+  },
+  {
+    id: 'hse_permit_approval', label: 'Permit to Work Approval', sourceModule: 'hse', defaultPriority: 'high',
+    approvalRoute: [
+      { role: 'Permit Issuer', label: 'Hazard controls and gas test verification' },
+      { role: 'HSE Manager',   label: 'High-risk permit authorisation' },
+    ],
+    evidence: [
+      { key: 'gas',       label: 'Gas test record',             required: true  },
+      { key: 'rescue',    label: 'Rescue / standby plan',        required: true  },
+      { key: 'isolation', label: 'Isolation / LOTO certificate', required: false },
+    ],
+    handoffsOnApproval: [],
+  },
+  {
+    id: 'hse_document_approval', label: 'Controlled Document Approval', sourceModule: 'documents', defaultPriority: 'normal',
+    approvalRoute: [
+      { role: 'Document Controller', label: 'Technical and compliance review' },
+      { role: 'HSE Manager',         label: 'Controlled release and publication' },
+    ],
+    evidence: [{ key: 'changes', label: 'Change summary', required: true }],
+    handoffsOnApproval: [{ target: 'hr', summary: 'Policy acknowledgement campaign distribution' }],
+  },
+  {
+    id: 'ppe-request', label: 'PPE Request', sourceModule: 'hse', defaultPriority: 'normal',
+    approvalRoute: [
+      { role: 'Site HSE Officer', label: 'Validate role requirement and stock availability' },
+      { role: 'HSE Manager',      label: 'Approve issue and cost allocation' },
+    ],
+    evidence: [{ key: 'reason', label: 'Request justification / hazard exposure', required: true }],
+    handoffsOnApproval: [],
+  },
+];
 const WIZARD_STEPS = ['Choose template', 'Fill details', 'Review & submit'];
 
 function WizardTab(): VNode {
