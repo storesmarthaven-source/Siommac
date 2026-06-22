@@ -87,10 +87,10 @@ function HazardCards(): VNode {
         variant="bar" tone={highCrit > 0 ? 'danger' : 'neutral'} data={{ bars: byCat }}
         footer={byCat.map(c => `${c.label} ${c.value}`).join(' · ') || 'No high-risk hazards'} />
       <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
-        variant="progress" data={{ pct: coverage, color: coverage >= 80 ? '#22c55e' : '#f59e0b', target: 'Target 85%' }}
+        variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
         footer="Approved / monitoring" />
       <InsightCard icon="fa-calendar-days" title="Review Cycle" value={`${overdueRev + dueWeek}`} subtitle={`${overdueRev} overdue · ${dueWeek} due this week`}
-        variant="sparkline" data={{ points: dueTrend(hz.map(h => h.review_due_at)), color: overdueRev > 0 ? '#ef4444' : '#60a5fa' }}
+        variant="sparkline" tone="navy" data={{ points: dueTrend(hz.map(h => h.review_due_at)), color: overdueRev > 0 ? '#f87171' : '#60a5fa' }}
         footer="Reviews due — next 6 weeks" />
     </div>
   );
@@ -123,8 +123,8 @@ function AssessmentCards(): VNode {
         variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
         footer="HSE review" />
       <InsightCard icon="fa-calendar-days" title="Reviews Due" value={`${dueMonth}`} subtitle={`${dueWeek} this week · ${dueMonth - dueWeek} this month`}
-        variant="status-grid" data={{ tiles: [{ value: dueWeek, label: 'This week' }, { value: dueMonth, label: 'This month' }] }}
-        footer="Annual / On Change cycle" />
+        variant="sparkline" tone="navy" data={{ points: dueTrend(a.map(x => x.review_due_at)), color: '#60a5fa' }}
+        footer="Reviews due — next 6 weeks" />
     </div>
   );
 }
@@ -155,7 +155,7 @@ function JsaCards(): VNode {
         variant="status-grid" tone="navy" data={{ tiles: [{ value: highRisk, label: 'High-risk' }, { value: dueWeek, label: 'Due soon' }] }}
         footer="Permit references" />
       <InsightCard icon="fa-user-graduate" title="Training / PPE Readiness" value={`${j.length > 0 ? Math.round((active / j.length) * 100) : 0}%`} subtitle="Competency + PPE coverage"
-        variant="progress" data={{ pct: j.length > 0 ? Math.round((active / j.length) * 100) : 0, color: '#22c55e', target: 'Target 90%' }}
+        variant="progress" tone="navy" data={{ pct: j.length > 0 ? Math.round((active / j.length) * 100) : 0, color: '#4ade80', target: 'Target 90%' }}
         footer="PPE requirements active" />
     </div>
   );
