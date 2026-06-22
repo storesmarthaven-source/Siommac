@@ -12,14 +12,13 @@ import {
   PageHeader, TabBar, withCounts, SectionHead,
   type AreaTab,
 } from '@ui';
-import { HSE_SITES, riskRating, hsePill } from './types';
+import { exportCsv } from '@ui/lib/exportCsv';
+import { HSE_SITES, hsePill } from './types';
 import {
   useRiskJsaSummary,
   useHazards,
   useAssessments,
   useJsaList,
-  useSubmitAssessment,
-  useSubmitJsa,
   type HazardRow,
   type AssessmentRow,
   type JsaRow,
@@ -41,8 +40,6 @@ const TABS: AreaTab[] = [
   { key: 'assessments', label: 'Risk Assessments', sublabel: 'Matrix & controls',  icon: 'fa-table-cells-large' },
   { key: 'jsa',         label: 'JSA Library',      sublabel: 'Task analysis',     icon: 'fa-list-ol' },
 ];
-
-const SCALE = [1, 2, 3, 4, 5] as const;
 
 const HAZARD_CATEGORIES = [
   'Safety','Health','Environmental','Chemical','Biological',
@@ -79,6 +76,43 @@ function riskPillFromLevel(level: RiskLevel, score?: number | null): VNode {
              : 'is-on';
   const band = level.charAt(0).toUpperCase() + level.slice(1);
   return <span class={`vt-pill ${cls}`}>{band}{score != null ? ` · ${score}` : ''}</span>;
+}
+
+/** Residual-risk pill from a residual score (L×S). Muted dash when not yet scored. */
+function residualPill(score: number | null | undefined): VNode {
+  if (score == null) return <span class="hse-muted">—</span>;
+  return riskPill2(riskLevelFrom(score), score);
+}
+function riskPill2(level: RiskLevel, score: number): VNode {
+  const cls = level === 'critical' ? 'is-off' : level === 'high' ? 'is-warn' : level === 'medium' ? 'is-amber' : 'is-on';
+  const band = level.charAt(0).toUpperCase() + level.slice(1);
+  return <span class={`vt-pill ${cls}`}>{band} · {score}</span>;
+}
+
+/** Short locale date, or em-dash. */
+function fmtDate(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+}
+
+/** Operating-site label: explicit site_id wins, else the seeded location_text. */
+function siteLabel(row: { site_id: string | null; location_text?: string | null }): string {
+  return row.site_id ?? row.location_text ?? '—';
+}
+
+/** True when the row's site/location matches the selected site filter. */
+function matchesSite(row: { site_id: string | null; location_text?: string | null }, site: string): boolean {
+  if (!site) return true;
+  const hay = `${row.site_id ?? ''} ${row.location_text ?? ''}`.toLowerCase();
+  return hay.includes(site.toLowerCase());
+}
+
+/** Review-due SLA chip: overdue (red), due-soon (amber), or the date. */
+function reviewSla(due: string | null | undefined): VNode {
+  if (!due) return <span class="hse-muted">—</span>;
+  const days = Math.ceil((new Date(due).getTime() - Date.now()) / 86_400_000);
+  if (days < 0)  return <span class="days-open overdue">{Math.abs(days)}d over</span>;
+  if (days <= 30) return <span class="days-open">{days}d</span>;
+  return <span class="hse-muted" style={{ fontSize: '0.72rem' }}>{fmtDate(due)}</span>;
 }
 
 // ── Root component ────────────────────────────────────────────────────────────
@@ -208,65 +242,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   );
 }
 
-// ── Right-side queue panel ─────────────────────────────────────────────────────
-
-function RiskQueuePanel({
-  highRisk, overdueDetail, loading, onHazardClick,
-}: {
-  highRisk:       HazardRow[];
-  overdueDetail:  Array<{ id: string; ref: string; title: string; review_due_at: string; status: string }>;
-  loading:        boolean;
-  onHazardClick:  (h: HazardRow) => void;
-}): VNode {
-  return (
-    <div class="oq-dark-card">
-      <div class="oq-dark-header">
-        <i class="fas fa-exclamation-circle" />
-        <span>High Risk Queue</span>
-        <span class="oq-dark-count">{highRisk.length}</span>
-      </div>
-      <div class="oq-dark-vertical">
-        {loading && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>Loading…</div>}
-        {!loading && highRisk.length === 0 && (
-          <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No high-risk hazards</div>
-        )}
-        {highRisk.slice(0, 5).map(h => (
-          <button key={h.id} class="oq-dark-item" onClick={() => onHazardClick(h)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <div class="icon-badge red"><i class="fas fa-radiation" /></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{h.ref} — {h.category}</div>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{h.title.slice(0, 48)}{h.title.length > 48 ? '…' : ''}</div>
-            </div>
-            <span class={`oq-dark-tag ${h.risk_level === 'critical' ? 'danger' : 'warning'}`}>
-              {h.risk_level.charAt(0).toUpperCase() + h.risk_level.slice(1)}
-            </span>
-          </button>
-        ))}
-      </div>
-      <div class="oq-dark-header" style={{ marginTop: '12px' }}>
-        <i class="fas fa-clock" />
-        <span>Overdue Assessments</span>
-        <span class="oq-dark-count">{overdueDetail.length}</span>
-      </div>
-      <div class="oq-dark-vertical">
-        {!loading && overdueDetail.length === 0 && (
-          <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>All assessments current</div>
-        )}
-        {overdueDetail.slice(0, 4).map(a => (
-          <div class="oq-dark-item" key={a.id}>
-            <div class="icon-badge amber"><i class="fas fa-clock" /></div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{a.ref}</div>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{a.title.slice(0, 40)}</div>
-            </div>
-            <span class="oq-dark-tag warning">Overdue</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Hazard Register tab ───────────────────────────────────────────────────────
 
 function HazardTab({
@@ -284,149 +259,198 @@ function HazardTab({
   const { data, isLoading } = useHazards({
     search:    search || undefined,
     category:  category  || undefined,
-    siteId:    siteId    || undefined,
     riskLevel: riskLevel || undefined,
   });
-  const hazards = data?.data ?? [];
-
-  const byCategory = hazards.reduce<Record<string, number>>((acc, h) => {
-    acc[h.category] = (acc[h.category] ?? 0) + 1;
-    return acc;
-  }, {});
-  const highRisk = hazards.filter(h => h.risk_level === 'high' || h.risk_level === 'critical');
+  const all      = data?.data ?? [];
+  const hazards  = all.filter(h => matchesSite(h, siteId));
 
   return (
     <div class="hse-area-main">
-        <SectionHead icon="fa-radiation" title="Hazard Register" sub="Identified hazards with likelihood × severity risk ratings." actions={
-          <button class="hse-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
-        } />
-        <div class="vt-toolbar">
-          <div class="vt-search" style={{ flex: '1 1 200px' }}>
-            <i class="fas fa-search" />
-            <input type="search" placeholder="Search hazards…" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} />
-          </div>
-          <select class="emp-filter-select" value={category} onChange={e => setCategory((e.target as HTMLSelectElement).value)}>
-            <option value="">All categories</option>
-            {HAZARD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-            <option value="">All sites</option>
-            {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select class="emp-filter-select" value={riskLevel} onChange={e => setRiskLevel((e.target as HTMLSelectElement).value)}>
-            <option value="">All risk levels</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
+      <SectionHead icon="fa-radiation" title="Hazard Register" sub="Identified hazards with initial and residual likelihood × severity ratings." actions={
+        <button class="hse-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
+      } />
+
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ flex: '1 1 200px' }}>
+          <i class="fas fa-search" />
+          <input type="search" placeholder="Search hazards…" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} />
         </div>
-        <div class="vt-table-card">
-          <div class="vt-table-scroll">
-            <table class="vt-table">
-              <thead>
-                <tr>
-                  <th>Ref</th><th>Hazard</th><th>Category</th><th>Site</th>
-                  <th>L × S</th><th>Risk</th><th>Status</th>
+        <select class="emp-filter-select" value={category} onChange={e => setCategory((e.target as HTMLSelectElement).value)}>
+          <option value="">All categories</option>
+          {HAZARD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+          <option value="">All sites</option>
+          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select class="emp-filter-select" value={riskLevel} onChange={e => setRiskLevel((e.target as HTMLSelectElement).value)}>
+          <option value="">All risk levels</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+        <button class="inc-action-btn blue" onClick={() => exportCsv(hazards, [
+          { header: 'Ref',        value: h => h.ref },
+          { header: 'Hazard',     value: h => h.title },
+          { header: 'Category',   value: h => h.category },
+          { header: 'Site',       value: h => siteLabel(h) },
+          { header: 'Initial L×S',value: h => `${h.initial_likelihood} × ${h.initial_severity}` },
+          { header: 'Initial Score', value: h => h.initial_score },
+          { header: 'Residual Score', value: h => h.residual_score ?? '' },
+          { header: 'Risk Level', value: h => h.risk_level },
+          { header: 'Status',     value: h => h.status },
+          { header: 'Review Due', value: h => h.review_due_at ? fmtDate(h.review_due_at) : '' },
+        ], 'hazard-register')}><i class="fas fa-download" /> Export</button>
+      </div>
+
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width: '120px' }}>Ref / Logged</th>
+                <th>Hazard</th>
+                <th style={{ width: '110px' }}>Category</th>
+                <th style={{ width: '92px' }}>Initial</th>
+                <th style={{ width: '92px' }}>Residual</th>
+                <th style={{ width: '120px' }}>Status</th>
+                <th style={{ width: '70px' }}>Review</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading hazards…</td></tr>
+              )}
+              {!isLoading && hazards.length === 0 && (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No hazards match.</td></tr>
+              )}
+              {hazards.map(h => (
+                <tr key={h.id} onClick={() => onSelect(h)} style={{ cursor: 'pointer' }}
+                    class={selected?.id === h.id ? 'vt-row-active' : ''}>
+                  <td>
+                    <span class="vt-cell-mono">{h.ref}</span>
+                    <div class="vt-cell-subtext">{fmtDate(h.created_at)}</div>
+                  </td>
+                  <td>
+                    <span class="vt-cell-name">{h.title}</span>
+                    <div class="vt-cell-subtext">{siteLabel(h)}</div>
+                  </td>
+                  <td>{h.category}</td>
+                  <td>{riskPill(h.initial_likelihood, h.initial_severity)}</td>
+                  <td>{residualPill(h.residual_score)}</td>
+                  <td><span class={hsePill(h.status)}>{h.status.replace(/_/g, ' ')}</span></td>
+                  <td>{reviewSla(h.review_due_at)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoading && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Loading hazards…</td></tr>
-                )}
-                {!isLoading && hazards.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No hazards found</td></tr>
-                )}
-                {hazards.map(h => (
-                  <tr key={h.id} onClick={() => onSelect(h)} style={{ cursor: 'pointer' }}
-                      class={selected?.id === h.id ? 'vt-row-active' : ''}>
-                    <td><span class="vt-cell-mono">{h.ref}</span></td>
-                    <td><span class="vt-cell-name">{h.title}</span></td>
-                    <td>{h.category}</td>
-                    <td class="hse-muted">{h.site_id ?? '—'}</td>
-                    <td class="hse-muted">{h.initial_likelihood} × {h.initial_severity}</td>
-                    <td>{riskPill(h.initial_likelihood, h.initial_severity)}</td>
-                    <td><span class={hsePill(h.status)}>{h.status.replace(/_/g, ' ')}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="vt-table-foot">
+          <span>Showing {hazards.length} of {all.length} hazards</span>
+          <span>Click any row to open detail · Esc to close</span>
         </div>
       </div>
+    </div>
   );
 }
 
 // ── Risk Assessments tab ──────────────────────────────────────────────────────
 
 function AssessmentsTab({
-  onNew, onSelect, selected, onSubmit,
+  onNew, onSelect, selected,
 }: {
   onNew:    () => void;
   onSelect: (a: AssessmentRow) => void;
   selected: AssessmentRow | null;
-  onSubmit: (id: string) => void;
+  onSubmit?: (id: string) => void;
 }): VNode {
   const [siteId, setSiteId] = useState('');
   const [status, setStatus] = useState('');
-  const submitAssessment    = useSubmitAssessment();
 
-  const { data, isLoading } = useAssessments({ siteId: siteId || undefined, status: status || undefined });
-  const assessments = data?.data ?? [];
-
-  const highCrit   = assessments.filter(a => a.risk_level === 'high' || a.risk_level === 'critical').length;
-  const underRev   = assessments.filter(a => a.status === 'under_review' || a.status === 'submitted').length;
-  const approved   = assessments.filter(a => a.status === 'approved' || a.status === 'active').length;
+  const { data, isLoading } = useAssessments({ status: status || undefined });
+  const all         = data?.data ?? [];
+  const assessments = all.filter(a => matchesSite(a, siteId));
 
   return (
     <div class="hse-area-main">
-        <SectionHead icon="fa-table-cells-large" title="Risk Assessments" sub="Formal risk assessments with likelihood × severity matrix scoring." actions={
-          <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
-        } />
-        <div class="vt-toolbar">
-          <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-            <option value="">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="submitted">Submitted</option>
-            <option value="under_review">Under Review</option>
-            <option value="approved">Approved</option>
-            <option value="returned">Returned</option>
-          </select>
-          <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-            <option value="">All sites</option>
-            {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+      <SectionHead icon="fa-table-cells-large" title="Risk Assessments" sub="Formal assessments scored on the 5×5 matrix — initial through residual risk." actions={
+        <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
+      } />
+
+      <div class="vt-toolbar">
+        <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="submitted">Submitted</option>
+          <option value="under_review">Under Review</option>
+          <option value="returned">Returned</option>
+          <option value="approved">Approved</option>
+          <option value="active">Active</option>
+        </select>
+        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+          <option value="">All sites</option>
+          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => exportCsv(assessments, [
+          { header: 'Ref',        value: a => a.ref },
+          { header: 'Title',      value: a => a.title },
+          { header: 'Type',       value: a => a.assessment_type },
+          { header: 'Site',       value: a => siteLabel(a) },
+          { header: 'Initial Score', value: a => a.initial_score ?? '' },
+          { header: 'Residual Score', value: a => a.residual_score ?? '' },
+          { header: 'Risk Level', value: a => a.risk_level },
+          { header: 'Status',     value: a => a.status },
+          { header: 'Review Due', value: a => a.review_due_at ? fmtDate(a.review_due_at) : '' },
+        ], 'risk-assessments')}><i class="fas fa-download" /> Export</button>
+      </div>
+
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width: '120px' }}>Ref / Created</th>
+                <th>Assessment</th>
+                <th style={{ width: '110px' }}>Type</th>
+                <th style={{ width: '92px' }}>Initial</th>
+                <th style={{ width: '92px' }}>Residual</th>
+                <th style={{ width: '120px' }}>Status</th>
+                <th style={{ width: '70px' }}>Review</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading…</td></tr>}
+              {!isLoading && assessments.length === 0 && (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No assessments match.</td></tr>
+              )}
+              {assessments.map(a => (
+                <tr key={a.id} onClick={() => onSelect(a)} style={{ cursor: 'pointer' }}
+                    class={selected?.id === a.id ? 'vt-row-active' : ''}>
+                  <td>
+                    <span class="vt-cell-mono">{a.ref}</span>
+                    <div class="vt-cell-subtext">{fmtDate(a.created_at)}</div>
+                  </td>
+                  <td>
+                    <span class="vt-cell-name">{a.title}</span>
+                    <div class="vt-cell-subtext">{siteLabel(a)}</div>
+                  </td>
+                  <td class="hse-muted" style={{ fontSize: '0.72rem' }}>{a.assessment_type.replace(/_/g, ' ')}</td>
+                  <td>{riskPillFromLevel(a.risk_level, a.initial_score)}</td>
+                  <td>{residualPill(a.residual_score)}</td>
+                  <td><span class={hsePill(a.status)}>{a.status.replace(/_/g, ' ')}</span></td>
+                  <td>{reviewSla(a.review_due_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div class="vt-table-card">
-          <div class="vt-table-scroll">
-            <table class="vt-table">
-              <thead>
-                <tr><th>Ref</th><th>Title</th><th>Type</th><th>Site</th><th>Risk</th><th>Status</th><th>Review Due</th></tr>
-              </thead>
-              <tbody>
-                {isLoading && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Loading…</td></tr>}
-                {!isLoading && assessments.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No assessments found</td></tr>
-                )}
-                {assessments.map(a => (
-                  <tr key={a.id} onClick={() => onSelect(a)} style={{ cursor: 'pointer' }}
-                      class={selected?.id === a.id ? 'vt-row-active' : ''}>
-                    <td><span class="vt-cell-mono">{a.ref}</span></td>
-                    <td><span class="vt-cell-name">{a.title}</span></td>
-                    <td class="hse-muted" style={{ fontSize: '0.72rem' }}>{a.assessment_type.replace(/_/g, ' ')}</td>
-                    <td class="hse-muted">{a.site_id ?? '—'}</td>
-                    <td>{riskPillFromLevel(a.risk_level, a.initial_score)}</td>
-                    <td><span class={hsePill(a.status)}>{a.status.replace(/_/g, ' ')}</span></td>
-                    <td class="hse-muted" style={{ fontSize: '0.72rem' }}>
-                      {a.review_due_at ? new Date(a.review_due_at).toLocaleDateString() : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div class="vt-table-foot">
+          <span>Showing {assessments.length} of {all.length} assessments</span>
+          <span>Click any row to open detail · Esc to close</span>
         </div>
       </div>
+    </div>
   );
 }
 
@@ -441,107 +465,84 @@ function JsaTab({
 }): VNode {
   const [siteId, setSiteId] = useState('');
   const [status, setStatus] = useState('');
-  const submitJsa           = useSubmitJsa();
 
-  const { data, isLoading } = useJsaList({ siteId: siteId || undefined, status: status || undefined });
-  const jsas = data?.data ?? [];
-
-  const approvedCount = jsas.filter(j => j.status === 'approved' || j.status === 'active').length;
-  const reviewCount   = jsas.filter(j => j.status === 'submitted' || j.status === 'hse_review').length;
-  const draftCount    = jsas.filter(j => j.status === 'draft').length;
+  const { data, isLoading } = useJsaList({ status: status || undefined });
+  const all  = data?.data ?? [];
+  const jsas = all.filter(j => matchesSite(j, siteId));
 
   return (
     <div class="hse-area-main">
-        <SectionHead icon="fa-list-ol" title="JSA Library" sub="Job Safety Analyses — step-by-step hazard identification per task." actions={
-          <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
-        } />
-        <div class="vt-toolbar">
-          <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-            <option value="">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="submitted">Submitted</option>
-            <option value="approved">Approved</option>
-            <option value="active">Active</option>
-          </select>
-          <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-            <option value="">All sites</option>
-            {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <div class="vt-table-card">
-          <div class="vt-table-scroll">
-            <table class="vt-table">
-              <thead>
-                <tr><th>Ref</th><th>Job / Task</th><th>Site</th><th>Steps</th><th>Risk</th><th>Status</th><th>Review Due</th></tr>
-              </thead>
-              <tbody>
-                {isLoading && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Loading…</td></tr>}
-                {!isLoading && jsas.length === 0 && (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No JSAs found</td></tr>
-                )}
-                {jsas.map(j => (
-                  <tr key={j.id} onClick={() => onSelect(j)} style={{ cursor: 'pointer' }}
-                      class={selected?.id === j.id ? 'vt-row-active' : ''}>
-                    <td><span class="vt-cell-mono">{j.ref}</span></td>
-                    <td><span class="vt-cell-name">{j.title}</span></td>
-                    <td class="hse-muted">{j.site_id ?? '—'}</td>
-                    <td class="hse-muted">{j.stepCount} steps</td>
-                    <td>{riskPillFromLevel(j.risk_level)}</td>
-                    <td><span class={hsePill(j.status)}>{j.status.replace(/_/g, ' ')}</span></td>
-                    <td class="hse-muted" style={{ fontSize: '0.72rem' }}>
-                      {j.review_due_at ? new Date(j.review_due_at).toLocaleDateString() : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-  );
-}
+      <SectionHead icon="fa-list-ol" title="JSA Library" sub="Job Safety Analyses — step-by-step hazard identification and controls per task." actions={
+        <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
+      } />
 
-// ── 5×5 Risk Matrix panel ─────────────────────────────────────────────────────
-
-function RiskMatrixPanel({ assessments }: { assessments: AssessmentRow[] }): VNode {
-  const counts = new Map<string, number>();
-  for (const a of assessments) {
-    if (a.initial_score) {
-      const r = riskRating(Math.ceil(Math.sqrt(a.initial_score)), Math.ceil(Math.sqrt(a.initial_score)));
-      const l = Math.ceil(Math.sqrt(a.initial_score));
-      const s = a.initial_score > 0 ? Math.ceil(a.initial_score / l) : 1;
-      const k = `${l}-${s}`;
-      counts.set(k, (counts.get(k) ?? 0) + 1);
-    }
-  }
-  return (
-    <div class="hse-aside-card hse-matrix-card">
-      <div class="hse-aside-head"><i class="fas fa-table-cells-large" /><span>Risk Matrix · L × S</span></div>
-      <div class="hse-matrix">
-        <div class="hse-matrix-corner">L \ S</div>
-        {SCALE.map(s => <div class="hse-matrix-axis" key={`s${s}`}>{s}</div>)}
-        {[...SCALE].reverse().map(l => (
-          <>
-            <div class="hse-matrix-axis" key={`l${l}`}>{l}</div>
-            {SCALE.map(s => {
-              const r = riskRating(l, s);
-              const n = counts.get(`${l}-${s}`) ?? 0;
-              return (
-                <div class={`hse-matrix-cell tone-${r.severity}`} key={`${l}-${s}`} title={`${r.band} (${r.score})`}>
-                  {n > 0 ? <span class="hse-matrix-dot">{n}</span> : ''}
-                </div>
-              );
-            })}
-          </>
-        ))}
+      <div class="vt-toolbar">
+        <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="submitted">Submitted</option>
+          <option value="hse_review">HSE Review</option>
+          <option value="approved">Approved</option>
+          <option value="active">Active</option>
+        </select>
+        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+          <option value="">All sites</option>
+          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => exportCsv(jsas, [
+          { header: 'Ref',        value: j => j.ref },
+          { header: 'Job / Task', value: j => j.title },
+          { header: 'Site',       value: j => siteLabel(j) },
+          { header: 'Steps',      value: j => j.stepCount },
+          { header: 'Risk Level', value: j => j.risk_level },
+          { header: 'Status',     value: j => j.status },
+          { header: 'Review Due', value: j => j.review_due_at ? fmtDate(j.review_due_at) : '' },
+        ], 'jsa-library')}><i class="fas fa-download" /> Export</button>
       </div>
-      <div class="hse-matrix-legend">
-        <span><i class="tone-success" /> Low</span>
-        <span><i class="tone-warning" /> Medium</span>
-        <span><i class="tone-danger" /> High / Critical</span>
+
+      <div class="vt-table-card">
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width: '120px' }}>Ref / Created</th>
+                <th>Job / Task</th>
+                <th style={{ width: '70px' }}>Steps</th>
+                <th style={{ width: '92px' }}>Risk</th>
+                <th style={{ width: '120px' }}>Status</th>
+                <th style={{ width: '70px' }}>Review</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && <tr><td colSpan={6} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading…</td></tr>}
+              {!isLoading && jsas.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No JSAs match.</td></tr>
+              )}
+              {jsas.map(j => (
+                <tr key={j.id} onClick={() => onSelect(j)} style={{ cursor: 'pointer' }}
+                    class={selected?.id === j.id ? 'vt-row-active' : ''}>
+                  <td>
+                    <span class="vt-cell-mono">{j.ref}</span>
+                    <div class="vt-cell-subtext">{fmtDate(j.created_at)}</div>
+                  </td>
+                  <td>
+                    <span class="vt-cell-name">{j.title}</span>
+                    <div class="vt-cell-subtext">{siteLabel(j)}</div>
+                  </td>
+                  <td class="hse-muted">{j.stepCount}</td>
+                  <td>{riskPillFromLevel(j.risk_level)}</td>
+                  <td><span class={hsePill(j.status)}>{j.status.replace(/_/g, ' ')}</span></td>
+                  <td>{reviewSla(j.review_due_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="vt-table-foot">
+          <span>Showing {jsas.length} of {all.length} JSAs</span>
+          <span>Click any row to open detail · Esc to close</span>
+        </div>
       </div>
     </div>
   );
 }
-
-// ── New Hazard Dialog ─────────────────────────────────────────────────────────

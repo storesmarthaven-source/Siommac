@@ -143,7 +143,7 @@ router.post('/risk-jsa/hazards/list', async c => {
 
   let q = sb
     .from('hse_hazards')
-    .select('id, ref, title, category, site_id, department_id, initial_likelihood, initial_severity, initial_score, residual_likelihood, residual_severity, residual_score, risk_level, status, owner_user_id, review_due_at, created_at')
+    .select('id, ref, title, category, site_id, location_text, department_id, initial_likelihood, initial_severity, initial_score, residual_likelihood, residual_severity, residual_score, risk_level, status, owner_user_id, review_due_at, created_at')
     .order('initial_score', { ascending: false })
     .limit(v.data.limit);
 
@@ -418,7 +418,7 @@ router.post('/risk-jsa/assessments/list', async c => {
 
   let q = sb
     .from('hse_risk_assessments')
-    .select('id, ref, assessment_type, title, site_id, department_id, owner_user_id, status, initial_score, residual_score, risk_level, review_due_at, created_at')
+    .select('id, ref, assessment_type, title, site_id, location_text, department_id, owner_user_id, status, initial_score, residual_score, risk_level, review_due_at, created_at')
     .order('created_at', { ascending: false })
     .limit(v.data.limit);
 
@@ -681,7 +681,7 @@ router.post('/risk-jsa/jsa/list', async c => {
 
   let q = sb
     .from('hse_jsa')
-    .select('id, ref, title, site_id, department_id, owner_user_id, status, risk_level, review_due_at, created_at, updated_at')
+    .select('id, ref, title, site_id, location_text, department_id, owner_user_id, status, risk_level, review_due_at, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(v.data.limit);
 

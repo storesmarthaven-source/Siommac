@@ -164,6 +164,12 @@
 .vt-table tbody tr { transition: background .12s; }
 .vt-table tbody tr:hover { background: var(--row-hover, #F8FAFE); }
 .vt-table tbody tr.selected { background: rgba(228,12,12,.05); }
+/* Register footer — count + hint line below the table */
+.vt-table-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 16px; border-top: 1px solid var(--border);
+  font-size: 0.68rem; color: var(--text-muted);
+}
 /* Account cell (avatar + name) */
 .vt-cell-account { display: flex; align-items: center; gap: 11px; }
 .vt-cell-avatar {

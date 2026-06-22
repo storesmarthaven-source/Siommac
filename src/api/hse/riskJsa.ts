@@ -44,6 +44,7 @@ export interface HazardRow {
   title:               string;
   category:            string;
   site_id:             string | null;
+  location_text:       string | null;
   department_id:       string | null;
   initial_likelihood:  number;
   initial_severity:    number;
@@ -64,6 +65,7 @@ export interface AssessmentRow {
   assessment_type: string;
   title:           string;
   site_id:         string | null;
+  location_text:   string | null;
   department_id:   string | null;
   owner_user_id:   string | null;
   status:          AssessmentStatus;
@@ -79,6 +81,7 @@ export interface JsaRow {
   ref:           string;
   title:         string;
   site_id:       string | null;
+  location_text: string | null;
   department_id: string | null;
   owner_user_id: string | null;
   status:        JsaStatus;

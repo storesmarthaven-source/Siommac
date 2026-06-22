@@ -12,7 +12,7 @@ create table if not exists public.hse_hazards (
   title                text not null,
   description          text not null default '',
   category             text not null,
-  site_id              text references public.sites(id),
+  site_id              text references public.project_sites(id),
   department_id        uuid references public.departments(id),
   location_text        text,
   owner_user_id        text references public.app_users(id),
@@ -58,7 +58,7 @@ create table if not exists public.hse_risk_assessments (
                         check (assessment_type in ('general','task','area','equipment','chemical','permit_linked','change')),
   title             text not null,
   description       text not null default '',
-  site_id           text references public.sites(id),
+  site_id           text references public.project_sites(id),
   department_id     uuid references public.departments(id),
   location_text     text,
   owner_user_id     text references public.app_users(id),
@@ -122,7 +122,7 @@ create table if not exists public.hse_jsa (
   ref              text not null unique,
   title            text not null,
   description      text not null default '',
-  site_id          text references public.sites(id),
+  site_id          text references public.project_sites(id),
   department_id    uuid references public.departments(id),
   location_text    text,
   owner_user_id    text references public.app_users(id),
@@ -244,14 +244,15 @@ alter table public.hse_training_links enable row level security;
 create policy "authenticated rw hse_training_links" on public.hse_training_links for all using (auth.role() = 'authenticated');
 create index if not exists hse_training_source_idx on public.hse_training_links(source_type, source_id);
 
--- ── ref_prefix entries (no-op if function/table handles it differently) ────────
--- The nextRef() function reads reference_counters. Seed the prefixes.
-insert into public.reference_counters (prefix, last_value)
+-- ── ref_prefix entries ─────────────────────────────────────────────────────────
+-- The nextRef() function reads reference_counters (prefix, year, next_number).
+-- Seed the prefixes for the current year so the first generated ref is …-0001.
+insert into public.reference_counters (prefix, year, next_number)
 values
-  ('HAZ', 0),
-  ('RA',  0),
-  ('JSA', 0)
-on conflict (prefix) do nothing;
+  ('HAZ', extract(year from now())::int, 1),
+  ('RA',  extract(year from now())::int, 1),
+  ('JSA', extract(year from now())::int, 1)
+on conflict (prefix, year) do nothing;
 
 -- ── workflow_templates ────────────────────────────────────────────────────────
 
