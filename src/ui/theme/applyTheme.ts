@@ -4,16 +4,14 @@
  * Runtime theming: apply token overrides to the document root so the WHOLE app
  * re-themes instantly (every component + hover/focus state reads these vars).
  *
- * Persistence is app-wide via the existing `settings` KV (key `themeTokens`):
+ * Persistence is app-wide via the dedicated `app_theme` table (see @api/theme):
  *   • boot:  apply the localStorage cache synchronously (no flash), then fetch
- *            the authoritative value from settings and re-apply + re-cache.
- *   • save:  superadmin writes the override map back to settings (see @api/theme).
+ *            the authoritative value from app_theme and re-apply + re-cache.
+ *   • save:  admin/superadmin writes the override map back (audited server-side).
  *
  * Only CHANGED tokens are stored — an empty map means "use the base.css defaults".
  */
 
-/** Settings key (also the cache namespace). Alphanumeric per UpdateSettingSchema. */
-export const THEME_SETTING_KEY = 'themeTokens';
 const LS_KEY = 'siomac.theme';
 
 export type ThemeOverrides = Record<string, string>;

@@ -925,7 +925,7 @@ export function HSEDashboard(): VNode {
   return (
     <div class="hse-tab hse-dash">
 
-      <AreaHero
+      <AreaHero pageKey="hse.dashboard"
         icon="fa-helmet-safety"
         areaIcon="fa-shield-halved"
         title="HSE Dashboard"
