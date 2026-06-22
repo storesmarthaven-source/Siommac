@@ -64,7 +64,8 @@ export function Wizard({
             {icon && <div class="wz-header-icon"><i class={`fas ${icon}`} /></div>}
             <div>
               <div class="wz-header-title">{title}</div>
-              {sub && <div class="wz-header-sub">{sub}</div>}
+              {/* Subtext is standard: a description if given, else the step indicator. */}
+              <div class="wz-header-sub">{sub ?? `Step ${step + 1} of ${steps.length}`}</div>
             </div>
           </div>
           <button class="wz-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>

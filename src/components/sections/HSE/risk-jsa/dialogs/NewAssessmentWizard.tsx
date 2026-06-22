@@ -253,6 +253,7 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
     <Wizard
       open={open}
       title="New Risk Assessment"
+      sub="Formal risk evaluation — scope, hazards, controls and residual-risk scoring through to approval."
       icon="fa-table-cells-large"
       steps={[...WIZARD_STEPS]}
       step={step}

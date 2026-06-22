@@ -126,6 +126,7 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
     <Wizard
       open={open}
       title="New Hazard"
+      sub="Identify, rate and control a workplace hazard — details, risk rating, controls and review."
       icon="fa-radiation"
       steps={STEPS}
       step={step}

@@ -240,6 +240,7 @@ export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => 
     <Wizard
       open={open}
       title="New Job Safety Analysis"
+      sub="Task-based job safety analysis — job steps, hazards, controls, PPE and training requirements."
       icon="fa-list-ol"
       steps={[...WIZARD_STEPS]}
       step={step}
