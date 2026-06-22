@@ -29,21 +29,26 @@ const BAND_LABEL: Record<RiskBand, string> = {
 };
 
 export interface RiskScorePillProps {
-  /** Provide either likelihood+severity, or an explicit score. */
+  /** Provide likelihood+severity, an explicit score, or a band/level. */
   likelihood?: number;
   severity?: number;
   score?: number;
   band?: RiskBand;
+  /** Alias for `band`. */
+  level?: RiskBand;
   /** Hide the numeric score (show band only). */
   hideScore?: boolean;
+  /** Alias for `hideScore`. */
+  compact?: boolean;
 }
 
-export function RiskScorePill({ likelihood, severity, score, band, hideScore }: RiskScorePillProps): VNode {
+export function RiskScorePill({ likelihood, severity, score, band, level, hideScore, compact }: RiskScorePillProps): VNode {
   const s = score ?? (likelihood != null && severity != null ? likelihood * severity : 0);
-  const b = band ?? calculateRiskBand(s);
+  const b = band ?? level ?? calculateRiskBand(s);
+  const hide = hideScore || compact;
   return (
     <span class={`vt-pill ${BAND_PILL[b]}`}>
-      {BAND_LABEL[b]}{!hideScore && s > 0 ? ` · ${s}` : ''}
+      {BAND_LABEL[b]}{!hide && s > 0 ? ` · ${s}` : ''}
     </span>
   );
 }
