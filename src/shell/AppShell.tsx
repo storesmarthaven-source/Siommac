@@ -23,16 +23,36 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-import LoginShell          from './LoginShell';
-import EmployeeSections    from './sections/EmployeeSections';
-import ManagerSections     from './sections/ManagerSections';
-import AdminSections       from './sections/AdminSections';
-import SharedSections      from './sections/SharedSections';
-import NotificationModal   from './modals/NotificationModal';
-import MessageModal        from './modals/MessageModal';
-import TicketModal         from './modals/TicketModal';
-import EmployeeModals      from './modals/EmployeeModals';
-import ProjectSiteModal    from './modals/ProjectSiteModal';
+import LoginShell                from './LoginShell';
+import EmployeeSections         from './sections/EmployeeSections';
+import ManagerSections          from './sections/ManagerSections';
+import AdminSections            from './sections/AdminSections';
+import SharedSections           from './sections/SharedSections';
+import NotificationModal        from './modals/NotificationModal';
+import MessageModal             from './modals/MessageModal';
+import TicketModal              from './modals/TicketModal';
+import EmployeeModals           from './modals/EmployeeModals';
+import ProjectSiteModal         from './modals/ProjectSiteModal';
+import { ProfilePill }          from '@shared/ProfilePill';
+import { useSessionStore, selectUserId } from '@store/session';
+import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
+import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
+
+// ── Communications bridge ─────────────────────────────────────────────────────
+// Headless component: subscribes to realtime signals and keeps summary fresh.
+// Split into Inner/Outer so hooks only mount when authenticated.
+
+function CommsBridgeInner() {
+  const { channelKey } = useCommunicationSummary();
+  useRealtimeSignals(channelKey);
+  return null;
+}
+
+function CommsBridge() {
+  const userId = useSessionStore(selectUserId);
+  if (!userId) return null;
+  return <CommsBridgeInner />;
+}
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
@@ -83,7 +103,9 @@ function PageHeader() {
           <i class="fas fa-bars" />
         </button>
       </div>
-      <div class="page-header-right" />
+      <div class="page-header-right">
+        <ProfilePill />
+      </div>
     </div>
   );
 }
@@ -105,6 +127,9 @@ export default function AppShell() {
       {/* Headless Preact controllers (legacy mount points — do not remove) */}
       <div id="preact-login-ctrl" style="display:none;" aria-hidden="true" />
       <div id="preact-nav-ctrl"   style="display:none;" aria-hidden="true" />
+
+      {/* Comms bridge: realtime signals + summary refresh (no DOM output) */}
+      <CommsBridge />
 
       {/* App shell (sidebar + main content) — hidden class removed by attSystem after login */}
       <div id="appShell" class="app-container hidden">

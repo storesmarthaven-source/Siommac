@@ -162,6 +162,23 @@ export const ticketKeys = {
   detail:   (id: string) => [...ticketKeys.all, 'detail', id] as const,
 } as const;
 
+// ── Communications ────────────────────────────────────────────────────────────
+
+export const communicationKeys = {
+  all:     ['communications']                  as const,
+  summary: () => ['communications', 'summary'] as const,
+} as const;
+
+// ── Workflows ─────────────────────────────────────────────────────────────────
+
+export const workflowKeys = {
+  all:    ['workflows']                                              as const,
+  lists:  () => [...workflowKeys.all, 'list']                       as const,
+  list:   (f: Record<string, unknown>) => [...workflowKeys.lists(), f] as const,
+  detail: (id: string) => [...workflowKeys.all, 'detail', id]       as const,
+  tasks:  () => [...workflowKeys.all, 'tasks']                      as const,
+} as const;
+
 // ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
 
 export const hseIncidentKeys = {
