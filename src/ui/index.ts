@@ -16,10 +16,13 @@ export {
   type HeroStatDef, type HeroFooterItem, type HeroMetric, type HeroBadge,
 } from './components/PageHero';
 export {
-  ModuleTabs, AreaTabs, withCounts,
+  ModuleTabs, TabBar, AreaTabs, withCounts,
   type ModuleTab, type AreaTab, type ModuleTabsProps,
 } from './components/ModuleTabs';
+export { PageHeader, type PageHeaderProps, type PageMetaChip } from './components/PageHeader';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
+export { MetricRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
+export { useCardReorder, ArrangeControls, type CardReorder } from './components/reorder';
 
 // ── Cards & metrics ──
 export { MetricCard } from './components/MetricCard';

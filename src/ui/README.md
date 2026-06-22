@@ -3,23 +3,29 @@
 The shared design system for the whole ERP. Pages define **data, content, actions, workflow**.
 This folder defines **look, spacing, layout, states, interaction patterns**.
 
-## The standard module page
+## The page standard
 
-Every module page (HSE areas, HR, Finance, Operations, Reports) has the same shape —
-build it with `ModulePageLayout` (or compose the pieces by hand):
+Two page shapes, applied uniformly across every module (HSE, HR, Finance, Operations):
 
 ```
-PageHero        ← 4 dark stat cards + KPI footer   (the "four cards at the top")
-SparkCard ×4    ← optional metric row
-ModuleTabs      ← the navigation tabs
-<tab content>   ← register table / split layout / panels
+MODULE DASHBOARD                     SUB-MODULE PAGE
+PageHero  ← dark hero, 4 cards       PageHeader  ← light header: breadcrumb + title + meta chips + actions
+<content>                            MetricRow   ← 4 rearrangeable cards
+                                     TabBar      ← bare tabs (no second header)
+                                     <content>
 ```
+
+Only **module dashboards** get the dark `PageHero`. **Sub-module pages** use the light
+`PageHeader` + a rearrangeable `MetricRow` + a bare `TabBar`. The four cards rearrange
+(drag, persisted per-user with an admin-set org default) on BOTH via `useCardReorder`.
+ProfilePill lives only in the app-level header (`AppShell`), never per-page.
 
 ## Component catalog (`import { … } from '@ui'`)
 
 | Group | Components |
 |---|---|
-| Page shape | `PageHero` · `ModuleTabs` (+ `withCounts`) · `SectionHead` |
+| Page shape | `PageHero` (module dashboard) · `PageHeader` (sub-module) · `ModuleTabs` / `TabBar` (+ `withCounts`) · `SectionHead` |
+| Rearrangeable cards | `MetricRow` · `useCardReorder` + `ArrangeControls` (drag-to-arrange, persisted via `ui_layout`) |
 | Layouts | `ModulePageLayout` · `SplitLayout` · `RegisterLayout` |
 | Cards & metrics | `MetricCard` · `SparkCard` · `ChartCard` · `MiniCard` · `RecordRow` · `StatusPill` |
 | Charts | `Sparkline` · `BarRow` · `ProgressBar` |

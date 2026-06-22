@@ -44,6 +44,35 @@ export interface ModuleTabsProps {
   hideAuditLog?: boolean;
 }
 
+/**
+ * The bare tab bar (no header card) — the standard navigation under a
+ * `PageHeader` on a sub-module page, so the page has ONE header, not two.
+ */
+export function TabBar({ tabs, active, onSelect }: {
+  tabs: ModuleTab[]; active: string; onSelect: (key: string) => void;
+}): VNode {
+  return (
+    <div class="hse-tabs-container hse-tabs-container--bare">
+      <div class="hse-tabs-bar" role="tablist">
+        {tabs.map(t => (
+          <button
+            key={t.key} role="tab" aria-selected={t.key === active}
+            class={`hse-tab${t.key === active ? ' active' : ''}`}
+            onClick={() => onSelect(t.key)}
+          >
+            <i class={`fas ${t.icon}`} />
+            <div class="hse-tab-label-wrap">
+              <span class="hse-tab-label">{t.label}</span>
+              {t.sublabel && <span class="hse-tab-sublabel">{t.sublabel}</span>}
+            </div>
+            {t.count !== undefined && <span class="hse-tab-count">{t.count}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ModuleTabs({
   icon, title, sub, tabs, active, onSelect, actionLabel, onAction, headerRight, hideAuditLog,
 }: ModuleTabsProps): VNode {

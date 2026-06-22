@@ -13,7 +13,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHero, ModuleTabs, withCounts, SectionHead,
+  PageHero, ModuleTabs, TabBar, PageHeader, MetricRow, withCounts, SectionHead,
   MetricCard, SparkCard, ChartCard, MiniCard, RecordRow, StatusPill,
   Sparkline, BarRow, ProgressBar,
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
@@ -137,6 +137,31 @@ export function UIKitPage(): VNode {
             tabs={SAMPLE_TABS} active={tab} onSelect={setTab}
             actionLabel="New Record" onAction={() => {}}
           />
+        </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="PageHeader — standard sub-module header (breadcrumb + meta chips + actions)" wide>
+          <PageHeader
+            icon="fa-triangle-exclamation" module="HSE" title="Incidents"
+            meta={[
+              { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
+              { icon: 'fa-location-dot', label: 'All sites' },
+              { icon: 'fa-hashtag', label: '6 records' },
+            ]}
+            actions={<><Button variant="secondary" icon="fa-download">Export</Button><Button variant="primary" icon="fa-circle-plus">New Incident</Button></>}
+          />
+        </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="MetricRow — rearrangeable sub-module cards (pass a pageKey to enable drag)" wide>
+          <MetricRow cards={[
+            { key: 'a', node: <SparkCard spark={{ label: 'Open', value: '14', sub: 'in progress', sparkPoints: [4, 6, 5, 8, 6, 14], sparkColor: '#f59e0b' }} /> },
+            { key: 'b', node: <SparkCard spark={{ label: 'Overdue', value: '3', sub: 'need action', delta: '2', deltaUp: true, sparkPoints: [1, 0, 2, 1, 3, 3], sparkColor: '#ef4444' }} /> },
+            { key: 'c', node: <SparkCard spark={{ label: 'Closure', value: '76%', progress: { pct: 76, color: '#22c55e', target: 'Target: 80%' } }} /> },
+            { key: 'd', node: <SparkCard spark={{ label: 'Closed', value: '114', sub: 'this year', sparkPoints: [80, 88, 95, 102, 110, 114], sparkColor: '#16a34a' }} /> },
+          ]} />
+        </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="TabBar — bare tabs (sit under PageHeader; no second header)" wide>
+          <TabBar tabs={SAMPLE_TABS} active={tab} onSelect={setTab} />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />
         <Demo label="SectionHead — table/register header" wide>

@@ -654,4 +654,41 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 @media (max-width: 1200px) { .hse-main-grid { grid-template-columns: 1fr; } .hse-spark-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 900px)  { .hse-spark-grid { grid-template-columns: 1fr 1fr; } .hero-footer { padding: 14px 16px; gap: 8px 14px; } .hero-footer-divider { display: none; } }
 @media (max-width: 600px)  { .hse-spark-grid { grid-template-columns: 1fr; } .hse-main-grid { grid-template-columns: 1fr; } .hero-footer { flex-direction: column; align-items: stretch; } }
+
+/* ── Standard sub-module page header (PageHeader) ───────────────────────────── */
+.ui-page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);
+}
+.ui-page-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
+.ui-page-head-icon {
+  width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 14px; color: #fff; font-size: 1.15rem;
+  background: linear-gradient(135deg, var(--siomac-navy), var(--siomac-red));
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
+}
+.ui-page-head-icon i { display: grid !important; place-items: center !important; }
+.ui-page-head-text { min-width: 0; }
+.ui-page-crumb {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 0.68rem; font-weight: 500; color: var(--text-muted); margin-bottom: 3px;
+}
+.ui-page-crumb-sep { font-size: 0.5rem; color: var(--border); }
+.ui-page-crumb-current { color: var(--siomac-navy); font-weight: 600; }
+.ui-page-title {
+  font-size: 1.3rem; font-weight: var(--font-weight-bold, 700); color: var(--siomac-navy);
+  line-height: 1.15; letter-spacing: -.01em;
+}
+.ui-page-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.ui-page-meta-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  border-radius: var(--radius-pill); background: var(--bg-subtle); border: 1px solid var(--border);
+  font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;
+}
+.ui-page-meta-chip i { font-size: 0.62rem; color: var(--siomac-navy); }
+.ui-page-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+@media (max-width: 600px) { .ui-page-head-actions { width: 100%; } }
+
+/* Bare tab bar (no header card) sits directly under a PageHeader. */
+.hse-tabs-container--bare { margin-top: 0; }
 }

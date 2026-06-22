@@ -18,8 +18,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
-import { useModuleLayout } from '../theme/useModuleLayout';
+import { useCardReorder, ArrangeControls } from './reorder';
 
 export interface HeroStatDef {
   icon: string;
@@ -105,24 +104,9 @@ function StatCard({ s, draggable, dragging, onDragStart, onDragOver, onDrop, onD
 }
 
 export function PageHero({ icon, title, stats, areaIcon, watermarkClass, footerItems, controls, pageKey }: PageHeroProps): VNode {
-  const cardKeys = stats.map(s => s.label);
-  const layout = useModuleLayout(pageKey, cardKeys);
-  const [arranging, setArranging] = useState(false);
-  const [dragKey, setDragKey] = useState<string | null>(null);
-
+  const r = useCardReorder(pageKey, stats.map(s => s.label));
   const byKey = new Map(stats.map(s => [s.label, s]));
-  const ordered = layout.enabled ? layout.order.map(k => byKey.get(k)).filter((s): s is HeroStatDef => !!s) : stats;
-
-  const onDrop = (targetKey: string) => {
-    if (!dragKey || dragKey === targetKey) return;
-    const next = [...layout.order];
-    const from = next.indexOf(dragKey);
-    const to = next.indexOf(targetKey);
-    if (from < 0 || to < 0) return;
-    next.splice(to, 0, next.splice(from, 1)[0]!);
-    layout.persistMine(next);
-    setDragKey(null);
-  };
+  const ordered = r.enabled ? r.order.map(k => byKey.get(k)).filter((s): s is HeroStatDef => !!s) : stats;
 
   return (
     <div class={`dash-overview-panel ppe-hero-panel hse-area-hero${watermarkClass ? ` ${watermarkClass}` : ''}`}>
@@ -136,7 +120,7 @@ export function PageHero({ icon, title, stats, areaIcon, watermarkClass, footerI
             </div>
           </div>
           <div class="hse-area-pill-zone">
-            {layout.enabled && <ArrangeControls layout={layout} arranging={arranging} setArranging={setArranging} />}
+            <ArrangeControls reorder={r} variant="onDark" />
             {controls}
             <i class={`fas ${areaIcon ?? icon} hse-hero-area-icon`} aria-hidden="true" />
           </div>
@@ -144,56 +128,13 @@ export function PageHero({ icon, title, stats, areaIcon, watermarkClass, footerI
 
         <div class="hse-area-stats-row">
           {ordered.map(s => (
-            <StatCard
-              key={s.label} s={s}
-              draggable={arranging}
-              dragging={dragKey === s.label}
-              onDragStart={() => setDragKey(s.label)}
-              onDragOver={e => { e.preventDefault(); }}
-              onDrop={() => onDrop(s.label)}
-              onDragEnd={() => setDragKey(null)}
-            />
+            <StatCard key={s.label} s={s} dragging={r.dragKey === s.label} {...r.dragHandlers(s.label)} />
           ))}
         </div>
 
       </div>
 
       {footerItems && footerItems.length > 0 && <HeroFooter items={footerItems} />}
-    </div>
-  );
-}
-
-function ArrangeControls({ layout, arranging, setArranging }: {
-  layout: ReturnType<typeof useModuleLayout>; arranging: boolean; setArranging: (v: boolean) => void;
-}): VNode {
-  const btn = {
-    display: 'inline-flex', alignItems: 'center', gap: '5px',
-    padding: '5px 9px', borderRadius: '8px', fontSize: '0.68rem', fontWeight: 600,
-    border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)',
-    color: 'rgba(255,255,255,.85)', cursor: 'pointer', whiteSpace: 'nowrap' as const,
-  };
-  if (!arranging) {
-    return (
-      <button style={btn} title="Rearrange the cards" onClick={() => setArranging(true)}>
-        <i class="fas fa-grip" /> Arrange
-      </button>
-    );
-  }
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-      {layout.hasOverride && (
-        <button style={btn} title="Revert to the default order" onClick={() => void layout.resetMine()}>
-          <i class="fas fa-rotate-left" /> Reset
-        </button>
-      )}
-      {layout.canSetDefault && (
-        <button style={btn} title="Make the current order the default for everyone" onClick={() => void layout.saveAsDefault()}>
-          <i class="fas fa-users" /> Set default
-        </button>
-      )}
-      <button style={{ ...btn, background: 'rgba(255,255,255,.92)', color: 'var(--siomac-navy)' }} onClick={() => setArranging(false)}>
-        <i class="fas fa-check" /> Done
-      </button>
     </div>
   );
 }
