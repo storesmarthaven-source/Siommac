@@ -44,6 +44,11 @@
    their current (post-components) precedence while carving is in progress. */
 @import '../../assets/styles/views.css' layer(sections);
 
+/* ── UI System page-shape layout (PageHero / SparkCard / ModuleTabs) ───────────
+   Relocated out of HSE.css so the design system owns its layout CSS. Kept in the
+   `sections` layer to preserve the exact precedence it had inside HSE.css. */
+@import '../../assets/styles/uikit-layout.css' layer(sections);
+
 /* ── Standalone section styles NOT contained in views.css ─────────────────────
    live-map.css and payroll.css are genuine standalone stylesheets (not
    duplicates of views.css). They will be relocated beside their components in

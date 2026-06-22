@@ -1,0 +1,657 @@
+/* =============================================================================
+ * uikit-layout.css — Siomac UI System: page-shape layout styles
+ *
+ * The look of the @ui page-shape components, relocated out of HSE.css so the
+ * design system owns its own CSS: PageHero (hero + dark stat cards + KPI footer),
+ * SparkCard row, and ModuleTabs (navigation tabs).
+ *
+ * Kept in @layer sections (same layer HSE.css used) so precedence — and the
+ * rendered result — is identical to before the move. Class names are unchanged.
+ * Token-driven; re-theme via assets/styles/base.css and the theme editor.
+ * ========================================================================== */
+@layer sections {
+
+/* ── Page hero — layout (from HSE.css "Redesigned area hero layout") ───────── */
+/* ── Redesigned area hero layout ─────────────────────────────────────────── */
+
+/* Override dash-panel-content padding for tighter area heroes */
+.hse-area-hero .dash-panel-content {
+  padding: 18px 22px 20px;
+}
+
+/* Top bar: title block left · ProfilePill right */
+.hse-area-topbar {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 28px; position: relative;
+}
+
+/* Left side: icon chip + text. Center-align so a single-line title sits
+   vertically centered against the 46px icon chip. */
+.hse-area-title-block {
+  display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;
+}
+
+/* Square icon chip — theme-aware (navy on light page, translucent on dark). */
+.hse-area-icon-chip {
+  width: 46px; height: 46px; flex-shrink: 0;
+  display: grid; place-items: center; border-radius: 13px;
+  background: rgba(27,45,85,.08);
+  border: 1px solid rgba(27,45,85,.12);
+}
+.hse-area-icon-chip i {
+  font-size: 1.15rem; color: var(--siomac-navy);
+  display: grid !important; place-items: center !important;
+}
+body[data-theme="dark"] .hse-area-icon-chip {
+  background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.18);
+}
+body[data-theme="dark"] .hse-area-icon-chip i { color: #fff; }
+
+/* Text block */
+.hse-area-text { min-width: 0; flex: 1; }
+
+/* Title + badges on one line */
+.hse-area-title-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.hse-area-heading {
+  font-size: 1.35rem; font-weight: 700; color: var(--siomac-navy);
+  letter-spacing: -.01em; line-height: 1.15; margin: 0; white-space: nowrap;
+}
+body[data-theme="dark"] .hse-area-heading { color: #fff; }
+
+/* Inline badge chips */
+.hse-area-badges {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+.hse-area-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14);
+  font-size: 0.62rem; font-weight: 500; color: rgba(255,255,255,.65);
+  white-space: nowrap;
+}
+.hse-area-badge i { font-size: 0.58rem; color: rgba(255,255,255,.4); }
+
+/* Subtitle / context line */
+.hse-area-context {
+  margin: 4px 0 0; font-size: 0.74rem; font-weight: 400;
+  color: rgba(255,255,255,.45); line-height: 1.4;
+}
+.hse-area-ctx-dot {
+  margin: 0 6px; color: rgba(255,255,255,.25);
+}
+
+/* Right side: watermark icon (positioned relative to topbar) + ProfilePill */
+.hse-area-pill-zone {
+  display: flex; align-items: center; gap: 0; flex-shrink: 0;
+}
+
+/* Watermark icon — large faded motif, centered behind the pill zone.
+   Theme-aware: navy tint on the light panel, white tint on the dark panel.
+   Size clamps so it stays proportional at different content widths. */
+.hse-area-topbar .hse-hero-area-icon {
+  position: absolute; right: 60px; top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(3rem, 5vw, 5rem); color: rgba(27,45,85,.06);
+  pointer-events: none; line-height: 1;
+}
+body[data-theme="dark"] .hse-area-topbar .hse-hero-area-icon { color: rgba(255,255,255,.06); }
+
+/* Stat cards row — tighter than the default dash-stats-row */
+.hse-area-stats-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.hse-area-stats-row .stat-card {
+  flex: 1 1 150px; min-width: 140px;
+}
+
+/* ── Dark stat cards (hero) ─────────────────────────────────────────────── */
+/* ── Stat cards (hero dark variant) ── */
+.stat-card {
+  background: var(--bg-card); padding: 16px 18px; border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid var(--border);
+  transition: transform .2s, box-shadow .2s;
+  display: flex; flex-direction: row; align-items: center; gap: 14px; position: relative;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+
+.stat-card-icon {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  background: rgba(228,12,12,0.09); color: var(--siomac-red);
+}
+.stat-card-icon.blue  { background: rgba(27,45,85,0.09);   color: var(--siomac-navy); }
+.stat-card-icon.green { background: rgba(46,125,50,0.09);  color: #2E7D32; }
+.stat-card-icon.gold  { background: rgba(255,183,18,0.14); color: #c67c00; }
+.stat-card-icon.red   { background: rgba(228,12,12,0.09);  color: var(--siomac-red); }
+
+.stat-card-body { flex: 1; min-width: 0; }
+
+.stat-card-trend {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 0.55rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 20px;
+  background: rgba(46,125,50,0.10); color: #2E7D32;
+}
+.stat-card-trend.down { background: rgba(198,40,40,0.10); color: var(--danger); }
+.stat-card-trend i { font-size: 0.5rem; }
+
+.stat-card-value {
+  font-size: 1.5rem; font-weight: 700; color: var(--siomac-navy);
+  line-height: 1.1;
+}
+.stat-card-label {
+  font-size: 0.62rem; color: var(--text-muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: .4px; margin-top: 2px;
+}
+.stat-card-sub {
+  font-size: 0.58rem; color: var(--text-muted); font-weight: 400;
+  margin-top: 1px; opacity: 0.7;
+}
+
+/* HSE hero stat cards — follow the app theme (like the attendance
+   "Today's Overview" hero): WHITE cards in light mode, translucent-dark cards
+   in dark mode. Scoped to `.hse-area-hero .stat-card-dark` so they win over the
+   generic `.dash-overview-panel .stat-card-*` rules from views.css. The
+   `.stat-card-dark` class name is retained for markup stability but no longer
+   means "always dark" — the theme decides. */
+
+/* ── Light mode (default): white cards, navy values, soft icon tints ── */
+.hse-area-hero .stat-card-dark {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.03);
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; position: relative;
+  transition: transform .2s, box-shadow .2s;
+}
+.hse-area-hero .stat-card-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px rgba(27,45,85,.08);
+}
+.hse-area-hero .stat-card-dark .stat-card-value { color: var(--siomac-navy); }
+.hse-area-hero .stat-card-dark .stat-card-label { color: var(--text-muted); }
+.hse-area-hero .stat-card-dark .stat-card-sub   { color: var(--text-muted); opacity: .8; }
+.hse-area-hero .stat-card-dark .stat-card-trend { background: rgba(34,197,94,.12); color: #15803d; }
+.hse-area-hero .stat-card-dark .stat-card-trend.down { background: rgba(228,12,12,.08); color: var(--siomac-red); }
+.hse-area-hero .stat-card-dark .stat-card-icon.blue  { background: rgba(27,45,85,.08);  color: var(--siomac-navy); }
+.hse-area-hero .stat-card-dark .stat-card-icon.green { background: rgba(34,197,94,.10); color: #15803d; }
+.hse-area-hero .stat-card-dark .stat-card-icon.red   { background: rgba(228,12,12,.07); color: var(--siomac-red); }
+.hse-area-hero .stat-card-dark .stat-card-icon.gold  { background: rgba(255,183,18,.14); color: #b45309; }
+
+/* ── Dark mode: translucent cards on the navy hero ── */
+body[data-theme="dark"] .hse-area-hero .stat-card-dark {
+  background: rgba(255,255,255,.07) !important;
+  border-color: rgba(255,255,255,.12) !important;
+  box-shadow: none !important;
+}
+body[data-theme="dark"] .hse-area-hero .stat-card-dark:hover {
+  background: rgba(255,255,255,.13) !important;
+  border-color: rgba(255,255,255,.25) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3) !important;
+  transform: none;
+}
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-value { color: #fff !important; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-label { color: rgba(255,255,255,.68) !important; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-sub   { color: rgba(255,255,255,.5) !important; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-trend { background: rgba(46,199,90,.2); color: #86efac; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-trend.down { background: rgba(255,80,80,.2); color: #fca5a5; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-icon.blue  { background: rgba(255,255,255,.18); color: #fff; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-icon.green { background: rgba(46,199,90,.28);  color: #d0ffdd; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-icon.red   { background: rgba(255,80,80,.28);  color: #ffc0c0; }
+body[data-theme="dark"] .hse-area-hero .stat-card-dark .stat-card-icon.gold  { background: rgba(255,183,18,.32); color: #ffe6b3; }
+
+
+/* ── Hero footer KPI strip ──────────────────────────────────────────────── */
+/* ── Hero footer bar — matches the attendance "Today's Overview"
+   .dash-panel-footer treatment (navy footer, theme-aware). ── */
+.hero-footer {
+  background: var(--siomac-navy);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0 0 22px 22px;
+  padding: 16px 28px; margin-top: 4px;
+  display: flex; align-items: center; justify-content: space-around;
+  flex-wrap: wrap; gap: 12px 20px; position: relative; z-index: 2;
+}
+body[data-theme="dark"] .hero-footer {
+  background: rgba(22, 36, 71, 0.85);
+  border-top: 1px solid rgb(72, 85, 114);
+}
+.hero-footer-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 14px; border-radius: 12px;
+  transition: background 0.2s ease; cursor: default;
+}
+.hero-footer-item:hover { background: rgba(255,255,255,0.05); }
+.hero-footer-icon {
+  font-size: 1.3rem; color: rgba(255,255,255,0.3); flex-shrink: 0;
+  width: 32px; text-align: center;
+}
+.hero-footer-content { display: flex; flex-direction: column; line-height: 1.3; }
+.hero-footer-label {
+  font-size: 0.58rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: rgba(255,255,255,0.35);
+}
+.hero-footer-value {
+  font-size: 1.05rem; font-weight: 700; color: rgba(255,255,255,0.92);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.hero-footer-value small { font-size: 0.68rem; font-weight: 500; color: rgba(255,255,255,0.5); }
+.hero-footer-pill {
+  font-size: 0.52rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.hero-footer-pill.green { background: rgba(46,199,90,0.2);  color: #86efac; }
+.hero-footer-pill.amber { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.hero-footer-pill.red   { background: rgba(239,68,68,0.2);  color: #fca5a5; }
+.hero-footer-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+.hero-footer-progress {
+  width: 64px; height: 4px; border-radius: 4px;
+  background: rgba(255,255,255,0.08); overflow: hidden; flex-shrink: 0;
+}
+.hero-footer-progress .fill { height: 100%; border-radius: 4px; background: #86efac; }
+.hero-footer-trend {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.62rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+}
+.hero-footer-trend.down { background: rgba(46,199,90,0.15); color: #86efac; }
+.hero-footer-trend.up   { background: rgba(239,68,68,0.15);  color: #fca5a5; }
+.hero-footer-trend i { font-size: 0.5rem; }
+
+
+/* ── Spark grid (4-up metric row) ───────────────────────────────────────── */
+/* ── Spark grid (4-up metric row below hero) ── */
+.hse-spark-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0;
+}
+.hse-spark-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px 18px 14px; box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; gap: 0;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.hse-spark-card:hover {
+  box-shadow: var(--shadow-hover); transform: translateY(-2px);
+}
+.hse-spark-card .hse-spark-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+}
+.hse-spark-card .hse-spark-label {
+  font-size: 0.63rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.hse-spark-card .hse-spark-val {
+  font-size: 1.6rem; font-weight: 800; font-family: var(--font-mono);
+  line-height: 1; color: var(--siomac-navy); letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+.hse-spark-card .hse-spark-sub {
+  font-size: 0.63rem; color: var(--text-muted); font-weight: 400;
+  line-height: 1.45; margin-bottom: 10px;
+}
+.hse-spark-card .hse-spark-months {
+  display: flex; justify-content: space-between;
+  font-size: 0.55rem; color: var(--text-muted); font-weight: 500; margin-top: 4px;
+}
+/* Delta badge */
+.hse-spark-card .hse-spark-delta {
+  font-size: 0.6rem; font-weight: 700; display: inline-flex; align-items: center;
+  gap: 3px; padding: 2px 7px; border-radius: 999px;
+}
+.hse-spark-card .hse-spark-delta.down { background: #dcfce7; color: #16a34a; }
+.hse-spark-card .hse-spark-delta.up   { background: #fee2e2; color: #dc2626; }
+/* Progress bar */
+.hse-spark-card .hse-spark-bar-track {
+  height: 6px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0);
+  overflow: hidden; margin-top: 0;
+}
+.hse-spark-card .hse-spark-bar-fill {
+  height: 100%; border-radius: inherit; transition: width 0.5s ease;
+}
+/* Type-breakdown bar rows */
+.hse-spark-card .sc-bar-row {
+  display: grid; grid-template-columns: 1fr auto; align-items: end;
+  gap: 0 8px; margin-bottom: 7px;
+}
+.hse-spark-card .sc-bar-row:last-child { margin-bottom: 0; }
+.hse-spark-card .sc-bar-label {
+  font-size: 0.62rem; color: var(--text-muted); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;
+}
+.hse-spark-card .sc-bar-val {
+  font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);
+  text-align: right; grid-row: 1; grid-column: 2; padding-bottom: 3px;
+}
+.hse-spark-card .sc-bar-track {
+  grid-column: 1; height: 6px; border-radius: 999px;
+  background: var(--bg-subtle, #e2e8f0); overflow: hidden;
+}
+.hse-spark-card .sc-bar-fill {
+  height: 100%; border-radius: inherit; transition: width 0.5s ease;
+}
+/* Progress target labels */
+.hse-spark-card .sc-progress-labels {
+  display: flex; justify-content: space-between;
+  font-size: 0.58rem; color: var(--text-muted); margin-top: 5px;
+}
+
+
+/* ── Module tabs container ──────────────────────────────────────────────── */
+/* ── Tabs container (new card structure) ── */
+.hse-tabs-container {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow-card); overflow: hidden;
+}
+.hse-tabs-header {
+  padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px; background: var(--bg-subtle, #F8FAFE);
+}
+.hse-tabs-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hse-tabs-header-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--siomac-navy); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.hse-tabs-header-text { min-width: 0; }
+.hse-tabs-header-title {
+  font-size: 0.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.2;
+}
+.hse-tabs-header-sub { font-size: 0.74rem; color: var(--text-muted); margin-top: 1px; }
+.hse-tabs-header-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.hse-tab-action-btn {
+  padding: 0 14px; display: flex; align-items: center; gap: 6px;
+  background: transparent; border: 1.5px solid var(--border);
+  border-radius: 40px; color: var(--text-muted);
+  font-size: 0.78rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+  height: 32px; white-space: nowrap;
+}
+.hse-tab-action-btn:hover {
+  background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy);
+}
+
+.hse-tabs-bar {
+  display: flex; gap: 4px; padding: 6px 8px 10px;
+  background: var(--bg-subtle, #F8FAFE);
+}
+/* Tab BUTTONS — scoped to .hse-tabs-bar so they never hit the page wrapper,
+   which also carries the bare `.hse-tab` class (`<div class="hse-tab hse-dash">`).
+   The unscoped `.hse-tab { display:flex }` rule used to turn the whole page
+   into a flex row, collapsing the hero into a narrow column. */
+.hse-tabs-bar .hse-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 12px; border: none; border-radius: 8px;
+  background: transparent; cursor: pointer; font-family: inherit;
+  font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+  transition: all .2s ease; white-space: nowrap; position: relative;
+}
+.hse-tabs-bar .hse-tab:hover { background: rgba(255,255,255,0.6); color: var(--siomac-navy); }
+
+.hse-tabs-bar .hse-tab i { font-size: 0.85rem; color: var(--text-muted); transition: color .2s; }
+.hse-tabs-bar .hse-tab:hover i { color: var(--siomac-navy); }
+.hse-tabs-bar .hse-tab.active {
+  background: var(--siomac-navy); color: #fff;
+  box-shadow: 0 2px 6px rgba(27,45,85,0.15);
+}
+.hse-tabs-bar .hse-tab.active i { color: #fff; }
+
+.hse-tab-label-wrap {
+  display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;
+}
+.hse-tab-label { font-size: 0.78rem; font-weight: 600; }
+.hse-tab-sublabel {
+  font-size: 0.58rem; font-weight: 400; color: var(--text-muted); opacity: 0.7;
+  transition: color .2s;
+}
+.hse-tabs-bar .hse-tab.active .hse-tab-sublabel { color: rgba(255,255,255,0.7); opacity: 1; }
+
+.hse-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 20px; padding: 0 7px;
+  border-radius: 20px; font-size: 0.6rem; font-weight: 700;
+  background: var(--bg-card); color: var(--text-muted);
+  border: 1.5px solid var(--border); transition: all .2s ease; margin-left: 4px;
+}
+.hse-tabs-bar .hse-tab:hover .hse-tab-count { background: rgba(27,45,85,0.08); color: var(--siomac-navy); border-color: rgba(27,45,85,0.15); }
+.hse-tabs-bar .hse-tab.active .hse-tab-count { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.15); }
+
+
+
+/* ── Area hero extensions ───────────────────────────────────────────────── */
+/* ── Area hero extensions ──────────────────────────────────────────────────── */
+.hse-hero-right {
+  display: flex; align-items: center; gap: 16px; position: relative;
+}
+.hse-hero-area-icon {
+  font-size: 4.5rem; color: rgba(27,45,85,.06); position: absolute;
+  right: 52px; top: 50%; transform: translateY(-50%); pointer-events: none;
+  line-height: 1;
+}
+body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
+.hse-hero-context {
+  display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;
+}
+.hse-hero-context span {
+  font-size: 0.76rem; font-weight: 400; color: rgba(255,255,255,.55);
+}
+.hse-hero-context i { color: rgba(255,255,255,.3); }
+
+
+/* ── Section head (SectionHead, area variant) ───────────────────────────── */
+/* ── Section head ── */
+.ppe-section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.ppe-section-title { display: flex; align-items: center; gap: 12px; }
+.ppe-title-icon {
+  width: 46px; height: 46px; flex-shrink: 0; display: grid; place-items: center; border-radius: 14px;
+  color: #fff; background: linear-gradient(135deg, var(--siomac-navy), var(--siomac-red));
+  box-shadow: 0 4px 12px rgba(15,23,42,.1);
+}
+.ppe-section-title h3 { color: var(--siomac-navy); font-size: 1.2rem; line-height: 1.1; letter-spacing: -.01em; }
+.ppe-section-title p { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; max-width: 640px; }
+.ppe-section-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+/* ── Mini cards (MiniCard) ──────────────────────────────────────────────── */
+/* ── Mini cards ── */
+.ppe-mini-card { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); box-shadow: var(--shadow-card); }
+.ppe-mini-card i { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: rgba(228,12,12,.1); color: var(--siomac-red); margin-bottom: 10px; font-size: 1rem; }
+.ppe-mini-card strong { display: block; color: var(--siomac-navy); font-size: 1.5rem; line-height: 1; margin-bottom: 5px; font-family: var(--font-mono); }
+.ppe-mini-card span { color: var(--text-muted); font-size: 0.76rem; line-height: 1.35; }
+
+/* ── Record rows (RecordRow) ────────────────────────────────────────────── */
+/* ── Records ── */
+.ppe-record-list { display: grid; gap: 10px; }
+.ppe-record { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+.ppe-record > i { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; background: rgba(27,45,84,.08); color: var(--siomac-navy); }
+.ppe-record strong { display: block; color: var(--siomac-navy); font-size: 0.82rem; }
+.ppe-record span { display: block; color: var(--text-muted); font-size: 0.74rem; line-height: 1.35; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   HSE AREA LAYOUT SYSTEM
+   Each area (Incidents, Risk, Permits, Inspections, Training, Toolbox, Documents)
+   uses the same composition:
+     1. .hse-area-kpi-strip — row of MiniCards (reuses .ppe-mini-card)
+     2. .hse-area-split     — main panel (table/content) + aside panel
+     3. .hse-aside-card     — white card blocks in the aside
+   This produces the same density as the Dashboard + PPE Manager.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* KPI mini-card strip — horizontal row of ppe-mini-cards */
+.hse-area-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Main split: content (60-65%) + aside (35-40%) */
+.hse-area-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, .85fr);
+  gap: 16px;
+  align-items: start;
+}
+.hse-area-main { min-width: 0; display: grid; gap: 14px; }
+.hse-area-aside { display: grid; gap: 14px; }
+
+/* Aside card — white bordered panel (matches the ppe-signals-panel record cards) */
+.hse-aside-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card);
+}
+.hse-aside-head {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: var(--bg-subtle, #F8FAFE); border-bottom: 1px solid var(--border);
+  color: var(--siomac-navy); font-size: 0.8rem; font-weight: 600;
+}
+.hse-aside-head i { color: var(--siomac-red); font-size: 0.84rem; }
+.hse-aside-head span { flex: 1; }
+.hse-aside-head.is-danger { background: #fef2f2; border-bottom-color: #f2cdcd; color: var(--siomac-red); }
+.hse-aside-head.is-danger i { color: var(--siomac-red); }
+
+/* Row list within an aside card */
+.hse-aside-list { display: grid; gap: 0; padding: 6px 0; }
+.hse-aside-row {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 10px; align-items: center;
+  padding: 9px 14px; cursor: pointer; transition: background .12s;
+}
+.hse-aside-row:hover { background: var(--bg-subtle, #F8FAFE); }
+.hse-aside-dot { font-size: 7px; }
+.hse-aside-dot.is-danger { color: var(--siomac-red); }
+.hse-aside-dot.is-warn   { color: #d97706; }
+.hse-aside-dot.is-ok     { color: #16a34a; }
+.hse-aside-text strong { display: block; color: var(--siomac-navy); font-size: 0.78rem; font-weight: 500; }
+.hse-aside-text span   { display: block; color: var(--text-muted); font-size: 0.7rem; font-weight: 400; line-height: 1.35; }
+.hse-aside-empty {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px; color: var(--text-muted); font-size: 0.78rem;
+}
+.hse-aside-empty i { color: #16a34a; }
+
+/* Meta row (pill + muted text) below aside head */
+.hse-aside-meta { display: flex; align-items: center; gap: 8px; padding: 8px 14px; flex-wrap: wrap; }
+
+/* Alert card variant */
+.hse-aside-alert .hse-aside-head { background: #fef2f2; border-bottom-color: #f2cdcd; }
+
+/* Stats 3-cell grid inside aside */
+.hse-aside-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 14px;
+}
+.hse-aside-stat { text-align: center; }
+.hse-aside-stat + .hse-aside-stat { border-left: 1px solid var(--border); }
+.hse-aside-stat strong { display: block; color: var(--siomac-navy); font-size: 1.5rem; font-weight: 700; line-height: 1; font-family: var(--font-mono); }
+.hse-aside-stat span   { display: block; color: var(--text-muted); font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; }
+
+/* Hint (empty state) inside aside */
+.hse-aside-hint {
+  display: grid; gap: 6px; padding: 20px; text-align: center;
+}
+.hse-aside-hint i { font-size: 1.5rem; color: var(--text-muted); margin: 0 auto 4px; }
+.hse-aside-hint strong { color: var(--siomac-navy); font-size: 0.84rem; }
+.hse-aside-hint p { color: var(--text-muted); font-size: 0.74rem; line-height: 1.4; }
+
+/* Detail row (icon + label/value pair) inside aside */
+.hse-aside-detail-row {
+  display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: start;
+  padding: 8px 14px;
+}
+.hse-aside-detail-row > i {
+  width: 32px; height: 32px; display: grid; place-items: center !important;
+  border-radius: 9px; background: rgba(27,45,84,.08); color: var(--siomac-navy);
+  font-size: 0.8rem;
+}
+.hse-aside-detail-row div strong { display: block; color: var(--siomac-navy); font-size: 0.72rem; font-weight: 500; }
+.hse-aside-detail-row div span   { display: block; color: var(--text-muted); font-size: 0.74rem; font-weight: 400; line-height: 1.35; }
+
+/* Priority bar (label + progress track) */
+.hse-priority-bar { padding: 8px 14px; }
+.hse-priority-bar:not(:last-child) { border-bottom: 1px solid var(--border); }
+.hse-priority-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.72rem; font-weight: 500; }
+.hse-priority-name { color: var(--siomac-navy); text-transform: capitalize; }
+.hse-priority-label > span:last-child { color: var(--text-muted); }
+
+/* Overdue date highlight */
+.hse-overdue-date { color: var(--siomac-red); font-weight: 500; }
+
+/* Link button (looks like a text link) */
+.hse-link-btn {
+  background: none; border: none; padding: 0; cursor: pointer; font: inherit;
+  color: var(--siomac-navy); font-size: 0.8rem; font-weight: 500;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.hse-link-btn:hover { color: var(--siomac-red); }
+
+/* Active row highlight in tables */
+.vt-row-active td { background: rgba(27,45,84,.04); }
+
+
+/* ── Hero badges + metric strip + area responsive ───────────────────────── */
+/* ── Hero badges (scope / period chips) ─────────────────────────────────── */
+.hse-hero-badges {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+.hse-hero-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  font-size: 0.66rem; font-weight: 500; color: rgba(255,255,255,.75);
+}
+.hse-hero-badge i { font-size: 0.6rem; color: rgba(255,255,255,.5); }
+
+/* ── Hero metric strip (sits below stat cards, above footer) ─────────────── */
+.hse-hero-metrics {
+  display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,.1); margin-top: 16px; padding-top: 14px;
+}
+.hse-hero-metric {
+  display: flex; align-items: baseline; gap: 7px; padding: 0 20px 0 0;
+}
+.hse-hero-metric:first-child { padding-left: 0; }
+.hse-hero-metric-sep {
+  width: 1px; height: 20px; background: rgba(255,255,255,.14); margin-right: 20px; flex-shrink: 0;
+}
+.hse-hero-metric-val {
+  font-size: 1.15rem; font-weight: 700; color: rgba(255,255,255,.9);
+  font-family: var(--font-mono); line-height: 1;
+}
+.hse-hero-metric-val.highlight { color: #4ade80; }
+.hse-hero-metric-label {
+  font-size: 0.65rem; font-weight: 400; color: rgba(255,255,255,.45); white-space: nowrap;
+}
+
+/* ── Responsive breakpoints for area layout ── */
+@container hse (max-width: 960px) {
+  .hse-area-split { grid-template-columns: 1fr; }
+  .hse-area-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container hse (max-width: 560px) {
+  .hse-area-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hse-aside-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+
+/* ── Main page grid (tabs column + right sidebar) ───────────────────────── */
+/* ── Main layout grid (tabs column + right sidebar) ── */
+.hse-main-grid {
+  display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;
+}
+.hse-left-col { display: flex; flex-direction: column; gap: 16px; }
+.hse-right-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Page-shape responsive (spark grid / main grid / hero footer) ───────── */
+@media (max-width: 1200px) { .hse-main-grid { grid-template-columns: 1fr; } .hse-spark-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px)  { .hse-spark-grid { grid-template-columns: 1fr 1fr; } .hero-footer { padding: 14px 16px; gap: 8px 14px; } .hero-footer-divider { display: none; } }
+@media (max-width: 600px)  { .hse-spark-grid { grid-template-columns: 1fr; } .hse-main-grid { grid-template-columns: 1fr; } .hero-footer { flex-direction: column; align-items: stretch; } }
+}
