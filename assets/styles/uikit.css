@@ -1,0 +1,115 @@
+/* =============================================================================
+ * uikit.css — Siomac UI System: app-wide standard window + form spec
+ *
+ * The ONE standard every modal, wizard and form in the ERP obeys, in EVERY
+ * module (HSE, HR, Finance, Operations, …). Components in `src/ui` render this
+ * markup; pages never hand-roll their own modal/form CSS.
+ *
+ * Everything is token-driven (assets/styles/base.css :root). To re-theme the
+ * whole app, change the tokens — never the values here.
+ *
+ * ── STANDARD WINDOW SPEC (modal / wizard) ───────────────────────────────────
+ *   Panel        centered, radius-md, elev-4; width by size: sm 460 / md 640 / lg 860
+ *   Header       icon chip (38px) + title + sub on the left; close button top-right
+ *   Title        1.05rem / 700 / navy
+ *   Subtext      0.78rem / muted
+ *   Close        34px square, top-right of header, radius-sm
+ *   Body         padding 20px, scrolls
+ *   Footer       border-top, buttons bottom-RIGHT, 8px gap
+ *
+ * ── STANDARD FORM SPEC ───────────────────────────────────────────────────────
+ *   Grid         2 columns (1 col < 560px), 12/14px gaps; .ui-field--wide spans all
+ *   Label        0.72rem / 600 / muted
+ *   Control      40px min-height, radius-sm, 0.82rem, navy text, navy focus ring
+ * ========================================================================== */
+
+/* ── Modal / standard window ────────────────────────────────────────────────── */
+
+.ui-modal-backdrop {
+  position: fixed; inset: 0; z-index: var(--z-modal-back);
+  background: rgba(27, 45, 84, .42);
+  display: flex; align-items: center; justify-content: center; padding: var(--space-4);
+}
+
+.ui-modal {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 48px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-4);
+  display: grid; grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+.ui-modal--sm { width: min(460px, 100%); }
+.ui-modal--lg { width: min(860px, 100%); }
+
+.ui-modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
+  padding: 18px 20px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+.ui-modal-headwrap { display: flex; align-items: flex-start; gap: var(--space-3); min-width: 0; }
+.ui-modal-icon {
+  flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  background: rgba(27, 45, 84, .08); color: var(--siomac-navy);
+  font-size: 1rem;
+}
+.ui-modal-titles { min-width: 0; }
+.ui-modal-title { color: var(--siomac-navy); font-size: 1.05rem; font-weight: 700; line-height: 1.25; }
+.ui-modal-sub   { color: var(--text-muted); font-size: 0.78rem; margin-top: 3px; line-height: 1.4; }
+
+.ui-modal-close {
+  flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text-muted); font-size: 0.9rem; cursor: pointer;
+  display: grid; place-items: center;
+  transition: color .15s, border-color .15s;
+}
+.ui-modal-close:hover { color: var(--siomac-navy); border-color: var(--siomac-navy); }
+
+.ui-modal-body { padding: 20px; overflow: auto; }
+
+.ui-modal-foot {
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
+  padding: 16px 20px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+}
+/* A left-aligned slot in the footer (e.g. a Back button) pushes the rest right. */
+.ui-modal-foot .ui-foot-left { margin-right: auto; }
+
+/* ── Wizard step indicator ───────────────────────────────────────────────────── */
+
+.ui-wizard-steps { display: flex; gap: var(--space-1); padding: 0 20px 16px; }
+.ui-wizard-step {
+  flex: 1; height: 4px; border-radius: var(--radius-pill);
+  background: var(--border); transition: background .2s;
+}
+.ui-wizard-step.is-done { background: var(--siomac-navy); }
+
+/* ── Form grid + controls ────────────────────────────────────────────────────── */
+
+.ui-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+@media (max-width: 560px) { .ui-form-grid { grid-template-columns: 1fr; } }
+
+.ui-field { display: grid; gap: 6px; min-width: 0; }
+.ui-field--wide { grid-column: 1 / -1; }
+.ui-field-label { color: var(--text-muted); font-size: 0.72rem; font-weight: 600; }
+
+.ui-input, .ui-select, .ui-textarea {
+  width: 100%; min-height: 40px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: #fff; padding: 0 12px;
+  font: inherit; font-size: 0.82rem; color: var(--siomac-navy);
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.ui-textarea { min-height: 76px; padding: 10px 12px; resize: vertical; line-height: 1.4; }
+.ui-input:focus, .ui-select:focus, .ui-textarea:focus {
+  border-color: var(--siomac-navy);
+  box-shadow: 0 0 0 3px rgba(27, 45, 84, .08);
+}

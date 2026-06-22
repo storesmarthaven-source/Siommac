@@ -1,29 +1,42 @@
 /**
  * src/ui/components/Drawer.tsx
  *
- * Right-side slide-in detail panel. Wraps the existing `.hse-drawer` /
- * `.hse-drawer-backdrop` classes (z-index from --z-drawer tokens) used by the
- * incident, investigation and dashboard drill-down drawers.
+ * Right-side slide-in detail panel: backdrop + panel with header (title/sub +
+ * close), an optional detail grid, a scrollable body (children), and an optional
+ * footer. Wraps the existing `.hse-drawer*` classes — zero visual change.
  *
- * Renders backdrop + panel with header (title/subtitle + close), a scrollable
- * body (children), and an optional footer. `open` drives the `.show` class.
+ * Unified superset of the old `@ui` Drawer and the HSE `_shared.tsx` `HseDrawer`:
+ *   • `sub` (preferred) or `subtitle` (alias) for the subtitle
+ *   • `foot` (preferred) or `footer` (alias) for the footer; defaults to a Close button
+ *   • optional `details` → renders the `.hse-drawer-grid` label/value cards
+ *
+ * Legacy aliases: `HseDrawer`, `DetailDrawer`.
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
 
-interface DrawerProps {
+export interface DrawerDetail { label: string; value: VNode | string; }
+
+export interface DrawerProps {
   open: boolean;
   title: string;
+  sub?: string;
+  /** Alias for `sub`. */
   subtitle?: string;
-  onClose: () => void;
-  /** Optional footer (action buttons). */
-  footer?: ComponentChildren;
-  /** Extra class on the panel (e.g. "inv-drawer" for width overrides). */
-  panelClass?: string;
+  details?: DrawerDetail[];
   children?: ComponentChildren;
+  onClose: () => void;
+  /** Footer content; defaults to a Close button. */
+  foot?: ComponentChildren;
+  /** Alias for `foot`. */
+  footer?: ComponentChildren;
+  /** Extra class on the panel (e.g. width override). */
+  panelClass?: string;
 }
 
-export function Drawer({ open, title, subtitle, onClose, footer, panelClass, children }: DrawerProps): VNode {
+export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, panelClass }: DrawerProps): VNode {
+  const subText = sub ?? subtitle;
+  const footContent = foot ?? footer ?? <button class="hse-btn" onClick={onClose}>Close</button>;
   return (
     <>
       <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={onClose} />
@@ -34,15 +47,23 @@ export function Drawer({ open, title, subtitle, onClose, footer, panelClass, chi
         aria-hidden={!open}
       >
         <div class="hse-drawer-head">
-          <div>
-            <h3>{title}</h3>
-            {subtitle && <p>{subtitle}</p>}
-          </div>
+          <div><h3>{title}</h3>{subText && <p>{subText}</p>}</div>
           <button class="hse-icon-btn" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
         </div>
-        <div class="hse-drawer-body">{children}</div>
-        {footer && <div class="hse-drawer-foot">{footer}</div>}
+        <div class="hse-drawer-body">
+          {details && (
+            <div class="hse-drawer-grid">
+              {details.map(d => <div class="hse-drawer-card" key={d.label}><span>{d.label}</span><strong>{d.value}</strong></div>)}
+            </div>
+          )}
+          {children}
+        </div>
+        <div class="hse-drawer-foot">{footContent}</div>
       </aside>
     </>
   );
 }
+
+/** Legacy aliases used by HSE pages during migration. */
+export const HseDrawer = Drawer;
+export const DetailDrawer = Drawer;

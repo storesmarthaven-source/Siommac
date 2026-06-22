@@ -28,6 +28,7 @@
 
 /* ── Shared component styles ──────────────────────────────────────────────── */
 @import '../../assets/styles/components.css'  layer(components);
+@import '../../assets/styles/uikit.css'       layer(components);
 @import '../../assets/styles/tables.css'      layer(components);
 @import '../../assets/styles/popup.css'       layer(components);
 @import '../../assets/styles/preferences.css' layer(components);

@@ -1,7 +1,7 @@
 /**
  * src/ui — barrel.
  *
- * One import surface for the design system: `import { Button, StatusPill } from '@ui'`.
+ * One import surface for the Siomac design system: `import { ... } from '@ui'`.
  * Adding a component = one export line here + an entry in examples/UIKitPage.tsx.
  * See README.md for the rules on what belongs here.
  */
@@ -9,17 +9,47 @@
 // ── Status source of truth ──
 export * from './status/statusTokens';
 
-// ── Components ──
-export { Button, type ButtonVariant } from './components/Button';
-export { StatusPill } from './components/StatusPill';
+// ── Page-shape components ──
+export {
+  PageHero, AreaHero, HeroFooter,
+  type PageHeroProps,
+  type HeroStatDef, type HeroFooterItem, type HeroMetric, type HeroBadge,
+} from './components/PageHero';
+export {
+  ModuleTabs, AreaTabs, withCounts,
+  type ModuleTab, type AreaTab, type ModuleTabsProps,
+} from './components/ModuleTabs';
+export { SectionHead, type SectionHeadProps } from './components/SectionHead';
+
+// ── Cards & metrics ──
 export { MetricCard } from './components/MetricCard';
-export { SectionHead } from './components/SectionHead';
+export { StatusPill } from './components/StatusPill';
+export { SparkCard, type SparkDef } from './components/SparkCard';
+export { ChartCard, type ChartCardProps } from './components/ChartCard';
+export { MiniCard, RecordRow, Record } from './components/Card';
+
+// ── Charts ──
+export { Sparkline, type SparklineProps } from './charts/Sparkline';
+export { BarRow, type BarRowProps } from './charts/BarRow';
+export { ProgressBar, type ProgressBarProps } from './charts/ProgressBar';
+
+// ── Inputs & forms ──
+export { Button, type ButtonVariant } from './components/Button';
 export { Toolbar, SearchInput, FilterSelect } from './components/Toolbar';
+export { Field, TextInput, SelectInput, TextareaInput, FormGrid } from './components/Field';
+
+// ── Data ──
 export { Tabs, type TabDef } from './components/Tabs';
 export { RegisterTable, type Column } from './components/RegisterTable';
-export { Drawer } from './components/Drawer';
+
+// ── Overlays (standard window) ──
+export { Modal, HseModal, type ModalProps } from './components/Modal';
+export { Wizard, type WizardProps } from './components/Wizard';
+export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
 
 // ── Layouts ──
+export { ModulePageLayout, type ModulePageLayoutProps } from './layouts/ModulePageLayout';
+export { SplitLayout } from './layouts/SplitLayout';
 export { RegisterLayout } from './layouts/RegisterLayout';
 
 // ── Utilities ──

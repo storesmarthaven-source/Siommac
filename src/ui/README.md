@@ -3,6 +3,39 @@
 The shared design system for the whole ERP. Pages define **data, content, actions, workflow**.
 This folder defines **look, spacing, layout, states, interaction patterns**.
 
+## The standard module page
+
+Every module page (HSE areas, HR, Finance, Operations, Reports) has the same shape —
+build it with `ModulePageLayout` (or compose the pieces by hand):
+
+```
+PageHero        ← 4 dark stat cards + KPI footer   (the "four cards at the top")
+SparkCard ×4    ← optional metric row
+ModuleTabs      ← the navigation tabs
+<tab content>   ← register table / split layout / panels
+```
+
+## Component catalog (`import { … } from '@ui'`)
+
+| Group | Components |
+|---|---|
+| Page shape | `PageHero` · `ModuleTabs` (+ `withCounts`) · `SectionHead` |
+| Layouts | `ModulePageLayout` · `SplitLayout` · `RegisterLayout` |
+| Cards & metrics | `MetricCard` · `SparkCard` · `ChartCard` · `MiniCard` · `RecordRow` · `StatusPill` |
+| Charts | `Sparkline` · `BarRow` · `ProgressBar` |
+| Inputs & forms | `Button` · `Field` · `TextInput` · `SelectInput` · `TextareaInput` · `FormGrid` · `Toolbar`/`SearchInput`/`FilterSelect` |
+| Data | `RegisterTable` · `Tabs` |
+| Overlays (standard window) | `Modal` · `Wizard` · `Drawer` |
+
+**Standard window:** `Modal` and `Wizard` render the ONE app-wide window spec
+(`.ui-modal*` in `assets/styles/uikit.css`): icon + title + sub header, close button
+top-right, scrolling body, footer buttons bottom-right. Forms use the standard
+`.ui-field` / `.ui-input` controls. Don't hand-roll modal or form CSS — use these.
+
+Legacy aliases (`AreaHero`=`PageHero`, `AreaTabs`=`ModuleTabs`, `HseModal`=`Modal`,
+`HseDrawer`=`Drawer`, `Record`=`RecordRow`) exist for the in-progress HSE migration
+and will be removed once all pages import the canonical names.
+
 ```
 src/ui/
   tokens          → design tokens live in assets/styles/base.css (:root)

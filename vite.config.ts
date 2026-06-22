@@ -99,6 +99,7 @@ export default defineConfig({
       { find: /^@store$/,  replacement: '/src/store/index.ts'  },
       { find: /^@cfg$/,    replacement: '/src/config/index.ts' },
       { find: /^@lib$/,    replacement: '/src/lib/index.ts'    },
+      { find: /^@ui$/,     replacement: '/src/ui/index.ts'     },
       { find: /^@shell$/,  replacement: '/src/shell/index.ts'  },
       { find: /^@$/,       replacement: '/src'                 },
     ],
