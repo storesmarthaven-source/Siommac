@@ -9,7 +9,7 @@
 import { type VNode }   from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, withCounts, SectionHead,
+  PageHeader, TabBar, withCounts,
   type AreaTab,
 } from '@ui';
 import { HSE_SITES, hsePill } from './types';
@@ -332,36 +332,45 @@ function HazardTab({
 
   return (
     <div class="hse-area-main">
-      <SectionHead icon="fa-radiation" title="Hazard Register" sub="Identified hazards with initial and residual likelihood × severity ratings." actions={
-        <button class="hse-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
-      } />
-
-      <div class="vt-toolbar">
-        <div class="vt-search" style={{ flex: '1 1 200px' }}>
-          <i class="fas fa-search" />
-          <input type="search" placeholder="Search hazards…" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} />
-        </div>
-        <select class="emp-filter-select" value={category} onChange={e => setCategory((e.target as HTMLSelectElement).value)}>
-          <option value="">All categories</option>
-          {HAZARD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-          <option value="">All sites</option>
-          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select class="emp-filter-select" value={riskLevel} onChange={e => setRiskLevel((e.target as HTMLSelectElement).value)}>
-          <option value="">All risk levels</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
-        </select>
-        <button class="inc-action-btn blue" onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
-      </div>
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
         registerLabel="Hazard Register" rows={hazards} columns={HAZARD_EXPORT_COLS} filenameBase="hazard-register" />
-
-      <div class="vt-table-card">
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-radiation" /></span>
+              <div>
+                <div class="vt-section-title">Hazard Register</div>
+                <div class="vt-section-sub">Identified hazards with initial and residual likelihood × severity ratings.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button class="inc-action-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
+            </div>
+          </div>
+          <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
+            <div class="vt-search" style={{ flex: '1 1 200px' }}>
+              <i class="fas fa-search" />
+              <input type="search" placeholder="Search hazards…" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} />
+            </div>
+            <select class="emp-filter-select" value={category} onChange={e => setCategory((e.target as HTMLSelectElement).value)}>
+              <option value="">All categories</option>
+              {HAZARD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+              <option value="">All sites</option>
+              {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select class="emp-filter-select" value={riskLevel} onChange={e => setRiskLevel((e.target as HTMLSelectElement).value)}>
+              <option value="">All risk levels</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+            <button class="inc-action-btn blue" onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
+          </div>
+        </div>
         <div class="vt-table-scroll">
           <table class="vt-table">
             <thead>
@@ -432,30 +441,39 @@ function AssessmentsTab({
 
   return (
     <div class="hse-area-main">
-      <SectionHead icon="fa-table-cells-large" title="Risk Assessments" sub="Formal assessments scored on the 5×5 matrix — initial through residual risk." actions={
-        <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
-      } />
-
-      <div class="vt-toolbar">
-        <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="submitted">Submitted</option>
-          <option value="under_review">Under Review</option>
-          <option value="returned">Returned</option>
-          <option value="approved">Approved</option>
-          <option value="active">Active</option>
-        </select>
-        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-          <option value="">All sites</option>
-          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
-      </div>
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
         registerLabel="Risk Assessments" rows={assessments} columns={ASSESSMENT_EXPORT_COLS} filenameBase="risk-assessments" />
-
-      <div class="vt-table-card">
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-table-cells-large" /></span>
+              <div>
+                <div class="vt-section-title">Risk Assessments</div>
+                <div class="vt-section-sub">Formal assessments scored on the 5×5 matrix — initial through residual risk.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button class="inc-action-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
+            </div>
+          </div>
+          <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
+            <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
+              <option value="">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="submitted">Submitted</option>
+              <option value="under_review">Under Review</option>
+              <option value="returned">Returned</option>
+              <option value="approved">Approved</option>
+              <option value="active">Active</option>
+            </select>
+            <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+              <option value="">All sites</option>
+              {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
+          </div>
+        </div>
         <div class="vt-table-scroll">
           <table class="vt-table">
             <thead>
@@ -523,29 +541,38 @@ function JsaTab({
 
   return (
     <div class="hse-area-main">
-      <SectionHead icon="fa-list-ol" title="JSA Library" sub="Job Safety Analyses — step-by-step hazard identification and controls per task." actions={
-        <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
-      } />
-
-      <div class="vt-toolbar">
-        <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
-          <option value="">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="submitted">Submitted</option>
-          <option value="hse_review">HSE Review</option>
-          <option value="approved">Approved</option>
-          <option value="active">Active</option>
-        </select>
-        <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
-          <option value="">All sites</option>
-          {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
-      </div>
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)}
         registerLabel="JSA Library" rows={jsas} columns={JSA_EXPORT_COLS} filenameBase="jsa-library" />
-
-      <div class="vt-table-card">
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div class="vt-section-titlewrap">
+              <span class="vt-section-icon"><i class="fas fa-list-ol" /></span>
+              <div>
+                <div class="vt-section-title">JSA Library</div>
+                <div class="vt-section-sub">Job Safety Analyses — step-by-step hazard identification and controls per task.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button class="inc-action-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
+            </div>
+          </div>
+          <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
+            <select class="emp-filter-select" value={status} onChange={e => setStatus((e.target as HTMLSelectElement).value)}>
+              <option value="">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="submitted">Submitted</option>
+              <option value="hse_review">HSE Review</option>
+              <option value="approved">Approved</option>
+              <option value="active">Active</option>
+            </select>
+            <select class="emp-filter-select" value={siteId} onChange={e => setSiteId((e.target as HTMLSelectElement).value)}>
+              <option value="">All sites</option>
+              {HSE_SITES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <button class="inc-action-btn blue" style={{ marginLeft: 'auto' }} onClick={() => setExportOpen(true)}><i class="fas fa-download" /> Export</button>
+          </div>
+        </div>
         <div class="vt-table-scroll">
           <table class="vt-table">
             <thead>

@@ -12,8 +12,11 @@
  */
 
 import { type VNode } from 'preact';
+import { SparkCard } from '@ui';
 import { useHazards, useAssessments, useJsaList, type RiskLevel } from '@api/hse/riskJsa';
 import { InsightCard } from './shared/InsightCard';
+
+const WEEK_LABELS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'];
 
 const SEV_COLOR: Record<RiskLevel, string> = { low: '#16a34a', medium: '#f59e0b', high: '#ef4444', critical: '#dc2626' };
 
@@ -89,9 +92,16 @@ function HazardCards(): VNode {
       <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
         variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
         footer="Approved / monitoring" />
-      <InsightCard icon="fa-calendar-days" title="Review Cycle" value={`${overdueRev + dueWeek}`} subtitle={`${overdueRev} overdue · ${dueWeek} due this week`}
-        variant="sparkline" tone="navy" data={{ points: dueTrend(hz.map(h => h.review_due_at)), color: overdueRev > 0 ? '#f87171' : '#60a5fa' }}
-        footer="Reviews due — next 6 weeks" />
+      <SparkCard spark={{
+        label: 'Review Cycle',
+        value: `${overdueRev + dueWeek}`,
+        sub: `${overdueRev} overdue · ${dueWeek} due this week`,
+        sparkPoints: dueTrend(hz.map(h => h.review_due_at)),
+        sparkColor: overdueRev > 0 ? '#f87171' : '#60a5fa',
+        months: WEEK_LABELS,
+        delta: `${dueWeek}`,
+        deltaUp: overdueRev > 0,
+      }} />
     </div>
   );
 }
@@ -122,9 +132,16 @@ function AssessmentCards(): VNode {
       <InsightCard icon="fa-clipboard-check" title="Approval Queue" value={`${underReview}`} subtitle={`${returned} returned · ${underReview} awaiting review`}
         variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
         footer="HSE review" />
-      <InsightCard icon="fa-calendar-days" title="Reviews Due" value={`${dueMonth}`} subtitle={`${dueWeek} this week · ${dueMonth - dueWeek} this month`}
-        variant="sparkline" tone="navy" data={{ points: dueTrend(a.map(x => x.review_due_at)), color: '#60a5fa' }}
-        footer="Reviews due — next 6 weeks" />
+      <SparkCard spark={{
+        label: 'Reviews Due',
+        value: `${dueMonth}`,
+        sub: `${dueWeek} this week · ${dueMonth - dueWeek} this month`,
+        sparkPoints: dueTrend(a.map(x => x.review_due_at)),
+        sparkColor: '#60a5fa',
+        months: WEEK_LABELS,
+        delta: `${dueWeek}`,
+        deltaUp: dueWeek > 0,
+      }} />
     </div>
   );
 }
@@ -145,9 +162,15 @@ function JsaCards(): VNode {
 
   return (
     <div style={ROW}>
-      <InsightCard icon="fa-list-ol" title="Active JSAs" value={active} subtitle={`${j.length} in the library · ${inReview} in review`}
-        variant="sparkline" data={{ points: monthlyTrend(j.map(x => x.created_at)), color: '#4ade80' }}
-        footer="Registered — last 6 months" />
+      <SparkCard spark={{
+        label: 'Active JSAs',
+        value: `${active}`,
+        sub: `${j.length} in the library · ${inReview} in review`,
+        sparkPoints: monthlyTrend(j.map(x => x.created_at)),
+        sparkColor: '#4ade80',
+        delta: `${active}`,
+        deltaUp: false,
+      }} />
       <InsightCard icon="fa-triangle-exclamation" title="High-Risk Jobs" value={`${highRisk}`} subtitle="Hot work · confined space · lifting"
         variant="bar" tone={highRisk > 0 ? 'danger' : 'neutral'} data={{ bars: bandBars }}
         footer="By risk band" />
