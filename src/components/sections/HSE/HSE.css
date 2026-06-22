@@ -2863,6 +2863,7 @@ body[data-theme="dark"] .hero-footer {
   transition: all .2s ease; white-space: nowrap; position: relative;
 }
 .hse-tabs-bar .hse-tab:hover { background: rgba(255,255,255,0.6); color: var(--siomac-navy); }
+
 .hse-tabs-bar .hse-tab i { font-size: 0.85rem; color: var(--text-muted); transition: color .2s; }
 .hse-tabs-bar .hse-tab:hover i { color: var(--siomac-navy); }
 .hse-tabs-bar .hse-tab.active {
@@ -5028,4 +5029,59 @@ body[data-theme="dark"] .hero-footer {
   display: flex;
   overflow: hidden;
   gap: 2px;
+}
+
+/* ── Incident drawer tab bar ─────────────────────────────────────────────────── */
+.hse-idrawer-tabbar {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--siomac-navy);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+}
+.hse-idrawer-tabbar::-webkit-scrollbar { display: none; }
+.hse-idrawer-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 12px 9px;
+  border: none; background: transparent;
+  color: rgba(255,255,255,.45);
+  cursor: pointer;
+  font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.hse-idrawer-tab i { font-size: 0.82rem; }
+.hse-idrawer-tab:hover { color: rgba(255,255,255,.75); }
+.hse-idrawer-tab.active { color: var(--siomac-gold); border-bottom-color: var(--siomac-gold); }
+
+/* ── Empty state inside drawer tabs ──────────────────────────────────────────── */
+.hse-idrawer-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 40px 20px;
+  color: var(--text-muted); font-size: 0.82rem; text-align: center;
+}
+
+/* ── Timeline inside drawer ───────────────────────────────────────────────────── */
+.hse-idrawer-timeline { display: flex; flex-direction: column; gap: 0; }
+.hse-timeline-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  position: relative;
+  padding-bottom: 12px;
+}
+.hse-timeline-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+  position: relative; z-index: 1;
+}
+.hse-timeline-line {
+  position: absolute; left: 4px; top: 14px; bottom: 0;
+  width: 2px; background: var(--border);
+}
+.hse-timeline-card {
+  flex: 1; padding: 8px 12px;
+  background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px;
+  min-width: 0;
 }

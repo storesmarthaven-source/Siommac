@@ -27,7 +27,7 @@ import { useCreateWorkflow } from '@api/workflows';
 import { toneClass } from '@ui/status/statusTokens';
 import { exportCsv } from '@ui/lib/exportCsv';
 import {
-  useHseIncidents, useHseIncident, useHseInvestigations, useHseCapa,
+  useHseIncidents, useHseIncidentDetail, useHseInvestigations, useHseCapa,
   useCreateIncident, useUpdateIncident,
   useCreateInvestigation, useUpdateInvestigation,
   useCreateCapa, useUpdateCapa,
@@ -3231,6 +3231,72 @@ function CapaVerifyModal({ open, item, onClose, onVerify }: {
 
 // ── Incident detail drawer ────────────────────────────────────────────────────
 
+type DrawerTab = 'overview' | 'people' | 'evidence' | 'investigation' | 'capa' | 'workflow' | 'timeline';
+
+const DRAWER_TABS: { key: DrawerTab; icon: string; label: string }[] = [
+  { key: 'overview',     icon: 'fa-circle-info',          label: 'Overview'     },
+  { key: 'people',       icon: 'fa-users',                label: 'People'       },
+  { key: 'evidence',     icon: 'fa-paperclip',            label: 'Evidence'     },
+  { key: 'investigation',icon: 'fa-magnifying-glass-chart',label: 'Investigation'},
+  { key: 'capa',         icon: 'fa-list-check',           label: 'CAPA'         },
+  { key: 'workflow',     icon: 'fa-diagram-project',      label: 'Workflow'     },
+  { key: 'timeline',     icon: 'fa-clock-rotate-left',    label: 'Timeline'     },
+];
+
+const PERSON_TYPE_ICON: Record<string, string> = {
+  injured:    'fa-person-falling',
+  witness:    'fa-eye',
+  reporter:   'fa-megaphone',
+  supervisor: 'fa-user-tie',
+  contractor: 'fa-helmet-safety',
+  visitor:    'fa-id-badge',
+};
+
+const PERSON_TYPE_COLOR: Record<string, string> = {
+  injured:    'var(--hse-danger)',
+  witness:    'var(--hse-info)',
+  reporter:   'var(--siomac-gold)',
+  supervisor: 'var(--hse-info)',
+  contractor: 'var(--hse-warn)',
+  visitor:    'var(--text-muted)',
+};
+
+const EVIDENCE_TYPE_ICON: Record<string, string> = {
+  photo:       'fa-image',
+  document:    'fa-file-lines',
+  statement:   'fa-comment-lines',
+  inspection:  'fa-clipboard-check',
+  measurement: 'fa-ruler',
+  other:       'fa-paperclip',
+};
+
+const EVENT_TYPE_LABEL: Record<string, string> = {
+  'hse.incident.submitted':     'Incident submitted',
+  'hse.incident.updated':       'Incident updated',
+  'hse.investigation.assigned': 'Investigation assigned',
+  'hse.investigation.updated':  'Investigation updated',
+  'hse.capa.assigned':          'CAPA assigned',
+  'hse.capa.closed':            'CAPA closed',
+};
+
+function DrawerTabBar({ active, onChange }: { active: DrawerTab; onChange: (t: DrawerTab) => void }): VNode {
+  return (
+    <div class="hse-idrawer-tabbar">
+      {DRAWER_TABS.map(t => (
+        <button
+          key={t.key}
+          class={`hse-idrawer-tab${active === t.key ? ' active' : ''}`}
+          onClick={() => onChange(t.key)}
+          title={t.label}
+        >
+          <i class={`fas ${t.icon}`} />
+          <span>{t.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
   incident: IncidentRecord | null;
   incidentId: string | null;
@@ -3240,40 +3306,434 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
   const open      = !!i;
   const sev       = (i ? (SEVERITY_META[i.severity] ?? SEVERITY_META.info) : SEVERITY_META.info)!;
   const updateInc = useUpdateIncident();
+  const [activeTab,  setActiveTab]  = useState<DrawerTab>('overview');
   const [markingOsh, setMarkingOsh] = useState(false);
 
-  // Single authoritative detail fetch: incident + its people in one response.
-  const detailQ    = useHseIncident(incidentId ?? '');
-  const liveRecord = detailQ.data?.incident ?? null;
-  const livePeople = detailQ.data?.people ?? [];
+  const detailQ = useHseIncidentDetail(incidentId ?? '');
+  const detail  = detailQ.data ?? null;
+  const inc     = detail?.incident ?? null;
 
-  const isInvestigating = /investigation/i.test(i?.status ?? '');
-  const isClosed        = /closed/i.test(i?.status ?? '');
-  const isCapaRaised    = /capa|action/i.test(i?.status ?? '') || isClosed;
-
-  // OSH dates and injury detail are first-class incident columns; people and
-  // witnesses come from the hse_incident_people rows fetched alongside.
-  const oshDue      = liveRecord?.osh_notification_due ?? null;
-  const oshNotified = liveRecord?.osh_notified_at ?? null;
+  const oshDue      = inc?.osh_notification_due ?? null;
+  const oshNotified = inc?.osh_notified_at      ?? null;
   const oshOverdue  = oshDue && !oshNotified && new Date(oshDue) < new Date();
 
   async function markOshVerbal() {
-    if (!liveRecord) return;
+    if (!inc) return;
     setMarkingOsh(true);
-    try { await updateInc.mutateAsync({ incidentId: liveRecord.id, oshNotifiedAt: new Date().toISOString() }); }
+    try { await updateInc.mutateAsync({ incidentId: inc.id, oshNotifiedAt: new Date().toISOString() }); }
     finally { setMarkingOsh(false); }
   }
 
-  const people    = livePeople.filter(p => p.person_type !== 'witness');
-  const witnesses = livePeople.filter(p => p.person_type === 'witness');
+  // ── Tab content ────────────────────────────────────────────────────────────
 
-  const steps = [
-    { icon: 'fa-file-circle-check', label: 'Incident recorded',     sub: `Reported by ${i?.reporter ?? '—'} · ${i?.date ?? ''}`, done: true,             active: false },
-    { icon: 'fa-route',             label: 'Routed to HSE Manager', sub: 'Auto-routed · SLA 24 hrs',                               done: true,             active: false },
-    { icon: 'fa-magnifying-glass',  label: 'Investigation opened',  sub: 'Root cause analysis · 5-Whys method',                    done: isInvestigating,  active: !isInvestigating && !isClosed },
-    { icon: 'fa-list-check',        label: 'CAPA raised',           sub: 'Corrective & preventive actions assigned',               done: isCapaRaised,     active: isInvestigating && !isCapaRaised },
-    { icon: 'fa-circle-check',      label: 'Closed out',            sub: 'Verified by HSE Manager · Audit trail locked',           done: isClosed,         active: isCapaRaised && !isClosed },
-  ];
+  function renderOverview(): VNode {
+    return (
+      <div>
+        {/* OSH banners */}
+        {oshDue && !oshNotified && (
+          <div class={`hse-idrawer-banner${oshOverdue ? ' hse-idrawer-banner--danger' : ' hse-idrawer-banner--warn'}`}>
+            <i class={`fas ${oshOverdue ? 'fa-triangle-exclamation' : 'fa-gavel'}`} />
+            <div class="hse-idrawer-banner-text">
+              <strong>{oshOverdue ? 'OSH Verbal Notification — OVERDUE' : 'OSH Verbal Notification Required'}</strong>
+              <span>Due: {new Date(oshDue).toLocaleString('en-GB')} · OSH Act 2004 s.19</span>
+            </div>
+            <button class="hse-btn" style={{ padding: '4px 10px', fontSize: '0.72rem', flexShrink: 0 }}
+              onClick={markOshVerbal} disabled={markingOsh}>
+              {markingOsh ? 'Saving…' : 'Mark Notified'}
+            </button>
+          </div>
+        )}
+        {oshDue && oshNotified && !inc?.osh_written_at && (
+          <div class="hse-idrawer-banner hse-idrawer-banner--warn">
+            <i class="fas fa-circle-check" />
+            <div class="hse-idrawer-banner-text">
+              <strong>Verbal notification logged</strong>
+              <span>Written report due within 7 days · {new Date(oshNotified).toLocaleString('en-GB')}</span>
+            </div>
+          </div>
+        )}
+        {oshNotified && inc?.osh_written_at && (
+          <div class="hse-idrawer-banner hse-idrawer-banner--ok">
+            <i class="fas fa-circle-check" />
+            <div class="hse-idrawer-banner-text">
+              <strong>OSH notifications complete</strong>
+              <span>Verbal and written report filed.</span>
+            </div>
+          </div>
+        )}
+
+        {/* Info grid */}
+        <div class="hse-idrawer-grid">
+          <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span>
+            <strong><span class={hsePill(inc?.status ?? '')}>{inc?.status ?? i?.status ?? '—'}</span></strong>
+          </div>
+          <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Date</span>
+            <strong>{inc?.incident_date ? new Date(inc.incident_date).toLocaleDateString('en-GB') : i?.date ?? '—'}</strong>
+          </div>
+          <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Reporter</span>
+            <strong>{inc?.reported_by ?? i?.reporter ?? '—'}</strong>
+          </div>
+          <div class="hse-idrawer-cell"><i class="fas fa-tag" /><span>Type</span>
+            <strong>{inc?.incident_type ?? i?.type ?? '—'}</strong>
+          </div>
+          {inc?.location_text && (
+            <div class="hse-idrawer-cell"><i class="fas fa-location-dot" /><span>Location</span><strong>{inc.location_text}</strong></div>
+          )}
+          {inc?.osh_classification && (
+            <div class="hse-idrawer-cell"><i class="fas fa-gavel" /><span>OSH Class</span>
+              <strong>{OSH_CLASSES.find(o => o.value === inc.osh_classification)?.label ?? inc.osh_classification}</strong>
+            </div>
+          )}
+          {inc && inc.lost_days > 0 && (
+            <div class="hse-idrawer-cell"><i class="fas fa-calendar-xmark" /><span>Lost days</span><strong>{inc.lost_days}</strong></div>
+          )}
+          {inc?.regulatory_class && (
+            <div class="hse-idrawer-cell"><i class="fas fa-scale-balanced" /><span>Reg. class</span><strong>{inc.regulatory_class}</strong></div>
+          )}
+          <div class="hse-idrawer-cell"><i class="fas fa-flag" /><span>Recordable</span>
+            <strong>{inc ? (inc.recordable ? 'Yes' : 'No') : '—'}</strong>
+          </div>
+          <div class="hse-idrawer-cell"><i class="fas fa-clock-rotate-left" /><span>Lost Time</span>
+            <strong>{inc ? (inc.lost_time ? 'Yes' : 'No') : '—'}</strong>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div class="hse-idrawer-section">
+          <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> Incident Description</div>
+          <p class="hse-idrawer-body-text">{inc?.description ?? i?.description ?? '—'}</p>
+          {(inc?.immediate_action ?? i?.immediateActions) && (
+            <div class="hse-idrawer-action-note">
+              <i class="fas fa-bolt" /> <strong>Immediate action:</strong> {inc?.immediate_action ?? i?.immediateActions}
+            </div>
+          )}
+        </div>
+
+        {/* Injury detail */}
+        {inc && (!!inc.injury_type || !!inc.body_part) && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-person-falling" /> Injury Details</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
+              {inc.injury_type    && <><span style={{ color: 'var(--text-muted)' }}>Nature:</span><span>{inc.injury_type}</span></>}
+              {inc.body_part      && <><span style={{ color: 'var(--text-muted)' }}>Body part:</span><span>{inc.body_part}</span></>}
+              {inc.return_to_work && <><span style={{ color: 'var(--text-muted)' }}>Return to work:</span><span>{new Date(inc.return_to_work).toLocaleDateString('en-GB')}</span></>}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderPeople(): VNode {
+    const people = detail?.people ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+    if (people.length === 0) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-users" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No people recorded for this incident.</span>
+      </div>
+    );
+    const grouped: Record<string, typeof people> = {};
+    for (const p of people) {
+      const k = p.person_type ?? 'other';
+      if (!grouped[k]) grouped[k] = [];
+      grouped[k]!.push(p);
+    }
+    return (
+      <div>
+        {Object.entries(grouped).map(([type, persons]) => (
+          <div class="hse-idrawer-section" key={type}>
+            <div class="hse-idrawer-section-head">
+              <i class={`fas ${PERSON_TYPE_ICON[type] ?? 'fa-user'}`} style={{ color: PERSON_TYPE_COLOR[type] ?? 'var(--text-muted)' }} />
+              {' '}{type.charAt(0).toUpperCase() + type.slice(1)}{persons.length > 1 ? `s (${persons.length})` : ''}
+            </div>
+            {persons.map((p, idx) => (
+              <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '2px' }}>
+                  {p.full_name}{p.user_id ? <span style={{ fontWeight: 400, opacity: .6 }}> · {p.user_id}</span> : null}
+                </div>
+                {p.role_or_company && <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>{p.role_or_company}</div>}
+                {p.injury_description && <p style={{ margin: '6px 0 0', fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{p.injury_description}</p>}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderEvidence(): VNode {
+    const evidence = detail?.evidence ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+    if (!detail?.investigation) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-paperclip" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No investigation opened yet. Evidence is collected during investigation.</span>
+      </div>
+    );
+    if (evidence.length === 0) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-paperclip" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No evidence collected yet.</span>
+        <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '4px' }}>Evidence is added through the Investigation workflow.</span>
+      </div>
+    );
+    return (
+      <div>
+        {evidence.map((ev, idx) => (
+          <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <i class={`fas ${EVIDENCE_TYPE_ICON[ev.evidence_type] ?? 'fa-paperclip'}`} style={{ color: 'var(--siomac-gold)', fontSize: '0.85rem' }} />
+              <strong style={{ fontSize: '0.82rem' }}>{ev.title}</strong>
+              <span class={`hse-pill hse-pill--${ev.status === 'collected' ? 'success' : 'info'}`} style={{ marginLeft: 'auto', fontSize: '0.7rem' }}>{ev.status}</span>
+            </div>
+            {ev.description && <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{ev.description}</p>}
+            {ev.collected_at && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>Collected: {new Date(ev.collected_at).toLocaleDateString('en-GB')}</div>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderInvestigation(): VNode {
+    const inv       = detail?.investigation ?? null;
+    const rootCauses = detail?.rootCauses ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+    if (!inv) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-magnifying-glass-chart" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No investigation opened yet.</span>
+        <button class="hse-btn primary" style={{ marginTop: '12px' }} onClick={onInvestigate}>
+          <i class="fas fa-plus" /> Open Investigation
+        </button>
+      </div>
+    );
+    const INV_STATUS_COLOR: Record<string, string> = {
+      assigned: 'var(--hse-info)', collecting_evidence: 'var(--siomac-gold)',
+      root_cause: 'var(--siomac-gold)', findings: 'var(--hse-warn)',
+      review: 'var(--hse-warn)', closed: 'var(--hse-success)', overdue: 'var(--hse-danger)',
+    };
+    return (
+      <div>
+        <div class="hse-idrawer-grid">
+          <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span>
+            <strong><span style={{ color: INV_STATUS_COLOR[inv.status] ?? 'inherit' }}>{inv.status.replace(/_/g, ' ')}</span></strong>
+          </div>
+          <div class="hse-idrawer-cell"><i class="fas fa-hashtag" /><span>Ref</span><strong>{inv.ref}</strong></div>
+          {inv.investigator_user_id && (
+            <div class="hse-idrawer-cell"><i class="fas fa-user-magnifying-glass" /><span>Investigator</span><strong>{inv.investigator_user_id}</strong></div>
+          )}
+          {inv.due_at && (
+            <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Due</span>
+              <strong>{new Date(inv.due_at).toLocaleDateString('en-GB')}</strong>
+            </div>
+          )}
+          {inv.root_cause_method && (
+            <div class="hse-idrawer-cell"><i class="fas fa-sitemap" /><span>Method</span>
+              <strong>{inv.root_cause_method === '5why' ? '5-Whys' : inv.root_cause_method}</strong>
+            </div>
+          )}
+          {inv.closed_at && (
+            <div class="hse-idrawer-cell"><i class="fas fa-circle-check" /><span>Closed</span>
+              <strong>{new Date(inv.closed_at).toLocaleDateString('en-GB')}</strong>
+            </div>
+          )}
+        </div>
+
+        {inv.summary && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> Summary</div>
+            <p class="hse-idrawer-body-text">{inv.summary}</p>
+          </div>
+        )}
+        {inv.findings && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-lightbulb" /> Findings</div>
+            <p class="hse-idrawer-body-text">{inv.findings}</p>
+          </div>
+        )}
+        {inv.recommendations && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-list-ul" /> Recommendations</div>
+            <p class="hse-idrawer-body-text">{inv.recommendations}</p>
+          </div>
+        )}
+
+        {rootCauses.length > 0 && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-sitemap" /> Root Causes ({rootCauses.length})</div>
+            {rootCauses.map((rc, idx) => (
+              <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', paddingTop: '1px' }}>{rc.category}</span>
+                  {rc.contributing_factor && <span class="hse-pill hse-pill--warn" style={{ fontSize: '0.68rem' }}>Contributing</span>}
+                </div>
+                <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.5 }}>{rc.cause}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderCapa(): VNode {
+    const capas = detail?.capa ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+    if (capas.length === 0) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-list-check" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No CAPA actions raised for this incident.</span>
+      </div>
+    );
+    const PRIO_COLOR: Record<string, string> = { critical: 'var(--hse-danger)', high: 'var(--hse-warn)', medium: 'var(--hse-info)', low: 'var(--text-muted)' };
+    return (
+      <div>
+        {capas.map((ca, idx) => {
+          const overdue = ca.due_at && ca.status !== 'closed' && ca.status !== 'cancelled' && new Date(ca.due_at) < new Date();
+          return (
+            <div key={idx} style={{ marginBottom: '10px', padding: '12px', background: 'var(--bg-subtle)', border: `1px solid ${overdue ? 'rgba(239,68,68,.3)' : 'var(--border)'}`, borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                <i class="fas fa-list-check" style={{ color: PRIO_COLOR[ca.priority] ?? 'var(--text-muted)', marginTop: '2px' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '2px' }}>{ca.title}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{ca.ref}</div>
+                </div>
+                <span class={`hse-pill hse-pill--${ca.status === 'closed' ? 'success' : overdue ? 'danger' : 'info'}`} style={{ fontSize: '0.7rem', flexShrink: 0 }}>
+                  {overdue && ca.status !== 'closed' ? 'Overdue' : ca.status.replace(/_/g,' ')}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                {ca.owner_user_id && <span><i class="fas fa-user" /> {ca.owner_user_id}</span>}
+                {ca.due_at && <span><i class="fas fa-calendar-day" /> {new Date(ca.due_at).toLocaleDateString('en-GB')}</span>}
+                {ca.effectiveness_result && <span><i class="fas fa-star" /> {ca.effectiveness_result.replace(/_/g,' ')}</span>}
+                <span><i class="fas fa-flag" /> {ca.priority}</span>
+              </div>
+              {ca.description && <p style={{ margin: '8px 0 0', fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{ca.description}</p>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  function renderWorkflow(): VNode {
+    const wf    = detail?.workflow    ?? null;
+    const tasks = detail?.workflowTasks ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+
+    const isInvestigating = /investigation/i.test(i?.status ?? '');
+    const isClosed        = /closed/i.test(i?.status ?? '');
+    const isCapaRaised    = /capa|action/i.test(i?.status ?? '') || isClosed;
+
+    const steps = [
+      { icon: 'fa-file-circle-check', label: 'Incident recorded',     sub: `Reported by ${i?.reporter ?? '—'} · ${i?.date ?? ''}`, done: true,            active: false },
+      { icon: 'fa-route',             label: 'Routed to HSE Manager', sub: 'Auto-routed · SLA 24 hrs',                              done: !!wf,            active: !wf && !isClosed },
+      { icon: 'fa-magnifying-glass',  label: 'Investigation opened',  sub: 'Root cause analysis',                                   done: isInvestigating, active: !!wf && !isInvestigating && !isClosed },
+      { icon: 'fa-list-check',        label: 'CAPA raised',           sub: 'Corrective & preventive actions',                       done: isCapaRaised,    active: isInvestigating && !isCapaRaised },
+      { icon: 'fa-circle-check',      label: 'Closed out',            sub: 'Verified by HSE Manager',                               done: isClosed,        active: isCapaRaised && !isClosed },
+    ];
+
+    return (
+      <div>
+        {wf && (
+          <div class="hse-idrawer-grid" style={{ marginBottom: '16px' }}>
+            <div class="hse-idrawer-cell"><i class="fas fa-hashtag" /><span>Workflow</span><strong>{wf.ref}</strong></div>
+            <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span>
+              <strong><span class={hsePill(wf.status)}>{wf.status}</span></strong>
+            </div>
+            <div class="hse-idrawer-cell"><i class="fas fa-flag" /><span>Priority</span><strong>{wf.priority}</strong></div>
+            {wf.due_at && <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Due</span><strong>{new Date(wf.due_at).toLocaleDateString('en-GB')}</strong></div>}
+          </div>
+        )}
+
+        <div class="hse-idrawer-section">
+          <div class="hse-idrawer-section-head"><i class="fas fa-diagram-project" /> Progress</div>
+          <div class="hse-idrawer-wf-steps">
+            {steps.map((step, idx) => (
+              <div key={idx} class={`hse-idrawer-wf-step${step.done ? ' wf-done' : step.active ? ' wf-active' : ' wf-pending'}`}>
+                {idx < steps.length - 1 && <div class="hse-idrawer-wf-line" />}
+                <div class="hse-idrawer-wf-icon"><i class={`fas ${step.done ? 'fa-check' : step.icon}`} /></div>
+                <div class="hse-idrawer-wf-card">
+                  <div class="hse-idrawer-wf-label">{step.label}</div>
+                  <div class="hse-idrawer-wf-sub">{step.sub}</div>
+                  {step.done   && <span class="hse-idrawer-wf-badge wf-badge-done"><i class="fas fa-circle-check" /> Complete</span>}
+                  {step.active && <span class="hse-idrawer-wf-badge wf-badge-active"><i class="fas fa-circle-dot" /> In Progress</span>}
+                  {!step.done && !step.active && <span class="hse-idrawer-wf-badge wf-badge-pending"><i class="fas fa-clock" /> Pending</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {tasks.length > 0 && (
+          <div class="hse-idrawer-section">
+            <div class="hse-idrawer-section-head"><i class="fas fa-list-check" /> Tasks ({tasks.length})</div>
+            {tasks.map((t, idx) => (
+              <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <i class={`fas ${t.status === 'completed' || t.status === 'approved' ? 'fa-circle-check' : t.status === 'open' ? 'fa-circle-dot' : 'fa-circle'}`}
+                    style={{ color: t.status === 'completed' || t.status === 'approved' ? 'var(--hse-success)' : t.status === 'open' ? 'var(--siomac-gold)' : 'var(--text-muted)' }} />
+                  <strong style={{ fontSize: '0.82rem', flex: 1 }}>{t.title}</strong>
+                  <span class={`hse-pill hse-pill--${t.status === 'completed' || t.status === 'approved' ? 'success' : t.status === 'open' ? 'info' : 'warn'}`} style={{ fontSize: '0.68rem' }}>{t.status}</span>
+                </div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  {t.assigned_role && <span><i class="fas fa-shield-halved" /> {t.assigned_role}</span>}
+                  {t.assigned_user_id && <span style={{ marginLeft: '8px' }}><i class="fas fa-user" /> {t.assigned_user_id}</span>}
+                  {t.due_at && <span style={{ marginLeft: '8px' }}><i class="fas fa-calendar-day" /> {new Date(t.due_at).toLocaleDateString('en-GB')}</span>}
+                </div>
+                {t.note && <p style={{ margin: '6px 0 0', fontSize: '0.76rem', color: 'var(--text-muted)' }}>{t.note}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderTimeline(): VNode {
+    const events = detail?.timeline ?? [];
+    if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
+    if (events.length === 0) return (
+      <div class="hse-idrawer-empty">
+        <i class="fas fa-clock-rotate-left" style={{ fontSize: '1.8rem', opacity: .3 }} />
+        <span>No events recorded yet.</span>
+      </div>
+    );
+    const SEV_COLOR: Record<string, string> = {
+      critical: 'var(--hse-danger)', high: 'var(--hse-warn)',
+      info: 'var(--hse-info)', success: 'var(--hse-success)',
+    };
+    return (
+      <div class="hse-idrawer-timeline">
+        {events.map((ev, idx) => (
+          <div key={idx} class="hse-timeline-row">
+            <div class="hse-timeline-dot" style={{ background: SEV_COLOR[ev.severity] ?? 'var(--border)' }} />
+            {idx < events.length - 1 && <div class="hse-timeline-line" />}
+            <div class="hse-timeline-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                <strong style={{ fontSize: '0.8rem' }}>{EVENT_TYPE_LABEL[ev.event_type] ?? ev.event_type.replace(/\./g,' ')}</strong>
+                <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {new Date(ev.created_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                </span>
+              </div>
+              {ev.actor_user_id && <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}><i class="fas fa-user" /> {ev.actor_user_id}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const TAB_RENDER: Record<DrawerTab, () => VNode> = {
+    overview:      renderOverview,
+    people:        renderPeople,
+    evidence:      renderEvidence,
+    investigation: renderInvestigation,
+    capa:          renderCapa,
+    workflow:      renderWorkflow,
+    timeline:      renderTimeline,
+  };
 
   return (
     <>
@@ -3299,148 +3759,31 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
           </div>
         </div>
 
+        {/* ── Tab bar ── */}
+        <DrawerTabBar active={activeTab} onChange={setActiveTab} />
+
         {/* ── Scrollable body ── */}
         <div class="hse-drawer-body">
-
-          {/* OSH notification banners */}
-          {oshDue && !oshNotified && (
-            <div class={`hse-idrawer-banner${oshOverdue ? ' hse-idrawer-banner--danger' : ' hse-idrawer-banner--warn'}`}>
-              <i class={`fas ${oshOverdue ? 'fa-triangle-exclamation' : 'fa-gavel'}`} />
+          {detailQ.isError && (
+            <div class="hse-idrawer-banner hse-idrawer-banner--danger">
+              <i class="fas fa-triangle-exclamation" />
               <div class="hse-idrawer-banner-text">
-                <strong>{oshOverdue ? 'OSH Verbal Notification — OVERDUE' : 'OSH Verbal Notification Required'}</strong>
-                <span>Due: {new Date(oshDue).toLocaleString('en-GB')} · OSH Act 2004 s.19</span>
-              </div>
-              <button class="hse-btn" style={{ padding: '4px 10px', fontSize: '0.72rem', flexShrink: 0 }}
-                onClick={markOshVerbal} disabled={markingOsh}>
-                {markingOsh ? 'Saving…' : 'Mark Notified'}
-              </button>
-            </div>
-          )}
-          {oshDue && oshNotified && !liveRecord?.osh_written_at && (
-            <div class="hse-idrawer-banner hse-idrawer-banner--warn">
-              <i class="fas fa-circle-check" />
-              <div class="hse-idrawer-banner-text">
-                <strong>Verbal notification logged</strong>
-                <span>Written report due within 7 days · {new Date(oshNotified).toLocaleString('en-GB')}</span>
+                <strong>Failed to load incident detail</strong>
+                <span>{(detailQ.error as Error)?.message ?? 'Unknown error'}</span>
               </div>
             </div>
           )}
-          {oshNotified && liveRecord?.osh_written_at && (
-            <div class="hse-idrawer-banner hse-idrawer-banner--ok">
-              <i class="fas fa-circle-check" />
-              <div class="hse-idrawer-banner-text">
-                <strong>OSH notifications complete</strong>
-                <span>Verbal and written report filed.</span>
-              </div>
-            </div>
-          )}
-
-          {/* Info grid */}
-          <div class="hse-idrawer-grid">
-            <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span>
-              <strong><span class={hsePill(i?.status ?? '')}>{i?.status ?? '—'}</span></strong>
-            </div>
-            <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Date</span><strong>{i?.date ?? '—'}</strong></div>
-            <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Reporter</span><strong>{i?.reporter ?? '—'}</strong></div>
-            {liveRecord?.osh_classification && (
-              <div class="hse-idrawer-cell"><i class="fas fa-tag" /><span>Classification</span>
-                <strong>{OSH_CLASSES.find(o => o.value === liveRecord.osh_classification)?.label ?? liveRecord.osh_classification}</strong>
-              </div>
-            )}
-            {liveRecord && liveRecord.lost_days > 0 && (
-              <div class="hse-idrawer-cell"><i class="fas fa-calendar-xmark" /><span>Lost days</span><strong>{liveRecord.lost_days}</strong></div>
-            )}
-          </div>
-
-          {/* Incident Description */}
-          <div class="hse-idrawer-section">
-            <div class="hse-idrawer-section-head"><i class="fas fa-align-left" /> Incident Description</div>
-            <p class="hse-idrawer-body-text">{i?.description ?? '—'}</p>
-            {i?.immediateActions && i.immediateActions !== '—' && (
-              <div class="hse-idrawer-action-note">
-                <i class="fas fa-bolt" /> <strong>Immediate action:</strong> {i.immediateActions}
-              </div>
-            )}
-          </div>
-
-          {/* Injury details */}
-          {liveRecord && (!!liveRecord.injury_type || !!liveRecord.body_part) && (
-            <div class="hse-idrawer-section">
-              <div class="hse-idrawer-section-head"><i class="fas fa-person-falling" /> Injury Details</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
-                {liveRecord.injury_type    && <><span style={{ color: 'var(--text-muted)' }}>Nature:</span><span>{liveRecord.injury_type}</span></>}
-                {liveRecord.body_part      && <><span style={{ color: 'var(--text-muted)' }}>Body part:</span><span>{liveRecord.body_part}</span></>}
-                {liveRecord.return_to_work && <><span style={{ color: 'var(--text-muted)' }}>Return to work:</span><span>{new Date(liveRecord.return_to_work).toLocaleDateString('en-GB')}</span></>}
-              </div>
-            </div>
-          )}
-
-          {/* People involved */}
-          {people.length > 0 && (
-            <div class="hse-idrawer-section">
-              <div class="hse-idrawer-section-head"><i class="fas fa-users" /> People Involved</div>
-              <div class="ppe-signals-list">
-                {people.map((p, idx) => {
-                  const isContractor = p.person_type === 'contractor';
-                  return (
-                    <div class="ppe-signal" key={idx}>
-                      <i class={`fas ${isContractor ? 'fa-helmet-safety is-warn' : 'fa-user is-info'}`} />
-                      <div class="ppe-signal-text">
-                        <strong>{p.full_name}{p.user_id ? ` (${p.user_id})` : ''}</strong>
-                        <span>{p.role_or_company ?? (isContractor ? 'Contractor' : p.person_type)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Witnesses */}
-          {witnesses.length > 0 && (
-            <div class="hse-idrawer-section">
-              <div class="hse-idrawer-section-head"><i class="fas fa-eye" /> Witnesses</div>
-              {witnesses.map((w, idx) => (
-                <div key={idx} style={{ marginBottom: '8px', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: '10px' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
-                    {w.full_name}{w.user_id ? ` (${w.user_id})` : ''}
-                  </div>
-                  {w.injury_description && <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{w.injury_description}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Investigation workflow */}
-          <div class="hse-idrawer-section">
-            <div class="hse-idrawer-section-head"><i class="fas fa-diagram-project" /> Investigation Workflow</div>
-            <div class="hse-idrawer-wf-steps">
-              {steps.map((step, idx) => (
-                <div key={idx} class={`hse-idrawer-wf-step${step.done ? ' wf-done' : step.active ? ' wf-active' : ' wf-pending'}`}>
-                  {idx < steps.length - 1 && <div class="hse-idrawer-wf-line" />}
-                  <div class="hse-idrawer-wf-icon">
-                    <i class={`fas ${step.done ? 'fa-check' : step.icon}`} />
-                  </div>
-                  <div class="hse-idrawer-wf-card">
-                    <div class="hse-idrawer-wf-label">{step.label}</div>
-                    <div class="hse-idrawer-wf-sub">{step.sub}</div>
-                    {step.done && <span class="hse-idrawer-wf-badge wf-badge-done"><i class="fas fa-circle-check" /> Complete</span>}
-                    {step.active && <span class="hse-idrawer-wf-badge wf-badge-active"><i class="fas fa-circle-dot" /> In Progress</span>}
-                    {!step.done && !step.active && <span class="hse-idrawer-wf-badge wf-badge-pending"><i class="fas fa-clock" /> Pending</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          {(TAB_RENDER[activeTab] ?? renderOverview)()}
         </div>
 
         {/* ── Footer ── */}
         <div class="hse-drawer-foot">
           <button class="hse-btn" onClick={onClose}>Close</button>
-          <button class="hse-btn primary" onClick={onInvestigate}>
-            <i class="fas fa-magnifying-glass-chart" /> Open Investigation
-          </button>
+          {activeTab !== 'investigation' && (
+            <button class="hse-btn primary" onClick={onInvestigate}>
+              <i class="fas fa-magnifying-glass-chart" /> Open Investigation
+            </button>
+          )}
         </div>
       </aside>
     </>

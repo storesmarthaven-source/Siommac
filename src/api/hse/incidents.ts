@@ -407,6 +407,75 @@ export function useUpdateCapa() {
   });
 }
 
+// ── Incident detail (all-in-one drawer payload) ───────────────────────────────
+
+export interface HseWorkflowInstance {
+  id:                 string;
+  ref:                string;
+  template_id:        string;
+  source_module:      string;
+  source_entity_type: string;
+  source_entity_id:   string;
+  status:             string;
+  priority:           string;
+  current_step:       string | null;
+  owner_user_id:      string | null;
+  due_at:             string | null;
+  created_at:         string;
+  updated_at:         string | null;
+}
+
+export interface HseWorkflowTask {
+  id:               string;
+  workflow_id:      string;
+  task_type:        string;
+  title:            string;
+  assigned_role:    string | null;
+  assigned_user_id: string | null;
+  status:           string;
+  due_at:           string | null;
+  completed_at:     string | null;
+  note:             string | null;
+  created_at:       string;
+}
+
+export interface HseTimelineEvent {
+  id:                 string;
+  event_type:         string;
+  source_entity_type: string;
+  source_entity_id:   string;
+  actor_user_id:      string | null;
+  severity:           string;
+  payload:            Record<string, unknown>;
+  created_at:         string;
+}
+
+export interface HseIncidentDetailData {
+  incident:      HseIncident;
+  people:        IncidentPerson[];
+  investigation: HseInvestigation | null;
+  evidence:      HseEvidence[];
+  rootCauses:    HseRootCause[];
+  capa:          HseCapa[];
+  workflow:      HseWorkflowInstance | null;
+  workflowTasks: HseWorkflowTask[];
+  timeline:      HseTimelineEvent[];
+}
+
+export function useHseIncidentDetail(incidentId: string) {
+  return useQuery({
+    queryKey: hseIncidentKeys.fullDetail(incidentId),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HseIncidentDetailData }>(
+        'hse/incidents/detail', { incidentId }, { signal },
+      );
+      if (!res.success) throw new Error((res as { message?: string }).message ?? 'Failed to load incident detail');
+      return res.data;
+    },
+    enabled: !!incidentId,
+  });
+}
+
 // ── Dashboard KPIs ────────────────────────────────────────────────────────────
 
 export function useHseDashboardKpis() {

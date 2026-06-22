@@ -394,4 +394,111 @@ router.post('/dashboard/kpis', async c => {
   });
 });
 
+// ── POST /api/hse/incidents/detail ───────────────────────────────────────────
+// Returns all drawer data for one incident in 3 async phases:
+//   Phase 1: incident row
+//   Phase 2: people, investigations, incident-level CAPA, workflow, timeline
+//   Phase 3: evidence, root causes, inv-level CAPA, workflow tasks
+
+router.post('/incidents/detail', async c => {
+  await requirePermission(c, 'hse.incidents.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const args = body.args as { incidentId?: string; ref?: string } | undefined;
+
+  if (!args?.incidentId && !args?.ref) {
+    return c.json({ success: false, message: 'incidentId or ref required' }, 400 as 200);
+  }
+
+  // Phase 1 — fetch the incident
+  let incQ = sb.from('hse_incidents').select('*');
+  if (args.incidentId) incQ = incQ.eq('id', args.incidentId);
+  else                 incQ = incQ.eq('ref', args.ref!);
+
+  const incRes = await incQ.maybeSingle();
+  if (!incRes.data) return c.json({ success: false, message: 'Incident not found' }, 404 as 200);
+
+  const incident   = incRes.data as Record<string, unknown>;
+  const incidentId = incident.id as string;
+  const incidentRef = incident.ref as string;
+
+  // Phase 2 — all data queryable from incidentId / incidentRef
+  const [peopleRes, invRes, incCapaRes, wfRes, timelineRes] = await Promise.all([
+    sb.from('hse_incident_people')
+      .select('*')
+      .eq('incident_id', incidentId)
+      .order('created_at'),
+    sb.from('hse_investigations')
+      .select('*')
+      .eq('incident_id', incidentId)
+      .order('created_at', { ascending: false })
+      .limit(1),
+    sb.from('hse_capa_actions')
+      .select('*')
+      .eq('source_type', 'incident')
+      .eq('source_id', incidentRef)
+      .order('due_at', { ascending: true, nullsFirst: false }),
+    sb.from('workflow_instances')
+      .select('*')
+      .eq('source_module', 'hse')
+      .eq('source_entity_type', 'incident')
+      .eq('source_entity_id', incidentRef)
+      .order('created_at', { ascending: false })
+      .limit(1),
+    sb.from('app_events')
+      .select('id, event_type, source_entity_type, source_entity_id, actor_user_id, severity, payload, created_at')
+      .eq('source_entity_id', incidentRef)
+      .order('created_at', { ascending: false })
+      .limit(30),
+  ]);
+
+  const investigation = ((invRes.data ?? []) as Record<string, unknown>[])[0] ?? null;
+  const workflow      = ((wfRes.data ?? []) as Record<string, unknown>[])[0] ?? null;
+
+  // Phase 3 — data that needs investigation.id or workflow.id
+  let evidence:      unknown[] = [];
+  let rootCauses:    unknown[] = [];
+  let invCapa:       unknown[] = [];
+  let workflowTasks: unknown[] = [];
+
+  const phase3: Promise<void>[] = [];
+
+  if (investigation) {
+    const invId  = investigation.id  as string;
+    const invRef = investigation.ref as string | undefined;
+    phase3.push(
+      (async () => { const r = await sb.from('hse_investigation_evidence').select('*').eq('investigation_id', invId).order('created_at'); evidence = r.data ?? []; })(),
+      (async () => { const r = await sb.from('hse_root_causes').select('*').eq('investigation_id', invId); rootCauses = r.data ?? []; })(),
+    );
+    if (invRef) {
+      phase3.push(
+        (async () => { const r = await sb.from('hse_capa_actions').select('*').eq('source_type', 'investigation').eq('source_id', invRef).order('due_at', { ascending: true, nullsFirst: false }); invCapa = r.data ?? []; })(),
+      );
+    }
+  }
+
+  if (workflow) {
+    const wfId = workflow.id as string;
+    phase3.push(
+      (async () => { const r = await sb.from('workflow_tasks').select('*').eq('workflow_id', wfId).order('created_at'); workflowTasks = r.data ?? []; })(),
+    );
+  }
+
+  await Promise.all(phase3);
+
+  return c.json({
+    success: true,
+    data: {
+      incident,
+      people:        peopleRes.data    ?? [],
+      investigation: investigation     ?? null,
+      evidence,
+      rootCauses,
+      capa:          [...(incCapaRes.data ?? []), ...invCapa],
+      workflow:      workflow           ?? null,
+      workflowTasks,
+      timeline:      timelineRes.data  ?? [],
+    },
+  });
+});
+
 export default router;
