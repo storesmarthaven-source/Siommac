@@ -994,6 +994,14 @@ body[data-theme="dark"] .hse-area-topbar .hse-hero-area-icon { color: rgba(255,2
 
 .hse-drawer--rich {
   width: min(520px, 100vw);
+  /* hero | tabbar | scrollable body | footer */
+  grid-template-rows: auto auto 1fr auto;
+}
+.hse-drawer--rich .hse-drawer-body {
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Navy hero at the top */
