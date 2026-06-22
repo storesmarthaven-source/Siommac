@@ -23,6 +23,7 @@ import {
   SplitLayout,
   type ModuleTab, type TabDef, type Column,
 } from '@ui';
+import { ThemeEditor } from './ThemeEditor';
 
 // ── Catalog scaffolding ─────────────────────────────────────────────────────────
 
@@ -93,14 +94,22 @@ export function UIKitPage(): VNode {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing]       = useState(false);
 
   return (
     <div style={{ maxWidth: '1100px' }}>
-      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 'var(--space-6)' }}>
-        Every component below comes from <code>@ui</code> and is themed entirely through design
-        tokens. This is the single source of truth for how the app looks. Edit a component in
-        <code> src/ui</code> or a token in <code>assets/styles/base.css</code> and every page updates.
-      </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, flex: 1 }}>
+          Every component below comes from <code>@ui</code> and is themed entirely through design
+          tokens. This is the single source of truth for how the app looks. Toggle the theme editor
+          to change tokens live and persist them app-wide — the catalog doubles as a preview.
+        </p>
+        <Button variant={editing ? 'primary' : 'blue'} icon="fa-palette" onClick={() => setEditing(e => !e)}>
+          {editing ? 'Close editor' : 'Edit theme'}
+        </Button>
+      </div>
+
+      {editing && <ThemeEditor />}
 
       {/* PAGE SHAPE ----------------------------------------------------------- */}
       <Section id="uikit-pageshape" title="Page shape" sub="The standard module page: hero (four stat cards) → optional spark row → navigation tabs → content.">

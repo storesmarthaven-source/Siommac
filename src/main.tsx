@@ -31,6 +31,11 @@ import '@lib/env';
 //    imports its own (section) stylesheet. Must precede all section imports.
 import './styles/index.css';
 
+// ③ Apply the saved design-system theme (token overrides) before first paint.
+//    Synchronously applies the localStorage cache, then refreshes from settings.
+import { initTheme } from '@ui/theme/applyTheme';
+initTheme();
+
 import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';
