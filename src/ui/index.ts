@@ -25,7 +25,7 @@ export { MetricRow, type MetricRowProps, type MetricCardItem } from './component
 export { useCardReorder, ArrangeControls, type CardReorder } from './components/reorder';
 
 // ── Cards & metrics ──
-export { MetricCard } from './components/MetricCard';
+export { Card, MetricCard, type CardProps } from './components/MetricCard';
 export { StatusPill } from './components/StatusPill';
 export { SparkCard, type SparkDef } from './components/SparkCard';
 export { ChartCard, type ChartCardProps } from './components/ChartCard';

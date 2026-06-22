@@ -14,7 +14,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   PageHero, ModuleTabs, TabBar, PageHeader, MetricRow, withCounts, SectionHead,
-  MetricCard, SparkCard, ChartCard, MiniCard, RecordRow, StatusPill,
+  Card, SparkCard, ChartCard, MiniCard, RecordRow, StatusPill,
   Sparkline, BarRow, ProgressBar,
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
@@ -209,11 +209,17 @@ export function UIKitPage(): VNode {
               { label: 'Env.',   value: 7, max: 34, color: '#3b82f6' },
             ] }} />
           </Demo>
-          <Demo label="MetricCard — shell with custom body">
-            <MetricCard icon="fa-list-check" title="Open Actions">
+          <Demo label="Card — standard shell (header + body)">
+            <Card icon="fa-list-check" title="Open Actions" headerRight={<span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>MTD</span>}>
               <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>27</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>5 due this week</div>
-            </MetricCard>
+            </Card>
+          </Demo>
+          <Demo label="Card — navy variant (control/watch tiles)">
+            <Card icon="fa-file-shield" title="Regulatory Watch" variant="navy">
+              <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fca5a5' }}>2</div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.55)' }}>OSH reviews due</div>
+            </Card>
           </Demo>
           <Demo label="ChartCard — titled container">
             <ChartCard label="Trend" headerRight={<StatusPill tone="positive">▲ 12%</StatusPill>}>

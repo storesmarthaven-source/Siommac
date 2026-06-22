@@ -27,7 +27,7 @@ ProfilePill lives only in the app-level header (`AppShell`), never per-page.
 | Page shape | `PageHero` (module dashboard) · `PageHeader` (sub-module) · `ModuleTabs` / `TabBar` (+ `withCounts`) · `SectionHead` |
 | Rearrangeable cards | `MetricRow` · `useCardReorder` + `ArrangeControls` (drag-to-arrange, persisted via `ui_layout`) |
 | Layouts | `ModulePageLayout` · `SplitLayout` · `RegisterLayout` |
-| Cards & metrics | `MetricCard` · `SparkCard` · `ChartCard` · `MiniCard` · `RecordRow` · `StatusPill` |
+| Cards & metrics | `Card` (the standard card shell — header + body, default/navy, forwards drag props) · `MetricCard` (alias) · `SparkCard` · `ChartCard` · `MiniCard` · `RecordRow` · `StatusPill` |
 | Charts | `Sparkline` · `BarRow` · `ProgressBar` |
 | Inputs & forms | `Button` · `Field` · `TextInput` · `SelectInput` · `TextareaInput` · `FormGrid` · `Toolbar`/`SearchInput`/`FilterSelect` |
 | Data | `RegisterTable` · `Tabs` |

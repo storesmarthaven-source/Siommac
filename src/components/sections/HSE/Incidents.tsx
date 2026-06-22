@@ -12,11 +12,11 @@
  * All mutations: call real backend; optimistic UI via query invalidation.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, cloneElement, toChildArray } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
-  TextInput, SelectInput, TextareaInput,
+  TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
   type AreaTab,
 } from '@ui';
 import {
@@ -453,6 +453,43 @@ function InvestigationPipeline({ incidents, investigations }: {
 
 // ── CAPA Summary Strip (horizontal, shown above incident register) ─────────────
 
+/**
+ * Wraps the four bespoke control-strip cards in the standard rearrange behaviour
+ * (drag to reorder, persisted via ui_layout). Drag handlers are cloned onto each
+ * `.inc-mini-card` directly so the `.capa-strip-four-cards` grid layout is kept.
+ */
+function ReorderStrip({ pageKey, keys, children }: {
+  pageKey: string; keys: string[]; children: ComponentChildren;
+}): VNode {
+  const kids = toChildArray(children) as VNode[];
+  const r = useCardReorder(pageKey, keys);
+  const byKey = new Map<string, VNode>();
+  keys.forEach((k, i) => { const node = kids[i]; if (node) byKey.set(k, node); });
+  const order = r.enabled ? r.order : keys;
+  return (
+    <div>
+      {r.enabled && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-2)' }}>
+          <ArrangeControls reorder={r} variant="light" />
+        </div>
+      )}
+      <div class="capa-strip-four-cards">
+        {order.map(k => {
+          const node = byKey.get(k);
+          if (!node) return null;
+          return cloneElement(node, {
+            key: k,
+            ...r.dragHandlers(k),
+            style: r.arranging
+              ? { cursor: 'grab', outline: '1px dashed var(--border)', borderRadius: '14px', opacity: r.dragKey === k ? 0.4 : 1 }
+              : undefined,
+          });
+        })}
+      </div>
+    </div>
+  );
+}
+
 function IncidentControlStrip({ incidents, investigations, capa, closurePct, avgDaysToClose, pageTab }: {
   incidents: IncidentRecord[];
   investigations: Investigation[];
@@ -518,7 +555,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
     const firstOverdue = overdueActs2[0];
     const firstPendEv  = pendingEvActs[0];
     return (
-      <div class="capa-strip-four-cards">
+      <ReorderStrip pageKey={`hse.incidents.${pageTab}`} keys={['open', 'overdue', 'verification', 'ownership']}>
 
         {/* CAPA Card 1 — Open Actions */}
         <div class="inc-mini-card">
@@ -638,13 +675,13 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
         </div>
 
-      </div>
+      </ReorderStrip>
     );
   }
 
   if (pageTab === 'investigations') {
     return (
-      <div class="capa-strip-four-cards">
+      <ReorderStrip pageKey={`hse.incidents.${pageTab}`} keys={['active', 'evidence', 'rootcause', 'capa']}>
 
         {/* Inv Card 1 — Open Investigations (white) */}
         <div class="inc-mini-card">
@@ -765,12 +802,12 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
         </div>
 
-      </div>
+      </ReorderStrip>
     );
   }
 
   return (
-    <div class="capa-strip-four-cards">
+    <ReorderStrip pageKey={`hse.incidents.${pageTab}`} keys={['severity', 'report', 'control', 'regulatory']}>
 
       {/* Card 1 — Severity Mix */}
       <div class="inc-mini-card">
@@ -950,7 +987,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
       </div>
 
 
-    </div>
+    </ReorderStrip>
   );
 }
 

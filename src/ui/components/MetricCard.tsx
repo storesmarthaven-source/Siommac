@@ -1,39 +1,63 @@
 /**
  * src/ui/components/MetricCard.tsx
  *
- * The summary card used in the top-card strip on register pages (Incidents,
- * CAPA, …). Wraps the existing `.inc-mini-card` markup — header (icon + title)
- * over a body — with an optional dark `navy` variant for "watch" cards.
+ * The STANDARD CARD for the whole ERP — one outline/window, different data inside.
+ * Every "card" on every page (dashboard stat tiles, sub-module metric strips,
+ * register insight cards) renders this same shell:
  *
- * It is intentionally a SHELL: pass whatever body content you need as children
- * (a big number, a list of signal rows, a progress bar). This matches how the
- * real pages use these cards — the header is uniform, the body varies.
+ *   ┌ header: icon chip + title ............ headerRight ┐
+ *   │ body: whatever the page needs (children)           │
+ *   └────────────────────────────────────────────────────┘
+ *
+ * Wraps the existing `.inc-mini-card` markup (+ `inc-mini-card-navy` for the dark
+ * variant) so it's a zero-visual-change drop-in. Any extra DOM props (draggable,
+ * onDrag*, style, …) are forwarded to the root, so a Card can be made
+ * rearrangeable just by spreading drag handlers onto it.
+ *
+ * Exported as both `Card` (canonical) and `MetricCard` (back-compat).
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, type JSX } from 'preact';
 
-interface MetricCardProps {
+export interface CardProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, 'icon' | 'title'> {
   /** FontAwesome icon class, e.g. "fa-list-check". */
-  icon: string;
-  title: string;
-  /** Dark navy "regulatory watch" styling. */
+  icon?: string;
+  title?: ComponentChildren;
+  /** Right-aligned header content (a badge, a "MTD · 6 total" note, a select). */
+  headerRight?: ComponentChildren;
+  /** 'navy' = the dark card used for "watch"/control tiles. */
+  variant?: 'default' | 'navy';
+  /** Back-compat shorthand for variant="navy". */
   navy?: boolean;
   /** Inline colour override for the header icon (e.g. a status token). */
   iconColor?: string;
-  class?: string;
+  /** Style/class for the inner body wrapper. */
+  bodyStyle?: JSX.CSSProperties;
+  bodyClass?: string;
   children?: ComponentChildren;
 }
 
-export function MetricCard({ icon, title, navy, iconColor, class: extra, children }: MetricCardProps): VNode {
-  const cardCls = `inc-mini-card${navy ? ' inc-mini-card-navy' : ''}${extra ? ' ' + extra : ''}`;
-  const headCls = `inc-mini-card-header${navy ? ' inc-mini-card-header-navy' : ''}`;
+export function Card({
+  icon, title, headerRight, variant, navy, iconColor,
+  class: extra, bodyStyle, bodyClass, children, ...rest
+}: CardProps): VNode {
+  const isNavy = variant === 'navy' || navy;
+  const cardCls = `inc-mini-card${isNavy ? ' inc-mini-card-navy' : ''}${extra ? ' ' + (extra as string) : ''}`;
+  const headCls = `inc-mini-card-header${isNavy ? ' inc-mini-card-header-navy' : ''}`;
+  const hasHeader = icon || title || headerRight;
   return (
-    <div class={cardCls}>
-      <div class={headCls}>
-        <i class={`fas ${icon}`} style={iconColor ? { color: iconColor } : undefined} />
-        <span>{title}</span>
-      </div>
-      <div class="inc-mini-card-body">{children}</div>
+    <div class={cardCls} {...rest}>
+      {hasHeader && (
+        <div class={headCls}>
+          {icon && <i class={`fas ${icon}`} style={iconColor ? { color: iconColor } : undefined} />}
+          {title && <span>{title}</span>}
+          {headerRight}
+        </div>
+      )}
+      <div class={`inc-mini-card-body${bodyClass ? ' ' + bodyClass : ''}`} style={bodyStyle}>{children}</div>
     </div>
   );
 }
+
+/** Back-compat alias. */
+export const MetricCard = Card;
