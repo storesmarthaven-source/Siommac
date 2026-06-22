@@ -60,8 +60,9 @@ interface Witness {
 // involved people and witnesses live in hse_incident_people (fetched alongside).
 
 function dbSeverityToUi(s: string): IncidentRecord['severity'] {
-  if (s === 'critical' || s === 'high') return 'danger';
-  if (s === 'moderate') return 'warning';
+  if (s === 'critical') return 'danger';
+  if (s === 'high')     return 'warning';
+  if (s === 'moderate') return 'info';
   return 'success';
 }
 
@@ -92,15 +93,18 @@ function dbStatusToUi(s: string): string {
 
 function dbToIncidentRecord(i: HseIncident): IncidentRecord {
   return {
-    ref:              i.ref,
-    date:             new Date(i.incident_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    type:             dbTypeToUi(i.incident_type),
-    severity:         dbSeverityToUi(i.severity),
-    site:             i.location_text ?? i.site_id ?? '—',
-    status:           dbStatusToUi(i.status),
-    reporter:         i.reported_by ?? '—',
-    description:      i.description ?? '',
-    immediateActions: i.immediate_action ?? '—',
+    ref:                 i.ref,
+    date:                new Date(i.incident_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    type:                dbTypeToUi(i.incident_type),
+    severity:            dbSeverityToUi(i.severity),
+    site:                i.location_text ?? i.site_id ?? '—',
+    status:              dbStatusToUi(i.status),
+    reporter:            i.reported_by ?? '—',
+    description:         i.description ?? '',
+    immediateActions:    i.immediate_action ?? '—',
+    lostTime:            i.lost_time,
+    oshNotificationDue:  i.osh_notification_due,
+    oshNotifiedAt:       i.osh_notified_at,
   };
 }
 
@@ -457,23 +461,27 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
   avgDaysToClose: number;
   pageTab: string;
 }): VNode {
+  const now           = new Date();
+  const startOfMonth  = new Date(now.getFullYear(), now.getMonth(), 1);
+  const mtdIncidents  = incidents.filter(i => i.date && new Date(i.date) >= startOfMonth);
+
   const activeInvest = incidents.filter(i => /investigation/i.test(i.status)).length;
-  const unassigned   = incidents.filter(i => /open/i.test(i.status)).length;
+  const needsTriage  = incidents.filter(i => /open/i.test(i.status)).length;
   const linkedCapas  = capa.filter(c => !/closed|verified/i.test(c.status)).length;
   const pendingEv    = capa.filter(c => /pending|evidence/i.test(c.status)).length;
   const emaNotifs    = incidents.filter(i => i.type === 'Environmental' && !/closed/i.test(i.status));
-  const oshRequired  = incidents.filter(i => i.severity === 'danger' && !/closed/i.test(i.status));
-  const ltiCount     = incidents.filter(i => i.type === 'Injury' && i.severity === 'danger').length;
+  const oshRequired  = incidents.filter(i => i.oshNotificationDue && !i.oshNotifiedAt && !/closed/i.test(i.status));
+  const ltiCount     = incidents.filter(i => i.lostTime === true).length;
   const overdueActs  = capa.filter(c => /overdue/i.test(c.status)).length;
   const priority     = emaNotifs[0] ?? oshRequired[0] ?? null;
 
   const sevCounts = {
-    danger:  incidents.filter(i => i.severity === 'danger').length,
-    warning: incidents.filter(i => i.severity === 'warning').length,
-    info:    incidents.filter(i => i.severity === 'info').length,
-    success: incidents.filter(i => i.severity === 'success').length,
+    danger:  mtdIncidents.filter(i => i.severity === 'danger').length,
+    warning: mtdIncidents.filter(i => i.severity === 'warning').length,
+    info:    mtdIncidents.filter(i => i.severity === 'info').length,
+    success: mtdIncidents.filter(i => i.severity === 'success').length,
   };
-  const total = incidents.length || 1;
+  const total = mtdIncidents.length || 1;
   const SEV_COLORS  = { danger: '#ef4444', warning: '#f59e0b', info: '#60a5fa', success: '#4ade80' };
   const SEV_FADED   = { danger: 'rgba(239,68,68,.15)', warning: 'rgba(245,158,11,.15)', info: 'rgba(96,165,250,.15)', success: 'rgba(74,222,128,.15)' };
   const cx = 44, cy = 44, r = 34, circ = 2 * Math.PI * r;
@@ -769,7 +777,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
         <div class="inc-mini-card-header">
           <i class="fas fa-chart-pie" />
           <span>Severity Mix</span>
-          <span style={{ marginLeft: 'auto', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 400 }}>MTD · {incidents.length} total</span>
+          <span style={{ marginLeft: 'auto', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 400 }}>MTD · {mtdIncidents.length} total</span>
         </div>
         <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
           {/* Large donut — no blur, clean gaps */}
@@ -802,7 +810,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
             </svg>
             {/* Center — total + open count */}
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-              <span style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{incidents.length}</span>
+              <span style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
               <span style={{ fontSize: '0.52rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', fontWeight: 600 }}>Incidents</span>
               <span style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 700, marginTop: '2px' }}>
                 {sevCounts.danger} critical
@@ -876,7 +884,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '12px' }}>
             {[
               { val: activeInvest, label: 'Active investigations', color: '#60a5fa' },
-              { val: unassigned,   label: 'Unassigned',            color: '#f59e0b' },
+              { val: needsTriage,  label: 'Needs Triage',          color: '#f59e0b' },
               { val: linkedCapas,  label: 'Linked CAPAs',          color: '#c4b5fd' },
               { val: pendingEv,    label: 'Pending evidence',       color: '#fb923c' },
             ].map(k => (
@@ -1030,7 +1038,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   const capa           = capaQ.data?.map(dbToCapa)                    ?? [];
 
   const ltiFreeDays = kpisQ.data?.ltiFreeDays ?? 47;
-  const ltifr       = 1.8;
+
 
   const openCount = incidents.filter(i => !/closed/i.test(i.status)).length;
   const critCount = incidents.filter(i => i.severity === 'danger').length;

@@ -254,6 +254,9 @@ export type IncidentType = 'Injury' | 'Near Miss' | 'Environmental' | 'Property 
 export interface IncidentRecord {
   ref: string; date: string; type: IncidentType; severity: HseSeverity;
   site: string; status: string; reporter: string; description: string; immediateActions: string;
+  lostTime?: boolean;
+  oshNotificationDue?: string | null;
+  oshNotifiedAt?: string | null;
 }
 
 export const mockIncidents: IncidentRecord[] = [
