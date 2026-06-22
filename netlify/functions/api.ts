@@ -31,6 +31,7 @@ import handoffsRouter       from './routes/handoffs';
 import hseIncidentsRouter   from './routes/hseIncidents';
 import hseInvestigationsRouter from './routes/hseInvestigations';
 import hseCapaRouter        from './routes/hseCapa';
+import hseRiskJsaRouter    from './routes/hseRiskJsa';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -144,6 +145,7 @@ app.route('/api/superadmin', superadminRouter);
 app.route('/api/hse',        hseIncidentsRouter);
 app.route('/api/hse',        hseInvestigationsRouter);
 app.route('/api/hse',        hseCapaRouter);
+app.route('/api/hse',        hseRiskJsaRouter);
 app.route('/api/workflow',   workflowRouter);
 app.route('/api',            workflowsRouter);
 app.route('/api',            communicationsRouter);

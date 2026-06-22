@@ -17,6 +17,9 @@ export type RefPrefix =
   | 'INC'   // HSE Incident
   | 'INV'   // HSE Investigation
   | 'CAPA'  // CAPA Action
+  | 'HAZ'   // HSE Hazard
+  | 'RA'    // Risk Assessment
+  | 'JSA'   // Job Safety Analysis
   | 'WF'    // Workflow
   | 'TKT'   // Ticket
   | 'HO'    // Handoff
