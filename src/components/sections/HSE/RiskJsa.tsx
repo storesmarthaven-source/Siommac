@@ -216,28 +216,34 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
         {/* Right-side supporting panel — changes by tab */}
         <div class="hse-right-col">
-          <div style={{ position: 'relative', marginBottom: '14px' }}>
-            <button class="hse-btn primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setNewMenuOpen(o => !o)}>
-              <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
-            </button>
-            {newMenuOpen && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
-                <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 41, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
-                  {[
-                    { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
-                    { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
-                    { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
-                    { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
-                  ].map(it => (
-                    <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
-                      <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+          <div style={{
+            background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px',
+            boxShadow: 'var(--shadow-card)', marginBottom: '14px', padding: '6px 8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minHeight: '60px',
+          }}>
+            <div style={{ position: 'relative' }}>
+              <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
+                <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
+              </button>
+              {newMenuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '210px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
+                    {[
+                      { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
+                      { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
+                      { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
+                      { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
+                    ].map(it => (
+                      <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
+                        <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <RiskJsaRightPanel
             activeTab={active as 'hazards' | 'assessments' | 'jsa'}
