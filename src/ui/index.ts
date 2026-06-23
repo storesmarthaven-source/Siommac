@@ -46,6 +46,7 @@ export { Field, TextInput, SelectInput, TextareaInput, FormGrid } from './compon
 // ── Data ──
 export { Tabs, type TabDef } from './components/Tabs';
 export { RegisterTable, type Column } from './components/RegisterTable';
+export { Pagination, usePagination, DEFAULT_PAGE_SIZE, type PaginationProps, type PaginationState } from './components/Pagination';
 
 // ── Overlays (standard window) ──
 export { Modal, HseModal, type ModalProps } from './components/Modal';

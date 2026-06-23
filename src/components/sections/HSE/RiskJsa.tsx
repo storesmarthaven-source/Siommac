@@ -9,7 +9,7 @@
 import { type VNode }   from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, withCounts, NewMenu,
+  PageHeader, TabBar, withCounts, NewMenu, Pagination, usePagination,
   type AreaTab,
 } from '@ui';
 import { HSE_SITES, hsePill } from './types';
@@ -312,6 +312,7 @@ function HazardTab({
   });
   const all      = data?.data ?? [];
   const hazards  = all.filter(h => matchesSite(h, siteId));
+  const pg = usePagination(hazards);
 
   return (
     <div class="hse-area-main">
@@ -374,7 +375,7 @@ function HazardTab({
               {!isLoading && hazards.length === 0 && (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No hazards match.</td></tr>
               )}
-              {hazards.map(h => (
+              {pg.pageItems.map(h => (
                 <tr key={h.id} onClick={() => onSelect(h)} style={{ cursor: 'pointer' }}
                     class={selected?.id === h.id ? 'vt-row-active' : ''}>
                   <td>
@@ -395,10 +396,7 @@ function HazardTab({
             </tbody>
           </table>
         </div>
-        <div class="vt-table-foot">
-          <span>Showing {hazards.length} of {all.length} hazards</span>
-          <span>Click any row to open detail · Esc to close</span>
-        </div>
+        <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun="hazards" />
       </div>
     </div>
   );
@@ -421,6 +419,7 @@ function AssessmentsTab({
   const { data, isLoading } = useAssessments({ status: status || undefined });
   const all         = data?.data ?? [];
   const assessments = all.filter(a => matchesSite(a, siteId));
+  const pg = usePagination(assessments);
 
   return (
     <div class="hse-area-main">
@@ -475,7 +474,7 @@ function AssessmentsTab({
               {!isLoading && assessments.length === 0 && (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No assessments match.</td></tr>
               )}
-              {assessments.map(a => (
+              {pg.pageItems.map(a => (
                 <tr key={a.id} onClick={() => onSelect(a)} style={{ cursor: 'pointer' }}
                     class={selected?.id === a.id ? 'vt-row-active' : ''}>
                   <td>
@@ -496,10 +495,7 @@ function AssessmentsTab({
             </tbody>
           </table>
         </div>
-        <div class="vt-table-foot">
-          <span>Showing {assessments.length} of {all.length} assessments</span>
-          <span>Click any row to open detail · Esc to close</span>
-        </div>
+        <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun="assessments" />
       </div>
     </div>
   );
@@ -521,6 +517,7 @@ function JsaTab({
   const { data, isLoading } = useJsaList({ status: status || undefined });
   const all  = data?.data ?? [];
   const jsas = all.filter(j => matchesSite(j, siteId));
+  const pg = usePagination(jsas);
 
   return (
     <div class="hse-area-main">
@@ -573,7 +570,7 @@ function JsaTab({
               {!isLoading && jsas.length === 0 && (
                 <tr><td colSpan={6} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No JSAs match.</td></tr>
               )}
-              {jsas.map(j => (
+              {pg.pageItems.map(j => (
                 <tr key={j.id} onClick={() => onSelect(j)} style={{ cursor: 'pointer' }}
                     class={selected?.id === j.id ? 'vt-row-active' : ''}>
                   <td>
@@ -593,10 +590,7 @@ function JsaTab({
             </tbody>
           </table>
         </div>
-        <div class="vt-table-foot">
-          <span>Showing {jsas.length} of {all.length} JSAs</span>
-          <span>Click any row to open detail · Esc to close</span>
-        </div>
+        <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun="JSAs" />
       </div>
     </div>
   );

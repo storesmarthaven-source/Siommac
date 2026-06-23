@@ -17,7 +17,7 @@ import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
-  MetricRow, StatsCard, Sparkline, NewMenu, type AreaTab,
+  MetricRow, StatsCard, Sparkline, NewMenu, Pagination, usePagination, type AreaTab,
 } from '@ui';
 import {
   hsePill, HSE_SITES,
@@ -826,32 +826,32 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
       { key: 'severity', node: (
         <StatsCard icon="fa-chart-pie" title="Severity Mix"
           chart={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ position: 'relative', flexShrink: 0, width: 94, height: 94 }}>
-                <svg width="94" height="94" viewBox="0 0 94 94">
-                  <circle cx="47" cy="47" r="38" fill="none" stroke="#eef0f5" stroke-width="9" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ position: 'relative', flexShrink: 0, width: 150, height: 150 }}>
+                <svg width="150" height="150" viewBox="0 0 150 150">
+                  <circle cx="75" cy="75" r="62" fill="none" stroke="#eef0f5" stroke-width="15" />
                   {(() => {
-                    const R = 38, C = 2 * Math.PI * R; let acc = 0;
+                    const R = 62, C = 2 * Math.PI * R; let acc = 0;
                     return (['danger','warning','info','success'] as const).map(k => {
                       const frac = sevCounts[k] / total;
                       if (frac <= 0) return null;
-                      const segLen = Math.max(0, frac * C - 3);
+                      const segLen = Math.max(0, frac * C - 4);
                       const rot = acc * 360 - 90;
                       acc += frac;
-                      return <circle key={k} cx="47" cy="47" r={R} fill="none" stroke={SEV_COLORS[k]} stroke-width="9"
-                        stroke-dasharray={`${segLen} ${C - segLen}`} transform={`rotate(${rot} 47 47)`} stroke-linecap="butt" />;
+                      return <circle key={k} cx="75" cy="75" r={R} fill="none" stroke={SEV_COLORS[k]} stroke-width="15"
+                        stroke-dasharray={`${segLen} ${C - segLen}`} transform={`rotate(${rot} 75 75)`} stroke-linecap="butt" />;
                     });
                   })()}
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1 }}>{mtdIncidents.length}</span>
-                  <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em' }}>MTD</span>
+                  <span style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
+                  <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', marginTop: '3px' }}>Incidents MTD</span>
                 </div>
               </div>
-              <div style={{ flex: 1, display: 'grid', gap: '5px', minWidth: 0 }}>
+              <div style={{ flex: 1, display: 'grid', gap: '9px', minWidth: 0 }}>
                 {([['danger','Critical'],['warning','High'],['info','Medium'],['success','Low']] as const).map(([k, label]) => (
-                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.74rem' }}>
+                    <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
                     <span style={{ color: 'var(--text-muted)', flex: 1 }}>{label}</span>
                     <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
                   </div>
@@ -1239,6 +1239,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
     });
   }, [incidents, savedView, search, typeFilter, siteFilter]);
 
+  const pg = usePagination(filtered);
 
   return (
     <div>
@@ -1303,7 +1304,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
             <tbody>
               {filtered.length === 0 ? (
                 <tr><td colSpan={9} style={{ textAlign:'center', color:'var(--text-muted)', padding:'28px' }}>No incidents match.</td></tr>
-              ) : filtered.map(i => {
+              ) : pg.pageItems.map(i => {
                 const days      = daysOpen(i.date);
                 const closed    = /closed/i.test(i.status);
                 const sev       = SEVERITY_META[i.severity] ?? SEVERITY_META['success']!;
@@ -1355,10 +1356,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
             </tbody>
           </table>
         </div>
-        <div style={{ padding:'7px 16px', borderTop:'1px solid var(--border)', fontSize:'0.68rem', color:'var(--text-muted)', display:'flex', justifyContent:'space-between' }}>
-          <span>Showing {filtered.length} of {incidents.length} incidents</span>
-          <span>Click any row to open detail · Esc to close</span>
-        </div>
+        <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun="incidents" />
       </div>
 
     </div>

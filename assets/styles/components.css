@@ -170,6 +170,23 @@
   padding: 7px 16px; border-top: 1px solid var(--border);
   font-size: 0.68rem; color: var(--text-muted);
 }
+/* Standard table pagination bar */
+.ui-pager {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 8px 16px; border-top: 1px solid var(--border); flex-wrap: wrap;
+}
+.ui-pager-info { font-size: 0.72rem; color: var(--text-muted); }
+.ui-pager-controls { display: flex; align-items: center; gap: 4px; }
+.ui-pager-ellipsis { color: var(--text-muted); padding: 0 2px; }
+.ui-pager-btn {
+  min-width: 28px; height: 28px; padding: 0 7px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--bg-card); cursor: pointer;
+  font-family: inherit; font-size: 0.74rem; font-weight: 600; color: var(--siomac-navy);
+  display: inline-flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s;
+}
+.ui-pager-btn:hover:not(:disabled) { background: var(--bg-subtle, #F8FAFE); border-color: var(--siomac-navy); }
+.ui-pager-btn.active { background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy); }
+.ui-pager-btn:disabled { opacity: .4; cursor: not-allowed; }
 /* Account cell (avatar + name) */
 .vt-cell-account { display: flex; align-items: center; gap: 11px; }
 .vt-cell-avatar {

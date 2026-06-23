@@ -8,7 +8,8 @@
  * Wraps existing `.vt-table-scroll` / `.vt-table` classes — no new CSS.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode, type ComponentChildren, toChildArray } from 'preact';
+import { usePagination, Pagination, DEFAULT_PAGE_SIZE } from './Pagination';
 
 export interface Column {
   label: string;
@@ -22,9 +23,17 @@ interface RegisterTableProps {
   children: ComponentChildren;
   /** Optional footer content (e.g. "Showing 12 of 40"). */
   footer?: ComponentChildren;
+  /** Rows per page (default 10). Pass 0 to disable pagination. */
+  pageSize?: number;
+  /** Count noun shown by the pager, e.g. "incidents". */
+  noun?: string;
 }
 
-export function RegisterTable({ columns, children, footer }: RegisterTableProps): VNode {
+export function RegisterTable({ columns, children, footer, pageSize = DEFAULT_PAGE_SIZE, noun }: RegisterTableProps): VNode {
+  const rows = toChildArray(children);
+  const paged = pageSize > 0;
+  const pg = usePagination(rows, paged ? pageSize : Math.max(1, rows.length));
+
   return (
     <>
       <div class="vt-table-scroll">
@@ -36,7 +45,7 @@ export function RegisterTable({ columns, children, footer }: RegisterTableProps)
               ))}
             </tr>
           </thead>
-          <tbody>{children}</tbody>
+          <tbody>{paged ? pg.pageItems : rows}</tbody>
         </table>
       </div>
       {footer && (
@@ -50,6 +59,9 @@ export function RegisterTable({ columns, children, footer }: RegisterTableProps)
         }}>
           {footer}
         </div>
+      )}
+      {paged && (
+        <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun={noun} />
       )}
     </>
   );

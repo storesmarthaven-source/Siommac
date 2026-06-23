@@ -911,7 +911,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
 }
 .hse-spark-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.hse-spark-header > i { font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0; }
+.hse-spark-header > i { font-size: 1.5rem; color: var(--siomac-navy); opacity: 0.16; flex-shrink: 0; }
 .hse-spark-label {
   font-size: 0.65rem; font-weight: 600; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: .04em;
@@ -936,7 +936,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   font-size: 0.56rem; color: var(--text-muted); font-weight: 500; margin-top: 1px;
 }
 .hse-spark-bar-track {
-  height: 5px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0); overflow: hidden; margin-top: 4px;
+  height: 9px; border-radius: 999px; background: var(--bg-subtle, #e2e8f0); overflow: hidden; margin-top: 6px;
 }
 .hse-spark-bar-fill { height: 100%; border-radius: inherit; }
 
