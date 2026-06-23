@@ -826,17 +826,22 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
     <MetricRow pageKey={`hse.incidents.${pageTab}`} rowClass="ui-stat-row" cards={[
       { key: 'severity', node: (
         <StatsCard icon="fa-chart-pie" title="Severity Mix" metric={mtdIncidents.length} metricUnit="MTD"
-          statuses={[
-            { label: 'Critical', value: sevCounts.danger,  color: SEV_COLORS.danger },
-            { label: 'High',     value: sevCounts.warning, color: SEV_COLORS.warning },
-            { label: 'Medium',   value: sevCounts.info,    color: SEV_COLORS.info },
-            { label: 'Low',      value: sevCounts.success, color: SEV_COLORS.success },
-          ]}
           chart={
-            <div style={{ display: 'flex', height: '10px', borderRadius: '999px', overflow: 'hidden', background: 'var(--border)' }}>
-              {(['danger','warning','info','success'] as const).map(k => sevCounts[k] > 0 ? (
-                <div key={k} style={{ width: `${(sevCounts[k] / total) * 100}%`, background: SEV_COLORS[k] }} />
-              ) : null)}
+            <div style={{ display: 'grid', gap: '8px' }}>
+              <div style={{ display: 'flex', height: '10px', borderRadius: '999px', overflow: 'hidden', background: 'var(--border)' }}>
+                {(['danger','warning','info','success'] as const).map(k => sevCounts[k] > 0 ? (
+                  <div key={k} style={{ width: `${(sevCounts[k] / total) * 100}%`, background: SEV_COLORS[k] }} />
+                ) : null)}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 14px' }}>
+                {([['danger','Critical'],['warning','High'],['info','Medium'],['success','Low']] as const).map(([k, label]) => (
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem' }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: SEV_COLORS[k], flexShrink: 0 }} />
+                    <span style={{ color: 'var(--text-muted)', flex: 1 }}>{label}</span>
+                    <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           }
           footer={`${sevCounts.danger + sevCounts.warning} high-risk this month`} />
