@@ -16,7 +16,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { useQueryClient }     from '@tanstack/preact-query';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@cfg';
-import { communicationKeys }  from '@api/queryKeys';
+import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from '@api/queryKeys';
 
 type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
@@ -52,9 +52,17 @@ export function useRealtimeSignals(channelKey: string | null): void {
           table:  'communication_signals',
           filter: `channel_key=eq.${channelKey}`,
         },
-        () => {
-          // Signal has no payload — just invalidate so summary refetches
+        (payload: { new?: { domain?: string } }) => {
+          // Summary (badge counts) always refreshes; the domain routes the rest.
           void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+          const domain = payload.new?.domain;
+          if (domain === 'notifications') {
+            void qc.invalidateQueries({ queryKey: notificationKeys.all });
+          } else if (domain === 'messages') {
+            void qc.invalidateQueries({ queryKey: messageKeys.all });
+          } else if (domain === 'tickets') {
+            void qc.invalidateQueries({ queryKey: ticketKeys.all });
+          }
         },
       )
       .subscribe();
