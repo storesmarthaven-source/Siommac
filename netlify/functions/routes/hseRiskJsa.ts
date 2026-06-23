@@ -838,6 +838,19 @@ const JsaCreateSchema = z.object({
     residualLikelihood: z.number().int().min(1).max(5).nullable().optional(),
     residualSeverity:   z.number().int().min(1).max(5).nullable().optional(),
     controlsSummary:    z.string().nullable().optional(),
+    // Nested per-step hazards (each with its own controls) — spec §7.
+    hazards: z.array(z.object({
+      description:        z.string().min(1),
+      category:           z.string().nullable().optional(),
+      initialLikelihood:  z.number().int().min(1).max(5).nullable().optional(),
+      initialSeverity:    z.number().int().min(1).max(5).nullable().optional(),
+      residualLikelihood: z.number().int().min(1).max(5).nullable().optional(),
+      residualSeverity:   z.number().int().min(1).max(5).nullable().optional(),
+      controls: z.array(z.object({
+        description: z.string().min(1),
+        controlType: z.string().default('administrative'),
+      })).default([]),
+    })).default([]),
   })).default([]),
   ppeItems: z.array(z.object({
     ppeItem:  z.string().min(1),
@@ -867,8 +880,12 @@ router.post('/risk-jsa/jsa/create', async c => {
 
   const ownerUserId = v.data.ownerUserId ?? user.id;
   const maxScore    = v.data.steps.reduce((m, s) => {
-    if (s.initialLikelihood && s.initialSeverity) return Math.max(m, s.initialLikelihood * s.initialSeverity);
-    return m;
+    let mm = m;
+    if (s.initialLikelihood && s.initialSeverity) mm = Math.max(mm, s.initialLikelihood * s.initialSeverity);
+    for (const h of s.hazards) {
+      if (h.initialLikelihood && h.initialSeverity) mm = Math.max(mm, h.initialLikelihood * h.initialSeverity);
+    }
+    return mm;
   }, 0);
   const level = maxScore > 0 ? riskLevel(maxScore) : 'medium';
 
@@ -919,7 +936,8 @@ router.post('/risk-jsa/jsa/create', async c => {
         const ops: PromiseLike<unknown>[] = [];
 
         if (v.data.steps.length > 0) {
-          ops.push(sb.from('hse_jsa_steps').insert(
+          // Insert steps first (need their ids to attach per-step hazards/controls).
+          const stepRes = await sb.from('hse_jsa_steps').insert(
             v.data.steps.map(s => ({
               jsa_id:             data.id,
               step_number:        s.stepNumber,
@@ -931,7 +949,37 @@ router.post('/risk-jsa/jsa/create', async c => {
               residual_severity:   s.residualSeverity   ?? null,
               controls_summary:   s.controlsSummary ?? null,
             })),
-          ).then(r => r));
+          ).select('id, step_number');
+          if (stepRes.error) throw stepRes.error;
+
+          const stepIdByNum = new Map((stepRes.data ?? []).map(r => [r.step_number as number, r.id as string]));
+          for (const s of v.data.steps) {
+            const stepId = stepIdByNum.get(s.stepNumber);
+            if (!stepId || s.hazards.length === 0) continue;
+            for (let hi = 0; hi < s.hazards.length; hi++) {
+              const h = s.hazards[hi]!;
+              const hzRes = await sb.from('hse_jsa_step_hazards').insert({
+                step_id:             stepId,
+                description:         h.description,
+                category:           h.category ?? null,
+                initial_likelihood: h.initialLikelihood ?? null,
+                initial_severity:   h.initialSeverity   ?? null,
+                residual_likelihood: h.residualLikelihood ?? null,
+                residual_severity:   h.residualSeverity   ?? null,
+                sort_order:         hi,
+              }).select('id').single<{ id: string }>();
+              if (hzRes.data && h.controls.length > 0) {
+                await sb.from('hse_jsa_step_controls').insert(
+                  h.controls.map((ctl, ci) => ({
+                    step_hazard_id: hzRes.data!.id,
+                    description:    ctl.description,
+                    control_type:   ctl.controlType,
+                    sort_order:     ci,
+                  })),
+                );
+              }
+            }
+          }
         }
         if (v.data.ppeItems.length > 0) {
           ops.push(sb.from('hse_ppe_requirements').insert(
@@ -1084,11 +1132,35 @@ router.post('/risk-jsa/jsa/detail', async c => {
       : Promise.resolve({ data: null }),
   ]);
 
+  // Nest per-step hazards (each with its controls) under their steps.
+  const steps = (stepsRes.data ?? []) as Array<Record<string, unknown>>;
+  const stepIds = steps.map(s => s.id as string);
+  if (stepIds.length > 0) {
+    const shRes = await sb.from('hse_jsa_step_hazards').select('*').in('step_id', stepIds).order('sort_order');
+    const stepHazards = (shRes.data ?? []) as Array<Record<string, unknown>>;
+    const hazIds = stepHazards.map(h => h.id as string);
+    const scRes = hazIds.length
+      ? await sb.from('hse_jsa_step_controls').select('*').in('step_hazard_id', hazIds).order('sort_order')
+      : { data: [] as Array<Record<string, unknown>> };
+    const controlsByHaz = new Map<string, Array<Record<string, unknown>>>();
+    for (const ctl of (scRes.data ?? []) as Array<Record<string, unknown>>) {
+      const k = ctl.step_hazard_id as string;
+      (controlsByHaz.get(k) ?? controlsByHaz.set(k, []).get(k)!).push(ctl);
+    }
+    const hazByStep = new Map<string, Array<Record<string, unknown>>>();
+    for (const h of stepHazards) {
+      h.controls = controlsByHaz.get(h.id as string) ?? [];
+      const k = h.step_id as string;
+      (hazByStep.get(k) ?? hazByStep.set(k, []).get(k)!).push(h);
+    }
+    for (const s of steps) s.hazards = hazByStep.get(s.id as string) ?? [];
+  }
+
   return c.json({
     success: true,
     data: {
       jsa,
-      steps:    stepsRes.data    ?? [],
+      steps,
       ppe:      ppeRes.data      ?? [],
       training: trainingRes.data ?? [],
       crew:     crewRes.data     ?? [],

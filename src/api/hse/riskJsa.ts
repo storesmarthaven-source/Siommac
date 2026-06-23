@@ -347,6 +347,16 @@ export function useJsaDetail(jsaId: string | null) {
   });
 }
 
+export interface JsaStepHazard {
+  description:         string;
+  category?:           string | null;
+  initialLikelihood?:  number | null;
+  initialSeverity?:    number | null;
+  residualLikelihood?: number | null;
+  residualSeverity?:   number | null;
+  controls?:           Array<{ description: string; controlType?: string }>;
+}
+
 export interface JsaStep {
   stepNumber:          number;
   taskStep:            string;
@@ -356,6 +366,8 @@ export interface JsaStep {
   residualLikelihood?: number | null;
   residualSeverity?:   number | null;
   controlsSummary?:    string | null;
+  /** Nested per-step hazards (each with its own controls). */
+  hazards?:            JsaStepHazard[];
 }
 
 export interface CreateJsaArgs extends Record<string, unknown> {

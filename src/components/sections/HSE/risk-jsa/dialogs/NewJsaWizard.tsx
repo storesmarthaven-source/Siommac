@@ -16,6 +16,7 @@ import {
   FormGrid,
 } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
+import { CONTROL_TYPES } from '../shared/ControlsTable';
 import {
   useCreateJsa,
   type JsaStep,
@@ -58,13 +59,12 @@ const SCALE_OPTIONS = [
 
 // ── Local types ───────────────────────────────────────────────────────────────
 
+interface ControlSub { description: string; controlType: string; }
+interface HazardSub { description: string; likelihood: string; severity: string; controls: ControlSub[]; }
 interface StepRow {
-  stepNumber:        number;
-  taskStep:          string;
-  hazardDescription: string;
-  likelihood:        string;
-  severity:          string;
-  controlsSummary:   string;
+  stepNumber: number;
+  taskStep:   string;
+  hazards:    HazardSub[];
 }
 
 interface PpeRow {
@@ -89,15 +89,20 @@ interface CrewRow {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function emptyStep(stepNumber: number): StepRow {
-  return { stepNumber, taskStep: '', hazardDescription: '', likelihood: '', severity: '', controlsSummary: '' };
+  return { stepNumber, taskStep: '', hazards: [] };
+}
+function emptyHazard(): HazardSub {
+  return { description: '', likelihood: '', severity: '', controls: [] };
 }
 
 function highestRiskBand(rows: StepRow[]): string {
   let maxScore = 0;
   for (const r of rows) {
-    const l = parseInt(r.likelihood, 10);
-    const s = parseInt(r.severity, 10);
-    if (!isNaN(l) && !isNaN(s)) maxScore = Math.max(maxScore, l * s);
+    for (const h of r.hazards) {
+      const l = parseInt(h.likelihood, 10);
+      const s = parseInt(h.severity, 10);
+      if (!isNaN(l) && !isNaN(s)) maxScore = Math.max(maxScore, l * s);
+    }
   }
   if (maxScore === 0) return 'None';
   if (maxScore >= 17) return 'Critical';
@@ -145,17 +150,19 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
     }
   }, [open, prefill]);
 
-  /** Add a suggested hazard from the source RA as a new (empty-task) job step. */
+  /** Add a suggested hazard from the source RA as a new job step (one hazard). */
   function addSuggestedStep(idx: number) {
     const h = suggested[idx];
     if (!h) return;
     setStepRows(prev => [...prev, {
-      stepNumber:        prev.length + 1,
-      taskStep:          '',
-      hazardDescription: h.description,
-      likelihood:        h.initialLikelihood != null ? String(h.initialLikelihood) : '',
-      severity:          h.initialSeverity   != null ? String(h.initialSeverity)   : '',
-      controlsSummary:   h.notes ?? '',
+      stepNumber: prev.length + 1,
+      taskStep:   '',
+      hazards: [{
+        description: h.description,
+        likelihood:  h.initialLikelihood != null ? String(h.initialLikelihood) : '',
+        severity:    h.initialSeverity   != null ? String(h.initialSeverity)   : '',
+        controls:    h.notes ? [{ description: h.notes, controlType: 'administrative' }] : [],
+      }],
     }]);
     setSuggested(prev => prev.filter((_, j) => j !== idx));
   }
@@ -196,6 +203,32 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
 
   function patchStep(i: number, patch: Partial<StepRow>) {
     setStepRows(prev => prev.map((r, j) => j === i ? { ...r, ...patch } : r));
+  }
+
+  // ── Nested hazard / control helpers (per step) ───────────────────────────────
+
+  function addHazard(si: number) {
+    setStepRows(prev => prev.map((r, j) => j === si ? { ...r, hazards: [...r.hazards, emptyHazard()] } : r));
+  }
+  function removeHazard(si: number, hi: number) {
+    setStepRows(prev => prev.map((r, j) => j === si ? { ...r, hazards: r.hazards.filter((_, k) => k !== hi) } : r));
+  }
+  function patchHazard(si: number, hi: number, patch: Partial<HazardSub>) {
+    setStepRows(prev => prev.map((r, j) => j === si
+      ? { ...r, hazards: r.hazards.map((h, k) => k === hi ? { ...h, ...patch } : h) } : r));
+  }
+  function addControl(si: number, hi: number) {
+    setStepRows(prev => prev.map((r, j) => j === si
+      ? { ...r, hazards: r.hazards.map((h, k) => k === hi ? { ...h, controls: [...h.controls, { description: '', controlType: 'administrative' }] } : h) } : r));
+  }
+  function removeControl(si: number, hi: number, ci: number) {
+    setStepRows(prev => prev.map((r, j) => j === si
+      ? { ...r, hazards: r.hazards.map((h, k) => k === hi ? { ...h, controls: h.controls.filter((_, m) => m !== ci) } : h) } : r));
+  }
+  function patchControl(si: number, hi: number, ci: number, patch: Partial<ControlSub>) {
+    setStepRows(prev => prev.map((r, j) => j === si
+      ? { ...r, hazards: r.hazards.map((h, k) => k === hi
+          ? { ...h, controls: h.controls.map((c, m) => m === ci ? { ...c, ...patch } : c) } : h) } : r));
   }
 
   // ── PPE helpers ────────────────────────────────────────────────────────────
@@ -252,12 +285,17 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
     setError('');
     try {
       const jsaSteps: JsaStep[] = validSteps.map((r, idx) => ({
-        stepNumber:         idx + 1,
-        taskStep:           r.taskStep.trim(),
-        hazardDescription:  r.hazardDescription.trim() || undefined,
-        initialLikelihood:  r.likelihood ? parseInt(r.likelihood, 10) : undefined,
-        initialSeverity:    r.severity   ? parseInt(r.severity, 10)   : undefined,
-        controlsSummary:    r.controlsSummary.trim() || undefined,
+        stepNumber: idx + 1,
+        taskStep:   r.taskStep.trim(),
+        hazards: r.hazards.filter(h => h.description.trim()).map(h => ({
+          description:       h.description.trim(),
+          initialLikelihood: h.likelihood ? parseInt(h.likelihood, 10) : undefined,
+          initialSeverity:   h.severity   ? parseInt(h.severity, 10)   : undefined,
+          controls: h.controls.filter(c => c.description.trim()).map(c => ({
+            description: c.description.trim(),
+            controlType: c.controlType,
+          })),
+        })),
       }));
 
       const ppeItems = ppeRows
@@ -384,110 +422,60 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
               </div>
             </div>
           )}
-          <div style={{ display: 'grid', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
-            {stepRows.map((row, i) => {
-              const l = row.likelihood ? parseInt(row.likelihood, 10) : 0;
-              const s = row.severity   ? parseInt(row.severity, 10)   : 0;
-              const showPill = l > 0 && s > 0;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    padding: '12px',
-                    background: 'var(--surface-alt)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.85rem', minWidth: '20px' }}>
-                      {row.stepNumber}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <input
-                        class="ui-input"
-                        placeholder="Task step description *"
-                        value={row.taskStep}
-                        onInput={e => patchStep(i, { taskStep: (e.target as HTMLInputElement).value })}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button
-                        class="hse-btn ghost"
-                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                        onClick={() => moveStepUp(i)}
-                        disabled={i === 0}
-                        title="Move up"
-                      >
-                        <i class="fas fa-arrow-up" />
-                      </button>
-                      <button
-                        class="hse-btn ghost"
-                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                        onClick={() => moveStepDown(i)}
-                        disabled={i === stepRows.length - 1}
-                        title="Move down"
-                      >
-                        <i class="fas fa-arrow-down" />
-                      </button>
-                      <button
-                        class="hse-btn ghost"
-                        style={{ padding: '4px 8px', fontSize: '0.75rem', color: 'var(--color-danger)' }}
-                        onClick={() => removeStepRow(i)}
-                        disabled={stepRows.length === 1}
-                        title="Remove step"
-                      >
-                        <i class="fas fa-trash" />
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <input
-                      class="ui-input"
-                      placeholder="Hazard description (optional)"
-                      value={row.hazardDescription}
-                      onInput={e => patchStep(i, { hazardDescription: (e.target as HTMLInputElement).value })}
-                    />
-                    <input
-                      class="ui-input"
-                      placeholder="Controls summary (optional)"
-                      value={row.controlsSummary}
-                      onInput={e => patchStep(i, { controlsSummary: (e.target as HTMLInputElement).value })}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <select
-                        class="ui-select"
-                        value={row.likelihood}
-                        onChange={e => patchStep(i, { likelihood: (e.target as HTMLSelectElement).value })}
-                        style={{ flex: 1 }}
-                        title="Likelihood"
-                      >
-                        <option value="">L (optional)</option>
-                        {SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                      <select
-                        class="ui-select"
-                        value={row.severity}
-                        onChange={e => patchStep(i, { severity: (e.target as HTMLSelectElement).value })}
-                        style={{ flex: 1 }}
-                        title="Severity"
-                      >
-                        <option value="">S (optional)</option>
-                        {SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                      {showPill && <RiskScorePill likelihood={l} severity={s} />}
-                    </div>
-                  </div>
+          <div style={{ display: 'grid', gap: '12px', maxHeight: '440px', overflowY: 'auto', paddingRight: '4px' }}>
+            {stepRows.map((row, i) => (
+              <div key={i} style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.85rem', minWidth: '20px' }}>{row.stepNumber}</span>
+                  <input class="ui-input" style={{ flex: 1 }} placeholder="Task step description *" value={row.taskStep}
+                    onInput={e => patchStep(i, { taskStep: (e.target as HTMLInputElement).value })} />
+                  <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => moveStepUp(i)} disabled={i === 0} title="Move up"><i class="fas fa-arrow-up" /></button>
+                  <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => moveStepDown(i)} disabled={i === stepRows.length - 1} title="Move down"><i class="fas fa-arrow-down" /></button>
+                  <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem', color: 'var(--color-danger)' }} onClick={() => removeStepRow(i)} disabled={stepRows.length === 1} title="Remove step"><i class="fas fa-trash" /></button>
                 </div>
-              );
-            })}
+
+                <div style={{ display: 'grid', gap: '8px', paddingLeft: '28px' }}>
+                  {row.hazards.map((h, hi) => {
+                    const l = h.likelihood ? parseInt(h.likelihood, 10) : 0;
+                    const sv = h.severity ? parseInt(h.severity, 10) : 0;
+                    return (
+                      <div key={hi} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', background: 'var(--bg-card)' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input class="ui-input" style={{ flex: 1 }} placeholder="Hazard description" value={h.description}
+                            onInput={e => patchHazard(i, hi, { description: (e.target as HTMLInputElement).value })} />
+                          <button class="hse-btn-icon-remove" onClick={() => removeHazard(i, hi)} aria-label="Remove hazard"><i class="fas fa-trash" /></button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '6px' }}>
+                          <select class="ui-select" style={{ flex: 1 }} value={h.likelihood} onChange={e => patchHazard(i, hi, { likelihood: (e.target as HTMLSelectElement).value })} title="Likelihood">
+                            <option value="">Likelihood</option>{SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <select class="ui-select" style={{ flex: 1 }} value={h.severity} onChange={e => patchHazard(i, hi, { severity: (e.target as HTMLSelectElement).value })} title="Severity">
+                            <option value="">Severity</option>{SCALE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          {l > 0 && sv > 0 && <RiskScorePill likelihood={l} severity={sv} />}
+                        </div>
+                        <div style={{ marginTop: '8px', paddingLeft: '10px', borderLeft: '2px solid var(--border)', display: 'grid', gap: '6px' }}>
+                          {h.controls.map((c, ci) => (
+                            <div key={ci} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <input class="ui-input" style={{ flex: 1 }} placeholder="Control measure" value={c.description}
+                                onInput={e => patchControl(i, hi, ci, { description: (e.target as HTMLInputElement).value })} />
+                              <select class="ui-select" style={{ width: '140px' }} value={c.controlType} onChange={e => patchControl(i, hi, ci, { controlType: (e.target as HTMLSelectElement).value })}>
+                                {CONTROL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </select>
+                              <button class="hse-btn-icon-remove" onClick={() => removeControl(i, hi, ci)} aria-label="Remove control"><i class="fas fa-xmark" /></button>
+                            </div>
+                          ))}
+                          <button class="inc-action-btn" style={{ justifySelf: 'start' }} onClick={() => addControl(i, hi)}><i class="fas fa-plus" /> Control</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <button class="hse-btn secondary" style={{ width: '100%' }} onClick={() => addHazard(i)}><i class="fas fa-triangle-exclamation" /> Add Hazard</button>
+                </div>
+              </div>
+            ))}
           </div>
-          <button
-            class="hse-btn secondary"
-            style={{ marginTop: '12px', width: '100%' }}
-            onClick={addStepRow}
-          >
-            <i class="fas fa-plus" /> Add Step
+          <button class="hse-btn secondary" style={{ marginTop: '12px', width: '100%' }} onClick={addStepRow}><i class="fas fa-plus" /> Add Step
           </button>
         </div>
       )}

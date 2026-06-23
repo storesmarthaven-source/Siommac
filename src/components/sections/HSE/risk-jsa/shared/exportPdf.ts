@@ -75,11 +75,21 @@ export function exportJsaPdf(jsa: Dict, detail: Dict | undefined): void {
     </div>
 
     <h2>Job Steps</h2>
-    ${table(['#', 'Task step', 'Hazard', 'Initial', 'Residual', 'Controls'],
-      steps.map(s => [
-        esc(s.step_number), esc(s.task_step), esc(s.hazard_description ?? '—'),
-        band(s.initial_score), band(s.residual_score), esc(s.controls_summary ?? '—'),
-      ]))}
+    ${table(['#', 'Task step', 'Hazards & controls', 'Initial'],
+      steps.flatMap(s => {
+        const hz = (s.hazards as Dict[]) ?? [];
+        if (hz.length === 0) {
+          return [[esc(s.step_number), esc(s.task_step),
+            `${esc(s.hazard_description ?? '—')}${s.controls_summary ? `<br><span class="muted">Controls: ${esc(s.controls_summary)}</span>` : ''}`,
+            band(s.initial_score)]];
+        }
+        return hz.map((h, i) => [
+          i === 0 ? esc(s.step_number) : '', i === 0 ? esc(s.task_step) : '',
+          `${esc(h.description)}${((h.controls as Dict[]) ?? []).length
+            ? `<br><span class="muted">Controls: ${((h.controls as Dict[]) ?? []).map(c => esc(c.description)).join('; ')}</span>` : ''}`,
+          band(h.initial_score),
+        ]);
+      }))}
 
     <h2>PPE</h2>
     ${table(['Item', 'Required', 'Notes'], ppe.map(p => [esc(p.ppe_item), p.required ? 'Yes' : 'No', esc(p.notes ?? '—')]))}

@@ -157,13 +157,30 @@ function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
           <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: '4px' }}>
             {s['task_step'] as string}
           </div>
-          {s['hazard_description'] && (
+          {/* Nested per-step hazards (each with its controls) */}
+          {((s['hazards'] as Array<Record<string, unknown>>) ?? []).map((h, hi) => (
+            <div key={hi} style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--border)' }}>
+              <div style={{ fontSize: '0.76rem', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i class="fas fa-triangle-exclamation" />
+                <span style={{ flex: 1 }}>{h['description'] as string}</span>
+                {h['initial_score'] != null && <RiskScorePill score={h['initial_score'] as number} />}
+              </div>
+              {((h['controls'] as Array<Record<string, unknown>>) ?? []).map((c, ci) => (
+                <div key={ci} style={{ fontSize: '0.73rem', color: 'var(--color-success)', marginTop: '2px', paddingLeft: '14px' }}>
+                  <i class="fas fa-shield-halved" style={{ marginRight: '4px' }} />
+                  {c['description'] as string} <span style={{ color: 'var(--text-muted)' }}>· {(c['control_type'] as string)?.replace(/_/g, ' ')}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+          {/* Legacy single-hazard fallback */}
+          {!((s['hazards'] as unknown[])?.length) && s['hazard_description'] && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)', marginTop: '3px' }}>
               <i class="fas fa-triangle-exclamation" style={{ marginRight: '4px' }} />
               {s['hazard_description'] as string}
             </div>
           )}
-          {s['controls_summary'] && (
+          {!((s['hazards'] as unknown[])?.length) && s['controls_summary'] && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '3px' }}>
               <i class="fas fa-shield-alt" style={{ marginRight: '4px' }} />
               {s['controls_summary'] as string}
