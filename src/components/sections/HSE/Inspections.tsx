@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
   type AreaTab, type SparkDef,
 } from '@ui';
 import {
@@ -34,7 +34,7 @@ function ScheduleTab({ inspections, onNew }: { inspections: InspectionRow[]; onN
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.inspections.0">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div>
           <div class="hse-spark-val" style={{ color: overdue > 0 ? '#ef4444' : '#22c55e' }}>{overdue}</div>
@@ -55,7 +55,7 @@ function ScheduleTab({ inspections, onNew }: { inspections: InspectionRow[]; onN
           <div class="hse-spark-val" style={{ color: '#22c55e' }}>92%</div>
           <div class="hse-spark-sub">YTD inspections completed on time</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -156,7 +156,7 @@ function FindingsTab({ findings }: { findings: FindingRow[] }): VNode {
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.inspections.1">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Open Findings</span></div>
           <div class="hse-spark-val" style={{ color: open > 0 ? '#f59e0b' : '#22c55e' }}>{open}</div>
@@ -177,7 +177,7 @@ function FindingsTab({ findings }: { findings: FindingRow[] }): VNode {
           <div class="hse-spark-val" style={{ color: '#22c55e' }}>91%</div>
           <div class="hse-spark-sub">Findings closed within SLA</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

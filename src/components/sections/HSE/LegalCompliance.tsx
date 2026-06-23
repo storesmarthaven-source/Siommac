@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
+import { PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -105,12 +105,12 @@ function ObligationsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.legalcompliance.0">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Obligations</span></div><div class="hse-spark-val">{mockObligations.length}</div><div class="hse-spark-sub">Tracked against T&T legislation</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Compliant</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{compliant}</div><div class="hse-spark-sub">No action required</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div><div class="hse-spark-sub">Action within 30 days</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{overdue}</div><div class="hse-spark-sub">Regulatory risk — escalate</div></div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -188,12 +188,12 @@ function EmaPermitsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.legalcompliance.1">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total EMA Permits</span></div><div class="hse-spark-val">{permits.length}</div><div class="hse-spark-sub">All T&T sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{permits.filter(p => p.status === 'Current').length}</div><div class="hse-spark-sub">Valid and in force</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Renewal Due</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div><div class="hse-spark-sub">Within 60 days</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{expired}</div><div class="hse-spark-sub">Activity must cease</div></div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -274,12 +274,12 @@ function BreachesTab(): VNode {
   const closed = mockBreaches.filter(b => b.status === 'Closed').length;
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.legalcompliance.2">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Breaches</span></div><div class="hse-spark-val">{mockBreaches.length}</div><div class="hse-spark-sub">Logged YTD</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Open</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{open}</div><div class="hse-spark-sub">Regulatory action pending</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Pending</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{mockBreaches.filter(b => b.status === 'Pending').length}</div><div class="hse-spark-sub">Evidence / response in progress</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Closed</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{closed}</div><div class="hse-spark-sub">Resolved and evidenced</div></div>
-      </div>
+      </ReorderableRow>
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
           <div class="vt-toolbar">
@@ -330,12 +330,12 @@ function BreachesTab(): VNode {
 function CalendarTab(): VNode {
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.legalcompliance.3">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Tracked Events</span></div><div class="hse-spark-val">{mockCalendar.length}</div><div class="hse-spark-sub">Regulatory milestones</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{mockCalendar.filter(e => e.status === 'Overdue').length}</div><div class="hse-spark-sub">Past deadline</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due Soon</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{mockCalendar.filter(e => e.status === 'Due' || e.status === 'Pending').length}</div><div class="hse-spark-sub">Action within 90 days</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>{mockCalendar.filter(e => e.status === 'Scheduled').length}</div><div class="hse-spark-sub">Date confirmed</div></div>
-      </div>
+      </ReorderableRow>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">

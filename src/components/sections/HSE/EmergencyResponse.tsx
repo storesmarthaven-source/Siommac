@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
+import { PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -110,12 +110,12 @@ function PlansTab(): VNode {
   const reviewDue = mockPlans.filter(p => p.status === 'Review Due').length;
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.emergencyresponse.0">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Plans</span></div><div class="hse-spark-val">{mockPlans.length}</div><div class="hse-spark-sub">Across 5 T&T sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockPlans.filter(p => p.status === 'Current').length}</div><div class="hse-spark-sub">Reviewed and approved</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Review Due</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{reviewDue}</div><div class="hse-spark-sub">Annual review overdue</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Plan Types</span></div><div class="hse-spark-val" style={{ fontSize: '0.85rem', color: '#60a5fa' }}>Fire · Spill · MOB</div><div class="hse-spark-sub">Site-specific scenarios</div></div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -176,12 +176,12 @@ function PlansTab(): VNode {
 function MusterTab(): VNode {
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.emergencyresponse.1">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Muster Points</span></div><div class="hse-spark-val">{mockMusterPoints.length}</div><div class="hse-spark-sub">Registered across all sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Capacity</span></div><div class="hse-spark-val">{mockMusterPoints.reduce((s, m) => s + m.capacity, 0)}</div><div class="hse-spark-sub">Workers accounted for per site</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Wardens Assigned</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockMusterPoints.length}</div><div class="hse-spark-sub">Named warden per point</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Marine Stations</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>{mockMusterPoints.filter(m => m.type === 'Marine').length}</div><div class="hse-spark-sub">MOB / vessel assembly</div></div>
-      </div>
+      </ReorderableRow>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
@@ -218,12 +218,12 @@ function DrillsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.emergencyresponse.2">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Drills YTD</span></div><div class="hse-spark-val">{drills.filter(d => d.status === 'Complete').length}</div><div class="hse-spark-sub">Completed across all sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Avg Score</span></div><div class="hse-spark-val" style={{ color: avgScore >= 85 ? '#22c55e' : '#f59e0b' }}>{Math.round(avgScore)}%</div><div class="hse-spark-sub">Drill performance rating</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Participants</span></div><div class="hse-spark-val">{drills.reduce((s, d) => s + d.participants, 0)}</div><div class="hse-spark-sub">Workers drilled YTD</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>{drills.filter(d => d.status === 'Scheduled').length}</div><div class="hse-spark-sub">Upcoming drills planned</div></div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -314,12 +314,12 @@ function ErtTab(): VNode {
   const renewalRequired = mockErtMembers.filter(m => m.status !== 'Active').length;
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.emergencyresponse.3">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">ERT Members</span></div><div class="hse-spark-val">{mockErtMembers.length}</div><div class="hse-spark-sub">Registered across all sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Active</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockErtMembers.filter(m => m.status === 'Active').length}</div><div class="hse-spark-sub">First aid and fire warden current</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Renewal Required</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{renewalRequired}</div><div class="hse-spark-sub">Training expired or due</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Coordinators</span></div><div class="hse-spark-val">{mockErtMembers.filter(m => m.ertRole === 'ERT Coordinator').length}</div><div class="hse-spark-sub">Overall ERT leadership</div></div>
-      </div>
+      </ReorderableRow>
       <div class="vt-toolbar">
         <div class="vt-search" style={{ flex: '1 1 220px' }}><i class="fas fa-search" /><input type="search" placeholder="Search ERT member…" /></div>
         <select class="emp-filter-select"><option>All sites</option>{HSE_SITES.map(s => <option key={s}>{s}</option>)}</select>

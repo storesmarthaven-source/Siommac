@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef } from '@ui';
+import { PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef } from '@ui';
 import {
   useWorkflowList,
   useWorkflow,
@@ -129,7 +129,7 @@ function ApprovalsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.workflows.0">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Pending</span></div>
           <div class="hse-spark-val" style={{ color: pending > 0 ? '#f59e0b' : '#4ade80' }}>{pending}</div>
@@ -150,7 +150,7 @@ function ApprovalsTab(): VNode {
           <div class="hse-spark-val">{tasks.length}</div>
           <div class="hse-spark-sub">All approval tasks</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="wf-filter-row">
         {(['pending', 'decided', 'all'] as const).map(f => (
@@ -266,7 +266,7 @@ function RegisterTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.workflows.1">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Total Workflows</span></div>
           <div class="hse-spark-val">{all.length}</div>
@@ -287,7 +287,7 @@ function RegisterTab(): VNode {
           <div class="hse-spark-val" style={{ color: critical > 0 ? '#ef4444' : '#4ade80' }}>{critical}</div>
           <div class="hse-spark-sub">High-priority escalations</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -440,7 +440,7 @@ function AuditTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.workflows.2">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Workflows</span></div>
           <div class="hse-spark-val">{workflows.length}</div>
@@ -461,7 +461,7 @@ function AuditTab(): VNode {
           <div class="hse-spark-val">{totalEvents}</div>
           <div class="hse-spark-sub">Tracked workflows</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -554,7 +554,7 @@ function HandoffsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.workflows.3">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Total Handoffs</span></div>
           <div class="hse-spark-val">{handoffs.length}</div>
@@ -575,7 +575,7 @@ function HandoffsTab(): VNode {
           <div class="hse-spark-val">{toFinance} / {toHr}</div>
           <div class="hse-spark-sub">By target module</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       {handoffsQ.isLoading && <Skeleton />}
       {handoffsQ.isError   && <div class="hse-error-bar"><i class="fas fa-triangle-exclamation" /> Failed to load handoffs.</div>}

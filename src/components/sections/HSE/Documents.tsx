@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
   type AreaTab, type SparkDef,
 } from '@ui';
 import { useCreateWorkflow } from '@api/workflows';
@@ -37,7 +37,7 @@ function DocsTab({ docs, onUpload }: { docs: HseDocRow[]; onUpload: () => void }
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.documents.0">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Published</span></div>
           <div class="hse-spark-val" style={{ color: '#22c55e' }}>{published}</div>
@@ -58,7 +58,7 @@ function DocsTab({ docs, onUpload }: { docs: HseDocRow[]; onUpload: () => void }
           <div class="hse-spark-val" style={{ fontSize: '0.9rem' }}>30 Jun</div>
           <div class="hse-spark-sub">Emergency Response Plan · v1.4</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -159,7 +159,7 @@ function SdsTab({ sds }: { sds: SdsRow[] }): VNode {
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.documents.1">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Total Chemicals</span></div>
           <div class="hse-spark-val">{sds.length}</div>
@@ -180,7 +180,7 @@ function SdsTab({ sds }: { sds: SdsRow[] }): VNode {
           <div class="hse-spark-val" style={{ color: expired > 0 ? '#ef4444' : '#22c55e' }}>{expired}</div>
           <div class="hse-spark-sub">Must not be used on-site</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

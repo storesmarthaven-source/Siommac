@@ -21,7 +21,7 @@ export {
 } from './components/ModuleTabs';
 export { PageHeader, type PageHeaderProps, type PageMetaChip } from './components/PageHeader';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
-export { MetricRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
+export { MetricRow, ReorderableRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
 export { useCardReorder, ArrangeControls, type CardReorder } from './components/reorder';
 
 // ── Cards & metrics ──

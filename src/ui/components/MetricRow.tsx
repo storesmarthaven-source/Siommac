@@ -9,7 +9,7 @@
  * MetricCard, a bespoke tile) can sit in the row and still be reorderable.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren, toChildArray } from 'preact';
 import { useRef, useLayoutEffect } from 'preact/hooks';
 import { useCardReorder, type CardReorder, ArrangeControls } from './reorder';
 
@@ -80,6 +80,57 @@ export function MetricRow({ pageKey, cards, rowClass = 'hse-spark-grid' }: Metri
             {c.node}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Drop-in reorderable row — makes ANY existing card row (e.g. a `hse-spark-row`)
+ * rearrangeable without restructuring its cards into `{ key, node }`. Just wrap
+ * the cards and pass a stable `pageKey`:
+ *
+ *   <ReorderableRow pageKey="hse.permits.ptw">
+ *     <div class="hse-spark">…</div>   // 4 cards as-is
+ *   </ReorderableRow>
+ *
+ * Card identity is positional (the card set is fixed per row), so order persists
+ * correctly per-user/org via the same backbone as MetricRow / PageHero.
+ */
+export function ReorderableRow({ pageKey, rowClass = 'hse-spark-row', children }: {
+  pageKey?: string;
+  rowClass?: string;
+  children: ComponentChildren;
+}): VNode {
+  const items = toChildArray(children);
+  const keys  = items.map((_, i) => `c${i}`);
+  const r: CardReorder = useCardReorder(pageKey, keys);
+  const setNode = useFlip(r.dragKey);
+  const byKey = new Map(items.map((node, i) => [`c${i}`, node]));
+  const renderKeys = r.enabled ? r.order : keys;
+
+  return (
+    <div>
+      {r.enabled && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-2)' }}>
+          <ArrangeControls reorder={r} variant="light" />
+        </div>
+      )}
+      <div class={rowClass}>
+        {renderKeys.map(key => {
+          const node = byKey.get(key);
+          if (node == null) return null;
+          return (
+            <div
+              key={key}
+              ref={r.arranging ? setNode(key) : undefined}
+              class={r.arranging ? r.dragClass(key) : undefined}
+              {...(r.arranging ? r.dragHandlers(key) : {})}
+            >
+              {node}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

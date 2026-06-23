@@ -102,6 +102,7 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
 | Sub-module header | `PageHeader` (breadcrumb + title + sub + meta chips, info-only) |
 | Page tabs | `TabBar` (bare) — or `ModuleTabs` if you really need a header card |
 | The 4-card row | `MetricRow` (rearrangeable) with `StatsCard` cards |
+| Make an existing card row rearrangeable | `ReorderableRow` — wrap the cards + pass a `pageKey` (no restructuring) |
 | A summary card (top of page) | `StatsCard` — fixed skeleton; `percent` → compliance bar |
 | An inside-tab / one-off card | `Card` — header + body, default/navy |
 | Charts | `SparkCard`, `Sparkline`, `BarRow`, `ProgressBar`, `ChartCard` |

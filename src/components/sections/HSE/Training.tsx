@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
+  PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
   type AreaTab, type SparkDef,
 } from '@ui';
 import {
@@ -36,7 +36,7 @@ function MatrixTab(): VNode {
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.training.0">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Overall Compliance</span></div>
           <div class="hse-spark-val" style={{ color: compliance >= 85 ? '#22c55e' : '#f59e0b' }}>{compliance}%</div>
@@ -60,7 +60,7 @@ function MatrixTab(): VNode {
           <div class="hse-spark-val" style={{ color: '#ef4444' }}>{expired}</div>
           <div class="hse-spark-sub">Immediate action required</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="vt-table-card">
         <div class="vt-table-scroll">
@@ -104,7 +104,7 @@ function CertsTab({ certs, onAdd }: { certs: CertificationRow[]; onAdd: () => vo
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <div class="hse-spark-row">
+      <ReorderableRow pageKey="hse.training.1">
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Total Certificates</span></div>
           <div class="hse-spark-val">{certs.length}</div>
@@ -125,7 +125,7 @@ function CertsTab({ certs, onAdd }: { certs: CertificationRow[]; onAdd: () => vo
           <div class="hse-spark-val" style={{ color: '#22c55e' }}>{certs.filter(c => /current/i.test(c.status)).length}</div>
           <div class="hse-spark-sub">Valid certifications</div>
         </div>
-      </div>
+      </ReorderableRow>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

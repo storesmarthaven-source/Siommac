@@ -13,7 +13,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
 import { useCreateWorkflow, useMyWorkflowTasks } from '@api/workflows';
-import { HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
+import { ReorderableRow, HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
   mockPpeAssignments, mockPpeRenewals, mockPpeReturns, mockPpeRequests, mockPpeKits,
@@ -347,11 +347,13 @@ function RenewalsTab(): VNode {
       <SectionHead icon="fa-clock-rotate-left" title="Renewal Automation"
         sub="Review overdue and upcoming PPE replacement cycles with automatic task generation and stock reservation."
         actions={<><button class="btn btn-outline-secondary btn-sm has-label"><i class="fas fa-envelope" /> Send Reminders</button><button class="btn btn-danger-primary btn-sm"><i class="fas fa-sync" /> Auto-Renew</button></>} />
-      <div class="hse-spark-row" style={{ marginBottom: '14px' }}>
-        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Tracked</span></div><div class="hse-spark-val">{mockPpeRenewals.length}</div><div class="hse-spark-sub">PPE renewal records</div></div>
-        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{overdue}</div><div class="hse-spark-sub">Immediate action required</div></div>
-        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due Soon</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{upcoming}</div><div class="hse-spark-sub">Within 90 days</div></div>
-        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockPpeRenewals.filter(r => r.status === 'active').length}</div><div class="hse-spark-sub">No action needed</div></div>
+      <div style={{ marginBottom: '14px' }}>
+        <ReorderableRow pageKey="hse.ppemanager.0">
+          <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Tracked</span></div><div class="hse-spark-val">{mockPpeRenewals.length}</div><div class="hse-spark-sub">PPE renewal records</div></div>
+          <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{overdue}</div><div class="hse-spark-sub">Immediate action required</div></div>
+          <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due Soon</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{upcoming}</div><div class="hse-spark-sub">Within 90 days</div></div>
+          <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockPpeRenewals.filter(r => r.status === 'active').length}</div><div class="hse-spark-sub">No action needed</div></div>
+        </ReorderableRow>
       </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
