@@ -17,6 +17,7 @@ import {
 } from '@api/communications';
 import { NotificationItem } from './NotificationItem';
 import { BroadcastComposer } from './BroadcastComposer';
+import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
 
 const TABS: AreaTab[] = [
   { key: 'all',      label: 'All',             icon: 'fa-inbox' },
@@ -33,6 +34,7 @@ export function NotificationCenter(): VNode {
   const [severity, setSeverity] = useState('');
   const [search, setSearch] = useState('');
   const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   const isAdmin = useCan('communications.admin');
   const { data: summary } = useCommsSummary();
@@ -73,6 +75,7 @@ export function NotificationCenter(): VNode {
             {isAdmin && (
               <button class="hse-btn" onClick={() => setBroadcastOpen(true)}><i class="fas fa-bullhorn" /> Broadcast</button>
             )}
+            <button class="hse-btn" onClick={() => setPrefsOpen(true)}><i class="fas fa-sliders" /> Preferences</button>
             <button class="hse-btn" disabled={markAll.isPending} onClick={() => markAll.mutate({})}>
               <i class="fas fa-check-double" /> Mark all read
             </button>
@@ -122,6 +125,7 @@ export function NotificationCenter(): VNode {
       </div>
 
       <BroadcastComposer open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
+      <NotificationPreferencesPanel open={prefsOpen} onClose={() => setPrefsOpen(false)} />
     </div>
   );
 }
