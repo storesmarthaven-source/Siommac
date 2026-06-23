@@ -11,6 +11,7 @@ import { Hono }         from 'hono';
 import { z }            from 'zod';
 import { getCookie, deleteCookie } from 'hono/cookie';
 import { requireUser }  from '../lib/auth';
+import { requireStepUp } from '../lib/stepUp';
 import {
   COOKIE_NAME as TD_COOKIE_NAME,
   listTrustedDevices,
@@ -105,10 +106,10 @@ router.post('/revoke', async c => {
 
 // ── POST /revoke-all ──────────────────────────────────────────────────────────
 // Revoke ALL trusted devices for the user, rotate the security stamp, and
-// clear the current device cookie.
+// clear the current device cookie.  Requires step-up (high-risk action).
 
 router.post('/revoke-all', async c => {
-  const user = await requireUser(c);
+  const user = await requireStepUp(c);  // step-up: revoking all devices is high-risk
 
   await revokeAllTrustedDevices(user.id);
 

@@ -35,6 +35,8 @@ import uiPrefsRouter        from './routes/uiPrefs';
 import auth2faRouter        from './routes/auth2fa';
 import webauthnRouter       from './routes/webauthn';
 import trustedDevicesRouter from './routes/trustedDevices';
+import authStepUpRouter     from './routes/authStepUp';
+import adminSecurityRouter, { policyReadRouter } from './routes/adminSecurity';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -62,9 +64,14 @@ const app = new Hono<{ Variables: HonoVariables }>();
 // unhandled route errors, and returns a proper JSON response instead of letting
 // them bubble up as unhandled exceptions (which Netlify turns into 500s with no body).
 app.onError((err, c) => {
-  const status = (err as { status?: number }).status ?? 500;
+  const e      = err as { status?: number; code?: string };
+  const status  = e.status ?? 500;
   const message = err.message || 'Internal server error';
-  return c.json({ success: false, message }, status as 200);
+  // Pass through discriminator codes (e.g. 'step_up_required', 'compliance_required')
+  // so the frontend can branch on them without parsing message strings.
+  const body: Record<string, unknown> = { success: false, message };
+  if (e.code) body['code'] = e.code;
+  return c.json(body, status as 200);
 });
 
 // Security headers — applied to every response
@@ -156,6 +163,9 @@ app.route('/api',            handoffsRouter);
 app.route('/api/auth/2fa',             auth2faRouter);
 app.route('/api',                      webauthnRouter);
 app.route('/api/auth/trusted-devices', trustedDevicesRouter);
+app.route('/api/auth/step-up',         authStepUpRouter);
+app.route('/api/auth/security',        policyReadRouter);
+app.route('/api/admin/security',       adminSecurityRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.

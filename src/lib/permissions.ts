@@ -159,6 +159,11 @@ export const PERMISSION_KEYS = [
   'communications.compliance_export', // export message history for approved investigations
   // ── Tickets ────────────────────────────────────────────────────────────────────
   'tickets.manage',                 // create, assign, resolve, and close support/work tickets
+  // ── Account Security (admin cross-user management) ──────────────────────────────
+  'auth.security.view',             // view another user's security status (MFA, passkeys, trusted devices)
+  'auth.security.manage_policy',    // update the organisation-wide security policy
+  'auth.passkeys.admin_revoke',     // revoke all passkeys for another user (admin action)
+  'auth.trusted_devices.admin_revoke', // revoke all trusted devices for another user (admin action)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -213,6 +218,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read',
+    'auth.security.view',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -269,6 +275,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
+    'auth.security.view', 'auth.security.manage_policy',
+    'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -332,6 +340,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
     'communications.compliance_read', 'communications.compliance_export',
+    'auth.security.view', 'auth.security.manage_policy',
+    'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
   ]),
 };
 

@@ -16,6 +16,7 @@ import { Hono }        from 'hono';
 import { z }           from 'zod';
 import { setCookie }   from 'hono/cookie';
 import { requireUser, log_ } from '../lib/auth';
+import { requireStepUp }    from '../lib/stepUp';
 import {
   generateRegistrationOptions,
   verifyRegistration,
@@ -146,9 +147,9 @@ router.post('/webauthn/credentials/rename', async c => {
   return c.json({ success: true });
 });
 
-// POST /api/webauthn/credentials/delete
+// POST /api/webauthn/credentials/delete  (requires step-up)
 router.post('/webauthn/credentials/delete', async c => {
-  const user = await requireUser(c);
+  const user = await requireStepUp(c);  // step-up: deleting a passkey is high-risk
   const v    = zv(c, CredentialIdSchema, c.get('body') as Record<string, unknown>);
   if (!v.ok) return v.response;
 

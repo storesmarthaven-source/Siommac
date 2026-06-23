@@ -16,6 +16,11 @@
 import crypto     from 'crypto';
 import { sb }     from './db';
 import { emitAppEvent } from './appEvents';
+import {
+  trustedDevicesEnabled as _tdEnabled,
+  ttlDaysForRole        as _ttlDaysForRole,
+  shouldOfferTrustedDevice as _shouldOffer,
+} from './securityPolicy';
 
 // ── Config & constants ────────────────────────────────────────────────────────
 
@@ -33,25 +38,20 @@ function getPepper(): string {
   return p;
 }
 
-export const trustedDevicesEnabled = true;
+// Re-export from securityPolicy so existing consumers of trustedDevices.ts
+// continue to work unchanged.
+export const trustedDevicesEnabled: boolean = _tdEnabled;
 
 export const COOKIE_NAME = 'siomac_td';
 
-/** TTL in days per role. Controls how long a trusted-device bypass is valid. */
-const TTL_BY_ROLE: Record<string, number> = {
-  superadmin: 7,
-  admin:      14,
-  manager:    14,
-  employee:   30,
-};
-
+/** TTL in days per role — delegates to securityPolicy (single source). */
 export function ttlDaysForRole(role: string): number {
-  return TTL_BY_ROLE[role] ?? 30;
+  return _ttlDaysForRole(role);
 }
 
-/** True unless policy denies for the role (currently all roles are eligible). */
-export function shouldOfferTrustedDevice(_role: string): boolean {
-  return trustedDevicesEnabled;
+/** True unless policy denies for the role. Delegates to securityPolicy. */
+export function shouldOfferTrustedDevice(role: string): boolean {
+  return _shouldOffer(role);
 }
 
 // ── HMAC helpers ──────────────────────────────────────────────────────────────
