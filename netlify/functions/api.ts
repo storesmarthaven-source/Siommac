@@ -31,6 +31,7 @@ import hseIncidentsRouter   from './routes/hseIncidents';
 import hseInvestigationsRouter from './routes/hseInvestigations';
 import hseCapaRouter        from './routes/hseCapa';
 import hseRiskJsaRouter    from './routes/hseRiskJsa';
+import hsePtwRouter         from './routes/hsePtw';
 import uiPrefsRouter        from './routes/uiPrefs';
 
 // Register module handoff receivers once at cold-start
@@ -145,6 +146,7 @@ app.route('/api/hse',        hseIncidentsRouter);
 app.route('/api/hse',        hseInvestigationsRouter);
 app.route('/api/hse',        hseCapaRouter);
 app.route('/api/hse',        hseRiskJsaRouter);
+app.route('/api/hse',        hsePtwRouter);
 app.route('/api/workflow',   workflowRouter);
 app.route('/api',            uiPrefsRouter);
 app.route('/api',            workflowsRouter);
