@@ -35,6 +35,13 @@ import {
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
 import { NotificationPreferences } from '@components/notifications';
+import {
+  useTotpStatus,
+  useStartTotpSetup,
+  useConfirmTotp,
+  useDisableTotp,
+  useRegenerateBackupCodes,
+} from '@api/security';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -622,6 +629,522 @@ function SessionTimeoutCard({ canEdit }: { canEdit: boolean }): VNode {
   );
 }
 
+// ── TOTP setup modal ──────────────────────────────────────────────────────────
+
+/** Step 1 → 2 → 3 flow within the setup modal */
+type SetupStep = 'qr' | 'confirm' | 'codes';
+
+interface TotpSetupModalProps {
+  onClose:   () => void;
+  onEnabled: () => void;
+}
+
+function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNode {
+  const [step,        setStep]        = useState<SetupStep>('qr');
+  const [qrDataUrl,   setQrDataUrl]   = useState('');
+  const [secret,      setSecret]      = useState('');
+  const [otpauthUrl,  setOtpauthUrl]  = useState('');
+  const [code,        setCode]        = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [copied,      setCopied]      = useState(false);
+  const [error,       setError]       = useState('');
+
+  const startSetup  = useStartTotpSetup();
+  const confirmTotp = useConfirmTotp();
+
+  // Kick off secret generation on mount
+  useEffect(() => {
+    startSetup.mutate(undefined, {
+      onSuccess: res => {
+        if (res.success) {
+          setQrDataUrl(res.qrDataUrl);
+          setSecret(res.secret);
+          setOtpauthUrl(res.otpauthUrl);
+        } else {
+          setError('Failed to start setup. Please try again.');
+        }
+      },
+      onError: () => setError('Network error. Please try again.'),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    setError('');
+    if (!/^\d{6}$/.test(code)) {
+      setError('Please enter the 6-digit code from your authenticator app.');
+      return;
+    }
+    confirmTotp.mutate(code, {
+      onSuccess: res => {
+        if (res.success) {
+          setBackupCodes(res.backupCodes);
+          setStep('codes');
+          onEnabled();
+        } else {
+          setError('Invalid code. Make sure your authenticator app is synced.');
+        }
+      },
+      onError: () => setError('Verification failed. Please try again.'),
+    });
+  }, [code, confirmTotp, onEnabled]);
+
+  const handleCopyCodes = useCallback(() => {
+    void navigator.clipboard.writeText(backupCodes.join('\n')).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [backupCodes]);
+
+  const handleDownloadCodes = useCallback(() => {
+    const blob = new Blob([backupCodes.join('\n')], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'siomac-backup-codes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [backupCodes]);
+
+  return (
+    <div class="totp-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div class="totp-modal">
+        <div class="totp-modal-header">
+          <div class="totp-modal-title">
+            <i class="fas fa-shield-halved" style={{ color: 'var(--siomac-navy, #1B2D55)', marginRight: 8 }} />
+            Set Up Authenticator App
+          </div>
+          <button type="button" class="totp-modal-close" onClick={onClose} aria-label="Close">
+            <i class="fas fa-xmark" />
+          </button>
+        </div>
+
+        {/* Step: QR code */}
+        {step === 'qr' && (
+          <div class="totp-modal-body">
+            {startSetup.isPending ? (
+              <div class="totp-loading"><i class="fas fa-spinner fa-spin" /> Generating secret…</div>
+            ) : error ? (
+              <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>
+            ) : (
+              <>
+                <p class="totp-step-desc">
+                  Scan this QR code with your authenticator app (Google Authenticator,
+                  Authy, 1Password, etc.) or enter the key manually.
+                </p>
+                {qrDataUrl && (
+                  <div class="totp-qr-wrap">
+                    <img src={qrDataUrl} alt="TOTP QR code" class="totp-qr-img" />
+                  </div>
+                )}
+                <div class="totp-manual-wrap">
+                  <div class="totp-manual-label">Manual entry key</div>
+                  <div class="totp-manual-code">{secret}</div>
+                  <div class="totp-manual-hint">
+                    Can't scan? Open your app, choose "Enter a setup key", and type the key above.
+                  </div>
+                </div>
+              </>
+            )}
+            <div class="totp-modal-footer">
+              <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
+              <button
+                type="button"
+                class="stg-btn-save"
+                disabled={!qrDataUrl || startSetup.isPending}
+                onClick={() => { setStep('confirm'); setCode(''); setError(''); }}
+              >
+                Next — Enter Code <i class="fas fa-arrow-right" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: confirm code */}
+        {step === 'confirm' && (
+          <div class="totp-modal-body">
+            <p class="totp-step-desc">
+              Open your authenticator app and enter the 6-digit code for Siomac.
+            </p>
+            <div class="stg-form-group" style={{ maxWidth: 220 }}>
+              <label>Verification code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                value={code}
+                onInput={e => setCode((e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                class="totp-code-input"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') handleConfirm(); }}
+              />
+            </div>
+            {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
+            <div class="totp-modal-footer">
+              <button type="button" class="stg-btn-outline" onClick={() => { setStep('qr'); setError(''); }}>Back</button>
+              <button
+                type="button"
+                class="stg-btn-save"
+                disabled={code.length !== 6 || confirmTotp.isPending}
+                onClick={handleConfirm}
+              >
+                {confirmTotp.isPending ? <><i class="fas fa-spinner fa-spin" /> Verifying…</> : 'Enable 2FA'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: backup codes */}
+        {step === 'codes' && (
+          <div class="totp-modal-body">
+            <div class="totp-success-banner">
+              <i class="fas fa-circle-check" /> Authenticator app enabled successfully!
+            </div>
+            <p class="totp-step-desc" style={{ marginTop: 16 }}>
+              <strong>Save these backup codes now.</strong> Each code can be used once to sign
+              in if you lose access to your authenticator app. They will not be shown again.
+            </p>
+            <div class="totp-codes-grid">
+              {backupCodes.map((bc, i) => (
+                <div key={i} class="totp-backup-code">{bc}</div>
+              ))}
+            </div>
+            <div class="totp-codes-actions">
+              <button type="button" class="stg-btn-outline" onClick={handleCopyCodes}>
+                <i class={copied ? 'fas fa-check' : 'fas fa-copy'} />
+                {copied ? 'Copied!' : 'Copy codes'}
+              </button>
+              <button type="button" class="stg-btn-outline" onClick={handleDownloadCodes}>
+                <i class="fas fa-download" /> Download
+              </button>
+            </div>
+            <div class="totp-modal-footer">
+              <button type="button" class="stg-btn-save" onClick={onClose}>
+                Done — I have saved my codes
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── TOTP disable modal ────────────────────────────────────────────────────────
+
+interface TotpDisableModalProps {
+  onClose:    () => void;
+  onDisabled: () => void;
+}
+
+function TotpDisableModal({ onClose, onDisabled }: TotpDisableModalProps): VNode {
+  const [code,  setCode]  = useState('');
+  const [error, setError] = useState('');
+  const disableTotp = useDisableTotp();
+
+  const handleDisable = useCallback(() => {
+    setError('');
+    disableTotp.mutate(code, {
+      onSuccess: res => {
+        if (res.success) {
+          toast.success('Two-factor authentication disabled.');
+          onDisabled();
+        } else if (res.code === 'last_factor') {
+          setError(res.message ?? 'Two-factor is required for your role and cannot be disabled.');
+        } else {
+          setError(res.message ?? 'Invalid code. Please try again.');
+        }
+      },
+      onError: () => setError('Request failed. Please try again.'),
+    });
+  }, [code, disableTotp, onDisabled]);
+
+  return (
+    <div class="totp-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div class="totp-modal">
+        <div class="totp-modal-header">
+          <div class="totp-modal-title">
+            <i class="fas fa-lock-open" style={{ color: '#DC2626', marginRight: 8 }} />
+            Disable Two-Factor Authentication
+          </div>
+          <button type="button" class="totp-modal-close" onClick={onClose} aria-label="Close">
+            <i class="fas fa-xmark" />
+          </button>
+        </div>
+        <div class="totp-modal-body">
+          <p class="totp-step-desc">
+            Enter your current authenticator code (or a backup code) to confirm.
+          </p>
+          <div class="stg-form-group" style={{ maxWidth: 220 }}>
+            <label>Code (TOTP or backup)</label>
+            <input
+              type="text"
+              inputMode="text"
+              maxLength={8}
+              value={code}
+              onInput={e => setCode((e.target as HTMLInputElement).value.trim().toUpperCase())}
+              placeholder="000000 or XXXXXXXX"
+              class="totp-code-input"
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleDisable(); }}
+            />
+          </div>
+          {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
+          <div class="totp-modal-footer">
+            <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
+            <button
+              type="button"
+              style={{ background: '#DC2626', color: '#fff', border: 'none', borderRadius: '10px', padding: '9px 20px', fontWeight: 600, cursor: 'pointer', fontSize: '0.83rem' }}
+              disabled={code.length < 6 || disableTotp.isPending}
+              onClick={handleDisable}
+            >
+              {disableTotp.isPending ? <><i class="fas fa-spinner fa-spin" /> Disabling…</> : 'Disable 2FA'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TOTP regenerate backup codes modal ────────────────────────────────────────
+
+interface TotpRegenModalProps {
+  onClose: () => void;
+}
+
+function TotpRegenModal({ onClose }: TotpRegenModalProps): VNode {
+  const [code,        setCode]        = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [copied,      setCopied]      = useState(false);
+  const [error,       setError]       = useState('');
+  const regenCodes = useRegenerateBackupCodes();
+
+  const handleRegen = useCallback(() => {
+    setError('');
+    regenCodes.mutate(code, {
+      onSuccess: res => {
+        if (res.success) {
+          setBackupCodes(res.backupCodes);
+        } else {
+          setError('Invalid code. Please try again.');
+        }
+      },
+      onError: () => setError('Request failed. Please try again.'),
+    });
+  }, [code, regenCodes]);
+
+  const handleCopy = useCallback(() => {
+    void navigator.clipboard.writeText(backupCodes.join('\n')).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [backupCodes]);
+
+  const handleDownload = useCallback(() => {
+    const blob = new Blob([backupCodes.join('\n')], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'siomac-backup-codes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [backupCodes]);
+
+  return (
+    <div class="totp-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div class="totp-modal">
+        <div class="totp-modal-header">
+          <div class="totp-modal-title">
+            <i class="fas fa-rotate" style={{ color: 'var(--siomac-navy, #1B2D55)', marginRight: 8 }} />
+            Regenerate Backup Codes
+          </div>
+          <button type="button" class="totp-modal-close" onClick={onClose} aria-label="Close">
+            <i class="fas fa-xmark" />
+          </button>
+        </div>
+        <div class="totp-modal-body">
+          {backupCodes.length === 0 ? (
+            <>
+              <p class="totp-step-desc">
+                Generating new codes will immediately invalidate your existing backup codes.
+                Enter your current authenticator code to confirm.
+              </p>
+              <div class="stg-form-group" style={{ maxWidth: 220 }}>
+                <label>Current authenticator code</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={code}
+                  onInput={e => setCode((e.target as HTMLInputElement).value.trim())}
+                  placeholder="000000"
+                  class="totp-code-input"
+                  autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') handleRegen(); }}
+                />
+              </div>
+              {error && <div class="totp-error"><i class="fas fa-circle-exclamation" /> {error}</div>}
+              <div class="totp-modal-footer">
+                <button type="button" class="stg-btn-outline" onClick={onClose}>Cancel</button>
+                <button
+                  type="button"
+                  class="stg-btn-save"
+                  disabled={code.length < 6 || regenCodes.isPending}
+                  onClick={handleRegen}
+                >
+                  {regenCodes.isPending ? <><i class="fas fa-spinner fa-spin" /> Generating…</> : 'Generate New Codes'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div class="totp-success-banner">
+                <i class="fas fa-circle-check" /> New backup codes generated — old codes are now invalid.
+              </div>
+              <p class="totp-step-desc" style={{ marginTop: 16 }}>
+                Save these codes somewhere safe. They will not be shown again.
+              </p>
+              <div class="totp-codes-grid">
+                {backupCodes.map((bc, i) => (
+                  <div key={i} class="totp-backup-code">{bc}</div>
+                ))}
+              </div>
+              <div class="totp-codes-actions">
+                <button type="button" class="stg-btn-outline" onClick={handleCopy}>
+                  <i class={copied ? 'fas fa-check' : 'fas fa-copy'} />
+                  {copied ? 'Copied!' : 'Copy codes'}
+                </button>
+                <button type="button" class="stg-btn-outline" onClick={handleDownload}>
+                  <i class="fas fa-download" /> Download
+                </button>
+              </div>
+              <div class="totp-modal-footer">
+                <button type="button" class="stg-btn-save" onClick={onClose}>Done</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Authenticator App card ────────────────────────────────────────────────────
+
+function AuthenticatorCard(): VNode {
+  const { data: status, isLoading, refetch } = useTotpStatus();
+  const [showSetup,    setShowSetup]    = useState(false);
+  const [showDisable,  setShowDisable]  = useState(false);
+  const [showRegen,    setShowRegen]    = useState(false);
+
+  const handleEnabled = useCallback(() => {
+    void refetch();
+    setShowSetup(false);
+  }, [refetch]);
+
+  const handleDisabled = useCallback(() => {
+    void refetch();
+    setShowDisable(false);
+  }, [refetch]);
+
+  const mandatory  = status?.mandatory  ?? false;
+  const enabled    = status?.enabled    ?? false;
+  const codesLeft  = status?.backupCodesRemaining ?? 0;
+  const enrolledAt = status?.enrolledAt ?? null;
+
+  return (
+    <>
+      <div class="totp-card">
+        <div class="totp-card-header">
+          <div class="totp-card-icon">
+            <i class="fas fa-mobile-screen-button" />
+          </div>
+          <div class="totp-card-info">
+            <div class="totp-card-title">Authenticator App</div>
+            <div class="totp-card-desc">
+              Use a TOTP app (Google Authenticator, Authy, 1Password) to generate one-time codes at login.
+            </div>
+          </div>
+          {!isLoading && (
+            <div class={`totp-badge ${enabled ? 'totp-badge--on' : 'totp-badge--off'}`}>
+              {enabled ? 'Enabled' : 'Disabled'}
+            </div>
+          )}
+        </div>
+
+        {isLoading && (
+          <div class="totp-loading"><i class="fas fa-spinner fa-spin" /> Loading…</div>
+        )}
+
+        {!isLoading && enabled && (
+          <div class="totp-enrolled-meta">
+            {enrolledAt && (
+              <span><i class="fas fa-calendar-check" /> Enrolled {new Date(enrolledAt).toLocaleDateString()}</span>
+            )}
+            <span><i class="fas fa-key" /> {codesLeft} backup {codesLeft === 1 ? 'code' : 'codes'} remaining</span>
+          </div>
+        )}
+
+        {!isLoading && mandatory && !enabled && (
+          <div class="totp-mandatory-note">
+            <i class="fas fa-circle-info" />
+            Two-factor authentication is required for your role.
+          </div>
+        )}
+
+        {!isLoading && (
+          <div class="totp-card-actions">
+            {!enabled ? (
+              <button
+                type="button"
+                class="stg-btn-save"
+                onClick={() => setShowSetup(true)}
+              >
+                <i class="fas fa-plus" /> Set up authenticator app
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  class="stg-btn-outline"
+                  disabled={mandatory}
+                  title={mandatory ? 'Two-factor is required for your role and cannot be disabled.' : undefined}
+                  onClick={() => { if (!mandatory) setShowDisable(true); }}
+                >
+                  <i class="fas fa-lock-open" /> Disable
+                </button>
+                <button
+                  type="button"
+                  class="stg-btn-outline"
+                  onClick={() => setShowRegen(true)}
+                >
+                  <i class="fas fa-rotate" /> Regenerate backup codes
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {!isLoading && mandatory && enabled && (
+          <div class="totp-mandatory-note" style={{ marginTop: 8 }}>
+            <i class="fas fa-lock" />
+            Two-factor is mandatory for your role and cannot be disabled.
+          </div>
+        )}
+      </div>
+
+      {showSetup   && <TotpSetupModal   onClose={() => setShowSetup(false)}   onEnabled={handleEnabled} />}
+      {showDisable && <TotpDisableModal onClose={() => setShowDisable(false)} onDisabled={handleDisabled} />}
+      {showRegen   && <TotpRegenModal   onClose={() => { setShowRegen(false); void refetch(); }} />}
+    </>
+  );
+}
+
+// ── Security panel ────────────────────────────────────────────────────────────
+
 function SecurityPanel(): VNode {
   const role = useSessionStore(s => s.role);
   const isSuperadmin = role === 'superadmin';
@@ -639,23 +1162,51 @@ function SecurityPanel(): VNode {
     <div>
       <SessionTimeoutCard canEdit={isSuperadmin} />
 
+      {/* Password card — stub; password change is in scope of a later phase */}
       <div class="stg-card">
-        <CardLabel icon="fa-lock" text="Access & Security" />
-        {[
-          { label: 'Two-Factor Authentication', desc: 'Require a one-time code at login — coming soon',     checked: false },
-          { label: 'Login alerts via email',    desc: 'Notify when a new device logs in — coming soon',     checked: false },
-        ].map(sw => (
-          <div key={sw.label} class="stg-switch-group">
-            <div>
-              <div class="stg-switch-label">{sw.label}</div>
-              <div class="stg-switch-desc">{sw.desc}</div>
+        <CardLabel icon="fa-key" text="Password" />
+        <div class="totp-card">
+          <div class="totp-card-header">
+            <div class="totp-card-icon">
+              <i class="fas fa-lock" />
             </div>
-            <label class="stg-toggle">
-              <input type="checkbox" checked={sw.checked} disabled />
-              <span class="stg-slider" />
-            </label>
+            <div class="totp-card-info">
+              <div class="totp-card-title">Account Password</div>
+              <div class="totp-card-desc">Managed via your account credentials.</div>
+            </div>
           </div>
-        ))}
+          <div class="totp-card-actions">
+            {/* TODO: implement password change in a later phase */}
+            <button type="button" class="stg-btn-outline" disabled title="Coming soon">
+              <i class="fas fa-key" /> Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Authenticator App (TOTP) card */}
+      <div class="stg-card">
+        <CardLabel icon="fa-shield-halved" text="Two-Factor Authentication" />
+        <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
+          Protect your account with a second verification step at login.
+          Each time you sign in, you'll need your password plus a code from your authenticator app.
+        </p>
+        <AuthenticatorCard />
+      </div>
+
+      {/* Login alerts — coming soon */}
+      <div class="stg-card">
+        <CardLabel icon="fa-bell" text="Login Alerts" />
+        <div class="stg-switch-group">
+          <div>
+            <div class="stg-switch-label">Login alerts via email</div>
+            <div class="stg-switch-desc">Notify when a new device signs in — coming soon</div>
+          </div>
+          <label class="stg-toggle">
+            <input type="checkbox" checked={false} disabled />
+            <span class="stg-slider" />
+          </label>
+        </div>
       </div>
 
       {/* Danger zone */}

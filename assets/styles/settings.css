@@ -227,3 +227,151 @@
   .stg-card { padding: 16px; }
 }
 
+
+/* ── TOTP / 2FA self-service UI (Phase B1) ─────────────────────────────────── */
+
+/* Modal overlay */
+.totp-modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.totp-modal {
+  background: var(--bg-card, #fff);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.totp-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+.totp-modal-title {
+  font-size: 1rem; font-weight: 700; color: var(--text-primary, #111);
+  display: flex; align-items: center;
+}
+.totp-modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted, #9ca3af); font-size: 1.1rem;
+  padding: 4px 8px; border-radius: 8px; line-height: 1;
+}
+.totp-modal-close:hover { background: var(--bg-subtle, #f5f7fb); }
+.totp-modal-body { padding: 20px 22px; }
+.totp-modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Steps */
+.totp-step-desc {
+  font-size: 0.83rem; color: var(--text-secondary, #6b7280);
+  line-height: 1.6; margin: 0 0 16px;
+}
+.totp-qr-wrap {
+  display: flex; justify-content: center; margin: 12px 0 18px;
+}
+.totp-qr-img { width: 180px; height: 180px; border-radius: 12px; border: 1px solid var(--border, #e5e7eb); }
+.totp-manual-wrap {
+  background: var(--bg-subtle, #f5f7fb);
+  border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.totp-manual-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted, #9ca3af); margin-bottom: 6px; }
+.totp-manual-code {
+  font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 700;
+  letter-spacing: .1em; color: var(--siomac-navy, #1B2D55);
+  word-break: break-all;
+}
+.totp-manual-hint { font-size: 0.72rem; color: var(--text-muted, #9ca3af); margin-top: 8px; line-height: 1.5; }
+
+/* Code input */
+.totp-code-input {
+  font-size: 1.3rem; font-family: 'Courier New', monospace;
+  letter-spacing: .15em; text-align: center;
+  border: 2px solid var(--border, #e5e7eb) !important;
+  border-radius: 12px !important; padding: 10px 16px !important;
+  width: 100%;
+}
+.totp-code-input:focus { border-color: var(--siomac-navy, #1B2D55) !important; outline: none; }
+
+/* Backup codes grid */
+.totp-codes-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  margin: 12px 0;
+}
+.totp-backup-code {
+  background: var(--bg-subtle, #f5f7fb);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px; padding: 8px 12px;
+  font-family: 'Courier New', monospace; font-size: 0.88rem;
+  font-weight: 700; letter-spacing: .08em;
+  color: var(--siomac-navy, #1B2D55); text-align: center;
+}
+.totp-codes-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+
+/* Success banner */
+.totp-success-banner {
+  background: #ecfdf5; border: 1px solid #6ee7b7;
+  color: #065f46; border-radius: 10px;
+  padding: 11px 14px; font-size: 0.83rem; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.totp-success-banner i { font-size: 1rem; }
+
+/* Error */
+.totp-error {
+  background: #fef2f2; border: 1px solid #fca5a5;
+  color: #b91c1c; border-radius: 10px;
+  padding: 10px 14px; font-size: 0.8rem;
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-top: 10px;
+}
+
+/* Loading */
+.totp-loading {
+  text-align: center; padding: 24px 0;
+  color: var(--text-muted, #9ca3af); font-size: 0.83rem;
+}
+
+/* TOTP card (within stg-card) */
+.totp-card {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px; padding: 16px;
+}
+.totp-card-header {
+  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px;
+}
+.totp-card-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(27,45,85,.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.totp-card-icon i { color: var(--siomac-navy, #1B2D55); font-size: 18px; }
+.totp-card-info { flex: 1; min-width: 0; }
+.totp-card-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #111); }
+.totp-card-desc  { font-size: 0.78rem; color: var(--text-secondary, #6b7280); margin-top: 3px; line-height: 1.5; }
+.totp-badge {
+  flex-shrink: 0; border-radius: 20px; padding: 3px 12px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: .03em;
+}
+.totp-badge--on  { background: #d1fae5; color: #065f46; }
+.totp-badge--off { background: #f3f4f6; color: #6b7280; }
+
+.totp-enrolled-meta {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  font-size: 0.75rem; color: var(--text-secondary, #6b7280);
+  margin-bottom: 12px;
+}
+.totp-enrolled-meta i { margin-right: 4px; }
+
+.totp-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.totp-mandatory-note {
+  font-size: 0.78rem; color: var(--siomac-navy, #1B2D55);
+  background: rgba(27,45,85,.06);
+  border-radius: 8px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 6px;
+}

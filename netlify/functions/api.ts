@@ -32,6 +32,7 @@ import hseCapaRouter        from './routes/hseCapa';
 import hseRiskJsaRouter    from './routes/hseRiskJsa';
 import hsePtwRouter         from './routes/hsePtw';
 import uiPrefsRouter        from './routes/uiPrefs';
+import auth2faRouter        from './routes/auth2fa';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -150,6 +151,7 @@ app.route('/api',            uiPrefsRouter);
 app.route('/api',            workflowsRouter);
 app.route('/api',            communicationsRouter);
 app.route('/api',            handoffsRouter);
+app.route('/api/auth/2fa',   auth2faRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.
