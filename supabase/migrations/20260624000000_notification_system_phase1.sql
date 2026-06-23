@@ -1,5 +1,6 @@
 -- Notification System — Phase 1: schema foundations.
--- (See docs/notification-architecture.md.)
+-- (See docs/notification-architecture.md.) Re-runnable / idempotent.
+--   • Relax notifications.type so the engine can store event-type strings.
 --   • Add action-tracking columns to notifications.
 --   • notification_preferences + notification_mutes tables.
 --   • Seed communications.admin (broadcast) permission.
@@ -9,6 +10,13 @@
 -- app_events from 20260621100000_erp_backbone_core.sql). An earlier draft of
 -- this file converted event_id to text to match a stale text-id app_events; that
 -- was wrong for the canonical schema and has been removed.
+
+-- ── 1. Relax the legacy type CHECK ────────────────────────────────────────────
+-- The ERP engine writes the event type (e.g. 'hse.incident.critical') into
+-- notifications.type. The original table had a CHECK limiting type to a fixed
+-- legacy enum, which blocks every engine-emitted notification. Drop it — type is
+-- now free text validated by the application, not the database.
+alter table public.notifications drop constraint if exists notifications_type_check;
 
 -- ── 2. Action-aware columns on notifications ──────────────────────────────────
 -- Read/unread = did the user see it. action_status = was the work actually done.
@@ -38,6 +46,7 @@ create table if not exists public.notification_preferences (
   primary key (user_id, event_type)
 );
 alter table public.notification_preferences enable row level security;
+drop policy if exists "authenticated rw notification_preferences" on public.notification_preferences;
 create policy "authenticated rw notification_preferences" on public.notification_preferences
   for all using (auth.role() = 'authenticated');
 
@@ -51,6 +60,7 @@ create table if not exists public.notification_mutes (
   primary key (user_id, scope)
 );
 alter table public.notification_mutes enable row level security;
+drop policy if exists "authenticated rw notification_mutes" on public.notification_mutes;
 create policy "authenticated rw notification_mutes" on public.notification_mutes
   for all using (auth.role() = 'authenticated');
 
