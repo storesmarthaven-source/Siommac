@@ -35,8 +35,24 @@
 --   tables remain untouched.  Retirement (rename + drop) is a later phase once
 --   all application routes have been cut over to the canonical API.
 --
--- NOTE: Must run AFTER 20260625200000_messaging_enhance.sql
+-- NOTE: Designed to run AFTER 20260625200000_messaging_enhance.sql, but the
+-- defensive block below self-ensures the columns it needs, so running this out
+-- of order no longer fails.
 -- ============================================================================
+
+-- ── Defensive: ensure the canonical columns this migration writes exist ───────
+-- (normally added by 20260625200000_messaging_enhance.sql; repeated here as
+--  add-column-if-not-exists so this script is order-independent and re-runnable)
+alter table public.message_threads
+  add column if not exists last_post_at      timestamptz,
+  add column if not exists last_post_preview text;
+alter table public.message_participants
+  add column if not exists joined_at  timestamptz not null default now(),
+  add column if not exists removed_at timestamptz;
+alter table public.message_posts
+  add column if not exists attachment_count integer not null default 0,
+  add column if not exists edited_at        timestamptz,
+  add column if not exists deleted_at       timestamptz;
 
 DO $$
 DECLARE
