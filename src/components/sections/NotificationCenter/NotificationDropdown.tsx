@@ -165,15 +165,15 @@ export function NotificationDropdown(): VNode {
 
       {/* Footer — quick actions only */}
       {rows.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', padding: '8px 14px', borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderTop: '1px solid var(--border)' }}>
           <button disabled={unread === 0 || markAll.isPending} onClick={() => markAll.mutate({})}
             style={{ background: 'none', border: 'none', cursor: unread === 0 ? 'default' : 'pointer',
-              fontSize: '0.78rem', fontWeight: 600, color: unread === 0 ? 'var(--text-muted)' : 'var(--siomac-navy)', padding: 0 }}>
+              fontSize: '0.86rem', fontWeight: 600, color: unread === 0 ? 'var(--text-muted)' : 'var(--siomac-navy)', padding: 0 }}>
             Mark all read
           </button>
           <button onClick={goToCenter}
             style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-navy)', padding: 0 }}>
+              fontSize: '0.86rem', fontWeight: 600, color: 'var(--siomac-navy)', padding: 0 }}>
             View all
           </button>
         </div>
