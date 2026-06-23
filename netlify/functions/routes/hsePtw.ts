@@ -21,6 +21,24 @@
  * POST /api/hse/ptw/permits/archive
  * POST /api/hse/ptw/permits/stats
  * POST /api/hse/ptw/permit-types/list
+ *
+ * Sub-register routes:
+ * POST /api/hse/ptw/permits/isolations/list
+ * POST /api/hse/ptw/permits/isolations/create
+ * POST /api/hse/ptw/permits/isolations/apply
+ * POST /api/hse/ptw/permits/isolations/verify
+ * POST /api/hse/ptw/permits/isolations/reject
+ * POST /api/hse/ptw/permits/isolations/remove
+ * POST /api/hse/ptw/permits/gas-tests/list
+ * POST /api/hse/ptw/permits/gas-tests/create
+ * POST /api/hse/ptw/permits/gas-tests/retest
+ * POST /api/hse/ptw/permits/gas-tests/mark-invalid
+ * POST /api/hse/ptw/permits/simops/list
+ * POST /api/hse/ptw/permits/simops/check
+ * POST /api/hse/ptw/permits/simops/resolve
+ * POST /api/hse/ptw/permits/simops/approve-override
+ * POST /api/hse/ptw/permits/approvals/list
+ * POST /api/hse/ptw/permits/approvals/decide
  */
 
 import { Hono }              from 'hono';
@@ -1140,6 +1158,1048 @@ router.post('/ptw/permit-types/list', async c => {
     .order('sort_order');
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   return c.json({ success: true, data: data ?? [] });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUB-REGISTER ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Helper: load a permit's identity for notifications ────────────────────────
+
+interface PermitMeta {
+  id: string;
+  permit_number: string | null;
+  requester_id: string | null;
+  work_supervisor_id: string | null;
+  site_id: string | null;
+  area_id: string | null;
+  start_datetime: string | null;
+  end_datetime: string | null;
+}
+
+async function getPermitMeta(permitId: string): Promise<PermitMeta | null> {
+  const { data } = await sb
+    .from('hse_permits')
+    .select('id, permit_number, requester_id, work_supervisor_id, site_id, area_id, start_datetime, end_datetime')
+    .eq('id', permitId)
+    .maybeSingle<PermitMeta>();
+  return data;
+}
+
+// ── POST /api/hse/ptw/permits/isolations/list ─────────────────────────────────
+// hse.ptw.view — list isolation points for a permit
+
+const IsolationListSchema = z.object({
+  permitId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/isolations/list', async c => {
+  await requirePermission(c, 'hse.ptw.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationListSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb
+    .from('hse_permit_isolations')
+    .select('*')
+    .eq('permit_id', v.data.permitId)
+    .order('sort_order');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/ptw/permits/isolations/create ───────────────────────────────
+// hse.ptw.manage — insert a new isolation point (status: 'pending')
+
+const IsolationCreateSchema = z.object({
+  permitId:        z.string().uuid(),
+  isolationType:   z.string().min(1),
+  isolationPoint:  z.string().min(1),
+  energySource:    z.string().nullable().optional(),
+  tagNumber:       z.string().nullable().optional(),
+  lockNumber:      z.string().nullable().optional(),
+  assetId:         z.string().uuid().nullable().optional(),
+  isolationMethod: z.string().nullable().optional(),
+  metadata:        z.record(z.string(), z.unknown()).optional(),
+});
+
+router.post('/ptw/permits/isolations/create', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationCreateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Verify permit exists
+  const permit = await getPermitMeta(v.data.permitId);
+  if (!permit) return c.json({ success: false, message: 'Permit not found.' }, 404 as 200);
+
+  const { data, error } = await sb
+    .from('hse_permit_isolations')
+    .insert({
+      permit_id:        v.data.permitId,
+      isolation_type:   v.data.isolationType,
+      isolation_point:  v.data.isolationPoint,
+      energy_source:    v.data.energySource ?? null,
+      tag_number:       v.data.tagNumber ?? null,
+      asset_id:         v.data.assetId ?? null,
+      isolation_method: v.data.isolationMethod ?? null,
+      status:           'pending',
+      metadata:         v.data.metadata ?? {},
+    })
+    .select('id')
+    .single<{ id: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
+
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     v.data.permitId,
+    action:        'isolation_created',
+    actor_user_id: user.id,
+    after_state:   { isolation_id: data.id, status: 'pending', isolation_point: v.data.isolationPoint },
+    metadata:      { isolation_type: v.data.isolationType },
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.isolation.created',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit.permit_number ?? v.data.permitId,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { isolationId: data.id, isolationPoint: v.data.isolationPoint, isolationType: v.data.isolationType },
+  });
+
+  return c.json({ success: true, data: { id: data.id } });
+});
+
+// ── POST /api/hse/ptw/permits/isolations/apply ────────────────────────────────
+// hse.ptw.manage — set status 'applied', record actor + timestamp
+
+const IsolationIdSchema = z.object({
+  isolationId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/isolations/apply', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationIdSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_isolations')
+    .select('id, permit_id, isolation_point, status')
+    .eq('id', v.data.isolationId)
+    .maybeSingle<{ id: string; permit_id: string; isolation_point: string; status: string }>();
+  if (!cur.data) return c.json({ success: false, message: 'Isolation point not found.' }, 404 as 200);
+  if (cur.data.status !== 'pending') {
+    return c.json({ success: false, message: `Cannot apply isolation in status "${cur.data.status}". Must be pending.` }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_isolations')
+    .update({ status: 'applied', applied_by: user.id, applied_at: now, updated_at: now })
+    .eq('id', v.data.isolationId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'isolation_applied',
+    actor_user_id: user.id,
+    after_state:   { isolation_id: v.data.isolationId, status: 'applied' },
+    metadata:      {},
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.isolation.applied',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { isolationId: v.data.isolationId, isolationPoint: cur.data.isolation_point },
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/ptw/permits/isolations/verify ───────────────────────────────
+// hse.ptw.activate — verify isolation. Guard: applied_by !== actor (same-person block).
+
+router.post('/ptw/permits/isolations/verify', async c => {
+  const user = await requirePermission(c, 'hse.ptw.activate');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationIdSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_isolations')
+    .select('id, permit_id, isolation_point, status, applied_by')
+    .eq('id', v.data.isolationId)
+    .maybeSingle<{ id: string; permit_id: string; isolation_point: string; status: string; applied_by: string | null }>();
+  if (!cur.data) return c.json({ success: false, message: 'Isolation point not found.' }, 404 as 200);
+  if (cur.data.status !== 'applied') {
+    return c.json({ success: false, message: `Cannot verify isolation in status "${cur.data.status}". Must be applied first.` }, 400 as 200);
+  }
+
+  // Same-person guard: the person who applied may not verify
+  if (cur.data.applied_by && cur.data.applied_by === user.id) {
+    return c.json({
+      success: false,
+      message: 'Apply and verify must be different people. The person who applied this isolation cannot also verify it.',
+    }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_isolations')
+    .update({ status: 'verified', verified_by: user.id, verified_at: now, updated_at: now })
+    .eq('id', v.data.isolationId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'isolation_verified',
+    actor_user_id: user.id,
+    after_state:   { isolation_id: v.data.isolationId, status: 'verified' },
+    metadata:      {},
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.isolation.verified',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'success',
+    payload:          { isolationId: v.data.isolationId, isolationPoint: cur.data.isolation_point },
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/ptw/permits/isolations/reject ───────────────────────────────
+// hse.ptw.activate — reject a pending/applied isolation; reset to 'pending'.
+// Note: DB status CHECK is ('pending'|'applied'|'verified'|'removed'); there is
+// no 'rejected' status. Rejection resets the point to 'pending' so it can be
+// re-applied. The rejection reason is persisted in the audit event.
+
+const IsolationRejectSchema = z.object({
+  isolationId: z.string().uuid(),
+  reason:      z.string().nullable().optional(),
+});
+
+router.post('/ptw/permits/isolations/reject', async c => {
+  const user = await requirePermission(c, 'hse.ptw.activate');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationRejectSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_isolations')
+    .select('id, permit_id, isolation_point, status, applied_by')
+    .eq('id', v.data.isolationId)
+    .maybeSingle<{ id: string; permit_id: string; isolation_point: string; status: string; applied_by: string | null }>();
+  if (!cur.data) return c.json({ success: false, message: 'Isolation point not found.' }, 404 as 200);
+  if (!['applied', 'pending'].includes(cur.data.status)) {
+    return c.json({ success: false, message: `Cannot reject isolation in status "${cur.data.status}".` }, 400 as 200);
+  }
+
+  // Reset to pending so it can be re-applied; store rejection reason in metadata
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_isolations')
+    .update({
+      status:     'pending',
+      applied_by: null,
+      applied_at: null,
+      updated_at: now,
+      metadata:   { rejection_reason: v.data.reason ?? null, rejected_by: user.id, rejected_at: now },
+    })
+    .eq('id', v.data.isolationId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'isolation_rejected',
+    actor_user_id: user.id,
+    after_state:   { isolation_id: v.data.isolationId, status: 'pending', reason: v.data.reason ?? null },
+    metadata:      { from_status: cur.data.status },
+  });
+
+  // Notify the requester so they know the isolation was rejected
+  void emitAppEvent({
+    eventType:        'ptw.isolation.rejected',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'warning',
+    payload:          { isolationId: v.data.isolationId, isolationPoint: cur.data.isolation_point, reason: v.data.reason ?? null },
+    ...(permit?.requester_id && permit.requester_id !== user.id ? {
+      explicitRecipients: [{ userId: permit.requester_id, reason: 'owner' as const }],
+      notification: {
+        title:          `Isolation rejected on permit ${permit.permit_number ?? cur.data.permit_id}`,
+        body:           `Isolation point "${cur.data.isolation_point}" was rejected${v.data.reason ? `: ${v.data.reason}` : '.'}`,
+        actionRoute:    `hse/permits/${cur.data.permit_id}`,
+        type:           'ptw.isolation.rejected',
+        actionRequired: true,
+      },
+    } : {}),
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/ptw/permits/isolations/remove ───────────────────────────────
+// hse.ptw.manage — mark isolation as removed (permit closeout / de-energisation)
+
+router.post('/ptw/permits/isolations/remove', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, IsolationIdSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_isolations')
+    .select('id, permit_id, isolation_point, status')
+    .eq('id', v.data.isolationId)
+    .maybeSingle<{ id: string; permit_id: string; isolation_point: string; status: string }>();
+  if (!cur.data) return c.json({ success: false, message: 'Isolation point not found.' }, 404 as 200);
+  if (cur.data.status === 'removed') {
+    return c.json({ success: false, message: 'Isolation already removed.' }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_isolations')
+    .update({ status: 'removed', removed_by: user.id, removed_at: now, updated_at: now })
+    .eq('id', v.data.isolationId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'isolation_removed',
+    actor_user_id: user.id,
+    after_state:   { isolation_id: v.data.isolationId, status: 'removed' },
+    metadata:      {},
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.isolation.removed',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { isolationId: v.data.isolationId, isolationPoint: cur.data.isolation_point },
+  });
+
+  return c.json({ success: true });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GAS TESTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/hse/ptw/permits/gas-tests/list ──────────────────────────────────
+// hse.ptw.view
+
+const GasTestListSchema = z.object({
+  permitId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/gas-tests/list', async c => {
+  await requirePermission(c, 'hse.ptw.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, GasTestListSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb
+    .from('hse_permit_gas_tests')
+    .select('*')
+    .eq('permit_id', v.data.permitId)
+    .order('test_sequence');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── Shared gas test insert helper ─────────────────────────────────────────────
+
+const GasTestCreateSchema = z.object({
+  permitId:               z.string().uuid(),
+  testLocation:           z.string().nullable().optional(),
+  instrumentId:           z.string().nullable().optional(),
+  oxygenPct:              z.number().nullable().optional(),
+  lelPct:                 z.number().nullable().optional(),
+  h2sPpm:                 z.number().nullable().optional(),
+  coPpm:                  z.number().nullable().optional(),
+  so2Ppm:                 z.number().nullable().optional(),
+  result:                 z.enum(['pass', 'fail', 'retest', 'pending']).default('pending'),
+  notes:                  z.string().nullable().optional(),
+  instrumentCalDate:      z.string().nullable().optional(),
+  metadata:               z.record(z.string(), z.unknown()).optional(),
+});
+
+async function insertGasTest(
+  c: Context<{ Variables: HonoVariables }>,
+  actorId: string,
+  args: z.infer<typeof GasTestCreateSchema>,
+): Promise<Response> {
+  // Verify permit exists
+  const permit = await getPermitMeta(args.permitId);
+  if (!permit) return c.json({ success: false, message: 'Permit not found.' }, 404 as 200);
+
+  // Determine next sequence number
+  const seqRes = await sb
+    .from('hse_permit_gas_tests')
+    .select('test_sequence')
+    .eq('permit_id', args.permitId)
+    .order('test_sequence', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ test_sequence: number }>();
+  const nextSeq = (seqRes.data?.test_sequence ?? 0) + 1;
+
+  const now = new Date().toISOString();
+
+  const { data, error } = await sb
+    .from('hse_permit_gas_tests')
+    .insert({
+      permit_id:          args.permitId,
+      test_sequence:      nextSeq,
+      tested_at:          now,
+      tester_id:          actorId,
+      location:           args.testLocation ?? null,
+      instrument_id:      args.instrumentId ?? null,
+      oxygen_pct:         args.oxygenPct ?? null,
+      lel_pct:            args.lelPct ?? null,
+      h2s_ppm:            args.h2sPpm ?? null,
+      co_ppm:             args.coPpm ?? null,
+      so2_ppm:            args.so2Ppm ?? null,
+      result:             args.result,
+      notes:              args.notes ?? null,
+      instrument_cal_date: args.instrumentCalDate ?? null,
+      metadata:           args.metadata ?? {},
+    })
+    .select('id')
+    .single<{ id: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Gas test insert failed' }, 500 as 200);
+
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     args.permitId,
+    action:        'gas_test_recorded',
+    actor_user_id: actorId,
+    after_state:   { gas_test_id: data.id, test_sequence: nextSeq, result: args.result },
+    metadata:      { location: args.testLocation ?? null, oxygen_pct: args.oxygenPct ?? null, lel_pct: args.lelPct ?? null },
+  });
+
+  const isFail = args.result === 'fail';
+
+  void emitAppEvent({
+    eventType:        isFail ? 'ptw.permit.gas_test_failed' : 'ptw.gas_test.recorded',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit.permit_number ?? args.permitId,
+    actorUserId:      actorId,
+    severity:         isFail ? 'critical' : 'info',
+    payload:          { gasTestId: data.id, testSequence: nextSeq, result: args.result, location: args.testLocation ?? null },
+    // Notify requester + supervisor on gas test failure (critical safety event)
+    ...(isFail ? {
+      explicitRecipients: [
+        ...(permit.requester_id && permit.requester_id !== actorId
+          ? [{ userId: permit.requester_id, reason: 'owner' as const }] : []),
+        ...(permit.work_supervisor_id && permit.work_supervisor_id !== actorId
+          ? [{ userId: permit.work_supervisor_id, reason: 'participant' as const }] : []),
+      ].filter(r => r.userId),
+      notification: {
+        title:          `Gas test FAILED on permit ${permit.permit_number ?? args.permitId}`,
+        body:           `Test #${nextSeq} recorded a FAIL result. Work must stop until safe atmospheric conditions are confirmed.`,
+        actionRoute:    `hse/permits/${args.permitId}`,
+        type:           'ptw.permit.gas_test_failed',
+        actionRequired: true,
+      },
+      dedupeKey: null,
+    } : {}),
+  });
+
+  return c.json({ success: true, data: { id: data.id, testSequence: nextSeq, result: args.result } });
+}
+
+// ── POST /api/hse/ptw/permits/gas-tests/create ───────────────────────────────
+// hse.ptw.manage
+
+router.post('/ptw/permits/gas-tests/create', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, GasTestCreateSchema, body.args);
+  if (!v.ok) return v.response;
+  return insertGasTest(c, user.id, v.data);
+});
+
+// ── POST /api/hse/ptw/permits/gas-tests/retest ───────────────────────────────
+// hse.ptw.manage — record a re-test (inserts a new row, incrementing sequence)
+
+router.post('/ptw/permits/gas-tests/retest', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, GasTestCreateSchema, body.args);
+  if (!v.ok) return v.response;
+  return insertGasTest(c, user.id, v.data);
+});
+
+// ── POST /api/hse/ptw/permits/gas-tests/mark-invalid ─────────────────────────
+// hse.ptw.manage — invalidate a specific gas test result (e.g. instrument fault)
+// Note: hse_permit_gas_tests has no status column. We record the invalidation
+// via metadata update and an audit event, and set result to 'pending' to
+// exclude it from the passing gate. This is the most schema-safe approach.
+
+const GasTestInvalidateSchema = z.object({
+  gasTestId: z.string().uuid(),
+  reason:    z.string().nullable().optional(),
+});
+
+router.post('/ptw/permits/gas-tests/mark-invalid', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, GasTestInvalidateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_gas_tests')
+    .select('id, permit_id, test_sequence, result')
+    .eq('id', v.data.gasTestId)
+    .maybeSingle<{ id: string; permit_id: string; test_sequence: number; result: string }>();
+  if (!cur.data) return c.json({ success: false, message: 'Gas test not found.' }, 404 as 200);
+
+  const now = new Date().toISOString();
+  // Mark result as 'pending' to neutralise the result + store invalidation in metadata
+  const { error } = await sb
+    .from('hse_permit_gas_tests')
+    .update({
+      result:   'pending',
+      notes:    `[INVALIDATED ${now}]${v.data.reason ? ` Reason: ${v.data.reason}` : ''}`,
+      metadata: { invalidated: true, invalidated_by: user.id, invalidated_at: now, invalidation_reason: v.data.reason ?? null, original_result: cur.data.result },
+    })
+    .eq('id', v.data.gasTestId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'gas_test_invalidated',
+    actor_user_id: user.id,
+    after_state:   { gas_test_id: v.data.gasTestId, test_sequence: cur.data.test_sequence, original_result: cur.data.result },
+    metadata:      { reason: v.data.reason ?? null },
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.gas_test.invalidated',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'warning',
+    payload:          { gasTestId: v.data.gasTestId, testSequence: cur.data.test_sequence, originalResult: cur.data.result, reason: v.data.reason ?? null },
+  });
+
+  return c.json({ success: true });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIMOPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/hse/ptw/permits/simops/list ─────────────────────────────────────
+// hse.ptw.view
+
+const SimopsListSchema = z.object({
+  permitId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/simops/list', async c => {
+  await requirePermission(c, 'hse.ptw.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, SimopsListSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb
+    .from('hse_permit_simops_conflicts')
+    .select('*')
+    .eq('permit_id', v.data.permitId)
+    .order('created_at');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/ptw/permits/simops/check ────────────────────────────────────
+// hse.ptw.manage — detect overlapping permits at same site/area, insert conflicts.
+
+const SimopsCheckSchema = z.object({
+  permitId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/simops/check', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, SimopsCheckSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Load the permit being checked
+  const permitRes = await sb
+    .from('hse_permits')
+    .select('id, permit_number, site_id, area_id, start_datetime, end_datetime, status')
+    .eq('id', v.data.permitId)
+    .maybeSingle<{
+      id: string;
+      permit_number: string | null;
+      site_id: string | null;
+      area_id: string | null;
+      start_datetime: string | null;
+      end_datetime: string | null;
+      status: string;
+    }>();
+  if (!permitRes.data) return c.json({ success: false, message: 'Permit not found.' }, 404 as 200);
+  const permit = permitRes.data;
+
+  // Find other active/approved permits that could overlap in time and share location
+  // A conflict exists when: same site_id OR same area_id, AND time windows overlap.
+  // Overlap condition: !(other.end < permit.start || other.start > permit.end)
+  // We fetch candidates and filter; for large datasets a DB function is preferred
+  // but this matches existing project patterns of fetching + JS filtering.
+  const CONFLICTING_STATUSES = ['submitted', 'risk_review', 'isolation_pending', 'gas_test_pending', 'awaiting_approval', 'approved', 'active'];
+  const conflictCandidatesRes = await sb
+    .from('hse_permits')
+    .select('id, permit_number, status, site_id, area_id, start_datetime, end_datetime')
+    .neq('id', v.data.permitId)
+    .in('status', CONFLICTING_STATUSES);
+
+  const candidates = (conflictCandidatesRes.data ?? []) as Array<{
+    id: string;
+    permit_number: string | null;
+    status: string;
+    site_id: string | null;
+    area_id: string | null;
+    start_datetime: string | null;
+    end_datetime: string | null;
+  }>;
+
+  const permitStart = permit.start_datetime ? new Date(permit.start_datetime).getTime() : null;
+  const permitEnd   = permit.end_datetime   ? new Date(permit.end_datetime).getTime()   : null;
+
+  const conflicts: Array<{ conflictingPermitId: string; conflictType: string; description: string }> = [];
+
+  for (const candidate of candidates) {
+    // Location overlap check
+    const sameLocation =
+      (permit.site_id && candidate.site_id && permit.site_id === candidate.site_id) ||
+      (permit.area_id && candidate.area_id && permit.area_id === candidate.area_id);
+    if (!sameLocation) continue;
+
+    // Time window overlap check (null = open-ended, always overlaps on that end)
+    let timeOverlap = true;
+    if (permitStart !== null && candidate.end_datetime !== null) {
+      if (permitStart >= new Date(candidate.end_datetime).getTime()) timeOverlap = false;
+    }
+    if (permitEnd !== null && candidate.start_datetime !== null) {
+      if (permitEnd <= new Date(candidate.start_datetime).getTime()) timeOverlap = false;
+    }
+    if (!timeOverlap) continue;
+
+    // Determine conflict type
+    const conflictType = permit.area_id && candidate.area_id && permit.area_id === candidate.area_id
+      ? 'location'
+      : 'location'; // Both site and area conflicts map to 'location'; extend to 'time' type if needed.
+
+    conflicts.push({
+      conflictingPermitId: candidate.id,
+      conflictType,
+      description: `Concurrent work detected with permit ${candidate.permit_number ?? candidate.id} (status: ${candidate.status}) at the same ${permit.area_id === candidate.area_id ? 'area' : 'site'}.`,
+    });
+  }
+
+  // Insert detected conflicts (skip ones that already exist for this permit pair)
+  const existingRes = await sb
+    .from('hse_permit_simops_conflicts')
+    .select('conflicting_permit_id')
+    .eq('permit_id', v.data.permitId);
+  const existingConflictIds = new Set(
+    ((existingRes.data ?? []) as Array<{ conflicting_permit_id: string | null }>)
+      .map(r => r.conflicting_permit_id)
+      .filter(Boolean),
+  );
+
+  const newConflicts = conflicts.filter(cf => !existingConflictIds.has(cf.conflictingPermitId));
+
+  if (newConflicts.length > 0) {
+    const rows = newConflicts.map(cf => ({
+      permit_id:            v.data.permitId,
+      conflicting_permit_id: cf.conflictingPermitId,
+      conflict_type:        cf.conflictType,
+      description:          cf.description,
+      status:               'open',
+    }));
+    await sb.from('hse_permit_simops_conflicts').insert(rows);
+
+    void sb.from('hse_permit_audit_events').insert({
+      permit_id:     v.data.permitId,
+      action:        'simops_check_performed',
+      actor_user_id: user.id,
+      after_state:   { conflicts_found: newConflicts.length, total_candidates: candidates.length },
+      metadata:      { new_conflicts: newConflicts },
+    });
+
+    void emitAppEvent({
+      eventType:        'ptw.simops.conflicts_detected',
+      sourceModule:     'hse',
+      sourceEntityType: 'permit',
+      sourceEntityId:   permit.permit_number ?? v.data.permitId,
+      actorUserId:      user.id,
+      severity:         'warning',
+      payload:          { conflictsFound: newConflicts.length, permitId: v.data.permitId },
+    });
+  }
+
+  return c.json({
+    success: true,
+    data: {
+      conflictsFound:  conflicts.length,
+      newConflicts:    newConflicts.length,
+      existingConflicts: conflicts.length - newConflicts.length,
+      conflicts,
+    },
+  });
+});
+
+// ── POST /api/hse/ptw/permits/simops/resolve ──────────────────────────────────
+// hse.ptw.manage — mark a SIMOPS conflict as resolved
+// DB status: 'resolved' maps to spec's 'resolved'.
+
+const SimopsConflictActionSchema = z.object({
+  conflictId: z.string().uuid(),
+  notes:      z.string().nullable().optional(),
+});
+
+router.post('/ptw/permits/simops/resolve', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, SimopsConflictActionSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_simops_conflicts')
+    .select('id, permit_id, status, conflict_type, conflicting_permit_id')
+    .eq('id', v.data.conflictId)
+    .maybeSingle<{ id: string; permit_id: string; status: string; conflict_type: string; conflicting_permit_id: string | null }>();
+  if (!cur.data) return c.json({ success: false, message: 'SIMOPS conflict not found.' }, 404 as 200);
+  if (cur.data.status === 'resolved') {
+    return c.json({ success: false, message: 'Conflict is already resolved.' }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_simops_conflicts')
+    .update({
+      status:      'resolved',
+      resolved_by: user.id,
+      resolved_at: now,
+      resolution:  v.data.notes ?? null,
+      updated_at:  now,
+    })
+    .eq('id', v.data.conflictId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'simops_conflict_resolved',
+    actor_user_id: user.id,
+    after_state:   { conflict_id: v.data.conflictId, status: 'resolved' },
+    metadata:      { notes: v.data.notes ?? null, conflicting_permit_id: cur.data.conflicting_permit_id },
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.simops.conflict_resolved',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'success',
+    payload:          { conflictId: v.data.conflictId, conflictType: cur.data.conflict_type },
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/ptw/permits/simops/approve-override ────────────────────────
+// hse.ptw.approve — approve an override for a SIMOPS conflict (elevated permission)
+// DB status: 'accepted' maps to spec's 'override_approved'.
+
+router.post('/ptw/permits/simops/approve-override', async c => {
+  const user = await requirePermission(c, 'hse.ptw.approve');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, SimopsConflictActionSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_simops_conflicts')
+    .select('id, permit_id, status, conflict_type, conflicting_permit_id')
+    .eq('id', v.data.conflictId)
+    .maybeSingle<{ id: string; permit_id: string; status: string; conflict_type: string; conflicting_permit_id: string | null }>();
+  if (!cur.data) return c.json({ success: false, message: 'SIMOPS conflict not found.' }, 404 as 200);
+  if (!['open', 'mitigated'].includes(cur.data.status)) {
+    return c.json({ success: false, message: `Cannot approve override for conflict in status "${cur.data.status}".` }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await sb
+    .from('hse_permit_simops_conflicts')
+    .update({
+      status:      'accepted',   // DB status: 'accepted' = override approved
+      resolved_by: user.id,
+      resolved_at: now,
+      resolution:  v.data.notes ? `[OVERRIDE APPROVED] ${v.data.notes}` : '[OVERRIDE APPROVED]',
+      updated_at:  now,
+    })
+    .eq('id', v.data.conflictId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const permit = await getPermitMeta(cur.data.permit_id);
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     cur.data.permit_id,
+    action:        'simops_override_approved',
+    actor_user_id: user.id,
+    after_state:   { conflict_id: v.data.conflictId, status: 'accepted', override: true },
+    metadata:      { notes: v.data.notes ?? null, conflicting_permit_id: cur.data.conflicting_permit_id },
+  });
+
+  void emitAppEvent({
+    eventType:        'ptw.simops.override_approved',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit',
+    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
+    actorUserId:      user.id,
+    severity:         'warning',  // Override is elevated risk — use warning severity
+    payload:          { conflictId: v.data.conflictId, conflictType: cur.data.conflict_type, notes: v.data.notes ?? null },
+  });
+
+  return c.json({ success: true });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// APPROVALS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/hse/ptw/permits/approvals/list ──────────────────────────────────
+// hse.ptw.view — ordered by step_order
+
+const ApprovalListSchema = z.object({
+  permitId: z.string().uuid(),
+});
+
+router.post('/ptw/permits/approvals/list', async c => {
+  await requirePermission(c, 'hse.ptw.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ApprovalListSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb
+    .from('hse_permit_approvals')
+    .select('*')
+    .eq('permit_id', v.data.permitId)
+    .order('step_order');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/ptw/permits/approvals/decide ────────────────────────────────
+// hse.ptw.approve — approve, reject, or request changes on a specific approval step.
+
+const ApprovalDecideSchema = z.object({
+  approvalId: z.string().uuid(),
+  decision:   z.enum(['approved', 'rejected', 'changes_requested']),
+  comments:   z.string().nullable().optional(),
+});
+
+router.post('/ptw/permits/approvals/decide', async c => {
+  const user = await requirePermission(c, 'hse.ptw.approve');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ApprovalDecideSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Load the approval step + its permit
+  const approvalRes = await sb
+    .from('hse_permit_approvals')
+    .select('id, permit_id, step_order, role_required, approver_user_id, status')
+    .eq('id', v.data.approvalId)
+    .maybeSingle<{
+      id: string;
+      permit_id: string;
+      step_order: number;
+      role_required: string;
+      approver_user_id: string | null;
+      status: string;
+    }>();
+  if (!approvalRes.data) return c.json({ success: false, message: 'Approval step not found.' }, 404 as 200);
+  const approval = approvalRes.data;
+
+  if (!['pending', 'delegated'].includes(approval.status)) {
+    return c.json({ success: false, message: `Approval step is already "${approval.status}" and cannot be decided again.` }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  // Map decision to DB status values — 'changes_requested' doesn't exist in DB enum:
+  // status check: ('pending','approved','rejected','delegated','skipped')
+  // For changes_requested: use 'rejected' with a comment note, OR we store it in
+  // comments only. Since 'changes_requested' is not a valid DB status we map to 'pending'
+  // and store the intent in comments. Actually the cleanest approach: map to 'rejected'
+  // for the step (it wasn't approved), and trigger changes_requested on the permit level.
+  const dbStatus: Record<string, string> = {
+    approved:           'approved',
+    rejected:           'rejected',
+    changes_requested:  'rejected',   // step-level rejection; permit gets changes_requested
+  };
+
+  const { error } = await sb
+    .from('hse_permit_approvals')
+    .update({
+      status:           dbStatus[v.data.decision] ?? 'rejected',
+      approver_user_id: approval.approver_user_id ?? user.id,  // set if not pre-assigned
+      decision_at:      now,
+      comments:         v.data.comments ?? null,
+      updated_at:       now,
+    })
+    .eq('id', v.data.approvalId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  // Load all approvals for this permit to determine terminal state
+  const allApprovalsRes = await sb
+    .from('hse_permit_approvals')
+    .select('id, step_order, status, approver_user_id, role_required')
+    .eq('permit_id', approval.permit_id)
+    .order('step_order');
+  const allApprovals = (allApprovalsRes.data ?? []) as Array<{
+    id: string;
+    step_order: number;
+    status: string;
+    approver_user_id: string | null;
+    role_required: string;
+  }>;
+
+  // Re-read the updated step
+  const updatedApprovals = allApprovals.map(a =>
+    a.id === v.data.approvalId ? { ...a, status: dbStatus[v.data.decision] ?? 'rejected' } : a,
+  );
+
+  const permit = await getPermitMeta(approval.permit_id);
+  const permRef = permit?.permit_number ?? approval.permit_id;
+
+  // Find the next pending approver (for notification)
+  const nextPending = updatedApprovals
+    .filter(a => a.status === 'pending' && a.id !== v.data.approvalId)
+    .sort((a, b) => a.step_order - b.step_order)[0];
+
+  // Terminal checks
+  const allApproved = updatedApprovals.every(a => ['approved', 'skipped'].includes(a.status));
+  const anyRejected = updatedApprovals.some(a => a.status === 'rejected');
+
+  void sb.from('hse_permit_audit_events').insert({
+    permit_id:     approval.permit_id,
+    action:        `approval_${v.data.decision}`,
+    actor_user_id: user.id,
+    after_state:   { approval_id: v.data.approvalId, step_order: approval.step_order, decision: v.data.decision },
+    metadata:      { comments: v.data.comments ?? null, role_required: approval.role_required },
+  });
+
+  if (v.data.decision === 'approved') {
+    if (allApproved) {
+      // All steps approved — notify requester
+      void emitAppEvent({
+        eventType:        'ptw.permit.approved',
+        sourceModule:     'hse',
+        sourceEntityType: 'permit',
+        sourceEntityId:   permRef,
+        actorUserId:      user.id,
+        severity:         'success',
+        payload:          { approvalId: v.data.approvalId, allStepsComplete: true },
+        dedupeKey:        `ptw.approval.all_approved:${approval.permit_id}`,
+        ...(permit?.requester_id && permit.requester_id !== user.id ? {
+          explicitRecipients: [{ userId: permit.requester_id, reason: 'owner' as const }],
+          notification: {
+            title:          `All approvals complete: ${permRef}`,
+            body:           `Your permit has received all required approvals and is ready for activation.`,
+            actionRoute:    `hse/permits/${approval.permit_id}`,
+            type:           'ptw.permit.approved',
+            actionRequired: false,
+          },
+        } : {}),
+      });
+    } else if (nextPending?.approver_user_id) {
+      // Notify next approver
+      void emitAppEvent({
+        eventType:        'ptw.permit.approval_required',
+        sourceModule:     'hse',
+        sourceEntityType: 'permit',
+        sourceEntityId:   permRef,
+        actorUserId:      user.id,
+        severity:         'info',
+        payload:          { approvalId: nextPending.id, stepOrder: nextPending.step_order, roleRequired: nextPending.role_required },
+        explicitRecipients: [{ userId: nextPending.approver_user_id, reason: 'assignee' as const }],
+        notification: {
+          title:          `Approval required for permit: ${permRef}`,
+          body:           `Your approval is required as ${nextPending.role_required}.`,
+          actionRoute:    `hse/permits/${approval.permit_id}`,
+          type:           'ptw.permit.approval_required',
+          actionRequired: true,
+        },
+      });
+    }
+  } else if (v.data.decision === 'rejected' || v.data.decision === 'changes_requested') {
+    // Notify requester of rejection / changes requested
+    const eventType = v.data.decision === 'rejected'
+      ? 'ptw.permit.rejected'
+      : 'ptw.permit.changes_requested';
+    const title = v.data.decision === 'rejected'
+      ? `Permit approval rejected: ${permRef}`
+      : `Changes requested on permit: ${permRef}`;
+    const bodyText = v.data.comments
+      ? `${v.data.decision === 'rejected' ? 'Rejected' : 'Changes requested'} by ${approval.role_required}: ${v.data.comments}`
+      : `${v.data.decision === 'rejected' ? 'Rejected' : 'Changes requested'} by ${approval.role_required}.`;
+
+    void emitAppEvent({
+      eventType,
+      sourceModule:     'hse',
+      sourceEntityType: 'permit',
+      sourceEntityId:   permRef,
+      actorUserId:      user.id,
+      severity:         'warning',
+      payload:          { approvalId: v.data.approvalId, decision: v.data.decision, comments: v.data.comments ?? null, roleRequired: approval.role_required },
+      ...(permit?.requester_id && permit.requester_id !== user.id ? {
+        explicitRecipients: [{ userId: permit.requester_id, reason: 'owner' as const }],
+        notification: {
+          title,
+          body:           bodyText,
+          actionRoute:    `hse/permits/${approval.permit_id}`,
+          type:           eventType,
+          actionRequired: true,
+        },
+      } : {}),
+    });
+  }
+
+  return c.json({
+    success: true,
+    data: {
+      decision:      v.data.decision,
+      allApproved,
+      anyRejected,
+      nextPendingStep: nextPending ? { id: nextPending.id, stepOrder: nextPending.step_order, roleRequired: nextPending.role_required } : null,
+    },
+  });
 });
 
 export default router;
