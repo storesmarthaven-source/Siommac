@@ -181,7 +181,7 @@ export function UIKitPage(): VNode {
           />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />
-        <Demo label="MetricRow — rearrangeable sub-module cards (pass a pageKey to enable drag)" wide>
+        <Demo label="MetricRow — rearrangeable cards. Click Arrange, then drag: the card fades to a placeholder, neighbours glide out of the way (FLIP), the drop target rings red. Order persists per-user." wide>
           <MetricRow cards={[
             { key: 'a', node: <SparkCard spark={{ label: 'Open', value: '14', sub: 'in progress', sparkPoints: [4, 6, 5, 8, 6, 14], sparkColor: '#f59e0b' }} /> },
             { key: 'b', node: <SparkCard spark={{ label: 'Overdue', value: '3', sub: 'need action', delta: '2', deltaUp: true, sparkPoints: [1, 0, 2, 1, 3, 3], sparkColor: '#ef4444' }} /> },

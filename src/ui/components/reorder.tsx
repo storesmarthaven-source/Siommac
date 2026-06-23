@@ -26,38 +26,63 @@ export interface CardDragProps {
 export interface CardReorder {
   enabled:      boolean;
   layout:       ModuleLayout;
+  /** Live order — reflects the in-progress drag so neighbours move out of the way. */
   order:        string[];
   arranging:    boolean;
   setArranging: (v: boolean) => void;
   dragKey:      string | null;
+  overKey:      string | null;
   dragHandlers: (key: string) => CardDragProps;
+  /** State class for a card: ui-reorder [is-arranging|is-dragging|is-drop-target|is-shifting]. */
+  dragClass:    (key: string) => string;
 }
 
 export function useCardReorder(pageKey: string | undefined, cardKeys: string[]): CardReorder {
   const layout = useModuleLayout(pageKey, cardKeys);
   const [arranging, setArranging] = useState(false);
-  const [dragKey, setDragKey] = useState<string | null>(null);
+  const [dragKey,   setDragKey]   = useState<string | null>(null);
+  const [overKey,   setOverKey]   = useState<string | null>(null);
+  const [liveOrder, setLiveOrder] = useState<string[] | null>(null);
 
-  const reorder = (target: string) => {
+  const order = liveOrder ?? layout.order;
+
+  /** Live-move the dragged card next to `target` so the row reflows as you drag. */
+  const moveLive = (target: string) => {
     if (!dragKey || dragKey === target) return;
-    const next = [...layout.order];
-    const from = next.indexOf(dragKey);
-    const to = next.indexOf(target);
+    const base = liveOrder ?? [...layout.order];
+    const from = base.indexOf(dragKey);
+    const to   = base.indexOf(target);
     if (from < 0 || to < 0) return;
+    const next = [...base];
     next.splice(to, 0, next.splice(from, 1)[0]!);
-    layout.persistMine(next);
-    setDragKey(null);
+    setLiveOrder(next);
+  };
+
+  const commit = () => {
+    if (liveOrder && dragKey && liveOrder.some((k, i) => k !== layout.order[i])) {
+      layout.persistMine(liveOrder);
+    }
+    setDragKey(null); setOverKey(null); setLiveOrder(null);
   };
 
   const dragHandlers = (key: string): CardDragProps => ({
     draggable:   arranging,
-    onDragStart: () => setDragKey(key),
-    onDragOver:  (e: DragEvent) => e.preventDefault(),
-    onDrop:      () => reorder(key),
-    onDragEnd:   () => setDragKey(null),
+    onDragStart: () => { setDragKey(key); setLiveOrder([...layout.order]); },
+    onDragOver:  (e: DragEvent) => { e.preventDefault(); setOverKey(key); moveLive(key); },
+    onDrop:      () => commit(),
+    onDragEnd:   () => commit(),
   });
 
-  return { enabled: layout.enabled, layout, order: layout.order, arranging, setArranging, dragKey, dragHandlers };
+  const dragClass = (key: string): string => {
+    let c = 'ui-reorder';
+    if (arranging)                                c += ' is-arranging';
+    if (dragKey === key)                          c += ' is-dragging';
+    else if (dragKey)                             c += ' is-shifting';
+    if (dragKey && overKey === key && key !== dragKey) c += ' is-drop-target';
+    return c;
+  };
+
+  return { enabled: layout.enabled, layout, order, arranging, setArranging, dragKey, overKey, dragHandlers, dragClass };
 }
 
 /** The Arrange / Reset / Set-default / Done toolbar. `onDark` for the hero. */

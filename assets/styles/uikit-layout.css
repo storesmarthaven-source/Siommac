@@ -330,6 +330,32 @@ body[data-theme="dark"] .hero-footer {
 
 .ui-stat-footer { font-size: 0.66rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; }
 .ui-stat-card--navy .ui-stat-footer { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.08); }
+
+/* ── Card reorder / Arrange states (useCardReorder → dragClass) ──────────────────
+   default · hover · dragging (placeholder) · drop-target · shifting · FLIP anim. */
+.ui-reorder {                                   /* DEFAULT */
+  border-radius: 16px;
+  transition: box-shadow .18s ease, opacity .18s ease, outline-color .18s ease;
+}
+.ui-reorder.is-arranging {                       /* ARRANGE MODE */
+  cursor: grab; outline: 2px dashed transparent; outline-offset: 2px;
+}
+.ui-reorder.is-arranging:hover {                 /* HOVER */
+  outline-color: var(--border);
+  box-shadow: 0 8px 22px rgba(15,23,42,.12);
+}
+.ui-reorder.is-dragging {                        /* DRAGGING / PLACEHOLDER */
+  cursor: grabbing; opacity: .42;
+  outline: 2px dashed var(--siomac-navy); outline-offset: 2px;
+}
+.ui-reorder.is-drop-target {                     /* DROP TARGET */
+  outline: 2px solid var(--siomac-red); outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(228,12,12,.12);
+}
+.ui-reorder.is-shifting {                        /* NEIGHBOURS (during a drag) */
+  opacity: .9;
+}
+/* FLIP transform transition is applied inline by MetricRow's useFlip. */
 .hse-spark-card {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
   padding: 16px 18px 14px; box-shadow: var(--shadow-card);
