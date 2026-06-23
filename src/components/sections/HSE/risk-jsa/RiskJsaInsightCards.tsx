@@ -12,7 +12,7 @@
  */
 
 import { type VNode } from 'preact';
-import { SparkCard } from '@ui';
+import { SparkCard, MetricRow } from '@ui';
 import { useHazards, useAssessments, useJsaList, type RiskLevel } from '@api/hse/riskJsa';
 import { InsightCard } from './shared/InsightCard';
 
@@ -61,7 +61,6 @@ export function RiskJsaInsightCards({ activeTab }: { activeTab: 'hazards' | 'ass
   return <HazardCards />;
 }
 
-const ROW: preact.JSX.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', marginBottom: '20px' };
 
 // ── Hazard Register ─────────────────────────────────────────────────────────────
 
@@ -82,26 +81,36 @@ function HazardCards(): VNode {
   const byCat = [...cat.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label, value]) => ({ label, value, color: '#ef4444' }));
 
   return (
-    <div style={ROW}>
-      <SparkCard spark={{
-        label: 'Review Cycle',
-        value: `${overdueRev + dueWeek}`,
-        sub: `${overdueRev} overdue · ${dueWeek} due this week`,
-        sparkPoints: dueTrend(hz.map(h => h.review_due_at)),
-        sparkColor: overdueRev > 0 ? '#f87171' : '#60a5fa',
-        months: WEEK_LABELS,
-        delta: `${dueWeek}`,
-        deltaUp: overdueRev > 0,
-      }} />
-      <InsightCard icon="fa-radiation" title="Hazard Profile" value={total} subtitle={`${critical} critical · ${high} high · ${medium} medium · ${low} low`}
-        variant="donut" data={{ segments: [{ value: critical, color: SEV_COLOR.critical }, { value: high, color: SEV_COLOR.high }, { value: medium, color: SEV_COLOR.medium }, { value: low, color: SEV_COLOR.low }] }}
-        footer="On the register" />
-      <InsightCard icon="fa-triangle-exclamation" title="High / Critical Hazards" value={`${highCrit}`} subtitle={overdueRev > 0 ? `${overdueRev} overdue reviews` : 'Need control verification'}
-        variant="bar" tone={highCrit > 0 ? 'danger' : 'neutral'} data={{ bars: byCat }}
-        footer={byCat.map(c => `${c.label} ${c.value}`).join(' · ') || 'No high-risk hazards'} />
-      <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
-        variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
-        footer="Approved / monitoring" />
+    <div style={{ marginBottom: '20px' }}>
+      <MetricRow pageKey="hse.risk.hazards" cards={[
+        { key: 'review', node: (
+          <SparkCard spark={{
+            label: 'Review Cycle',
+            value: `${overdueRev + dueWeek}`,
+            sub: `${overdueRev} overdue · ${dueWeek} due this week`,
+            sparkPoints: dueTrend(hz.map(h => h.review_due_at)),
+            sparkColor: overdueRev > 0 ? '#f87171' : '#60a5fa',
+            months: WEEK_LABELS,
+            delta: `${dueWeek}`,
+            deltaUp: overdueRev > 0,
+          }} />
+        ) },
+        { key: 'profile', node: (
+          <InsightCard icon="fa-radiation" title="Hazard Profile" value={total} subtitle={`${critical} critical · ${high} high · ${medium} medium · ${low} low`}
+            variant="donut" data={{ segments: [{ value: critical, color: SEV_COLOR.critical }, { value: high, color: SEV_COLOR.high }, { value: medium, color: SEV_COLOR.medium }, { value: low, color: SEV_COLOR.low }] }}
+            footer="On the register" />
+        ) },
+        { key: 'highcrit', node: (
+          <InsightCard icon="fa-triangle-exclamation" title="High / Critical Hazards" value={`${highCrit}`} subtitle={overdueRev > 0 ? `${overdueRev} overdue reviews` : 'Need control verification'}
+            variant="bar" tone={highCrit > 0 ? 'danger' : 'neutral'} data={{ bars: byCat }}
+            footer={byCat.map(c => `${c.label} ${c.value}`).join(' · ') || 'No high-risk hazards'} />
+        ) },
+        { key: 'coverage', node: (
+          <InsightCard icon="fa-shield-halved" title="Control Coverage" value={`${coverage}%`} subtitle={`${withControls} of ${total} hazards controlled`}
+            variant="progress" tone="navy" data={{ pct: coverage, color: coverage >= 80 ? '#4ade80' : '#fbbf24', target: 'Target 85%' }}
+            footer="Approved / monitoring" />
+        ) },
+      ]} />
     </div>
   );
 }
@@ -122,26 +131,36 @@ function AssessmentCards(): VNode {
   const dueMonth = a.filter(x => within(30, x.review_due_at)).length;
 
   return (
-    <div style={ROW}>
-      <SparkCard spark={{
-        label: 'Reviews Due',
-        value: `${dueMonth}`,
-        sub: `${dueWeek} this week · ${dueMonth - dueWeek} this month`,
-        sparkPoints: dueTrend(a.map(x => x.review_due_at)),
-        sparkColor: '#60a5fa',
-        months: WEEK_LABELS,
-        delta: `${dueWeek}`,
-        deltaUp: dueWeek > 0,
-      }} />
-      <InsightCard icon="fa-table-cells-large" title="Assessment Status" value={total} subtitle={`${active} active · ${underReview} under review · ${expired} expired`}
-        variant="donut" data={{ segments: [{ value: active, color: '#16a34a' }, { value: underReview, color: '#f59e0b' }, { value: expired, color: '#ef4444' }] }}
-        footer={`${underReview} pending approval`} />
-      <InsightCard icon="fa-arrow-down-wide-short" title="Residual Risk" value={`${highResidual}`} subtitle={`${acceptable}% acceptable after controls`}
-        variant="progress" tone={highResidual > 0 ? 'warning' : 'neutral'} data={{ pct: acceptable, color: acceptable >= 85 ? '#22c55e' : '#f59e0b', target: 'Target 85%' }}
-        footer="High residual remaining" />
-      <InsightCard icon="fa-clipboard-check" title="Approval Queue" value={`${underReview}`} subtitle={`${returned} returned · ${underReview} awaiting review`}
-        variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
-        footer="HSE review" />
+    <div style={{ marginBottom: '20px' }}>
+      <MetricRow pageKey="hse.risk.assessments" cards={[
+        { key: 'reviews', node: (
+          <SparkCard spark={{
+            label: 'Reviews Due',
+            value: `${dueMonth}`,
+            sub: `${dueWeek} this week · ${dueMonth - dueWeek} this month`,
+            sparkPoints: dueTrend(a.map(x => x.review_due_at)),
+            sparkColor: '#60a5fa',
+            months: WEEK_LABELS,
+            delta: `${dueWeek}`,
+            deltaUp: dueWeek > 0,
+          }} />
+        ) },
+        { key: 'status', node: (
+          <InsightCard icon="fa-table-cells-large" title="Assessment Status" value={total} subtitle={`${active} active · ${underReview} under review · ${expired} expired`}
+            variant="donut" data={{ segments: [{ value: active, color: '#16a34a' }, { value: underReview, color: '#f59e0b' }, { value: expired, color: '#ef4444' }] }}
+            footer={`${underReview} pending approval`} />
+        ) },
+        { key: 'residual', node: (
+          <InsightCard icon="fa-arrow-down-wide-short" title="Residual Risk" value={`${highResidual}`} subtitle={`${acceptable}% acceptable after controls`}
+            variant="progress" tone={highResidual > 0 ? 'warning' : 'neutral'} data={{ pct: acceptable, color: acceptable >= 85 ? '#22c55e' : '#f59e0b', target: 'Target 85%' }}
+            footer="High residual remaining" />
+        ) },
+        { key: 'approvals', node: (
+          <InsightCard icon="fa-clipboard-check" title="Approval Queue" value={`${underReview}`} subtitle={`${returned} returned · ${underReview} awaiting review`}
+            variant="status-grid" tone="navy" data={{ tiles: [{ value: underReview, label: 'Awaiting' }, { value: returned, label: 'Returned', tone: returned > 0 ? '#fca5a5' : '#4ade80' }] }}
+            footer="HSE review" />
+        ) },
+      ]} />
     </div>
   );
 }
@@ -161,25 +180,35 @@ function JsaCards(): VNode {
     .filter(b => b.value > 0);
 
   return (
-    <div style={ROW}>
-      <SparkCard spark={{
-        label: 'Active JSAs',
-        value: `${active}`,
-        sub: `${j.length} in the library · ${inReview} in review`,
-        sparkPoints: monthlyTrend(j.map(x => x.created_at)),
-        sparkColor: '#4ade80',
-        delta: `${active}`,
-        deltaUp: false,
-      }} />
-      <InsightCard icon="fa-triangle-exclamation" title="High-Risk Jobs" value={`${highRisk}`} subtitle="Hot work · confined space · lifting"
-        variant="bar" tone={highRisk > 0 ? 'danger' : 'neutral'} data={{ bars: bandBars }}
-        footer="By risk band" />
-      <InsightCard icon="fa-file-shield" title="Permit-Linked JSAs" value={`${j.filter(x => x.status === 'active').length}`} subtitle="Hot work, confined space, general"
-        variant="status-grid" tone="navy" data={{ tiles: [{ value: highRisk, label: 'High-risk' }, { value: dueWeek, label: 'Due soon' }] }}
-        footer="Permit references" />
-      <InsightCard icon="fa-user-graduate" title="Training / PPE Readiness" value={`${j.length > 0 ? Math.round((active / j.length) * 100) : 0}%`} subtitle="Competency + PPE coverage"
-        variant="progress" tone="navy" data={{ pct: j.length > 0 ? Math.round((active / j.length) * 100) : 0, color: '#4ade80', target: 'Target 90%' }}
-        footer="PPE requirements active" />
+    <div style={{ marginBottom: '20px' }}>
+      <MetricRow pageKey="hse.risk.jsa" cards={[
+        { key: 'active', node: (
+          <SparkCard spark={{
+            label: 'Active JSAs',
+            value: `${active}`,
+            sub: `${j.length} in the library · ${inReview} in review`,
+            sparkPoints: monthlyTrend(j.map(x => x.created_at)),
+            sparkColor: '#4ade80',
+            delta: `${active}`,
+            deltaUp: false,
+          }} />
+        ) },
+        { key: 'highrisk', node: (
+          <InsightCard icon="fa-triangle-exclamation" title="High-Risk Jobs" value={`${highRisk}`} subtitle="Hot work · confined space · lifting"
+            variant="bar" tone={highRisk > 0 ? 'danger' : 'neutral'} data={{ bars: bandBars }}
+            footer="By risk band" />
+        ) },
+        { key: 'permit', node: (
+          <InsightCard icon="fa-file-shield" title="Permit-Linked JSAs" value={`${j.filter(x => x.status === 'active').length}`} subtitle="Hot work, confined space, general"
+            variant="status-grid" tone="navy" data={{ tiles: [{ value: highRisk, label: 'High-risk' }, { value: dueWeek, label: 'Due soon' }] }}
+            footer="Permit references" />
+        ) },
+        { key: 'training', node: (
+          <InsightCard icon="fa-user-graduate" title="Training / PPE Readiness" value={`${j.length > 0 ? Math.round((active / j.length) * 100) : 0}%`} subtitle="Competency + PPE coverage"
+            variant="progress" tone="navy" data={{ pct: j.length > 0 ? Math.round((active / j.length) * 100) : 0, color: '#4ade80', target: 'Target 90%' }}
+            footer="PPE requirements active" />
+        ) },
+      ]} />
     </div>
   );
 }
