@@ -189,20 +189,86 @@ function injectPasskeyTfaButton(onClick: () => void): () => void {
   return () => { btn.remove(); };
 }
 
+// ── Trust-this-device checkbox injection ──────────────────────────────────────
+
+const TRUST_CHECKBOX_ID = 'trustDeviceCheckbox';
+const TRUST_ROW_ID      = 'trustDeviceRow';
+
+/**
+ * Inject a "Trust this device for N days" checkbox below the TFA submit button.
+ * Only shown when trustedDeviceEligible && trustedDevicePolicy.enabled.
+ * Returns: [cleanup, setVisible, readChecked]
+ */
+function injectTrustDeviceRow(
+  maxDays:  number,
+  onChange: (checked: boolean) => void,
+): () => void {
+  const tfaPanel = document.getElementById('twoFaPanel');
+  if (!tfaPanel) return () => {};
+  if (document.getElementById(TRUST_ROW_ID)) {
+    return () => {};
+  }
+
+  const row = document.createElement('div');
+  row.id = TRUST_ROW_ID;
+  row.style.cssText = [
+    'display:flex',
+    'align-items:center',
+    'gap:8px',
+    'margin-top:14px',
+    'padding:10px 12px',
+    'background:var(--bg-subtle,#f5f7fb)',
+    'border-radius:10px',
+    'border:1px solid var(--border-color,#dde3ea)',
+  ].join(';');
+
+  const cb = document.createElement('input');
+  cb.type    = 'checkbox';
+  cb.id      = TRUST_CHECKBOX_ID;
+  cb.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:var(--accent,#2563eb);flex-shrink:0';
+  cb.onchange = () => onChange(cb.checked);
+
+  const lbl = document.createElement('label');
+  lbl.htmlFor = TRUST_CHECKBOX_ID;
+  lbl.style.cssText = 'font-size:0.82rem;color:var(--text-secondary,#536171);cursor:pointer;line-height:1.4;margin:0';
+  lbl.innerHTML = `<i class="fas fa-shield-check" style="color:var(--accent,#2563eb);margin-right:4px"></i>`
+    + `Trust this device for <strong>${maxDays} day${maxDays !== 1 ? 's' : ''}</strong> — skip 2FA on future sign-ins`;
+
+  row.appendChild(cb);
+  row.appendChild(lbl);
+
+  // Insert at bottom of tfaPanel
+  tfaPanel.appendChild(row);
+
+  return () => { row.remove(); };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
+  // B3b: ref holding the "inject trust row" callback so loginMut.onSuccess can call it
+  // The callback is set by the useEffect after the panel DOM is ready.
+  const injectTrustRowRef = useRef<(() => void) | null>(null);
+
   // Persisted 2FA state (preAuthToken, rememberMe, methods) — lives only in memory
   const tfaRef = useRef<{
-    preAuthToken:  string | null;
-    rememberMe:    boolean;
-    methods:       string[];
-    username:      string;
+    preAuthToken:          string | null;
+    rememberMe:            boolean;
+    methods:               string[];
+    username:              string;
+    // B3b: trusted device offer fields captured from /login response
+    trustedDeviceEligible: boolean;
+    trustedDevicePolicy:   { enabled: boolean; maxDays: number } | null;
+    // B3b: current value of the "trust this device" checkbox
+    rememberDevice:        boolean;
   }>({
-    preAuthToken: null,
-    rememberMe:   false,
-    methods:      [],
-    username:     '',
+    preAuthToken:          null,
+    rememberMe:            false,
+    methods:               [],
+    username:              '',
+    trustedDeviceEligible: false,
+    trustedDevicePolicy:   null,
+    rememberDevice:        false,
   });
 
   // ── Button loading helpers ─────────────────────────────────────────────────
@@ -266,17 +332,23 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       }
 
       if (result.requiresTwoFactor) {
-        tfaRef.current.preAuthToken = result.preAuthToken ?? null;
-        tfaRef.current.methods      = result.methods ?? [];
-        tfaRef.current.username     = (document.getElementById('username') as HTMLInputElement | null)?.value.trim() ?? '';
+        tfaRef.current.preAuthToken          = result.preAuthToken ?? null;
+        tfaRef.current.methods               = result.methods ?? [];
+        tfaRef.current.username              = (document.getElementById('username') as HTMLInputElement | null)?.value.trim() ?? '';
         const remEl = document.getElementById('rememberMe') as HTMLInputElement | null;
-        tfaRef.current.rememberMe   = remEl?.checked ?? false;
+        tfaRef.current.rememberMe            = remEl?.checked ?? false;
+        // B3b: capture trusted device policy from login response
+        tfaRef.current.trustedDeviceEligible = result.trustedDeviceEligible ?? false;
+        tfaRef.current.trustedDevicePolicy   = result.trustedDevicePolicy ?? null;
+        tfaRef.current.rememberDevice        = false;
         // Show verify panel
         showPanel('tfa-verify');
         otpClear('tfaOtpRow');
         setErrorBanner('tfaErrorBanner', null);
         const bkSec = document.getElementById('tfaBackupSection');
         if (bkSec) bkSec.style.display = 'none';
+        // B3b: inject trust-device row if eligible
+        injectTrustRowRef.current?.();
         focusFirst('tfaOtpRow');
         return;
       }
@@ -319,7 +391,15 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       if (!result.success) {
         setErrorBanner('loginErrorBanner', result.message || 'Setup failed. Please log in again.');
         showPanel('credentials');
-        tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
+        tfaRef.current = {
+          preAuthToken:          null,
+          rememberMe:            false,
+          methods:               [],
+          username:              '',
+          trustedDeviceEligible: false,
+          trustedDevicePolicy:   null,
+          rememberDevice:        false,
+        };
         return;
       }
       // Populate QR panel
@@ -365,8 +445,16 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       try { localStorage.removeItem('rememberedUser'); } catch (_) {}
     }
 
-    // Reset 2FA memory
-    tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
+    // Reset 2FA memory (including B3b trusted device fields)
+    tfaRef.current = {
+      preAuthToken:          null,
+      rememberMe:            false,
+      methods:               [],
+      username:              '',
+      trustedDeviceEligible: false,
+      trustedDevicePolicy:   null,
+      rememberDevice:        false,
+    };
 
     onLoginSuccess(result);
   }, [onLoginSuccess]);
@@ -399,11 +487,16 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   }, [_completeLogin]);
 
   // Submit TOTP verify (also used for backup code path)
-  const submitTfaCode = useCallback((code: string) => {
+  // rememberDevice is only honoured server-side for 6-digit TOTP codes (not backup codes)
+  const submitTfaCode = useCallback((code: string, isBackupCode = false) => {
     const token = tfaRef.current.preAuthToken;
     if (!token) return;
     setErrorBanner('tfaErrorBanner', null);
-    verifyMut.mutate({ preAuthToken: token, code });
+    const rememberDevice = !isBackupCode && tfaRef.current.rememberDevice;
+    const deviceLabel    = rememberDevice
+      ? (navigator.userAgent.slice(0, 80) || undefined)
+      : undefined;
+    verifyMut.mutate({ preAuthToken: token, code, rememberDevice, deviceLabel });
   }, [verifyMut]);
 
   // Submit setup-confirm code
@@ -481,10 +574,17 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       });
 
       // 3. Verify — returns full session payload
+      // Pass rememberDevice if the checkbox is checked (B3b)
+      const rememberDevice = tfaRef.current.rememberDevice;
+      const deviceLabel    = rememberDevice
+        ? (navigator.userAgent.slice(0, 80) || undefined)
+        : undefined;
       const result = await webauthnAuthVerify({
-        flow:          'second_factor',
-        preAuthToken:  token,
-        response:      assertion as unknown as Record<string, unknown>,
+        flow:           'second_factor',
+        preAuthToken:   token,
+        response:       assertion as unknown as Record<string, unknown>,
+        rememberDevice,
+        deviceLabel,
       });
 
       if (!result.success) {
@@ -574,6 +674,9 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         const inp = document.getElementById('tfaBackupCode');
         if (inp) (inp as HTMLInputElement).focus();
       }
+      // B3b: hide trust-device row when backup section is showing (backup codes must not create a trust)
+      const trustRow = document.getElementById(TRUST_ROW_ID);
+      if (trustRow) trustRow.style.display = hidden ? 'none' : 'flex';
     }
 
     function handleTfaBackupSubmit() {
@@ -583,12 +686,21 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         setErrorBanner('tfaErrorBanner', 'Please enter your backup code.');
         return;
       }
-      submitTfaCode(code);
+      // isBackupCode=true suppresses the rememberDevice flag (server also enforces this)
+      submitTfaCode(code, true);
     }
 
     function handleTfaBack() {
       showPanel('credentials');
-      tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
+      tfaRef.current = {
+        preAuthToken:          null,
+        rememberMe:            false,
+        methods:               [],
+        username:              '',
+        trustedDeviceEligible: false,
+        trustedDevicePolicy:   null,
+        rememberDevice:        false,
+      };
     }
 
     const tfaSubmitBtn    = document.getElementById('tfaSubmitBtn');
@@ -610,6 +722,30 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       if (!tfaRef.current.methods.includes('webauthn')) return;
       void handlePasskeyTfa();
     });
+
+    // ── Inject "Trust this device" checkbox (B3b) ───────────────────────────
+    // We inject lazily when the tfa-verify panel is first shown (see loginMut.onSuccess).
+    // We keep a reference to the cleanup fn so we can remove it on unmount.
+    // The checkbox is hidden while the backup-code section is visible.
+    let removeTrustRow: (() => void) | null = null;
+
+    // Wire injectTrustRowRef so loginMut.onSuccess (outside useEffect) can trigger injection.
+    injectTrustRowRef.current = () => {
+      if (removeTrustRow) {
+        // Already injected from a previous login attempt — reset checkbox and reshow
+        const cb = document.getElementById(TRUST_CHECKBOX_ID) as HTMLInputElement | null;
+        if (cb) cb.checked = false;
+        tfaRef.current.rememberDevice = false;
+        const row = document.getElementById(TRUST_ROW_ID);
+        if (row) row.style.display = 'flex';
+        return;
+      }
+      const { trustedDeviceEligible, trustedDevicePolicy } = tfaRef.current;
+      if (!trustedDeviceEligible || !trustedDevicePolicy?.enabled) return;
+      removeTrustRow = injectTrustDeviceRow(trustedDevicePolicy.maxDays, (checked) => {
+        tfaRef.current.rememberDevice = checked;
+      });
+    };
 
     // ── TFA setup panel ─────────────────────────────────────────────────────
     function handleSetupQrNext() {
@@ -654,6 +790,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       loginForm?.removeEventListener('submit', handleLoginSubmit);
       removePasskeyLoginBtn();
       removePasskeyTfaBtn();
+      removeTrustRow?.();
+      injectTrustRowRef.current = null;
       unwireVerify();
       unwireSetupOtp();
       tfaSubmitBtn?.removeEventListener('click', handleTfaSubmitBtn);

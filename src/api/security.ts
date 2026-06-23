@@ -91,12 +91,38 @@ export interface PasskeyMutateResponse {
   code?:    'last_factor';
 }
 
+// ── Trusted device response types ─────────────────────────────────────────────
+
+export interface TrustedDevice {
+  id:           string;
+  label:        string | null;
+  browserName:  string | null;
+  osName:       string | null;
+  deviceType:   string | null;
+  createdAt:    string;
+  lastUsedAt:   string | null;
+  trustedUntil: string;
+  method:       string;
+  currentDevice: boolean;
+}
+
+export interface TrustedDevicesListResponse {
+  success: boolean;
+  devices: TrustedDevice[];
+}
+
+export interface TrustedDeviceMutateResponse {
+  success:  boolean;
+  message?: string;
+}
+
 // ── Query keys ────────────────────────────────────────────────────────────────
 
 export const securityKeys = {
-  all:      ['security']                      as const,
-  totp:     () => ['security', 'totp']        as const,
-  passkeys: () => ['security', 'passkeys']    as const,
+  all:           ['security']                           as const,
+  totp:          () => ['security', 'totp']             as const,
+  passkeys:      () => ['security', 'passkeys']         as const,
+  trustedDevices: () => ['security', 'trusted-devices'] as const,
 } as const;
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -249,6 +275,52 @@ export function useDeletePasskey() {
         void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
         void qc.invalidateQueries({ queryKey: securityKeys.totp() });
       }
+    },
+  });
+}
+
+// ── Trusted devices hooks ─────────────────────────────────────────────────────
+
+/**
+ * List trusted devices for the current user.
+ * The server marks the current request's device with currentDevice: true.
+ */
+export function useTrustedDevices(enabled = true) {
+  return useQuery({
+    queryKey: securityKeys.trustedDevices(),
+    queryFn:  () => apiPost<TrustedDevicesListResponse>('/api/auth/trusted-devices/list', {}),
+    enabled,
+    staleTime: 30_000,
+    select: (data) => data.devices ?? [],
+  });
+}
+
+/**
+ * Revoke a single trusted device by ID.
+ * Invalidates the trusted-devices list on success.
+ */
+export function useRevokeTrustedDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (trustedDeviceId: string) =>
+      apiPost<TrustedDeviceMutateResponse>('/api/auth/trusted-devices/revoke', { trustedDeviceId }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: securityKeys.trustedDevices() });
+    },
+  });
+}
+
+/**
+ * Revoke ALL trusted devices for the current user and rotate the security stamp.
+ * This forces re-verification of MFA on next login everywhere.
+ */
+export function useRevokeAllTrustedDevices() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<TrustedDeviceMutateResponse>('/api/auth/trusted-devices/revoke-all', {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: securityKeys.trustedDevices() });
     },
   });
 }

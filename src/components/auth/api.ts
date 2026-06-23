@@ -39,6 +39,9 @@ export interface LoginResult {
   requiresSetup?:     boolean;
   preAuthToken?:      string;
   methods?:           string[]; // ['totp', 'webauthn']
+  // Trusted device offer (B3a) — present when requiresTwoFactor is true
+  trustedDeviceEligible?: boolean;
+  trustedDevicePolicy?:   { enabled: boolean; maxDays: number };
   // TOTP setup
   qrCode?:            string;
   manualCode?:        string;
@@ -73,8 +76,10 @@ export async function loginApi(payload: {
 }
 
 export async function verify2faApi(payload: {
-  preAuthToken: string;
-  code:         string;
+  preAuthToken:   string;
+  code:           string;
+  rememberDevice?: boolean;
+  deviceLabel?:    string;
 }): Promise<LoginResult> {
   return authPost<LoginResult>('verify2fa', payload as unknown as Record<string, unknown>);
 }
@@ -122,9 +127,11 @@ export async function webauthnAuthOptions(username?: string): Promise<WebAuthnOp
  * On success returns the same buildSessionPayload shape as /login.
  */
 export async function webauthnAuthVerify(payload: {
-  flow:          'passwordless' | 'second_factor';
-  preAuthToken?: string;
-  response:      Record<string, unknown>;
+  flow:            'passwordless' | 'second_factor';
+  preAuthToken?:   string;
+  response:        Record<string, unknown>;
+  rememberDevice?: boolean;
+  deviceLabel?:    string;
 }): Promise<LoginResult> {
   return authPost<LoginResult>(
     'webauthn/auth/verify',

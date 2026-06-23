@@ -45,7 +45,11 @@ import {
   useRegisterPasskey,
   useRenamePasskey,
   useDeletePasskey,
+  useTrustedDevices,
+  useRevokeTrustedDevice,
+  useRevokeAllTrustedDevices,
   type PasskeyCredential,
+  type TrustedDevice,
 } from '@api/security';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -552,6 +556,136 @@ function NotificationsPanel(): VNode {
         delivery will be available in a future update.
       </p>
       <NotificationPreferences />
+    </div>
+  );
+}
+
+// ── Trusted Devices card ──────────────────────────────────────────────────────
+
+function TrustedDevicesCard(): VNode {
+  const { data: devices = [], isLoading, refetch } = useTrustedDevices();
+  const revokeMut    = useRevokeTrustedDevice();
+  const revokeAllMut = useRevokeAllTrustedDevices();
+
+  const handleRevoke = useCallback(async (device: TrustedDevice) => {
+    const name = device.label || `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
+    if (!window.confirm(`Remove trusted device "${name}"? You will need to re-verify 2FA from that device.`)) return;
+    try {
+      await revokeMut.mutateAsync(device.id);
+      toast.success('Trusted device removed.');
+      void refetch();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove device.');
+    }
+  }, [revokeMut, refetch]);
+
+  const handleRevokeAll = useCallback(async () => {
+    if (!window.confirm(
+      'Revoke ALL trusted devices? You (and everyone else on all devices) will need to re-verify 2FA on the next login.'
+    )) return;
+    try {
+      await revokeAllMut.mutateAsync();
+      toast.success('All trusted devices revoked.');
+      void refetch();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to revoke all devices.');
+    }
+  }, [revokeAllMut, refetch]);
+
+  return (
+    <div class="totp-card">
+      <div class="totp-card-header">
+        <div class="totp-card-icon"><i class="fas fa-laptop-mobile" /></div>
+        <div class="totp-card-info">
+          <div class="totp-card-title">Trusted Devices</div>
+          <div class="totp-card-desc">
+            Devices that can skip two-factor verification for a limited time.
+          </div>
+        </div>
+        {!isLoading && (
+          <div class={`totp-badge ${devices.length > 0 ? 'totp-badge--on' : 'totp-badge--off'}`}>
+            {devices.length > 0 ? `${devices.length} trusted` : 'None'}
+          </div>
+        )}
+      </div>
+
+      {isLoading && (
+        <div class="totp-loading"><i class="fas fa-spinner fa-spin" /> Loading…</div>
+      )}
+
+      {!isLoading && devices.length === 0 && (
+        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '10px', fontStyle: 'italic' }}>
+          No trusted devices. Check "Trust this device" after 2FA to add one.
+        </div>
+      )}
+
+      {!isLoading && devices.length > 0 && (
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {devices.map((device) => {
+            const untilDate    = new Date(device.trustedUntil).toLocaleDateString();
+            const lastUsed     = device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleDateString() : null;
+            const displayLabel = device.label || [device.browserName, device.osName].filter(Boolean).join(' on ') || 'Unknown device';
+            const subLine      = [device.browserName, device.osName].filter(Boolean).join(' · ');
+            return (
+              <div
+                key={device.id}
+                class="totp-enrolled-meta"
+                style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{displayLabel}</span>
+                    {device.currentDevice && (
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700, padding: '1px 7px',
+                        background: 'var(--accent,#2563eb)', color: '#fff',
+                        borderRadius: '20px', letterSpacing: '0.02em',
+                      }}>
+                        This device
+                      </span>
+                    )}
+                  </div>
+                  {subLine && (
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '1px' }}>
+                      {subLine}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '3px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <span><i class="fas fa-calendar-check" style={{ marginRight: 3 }} />Trusted until {untilDate}</span>
+                    {lastUsed && <span><i class="fas fa-clock" style={{ marginRight: 3 }} />Last used {lastUsed}</span>}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="stg-btn-outline"
+                  style={{ padding: '3px 10px', fontSize: '0.78rem', flexShrink: 0, color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+                  onClick={() => void handleRevoke(device)}
+                  disabled={revokeMut.isPending || revokeAllMut.isPending}
+                >
+                  <i class="fas fa-trash-can" /> Revoke
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!isLoading && devices.length > 0 && (
+        <div class="totp-card-actions" style={{ marginTop: '14px' }}>
+          <button
+            type="button"
+            class="stg-btn-outline"
+            style={{ color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+            onClick={() => void handleRevokeAll()}
+            disabled={revokeAllMut.isPending || revokeMut.isPending}
+          >
+            {revokeAllMut.isPending
+              ? <><i class="fas fa-spinner fa-spin" /> Revoking…</>
+              : <><i class="fas fa-ban" /> Revoke all trusted devices</>
+            }
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1378,6 +1512,15 @@ function SecurityPanel(): VNode {
           Register a biometric or hardware key to sign in without a password or one-time code.
         </p>
         <PasskeysCard />
+      </div>
+
+      {/* Trusted Devices card */}
+      <div class="stg-card">
+        <CardLabel icon="fa-laptop-mobile" text="Trusted Devices" />
+        <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
+          Devices you have marked as trusted can sign in without a 2FA code for a limited time.
+        </p>
+        <TrustedDevicesCard />
       </div>
 
       {/* Login alerts — coming soon */}

@@ -308,10 +308,12 @@ registerAuthExpiredHandler(() => useSessionStore.getState().expire());
 
 // ── Selectors (memoised — use these in components, not raw store access) ──────
 
-export const selectIsAdmin        = (s: SessionState) => s.role === 'admin' || s.role === 'superadmin';
-export const selectIsSuperAdmin   = (s: SessionState) => s.role === 'superadmin';
-export const selectIsManager      = (s: SessionState) => s.role === 'manager' || selectIsAdmin(s);
-export const selectUserId         = (s: SessionState) => s.userId;
-export const selectRole           = (s: SessionState) => s.role;
-export const selectFullName       = (s: SessionState) => s.fullName;
-export const selectPermissions    = (s: SessionState) => s.permissionOverrides;
+export const selectIsAdmin          = (s: SessionState) => s.role === 'admin' || s.role === 'superadmin';
+export const selectIsSuperAdmin     = (s: SessionState) => s.role === 'superadmin';
+export const selectIsManager        = (s: SessionState) => s.role === 'manager' || selectIsAdmin(s);
+export const selectUserId           = (s: SessionState) => s.userId;
+export const selectRole             = (s: SessionState) => s.role;
+export const selectFullName         = (s: SessionState) => s.fullName;
+export const selectPermissions      = (s: SessionState) => s.permissionOverrides;
+/** True when the current session was established via a trusted-device cookie (no 2FA challenge). */
+export const selectTrustedDeviceUsed = (s: SessionState) => s.authStrength === 'trusted_device';
