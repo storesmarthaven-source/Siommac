@@ -25,7 +25,6 @@ import {
   getRole,
 } from './navCore';
 import { scheduleHdrBadgeSync, doHdrBadgeSync } from './badgeSync';
-import { mountNotificationsPanel } from './NotificationsPanel';
 import { mountMessagesPanel }      from './MessagesPanel';
 import { mountTicketsPanel }       from './TicketsPanel';
 
@@ -266,11 +265,13 @@ export function NavController(): h.JSX.Element {
       });
     }
 
-    // ── 12. Mount the three panel systems ────────────────────────────────────
-    const cleanupNotifs  = mountNotificationsPanel();
+    // ── 12. Mount the panel systems ───────────────────────────────────────────
+    //    Notifications now render via the Preact <NotificationDropdown> mounted
+    //    into #preact-notif-dropdown-root (main.tsx) — the legacy imperative
+    //    NotificationsPanel is retired.
     const cleanupMsgs    = mountMessagesPanel();
     const cleanupTickets = mountTicketsPanel();
-    cleanups.push(cleanupNotifs, cleanupMsgs, cleanupTickets);
+    cleanups.push(cleanupMsgs, cleanupTickets);
 
     // ── 13. Expose Nav shim on window ─────────────────────────────────────────
     //    Other scripts call window.Nav.buildSidebar etc. after login.

@@ -89,7 +89,7 @@ import {
   mountSuperadminConsoleSection,
   unmountSuperadminConsoleSection,
 } from '@sections/SuperadminConsole';
-import { mountNotificationCenterSection } from '@sections/NotificationCenter';
+import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
 import '@sections/HSE';                 // self-registers the HSE module
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
@@ -450,6 +450,12 @@ async function bootApp(): Promise<void> {
   const notificationCenterRoot = document.getElementById('preact-notification-center-root');
   if (notificationCenterRoot) {
     mountNotificationCenterSection(notificationCenterRoot, { queryClient });
+  }
+
+  // Bell dropdown (inside the header notification modal)
+  const notifDropdownRoot = document.getElementById('preact-notif-dropdown-root');
+  if (notifDropdownRoot) {
+    mountNotificationDropdown(notifDropdownRoot, { queryClient });
   }
 
   // Registered feature modules (HSE, and future modules) — each mounts into the
