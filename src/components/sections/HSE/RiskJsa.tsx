@@ -150,7 +150,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const overdueAssessments = summary?.overdueAssessments     ?? 0;
 
   const { data: pendingRes } = useRiskJsaQueue('pending');
-  const pendingCount = pendingRes?.data.length ?? 0;
+  const pendingCount = pendingRes?.data?.length ?? 0;
 
   const tabsWithCounts = withCounts(TABS, {
     hazards:     totalHazards,
