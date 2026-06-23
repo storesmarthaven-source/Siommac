@@ -16,13 +16,20 @@
  * POST /api/hse/risk-jsa/jsa/submit
  * POST /api/hse/risk-jsa/controls/create
  * POST /api/hse/risk-jsa/controls/verify
- * POST /api/hse/risk-jsa/review
+ * POST /api/hse/risk-jsa/review                 (legacy: approve/return/archive)
+ * POST /api/hse/risk-jsa/approve
+ * POST /api/hse/risk-jsa/reject
+ * POST /api/hse/risk-jsa/request-changes
+ * POST /api/hse/risk-jsa/activate
+ * POST /api/hse/risk-jsa/close
+ * POST /api/hse/risk-jsa/archive
  * POST /api/hse/risk-jsa/hazards/submit
  * POST /api/hse/risk-jsa/templates/list
  * POST /api/hse/risk-jsa/templates/duplicate
  */
 
 import { Hono }              from 'hono';
+import type { Context }      from 'hono';
 import { z, zv }             from '../lib/validate';
 import { requirePermission } from '../lib/auth';
 import { sb }                from '../lib/db';
@@ -1023,7 +1030,116 @@ router.post('/risk-jsa/controls/create', async c => {
   return c.json({ success: true, controlId: data.id });
 });
 
-// ── POST /api/hse/risk-jsa/review ────────────────────────────────────────────
+// ── Workflow lifecycle — status transition engine ────────────────────────────
+// Canonical Risk/JSA status map (spec §12), as a superset across the three
+// entity types (hazards use under_review; JSAs use hse_review). A transition is
+// allowed only if `to` is listed under the current status. Terminal: archived.
+
+const TABLE_MAP = {
+  hazard:     'hse_hazards',
+  assessment: 'hse_risk_assessments',
+  jsa:        'hse_jsa',
+} as const;
+
+const STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft:               ['submitted', 'under_review', 'hse_review', 'archived'],
+  registered:          ['under_review', 'assessment_required', 'controls_required', 'archived'],
+  assessment_required: ['under_review', 'controls_required', 'archived'],
+  controls_required:   ['under_review', 'archived'],
+  submitted:           ['under_review', 'hse_review', 'changes_requested', 'rejected', 'returned', 'archived'],
+  under_review:        ['approved', 'changes_requested', 'rejected', 'returned', 'archived'],
+  hse_review:          ['approved', 'changes_requested', 'rejected', 'returned', 'archived'],
+  returned:            ['draft', 'submitted', 'under_review', 'hse_review', 'archived'],
+  changes_requested:   ['draft', 'submitted', 'under_review', 'hse_review', 'archived'],
+  approved:            ['active', 'monitoring', 'archived'],
+  monitoring:          ['under_review', 'archived'],
+  active:              ['closed', 'expired', 'archived'],
+  expired:             ['draft', 'under_review', 'archived'],
+  closed:              ['archived'],
+  rejected:            ['draft', 'archived'],
+  archived:            [],
+};
+
+function canTransition(from: string, to: string): boolean {
+  return STATUS_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
+const ActionSchema = z.object({
+  entityType:      z.enum(['hazard','assessment','jsa']),
+  entityId:        z.string().uuid(),
+  note:            z.string().nullable().optional(),
+  nextReviewDueAt: z.string().nullable().optional(),
+});
+
+/**
+ * Validate + apply a single status transition, emitting an audit event. Shared
+ * by every lifecycle endpoint so the transition map is the one gate.
+ */
+async function applyTransition(
+  c: Context<{ Variables: HonoVariables }>,
+  opts: { entityType: 'hazard' | 'assessment' | 'jsa'; entityId: string; action: string; toStatus: string; actorId: string; note?: string | null; nextReviewDueAt?: string | null },
+) {
+  const table = TABLE_MAP[opts.entityType];
+  const cur = await sb.from(table as 'hse_hazards')
+    .select('id, ref, status').eq('id', opts.entityId)
+    .maybeSingle<{ id: string; ref: string; status: string }>();
+  if (!cur.data) return c.json({ success: false, message: 'Record not found' }, 404 as 200);
+
+  if (cur.data.status === opts.toStatus) {
+    return c.json({ success: false, message: `Already ${opts.toStatus}` }, 400 as 200);
+  }
+  if (!canTransition(cur.data.status, opts.toStatus)) {
+    return c.json({ success: false, message: `Cannot ${opts.action} from "${cur.data.status}"` }, 400 as 200);
+  }
+
+  const now = new Date().toISOString();
+  const updates: Record<string, unknown> = { status: opts.toStatus, updated_at: now };
+  if (opts.nextReviewDueAt) updates.review_due_at = opts.nextReviewDueAt;
+
+  const { error } = await sb.from(table as 'hse_hazards').update(updates).eq('id', opts.entityId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        `hse.${opts.entityType}.${opts.action}`,
+    sourceModule:     'hse',
+    sourceEntityType: opts.entityType,
+    sourceEntityId:   cur.data.ref,
+    actorUserId:      opts.actorId,
+    severity:         opts.toStatus === 'approved' || opts.toStatus === 'active' ? 'success'
+                    : opts.toStatus === 'rejected' ? 'warning' : 'info',
+    payload:          { action: opts.action, fromStatus: cur.data.status, toStatus: opts.toStatus, note: opts.note ?? null },
+  });
+
+  return c.json({ success: true, status: opts.toStatus });
+}
+
+// Distinct lifecycle endpoints. approve/reject/request-changes need approver
+// rights; activate/close/archive are manage-level operational transitions.
+const LIFECYCLE: Array<{ path: string; action: string; toStatus: string; permission: 'hse.risk.approve' | 'hse.risk.manage' }> = [
+  { path: 'approve',         action: 'approved',          toStatus: 'approved',          permission: 'hse.risk.approve' },
+  { path: 'reject',          action: 'rejected',          toStatus: 'rejected',          permission: 'hse.risk.approve' },
+  { path: 'request-changes', action: 'changes_requested', toStatus: 'changes_requested', permission: 'hse.risk.approve' },
+  { path: 'activate',        action: 'activated',         toStatus: 'active',            permission: 'hse.risk.manage' },
+  { path: 'close',           action: 'closed',            toStatus: 'closed',            permission: 'hse.risk.manage' },
+  { path: 'archive',         action: 'archived',          toStatus: 'archived',          permission: 'hse.risk.manage' },
+];
+
+for (const L of LIFECYCLE) {
+  router.post(`/risk-jsa/${L.path}`, async c => {
+    const user = await requirePermission(c, L.permission);
+    const body = c.get('body') as Record<string, unknown>;
+    const v = zv(c, ActionSchema, body.args);
+    if (!v.ok) return v.response;
+    return applyTransition(c, {
+      entityType: v.data.entityType, entityId: v.data.entityId,
+      action: L.action, toStatus: L.toStatus, actorId: user.id,
+      note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
+    });
+  });
+}
+
+// ── POST /api/hse/risk-jsa/review (legacy, delegates to the transition engine) ─
+// Kept for the existing drawer action footer (approve / return / archive).
 
 const ReviewSchema = z.object({
   entityType:          z.enum(['hazard','assessment','jsa']),
@@ -1040,43 +1156,15 @@ router.post('/risk-jsa/review', async c => {
   const v = zv(c, ReviewSchema, body.args);
   if (!v.ok) return v.response;
 
-  const tableMap = {
-    hazard:     'hse_hazards',
-    assessment: 'hse_risk_assessments',
-    jsa:        'hse_jsa',
-  } as const;
+  const toStatus = v.data.outcome === 'approve' ? 'approved'
+                 : v.data.outcome === 'archive' ? 'archived'
+                 : 'returned';
 
-  const approvedStatus = {
-    hazard:     'approved',
-    assessment: 'approved',
-    jsa:        'approved',
-  } as const;
-
-  const table = tableMap[v.data.entityType];
-  const now   = new Date().toISOString();
-
-  const updates: Record<string, unknown> = {
-    updated_at: now,
-    status: v.data.outcome === 'approve' ? approvedStatus[v.data.entityType]
-          : v.data.outcome === 'archive' ? 'archived'
-          : 'returned',
-  };
-  if (v.data.nextReviewDueAt) updates.review_due_at = v.data.nextReviewDueAt;
-
-  const { error } = await sb.from(table as 'hse_hazards').update(updates).eq('id', v.data.entityId);
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-
-  void emitAppEvent({
-    eventType:        `hse.${v.data.entityType}.${v.data.outcome}d`,
-    sourceModule:     'hse',
-    sourceEntityType: v.data.entityType,
-    sourceEntityId:   v.data.entityId,
-    actorUserId:      user.id,
-    severity:         v.data.outcome === 'approve' ? 'success' : 'info',
-    payload:          { outcome: v.data.outcome, note: v.data.note },
+  return applyTransition(c, {
+    entityType: v.data.entityType, entityId: v.data.entityId,
+    action: `${v.data.outcome}d`, toStatus, actorId: user.id,
+    note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
   });
-
-  return c.json({ success: true });
 });
 
 // ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────
