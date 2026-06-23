@@ -50,6 +50,27 @@ create index if not exists hse_hazards_risk_idx    on public.hse_hazards(risk_le
 create index if not exists hse_hazards_site_idx    on public.hse_hazards(site_id);
 create index if not exists hse_hazards_created_idx on public.hse_hazards(created_at desc);
 
+-- The earlier HSE-core migration (20260621100002) created a SKELETON
+-- hse_risk_assessments with a different, superseded shape (hazard_description /
+-- likelihood / review_date, no review_due_at). If that legacy table is present
+-- (detected by the absence of review_due_at), drop it so the canonical definition
+-- below can be created. Safe: the skeleton was never populated by the app.
+DO $$
+BEGIN
+  IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'hse_risk_assessments'
+     ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'hse_risk_assessments'
+          AND column_name = 'review_due_at'
+     )
+  THEN
+    DROP TABLE public.hse_risk_assessments CASCADE;
+    RAISE NOTICE 'Dropped legacy skeleton hse_risk_assessments (superseded by canonical shape).';
+  END IF;
+END $$;
+
 create table if not exists public.hse_risk_assessments (
   id                uuid primary key default gen_random_uuid(),
   ref               text not null unique,

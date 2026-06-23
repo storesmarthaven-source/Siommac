@@ -50,6 +50,23 @@ create trigger hse_hazards_updated_at before update on public.hse_hazards
   for each row execute function public.set_hse_hazards_updated_at();
 
 -- ── hse_risk_assessments ──────────────────────────────────────────────────────
+-- The earlier HSE-core migration (20260621100002) created a SKELETON
+-- hse_risk_assessments with a superseded shape. Drop it (only when present in the
+-- old shape — no review_due_at) so the canonical definition below owns the name.
+do $$
+begin
+  if exists (
+        select 1 from information_schema.tables
+        where table_schema = 'public' and table_name = 'hse_risk_assessments'
+     ) and not exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public' and table_name = 'hse_risk_assessments'
+          and column_name = 'review_due_at'
+     )
+  then
+    drop table public.hse_risk_assessments cascade;
+  end if;
+end $$;
 
 create table if not exists public.hse_risk_assessments (
   id                uuid primary key default gen_random_uuid(),
