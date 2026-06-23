@@ -18,8 +18,9 @@ import {
 } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
-import { useCreateAssessment } from '@api/hse/riskJsa';
+import { useCreateAssessment, type HazardLibraryItem } from '@api/hse/riskJsa';
 import { HSE_SITES } from '../../types';
+import { HazardLibraryDrawer } from './LibraryDrawers';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,7 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
   const [reviewDue,   setReviewDue]   = useState('');
   const [hazards,     setHazards]     = useState<HazardEntry[]>([]);
   const [error,       setError]       = useState('');
+  const [hazardLibOpen, setHazardLibOpen] = useState(false);
 
   const create = useCreateAssessment();
 
@@ -198,6 +200,22 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
 
   function removeHazard(i: number) {
     setHazards(prev => prev.filter((_, j) => j !== i));
+  }
+
+  /** Append standard hazards picked from the library, seeded with their default L×S. */
+  function addLibraryHazards(items: HazardLibraryItem[]) {
+    setHazards(prev => [
+      ...prev,
+      ...items.map(h => ({
+        hazardDescription:  h.title,
+        category:           h.category,
+        initialLikelihood:  h.default_likelihood ?? 3,
+        initialSeverity:    h.default_severity ?? 3,
+        controlsNote:       '',
+        residualLikelihood: undefined,
+        residualSeverity:   undefined,
+      })),
+    ]);
   }
 
   function canAdvance(from: number): boolean {
@@ -359,7 +377,10 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
               onRemove={() => removeHazard(i)}
             />
           ))}
-          <Button variant="outline" icon="fa-plus" onClick={addHazard}>Add Hazard</Button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button variant="outline" icon="fa-plus" onClick={addHazard}>Add Hazard</Button>
+            <Button variant="outline" icon="fa-book-open" onClick={() => setHazardLibOpen(true)}>From library</Button>
+          </div>
         </div>
       )}
 
@@ -499,6 +520,8 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
           <StatusPill status="draft">Will be saved as Draft</StatusPill>
         </div>
       )}
+
+      <HazardLibraryDrawer open={hazardLibOpen} onClose={() => setHazardLibOpen(false)} onInsert={addLibraryHazards} />
     </Wizard>
   );
 }

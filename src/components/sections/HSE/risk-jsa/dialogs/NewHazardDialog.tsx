@@ -13,8 +13,9 @@ import { Wizard, FormGrid, Field, TextInput, SelectInput, TextareaInput } from '
 import { RiskScorePill, calculateRiskBand } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
 import { ControlsTable, type ControlDraft, emptyControl } from '../shared/ControlsTable';
-import { useCreateHazard } from '@api/hse/riskJsa';
+import { useCreateHazard, type ControlLibraryItem } from '@api/hse/riskJsa';
 import { HSE_SITES } from '../../types';
+import { ControlLibraryDrawer } from './LibraryDrawers';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,22 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
 
   // ── Step 4: error state
   const [error, setError] = useState('');
+  const [controlLibOpen, setControlLibOpen] = useState(false);
+
+  /** Insert a library control as a new control draft row. */
+  function addLibraryControl(item: ControlLibraryItem) {
+    const draft: ControlDraft = {
+      description: item.description || item.title,
+      controlType: item.control_type,
+      ownerUserId: null,
+      dueAt: null,
+      verificationRequired: false,
+    };
+    setControls(prev => {
+      const filled = prev.filter(c => c.description.trim());
+      return [...filled, draft];
+    });
+  }
 
   const createHazard = useCreateHazard();
 
@@ -243,9 +260,14 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
       {step === 2 && (
         <div style={{ display: 'grid', gap: 'var(--space-5)' }}>
           <div>
-            <h4 style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
-              Existing / Required Controls
-            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                Existing / Required Controls
+              </h4>
+              <button type="button" class="inc-action-btn" onClick={() => setControlLibOpen(true)}>
+                <i class="fas fa-book-open" /> From library
+              </button>
+            </div>
             <ControlsTable controls={controls} onChange={setControls} />
           </div>
 
@@ -369,6 +391,8 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
           )}
         </div>
       )}
+
+      <ControlLibraryDrawer open={controlLibOpen} onClose={() => setControlLibOpen(false)} onInsert={addLibraryControl} />
     </Wizard>
   );
 }
