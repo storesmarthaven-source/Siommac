@@ -785,7 +785,7 @@ export function MessageCenter(): VNode {
 
       {emptyAll ? (
         /* ── Full-width welcome state (no conversations) ─────────────────────── */
-        <div style={{ flex: 1, minHeight: '420px', display: 'flex', flexDirection: 'column',
+        <div style={{ height: 'calc(100vh - 230px)', minHeight: '420px', display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '24px',
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(27,45,85,0.08)',
@@ -802,7 +802,7 @@ export function MessageCenter(): VNode {
         </div>
       ) : (
         /* ── Split layout (threads exist) ────────────────────────────────────── */
-        <div style={{ flex: 1, display: 'flex', gap: '0', minHeight: '400px', overflow: 'hidden',
+        <div style={{ height: 'calc(100vh - 230px)', minHeight: '420px', display: 'flex', gap: '0', overflow: 'hidden',
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
           {/* Left pane — thread list */}
           <div style={{ width: '300px', minWidth: '260px', flexShrink: 0,
