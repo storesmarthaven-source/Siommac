@@ -139,7 +139,10 @@ export const historyKeys = {
 
 export const notificationKeys = {
   all:         ['notifications']                                       as const,
-  mine:        (filters?: unknown) => [...notificationKeys.all, 'mine', filters] as const,
+  mine:        (filters?: unknown) =>
+    (filters === undefined
+      ? [...notificationKeys.all, 'mine'] as const
+      : [...notificationKeys.all, 'mine', filters] as const),
   unread:      () => [...notificationKeys.all, 'unread']               as const,
   preferences: () => [...notificationKeys.all, 'preferences']         as const,
 } as const;

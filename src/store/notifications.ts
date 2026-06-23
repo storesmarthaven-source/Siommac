@@ -27,7 +27,7 @@
 import { create }          from 'zustand';
 import { logger }          from '@lib/logger';
 import { getQueryClient }  from '@lib/queryClient';
-import { notificationKeys } from '@api/queryKeys';
+import { notificationKeys, communicationKeys } from '@api/queryKeys';
 import type { NotificationRow } from '@api/schemas/notification';
 
 // ── State shape ───────────────────────────────────────────────────────────────
@@ -38,6 +38,9 @@ export interface NotificationState {
 
   /** Whether the notification panel is currently open */
   panelOpen:   boolean;
+
+  /** ISO timestamp of the last realtime notification signal (debug / freshness) */
+  lastRealtimeAt: string | null;
 
   /** Snapshot of the most recent notifications (mirrors TanStack Query cache) */
   items:       NotificationRow[];
@@ -50,11 +53,18 @@ export interface NotificationState {
   /** Called when a new notification arrives via Realtime INSERT */
   onNewNotification: () => void;
 
-  /** Called when the panel is opened — resets unread count in store + DB */
-  onPanelOpen:       (userId: string) => void;
+  /**
+   * Called when the panel is opened. Opening the panel is a *glance*, not a
+   * review — it MUST NOT mark anything read. Reading happens explicitly (click
+   * an item, open its record, or press "Mark all read").
+   */
+  onPanelOpen:       (userId?: string) => void;
 
   /** Called when the panel is closed */
   onPanelClose:      () => void;
+
+  /** Reconcile the optimistic count with the authoritative summary value. */
+  syncUnreadCount:   (count: number) => void;
 
   /** Hydrate the store from a fresh DB fetch */
   setItems:          (items: NotificationRow[], unreadCount: number) => void;
@@ -66,44 +76,39 @@ export interface NotificationState {
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 export const useNotificationStore = create<NotificationState>()((set) => ({
-  unreadCount: 0,
-  panelOpen:   false,
-  items:       [],
-  loading:     false,
+  unreadCount:    0,
+  panelOpen:      false,
+  lastRealtimeAt: null,
+  items:          [],
+  loading:        false,
 
   onNewNotification() {
     // Optimistic increment — the Realtime event fires before the refetch completes
-    set((s) => ({ unreadCount: s.unreadCount + 1 }));
+    set((s) => ({ unreadCount: s.unreadCount + 1, lastRealtimeAt: new Date().toISOString() }));
 
-    // Invalidate TanStack Query so the panel list refreshes automatically
+    // Invalidate TanStack Query so the badge, list and summary all refresh.
+    // The summary is the authoritative count; syncUnreadCount reconciles after.
     try {
-      void getQueryClient().invalidateQueries({ queryKey: notificationKeys.mine() });
-      void getQueryClient().invalidateQueries({ queryKey: notificationKeys.unread() });
+      const qc = getQueryClient();
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: notificationKeys.mine() });
+      void qc.invalidateQueries({ queryKey: notificationKeys.unread() });
     } catch (err) {
       logger.warn('[notifications] Could not invalidate query cache', { err });
     }
   },
 
-  onPanelOpen(userId) {
+  onPanelOpen() {
+    // Glance only — opening the panel never marks notifications read.
     set({ panelOpen: true });
-
-    // Mark all as read in DB (fire-and-forget — badge resets immediately in UI)
-    import('@api/notifications').then(({ markAllAsRead }) => {
-      void markAllAsRead(userId).then(() => {
-        set({ unreadCount: 0 });
-        // Invalidate so the panel re-fetches with is_read: true on all items
-        try {
-              void getQueryClient().invalidateQueries({ queryKey: notificationKeys.mine() });
-          void getQueryClient().invalidateQueries({ queryKey: notificationKeys.unread() });
-        } catch { /* ignore */ }
-      }).catch((err: unknown) => {
-        logger.warn('[notifications] markAllAsRead failed', { err });
-      });
-    }).catch(() => { /* ignore */ });
   },
 
   onPanelClose() {
     set({ panelOpen: false });
+  },
+
+  syncUnreadCount(count) {
+    set({ unreadCount: count });
   },
 
   setItems(items, unreadCount) {
@@ -111,6 +116,6 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
   },
 
   reset() {
-    set({ unreadCount: 0, panelOpen: false, items: [], loading: false });
+    set({ unreadCount: 0, panelOpen: false, lastRealtimeAt: null, items: [], loading: false });
   },
 }));

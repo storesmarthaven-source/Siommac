@@ -252,6 +252,20 @@ describe('useNotificationStore', () => {
     expect(useNotificationStore.getState().panelOpen).toBe(false);
   });
 
+  it('onPanelOpen is a glance — it never marks notifications read', () => {
+    useNotificationStore.setState({ unreadCount: 5, panelOpen: false });
+    useNotificationStore.getState().onPanelOpen();
+    const s = useNotificationStore.getState();
+    expect(s.panelOpen).toBe(true);
+    expect(s.unreadCount).toBe(5); // unchanged — reading is always explicit
+  });
+
+  it('syncUnreadCount reconciles the optimistic count with the authoritative value', () => {
+    useNotificationStore.setState({ unreadCount: 9 });
+    useNotificationStore.getState().syncUnreadCount(3);
+    expect(useNotificationStore.getState().unreadCount).toBe(3);
+  });
+
   it('setState directly updates unreadCount (used by markAllAsRead mutations)', () => {
     useNotificationStore.setState({ unreadCount: 3 });
     expect(useNotificationStore.getState().unreadCount).toBe(3);
