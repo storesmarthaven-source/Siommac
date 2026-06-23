@@ -13,6 +13,7 @@
  * POST /api/hse/risk-jsa/jsa/list
  * POST /api/hse/risk-jsa/jsa/create
  * POST /api/hse/risk-jsa/jsa/from-assessment
+ * POST /api/hse/risk-jsa/jsa/acknowledge
  * POST /api/hse/risk-jsa/jsa/detail
  * POST /api/hse/risk-jsa/jsa/submit
  * POST /api/hse/risk-jsa/controls/create
@@ -758,6 +759,13 @@ const JsaCreateSchema = z.object({
     competencyVerification:  z.boolean().default(false),
     notes:                   z.string().nullable().optional(),
   })).default([]),
+  crewMembers: z.array(z.object({
+    userId:             z.string().nullable().optional(),
+    crewName:           z.string().min(1),
+    roleTitle:          z.string().nullable().optional(),
+    required:           z.boolean().default(true),
+    competencyVerified: z.boolean().default(false),
+  })).default([]),
 });
 
 router.post('/risk-jsa/jsa/create', async c => {
@@ -867,6 +875,18 @@ router.post('/risk-jsa/jsa/create', async c => {
             created_by:  user.id,
           }).then(r => r));
         }
+        if (v.data.crewMembers.length > 0) {
+          ops.push(sb.from('hse_jsa_crew_acknowledgements').insert(
+            v.data.crewMembers.map(m => ({
+              jsa_id:              data.id,
+              user_id:             m.userId ?? null,
+              crew_name:           m.crewName,
+              role_title:          m.roleTitle ?? null,
+              required:            m.required,
+              competency_verified: m.competencyVerified,
+            })),
+          ).then(r => r));
+        }
 
         await Promise.all(ops);
         return data;
@@ -958,10 +978,11 @@ router.post('/risk-jsa/jsa/detail', async c => {
   const jsaRef = jsa.ref as string;
   const workflowId = jsa.workflow_id as string | null;
 
-  const [stepsRes, ppeRes, trainingRes, timelineRes, wfRes] = await Promise.all([
+  const [stepsRes, ppeRes, trainingRes, crewRes, timelineRes, wfRes] = await Promise.all([
     sb.from('hse_jsa_steps').select('*').eq('jsa_id', jsaId).order('step_number'),
     sb.from('hse_ppe_requirements').select('*').eq('source_type', 'jsa').eq('source_id', jsaId),
     sb.from('hse_training_links').select('*').eq('source_type', 'jsa').eq('source_id', jsaId),
+    sb.from('hse_jsa_crew_acknowledgements').select('*').eq('jsa_id', jsaId).order('created_at'),
     sb.from('app_events')
       .select('id, event_type, actor_user_id, severity, payload, created_at')
       .eq('source_entity_id', jsaRef)
@@ -979,6 +1000,7 @@ router.post('/risk-jsa/jsa/detail', async c => {
       steps:    stepsRes.data    ?? [],
       ppe:      ppeRes.data      ?? [],
       training: trainingRes.data ?? [],
+      crew:     crewRes.data     ?? [],
       timeline: timelineRes.data ?? [],
       workflow: wfRes.data       ?? null,
     },
@@ -1132,7 +1154,32 @@ const ActionSchema = z.object({
   entityId:        z.string().uuid(),
   note:            z.string().nullable().optional(),
   nextReviewDueAt: z.string().nullable().optional(),
+  /** Override the JSA crew competency gate when activating. */
+  override:        z.boolean().default(false),
 });
+
+/**
+ * Activation gate for JSAs (spec §10): every required crew member must have
+ * acknowledged, and competency gaps block activation unless overridden.
+ * Returns an error Response when blocked, or null when activation may proceed.
+ */
+async function jsaActivationGate(c: Context<{ Variables: HonoVariables }>, jsaId: string, override: boolean) {
+  const crewRes = await sb.from('hse_jsa_crew_acknowledgements')
+    .select('crew_name, required, competency_verified, acknowledged')
+    .eq('jsa_id', jsaId);
+  const crew = (crewRes.data ?? []) as Array<{ required: boolean; competency_verified: boolean; acknowledged: boolean }>;
+  const required = crew.filter(m => m.required);
+  const notAcked = required.filter(m => !m.acknowledged).length;
+  const compGaps = required.filter(m => !m.competency_verified).length;
+
+  if (notAcked > 0) {
+    return c.json({ success: false, message: `${notAcked} required crew member(s) have not acknowledged this JSA.` }, 400 as 200);
+  }
+  if (compGaps > 0 && !override) {
+    return c.json({ success: false, requiresOverride: true, message: `${compGaps} crew member(s) have unverified competency — override required to activate.` }, 400 as 200);
+  }
+  return null;
+}
 
 /**
  * Validate + apply a single status transition, emitting an audit event. Shared
@@ -1193,6 +1240,13 @@ for (const L of LIFECYCLE) {
     const body = c.get('body') as Record<string, unknown>;
     const v = zv(c, ActionSchema, body.args);
     if (!v.ok) return v.response;
+
+    // JSA activation is gated on crew acknowledgement + competency.
+    if (L.path === 'activate' && v.data.entityType === 'jsa') {
+      const blocked = await jsaActivationGate(c, v.data.entityId, v.data.override);
+      if (blocked) return blocked;
+    }
+
     return applyTransition(c, {
       entityType: v.data.entityType, entityId: v.data.entityId,
       action: L.action, toStatus: L.toStatus, actorId: user.id,
@@ -1200,6 +1254,41 @@ for (const L of LIFECYCLE) {
     });
   });
 }
+
+// ── POST /api/hse/risk-jsa/jsa/acknowledge ───────────────────────────────────
+// A crew member acknowledges a JSA (and optionally confirms competency).
+
+const AckSchema = z.object({
+  jsaId:              z.string().uuid(),
+  crewId:             z.string().uuid(),
+  competencyVerified: z.boolean().optional(),
+});
+
+router.post('/risk-jsa/jsa/acknowledge', async c => {
+  const user = await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, AckSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const updates: Record<string, unknown> = { acknowledged: true, acknowledged_at: new Date().toISOString() };
+  if (v.data.competencyVerified !== undefined) updates.competency_verified = v.data.competencyVerified;
+
+  const { error } = await sb.from('hse_jsa_crew_acknowledgements')
+    .update(updates).eq('id', v.data.crewId).eq('jsa_id', v.data.jsaId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.jsa.crew_acknowledged',
+    sourceModule:     'hse',
+    sourceEntityType: 'jsa',
+    sourceEntityId:   v.data.jsaId,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { crewId: v.data.crewId },
+  });
+
+  return c.json({ success: true });
+});
 
 // ── POST /api/hse/risk-jsa/review (legacy, delegates to the transition engine) ─
 // Kept for the existing drawer action footer (approve / return / archive).

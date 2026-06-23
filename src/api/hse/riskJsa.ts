@@ -350,6 +350,25 @@ export interface CreateJsaArgs extends Record<string, unknown> {
     competencyVerification?: boolean;
     notes?:                  string | null;
   }>;
+  crewMembers?: Array<{
+    userId?:             string | null;
+    crewName:            string;
+    roleTitle?:          string | null;
+    required?:           boolean;
+    competencyVerified?: boolean;
+  }>;
+}
+
+export interface JsaCrewMember {
+  id:                  string;
+  jsa_id:              string;
+  user_id:             string | null;
+  crew_name:           string;
+  role_title:          string | null;
+  required:            boolean;
+  competency_verified: boolean;
+  acknowledged:        boolean;
+  acknowledged_at:     string | null;
 }
 
 export function useCreateJsa() {
@@ -454,6 +473,8 @@ export interface LifecycleArgs extends Record<string, unknown> {
   entityId:        string;
   note?:           string | null;
   nextReviewDueAt?: string | null;
+  /** Override the JSA crew competency gate when activating. */
+  override?:       boolean;
 }
 
 /** Drive one lifecycle transition (approve/reject/request-changes/activate/close/archive). */
@@ -461,7 +482,17 @@ export function useRiskJsaLifecycle() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ action, ...args }: LifecycleArgs & { action: LifecycleAction }) =>
-      apiPost<{ success: boolean; status?: string }>(`hse/risk-jsa/${action}`, args),
+      apiPost<{ success: boolean; status?: string; requiresOverride?: boolean; message?: string }>(`hse/risk-jsa/${action}`, args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+/** A crew member acknowledges a JSA (optionally confirming competency). */
+export function useAcknowledgeJsa() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { jsaId: string; crewId: string; competencyVerified?: boolean }) =>
+      apiPost<{ success: boolean }>('hse/risk-jsa/jsa/acknowledge', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });
 }
