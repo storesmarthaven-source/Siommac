@@ -383,8 +383,6 @@ body[data-theme="dark"] .hero-footer {
   display: flex; gap: 4px; padding: 6px 8px 10px;
   background: var(--bg-subtle, #F8FAFE);
 }
-/* Right-aligned controls inside the bare tab bar (e.g. a New ▾ menu). */
-.hse-tabs-bar-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 /* Tab BUTTONS — scoped to .hse-tabs-bar so they never hit the page wrapper,
    which also carries the bare `.hse-tab` class (`<div class="hse-tab hse-dash">`).
    The unscoped `.hse-tab { display:flex }` rule used to turn the whole page

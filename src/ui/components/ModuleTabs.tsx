@@ -11,7 +11,7 @@
  * Legacy alias: `AreaTabs`.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode } from 'preact';
 
 export interface ModuleTab {
   key: string;
@@ -48,10 +48,8 @@ export interface ModuleTabsProps {
  * The bare tab bar (no header card) — the standard navigation under a
  * `PageHeader` on a sub-module page, so the page has ONE header, not two.
  */
-export function TabBar({ tabs, active, onSelect, actions }: {
+export function TabBar({ tabs, active, onSelect }: {
   tabs: ModuleTab[]; active: string; onSelect: (key: string) => void;
-  /** Optional right-aligned controls in the tab bar (e.g. a New ▾ menu). */
-  actions?: ComponentChildren;
 }): VNode {
   return (
     <div class="hse-tabs-container hse-tabs-container--bare">
@@ -70,7 +68,6 @@ export function TabBar({ tabs, active, onSelect, actions }: {
             {t.count !== undefined && <span class="hse-tab-count">{t.count}</span>}
           </button>
         ))}
-        {actions && <div class="hse-tabs-bar-actions">{actions}</div>}
       </div>
     </div>
   );

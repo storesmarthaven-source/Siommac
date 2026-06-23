@@ -26,7 +26,7 @@ create table if not exists public.hse_hazards (
   description          text not null default '',
   category             text not null,
   site_id              text references public.project_sites(id),
-  department_id        uuid references public.departments(id),
+  department_id        text references public.departments(id),
   location_text        text,
   owner_user_id        text references public.app_users(id),
   initial_likelihood   int  not null check (initial_likelihood between 1 and 5),
@@ -58,7 +58,7 @@ create table if not exists public.hse_risk_assessments (
   title             text not null,
   description       text not null default '',
   site_id           text references public.project_sites(id),
-  department_id     uuid references public.departments(id),
+  department_id     text references public.departments(id),
   location_text     text,
   owner_user_id     text references public.app_users(id),
   status            text not null default 'draft'
@@ -103,7 +103,7 @@ create table if not exists public.hse_jsa (
   title            text not null,
   description      text not null default '',
   site_id          text references public.project_sites(id),
-  department_id    uuid references public.departments(id),
+  department_id    text references public.departments(id),
   location_text    text,
   owner_user_id    text references public.app_users(id),
   status           text not null default 'draft'
