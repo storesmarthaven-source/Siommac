@@ -159,38 +159,37 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           { icon: 'fa-table-cells-large', label: '5×5 matrix' },
           ...(overdueAssessments > 0 ? [{ icon: 'fa-clock', label: `${overdueAssessments} overdue` }] : []),
         ]}
-        actions={
-          <div style={{ position: 'relative' }}>
-            <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
-              <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
-            </button>
-            {newMenuOpen && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
-                <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '210px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
-                  {[
-                    { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
-                    { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
-                    { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
-                    { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
-                  ].map(it => (
-                    <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
-                      <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        }
       />
 
       <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
 
       <div class="hse-main-grid">
         <div class="hse-left-col">
-          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
+          <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} actions={
+            <div style={{ position: 'relative' }}>
+              <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
+                <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
+              </button>
+              {newMenuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '210px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
+                    {[
+                      { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
+                      { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
+                      { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
+                      { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
+                    ].map(it => (
+                      <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
+                        <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          } />
 
           <div class="hse-spark-row">
             <div class="hse-spark">
