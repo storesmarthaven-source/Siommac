@@ -9,7 +9,7 @@
 import { type VNode }   from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, withCounts, ReorderableRow,
+  PageHeader, TabBar, withCounts, ReorderableRow, NewMenu,
   type AreaTab,
 } from '@ui';
 import { HSE_SITES, hsePill } from './types';
@@ -127,7 +127,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const [selectedHazard,  setSelectedHazard]  = useState<HazardRow | null>(null);
   const [selectedRa,      setSelectedRa]      = useState<AssessmentRow | null>(null);
   const [selectedJsa,     setSelectedJsa]     = useState<JsaRow | null>(null);
-  const [newMenuOpen,     setNewMenuOpen]     = useState(false);
   const [templatesOpen,   setTemplatesOpen]   = useState(false);
 
   const { data: summaryRes, isLoading: summaryLoading } = useRiskJsaSummary();
@@ -217,29 +216,12 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         {/* Right-side supporting panel — changes by tab */}
         <div class="hse-right-col">
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
-            <div style={{ position: 'relative' }}>
-              <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
-                <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
-              </button>
-              {newMenuOpen && (
-                <>
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setNewMenuOpen(false)} />
-                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '210px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid' }}>
-                    {[
-                      { label: 'New Hazard', icon: 'fa-radiation', act: () => setHazardFormOpen(true) },
-                      { label: 'New Risk Assessment', icon: 'fa-table-cells-large', act: () => setRaFormOpen(true) },
-                      { label: 'New JSA', icon: 'fa-list-ol', act: () => setJsaFormOpen(true) },
-                      { label: 'Workflow Templates', icon: 'fa-diagram-project', act: () => setTemplatesOpen(true) },
-                    ].map(it => (
-                      <button key={it.label} onClick={() => { it.act(); setNewMenuOpen(false); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>
-                        <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--siomac-red)' }} /> {it.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+            <NewMenu align="right" items={[
+              { label: 'New Hazard',          icon: 'fa-radiation',         sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
+              { label: 'New Risk Assessment', icon: 'fa-table-cells-large', sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
+              { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => setJsaFormOpen(true) },
+              { label: 'Workflow Templates',  icon: 'fa-diagram-project',   divider: true,                    onSelect: () => setTemplatesOpen(true) },
+            ]} />
           </div>
           <RiskJsaRightPanel
             activeTab={active as 'hazards' | 'assessments' | 'jsa'}

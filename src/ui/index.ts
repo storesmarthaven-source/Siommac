@@ -22,6 +22,7 @@ export {
 export { PageHeader, type PageHeaderProps, type PageMetaChip } from './components/PageHeader';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
 export { MetricRow, ReorderableRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
+export { NewMenu, type NewMenuProps, type NewMenuItem } from './components/NewMenu';
 export { useCardReorder, ArrangeControls, type CardReorder } from './components/reorder';
 
 // ── Cards & metrics ──

@@ -17,6 +17,7 @@ import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
+  MetricRow, StatsCard, Sparkline, NewMenu,
   type AreaTab,
 } from '@ui';
 import {
@@ -181,7 +182,6 @@ function dbToCapa(c: HseCapa): CapaItem {
 
 const TABS: AreaTab[] = [
   { key: 'register',       label: 'Register',        sublabel: 'All incidents',   icon: 'fa-list-ul' },
-  { key: 'report',         label: 'Report Incident', sublabel: 'New case',        icon: 'fa-circle-plus' },
   { key: 'investigations', label: 'Investigations',  sublabel: 'Root cause',      icon: 'fa-magnifying-glass-chart' },
   { key: 'capa',           label: 'CAPA / Actions',  sublabel: 'Corrective plans', icon: 'fa-list-check' },
 ];
@@ -806,188 +806,62 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
     );
   }
 
+  // ── Enterprise stats — Severity Mix · Open Investigations · Corrective Actions · Trend ──
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const thisMonthCount = mtdIncidents.length;
+  const lastMonthCount = incidents.filter(i => i.date && new Date(i.date) >= prevMonthStart && new Date(i.date) < startOfMonth).length;
+  const trendPct = lastMonthCount > 0 ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100) : (thisMonthCount > 0 ? 100 : 0);
+  const monthly = Array.from({ length: 6 }, (_, idx) => {
+    const ms = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
+    const me = new Date(now.getFullYear(), now.getMonth() - (5 - idx) + 1, 1);
+    return incidents.filter(i => i.date && new Date(i.date) >= ms && new Date(i.date) < me).length;
+  });
+  const capaTotal = capa.length;
+  const capaDone  = capa.filter(c => /closed|verified/i.test(c.status)).length;
+  const capaPct   = capaTotal > 0 ? Math.round((capaDone / capaTotal) * 100) : 0;
+
   return (
-    <ReorderStrip pageKey={`hse.incidents.${pageTab}`} keys={['severity', 'report', 'control', 'regulatory']}>
-
-      {/* Card 1 — Severity Mix */}
-      <div class="inc-mini-card">
-        <div class="inc-mini-card-header">
-          <i class="fas fa-chart-pie" />
-          <span>Severity Mix</span>
-          <span style={{ marginLeft: 'auto', fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 400 }}>MTD · {mtdIncidents.length} total</span>
-        </div>
-        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          {/* Large donut — no blur, clean gaps */}
-          <div style={{ position: 'relative', flexShrink: 0, width: 168, height: 168 }}>
-            <svg width="168" height="168" viewBox="0 0 168 168">
-              <circle cx="84" cy="84" r="68" fill="none" stroke="#eef0f5" stroke-width="16" />
-              {(() => {
-                const R = 68, C = 2 * Math.PI * R;
-                const GAP_DEG = 2.5;
-                let angleDeg = -90;
-                return (['danger','warning','info','success'] as const).map(k => {
-                  const pct = sevCounts[k] / total;
-                  if (pct === 0) return null;
-                  const segDeg  = pct * 360 - GAP_DEG;
-                  const segLen  = (segDeg / 360) * C;
-                  const startDeg = angleDeg + GAP_DEG / 2;
-                  angleDeg += pct * 360;
-                  return (
-                    <circle key={k} cx="84" cy="84" r={R} fill="none"
-                      stroke={SEV_COLORS[k]}
-                      stroke-width="16"
-                      stroke-linecap="butt"
-                      stroke-dasharray={`${segLen} ${C - segLen}`}
-                      stroke-dashoffset={-((startDeg + 90) / 360) * C + C * 0.25}
-                      transform={`rotate(${startDeg + 90} 84 84)`}
-                    />
-                  );
-                });
-              })()}
-            </svg>
-            {/* Center — total + open count */}
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-              <span style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
-              <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', fontWeight: 600 }}>Incidents</span>
-              <span style={{ fontSize: '0.68rem', color: '#ef4444', fontWeight: 700, marginTop: '3px' }}>
-                {sevCounts.danger} critical
-              </span>
+    <MetricRow pageKey={`hse.incidents.${pageTab}`} rowClass="ui-stat-row" cards={[
+      { key: 'severity', node: (
+        <StatsCard icon="fa-chart-pie" title="Severity Mix" metric={mtdIncidents.length} metricUnit="MTD"
+          statuses={[
+            { label: 'Critical', value: sevCounts.danger,  color: SEV_COLORS.danger },
+            { label: 'High',     value: sevCounts.warning, color: SEV_COLORS.warning },
+            { label: 'Medium',   value: sevCounts.info,    color: SEV_COLORS.info },
+            { label: 'Low',      value: sevCounts.success, color: SEV_COLORS.success },
+          ]}
+          chart={
+            <div style={{ display: 'flex', height: '10px', borderRadius: '999px', overflow: 'hidden', background: 'var(--border)' }}>
+              {(['danger','warning','info','success'] as const).map(k => sevCounts[k] > 0 ? (
+                <div key={k} style={{ width: `${(sevCounts[k] / total) * 100}%`, background: SEV_COLORS[k] }} />
+              ) : null)}
             </div>
-          </div>
-          {/* Compact legend — 2 col grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', width: '100%', marginTop: '4px' }}>
-            {(['danger','warning','info','success'] as const).map(k => {
-              const label = k === 'danger' ? 'Critical' : k === 'warning' ? 'High' : k === 'info' ? 'Medium' : 'Low';
-              const pct   = Math.round(sevCounts[k] / total * 100);
-              return (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
-                  <span style={{ fontSize: '0.70rem', color: 'var(--text-muted)' }}>{pct}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Card 2 — Report Incident (white) */}
-      <div class="inc-mini-card">
-        <div class="inc-mini-card-header">
-          <i class="fas fa-circle-plus" style={{ color: 'var(--siomac-orange)' }} />
-          <span>Report Incident</span>
-          <span class="inc-report-badge">New</span>
-        </div>
-        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
-          {/* Type buttons — 2×2 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
-            {[
-              { icon: 'fa-person-falling-burst', label: 'Injury',        sublabel: 'Personal harm',  color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-              { icon: 'fa-triangle-exclamation', label: 'Near Miss',     sublabel: 'Close call',     color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-              { icon: 'fa-leaf',                 label: 'Environmental', sublabel: 'Spill / release',color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-              { icon: 'fa-wrench',               label: 'Property',      sublabel: 'Asset damage',   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-            ].map(t => (
-              <button key={t.label} class="inc-report-type-btn" style={{ '--rtc': t.color, '--rtbg': t.bg, '--rtbd': t.border } as any}>
-                <span class="inc-rtype-icon"><i class={`fas ${t.icon}`} /></span>
-                <span class="inc-rtype-label">{t.label}</span>
-                <span class="inc-rtype-sub">{t.sublabel}</span>
-              </button>
-            ))}
-          </div>
-          {/* Quick stats row */}
-          <div style={{ display: 'flex', gap: '6px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-            {[
-              { val: incidents.filter(i => /open/i.test(i.status)).length,   label: 'Open',    color: '#d97706' },
-              { val: incidents.filter(i => /invest/i.test(i.status)).length, label: 'Active',  color: '#2563eb' },
-              { val: incidents.filter(i => /closed/i.test(i.status)).length, label: 'Closed',  color: '#16a34a' },
-            ].map(s => (
-              <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '6px 4px', borderRadius: '8px', background: 'var(--bg-subtle)' }}>
-                <div style={{ fontSize: '1rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.val}</div>
-                <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)', marginTop: '2px' }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Card 3 — Investigation Control (dark navy) */}
-      <div class="inc-mini-card inc-mini-card-navy">
-        <div class="inc-mini-card-header inc-mini-card-header-navy">
-          <i class="fas fa-magnifying-glass" />
-          <span>Investigation Control</span>
-        </div>
-        <div class="inc-mini-card-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', marginBottom: '20px' }}>
-            {[
-              { val: activeInvest, label: 'Active investigations', color: '#60a5fa' },
-              { val: needsTriage,  label: 'Needs Triage',          color: '#f59e0b' },
-              { val: linkedCapas,  label: 'Linked CAPAs',          color: '#c4b5fd' },
-              { val: pendingEv,    label: 'Pending evidence',       color: '#fb923c' },
-            ].map(k => (
-              <div key={k.label} style={{ padding: '9px 8px', borderRadius: '9px', background: 'rgba(255,255,255,.07)', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
-                <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,.45)', marginTop: '3px' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: '26px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.67rem', color: 'rgba(255,255,255,.5)', marginBottom: '5px' }}>
-              <span><i class="fas fa-circle-check" style={{ marginRight: '4px' }} />Closure</span>
-              <span style={{ fontWeight: 700, color: closurePct >= 95 ? '#4ade80' : '#f59e0b' }}>{closurePct}% · Target 95%</span>
-            </div>
-            <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.1)' }}>
-              <div style={{ width: `${closurePct}%`, height: '100%', borderRadius: '999px', background: closurePct >= 95 ? '#4ade80' : closurePct >= 70 ? '#f59e0b' : '#ef4444' }} />
-            </div>
-            <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>
-              Avg close {avgDaysToClose > 0 ? `${avgDaysToClose}d` : '—'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Card 3 — Regulatory Watch (dark navy) */}
-      <div class="inc-mini-card inc-mini-card-navy">
-        <div class="inc-mini-card-header inc-mini-card-header-navy">
-          <i class="fas fa-file-shield" />
-          <span>Regulatory Watch</span>
-        </div>
-        <div class="inc-mini-card-body" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '20px' }}>
-            {[
-              { val: emaNotifs.length,   label: 'EMA notifications',  urgent: emaNotifs.length > 0 },
-              { val: oshRequired.length, label: 'OSH review required', urgent: oshRequired.length > 0 },
-              { val: ltiCount,           label: 'LTI reportables',     urgent: ltiCount > 0 },
-              { val: overdueActs,        label: 'Overdue actions',     urgent: overdueActs > 0 },
-            ].map(k => (
-              <div key={k.label} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,.07)', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: k.urgent ? '#fca5a5' : '#4ade80', lineHeight: 1 }}>{k.val}</div>
-                <div style={{ fontSize: '0.57rem', color: 'rgba(255,255,255,.45)', marginTop: '2px' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-          {priority ? (
-            <div style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', borderRadius: '8px', padding: '8px 10px', marginTop: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fca5a5' }}>{priority.ref}</span>
-                <span style={{ fontSize: '0.57rem', background: 'rgba(239,68,68,.3)', color: '#fca5a5', borderRadius: '4px', padding: '1px 5px' }}>Due today</span>
-              </div>
-              <div style={{ fontSize: '0.67rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.3, marginBottom: '2px' }}>
-                {priority.description.length > 50 ? priority.description.slice(0, 48) + '…' : priority.description}
-              </div>
-              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,.4)' }}>{priority.site} · {priority.type}</div>
-            </div>
-          ) : (
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.35)', paddingTop: '2px' }}>
-              <i class="fas fa-circle-check" style={{ color: '#4ade80', marginRight: '6px' }} />
-              No items requiring immediate action
-            </div>
-          )}
-        </div>
-      </div>
-
-
-    </ReorderStrip>
+          }
+          footer={`${sevCounts.danger + sevCounts.warning} high-risk this month`} />
+      ) },
+      { key: 'investigations', node: (
+        <StatsCard icon="fa-magnifying-glass" title="Open Investigations" metric={invOpen} metricUnit="open"
+          supporting={`${rcaPct}% root-caused · ${activeInvest} incidents under investigation`}
+          statuses={[
+            { label: 'Critical',  value: invCrit,   color: '#ef4444' },
+            { label: 'In review', value: invReview, color: '#f59e0b' },
+          ]}
+          footer={`${evPending} evidence items outstanding`} />
+      ) },
+      { key: 'corrective', node: (
+        <StatsCard icon="fa-list-check" title="Corrective Actions" variant="navy"
+          metric={`${capaPct}%`} supporting={`${capaDone} / ${capaTotal} corrective actions completed`}
+          percent={capaPct} percentColor={capaPct >= 95 ? '#4ade80' : '#fbbf24'} percentTarget="Target 95%"
+          footer={`Avg close ${avgDaysToClose > 0 ? `${avgDaysToClose}d` : '—'}`} />
+      ) },
+      { key: 'trend', node: (
+        <StatsCard icon="fa-chart-line" title="Incident Trend" variant="navy"
+          metric={thisMonthCount} metricUnit="this month"
+          supporting={`${trendPct >= 0 ? '+' : ''}${trendPct}% vs last month`}
+          chart={<Sparkline points={monthly} color={trendPct > 0 ? '#f87171' : '#4ade80'} height={40} />}
+          footer="Incidents — last 6 months" />
+      ) },
+    ]} />
   );
 }
 
@@ -1216,8 +1090,20 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         pageTab={pageTab}
       />
 
-      {/* ── Tab workspace ── */}
-      <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
+      {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <NewMenu label="New Incident" items={[
+            { label: 'Report Injury',        icon: 'fa-person-falling-burst', sub: 'Personal harm',     onSelect: () => setWizardOpen(true) },
+            { label: 'Report Near Miss',     icon: 'fa-triangle-exclamation', sub: 'Close call',        onSelect: () => setWizardOpen(true) },
+            { label: 'Report Environmental', icon: 'fa-leaf',                 sub: 'Spill / release',   onSelect: () => setWizardOpen(true) },
+            { label: 'Report Property',      icon: 'fa-wrench',               sub: 'Asset damage',      onSelect: () => setWizardOpen(true) },
+          ]} />
+        </div>
+      </div>
 
       {/* Tab content — consistent top gap below nav */}
       <div style={{ marginTop: '20px' }}>
@@ -1312,9 +1198,6 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
                 <div class="vt-section-title">Incident Register</div>
                 <div class="vt-section-sub">All reported incidents · click any row to open detail</div>
               </div>
-            </div>
-            <div style={{ display:'flex', gap:'8px', flexShrink:0 }}>
-              <button class="inc-action-btn primary" onClick={onReport}><i class="fas fa-circle-plus" /> Report Incident</button>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
