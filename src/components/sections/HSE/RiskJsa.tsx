@@ -216,11 +216,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
         {/* Right-side supporting panel — changes by tab */}
         <div class="hse-right-col">
-          <div style={{
-            background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px',
-            boxShadow: 'var(--shadow-card)', marginBottom: '14px', padding: '6px 8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minHeight: '60px',
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
             <div style={{ position: 'relative' }}>
               <button class="hse-btn primary" onClick={() => setNewMenuOpen(o => !o)}>
                 <i class="fas fa-circle-plus" /> New <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
