@@ -885,8 +885,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           metric={thisMonthCount} metricUnit="this month"
           supporting={`${trendPct >= 0 ? '+' : ''}${trendPct}% vs last month`}
           chart={
-            <div>
-              <Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={40} />
+            <div style={{ width: '100%' }}>
+              <Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={96} />
               <div class="hse-spark-months">{monthLabels.map(m => <span key={m}>{m}</span>)}</div>
             </div>
           }
@@ -1140,22 +1140,22 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       <div style={{ marginTop: '16px' }}>
         <div class="hse-spark-row">
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span><i class="fas fa-triangle-exclamation" /></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span></div>
             <div class="hse-spark-val">{incidents.length}</div>
             <div class="hse-spark-sub">All recorded cases</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Open</span><i class="fas fa-folder-open" /></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Open</span></div>
             <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{incidents.filter(i => !/closed/i.test(i.status)).length}</div>
             <div class="hse-spark-sub">Awaiting closure</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Lost-Time</span><i class="fas fa-user-injured" /></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Lost-Time</span></div>
             <div class="hse-spark-val" style={{ color: '#ef4444' }}>{incidents.filter(i => i.lostTime).length}</div>
             <div class="hse-spark-sub">LTI reportable</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span><i class="fas fa-circle-check" /></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span></div>
             <div class="hse-spark-val" style={{ color: '#22c55e' }}>{closurePct}%</div>
             <div class="hse-spark-sub">Closed of total</div>
           </div>
