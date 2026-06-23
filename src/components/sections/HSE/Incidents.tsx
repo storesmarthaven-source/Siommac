@@ -885,8 +885,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           metric={thisMonthCount} metricUnit="this month"
           supporting={`${trendPct >= 0 ? '+' : ''}${trendPct}% vs last month`}
           chart={
-            <div style={{ width: '100%' }}>
-              <Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={96} />
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={72} />
               <div class="hse-spark-months">{monthLabels.map(m => <span key={m}>{m}</span>)}</div>
             </div>
           }
