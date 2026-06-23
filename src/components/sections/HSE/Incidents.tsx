@@ -1122,7 +1122,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       />
 
       {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '20px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
         </div>
