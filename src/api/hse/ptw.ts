@@ -172,6 +172,9 @@ export type PermitLifecycleAction =
   | 'activate'
   | 'suspend'
   | 'revalidate'
+  | 'request-extension'
+  | 'approve-extension'
+  | 'reject-extension'
   | 'close'
   | 'cancel'
   | 'archive';
@@ -259,5 +262,271 @@ export function usePermitTransition() {
         `hse/ptw/permits/${action}`, { args: { permitId, note: note ?? null } },
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ptwKeys.all }),
+  });
+}
+
+// ── Sub-register types ────────────────────────────────────────────────────────
+
+export interface PermitIsolation {
+  id:              string;
+  permit_id:       string;
+  isolation_type:  string;
+  description:     string;
+  equipment_tag:   string | null;
+  location:        string | null;
+  responsible_person_id: string | null;
+  status:          string;
+  applied_at:      string | null;
+  verified_at:     string | null;
+  removed_at:      string | null;
+  notes:           string | null;
+  created_at:      string;
+}
+
+export interface PermitGasTest {
+  id:              string;
+  permit_id:       string;
+  test_location:   string;
+  test_type:       string;
+  tested_by:       string | null;
+  oxygen_pct:      number | null;
+  lel_pct:         number | null;
+  co_ppm:          number | null;
+  h2s_ppm:         number | null;
+  result:          string;
+  notes:           string | null;
+  tested_at:       string;
+  valid_until:     string | null;
+  invalidated_at:  string | null;
+  created_at:      string;
+}
+
+export interface PermitSimops {
+  id:              string;
+  permit_id:       string;
+  conflicting_permit_id: string | null;
+  conflict_type:   string;
+  description:     string;
+  risk_assessment: string | null;
+  status:          string;
+  resolved_by:     string | null;
+  resolved_at:     string | null;
+  override_approved_by: string | null;
+  override_approved_at: string | null;
+  override_justification: string | null;
+  created_at:      string;
+}
+
+export interface PermitApproval {
+  id:              string;
+  permit_id:       string;
+  approval_type:   string;
+  approver_id:     string | null;
+  approver_name:   string | null;
+  required:        boolean;
+  status:          string;
+  notes:           string | null;
+  decided_at:      string | null;
+  sequence_order:  number | null;
+  created_at:      string;
+}
+
+// ── Sub-register arg types ─────────────────────────────────────────────────────
+
+export interface CreateIsolationArgs extends Record<string, unknown> {
+  permitId:           string;
+  isolationType:      string;
+  description:        string;
+  equipmentTag?:      string | null;
+  location?:          string | null;
+  responsiblePersonId?: string | null;
+  notes?:             string | null;
+}
+
+export interface IsolationActionArgs extends Record<string, unknown> {
+  isolationId: string;
+  permitId:    string;
+  note?:       string | null;
+}
+
+export interface CreateGasTestArgs extends Record<string, unknown> {
+  permitId:      string;
+  testLocation:  string;
+  testType:      string;
+  testedBy?:     string | null;
+  oxygenPct?:    number | null;
+  lelPct?:       number | null;
+  coPpm?:        number | null;
+  h2sPpm?:       number | null;
+  result:        string;
+  notes?:        string | null;
+  validUntil?:   string | null;
+}
+
+export interface GasTestActionArgs extends Record<string, unknown> {
+  gasTestId: string;
+  permitId:  string;
+  note?:     string | null;
+}
+
+export interface SimopsCheckArgs extends Record<string, unknown> {
+  permitId: string;
+}
+
+export interface SimopsActionArgs extends Record<string, unknown> {
+  simopsId:              string;
+  permitId:              string;
+  note?:                 string | null;
+  overrideJustification?: string | null;
+}
+
+export interface DecideApprovalArgs extends Record<string, unknown> {
+  approvalId: string;
+  permitId:   string;
+  decision:   'approve' | 'reject';
+  notes?:     string | null;
+}
+
+// ── Sub-register query hooks ──────────────────────────────────────────────────
+
+export function usePermitIsolations(permitId: string | null) {
+  return useQuery({
+    queryKey: [...ptwKeys.detail(permitId ?? ''), 'isolations'],
+    queryFn:  () => apiPost<{ success: boolean; data: PermitIsolation[] }>(
+      'hse/ptw/permits/isolations/list', { args: { permitId } },
+    ),
+    enabled:   !!permitId,
+    staleTime: 15_000,
+  });
+}
+
+export function usePermitGasTests(permitId: string | null) {
+  return useQuery({
+    queryKey: [...ptwKeys.detail(permitId ?? ''), 'gas-tests'],
+    queryFn:  () => apiPost<{ success: boolean; data: PermitGasTest[] }>(
+      'hse/ptw/permits/gas-tests/list', { args: { permitId } },
+    ),
+    enabled:   !!permitId,
+    staleTime: 15_000,
+  });
+}
+
+export function usePermitSimops(permitId: string | null) {
+  return useQuery({
+    queryKey: [...ptwKeys.detail(permitId ?? ''), 'simops'],
+    queryFn:  () => apiPost<{ success: boolean; data: PermitSimops[] }>(
+      'hse/ptw/permits/simops/list', { args: { permitId } },
+    ),
+    enabled:   !!permitId,
+    staleTime: 15_000,
+  });
+}
+
+export function usePermitApprovals(permitId: string | null) {
+  return useQuery({
+    queryKey: [...ptwKeys.detail(permitId ?? ''), 'approvals'],
+    queryFn:  () => apiPost<{ success: boolean; data: PermitApproval[] }>(
+      'hse/ptw/permits/approvals/list', { args: { permitId } },
+    ),
+    enabled:   !!permitId,
+    staleTime: 15_000,
+  });
+}
+
+// ── Sub-register mutation hooks ───────────────────────────────────────────────
+
+export function useCreateIsolation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: CreateIsolationArgs) =>
+      apiPost<{ success: boolean; data: { id: string } }>(
+        'hse/ptw/permits/isolations/create', { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
+    },
+  });
+}
+
+export function useIsolationAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, ...args }: IsolationActionArgs & { action: 'apply' | 'verify' | 'reject' | 'remove' }) =>
+      apiPost<{ success: boolean }>(
+        `hse/ptw/permits/isolations/${action}`, { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
+    },
+  });
+}
+
+export function useCreateGasTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: CreateGasTestArgs) =>
+      apiPost<{ success: boolean; data: { id: string } }>(
+        'hse/ptw/permits/gas-tests/create', { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
+    },
+  });
+}
+
+export function useGasTestAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, ...args }: GasTestActionArgs & { action: 'retest' | 'mark-invalid' }) =>
+      apiPost<{ success: boolean }>(
+        `hse/ptw/permits/gas-tests/${action}`, { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
+    },
+  });
+}
+
+export function useSimopsCheck() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: SimopsCheckArgs) =>
+      apiPost<{ success: boolean; data: { conflictsFound: number } }>(
+        'hse/ptw/permits/simops/check', { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+    },
+  });
+}
+
+export function useSimopsAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, ...args }: SimopsActionArgs & { action: 'resolve' | 'approve-override' }) =>
+      apiPost<{ success: boolean }>(
+        `hse/ptw/permits/simops/${action}`, { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+    },
+  });
+}
+
+export function useDecideApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: DecideApprovalArgs) =>
+      apiPost<{ success: boolean }>(
+        'hse/ptw/permits/approvals/decide', { args }, { retryable: false },
+      ),
+    onSuccess: (_res, vars) => {
+      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
+      void qc.invalidateQueries({ queryKey: ptwKeys.all });
+    },
   });
 }

@@ -23,6 +23,7 @@ import {
   type PermitStatus,
 } from '@api/hse/ptw';
 import { NewPermitWizard } from './ptw/dialogs/NewPermitWizard';
+import { PermitDetailDrawer } from './ptw/PermitDetailDrawer';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -36,8 +37,10 @@ const TABS: AreaTab[] = [
   { key: 'archive',   label: 'Archive',     sublabel: 'Closed & cancelled',    icon: 'fa-box-archive' },
 ];
 
-/** Tabs with their own sub-register content. "Coming soon" tabs listed in DEFERRED. */
-const DEFERRED_TABS = ['isolations', 'gastests', 'simops', 'templates'];
+/** Page-level tabs whose sub-register management lives inside the permit drawer. */
+const DRAWER_MANAGED_TABS = ['isolations', 'gastests', 'simops'];
+/** Templates tab: truly deferred (no backend endpoint yet). */
+const TEMPLATES_TAB = 'templates';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -87,7 +90,7 @@ function typeIcon(permitType: string): string {
 
 // ── Permits table tab ─────────────────────────────────────────────────────────
 
-function PermitsTab({ statusFilter }: { statusFilter?: string }): VNode {
+function PermitsTab({ statusFilter, onOpenPermit }: { statusFilter?: string; onOpenPermit: (p: PermitListRow) => void }): VNode {
   const [search,    setSearch]    = useState('');
   const [type,      setType]      = useState('');
   const [site,      setSite]      = useState('');
@@ -190,7 +193,7 @@ function PermitsTab({ statusFilter }: { statusFilter?: string }): VNode {
                 <tr><td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No permits match.</td></tr>
               )}
               {pg.pageItems.map((p: PermitListRow) => (
-                <tr key={p.id} style={{ cursor: 'pointer' }}>
+                <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => onOpenPermit(p)}>
                   <td>
                     <span class="vt-cell-mono">{p.permit_number ?? '—'}</span>
                     <div class="vt-cell-subtext">{fmtDt(p.created_at).split(',')[0]}</div>
@@ -214,7 +217,7 @@ function PermitsTab({ statusFilter }: { statusFilter?: string }): VNode {
                     <button
                       class="inc-action-btn blue"
                       style={{ padding: '3px 8px', fontSize: '0.7rem' }}
-                      onClick={() => { /* detail drawer — future phase */ }}
+                      onClick={e => { e.stopPropagation(); onOpenPermit(p); }}
                       title="View permit"
                     >
                       Open
@@ -383,11 +386,28 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
   );
 }
 
+// ── Drawer-pointer tab ────────────────────────────────────────────────────────
+
+function DrawerPointerTab({ icon, label, detail }: { icon: string; label: string; detail: string }): VNode {
+  return (
+    <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+      <i class={`fas ${icon}`} style={{ fontSize: '2.4rem', opacity: 0.25, marginBottom: '16px', display: 'block' }} />
+      <div style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-body)' }}>{label}</div>
+      <div style={{ fontSize: '0.78rem', maxWidth: '400px', margin: '0 auto', lineHeight: 1.6 }}>{detail}</div>
+      <div style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '6px', background: 'rgba(27,45,84,.07)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
+        <i class="fas fa-arrow-pointer" style={{ opacity: 0.6 }} />
+        Open a permit from the Permits tab to manage its records here
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
 export function PermitsArea({ tab }: { tab: string }): VNode {
-  const [active,       setActive]       = useState(tab);
-  const [wizardOpen,   setWizardOpen]   = useState(false);
+  const [active,         setActive]         = useState(tab);
+  const [wizardOpen,     setWizardOpen]     = useState(false);
+  const [selectedPermit, setSelectedPermit] = useState<PermitListRow | null>(null);
 
   // Stats for meta chips in PageHeader
   const { data: statsRes } = usePermitStats();
@@ -449,43 +469,56 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
       {/* ── Tab content ── */}
 
       {active === 'permits' && (
-        <PermitsTab />
+        <PermitsTab onOpenPermit={p => setSelectedPermit(p)} />
       )}
 
       {active === 'approvals' && (
-        <PermitsTab statusFilter="awaiting_approval" />
+        <PermitsTab statusFilter="awaiting_approval" onOpenPermit={p => setSelectedPermit(p)} />
       )}
 
       {active === 'archive' && (
-        <PermitsTab statusFilter="archived" />
+        <PermitsTab statusFilter="archived" onOpenPermit={p => setSelectedPermit(p)} />
       )}
 
-      {DEFERRED_TABS.includes(active) && (() => {
+      {/* Isolations / Gas Tests / SIMOPS: sub-register endpoints are per-permit.
+          There is no list-all endpoint, so page-level tabs point users to the drawer. */}
+      {DRAWER_MANAGED_TABS.includes(active) && (() => {
         const MAP: Record<string, { icon: string; label: string; detail: string }> = {
           isolations: {
             icon:   'fa-lock',
-            label:  'Isolations Register',
-            detail: 'Lock-out / tag-out isolation points linked to active permits. This register will be available once the PTW isolation backend is complete.',
+            label:  'Isolations',
+            detail: 'Lock-out / tag-out isolation points are managed per permit. Open a permit from the Permits tab, then switch to the Isolations tab inside the drawer to apply, verify, or remove isolation points.',
           },
           gastests: {
             icon:   'fa-flask-vial',
-            label:  'Gas Test Log',
-            detail: 'Atmospheric readings and gas test records for confined-space and hot-work permits. Available in a later phase.',
+            label:  'Gas Tests',
+            detail: 'Atmospheric readings and gas test results are recorded per permit. Open a permit from the Permits tab, then switch to the Gas Tests tab inside the drawer to log readings and manage results.',
           },
           simops: {
             icon:   'fa-diagram-project',
-            label:  'SIMOPS Conflict Management',
-            detail: 'Simultaneous operations conflict detection and resolution matrix. Available in a later phase.',
-          },
-          templates: {
-            icon:   'fa-copy',
-            label:  'PTW Templates',
-            detail: 'Pre-configured permit templates for common work types. Template management will be added in a later phase.',
+            label:  'SIMOPS Conflicts',
+            detail: 'Simultaneous operations conflict detection is managed per permit. Open a permit from the Permits tab, then switch to the SIMOPS tab inside the drawer to run a check and resolve conflicts.',
           },
         };
-        const cfg = MAP[active] ?? { icon: 'fa-clock', label: active, detail: 'Coming soon.' };
-        return <ComingSoonTab icon={cfg.icon} label={cfg.label} detail={cfg.detail} />;
+        const cfg = MAP[active] ?? { icon: 'fa-clock', label: active, detail: 'Open a permit to manage this sub-register.' };
+        return <DrawerPointerTab icon={cfg.icon} label={cfg.label} detail={cfg.detail} />;
       })()}
+
+      {active === TEMPLATES_TAB && (
+        <ComingSoonTab
+          icon="fa-copy"
+          label="PTW Templates"
+          detail="Pre-configured permit templates for common work types. Template management will be added in a later phase."
+        />
+      )}
+
+      {/* Permit detail drawer */}
+      {selectedPermit && (
+        <PermitDetailDrawer
+          permit={selectedPermit}
+          onClose={() => setSelectedPermit(null)}
+        />
+      )}
 
       {/* New Permit wizard */}
       <NewPermitWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
