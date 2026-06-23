@@ -855,10 +855,10 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           footer={`Avg close ${avgDaysToClose > 0 ? `${avgDaysToClose}d` : '—'}`} />
       ) },
       { key: 'trend', node: (
-        <StatsCard icon="fa-chart-line" title="Incident Trend" variant="navy"
+        <StatsCard icon="fa-chart-line" title="Incident Trend"
           metric={thisMonthCount} metricUnit="this month"
           supporting={`${trendPct >= 0 ? '+' : ''}${trendPct}% vs last month`}
-          chart={<Sparkline points={monthly} color={trendPct > 0 ? '#f87171' : '#4ade80'} height={40} />}
+          chart={<Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={40} />}
           footer="Incidents — last 6 months" />
       ) },
     ]} />
