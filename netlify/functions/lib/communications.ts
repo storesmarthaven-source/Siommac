@@ -52,7 +52,11 @@ export async function emitSignal(
 // ── Communications summary ─────────────────────────────────────────────────────
 
 export interface CommsSummary {
-  notificationsUnread: number;
+  notificationsUnread:         number;
+  notificationsTotal:          number; // active (not archived)
+  notificationsActionRequired: number; // action_required & pending, active
+  notificationsCritical:       number; // unread critical, active
+  notificationsArchived:       number;
   messagesUnread:      number;
   ticketsOpen:         number;
   ticketsUnread:       number;
@@ -68,12 +72,42 @@ export interface CommsSummary {
 export async function getCommsSummary(userId: string, role: string): Promise<CommsSummary> {
   const channelKey = await _ensureRealtimeChannel(userId);
 
-  const [notifRes, msgRes, ticketRes, workflowRes, handoffRes] = await Promise.allSettled([
+  const nowIso = new Date().toISOString();
+  // Active = not archived and not expired. `sb` is the untyped service client,
+  // so the chained filter builder is typed as `any` here by design.
+  const notActive = <T>(q: T): T =>
+    (q as { is: (c: string, v: null) => { or: (f: string) => T } })
+      .is('archived_at', null).or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+
+  const [
+    notifRes, notifTotalRes, notifActionRes, notifCritRes, notifArchRes,
+    msgRes, ticketRes, workflowRes, handoffRes,
+  ] = await Promise.allSettled([
+    notActive(sb.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false)),
+
+    notActive(sb.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)),
+
+    notActive(sb.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('action_required', true)
+      .eq('action_status', 'pending')),
+
+    notActive(sb.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('severity', 'critical')
+      .eq('is_read', false)),
+
     sb.from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('is_read', false)
-      .is('archived_at', null),
+      .not('archived_at', 'is', null),
 
     sb.from('message_participants')
       .select('thread_id', { count: 'exact', head: true })
@@ -99,7 +133,11 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
   ]);
 
   return {
-    notificationsUnread: _countFromSettled(notifRes),
+    notificationsUnread:         _countFromSettled(notifRes),
+    notificationsTotal:          _countFromSettled(notifTotalRes),
+    notificationsActionRequired: _countFromSettled(notifActionRes),
+    notificationsCritical:       _countFromSettled(notifCritRes),
+    notificationsArchived:       _countFromSettled(notifArchRes),
     messagesUnread:      _countFromSettled(msgRes),
     ticketsOpen:         _countFromSettled(ticketRes),
     ticketsUnread:       0, // TODO: per-ticket unread tracking

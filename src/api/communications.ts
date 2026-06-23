@@ -20,7 +20,11 @@ import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from './
 // ── Response types ─────────────────────────────────────────────────────────────
 
 export interface CommsSummary {
-  notificationsUnread: number;
+  notificationsUnread:         number;
+  notificationsTotal:          number;
+  notificationsActionRequired: number;
+  notificationsCritical:       number;
+  notificationsArchived:       number;
   messagesUnread:      number;
   ticketsOpen:         number;
   ticketsUnread:       number;
@@ -52,6 +56,16 @@ export interface NotificationPreference {
   in_app:     boolean;
   email:      boolean;
   whatsapp:   boolean;
+}
+
+export interface NotificationSnoozeState {
+  mutedUntil: string | null; // null = indefinite
+}
+
+export interface NotificationPreferencesData {
+  defaults:    NotificationPreference;
+  preferences: NotificationPreference[];
+  snooze:      NotificationSnoozeState | null;
 }
 
 export interface MessageThread {
@@ -153,7 +167,7 @@ export function useNotificationPreferences() {
   return useQuery({
     queryKey: notificationKeys.preferences(),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: { defaults: NotificationPreference; preferences: NotificationPreference[] } }>(
+      const res = await apiPost<{ success: boolean; data: NotificationPreferencesData }>(
         'communications/notifications/preferences/get', { args: {} }, { signal },
       );
       if (!res.success) throw new Error('Failed to load preferences');

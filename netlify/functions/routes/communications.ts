@@ -147,15 +147,32 @@ router.post('/communications/notifications/archive', async c => {
 
 router.post('/communications/notifications/preferences/get', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const { data, error } = await sb.from('notification_preferences')
-    .select('event_type, in_app, email, whatsapp')
-    .eq('user_id', user.id);
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const [prefsRes, muteRes] = await Promise.all([
+    sb.from('notification_preferences')
+      .select('event_type, in_app, email, whatsapp')
+      .eq('user_id', user.id),
+    sb.from('notification_mutes')
+      .select('muted_until')
+      .eq('user_id', user.id)
+      .eq('scope', 'all')
+      .maybeSingle(),
+  ]) as [
+    { error: { message: string } | null; data: Array<{ event_type: string; in_app: boolean; email: boolean; whatsapp: boolean }> | null },
+    { data: { muted_until: string | null } | null },
+  ];
+  if (prefsRes.error) return c.json({ success: false, message: prefsRes.error.message }, 500 as 200);
 
-  const all = data ?? [];
+  const all = prefsRes.data ?? [];
   const defaults = all.find(p => p.event_type === '*') ?? { event_type: '*', in_app: true, email: false, whatsapp: false };
   const preferences = all.filter(p => p.event_type !== '*');
-  return c.json({ success: true, data: { defaults, preferences } });
+
+  // Snooze is active when a mute row exists and is either indefinite (null) or in the future.
+  const mute = muteRes.data;
+  const snooze = mute && (mute.muted_until == null || new Date(mute.muted_until).getTime() > Date.now())
+    ? { mutedUntil: mute.muted_until }
+    : null;
+
+  return c.json({ success: true, data: { defaults, preferences, snooze } });
 });
 
 const PrefSetSchema = z.object({
