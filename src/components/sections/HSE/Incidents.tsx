@@ -824,18 +824,34 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
   return (
     <MetricRow pageKey={`hse.incidents.${pageTab}`} rowClass="ui-stat-row" cards={[
       { key: 'severity', node: (
-        <StatsCard icon="fa-chart-pie" title="Severity Mix" metric={mtdIncidents.length} metricUnit="MTD"
+        <StatsCard icon="fa-chart-pie" title="Severity Mix"
           chart={
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <div style={{ display: 'flex', height: '10px', borderRadius: '999px', overflow: 'hidden', background: 'var(--border)' }}>
-                {(['danger','warning','info','success'] as const).map(k => sevCounts[k] > 0 ? (
-                  <div key={k} style={{ width: `${(sevCounts[k] / total) * 100}%`, background: SEV_COLORS[k] }} />
-                ) : null)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ position: 'relative', flexShrink: 0, width: 94, height: 94 }}>
+                <svg width="94" height="94" viewBox="0 0 94 94">
+                  <circle cx="47" cy="47" r="38" fill="none" stroke="#eef0f5" stroke-width="9" />
+                  {(() => {
+                    const R = 38, C = 2 * Math.PI * R; let acc = 0;
+                    return (['danger','warning','info','success'] as const).map(k => {
+                      const frac = sevCounts[k] / total;
+                      if (frac <= 0) return null;
+                      const segLen = Math.max(0, frac * C - 3);
+                      const rot = acc * 360 - 90;
+                      acc += frac;
+                      return <circle key={k} cx="47" cy="47" r={R} fill="none" stroke={SEV_COLORS[k]} stroke-width="9"
+                        stroke-dasharray={`${segLen} ${C - segLen}`} transform={`rotate(${rot} 47 47)`} stroke-linecap="butt" />;
+                    });
+                  })()}
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1 }}>{mtdIncidents.length}</span>
+                  <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em' }}>MTD</span>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 14px' }}>
+              <div style={{ flex: 1, display: 'grid', gap: '5px', minWidth: 0 }}>
                 {([['danger','Critical'],['warning','High'],['info','Medium'],['success','Low']] as const).map(([k, label]) => (
                   <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem' }}>
-                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: SEV_COLORS[k], flexShrink: 0 }} />
+                    <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
                     <span style={{ color: 'var(--text-muted)', flex: 1 }}>{label}</span>
                     <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
                   </div>
@@ -1121,24 +1137,25 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       <div style={{ marginTop: '16px' }}>
         <div class="hse-spark-row">
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span><i class="fas fa-triangle-exclamation" /></div>
             <div class="hse-spark-val">{incidents.length}</div>
             <div class="hse-spark-sub">All recorded cases</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Open</span></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Open</span><i class="fas fa-folder-open" /></div>
             <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{incidents.filter(i => !/closed/i.test(i.status)).length}</div>
             <div class="hse-spark-sub">Awaiting closure</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Lost-Time</span></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Lost-Time</span><i class="fas fa-user-injured" /></div>
             <div class="hse-spark-val" style={{ color: '#ef4444' }}>{incidents.filter(i => i.lostTime).length}</div>
             <div class="hse-spark-sub">LTI reportable</div>
           </div>
           <div class="hse-spark">
-            <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span></div>
+            <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span><i class="fas fa-circle-check" /></div>
             <div class="hse-spark-val" style={{ color: '#22c55e' }}>{closurePct}%</div>
             <div class="hse-spark-sub">Closed of total</div>
+            <div class="hse-spark-bar-track"><div class="hse-spark-bar-fill" style={{ width: `${Math.min(100, closurePct)}%`, background: closurePct >= 95 ? '#22c55e' : closurePct >= 70 ? '#f59e0b' : '#ef4444' }} /></div>
           </div>
         </div>
       </div>

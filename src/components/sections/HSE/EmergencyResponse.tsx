@@ -220,7 +220,7 @@ function DrillsTab(): VNode {
     <div class="ppe-tab-content">
       <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Drills YTD</span></div><div class="hse-spark-val">{drills.filter(d => d.status === 'Complete').length}</div><div class="hse-spark-sub">Completed across all sites</div></div>
-        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Avg Score</span></div><div class="hse-spark-val" style={{ color: avgScore >= 85 ? '#22c55e' : '#f59e0b' }}>{Math.round(avgScore)}%</div><div class="hse-spark-sub">Drill performance rating</div></div>
+        <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Avg Score</span><i class="fas fa-gauge-high" /></div><div class="hse-spark-val" style={{ color: avgScore >= 85 ? '#22c55e' : '#f59e0b' }}>{Math.round(avgScore)}%</div><div class="hse-spark-sub">Drill performance rating</div><div class="hse-spark-bar-track"><div class="hse-spark-bar-fill" style={{ width: `${Math.min(100, Math.round(avgScore))}%`, background: avgScore >= 85 ? '#22c55e' : '#f59e0b' }} /></div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Participants</span></div><div class="hse-spark-val">{drills.reduce((s, d) => s + d.participants, 0)}</div><div class="hse-spark-sub">Workers drilled YTD</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>{drills.filter(d => d.status === 'Scheduled').length}</div><div class="hse-spark-sub">Upcoming drills planned</div></div>
       </div>

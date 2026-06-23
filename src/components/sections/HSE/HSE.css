@@ -910,7 +910,8 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   background: var(--bg-card);
   padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
 }
-.hse-spark-header { display: flex; align-items: center; justify-content: space-between; }
+.hse-spark-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hse-spark-header > i { font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0; }
 .hse-spark-label {
   font-size: 0.65rem; font-weight: 600; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: .04em;

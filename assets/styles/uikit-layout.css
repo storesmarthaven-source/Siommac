@@ -329,7 +329,7 @@ body[data-theme="dark"] .hero-footer {
 .ui-stat-bar-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-muted); }
 .ui-stat-card--navy .ui-stat-bar-labels { color: rgba(255,255,255,0.45); }
 
-.ui-stat-footer { font-size: 0.66rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; }
+.ui-stat-footer { font-size: 0.66rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; text-transform: capitalize; }
 .ui-stat-card--navy .ui-stat-footer { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.08); }
 
 /* ── Card reorder / Arrange states (useCardReorder → dragClass) ──────────────────

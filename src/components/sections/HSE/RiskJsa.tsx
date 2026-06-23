@@ -168,24 +168,25 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
 
           <div class="hse-spark-row">
             <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
+              <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span><i class="fas fa-radiation" /></div>
               <div class="hse-spark-val">{totalHazards}</div>
               <div class="hse-spark-sub">On the live register</div>
             </div>
             <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span></div>
+              <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span><i class="fas fa-triangle-exclamation" /></div>
               <div class="hse-spark-val" style={{ color: '#ef4444' }}>{highCritical}</div>
               <div class="hse-spark-sub">Priority for control</div>
             </div>
             <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span></div>
+              <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span><i class="fas fa-table-cells-large" /></div>
               <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{openAssessments}</div>
               <div class="hse-spark-sub">{overdueAssessments > 0 ? `${overdueAssessments} overdue review` : 'All reviews current'}</div>
             </div>
             <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span></div>
+              <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span><i class="fas fa-arrow-down-wide-short" /></div>
               <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
               <div class="hse-spark-sub">Initial → residual, controlled</div>
+              <div class="hse-spark-bar-track"><div class="hse-spark-bar-fill" style={{ width: `${Math.min(100, riskReductionPct)}%`, background: riskReductionPct >= 50 ? '#22c55e' : '#f59e0b' }} /></div>
             </div>
           </div>
 
