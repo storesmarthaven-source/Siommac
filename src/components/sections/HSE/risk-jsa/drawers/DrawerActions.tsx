@@ -10,8 +10,8 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Modal } from '@ui';
-import { useRiskJsaReview } from '@api/hse/riskJsa';
+import { Modal, Field, TextareaInput } from '@ui';
+import { useRiskJsaReview, useRiskJsaLifecycle } from '@api/hse/riskJsa';
 import { SubmitForReviewDialog, type WorkflowEntity } from '../dialogs/SubmitForReviewDialog';
 import { ApprovalDecisionDialog } from '../dialogs/ApprovalDecisionDialog';
 import { LinkCapaDialog } from '../dialogs/LinkCapaDialog';
@@ -28,9 +28,9 @@ export interface DrawerActionsProps {
   onClose: () => void;
 }
 
-type OpenDialog = 'none' | 'submit' | 'approve' | 'capa' | 'control' | 'review' | 'archive';
+type OpenDialog = 'none' | 'submit' | 'approve' | 'capa' | 'control' | 'review' | 'archive' | 'close';
 
-const SUBMITTABLE = ['draft', 'registered', 'returned', 'assessment_required', 'controls_required'];
+const SUBMITTABLE = ['draft', 'registered', 'returned', 'changes_requested', 'assessment_required', 'controls_required'];
 const DECIDABLE   = ['submitted', 'under_review', 'hse_review'];
 const REVIEWABLE  = ['approved', 'active', 'monitoring'];
 
@@ -38,12 +38,18 @@ export function DrawerActions({
   entityType, entityId, entityRef, entityTitle, status, onClose,
 }: DrawerActionsProps): VNode {
   const [open, setOpen] = useState<OpenDialog>('none');
+  const [overrideMsg, setOverrideMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [closeNote, setCloseNote] = useState('');
   const review = useRiskJsaReview();
+  const lifecycle = useRiskJsaLifecycle();
 
   const archived   = status === 'archived';
   const canSubmit  = SUBMITTABLE.includes(status);
   const canDecide  = DECIDABLE.includes(status);
   const canReview  = REVIEWABLE.includes(status);
+  const canActivate = status === 'approved';
+  const canCloseOut = status === 'active';
 
   async function archive() {
     try {
@@ -51,6 +57,26 @@ export function DrawerActions({
       setOpen('none');
       onClose();
     } catch { /* surfaced by mutation state; keep dialog open */ }
+  }
+
+  /** Activate (approved → active). For JSAs this hits the crew gate; if competency
+   *  is unverified the backend returns requiresOverride, which we confirm. */
+  async function activate(override: boolean) {
+    setActionError('');
+    const res = await lifecycle.mutateAsync({ action: 'activate', entityType, entityId, override });
+    if (res.success) { setOverrideMsg(null); onClose(); return; }
+    if (res.requiresOverride) { setOverrideMsg(res.message ?? 'Override required to activate.'); return; }
+    setOverrideMsg(null);
+    setActionError(res.message ?? 'Could not activate.');
+  }
+
+  /** Close out an active record (requires completion notes per spec §10). */
+  async function closeOut() {
+    if (!closeNote.trim()) { setActionError('Completion notes are required to close.'); return; }
+    setActionError('');
+    const res = await lifecycle.mutateAsync({ action: 'close', entityType, entityId, note: closeNote.trim() });
+    if (res.success) { setOpen('none'); setCloseNote(''); onClose(); return; }
+    setActionError(res.message ?? 'Could not close.');
   }
 
   return (
@@ -71,6 +97,16 @@ export function DrawerActions({
         {canReview && (
           <button class="hse-btn" onClick={() => setOpen('review')}>
             <i class="fas fa-rotate" /> Review / Renew
+          </button>
+        )}
+        {canActivate && (
+          <button class="hse-btn primary" onClick={() => void activate(false)} disabled={lifecycle.isPending}>
+            <i class="fas fa-circle-play" /> Activate
+          </button>
+        )}
+        {canCloseOut && (
+          <button class="hse-btn" onClick={() => { setActionError(''); setOpen('close'); }}>
+            <i class="fas fa-flag-checkered" /> Close Out
           </button>
         )}
         {!archived && !canSubmit && !canDecide && !canReview && (
@@ -109,6 +145,30 @@ export function DrawerActions({
           audit trail and can be referenced, but no further workflow actions apply.
         </p>
       </Modal>
+
+      {/* Crew competency override confirmation (JSA activation gate) */}
+      <Modal open={overrideMsg !== null} title={`Activate ${entityRef}?`} icon="fa-triangle-exclamation" size="sm"
+        onClose={() => setOverrideMsg(null)} onSubmit={() => void activate(true)}
+        submitLabel="Activate anyway" submitDisabled={lifecycle.isPending}>
+        <p style={{ fontSize: '0.85rem', margin: 0 }}>{overrideMsg}</p>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+          Activating overrides the competency gap — this is recorded in the audit trail.
+        </p>
+      </Modal>
+
+      {/* Close out — completion notes required */}
+      <Modal open={open === 'close'} title={`Close out ${entityRef}?`} icon="fa-flag-checkered" size="sm"
+        onClose={() => { setOpen('none'); setCloseNote(''); setActionError(''); }} onSubmit={() => void closeOut()}
+        submitLabel="Close Out" submitDisabled={lifecycle.isPending}>
+        <Field label="Completion notes *" wide>
+          <TextareaInput value={closeNote} onInput={setCloseNote} rows={3} placeholder="Summary of completion / sign-off…" />
+        </Field>
+        {actionError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem', marginTop: '8px' }}>{actionError}</div>}
+      </Modal>
+
+      {actionError && overrideMsg === null && open !== 'close' && (
+        <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem', marginTop: '8px', textAlign: 'right' }}>{actionError}</div>
+      )}
     </>
   );
 }
