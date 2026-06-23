@@ -25,11 +25,11 @@ import { HSE_SITES } from '../../types';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const WIZARD_STEPS = [
-  'Job Details',
-  'Job Steps',
-  'PPE',
-  'Training',
-  'Review & Submit',
+  { label: 'Job Details',     sub: 'Task & site' },
+  { label: 'Job Steps',       sub: 'Break down the task' },
+  { label: 'PPE',             sub: 'Required equipment' },
+  { label: 'Training',        sub: 'Competency needs' },
+  { label: 'Review & Submit', sub: 'Confirm & submit' },
 ] as const;
 
 const PPE_ITEMS = [

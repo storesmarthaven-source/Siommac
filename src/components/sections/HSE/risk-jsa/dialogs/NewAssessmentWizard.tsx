@@ -49,12 +49,12 @@ const REVIEW_CYCLES = [
 const SITE_OPTIONS = HSE_SITES.map(s => ({ value: s, label: s }));
 
 const WIZARD_STEPS = [
-  'Assessment Type',
-  'Scope',
-  'Hazards',
-  'Controls',
-  'Residual Risk',
-  'Review & Submit',
+  { label: 'Assessment Type', sub: 'Method & template' },
+  { label: 'Scope',           sub: 'Task, site & team' },
+  { label: 'Hazards',         sub: 'Identify hazards' },
+  { label: 'Controls',        sub: 'Existing & added' },
+  { label: 'Residual Risk',   sub: 'Score after controls' },
+  { label: 'Review & Submit', sub: 'Confirm & submit' },
 ] as const;
 
 // ── Hazard entry shape used locally ───────────────────────────────────────────

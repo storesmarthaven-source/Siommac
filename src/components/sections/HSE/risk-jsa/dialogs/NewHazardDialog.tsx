@@ -18,7 +18,12 @@ import { HSE_SITES } from '../../types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STEPS = ['Hazard Details', 'Initial Risk Rating', 'Controls', 'Review'];
+const STEPS = [
+  { label: 'Hazard Details',      sub: 'What & where' },
+  { label: 'Initial Risk Rating', sub: 'Likelihood × severity' },
+  { label: 'Controls',            sub: 'Mitigation measures' },
+  { label: 'Review',              sub: 'Confirm & submit' },
+];
 
 const HAZARD_CATEGORIES = [
   'Safety', 'Health', 'Environmental', 'Chemical', 'Biological',
