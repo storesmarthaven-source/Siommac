@@ -1,0 +1,399 @@
+/**
+ * src/components/sections/Messages/MessageCenter.tsx
+ *
+ * Full-page s-messages section. PageHeader + TabBar (Inbox/Sent/Archived) +
+ * New Message button on the right of the tab row + two-pane body:
+ *   left → ThreadList, right → Conversation (or empty state).
+ *
+ * Listens for siomac:openThread CustomEvent so the dropdown can pre-select a
+ * thread on navigation.
+ */
+
+import { type VNode } from 'preact';
+import { useState, useEffect, useCallback } from 'preact/hooks';
+import { PageHeader, TabBar, withCounts, type AreaTab } from '@ui';
+import {
+  useMessageThreadsFull, useThreadPosts, useMarkThreadRead,
+  usePostMessage, useArchiveThread, useCommsSummary,
+  type MessageThreadListItem, type ThreadFilters,
+} from '@api/communications';
+import { ComposeThreadDialog } from './ComposeThreadDialog';
+
+const TABS: AreaTab[] = [
+  { key: 'inbox',    label: 'Inbox',    icon: 'fa-inbox' },
+  { key: 'sent',     label: 'Sent',     icon: 'fa-paper-plane' },
+  { key: 'archived', label: 'Archived', icon: 'fa-box-archive' },
+];
+
+// ── Thread list (left pane) ────────────────────────────────────────────────────
+
+function ThreadList({ threads, selectedId, onSelect, isLoading }: {
+  threads:    MessageThreadListItem[];
+  selectedId: string | null;
+  onSelect:   (t: MessageThreadListItem) => void;
+  isLoading:  boolean;
+}): VNode {
+  const [search, setSearch] = useState('');
+  const filtered = threads.filter(t => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (t.subject ?? '').toLowerCase().includes(q)
+      || t.participants.some(p => (p.full_name ?? '').toLowerCase().includes(q))
+      || (t.last_post_body ?? '').toLowerCase().includes(q);
+  });
+
+  function displayName(t: MessageThreadListItem): string {
+    return t.subject
+      ?? t.participants.filter(p => p.role !== 'self').map(p => p.full_name ?? p.username ?? '?').join(', ')
+      ?? 'Thread';
+  }
+
+  function relTime(iso: string | null | undefined): string {
+    if (!iso) return '';
+    const d = Date.now() - new Date(iso).getTime();
+    const m = Math.round(d / 60000);
+    if (m < 1) return 'now';
+    if (m < 60) return `${m}m`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.round(h / 24)}d`;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Search */}
+      <div class="vt-search" style={{ margin: '12px', flexShrink: 0 }}>
+        <i class="fas fa-search" />
+        <input type="search" placeholder="Search threads…" value={search}
+          onInput={e => setSearch((e.target as HTMLInputElement).value)} />
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {isLoading && (
+          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>
+        )}
+        {!isLoading && filtered.length === 0 && (
+          <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+            <i class="fas fa-comments" style={{ fontSize: '1.6rem', color: 'var(--text-muted)', opacity: 0.4 }} />
+            <div style={{ fontWeight: 600, color: 'var(--siomac-navy)', marginTop: '10px', fontSize: '0.85rem' }}>No threads</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+              {search ? 'No results for this search.' : 'Start a conversation.'}
+            </div>
+          </div>
+        )}
+        {filtered.map(t => {
+          const isSelected = t.id === selectedId;
+          const isUnread   = t.unread_count > 0;
+          const name       = displayName(t);
+          const firstP     = t.participants.find(p => p.role !== 'self') ?? t.participants[0];
+          const ava        = firstP?.full_name ?? firstP?.username ?? '?';
+          const iniText    = ((ava[0] ?? '').toUpperCase());
+          return (
+            <div key={t.id} onClick={() => onSelect(t)}
+              style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer',
+                background: isSelected ? 'rgba(27,45,85,0.07)' : 'transparent',
+                borderLeft: isSelected ? '3px solid var(--siomac-navy)' : '3px solid transparent' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: '0.83rem', fontWeight: isUnread ? 700 : 500,
+                      color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {name}
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', flexShrink: 0 }}>
+                      {relTime(t.last_post_at ?? t.created_at)}
+                    </span>
+                    {isUnread && (
+                      <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
+                        background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                        {t.unread_count > 9 ? '9+' : t.unread_count}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)', overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
+                    {t.last_post_body ?? ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Conversation (right pane) ─────────────────────────────────────────────────
+
+function Conversation({ thread }: { thread: MessageThreadListItem }): VNode {
+  const [body, setBody] = useState('');
+  const { data: posts = [], isLoading } = useThreadPosts(thread.id);
+  const postMsg  = usePostMessage();
+  const archive  = useArchiveThread();
+  const markRead = useMarkThreadRead();
+
+  // Mark read when thread opens
+  useEffect(() => {
+    if (thread.unread_count > 0) markRead.mutate(thread.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thread.id]);
+
+  function handleSend() {
+    const trimmed = body.trim();
+    if (!trimmed || postMsg.isPending) return;
+    postMsg.mutate({ threadId: thread.id, body: trimmed }, {
+      onSuccess: () => setBody(''),
+    });
+  }
+
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  const displayName = thread.subject
+    ?? thread.participants.filter(p => p.role !== 'self').map(p => p.full_name ?? p.username ?? '?').join(', ')
+    ?? 'Thread';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Conversation header */}
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--siomac-navy)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {displayName}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '1px' }}>
+            {thread.participant_count} participants
+            {thread.source_module ? ` · ${thread.source_module}` : ''}
+          </div>
+        </div>
+        <button
+          onClick={() => archive.mutate({ threadId: thread.id, archived: !thread.is_archived })}
+          disabled={archive.isPending}
+          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '7px',
+            cursor: 'pointer', color: 'var(--text-muted)', padding: '5px 10px', fontSize: '0.76rem' }}
+          title={thread.is_archived ? 'Unarchive' : 'Archive'}>
+          <i class={`fas ${thread.is_archived ? 'fa-inbox' : 'fa-box-archive'}`} />
+        </button>
+      </div>
+
+      {/* Posts */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {isLoading && (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>
+        )}
+        {posts.map(post => {
+          const isSystem = post.is_system;
+          const authorName = post.author_profile?.full_name ?? post.author_profile?.username ?? 'System';
+          const iniText = ((authorName[0] ?? '').toUpperCase());
+          const relTime = (() => {
+            const d = Date.now() - new Date(post.created_at).getTime();
+            const m = Math.round(d / 60000);
+            if (m < 1) return 'just now';
+            if (m < 60) return `${m}m ago`;
+            const h = Math.round(m / 60);
+            if (h < 24) return `${h}h ago`;
+            return new Date(post.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+          })();
+
+          if (isSystem) {
+            return (
+              <div key={post.id} style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-surface)',
+                  padding: '3px 12px', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                  {post.body}
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <div key={post.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+                background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {post.author_profile?.profile_image
+                  ? <img src={post.author_profile.profile_image} alt={iniText}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  : <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>
+                }
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{authorName}</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{relTime}</span>
+                  {post.is_edited && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(edited)</span>}
+                </div>
+                <div style={{ fontSize: '0.83rem', color: post.is_deleted ? 'var(--text-muted)' : 'var(--siomac-navy)',
+                  lineHeight: 1.5, fontStyle: post.is_deleted ? 'italic' : 'normal',
+                  background: 'var(--bg-surface)', borderRadius: '10px', padding: '8px 12px',
+                  border: '1px solid var(--border)' }}>
+                  {post.is_deleted ? 'This message was deleted.' : post.body}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Composer */}
+      {!thread.is_archived && (
+        <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <textarea
+              value={body}
+              onInput={e => setBody((e.target as HTMLTextAreaElement).value)}
+              onKeyDown={onKeyDown}
+              placeholder="Write a message… (Enter to send, Shift+Enter for newline)"
+              rows={2}
+              style={{ flex: 1, border: '1px solid var(--border)', borderRadius: '8px',
+                padding: '8px 10px', fontSize: '0.82rem', fontFamily: 'inherit',
+                resize: 'none', outline: 'none' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!body.trim() || postMsg.isPending}
+              style={{ padding: '8px 14px', borderRadius: '8px', border: 'none',
+                background: body.trim() && !postMsg.isPending ? 'var(--siomac-navy)' : 'var(--border)',
+                color: body.trim() && !postMsg.isPending ? '#fff' : 'var(--text-muted)',
+                cursor: body.trim() && !postMsg.isPending ? 'pointer' : 'default',
+                fontSize: '0.82rem', fontWeight: 600, flexShrink: 0 }}>
+              <i class="fas fa-paper-plane" />
+            </button>
+          </div>
+        </div>
+      )}
+      {thread.is_archived && (
+        <div style={{ padding: '10px 18px', borderTop: '1px solid var(--border)', flexShrink: 0,
+          background: 'var(--bg-surface)', fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+          <i class="fas fa-box-archive" style={{ marginRight: '5px' }} />
+          This thread is archived. Unarchive to send messages.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MessageCenter (main export) ───────────────────────────────────────────────
+
+export function MessageCenter(): VNode {
+  const [tab, setTab]               = useState('inbox');
+  const [selectedThread, setSelectedThread] = useState<MessageThreadListItem | null>(null);
+  const [composeOpen, setComposeOpen] = useState(false);
+
+  const { data: summary } = useCommsSummary();
+  const unread = summary?.messagesUnread ?? 0;
+
+  const filters: ThreadFilters = {
+    tab:   tab as ThreadFilters['tab'],
+    limit: 100,
+  };
+  const { data: threads = [], isLoading } = useMessageThreadsFull(filters);
+
+  // Listen for dropdown pre-selection events
+  useEffect(() => {
+    function onOpenThread(e: Event) {
+      const { threadId } = (e as CustomEvent<{ threadId: string }>).detail;
+      const t = threads.find(x => x.id === threadId);
+      if (t) setSelectedThread(t);
+    }
+    window.addEventListener('siomac:openThread', onOpenThread);
+    return () => window.removeEventListener('siomac:openThread', onOpenThread);
+  }, [threads]);
+
+  // Auto-deselect if thread no longer in list
+  useEffect(() => {
+    if (selectedThread && !threads.find(t => t.id === selectedThread.id)) {
+      setSelectedThread(null);
+    }
+  }, [threads, selectedThread]);
+
+  const tabs = withCounts(TABS, {
+    inbox:    unread,
+    sent:     undefined,
+    archived: undefined,
+  });
+
+  return (
+    <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%' }}>
+      <PageHeader
+        icon="fa-comments"
+        module="Messages"
+        title="Messages"
+        sub="Threaded conversations across your team and linked ERP records."
+        meta={[
+          { icon: 'fa-envelope', label: `${unread} unread` },
+        ]}
+      />
+
+      {/* Tab row + New Message button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TabBar tabs={tabs} active={tab} onSelect={setTab} />
+        </div>
+        <button class="hse-btn" onClick={() => setComposeOpen(true)} style={{ flexShrink: 0 }}>
+          <i class="fas fa-pen-to-square" /> New Message
+        </button>
+      </div>
+
+      {/* Two-pane body */}
+      <div style={{ flex: 1, display: 'flex', gap: '0', minHeight: '400px', overflow: 'hidden',
+        background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
+        {/* Left pane — thread list */}
+        <div style={{ width: '300px', minWidth: '260px', flexShrink: 0,
+          borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
+          <ThreadList
+            threads={threads}
+            selectedId={selectedThread?.id ?? null}
+            onSelect={setSelectedThread}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* Right pane — conversation or empty state */}
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          {selectedThread
+            ? <Conversation thread={selectedThread} />
+            : (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '12px', color: 'var(--text-muted)' }}>
+                <i class="fas fa-comments" style={{ fontSize: '2.4rem', opacity: 0.3 }} />
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
+                  Select a conversation
+                </div>
+                <div style={{ fontSize: '0.8rem' }}>
+                  Choose a thread from the left, or start a new one.
+                </div>
+                <button class="hse-btn" onClick={() => setComposeOpen(true)}>
+                  <i class="fas fa-pen-to-square" /> New Message
+                </button>
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <ComposeThreadDialog
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        onCreated={(threadId) => {
+          setComposeOpen(false);
+          // The new thread will appear after query invalidation; find and select it
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('siomac:openThread', { detail: { threadId } }));
+          }, 300);
+        }}
+      />
+    </div>
+  );
+}

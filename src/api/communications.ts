@@ -314,7 +314,7 @@ export function usePostMessage() {
 
 export interface CreateThreadArgs extends Record<string, unknown> {
   threadType?:        'direct' | 'group' | 'record' | 'system';
-  subject:            string;
+  subject?:           string;
   sourceModule?:      string | null;
   sourceEntityType?:  string | null;
   sourceEntityId?:    string | null;
@@ -333,6 +333,212 @@ export function useCreateMessageThread() {
       qc.invalidateQueries({ queryKey: messageKeys.all });
       qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
+  });
+}
+
+// ── Messages — extended API (canonical backend Phase 1-4) ───────────────────
+
+/** Full interface returned by communications/messages/threads */
+export interface MessageThreadListItem {
+  id:                  string;
+  thread_type:         'direct' | 'group' | 'record' | 'system';
+  subject:             string | null;
+  source_module:       string | null;
+  source_entity_type:  string | null;
+  source_entity_id:    string | null;
+  created_by:          string | null;
+  created_at:          string;
+  unread_count:        number;
+  last_post_body:      string | null;
+  last_post_at:        string | null;
+  last_post_by:        string | null;
+  participant_count:   number;
+  participants:        MessageParticipantProfile[];
+  is_archived:         boolean;
+  role:                string;
+}
+
+export interface MessageParticipantProfile {
+  user_id:     string;
+  full_name:   string | null;
+  username:    string | null;
+  profile_image: string | null;
+  role:        string;
+}
+
+export interface MessageThreadDetail {
+  thread:       MessageThreadListItem;
+  participants: MessageParticipantProfile[];
+}
+
+export interface MessagePostRow {
+  id:             string;
+  thread_id:      string;
+  author_user_id: string | null;
+  author_profile: MessageParticipantProfile | null;
+  body:           string;
+  is_system:      boolean;
+  is_edited:      boolean;
+  is_deleted:     boolean;
+  created_at:     string;
+  edited_at:      string | null;
+}
+
+export interface MessageRecipient {
+  user_id:       string;
+  full_name:     string | null;
+  username:      string | null;
+  profile_image: string | null;
+  role:          string;
+  department:    string | null;
+}
+
+export interface ThreadFilters extends Record<string, unknown> {
+  tab?:    'inbox' | 'sent' | 'archived' | 'all';
+  search?: string;
+  limit?:  number;
+  cursor?: string | null;
+}
+
+/** Full thread list with richer typing — replaces the legacy useMessageThreads. */
+export function useMessageThreadsFull(filters: ThreadFilters = {}) {
+  return useQuery({
+    queryKey: messageKeys.threads(filters),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessageThreadListItem[]; nextCursor: string | null }>(
+        'communications/messages/threads',
+        { args: { limit: 50, ...filters } },
+        { signal },
+      );
+      if (!res.success) throw new Error('Failed to load message threads');
+      return res.data;
+    },
+  });
+}
+
+/** Single thread detail (subject + participants). */
+export function useThread(threadId: string) {
+  return useQuery({
+    queryKey: messageKeys.thread(threadId),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessageThreadDetail }>(
+        'communications/messages/thread',
+        { args: { threadId } },
+        { signal },
+      );
+      if (!res.success) throw new Error('Failed to load thread');
+      return res.data;
+    },
+    enabled: !!threadId,
+  });
+}
+
+/** Posts for a thread — richer than useMessagePosts (author profiles, edit/delete states). */
+export function useThreadPosts(threadId: string) {
+  return useQuery({
+    queryKey: messageKeys.posts(threadId),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessagePostRow[] }>(
+        'communications/messages/posts',
+        { args: { threadId, limit: 100 } },
+        { signal },
+      );
+      if (!res.success) throw new Error('Failed to load posts');
+      return res.data;
+    },
+    enabled: !!threadId,
+  });
+}
+
+/** Fire-and-forget mark-read (called when thread opens). */
+export function useMarkThreadRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (threadId: string) =>
+      apiPost<{ success: boolean }>(
+        'communications/messages/markRead', { args: { threadId } }, { retryable: false },
+      ),
+    onSuccess: (_r: unknown, threadId: string) => {
+      qc.invalidateQueries({ queryKey: messageKeys.all });
+      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+    },
+  });
+}
+
+/** Archive / unarchive a thread. */
+export function useArchiveThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, archived }: { threadId: string; archived: boolean }) =>
+      apiPost<{ success: boolean }>(
+        'communications/messages/archive', { args: { threadId, archived } }, { retryable: false },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: messageKeys.all });
+      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+    },
+  });
+}
+
+/** Add participants to a thread. */
+export function useAddThreadParticipants() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, userIds }: { threadId: string; userIds: string[] }) =>
+      apiPost<{ success: boolean }>(
+        'communications/messages/participants/add', { args: { threadId, userIds } }, { retryable: false },
+      ),
+    onSuccess: (_r: unknown, { threadId }: { threadId: string; userIds: string[] }) => {
+      qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
+    },
+  });
+}
+
+/** Remove a participant from a thread. */
+export function useRemoveThreadParticipant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, userId }: { threadId: string; userId: string }) =>
+      apiPost<{ success: boolean }>(
+        'communications/messages/participants/remove', { args: { threadId, userId } }, { retryable: false },
+      ),
+    onSuccess: (_r: unknown, { threadId }: { threadId: string; userId: string }) => {
+      qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
+    },
+  });
+}
+
+/** Full-text search across messages. */
+export function useMessageSearch(query: string) {
+  return useQuery({
+    queryKey: messageKeys.search(query),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessageThreadListItem[] }>(
+        'communications/messages/search',
+        { args: { query, limit: 20 } },
+        { signal },
+      );
+      if (!res.success) throw new Error('Search failed');
+      return res.data;
+    },
+    enabled: query.trim().length >= 2,
+  });
+}
+
+/** Recipient picker — autocomplete from the backend. */
+export function useMessageRecipients(query = '') {
+  return useQuery({
+    queryKey: messageKeys.recipients(query),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessageRecipient[] }>(
+        'communications/messages/recipients',
+        { args: { query: query || undefined } },
+        { signal },
+      );
+      if (!res.success) throw new Error('Failed to load recipients');
+      return res.data;
+    },
+    staleTime: 60_000,
   });
 }
 

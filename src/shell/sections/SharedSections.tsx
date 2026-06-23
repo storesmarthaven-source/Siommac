@@ -213,6 +213,17 @@ export default function SharedSections() {
         <div id="preact-notification-center-root" />
       </AppSection>
 
+      <AppSection id="s-messages">
+        <ProfilePill ids={{
+          profileBtn: 'msgCtrProfileBtn', avatar: 'msgCtrProfileAvatar',
+          profileName: 'msgCtrProfileName', profileRole: 'msgCtrProfileRole',
+          notifBtn: 'msgCtrNotifBtn', notifBadge: 'msgCtrNotifBadge',
+          msgBtn: 'msgCtrMsgBtn', msgBadge: 'msgCtrMsgBadge',
+          ticketBtn: 'msgCtrTicketBtn', ticketBadge: 'msgCtrTicketBadge',
+        }} />
+        <div id="preact-messages-root" />
+      </AppSection>
+
       <AppSection id="s-superadmin-console">
         <ProfilePill ids={{
           profileBtn: 'sadmModProfileBtn', avatar: 'sadmModProfileAvatar',

@@ -150,11 +150,20 @@ export const notificationKeys = {
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 export const messageKeys = {
-  all:      ['messages']                                   as const,
-  inbox:    () => [...messageKeys.all, 'inbox']            as const,
-  sent:     () => [...messageKeys.all, 'sent']             as const,
-  thread:   (id: string) => [...messageKeys.all, 'thread', id] as const,
-  unread:   () => [...messageKeys.all, 'unread']           as const,
+  all:        ['messages']                                                         as const,
+  /** All thread lists — invalidates both inbox and sent (used for broad invalidation). */
+  threads:    (filters?: Record<string, unknown>) =>
+    (filters === undefined
+      ? [...messageKeys.all, 'threads'] as const
+      : [...messageKeys.all, 'threads', filters] as const),
+  thread:     (id: string) => [...messageKeys.all, 'thread', id]                  as const,
+  posts:      (threadId: string) => [...messageKeys.all, 'posts', threadId]       as const,
+  recipients: (query?: string) => [...messageKeys.all, 'recipients', query ?? ''] as const,
+  search:     (query: string) => [...messageKeys.all, 'search', query]            as const,
+  /** Legacy compat — some older hooks used these; keep until messages.test.ts is updated. */
+  inbox:      () => [...messageKeys.all, 'threads']                               as const,
+  sent:       () => [...messageKeys.all, 'threads', { tab: 'sent' }]             as const,
+  unread:     () => [...messageKeys.all, 'threads', { tab: 'unread' }]           as const,
 } as const;
 
 // ── Tickets ───────────────────────────────────────────────────────────────────

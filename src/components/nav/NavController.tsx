@@ -25,7 +25,6 @@ import {
   getRole,
 } from './navCore';
 import { scheduleHdrBadgeSync, doHdrBadgeSync } from './badgeSync';
-import { mountMessagesPanel }      from './MessagesPanel';
 import { mountTicketsPanel }       from './TicketsPanel';
 
 // ── Shared header modals (one set, shared by every profile pill) ─────────────
@@ -155,18 +154,8 @@ export function NavController(): h.JSX.Element {
         // into #hdrNotifModal — it loads via TanStack Query on open, so there is
         // no imperative post-open work here.
       } else {
-        setTimeout(() => {
-          const ml = document.getElementById('msgList');
-          const mf = document.getElementById('msgModalFoot');
-          const md = document.getElementById('msgDetailPane');
-          const mc = document.getElementById('msgComposePane');
-          if (ml) ml.style.display = '';
-          if (mf) mf.style.display = '';
-          if (md) md.style.display = 'none';
-          if (mc) mc.style.display = 'none';
-          callWin('_clearMsgDetail');
-          callWin('_msgModalOpened');
-        }, 0);
+        // The message modal is now the self-fetching Preact <MessageDropdown>
+        // mounted into #hdrMsgModal — no imperative post-open work needed.
       }
     }
 
@@ -267,12 +256,10 @@ export function NavController(): h.JSX.Element {
     }
 
     // ── 12. Mount the panel systems ───────────────────────────────────────────
-    //    Notifications now render via the Preact <NotificationDropdown> mounted
-    //    into #preact-notif-dropdown-root (main.tsx) — the legacy imperative
-    //    NotificationsPanel is retired.
-    const cleanupMsgs    = mountMessagesPanel();
+    //    Notifications render via Preact <NotificationDropdown> (main.tsx) — retired.
+    //    Messages now render via Preact <MessageDropdown> (main.tsx) — retired.
     const cleanupTickets = mountTicketsPanel();
-    cleanups.push(cleanupMsgs, cleanupTickets);
+    cleanups.push(cleanupTickets);
 
     // ── 13. Expose Nav shim on window ─────────────────────────────────────────
     //    Other scripts call window.Nav.buildSidebar etc. after login.

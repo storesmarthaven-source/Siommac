@@ -119,18 +119,21 @@ describe('messageKeys', () => {
   });
 
   it('inbox() nests under all', () => {
-    expect(messageKeys.inbox()).toEqual(['messages', 'inbox']);
+    // inbox() is now a compat alias for threads() — shares the 'messages' root
     expect(messageKeys.inbox()[0]).toBe(messageKeys.all[0]);
+    expect(messageKeys.inbox()).toEqual(['messages', 'threads']);
   });
 
   it('sent() nests under all', () => {
-    expect(messageKeys.sent()).toEqual(['messages', 'sent']);
+    // sent() is a compat alias scoped to { tab: 'sent' }
     expect(messageKeys.sent()[0]).toBe(messageKeys.all[0]);
+    expect(messageKeys.sent()).toEqual(['messages', 'threads', { tab: 'sent' }]);
   });
 
   it('unread() nests under all', () => {
-    expect(messageKeys.unread()).toEqual(['messages', 'unread']);
+    // unread() is a compat alias scoped to { tab: 'unread' }
     expect(messageKeys.unread()[0]).toBe(messageKeys.all[0]);
+    expect(messageKeys.unread()).toEqual(['messages', 'threads', { tab: 'unread' }]);
   });
 
   it('thread(id) nests under all', () => {

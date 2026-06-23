@@ -90,6 +90,7 @@ import {
   unmountSuperadminConsoleSection,
 } from '@sections/SuperadminConsole';
 import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
+import { mountMessageCenterSection, mountMessageDropdown } from '@sections/Messages';
 import '@sections/HSE';                 // self-registers the HSE module
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
@@ -456,6 +457,18 @@ async function bootApp(): Promise<void> {
   const notifDropdownRoot = document.getElementById('preact-notif-dropdown-root');
   if (notifDropdownRoot) {
     mountNotificationDropdown(notifDropdownRoot, { queryClient });
+  }
+
+  // Message Center section (all roles)
+  const messagesCenterRoot = document.getElementById('preact-messages-root');
+  if (messagesCenterRoot) {
+    mountMessageCenterSection(messagesCenterRoot, { queryClient });
+  }
+
+  // Message dropdown (inside the header message modal)
+  const msgDropdownRoot = document.getElementById('preact-msg-dropdown-root');
+  if (msgDropdownRoot) {
+    mountMessageDropdown(msgDropdownRoot, { queryClient });
   }
 
   // Registered feature modules (HSE, and future modules) — each mounts into the
