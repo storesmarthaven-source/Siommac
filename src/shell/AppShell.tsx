@@ -33,7 +33,6 @@ import MessageModal             from './modals/MessageModal';
 import TicketModal              from './modals/TicketModal';
 import EmployeeModals           from './modals/EmployeeModals';
 import ProjectSiteModal         from './modals/ProjectSiteModal';
-import { ProfilePill }          from '@shared/ProfilePill';
 import { useSessionStore, selectUserId } from '@store/session';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
@@ -103,9 +102,7 @@ function PageHeader() {
           <i class="fas fa-bars" />
         </button>
       </div>
-      <div class="page-header-right">
-        <ProfilePill />
-      </div>
+      <div class="page-header-right" />
     </div>
   );
 }

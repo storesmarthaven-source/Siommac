@@ -41,9 +41,6 @@ function MatrixTab(): VNode {
           <div class="hse-spark-header"><span class="hse-spark-label">Overall Compliance</span></div>
           <div class="hse-spark-val" style={{ color: compliance >= 85 ? '#22c55e' : '#f59e0b' }}>{compliance}%</div>
           <div class="hse-spark-sub">Current / total competency slots</div>
-          <div class="hse-spark-bar-track" style={{ marginTop: '6px' }}>
-            <div class="hse-spark-bar-fill" style={{ width: `${compliance}%`, background: compliance >= 85 ? '#22c55e' : '#f59e0b' }} />
-          </div>
         </div>
         <div class="hse-spark">
           <div class="hse-spark-header"><span class="hse-spark-label">Current</span></div>

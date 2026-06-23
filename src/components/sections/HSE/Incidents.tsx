@@ -1158,7 +1158,6 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
             <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span><i class="fas fa-circle-check" /></div>
             <div class="hse-spark-val" style={{ color: '#22c55e' }}>{closurePct}%</div>
             <div class="hse-spark-sub">Closed of total</div>
-            <div class="hse-spark-bar-track"><div class="hse-spark-bar-fill" style={{ width: `${Math.min(100, closurePct)}%`, background: closurePct >= 95 ? '#22c55e' : closurePct >= 70 ? '#f59e0b' : '#ef4444' }} /></div>
           </div>
         </div>
       </div>

@@ -747,9 +747,6 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);
 }
-/* Pages with a PageHeader carry the ProfilePill in the header row itself, so drop
-   the duplicate from the app top bar (the mobile menu button there is kept). */
-.main-content:has(.ui-page-header) > .page-header .page-header-right { display: none; }
 .ui-page-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
 .ui-page-head-icon {
   width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
