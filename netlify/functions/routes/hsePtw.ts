@@ -421,6 +421,28 @@ router.post('/ptw/permits/list', async c => {
 
 // ── POST /api/hse/ptw/permits/create ─────────────────────────────────────────
 
+const PermitControlSchema = z.object({
+  description:          z.string().min(1),
+  responsibleUserId:    z.string().nullable().optional(),
+  verificationRequired: z.boolean().optional(),
+  evidenceRequired:     z.boolean().optional(),
+});
+
+const PermitHazardSchema = z.object({
+  category:    z.string().min(1),
+  name:        z.string().min(1),
+  description: z.string().optional(),
+  consequence: z.string().optional(),
+  riskLevel:   z.enum(['low', 'medium', 'high', 'critical']).nullable().optional(),
+  controls:    z.array(PermitControlSchema).default([]),
+});
+
+const PermitIsolationSchema = z.object({
+  isolationType:  z.string().min(1),
+  isolationPoint: z.string().min(1),
+  tagNumber:      z.string().nullable().optional(),
+});
+
 const PermitCreateSchema = z.object({
   permitType:       z.string().min(1),
   title:            z.string().min(1).max(300),
@@ -447,6 +469,15 @@ const PermitCreateSchema = z.object({
   /** When true, status starts as 'submitted' instead of 'draft'. */
   submitImmediately: z.boolean().default(false),
   metadata:         z.record(z.string(), z.unknown()).optional(),
+  /** Child hazards + controls to insert after permit creation (best-effort). */
+  hazards:          z.array(PermitHazardSchema).optional(),
+  /** Isolation points (status='planned') to insert after creation (best-effort). */
+  isolations:       z.array(PermitIsolationSchema).optional(),
+  /** Gas test planned flag — stored in permit metadata. */
+  gasTestRequired:  z.boolean().optional(),
+  gasTestNote:      z.string().nullable().optional(),
+  /** SIMOPS note — stored in permit metadata. */
+  simopsNote:       z.string().nullable().optional(),
 });
 
 router.post('/ptw/permits/create', async c => {
@@ -587,6 +618,80 @@ router.post('/ptw/permits/create', async c => {
           },
         } : {}),
       });
+    }
+
+    // ── Insert child records (best-effort, non-fatal) ────────────────────────
+    const permitId = result.entityId;
+
+    // Hazards + controls
+    const hazardRows = v.data.hazards ?? [];
+    if (hazardRows.length > 0) {
+      for (const h of hazardRows) {
+        try {
+          const hazardInsert = await sb
+            .from('hse_permit_hazards')
+            .insert({
+              permit_id:   permitId,
+              hazard_type: h.category,
+              description: [h.name, h.description].filter(Boolean).join(' — '),
+              risk_level:  h.riskLevel ?? null,
+              metadata:    { name: h.name, consequence: h.consequence ?? null },
+            })
+            .select('id')
+            .single<{ id: string }>();
+
+          if (hazardInsert.data && h.controls.length > 0) {
+            const hazardId = hazardInsert.data.id;
+            await sb.from('hse_permit_controls').insert(
+              h.controls.map((ctrl, idx) => ({
+                permit_id:            permitId,
+                hazard_id:            hazardId,
+                control_type:         'administrative',
+                description:          ctrl.description,
+                is_mandatory:         ctrl.verificationRequired ?? false,
+                sort_order:           idx,
+                metadata: {
+                  responsible_user_id:  ctrl.responsibleUserId ?? null,
+                  evidence_required:    ctrl.evidenceRequired ?? false,
+                },
+              })),
+            );
+          }
+        } catch (childErr) {
+          console.error('[PTW create] hazard child insert error:', childErr);
+        }
+      }
+    }
+
+    // Isolation points
+    const isolationRows = v.data.isolations ?? [];
+    if (isolationRows.length > 0) {
+      try {
+        await sb.from('hse_permit_isolations').insert(
+          isolationRows.map((iso, idx) => ({
+            permit_id:       permitId,
+            isolation_type:  iso.isolationType,
+            isolation_point: iso.isolationPoint,
+            tag_number:      iso.tagNumber ?? null,
+            status:          'pending',
+            sort_order:      idx,
+          })),
+        );
+      } catch (childErr) {
+        console.error('[PTW create] isolation child insert error:', childErr);
+      }
+    }
+
+    // Gas test / SIMOPS flags stored in metadata update (best-effort)
+    if (v.data.gasTestRequired !== undefined || v.data.simopsNote) {
+      void sb.from('hse_permits').update({
+        metadata: {
+          gas_test_planned: v.data.gasTestRequired ?? false,
+          gas_test_note:    v.data.gasTestNote ?? null,
+          simops_note:      v.data.simopsNote ?? null,
+        },
+        updated_at: new Date().toISOString(),
+      }).eq('id', permitId);
     }
 
     return c.json({

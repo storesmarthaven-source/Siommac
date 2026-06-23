@@ -130,6 +130,32 @@ export interface PermitFilter extends Record<string, unknown> {
 
 // ── Arg types for create / update ─────────────────────────────────────────────
 
+// ── Child record types for create payload ─────────────────────────────────────
+
+export interface CreatePermitHazardControl {
+  description:         string;
+  responsibleUserId?:  string | null;
+  verificationRequired?: boolean;
+  evidenceRequired?:   boolean;
+}
+
+export interface CreatePermitHazard {
+  category:    string;
+  name:        string;
+  description?: string;
+  consequence?: string;
+  riskLevel?:  string | null;
+  controls:    CreatePermitHazardControl[];
+}
+
+export interface CreatePermitIsolation {
+  isolationType:  string;
+  isolationPoint: string;
+  tagNumber?:     string | null;
+}
+
+// ── Create args ───────────────────────────────────────────────────────────────
+
 export interface CreatePermitArgs extends Record<string, unknown> {
   permitType:        string;
   title:             string;
@@ -145,6 +171,15 @@ export interface CreatePermitArgs extends Record<string, unknown> {
   linkedRiskAssessmentId?: string | null;
   /** When true, creates as 'submitted' instead of 'draft'. */
   submitImmediately?: boolean;
+  /** Hazards + controls to insert after permit creation. */
+  hazards?:          CreatePermitHazard[];
+  /** Isolation points to insert (status='planned'). */
+  isolations?:       CreatePermitIsolation[];
+  /** Gas test flag — stored on the permit metadata. */
+  gasTestRequired?:  boolean;
+  gasTestNote?:      string | null;
+  /** SIMOPS note. */
+  simopsNote?:       string | null;
 }
 
 export interface UpdatePermitArgs extends Record<string, unknown> {
@@ -649,5 +684,74 @@ export function useDeactivatePermitTemplate() {
         'hse/ptw/permit-templates/deactivate', { args }, { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
+  });
+}
+
+// ── JSA / RA search for wizard Step 3 ────────────────────────────────────────
+// Thin wrappers around the Risk/JSA list endpoints, filtered to approved/active.
+// These are read-only lookups used by the PTW wizard only.
+
+export interface JsaSearchRow {
+  id:     string;
+  ref:    string;
+  title:  string;
+  status: string;
+}
+
+export interface RaSearchRow {
+  id:     string;
+  ref:    string;
+  title:  string;
+  status: string;
+}
+
+/**
+ * Search approved/active JSAs by keyword.
+ * Enabled only when query is non-empty (min 2 chars).
+ */
+export function useApprovedJsaSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['ptw', 'jsa-search', q] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: JsaSearchRow[] }>(
+      'hse/risk-jsa/jsa/list',
+      { args: { status: 'approved', limit: 30 } },
+    ).then(res => {
+      // Client-side keyword filter (title / ref match)
+      const lower = q.toLowerCase();
+      return {
+        ...res,
+        data: (res.data ?? []).filter(
+          r => r.ref.toLowerCase().includes(lower) || r.title.toLowerCase().includes(lower),
+        ),
+      };
+    }),
+    enabled:   q.length >= 2,
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Search approved/active Risk Assessments by keyword.
+ * Enabled only when query is non-empty (min 2 chars).
+ */
+export function useApprovedRaSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['ptw', 'ra-search', q] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: RaSearchRow[] }>(
+      'hse/risk-jsa/assessments/list',
+      { args: { status: 'approved', limit: 30 } },
+    ).then(res => {
+      const lower = q.toLowerCase();
+      return {
+        ...res,
+        data: (res.data ?? []).filter(
+          r => r.ref.toLowerCase().includes(lower) || r.title.toLowerCase().includes(lower),
+        ),
+      };
+    }),
+    enabled:   q.length >= 2,
+    staleTime: 60_000,
   });
 }
