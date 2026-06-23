@@ -6,12 +6,12 @@ import type { AuthMethodClaims }       from '../lib/auth';
 import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/permissions';
 import { getProfileSignedUrl }         from '../lib/photos';
 import { setting }                     from '../lib/settings';
-import { checkLoginLimit }             from '../lib/ratelimit';
+import { checkLoginLimit, rateLimit, checkCodeVerifyLimit }  from '../lib/ratelimit';
 import { uploadBase64 }                from '../lib/upload';
 import { noPhoto }                     from '../lib/photos';
 import {
   zv, LoginSchema, UpdateColorSchemeSchema, UpdateLayoutModeSchema,
-  UpdateMyProfileSchema, VerifyPasswordSchema,
+  UpdateMyProfileSchema, VerifyPasswordSchema, ChangePasswordSchema,
   Setup2faInitSchema, Setup2faConfirmSchema, Disable2faSchema,
   z,
 } from '../lib/validate';
@@ -28,6 +28,7 @@ import {
   createTrustedDevice,
   ttlDaysForRole,
   shouldOfferTrustedDevice,
+  rotateSecurityStamp,
 } from '../lib/trustedDevices';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables }          from '../../../types/api';
@@ -284,6 +285,12 @@ const Verify2faExtSchema = z.object({
 });
 
 router.post('/verify2fa', async c => {
+  const ip = c.get('clientIp') ?? 'unknown';
+  const rl = checkCodeVerifyLimit.check(ip);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
+
   const rawArgs = c.get('body').args ?? {};
   const v = zv(c, Verify2faExtSchema, rawArgs);
   if (!v.ok) return v.response;
@@ -401,6 +408,12 @@ router.post('/setup2fa', async c => {
 
 // ── Setup 2FA (step 2) — confirm with a valid TOTP code ───────────────────────
 router.post('/confirm2faSetup', async c => {
+  const ip = c.get('clientIp') ?? 'unknown';
+  const rl = checkCodeVerifyLimit.check(ip);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
+
   const v = zv(c, Setup2faConfirmSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { preAuthToken, code } = v.data;
@@ -595,6 +608,75 @@ router.post('/verifyPassword', async c => {
   if (!u.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
   const { error } = await createAnonClient().auth.signInWithPassword({ email: u.auth_email, password: v.data.password });
   return error ? c.json({ success: false, message: 'Incorrect password.' }) : c.json({ success: true });
+});
+
+// ── Change password — self-service, verify-current-then-set ──────────────────
+// Rate-limited: 5 attempts per 15 minutes per IP (same window as /login).
+const checkPasswordChangeLimit = rateLimit({ max: 5, windowMs: 15 * 60 * 1000, prefix: 'pwchange' });
+
+router.post('/auth/password/change', async c => {
+  // Rate limit first (before any DB work)
+  const ip = c.get('clientIp') ?? 'unknown';
+  const rl = checkPasswordChangeLimit.check(ip);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
+
+  const u = await requireUser(c);
+  const v = zv(c, ChangePasswordSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+
+  const { currentPassword, newPassword } = v.data;
+
+  if (currentPassword === newPassword) {
+    return c.json({ success: false, code: 'same_password', message: 'New password must differ from the current password.' }, 400);
+  }
+
+  if (!u.auth_email) {
+    return c.json({ success: false, message: 'Account not linked to auth.' }, 400);
+  }
+
+  // Verify current password — captures auth UID from the sign-in response
+  const { data: signInData, error: signInError } = await createAnonClient().auth.signInWithPassword({
+    email:    u.auth_email,
+    password: currentPassword,
+  });
+
+  if (signInError || !signInData.user) {
+    return c.json({ success: false, code: 'invalid_password', message: 'Current password is incorrect.' }, 400);
+  }
+
+  const authUid = signInData.user.id;
+
+  // Set the new password via admin API (service-role client)
+  const { error: updateError } = await sb.auth.admin.updateUserById(authUid, { password: newPassword });
+  if (updateError) {
+    console.error('[auth/password/change] admin updateUserById failed:', updateError.message);
+    return c.json({ success: false, message: 'Failed to update password. Please try again.' }, 500);
+  }
+
+  // Rotate security stamp — invalidates all trusted devices
+  await rotateSecurityStamp(u.id, 'password_changed');
+
+  // Record password_changed_at in security state
+  await sb
+    .from('auth_user_security_state')
+    .upsert({ user_id: u.id, password_changed_at: new Date().toISOString() }, { onConflict: 'user_id' });
+
+  // Emit audit event
+  void emitAppEvent({
+    eventType:        'auth.password.changed',
+    sourceModule:     'auth',
+    sourceEntityType: 'user',
+    sourceEntityId:   u.id,
+    actorUserId:      u.id,
+    severity:         'warning',
+    payload:          {},
+  });
+
+  await log_(u, 'password_changed', 'user', u.id, '');
+
+  return c.json({ success: true });
 });
 
 export default router;

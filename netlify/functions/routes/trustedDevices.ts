@@ -12,6 +12,7 @@ import { z }            from 'zod';
 import { getCookie, deleteCookie } from 'hono/cookie';
 import { requireUser }  from '../lib/auth';
 import { requireStepUp } from '../lib/stepUp';
+import { checkAuthMutationLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import {
   COOKIE_NAME as TD_COOKIE_NAME,
   listTrustedDevices,
@@ -35,6 +36,10 @@ const RevokeSchema = z.object({
 
 router.post('/list', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthReadLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const devices = await listTrustedDevices(user.id);
 
@@ -75,6 +80,10 @@ router.post('/list', async c => {
 
 router.post('/revoke', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthMutationLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const body = c.get('body').args ?? c.get('body');
   const v    = RevokeSchema.safeParse(body);
   if (!v.success) {
@@ -110,6 +119,10 @@ router.post('/revoke', async c => {
 
 router.post('/revoke-all', async c => {
   const user = await requireStepUp(c);  // step-up: revoking all devices is high-risk
+  const rl = checkAuthMutationLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   await revokeAllTrustedDevices(user.id);
 

@@ -31,7 +31,7 @@ import {
 } from '../lib/webauthn';
 import { validateChallenge, consumeChallenge } from '../lib/totp';
 import { buildSessionPayload }                  from '../routes/auth';
-import { checkLoginLimit }                      from '../lib/ratelimit';
+import { checkLoginLimit, checkAuthMutationLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import { sb }                                   from '../lib/db';
 import { zv }                                   from '../lib/validate';
 import {
@@ -101,6 +101,10 @@ const AuthVerifySchema = z.object({
 // POST /api/webauthn/register/options
 router.post('/webauthn/register/options', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthReadLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const { options } = await generateRegistrationOptions({
     id:        user.id,
@@ -114,6 +118,10 @@ router.post('/webauthn/register/options', async c => {
 // POST /api/webauthn/register/verify
 router.post('/webauthn/register/verify', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthMutationLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v    = zv(c, RegisterVerifySchema, c.get('body') as Record<string, unknown>);
   if (!v.ok) return v.response;
 
@@ -132,7 +140,11 @@ router.post('/webauthn/register/verify', async c => {
 
 // POST /api/webauthn/credentials/list
 router.post('/webauthn/credentials/list', async c => {
-  const user  = await requireUser(c);
+  const user = await requireUser(c);
+  const rl = checkAuthReadLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const creds = await listCredentials(user.id);
   return c.json({ success: true, credentials: creds });
 });
@@ -140,6 +152,10 @@ router.post('/webauthn/credentials/list', async c => {
 // POST /api/webauthn/credentials/rename
 router.post('/webauthn/credentials/rename', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthReadLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v    = zv(c, RenameSchema, c.get('body') as Record<string, unknown>);
   if (!v.ok) return v.response;
 
@@ -150,6 +166,10 @@ router.post('/webauthn/credentials/rename', async c => {
 // POST /api/webauthn/credentials/delete  (requires step-up)
 router.post('/webauthn/credentials/delete', async c => {
   const user = await requireStepUp(c);  // step-up: deleting a passkey is high-risk
+  const rl = checkAuthMutationLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v    = zv(c, CredentialIdSchema, c.get('body') as Record<string, unknown>);
   if (!v.ok) return v.response;
 

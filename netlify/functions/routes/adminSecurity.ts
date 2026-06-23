@@ -15,6 +15,7 @@ import { Hono }             from 'hono';
 import { z }                from 'zod';
 import { requirePermission, requireUser } from '../lib/auth';
 import { requireStepUp }    from '../lib/stepUp';
+import { checkAuthMutationLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import { sb }               from '../lib/db';
 import { emitAppEvent }     from '../lib/appEvents';
 import { zv }               from '../lib/validate';
@@ -39,7 +40,11 @@ const UserIdSchema = z.object({
 // Returns a security overview for the target user (no step-up required — read-only).
 
 router.post('/users/status', async c => {
-  await requirePermission(c, 'auth.security.view');
+  const actor = await requirePermission(c, 'auth.security.view');
+  const rl = checkAuthReadLimit.check(actor.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, UserIdSchema, body.args ?? body);
@@ -87,6 +92,10 @@ router.post('/users/status', async c => {
 router.post('/users/passkeys/revoke-all', async c => {
   const actor = await requirePermission(c, 'auth.passkeys.admin_revoke');
   await requireStepUp(c);
+  const rl = checkAuthMutationLimit.check(actor.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, UserIdSchema, body.args ?? body);
@@ -142,6 +151,10 @@ router.post('/users/passkeys/revoke-all', async c => {
 router.post('/users/trusted-devices/revoke-all', async c => {
   const actor = await requirePermission(c, 'auth.trusted_devices.admin_revoke');
   await requireStepUp(c);
+  const rl = checkAuthMutationLimit.check(actor.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, UserIdSchema, body.args ?? body);
@@ -187,7 +200,11 @@ export const policyReadRouter = new Hono<{ Variables: HonoVariables }>();
 
 policyReadRouter.post('/policy', async c => {
   // Any authenticated user may read policy (used by the step-up dialog etc.)
-  await requireUser(c);
+  const u = await requireUser(c);
+  const rl = checkAuthReadLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   return c.json({
     success: true,
@@ -210,8 +227,12 @@ const PolicyUpdateSchema = z.object({
 });
 
 router.post('/policy/update', async c => {
-  await requirePermission(c, 'auth.security.manage_policy');
+  const actor = await requirePermission(c, 'auth.security.manage_policy');
   await requireStepUp(c);
+  const rl = checkAuthMutationLimit.check(actor.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, PolicyUpdateSchema, body.args ?? body);

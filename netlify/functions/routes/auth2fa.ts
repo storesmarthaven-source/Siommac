@@ -9,6 +9,7 @@
 import { Hono }    from 'hono';
 import { sb }      from '../lib/db';
 import { requireUser } from '../lib/auth';
+import { checkAuthMutationLimit, checkCodeVerifyLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import {
   zv, z,
 } from '../lib/validate';
@@ -57,6 +58,10 @@ async function verifyAnyCode(u: AppUser, code: string): Promise<boolean> {
 
 router.post('/status', async c => {
   const u = await requireUser(c);
+  const rl = checkAuthReadLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const codesRemaining = (u.backup_codes ?? []).filter(Boolean).length;
   return c.json({
     success:              true,
@@ -74,6 +79,10 @@ router.post('/status', async c => {
 
 router.post('/setup', async c => {
   const u = await requireUser(c);
+  const rl = checkAuthReadLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   const [plain, encrypted] = generateTotpSecret();
   const qrDataUrl = await buildQrCode(plain, u.username);
@@ -101,6 +110,10 @@ router.post('/setup', async c => {
 
 router.post('/confirm', async c => {
   const u = await requireUser(c);
+  const rl = checkCodeVerifyLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v = zv(c, ConfirmSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
 
@@ -150,6 +163,10 @@ router.post('/confirm', async c => {
 
 router.post('/disable', async c => {
   const u = await requireUser(c);
+  const rl = checkAuthMutationLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v = zv(c, DisableSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
 
@@ -209,6 +226,10 @@ router.post('/disable', async c => {
 
 router.post('/backup-codes/regenerate', async c => {
   const u = await requireUser(c);
+  const rl = checkAuthMutationLimit.check(u.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const v = zv(c, RegenSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
 

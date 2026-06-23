@@ -50,6 +50,28 @@ const checkLoginLimit = rateLimit({ max: 5, windowMs: 15 * 60 * 1000, prefix: 'l
 // 200 requests per minute per IP globally
 const checkGlobalLimit = rateLimit({ max: 200, windowMs: 60 * 1000, prefix: 'global' });
 
+// ── Shared auth-route limiters ─────────────────────────────────────────────────
+
+// Authenticated code/assertion-verifying or sensitive mutations: 10 per 15 min keyed by userId.
+// Applied to: /auth/2fa/confirm, /auth/2fa/disable, /auth/2fa/backup-codes/regenerate,
+//             /webauthn/register/verify, /webauthn/credentials/delete,
+//             /auth/trusted-devices/revoke, /auth/trusted-devices/revoke-all,
+//             /admin/security/users/passkeys/revoke-all,
+//             /admin/security/users/trusted-devices/revoke-all,
+//             /auth/password/change (already keyed by IP; this is a complementary userId key).
+const checkAuthMutationLimit = rateLimit({ max: 10, windowMs: 15 * 60 * 1000, prefix: 'auth_mut' });
+
+// Tighter brute-force-sensitive verify endpoints: 5 per 15 min keyed by userId.
+// Applied to: /auth/step-up/verify, /verify2fa, /confirm2faSetup.
+const checkCodeVerifyLimit = rateLimit({ max: 5, windowMs: 15 * 60 * 1000, prefix: 'code_verify' });
+
+// Loose limiter for read-only security endpoints: 60 per 15 min keyed by userId.
+// Applied to: /auth/2fa/status, /auth/2fa/setup, /auth/step-up/options,
+//             /webauthn/register/options, /webauthn/credentials/list,
+//             /webauthn/credentials/rename, /auth/trusted-devices/list,
+//             /admin/security/users/status, /auth/security/policy.
+const checkAuthReadLimit = rateLimit({ max: 60, windowMs: 15 * 60 * 1000, prefix: 'auth_read' });
+
 // Hono middleware: enforces the global rate limit and attaches client IP to context.
 async function globalRateLimitMiddleware(
   c: Context<{ Variables: HonoVariables }>,
@@ -69,4 +91,12 @@ async function globalRateLimitMiddleware(
   await next();
 }
 
-export { rateLimit, checkLoginLimit, checkGlobalLimit, globalRateLimitMiddleware };
+export {
+  rateLimit,
+  checkLoginLimit,
+  checkGlobalLimit,
+  globalRateLimitMiddleware,
+  checkAuthMutationLimit,
+  checkCodeVerifyLimit,
+  checkAuthReadLimit,
+};

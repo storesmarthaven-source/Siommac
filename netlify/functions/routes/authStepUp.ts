@@ -15,6 +15,7 @@
 import { Hono }       from 'hono';
 import { z }          from 'zod';
 import { requireUser, signUser } from '../lib/auth';
+import { checkCodeVerifyLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import { verifyCode }            from '../lib/totp';
 import {
   generateAuthenticationOptions,
@@ -43,6 +44,10 @@ const VerifySchema = z.object({
 
 router.post('/options', async c => {
   const user = await requireUser(c);
+  const rl = checkAuthReadLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  }
 
   // Check TOTP
   const totpAvailable = Boolean(user.totp_enabled && user.totp_secret);
@@ -79,6 +84,10 @@ router.post('/options', async c => {
 
 router.post('/verify', async c => {
   const user = await requireUser(c);
+  const rl = checkCodeVerifyLimit.check(user.id);
+  if (!rl.ok) {
+    return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
+  }
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, VerifySchema, body.args ?? body);
   if (!v.ok) return v.response;
