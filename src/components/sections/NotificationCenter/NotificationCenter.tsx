@@ -8,7 +8,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { PageHeader, TabBar, withCounts, type AreaTab } from '@ui';
 import { useCan } from '@lib/permissions';
 import {
@@ -66,9 +66,24 @@ export function NotificationCenter(): VNode {
   const [criticalOnly, setCriticalOnly] = useState(false);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
 
   const isAdmin = useCan('communications.admin');
   const { data: summary } = useCommsSummary();
+
+  // Close the overflow menu on an outside click.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (menuRef.current?.contains(t) || menuBtnRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [menuOpen]);
 
   const effectiveSeverity = criticalOnly ? 'critical' : severity;
   const hasFilters = Boolean(module || severity || search || criticalOnly);
@@ -82,9 +97,10 @@ export function NotificationCenter(): VNode {
     severity:           (effectiveSeverity || undefined) as NotificationListArgs['severity'],
     search:             search || undefined,
   };
-  const { data, isLoading } = useNotifications(args);
+  const { data, isLoading, refetch } = useNotifications(args);
   const rows = data ?? [];
   const groups = useMemo(() => groupByDate(rows), [rows]);
+  const unread = summary?.notificationsUnread ?? 0;
 
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
@@ -114,25 +130,47 @@ export function NotificationCenter(): VNode {
         title="Notification Center"
         sub="Everything across the ERP that needs your attention — alerts, approvals, assignments and reminders."
         meta={[
-          { icon: 'fa-envelope',            label: `${summary?.notificationsUnread ?? 0} unread` },
+          { icon: 'fa-envelope',            label: `${unread} unread` },
           { icon: 'fa-clipboard-check',     label: `${summary?.notificationsActionRequired ?? 0} action required` },
           { icon: 'fa-triangle-exclamation',label: `${summary?.notificationsCritical ?? 0} critical` },
         ]}
-        actions={
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {isAdmin && (
-              <button class="hse-btn" onClick={() => setBroadcastOpen(true)}><i class="fas fa-bullhorn" /> Broadcast</button>
-            )}
-            <button class="hse-btn" onClick={() => setPrefsOpen(true)}><i class="fas fa-sliders" /> Preferences</button>
-            <button class="hse-btn" disabled={markAll.isPending} onClick={() => markAll.mutate({})}>
-              <i class="fas fa-check-double" /> Mark all read
-            </button>
-          </div>
-        }
       />
 
-      <div style={{ marginTop: '12px' }}>
-        <TabBar tabs={tabs} active={tab} onSelect={setTab} />
+      {/* Tabs row — status on the left, list/utility actions on the right. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TabBar tabs={tabs} active={tab} onSelect={setTab} />
+        </div>
+
+        {unread > 0 && (
+          <button class="hse-btn" disabled={markAll.isPending} onClick={() => markAll.mutate({})} style={{ flexShrink: 0 }}>
+            <i class="fas fa-check-double" /> Mark all read
+          </button>
+        )}
+
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button ref={menuBtnRef} class="hse-btn" title="More actions" onClick={() => setMenuOpen(o => !o)}>
+            <i class="fas fa-ellipsis" />
+          </button>
+          {menuOpen && (
+            <div ref={menuRef} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: '210px', marginTop: '4px',
+              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--elev-4)', overflow: 'hidden' }}>
+              {[
+                { icon: 'fa-sliders',     label: 'Notification preferences', onClick: () => setPrefsOpen(true), show: true },
+                { icon: 'fa-box-archive', label: 'Archive all read',         onClick: () => archive.mutate({ all: true }), show: true },
+                { icon: 'fa-rotate',      label: 'Refresh',                  onClick: () => { void refetch(); }, show: true },
+                { icon: 'fa-bullhorn',    label: 'Send broadcast',           onClick: () => setBroadcastOpen(true), show: isAdmin },
+              ].filter(it => it.show).map(it => (
+                <button key={it.label} onClick={() => { it.onClick(); setMenuOpen(false); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
+                    background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer',
+                    textAlign: 'left', fontSize: '0.8rem', color: 'var(--siomac-navy)', whiteSpace: 'nowrap' }}>
+                  <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--text-muted)', flexShrink: 0 }} /> {it.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filter toolbar */}
