@@ -23,6 +23,7 @@ import {
   type AssessmentRow,
   type JsaRow,
   type RiskLevel,
+  type JsaPrefill,
 } from '@api/hse/riskJsa';
 import { NewHazardDialog }     from './risk-jsa/dialogs/NewHazardDialog';
 import { NewAssessmentWizard } from './risk-jsa/dialogs/NewAssessmentWizard';
@@ -35,6 +36,7 @@ import { RiskJsaRightPanel }  from './risk-jsa/RiskJsaRightPanel';
 import { PendingApprovalTab, TemplatesTab, ArchiveTab } from './risk-jsa/RiskJsaQueueTabs';
 import { ExportDialog }       from './risk-jsa/dialogs/ExportDialog';
 import { TemplateDialog }     from './risk-jsa/dialogs/TemplateDialog';
+import { GenerateJsaDialog }  from './risk-jsa/dialogs/GenerateJsaDialog';
 import { calculateRiskBand }  from './risk-jsa/shared/RiskScorePill';
 import { type CsvColumn }     from '@ui/lib/exportCsv';
 
@@ -134,6 +136,8 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const [selectedRa,      setSelectedRa]      = useState<AssessmentRow | null>(null);
   const [selectedJsa,     setSelectedJsa]     = useState<JsaRow | null>(null);
   const [templatesOpen,   setTemplatesOpen]   = useState(false);
+  const [generateOpen,    setGenerateOpen]    = useState(false);
+  const [jsaPrefill,      setJsaPrefill]      = useState<JsaPrefill | null>(null);
 
   const { data: summaryRes, isLoading: summaryLoading } = useRiskJsaSummary();
   const summary = summaryRes?.data;
@@ -184,7 +188,8 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           <NewMenu label="New" fill items={[
             { label: 'New Hazard',          icon: 'fa-radiation',         sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
             { label: 'New Risk Assessment', icon: 'fa-table-cells-large', sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
-            { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => setJsaFormOpen(true) },
+            { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => { setJsaPrefill(null); setJsaFormOpen(true); } },
+            { label: 'Generate JSA from Risk Assessment', icon: 'fa-wand-magic-sparkles', sub: 'Carry over scope & hazards', onSelect: () => setGenerateOpen(true) },
             { label: 'Workflow Templates',  icon: 'fa-diagram-project',   divider: true,                    onSelect: () => setTemplatesOpen(true) },
           ]} />
         </div>
@@ -262,7 +267,12 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
       {/* Dialogs */}
       <NewHazardDialog open={hazardFormOpen} onClose={() => setHazardFormOpen(false)} />
       <NewAssessmentWizard open={raFormOpen} onClose={() => setRaFormOpen(false)} />
-      <NewJsaWizard open={jsaFormOpen} onClose={() => setJsaFormOpen(false)} />
+      <NewJsaWizard open={jsaFormOpen} onClose={() => { setJsaFormOpen(false); setJsaPrefill(null); }} prefill={jsaPrefill} />
+      <GenerateJsaDialog
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
+        onGenerated={(p) => { setGenerateOpen(false); setJsaPrefill(p); setJsaFormOpen(true); }}
+      />
       <TemplateDialog open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
 
       {/* Drawers */}

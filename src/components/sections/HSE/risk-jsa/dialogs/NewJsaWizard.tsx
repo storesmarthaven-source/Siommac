@@ -5,7 +5,7 @@
  * Steps: Job Details → Job Steps → PPE → Training → Review & Submit
  */
 
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { type VNode } from 'preact';
 import {
   Wizard,
@@ -19,6 +19,7 @@ import { RiskScorePill } from '../shared/RiskScorePill';
 import {
   useCreateJsa,
   type JsaStep,
+  type JsaPrefill,
 } from '@api/hse/riskJsa';
 import { HSE_SITES } from '../../types';
 
@@ -99,7 +100,7 @@ function highestRiskBand(rows: StepRow[]): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => void }): VNode | null {
+export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClose: () => void; prefill?: JsaPrefill | null }): VNode | null {
   const [step,      setStep]      = useState(0);
   const [title,     setTitle]     = useState('');
   const [desc,      setDesc]      = useState('');
@@ -113,8 +114,42 @@ export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => 
   );
   const [training,  setTraining]  = useState<TrainingRow[]>([]);
   const [error,     setError]     = useState('');
+  // Source RA when generated from a risk assessment + the unused suggested hazards.
+  const [linkedRaId, setLinkedRaId] = useState<string | null>(null);
+  const [sourceRef,  setSourceRef]  = useState<string | null>(null);
+  const [suggested,  setSuggested]  = useState<JsaPrefill['suggestedHazards']>([]);
 
   const create = useCreateJsa();
+
+  // Seed from a risk-assessment prefill when the wizard opens (spec §15).
+  useEffect(() => {
+    if (!open) return;
+    if (prefill) {
+      setTitle(prefill.title);
+      setSite(prefill.siteId ?? '');
+      setDept(prefill.departmentId ?? '');
+      setLocation(prefill.locationText ?? '');
+      setReviewDue(prefill.reviewDueAt ? prefill.reviewDueAt.slice(0, 10) : '');
+      setLinkedRaId(prefill.linkedRiskAssessmentId);
+      setSourceRef(prefill.sourceRef);
+      setSuggested(prefill.suggestedHazards);
+    }
+  }, [open, prefill]);
+
+  /** Add a suggested hazard from the source RA as a new (empty-task) job step. */
+  function addSuggestedStep(idx: number) {
+    const h = suggested[idx];
+    if (!h) return;
+    setStepRows(prev => [...prev, {
+      stepNumber:        prev.length + 1,
+      taskStep:          '',
+      hazardDescription: h.description,
+      likelihood:        h.initialLikelihood != null ? String(h.initialLikelihood) : '',
+      severity:          h.initialSeverity   != null ? String(h.initialSeverity)   : '',
+      controlsSummary:   h.notes ?? '',
+    }]);
+    setSuggested(prev => prev.filter((_, j) => j !== idx));
+  }
 
   // ── Step row helpers ───────────────────────────────────────────────────────
 
@@ -223,6 +258,7 @@ export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => 
         departmentId:    dept   || null,
         locationText:    location.trim() || undefined,
         reviewDueAt:     reviewDue || null,
+        linkedRiskAssessmentId: linkedRaId,
         steps:           jsaSteps,
         ppeItems:        ppeItems.length > 0 ? ppeItems : undefined,
         trainingLinks:   trainingLinks.length > 0 ? trainingLinks : undefined,
@@ -240,7 +276,9 @@ export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => 
     <Wizard
       open={open}
       title="New Job Safety Analysis"
-      sub="Task-based job safety analysis — job steps, hazards, controls, PPE and training requirements."
+      sub={sourceRef
+        ? `Generated from risk assessment ${sourceRef} — break the work into steps and assign the suggested hazards.`
+        : 'Task-based job safety analysis — job steps, hazards, controls, PPE and training requirements.'}
       icon="fa-list-ol"
       steps={[...WIZARD_STEPS]}
       step={step}
@@ -296,6 +334,25 @@ export function NewJsaWizard({ open, onClose }: { open: boolean; onClose: () => 
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
             Break the job into discrete steps. For each step, optionally add hazard details and risk scores.
           </p>
+
+          {suggested.length > 0 && (
+            <div style={{ marginBottom: '14px', padding: '12px', background: 'var(--bg-subtle, #f8fafe)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+              <div style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--siomac-navy)', marginBottom: '8px' }}>
+                <i class="fas fa-wand-magic-sparkles" style={{ marginRight: '6px', color: 'var(--siomac-red)' }} />
+                Suggested hazards from {sourceRef} — click to add as a step
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {suggested.map((h, i) => (
+                  <button key={i} type="button" class="inc-action-btn" onClick={() => addSuggestedStep(i)}>
+                    <i class="fas fa-plus" /> {h.description.length > 40 ? `${h.description.slice(0, 38)}…` : h.description}
+                    {h.initialLikelihood != null && h.initialSeverity != null && (
+                      <span style={{ marginLeft: '6px' }}><RiskScorePill likelihood={h.initialLikelihood} severity={h.initialSeverity} compact /></span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'grid', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>
             {stepRows.map((row, i) => {
               const l = row.likelihood ? parseInt(row.likelihood, 10) : 0;
