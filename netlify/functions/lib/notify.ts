@@ -115,8 +115,9 @@ export async function notify(payload: NotifyPayload): Promise<void> {
   const { userId, type, title, body = '', link } = payload;
 
   try {
-    // 1. Persist in-app notification (best-effort — don't block on error)
-    await sb.from('notifications').insert({
+    // 1. Persist in-app notification (best-effort — don't block on error) and
+    //    record the in-app delivery so notification_deliveries is the audit log.
+    const insRes = await sb.from('notifications').insert({
       user_id:    userId,
       type,
       title,
@@ -124,9 +125,20 @@ export async function notify(payload: NotifyPayload): Promise<void> {
       is_read:    false,
       link:       link ?? null,
       created_at: new Date().toISOString(),
-    }).then(({ error }) => {
-      if (error) logger.warn('[notify] Failed to persist notification', { userId, type, error: error.message });
-    });
+    }).select('id').single<{ id: string }>();
+
+    if (insRes.error) {
+      logger.warn('[notify] Failed to persist notification', { userId, type, error: insRes.error.message });
+    } else if (insRes.data) {
+      void sb.from('notification_deliveries').insert({
+        notification_id: insRes.data.id,
+        channel:         'in_app',
+        status:          'delivered',
+        attempted_at:    new Date().toISOString(),
+      }).then(({ error }) => {
+        if (error) logger.warn('[notify] Failed to record in_app delivery', { error: error.message });
+      });
+    }
 
     // 2. Load user delivery info and preferences in parallel
     const [userRes, prefRes] = await Promise.all([
@@ -137,7 +149,7 @@ export async function notify(payload: NotifyPayload): Promise<void> {
       sb.from('notification_preferences')
         .select('in_app, email, whatsapp')
         .eq('user_id', userId)
-        .eq('type', type)
+        .eq('event_type', type)
         .maybeSingle<DeliveryPrefs>(),
     ]);
 
