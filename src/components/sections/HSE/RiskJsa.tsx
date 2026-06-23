@@ -209,14 +209,12 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         <div class="hse-left-col">
           {active === 'hazards' && (
             <HazardTab
-              onNewHazard={() => setHazardFormOpen(true)}
               onSelect={setSelectedHazard}
               selected={selectedHazard}
             />
           )}
           {active === 'assessments' && (
             <AssessmentsTab
-              onNew={() => setRaFormOpen(true)}
               onSelect={setSelectedRa}
               selected={selectedRa}
               onSubmit={(id) => { setSelectedRa(null); void id; }}
@@ -224,7 +222,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           )}
           {active === 'jsa' && (
             <JsaTab
-              onNew={() => setJsaFormOpen(true)}
               onSelect={setSelectedJsa}
               selected={selectedJsa}
             />
@@ -301,9 +298,8 @@ const JSA_EXPORT_COLS: CsvColumn<JsaRow>[] = [
 ];
 
 function HazardTab({
-  onNewHazard, onSelect, selected,
+  onSelect, selected,
 }: {
-  onNewHazard: () => void;
   onSelect:    (h: HazardRow) => void;
   selected:    HazardRow | null;
 }): VNode {
@@ -328,16 +324,11 @@ function HazardTab({
         registerLabel="Hazard Register" rows={hazards} columns={HAZARD_EXPORT_COLS} filenameBase="hazard-register" />
       <div class="hse-table-card">
         <div class="hse-table-card-top">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <div class="vt-section-titlewrap">
-              <span class="vt-section-icon"><i class="fas fa-radiation" /></span>
-              <div>
-                <div class="vt-section-title">Hazard Register</div>
-                <div class="vt-section-sub">Identified hazards with initial and residual likelihood × severity ratings.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button class="inc-action-btn primary" onClick={onNewHazard}><i class="fas fa-circle-plus" /> New Hazard</button>
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-radiation" /></span>
+            <div>
+              <div class="vt-section-title">Hazard Register</div>
+              <div class="vt-section-sub">Identified hazards with initial and residual likelihood × severity ratings.</div>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
@@ -413,9 +404,8 @@ function HazardTab({
 // ── Risk Assessments tab ──────────────────────────────────────────────────────
 
 function AssessmentsTab({
-  onNew, onSelect, selected,
+  onSelect, selected,
 }: {
-  onNew:    () => void;
   onSelect: (a: AssessmentRow) => void;
   selected: AssessmentRow | null;
   onSubmit?: (id: string) => void;
@@ -435,16 +425,11 @@ function AssessmentsTab({
         registerLabel="Risk Assessments" rows={assessments} columns={ASSESSMENT_EXPORT_COLS} filenameBase="risk-assessments" />
       <div class="hse-table-card">
         <div class="hse-table-card-top">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <div class="vt-section-titlewrap">
-              <span class="vt-section-icon"><i class="fas fa-table-cells-large" /></span>
-              <div>
-                <div class="vt-section-title">Risk Assessments</div>
-                <div class="vt-section-sub">Formal assessments scored on the 5×5 matrix — initial through residual risk.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button class="inc-action-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New Assessment</button>
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-table-cells-large" /></span>
+            <div>
+              <div class="vt-section-title">Risk Assessments</div>
+              <div class="vt-section-sub">Formal assessments scored on the 5×5 matrix — initial through residual risk.</div>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
@@ -512,9 +497,8 @@ function AssessmentsTab({
 // ── JSA Library tab ───────────────────────────────────────────────────────────
 
 function JsaTab({
-  onNew, onSelect, selected,
+  onSelect, selected,
 }: {
-  onNew:    () => void;
   onSelect: (j: JsaRow) => void;
   selected: JsaRow | null;
 }): VNode {
@@ -533,16 +517,11 @@ function JsaTab({
         registerLabel="JSA Library" rows={jsas} columns={JSA_EXPORT_COLS} filenameBase="jsa-library" />
       <div class="hse-table-card">
         <div class="hse-table-card-top">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <div class="vt-section-titlewrap">
-              <span class="vt-section-icon"><i class="fas fa-list-ol" /></span>
-              <div>
-                <div class="vt-section-title">JSA Library</div>
-                <div class="vt-section-sub">Job Safety Analyses — step-by-step hazard identification and controls per task.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button class="inc-action-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> New JSA</button>
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-list-ol" /></span>
+            <div>
+              <div class="vt-section-title">JSA Library</div>
+              <div class="vt-section-sub">Job Safety Analyses — step-by-step hazard identification and controls per task.</div>
             </div>
           </div>
           <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>

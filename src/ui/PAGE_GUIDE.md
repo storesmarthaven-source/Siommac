@@ -29,12 +29,24 @@ import { PageHero } from '@ui';
 
 ## 2. Sub-module page — Incidents, Risk & JSA, Permits, …
 
-No dark hero. A light, info-only header, a rearrangeable metric row, then bare tabs.
+No dark hero. **Incidents is the reference implementation** — every sub-module page
+matches it exactly: same order, same spacing tokens, same card sizes.
+
+The page is a **flex column with `gap: 14px`** (set inline so it wins over the
+`hse-dash` grid while keeping the container query). Order is always:
+
+```
+PageHeader                  (light, info-only — ProfilePill is on the right, from PageHeader)
+StatsCard row               (4 fixed-size cards, rearrangeable, tab-aware)
+tab row  [ TabBar | New ▾ ] (marginTop: 20px — TabBar flex:1, NewMenu fill on the right)
+spark KPI row               (marginTop: 16px — 4 compact .hse-spark cells, NO icons)
+table card(s)               (optionally main | right-panel via hse-main-grid)
+```
 
 ```tsx
-import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
+import { PageHeader, MetricRow, StatsCard, TabBar, NewMenu, Sparkline } from '@ui';
 
-<div class="hse-tab hse-dash">
+<div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
   <PageHeader
     icon="fa-radiation"
     module="HSE"                      // breadcrumb root
@@ -46,27 +58,61 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
     ]}
   />
 
-  <MetricRow                          // the 4-card row — rearrangeable + persisted
-    pageKey="hse.risk"
-    cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))}
-  />
+  {/* 4 standard StatsCards — fixed size, rearrangeable, tab-aware. rowClass MUST be
+      "ui-stat-row". Use the donut / count / % (navy) / trend mix from Incidents. */}
+  <MetricRow pageKey={`hse.risk.${tab}`} rowClass="ui-stat-row" cards={[ /* 4 StatsCard */ ]} />
 
-  <TabBar tabs={tabs} active={active} onSelect={setActive} />
+  {/* Tab workspace — nav + the ONE standard create action on the right */}
+  <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '20px' }}>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <TabBar tabs={tabs} active={active} onSelect={setActive} />
+    </div>
+    <div style={{ flexShrink: 0 }}>
+      <NewMenu label="New" fill items={[ /* page-specific create items */ ]} />
+    </div>
+  </div>
 
-  {/* tab content — tables, SplitLayout, panels */}
+  {/* Compact KPI spark row */}
+  <div style={{ marginTop: '16px' }}>
+    <div class="hse-spark-row">{/* 4 × .hse-spark (label / val / sub — no icons) */}</div>
+  </div>
+
+  {/* Table — full width, OR main | aside via hse-main-grid (1fr 320px) when the page
+      has a supporting signals panel. The panel goes on the RIGHT, never below. */}
+  <div class="hse-main-grid">
+    <div class="hse-left-col">{/* <RegisterTable> table card(s) */}</div>
+    <div class="hse-right-col">{/* signals panel (optional) */}</div>
+  </div>
 </div>
 ```
+
+### The table card — fixed shape
+
+```
+.hse-table-card
+  .hse-table-card-top
+    .vt-section-titlewrap   (icon + title + sub)        ← LEFT
+    [ optional table-level action e.g. "Audit Log" ]    ← RIGHT
+    .vt-toolbar  (search + filter selects + Export)
+  table.vt-table
+  <Pagination noun="…" />   (10 rows / page default)
+```
+
+**Never put a "New …" button in the table card.** Creation is the `NewMenu` on the tab
+row — one create entry-point per page. The table-top right slot is only for table-level
+actions (Audit Log, bulk export); leave it empty otherwise.
 
 ---
 
 ## The rules — non-negotiable
 
-1. **Headers are info-only; the primary create is a `NewMenu`.** No action buttons in
-   `PageHeader` / `PageHero`. The page's create action is the standard **`NewMenu`** ("New ▾")
-   placed to the **right of the nav/tabs row**. Each page passes its own items (the submenu)
-   and the workflow each triggers — e.g. Risk/JSA → New Hazard / Risk Assessment / JSA;
-   Incidents → Injury / Near Miss / Environmental / Property. One item renders a plain
-   primary button; many render the dropdown.
+1. **One create entry-point per page: the `NewMenu` on the tab row.** No create buttons in
+   `PageHeader` / `PageHero`, and **none inside table cards** (`hse-table-card-top` is
+   info + table-level actions only — Audit Log / Export, never "New …"). The page's create
+   action is the standard **`NewMenu`** ("New ▾", red accent, `fill`) placed to the **right of
+   the nav/tabs row**. Each page passes its own items (the submenu) and the workflow each
+   triggers — e.g. Risk/JSA → New Hazard / Risk Assessment / JSA; Incidents → Injury /
+   Near Miss / Environmental / Property. One item renders a plain button; many render the dropdown.
 2. **One ProfilePill per page** — the app-level header (`AppShell`) owns it. Never render
    a ProfilePill inside a page or hero.
 3. **The four top summary cards use `<StatsCard>`** — the standard skeleton (fixed size,
