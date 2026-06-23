@@ -2202,4 +2202,281 @@ router.post('/ptw/permits/approvals/decide', async c => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERMIT TEMPLATES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/hse/ptw/permit-templates/list ───────────────────────────────────
+// hse.ptw.view — list permit templates, optionally filtering by active status.
+
+const TemplateListSchema = z.object({
+  activeOnly: z.boolean().optional(),
+});
+
+router.post('/ptw/permit-templates/list', async c => {
+  await requirePermission(c, 'hse.ptw.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateListSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+
+  let q = sb
+    .from('hse_permit_templates')
+    .select('id, name, description, permit_type, risk_level, requires_jsa, requires_isolation, requires_gas_test, approval_route, hazards, controls, pre_work_checks, post_work_checks, active, config, created_by, created_at, updated_at')
+    .order('name');
+
+  if (v.data.activeOnly === true) q = q.eq('active', true);
+
+  const { data, error } = await q;
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/ptw/permit-templates/create ─────────────────────────────────
+// hse.ptw.manage — insert a new permit template (active=true by default).
+
+const TemplateCreateSchema = z.object({
+  name:              z.string().min(1).max(200),
+  description:       z.string().optional(),
+  permitType:        z.string().min(1),
+  riskLevel:         z.enum(['low', 'medium', 'high', 'critical']).nullable().optional(),
+  requiresJsa:       z.boolean().optional(),
+  requiresIsolation: z.boolean().optional(),
+  requiresGasTest:   z.boolean().optional(),
+  approvalRoute:     z.array(z.unknown()).optional(),
+  hazards:           z.array(z.unknown()).optional(),
+  controls:          z.array(z.unknown()).optional(),
+  preWorkChecks:     z.array(z.unknown()).optional(),
+  postWorkChecks:    z.array(z.unknown()).optional(),
+  config:            z.record(z.string(), z.unknown()).optional(),
+});
+
+router.post('/ptw/permit-templates/create', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateCreateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const now = new Date().toISOString();
+  const { data, error } = await sb
+    .from('hse_permit_templates')
+    .insert({
+      name:              v.data.name,
+      description:       v.data.description ?? null,
+      permit_type:       v.data.permitType,
+      risk_level:        v.data.riskLevel ?? null,
+      requires_jsa:      v.data.requiresJsa       ?? false,
+      requires_isolation:v.data.requiresIsolation ?? false,
+      requires_gas_test: v.data.requiresGasTest   ?? false,
+      approval_route:    v.data.approvalRoute      ?? [],
+      hazards:           v.data.hazards            ?? [],
+      controls:          v.data.controls           ?? [],
+      pre_work_checks:   v.data.preWorkChecks      ?? [],
+      post_work_checks:  v.data.postWorkChecks     ?? [],
+      active:            true,
+      config:            v.data.config             ?? {},
+      created_by:        user.id,
+      updated_at:        now,
+    })
+    .select('id')
+    .single<{ id: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Template insert failed' }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.permit_template.created',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit_template',
+    sourceEntityId:   data.id,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { name: v.data.name, permitType: v.data.permitType },
+  });
+
+  return c.json({ success: true, data: { id: data.id } });
+});
+
+// ── POST /api/hse/ptw/permit-templates/update ─────────────────────────────────
+// hse.ptw.manage — patch any mutable field of a template.
+
+const TemplateUpdateSchema = z.object({
+  templateId:        z.string().uuid(),
+  name:              z.string().min(1).max(200).optional(),
+  description:       z.string().nullable().optional(),
+  permitType:        z.string().min(1).optional(),
+  riskLevel:         z.enum(['low', 'medium', 'high', 'critical']).nullable().optional(),
+  requiresJsa:       z.boolean().optional(),
+  requiresIsolation: z.boolean().optional(),
+  requiresGasTest:   z.boolean().optional(),
+  approvalRoute:     z.array(z.unknown()).optional(),
+  hazards:           z.array(z.unknown()).optional(),
+  controls:          z.array(z.unknown()).optional(),
+  preWorkChecks:     z.array(z.unknown()).optional(),
+  postWorkChecks:    z.array(z.unknown()).optional(),
+  config:            z.record(z.string(), z.unknown()).optional(),
+});
+
+router.post('/ptw/permit-templates/update', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateUpdateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { templateId, ...fields } = v.data;
+
+  // Verify template exists
+  const cur = await sb
+    .from('hse_permit_templates')
+    .select('id')
+    .eq('id', templateId)
+    .maybeSingle<{ id: string }>();
+  if (!cur.data) return c.json({ success: false, message: 'Template not found.' }, 404 as 200);
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (fields.name              !== undefined) updates.name               = fields.name;
+  if (fields.description       !== undefined) updates.description        = fields.description;
+  if (fields.permitType        !== undefined) updates.permit_type        = fields.permitType;
+  if (fields.riskLevel         !== undefined) updates.risk_level         = fields.riskLevel;
+  if (fields.requiresJsa       !== undefined) updates.requires_jsa       = fields.requiresJsa;
+  if (fields.requiresIsolation !== undefined) updates.requires_isolation = fields.requiresIsolation;
+  if (fields.requiresGasTest   !== undefined) updates.requires_gas_test  = fields.requiresGasTest;
+  if (fields.approvalRoute     !== undefined) updates.approval_route     = fields.approvalRoute;
+  if (fields.hazards           !== undefined) updates.hazards            = fields.hazards;
+  if (fields.controls          !== undefined) updates.controls           = fields.controls;
+  if (fields.preWorkChecks     !== undefined) updates.pre_work_checks    = fields.preWorkChecks;
+  if (fields.postWorkChecks    !== undefined) updates.post_work_checks   = fields.postWorkChecks;
+  if (fields.config            !== undefined) updates.config             = fields.config;
+
+  const { error } = await sb.from('hse_permit_templates').update(updates).eq('id', templateId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.permit_template.updated',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit_template',
+    sourceEntityId:   templateId,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { changes: Object.keys(updates).filter(k => k !== 'updated_at') },
+  });
+
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/ptw/permit-templates/duplicate ──────────────────────────────
+// hse.ptw.manage — copy a template row, appending " (copy)" to the name.
+
+const TemplateDuplicateSchema = z.object({
+  templateId: z.string().uuid(),
+});
+
+router.post('/ptw/permit-templates/duplicate', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateDuplicateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Load source template
+  const src = await sb
+    .from('hse_permit_templates')
+    .select('name, description, permit_type, risk_level, requires_jsa, requires_isolation, requires_gas_test, approval_route, hazards, controls, pre_work_checks, post_work_checks, config')
+    .eq('id', v.data.templateId)
+    .maybeSingle<{
+      name: string;
+      description: string | null;
+      permit_type: string;
+      risk_level: string | null;
+      requires_jsa: boolean;
+      requires_isolation: boolean;
+      requires_gas_test: boolean;
+      approval_route: unknown;
+      hazards: unknown;
+      controls: unknown;
+      pre_work_checks: unknown;
+      post_work_checks: unknown;
+      config: unknown;
+    }>();
+
+  if (!src.data) return c.json({ success: false, message: 'Template not found.' }, 404 as 200);
+  const s = src.data;
+
+  const now = new Date().toISOString();
+  const { data, error } = await sb
+    .from('hse_permit_templates')
+    .insert({
+      name:               `${s.name} (copy)`,
+      description:        s.description,
+      permit_type:        s.permit_type,
+      risk_level:         s.risk_level,
+      requires_jsa:       s.requires_jsa,
+      requires_isolation: s.requires_isolation,
+      requires_gas_test:  s.requires_gas_test,
+      approval_route:     s.approval_route,
+      hazards:            s.hazards,
+      controls:           s.controls,
+      pre_work_checks:    s.pre_work_checks,
+      post_work_checks:   s.post_work_checks,
+      active:             true,
+      config:             s.config,
+      created_by:         user.id,
+      updated_at:         now,
+    })
+    .select('id')
+    .single<{ id: string }>();
+
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Duplicate failed' }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        'hse.permit_template.duplicated',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit_template',
+    sourceEntityId:   data.id,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { sourceTemplateId: v.data.templateId, newTemplateId: data.id, name: `${s.name} (copy)` },
+  });
+
+  return c.json({ success: true, data: { id: data.id } });
+});
+
+// ── POST /api/hse/ptw/permit-templates/deactivate ────────────────────────────
+// hse.ptw.manage — toggle active flag (activate or deactivate).
+
+const TemplateDeactivateSchema = z.object({
+  templateId: z.string().uuid(),
+  active:     z.boolean(),
+});
+
+router.post('/ptw/permit-templates/deactivate', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TemplateDeactivateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permit_templates')
+    .select('id, name, active')
+    .eq('id', v.data.templateId)
+    .maybeSingle<{ id: string; name: string; active: boolean }>();
+  if (!cur.data) return c.json({ success: false, message: 'Template not found.' }, 404 as 200);
+
+  const { error } = await sb
+    .from('hse_permit_templates')
+    .update({ active: v.data.active, updated_at: new Date().toISOString() })
+    .eq('id', v.data.templateId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  void emitAppEvent({
+    eventType:        v.data.active ? 'hse.permit_template.activated' : 'hse.permit_template.deactivated',
+    sourceModule:     'hse',
+    sourceEntityType: 'permit_template',
+    sourceEntityId:   v.data.templateId,
+    actorUserId:      user.id,
+    severity:         'info',
+    payload:          { templateId: v.data.templateId, name: cur.data.name, active: v.data.active },
+  });
+
+  return c.json({ success: true });
+});
+
 export default router;
+

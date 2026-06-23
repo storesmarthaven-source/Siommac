@@ -530,3 +530,124 @@ export function useDecideApproval() {
     },
   });
 }
+
+// ── Permit Template types ─────────────────────────────────────────────────────
+
+export interface PermitTemplate {
+  id:                 string;
+  name:               string;
+  description:        string | null;
+  permit_type:        string;
+  risk_level:         PermitRiskLevel | null;
+  requires_jsa:       boolean;
+  requires_isolation: boolean;
+  requires_gas_test:  boolean;
+  approval_route:     unknown[];
+  hazards:            unknown[];
+  controls:           unknown[];
+  pre_work_checks:    unknown[];
+  post_work_checks:   unknown[];
+  active:             boolean;
+  config:             Record<string, unknown>;
+  created_by:         string | null;
+  created_at:         string;
+  updated_at:         string | null;
+}
+
+export interface CreateTemplateArgs extends Record<string, unknown> {
+  name:               string;
+  permitType:         string;
+  description?:       string;
+  riskLevel?:         PermitRiskLevel | null;
+  requiresJsa?:       boolean;
+  requiresIsolation?: boolean;
+  requiresGasTest?:   boolean;
+  hazards?:           string;
+  controls?:          string;
+}
+
+export interface UpdateTemplateArgs extends Record<string, unknown> {
+  templateId:         string;
+  name?:              string;
+  permitType?:        string;
+  description?:       string | null;
+  riskLevel?:         PermitRiskLevel | null;
+  requiresJsa?:       boolean;
+  requiresIsolation?: boolean;
+  requiresGasTest?:   boolean;
+  hazards?:           string;
+  controls?:          string;
+}
+
+// ── Permit Template query hooks ───────────────────────────────────────────────
+
+export function usePermitTemplates(activeOnly?: boolean) {
+  const filter = activeOnly !== undefined ? { activeOnly } : {};
+  return useQuery({
+    queryKey: ptwKeys.templates(filter),
+    queryFn:  () => apiPost<{ success: boolean; data: PermitTemplate[] }>(
+      'hse/ptw/permit-templates/list', { args: activeOnly !== undefined ? { activeOnly } : {} },
+    ),
+    staleTime: 60_000,
+  });
+}
+
+// ── Permit Template mutation hooks ────────────────────────────────────────────
+
+/** Parse freeform hazards/controls text into a jsonb array of simple objects. */
+function parseTextList(raw: string | undefined): unknown[] {
+  if (!raw?.trim()) return [];
+  return raw
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(text => ({ text }));
+}
+
+export function useCreatePermitTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ hazards, controls, ...rest }: CreateTemplateArgs) =>
+      apiPost<{ success: boolean; data: { id: string } }>(
+        'hse/ptw/permit-templates/create',
+        { args: { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) } },
+        { retryable: false },
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
+  });
+}
+
+export function useUpdatePermitTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ hazards, controls, ...rest }: UpdateTemplateArgs) =>
+      apiPost<{ success: boolean }>(
+        'hse/ptw/permit-templates/update',
+        { args: { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) } },
+        { retryable: false },
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
+  });
+}
+
+export function useDuplicatePermitTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { templateId: string }) =>
+      apiPost<{ success: boolean; data: { id: string } }>(
+        'hse/ptw/permit-templates/duplicate', { args }, { retryable: false },
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
+  });
+}
+
+export function useDeactivatePermitTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { templateId: string; active: boolean }) =>
+      apiPost<{ success: boolean }>(
+        'hse/ptw/permit-templates/deactivate', { args }, { retryable: false },
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
+  });
+}

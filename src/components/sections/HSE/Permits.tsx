@@ -19,11 +19,16 @@ import { hsePill, HSE_SITES } from './types';
 import {
   usePermits,
   usePermitStats,
+  usePermitTemplates,
+  useDuplicatePermitTemplate,
+  useDeactivatePermitTemplate,
   type PermitListRow,
   type PermitStatus,
+  type PermitTemplate,
 } from '@api/hse/ptw';
 import { NewPermitWizard } from './ptw/dialogs/NewPermitWizard';
 import { PermitDetailDrawer } from './ptw/PermitDetailDrawer';
+import { PermitTemplateDialog } from './ptw/dialogs/PermitTemplateDialog';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -39,8 +44,6 @@ const TABS: AreaTab[] = [
 
 /** Page-level tabs whose sub-register management lives inside the permit drawer. */
 const DRAWER_MANAGED_TABS = ['isolations', 'gastests', 'simops'];
-/** Templates tab: truly deferred (no backend endpoint yet). */
-const TEMPLATES_TAB = 'templates';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -234,21 +237,6 @@ function PermitsTab({ statusFilter, onOpenPermit }: { statusFilter?: string; onO
   );
 }
 
-// ── Coming-soon empty state ───────────────────────────────────────────────────
-
-function ComingSoonTab({ icon, label, detail }: { icon: string; label: string; detail: string }): VNode {
-  return (
-    <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-      <i class={`fas ${icon}`} style={{ fontSize: '2.4rem', opacity: 0.25, marginBottom: '16px', display: 'block' }} />
-      <div style={{ fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-body)' }}>{label}</div>
-      <div style={{ fontSize: '0.78rem', maxWidth: '380px', margin: '0 auto', lineHeight: 1.6 }}>{detail}</div>
-      <div style={{ marginTop: '12px', display: 'inline-block', padding: '4px 12px', borderRadius: '6px', background: 'rgba(27,45,84,.07)', fontSize: '0.72rem', fontWeight: 600, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        Coming in a later phase
-      </div>
-    </div>
-  );
-}
-
 // ── Stats cards strip ─────────────────────────────────────────────────────────
 
 function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
@@ -402,12 +390,160 @@ function DrawerPointerTab({ icon, label, detail }: { icon: string; label: string
   );
 }
 
+// ── Templates tab ─────────────────────────────────────────────────────────────
+
+function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: PermitTemplate) => void }): VNode {
+  const [activeOnly, setActiveOnly] = useState(false);
+  const { data, isLoading } = usePermitTemplates(activeOnly ? true : undefined);
+  const templates = data?.data ?? [];
+
+  const duplicate   = useDuplicatePermitTemplate();
+  const deactivate  = useDeactivatePermitTemplate();
+
+  function riskPillTemplate(level: string | null): VNode {
+    if (!level) return <span class="hse-muted">—</span>;
+    const cls =
+      level === 'critical' ? 'vt-pill is-off'
+      : level === 'high'   ? 'vt-pill is-warn'
+      : level === 'medium' ? 'vt-pill is-amber'
+      : 'vt-pill is-on';
+    return <span class={cls}>{level.charAt(0).toUpperCase() + level.slice(1)}</span>;
+  }
+
+  function checkIcon(val: boolean): VNode {
+    return val
+      ? <i class="fas fa-circle-check" style={{ color: 'var(--color-success)', fontSize: '0.85rem' }} />
+      : <i class="fas fa-circle-xmark" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', opacity: 0.4 }} />;
+  }
+
+  return (
+    <div class="hse-area-main">
+      <div class="hse-table-card">
+        <div class="hse-table-card-top">
+          <div class="vt-section-titlewrap">
+            <span class="vt-section-icon"><i class="fas fa-copy" /></span>
+            <div>
+              <div class="vt-section-title">Permit Templates</div>
+              <div class="vt-section-sub">Pre-configured workflow blueprints for common high-risk work types.</div>
+            </div>
+          </div>
+          <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px', alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={activeOnly}
+                onChange={e => setActiveOnly((e.target as HTMLInputElement).checked)}
+                style={{ accentColor: 'var(--siomac-navy)' }}
+              />
+              Active only
+            </label>
+            <button class="inc-action-btn blue" style={{ padding: '6px 14px', fontSize: '0.8rem' }} onClick={onNew} type="button">
+              <i class="fas fa-plus" style={{ marginRight: '5px' }} />New Template
+            </button>
+          </div>
+        </div>
+
+        <div class="vt-table-scroll">
+          <table class="vt-table">
+            <thead>
+              <tr>
+                <th>Template Name</th>
+                <th style={{ width: '130px' }}>Permit Type</th>
+                <th style={{ width: '90px' }}>Risk Level</th>
+                <th style={{ width: '60px', textAlign: 'center' }}>JSA</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Isolation</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Gas Test</th>
+                <th style={{ width: '70px', textAlign: 'center' }}>Active</th>
+                <th style={{ width: '130px' }}>Last Updated</th>
+                <th style={{ width: '110px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading templates…</td></tr>
+              )}
+              {!isLoading && templates.length === 0 && (
+                <tr>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+                    <i class="fas fa-copy" style={{ fontSize: '2rem', opacity: 0.2, marginBottom: '10px', display: 'block' }} />
+                    No templates yet. Click <strong>New Template</strong> to create one.
+                  </td>
+                </tr>
+              )}
+              {templates.map((t: PermitTemplate) => (
+                <tr key={t.id}>
+                  <td>
+                    <span class="vt-cell-name" style={{ opacity: t.active ? 1 : 0.5 }}>{t.name}</span>
+                    {t.description && <div class="vt-cell-subtext" style={{ opacity: t.active ? 1 : 0.5 }}>{t.description}</div>}
+                  </td>
+                  <td style={{ fontSize: '0.78rem' }}>{t.permit_type.replace(/_/g, ' ')}</td>
+                  <td>{riskPillTemplate(t.risk_level)}</td>
+                  <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_jsa)}</td>
+                  <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_isolation)}</td>
+                  <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_gas_test)}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    {t.active
+                      ? <span class="vt-pill is-on" style={{ fontSize: '0.7rem' }}>Active</span>
+                      : <span class="vt-pill is-off" style={{ fontSize: '0.7rem' }}>Inactive</span>
+                    }
+                  </td>
+                  <td class="hse-muted" style={{ fontSize: '0.76rem' }}>
+                    {t.updated_at
+                      ? new Date(t.updated_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })
+                      : new Date(t.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })
+                    }
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        class="inc-action-btn blue"
+                        style={{ padding: '3px 8px', fontSize: '0.7rem' }}
+                        title="Edit template"
+                        onClick={() => onEdit(t)}
+                        type="button"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="inc-action-btn"
+                        style={{ padding: '3px 8px', fontSize: '0.7rem' }}
+                        title="Duplicate template"
+                        disabled={duplicate.isPending}
+                        onClick={() => void duplicate.mutateAsync({ templateId: t.id })}
+                        type="button"
+                      >
+                        <i class="fas fa-copy" />
+                      </button>
+                      <button
+                        class={`inc-action-btn ${t.active ? '' : 'blue'}`}
+                        style={{ padding: '3px 8px', fontSize: '0.7rem' }}
+                        title={t.active ? 'Deactivate template' : 'Activate template'}
+                        disabled={deactivate.isPending}
+                        onClick={() => void deactivate.mutateAsync({ templateId: t.id, active: !t.active })}
+                        type="button"
+                      >
+                        {t.active ? <i class="fas fa-eye-slash" /> : <i class="fas fa-eye" />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 
 export function PermitsArea({ tab }: { tab: string }): VNode {
-  const [active,         setActive]         = useState(tab);
-  const [wizardOpen,     setWizardOpen]     = useState(false);
-  const [selectedPermit, setSelectedPermit] = useState<PermitListRow | null>(null);
+  const [active,          setActive]          = useState(tab);
+  const [wizardOpen,      setWizardOpen]      = useState(false);
+  const [selectedPermit,  setSelectedPermit]  = useState<PermitListRow | null>(null);
+  const [templateDialog,  setTemplateDialog]  = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<PermitTemplate | null>(null);
 
   // Stats for meta chips in PageHeader
   const { data: statsRes } = usePermitStats();
@@ -504,11 +640,10 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         return <DrawerPointerTab icon={cfg.icon} label={cfg.label} detail={cfg.detail} />;
       })()}
 
-      {active === TEMPLATES_TAB && (
-        <ComingSoonTab
-          icon="fa-copy"
-          label="PTW Templates"
-          detail="Pre-configured permit templates for common work types. Template management will be added in a later phase."
+      {active === 'templates' && (
+        <TemplatesTab
+          onNew={() => { setEditingTemplate(null); setTemplateDialog(true); }}
+          onEdit={t  => { setEditingTemplate(t);   setTemplateDialog(true); }}
         />
       )}
 
@@ -522,6 +657,13 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
 
       {/* New Permit wizard */}
       <NewPermitWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+
+      {/* Template create/edit dialog */}
+      <PermitTemplateDialog
+        open={templateDialog}
+        onClose={() => { setTemplateDialog(false); setEditingTemplate(null); }}
+        template={editingTemplate}
+      />
     </div>
   );
 }
