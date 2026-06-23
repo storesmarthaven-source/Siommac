@@ -202,7 +202,7 @@
 
 /* Status pill (green Enabled / grey Disabled / etc.) */
 .vt-pill {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
   font-size: 0.74rem; font-weight: 600; border-radius: 20px; padding: 3px 11px;
 }
 .vt-pill.is-on   { background: rgba(22,163,74,.12);  color: #15803d; }
