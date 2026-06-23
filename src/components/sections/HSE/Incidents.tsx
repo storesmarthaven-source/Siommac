@@ -1122,12 +1122,12 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       />
 
       {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
         </div>
         <div style={{ flexShrink: 0 }}>
-          <NewMenu label="New Incident" items={[
+          <NewMenu label="New Incident" fill items={[
             { label: 'Report Injury',        icon: 'fa-person-falling-burst', sub: 'Personal harm',     onSelect: () => setWizardOpen(true) },
             { label: 'Report Near Miss',     icon: 'fa-triangle-exclamation', sub: 'Close call',        onSelect: () => setWizardOpen(true) },
             { label: 'Report Environmental', icon: 'fa-leaf',                 sub: 'Spill / release',   onSelect: () => setWizardOpen(true) },

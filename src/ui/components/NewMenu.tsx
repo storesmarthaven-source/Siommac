@@ -36,24 +36,29 @@ export interface NewMenuProps {
   align?: 'left' | 'right';
   /** Override the leading icon (default fa-circle-plus). */
   icon?: string;
+  /** Stretch the button to fill its container's height (e.g. to match an adjacent tab bar). */
+  fill?: boolean;
 }
 
-export function NewMenu({ items, label, align = 'right', icon = 'fa-circle-plus' }: NewMenuProps): VNode {
+export function NewMenu({ items, label, align = 'right', icon = 'fa-circle-plus', fill = false }: NewMenuProps): VNode {
   const [open, setOpen] = useState(false);
+
+  // When `fill`, override the 40px min-height so the button matches its row's height.
+  const fillStyle = fill ? { height: '100%', minHeight: 0 } : undefined;
 
   // Single action → plain primary button (no dropdown).
   if (items.length === 1) {
     const only = items[0]!;
     return (
-      <button class="hse-btn primary" onClick={only.onSelect}>
+      <button class="hse-btn primary" style={fillStyle} onClick={only.onSelect}>
         <i class={`fas ${only.icon ?? icon}`} /> {label ?? only.label}
       </button>
     );
   }
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button class="hse-btn primary" onClick={() => setOpen(o => !o)}>
+    <div style={{ position: 'relative', height: fill ? '100%' : undefined }}>
+      <button class="hse-btn primary" style={fillStyle} onClick={() => setOpen(o => !o)}>
         <i class={`fas ${icon}`} /> {label ?? 'New'}{' '}
         <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
       </button>
