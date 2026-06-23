@@ -89,8 +89,15 @@ export function useCardReorder(pageKey: string | undefined, cardKeys: string[]):
 export function ArrangeControls({ reorder, variant = 'onDark' }: {
   reorder: CardReorder; variant?: 'onDark' | 'light';
 }): VNode | null {
+  const [save, setSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   if (!reorder.enabled) return null;
   const { arranging, setArranging, layout } = reorder;
+
+  const setDefault = async () => {
+    setSave('saving');
+    try { await layout.saveAsDefault(); setSave('saved'); setTimeout(() => setSave('idle'), 2200); }
+    catch { setSave('error'); setTimeout(() => setSave('idle'), 4000); }
+  };
 
   const onDark = variant === 'onDark';
   const btn = {
@@ -120,8 +127,15 @@ export function ArrangeControls({ reorder, variant = 'onDark' }: {
         </button>
       )}
       {layout.canSetDefault && (
-        <button style={btn} title="Make the current order the default for everyone" onClick={() => void layout.saveAsDefault()}>
-          <i class="fas fa-users" /> Set default
+        <button
+          style={save === 'error' ? { ...btn, borderColor: 'var(--siomac-red)', color: 'var(--siomac-red)' }
+               : save === 'saved' ? { ...btn, borderColor: '#16a34a', color: '#16a34a' } : btn}
+          title="Make the current order the default for everyone"
+          disabled={save === 'saving'}
+          onClick={() => void setDefault()}
+        >
+          <i class={`fas ${save === 'saving' ? 'fa-spinner fa-spin' : save === 'saved' ? 'fa-check' : save === 'error' ? 'fa-triangle-exclamation' : 'fa-users'}`} />{' '}
+          {save === 'saving' ? 'Saving…' : save === 'saved' ? 'Saved' : save === 'error' ? 'Save failed' : 'Set default'}
         </button>
       )}
       <button style={doneBtn} onClick={() => setArranging(false)}>

@@ -71,7 +71,10 @@ export function useModuleLayout(pageKey: string | undefined, cards: string[]): M
     setOrderState(next);
     setHasOverride(true);
     try { localStorage.setItem(LS(pageKey), JSON.stringify(next)); } catch { /* ignore */ }
-    void saveLayoutOverride(pageKey, next).catch(() => {});
+    void saveLayoutOverride(pageKey, next).catch(err => {
+      // Saved locally; the server write failed (e.g. ui_layout table missing).
+      console.warn('[ui_layout] could not persist card order to the server:', err?.message ?? err);
+    });
   }, [pageKey]);
 
   const saveAsDefault = useCallback(async () => {
