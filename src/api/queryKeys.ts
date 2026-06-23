@@ -192,6 +192,20 @@ export const handoffKeys = {
 
 // ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
 
+// ── HSE — Permits to Work (PTW) ───────────────────────────────────────────────
+
+export const ptwKeys = {
+  all:      ['hse-ptw']                                                           as const,
+  lists:    () => [...ptwKeys.all, 'list']                                        as const,
+  list:     (f: Record<string, unknown>) => [...ptwKeys.lists(), f]               as const,
+  details:  () => [...ptwKeys.all, 'detail']                                      as const,
+  detail:   (id: string) => [...ptwKeys.details(), id]                            as const,
+  stats:    () => [...ptwKeys.all, 'stats']                                       as const,
+  types:    () => [...ptwKeys.all, 'types']                                       as const,
+} as const;
+
+// ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
+
 export const hseIncidentKeys = {
   all:          ['hse-incidents']                                                         as const,
   lists:        () => [...hseIncidentKeys.all, 'list']                                    as const,
