@@ -138,9 +138,10 @@ export const historyKeys = {
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export const notificationKeys = {
-  all:      ['notifications']                              as const,
-  mine:     () => [...notificationKeys.all, 'mine']        as const,
-  unread:   () => [...notificationKeys.all, 'unread']      as const,
+  all:         ['notifications']                                       as const,
+  mine:        (filters?: unknown) => [...notificationKeys.all, 'mine', filters] as const,
+  unread:      () => [...notificationKeys.all, 'unread']               as const,
+  preferences: () => [...notificationKeys.all, 'preferences']         as const,
 } as const;
 
 // ── Messages ──────────────────────────────────────────────────────────────────

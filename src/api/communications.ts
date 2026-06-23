@@ -30,17 +30,28 @@ export interface CommsSummary {
 }
 
 export interface CanonicalNotification {
-  id:           string;
-  type:         string;
-  module:       string | null;
-  severity:     string;
-  title:        string;
-  body:         string | null;
-  source_type:  string | null;
-  source_id:    string | null;
-  action_route: string | null;
-  is_read:      boolean;
-  created_at:   string;
+  id:              string;
+  type:            string;
+  module:          string | null;
+  severity:        string;
+  title:           string;
+  body:            string | null;
+  source_type:     string | null;
+  source_id:       string | null;
+  action_route:    string | null;
+  metadata:        Record<string, unknown> | null;
+  is_read:         boolean;
+  action_required: boolean;
+  action_status:   string;
+  due_at:          string | null;
+  created_at:      string;
+}
+
+export interface NotificationPreference {
+  event_type: string;
+  in_app:     boolean;
+  email:      boolean;
+  whatsapp:   boolean;
 }
 
 export interface MessageThread {
@@ -111,16 +122,21 @@ export function useCommsSummary() {
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export interface NotificationListArgs extends Record<string, unknown> {
-  limit?:      number;
-  cursor?:     string | null;
-  unreadOnly?: boolean;
+  limit?:              number;
+  cursor?:             string | null;
+  unreadOnly?:         boolean;
+  archivedOnly?:       boolean;
+  actionRequiredOnly?: boolean;
+  module?:             string | null;
+  severity?:           'info' | 'success' | 'warning' | 'critical' | null;
+  search?:             string | null;
 }
 
 export function useNotifications(args: NotificationListArgs = {}) {
   return useQuery({
-    queryKey: notificationKeys.mine(),
+    queryKey: notificationKeys.mine(args),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: CanonicalNotification[] }>(
+      const res = await apiPost<{ success: boolean; data: CanonicalNotification[]; nextCursor: string | null }>(
         'communications/notifications/list',
         { args: { limit: 30, ...args } },
         { signal },
@@ -128,6 +144,57 @@ export function useNotifications(args: NotificationListArgs = {}) {
       if (!res.success) throw new Error('Failed to load notifications');
       return res.data;
     },
+  });
+}
+
+// ── Preferences · mute · broadcast ──────────────────────────────────────────────
+
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: notificationKeys.preferences(),
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: { defaults: NotificationPreference; preferences: NotificationPreference[] } }>(
+        'communications/notifications/preferences/get', { args: {} }, { signal },
+      );
+      if (!res.success) throw new Error('Failed to load preferences');
+      return res.data;
+    },
+  });
+}
+
+export function useSetNotificationPreference() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: NotificationPreference & { eventType: string }) =>
+      apiPost<{ success: boolean }>('communications/notifications/preferences/set', { args }, { retryable: false }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.preferences() }),
+  });
+}
+
+export function useMuteNotifications() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { scope: string; mutedUntil?: string | null; clear?: boolean }) =>
+      apiPost<{ success: boolean }>('communications/notifications/mute', { args }, { retryable: false }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+  });
+}
+
+export interface BroadcastArgs extends Record<string, unknown> {
+  audience: { type: 'all' | 'role' | 'site' | 'department' | 'users'; value?: string; userIds?: string[] };
+  severity: 'info' | 'success' | 'warning' | 'critical';
+  title: string;
+  body: string;
+  actionRoute?: string | null;
+  expiresAt?: string | null;
+}
+
+export function useBroadcastNotification() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: BroadcastArgs) =>
+      apiPost<{ success: boolean; recipientCount: number }>('communications/notifications/broadcast', { args }, { retryable: false }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: communicationKeys.summary() }),
   });
 }
 
@@ -150,10 +217,10 @@ export function useMarkNotificationRead() {
 export function useMarkAllNotificationsRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
+    mutationFn: (args: { module?: string } = {}) =>
       apiPost<{ success: boolean }>(
         'communications/notifications/markAllRead',
-        { args: {} },
+        { args },
         { retryable: false },
       ),
     onSuccess: () => {
