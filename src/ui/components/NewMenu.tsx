@@ -50,7 +50,7 @@ export function NewMenu({ items, label, align = 'right', icon = 'fa-circle-plus'
   if (items.length === 1) {
     const only = items[0]!;
     return (
-      <button class="hse-btn primary" style={fillStyle} onClick={only.onSelect}>
+      <button class="hse-btn accent" style={fillStyle} onClick={only.onSelect}>
         <i class={`fas ${only.icon ?? icon}`} /> {label ?? only.label}
       </button>
     );
@@ -58,7 +58,7 @@ export function NewMenu({ items, label, align = 'right', icon = 'fa-circle-plus'
 
   return (
     <div style={{ position: 'relative', height: fill ? '100%' : undefined }}>
-      <button class="hse-btn primary" style={fillStyle} onClick={() => setOpen(o => !o)}>
+      <button class="hse-btn accent" style={fillStyle} onClick={() => setOpen(o => !o)}>
         <i class={`fas ${icon}`} /> {label ?? 'New'}{' '}
         <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
       </button>
