@@ -12,6 +12,7 @@
  * POST /api/hse/risk-jsa/assessments/submit
  * POST /api/hse/risk-jsa/jsa/list
  * POST /api/hse/risk-jsa/jsa/create
+ * POST /api/hse/risk-jsa/jsa/from-assessment
  * POST /api/hse/risk-jsa/jsa/detail
  * POST /api/hse/risk-jsa/jsa/submit
  * POST /api/hse/risk-jsa/controls/create
@@ -731,6 +732,8 @@ const JsaCreateSchema = z.object({
   locationText: z.string().nullable().optional(),
   ownerUserId:  z.string().nullable().optional(),
   reviewDueAt:  z.string().nullable().optional(),
+  /** When generated from a risk assessment, the source RA id — recorded as a link. */
+  linkedRiskAssessmentId: z.string().uuid().nullable().optional(),
   steps: z.array(z.object({
     stepNumber:         z.number().int().min(1),
     taskStep:           z.string().min(1),
@@ -851,6 +854,16 @@ router.post('/risk-jsa/jsa/create', async c => {
             })),
           ).then(r => r));
         }
+        if (v.data.linkedRiskAssessmentId) {
+          ops.push(sb.from('hse_risk_jsa_links').insert({
+            source_type: 'jsa',
+            source_id:   data.id,
+            target_type: 'assessment',
+            target_id:   v.data.linkedRiskAssessmentId,
+            link_type:   'derived_from',
+            created_by:  user.id,
+          }).then(r => r));
+        }
 
         await Promise.all(ops);
         return data;
@@ -870,6 +883,53 @@ router.post('/risk-jsa/jsa/create', async c => {
   } catch (err) {
     return c.json({ success: false, message: err instanceof Error ? err.message : 'Create failed' }, 500 as 200);
   }
+});
+
+// ── POST /api/hse/risk-jsa/jsa/from-assessment ───────────────────────────────
+// Build a JSA draft prefill from a risk assessment (spec §15) — header fields +
+// suggested hazards. Does NOT persist; the JSA wizard finalises and creates it.
+
+router.post('/risk-jsa/jsa/from-assessment', async c => {
+  await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const args = body.args as { assessmentId?: string } | undefined;
+  if (!args?.assessmentId) return c.json({ success: false, message: 'assessmentId required' }, 400 as 200);
+
+  const raRes = await sb.from('hse_risk_assessments')
+    .select('id, ref, title, site_id, department_id, location_text, review_due_at')
+    .eq('id', args.assessmentId)
+    .maybeSingle<{ id: string; ref: string; title: string; site_id: string | null; department_id: string | null; location_text: string | null; review_due_at: string | null }>();
+  if (!raRes.data) return c.json({ success: false, message: 'Risk assessment not found' }, 404 as 200);
+  const ra = raRes.data;
+
+  const hzRes = await sb.from('hse_risk_assessment_hazards')
+    .select('hazard_description, category, initial_likelihood, initial_severity, residual_likelihood, residual_severity, notes')
+    .eq('assessment_id', ra.id)
+    .order('initial_score', { ascending: false });
+
+  const suggestedHazards = (hzRes.data ?? []).map(h => ({
+    description:         h.hazard_description ?? '',
+    category:            h.category ?? null,
+    initialLikelihood:   h.initial_likelihood ?? null,
+    initialSeverity:     h.initial_severity ?? null,
+    residualLikelihood:  h.residual_likelihood ?? null,
+    residualSeverity:    h.residual_severity ?? null,
+    notes:               h.notes ?? null,
+  }));
+
+  return c.json({
+    success: true,
+    data: {
+      title:                  `${ra.title} — JSA`,
+      siteId:                 ra.site_id,
+      departmentId:           ra.department_id,
+      locationText:           ra.location_text,
+      reviewDueAt:            ra.review_due_at,
+      linkedRiskAssessmentId: ra.id,
+      sourceRef:              ra.ref,
+      suggestedHazards,
+    },
+  });
 });
 
 // ── POST /api/hse/risk-jsa/jsa/detail ────────────────────────────────────────

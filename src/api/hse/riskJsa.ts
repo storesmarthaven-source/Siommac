@@ -340,6 +340,8 @@ export interface CreateJsaArgs extends Record<string, unknown> {
   locationText?:  string | null;
   ownerUserId?:   string | null;
   reviewDueAt?:   string | null;
+  /** Source RA id when this JSA was generated from a risk assessment. */
+  linkedRiskAssessmentId?: string | null;
   steps?:         JsaStep[];
   ppeItems?: Array<{ ppeItem: string; required?: boolean; notes?: string | null }>;
   trainingLinks?: Array<{
@@ -367,6 +369,37 @@ export function useSubmitJsa() {
     mutationFn: (args: { jsaId: string; note?: string }) =>
       apiPost<{ success: boolean; workflowId: string | null }>('hse/risk-jsa/jsa/submit', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Generate JSA from a risk assessment (prefill, not persisted) ─────────────────
+
+export interface JsaSuggestedHazard {
+  description:         string;
+  category:            string | null;
+  initialLikelihood:   number | null;
+  initialSeverity:     number | null;
+  residualLikelihood:  number | null;
+  residualSeverity:    number | null;
+  notes:               string | null;
+}
+
+export interface JsaPrefill {
+  title:                  string;
+  siteId:                 string | null;
+  departmentId:           string | null;
+  locationText:           string | null;
+  reviewDueAt:            string | null;
+  linkedRiskAssessmentId: string;
+  sourceRef:              string;
+  suggestedHazards:       JsaSuggestedHazard[];
+}
+
+/** Fetch a JSA-draft prefill derived from a risk assessment (spec §15). */
+export function useGenerateJsaFromAssessment() {
+  return useMutation({
+    mutationFn: (assessmentId: string) =>
+      apiPost<{ success: boolean; data: JsaPrefill }>('hse/risk-jsa/jsa/from-assessment', { assessmentId }),
   });
 }
 
