@@ -11,6 +11,10 @@
  * POST /api/communications/notifications/markRead
  * POST /api/communications/notifications/markAllRead
  * POST /api/communications/notifications/archive
+ * POST /api/communications/notifications/preferences/get
+ * POST /api/communications/notifications/preferences/set
+ * POST /api/communications/notifications/mute
+ * POST /api/communications/notifications/broadcast      (communications.admin)
  *
  * Messages
  * POST /api/communications/messages/createThread
@@ -32,6 +36,7 @@ import { z, zv }             from '../lib/validate';
 import { requirePermission, requireUser } from '../lib/auth';
 import { sb }                from '../lib/db';
 import { getCommsSummary, createMessageThread, createTicket, emitSignal } from '../lib/communications';
+import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -47,9 +52,14 @@ router.post('/communications/summary', async c => {
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 const NotifListSchema = z.object({
-  limit:      z.number().int().min(1).max(100).default(30),
-  cursor:     z.string().nullable().optional(),
-  unreadOnly: z.boolean().default(false),
+  limit:              z.number().int().min(1).max(100).default(30),
+  cursor:             z.string().nullable().optional(),
+  unreadOnly:         z.boolean().default(false),
+  archivedOnly:       z.boolean().default(false),
+  actionRequiredOnly: z.boolean().default(false),
+  module:             z.string().nullable().optional(),
+  severity:           z.enum(['info','success','warning','critical']).nullable().optional(),
+  search:             z.string().nullable().optional(),
 });
 
 router.post('/communications/notifications/list', async c => {
@@ -60,18 +70,29 @@ router.post('/communications/notifications/list', async c => {
 
   let q = sb
     .from('notifications')
-    .select('id, type, module, severity, title, body, source_type, source_id, action_route, is_read, created_at')
+    .select('id, type, module, severity, title, body, source_type, source_id, action_route, metadata, is_read, action_required, action_status, due_at, created_at')
     .eq('user_id', user.id)
-    .is('archived_at', null)
     .order('created_at', { ascending: false })
     .limit(v.data.limit);
 
-  if (v.data.unreadOnly) q = q.eq('is_read', false);
-  if (v.data.cursor) q = q.lt('created_at', v.data.cursor);
+  // Archived view vs active (default exclude archived + expired).
+  if (v.data.archivedOnly) {
+    q = q.not('archived_at', 'is', null);
+  } else {
+    q = q.is('archived_at', null).or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  }
+  if (v.data.unreadOnly)         q = q.eq('is_read', false);
+  if (v.data.actionRequiredOnly) q = q.eq('action_required', true).eq('action_status', 'pending');
+  if (v.data.module)             q = q.eq('module', v.data.module);
+  if (v.data.severity)           q = q.eq('severity', v.data.severity);
+  if (v.data.search)             q = q.ilike('title', `%${v.data.search}%`);
+  if (v.data.cursor)             q = q.lt('created_at', v.data.cursor);
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  const rows = data ?? [];
+  const nextCursor = rows.length === v.data.limit ? (rows[rows.length - 1]!.created_at as string) : null;
+  return c.json({ success: true, data: rows, nextCursor });
 });
 
 router.post('/communications/notifications/markRead', async c => {
@@ -90,11 +111,14 @@ router.post('/communications/notifications/markRead', async c => {
 
 router.post('/communications/notifications/markAllRead', async c => {
   const user = await requirePermission(c, 'communications.view');
+  const args = (c.get('body') as Record<string, unknown>).args as { module?: string } | undefined;
 
-  await sb.from('notifications')
+  let q = sb.from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString() })
     .eq('user_id', user.id)
     .eq('is_read', false);
+  if (args?.module) q = q.eq('module', args.module);
+  await q;
 
   return c.json({ success: true });
 });
@@ -117,6 +141,131 @@ router.post('/communications/notifications/archive', async c => {
   }
 
   return c.json({ success: true });
+});
+
+// ── Notification preferences ──────────────────────────────────────────────────
+
+router.post('/communications/notifications/preferences/get', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const { data, error } = await sb.from('notification_preferences')
+    .select('event_type, in_app, email, whatsapp')
+    .eq('user_id', user.id);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const all = data ?? [];
+  const defaults = all.find(p => p.event_type === '*') ?? { event_type: '*', in_app: true, email: false, whatsapp: false };
+  const preferences = all.filter(p => p.event_type !== '*');
+  return c.json({ success: true, data: { defaults, preferences } });
+});
+
+const PrefSetSchema = z.object({
+  eventType: z.string().min(1),
+  in_app:    z.boolean(),
+  email:     z.boolean(),
+  whatsapp:  z.boolean(),
+});
+
+router.post('/communications/notifications/preferences/set', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, PrefSetSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { error } = await sb.from('notification_preferences').upsert({
+    user_id:    user.id,
+    event_type: v.data.eventType,
+    in_app:     v.data.in_app,
+    email:      v.data.email,
+    whatsapp:   v.data.whatsapp,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id,event_type' });
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true });
+});
+
+// ── Mute / snooze ─────────────────────────────────────────────────────────────
+
+const MuteSchema = z.object({
+  scope:      z.string().min(1),               // 'all' | 'module:<m>' | 'event:<type>'
+  mutedUntil: z.string().nullable().optional(), // null = indefinite
+  clear:      z.boolean().default(false),
+});
+
+router.post('/communications/notifications/mute', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, MuteSchema, body.args);
+  if (!v.ok) return v.response;
+
+  if (v.data.clear) {
+    await sb.from('notification_mutes').delete().eq('user_id', user.id).eq('scope', v.data.scope);
+    return c.json({ success: true });
+  }
+  const { error } = await sb.from('notification_mutes').upsert({
+    user_id:     user.id,
+    scope:       v.data.scope,
+    muted_until: v.data.mutedUntil ?? null,
+  }, { onConflict: 'user_id,scope' });
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true });
+});
+
+// ── Admin broadcast ───────────────────────────────────────────────────────────
+
+const BroadcastSchema = z.object({
+  audience: z.object({
+    type:    z.enum(['all','role','site','department','users']),
+    value:   z.string().nullable().optional(),
+    userIds: z.array(z.string()).optional(),
+  }),
+  severity:    z.enum(['info','success','warning','critical']).default('info'),
+  title:       z.string().min(1).max(200),
+  body:        z.string().min(1).max(2000),
+  actionRoute: z.string().nullable().optional(),
+  expiresAt:   z.string().nullable().optional(),
+});
+
+router.post('/communications/notifications/broadcast', async c => {
+  const user = await requirePermission(c, 'communications.admin');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, BroadcastSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Resolve the audience to a concrete user-id list.
+  const a = v.data.audience;
+  let userIds: string[] = [];
+  if (a.type === 'users') {
+    userIds = a.userIds ?? [];
+  } else if (a.type === 'site') {
+    const { data } = await sb.from('project_site_employees').select('user_id').eq('site_id', a.value ?? '');
+    userIds = (data ?? []).map(r => r.user_id as string);
+  } else {
+    let q = sb.from('app_users').select('id').eq('status', 'active');
+    if (a.type === 'role')       q = q.eq('role', a.value ?? '');
+    if (a.type === 'department')  q = q.eq('department_id', a.value ?? '');
+    const { data } = await q;
+    userIds = (data ?? []).map(r => r.id as string);
+  }
+  userIds = [...new Set(userIds)].filter(Boolean);
+  if (userIds.length === 0) return c.json({ success: true, recipientCount: 0 });
+
+  const res = await emitAppEvent({
+    eventType:         'communications.broadcast',
+    sourceModule:      'communications',
+    sourceEntityType:  'broadcast',
+    sourceEntityId:    `bcast-${Date.now()}`,
+    actorUserId:       user.id,
+    severity:          v.data.severity,
+    payload:           { audience: a.type, expiresAt: v.data.expiresAt ?? null },
+    explicitRecipients: userIds.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+    notification: {
+      title:       v.data.title,
+      body:        v.data.body,
+      actionRoute: v.data.actionRoute ?? undefined,
+    },
+  });
+
+  return c.json({ success: true, recipientCount: res.recipientCount ?? userIds.length });
 });
 
 // ── Messages ──────────────────────────────────────────────────────────────────
