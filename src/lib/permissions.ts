@@ -119,6 +119,7 @@ export const PERMISSION_KEYS = [
   // ── HSE module ───────────────────────────────────────────────────────────────
   'hse.incidents.view',     'hse.incidents.manage',
   'hse.risk.view',          'hse.risk.manage',
+  'hse.risk.library.manage', // curate the master hazard / control libraries
   'hse.permits.view',       'hse.permits.manage',
   'hse.inspections.view',   'hse.inspections.manage',
   'hse.training.view',      'hse.training.manage',
@@ -170,6 +171,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'sites.view', 'map.view', 'dashboard.view', 'reports.export',
     'hse.incidents.view', 'hse.incidents.manage',
     'hse.risk.view',      'hse.risk.manage',
+    'hse.risk.library.manage',
     'hse.permits.view',   'hse.permits.manage',
     'hse.inspections.view','hse.inspections.manage',
     'hse.training.view',  'hse.training.manage',
@@ -219,6 +221,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'settings.view', 'settings.edit', 'settings.statutory_rates',
     'hse.incidents.view', 'hse.incidents.manage',
     'hse.risk.view',      'hse.risk.manage',
+    'hse.risk.library.manage',
     'hse.permits.view',   'hse.permits.manage',
     'hse.inspections.view','hse.inspections.manage',
     'hse.training.view',  'hse.training.manage',
@@ -275,6 +278,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'permissions.manage', 'sessions.manage', 'audit.view', 'roles.manage',
     'hse.incidents.view', 'hse.incidents.manage',
     'hse.risk.view',      'hse.risk.manage',
+    'hse.risk.library.manage',
     'hse.permits.view',   'hse.permits.manage',
     'hse.inspections.view','hse.inspections.manage',
     'hse.training.view',  'hse.training.manage',

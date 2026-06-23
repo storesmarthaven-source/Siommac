@@ -16,6 +16,8 @@
 import { useState } from 'preact/hooks';
 import type { VNode } from 'preact';
 import { Modal, Field, TextInput, TextareaInput, SelectInput, FormGrid } from '@ui';
+import { useCan } from '@lib/permissions';
+import { useCreateLibraryHazard } from '@api/hse/riskJsa';
 import type { HazardCategory } from '../ptwHazardProfiles';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -107,7 +109,11 @@ export function CustomHazardDialog({ open, onClose, onAdd }: {
 }): VNode {
   const [form, setForm] = useState<CustomHazard>(EMPTY);
   const [controlsText, setControlsText] = useState('');
+  const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [error, setError] = useState('');
+
+  const canManageLibrary = useCan('hse.risk.library.manage');
+  const libraryCreate = useCreateLibraryHazard();
 
   function patch(p: Partial<CustomHazard>) {
     setForm(prev => ({ ...prev, ...p }));
@@ -128,14 +134,28 @@ export function CustomHazardDialog({ open, onClose, onAdd }: {
     if (!validate()) return;
     const controls = controlsText.split('\n').map(l => l.trim()).filter(Boolean);
     onAdd({ ...form, controls });
+
+    // HSE/admin may also promote this hazard into the master library.
+    if (saveToLibrary && canManageLibrary) {
+      libraryCreate.mutate({
+        category:           form.category,
+        title:              form.name.trim(),
+        description:        form.description.trim(),
+        typicalConsequence: form.consequence.trim(),
+        workTypes:          [],
+      });
+    }
+
     setForm(EMPTY);
     setControlsText('');
+    setSaveToLibrary(false);
     onClose();
   }
 
   function handleClose() {
     setForm(EMPTY);
     setControlsText('');
+    setSaveToLibrary(false);
     setError('');
     onClose();
   }
@@ -232,27 +252,34 @@ export function CustomHazardDialog({ open, onClose, onAdd }: {
           />
         </div>
 
-        {/* Save to library (gated — create route not yet available) */}
-        <div style={{
-          gridColumn: '1 / -1',
-          padding: '10px 12px',
-          background: 'var(--surface-alt)',
-          borderRadius: '8px',
-          border: '1px dashed var(--border)',
-        }}>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'not-allowed', opacity: 0.55 }}>
-            <input type="checkbox" disabled style={{ marginTop: '2px' }} />
-            <div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)' }}>
-                Save to hazard library
+        {/* Save to master library — HSE/admin only (hse.risk.library.manage) */}
+        {canManageLibrary && (
+          <div style={{
+            gridColumn: '1 / -1',
+            padding: '10px 12px',
+            background: 'var(--surface-alt)',
+            borderRadius: '8px',
+            border: '1px solid var(--border)',
+          }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={saveToLibrary}
+                onChange={e => setSaveToLibrary((e.target as HTMLInputElement).checked)}
+                style={{ marginTop: '2px' }}
+              />
+              <div>
+                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)' }}>
+                  Also save to the master hazard library
+                </div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Makes this hazard reusable across future permits and assessments.
+                  It is always added to this permit regardless of this option.
+                </div>
               </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Requires library API route (<code>risk-jsa/library/hazards/create</code>) — not yet available.
-                This hazard will be added to this permit only.
-              </div>
-            </div>
-          </label>
-        </div>
+            </label>
+          </div>
+        )}
 
         {/* Error */}
         {error && (

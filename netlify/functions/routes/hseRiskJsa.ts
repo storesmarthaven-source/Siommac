@@ -1567,6 +1567,44 @@ router.post('/risk-jsa/library/hazards', async c => {
   return c.json({ success: true, data: data ?? [] });
 });
 
+// ── POST /api/hse/risk-jsa/library/hazards/create ────────────────────────────
+// Curate the master hazard library (e.g. promote a custom permit hazard).
+
+const HazardLibraryCreateSchema = z.object({
+  category:           z.string().min(1).max(120),
+  title:              z.string().min(1).max(200),
+  description:        z.string().max(2000).optional().default(''),
+  typicalConsequence: z.string().max(2000).optional().default(''),
+  defaultLikelihood:  z.number().int().min(1).max(5).nullable().optional(),
+  defaultSeverity:    z.number().int().min(1).max(5).nullable().optional(),
+  workTypes:          z.array(z.string()).optional().default([]),
+});
+
+router.post('/risk-jsa/library/hazards/create', async c => {
+  await requirePermission(c, 'hse.risk.library.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, HazardLibraryCreateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Deterministic-ish unique code from the title slug + a short suffix.
+  const slug = v.data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
+  const code = `HZ-${slug || 'hazard'}-${Date.now().toString(36).slice(-4)}`;
+
+  const { data, error } = await sb.from('hse_hazard_library').insert({
+    code,
+    category:            v.data.category,
+    title:               v.data.title,
+    description:         v.data.description,
+    typical_consequence: v.data.typicalConsequence,
+    default_likelihood:  v.data.defaultLikelihood ?? null,
+    default_severity:    v.data.defaultSeverity ?? null,
+    work_types:          v.data.workTypes,
+  }).select('id, code').single<{ id: string; code: string }>();
+
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data });
+});
+
 // ── POST /api/hse/risk-jsa/library/controls ──────────────────────────────────
 // Standard control bank — pick-from-library for hazards / assessments / JSAs.
 

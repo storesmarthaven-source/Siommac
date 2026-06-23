@@ -210,6 +210,28 @@ export function useCreateHazard() {
   });
 }
 
+export interface CreateLibraryHazardArgs extends Record<string, unknown> {
+  category:            string;
+  title:               string;
+  description?:        string;
+  typicalConsequence?: string;
+  defaultLikelihood?:  number | null;
+  defaultSeverity?:    number | null;
+  workTypes?:          string[];
+}
+
+/** Promote a hazard into the master hazard library (gated on hse.risk.library.manage). */
+export function useCreateLibraryHazard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: CreateLibraryHazardArgs) =>
+      apiPost<{ success: boolean; data: { id: string; code: string }; message?: string }>(
+        'hse/risk-jsa/library/hazards/create', args, { retryable: false },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
 export interface UpdateHazardArgs extends Record<string, unknown> {
   hazardId:            string;
   title?:              string;
