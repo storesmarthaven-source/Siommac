@@ -1354,8 +1354,8 @@ async function applyTransition(
 ) {
   const table = TABLE_MAP[opts.entityType];
   const cur = await sb.from(table as 'hse_hazards')
-    .select('id, ref, status').eq('id', opts.entityId)
-    .maybeSingle<{ id: string; ref: string; status: string }>();
+    .select('id, ref, status, created_by').eq('id', opts.entityId)
+    .maybeSingle<{ id: string; ref: string; status: string; created_by: string | null }>();
   if (!cur.data) return c.json({ success: false, message: 'Record not found' }, 404 as 200);
 
   if (cur.data.status === opts.toStatus) {
@@ -1372,6 +1372,18 @@ async function applyTransition(
   const { error } = await sb.from(table as 'hse_hazards').update(updates).eq('id', opts.entityId);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
+  // Review decisions notify the original submitter (the record owner). They are
+  // delivered as an explicit recipient, so no event_rule is required to reach them.
+  const ENTITY_LABEL: Record<typeof opts.entityType, string> = { hazard: 'Hazard', assessment: 'Risk assessment', jsa: 'JSA' };
+  const DECISION_NOTE: Record<string, { title: string; body: string; required: boolean } | undefined> = {
+    approved:           { title: `${ENTITY_LABEL[opts.entityType]} approved`,           body: `${cur.data.ref} was approved.`,                   required: false },
+    rejected:           { title: `${ENTITY_LABEL[opts.entityType]} rejected`,           body: `${cur.data.ref} was rejected${opts.note ? `: ${opts.note}` : '.'}`, required: true },
+    changes_requested:  { title: `Changes requested on ${cur.data.ref}`,                body: `Reviewer requested changes${opts.note ? `: ${opts.note}` : '.'}`,   required: true },
+    activated:          { title: `${ENTITY_LABEL[opts.entityType]} activated`,          body: `${cur.data.ref} is now active.`,                  required: false },
+  };
+  const decision = DECISION_NOTE[opts.action];
+  const notifySubmitter = decision && cur.data.created_by && cur.data.created_by !== opts.actorId;
+
   void emitAppEvent({
     eventType:        `hse.${opts.entityType}.${opts.action}`,
     sourceModule:     'hse',
@@ -1381,6 +1393,15 @@ async function applyTransition(
     severity:         opts.toStatus === 'approved' || opts.toStatus === 'active' ? 'success'
                     : opts.toStatus === 'rejected' ? 'warning' : 'info',
     payload:          { action: opts.action, fromStatus: cur.data.status, toStatus: opts.toStatus, note: opts.note ?? null },
+    ...(notifySubmitter ? {
+      explicitRecipients: [{ userId: cur.data.created_by as string, reason: 'owner' as const }],
+      notification: {
+        title:          decision!.title,
+        body:           decision!.body,
+        actionRoute:    'hse/risk-jsa',
+        actionRequired: decision!.required,
+      },
+    } : {}),
   });
 
   return c.json({ success: true, status: opts.toStatus });

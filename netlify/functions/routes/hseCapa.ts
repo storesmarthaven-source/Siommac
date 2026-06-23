@@ -217,14 +217,29 @@ router.post('/capa/update', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   if (fields.status === 'closed') {
+    // Notify the CAPA owner (and originator) that their action was closed.
+    const closed = await sb.from('hse_capa_actions')
+      .select('ref, owner_user_id, created_by').eq('id', capaId)
+      .maybeSingle<{ ref: string; owner_user_id: string | null; created_by: string | null }>();
+    const recipientIds = [...new Set([closed.data?.owner_user_id, closed.data?.created_by]
+      .filter((id): id is string => Boolean(id) && id !== user.id))];
+
     void emitAppEvent({
       eventType:        'hse.capa.closed',
       sourceModule:     'hse',
       sourceEntityType: 'capa',
-      sourceEntityId:   capaId,
+      sourceEntityId:   closed.data?.ref ?? capaId,
       actorUserId:      user.id,
       severity:         'success',
       payload:          { effectivenessResult: fields.effectivenessResult },
+      ...(recipientIds.length ? {
+        explicitRecipients: recipientIds.map(id => ({ userId: id, reason: 'owner' as const })),
+        notification: {
+          title:       'CAPA closed',
+          body:        `${closed.data?.ref ?? 'A corrective action'} was closed.`,
+          actionRoute: 'hse/incidents',
+        },
+      } : {}),
     });
   }
 
