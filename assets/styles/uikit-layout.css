@@ -281,7 +281,8 @@ body[data-theme="dark"] .hero-footer {
 .ui-stat-card {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: var(--shadow-card); overflow: clip; min-width: 0;
-  display: flex; flex-direction: column; min-height: 184px;
+  /* One standard size for every stats card, app-wide (tune via --stat-card-height). */
+  display: flex; flex-direction: column; height: var(--stat-card-height, 250px);
   transition: box-shadow .18s, transform .18s;
 }
 .ui-stat-card:hover { box-shadow: 0 8px 24px rgba(15,23,42,.1); transform: translateY(-1px); }
@@ -300,7 +301,7 @@ body[data-theme="dark"] .hero-footer {
 }
 .ui-stat-card--navy .ui-stat-card-header i { color: rgba(255,255,255,0.55); }
 
-.ui-stat-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.ui-stat-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow: hidden; }
 .ui-stat-spacer { flex: 1 1 auto; min-height: 6px; }
 
 .ui-stat-metric-row { display: flex; align-items: baseline; gap: 8px; }

@@ -61,8 +61,12 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
 
 ## The rules — non-negotiable
 
-1. **Headers are info-only.** No "New …" / action buttons in `PageHeader` or `PageHero`.
-   Primary actions live in the tab content (a `SectionHead` action, a table toolbar).
+1. **Headers are info-only; the primary create is a `NewMenu`.** No action buttons in
+   `PageHeader` / `PageHero`. The page's create action is the standard **`NewMenu`** ("New ▾")
+   placed to the **right of the nav/tabs row**. Each page passes its own items (the submenu)
+   and the workflow each triggers — e.g. Risk/JSA → New Hazard / Risk Assessment / JSA;
+   Incidents → Injury / Near Miss / Environmental / Property. One item renders a plain
+   primary button; many render the dropdown.
 2. **One ProfilePill per page** — the app-level header (`AppShell`) owns it. Never render
    a ProfilePill inside a page or hero.
 3. **The four top summary cards use `<StatsCard>`** — the standard skeleton (fixed size,
@@ -101,6 +105,7 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
 | Module dashboard header | `PageHero` (4 rearrangeable stat cards + KPI footer) |
 | Sub-module header | `PageHeader` (breadcrumb + title + sub + meta chips, info-only) |
 | Page tabs | `TabBar` (bare) — or `ModuleTabs` if you really need a header card |
+| Primary create action | `NewMenu` ("New ▾") to the right of the nav/tabs — page-specific items |
 | The 4-card row | `MetricRow` (rearrangeable) with `StatsCard` cards |
 | Make an existing card row rearrangeable | `ReorderableRow` — wrap the cards + pass a `pageKey` (no restructuring) |
 | A summary card (top of page) | `StatsCard` — fixed skeleton; `percent` → compliance bar |
