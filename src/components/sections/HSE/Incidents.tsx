@@ -17,7 +17,7 @@ import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
-  MetricRow, StatsCard, Sparkline, NewMenu,
+  MetricRow, StatsCard, Sparkline, NewMenu, ReorderableRow,
   type AreaTab,
 } from '@ui';
 import {
@@ -1116,6 +1116,32 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
             { label: 'Report Property',      icon: 'fa-wrench',               sub: 'Asset damage',      onSelect: () => setWizardOpen(true) },
           ]} />
         </div>
+      </div>
+
+      {/* ── Quick KPI spark row ── */}
+      <div style={{ marginTop: '16px' }}>
+        <ReorderableRow pageKey="hse.incidents.kpi">
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span></div>
+            <div class="hse-spark-val">{incidents.length}</div>
+            <div class="hse-spark-sub">All recorded cases</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Open</span></div>
+            <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{incidents.filter(i => !/closed/i.test(i.status)).length}</div>
+            <div class="hse-spark-sub">Awaiting closure</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Lost-Time</span></div>
+            <div class="hse-spark-val" style={{ color: '#ef4444' }}>{incidents.filter(i => i.lostTime).length}</div>
+            <div class="hse-spark-sub">LTI reportable</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span></div>
+            <div class="hse-spark-val" style={{ color: '#22c55e' }}>{closurePct}%</div>
+            <div class="hse-spark-sub">Closed of total</div>
+          </div>
+        </ReorderableRow>
       </div>
 
       {/* Tab content — consistent top gap below nav */}
