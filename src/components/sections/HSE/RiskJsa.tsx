@@ -18,6 +18,7 @@ import {
   useHazards,
   useAssessments,
   useJsaList,
+  useRiskJsaQueue,
   type HazardRow,
   type AssessmentRow,
   type JsaRow,
@@ -31,6 +32,7 @@ import { RiskAssessmentDrawer } from './risk-jsa/drawers/RiskAssessmentDrawer';
 import { JsaDrawer }           from './risk-jsa/drawers/JsaDrawer';
 import { RiskJsaInsightCards } from './risk-jsa/RiskJsaInsightCards';
 import { RiskJsaRightPanel }  from './risk-jsa/RiskJsaRightPanel';
+import { PendingApprovalTab, TemplatesTab, ArchiveTab } from './risk-jsa/RiskJsaQueueTabs';
 import { ExportDialog }       from './risk-jsa/dialogs/ExportDialog';
 import { TemplateDialog }     from './risk-jsa/dialogs/TemplateDialog';
 import { calculateRiskBand }  from './risk-jsa/shared/RiskScorePill';
@@ -39,10 +41,15 @@ import { type CsvColumn }     from '@ui/lib/exportCsv';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS: AreaTab[] = [
-  { key: 'hazards',     label: 'Hazard Register',  sublabel: 'All hazards',       icon: 'fa-radiation' },
+  { key: 'hazards',     label: 'Hazard Register',  sublabel: 'All hazards',        icon: 'fa-radiation' },
   { key: 'assessments', label: 'Risk Assessments', sublabel: 'Matrix & controls',  icon: 'fa-table-cells-large' },
-  { key: 'jsa',         label: 'JSA Library',      sublabel: 'Task analysis',     icon: 'fa-list-ol' },
+  { key: 'jsa',         label: 'JSA Library',      sublabel: 'Task analysis',      icon: 'fa-list-ol' },
+  { key: 'pending',     label: 'Pending Approval', sublabel: 'Awaiting decision',  icon: 'fa-clipboard-check' },
+  { key: 'templates',   label: 'Templates',        sublabel: 'Workflow blueprints', icon: 'fa-diagram-project' },
+  { key: 'archive',     label: 'Archive',          sublabel: 'Archived records',   icon: 'fa-box-archive' },
 ];
+
+const ENTITY_TABS = ['hazards', 'assessments', 'jsa'];
 
 const HAZARD_CATEGORIES = [
   'Safety','Health','Environmental','Chemical','Biological',
@@ -138,11 +145,17 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const riskReductionPct   = summary?.riskReductionPct       ?? 0;
   const overdueAssessments = summary?.overdueAssessments     ?? 0;
 
+  const { data: pendingRes } = useRiskJsaQueue('pending');
+  const pendingCount = pendingRes?.data.length ?? 0;
+
   const tabsWithCounts = withCounts(TABS, {
     hazards:     totalHazards,
     assessments: openAssessments,
     jsa:         openJsa,
+    pending:     pendingCount,
   });
+
+  const isEntityTab = ENTITY_TABS.includes(active);
 
   return (
     <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -159,8 +172,8 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
-      {/* ── Tab-aware summary cards (standard StatsCard row) ── */}
-      <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
+      {/* ── Tab-aware summary cards (standard StatsCard row) — entity tabs only ── */}
+      {isEntityTab && <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />}
 
       {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
       <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '20px' }}>
@@ -177,7 +190,8 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         </div>
       </div>
 
-      {/* ── Quick KPI spark row ── */}
+      {/* ── Quick KPI spark row — entity tabs only ── */}
+      {isEntityTab && (
       <div style={{ marginTop: '16px' }}>
         <div class="hse-spark-row">
           <div class="hse-spark">
@@ -202,8 +216,10 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           </div>
         </div>
       </div>
+      )}
 
-      {/* ── Table (left) + supporting signals panel (right) ── */}
+      {/* ── Entity registers: table (left) + signals panel (right) ── */}
+      {isEntityTab && (
       <div class="hse-main-grid">
         <div class="hse-left-col">
           {active === 'hazards' && (
@@ -236,6 +252,12 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
           />
         </div>
       </div>
+      )}
+
+      {/* ── Cross-cutting tabs (full width) ── */}
+      {active === 'pending'   && <PendingApprovalTab />}
+      {active === 'templates' && <TemplatesTab />}
+      {active === 'archive'   && <ArchiveTab />}
 
       {/* Dialogs */}
       <NewHazardDialog open={hazardFormOpen} onClose={() => setHazardFormOpen(false)} />
