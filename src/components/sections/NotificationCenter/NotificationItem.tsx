@@ -9,41 +9,7 @@
 
 import { type VNode } from 'preact';
 import { type CanonicalNotification } from '@api/communications';
-
-const SEV_COLOR: Record<string, string> = {
-  critical: '#ef4444', warning: '#f59e0b', success: '#16a34a', info: '#3b82f6',
-};
-const MODULE_META: Array<[RegExp, string, string]> = [
-  // [matcher, icon, human label]
-  [/incident/,                'fa-triangle-exclamation', 'Incidents'],
-  [/capa/,                    'fa-list-check',           'CAPA'],
-  [/risk|jsa/,                'fa-radiation',            'Risk / JSA'],
-  [/permit|ptw/,              'fa-file-shield',          'Permit to Work'],
-  [/investigation/,           'fa-magnifying-glass-chart','Investigations'],
-  [/inspection/,              'fa-clipboard-check',      'Inspections'],
-  [/document/,                'fa-file-lines',           'Documents'],
-  [/workflow/,                'fa-diagram-project',      'Workflow'],
-  [/broadcast|communications/,'fa-bullhorn',             'Announcements'],
-  [/payroll/,                 'fa-money-bill',           'Payroll'],
-  [/finance/,                 'fa-money-bill',           'Finance'],
-  [/\bhr\b|human/,            'fa-user-group',           'HR'],
-];
-function moduleMeta(n: CanonicalNotification): { icon: string; label: string } {
-  const hay = `${n.module ?? ''} ${n.type}`.toLowerCase();
-  const hit = MODULE_META.find(([re]) => re.test(hay));
-  return hit ? { icon: hit[1], label: hit[2] } : { icon: 'fa-bell', label: n.module ?? 'General' };
-}
-function relativeTime(iso: string): string {
-  const d = Date.now() - new Date(iso).getTime();
-  const m = Math.round(d / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.round(h / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
-}
+import { SEV_COLOR, moduleMeta, relativeTime } from './notifMeta';
 
 export function NotificationItem({ n, compact, onOpen, onArchive }: {
   n: CanonicalNotification;

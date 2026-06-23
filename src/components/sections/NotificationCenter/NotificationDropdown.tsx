@@ -15,7 +15,7 @@ import {
   type CanonicalNotification, type NotificationListArgs,
 } from '@api/communications';
 import { showSection } from '@components/nav/navCore';
-import { NotificationItem } from './NotificationItem';
+import { NotificationDropdownItem } from './NotificationDropdownItem';
 
 const TABS = [
   { key: 'all',    label: 'All' },
@@ -101,10 +101,11 @@ export function NotificationDropdown(): VNode {
             <div ref={menuRef} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: '210px', marginTop: '4px',
               background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--elev-4)', overflow: 'hidden' }}>
               {[
+                { icon: 'fa-check-double', label: 'Mark all read', onClick: () => markAll.mutate({}) },
+                { icon: 'fa-sliders', label: 'Notification preferences', onClick: goToCenter },
+                { icon: 'fa-up-right-from-square', label: 'View Notification Center', onClick: goToCenter },
+                { icon: 'fa-box-archive', label: 'Archive all read', onClick: () => archive.mutate({ all: true }) },
                 { icon: 'fa-rotate', label: 'Refresh', onClick: () => { void refetch(); } },
-                { icon: 'fa-check-double', label: 'Mark All Read', onClick: () => markAll.mutate({}) },
-                { icon: 'fa-box-archive', label: 'Archive All Read', onClick: () => archive.mutate({ all: true }) },
-                { icon: 'fa-sliders', label: 'Notification Preferences', onClick: goToCenter },
               ].map(it => (
                 <button key={it.label} onClick={() => { it.onClick(); setMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
@@ -145,10 +146,25 @@ export function NotificationDropdown(): VNode {
           </div>
         )}
         {rows.map(n => (
-          <NotificationItem key={n.id} n={n} compact onOpen={open}
-            onArchive={x => archive.mutate({ notificationId: x.id })} />
+          <NotificationDropdownItem key={n.id} n={n} onOpen={open} />
         ))}
       </div>
+
+      {/* Footer — quick actions only */}
+      {rows.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', padding: '8px 14px', borderTop: '1px solid var(--border)' }}>
+          <button disabled={unread === 0 || markAll.isPending} onClick={() => markAll.mutate({})}
+            style={{ background: 'none', border: 'none', cursor: unread === 0 ? 'default' : 'pointer',
+              fontSize: '0.78rem', fontWeight: 600, color: unread === 0 ? 'var(--text-muted)' : 'var(--siomac-navy)', padding: 0 }}>
+            Mark all read
+          </button>
+          <button onClick={goToCenter}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-navy)', padding: 0 }}>
+            View all
+          </button>
+        </div>
+      )}
     </div>
   );
 }
