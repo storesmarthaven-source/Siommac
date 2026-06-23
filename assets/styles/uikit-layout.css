@@ -320,7 +320,7 @@ body[data-theme="dark"] .hero-footer {
 .ui-stat-card--navy .ui-stat-status-label { color: rgba(255,255,255,0.7); }
 .ui-stat-status-val { font-weight: 700; flex-shrink: 0; }
 
-.ui-stat-chart { min-width: 0; }
+.ui-stat-chart { min-width: 0; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; }
 
 .ui-stat-bar-wrap { display: flex; flex-direction: column; gap: 4px; }
 .ui-stat-bar-track { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
@@ -744,7 +744,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 
 /* ── Standard sub-module page header (PageHeader) ───────────────────────────── */
 .ui-page-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);
 }
 .ui-page-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }

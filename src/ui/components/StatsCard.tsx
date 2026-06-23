@@ -111,8 +111,9 @@ export function StatsCard({
 
         {children}
 
-        {/* Spacer keeps the bar / footer pinned to the bottom so the card fills. */}
-        {(hasPercent || footer) && <div class="ui-stat-spacer" />}
+        {/* When there's a chart it fills + centres (flex:1); otherwise a spacer
+            pins the bar / footer to the bottom so the card never looks empty. */}
+        {!chart && (hasPercent || footer) && <div class="ui-stat-spacer" />}
 
         {hasPercent && (
           <div class="ui-stat-bar-wrap">

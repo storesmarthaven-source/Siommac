@@ -827,8 +827,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
         <StatsCard icon="fa-chart-pie" title="Severity Mix"
           chart={
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ position: 'relative', flexShrink: 0, width: 150, height: 150 }}>
-                <svg width="150" height="150" viewBox="0 0 150 150">
+              <div style={{ position: 'relative', flexShrink: 0, width: 142, height: 142 }}>
+                <svg width="142" height="142" viewBox="0 0 150 150">
                   <circle cx="75" cy="75" r="62" fill="none" stroke="#eef0f5" stroke-width="15" />
                   {(() => {
                     const R = 62, C = 2 * Math.PI * R; let acc = 0;
