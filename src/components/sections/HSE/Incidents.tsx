@@ -811,11 +811,13 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
   const thisMonthCount = mtdIncidents.length;
   const lastMonthCount = incidents.filter(i => i.date && new Date(i.date) >= prevMonthStart && new Date(i.date) < startOfMonth).length;
   const trendPct = lastMonthCount > 0 ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100) : (thisMonthCount > 0 ? 100 : 0);
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthly = Array.from({ length: 6 }, (_, idx) => {
     const ms = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
     const me = new Date(now.getFullYear(), now.getMonth() - (5 - idx) + 1, 1);
     return incidents.filter(i => i.date && new Date(i.date) >= ms && new Date(i.date) < me).length;
   });
+  const monthLabels = Array.from({ length: 6 }, (_, idx) => MONTH_ABBR[(now.getMonth() - (5 - idx) + 12) % 12]!);
   const capaTotal = capa.length;
   const capaDone  = capa.filter(c => /closed|verified/i.test(c.status)).length;
   const capaPct   = capaTotal > 0 ? Math.round((capaDone / capaTotal) * 100) : 0;
@@ -858,7 +860,12 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
         <StatsCard icon="fa-chart-line" title="Incident Trend"
           metric={thisMonthCount} metricUnit="this month"
           supporting={`${trendPct >= 0 ? '+' : ''}${trendPct}% vs last month`}
-          chart={<Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={40} />}
+          chart={
+            <div>
+              <Sparkline points={monthly} color={trendPct > 0 ? '#ef4444' : '#16a34a'} height={40} />
+              <div class="hse-spark-months">{monthLabels.map(m => <span key={m}>{m}</span>)}</div>
+            </div>
+          }
           footer="Incidents — last 6 months" />
       ) },
     ]} />
