@@ -222,28 +222,13 @@ describe('useNotificationStore', () => {
     expect(useNotificationStore.getState().unreadCount).toBe(2);
   });
 
-  it('setItems updates items and unread count', () => {
-    const items = [
-      {
-        id: UUID_1, user_id: UUID_2, type: 'mention' as NotificationType,
-        title: 'Test', body: '', is_read: false, link: null,
-        created_at: '2025-01-01T00:00:00+00:00',
-      },
-    ];
-    useNotificationStore.getState().setItems(items, 1);
-    expect(useNotificationStore.getState().items).toHaveLength(1);
-    expect(useNotificationStore.getState().unreadCount).toBe(1);
-    expect(useNotificationStore.getState().loading).toBe(false);
-  });
-
   it('reset clears all fields', () => {
-    useNotificationStore.setState({ unreadCount: 5, panelOpen: true });
+    useNotificationStore.setState({ unreadCount: 5, panelOpen: true, lastRealtimeAt: '2026-01-01T00:00:00Z' });
     useNotificationStore.getState().reset();
     const s = useNotificationStore.getState();
     expect(s.unreadCount).toBe(0);
     expect(s.panelOpen).toBe(false);
-    expect(s.items).toHaveLength(0);
-    expect(s.loading).toBe(false);
+    expect(s.lastRealtimeAt).toBeNull();
   });
 
   it('onPanelClose sets panelOpen to false', () => {

@@ -151,8 +151,9 @@ export function NavController(): h.JSX.Element {
           callWin('_ticketModalOpened');
         }, 0);
       } else if (kind === 'notif') {
-        callWin('_fetchNotifs');
-        callWin('_notifModalOpened');
+        // The bell is the self-fetching Preact <NotificationDropdown> mounted
+        // into #hdrNotifModal — it loads via TanStack Query on open, so there is
+        // no imperative post-open work here.
       } else {
         setTimeout(() => {
           const ml = document.getElementById('msgList');

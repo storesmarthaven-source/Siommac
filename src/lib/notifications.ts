@@ -198,7 +198,7 @@ export function useClearAllNotifications() {
   return useMutation({
     mutationFn: () => clearAllNotifications(userId!),
     onSuccess: () => {
-      useNotificationStore.setState({ unreadCount: 0, items: [] });
+      useNotificationStore.setState({ unreadCount: 0 });
       void qc.invalidateQueries({ queryKey: notificationKeys.all });
     },
     onError: (err: Error) => {

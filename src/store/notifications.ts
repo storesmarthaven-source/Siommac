@@ -1,34 +1,32 @@
 /**
  * src/store/notifications.ts
  *
- * Zustand store for notification state: unread count and in-memory list.
+ * Notification UI bridge (Zustand). This is NOT a server-state store — the
+ * notification list lives entirely in TanStack Query. The store holds only the
+ * small pieces of derived UI state that need to update faster than a refetch:
+ * the optimistic unread count and the panel-open flag.
  *
- * RESPONSIBILITY (per docs/CODING_STANDARDS.md §7-State-Management-Rules):
- *   - Holds derived UI state ONLY (unread count, loading flag, list snapshot)
- *   - Server state lives in TanStack Query — this store is a Realtime-update
- *     bridge that triggers Query invalidations rather than duplicating the cache
+ * RESPONSIBILITY:
+ *   - Optimistic unread count (instant badge bump on a realtime INSERT)
+ *   - Panel open/closed flag
+ *   - Triggers TanStack Query invalidations on realtime events (summary, list,
+ *     unread) so the authoritative data refetches
+ *   - Reconciles the optimistic count back to the summary's value
  *
- * REALTIME INTEGRATION (per docs/ARCHITECTURE.md §10-Realtime):
- *   The `notificationsRealtimeChannel` in src/store/realtime.ts fires
- *   `onRealtimeEvent('notifications', ...)` on INSERT. That callback calls
- *   `useNotificationStore.getState().onNewNotification()` which:
- *     1. Increments the unread count optimistically (instant badge update)
- *     2. Invalidates the TanStack Query cache (triggers a refetch)
+ * It deliberately does NOT mirror the notification list and does NOT mark
+ * anything read on its own. Reading is always explicit.
  *
  * USAGE:
  *   const unread = useNotificationStore((s) => s.unreadCount);
  *   const { onPanelOpen } = useNotificationStore.getState();
  *
  * @see docs/ARCHITECTURE.md §10-Realtime
- * @see docs/CODING_STANDARDS.md §7-State-Management-Rules
- * @see docs/PHASE_PLAN.md §Phase-2c
  */
 
 import { create }          from 'zustand';
 import { logger }          from '@lib/logger';
 import { getQueryClient }  from '@lib/queryClient';
 import { notificationKeys, communicationKeys } from '@api/queryKeys';
-import type { NotificationRow } from '@api/schemas/notification';
 
 // ── State shape ───────────────────────────────────────────────────────────────
 
@@ -41,12 +39,6 @@ export interface NotificationState {
 
   /** ISO timestamp of the last realtime notification signal (debug / freshness) */
   lastRealtimeAt: string | null;
-
-  /** Snapshot of the most recent notifications (mirrors TanStack Query cache) */
-  items:       NotificationRow[];
-
-  /** True while the initial fetch is in flight */
-  loading:     boolean;
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -66,9 +58,6 @@ export interface NotificationState {
   /** Reconcile the optimistic count with the authoritative summary value. */
   syncUnreadCount:   (count: number) => void;
 
-  /** Hydrate the store from a fresh DB fetch */
-  setItems:          (items: NotificationRow[], unreadCount: number) => void;
-
   /** Reset on logout */
   reset:             () => void;
 }
@@ -79,8 +68,6 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
   unreadCount:    0,
   panelOpen:      false,
   lastRealtimeAt: null,
-  items:          [],
-  loading:        false,
 
   onNewNotification() {
     // Optimistic increment — the Realtime event fires before the refetch completes
@@ -111,11 +98,7 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
     set({ unreadCount: count });
   },
 
-  setItems(items, unreadCount) {
-    set({ items, unreadCount, loading: false });
-  },
-
   reset() {
-    set({ unreadCount: 0, panelOpen: false, lastRealtimeAt: null, items: [], loading: false });
+    set({ unreadCount: 0, panelOpen: false, lastRealtimeAt: null });
   },
 }));
