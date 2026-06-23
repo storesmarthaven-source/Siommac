@@ -75,6 +75,7 @@ export interface HazardRow {
   owner_user_id:       string | null;
   review_due_at:       string | null;
   created_at:          string;
+  version?:            number;
 }
 
 export interface AssessmentRow {
@@ -92,6 +93,7 @@ export interface AssessmentRow {
   risk_level:      RiskLevel;
   review_due_at:   string | null;
   created_at:      string;
+  version?:        number;
 }
 
 export interface JsaRow {
@@ -107,6 +109,7 @@ export interface JsaRow {
   review_due_at: string | null;
   created_at:    string;
   stepCount:     number;
+  version?:      number;
 }
 
 export interface RiskJsaSummary {
@@ -217,13 +220,36 @@ export interface UpdateHazardArgs extends Record<string, unknown> {
   residualSeverity?:   number | null;
   ownerUserId?:        string | null;
   reviewDueAt?:        string | null;
+  /** Optimistic-concurrency token from the last read (spec §13). */
+  version?:            number;
 }
+
+/** Shape returned by update endpoints — `conflict` true when the version was stale. */
+interface UpdateResult { success: boolean; conflict?: boolean; message?: string }
 
 export function useUpdateHazard() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: UpdateHazardArgs) =>
-      apiPost<{ success: boolean }>('hse/risk-jsa/hazards/update', args),
+      apiPost<UpdateResult>('hse/risk-jsa/hazards/update', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+export function useUpdateAssessment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { assessmentId: string; title?: string; description?: string; status?: string; reviewDueAt?: string | null; version?: number }) =>
+      apiPost<UpdateResult>('hse/risk-jsa/assessments/update', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+export function useUpdateJsa() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { jsaId: string; title?: string; description?: string; status?: string; reviewDueAt?: string | null; version?: number }) =>
+      apiPost<UpdateResult>('hse/risk-jsa/jsa/update', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });
 }

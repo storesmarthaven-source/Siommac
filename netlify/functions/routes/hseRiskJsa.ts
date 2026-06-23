@@ -9,7 +9,9 @@
  * POST /api/hse/risk-jsa/assessments/list
  * POST /api/hse/risk-jsa/assessments/create
  * POST /api/hse/risk-jsa/assessments/detail
+ * POST /api/hse/risk-jsa/assessments/update
  * POST /api/hse/risk-jsa/assessments/submit
+ * POST /api/hse/risk-jsa/jsa/update
  * POST /api/hse/risk-jsa/jsa/list
  * POST /api/hse/risk-jsa/jsa/create
  * POST /api/hse/risk-jsa/jsa/from-assessment
@@ -371,6 +373,89 @@ router.post('/risk-jsa/hazards/detail', async c => {
   });
 });
 
+// ── Optimistic-concurrency update helper (spec §13) ──────────────────────────
+// When the client sends the `version` it read, the write only applies if the
+// stored version still matches, and bumps it. A mismatch → 409 conflict so the
+// client can reload. Without a version, falls back to a plain update by id.
+
+async function applyVersionedUpdate(
+  c: Context<{ Variables: HonoVariables }>,
+  table: 'hse_hazards' | 'hse_risk_assessments' | 'hse_jsa',
+  id: string, version: number | undefined, updates: Record<string, unknown>,
+) {
+  if (version === undefined) {
+    const { error } = await sb.from(table).update(updates).eq('id', id);
+    if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+    return null;
+  }
+  const { data, error } = await sb.from(table)
+    .update({ ...updates, version: version + 1 })
+    .eq('id', id).eq('version', version).select('id');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  if (!data || data.length === 0) {
+    return c.json({ success: false, conflict: true, message: 'This record was changed by someone else — reload and re-apply your edits.' }, 409 as 200);
+  }
+  return null;
+}
+
+// ── POST /api/hse/risk-jsa/assessments/update ────────────────────────────────
+
+router.post('/risk-jsa/assessments/update', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({
+    assessmentId: z.string().uuid(),
+    title:        z.string().min(1).max(300).optional(),
+    description:  z.string().optional(),
+    status:       z.string().optional(),
+    reviewDueAt:  z.string().nullable().optional(),
+    version:      z.number().int().optional(),
+  }), body.args);
+  if (!v.ok) return v.response;
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (v.data.title !== undefined)       updates.title         = v.data.title;
+  if (v.data.description !== undefined) updates.description    = v.data.description;
+  if (v.data.status !== undefined)      updates.status        = v.data.status;
+  if (v.data.reviewDueAt !== undefined) updates.review_due_at = v.data.reviewDueAt;
+
+  const conflict = await applyVersionedUpdate(c, 'hse_risk_assessments', v.data.assessmentId, v.data.version, updates);
+  if (conflict) return conflict;
+
+  void emitAppEvent({ eventType: 'hse.assessment.updated', sourceModule: 'hse', sourceEntityType: 'assessment',
+    sourceEntityId: v.data.assessmentId, actorUserId: user.id, severity: 'info', payload: { changes: Object.keys(updates) } });
+  return c.json({ success: true });
+});
+
+// ── POST /api/hse/risk-jsa/jsa/update ────────────────────────────────────────
+
+router.post('/risk-jsa/jsa/update', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({
+    jsaId:       z.string().uuid(),
+    title:       z.string().min(1).max(300).optional(),
+    description: z.string().optional(),
+    status:      z.string().optional(),
+    reviewDueAt: z.string().nullable().optional(),
+    version:     z.number().int().optional(),
+  }), body.args);
+  if (!v.ok) return v.response;
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (v.data.title !== undefined)       updates.title         = v.data.title;
+  if (v.data.description !== undefined) updates.description    = v.data.description;
+  if (v.data.status !== undefined)      updates.status        = v.data.status;
+  if (v.data.reviewDueAt !== undefined) updates.review_due_at = v.data.reviewDueAt;
+
+  const conflict = await applyVersionedUpdate(c, 'hse_jsa', v.data.jsaId, v.data.version, updates);
+  if (conflict) return conflict;
+
+  void emitAppEvent({ eventType: 'hse.jsa.updated', sourceModule: 'hse', sourceEntityType: 'jsa',
+    sourceEntityId: v.data.jsaId, actorUserId: user.id, severity: 'info', payload: { changes: Object.keys(updates) } });
+  return c.json({ success: true });
+});
+
 // ── POST /api/hse/risk-jsa/hazards/update ────────────────────────────────────
 
 const HazardUpdateSchema = z.object({
@@ -383,6 +468,8 @@ const HazardUpdateSchema = z.object({
   residualSeverity:    z.number().int().min(1).max(5).nullable().optional(),
   ownerUserId:         z.string().nullable().optional(),
   reviewDueAt:         z.string().nullable().optional(),
+  /** Optimistic-concurrency token from the last read (spec §13). */
+  version:             z.number().int().optional(),
 });
 
 router.post('/risk-jsa/hazards/update', async c => {
@@ -391,7 +478,7 @@ router.post('/risk-jsa/hazards/update', async c => {
   const v = zv(c, HazardUpdateSchema, body.args);
   if (!v.ok) return v.response;
 
-  const { hazardId, ...fields } = v.data;
+  const { hazardId, version, ...fields } = v.data;
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (fields.title !== undefined)              updates.title              = fields.title;
@@ -407,8 +494,8 @@ router.post('/risk-jsa/hazards/update', async c => {
     updates.residual_score = fields.residualLikelihood * fields.residualSeverity;
   }
 
-  const { error } = await sb.from('hse_hazards').update(updates).eq('id', hazardId);
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const conflict = await applyVersionedUpdate(c, 'hse_hazards', hazardId, version, updates);
+  if (conflict) return conflict;
 
   void emitAppEvent({
     eventType:        'hse.hazard.updated',
