@@ -18,10 +18,13 @@ import {
   getActiveSessionsApi, revokeSessionApi,
   getAuditLogsApi,
   listRolesApi, getRolePermissionsApi, createRoleApi, updateRoleApi, deleteRoleApi, setRolePermissionApi,
+  listApprovalsApi, approveGrantApi, rejectGrantApi, cancelGrantApi,
   type ModuleKey, type ModuleMatrix, type ManagerEntry,
   type ConsoleUser, type UserPermissionRow, type ActiveSession,
   type AuditLogFilters, type RoleRow,
+  type PermissionApproval, type ApprovalStatus,
 } from '@lib/superadminApi';
+import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import { setModuleMatrix } from '@components/nav/navCore';
 import { consoleKeys } from './queryKeys';
 
@@ -310,6 +313,85 @@ export function useSetRolePermission() {
       if (!res.success) { toast.error(res.message ?? 'Failed to update permission.'); return; }
       toast.success(`${vars.permission} ${vars.granted ? 'granted' : 'revoked'} for role.`);
       void qc.invalidateQueries({ queryKey: consoleKeys.rolePerms(vars.roleName) });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+// ── Permission-grant approvals (maker-checker) ────────────────────────────────
+
+export function usePermissionApprovals(status?: ApprovalStatus) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: consoleKeys.approvals(status),
+    enabled:  isAuthenticated,
+    queryFn: async () => {
+      const res = await listApprovalsApi(status);
+      if (!res.success) throw new Error(res.message ?? 'Failed to load approvals');
+      return (res.approvals ?? []) as PermissionApproval[];
+    },
+  });
+}
+
+export function useApproveGrant() {
+  const qc = useQueryClient();
+  const { ensureStepUp } = useStepUp();
+  return useMutation({
+    mutationFn: async (approvalId: string) => {
+      const wrapped = withStepUp(ensureStepUp, () => approveGrantApi(approvalId));
+      return wrapped();
+    },
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) {
+        if (res.code === 'self_approval') {
+          toast.error('You cannot approve your own request — a different superadmin must review it.');
+        } else if (res.code === 'expired') {
+          toast.error('This approval request has expired and can no longer be approved.');
+        } else {
+          toast.error(res.message ?? 'Failed to approve grant.');
+        }
+        return;
+      }
+      toast.success('Permission grant approved and applied.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useRejectGrant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ approvalId, reason }: { approvalId: string; reason?: string }) =>
+      rejectGrantApi(approvalId, reason),
+    retry: false,
+    onSuccess: (res, vars) => {
+      if (!res.success) {
+        if (res.code === 'self_approval') {
+          toast.error('You cannot reject your own request.');
+        } else {
+          toast.error(res.message ?? 'Failed to reject grant.');
+        }
+        return;
+      }
+      void vars; // suppress unused warning
+      toast.success('Permission grant request rejected.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useCancelGrant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (approvalId: string) => cancelGrantApi(approvalId),
+    retry: false,
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to cancel request.'); return; }
+      toast.success('Approval request cancelled.');
+      void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
     },
     onError: () => toast.error('Network error. Try again.'),
   });

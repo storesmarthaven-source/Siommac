@@ -25,7 +25,9 @@ import { PermissionsTab }      from './tabs/PermissionsTab';
 import { SessionsTab }         from './tabs/SessionsTab';
 import { AuditLogTab }         from './tabs/AuditLogTab';
 import { UserSecurityPanel }   from './tabs/UserSecurityPanel';
+import { ApprovalsTab }        from './tabs/ApprovalsTab';
 import { UIKitPage }           from '@ui/examples/UIKitPage';
+import { usePermissionApprovals } from './hooks';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -65,6 +67,13 @@ const TABS: ConsoleTab[] = [
     body:  PermissionsTab,
   },
   {
+    id:    'approvals',
+    label: 'Approvals',
+    icon:  'fa-shield-check',
+    desc:  'Maker-checker queue for critical permission grants. A second superadmin must approve any grant of a critical capability before it takes effect.',
+    body:  ApprovalsTab,
+  },
+  {
     id:    'sessions',
     label: 'Sessions',
     icon:  'fa-user-clock',
@@ -101,6 +110,10 @@ export function ConsoleSection(): VNode {
   const active = TABS.find(t => t.id === activeId) ?? TABS[0]!;
   const Body = active.body;
 
+  // Pending approvals count for the badge on the Approvals tab.
+  const approvalsQ = usePermissionApprovals('pending');
+  const pendingCount = approvalsQ.data?.length ?? 0;
+
   return (
     <div class="stg-layout">
       {/* Left sub-nav */}
@@ -116,7 +129,20 @@ export function ConsoleSection(): VNode {
               aria-current={t.id === activeId ? 'page' : undefined}
             >
               <span class="stg-nav-icon"><i class={`fas ${t.icon}`} aria-hidden="true" /></span>
-              <span class="stg-nav-label">{t.label}</span>
+              <span class="stg-nav-label">
+                {t.label}
+                {t.id === 'approvals' && pendingCount > 0 && (
+                  <span style={{
+                    marginLeft: '7px', fontSize: '10px', fontWeight: '700',
+                    padding: '1px 6px', borderRadius: '10px',
+                    background: 'rgba(234,179,8,0.18)', color: '#713f12',
+                    border: '1px solid rgba(234,179,8,0.35)',
+                    lineHeight: '1.4',
+                  }}>
+                    {pendingCount}
+                  </span>
+                )}
+              </span>
               <span class="stg-nav-arrow"><i class="fas fa-chevron-right" aria-hidden="true" /></span>
             </button>
           ))}

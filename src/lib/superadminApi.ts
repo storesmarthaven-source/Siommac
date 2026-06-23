@@ -15,7 +15,7 @@ import { apiFetch } from '@lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type ModuleKey  = 'dashboard' | 'employees' | 'payroll' | 'live_map' | 'attendance';
+export type ModuleKey  = 'dashboard' | 'employees' | 'payroll' | 'live_map' | 'attendance' | 'hse' | 'hr' | 'finance' | 'operations';
 export type ModuleRole = 'admin' | 'manager';
 
 /** Full role-level matrix returned by getModules */
@@ -295,4 +295,85 @@ export async function deleteRoleApi(roleName: string): Promise<{ success: boolea
 /** Grant or revoke a single permission in a role's default set. */
 export async function setRolePermissionApi(roleName: string, permission: string, granted: boolean): Promise<{ success: boolean; message?: string }> {
   return apiFetch('superadmin/setRolePermission', { method: 'POST', body: { args: { roleName, permission, granted } } });
+}
+
+// ── Permission-grant approvals (maker-checker) ────────────────────────────────
+
+export interface PermissionApproval {
+  id:              string;
+  requestType:     'role_permission' | 'user_override';
+  targetRole:      string | null;
+  targetUserId:    string | null;
+  permissionKey:   string;
+  effect:          string;
+  reason:          string;
+  status:          string;
+  requestedBy:     string;
+  requestedByName: string;
+  requestedAt:     string;
+  decidedBy:       string | null;
+  decidedByName:   string | null;
+  decidedAt:       string | null;
+  decisionReason:  string | null;
+  appliedAt:       string | null;
+  expiresAt:       string;
+}
+
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+/** List permission-grant approval requests. Defaults to pending. */
+export async function listApprovalsApi(status?: ApprovalStatus): Promise<{
+  success:    boolean;
+  approvals?: PermissionApproval[];
+  message?:   string;
+}> {
+  return apiFetch('admin/approvals/list', { method: 'POST', body: { args: status ? { status } : {} } });
+}
+
+/** Approve a pending critical-grant request (step-up required, maker ≠ checker). */
+export async function approveGrantApi(approvalId: string): Promise<{
+  success: boolean;
+  code?:   string;
+  message?: string;
+}> {
+  return apiFetch('admin/approvals/approve', { method: 'POST', body: { args: { approvalId } } });
+}
+
+/** Reject a pending critical-grant request (maker ≠ checker enforced). */
+export async function rejectGrantApi(approvalId: string, reason?: string): Promise<{
+  success:  boolean;
+  code?:    string;
+  message?: string;
+}> {
+  return apiFetch('admin/approvals/reject', { method: 'POST', body: { args: { approvalId, reason } } });
+}
+
+/** Cancel your own pending critical-grant request. */
+export async function cancelGrantApi(approvalId: string): Promise<{
+  success:  boolean;
+  message?: string;
+}> {
+  return apiFetch('admin/approvals/cancel', { method: 'POST', body: { args: { approvalId } } });
+}
+
+/**
+ * Grant with reason — used for critical permission keys that require maker-checker.
+ * May return { pending: true, approvalId } instead of immediately applying.
+ */
+export async function setUserPermissionWithReasonApi(
+  userId: string, permission: string, granted: boolean, reason?: string,
+): Promise<{ success: boolean; pending?: boolean; approvalId?: string; message?: string; code?: string }> {
+  return apiFetch('superadmin/setUserPermission', {
+    method: 'POST',
+    body:   { args: { userId, permission, granted, reason } },
+  });
+}
+
+export async function setRolePermissionWithReasonApi(
+  roleName: string, permission: string, granted: boolean, reason?: string,
+): Promise<{ success: boolean; pending?: boolean; approvalId?: string; message?: string; code?: string }> {
+  return apiFetch('superadmin/setRolePermission', {
+    method: 'POST',
+    body:   { args: { roleName, permission, granted, reason } },
+  });
 }

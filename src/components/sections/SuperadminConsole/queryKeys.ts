@@ -21,4 +21,6 @@ export const consoleKeys = {
 
   roles:      () => [...consoleKeys.all, 'roles'] as const,
   rolePerms:  (roleName: string) => [...consoleKeys.all, 'rolePerms', roleName] as const,
+
+  approvals:  (status?: string) => [...consoleKeys.all, 'approvals', status ?? 'pending'] as const,
 };

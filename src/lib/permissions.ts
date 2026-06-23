@@ -168,6 +168,20 @@ export const PERMISSION_KEYS = [
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
 
+// ── Critical-grant keys (require dual superadmin approval) ──────────────────
+// MIRROR of netlify/functions/lib/permissions.ts — kept in sync by
+// tests/unit/criticalGrants.sync.test.ts.
+export const CRITICAL_GRANT_KEYS = new Set<string>([
+  'communications.compliance_read',
+  'communications.compliance_export',
+  'auth.security.manage_policy',
+  'auth.passkeys.admin_revoke',
+  'auth.trusted_devices.admin_revoke',
+  'permissions.manage',
+  'roles.manage',
+  'communications.admin',
+]);
+
 // ── Role defaults ─────────────────────────────────────────────────────────────
 
 /**
