@@ -1,14 +1,15 @@
 /**
  * src/components/sections/NotificationCenter/NotificationCenter.tsx
  *
- * The global Notification Center (section s-notification-center). Header + tabs
- * (All / Unread / Action Required / Archived) + filters (module / severity /
- * search) + the notification list, on the canonical communications backbone.
+ * The global Notification Center (section s-notification-center) — a work inbox
+ * for the ERP. Compact header with summary chips · segmented tab bar with counts
+ * · filter toolbar + quick chips · a date-grouped notification stream with a calm,
+ * helpful empty state. On the canonical communications backbone.
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
-import { PageHeader, TabBar, type AreaTab } from '@ui';
+import { useMemo, useState } from 'preact/hooks';
+import { PageHeader, TabBar, withCounts, type AreaTab } from '@ui';
 import { useCan } from '@lib/permissions';
 import {
   useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
@@ -26,18 +27,51 @@ const TABS: AreaTab[] = [
   { key: 'archived', label: 'Archived',        icon: 'fa-box-archive' },
 ];
 
-const MODULES = ['', 'hse.incidents', 'hse.investigations', 'hse.capa', 'hse.risk', 'hse.ptw', 'communications'];
+const MODULE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'hse.incidents',     label: 'Incidents' },
+  { value: 'hse.investigations',label: 'Investigations' },
+  { value: 'hse.capa',          label: 'CAPA' },
+  { value: 'hse.risk',          label: 'Risk / JSA' },
+  { value: 'hse.ptw',           label: 'Permit to Work' },
+  { value: 'communications',    label: 'Announcements' },
+];
+
+// ── Date grouping ───────────────────────────────────────────────────────────
+const GROUP_ORDER = ['Today', 'Yesterday', 'Earlier this week', 'Older'] as const;
+
+function dateGroup(iso: string): typeof GROUP_ORDER[number] {
+  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+  const t = new Date(iso).getTime();
+  const today = startOfToday.getTime();
+  if (t >= today) return 'Today';
+  if (t >= today - 86_400_000) return 'Yesterday';
+  if (t >= today - 6 * 86_400_000) return 'Earlier this week';
+  return 'Older';
+}
+
+function groupByDate(rows: CanonicalNotification[]): Array<[string, CanonicalNotification[]]> {
+  const buckets = new Map<string, CanonicalNotification[]>();
+  for (const n of rows) {
+    const g = dateGroup(n.created_at);
+    (buckets.get(g) ?? buckets.set(g, []).get(g)!).push(n);
+  }
+  return GROUP_ORDER.filter(g => buckets.has(g)).map(g => [g, buckets.get(g)!]);
+}
 
 export function NotificationCenter(): VNode {
   const [tab, setTab] = useState('all');
   const [module, setModule] = useState('');
   const [severity, setSeverity] = useState('');
   const [search, setSearch] = useState('');
+  const [criticalOnly, setCriticalOnly] = useState(false);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
 
   const isAdmin = useCan('communications.admin');
   const { data: summary } = useCommsSummary();
+
+  const effectiveSeverity = criticalOnly ? 'critical' : severity;
+  const hasFilters = Boolean(module || severity || search || criticalOnly);
 
   const args: NotificationListArgs = {
     limit: 100,
@@ -45,19 +79,31 @@ export function NotificationCenter(): VNode {
     actionRequiredOnly: tab === 'action',
     archivedOnly:       tab === 'archived',
     module:             module || undefined,
-    severity:           (severity || undefined) as NotificationListArgs['severity'],
+    severity:           (effectiveSeverity || undefined) as NotificationListArgs['severity'],
     search:             search || undefined,
   };
   const { data, isLoading } = useNotifications(args);
   const rows = data ?? [];
+  const groups = useMemo(() => groupByDate(rows), [rows]);
 
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   const archive = useArchiveNotification();
 
+  const tabs = withCounts(TABS, {
+    all:      summary?.notificationsTotal,
+    unread:   summary?.notificationsUnread,
+    action:   summary?.notificationsActionRequired,
+    archived: summary?.notificationsArchived,
+  });
+
   function open(n: CanonicalNotification) {
     if (!n.is_read) markRead.mutate(n.id);
     // action_route deep-linking is wired as modules expose section ids (follow-up).
+  }
+
+  function clearFilters() {
+    setModule(''); setSeverity(''); setSearch(''); setCriticalOnly(false);
   }
 
   return (
@@ -68,7 +114,9 @@ export function NotificationCenter(): VNode {
         title="Notification Center"
         sub="Everything across the ERP that needs your attention — alerts, approvals, assignments and reminders."
         meta={[
-          { icon: 'fa-envelope', label: `${summary?.notificationsUnread ?? 0} unread` },
+          { icon: 'fa-envelope',            label: `${summary?.notificationsUnread ?? 0} unread` },
+          { icon: 'fa-clipboard-check',     label: `${summary?.notificationsActionRequired ?? 0} action required` },
+          { icon: 'fa-triangle-exclamation',label: `${summary?.notificationsCritical ?? 0} critical` },
         ]}
         actions={
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -83,14 +131,12 @@ export function NotificationCenter(): VNode {
         }
       />
 
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '12px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <TabBar tabs={TABS} active={tab} onSelect={setTab} />
-        </div>
+      <div style={{ marginTop: '12px' }}>
+        <TabBar tabs={tabs} active={tab} onSelect={setTab} />
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+      {/* Filter toolbar */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '8px' }}>
         <div class="vt-search" style={{ flex: '1 1 200px' }}>
           <i class="fas fa-search" />
           <input type="search" placeholder="Search notifications…" value={search}
@@ -98,29 +144,60 @@ export function NotificationCenter(): VNode {
         </div>
         <select class="emp-filter-select" value={module} onChange={e => setModule((e.target as HTMLSelectElement).value)}>
           <option value="">All modules</option>
-          {MODULES.filter(Boolean).map(m => <option key={m} value={m}>{m}</option>)}
+          {MODULE_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
-        <select class="emp-filter-select" value={severity} onChange={e => setSeverity((e.target as HTMLSelectElement).value)}>
+        <select class="emp-filter-select" value={severity} disabled={criticalOnly}
+          onChange={e => setSeverity((e.target as HTMLSelectElement).value)}>
           <option value="">All severities</option>
           <option value="critical">Critical</option>
           <option value="warning">Warning</option>
           <option value="success">Success</option>
           <option value="info">Info</option>
         </select>
+        {/* Quick filter chips */}
+        <button type="button" onClick={() => setCriticalOnly(v => !v)}
+          class={`nc-chip${criticalOnly ? ' is-active' : ''}`}>
+          <i class="fas fa-triangle-exclamation" /> Critical only
+        </button>
+        {hasFilters && (
+          <button type="button" onClick={clearFilters} class="nc-chip nc-chip--ghost">
+            <i class="fas fa-xmark" /> Clear filters
+          </button>
+        )}
       </div>
 
       {/* List */}
       <div class="hse-table-card" style={{ overflow: 'hidden' }}>
         {isLoading && <div style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>}
+
         {!isLoading && rows.length === 0 && (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <i class="fas fa-bell-slash" style={{ fontSize: '1.8rem', opacity: 0.4 }} />
-            <div style={{ marginTop: '10px' }}>Nothing here.</div>
+          <div style={{ padding: '46px 24px', textAlign: 'center' }}>
+            <i class="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
+            <div style={{ fontWeight: 700, color: 'var(--siomac-navy)', marginTop: '12px', fontSize: '0.95rem' }}>
+              You're all caught up
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+              {hasFilters
+                ? 'No notifications match this view. Try changing the filters.'
+                : tab === 'archived'
+                  ? 'Nothing has been archived yet.'
+                  : 'No notifications or required actions right now.'}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '14px' }}>
+              {hasFilters && <button class="hse-btn" onClick={clearFilters}><i class="fas fa-filter-circle-xmark" /> Clear filters</button>}
+              {tab !== 'archived' && <button class="hse-btn" onClick={() => setTab('archived')}><i class="fas fa-box-archive" /> Show archived</button>}
+            </div>
           </div>
         )}
-        {rows.map(n => (
-          <NotificationItem key={n.id} n={n} onOpen={open}
-            onArchive={tab === 'archived' ? undefined : (x => archive.mutate({ notificationId: x.id }))} />
+
+        {!isLoading && groups.map(([label, items]) => (
+          <div key={label}>
+            <div class="nc-group-head">{label} <span class="nc-group-count">{items.length}</span></div>
+            {items.map(n => (
+              <NotificationItem key={n.id} n={n} onOpen={open}
+                onArchive={tab === 'archived' ? undefined : (x => archive.mutate({ notificationId: x.id }))} />
+            ))}
+          </div>
         ))}
       </div>
 

@@ -113,3 +113,32 @@
   border-color: var(--siomac-navy);
   box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08));
 }
+
+/* ── Notification Center (nc-*) ─────────────────────────────────────────────── */
+.nc-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: #fff; color: var(--text-muted);
+  padding: 0 13px; height: 34px;
+  font: inherit; font-size: 0.76rem; font-weight: var(--font-weight-semibold, 600);
+  cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s;
+}
+.nc-chip:hover { border-color: var(--siomac-navy); color: var(--siomac-navy); }
+.nc-chip.is-active {
+  background: rgba(239, 68, 68, .08); border-color: #ef4444; color: #b91c1c;
+}
+.nc-chip--ghost { border-style: dashed; }
+
+.nc-group-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: var(--bg-subtle, #f7f8fa);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.nc-group-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--border); color: var(--siomac-navy);
+  font-size: 0.66rem; letter-spacing: 0;
+}
