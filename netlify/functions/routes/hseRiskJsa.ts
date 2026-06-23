@@ -768,6 +768,7 @@ router.post('/risk-jsa/assessments/submit', async c => {
       body:  ra.title,
       actionRoute: 'hse/risk-jsa',
       type:  'hse.risk_assessment.submitted',
+      actionRequired: true,
     },
   });
 
@@ -1223,6 +1224,7 @@ router.post('/risk-jsa/jsa/submit', async c => {
       body:  jsa.title,
       actionRoute: 'hse/risk-jsa',
       type:  'hse.jsa.submitted',
+      actionRequired: true,
     },
   });
 
@@ -1736,6 +1738,7 @@ router.post('/risk-jsa/hazards/submit', async c => {
       body:  hz.title,
       actionRoute: 'hse/risk-jsa',
       type:  'hse.hazard.submitted',
+      actionRequired: true,
     },
   });
 

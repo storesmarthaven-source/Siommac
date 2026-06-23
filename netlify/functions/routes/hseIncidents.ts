@@ -363,16 +363,42 @@ router.post('/incidents/update', async c => {
   const { error } = await sb.from('hse_incidents').update(updates).eq('id', incidentId);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
-  // Emit update event (silent — no notification)
-  void emitAppEvent({
-    eventType:        'hse.incident.updated',
-    sourceModule:     'hse',
-    sourceEntityType: 'incident',
-    sourceEntityId:   incidentId,
-    actorUserId:      user.id,
-    severity:         'info',
-    payload:          { changes: Object.keys(updates) },
-  });
+  // Closing an incident notifies the original reporter (a confirmation, not an
+  // action). Every other status change is a silent audit-only event.
+  if (fields.status === 'closed') {
+    const closed = await sb.from('hse_incidents')
+      .select('ref, reported_by').eq('id', incidentId)
+      .maybeSingle<{ ref: string; reported_by: string | null }>();
+    const reporter = closed.data?.reported_by;
+    void emitAppEvent({
+      eventType:        'hse.incident.closed',
+      sourceModule:     'hse',
+      sourceEntityType: 'incident',
+      sourceEntityId:   closed.data?.ref ?? incidentId,
+      actorUserId:      user.id,
+      severity:         'success',
+      payload:          { status: 'closed' },
+      ...(reporter && reporter !== user.id ? {
+        explicitRecipients: [{ userId: reporter, reason: 'owner' as const }],
+        notification: {
+          title:       'Incident closed',
+          body:        `${closed.data?.ref ?? 'Your reported incident'} was investigated and closed.`,
+          actionRoute: 'hse/incidents',
+        },
+      } : {}),
+    });
+  } else {
+    // Silent audit event for all other field/status changes.
+    void emitAppEvent({
+      eventType:        'hse.incident.updated',
+      sourceModule:     'hse',
+      sourceEntityType: 'incident',
+      sourceEntityId:   incidentId,
+      actorUserId:      user.id,
+      severity:         'info',
+      payload:          { changes: Object.keys(updates) },
+    });
+  }
 
   return c.json({ success: true });
 });

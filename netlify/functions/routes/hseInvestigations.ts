@@ -98,10 +98,11 @@ router.post('/investigations/create', async c => {
         eventPayload:   { investigatorId, incidentId: v.data.incidentId },
         explicitRecipients: [{ userId: investigatorId, reason: 'assignee' as const }],
         notification: {
-          title: 'Investigation assigned',
+          title: 'Investigation assigned to you',
           body:  `You have been assigned to lead this investigation.`,
           actionRoute: 'hse/investigations',
           type:  'hse.investigation.assigned',
+          actionRequired: true,
         },
         getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
         afterCommit: async ({ entityId: _entityId }) => {

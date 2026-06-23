@@ -35,6 +35,11 @@ cross join (values
    'hse.ptw', 'critical', 'permit', 'SEED-PTW-000421', 'hse/permits',
    false, true, 'pending', now() - interval '40 minutes', now() - interval '5 hours', null::timestamptz),
 
+  ('hse.investigation.assigned', 'Investigation assigned to you',
+   'You have been assigned to lead the investigation for INC-2026-0007.',
+   'hse.investigations', 'info', 'investigation', 'SEED-INV-2026-0007', 'hse/investigations',
+   false, true, 'pending', now() + interval '5 days', now() - interval '3 hours', null::timestamptz),
+
   -- Yesterday ─────────────────────────────────────────────────────────────────
   ('hse.risk.approval_required', 'Risk assessment needs your approval',
    'RA-2026-0044 (Working at Height — Tank Farm) is awaiting your decision.',

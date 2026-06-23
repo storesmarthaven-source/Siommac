@@ -77,10 +77,12 @@ export interface ModuleMutationOptions<TRecord> {
   eventSeverity?:  EventSeverity;
   eventPayload?:   Record<string, unknown>;
   notification?: {
-    title:        string;
-    body?:        string;
-    actionRoute?: string;
-    type?:        string;
+    title:           string;
+    body?:           string;
+    actionRoute?:    string;
+    type?:           string;
+    actionRequired?: boolean;
+    dueAt?:          string | null;
   };
   explicitRecipients?: Array<{ userId: string; reason: 'assignee' | 'owner' | 'reporter' | 'supervisor' }>;
 

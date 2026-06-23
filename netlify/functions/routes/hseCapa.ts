@@ -112,10 +112,12 @@ router.post('/capa/create', async c => {
         eventPayload:   { ownerUserId, priority: v.data.priority },
         explicitRecipients: [{ userId: ownerUserId, reason: 'assignee' as const }],
         notification: {
-          title: 'CAPA assigned',
+          title: 'CAPA assigned to you',
           body:  `${v.data.title} — due ${v.data.dueAt ?? 'TBD'}`,
           actionRoute: 'hse/capa',
           type:  'hse.capa.assigned',
+          actionRequired: true,
+          dueAt: v.data.dueAt ?? null,
         },
         workflow: {
           templateKey: 'hse_capa_closure',
