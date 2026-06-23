@@ -43,6 +43,11 @@ export interface LoginResponse extends ApiResponse {
   requiresSetup?:     boolean;  // mandatory role, not yet enrolled
   preAuthToken?:      string;   // short-lived, grants only /verify2fa or /setup2fa
   methods?:           string[]; // ['totp', 'webauthn'] — which factors are available
+  // ── Auth-method claims (present on full session responses) ───────────────
+  /** Authentication Method References — mirrors JWT amr claim */
+  amr?:           string[];
+  /** Coarse strength classification for the session */
+  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey';
 }
 
 export interface Setup2faResponse extends ApiResponse {
@@ -70,6 +75,9 @@ export interface Verify2faResponse extends ApiResponse {
   rolePermissions?: string[];
   isEmployee?: boolean;
   sessionIdleTimeoutMs?: number;
+  // ── Auth-method claims (present on full session responses) ───────────────
+  amr?:           string[];
+  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey';
 }
 
 export interface TwoFactorStatusResponse extends ApiResponse {

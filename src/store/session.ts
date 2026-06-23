@@ -64,6 +64,14 @@ export interface SessionState {
   /** true = enrolled; false = not enrolled; null = unknown (not yet checked) */
   totpEnabled:      boolean | null;
 
+  // ── Passkeys / WebAuthn ────────────────────────────────────────────────────
+  /** Number of registered passkeys — populated by the Security panel on load. */
+  passkeyCount:     number;
+  /** Authentication Method References for the current session (mirrors JWT amr claim). */
+  amr:              string[];
+  /** Coarse strength classification for the current session. */
+  authStrength:     'password_only' | 'mfa' | 'passwordless_passkey' | null;
+
   // ── RBAC — per-user permission overrides (Phase 2b) ───────────────────────
   /**
    * Per-user overrides loaded from the `user_permissions` table at login.
@@ -96,6 +104,8 @@ export interface SessionState {
   refreshTokens: (token: string, refreshToken: string, expiresAt: number) => void;
   /** Apply per-user permission overrides loaded from DB at login (Phase 2b) */
   setPermissionOverrides: (overrides: PermissionOverride[]) => void;
+  /** Update the registered passkey count (called by the Security panel). */
+  setPasskeyCount: (count: number) => void;
   /** Session expired — clear state and show login */
   expire:  () => void;
   /** Full logout — clears state + localStorage */
@@ -124,6 +134,9 @@ function payloadToState(p: LoginResponse | Verify2faResponse): Partial<SessionSt
     permissionOverrides: p.permissionOverrides ?? [],
     rolePermissions:     p.rolePermissions ?? [],
     preAuthToken:    null,
+    // Auth-method claims from the session response (present for WebAuthn + verify flows)
+    amr:         (p as LoginResponse).amr ?? [],
+    authStrength: (p as LoginResponse).authStrength ?? null,
   };
 }
 
@@ -165,6 +178,9 @@ const LOGGED_OUT: Partial<SessionState> = {
   companyLogoUrl:      null,
   preAuthToken:        null,
   totpEnabled:         null,
+  passkeyCount:        0,
+  amr:                 [],
+  authStrength:        null,
   permissionOverrides: [],
   rolePermissions:     [],
 };
@@ -193,6 +209,9 @@ export const useSessionStore = create<SessionState>()((set) => ({
   companyLogoUrl:  null,
   preAuthToken:        null,
   totpEnabled:         null,
+  passkeyCount:        0,
+  amr:                 [],
+  authStrength:        null,
   permissionOverrides: [],
   rolePermissions:     [],
 
@@ -265,6 +284,10 @@ export const useSessionStore = create<SessionState>()((set) => ({
 
   setPermissionOverrides(overrides) {
     set({ permissionOverrides: overrides });
+  },
+
+  setPasskeyCount(count) {
+    set({ passkeyCount: count });
   },
 
   expire() {

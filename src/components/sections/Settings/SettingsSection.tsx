@@ -41,6 +41,11 @@ import {
   useConfirmTotp,
   useDisableTotp,
   useRegenerateBackupCodes,
+  usePasskeys,
+  useRegisterPasskey,
+  useRenamePasskey,
+  useDeletePasskey,
+  type PasskeyCredential,
 } from '@api/security';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1032,6 +1037,178 @@ function TotpRegenModal({ onClose }: TotpRegenModalProps): VNode {
   );
 }
 
+// ── Passkeys card ─────────────────────────────────────────────────────────────
+
+/** True if WebAuthn is available in this browser. */
+const webauthnAvailable = typeof window !== 'undefined' && !!window.PublicKeyCredential;
+
+function PasskeysCard(): VNode {
+  const setPasskeyCount = useSessionStore(s => s.setPasskeyCount);
+  const { data: passkeys = [], isLoading, refetch } = usePasskeys(webauthnAvailable);
+  const registerMut = useRegisterPasskey();
+  const renameMut   = useRenamePasskey();
+  const deleteMut   = useDeletePasskey();
+
+  // Keep session store in sync with count
+  useEffect(() => {
+    setPasskeyCount(passkeys.length);
+  }, [passkeys.length, setPasskeyCount]);
+
+  // ── Register new passkey ───────────────────────────────────────────────────
+  const handleAdd = useCallback(async () => {
+    const rawLabel = window.prompt('Name this passkey (optional):', '');
+    if (rawLabel === null) return; // user cancelled
+    const label = rawLabel.trim() || undefined;
+    try {
+      await registerMut.mutateAsync(label);
+      toast.success('Passkey registered successfully.');
+      void refetch();
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'NotAllowedError' || name === 'AbortError') return; // user cancelled
+      toast.error(err instanceof Error ? err.message : 'Registration failed.');
+    }
+  }, [registerMut, refetch]);
+
+  // ── Rename passkey ─────────────────────────────────────────────────────────
+  const handleRename = useCallback(async (cred: PasskeyCredential) => {
+    const newLabel = window.prompt('New name for this passkey:', cred.label || '');
+    if (newLabel === null || newLabel.trim() === '') return;
+    try {
+      await renameMut.mutateAsync({ credentialId: cred.id, label: newLabel.trim() });
+      toast.success('Passkey renamed.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Rename failed.');
+    }
+  }, [renameMut]);
+
+  // ── Delete passkey ─────────────────────────────────────────────────────────
+  const handleDelete = useCallback(async (cred: PasskeyCredential) => {
+    if (!window.confirm(`Remove passkey "${cred.label || cred.id.slice(0, 8) + '…'}"?`)) return;
+    try {
+      const res = await deleteMut.mutateAsync(cred.id);
+      if (!res.success && res.code === 'last_factor') {
+        toast.error(res.message ?? 'Cannot remove your last strong factor.');
+        return;
+      }
+      toast.success('Passkey removed.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Delete failed.');
+    }
+  }, [deleteMut]);
+
+  if (!webauthnAvailable) {
+    return (
+      <div class="totp-card">
+        <div class="totp-card-header">
+          <div class="totp-card-icon"><i class="fas fa-fingerprint" /></div>
+          <div class="totp-card-info">
+            <div class="totp-card-title">Passkeys</div>
+            <div class="totp-card-desc">
+              Passkeys are not supported in this browser. Use a modern browser with WebAuthn support.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div class="totp-card">
+      <div class="totp-card-header">
+        <div class="totp-card-icon"><i class="fas fa-fingerprint" /></div>
+        <div class="totp-card-info">
+          <div class="totp-card-title">Passkeys</div>
+          <div class="totp-card-desc">
+            Sign in with biometrics or a hardware key — no password required.
+          </div>
+        </div>
+        {!isLoading && (
+          <div class={`totp-badge ${passkeys.length > 0 ? 'totp-badge--on' : 'totp-badge--off'}`}>
+            {passkeys.length > 0 ? `${passkeys.length} registered` : 'None'}
+          </div>
+        )}
+      </div>
+
+      {isLoading && (
+        <div class="totp-loading"><i class="fas fa-spinner fa-spin" /> Loading…</div>
+      )}
+
+      {!isLoading && passkeys.length > 0 && (
+        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {passkeys.map((cred) => (
+            <div
+              key={cred.id}
+              class="totp-enrolled-meta"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                  {cred.label || <em style={{ color: 'var(--text-secondary)' }}>Unnamed</em>}
+                </span>
+                <span style={{ margin: '0 8px', color: 'var(--text-secondary)' }}>·</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  {cred.deviceType === 'multiDevice' ? 'Synced' : 'Single-device'}
+                  {cred.backedUp ? ' · Backed up' : ''}
+                </span>
+                <span style={{ margin: '0 8px', color: 'var(--text-secondary)' }}>·</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <i class="fas fa-calendar-plus" style={{ marginRight: 3 }} />
+                  Added {new Date(cred.createdAt).toLocaleDateString()}
+                </span>
+                {cred.lastUsedAt && (
+                  <>
+                    <span style={{ margin: '0 8px', color: 'var(--text-secondary)' }}>·</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      Last used {new Date(cred.lastUsedAt).toLocaleDateString()}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  class="stg-btn-outline"
+                  style={{ padding: '3px 10px', fontSize: '0.78rem' }}
+                  onClick={() => void handleRename(cred)}
+                  disabled={renameMut.isPending}
+                >
+                  <i class="fas fa-pencil" /> Rename
+                </button>
+                <button
+                  type="button"
+                  class="stg-btn-outline"
+                  style={{ padding: '3px 10px', fontSize: '0.78rem', color: 'var(--danger,#ef4444)', borderColor: 'var(--danger,#ef4444)' }}
+                  onClick={() => void handleDelete(cred)}
+                  disabled={deleteMut.isPending}
+                >
+                  <i class="fas fa-trash-can" /> Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && (
+        <div class="totp-card-actions">
+          <button
+            type="button"
+            class="stg-btn-save"
+            onClick={() => void handleAdd()}
+            disabled={registerMut.isPending}
+          >
+            {registerMut.isPending
+              ? <><i class="fas fa-spinner fa-spin" /> Registering…</>
+              : <><i class="fas fa-plus" /> Add Passkey</>
+            }
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Authenticator App card ────────────────────────────────────────────────────
 
 function AuthenticatorCard(): VNode {
@@ -1192,6 +1369,15 @@ function SecurityPanel(): VNode {
           Each time you sign in, you'll need your password plus a code from your authenticator app.
         </p>
         <AuthenticatorCard />
+      </div>
+
+      {/* Passkeys card */}
+      <div class="stg-card">
+        <CardLabel icon="fa-fingerprint" text="Passkeys" />
+        <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
+          Register a biometric or hardware key to sign in without a password or one-time code.
+        </p>
+        <PasskeysCard />
       </div>
 
       {/* Login alerts — coming soon */}

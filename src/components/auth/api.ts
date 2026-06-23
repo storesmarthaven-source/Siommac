@@ -18,6 +18,7 @@ export interface LoginResult {
   message?:          string;
   // Direct login
   token?:            string;
+  refreshToken?:     string;
   userId?:           string | number;
   username?:         string;
   fullName?:         string;
@@ -30,15 +31,36 @@ export interface LoginResult {
   companyName?:      string;
   companyLogoUrl?:   string;
   profileImage?:     string;
+  rolePermissions?:  string[];
+  permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
+  sessionIdleTimeoutMs?: number;
   // 2FA branch
   requiresTwoFactor?: boolean;
   requiresSetup?:     boolean;
   preAuthToken?:      string;
+  methods?:           string[]; // ['totp', 'webauthn']
   // TOTP setup
   qrCode?:            string;
   manualCode?:        string;
   // Backup codes
   backupCodes?:       string[];
+  // Auth-method claims (present on successful full-session responses)
+  amr?:               string[];
+  authStrength?:      'password_only' | 'mfa' | 'passwordless_passkey';
+}
+
+// ── WebAuthn pre-auth response shapes ─────────────────────────────────────────
+
+export interface WebAuthnOptionsResult {
+  success: boolean;
+  message?: string;
+  options?: Record<string, unknown>;
+}
+
+export interface WebAuthnVerifyResult extends LoginResult {
+  // WebAuthn verify for passwordless/second_factor returns the same full
+  // session shape as a successful /login (buildSessionPayload output).
+  // Fields are already declared in LoginResult above.
 }
 
 // ── Fetchers ──────────────────────────────────────────────────────────────────
@@ -77,4 +99,35 @@ export async function logoutApi(payload: {
   try {
     await apiAction('logout', payload as unknown as Record<string, unknown>);
   } catch { /* fire-and-forget */ }
+}
+
+// ── WebAuthn pre-auth (public, no JWT) ───────────────────────────────────────
+
+/**
+ * Fetch WebAuthn authentication options.
+ * Pass username for second-factor (discoverable by username).
+ * Omit username for passwordless (fully discoverable credential).
+ */
+export async function webauthnAuthOptions(username?: string): Promise<WebAuthnOptionsResult> {
+  return authPost<WebAuthnOptionsResult>(
+    'webauthn/auth/options',
+    (username ? { username } : {}) as Record<string, unknown>,
+  );
+}
+
+/**
+ * Verify a WebAuthn assertion and exchange for a full session.
+ * For flow='passwordless': no preAuthToken needed.
+ * For flow='second_factor': pass the preAuthToken from the /login requiresTwoFactor response.
+ * On success returns the same buildSessionPayload shape as /login.
+ */
+export async function webauthnAuthVerify(payload: {
+  flow:          'passwordless' | 'second_factor';
+  preAuthToken?: string;
+  response:      Record<string, unknown>;
+}): Promise<LoginResult> {
+  return authPost<LoginResult>(
+    'webauthn/auth/verify',
+    payload as unknown as Record<string, unknown>,
+  );
 }

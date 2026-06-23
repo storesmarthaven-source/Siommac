@@ -1,19 +1,27 @@
 /**
  * src/api/security.ts
  *
- * TanStack Query hooks for the authenticated TOTP self-service API.
+ * TanStack Query hooks for the authenticated security self-service APIs.
  * All routes require a valid session JWT (handled by apiPost).
  *
- * Backend endpoints — all POST /api/auth/2fa/*:
+ * TOTP endpoints — all POST /api/auth/2fa/*:
  *   /status               → current enrollment state
  *   /setup                → generate secret + QR code (pending, not yet enabled)
  *   /confirm              → verify first TOTP code → enable + return backup codes (once)
  *   /disable              → verify current code → disable (blocked for mandatory roles)
  *   /backup-codes/regenerate → verify current code → regenerate + return codes (once)
+ *
+ * WebAuthn / Passkey endpoints — all POST /api/webauthn/*:
+ *   /register/options     → start credential registration ceremony
+ *   /register/verify      → complete registration + persist credential
+ *   /credentials/list     → list saved passkeys
+ *   /credentials/rename   → rename a passkey
+ *   /credentials/delete   → delete a passkey (last-factor guard)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { startRegistration } from '@simplewebauthn/browser';
 
 // ── Response types ─────────────────────────────────────────────────────────────
 
@@ -49,11 +57,46 @@ export interface TotpRegenResponse {
   backupCodes: string[];   // shown once
 }
 
+// ── WebAuthn / Passkey response types ─────────────────────────────────────────
+
+export interface PasskeyCredential {
+  id:           string;
+  label:        string;
+  deviceType:   string;
+  backedUp:     boolean;
+  createdAt:    string;
+  lastUsedAt:   string | null;
+  transports:   string[];
+}
+
+export interface PasskeyListResponse {
+  success:     boolean;
+  credentials: PasskeyCredential[];
+}
+
+export interface PasskeyRegisterOptionsResponse {
+  success: boolean;
+  options: Record<string, unknown>;
+}
+
+export interface PasskeyRegisterVerifyResponse {
+  success:    boolean;
+  credential: PasskeyCredential;
+  message?:   string;
+}
+
+export interface PasskeyMutateResponse {
+  success:  boolean;
+  message?: string;
+  code?:    'last_factor';
+}
+
 // ── Query keys ────────────────────────────────────────────────────────────────
 
 export const securityKeys = {
-  all:    ['security']                   as const,
-  totp:   () => ['security', 'totp']    as const,
+  all:      ['security']                      as const,
+  totp:     () => ['security', 'totp']        as const,
+  passkeys: () => ['security', 'passkeys']    as const,
 } as const;
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -122,6 +165,90 @@ export function useRegenerateBackupCodes() {
       apiPost<TotpRegenResponse>('/api/auth/2fa/backup-codes/regenerate', { code }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.totp() });
+    },
+  });
+}
+
+// ── WebAuthn / Passkey hooks ──────────────────────────────────────────────────
+
+/**
+ * List all registered passkeys for the current user.
+ */
+export function usePasskeys(enabled = true) {
+  return useQuery({
+    queryKey: securityKeys.passkeys(),
+    queryFn:  () => apiPost<PasskeyListResponse>('/api/webauthn/credentials/list', {}),
+    enabled,
+    staleTime: 30_000,
+    select: (data) => data.credentials ?? [],
+  });
+}
+
+/**
+ * Register a new passkey.
+ * Runs the full ceremony: fetch options → startRegistration (browser) → verify.
+ * Pass an optional label to name the passkey.
+ */
+export function useRegisterPasskey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (label?: string) => {
+      // 1. Get registration options from server
+      const optionsRes = await apiPost<PasskeyRegisterOptionsResponse>(
+        '/api/webauthn/register/options',
+        {},
+      );
+      if (!optionsRes.success || !optionsRes.options) {
+        throw new Error('Failed to get registration options');
+      }
+
+      // 2. Run browser ceremony
+      const registrationResponse = await startRegistration({
+        optionsJSON: optionsRes.options as unknown as Parameters<typeof startRegistration>[0]['optionsJSON'],
+      });
+
+      // 3. Verify with server
+      return apiPost<PasskeyRegisterVerifyResponse>('/api/webauthn/register/verify', {
+        response: registrationResponse as unknown as Record<string, unknown>,
+        ...(label ? { label } : {}),
+      });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
+      void qc.invalidateQueries({ queryKey: securityKeys.totp() });
+    },
+  });
+}
+
+/**
+ * Rename a saved passkey.
+ */
+export function useRenamePasskey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { credentialId: string; label: string }) =>
+      apiPost<PasskeyMutateResponse>('/api/webauthn/credentials/rename', payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
+    },
+  });
+}
+
+/**
+ * Delete a saved passkey.
+ * If this is the user's last strong factor, the server returns 400 with
+ * code: 'last_factor'. Surface that message to the user — do not swallow it.
+ */
+export function useDeletePasskey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (credentialId: string) =>
+      apiPost<PasskeyMutateResponse>('/api/webauthn/credentials/delete', { credentialId }),
+    onSuccess: (data) => {
+      if (data.success) {
+        void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
+        void qc.invalidateQueries({ queryKey: securityKeys.totp() });
+      }
     },
   });
 }

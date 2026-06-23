@@ -11,6 +11,10 @@
  *   tfa-setup-confirm → tfa-backup
  *   any success → calls props.onLoginSuccess(result)
  *
+ * WebAuthn entry points (B2b):
+ *   credentials: "Sign in with a passkey" → passwordless flow
+ *   tfa-verify:  "Use a passkey instead"  → second_factor flow (gated on methods includes 'webauthn')
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  */
@@ -18,11 +22,14 @@
 import { h, Fragment } from 'preact';
 import { useEffect, useRef, useCallback } from 'preact/hooks';
 import { useMutation } from '@tanstack/preact-query';
+import { startAuthentication } from '@simplewebauthn/browser';
 import {
   loginApi,
   verify2faApi,
   setup2faApi,
   confirm2faSetupApi,
+  webauthnAuthOptions,
+  webauthnAuthVerify,
   type LoginResult,
 } from './api';
 import { otpValue, otpClear, wireOtpRow } from './OtpInput';
@@ -65,13 +72,137 @@ function focusFirst(rowId: string) {
   if (first) first.focus();
 }
 
+/** Whether WebAuthn is available in this browser. */
+function webauthnSupported(): boolean {
+  return typeof window !== 'undefined' && !!window.PublicKeyCredential;
+}
+
+// ── Passkey button injection helpers ─────────────────────────────────────────
+
+const PASSKEY_BTN_ID = 'passkeyLoginBtn';
+const PASSKEY_TFA_BTN_ID = 'passkeyTfaBtn';
+
+function injectPasskeyLoginButton(onClick: () => void): () => void {
+  if (!webauthnSupported()) return () => {};
+
+  const loginForm = document.getElementById('loginForm');
+  if (!loginForm) return () => {};
+
+  // Avoid double-injection
+  if (document.getElementById(PASSKEY_BTN_ID)) {
+    const existing = document.getElementById(PASSKEY_BTN_ID);
+    if (existing) {
+      existing.onclick = onClick;
+    }
+    return () => {};
+  }
+
+  // Divider
+  const divider = document.createElement('div');
+  divider.id = 'passkeyDivider';
+  divider.style.cssText = [
+    'display:flex',
+    'align-items:center',
+    'gap:10px',
+    'margin:16px 0 12px',
+    'font-size:0.78rem',
+    'color:var(--text-secondary,#8896a4)',
+  ].join(';');
+  divider.innerHTML = '<span style="flex:1;height:1px;background:var(--border-color,#dde3ea)"></span>'
+    + '<span>or</span>'
+    + '<span style="flex:1;height:1px;background:var(--border-color,#dde3ea)"></span>';
+
+  // Button
+  const btn = document.createElement('button');
+  btn.id = PASSKEY_BTN_ID;
+  btn.type = 'button';
+  btn.style.cssText = [
+    'width:100%',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'gap:8px',
+    'padding:10px 16px',
+    'border:1.5px solid var(--border-color,#dde3ea)',
+    'border-radius:var(--radius-md,8px)',
+    'background:var(--card-bg,#fff)',
+    'color:var(--text-primary,#1a2433)',
+    'font-size:0.875rem',
+    'font-weight:500',
+    'cursor:pointer',
+    'transition:border-color 0.15s,box-shadow 0.15s',
+  ].join(';');
+  btn.innerHTML = '<i class="fas fa-fingerprint" style="font-size:1rem;color:var(--accent,#2563eb)"></i>'
+    + ' Sign in with a passkey';
+  btn.onmouseenter = () => { btn.style.borderColor = 'var(--accent,#2563eb)'; };
+  btn.onmouseleave = () => { btn.style.borderColor = 'var(--border-color,#dde3ea)'; };
+  btn.onclick = onClick;
+
+  loginForm.appendChild(divider);
+  loginForm.appendChild(btn);
+
+  return () => {
+    divider.remove();
+    btn.remove();
+  };
+}
+
+function injectPasskeyTfaButton(onClick: () => void): () => void {
+  if (!webauthnSupported()) return () => {};
+
+  const tfaPanel = document.getElementById('twoFaPanel');
+  if (!tfaPanel) return () => {};
+  if (document.getElementById(PASSKEY_TFA_BTN_ID)) {
+    const existing = document.getElementById(PASSKEY_TFA_BTN_ID);
+    if (existing) existing.onclick = onClick;
+    return () => {};
+  }
+
+  const btn = document.createElement('button');
+  btn.id = PASSKEY_TFA_BTN_ID;
+  btn.type = 'button';
+  btn.style.cssText = [
+    'display:flex',
+    'align-items:center',
+    'gap:6px',
+    'margin-top:10px',
+    'background:none',
+    'border:none',
+    'color:var(--accent,#2563eb)',
+    'font-size:0.82rem',
+    'cursor:pointer',
+    'padding:4px 0',
+    'text-decoration:underline',
+    'text-underline-offset:2px',
+  ].join(';');
+  btn.innerHTML = '<i class="fas fa-fingerprint"></i> Use a passkey instead';
+  btn.onclick = onClick;
+
+  // Insert after the tfaSubmitBtn (find its parent)
+  const submitBtn = document.getElementById('tfaSubmitBtn');
+  if (submitBtn?.parentElement) {
+    submitBtn.parentElement.insertBefore(btn, submitBtn.nextSibling);
+  } else {
+    tfaPanel.appendChild(btn);
+  }
+
+  return () => { btn.remove(); };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
-  // Persisted 2FA state (preAuthToken, rememberMe) — lives only in memory
-  const tfaRef = useRef<{ preAuthToken: string | null; rememberMe: boolean }>({
+  // Persisted 2FA state (preAuthToken, rememberMe, methods) — lives only in memory
+  const tfaRef = useRef<{
+    preAuthToken:  string | null;
+    rememberMe:    boolean;
+    methods:       string[];
+    username:      string;
+  }>({
     preAuthToken: null,
     rememberMe:   false,
+    methods:      [],
+    username:     '',
   });
 
   // ── Button loading helpers ─────────────────────────────────────────────────
@@ -104,6 +235,19 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       : '<i class="fas fa-check-circle"></i> Enable Two-Factor Auth';
   }
 
+  function setPasskeyBtnLoading(id: string, loading: boolean) {
+    const btn = document.getElementById(id) as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.disabled = loading;
+    if (loading) {
+      btn.dataset['originalHtml'] = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying…';
+    } else if (btn.dataset['originalHtml']) {
+      btn.innerHTML = btn.dataset['originalHtml'];
+      delete btn.dataset['originalHtml'];
+    }
+  }
+
   // ── login mutation ────────────────────────────────────────────────────────
 
   const loginMut = useMutation({
@@ -123,6 +267,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
       if (result.requiresTwoFactor) {
         tfaRef.current.preAuthToken = result.preAuthToken ?? null;
+        tfaRef.current.methods      = result.methods ?? [];
+        tfaRef.current.username     = (document.getElementById('username') as HTMLInputElement | null)?.value.trim() ?? '';
         const remEl = document.getElementById('rememberMe') as HTMLInputElement | null;
         tfaRef.current.rememberMe   = remEl?.checked ?? false;
         // Show verify panel
@@ -173,7 +319,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       if (!result.success) {
         setErrorBanner('loginErrorBanner', result.message || 'Setup failed. Please log in again.');
         showPanel('credentials');
-        tfaRef.current = { preAuthToken: null, rememberMe: false };
+        tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
         return;
       }
       // Populate QR panel
@@ -220,7 +366,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
 
     // Reset 2FA memory
-    tfaRef.current = { preAuthToken: null, rememberMe: false };
+    tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
 
     onLoginSuccess(result);
   }, [onLoginSuccess]);
@@ -268,6 +414,97 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     confirmSetupMut.mutate({ preAuthToken: token, code });
   }, [confirmSetupMut]);
 
+  // ── WebAuthn: passwordless login (credentials panel) ──────────────────────
+
+  const handlePasskeyLogin = useCallback(async () => {
+    setErrorBanner('loginErrorBanner', null);
+    setPasskeyBtnLoading(PASSKEY_BTN_ID, true);
+    try {
+      // 1. Get authentication options (no username = fully discoverable)
+      const optRes = await webauthnAuthOptions();
+      if (!optRes.success || !optRes.options) {
+        setErrorBanner('loginErrorBanner', optRes.message || 'Could not start passkey login.');
+        return;
+      }
+
+      // 2. Browser ceremony
+      const assertion = await startAuthentication({
+        optionsJSON: optRes.options as unknown as Parameters<typeof startAuthentication>[0]['optionsJSON'],
+      });
+
+      // 3. Verify with server — returns full session payload
+      const result = await webauthnAuthVerify({
+        flow:     'passwordless',
+        response: assertion as unknown as Record<string, unknown>,
+      });
+
+      if (!result.success) {
+        setErrorBanner('loginErrorBanner', result.message || 'Passkey verification failed.');
+        return;
+      }
+
+      _completeLogin(result);
+    } catch (err: unknown) {
+      // User cancelled the browser dialog — show a soft, non-alarming message
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'NotAllowedError' || name === 'AbortError') {
+        // User dismissed — do nothing (stay on the page)
+        return;
+      }
+      const msg = err instanceof Error ? err.message : 'Passkey sign-in failed.';
+      setErrorBanner('loginErrorBanner', msg);
+    } finally {
+      setPasskeyBtnLoading(PASSKEY_BTN_ID, false);
+    }
+  }, [_completeLogin]);
+
+  // ── WebAuthn: second-factor during TOTP panel ─────────────────────────────
+
+  const handlePasskeyTfa = useCallback(async () => {
+    const token    = tfaRef.current.preAuthToken;
+    const username = tfaRef.current.username;
+    if (!token) return;
+
+    setErrorBanner('tfaErrorBanner', null);
+    setPasskeyBtnLoading(PASSKEY_TFA_BTN_ID, true);
+    try {
+      // 1. Get authentication options — hint with username so the correct cred is returned
+      const optRes = await webauthnAuthOptions(username || undefined);
+      if (!optRes.success || !optRes.options) {
+        setErrorBanner('tfaErrorBanner', optRes.message || 'Could not start passkey verification.');
+        return;
+      }
+
+      // 2. Browser ceremony
+      const assertion = await startAuthentication({
+        optionsJSON: optRes.options as unknown as Parameters<typeof startAuthentication>[0]['optionsJSON'],
+      });
+
+      // 3. Verify — returns full session payload
+      const result = await webauthnAuthVerify({
+        flow:          'second_factor',
+        preAuthToken:  token,
+        response:      assertion as unknown as Record<string, unknown>,
+      });
+
+      if (!result.success) {
+        setErrorBanner('tfaErrorBanner', result.message || 'Passkey verification failed.');
+        return;
+      }
+
+      _completeLogin(result);
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'NotAllowedError' || name === 'AbortError') {
+        return;
+      }
+      const msg = err instanceof Error ? err.message : 'Passkey verification failed.';
+      setErrorBanner('tfaErrorBanner', msg);
+    } finally {
+      setPasskeyBtnLoading(PASSKEY_TFA_BTN_ID, false);
+    }
+  }, []);
+
   // ── Wire DOM events ───────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -310,6 +547,9 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     const loginForm = document.getElementById('loginForm');
     loginForm?.addEventListener('submit', handleLoginSubmit);
 
+    // ── Inject passkey login button ─────────────────────────────────────────
+    const removePasskeyLoginBtn = injectPasskeyLoginButton(handlePasskeyLogin);
+
     // ── TFA verify panel ────────────────────────────────────────────────────
     const unwireVerify = wireOtpRow('tfaOtpRow', () => {
       const code = otpValue('tfaOtpRow');
@@ -348,7 +588,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
     function handleTfaBack() {
       showPanel('credentials');
-      tfaRef.current = { preAuthToken: null, rememberMe: false };
+      tfaRef.current = { preAuthToken: null, rememberMe: false, methods: [], username: '' };
     }
 
     const tfaSubmitBtn    = document.getElementById('tfaSubmitBtn');
@@ -360,6 +600,16 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     tfaBackupToggle?.addEventListener('click', handleTfaBackupToggle);
     tfaBackupSubmit?.addEventListener('click', handleTfaBackupSubmit);
     tfaBackBtn?.addEventListener('click', handleTfaBack);
+
+    // ── Inject passkey TFA button (shown only when webauthn is in methods) ──
+    // We inject it unconditionally; we gate visibility by checking methods at click time.
+    // This avoids needing to know methods before the panel is shown.
+    // The button is hidden until the tfa-verify panel is actually shown.
+    const removePasskeyTfaBtn = injectPasskeyTfaButton(() => {
+      // Only run if webauthn is in the methods list from the login response
+      if (!tfaRef.current.methods.includes('webauthn')) return;
+      void handlePasskeyTfa();
+    });
 
     // ── TFA setup panel ─────────────────────────────────────────────────────
     function handleSetupQrNext() {
@@ -402,6 +652,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
     return () => {
       loginForm?.removeEventListener('submit', handleLoginSubmit);
+      removePasskeyLoginBtn();
+      removePasskeyTfaBtn();
       unwireVerify();
       unwireSetupOtp();
       tfaSubmitBtn?.removeEventListener('click', handleTfaSubmitBtn);
