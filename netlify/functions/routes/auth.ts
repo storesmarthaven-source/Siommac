@@ -1,6 +1,7 @@
 import { Hono }     from 'hono';
 import { sb, createAnonClient } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
+import type { AuthMethodClaims }       from '../lib/auth';
 import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/permissions';
 import { getProfileSignedUrl }         from '../lib/photos';
 import { setting }                     from '../lib/settings';
@@ -19,6 +20,7 @@ import {
   generateTotpSecret, verifyCode, buildQrCode,
   generateBackupCodes, consumeBackupCode,
 } from '../lib/totp';
+import { hasStrongFactor, getFactorMethods } from '../lib/webauthn';
 import type { HonoVariables }          from '../../../types/api';
 import type { AppUser }                from '../../../types/db';
 
@@ -50,7 +52,11 @@ function deviceFrom(c: { req: { header: (k: string) => string | undefined }; get
 }
 
 // ── Shared helper: build full session payload after successful auth ────────────
-async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip?: string }) {
+export async function buildSessionPayload(
+  u:       AppUser,
+  device?: { userAgent?: string; ip?: string },
+  amr?:    Partial<AuthMethodClaims>,
+) {
   const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs, roleSet, isEmployee, roleScope] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
@@ -67,7 +73,7 @@ async function buildSessionPayload(u: AppUser, device?: { userAgent?: string; ip
   ]);
   return {
     success:      true as const,
-    token:        signUser(u),
+    token:        signUser(u, amr),
     refreshToken,
     userId:       u.id,
     username:     u.username,
@@ -140,22 +146,44 @@ router.post('/login', async c => {
   // ── 2FA gate ──────────────────────────────────────────────────────────────
   const mandatory = isTwoFactorMandatory(u.role);
 
-  if (mandatory && !u.totp_enabled) {
-    const setupToken = await issueChallenge(u.id, 'setup');
-    await log_(u, 'login_requires_setup', 'user', u.id, '2FA setup required');
-    return c.json({ success: true, requiresSetup: true, preAuthToken: setupToken });
+  if (mandatory) {
+    // Use hasStrongFactor: TOTP OR a registered passkey satisfies the gate.
+    const strongFactor = await hasStrongFactor(u.id);
+
+    if (!strongFactor) {
+      // No factor at all — prompt for TOTP setup (the existing enrolment flow)
+      const setupToken = await issueChallenge(u.id, 'setup');
+      await log_(u, 'login_requires_setup', 'user', u.id, '2FA setup required');
+      return c.json({ success: true, requiresSetup: true, preAuthToken: setupToken });
+    }
+
+    // User has at least one strong factor — require them to use it
+    const [preAuthToken, factorMethods] = await Promise.all([
+      issueChallenge(u.id, 'verify'),
+      getFactorMethods(u.id),
+    ]);
+    const methods: string[] = [];
+    if (factorMethods.hasTotp)        methods.push('totp');
+    if (factorMethods.passkeyCount > 0) methods.push('webauthn');
+    await log_(u, 'login_requires_2fa', 'user', u.id, `methods: ${methods.join(',')}`);
+    return c.json({ success: true, requiresTwoFactor: true, preAuthToken, methods });
   }
 
   if (u.totp_enabled) {
+    // Non-mandatory role has voluntarily enrolled TOTP — honour it
     const preAuthToken = await issueChallenge(u.id, 'verify');
     await log_(u, 'login_requires_2fa', 'user', u.id, '');
-    return c.json({ success: true, requiresTwoFactor: true, preAuthToken });
+    return c.json({ success: true, requiresTwoFactor: true, preAuthToken, methods: ['totp'] });
   }
 
-  // No 2FA required — issue full session
+  // No 2FA required — issue full session (password-only)
   console.log('[login] building session for', u.username);
   try {
-    const payload = await buildSessionPayload(u, deviceFrom(c));
+    const payload = await buildSessionPayload(u, deviceFrom(c), {
+      amr:          ['pwd'],
+      mfaSatisfied: false,
+      authStrength: 'password_only',
+    });
     await log_(u, 'login', 'user', u.id, 'login ok');
     return c.json(payload);
   } catch (e) {
@@ -205,7 +233,12 @@ router.post('/verify2fa', async c => {
 
   await consumeChallenge(challenge.id);
   await log_(u, 'login', 'user', u.id, usedBackup ? 'login ok (backup code)' : 'login ok (2FA)');
-  return c.json(await buildSessionPayload(u, deviceFrom(c)));
+  return c.json(await buildSessionPayload(u, deviceFrom(c), {
+    amr:           ['pwd', 'otp'],
+    mfaSatisfied:  true,
+    mfaVerifiedAt: new Date().toISOString(),
+    authStrength:  'mfa',
+  }));
 });
 
 // ── Setup 2FA (step 1) — generate secret + QR code ───────────────────────────
@@ -289,7 +322,12 @@ router.post('/confirm2faSetup', async c => {
 
   await log_(uFull, '2fa_enrolled', 'user', uFull.id, '');
 
-  const session = await buildSessionPayload(uFull, deviceFrom(c));
+  const session = await buildSessionPayload(uFull, deviceFrom(c), {
+    amr:           ['pwd', 'otp'],
+    mfaSatisfied:  true,
+    mfaVerifiedAt: new Date().toISOString(),
+    authStrength:  'mfa',
+  });
   return c.json({ ...session, backupCodes: plains });  // plaintext shown ONCE
 });
 

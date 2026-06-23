@@ -51,6 +51,7 @@
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@netlify/functions": "^2.0.0",
+    "@simplewebauthn/server": "^13.3.1",
     "@supabase/supabase-js": "^2.45.0",
     "@tanstack/preact-query": "^5.100.10",
     "@tanstack/query-core": "^5.100.10",

@@ -44,15 +44,32 @@ if (USE_RS256) {
 
 // ── Access token helpers ──────────────────────────────────────────────────────
 
+export interface AuthMethodClaims {
+  /** Authentication Method References (RFC 8176). */
+  amr:           string[];
+  /** True when the session has fully satisfied MFA for the user's role. */
+  mfaSatisfied:  boolean;
+  /** ISO timestamp of the second-factor verification (absent for password-only). */
+  mfaVerifiedAt?: string;
+  /** Coarse strength classification. */
+  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey';
+}
+
 /** Issue a short-lived signed access JWT for a user. */
-function signUser(u: AppUser): string {
+function signUser(u: AppUser, amrClaims?: Partial<AuthMethodClaims>): string {
   const jti = crypto.randomUUID();
+  const now  = new Date().toISOString();
   const payload = {
     sub:          u.id,
     username:     u.username,
     role:         u.role,
     departmentId: u.department_id ?? '',
     jti,
+    // Auth-method claims — default to password-only for backward compat
+    amr:           amrClaims?.amr          ?? ['pwd'],
+    mfaSatisfied:  amrClaims?.mfaSatisfied ?? false,
+    mfaVerifiedAt: amrClaims?.mfaVerifiedAt,
+    authStrength:  amrClaims?.authStrength  ?? 'password_only',
   };
   if (USE_RS256) {
     return jwt.sign(payload, JWT_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: ACCESS_TOKEN_TTL });
@@ -326,6 +343,22 @@ async function requirePermission(
   return u;
 }
 
+/**
+ * Non-throwing permission check for an already-loaded user. Same resolution as
+ * requirePermission (per-user override → role default → deny; superadmin allow-all)
+ * but returns a boolean instead of throwing — for routes that must branch on
+ * several capabilities (e.g. the messaging read-gate) rather than gate the whole
+ * request on one key.
+ */
+async function userCan(user: { id: string; role?: string | null }, key: string): Promise<boolean> {
+  if (user.role === 'superadmin') return true;
+  const [roleSet, overrides] = await Promise.all([
+    loadRolePermissions(user.role ?? ''),
+    loadUserOverrides(user.id),
+  ]);
+  return resolveWithSet(key, roleSet, overrides);
+}
+
 // ── Activity logging ──────────────────────────────────────────────────────────
 
 async function log_(
@@ -365,6 +398,7 @@ export {
   requireUser,
   requireRole,
   requirePermission,
+  userCan,
   loadUserOverrides,
   revokeUserSessions,
   log_,

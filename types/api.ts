@@ -39,9 +39,10 @@ export interface LoginResponse extends ApiResponse {
   isEmployee?: boolean;
   sessionIdleTimeoutMs?: number;  // resolved per-role idle window (ms)
   // ── 2FA intermediate states ──────────────────────────────────────────────
-  requiresTwoFactor?: boolean;  // enrolled, must enter TOTP code
+  requiresTwoFactor?: boolean;  // enrolled, must enter TOTP code or use passkey
   requiresSetup?:     boolean;  // mandatory role, not yet enrolled
   preAuthToken?:      string;   // short-lived, grants only /verify2fa or /setup2fa
+  methods?:           string[]; // ['totp', 'webauthn'] — which factors are available
 }
 
 export interface Setup2faResponse extends ApiResponse {
@@ -87,6 +88,15 @@ export interface JwtPayload {
   jti:          string;   // unique token id — used for revocation checks
   iat:          number;
   exp:          number;
+  // ── Auth-method claims (Phase B2a) ────────────────────────────────────────
+  /** Authentication Method References — e.g. ['pwd'], ['pwd','otp'], ['pwd','webauthn'], ['webauthn'] */
+  amr:           string[];
+  /** True when the session has satisfied the MFA requirement for the user's role. */
+  mfaSatisfied:  boolean;
+  /** ISO timestamp when the second factor was verified (absent for password-only sessions). */
+  mfaVerifiedAt?: string;
+  /** Coarse strength classification for the session. */
+  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey';
 }
 
 // ── Hono context variables ─────────────────────────────────────────────────────
