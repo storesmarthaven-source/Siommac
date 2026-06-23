@@ -41,8 +41,19 @@ export const PERMISSION_KEYS = [
   'roles.manage',
   // ── HSE module ──────────────────────────────────────────────────────────────
   'hse.incidents.view',    'hse.incidents.manage',
+  'hse.incidents.create',  // submit a new incident report (distinct from manage)
+  'hse.investigations.manage', // manage investigation records
   'hse.risk.view',         'hse.risk.manage',
-  'hse.permits.view',      'hse.permits.manage',
+  'hse.risk.approve',      // approve risk assessments
+  'hse.risk.library.manage',
+  // ── PTW (Permit-to-Work) ───────────────────────────────────────────────────
+  'hse.ptw.view',          // view permits in the register
+  'hse.ptw.create',        // create / draft a new permit
+  'hse.ptw.approve',       // approve a submitted permit
+  'hse.ptw.activate',      // activate an approved permit (on-site gate)
+  'hse.ptw.manage',        // admin actions: extend, close, cancel, void
+  // ── CAPA ──────────────────────────────────────────────────────────────────
+  'hse.capa.manage',       // manage corrective/preventive actions
   'hse.inspections.view',  'hse.inspections.manage',
   'hse.training.view',     'hse.training.manage',
   'hse.toolbox.view',      'hse.toolbox.manage',
@@ -56,6 +67,18 @@ export const PERMISSION_KEYS = [
   'hse.workflows.view',    'hse.workflows.manage',
   // ── Platform workflow ────────────────────────────────────────────────────────
   'workflow.submit', 'workflow.approve', 'workflow.audit',
+  'workflow.view',         // view workflow tasks and status
+  // ── Communications / Messaging (participant-default; NO broad read-all key) ────
+  'communications.view',
+  'communications.thread_create',
+  'communications.thread_manage_own',
+  'communications.record_thread_read',
+  'communications.moderate',
+  'communications.admin',
+  'communications.compliance_read',
+  'communications.compliance_export',
+  // ── Tickets ────────────────────────────────────────────────────────────────
+  'tickets.manage',        // create, assign, resolve, and close support/work tickets
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -69,12 +92,37 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
+    'hse.incidents.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
+    'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+    'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+    'hse.dashboard.view', 'hse.workflows.view',
+    'workflow.submit', 'workflow.view',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
   ]),
   manager: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
     'payroll.view_own', 'employees.view', 'employees.view_detail',
     'sites.view', 'map.view', 'dashboard.view', 'reports.export',
+    'hse.incidents.view', 'hse.incidents.manage', 'hse.incidents.create',
+    'hse.investigations.manage',
+    'hse.risk.view',      'hse.risk.manage', 'hse.risk.approve',
+    'hse.risk.library.manage',
+    'hse.ptw.view',       'hse.ptw.create', 'hse.ptw.approve', 'hse.ptw.activate', 'hse.ptw.manage',
+    'hse.capa.manage',
+    'hse.inspections.view','hse.inspections.manage',
+    'hse.training.view',  'hse.training.manage',
+    'hse.toolbox.view',   'hse.toolbox.manage',
+    'hse.documents.view', 'hse.documents.manage',
+    'hse.contractors.view','hse.contractors.manage',
+    'hse.legal.view',     'hse.emergency.view',   'hse.emergency.manage',
+    'hse.environmental.view','hse.environmental.manage',
+    'hse.ppe.view',       'hse.ppe.manage',
+    'hse.dashboard.view', 'hse.workflows.view', 'hse.workflows.manage',
+    'workflow.submit', 'workflow.approve', 'workflow.audit', 'workflow.view',
+    'tickets.manage',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.record_thread_read',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -87,6 +135,26 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'sites.view', 'sites.add', 'sites.edit', 'sites.delete', 'sites.assign_employees',
     'map.view', 'dashboard.view', 'reports.export',
     'settings.view', 'settings.edit', 'settings.statutory_rates',
+    'hse.incidents.view', 'hse.incidents.manage', 'hse.incidents.create',
+    'hse.investigations.manage',
+    'hse.risk.view',      'hse.risk.manage', 'hse.risk.approve',
+    'hse.risk.library.manage',
+    'hse.ptw.view',       'hse.ptw.create', 'hse.ptw.approve', 'hse.ptw.activate', 'hse.ptw.manage',
+    'hse.capa.manage',
+    'hse.inspections.view','hse.inspections.manage',
+    'hse.training.view',  'hse.training.manage',
+    'hse.toolbox.view',   'hse.toolbox.manage',
+    'hse.documents.view', 'hse.documents.manage',
+    'hse.contractors.view','hse.contractors.manage',
+    'hse.legal.view',     'hse.legal.manage',
+    'hse.emergency.view', 'hse.emergency.manage',
+    'hse.environmental.view','hse.environmental.manage',
+    'hse.ppe.view',       'hse.ppe.manage',
+    'hse.dashboard.view', 'hse.workflows.view', 'hse.workflows.manage',
+    'workflow.submit', 'workflow.approve', 'workflow.audit', 'workflow.view',
+    'tickets.manage',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.record_thread_read', 'communications.moderate', 'communications.admin',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };
