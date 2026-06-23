@@ -16,6 +16,11 @@
 
 import { sb }          from './db';
 import { emitAppEvent } from './appEvents';
+import { getSignedUrl }  from './photos';
+import { createAttachmentUploadUrl } from './upload';
+
+// ── Messaging attachments bucket ───────────────────────────────────────────────
+export const MESSAGES_BUCKET = 'message-attachments';
 
 // ── Realtime signal emission ───────────────────────────────────────────────────
 
@@ -793,6 +798,7 @@ export interface AttachmentRow {
   filePath:    string;
   contentType: string | null;
   sizeBytes:   number | null;
+  url:         string | null;  // signed download URL (24 h, best-effort)
 }
 
 export interface GetThreadPostsResult {
@@ -863,10 +869,20 @@ export async function getThreadPosts(
           }
       : { data: null };
 
+    // Compute signed URLs for all attachments (best-effort, parallel)
+    const attachList = attachments ?? [];
+    const signedUrls = await Promise.all(
+      attachList.map(a =>
+        getSignedUrl(MESSAGES_BUCKET, a.file_path).catch(() => ''),
+      ),
+    );
+
     const attachMap = new Map<string, AttachmentRow[]>();
-    for (const a of attachments ?? []) {
+    for (let i = 0; i < attachList.length; i++) {
+      const a   = attachList[i]!;
+      const url = signedUrls[i] ?? null;
       const list = attachMap.get(a.post_id) ?? [];
-      list.push({ id: a.id, fileName: a.file_name, filePath: a.file_path, contentType: a.content_type, sizeBytes: a.size_bytes });
+      list.push({ id: a.id, fileName: a.file_name, filePath: a.file_path, contentType: a.content_type, sizeBytes: a.size_bytes, url: url || null });
       attachMap.set(a.post_id, list);
     }
 
@@ -893,6 +909,61 @@ export async function getThreadPosts(
     console.error('[communications] getThreadPosts failed:', e);
     return { ok: false, message: 'Internal error' };
   }
+}
+
+// ── Message attachment helpers ────────────────────────────────────────────────
+
+export interface MessageAttachmentUploadUrlResult {
+  uploadUrl: string;
+  token:     string;
+  path:      string;
+  bucket:    string;
+  ext:       string;
+}
+
+/**
+ * Generate a presigned upload URL for the message-attachments bucket.
+ * The client PUTs the raw file binary to `uploadUrl`, then calls
+ * `createMessageAttachmentRecord` to persist the metadata row.
+ */
+export async function createMessageAttachmentUploadUrl(
+  fileName: string,
+  mimeType: string,
+): Promise<MessageAttachmentUploadUrlResult> {
+  const result = await createAttachmentUploadUrl(MESSAGES_BUCKET, fileName, mimeType);
+  return { ...result, bucket: MESSAGES_BUCKET };
+}
+
+export interface CreateMessageAttachmentInput {
+  fileName:    string;
+  filePath:    string;
+  contentType: string | null;
+  sizeBytes:   number | null;
+  uploadedBy:  string;
+}
+
+/**
+ * Insert a `message_attachments` row with `post_id` NULL.
+ * The `postMessage` / `createMessageThread` lib functions link it to the post
+ * via UPDATE ... WHERE id IN (...attachmentIds).
+ */
+export async function createMessageAttachmentRecord(
+  input: CreateMessageAttachmentInput,
+): Promise<{ ok: boolean; id?: string; message?: string }> {
+  const { data, error } = await sb.from('message_attachments').insert({
+    file_name:   input.fileName,
+    file_path:   input.filePath,
+    content_type: input.contentType,
+    size_bytes:  input.sizeBytes,
+    uploaded_by: input.uploadedBy,
+    // post_id intentionally NULL — linked on send
+  }).select('id').single<{ id: string }>();
+
+  if (error || !data) {
+    console.error('[communications] createMessageAttachmentRecord failed:', error?.message);
+    return { ok: false, message: error?.message ?? 'Failed to create attachment record' };
+  }
+  return { ok: true, id: data.id };
 }
 
 // ── markThreadRead ─────────────────────────────────────────────────────────────

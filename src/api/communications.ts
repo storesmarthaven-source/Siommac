@@ -294,8 +294,9 @@ export function useMessagePosts(threadId: string) {
 }
 
 export interface PostMessageArgs extends Record<string, unknown> {
-  threadId: string;
-  body:     string;
+  threadId:      string;
+  body:          string;
+  attachmentIds?: string[];
 }
 
 export function usePostMessage() {
@@ -307,8 +308,45 @@ export function usePostMessage() {
       ),
     onSuccess: (_r: unknown, vars: PostMessageArgs) => {
       qc.invalidateQueries({ queryKey: messageKeys.thread(vars.threadId) });
+      qc.invalidateQueries({ queryKey: messageKeys.posts(vars.threadId) });
       qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
+  });
+}
+
+// ── Attachment upload hooks ───────────────────────────────────────────────────
+
+export interface AttachmentUploadUrlResult {
+  uploadUrl: string;
+  token:     string;
+  path:      string;
+  bucket:    string;
+  ext:       string;
+}
+
+/** Step 1: get a presigned PUT URL from the backend. */
+export function useMessageAttachmentUploadUrl() {
+  return useMutation({
+    mutationFn: (args: { fileName: string; mimeType: string }) =>
+      apiPost<{ success: boolean; data: AttachmentUploadUrlResult }>(
+        'communications/messages/attachments/upload-url', { args }, { retryable: false },
+      ).then(r => {
+        if (!r.success) throw new Error('Failed to get upload URL');
+        return r.data;
+      }),
+  });
+}
+
+/** Step 3: persist the attachment metadata row (post_id NULL until send). */
+export function useCreateMessageAttachment() {
+  return useMutation({
+    mutationFn: (args: { fileName: string; filePath: string; contentType: string | null; sizeBytes: number | null }) =>
+      apiPost<{ success: boolean; id: string }>(
+        'communications/messages/attachments/create', { args }, { retryable: false },
+      ).then(r => {
+        if (!r.success) throw new Error('Failed to create attachment record');
+        return r.id;
+      }),
   });
 }
 
@@ -320,6 +358,7 @@ export interface CreateThreadArgs extends Record<string, unknown> {
   sourceEntityId?:    string | null;
   participantUserIds: string[];
   body:               string;
+  attachmentIds?:     string[];
 }
 
 export function useCreateMessageThread() {
@@ -371,17 +410,36 @@ export interface MessageThreadDetail {
   participants: MessageParticipantProfile[];
 }
 
+export interface MessageAttachment {
+  id:           string;
+  fileName:     string;       // camelCase — matches backend PostRow/AttachmentRow
+  filePath:     string;
+  contentType:  string | null;
+  sizeBytes:    number | null;
+  url:          string | null; // signed download URL (24 h)
+}
+
 export interface MessagePostRow {
-  id:             string;
-  thread_id:      string;
-  author_user_id: string | null;
-  author_profile: MessageParticipantProfile | null;
-  body:           string;
-  is_system:      boolean;
-  is_edited:      boolean;
-  is_deleted:     boolean;
-  created_at:     string;
-  edited_at:      string | null;
+  id:              string;
+  threadId:        string;      // camelCase from backend lib
+  thread_id:       string;      // kept for compat — same value
+  authorUserId:    string | null;
+  author_user_id:  string | null;
+  authorName:      string | null;
+  authorEmail:     string | null;
+  author_profile:  MessageParticipantProfile | null;
+  body:            string;
+  isSystem:        boolean;
+  is_system:       boolean;
+  attachmentCount: number;
+  is_edited:       boolean;
+  is_deleted:      boolean;
+  editedAt:        string | null;
+  edited_at:       string | null;
+  deletedAt:       string | null;
+  createdAt:       string;
+  created_at:      string;
+  attachments:     MessageAttachment[];
 }
 
 export interface MessageRecipient {

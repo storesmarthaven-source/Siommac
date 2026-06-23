@@ -22,6 +22,8 @@
  * POST /api/communications/messages/posts
  * POST /api/communications/messages/post
  * POST /api/communications/messages/markRead
+ * POST /api/communications/messages/attachments/upload-url
+ * POST /api/communications/messages/attachments/create
  *
  * Tickets
  * POST /api/communications/tickets/create
@@ -50,6 +52,8 @@ import {
   removeThreadParticipant,
   searchMessages,
   getMessageRecipients,
+  createMessageAttachmentUploadUrl,
+  createMessageAttachmentRecord,
 } from '../lib/communications';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
@@ -416,6 +420,55 @@ router.post('/communications/messages/post', async c => {
     return c.json({ success: false, message: result.message ?? 'Failed' }, status);
   }
   return c.json({ success: true, postId: result.postId, threadId: result.threadId, createdAt: result.createdAt });
+});
+
+// POST /api/communications/messages/attachments/upload-url
+// Returns a presigned PUT URL so the browser can upload directly to Supabase Storage.
+const AttachUploadUrlSchema = z.object({
+  fileName: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(128),
+});
+
+router.post('/communications/messages/attachments/upload-url', async c => {
+  await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, AttachUploadUrlSchema, body.args);
+  if (!v.ok) return v.response;
+
+  try {
+    const result = await createMessageAttachmentUploadUrl(v.data.fileName, v.data.mimeType);
+    return c.json({ success: true, data: result });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Failed to create upload URL';
+    return c.json({ success: false, message: msg }, 400 as 200);
+  }
+});
+
+// POST /api/communications/messages/attachments/create
+// Persists the attachment metadata row (post_id NULL until the post is sent).
+const AttachCreateSchema = z.object({
+  fileName:    z.string().min(1).max(255),
+  filePath:    z.string().min(1).max(1024),
+  contentType: z.string().nullable().optional(),
+  sizeBytes:   z.number().int().nonnegative().nullable().optional(),
+});
+
+router.post('/communications/messages/attachments/create', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, AttachCreateSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await createMessageAttachmentRecord({
+    fileName:    v.data.fileName,
+    filePath:    v.data.filePath,
+    contentType: v.data.contentType ?? null,
+    sizeBytes:   v.data.sizeBytes ?? null,
+    uploadedBy:  user.id,
+  });
+
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed' }, 500 as 200);
+  return c.json({ success: true, id: result.id });
 });
 
 // POST /api/communications/messages/markRead

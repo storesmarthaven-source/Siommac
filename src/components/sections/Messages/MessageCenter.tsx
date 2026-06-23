@@ -10,13 +10,15 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { PageHeader, type AreaTab } from '@ui';
 import {
   useMessageThreadsFull, useThreadPosts, useMarkThreadRead,
   usePostMessage, useArchiveThread, useCommsSummary,
   useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
+  useMessageAttachmentUploadUrl, useCreateMessageAttachment,
   type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
+  type MessageAttachment,
 } from '@api/communications';
 import { useSessionStore } from '@store/session';
 import { ComposeThreadDialog } from './ComposeThreadDialog';
@@ -26,6 +28,52 @@ const TABS: AreaTab[] = [
   { key: 'sent',     label: 'Sent',     icon: 'fa-paper-plane' },
   { key: 'archived', label: 'Archived', icon: 'fa-box-archive' },
 ];
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+function fmtBytes(n: number | null | undefined): string {
+  if (n == null || n <= 0) return '';
+  if (n < 1024)            return `${n} B`;
+  if (n < 1024 * 1024)     return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileIcon(ct: string | null | undefined): string {
+  if (!ct) return 'fa-file';
+  if (ct.startsWith('image/'))              return 'fa-file-image';
+  if (ct === 'application/pdf')             return 'fa-file-pdf';
+  if (ct.includes('word'))                  return 'fa-file-word';
+  if (ct.includes('excel') || ct.includes('spreadsheet') || ct === 'text/csv') return 'fa-file-excel';
+  if (ct.startsWith('text/'))               return 'fa-file-lines';
+  return 'fa-file';
+}
+
+/** A single downloadable attachment chip. */
+function AttachChip({ a }: { a: MessageAttachment }): VNode {
+  const href = a.url ?? undefined;
+  const Tag  = href ? 'a' : 'span';
+  return (
+    <Tag
+      href={href}
+      download={a.fileName}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={a.fileName}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '5px',
+        padding: '3px 9px', borderRadius: '6px',
+        background: 'var(--bg-subtle, #f4f5f7)', border: '1px solid var(--border)',
+        fontSize: '0.72rem', color: 'var(--siomac-navy)', textDecoration: 'none',
+        cursor: href ? 'pointer' : 'default', flexShrink: 0,
+      }}>
+      <i class={`fas ${fileIcon(a.contentType)}`} style={{ fontSize: '0.68rem' }} />
+      <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {a.fileName}
+      </span>
+      {a.sizeBytes != null && <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{fmtBytes(a.sizeBytes)}</span>}
+    </Tag>
+  );
+}
 
 // ── Thread list (left pane) ────────────────────────────────────────────────────
 
@@ -157,6 +205,16 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
   );
 }
 
+// ── Pending attachment (pre-upload state) ─────────────────────────────────────
+
+interface PendingAttachment {
+  localId:  string;   // uuid-ish local key
+  file:     File;
+  state:    'uploading' | 'done' | 'error';
+  attachId: string | null;  // server-assigned id once done
+  error:    string | null;
+}
+
 // ── Conversation (right pane) ─────────────────────────────────────────────────
 
 function Conversation({ thread, detailsOpen, onToggleDetails }: {
@@ -164,11 +222,16 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   detailsOpen?: boolean;
   onToggleDetails?: () => void;
 }): VNode {
-  const [body, setBody] = useState('');
+  const [body, setBody]               = useState('');
+  const [pending, setPending]         = useState<PendingAttachment[]>([]);
+  const fileInputRef                  = useRef<HTMLInputElement>(null);
+
   const { data: posts = [], isLoading } = useThreadPosts(thread.id);
-  const postMsg  = usePostMessage();
-  const archive  = useArchiveThread();
-  const markRead = useMarkThreadRead();
+  const postMsg     = usePostMessage();
+  const archive     = useArchiveThread();
+  const markRead    = useMarkThreadRead();
+  const getUploadUrl = useMessageAttachmentUploadUrl();
+  const createAttach = useCreateMessageAttachment();
 
   // Mark read when thread opens
   useEffect(() => {
@@ -176,11 +239,68 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.id]);
 
+  // Upload pipeline: get presigned URL → PUT file → create DB row
+  async function uploadFile(file: File): Promise<string | null> {
+    try {
+      const urlRes = await getUploadUrl.mutateAsync({ fileName: file.name, mimeType: file.type || 'application/octet-stream' });
+      // PUT raw binary to Supabase Storage
+      const put = await fetch(urlRes.uploadUrl, {
+        method:  'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body:    file,
+      });
+      if (!put.ok) throw new Error(`Storage PUT failed: ${put.status}`);
+      // Persist DB row
+      const id = await createAttach.mutateAsync({
+        fileName:    file.name,
+        filePath:    urlRes.path,
+        contentType: file.type || null,
+        sizeBytes:   file.size,
+      });
+      return id ?? null;
+    } catch (err) {
+      console.error('[MessageCenter] upload failed', err);
+      return null;
+    }
+  }
+
+  function handleFileChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (!files.length) return;
+
+    for (const file of files) {
+      const localId: string = `${Date.now()}-${Math.random()}`;
+      const entry: PendingAttachment = { localId, file, state: 'uploading', attachId: null, error: null };
+      setPending(prev => [...prev, entry]);
+
+      void uploadFile(file).then(id => {
+        setPending(prev => prev.map(p =>
+          p.localId === localId
+            ? (id ? { ...p, state: 'done' as const, attachId: id } : { ...p, state: 'error' as const, error: 'Upload failed' })
+            : p,
+        ));
+      });
+    }
+  }
+
+  function removePending(localId: string) {
+    setPending(prev => prev.filter(p => p.localId !== localId));
+  }
+
+  const canSend = (body.trim().length > 0 || pending.some(p => p.state === 'done'))
+    && !postMsg.isPending
+    && !pending.some(p => p.state === 'uploading');
+
   function handleSend() {
-    const trimmed = body.trim();
-    if (!trimmed || postMsg.isPending) return;
-    postMsg.mutate({ threadId: thread.id, body: trimmed }, {
-      onSuccess: () => setBody(''),
+    if (!canSend) return;
+    const attachmentIds = pending.filter(p => p.state === 'done' && p.attachId).map(p => p.attachId as string);
+    postMsg.mutate({ threadId: thread.id, body: body.trim() || '​', attachmentIds: attachmentIds.length ? attachmentIds : undefined }, {
+      onSuccess: () => {
+        setBody('');
+        setPending([]);
+      },
     });
   }
 
@@ -234,17 +354,27 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>
         )}
         {posts.map(post => {
-          const isSystem = post.is_system;
-          const authorName = post.author_profile?.full_name ?? post.author_profile?.username ?? 'System';
-          const iniText = ((authorName[0] ?? '').toUpperCase());
+          // Backend returns camelCase (PostRow). Support both camelCase and snake_case for safety.
+          const isSystem   = post.isSystem ?? post.is_system ?? false;
+          const isDeleted  = post.deletedAt != null || (post as { is_deleted?: boolean }).is_deleted === true;
+          const isEdited   = post.editedAt != null || (post as { is_edited?: boolean }).is_edited === true;
+          const createdAt  = post.createdAt ?? post.created_at;
+          const authorName = post.authorName
+            ?? post.author_profile?.full_name
+            ?? post.author_profile?.username
+            ?? (isSystem ? 'System' : 'Unknown');
+          const profileImg = post.author_profile?.profile_image ?? null;
+          const iniText    = ((authorName[0] ?? '').toUpperCase());
+          const attachments: MessageAttachment[] = Array.isArray(post.attachments) ? post.attachments : [];
+
           const relTime = (() => {
-            const d = Date.now() - new Date(post.created_at).getTime();
+            const d = Date.now() - new Date(createdAt).getTime();
             const m = Math.round(d / 60000);
             if (m < 1) return 'just now';
             if (m < 60) return `${m}m ago`;
             const h = Math.round(m / 60);
             if (h < 24) return `${h}h ago`;
-            return new Date(post.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            return new Date(createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
           })();
 
           if (isSystem) {
@@ -262,8 +392,8 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
             <div key={post.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
               <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
                 background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {post.author_profile?.profile_image
-                  ? <img src={post.author_profile.profile_image} alt={iniText}
+                {profileImg
+                  ? <img src={profileImg} alt={iniText}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                   : <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>
                 }
@@ -272,14 +402,20 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
                   <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{authorName}</span>
                   <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{relTime}</span>
-                  {post.is_edited && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(edited)</span>}
+                  {isEdited && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(edited)</span>}
                 </div>
-                <div style={{ fontSize: '0.83rem', color: post.is_deleted ? 'var(--text-muted)' : 'var(--siomac-navy)',
-                  lineHeight: 1.5, fontStyle: post.is_deleted ? 'italic' : 'normal',
+                <div style={{ fontSize: '0.83rem', color: isDeleted ? 'var(--text-muted)' : 'var(--siomac-navy)',
+                  lineHeight: 1.5, fontStyle: isDeleted ? 'italic' : 'normal',
                   background: 'var(--bg-surface)', borderRadius: '10px', padding: '8px 12px',
                   border: '1px solid var(--border)' }}>
-                  {post.is_deleted ? 'This message was deleted.' : post.body}
+                  {isDeleted ? 'This message was deleted.' : post.body}
                 </div>
+                {/* Attachment chips */}
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                    {attachments.map(a => <AttachChip key={a.id} a={a} />)}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -289,7 +425,56 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
       {/* Composer */}
       {!thread.is_archived && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          {/* Pending attachment chips */}
+          {pending.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              {pending.map(p => (
+                <div key={p.localId} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  padding: '3px 8px', borderRadius: '6px',
+                  background: p.state === 'error' ? 'rgba(220,38,38,0.07)' : 'var(--bg-subtle, #f4f5f7)',
+                  border: `1px solid ${p.state === 'error' ? '#f87171' : 'var(--border)'}`,
+                  fontSize: '0.72rem', color: p.state === 'error' ? '#dc2626' : 'var(--siomac-navy)',
+                }}>
+                  {p.state === 'uploading'
+                    ? <i class="fas fa-spinner fa-spin" style={{ fontSize: '0.65rem' }} />
+                    : p.state === 'error'
+                      ? <i class="fas fa-triangle-exclamation" style={{ fontSize: '0.65rem' }} />
+                      : <i class={`fas ${fileIcon(p.file.type)}`} style={{ fontSize: '0.65rem' }} />
+                  }
+                  <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.state === 'error' ? (p.error ?? 'Failed') : p.file.name}
+                  </span>
+                  {fmtBytes(p.file.size) && (
+                    <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{fmtBytes(p.file.size)}</span>
+                  )}
+                  <button onClick={() => removePending(p.localId)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px',
+                      color: 'var(--text-muted)', lineHeight: 1, flexShrink: 0 }}
+                    title="Remove">
+                    <i class="fas fa-xmark" style={{ fontSize: '0.65rem' }} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+            {/* Paperclip */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach file"
+              style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)',
+                background: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}>
+              <i class="fas fa-paperclip" style={{ fontSize: '0.82rem' }} />
+            </button>
             <textarea
               value={body}
               onInput={e => setBody((e.target as HTMLTextAreaElement).value)}
@@ -302,11 +487,11 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
             />
             <button
               onClick={handleSend}
-              disabled={!body.trim() || postMsg.isPending}
+              disabled={!canSend}
               style={{ padding: '8px 14px', borderRadius: '8px', border: 'none',
-                background: body.trim() && !postMsg.isPending ? 'var(--siomac-navy)' : 'var(--border)',
-                color: body.trim() && !postMsg.isPending ? '#fff' : 'var(--text-muted)',
-                cursor: body.trim() && !postMsg.isPending ? 'pointer' : 'default',
+                background: canSend ? 'var(--siomac-navy)' : 'var(--border)',
+                color: canSend ? '#fff' : 'var(--text-muted)',
+                cursor: canSend ? 'pointer' : 'default',
                 fontSize: '0.82rem', fontWeight: 600, flexShrink: 0 }}>
               <i class="fas fa-paper-plane" />
             </button>
@@ -351,9 +536,21 @@ function SectionHead({ children }: { children: ComponentChildren }): VNode {
 
 function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNode {
   const myId = useSessionStore(s => s.userId);
-  const { data: detail } = useThread(thread.id);
+  const { data: detail }   = useThread(thread.id);
+  const { data: allPosts = [] } = useThreadPosts(thread.id);
   const participants: MessageParticipantProfile[] = detail?.participants ?? thread.participants;
   const isOwner = thread.role === 'owner';
+
+  // Flatten all attachments from all posts for the Files panel
+  const allFiles: (MessageAttachment & { createdAt: string; authorName: string | null })[] = [];
+  for (const post of allPosts) {
+    const postAttachments: MessageAttachment[] = Array.isArray(post.attachments) ? post.attachments : [];
+    const createdAt = post.createdAt ?? post.created_at ?? '';
+    const authorName = post.authorName ?? post.author_profile?.full_name ?? null;
+    for (const a of postAttachments) {
+      allFiles.push({ ...a, createdAt, authorName });
+    }
+  }
 
   const addP    = useAddThreadParticipants();
   const removeP = useRemoveThreadParticipant();
@@ -459,11 +656,46 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
 
       {/* Files */}
       <div>
-        <SectionHead>Files</SectionHead>
-        <div style={{ textAlign: 'center', padding: '18px 8px', color: 'var(--text-muted)' }}>
-          <i class="fas fa-paperclip" style={{ fontSize: '1.3rem', opacity: 0.4 }} />
-          <div style={{ fontSize: '0.76rem', marginTop: '6px' }}>No files shared yet.</div>
-        </div>
+        <SectionHead>Files ({allFiles.length})</SectionHead>
+        {allFiles.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '18px 8px', color: 'var(--text-muted)' }}>
+            <i class="fas fa-paperclip" style={{ fontSize: '1.3rem', opacity: 0.4 }} />
+            <div style={{ fontSize: '0.76rem', marginTop: '6px' }}>No files shared yet.</div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {allFiles.map(a => {
+              const href = a.url ?? undefined;
+              const Tag  = href ? 'a' : 'div';
+              return (
+                <Tag
+                  key={a.id}
+                  href={href}
+                  download={a.fileName}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 9px',
+                    borderRadius: '8px', border: '1px solid var(--border)',
+                    background: 'var(--bg-subtle, #f4f5f7)', textDecoration: 'none',
+                    cursor: href ? 'pointer' : 'default',
+                  }}>
+                  <i class={`fas ${fileIcon(a.contentType)}`} style={{ color: 'var(--siomac-navy)', fontSize: '1rem', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.77rem', fontWeight: 600, color: 'var(--siomac-navy)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {a.fileName}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      {[fmtBytes(a.sizeBytes), a.authorName].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                  {href && <i class="fas fa-download" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', flexShrink: 0 }} />}
+                </Tag>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
