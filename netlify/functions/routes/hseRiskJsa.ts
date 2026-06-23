@@ -1167,6 +1167,43 @@ router.post('/risk-jsa/review', async c => {
   });
 });
 
+// ── POST /api/hse/risk-jsa/queue ─────────────────────────────────────────────
+// Unified cross-entity list for the Pending Approval and Archive tabs. scope
+// 'pending' → records awaiting a decision; 'archived' → the archive view.
+
+const QueueSchema = z.object({
+  scope: z.enum(['pending', 'archived']).default('pending'),
+  limit: z.number().int().min(1).max(200).default(100),
+});
+
+router.post('/risk-jsa/queue', async c => {
+  await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, QueueSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+
+  const statuses = v.data.scope === 'archived'
+    ? ['archived']
+    : ['submitted', 'under_review', 'hse_review'];
+  const cols = 'id, ref, title, risk_level, status, site_id, location_text, review_due_at, created_at, updated_at';
+
+  const [hz, ra, js] = await Promise.all([
+    sb.from('hse_hazards').select(cols).in('status', statuses).order('updated_at', { ascending: false }).limit(v.data.limit),
+    sb.from('hse_risk_assessments').select(cols).in('status', statuses).order('updated_at', { ascending: false }).limit(v.data.limit),
+    sb.from('hse_jsa').select(cols).in('status', statuses).order('updated_at', { ascending: false }).limit(v.data.limit),
+  ]);
+
+  type Row = Record<string, unknown> & { updated_at?: string };
+  const tag = (rows: Row[] | null, entityType: string) => (rows ?? []).map(r => ({ ...r, entityType }));
+  const rows = [
+    ...tag(hz.data as Row[] | null, 'hazard'),
+    ...tag(ra.data as Row[] | null, 'assessment'),
+    ...tag(js.data as Row[] | null, 'jsa'),
+  ].sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')));
+
+  return c.json({ success: true, data: rows });
+});
+
 // ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────
 // Submit a hazard for review → status under_review + (create) hazard-review workflow.
 

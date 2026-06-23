@@ -27,13 +27,31 @@ export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 export type HazardStatus =
   | 'draft' | 'registered' | 'assessment_required' | 'controls_required'
-  | 'under_review' | 'approved' | 'monitoring' | 'archived';
+  | 'under_review' | 'approved' | 'monitoring' | 'archived'
+  | 'changes_requested' | 'rejected' | 'closed';
 
 export type AssessmentStatus =
-  | 'draft' | 'submitted' | 'under_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived';
+  | 'draft' | 'submitted' | 'under_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived'
+  | 'changes_requested' | 'rejected' | 'closed';
 
 export type JsaStatus =
-  | 'draft' | 'submitted' | 'hse_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived';
+  | 'draft' | 'submitted' | 'hse_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived'
+  | 'changes_requested' | 'rejected' | 'closed';
+
+/** A row in the cross-entity Pending Approval / Archive queue. */
+export interface QueueRow {
+  entityType:    'hazard' | 'assessment' | 'jsa';
+  id:            string;
+  ref:           string;
+  title:         string;
+  risk_level:    RiskLevel;
+  status:        string;
+  site_id:       string | null;
+  location_text: string | null;
+  review_due_at: string | null;
+  created_at:    string;
+  updated_at:    string;
+}
 
 export type ControlType =
   | 'elimination' | 'substitution' | 'engineering' | 'administrative' | 'ppe' | 'emergency_response';
@@ -390,6 +408,38 @@ export function useRiskJsaReview() {
     mutationFn: (args: ReviewArgs) =>
       apiPost<{ success: boolean }>('hse/risk-jsa/review', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Lifecycle actions (status-transition engine) ─────────────────────────────────
+
+export type LifecycleAction =
+  | 'approve' | 'reject' | 'request-changes' | 'activate' | 'close' | 'archive';
+
+export interface LifecycleArgs extends Record<string, unknown> {
+  entityType:      'hazard' | 'assessment' | 'jsa';
+  entityId:        string;
+  note?:           string | null;
+  nextReviewDueAt?: string | null;
+}
+
+/** Drive one lifecycle transition (approve/reject/request-changes/activate/close/archive). */
+export function useRiskJsaLifecycle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ action, ...args }: LifecycleArgs & { action: LifecycleAction }) =>
+      apiPost<{ success: boolean; status?: string }>(`hse/risk-jsa/${action}`, args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
+  });
+}
+
+// ── Pending Approval / Archive queue ─────────────────────────────────────────────
+
+export function useRiskJsaQueue(scope: 'pending' | 'archived') {
+  return useQuery({
+    queryKey: ['hse', 'risk-jsa', 'queue', scope] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: QueueRow[] }>('hse/risk-jsa/queue', { scope }),
+    staleTime: 20_000,
   });
 }
 
