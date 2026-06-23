@@ -7,33 +7,17 @@
  */
 
 import { apiAction } from '@lib/api';
-import type { NotifItem, MsgItem, TicketItem } from './types';
+import type { NotifItem, TicketItem } from './types';
 
 interface NotifResponse        { success: boolean; data?: NotifItem[]; }
-interface MsgResponse          { success: boolean; data?: MsgItem[]; unreadCount?: number; }
 interface TicketResponse       { success: boolean; data?: TicketItem[]; }
 interface BasicResponse        { success: boolean; message?: string; id?: string | number; ticketNumber?: string; count?: number; }
 
 export const getNotifications = () =>
   apiAction<NotifResponse>('getNotifications', {});
 
-export const getMessages = () =>
-  apiAction<MsgResponse>('getMessages', {});
-
-export const markMessageRead = (messageId: string | number) =>
-  apiAction<BasicResponse>('markMessageRead', { messageId } as unknown as Record<string, unknown>);
-
-export const sendMessage = (args: { subject: string; body: string; toUsername: string }) =>
-  apiAction<BasicResponse>('sendMessage', args as unknown as Record<string, unknown>);
-
-export const replyMessage = (args: { messageId: string | number; body: string }) =>
-  apiAction<BasicResponse>('replyMessage', args as unknown as Record<string, unknown>);
-
-export const deleteMessage = (messageId: string | number) =>
-  apiAction<BasicResponse>('deleteMessage', { messageId } as unknown as Record<string, unknown>);
-
-export const getEmployeesForMsg = () =>
-  apiAction<{ success: boolean; data?: Array<{ username: string; fullName: string; role: string }> }>('getEmployeesForMsg', {});
+// Legacy message endpoints retired — the canonical communications/messages/* API
+// (src/api/communications.ts) replaces them.
 
 export const getTickets = () =>
   apiAction<TicketResponse>('getTickets', {});

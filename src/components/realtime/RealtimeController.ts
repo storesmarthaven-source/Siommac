@@ -108,27 +108,10 @@ export function initRealtime(): void {
   _client
     .channel('siomac-live', { config: { broadcast: { self: false } } })
 
-    // ── messages ──────────────────────────────────────────────────────────────
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchMsgs');
-    })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchMsgs');
-    })
-
-    // ── message replies ───────────────────────────────────────────────────────
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message_replies' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchMsgs');
-    })
-
-    // ── message reads (per-user read state) ───────────────────────────────────
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'message_reads' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchMsgs');
-    })
+    // Messages now flow through the canonical communications backbone: the
+    // backend emits communication_signals and useRealtimeSignals refreshes the
+    // message badge + lists. The legacy messages/message_replies/message_reads
+    // table subscriptions were retired with routes/messages.ts.
 
     // ── support tickets ───────────────────────────────────────────────────────
     .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
