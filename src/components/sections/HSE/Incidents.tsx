@@ -842,7 +842,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           footer={`${sevCounts.danger + sevCounts.warning} high-risk this month`} />
       ) },
       { key: 'investigations', node: (
-        <StatsCard icon="fa-magnifying-glass" title="Open Investigations" metric={invOpen} metricUnit="open"
+        <StatsCard icon="fa-magnifying-glass" title="Open Investigations"
+          metric={investigations.filter(i => !/closed/i.test(i.status)).length} metricUnit="open"
           supporting={`${rcaPct}% root-caused · ${activeInvest} incidents under investigation`}
           statuses={[
             { label: 'Critical',  value: invCrit,   color: '#ef4444' },
