@@ -33,6 +33,7 @@ import { RiskJsaInsightCards } from './risk-jsa/RiskJsaInsightCards';
 import { RiskJsaRightPanel }  from './risk-jsa/RiskJsaRightPanel';
 import { ExportDialog }       from './risk-jsa/dialogs/ExportDialog';
 import { TemplateDialog }     from './risk-jsa/dialogs/TemplateDialog';
+import { calculateRiskBand }  from './risk-jsa/shared/RiskScorePill';
 import { type CsvColumn }     from '@ui/lib/exportCsv';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -50,11 +51,9 @@ const HAZARD_CATEGORIES = [
 
 // ── Risk helpers ──────────────────────────────────────────────────────────────
 
+/** Canonical 5×5 band from an L×S score — delegates to the shared RiskScorePill helper. */
 function riskLevelFrom(score: number): RiskLevel {
-  if (score >= 20) return 'critical';
-  if (score >= 10) return 'high';
-  if (score >= 6)  return 'medium';
-  return 'low';
+  return calculateRiskBand(score) as RiskLevel;
 }
 
 function riskPill(likelihood: number, severity: number): VNode {

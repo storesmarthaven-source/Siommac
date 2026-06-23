@@ -35,12 +35,14 @@ import type { HonoVariables } from '../../../types/api';
 const router = new Hono<{ Variables: HonoVariables }>();
 
 // ── Risk level helper ─────────────────────────────────────────────────────────
+// Canonical 5×5 bands (must match src/.../shared/RiskScorePill.ts calculateRiskBand):
+//   1–5 low · 6–9 medium · 10–16 high · 17–25 critical
 
 function riskLevel(score: number): 'low' | 'medium' | 'high' | 'critical' {
-  if (score >= 20) return 'critical';
-  if (score >= 10) return 'high';
-  if (score >= 6)  return 'medium';
-  return 'low';
+  if (score <= 5)  return 'low';
+  if (score <= 9)  return 'medium';
+  if (score <= 16) return 'high';
+  return 'critical';
 }
 
 // ── POST /api/hse/risk-jsa/summary ────────────────────────────────────────────
