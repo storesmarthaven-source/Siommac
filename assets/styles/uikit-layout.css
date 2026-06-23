@@ -467,7 +467,7 @@ body[data-theme="dark"] .hero-footer {
 }
 
 .hse-tabs-bar {
-  display: flex; gap: 4px; padding: 4px 6px; align-items: stretch;
+  display: flex; gap: 4px; padding: 6px; align-items: stretch;
   background: var(--bg-subtle, #F8FAFE);
 }
 /* Tab BUTTONS — scoped to .hse-tabs-bar so they never hit the page wrapper,
@@ -476,7 +476,7 @@ body[data-theme="dark"] .hero-footer {
    into a flex row, collapsing the hero into a narrow column. */
 .hse-tabs-bar .hse-tab {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 7px 12px; border: none; border-radius: 7px;
+  padding: 9px 12px; border: none; border-radius: 7px;
   background: transparent; cursor: pointer; font-family: inherit;
   font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
   transition: all .2s ease; white-space: nowrap; position: relative;
