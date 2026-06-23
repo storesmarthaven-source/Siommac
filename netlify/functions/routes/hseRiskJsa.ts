@@ -24,6 +24,9 @@
  * POST /api/hse/risk-jsa/activate
  * POST /api/hse/risk-jsa/close
  * POST /api/hse/risk-jsa/archive
+ * POST /api/hse/risk-jsa/queue
+ * POST /api/hse/risk-jsa/library/hazards
+ * POST /api/hse/risk-jsa/library/controls
  * POST /api/hse/risk-jsa/hazards/submit
  * POST /api/hse/risk-jsa/templates/list
  * POST /api/hse/risk-jsa/templates/duplicate
@@ -1262,6 +1265,56 @@ router.post('/risk-jsa/queue', async c => {
   ].sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')));
 
   return c.json({ success: true, data: rows });
+});
+
+// ── POST /api/hse/risk-jsa/library/hazards ───────────────────────────────────
+// Standard hazard bank — pick-from-library for assessments / JSAs.
+
+const HazardLibrarySchema = z.object({
+  search:   z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  workType: z.string().nullable().optional(),
+});
+
+router.post('/risk-jsa/library/hazards', async c => {
+  await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, HazardLibrarySchema, body.args ?? {});
+  if (!v.ok) return v.response;
+
+  let q = sb.from('hse_hazard_library').select('*').eq('is_active', true).order('category').order('title');
+  if (v.data.category) q = q.eq('category', v.data.category);
+  if (v.data.workType) q = q.contains('work_types', [v.data.workType]);
+  if (v.data.search)   q = q.ilike('title', `%${v.data.search}%`);
+
+  const { data, error } = await q;
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// ── POST /api/hse/risk-jsa/library/controls ──────────────────────────────────
+// Standard control bank — pick-from-library for hazards / assessments / JSAs.
+
+const ControlLibrarySchema = z.object({
+  search:         z.string().nullable().optional(),
+  controlType:    z.string().nullable().optional(),
+  hazardCategory: z.string().nullable().optional(),
+});
+
+router.post('/risk-jsa/library/controls', async c => {
+  await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ControlLibrarySchema, body.args ?? {});
+  if (!v.ok) return v.response;
+
+  let q = sb.from('hse_control_library').select('*').eq('is_active', true).order('control_type').order('title');
+  if (v.data.controlType)    q = q.eq('control_type', v.data.controlType);
+  if (v.data.hazardCategory) q = q.eq('hazard_category', v.data.hazardCategory);
+  if (v.data.search)         q = q.ilike('title', `%${v.data.search}%`);
+
+  const { data, error } = await q;
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: data ?? [] });
 });
 
 // ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────

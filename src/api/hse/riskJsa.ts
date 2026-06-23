@@ -526,6 +526,60 @@ export function useLinkCapa() {
   });
 }
 
+// ── Reference libraries (standard hazards / controls) ────────────────────────────
+
+export interface HazardLibraryItem {
+  id:                  string;
+  code:                string;
+  category:            string;
+  title:               string;
+  description:         string;
+  typical_consequence: string;
+  default_likelihood:  number | null;
+  default_severity:    number | null;
+  work_types:          string[];
+}
+
+export interface ControlLibraryItem {
+  id:              string;
+  code:            string;
+  control_type:    ControlType;
+  title:           string;
+  description:     string;
+  hazard_category: string | null;
+  effectiveness:   'high' | 'medium' | 'low' | null;
+}
+
+export interface HazardLibraryFilter extends Record<string, unknown> {
+  search?:   string | null;
+  category?: string | null;
+  workType?: string | null;
+}
+
+export function useHazardLibrary(filter: HazardLibraryFilter = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['hse', 'risk-jsa', 'lib-hazards', filter] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: HazardLibraryItem[] }>('hse/risk-jsa/library/hazards', filter),
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export interface ControlLibraryFilter extends Record<string, unknown> {
+  search?:         string | null;
+  controlType?:    string | null;
+  hazardCategory?: string | null;
+}
+
+export function useControlLibrary(filter: ControlLibraryFilter = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['hse', 'risk-jsa', 'lib-controls', filter] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: ControlLibraryItem[] }>('hse/risk-jsa/library/controls', filter),
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}
+
 // ── Workflow templates ───────────────────────────────────────────────────────────
 
 export interface WorkflowTemplate {
