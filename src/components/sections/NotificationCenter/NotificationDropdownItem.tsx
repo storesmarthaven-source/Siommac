@@ -21,11 +21,8 @@ export function NotificationDropdownItem({ n, onOpen }: {
   const muted = n.action_status === 'completed' || n.action_status === 'expired' || n.action_status === 'dismissed';
   const showDot = !n.is_read && !muted;
 
-  // Context line parts: module · ref · [action required] · time.
-  const parts: Array<{ text: string; tone?: string }> = [{ text: mod.label }];
-  if (n.source_id) parts.push({ text: n.source_id });
-  if (actionPending) parts.push({ text: 'Action required', tone: '#b45309' });
-  parts.push({ text: relativeTime(n.created_at) });
+  // Context line: module · ref · time (the action-required badge renders inline).
+  const parts = [mod.label, n.source_id, relativeTime(n.created_at)].filter(Boolean) as string[];
 
   return (
     <div
@@ -49,13 +46,18 @@ export function NotificationDropdownItem({ n, onOpen }: {
           </span>
           {showDot && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: sev, flexShrink: 0, marginLeft: 'auto' }} />}
         </div>
-        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {parts.map((p, i) => (
-            <span key={i} style={{ color: p.tone ?? 'inherit' }}>
-              {i > 0 ? ' · ' : ''}{p.text}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', minWidth: 0 }}>
+          {actionPending && (
+            <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 600, lineHeight: 1.5,
+              padding: '0 6px', borderRadius: '5px', background: 'rgba(245,158,11,.14)', color: '#b45309',
+              whiteSpace: 'nowrap' }}>
+              Action required
             </span>
-          ))}
+          )}
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+            {parts.join(' · ')}
+          </span>
         </div>
       </div>
     </div>
