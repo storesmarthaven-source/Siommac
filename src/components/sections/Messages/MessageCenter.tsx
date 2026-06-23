@@ -10,8 +10,8 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useEffect, useCallback } from 'preact/hooks';
-import { PageHeader, TabBar, withCounts, type AreaTab } from '@ui';
+import { useState, useEffect } from 'preact/hooks';
+import { PageHeader, type AreaTab } from '@ui';
 import {
   useMessageThreadsFull, useThreadPosts, useMarkThreadRead,
   usePostMessage, useArchiveThread, useCommsSummary,
@@ -34,12 +34,21 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
   isLoading:  boolean;
 }): VNode {
   const [search, setSearch] = useState('');
+  const [chips, setChips] = useState({ unread: false, groups: false, records: false });
+  const toggle = (k: 'unread' | 'groups' | 'records') => setChips(c => ({ ...c, [k]: !c[k] }));
+
   const filtered = threads.filter(t => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (t.subject ?? '').toLowerCase().includes(q)
-      || t.participants.some(p => (p.full_name ?? '').toLowerCase().includes(q))
-      || (t.last_post_body ?? '').toLowerCase().includes(q);
+    if (chips.unread  && !(t.unread_count > 0))     return false;
+    if (chips.groups  && !(t.participant_count > 2)) return false;
+    if (chips.records && !t.source_module)          return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const hit = (t.subject ?? '').toLowerCase().includes(q)
+        || t.participants.some(p => (p.full_name ?? '').toLowerCase().includes(q))
+        || (t.last_post_body ?? '').toLowerCase().includes(q);
+      if (!hit) return false;
+    }
+    return true;
   });
 
   function displayName(t: MessageThreadListItem): string {
@@ -62,10 +71,27 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Search */}
-      <div class="vt-search" style={{ margin: '12px', flexShrink: 0 }}>
+      <div class="vt-search" style={{ margin: '12px 12px 8px', flexShrink: 0 }}>
         <i class="fas fa-search" />
-        <input type="search" placeholder="Search threads…" value={search}
+        <input type="search" placeholder="Search conversations…" value={search}
           onInput={e => setSearch((e.target as HTMLInputElement).value)} />
+      </div>
+
+      {/* Filter chips */}
+      <div style={{ display: 'flex', gap: '6px', padding: '0 12px 10px', flexShrink: 0, flexWrap: 'wrap' }}>
+        {([['unread', 'Unread'], ['groups', 'Groups'], ['records', 'Records']] as const).map(([k, label]) => {
+          const on = chips[k];
+          return (
+            <button key={k} onClick={() => toggle(k)}
+              style={{ height: '28px', padding: '0 12px', borderRadius: '999px', cursor: 'pointer',
+                fontSize: '0.72rem', fontWeight: 600, fontFamily: 'inherit',
+                border: `1px solid ${on ? 'var(--siomac-navy)' : 'var(--border)'}`,
+                background: on ? 'var(--siomac-navy)' : '#fff',
+                color: on ? '#fff' : 'var(--text-muted)' }}>
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -318,11 +344,12 @@ export function MessageCenter(): VNode {
     }
   }, [threads, selectedThread]);
 
-  const tabs = withCounts(TABS, {
-    inbox:    unread,
-    sent:     undefined,
-    archived: undefined,
-  });
+  // 0 threads on this tab → full-width welcome state (no split). >0 → split.
+  const hasThreads = threads.length > 0;
+  const emptyAll   = !isLoading && !hasThreads;
+  const emptyTitle = tab === 'archived' ? 'No archived conversations'
+                   : tab === 'sent'     ? 'Nothing sent yet'
+                   :                       'No conversations yet';
 
   return (
     <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%' }}>
@@ -336,52 +363,86 @@ export function MessageCenter(): VNode {
         ]}
       />
 
-      {/* Tab row + New Message button */}
+      {/* Compact tab row + New Message button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <TabBar tabs={tabs} active={tab} onSelect={setTab} />
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {TABS.map(t => {
+            const on    = tab === t.key;
+            const count = t.key === 'inbox' ? unread : undefined;
+            return (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                style={{ display: 'flex', alignItems: 'center', gap: '7px', height: '34px', padding: '0 14px',
+                  borderRadius: '9px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit',
+                  border: 'none', background: on ? 'var(--siomac-navy)' : 'transparent',
+                  color: on ? '#fff' : 'var(--text-muted)' }}>
+                <i class={`fas ${t.icon}`} style={{ fontSize: '0.78rem' }} /> {t.label}
+                {count !== undefined && count > 0 && (
+                  <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', padding: '0 5px',
+                    background: on ? 'rgba(255,255,255,0.25)' : 'var(--border)',
+                    color: on ? '#fff' : 'var(--siomac-navy)', fontSize: '0.66rem', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
-        <button class="hse-btn" onClick={() => setComposeOpen(true)} style={{ flexShrink: 0 }}>
+        <button class="hse-btn" onClick={() => setComposeOpen(true)} style={{ marginLeft: 'auto', flexShrink: 0 }}>
           <i class="fas fa-pen-to-square" /> New Message
         </button>
       </div>
 
-      {/* Two-pane body */}
-      <div style={{ flex: 1, display: 'flex', gap: '0', minHeight: '400px', overflow: 'hidden',
-        background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
-        {/* Left pane — thread list */}
-        <div style={{ width: '300px', minWidth: '260px', flexShrink: 0,
-          borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
-          <ThreadList
-            threads={threads}
-            selectedId={selectedThread?.id ?? null}
-            onSelect={setSelectedThread}
-            isLoading={isLoading}
-          />
+      {emptyAll ? (
+        /* ── Full-width welcome state (no conversations) ─────────────────────── */
+        <div style={{ flex: 1, minHeight: '420px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '24px',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(27,45,85,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i class="fas fa-comments" style={{ fontSize: '1.8rem', color: 'var(--siomac-navy)', opacity: 0.7 }} />
+          </div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{emptyTitle}</div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '420px' }}>
+            Start a direct message, group conversation, or record-linked discussion.
+          </div>
+          <button class="hse-btn primary" onClick={() => setComposeOpen(true)}>
+            <i class="fas fa-pen-to-square" /> New Message
+          </button>
         </div>
+      ) : (
+        /* ── Split layout (threads exist) ────────────────────────────────────── */
+        <div style={{ flex: 1, display: 'flex', gap: '0', minHeight: '400px', overflow: 'hidden',
+          background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
+          {/* Left pane — thread list */}
+          <div style={{ width: '300px', minWidth: '260px', flexShrink: 0,
+            borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
+            <ThreadList
+              threads={threads}
+              selectedId={selectedThread?.id ?? null}
+              onSelect={setSelectedThread}
+              isLoading={isLoading}
+            />
+          </div>
 
-        {/* Right pane — conversation or empty state */}
-        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          {selectedThread
-            ? <Conversation thread={selectedThread} />
-            : (
-              <div style={{ height: '100%', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '12px', color: 'var(--text-muted)' }}>
-                <i class="fas fa-comments" style={{ fontSize: '2.4rem', opacity: 0.3 }} />
-                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
-                  Select a conversation
+          {/* Right pane — conversation, or "select one" (threads exist) */}
+          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            {selectedThread
+              ? <Conversation thread={selectedThread} />
+              : (
+                <div style={{ height: '100%', display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-muted)', padding: '24px', textAlign: 'center' }}>
+                  <i class="fas fa-comments" style={{ fontSize: '2.4rem', opacity: 0.25 }} />
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>
+                    Select a conversation
+                  </div>
+                  <div style={{ fontSize: '0.82rem' }}>
+                    Choose a thread from the inbox to view the discussion.
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.8rem' }}>
-                  Choose a thread from the left, or start a new one.
-                </div>
-                <button class="hse-btn" onClick={() => setComposeOpen(true)}>
-                  <i class="fas fa-pen-to-square" /> New Message
-                </button>
-              </div>
-            )
-          }
+              )
+            }
+          </div>
         </div>
-      </div>
+      )}
 
       <ComposeThreadDialog
         open={composeOpen}
