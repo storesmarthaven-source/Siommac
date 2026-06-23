@@ -201,6 +201,18 @@ export default function SharedSections() {
       <LiveMapSection />
 
       {/* Superadmin Console — superadmin only */}
+      {/* Notification Center — all roles */}
+      <AppSection id="s-notification-center">
+        <ProfilePill ids={{
+          profileBtn: 'ncProfileBtn', avatar: 'ncProfileAvatar',
+          profileName: 'ncProfileName', profileRole: 'ncProfileRole',
+          notifBtn: 'ncNotifBtn', notifBadge: 'ncNotifBadge',
+          msgBtn: 'ncMsgBtn', msgBadge: 'ncMsgBadge',
+          ticketBtn: 'ncTicketBtn', ticketBadge: 'ncTicketBadge',
+        }} />
+        <div id="preact-notification-center-root" />
+      </AppSection>
+
       <AppSection id="s-superadmin-console">
         <ProfilePill ids={{
           profileBtn: 'sadmModProfileBtn', avatar: 'sadmModProfileAvatar',

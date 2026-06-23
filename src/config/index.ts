@@ -141,6 +141,7 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
 };
 
 export const COMMON_SECTIONS: SectionDef[] = [
+  { id: 's-notification-center', label: 'Notifications', icon: 'fa-bell',        sub: 'Alerts, approvals, assignments and reminders across the ERP', group: 'account' },
   { id: 's-profile',  label: 'My Profile', icon: 'fa-user-circle', sub: 'Your account details, photo and contact info', group: 'account' },
   { id: 's-settings', label: 'Settings',   icon: 'fa-palette',     sub: 'Themes, layout, security and company branding', group: 'account' },
   { id: 's-about',    label: 'About',      icon: 'fa-info-circle', sub: 'Version, credits and system information',      group: 'account' },
