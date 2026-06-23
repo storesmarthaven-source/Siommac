@@ -1,16 +1,14 @@
 -- Notification System — Phase 1: schema foundations.
 -- (See docs/notification-architecture.md.)
---   • Fix notifications.event_id type (uuid → text) so it links to app_events(id) (text).
 --   • Add action-tracking columns to notifications.
 --   • notification_preferences + notification_mutes tables.
 --   • Seed communications.admin (broadcast) permission.
-
--- ── 1. Fix notifications.event_id → text, re-link to app_events(id) ────────────
-alter table public.notifications drop constraint if exists notifications_event_id_fkey;
-alter table public.notifications alter column event_id type text using event_id::text;
-alter table public.notifications
-  add constraint notifications_event_id_fkey
-  foreign key (event_id) references public.app_events(id) on delete set null;
+--
+-- NOTE: notifications.event_id is already uuid → app_events(id) (added by
+-- 20260621100001_erp_communications_core.sql against the canonical uuid
+-- app_events from 20260621100000_erp_backbone_core.sql). An earlier draft of
+-- this file converted event_id to text to match a stale text-id app_events; that
+-- was wrong for the canonical schema and has been removed.
 
 -- ── 2. Action-aware columns on notifications ──────────────────────────────────
 -- Read/unread = did the user see it. action_status = was the work actually done.

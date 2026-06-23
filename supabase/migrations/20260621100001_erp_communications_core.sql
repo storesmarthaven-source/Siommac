@@ -34,7 +34,7 @@ create index if not exists notifications_user_unread_idx
 
 create table if not exists public.notification_deliveries (
   id                  uuid    primary key default gen_random_uuid(),
-  notification_id     uuid    not null references public.notifications(id) on delete cascade,
+  notification_id     text    not null references public.notifications(id) on delete cascade,
   channel             text    not null check (channel in ('in_app','email','whatsapp')),
   status              text    not null default 'pending'
                               check (status in ('pending','sent','failed','skipped')),
