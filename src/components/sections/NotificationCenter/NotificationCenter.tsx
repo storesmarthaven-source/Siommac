@@ -98,7 +98,16 @@ export function NotificationCenter(): VNode {
     search:             search || undefined,
   };
   const { data, isLoading, refetch } = useNotifications(args);
-  const rows = data ?? [];
+  // Belt-and-suspenders: filter the active-tab predicates client-side too, so the
+  // tabs are correct even if an older deployed backend ignores the list args.
+  const rows = (data ?? []).filter(n => {
+    if (tab === 'unread') return !n.is_read;
+    if (tab === 'action') return n.action_required && n.action_status === 'pending';
+    if (severity && n.severity !== severity)             return false;
+    if (criticalOnly && n.severity !== 'critical')       return false;
+    if (module && n.module !== module)                   return false;
+    return true;
+  });
   const groups = useMemo(() => groupByDate(rows), [rows]);
   const unread = summary?.notificationsUnread ?? 0;
 

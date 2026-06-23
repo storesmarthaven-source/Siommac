@@ -14,7 +14,7 @@ import {
   useMarkAllNotificationsRead, useArchiveNotification,
   type CanonicalNotification, type NotificationListArgs,
 } from '@api/communications';
-import { showSection } from '@components/nav/navCore';
+import { showSection, setHdrBadge } from '@components/nav/navCore';
 import { NotificationDropdownItem } from './NotificationDropdownItem';
 
 const TABS = [
@@ -66,13 +66,26 @@ export function NotificationDropdown(): VNode {
   const { data: summary } = useCommsSummary();
   const unread = summary?.notificationsUnread ?? 0;
 
+  // Drive the header bell badge straight from the summary the dropdown already
+  // loads — guarantees the count shows even if the imperative badgeSync poll
+  // hasn't run yet. (Always mounted, so this keeps the badge live app-wide.)
+  useEffect(() => {
+    document.querySelectorAll('[data-pill-badge="notif"]').forEach(el => setHdrBadge(el, unread));
+  }, [unread]);
+
   const args: NotificationListArgs = {
-    limit: 10,
+    limit: 30,
     unreadOnly:         tab === 'unread',
     actionRequiredOnly: tab === 'action',
   };
   const { data, isLoading, refetch } = useNotifications(args);
-  const rows = data ?? [];
+  // Belt-and-suspenders: also filter client-side so the tabs are correct even if
+  // an older deployed backend ignores the unreadOnly / actionRequiredOnly args.
+  const rows = (data ?? []).filter(n => {
+    if (tab === 'unread') return !n.is_read;
+    if (tab === 'action') return n.action_required && n.action_status === 'pending';
+    return true;
+  }).slice(0, 12);
 
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
