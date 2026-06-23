@@ -35,6 +35,7 @@ import {
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
 import { NotificationPreferences } from '@components/notifications';
+import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
   useTotpStatus,
   useStartTotpSetup,
@@ -566,6 +567,7 @@ function TrustedDevicesCard(): VNode {
   const { data: devices = [], isLoading, refetch } = useTrustedDevices();
   const revokeMut    = useRevokeTrustedDevice();
   const revokeAllMut = useRevokeAllTrustedDevices();
+  const { ensureStepUp } = useStepUp();
 
   const handleRevoke = useCallback(async (device: TrustedDevice) => {
     const name = device.label || `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
@@ -584,13 +586,15 @@ function TrustedDevicesCard(): VNode {
       'Revoke ALL trusted devices? You (and everyone else on all devices) will need to re-verify 2FA on the next login.'
     )) return;
     try {
-      await revokeAllMut.mutateAsync();
+      const doRevoke = withStepUp(ensureStepUp, () => revokeAllMut.mutateAsync());
+      const res = await doRevoke();
+      if (!res.success && res.code === 'step_up_required') return; // user cancelled
       toast.success('All trusted devices revoked.');
       void refetch();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to revoke all devices.');
     }
-  }, [revokeAllMut, refetch]);
+  }, [revokeAllMut, ensureStepUp, refetch]);
 
   return (
     <div class="totp-card">
@@ -1182,6 +1186,7 @@ function PasskeysCard(): VNode {
   const registerMut = useRegisterPasskey();
   const renameMut   = useRenamePasskey();
   const deleteMut   = useDeletePasskey();
+  const { ensureStepUp } = useStepUp();
 
   // Keep session store in sync with count
   useEffect(() => {
@@ -1220,16 +1225,20 @@ function PasskeysCard(): VNode {
   const handleDelete = useCallback(async (cred: PasskeyCredential) => {
     if (!window.confirm(`Remove passkey "${cred.label || cred.id.slice(0, 8) + '…'}"?`)) return;
     try {
-      const res = await deleteMut.mutateAsync(cred.id);
+      const doDelete = withStepUp(ensureStepUp, () =>
+        deleteMut.mutateAsync(cred.id)
+      );
+      const res = await doDelete();
       if (!res.success && res.code === 'last_factor') {
         toast.error(res.message ?? 'Cannot remove your last strong factor.');
         return;
       }
+      if (!res.success && res.code === 'step_up_required') return; // user cancelled step-up
       toast.success('Passkey removed.');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Delete failed.');
     }
-  }, [deleteMut]);
+  }, [deleteMut, ensureStepUp]);
 
   if (!webauthnAvailable) {
     return (

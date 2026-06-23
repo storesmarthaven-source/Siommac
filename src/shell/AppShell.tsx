@@ -36,6 +36,7 @@ import ProjectSiteModal         from './modals/ProjectSiteModal';
 import { useSessionStore, selectUserId } from '@store/session';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
+import { StepUpProvider }                from '@/hooks/useStepUp';
 
 // ── Communications bridge ─────────────────────────────────────────────────────
 // Headless component: subscribes to realtime signals and keeps summary fresh.
@@ -111,7 +112,8 @@ function PageHeader() {
 
 export default function AppShell() {
   return (
-    <>
+    <StepUpProvider>
+      <>
       {/* Global notification banner (toast-style, legacy) */}
       <div class="notification" id="notification" />
 
@@ -161,5 +163,6 @@ export default function AppShell() {
       {/* Reusable nav sub-menu customizer mount root */}
       <div id="preact-navcust-root" />
     </>
+    </StepUpProvider>
   );
 }

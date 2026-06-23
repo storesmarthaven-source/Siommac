@@ -19,12 +19,13 @@
 
 import { type VNode, type ComponentType } from 'preact';
 import { useState } from 'preact/hooks';
-import { ModulesTab }      from './tabs/ModulesTab';
-import { RolesTab }        from './tabs/RolesTab';
-import { PermissionsTab }  from './tabs/PermissionsTab';
-import { SessionsTab }     from './tabs/SessionsTab';
-import { AuditLogTab }     from './tabs/AuditLogTab';
-import { UIKitPage }       from '@ui/examples/UIKitPage';
+import { ModulesTab }          from './tabs/ModulesTab';
+import { RolesTab }            from './tabs/RolesTab';
+import { PermissionsTab }      from './tabs/PermissionsTab';
+import { SessionsTab }         from './tabs/SessionsTab';
+import { AuditLogTab }         from './tabs/AuditLogTab';
+import { UserSecurityPanel }   from './tabs/UserSecurityPanel';
+import { UIKitPage }           from '@ui/examples/UIKitPage';
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 
@@ -76,6 +77,13 @@ const TABS: ConsoleTab[] = [
     icon:  'fa-clipboard-list',
     desc:  'A tamper-evident, append-only record of every privileged action — who did what, when, and from where. Filter, search and export to CSV.',
     body:  AuditLogTab,
+  },
+  {
+    id:    'user-security',
+    label: 'User Security',
+    icon:  'fa-user-shield',
+    desc:  'Inspect and manage authentication factors for individual users. Revoke passkeys or trusted devices (requires step-up verification).',
+    body:  UserSecurityPanel,
   },
   {
     id:    'uikit',

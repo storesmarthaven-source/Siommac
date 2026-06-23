@@ -88,7 +88,7 @@ export interface PasskeyRegisterVerifyResponse {
 export interface PasskeyMutateResponse {
   success:  boolean;
   message?: string;
-  code?:    'last_factor';
+  code?:    string;
 }
 
 // ── Trusted device response types ─────────────────────────────────────────────
@@ -114,6 +114,7 @@ export interface TrustedDevicesListResponse {
 export interface TrustedDeviceMutateResponse {
   success:  boolean;
   message?: string;
+  code?:    string;
 }
 
 // ── Query keys ────────────────────────────────────────────────────────────────
@@ -321,6 +322,74 @@ export function useRevokeAllTrustedDevices() {
       apiPost<TrustedDeviceMutateResponse>('/api/auth/trusted-devices/revoke-all', {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.trustedDevices() });
+    },
+  });
+}
+
+// ── Admin security response types ─────────────────────────────────────────────
+
+export interface AdminUserSecurityStatusResponse {
+  success:            boolean;
+  totpEnabled:        boolean;
+  passkeyCount:       number;
+  trustedDeviceCount: number;
+  mfaMandatory:       boolean;
+  message?:           string;
+}
+
+export interface AdminRevokeMutateResponse {
+  success:  boolean;
+  message?: string;
+  code?:    string;
+}
+
+// ── Admin security query keys ─────────────────────────────────────────────────
+
+export const adminSecurityKeys = {
+  userStatus: (userId: string) => ['admin', 'security', 'user', userId] as const,
+} as const;
+
+// ── Admin hooks ───────────────────────────────────────────────────────────────
+
+/** Fetch security posture for a given user (admin view). */
+export function useAdminUserSecurityStatus(userId: string, enabled = true) {
+  return useQuery({
+    queryKey: adminSecurityKeys.userStatus(userId),
+    queryFn:  () => apiPost<AdminUserSecurityStatusResponse>(
+      '/api/admin/security/users/status',
+      { userId },
+    ),
+    enabled: enabled && !!userId,
+    staleTime: 30_000,
+  });
+}
+
+/** Revoke all passkeys for a given user (admin action — requires step-up, handled at call site). */
+export function useAdminRevokeUserPasskeys() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiPost<AdminRevokeMutateResponse>(
+        '/api/admin/security/users/passkeys/revoke-all',
+        { userId },
+      ),
+    onSuccess: (_data, userId) => {
+      void qc.invalidateQueries({ queryKey: adminSecurityKeys.userStatus(userId) });
+    },
+  });
+}
+
+/** Revoke all trusted devices for a given user (admin action — requires step-up, handled at call site). */
+export function useAdminRevokeUserTrustedDevices() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiPost<AdminRevokeMutateResponse>(
+        '/api/admin/security/users/trusted-devices/revoke-all',
+        { userId },
+      ),
+    onSuccess: (_data, userId) => {
+      void qc.invalidateQueries({ queryKey: adminSecurityKeys.userStatus(userId) });
     },
   });
 }
