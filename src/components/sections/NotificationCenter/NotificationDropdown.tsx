@@ -8,7 +8,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import {
   useNotifications, useCommsSummary, useMarkNotificationRead,
   useMarkAllNotificationsRead, useArchiveNotification,
@@ -37,6 +37,31 @@ function goToCenter(): void {
 export function NotificationDropdown(): VNode {
   const [tab, setTab] = useState<string>('all');
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Reset the overflow menu whenever the bell dialog is closed.
+  useEffect(() => {
+    const modal = document.getElementById('hdrNotifModal');
+    if (!modal) return;
+    const obs = new MutationObserver(() => {
+      if (!modal.classList.contains('open')) setMenuOpen(false);
+    });
+    obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+
+  // Close the overflow menu on an outside click (without blocking the X button).
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (menuRef.current?.contains(t) || menuBtnRef.current?.contains(t)) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [menuOpen]);
 
   const { data: summary } = useCommsSummary();
   const unread = summary?.notificationsUnread ?? 0;
@@ -65,7 +90,7 @@ export function NotificationDropdown(): VNode {
         <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.9rem' }}>Notifications</span>
         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{unread} unread</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
-          <button class="hdr-modal-close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          <button ref={menuBtnRef} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px 6px' }}
             onClick={() => setMenuOpen(o => !o)} title="More">
             <i class="fas fa-ellipsis" />
           </button>
@@ -73,24 +98,22 @@ export function NotificationDropdown(): VNode {
             <i class="fas fa-times" />
           </button>
           {menuOpen && (
-            <>
-              <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setMenuOpen(false)} />
-              <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: '190px', marginTop: '4px',
-                background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--elev-4)', overflow: 'hidden' }}>
-                {[
-                  { icon: 'fa-rotate', label: 'Refresh', onClick: () => { void refetch(); } },
-                  { icon: 'fa-check-double', label: 'Mark all read', onClick: () => markAll.mutate({}) },
-                  { icon: 'fa-box-archive', label: 'Archive all read', onClick: () => archive.mutate({ all: true }) },
-                  { icon: 'fa-sliders', label: 'Notification preferences', onClick: goToCenter },
-                ].map(it => (
-                  <button key={it.label} onClick={() => { it.onClick(); setMenuOpen(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
-                      background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', fontSize: '0.8rem', color: 'var(--siomac-navy)' }}>
-                    <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--text-muted)' }} /> {it.label}
-                  </button>
-                ))}
-              </div>
-            </>
+            <div ref={menuRef} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 41, minWidth: '210px', marginTop: '4px',
+              background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--elev-4)', overflow: 'hidden' }}>
+              {[
+                { icon: 'fa-rotate', label: 'Refresh', onClick: () => { void refetch(); } },
+                { icon: 'fa-check-double', label: 'Mark All Read', onClick: () => markAll.mutate({}) },
+                { icon: 'fa-box-archive', label: 'Archive All Read', onClick: () => archive.mutate({ all: true }) },
+                { icon: 'fa-sliders', label: 'Notification Preferences', onClick: goToCenter },
+              ].map(it => (
+                <button key={it.label} onClick={() => { it.onClick(); setMenuOpen(false); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
+                    background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer',
+                    textAlign: 'left', fontSize: '0.8rem', color: 'var(--siomac-navy)', whiteSpace: 'nowrap' }}>
+                  <i class={`fas ${it.icon}`} style={{ width: '16px', color: 'var(--text-muted)', flexShrink: 0 }} /> {it.label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -125,18 +148,6 @@ export function NotificationDropdown(): VNode {
           <NotificationItem key={n.id} n={n} compact onOpen={open}
             onArchive={x => archive.mutate({ notificationId: x.id })} />
         ))}
-      </div>
-
-      {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderTop: '1px solid var(--border)' }}>
-        <button onClick={() => markAll.mutate({})} disabled={markAll.isPending}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
-          Mark all read
-        </button>
-        <button onClick={goToCenter}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-red)' }}>
-          View all <i class="fas fa-arrow-right" style={{ fontSize: '0.66rem' }} />
-        </button>
       </div>
     </div>
   );
