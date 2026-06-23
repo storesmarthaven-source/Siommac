@@ -12,6 +12,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { ProfilePill } from '@shared/ProfilePill';
 
 export interface PageMetaChip { icon?: string; label: string; }
 
@@ -62,7 +63,10 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
           )}
         </div>
       </div>
-      {actions && <div class="ui-page-head-actions">{actions}</div>}
+      <div class="ui-page-head-actions">
+        {actions}
+        <ProfilePill />
+      </div>
     </div>
   );
 }

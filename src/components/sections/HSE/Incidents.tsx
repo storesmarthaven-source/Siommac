@@ -826,20 +826,23 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
       { key: 'severity', node: (
         <StatsCard icon="fa-chart-pie" title="Severity Mix"
           chart={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '26px' }}>
               <div style={{ position: 'relative', flexShrink: 0, width: 142, height: 142 }}>
                 <svg width="142" height="142" viewBox="0 0 150 150">
                   <circle cx="75" cy="75" r="62" fill="none" stroke="#eef0f5" stroke-width="15" />
                   {(() => {
-                    const R = 62, C = 2 * Math.PI * R; let acc = 0;
+                    const R = 62, C = 2 * Math.PI * R; let offset = 0;
                     return (['danger','warning','info','success'] as const).map(k => {
-                      const frac = sevCounts[k] / total;
-                      if (frac <= 0) return null;
-                      const segLen = Math.max(0, frac * C - 4);
-                      const rot = acc * 360 - 90;
-                      acc += frac;
-                      return <circle key={k} cx="75" cy="75" r={R} fill="none" stroke={SEV_COLORS[k]} stroke-width="15"
-                        stroke-dasharray={`${segLen} ${C - segLen}`} transform={`rotate(${rot} 75 75)`} stroke-linecap="butt" />;
+                      const val = sevCounts[k];
+                      if (val <= 0) return null;
+                      const len = (val / total) * C;
+                      const node = (
+                        <circle key={k} cx="75" cy="75" r={R} fill="none" stroke={SEV_COLORS[k]} stroke-width="15"
+                          stroke-dasharray={`${Math.max(0, len - 3)} ${C}`} stroke-dashoffset={-offset}
+                          transform="rotate(-90 75 75)" stroke-linecap="butt" />
+                      );
+                      offset += len;
+                      return node;
                     });
                   })()}
                 </svg>
