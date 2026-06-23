@@ -146,7 +146,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   });
 
   return (
-    <div class="hse-tab hse-dash">
+    <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <PageHeader
         icon="fa-radiation"
         module="HSE"
@@ -160,77 +160,81 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
+      {/* ── Tab-aware summary cards (standard StatsCard row) ── */}
       <RiskJsaInsightCards activeTab={active as 'hazards' | 'assessments' | 'jsa'} />
 
-      <div class="hse-main-grid">
-        <div class="hse-left-col">
+      {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '20px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
-
-          <div class="hse-spark-row">
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
-              <div class="hse-spark-val">{totalHazards}</div>
-              <div class="hse-spark-sub">On the live register</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span></div>
-              <div class="hse-spark-val" style={{ color: '#ef4444' }}>{highCritical}</div>
-              <div class="hse-spark-sub">Priority for control</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span></div>
-              <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{openAssessments}</div>
-              <div class="hse-spark-sub">{overdueAssessments > 0 ? `${overdueAssessments} overdue review` : 'All reviews current'}</div>
-            </div>
-            <div class="hse-spark">
-              <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span></div>
-              <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
-              <div class="hse-spark-sub">Initial → residual, controlled</div>
-            </div>
-          </div>
-
-          {active === 'hazards' && (
-            <HazardTab
-              onNewHazard={() => setHazardFormOpen(true)}
-              onSelect={setSelectedHazard}
-              selected={selectedHazard}
-            />
-          )}
-          {active === 'assessments' && (
-            <AssessmentsTab
-              onNew={() => setRaFormOpen(true)}
-              onSelect={setSelectedRa}
-              selected={selectedRa}
-              onSubmit={(id) => { setSelectedRa(null); void id; }}
-            />
-          )}
-          {active === 'jsa' && (
-            <JsaTab
-              onNew={() => setJsaFormOpen(true)}
-              onSelect={setSelectedJsa}
-              selected={selectedJsa}
-            />
-          )}
         </div>
-
-        {/* Right-side supporting panel — changes by tab */}
-        <div class="hse-right-col">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
-            <NewMenu align="right" items={[
-              { label: 'New Hazard',          icon: 'fa-radiation',         sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
-              { label: 'New Risk Assessment', icon: 'fa-table-cells-large', sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
-              { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => setJsaFormOpen(true) },
-              { label: 'Workflow Templates',  icon: 'fa-diagram-project',   divider: true,                    onSelect: () => setTemplatesOpen(true) },
-            ]} />
-          </div>
-          <RiskJsaRightPanel
-            activeTab={active as 'hazards' | 'assessments' | 'jsa'}
-            onHazard={setSelectedHazard}
-            onAssessment={setSelectedRa}
-            onJsa={setSelectedJsa}
-          />
+        <div style={{ flexShrink: 0 }}>
+          <NewMenu label="New" fill items={[
+            { label: 'New Hazard',          icon: 'fa-radiation',         sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
+            { label: 'New Risk Assessment', icon: 'fa-table-cells-large', sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
+            { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => setJsaFormOpen(true) },
+            { label: 'Workflow Templates',  icon: 'fa-diagram-project',   divider: true,                    onSelect: () => setTemplatesOpen(true) },
+          ]} />
         </div>
       </div>
+
+      {/* ── Quick KPI spark row ── */}
+      <div style={{ marginTop: '16px' }}>
+        <div class="hse-spark-row">
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
+            <div class="hse-spark-val">{totalHazards}</div>
+            <div class="hse-spark-sub">On the live register</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">High / Critical</span></div>
+            <div class="hse-spark-val" style={{ color: '#ef4444' }}>{highCritical}</div>
+            <div class="hse-spark-sub">Priority for control</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Open Assessments</span></div>
+            <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{openAssessments}</div>
+            <div class="hse-spark-sub">{overdueAssessments > 0 ? `${overdueAssessments} overdue review` : 'All reviews current'}</div>
+          </div>
+          <div class="hse-spark">
+            <div class="hse-spark-header"><span class="hse-spark-label">Risk Reduction</span></div>
+            <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
+            <div class="hse-spark-sub">Initial → residual, controlled</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Active tab content (full width) ── */}
+      {active === 'hazards' && (
+        <HazardTab
+          onNewHazard={() => setHazardFormOpen(true)}
+          onSelect={setSelectedHazard}
+          selected={selectedHazard}
+        />
+      )}
+      {active === 'assessments' && (
+        <AssessmentsTab
+          onNew={() => setRaFormOpen(true)}
+          onSelect={setSelectedRa}
+          selected={selectedRa}
+          onSubmit={(id) => { setSelectedRa(null); void id; }}
+        />
+      )}
+      {active === 'jsa' && (
+        <JsaTab
+          onNew={() => setJsaFormOpen(true)}
+          onSelect={setSelectedJsa}
+          selected={selectedJsa}
+        />
+      )}
+
+      {/* ── Supporting signals panel — below the table, changes by tab ── */}
+      <RiskJsaRightPanel
+        activeTab={active as 'hazards' | 'assessments' | 'jsa'}
+        onHazard={setSelectedHazard}
+        onAssessment={setSelectedRa}
+        onJsa={setSelectedJsa}
+      />
 
       {/* Dialogs */}
       <NewHazardDialog open={hazardFormOpen} onClose={() => setHazardFormOpen(false)} />
