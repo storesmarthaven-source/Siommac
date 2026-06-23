@@ -28,36 +28,35 @@ export function NotificationDropdownItem({ n, onOpen }: {
     <div
       onClick={() => onOpen(n)}
       class={`nc-row${showDot ? ' is-unread' : ''}`}
-      style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 14px',
+      style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '16px 14px',
         borderBottom: '1px solid var(--border)', opacity: muted ? 0.7 : 1, cursor: 'pointer' }}
     >
       {/* Soft circular icon */}
-      <div style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
+      <div style={{ width: '42px', height: '42px', borderRadius: '50%', flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: muted ? 'var(--border)' : `${sev}1f` }}>
-        <i class={`fas ${mod.icon}`} style={{ color: muted ? 'var(--text-muted)' : sev, fontSize: '0.9rem' }} />
+        <i class={`fas ${mod.icon}`} style={{ color: muted ? 'var(--text-muted)' : sev, fontSize: '0.95rem' }} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: n.is_read ? 500 : 600, color: 'var(--siomac-navy)',
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: '0.85rem', fontWeight: n.is_read ? 500 : 600, color: 'var(--siomac-navy)',
             lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {n.title}
           </span>
-          {showDot && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: sev, flexShrink: 0, marginLeft: 'auto' }} />}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', minWidth: 0 }}>
+          {/* Top-right corner: action-required badge + unread dot */}
           {actionPending && (
-            <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 600, lineHeight: 1.5,
+            <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 600, lineHeight: 1.6,
               padding: '0 6px', borderRadius: '5px', background: 'rgba(245,158,11,.14)', color: '#b45309',
               whiteSpace: 'nowrap' }}>
               Action required
             </span>
           )}
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)',
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-            {parts.join(' · ')}
-          </span>
+          {showDot && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: sev, flexShrink: 0 }} />}
+        </div>
+        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {parts.join(' · ')}
         </div>
       </div>
     </div>
