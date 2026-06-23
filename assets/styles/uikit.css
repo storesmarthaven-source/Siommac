@@ -142,3 +142,17 @@
   background: var(--border); color: var(--siomac-navy);
   font-size: 0.66rem; letter-spacing: 0;
 }
+
+/* Notification rows */
+.nc-row { background: transparent; transition: background .12s; }
+.nc-row.is-unread { background: rgba(27, 45, 85, .035); }
+.nc-row:hover { background: var(--bg-subtle, #f7f8fa); }
+
+.nc-archive {
+  flex-shrink: 0; align-self: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--text-muted); opacity: 0; transition: opacity .12s, background .12s, color .12s;
+}
+.nc-row:hover .nc-archive { opacity: 1; }
+.nc-archive:hover { background: var(--border); color: var(--siomac-navy); }
