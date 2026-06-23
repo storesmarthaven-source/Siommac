@@ -20,6 +20,7 @@
 
 import { sb }                 from './db';
 import { resolveRecipients }  from './recipientResolver';
+import type { ExplicitRecipient } from './recipientResolver';
 import { notify }             from './notify';
 import { emitSignal }         from './communications';
 
@@ -46,6 +47,9 @@ export interface EmitAppEventInput {
    */
   dedupeKey?: string | null;
 
+  /** Owner/assignee/watcher etc. the calling route already knows. */
+  explicitRecipients?: ExplicitRecipient[];
+
   /**
    * Notification rendered for each resolved recipient.
    * Omit for silent audit-style events (no in-app notification).
@@ -56,6 +60,10 @@ export interface EmitAppEventInput {
     /** Route the notification opens, e.g. 'hse/incidents/INC-2026-0001' */
     actionRoute?: string;
     type?: string;
+    /** Marks the notification as actionable work (drives action_status). */
+    actionRequired?: boolean;
+    /** When the action is due (for reminders / escalation). */
+    dueAt?: string | null;
   };
 }
 
@@ -117,10 +125,20 @@ export async function emitAppEvent(input: EmitAppEventInput): Promise<EmitAppEve
       await Promise.all([...recipients.keys()].map(userId =>
         notify({
           userId,
-          type:  n.type ?? input.eventType,
-          title: n.title,
-          body:  n.body,
-          link:  n.actionRoute,
+          type:           n.type ?? input.eventType,
+          title:          n.title,
+          body:           n.body,
+          link:           n.actionRoute,
+          eventId,
+          module:         input.sourceModule,
+          severity:       input.severity ?? 'info',
+          sourceType:     input.sourceEntityType,
+          sourceId:       input.sourceEntityId,
+          actionRoute:    n.actionRoute,
+          metadata:       input.payload,
+          dedupeKey:      input.dedupeKey ?? null,
+          actionRequired: n.actionRequired,
+          dueAt:          n.dueAt,
         }).catch(err => console.warn('[appEvents] notify failed for', userId, err)),
       ));
 

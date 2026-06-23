@@ -35,16 +35,29 @@ const logger = {
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface NotifyPayload {
-  /** UUID of the target app_users row */
+  /** app_users.id of the target */
   userId:  string;
-  /** Matches NotificationTypeSchema values */
+  /** Event/notification type, e.g. 'hse.capa.overdue' */
   type:    string;
   /** Short headline, max ~100 chars */
   title:   string;
   /** Longer body text, max ~500 chars */
   body?:   string;
-  /** Optional deep-link (section id like 's-emp-payroll') */
+  /** Optional deep-link (legacy section id or path) */
   link?:   string;
+
+  // ── ERP notification fields (notification system) ──
+  eventId?:        string | null;
+  module?:         string;
+  severity?:       string;
+  sourceType?:     string | null;
+  sourceId?:       string | null;
+  actionRoute?:    string | null;
+  metadata?:       Record<string, unknown>;
+  /** Base dedupe key; persisted as `${userId}:${dedupeKey}` (unique per user). */
+  dedupeKey?:      string | null;
+  actionRequired?: boolean;
+  dueAt?:          string | null;
 }
 
 interface UserDeliveryInfo {
@@ -115,43 +128,31 @@ export async function notify(payload: NotifyPayload): Promise<void> {
   const { userId, type, title, body = '', link } = payload;
 
   try {
-    // 1. Persist in-app notification (best-effort — don't block on error) and
-    //    record the in-app delivery so notification_deliveries is the audit log.
-    const insRes = await sb.from('notifications').insert({
-      user_id:    userId,
-      type,
-      title,
-      body,
-      is_read:    false,
-      link:       link ?? null,
-      created_at: new Date().toISOString(),
-    }).select('id').single<{ id: string }>();
-
-    if (insRes.error) {
-      logger.warn('[notify] Failed to persist notification', { userId, type, error: insRes.error.message });
-    } else if (insRes.data) {
-      void sb.from('notification_deliveries').insert({
-        notification_id: insRes.data.id,
-        channel:         'in_app',
-        status:          'delivered',
-        attempted_at:    new Date().toISOString(),
-      }).then(({ error }) => {
-        if (error) logger.warn('[notify] Failed to record in_app delivery', { error: error.message });
-      });
-    }
-
-    // 2. Load user delivery info and preferences in parallel
-    const [userRes, prefRes] = await Promise.all([
+    // 1. Load user delivery info, preferences (this type → fallback '*'), and mutes.
+    const [userRes, prefRes, prefDefaultRes, mutesRes] = await Promise.all([
       sb.from('app_users')
         .select('email, phone, full_name')
         .eq('id', userId)
         .maybeSingle<{ email: string | null; phone: string | null; full_name: string }>(),
       sb.from('notification_preferences')
         .select('in_app, email, whatsapp')
-        .eq('user_id', userId)
-        .eq('event_type', type)
+        .eq('user_id', userId).eq('event_type', type)
         .maybeSingle<DeliveryPrefs>(),
+      sb.from('notification_preferences')
+        .select('in_app, email, whatsapp')
+        .eq('user_id', userId).eq('event_type', '*')
+        .maybeSingle<DeliveryPrefs>(),
+      sb.from('notification_mutes')
+        .select('scope, muted_until')
+        .eq('user_id', userId)
+        .in('scope', ['all', `module:${payload.module ?? ''}`, `event:${type}`]),
     ]);
+
+    // Mute gate: any active mute (indefinite or future) silences this notification.
+    const now = Date.now();
+    const mutes = (mutesRes.data ?? []) as Array<{ scope: string; muted_until: string | null }>;
+    const muted = mutes.some(m => m.muted_until == null || new Date(m.muted_until).getTime() > now);
+    if (muted) return;
 
     const user: UserDeliveryInfo = {
       email:    userRes.data?.email    ?? null,
@@ -159,8 +160,49 @@ export async function notify(payload: NotifyPayload): Promise<void> {
       fullName: userRes.data?.full_name ?? 'there',
     };
 
-    // Default: in-app on, email off, whatsapp off
-    const prefs: DeliveryPrefs = prefRes.data ?? { in_app: true, email: false, whatsapp: false };
+    // Default: in-app on, email off, whatsapp off. Specific pref overrides default.
+    const prefs: DeliveryPrefs = prefRes.data ?? prefDefaultRes.data ?? { in_app: true, email: false, whatsapp: false };
+    if (!prefs.in_app && !prefs.email && !prefs.whatsapp) return;
+
+    // 2. Persist the in-app notification (rich columns) + record the delivery.
+    if (prefs.in_app) {
+      const insRes = await sb.from('notifications').insert({
+        user_id:         userId,
+        type,
+        title,
+        body,
+        is_read:         false,
+        link:            link ?? payload.actionRoute ?? null,
+        event_id:        payload.eventId ?? null,
+        module:          payload.module ?? null,
+        severity:        payload.severity ?? 'info',
+        source_type:     payload.sourceType ?? null,
+        source_id:       payload.sourceId ?? null,
+        action_route:    payload.actionRoute ?? null,
+        metadata:        payload.metadata ?? {},
+        dedupe_key:      payload.dedupeKey ? `${userId}:${payload.dedupeKey}` : null,
+        action_required: payload.actionRequired ?? false,
+        action_status:   payload.actionRequired ? 'pending' : 'none',
+        due_at:          payload.dueAt ?? null,
+        created_at:      new Date().toISOString(),
+      }).select('id').single<{ id: string }>();
+
+      if (insRes.error) {
+        // 23505 = duplicate dedupe_key for this user → already notified, skip silently.
+        if ((insRes.error as { code?: string }).code !== '23505') {
+          logger.warn('[notify] Failed to persist notification', { userId, type, error: insRes.error.message });
+        }
+      } else if (insRes.data) {
+        void sb.from('notification_deliveries').insert({
+          notification_id: insRes.data.id,
+          channel:         'in_app',
+          status:          'delivered',
+          attempted_at:    new Date().toISOString(),
+        }).then(({ error }) => {
+          if (error) logger.warn('[notify] Failed to record in_app delivery', { error: error.message });
+        });
+      }
+    }
 
     // Fetch company name for email branding (best-effort)
     const companyName = await sb.from('settings')
