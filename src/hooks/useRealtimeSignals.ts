@@ -9,6 +9,12 @@
  * Realtime because they carry only (channel_key, domain, created_at).
  * Business data always comes through the authenticated /api/* endpoints.
  *
+ * On each signal it also schedules a header-badge sync, so the imperative
+ * `[data-pill-badge]` counts refresh in realtime through this canonical path
+ * (notifications/messages/tickets) rather than waiting for the 30 s poll. This
+ * is what the legacy RealtimeController did via per-table subscriptions; routing
+ * it through communication_signals lets that controller eventually retire.
+ *
  * Usage: mount once in AppShell after login, passing the channelKey from
  * useCommunicationSummary().
  */
@@ -17,6 +23,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { useQueryClient }     from '@tanstack/preact-query';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@cfg';
 import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from '@api/queryKeys';
+import { scheduleHdrBadgeSync } from '@components/nav';
 
 type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
@@ -53,6 +60,8 @@ export function useRealtimeSignals(channelKey: string | null): void {
           filter: `channel_key=eq.${channelKey}`,
         },
         (payload: { new?: { domain?: string } }) => {
+          // Refresh the imperative header pill badges through the canonical path.
+          scheduleHdrBadgeSync();
           // Summary (badge counts) always refreshes; the domain routes the rest.
           void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
           const domain = payload.new?.domain;
