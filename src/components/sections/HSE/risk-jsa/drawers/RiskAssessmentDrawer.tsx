@@ -22,7 +22,10 @@ import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { AttachmentsPanel } from '../shared/AttachmentsPanel';
 import { exportAssessmentPdf } from '../shared/exportPdf';
+import { EditDetailsDialog } from '../dialogs/EditDetailsDialog';
 import { VerifyControlButton } from '../dialogs/VerifyControlButton';
+
+const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
@@ -266,9 +269,12 @@ export function RiskAssessmentDrawer({
   onClose:    () => void;
 }): VNode {
   const [activeTab, setActiveTab] = useState<DrawerTab>('overview');
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: detailRes } = useAssessmentDetail(assessment.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
+  const raRec    = (detail?.assessment as Record<string, unknown>) ?? undefined;
+  const editable = EDITABLE.includes(assessment.status);
   const hazards  = (detail?.hazards  as unknown[]) ?? [];
   const controls = (detail?.controls as unknown[]) ?? [];
   const timeline = (detail?.timeline as unknown[]) ?? [];
@@ -292,11 +298,18 @@ export function RiskAssessmentDrawer({
         />
       }
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingBottom: '8px' }}>
+        {editable && (
+          <button class="inc-action-btn" onClick={() => setEditOpen(true)}><i class="fas fa-pen" /> Edit</button>
+        )}
         <button class="inc-action-btn" onClick={() => exportAssessmentPdf(assessment as unknown as Record<string, unknown>, detail)}>
           <i class="fas fa-file-pdf" /> Export PDF
         </button>
       </div>
+
+      <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
+        entityType="assessment" entityId={assessment.id} entityRef={assessment.ref}
+        initial={{ title: assessment.title, description: (raRec?.description as string) ?? '', reviewDueAt: assessment.review_due_at, version: raRec?.version as number | undefined }} />
 
       <Tabs<DrawerTab>
         tabs={DRAWER_TABS}

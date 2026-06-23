@@ -14,6 +14,9 @@ import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { VerifyControlButton } from '../dialogs/VerifyControlButton';
 import { AttachmentsPanel } from '../shared/AttachmentsPanel';
+import { EditDetailsDialog } from '../dialogs/EditDetailsDialog';
+
+const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -32,9 +35,12 @@ const HAZARD_TABS: ReadonlyArray<TabDef<HazardTabKey>> = [
 
 export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: () => void }): VNode {
   const [activeTab, setActiveTab] = useState<HazardTabKey>('overview');
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: detailRes } = useHazardDetail(hazard.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
+  const hzRec    = (detail?.hazard as Record<string, unknown>) ?? undefined;
+  const editable = EDITABLE.includes(hazard.status);
   const controls = (detail?.controls as unknown[]) ?? [];
   const capa     = (detail?.capa     as unknown[]) ?? [];
   const timeline = (detail?.timeline as unknown[]) ?? [];
@@ -63,7 +69,16 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
         <span class={hsePill(hazard.status)} style={{ fontSize: '0.72rem' }}>
           {hazard.status.replace(/_/g, ' ')}
         </span>
+        {editable && (
+          <button class="inc-action-btn" style={{ marginLeft: 'auto' }} onClick={() => setEditOpen(true)}>
+            <i class="fas fa-pen" /> Edit
+          </button>
+        )}
       </div>
+
+      <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
+        entityType="hazard" entityId={hazard.id} entityRef={hazard.ref}
+        initial={{ title: hazard.title, description: (hzRec?.description as string) ?? '', reviewDueAt: hazard.review_due_at, version: hzRec?.version as number | undefined }} />
 
       {/* Tab bar */}
       <Tabs<HazardTabKey>

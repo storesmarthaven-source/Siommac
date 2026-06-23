@@ -14,6 +14,9 @@ import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { AttachmentsPanel } from '../shared/AttachmentsPanel';
 import { exportJsaPdf } from '../shared/exportPdf';
+import { EditDetailsDialog } from '../dialogs/EditDetailsDialog';
+
+const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -33,9 +36,12 @@ const JSA_TABS: ReadonlyArray<TabDef<JsaTabKey>> = [
 
 export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }): VNode {
   const [activeTab, setActiveTab] = useState<JsaTabKey>('overview');
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: detailRes } = useJsaDetail(jsa.id);
   const detail   = detailRes?.data as Record<string, unknown> | undefined;
+  const jsaRec   = (detail?.jsa as Record<string, unknown>) ?? undefined;
+  const editable = EDITABLE.includes(jsa.status);
   const steps    = (detail?.steps    as unknown[]) ?? [];
   const ppe      = (detail?.ppe      as unknown[]) ?? [];
   const training = (detail?.training as unknown[]) ?? (detail?.trainingLinks as unknown[]) ?? [];
@@ -65,10 +71,19 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
         <span class={hsePill(jsa.status)} style={{ fontSize: '0.72rem' }}>
           {jsa.status.replace(/_/g, ' ')}
         </span>
-        <button class="inc-action-btn" style={{ marginLeft: 'auto' }} onClick={() => exportJsaPdf(jsa as unknown as Record<string, unknown>, detail)}>
+        {editable && (
+          <button class="inc-action-btn" style={{ marginLeft: 'auto' }} onClick={() => setEditOpen(true)}>
+            <i class="fas fa-pen" /> Edit
+          </button>
+        )}
+        <button class="inc-action-btn" style={editable ? undefined : { marginLeft: 'auto' }} onClick={() => exportJsaPdf(jsa as unknown as Record<string, unknown>, detail)}>
           <i class="fas fa-file-pdf" /> Export PDF
         </button>
       </div>
+
+      <EditDetailsDialog open={editOpen} onClose={() => setEditOpen(false)}
+        entityType="jsa" entityId={jsa.id} entityRef={jsa.ref}
+        initial={{ title: jsa.title, description: (jsaRec?.description as string) ?? '', reviewDueAt: jsa.review_due_at, version: jsaRec?.version as number | undefined }} />
 
       {/* Tab bar */}
       <Tabs<JsaTabKey>
