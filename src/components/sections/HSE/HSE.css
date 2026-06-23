@@ -908,7 +908,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
 }
 .hse-spark {
   background: var(--bg-card);
-  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
+  padding: 11px 14px; display: flex; flex-direction: column; gap: 4px;
 }
 .hse-spark-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .hse-spark-label {
@@ -923,7 +923,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
 .hse-spark-delta.up   { background: #fee2e2; color: #dc2626; }
 .hse-spark-delta.flat { background: #f1f5f9; color: #64748b; }
 .hse-spark-val {
-  font-size: 1.7rem; font-weight: 700; font-family: var(--font-mono);
+  font-size: 1.45rem; font-weight: 700; font-family: var(--font-mono);
   line-height: 1; color: var(--siomac-navy);
 }
 .hse-spark-sub {
