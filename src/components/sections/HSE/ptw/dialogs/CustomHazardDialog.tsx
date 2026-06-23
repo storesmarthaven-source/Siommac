@@ -167,6 +167,7 @@ export function CustomHazardDialog({ open, onClose, onAdd }: {
       sub="Define a hazard specific to this permit. It will be added to this permit only."
       icon="fa-triangle-exclamation"
       size="lg"
+      overlayClass="ui-modal--over-wizard"
       onClose={handleClose}
       onSubmit={handleAdd}
       submitLabel="Add Hazard"

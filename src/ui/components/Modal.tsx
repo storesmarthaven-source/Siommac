@@ -30,15 +30,17 @@ export interface ModalProps {
   cancelLabel?: string;
   /** Replace the default footer entirely (Cancel/Submit) with custom content. */
   footer?: ComponentChildren;
+  /** Extra class on the backdrop — e.g. to raise z-index when nested over a wizard. */
+  overlayClass?: string;
 }
 
 export function Modal({
   open, title, sub, icon, size = 'md', children, onClose,
-  onSubmit, submitLabel = 'Submit', submitDisabled, cancelLabel = 'Cancel', footer,
+  onSubmit, submitLabel = 'Submit', submitDisabled, cancelLabel = 'Cancel', footer, overlayClass,
 }: ModalProps): VNode | null {
   if (!open) return null;
   return (
-    <div class="ui-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div class={`ui-modal-backdrop${overlayClass ? ` ${overlayClass}` : ''}`} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <section class={`ui-modal${size !== 'md' ? ` ui-modal--${size}` : ''}`} role="dialog" aria-modal="true">
         <header class="ui-modal-head">
           <div class="ui-modal-headwrap">

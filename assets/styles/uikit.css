@@ -30,6 +30,8 @@
   background: rgba(27, 45, 84, .42);
   display: flex; align-items: center; justify-content: center; padding: var(--space-4);
 }
+/* A Modal opened over the wizard (z-index 1000) must stack above it. */
+.ui-modal-backdrop.ui-modal--over-wizard { z-index: 1200; }
 
 .ui-modal {
   width: min(640px, 100%);
