@@ -13,6 +13,7 @@ import { useJsaDetail, useAcknowledgeJsa, type JsaRow, type JsaCrewMember } from
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { AttachmentsPanel } from '../shared/AttachmentsPanel';
+import { exportJsaPdf } from '../shared/exportPdf';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -64,6 +65,9 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
         <span class={hsePill(jsa.status)} style={{ fontSize: '0.72rem' }}>
           {jsa.status.replace(/_/g, ' ')}
         </span>
+        <button class="inc-action-btn" style={{ marginLeft: 'auto' }} onClick={() => exportJsaPdf(jsa as unknown as Record<string, unknown>, detail)}>
+          <i class="fas fa-file-pdf" /> Export PDF
+        </button>
       </div>
 
       {/* Tab bar */}

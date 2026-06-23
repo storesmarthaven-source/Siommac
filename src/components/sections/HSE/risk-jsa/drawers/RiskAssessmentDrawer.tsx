@@ -21,6 +21,7 @@ import { useAssessmentDetail, type AssessmentRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { AttachmentsPanel } from '../shared/AttachmentsPanel';
+import { exportAssessmentPdf } from '../shared/exportPdf';
 import { VerifyControlButton } from '../dialogs/VerifyControlButton';
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
@@ -291,6 +292,12 @@ export function RiskAssessmentDrawer({
         />
       }
     >
+      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '8px' }}>
+        <button class="inc-action-btn" onClick={() => exportAssessmentPdf(assessment as unknown as Record<string, unknown>, detail)}>
+          <i class="fas fa-file-pdf" /> Export PDF
+        </button>
+      </div>
+
       <Tabs<DrawerTab>
         tabs={DRAWER_TABS}
         active={activeTab}
