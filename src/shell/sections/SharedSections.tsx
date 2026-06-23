@@ -201,26 +201,14 @@ export default function SharedSections() {
       <LiveMapSection />
 
       {/* Superadmin Console — superadmin only */}
-      {/* Notification Center — all roles */}
+      {/* Notification Center / Messages — all roles.
+          NO wrapper <ProfilePill> here: the Preact component's <PageHeader>
+          already renders the single standard pill. A second one duplicates it. */}
       <AppSection id="s-notification-center">
-        <ProfilePill ids={{
-          profileBtn: 'ncProfileBtn', avatar: 'ncProfileAvatar',
-          profileName: 'ncProfileName', profileRole: 'ncProfileRole',
-          notifBtn: 'ncNotifBtn', notifBadge: 'ncNotifBadge',
-          msgBtn: 'ncMsgBtn', msgBadge: 'ncMsgBadge',
-          ticketBtn: 'ncTicketBtn', ticketBadge: 'ncTicketBadge',
-        }} />
         <div id="preact-notification-center-root" />
       </AppSection>
 
       <AppSection id="s-messages">
-        <ProfilePill ids={{
-          profileBtn: 'msgCtrProfileBtn', avatar: 'msgCtrProfileAvatar',
-          profileName: 'msgCtrProfileName', profileRole: 'msgCtrProfileRole',
-          notifBtn: 'msgCtrNotifBtn', notifBadge: 'msgCtrNotifBadge',
-          msgBtn: 'msgCtrMsgBtn', msgBadge: 'msgCtrMsgBadge',
-          ticketBtn: 'msgCtrTicketBtn', ticketBadge: 'msgCtrTicketBadge',
-        }} />
         <div id="preact-messages-root" />
       </AppSection>
 
