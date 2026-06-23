@@ -1122,7 +1122,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
       />
 
       {/* ── Tab workspace — nav + standard New ▾ menu on the right ── */}
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '10px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={PAGE_TABS} active={pageTab} onSelect={setPageTab} />
         </div>
@@ -1222,6 +1222,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
   const [search,     setSearch]   = useState('');
   const [typeFilter, setType]     = useState('All types');
   const [siteFilter, setSite]     = useState('All sites');
+  const [auditOpen,  setAuditOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -1243,6 +1244,10 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
 
   const pg = usePagination(filtered);
 
+  // Audit trail — derived from the visible register, newest first. Every incident
+  // contributes its lifecycle events (reported → investigation → CAPA → closed).
+  const auditEntries = useMemo(() => buildAuditTrail(filtered, capa), [filtered, capa]);
+
   return (
     <div>
 
@@ -1257,6 +1262,9 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
                 <div class="vt-section-sub">All reported incidents · click any row to open detail</div>
               </div>
             </div>
+            <button class="inc-action-btn secondary" onClick={() => setAuditOpen(true)}>
+              <i class="fas fa-clock-rotate-left" /> Audit Log
+            </button>
           </div>
           <div class="vt-toolbar" style={{ marginBottom: 0, marginTop: '12px' }}>
             <div class="vt-search" style={{ flex: '1 1 180px' }}>
@@ -1361,8 +1369,93 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
         <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun="incidents" />
       </div>
 
+      {/* ── Audit Log ── */}
+      <HseModal open={auditOpen} title="Incident Audit Log" sub={`${auditEntries.length} events · newest first`} icon="fa-clock-rotate-left" size="lg" onClose={() => setAuditOpen(false)}>
+        {auditEntries.length === 0 ? (
+          <div class="hse-empty" style={{ padding: '28px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <i class="fas fa-shield-halved" style={{ fontSize: '1.6rem', opacity: 0.4 }} />
+            <div style={{ marginTop: '8px' }}>No audit events for the current filter.</div>
+          </div>
+        ) : (
+          <div class="inc-audit-list">
+            {auditEntries.map((e, idx) => (
+              <div class="inc-audit-row" key={`${e.ref}-${e.action}-${idx}`}>
+                <span class="inc-audit-dot" style={{ background: e.color }} />
+                <div class="inc-audit-body">
+                  <div class="inc-audit-head">
+                    <span class="inc-audit-action">{e.action}</span>
+                    <span class="vt-cell-mono inc-audit-ref">{e.ref}</span>
+                  </div>
+                  <div class="inc-audit-meta">{e.actor} · {e.detail}</div>
+                </div>
+                <span class="inc-audit-date">{e.date}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </HseModal>
+
     </div>
   );
+}
+
+// ── Audit trail ────────────────────────────────────────────────────────────────
+
+interface AuditEntry {
+  ref: string; action: string; actor: string; detail: string;
+  date: string; ts: number; color: string;
+}
+
+/** Parse the seed date strings ("12 Jun 2026") into a sortable timestamp. */
+function auditTs(date: string): number {
+  const t = Date.parse(date);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** Build a reverse-chronological lifecycle trail from the incident register. */
+function buildAuditTrail(incidents: IncidentRecord[], capa: CapaItem[]): AuditEntry[] {
+  const entries: AuditEntry[] = [];
+  const ts = (d: string) => auditTs(d);
+
+  for (const i of incidents) {
+    const sev = SEVERITY_META[i.severity] ?? SEVERITY_META['success']!;
+    // Reported
+    entries.push({
+      ref: i.ref, action: 'Incident reported', actor: i.reporter,
+      detail: `${i.type} · ${i.site}`, date: i.date, ts: ts(i.date), color: sev.color,
+    });
+    // OSH regulator notification
+    if (i.oshNotifiedAt) {
+      entries.push({
+        ref: i.ref, action: 'OSH Agency notified', actor: 'HSE Manager',
+        detail: 'Statutory notification filed', date: i.oshNotifiedAt, ts: ts(i.oshNotifiedAt), color: '#ef4444',
+      });
+    }
+    // Investigation
+    if (/investigation/i.test(i.status)) {
+      entries.push({
+        ref: i.ref, action: 'Investigation opened', actor: 'HSE Team',
+        detail: 'Root-cause analysis in progress', date: i.date, ts: ts(i.date) + 1, color: '#3b82f6',
+      });
+    }
+    // CAPA raised
+    const capaCount = capa.filter(c => c.source === i.ref).length;
+    if (capaCount > 0) {
+      entries.push({
+        ref: i.ref, action: 'CAPA raised', actor: 'HSE Team',
+        detail: `${capaCount} corrective action${capaCount > 1 ? 's' : ''} assigned`, date: i.date, ts: ts(i.date) + 2, color: '#f59e0b',
+      });
+    }
+    // Closed
+    if (/closed/i.test(i.status)) {
+      entries.push({
+        ref: i.ref, action: 'Closed out', actor: 'HSE Manager',
+        detail: 'Verified · audit trail locked', date: i.date, ts: ts(i.date) + 3, color: '#22c55e',
+      });
+    }
+  }
+
+  return entries.sort((a, b) => b.ts - a.ts);
 }
 
 function matchSev(uiSeverity: string, filter: string): boolean {

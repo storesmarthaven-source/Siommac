@@ -2096,6 +2096,24 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
 /* ── Incidents workspace layout ── */
 .inc-workspace { display: flex; flex-direction: column; gap: 14px; }
 
+/* ── Incident audit log (modal) ── */
+.inc-audit-list { display: flex; flex-direction: column; }
+.inc-audit-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 4px; border-bottom: 1px solid var(--border);
+}
+.inc-audit-row:last-child { border-bottom: none; }
+.inc-audit-dot {
+  width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; margin-top: 5px;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+}
+.inc-audit-body { flex: 1; min-width: 0; }
+.inc-audit-head { display: flex; align-items: center; gap: 8px; }
+.inc-audit-action { font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy); }
+.inc-audit-ref { font-size: 0.72rem; color: var(--text-muted); }
+.inc-audit-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 1px; }
+.inc-audit-date { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+
 /* Page header */
 .inc-page-header {
   display: flex; align-items: center; justify-content: space-between;
