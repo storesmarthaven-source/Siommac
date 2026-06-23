@@ -65,9 +65,13 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
    Primary actions live in the tab content (a `SectionHead` action, a table toolbar).
 2. **One ProfilePill per page** — the app-level header (`AppShell`) owns it. Never render
    a ProfilePill inside a page or hero.
-3. **All cards use `<Card>`.** Never hand-roll `.inc-mini-card` markup. `Card` is the one
-   shell: header (`icon` + `title` + optional `headerRight`), body (`children` + `bodyStyle`),
-   `variant="default" | "navy"`. Different data goes in the body — the window stays identical.
+3. **The four top summary cards use `<StatsCard>`** — the standard skeleton (fixed size,
+   configurable header colour, slots for metric / supporting / status dots / chart / footer).
+   The body always fills, so cards never look empty. **Any card showing a percentage MUST pass
+   `percent`** so a compliance/progress bar renders near the bottom (the "Overall Compliance"
+   pattern). The *content* (charts, metrics, insights) stays page-specific; the *skeleton* is shared.
+   Inside-tab cards and one-off tiles use `<Card>` (the same shell, simpler). Never hand-roll
+   `.inc-mini-card` markup.
 4. **Four-card rows are rearrangeable.** Give `PageHero` a `pageKey`, or wrap a sub-module
    row in `MetricRow` with a `pageKey`. Order persists per-user with an admin-set org default
    (via the `ui_layout` backbone). `pageKey` convention: `<module>.<area>`, and
@@ -97,8 +101,9 @@ import { PageHeader, MetricRow, TabBar, Card, SparkCard } from '@ui';
 | Module dashboard header | `PageHero` (4 rearrangeable stat cards + KPI footer) |
 | Sub-module header | `PageHeader` (breadcrumb + title + sub + meta chips, info-only) |
 | Page tabs | `TabBar` (bare) — or `ModuleTabs` if you really need a header card |
-| The 4-card row | `MetricRow` (rearrangeable) with `Card`/`SparkCard` cards |
-| A card | `Card` (always) — header + body, default/navy |
+| The 4-card row | `MetricRow` (rearrangeable) with `StatsCard` cards |
+| A summary card (top of page) | `StatsCard` — fixed skeleton; `percent` → compliance bar |
+| An inside-tab / one-off card | `Card` — header + body, default/navy |
 | Charts | `SparkCard`, `Sparkline`, `BarRow`, `ProgressBar`, `ChartCard` |
 | Section header in content | `SectionHead` (this is where action buttons go) |
 | Table | `RegisterTable` |

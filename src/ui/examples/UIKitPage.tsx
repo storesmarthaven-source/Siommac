@@ -14,7 +14,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   PageHero, ModuleTabs, TabBar, PageHeader, MetricRow, withCounts, SectionHead,
-  Card, SparkCard, ChartCard, MiniCard, RecordRow, StatusPill,
+  Card, SparkCard, StatsCard, ChartCard, MiniCard, RecordRow, StatusPill,
   Sparkline, BarRow, ProgressBar,
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
@@ -224,6 +224,32 @@ export function UIKitPage(): VNode {
       </Section>
 
       {/* CARDS & METRICS ------------------------------------------------------ */}
+      <Section id="uikit-statscard" title="StatsCard — the standard summary card" sub="The DEFAULT skeleton for the four top cards on every module page. Configure header colour + slots (metric, supporting, status dots, chart, percent bar, footer). Body always fills — percentage cards MUST pass `percent` for a compliance bar.">
+        <div class="ui-stat-row" style={{ marginBottom: '16px' }}>
+          <StatsCard icon="fa-list-check" title="Open Actions" metric={27} metricUnit="open"
+            statuses={[
+              { label: 'Critical', value: 4, color: '#ef4444' },
+              { label: 'High',     value: 9, color: '#f59e0b' },
+              { label: 'Medium',   value: 14, color: '#60a5fa' },
+            ]}
+            footer="5 due this week" />
+          <StatsCard icon="fa-gauge-high" title="Overall Compliance" metric="25%"
+            supporting="Current / total competency slots"
+            percent={25} percentColor="#f59e0b" percentTarget="Target 85%" />
+          <StatsCard icon="fa-bolt" title="Severity Mix" variant="navy" metric={34} metricUnit="incidents"
+            chart={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <BarRow label="Critical" value={6}  max={34} color="#ef4444" />
+                <BarRow label="High"     value={11} max={34} color="#f59e0b" />
+                <BarRow label="Moderate" value={17} max={34} color="#60a5fa" />
+              </div>
+            } />
+          <StatsCard icon="fa-shield-halved" title="Control Coverage" variant="navy" metric="82%"
+            supporting="Hazards with verified controls"
+            percent={82} percentColor="#4ade80" percentTarget="Target 85%" />
+        </div>
+      </Section>
+
       <Section id="uikit-cards" title="Cards & metrics" sub="The metric vocabulary used in the spark row and inside tabs.">
         <Grid>
           <Demo label="SparkCard — sparkline">

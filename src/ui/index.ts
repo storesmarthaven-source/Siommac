@@ -28,6 +28,7 @@ export { useCardReorder, ArrangeControls, type CardReorder } from './components/
 export { Card, MetricCard, type CardProps } from './components/MetricCard';
 export { StatusPill } from './components/StatusPill';
 export { SparkCard, type SparkDef } from './components/SparkCard';
+export { StatsCard, type StatsCardProps, type StatStatus } from './components/StatsCard';
 export { ChartCard, type ChartCardProps } from './components/ChartCard';
 export { MiniCard, RecordRow, Record } from './components/Card';
 

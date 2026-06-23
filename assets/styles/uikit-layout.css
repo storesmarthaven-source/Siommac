@@ -270,6 +270,66 @@ body[data-theme="dark"] .hero-footer {
 .hse-spark-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0;
 }
+
+/* ── Standard StatsCard (ui-stat-*) — default skeleton for the 4 summary cards ──
+   Modelled on the Incidents .inc-mini-card (Severity Mix / Overall Compliance).
+   Fixed minimum size, body always fills, percent bar / footer pin to bottom. */
+.ui-stat-row {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
+  align-items: stretch;
+}
+.ui-stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow-card); overflow: clip; min-width: 0;
+  display: flex; flex-direction: column; min-height: 184px;
+  transition: box-shadow .18s, transform .18s;
+}
+.ui-stat-card:hover { box-shadow: 0 8px 24px rgba(15,23,42,.1); transform: translateY(-1px); }
+.ui-stat-card--navy {
+  background: linear-gradient(160deg, #1e3461 0%, var(--siomac-navy) 100%);
+  border-color: rgba(255,255,255,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.ui-stat-card-header {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 12px 16px 11px; border-bottom: 1px solid var(--border);
+  background: #f8fafe; font-size: 0.76rem; font-weight: 700; color: var(--siomac-navy);
+}
+.ui-stat-card-header i { font-size: 0.85rem; color: var(--text-muted); }
+.ui-stat-card--navy .ui-stat-card-header {
+  background: rgba(255,255,255,0.04); border-bottom-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9);
+}
+.ui-stat-card--navy .ui-stat-card-header i { color: rgba(255,255,255,0.55); }
+
+.ui-stat-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.ui-stat-spacer { flex: 1 1 auto; min-height: 6px; }
+
+.ui-stat-metric-row { display: flex; align-items: baseline; gap: 8px; }
+.ui-stat-metric { font-size: 2.4rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--siomac-navy); }
+.ui-stat-card--navy .ui-stat-metric { color: #fff; }
+.ui-stat-metric-unit { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.ui-stat-card--navy .ui-stat-metric-unit { color: rgba(255,255,255,0.5); }
+
+.ui-stat-supporting { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+.ui-stat-card--navy .ui-stat-supporting { color: rgba(255,255,255,0.6); }
+
+.ui-stat-statuses { display: flex; flex-direction: column; gap: 5px; }
+.ui-stat-status { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+.ui-stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ui-stat-status-label { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-stat-card--navy .ui-stat-status-label { color: rgba(255,255,255,0.7); }
+.ui-stat-status-val { font-weight: 700; flex-shrink: 0; }
+
+.ui-stat-chart { min-width: 0; }
+
+.ui-stat-bar-wrap { display: flex; flex-direction: column; gap: 4px; }
+.ui-stat-bar-track { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ui-stat-card--navy .ui-stat-bar-track { background: rgba(255,255,255,0.12); }
+.ui-stat-bar-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+.ui-stat-bar-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-muted); }
+.ui-stat-card--navy .ui-stat-bar-labels { color: rgba(255,255,255,0.45); }
+
+.ui-stat-footer { font-size: 0.66rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; }
+.ui-stat-card--navy .ui-stat-footer { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.08); }
 .hse-spark-card {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
   padding: 16px 18px 14px; box-shadow: var(--shadow-card);
