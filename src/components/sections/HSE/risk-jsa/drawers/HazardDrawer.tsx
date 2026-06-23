@@ -13,16 +13,18 @@ import { useHazardDetail, type HazardRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 import { VerifyControlButton } from '../dialogs/VerifyControlButton';
+import { AttachmentsPanel } from '../shared/AttachmentsPanel';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type HazardTabKey = 'overview' | 'controls' | 'capa' | 'workflow' | 'timeline';
+type HazardTabKey = 'overview' | 'controls' | 'capa' | 'workflow' | 'files' | 'timeline';
 
 const HAZARD_TABS: ReadonlyArray<TabDef<HazardTabKey>> = [
   { key: 'overview',  label: 'Overview'  },
   { key: 'controls',  label: 'Controls'  },
   { key: 'capa',      label: 'CAPA'      },
   { key: 'workflow',  label: 'Workflow'  },
+  { key: 'files',     label: 'Files'     },
   { key: 'timeline',  label: 'Timeline'  },
 ];
 
@@ -85,6 +87,9 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
         )}
         {activeTab === 'workflow' && (
           <HazardWorkflowTab workflow={workflow} />
+        )}
+        {activeTab === 'files' && (
+          <AttachmentsPanel entityType="hazard" entityId={hazard.id} />
         )}
         {activeTab === 'timeline' && (
           <HazardTimelineTab timeline={timeline} />

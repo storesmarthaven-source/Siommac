@@ -12,10 +12,11 @@ import { RiskScorePill } from '../shared/RiskScorePill';
 import { useJsaDetail, useAcknowledgeJsa, type JsaRow, type JsaCrewMember } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
+import { AttachmentsPanel } from '../shared/AttachmentsPanel';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'crew' | 'timeline';
+type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'crew' | 'files' | 'timeline';
 
 const JSA_TABS: ReadonlyArray<TabDef<JsaTabKey>> = [
   { key: 'overview',  label: 'Overview'  },
@@ -23,6 +24,7 @@ const JSA_TABS: ReadonlyArray<TabDef<JsaTabKey>> = [
   { key: 'ppe',       label: 'PPE'       },
   { key: 'training',  label: 'Training'  },
   { key: 'crew',      label: 'Crew'      },
+  { key: 'files',     label: 'Files'     },
   { key: 'timeline',  label: 'Timeline'  },
 ];
 
@@ -89,6 +91,9 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
         )}
         {activeTab === 'crew' && (
           <JsaCrewTab jsaId={jsa.id} crew={crew} />
+        )}
+        {activeTab === 'files' && (
+          <AttachmentsPanel entityType="jsa" entityId={jsa.id} />
         )}
         {activeTab === 'timeline' && (
           <JsaTimelineTab timeline={timeline} />

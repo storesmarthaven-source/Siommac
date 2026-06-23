@@ -20,17 +20,19 @@ import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
 import { useAssessmentDetail, type AssessmentRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
+import { AttachmentsPanel } from '../shared/AttachmentsPanel';
 import { VerifyControlButton } from '../dialogs/VerifyControlButton';
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
-type DrawerTab = 'overview' | 'hazards' | 'matrix' | 'controls' | 'timeline';
+type DrawerTab = 'overview' | 'hazards' | 'matrix' | 'controls' | 'files' | 'timeline';
 
 const DRAWER_TABS: ReadonlyArray<TabDef<DrawerTab>> = [
   { key: 'overview',  label: 'Overview'     },
   { key: 'hazards',   label: 'Hazards'      },
   { key: 'matrix',    label: 'Risk Matrix'  },
   { key: 'controls',  label: 'Controls'     },
+  { key: 'files',     label: 'Files'        },
   { key: 'timeline',  label: 'Timeline'     },
 ];
 
@@ -300,6 +302,7 @@ export function RiskAssessmentDrawer({
         {activeTab === 'hazards'  && <HazardsTab  hazards={hazards} />}
         {activeTab === 'matrix'   && <RiskMatrixTab hazards={hazards} assessment={assessment} />}
         {activeTab === 'controls' && <ControlsTab controls={controls} />}
+        {activeTab === 'files' && <AttachmentsPanel entityType="assessment" entityId={assessment.id} />}
         {activeTab === 'timeline' && <TimelineTab timeline={timeline} />}
       </div>
     </Drawer>

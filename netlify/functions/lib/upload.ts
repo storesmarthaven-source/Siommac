@@ -24,6 +24,21 @@ const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   'image/webp': 'webp',
 };
 
+// Document/evidence attachments (HSE) — images plus common office/PDF formats.
+const ALLOWED_ATTACHMENT_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/jpg':  'jpg',
+  'image/png':  'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'text/csv': 'csv',
+  'text/plain': 'txt',
+};
+
 const MAX_BASE64_BYTES  = 8 * 1024 * 1024;   // raw string length guard
 const MAX_BINARY_BYTES  = 6 * 1024 * 1024;   // decoded buffer guard
 const PRESIGN_TTL_SECS  = 300;               // 5-minute window to upload
@@ -105,5 +120,22 @@ async function uploadBase64(bucket: string, base64: string, name: string): Promi
   return path;
 }
 
-export { createUploadUrl, uploadBase64 };
+/**
+ * Presigned upload URL for an HSE document/evidence attachment. Same flow as
+ * createUploadUrl but with the broader document MIME allowlist.
+ */
+async function createAttachmentUploadUrl(bucket: string, name: string, mimeType: string): Promise<UploadUrlResult & { ext: string }> {
+  const ext = ALLOWED_ATTACHMENT_TYPES[mimeType.toLowerCase()];
+  if (!ext) throw new Error(`Unsupported file type: ${mimeType}`);
+
+  const safeName = name.replace(/[^a-zA-Z0-9_\-.]/g, '_').slice(0, 80);
+  const path     = `${safeName}_${Date.now()}.${ext}`;
+
+  const { data, error } = await sb.storage.from(bucket).createSignedUploadUrl(path);
+  if (error || !data) throw new Error(`Failed to create upload URL: ${error?.message ?? 'unknown'}`);
+
+  return { uploadUrl: data.signedUrl, token: data.token, path, ext };
+}
+
+export { createUploadUrl, createAttachmentUploadUrl, uploadBase64 };
 export type { UploadUrlResult };

@@ -557,6 +557,60 @@ export function useLinkCapa() {
   });
 }
 
+// ── Attachments ──────────────────────────────────────────────────────────────────
+
+export type AttachEntityType = 'hazard' | 'assessment' | 'jsa';
+
+export interface AttachmentRow {
+  id:           string;
+  file_name:    string;
+  mime_type:    string;
+  storage_path: string;
+  uploaded_by:  string | null;
+  created_at:   string;
+  url:          string;
+}
+
+export function useAttachments(entityType: AttachEntityType, entityId: string | null) {
+  return useQuery({
+    queryKey: ['hse', 'risk-jsa', 'attachments', entityType, entityId] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: AttachmentRow[] }>('hse/risk-jsa/attachments/list', { entityType, entityId }),
+    enabled:  !!entityId,
+    staleTime: 15_000,
+  });
+}
+
+/** Full upload: presigned URL → PUT the file → record metadata. */
+export function useUploadAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ entityType, entityId, file }: { entityType: AttachEntityType; entityId: string; file: File }) => {
+      const signed = await apiPost<{ success: boolean; uploadUrl?: string; path?: string; message?: string }>(
+        'hse/risk-jsa/attachments/upload-url', { fileName: file.name, mimeType: file.type }, { retryable: false });
+      if (!signed.success || !signed.uploadUrl || !signed.path) throw new Error(signed.message ?? 'Could not start upload');
+
+      const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+      if (!put.ok) throw new Error(`Upload failed (HTTP ${put.status})`);
+
+      return apiPost<{ success: boolean; attachmentId: string }>(
+        'hse/risk-jsa/attachments/create',
+        { entityType, entityId, fileName: file.name, mimeType: file.type, storagePath: signed.path },
+        { retryable: false },
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hse', 'risk-jsa', 'attachments'] }),
+  });
+}
+
+export function useDeleteAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      apiPost<{ success: boolean }>('hse/risk-jsa/attachments/delete', { attachmentId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hse', 'risk-jsa', 'attachments'] }),
+  });
+}
+
 // ── Reference libraries (standard hazards / controls) ────────────────────────────
 
 export interface HazardLibraryItem {

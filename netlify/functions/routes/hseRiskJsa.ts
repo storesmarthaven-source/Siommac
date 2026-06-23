@@ -42,7 +42,11 @@ import { nextRef }           from '../lib/refGenerator';
 import { emitAppEvent }      from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
 import { createWorkflow }   from '../lib/workflowEngine';
+import { createAttachmentUploadUrl } from '../lib/upload';
+import { getSignedUrl }     from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
+
+const ATTACH_BUCKET = 'hse-attachments';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
@@ -1404,6 +1408,94 @@ router.post('/risk-jsa/library/controls', async c => {
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   return c.json({ success: true, data: data ?? [] });
+});
+
+// ── Attachments (presigned upload → metadata row → signed download) ──────────
+
+const AttachEntity = z.enum(['hazard', 'assessment', 'jsa']);
+
+router.post('/risk-jsa/attachments/upload-url', async c => {
+  await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) }), body.args);
+  if (!v.ok) return v.response;
+  try {
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(ATTACH_BUCKET, v.data.fileName, v.data.mimeType);
+    return c.json({ success: true, uploadUrl, token, path, bucket: ATTACH_BUCKET });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Upload URL failed' }, 400 as 200);
+  }
+});
+
+router.post('/risk-jsa/attachments/create', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({
+    entityType:  AttachEntity,
+    entityId:    z.string().min(1),
+    fileName:    z.string().min(1),
+    mimeType:    z.string().min(1),
+    storagePath: z.string().min(1),
+  }), body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb.from('attachments').insert({
+    entity_type:  `hse_${v.data.entityType}`,
+    entity_id:    v.data.entityId,
+    file_name:    v.data.fileName,
+    mime_type:    v.data.mimeType,
+    storage_path: v.data.storagePath,
+    uploaded_by:  user.id,
+  }).select('id').single<{ id: string }>();
+  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
+
+  void emitAppEvent({
+    eventType: 'hse.attachment.added', sourceModule: 'hse',
+    sourceEntityType: v.data.entityType, sourceEntityId: v.data.entityId,
+    actorUserId: user.id, severity: 'info', payload: { fileName: v.data.fileName },
+  });
+
+  return c.json({ success: true, attachmentId: data.id });
+});
+
+router.post('/risk-jsa/attachments/list', async c => {
+  await requirePermission(c, 'hse.risk.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({ entityType: AttachEntity, entityId: z.string().min(1) }), body.args);
+  if (!v.ok) return v.response;
+
+  const { data, error } = await sb.from('attachments')
+    .select('id, file_name, mime_type, storage_path, uploaded_by, created_at')
+    .eq('entity_type', `hse_${v.data.entityType}`)
+    .eq('entity_id', v.data.entityId)
+    .order('created_at', { ascending: false });
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  const rows = await Promise.all((data ?? []).map(async a => ({
+    ...a,
+    url: await getSignedUrl(ATTACH_BUCKET, a.storage_path as string).catch(() => ''),
+  })));
+  return c.json({ success: true, data: rows });
+});
+
+router.post('/risk-jsa/attachments/delete', async c => {
+  const user = await requirePermission(c, 'hse.risk.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, z.object({ attachmentId: z.string().uuid() }), body.args);
+  if (!v.ok) return v.response;
+
+  const found = await sb.from('attachments').select('storage_path').eq('id', v.data.attachmentId).maybeSingle<{ storage_path: string }>();
+  const { error } = await sb.from('attachments').delete().eq('id', v.data.attachmentId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  if (found.data?.storage_path) {
+    await sb.storage.from(ATTACH_BUCKET).remove([found.data.storage_path]).catch(() => {});
+  }
+  void emitAppEvent({
+    eventType: 'hse.attachment.removed', sourceModule: 'hse',
+    sourceEntityType: 'attachment', sourceEntityId: v.data.attachmentId,
+    actorUserId: user.id, severity: 'info', payload: {},
+  });
+  return c.json({ success: true });
 });
 
 // ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────
