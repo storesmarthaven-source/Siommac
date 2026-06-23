@@ -21,6 +21,7 @@ import {
   isTwoFactorMandatory,
 } from '../lib/totp';
 import { emitAppEvent } from '../lib/appEvents';
+import { rotateSecurityStamp } from '../lib/trustedDevices';
 import type { HonoVariables } from '../../../types/api';
 import type { AppUser }       from '../../../types/db';
 
@@ -124,6 +125,9 @@ router.post('/confirm', async c => {
     backup_codes:     hashes,
   }).eq('id', u.id);
 
+  // Rotate security stamp — invalidates all trusted devices (new factor = fresh trust required)
+  void rotateSecurityStamp(u.id, 'totp_enabled');
+
   void emitAppEvent({
     eventType:        'auth.totp.enabled',
     sourceModule:     'auth',
@@ -183,6 +187,9 @@ router.post('/disable', async c => {
     backup_codes:     null,
   }).eq('id', u.id);
 
+  // Rotate security stamp — factor removed, all trusted devices must re-authenticate
+  void rotateSecurityStamp(u.id, 'totp_disabled');
+
   void emitAppEvent({
     eventType:        'auth.totp.disabled',
     sourceModule:     'auth',
@@ -225,6 +232,9 @@ router.post('/backup-codes/regenerate', async c => {
 
   const [plains, hashes] = await generateBackupCodes();
   await sb.from('app_users').update({ backup_codes: hashes }).eq('id', u.id);
+
+  // Rotate security stamp — new backup codes = changed factor state, invalidate trusted devices
+  void rotateSecurityStamp(u.id, 'backup_codes_regenerated');
 
   void emitAppEvent({
     eventType:        'auth.totp.backup_codes_regenerated',

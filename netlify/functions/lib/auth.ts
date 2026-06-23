@@ -52,7 +52,7 @@ export interface AuthMethodClaims {
   /** ISO timestamp of the second-factor verification (absent for password-only). */
   mfaVerifiedAt?: string;
   /** Coarse strength classification. */
-  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey';
+  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey' | 'trusted_device';
 }
 
 /** Issue a short-lived signed access JWT for a user. */

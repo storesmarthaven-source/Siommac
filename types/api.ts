@@ -47,7 +47,12 @@ export interface LoginResponse extends ApiResponse {
   /** Authentication Method References — mirrors JWT amr claim */
   amr?:           string[];
   /** Coarse strength classification for the session */
-  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey';
+  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey' | 'trusted_device';
+  // ── Trusted device hints (returned on requiresTwoFactor) ────────────────
+  /** True if the UI should offer a "remember this device" checkbox */
+  trustedDeviceEligible?: boolean;
+  /** Policy info for the checkbox label (e.g. max TTL days) */
+  trustedDevicePolicy?: { enabled: boolean; maxDays: number };
 }
 
 export interface Setup2faResponse extends ApiResponse {
@@ -77,7 +82,7 @@ export interface Verify2faResponse extends ApiResponse {
   sessionIdleTimeoutMs?: number;
   // ── Auth-method claims (present on full session responses) ───────────────
   amr?:           string[];
-  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey';
+  authStrength?:  'password_only' | 'mfa' | 'passwordless_passkey' | 'trusted_device';
 }
 
 export interface TwoFactorStatusResponse extends ApiResponse {
@@ -104,7 +109,7 @@ export interface JwtPayload {
   /** ISO timestamp when the second factor was verified (absent for password-only sessions). */
   mfaVerifiedAt?: string;
   /** Coarse strength classification for the session. */
-  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey';
+  authStrength:  'password_only' | 'mfa' | 'passwordless_passkey' | 'trusted_device';
 }
 
 // ── Hono context variables ─────────────────────────────────────────────────────

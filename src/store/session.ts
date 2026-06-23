@@ -70,7 +70,7 @@ export interface SessionState {
   /** Authentication Method References for the current session (mirrors JWT amr claim). */
   amr:              string[];
   /** Coarse strength classification for the current session. */
-  authStrength:     'password_only' | 'mfa' | 'passwordless_passkey' | null;
+  authStrength:     'password_only' | 'mfa' | 'passwordless_passkey' | 'trusted_device' | null;
 
   // ── RBAC — per-user permission overrides (Phase 2b) ───────────────────────
   /**

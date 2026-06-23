@@ -14,6 +14,7 @@
 
 import { Hono }        from 'hono';
 import { z }           from 'zod';
+import { setCookie }   from 'hono/cookie';
 import { requireUser, log_ } from '../lib/auth';
 import {
   generateRegistrationOptions,
@@ -32,6 +33,12 @@ import { buildSessionPayload }                  from '../routes/auth';
 import { checkLoginLimit }                      from '../lib/ratelimit';
 import { sb }                                   from '../lib/db';
 import { zv }                                   from '../lib/validate';
+import {
+  COOKIE_NAME as TD_COOKIE_NAME,
+  createTrustedDevice,
+  rotateSecurityStamp,
+  ttlDaysForRole,
+} from '../lib/trustedDevices';
 import type { HonoVariables }                   from '../../../types/api';
 import type { AppUser }                         from '../../../types/db';
 
@@ -74,8 +81,10 @@ const AuthOptionsSchema = z.object({
 });
 
 const AuthVerifySchema = z.object({
-  flow:         z.enum(['passwordless', 'second_factor']),
-  preAuthToken: z.string().optional(),
+  flow:           z.enum(['passwordless', 'second_factor']),
+  preAuthToken:   z.string().optional(),
+  rememberDevice: z.boolean().optional().default(false),
+  deviceLabel:    z.string().max(80).optional(),
   response: z.object({
     id:                    z.string(),
     rawId:                 z.string(),
@@ -113,6 +122,9 @@ router.post('/webauthn/register/verify', async c => {
 
   await log_(user, 'auth.passkey.registered', 'webauthn_credentials', credential.id,
     `Passkey registered: ${credential.label ?? credential.credentialId.slice(0, 16)}`);
+
+  // New strong factor registered — rotate stamp to invalidate existing trusted devices
+  void rotateSecurityStamp(user.id, 'passkey_registered');
 
   return c.json({ success: true, credential });
 });
@@ -158,6 +170,9 @@ router.post('/webauthn/credentials/delete', async c => {
   await deleteCredential(user.id, v.data.credentialId);
   await log_(user, 'auth.passkey.deleted', 'webauthn_credentials', v.data.credentialId,
     'Passkey deleted');
+
+  // Factor removed — rotate stamp to invalidate trusted devices
+  void rotateSecurityStamp(user.id, 'passkey_deleted');
 
   return c.json({ success: true });
 });
@@ -211,7 +226,7 @@ router.post('/webauthn/auth/verify', async c => {
   const v    = zv(c, AuthVerifySchema, body);
   if (!v.ok) return v.response;
 
-  const { flow, preAuthToken, response: assertionResp } = v.data;
+  const { flow, preAuthToken, rememberDevice, deviceLabel, response: assertionResp } = v.data;
 
   if (flow === 'second_factor') {
     // ── Second-factor path ────────────────────────────────────────────────────
@@ -247,6 +262,30 @@ router.post('/webauthn/auth/verify', async c => {
       mfaSatisfied:  true,
       authStrength:  'mfa',
     });
+
+    // Issue trusted-device cookie if requested
+    if (rememberDevice) {
+      try {
+        const ttlDays = ttlDaysForRole(result.user.role);
+        const { cookieValue } = await createTrustedDevice({
+          userId:    result.user.id,
+          method:    'webauthn',
+          label:     deviceLabel,
+          userAgent: c.req.header('user-agent') ?? undefined,
+          ipAddress: ip,
+          ttlDays,
+        });
+        setCookie(c, TD_COOKIE_NAME, cookieValue, {
+          httpOnly: true,
+          secure:   true,
+          sameSite: 'Lax',
+          path:     '/',
+          maxAge:   ttlDays * 86400,
+        });
+      } catch (err) {
+        console.error('[webauthn/auth/verify] createTrustedDevice failed:', err);
+      }
+    }
 
     await log_(result.user, 'auth.login.webauthn_2fa', 'user', result.user.id, 'Passkey 2nd-factor login');
     return c.json(payload);

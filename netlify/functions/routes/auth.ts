@@ -1,4 +1,5 @@
 import { Hono }     from 'hono';
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { sb, createAnonClient } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
 import type { AuthMethodClaims }       from '../lib/auth';
@@ -11,7 +12,7 @@ import { noPhoto }                     from '../lib/photos';
 import {
   zv, LoginSchema, UpdateColorSchemeSchema, UpdateLayoutModeSchema,
   UpdateMyProfileSchema, VerifyPasswordSchema,
-  Verify2faSchema, Setup2faInitSchema, Setup2faConfirmSchema, Disable2faSchema,
+  Setup2faInitSchema, Setup2faConfirmSchema, Disable2faSchema,
   z,
 } from '../lib/validate';
 import {
@@ -21,6 +22,14 @@ import {
   generateBackupCodes, consumeBackupCode,
 } from '../lib/totp';
 import { hasStrongFactor, getFactorMethods } from '../lib/webauthn';
+import {
+  COOKIE_NAME as TD_COOKIE_NAME,
+  verifyTrustedDevice,
+  createTrustedDevice,
+  ttlDaysForRole,
+  shouldOfferTrustedDevice,
+} from '../lib/trustedDevices';
+import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables }          from '../../../types/api';
 import type { AppUser }                from '../../../types/db';
 
@@ -157,23 +166,94 @@ router.post('/login', async c => {
       return c.json({ success: true, requiresSetup: true, preAuthToken: setupToken });
     }
 
+    // ── Trusted device check ────────────────────────────────────────────────
+    // If the browser has a valid trusted-device cookie, skip the 2FA step and
+    // issue a full session with authStrength='trusted_device'.
+    const tdCookie = getCookie(c, TD_COOKIE_NAME);
+    if (tdCookie) {
+      const tdResult = await verifyTrustedDevice({
+        userId:     u.id,
+        cookieValue: tdCookie,
+        ipAddress:   c.get('clientIp') ?? undefined,
+      });
+      if (tdResult.trusted) {
+        const payload = await buildSessionPayload(u, deviceFrom(c), {
+          amr:          ['pwd', 'trusted_device'],
+          mfaSatisfied: true,
+          authStrength: 'trusted_device',
+        });
+        void emitAppEvent({
+          eventType:        'auth.login.trusted_device_used',
+          sourceModule:     'auth',
+          sourceEntityType: 'user',
+          sourceEntityId:   u.id,
+          actorUserId:      u.id,
+          severity:         'info',
+          payload:          { deviceId: tdResult.device.id, label: tdResult.device.label },
+        });
+        await log_(u, 'login', 'user', u.id, 'login ok (trusted device)');
+        return c.json(payload);
+      }
+    }
+
     // User has at least one strong factor — require them to use it
     const [preAuthToken, factorMethods] = await Promise.all([
       issueChallenge(u.id, 'verify'),
       getFactorMethods(u.id),
     ]);
     const methods: string[] = [];
-    if (factorMethods.hasTotp)        methods.push('totp');
+    if (factorMethods.hasTotp)          methods.push('totp');
     if (factorMethods.passkeyCount > 0) methods.push('webauthn');
     await log_(u, 'login_requires_2fa', 'user', u.id, `methods: ${methods.join(',')}`);
-    return c.json({ success: true, requiresTwoFactor: true, preAuthToken, methods });
+    return c.json({
+      success:              true,
+      requiresTwoFactor:    true,
+      preAuthToken,
+      methods,
+      trustedDeviceEligible: shouldOfferTrustedDevice(u.role),
+      trustedDevicePolicy:   { enabled: true, maxDays: ttlDaysForRole(u.role) },
+    });
   }
 
   if (u.totp_enabled) {
-    // Non-mandatory role has voluntarily enrolled TOTP — honour it
+    // Non-mandatory role has voluntarily enrolled TOTP — honour it.
+    // Check trusted device first.
+    const tdCookie = getCookie(c, TD_COOKIE_NAME);
+    if (tdCookie) {
+      const tdResult = await verifyTrustedDevice({
+        userId:      u.id,
+        cookieValue: tdCookie,
+        ipAddress:   c.get('clientIp') ?? undefined,
+      });
+      if (tdResult.trusted) {
+        const payload = await buildSessionPayload(u, deviceFrom(c), {
+          amr:          ['pwd', 'trusted_device'],
+          mfaSatisfied: true,
+          authStrength: 'trusted_device',
+        });
+        void emitAppEvent({
+          eventType:        'auth.login.trusted_device_used',
+          sourceModule:     'auth',
+          sourceEntityType: 'user',
+          sourceEntityId:   u.id,
+          actorUserId:      u.id,
+          severity:         'info',
+          payload:          { deviceId: tdResult.device.id, label: tdResult.device.label },
+        });
+        await log_(u, 'login', 'user', u.id, 'login ok (trusted device)');
+        return c.json(payload);
+      }
+    }
     const preAuthToken = await issueChallenge(u.id, 'verify');
     await log_(u, 'login_requires_2fa', 'user', u.id, '');
-    return c.json({ success: true, requiresTwoFactor: true, preAuthToken, methods: ['totp'] });
+    return c.json({
+      success:              true,
+      requiresTwoFactor:    true,
+      preAuthToken,
+      methods:              ['totp'],
+      trustedDeviceEligible: shouldOfferTrustedDevice(u.role),
+      trustedDevicePolicy:   { enabled: true, maxDays: ttlDaysForRole(u.role) },
+    });
   }
 
   // No 2FA required — issue full session (password-only)
@@ -193,10 +273,21 @@ router.post('/login', async c => {
 });
 
 // ── Verify 2FA — consume pre-auth token + TOTP/backup code ───────────────────
+// Extended for B3a: accepts optional rememberDevice + deviceLabel.
+// rememberDevice is honoured ONLY when a TOTP code (not a backup code) succeeds.
+
+const Verify2faExtSchema = z.object({
+  preAuthToken:  z.string().min(1),
+  code:          z.string().min(6).max(8),
+  rememberDevice: z.boolean().optional().default(false),
+  deviceLabel:    z.string().max(80).optional(),
+});
+
 router.post('/verify2fa', async c => {
-  const v = zv(c, Verify2faSchema, c.get('body').args ?? {});
+  const rawArgs = c.get('body').args ?? {};
+  const v = zv(c, Verify2faExtSchema, rawArgs);
   if (!v.ok) return v.response;
-  const { preAuthToken, code } = v.data;
+  const { preAuthToken, code, rememberDevice, deviceLabel } = v.data;
 
   const challenge = await validateChallenge(preAuthToken);
   if (!challenge || challenge.type !== 'verify') {
@@ -216,7 +307,7 @@ router.post('/verify2fa', async c => {
 
   // Try TOTP code first, then backup code
   const isDigits = /^\d{6}$/.test(code);
-  let codeOk = false;
+  let codeOk    = false;
   let usedBackup = false;
 
   if (isDigits) {
@@ -232,13 +323,41 @@ router.post('/verify2fa', async c => {
   }
 
   await consumeChallenge(challenge.id);
-  await log_(u, 'login', 'user', u.id, usedBackup ? 'login ok (backup code)' : 'login ok (2FA)');
-  return c.json(await buildSessionPayload(u, deviceFrom(c), {
+
+  const session = await buildSessionPayload(u, deviceFrom(c), {
     amr:           ['pwd', 'otp'],
     mfaSatisfied:  true,
     mfaVerifiedAt: new Date().toISOString(),
     authStrength:  'mfa',
-  }));
+  });
+
+  // Issue trusted-device cookie ONLY for TOTP (not backup code)
+  if (rememberDevice && !usedBackup) {
+    try {
+      const ttlDays = ttlDaysForRole(u.role);
+      const { cookieValue } = await createTrustedDevice({
+        userId:    u.id,
+        method:    'totp',
+        label:     deviceLabel,
+        userAgent: c.req.header('user-agent') ?? undefined,
+        ipAddress: c.get('clientIp') ?? undefined,
+        ttlDays,
+      });
+      setCookie(c, TD_COOKIE_NAME, cookieValue, {
+        httpOnly: true,
+        secure:   true,
+        sameSite: 'Lax',
+        path:     '/',
+        maxAge:   ttlDays * 86400,
+      });
+    } catch (err) {
+      // Non-fatal: log but don't fail the login
+      console.error('[verify2fa] createTrustedDevice failed:', err);
+    }
+  }
+
+  await log_(u, 'login', 'user', u.id, usedBackup ? 'login ok (backup code)' : 'login ok (2FA)');
+  return c.json(session);
 });
 
 // ── Setup 2FA (step 1) — generate secret + QR code ───────────────────────────
