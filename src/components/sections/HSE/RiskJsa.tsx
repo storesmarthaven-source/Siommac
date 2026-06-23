@@ -9,7 +9,7 @@
 import { type VNode }   from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, withCounts, ReorderableRow, NewMenu,
+  PageHeader, TabBar, withCounts, NewMenu,
   type AreaTab,
 } from '@ui';
 import { HSE_SITES, hsePill } from './types';
@@ -166,7 +166,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         <div class="hse-left-col">
           <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
 
-          <ReorderableRow pageKey="hse.risk.kpi">
+          <div class="hse-spark-row">
             <div class="hse-spark">
               <div class="hse-spark-header"><span class="hse-spark-label">Total Hazards</span></div>
               <div class="hse-spark-val">{totalHazards}</div>
@@ -187,7 +187,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
               <div class="hse-spark-val" style={{ color: '#22c55e' }}>{riskReductionPct}%</div>
               <div class="hse-spark-sub">Initial → residual, controlled</div>
             </div>
-          </ReorderableRow>
+          </div>
 
           {active === 'hazards' && (
             <HazardTab

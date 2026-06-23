@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 import { useCreateWorkflow } from '@api/workflows';
 
@@ -132,12 +132,12 @@ function SpillsTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.environmental.0">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Spills YTD</span></div><div class="hse-spark-val">{spills.length}</div><div class="hse-spark-sub">All T&T sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Open</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{open}</div><div class="hse-spark-sub">Cleanup and closure pending</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Tier 2 Events</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{tier2}</div><div class="hse-spark-sub">EMA notification required</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">EMA Notified</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{spills.filter(s => s.emaNotified).length}</div><div class="hse-spark-sub">Within 24-hour window</div></div>
-      </ReorderableRow>
+      </div>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -225,12 +225,12 @@ function WasteTab(): VNode {
   const manifested = mockWaste.filter(w => w.status === 'Manifested').length;
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.environmental.1">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Waste Records YTD</span></div><div class="hse-spark-val">{mockWaste.length}</div><div class="hse-spark-sub">All hazardous waste movements</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Manifested</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{manifested}</div><div class="hse-spark-sub">Cradle-to-grave evidence</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Pending Manifest</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{pending}</div><div class="hse-spark-sub">Awaiting carrier confirmation</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Hazardous Codes</span></div><div class="hse-spark-val" style={{ fontSize: '0.85rem', color: '#60a5fa' }}>RIC / EMA</div><div class="hse-spark-sub">Regulated Industries Commission</div></div>
-      </ReorderableRow>
+      </div>
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
           <div class="vt-toolbar">
@@ -290,12 +290,12 @@ function WasteTab(): VNode {
 function EmaTab(): VNode {
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.environmental.2">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Notifications YTD</span></div><div class="hse-spark-val">{mockEmaNotifications.length}</div><div class="hse-spark-sub">EMA formal notifications</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Open</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{mockEmaNotifications.filter(n => n.status === 'Submitted').length}</div><div class="hse-spark-sub">Awaiting EMA response</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Closed</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockEmaNotifications.filter(n => n.status === 'Closed').length}</div><div class="hse-spark-sub">EMA case closed</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">24-hr Rule</span></div><div class="hse-spark-val" style={{ fontSize: '0.82rem', color: '#60a5fa' }}>EMA Act S.22</div><div class="hse-spark-sub">Tier 2+ spill notification window</div></div>
-      </ReorderableRow>
+      </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">
@@ -326,12 +326,12 @@ function MonitoringTab(): VNode {
   const compliant  = mockMonitoring.filter(m => m.status === 'Compliant').length;
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.environmental.3">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Parameters Tracked</span></div><div class="hse-spark-val">{mockMonitoring.length}</div><div class="hse-spark-sub">Across all T&T sites</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Compliant</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{compliant}</div><div class="hse-spark-sub">Within EMA permit limits</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Sample Due</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{sampleDue}</div><div class="hse-spark-sub">Schedule sampling now</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Marine Monitoring</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>Galeota</div><div class="hse-spark-sub">Monthly water quality — EMA std</div></div>
-      </ReorderableRow>
+      </div>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

@@ -6,7 +6,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, Field, SelectInput, TextInput, TextareaInput,
+  PageHeader, MetricRow, TabBar, withCounts, SparkCard, Field, SelectInput, TextInput, TextareaInput,
   type AreaTab, type SparkDef,
 } from '@ui';
 import { useCreateWorkflow } from '@api/workflows';
@@ -40,7 +40,7 @@ function RegisterTab({ permits, onNew }: { permits: PermitRow[]; onNew: () => vo
   return (
     <div class="ppe-tab-content">
       {/* Analytics strip */}
-      <ReorderableRow pageKey="hse.permits.0">
+      <div class="hse-spark-row">
         <div class="hse-spark">
           <div class="hse-spark-header">
             <span class="hse-spark-label">Active Permits</span>
@@ -69,7 +69,7 @@ function RegisterTab({ permits, onNew }: { permits: PermitRow[]; onNew: () => vo
           <div class="hse-spark-val" style={{ color: '#f59e0b' }}>88%</div>
           <div class="hse-spark-sub">Evidence attached on issue</div>
         </div>
-      </ReorderableRow>
+      </div>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">

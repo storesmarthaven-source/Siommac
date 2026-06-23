@@ -8,7 +8,7 @@
 
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { PageHeader, MetricRow, ReorderableRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
+import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -115,12 +115,12 @@ function RegisterTab(): VNode {
 
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.contractors.0">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Contractors</span></div><div class="hse-spark-val">{contractors.length}</div><div class="hse-spark-sub">Registered with HSE file</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Active</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{active}</div><div class="hse-spark-sub">All files current</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Pending Review</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{pending}</div><div class="hse-spark-sub">Document action required</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Blocked</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{blocked}</div><div class="hse-spark-sub">Expired file — site access denied</div></div>
-      </ReorderableRow>
+      </div>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -201,12 +201,12 @@ function InductionTab(): VNode {
   const complete  = mockInductions.filter(i => i.status === 'Complete').length;
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.contractors.1">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Inductions</span></div><div class="hse-spark-val">{mockInductions.length}</div><div class="hse-spark-sub">All contractor workers</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Completed</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{complete}</div><div class="hse-spark-sub">Induction record on file</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{overdue}</div><div class="hse-spark-sub">Worker on site without induction</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div><div class="hse-spark-val" style={{ color: '#60a5fa' }}>{mockInductions.filter(i => i.status === 'Scheduled').length}</div><div class="hse-spark-sub">Booked with HSE Officer</div></div>
-      </ReorderableRow>
+      </div>
       <div class="vt-toolbar">
         <div class="vt-search" style={{ flex: '1 1 220px' }}><i class="fas fa-search" /><input type="search" placeholder="Search worker or company…" /></div>
         <select class="emp-filter-select"><option>All sites</option>{HSE_SITES.map(s => <option key={s}>{s}</option>)}</select>
@@ -242,12 +242,12 @@ function FilesTab(): VNode {
   const due     = mockHseFiles.filter(f => f.status === 'Due').length;
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.contractors.2">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Total Documents</span></div><div class="hse-spark-val">{mockHseFiles.length}</div><div class="hse-spark-sub">Across all contractors</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{expired}</div><div class="hse-spark-sub">Contractor site access blocked</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Due Soon</span></div><div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div><div class="hse-spark-sub">Action required within 30 days</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Current</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockHseFiles.filter(f => f.status === 'Current').length}</div><div class="hse-spark-sub">Files in good standing</div></div>
-      </ReorderableRow>
+      </div>
 
       <div class="ppe-screen-grid">
         <div class="ppe-screen-main">
@@ -307,12 +307,12 @@ function FilesTab(): VNode {
 function AccessTab(): VNode {
   return (
     <div class="ppe-tab-content">
-      <ReorderableRow pageKey="hse.contractors.3">
+      <div class="hse-spark-row">
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Access Attempts Today</span></div><div class="hse-spark-val">{mockAccess.length}</div><div class="hse-spark-sub">Gate checks logged</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Granted</span></div><div class="hse-spark-val" style={{ color: '#22c55e' }}>{mockAccess.filter(a => a.allowed).length}</div><div class="hse-spark-sub">All HSE files verified</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Denied</span></div><div class="hse-spark-val" style={{ color: '#ef4444' }}>{mockAccess.filter(a => !a.allowed).length}</div><div class="hse-spark-sub">Expired or missing file</div></div>
         <div class="hse-spark"><div class="hse-spark-header"><span class="hse-spark-label">Gate Rule</span></div><div class="hse-spark-val" style={{ fontSize: '0.78rem', color: '#60a5fa' }}>Auto-block</div><div class="hse-spark-sub">Expired STOW/insurance = deny</div></div>
-      </ReorderableRow>
+      </div>
       <div class="vt-table-card">
         <div class="vt-table-scroll">
           <table class="vt-table">

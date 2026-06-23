@@ -17,8 +17,7 @@ import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
-  MetricRow, StatsCard, Sparkline, NewMenu, ReorderableRow,
-  type AreaTab,
+  MetricRow, StatsCard, Sparkline, NewMenu, type AreaTab,
 } from '@ui';
 import {
   hsePill, HSE_SITES,
@@ -1120,7 +1119,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
 
       {/* ── Quick KPI spark row ── */}
       <div style={{ marginTop: '16px' }}>
-        <ReorderableRow pageKey="hse.incidents.kpi">
+        <div class="hse-spark-row">
           <div class="hse-spark">
             <div class="hse-spark-header"><span class="hse-spark-label">Total Incidents</span></div>
             <div class="hse-spark-val">{incidents.length}</div>
@@ -1141,7 +1140,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
             <div class="hse-spark-val" style={{ color: '#22c55e' }}>{closurePct}%</div>
             <div class="hse-spark-sub">Closed of total</div>
           </div>
-        </ReorderableRow>
+        </div>
       </div>
 
       {/* Tab content — consistent top gap below nav */}
