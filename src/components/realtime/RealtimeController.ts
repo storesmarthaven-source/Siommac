@@ -25,7 +25,7 @@
 
 import { env }                    from '@lib/env';
 import { scheduleHdrBadgeSync }   from '@components/nav';
-import { authPost }               from '@lib/api';
+import { applyBrandingPush }      from './BrandingRealtimeBridge';
 
 // ── Supabase client type (loaded via CDN — window.supabase) ──────────────────
 
@@ -156,29 +156,10 @@ export function initRealtime(): void {
     })
 
     // ── settings (branding live push) ─────────────────────────────────────────
-    // When an admin saves a new logo or company name all open sessions update
-    // within ~1 second without a page reload.
+    // Delegated to BrandingRealtimeBridge — branding is its own concern, it just
+    // rides this shared channel.
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, () => {
-      authPost<{ success: boolean; companyLogoUrl?: string; companyName?: string }>(
-        'settings/getPublicBranding', {},
-      ).then(res => {
-        if (!res.success) return;
-        const logoUrl = res.companyLogoUrl ?? '';
-        const name    = res.companyName    ?? '';
-        const sv = (window as unknown as Record<string, { applyCompanyLogo?: (u: string) => void; applyCompanyName?: (n: string) => void }>)['SettingsView'];
-        sv?.applyCompanyLogo?.(logoUrl);
-        sv?.applyCompanyName?.(name);
-        // Also patch localStorage cache so next reload gets the fresh branding
-        try {
-          const raw = localStorage.getItem('siomac_session_v1');
-          if (raw) {
-            const s = JSON.parse(raw) as Record<string, unknown>;
-            s['companyLogoUrl'] = logoUrl;
-            s['companyName']    = name;
-            localStorage.setItem('siomac_session_v1', JSON.stringify(s));
-          }
-        } catch (_) {}
-      }).catch(() => { /* non-fatal */ });
+      applyBrandingPush();
     })
 
     .subscribe((status: string, err?: unknown) => {
