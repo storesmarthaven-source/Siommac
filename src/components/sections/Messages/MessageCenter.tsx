@@ -9,14 +9,16 @@
  * thread on navigation.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { PageHeader, type AreaTab } from '@ui';
 import {
   useMessageThreadsFull, useThreadPosts, useMarkThreadRead,
   usePostMessage, useArchiveThread, useCommsSummary,
-  type MessageThreadListItem, type ThreadFilters,
+  useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
+  type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
 } from '@api/communications';
+import { useSessionStore } from '@store/session';
 import { ComposeThreadDialog } from './ComposeThreadDialog';
 
 const TABS: AreaTab[] = [
@@ -157,7 +159,11 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
 
 // ── Conversation (right pane) ─────────────────────────────────────────────────
 
-function Conversation({ thread }: { thread: MessageThreadListItem }): VNode {
+function Conversation({ thread, detailsOpen, onToggleDetails }: {
+  thread: MessageThreadListItem;
+  detailsOpen?: boolean;
+  onToggleDetails?: () => void;
+}): VNode {
   const [body, setBody] = useState('');
   const { data: posts = [], isLoading } = useThreadPosts(thread.id);
   const postMsg  = usePostMessage();
@@ -212,6 +218,14 @@ function Conversation({ thread }: { thread: MessageThreadListItem }): VNode {
           title={thread.is_archived ? 'Unarchive' : 'Archive'}>
           <i class={`fas ${thread.is_archived ? 'fa-inbox' : 'fa-box-archive'}`} />
         </button>
+        {onToggleDetails && (
+          <button onClick={onToggleDetails}
+            style={{ background: detailsOpen ? 'rgba(27,45,85,0.07)' : 'none', border: '1px solid var(--border)', borderRadius: '7px',
+              cursor: 'pointer', color: detailsOpen ? 'var(--siomac-navy)' : 'var(--text-muted)', padding: '5px 10px', fontSize: '0.76rem' }}
+            title="Details">
+            <i class="fas fa-circle-info" />
+          </button>
+        )}
       </div>
 
       {/* Posts */}
@@ -310,12 +324,158 @@ function Conversation({ thread }: { thread: MessageThreadListItem }): VNode {
   );
 }
 
+// ── Thread details panel (right pane) ─────────────────────────────────────────
+
+function initials(name: string): string {
+  const p = name.trim().split(/\s+/);
+  return (((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()) || '?';
+}
+
+function Avatar({ name, img, size = 34 }: { name: string; img?: string | null; size?: number }): VNode {
+  return img
+    ? <img src={img} alt={name} style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    : (
+      <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: `${size * 0.36}px`, fontWeight: 700, color: 'var(--siomac-navy)' }}>{initials(name)}</span>
+      </div>
+    );
+}
+
+function SectionHead({ children }: { children: ComponentChildren }): VNode {
+  return (
+    <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
+      color: 'var(--text-muted)', marginBottom: '10px' }}>{children}</div>
+  );
+}
+
+function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNode {
+  const myId = useSessionStore(s => s.userId);
+  const { data: detail } = useThread(thread.id);
+  const participants: MessageParticipantProfile[] = detail?.participants ?? thread.participants;
+  const isOwner = thread.role === 'owner';
+
+  const addP    = useAddThreadParticipants();
+  const removeP = useRemoveThreadParticipant();
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const { data: recipients = [] } = useMessageRecipients(q);
+  const existing = new Set(participants.map(p => p.user_id));
+  const candidates = recipients.filter(r => !existing.has(r.user_id)).slice(0, 6);
+
+  const typeLabel = thread.thread_type === 'group'  ? 'Group conversation'
+                  : thread.thread_type === 'record' ? 'Record discussion'
+                  : thread.thread_type === 'system' ? 'System thread'
+                  :                                    'Direct message';
+  const others = participants.filter(p => p.user_id !== myId);
+  const title  = thread.subject ?? (others.map(p => p.full_name ?? p.username ?? '?').join(', ') || 'Conversation');
+
+  return (
+    <div style={{ padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
+        <Avatar name={title} img={others[0]?.profile_image} size={64} />
+        <div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{title}</div>
+          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {typeLabel} · {thread.participant_count} {thread.participant_count === 1 ? 'person' : 'people'}
+          </div>
+        </div>
+      </div>
+
+      {/* Linked record */}
+      {thread.source_module && thread.source_entity_id && (
+        <div>
+          <SectionHead>Linked record</SectionHead>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+            background: 'var(--bg-subtle, #f7f8fa)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+            <i class="fas fa-link" style={{ color: 'var(--siomac-navy)' }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {thread.source_entity_id}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                {thread.source_module}{thread.source_entity_type ? ` · ${thread.source_entity_type}` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Participants */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <SectionHead>Participants ({participants.length})</SectionHead>
+          {isOwner && (
+            <button onClick={() => setAddOpen(o => !o)}
+              style={{ marginLeft: 'auto', marginTop: '-6px', background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--siomac-navy)', fontSize: '0.74rem', fontWeight: 600 }}>
+              <i class="fas fa-user-plus" /> Add
+            </button>
+          )}
+        </div>
+
+        {isOwner && addOpen && (
+          <div style={{ marginBottom: '10px' }}>
+            <div class="vt-search" style={{ marginBottom: '6px' }}>
+              <i class="fas fa-search" />
+              <input type="search" placeholder="Search people…" value={q}
+                onInput={e => setQ((e.target as HTMLInputElement).value)} />
+            </div>
+            {candidates.map(r => (
+              <button key={r.user_id} disabled={addP.isPending}
+                onClick={() => { addP.mutate({ threadId: thread.id, userIds: [r.user_id] }); setQ(''); setAddOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px',
+                  background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: '7px' }}>
+                <Avatar name={r.full_name ?? r.username ?? '?'} img={r.profile_image} size={26} />
+                <span style={{ fontSize: '0.8rem', color: 'var(--siomac-navy)' }}>{r.full_name ?? r.username}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {participants.map(p => {
+            const name = (p.user_id === myId ? 'You' : (p.full_name ?? p.username ?? '?'));
+            return (
+              <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Avatar name={p.full_name ?? p.username ?? '?'} img={p.profile_image} size={32} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{p.role}</div>
+                </div>
+                {isOwner && p.user_id !== myId && (
+                  <button onClick={() => removeP.mutate({ threadId: thread.id, userId: p.user_id })} disabled={removeP.isPending}
+                    title="Remove" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}>
+                    <i class="fas fa-xmark" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Files */}
+      <div>
+        <SectionHead>Files</SectionHead>
+        <div style={{ textAlign: 'center', padding: '18px 8px', color: 'var(--text-muted)' }}>
+          <i class="fas fa-paperclip" style={{ fontSize: '1.3rem', opacity: 0.4 }} />
+          <div style={{ fontSize: '0.76rem', marginTop: '6px' }}>No files shared yet.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MessageCenter (main export) ───────────────────────────────────────────────
 
 export function MessageCenter(): VNode {
   const [tab, setTab]               = useState('inbox');
   const [selectedThread, setSelectedThread] = useState<MessageThreadListItem | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
 
   const { data: summary } = useCommsSummary();
   const unread = summary?.messagesUnread ?? 0;
@@ -423,10 +583,21 @@ export function MessageCenter(): VNode {
             />
           </div>
 
-          {/* Right pane — conversation, or "select one" (threads exist) */}
+          {/* Right pane — conversation (+ details panel), or "select one" */}
           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             {selectedThread
-              ? <Conversation thread={selectedThread} />
+              ? (
+                <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Conversation thread={selectedThread} detailsOpen={showDetails} onToggleDetails={() => setShowDetails(v => !v)} />
+                  </div>
+                  {showDetails && (
+                    <div style={{ width: '280px', flexShrink: 0, borderLeft: '1px solid var(--border)', overflowY: 'auto' }}>
+                      <ThreadDetailsPanel thread={selectedThread} />
+                    </div>
+                  )}
+                </div>
+              )
               : (
                 <div style={{ height: '100%', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-muted)', padding: '24px', textAlign: 'center' }}>
