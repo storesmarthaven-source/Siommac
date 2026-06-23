@@ -204,37 +204,42 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         </div>
       </div>
 
-      {/* ── Active tab content (full width) ── */}
-      {active === 'hazards' && (
-        <HazardTab
-          onNewHazard={() => setHazardFormOpen(true)}
-          onSelect={setSelectedHazard}
-          selected={selectedHazard}
-        />
-      )}
-      {active === 'assessments' && (
-        <AssessmentsTab
-          onNew={() => setRaFormOpen(true)}
-          onSelect={setSelectedRa}
-          selected={selectedRa}
-          onSubmit={(id) => { setSelectedRa(null); void id; }}
-        />
-      )}
-      {active === 'jsa' && (
-        <JsaTab
-          onNew={() => setJsaFormOpen(true)}
-          onSelect={setSelectedJsa}
-          selected={selectedJsa}
-        />
-      )}
+      {/* ── Table (left) + supporting signals panel (right) ── */}
+      <div class="hse-main-grid">
+        <div class="hse-left-col">
+          {active === 'hazards' && (
+            <HazardTab
+              onNewHazard={() => setHazardFormOpen(true)}
+              onSelect={setSelectedHazard}
+              selected={selectedHazard}
+            />
+          )}
+          {active === 'assessments' && (
+            <AssessmentsTab
+              onNew={() => setRaFormOpen(true)}
+              onSelect={setSelectedRa}
+              selected={selectedRa}
+              onSubmit={(id) => { setSelectedRa(null); void id; }}
+            />
+          )}
+          {active === 'jsa' && (
+            <JsaTab
+              onNew={() => setJsaFormOpen(true)}
+              onSelect={setSelectedJsa}
+              selected={selectedJsa}
+            />
+          )}
+        </div>
 
-      {/* ── Supporting signals panel — below the table, changes by tab ── */}
-      <RiskJsaRightPanel
-        activeTab={active as 'hazards' | 'assessments' | 'jsa'}
-        onHazard={setSelectedHazard}
-        onAssessment={setSelectedRa}
-        onJsa={setSelectedJsa}
-      />
+        <div class="hse-right-col">
+          <RiskJsaRightPanel
+            activeTab={active as 'hazards' | 'assessments' | 'jsa'}
+            onHazard={setSelectedHazard}
+            onAssessment={setSelectedRa}
+            onJsa={setSelectedJsa}
+          />
+        </div>
+      </div>
 
       {/* Dialogs */}
       <NewHazardDialog open={hazardFormOpen} onClose={() => setHazardFormOpen(false)} />
