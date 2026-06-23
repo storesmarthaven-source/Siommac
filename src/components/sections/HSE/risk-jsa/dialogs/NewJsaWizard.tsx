@@ -30,6 +30,7 @@ const WIZARD_STEPS = [
   { label: 'Job Steps',       sub: 'Break down the task' },
   { label: 'PPE',             sub: 'Required equipment' },
   { label: 'Training',        sub: 'Competency needs' },
+  { label: 'Crew',            sub: 'Team & acknowledgement' },
   { label: 'Review & Submit', sub: 'Confirm & submit' },
 ] as const;
 
@@ -78,6 +79,13 @@ interface TrainingRow {
   competencyVerification: boolean;
 }
 
+interface CrewRow {
+  crewName:           string;
+  roleTitle:          string;
+  required:           boolean;
+  competencyVerified: boolean;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function emptyStep(stepNumber: number): StepRow {
@@ -113,6 +121,7 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
     PPE_ITEMS.map(item => ({ ppeItem: item, required: false, notes: '' })),
   );
   const [training,  setTraining]  = useState<TrainingRow[]>([]);
+  const [crew,      setCrew]      = useState<CrewRow[]>([]);
   const [error,     setError]     = useState('');
   // Source RA when generated from a risk assessment + the unused suggested hazards.
   const [linkedRaId, setLinkedRaId] = useState<string | null>(null);
@@ -213,6 +222,18 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
     setTraining(prev => prev.map((r, j) => j === i ? { ...r, ...patch } : r));
   }
 
+  // ── Crew helpers ─────────────────────────────────────────────────────────────
+
+  function addCrew() {
+    setCrew(prev => [...prev, { crewName: '', roleTitle: '', required: true, competencyVerified: false }]);
+  }
+  function removeCrew(i: number) {
+    setCrew(prev => prev.filter((_, j) => j !== i));
+  }
+  function patchCrew(i: number, patch: Partial<CrewRow>) {
+    setCrew(prev => prev.map((r, j) => j === i ? { ...r, ...patch } : r));
+  }
+
   // ── Validation ─────────────────────────────────────────────────────────────
 
   function canAdvance(from: number): boolean {
@@ -251,6 +272,15 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
           competencyVerification: r.competencyVerification,
         }));
 
+      const crewMembers = crew
+        .filter(r => r.crewName.trim())
+        .map(r => ({
+          crewName:           r.crewName.trim(),
+          roleTitle:          r.roleTitle.trim() || undefined,
+          required:           r.required,
+          competencyVerified: r.competencyVerified,
+        }));
+
       await create.mutateAsync({
         title:           title.trim(),
         description:     desc.trim() || undefined,
@@ -262,6 +292,7 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
         steps:           jsaSteps,
         ppeItems:        ppeItems.length > 0 ? ppeItems : undefined,
         trainingLinks:   trainingLinks.length > 0 ? trainingLinks : undefined,
+        crewMembers:     crewMembers.length > 0 ? crewMembers : undefined,
       });
       onClose();
     } catch (e) {
@@ -578,8 +609,45 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
         </div>
       )}
 
-      {/* ── Step 4: Review & Submit ── */}
+      {/* ── Step 4: Crew ── */}
       {step === 4 && (
+        <div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            List the crew. Every <strong>required</strong> member must acknowledge the JSA before it can be activated;
+            unverified competency blocks activation unless overridden.
+          </p>
+          <div style={{ display: 'grid', gap: '8px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
+            {crew.length === 0 && (
+              <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem', padding: '12px 0' }}>
+                No crew added yet.
+              </p>
+            )}
+            {crew.map((r, i) => (
+              <div key={i} style={{ padding: '10px 12px', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <TextInput value={r.crewName} onInput={v => patchCrew(i, { crewName: v })} placeholder="Crew member name" />
+                  <TextInput value={r.roleTitle} onInput={v => patchCrew(i, { roleTitle: v })} placeholder="Role (e.g. Technician)" />
+                  <button class="hse-btn-icon-remove" onClick={() => removeCrew(i)} aria-label="Remove"><i class="fas fa-trash" /></button>
+                </div>
+                <div style={{ display: 'flex', gap: '18px', marginTop: '8px', fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={r.required} onChange={() => patchCrew(i, { required: !r.required })} /> Required
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={r.competencyVerified} onChange={() => patchCrew(i, { competencyVerified: !r.competencyVerified })} /> Competency verified
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button class="hse-btn secondary" style={{ width: '100%', marginTop: '10px' }} onClick={addCrew}>
+            <i class="fas fa-user-plus" /> Add Crew Member
+          </button>
+        </div>
+      )}
+
+      {/* ── Step 5: Review & Submit ── */}
+      {step === 5 && (
         <div style={{ display: 'grid', gap: '12px' }}>
           <div
             style={{

@@ -9,19 +9,20 @@ import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
 import { Drawer, Tabs, type TabDef } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
-import { useJsaDetail, type JsaRow } from '@api/hse/riskJsa';
+import { useJsaDetail, useAcknowledgeJsa, type JsaRow, type JsaCrewMember } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
 import { DrawerActions } from './DrawerActions';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'timeline';
+type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'crew' | 'timeline';
 
 const JSA_TABS: ReadonlyArray<TabDef<JsaTabKey>> = [
   { key: 'overview',  label: 'Overview'  },
   { key: 'steps',     label: 'Job Steps' },
   { key: 'ppe',       label: 'PPE'       },
   { key: 'training',  label: 'Training'  },
+  { key: 'crew',      label: 'Crew'      },
   { key: 'timeline',  label: 'Timeline'  },
 ];
 
@@ -35,6 +36,7 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
   const steps    = (detail?.steps    as unknown[]) ?? [];
   const ppe      = (detail?.ppe      as unknown[]) ?? [];
   const training = (detail?.training as unknown[]) ?? (detail?.trainingLinks as unknown[]) ?? [];
+  const crew     = (detail?.crew     as JsaCrewMember[]) ?? [];
   const timeline = (detail?.timeline as unknown[]) ?? [];
 
   return (
@@ -84,6 +86,9 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
         )}
         {activeTab === 'training' && (
           <JsaTrainingTab training={training} />
+        )}
+        {activeTab === 'crew' && (
+          <JsaCrewTab jsaId={jsa.id} crew={crew} />
         )}
         {activeTab === 'timeline' && (
           <JsaTimelineTab timeline={timeline} />
@@ -213,6 +218,45 @@ function JsaTrainingTab({ training }: { training: unknown[] }): VNode {
             )}
             {(t['competency_verification'] ?? t['competencyVerification']) && (
               <span><i class="fas fa-clipboard-check" style={{ marginRight: '3px' }} />Competency verification</span>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function JsaCrewTab({ jsaId, crew }: { jsaId: string; crew: JsaCrewMember[] }): VNode {
+  const ack = useAcknowledgeJsa();
+  if (crew.length === 0) return <EmptyState message="No crew members listed" />;
+
+  const acked = crew.filter(m => m.acknowledged).length;
+  const required = crew.filter(m => m.required);
+  const reqAcked = required.filter(m => m.acknowledged).length;
+
+  return (
+    <div style={{ display: 'grid', gap: '8px' }}>
+      <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '2px' }}>
+        {acked}/{crew.length} acknowledged · {reqAcked}/{required.length} required complete
+      </div>
+      {crew.map(m => (
+        <div key={m.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-card)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 600, color: 'var(--siomac-navy)', fontSize: '0.84rem' }}>
+                {m.crew_name}{m.required && <span style={{ color: 'var(--siomac-red)', marginLeft: '4px' }}>*</span>}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {m.role_title ?? '—'} · competency {m.competency_verified ? 'verified' : 'unverified'}
+              </div>
+            </div>
+            {m.acknowledged ? (
+              <span class="vt-pill is-on"><i class="fas fa-check" /> Acknowledged</span>
+            ) : (
+              <button class="inc-action-btn primary" disabled={ack.isPending}
+                onClick={() => ack.mutate({ jsaId, crewId: m.id })}>
+                <i class="fas fa-signature" /> Acknowledge
+              </button>
             )}
           </div>
         </div>
