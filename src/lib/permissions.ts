@@ -157,6 +157,18 @@ export const PERMISSION_KEYS = [
   'communications.admin',           // messaging settings, retention, broadcast, blocked users
   'communications.compliance_read', // controlled, audited read of private threads (per-user grant)
   'communications.compliance_export', // export message history for approved investigations
+  // Granular message/participant capabilities (rich Message Center add-on)
+  'communications.messages.post',                 // send a message in a thread you participate in
+  'communications.messages.attach',               // attach files to a message
+  'communications.messages.download_attachment',  // fetch a signed URL for an attachment
+  'communications.messages.delete_own_attachment',// remove an attachment you uploaded
+  'communications.messages.pin_own',              // pin/unpin for yourself (personal pin)
+  'communications.messages.pin_thread',           // pin for everyone in the thread
+  'communications.messages.unpin_own',            // remove your own pins
+  'communications.messages.unpin_any',            // remove anyone's pins (moderation)
+  'communications.participants.add',              // add participants to a thread you can manage
+  'communications.participants.remove',           // remove participants from a thread you can manage
+  'communications.participants.change_role',      // change a participant's role
   // ── Tickets ────────────────────────────────────────────────────────────────────
   'tickets.manage',                 // create, assign, resolve, and close support/work tickets
   // ── Account Security (admin cross-user management) ──────────────────────────────
@@ -205,6 +217,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hse.dashboard.view', 'hse.workflows.view',
     'workflow.submit', 'workflow.view',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
   ]),
 
   manager: new Set<PermissionKey>([
@@ -232,6 +248,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.pin_thread',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.participants.add', 'communications.participants.remove',
+    'communications.participants.change_role',
     'auth.security.view',
   ]),
 
@@ -289,6 +311,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.pin_thread',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.participants.add', 'communications.participants.remove',
+    'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
   ]),
@@ -354,6 +382,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
     'communications.compliance_read', 'communications.compliance_export',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.pin_thread',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.participants.add', 'communications.participants.remove',
+    'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
   ]),

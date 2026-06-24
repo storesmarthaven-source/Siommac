@@ -108,8 +108,9 @@ export async function pinMessage(input: PinMessageInput): Promise<PinResult> {
 
     // Thread-visible pins are a shared act → owner or a moderator/admin only.
     if (input.visibility === 'thread') {
-      const canModerate = role === 'owner' || await userCan({ id: input.currentUserId, role: input.currentUserRole }, 'communications.admin');
-      if (!canModerate) return { ok: false, message: 'Only the thread owner can pin for everyone' };
+      const canPinForThread = role === 'owner'
+        || await userCan({ id: input.currentUserId, role: input.currentUserRole }, 'communications.messages.pin_thread');
+      if (!canPinForThread) return { ok: false, message: 'Only the thread owner can pin for everyone' };
     }
 
     const { data: row, error } = await sb
@@ -159,8 +160,8 @@ export async function unpinMessage(pinId: string, userId: string, userRole: stri
     // You may remove your own pin; thread pins also removable by owner/admin.
     if (pin.pinned_by !== userId) {
       const role = await participantRole(pin.thread_id, userId);
-      const canModerate = role === 'owner' || await userCan({ id: userId, role: userRole }, 'communications.admin');
-      if (!canModerate) return { ok: false, message: 'You can only unpin your own pins' };
+      const canUnpinAny = role === 'owner' || await userCan({ id: userId, role: userRole }, 'communications.messages.unpin_any');
+      if (!canUnpinAny) return { ok: false, message: 'You can only unpin your own pins' };
     }
 
     const { error } = await sb

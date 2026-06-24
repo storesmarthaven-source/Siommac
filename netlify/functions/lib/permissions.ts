@@ -77,6 +77,18 @@ export const PERMISSION_KEYS = [
   'communications.admin',
   'communications.compliance_read',
   'communications.compliance_export',
+  // Granular message/participant capabilities (rich Message Center add-on)
+  'communications.messages.post',
+  'communications.messages.attach',
+  'communications.messages.download_attachment',
+  'communications.messages.delete_own_attachment',
+  'communications.messages.pin_own',
+  'communications.messages.pin_thread',
+  'communications.messages.unpin_own',
+  'communications.messages.unpin_any',
+  'communications.participants.add',
+  'communications.participants.remove',
+  'communications.participants.change_role',
   // ── Tickets ────────────────────────────────────────────────────────────────
   'tickets.manage',        // create, assign, resolve, and close support/work tickets
   // ── Account Security (admin cross-user management) ──────────────────────────
@@ -87,6 +99,28 @@ export const PERMISSION_KEYS = [
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
+
+// ── Critical-grant keys (require dual superadmin approval) ──────────────────
+/**
+ * Permission keys that are so sensitive that granting them (effect=allow) to any
+ * role or user requires a SECOND superadmin to approve before they take effect.
+ * Revokes and deny-overrides are never intercepted — only grants are gated.
+ */
+export const CRITICAL_GRANT_KEYS = new Set<string>([
+  'communications.compliance_read',
+  'communications.compliance_export',
+  'auth.security.manage_policy',
+  'auth.passkeys.admin_revoke',
+  'auth.trusted_devices.admin_revoke',
+  'permissions.manage',
+  'roles.manage',
+  'communications.admin',
+]);
+
+/** Returns true when granting this permission key requires dual-superadmin approval. */
+export function isCriticalGrant(key: string): boolean {
+  return CRITICAL_GRANT_KEYS.has(key);
+}
 
 // ── Role defaults ─────────────────────────────────────────────────────────────
 // Source of truth for role→permissions is now the `role_permissions` table
@@ -103,6 +137,10 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hse.dashboard.view', 'hse.workflows.view',
     'workflow.submit', 'workflow.view',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
   ]),
   manager: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
@@ -128,6 +166,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.pin_thread',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.participants.add', 'communications.participants.remove',
+    'communications.participants.change_role',
     'auth.security.view',
   ]),
   admin: new Set<PermissionKey>([
@@ -161,6 +205,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.pin_thread',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.participants.add', 'communications.participants.remove',
+    'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
   ]),

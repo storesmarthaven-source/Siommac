@@ -636,6 +636,72 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'critical',
     requiresSuperAdmin: true,
   },
+  'communications.messages.post': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Send Messages',
+    description: 'Post messages in threads you participate in.',
+    risk: 'low',
+  },
+  'communications.messages.attach': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Attach Files',
+    description: 'Attach files to messages.',
+    risk: 'low',
+  },
+  'communications.messages.download_attachment': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Download Attachments',
+    description: 'Fetch signed URLs to view or download message attachments.',
+    risk: 'low',
+  },
+  'communications.messages.delete_own_attachment': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Delete Own Attachments',
+    description: 'Remove attachments you uploaded.',
+    risk: 'low',
+  },
+  'communications.messages.pin_own': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Personal Pins',
+    description: 'Pin conversations or messages for yourself.',
+    risk: 'low',
+  },
+  'communications.messages.pin_thread': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Pin For Everyone',
+    description: 'Pin a conversation or message for all participants in a thread.',
+    risk: 'medium',
+  },
+  'communications.messages.unpin_own': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Remove Own Pins',
+    description: 'Remove pins you created.',
+    risk: 'low',
+  },
+  'communications.messages.unpin_any': {
+    module: 'Communications', group: 'Moderation',
+    label: 'Remove Any Pin',
+    description: 'Remove pins created by anyone (moderation).',
+    risk: 'medium',
+  },
+  'communications.participants.add': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Add Participants',
+    description: 'Add participants to a thread you can manage.',
+    risk: 'medium',
+  },
+  'communications.participants.remove': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Remove Participants',
+    description: 'Remove participants from a thread you can manage.',
+    risk: 'medium',
+  },
+  'communications.participants.change_role': {
+    module: 'Communications', group: 'Messaging',
+    label: 'Change Participant Roles',
+    description: 'Change a participant’s role within a thread.',
+    risk: 'medium',
+  },
 
   // ── Tickets ───────────────────────────────────────────────────────────────────
   'tickets.manage': {
