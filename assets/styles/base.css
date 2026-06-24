@@ -20,6 +20,11 @@
   --text-primary: #1F2A44;
   --text-muted:   #5E6F8D;
 
+  /* Form controls (search boxes, selects, inputs) — tokenised field colours. */
+  --field-border:      #DBE3ED;
+  --field-icon:        #808CA3;
+  --field-placeholder: #AAB4C8;
+
   /* Semantic (kept for backward compat) */
   --navy-primary:  #1B2D55;
   --navy-dark:     #101D3B;

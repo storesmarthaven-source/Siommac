@@ -39,17 +39,17 @@
 .vt-search {
   display: flex; align-items: center; gap: 8px;
   background: var(--bg-subtle, #F8FAFE);
-  border: 1.5px solid var(--border); border-radius: 40px;
+  border: 1.5px solid var(--field-border); border-radius: 40px;
   padding: 8px 14px; min-width: 240px;
   transition: border-color .2s, box-shadow .2s;
 }
 .vt-search:focus-within { border-color: var(--siomac-red); box-shadow: 0 0 0 3px rgba(228,12,12,.08); }
-.vt-search i { color: #98a4bb; font-size: 0.85rem; }
+.vt-search i { color: var(--field-icon); font-size: 0.85rem; }
 .vt-search input {
   border: none; outline: none; background: transparent; flex: 1;
   font-size: 0.85rem; color: var(--text-primary); font-family: inherit; min-width: 0;
 }
-.vt-search input::placeholder { color: #aab4c8; }
+.vt-search input::placeholder { color: var(--field-placeholder); }
 
 /* Filter chip (bordered pill with icon + label + chevron) */
 .vt-chip {

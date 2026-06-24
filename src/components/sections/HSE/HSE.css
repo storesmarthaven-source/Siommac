@@ -2927,7 +2927,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
 }
 
 .emp-filter-select {
-  padding: 6px 12px; border-radius: 40px; border: 1.5px solid var(--border);
+  padding: 6px 12px; border-radius: 40px; border: 1.5px solid var(--field-border);
   background: var(--bg-card); font-size: 0.78rem; font-family: inherit;
   color: var(--text-primary); outline: none; cursor: pointer; transition: border-color .2s;
 }
