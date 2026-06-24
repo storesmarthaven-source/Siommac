@@ -160,6 +160,12 @@ export const messageKeys = {
   posts:      (threadId: string) => [...messageKeys.all, 'posts', threadId]       as const,
   recipients: (query?: string) => [...messageKeys.all, 'recipients', query ?? ''] as const,
   search:     (query: string) => [...messageKeys.all, 'search', query]            as const,
+  // ── Rich Message Center ──
+  pins:          (threadId: string) => [...messageKeys.all, 'pins', threadId]     as const,
+  pinnedSummary: () => [...messageKeys.all, 'pins', 'summary']                     as const,
+  online:        () => [...messageKeys.all, 'online']                             as const,
+  draft:         (threadId: string) => [...messageKeys.all, 'draft', threadId]    as const,
+  context:       (threadId: string) => [...messageKeys.all, 'context', threadId]  as const,
   /** Legacy compat — some older hooks used these; keep until messages.test.ts is updated. */
   inbox:      () => [...messageKeys.all, 'threads']                               as const,
   sent:       () => [...messageKeys.all, 'threads', { tab: 'sent' }]             as const,

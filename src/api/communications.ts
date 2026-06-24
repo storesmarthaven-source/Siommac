@@ -16,6 +16,26 @@ import {
 } from '@tanstack/preact-query';
 import { apiPost }            from '@lib/api';
 import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from './queryKeys';
+import type {
+  MessageThread as MessageThreadDTO, MessageParticipant as MessageParticipantDTO,
+  MessagePost as MessagePostDTO, MessageAttachment as MessageAttachmentDTO,
+  MessageRecipient as MessageRecipientDTO, MessageThreadDetail as MessageThreadDetailDTO,
+  ComplianceThread as ComplianceThreadDTO, MessagePin as MessagePinDTO,
+  PresenceStatus,
+} from '../../types/messaging';
+
+export type MessagePin = MessagePinDTO;
+
+// ── Messaging contract (shared, camelCase) ──────────────────────────────────────
+// These re-exports keep the existing import names stable across the app while the
+// single source of truth lives in types/messaging.ts.
+export type MessageThreadListItem     = MessageThreadDTO;
+export type MessageParticipantProfile = MessageParticipantDTO;
+export type MessagePostRow            = MessagePostDTO;
+export type MessageAttachment         = MessageAttachmentDTO;
+export type MessageRecipient          = MessageRecipientDTO;
+export type MessageThreadDetail       = MessageThreadDetailDTO;
+export type ComplianceThreadRow       = ComplianceThreadDTO;
 
 // ── Response types ─────────────────────────────────────────────────────────────
 
@@ -51,7 +71,7 @@ export interface CanonicalNotification {
   created_at:      string;
 }
 
-export interface NotificationPreference {
+export interface NotificationPreference extends Record<string, unknown> {
   event_type: string;
   in_app:     boolean;
   email:      boolean;
@@ -123,7 +143,7 @@ export function useCommsSummary() {
     queryKey: communicationKeys.summary(),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CommsSummary }>(
-        'communications/summary', { args: {} }, { signal },
+        'communications/summary', {}, { signal },
       );
       if (!res.success) throw new Error('Failed to load communications summary');
       return res.data;
@@ -152,7 +172,7 @@ export function useNotifications(args: NotificationListArgs = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalNotification[]; nextCursor: string | null }>(
         'communications/notifications/list',
-        { args: { limit: 30, ...args } },
+        { limit: 30, ...args },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load notifications');
@@ -168,7 +188,7 @@ export function useNotificationPreferences() {
     queryKey: notificationKeys.preferences(),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: NotificationPreferencesData }>(
-        'communications/notifications/preferences/get', { args: {} }, { signal },
+        'communications/notifications/preferences/get', {}, { signal },
       );
       if (!res.success) throw new Error('Failed to load preferences');
       return res.data;
@@ -180,7 +200,7 @@ export function useSetNotificationPreference() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: NotificationPreference & { eventType: string }) =>
-      apiPost<{ success: boolean }>('communications/notifications/preferences/set', { args }, { retryable: false }),
+      apiPost<{ success: boolean }>('communications/notifications/preferences/set', args, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.preferences() }),
   });
 }
@@ -189,7 +209,7 @@ export function useMuteNotifications() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { scope: string; mutedUntil?: string | null; clear?: boolean }) =>
-      apiPost<{ success: boolean }>('communications/notifications/mute', { args }, { retryable: false }),
+      apiPost<{ success: boolean }>('communications/notifications/mute', args, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
   });
 }
@@ -207,7 +227,7 @@ export function useBroadcastNotification() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: BroadcastArgs) =>
-      apiPost<{ success: boolean; recipientCount: number }>('communications/notifications/broadcast', { args }, { retryable: false }),
+      apiPost<{ success: boolean; recipientCount: number }>('communications/notifications/broadcast', args, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: communicationKeys.summary() }),
   });
 }
@@ -218,7 +238,7 @@ export function useMarkNotificationRead() {
     mutationFn: (notificationId: string) =>
       apiPost<{ success: boolean }>(
         'communications/notifications/markRead',
-        { args: { notificationId } },
+        { notificationId },
         { retryable: false },
       ),
     onSuccess: () => {
@@ -234,7 +254,7 @@ export function useMarkAllNotificationsRead() {
     mutationFn: (args: { module?: string } = {}) =>
       apiPost<{ success: boolean }>(
         'communications/notifications/markAllRead',
-        { args },
+        args,
         { retryable: false },
       ),
     onSuccess: () => {
@@ -250,7 +270,7 @@ export function useArchiveNotification() {
     mutationFn: (args: { notificationId?: string; all?: boolean }) =>
       apiPost<{ success: boolean }>(
         'communications/notifications/archive',
-        { args },
+        args,
         { retryable: false },
       ),
     onSuccess: () => {
@@ -268,7 +288,7 @@ export function useMessageThreads(limit = 50) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThread[] }>(
         'communications/messages/threads',
-        { args: { limit } },
+        { limit },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load message threads');
@@ -283,7 +303,7 @@ export function useMessagePosts(threadId: string) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessagePost[] }>(
         'communications/messages/posts',
-        { args: { threadId, limit: 50 } },
+        { threadId, limit: 50 },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load posts');
@@ -304,7 +324,7 @@ export function usePostMessage() {
   return useMutation({
     mutationFn: (args: PostMessageArgs) =>
       apiPost<{ success: boolean; postId: string }>(
-        'communications/messages/post', { args }, { retryable: false },
+        'communications/messages/post', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: PostMessageArgs) => {
       qc.invalidateQueries({ queryKey: messageKeys.thread(vars.threadId) });
@@ -329,7 +349,7 @@ export function useMessageAttachmentUploadUrl() {
   return useMutation({
     mutationFn: (args: { fileName: string; mimeType: string }) =>
       apiPost<{ success: boolean; data: AttachmentUploadUrlResult }>(
-        'communications/messages/attachments/upload-url', { args }, { retryable: false },
+        'communications/messages/attachments/upload-url', args, { retryable: false },
       ).then(r => {
         if (!r.success) throw new Error('Failed to get upload URL');
         return r.data;
@@ -342,7 +362,7 @@ export function useCreateMessageAttachment() {
   return useMutation({
     mutationFn: (args: { fileName: string; filePath: string; contentType: string | null; sizeBytes: number | null }) =>
       apiPost<{ success: boolean; id: string }>(
-        'communications/messages/attachments/create', { args }, { retryable: false },
+        'communications/messages/attachments/create', args, { retryable: false },
       ).then(r => {
         if (!r.success) throw new Error('Failed to create attachment record');
         return r.id;
@@ -364,10 +384,17 @@ export interface CreateThreadArgs extends Record<string, unknown> {
 export function useCreateMessageThread() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: CreateThreadArgs) =>
-      apiPost<{ success: boolean; threadId: string }>(
-        'communications/messages/createThread', { args }, { retryable: false },
-      ),
+    // apiPost never rejects, so we must throw on a non-success body — otherwise
+    // TanStack treats a failed create as a success: onSuccess fires with an
+    // undefined threadId (opening a broken thread) and isError never flips, so
+    // the dialog's error banner never shows.
+    mutationFn: async (args: CreateThreadArgs) => {
+      const res = await apiPost<{ success: boolean; threadId: string; message?: string }>(
+        'communications/messages/createThread', args, { retryable: false },
+      );
+      if (!res.success || !res.threadId) throw new Error(res.message ?? 'Failed to create thread');
+      return res;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: messageKeys.all });
       qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -375,81 +402,9 @@ export function useCreateMessageThread() {
   });
 }
 
-// ── Messages — extended API (canonical backend Phase 1-4) ───────────────────
-
-/** Full interface returned by communications/messages/threads */
-export interface MessageThreadListItem {
-  id:                  string;
-  thread_type:         'direct' | 'group' | 'record' | 'system';
-  subject:             string | null;
-  source_module:       string | null;
-  source_entity_type:  string | null;
-  source_entity_id:    string | null;
-  created_by:          string | null;
-  created_at:          string;
-  unread_count:        number;
-  last_post_body:      string | null;
-  last_post_at:        string | null;
-  last_post_by:        string | null;
-  participant_count:   number;
-  participants:        MessageParticipantProfile[];
-  is_archived:         boolean;
-  role:                string;
-}
-
-export interface MessageParticipantProfile {
-  user_id:     string;
-  full_name:   string | null;
-  username:    string | null;
-  profile_image: string | null;
-  role:        string;
-}
-
-export interface MessageThreadDetail {
-  thread:       MessageThreadListItem;
-  participants: MessageParticipantProfile[];
-}
-
-export interface MessageAttachment {
-  id:           string;
-  fileName:     string;       // camelCase — matches backend PostRow/AttachmentRow
-  filePath:     string;
-  contentType:  string | null;
-  sizeBytes:    number | null;
-  url:          string | null; // signed download URL (24 h)
-}
-
-export interface MessagePostRow {
-  id:              string;
-  threadId:        string;      // camelCase from backend lib
-  thread_id:       string;      // kept for compat — same value
-  authorUserId:    string | null;
-  author_user_id:  string | null;
-  authorName:      string | null;
-  authorEmail:     string | null;
-  author_profile:  MessageParticipantProfile | null;
-  body:            string;
-  isSystem:        boolean;
-  is_system:       boolean;
-  attachmentCount: number;
-  is_edited:       boolean;
-  is_deleted:      boolean;
-  editedAt:        string | null;
-  edited_at:       string | null;
-  deletedAt:       string | null;
-  createdAt:       string;
-  created_at:      string;
-  attachments:     MessageAttachment[];
-}
-
-export interface MessageRecipient {
-  user_id:       string;
-  full_name:     string | null;
-  username:      string | null;
-  profile_image: string | null;
-  role:          string;
-  department:    string | null;
-}
+// ── Messages — extended API (canonical backend, shared camelCase contract) ──────
+// Thread / participant / post / attachment / recipient shapes are the shared DTOs
+// re-exported at the top of this file (single source: types/messaging.ts).
 
 export interface ThreadFilters extends Record<string, unknown> {
   tab?:    'inbox' | 'sent' | 'archived' | 'all';
@@ -465,7 +420,7 @@ export function useMessageThreadsFull(filters: ThreadFilters = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThreadListItem[]; nextCursor: string | null }>(
         'communications/messages/threads',
-        { args: { limit: 50, ...filters } },
+        { limit: 50, ...filters },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load message threads');
@@ -481,7 +436,7 @@ export function useThread(threadId: string) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThreadDetail }>(
         'communications/messages/thread',
-        { args: { threadId } },
+        { threadId },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load thread');
@@ -491,20 +446,32 @@ export function useThread(threadId: string) {
   });
 }
 
+/** A thread-access error carrying the backend's access code (compliance_required / forbidden). */
+export class ThreadAccessError extends Error {
+  code: 'compliance_required' | 'forbidden' | undefined;
+  constructor(message: string, code?: 'compliance_required' | 'forbidden') {
+    super(message);
+    this.name = 'ThreadAccessError';
+    this.code = code;
+  }
+}
+
 /** Posts for a thread — richer than useMessagePosts (author profiles, edit/delete states). */
 export function useThreadPosts(threadId: string) {
   return useQuery({
     queryKey: messageKeys.posts(threadId),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: MessagePostRow[] }>(
+      const res = await apiPost<{ success: boolean; data: MessagePostRow[]; code?: 'compliance_required' | 'forbidden'; message?: string }>(
         'communications/messages/posts',
-        { args: { threadId, limit: 100 } },
+        { threadId, limit: 100 },
         { signal },
       );
-      if (!res.success) throw new Error('Failed to load posts');
+      if (!res.success) throw new ThreadAccessError(res.message ?? 'Failed to load posts', res.code);
       return res.data;
     },
     enabled: !!threadId,
+    // Don't burn retries on an access denial — it won't change without a grant.
+    retry: (count: number, err: unknown) => !(err instanceof ThreadAccessError && err.code) && count < 2,
   });
 }
 
@@ -514,12 +481,110 @@ export function useMarkThreadRead() {
   return useMutation({
     mutationFn: (threadId: string) =>
       apiPost<{ success: boolean }>(
-        'communications/messages/markRead', { args: { threadId } }, { retryable: false },
+        'communications/messages/markRead', { threadId }, { retryable: false },
       ),
     onSuccess: (_r: unknown, threadId: string) => {
       qc.invalidateQueries({ queryKey: messageKeys.all });
       qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
+  });
+}
+
+// ── Rich Message Center: pins · drafts · presence · attachments ─────────────────
+
+export interface OnlineUser { userId: string; displayName: string | null; initials: string; status: PresenceStatus; profileImage: string | null }
+export interface PinnedThreadRow { threadId: string; subject: string | null; note: string | null; pinnedAt: string }
+
+/** Pinned-conversations summary for the sidebar. */
+export function usePinnedSummary() {
+  return useQuery({
+    queryKey: messageKeys.pinnedSummary(),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: PinnedThreadRow[] }>('communications/messages/pins/pinned-summary', {}, { signal });
+      return res.success ? res.data : [];
+    },
+    staleTime: 30_000,
+  });
+}
+
+/** Active pins (thread + own personal) for a thread. */
+export function usePins(threadId: string) {
+  return useQuery({
+    queryKey: messageKeys.pins(threadId),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: MessagePin[] }>('communications/messages/pins/list', { threadId }, { signal });
+      return res.success ? res.data : [];
+    },
+    enabled: !!threadId,
+  });
+}
+
+export function usePinMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { threadId: string; postId?: string | null; pinType: 'thread' | 'post'; visibility?: 'thread' | 'personal'; note?: string | null }) =>
+      apiPost<{ success: boolean; message?: string }>('communications/messages/pins/pin', input, { retryable: false })
+        .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed to pin'); return r; }),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
+      qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
+    },
+  });
+}
+
+export function useUnpinMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pinId }: { pinId: string; threadId: string }) =>
+      apiPost<{ success: boolean; message?: string }>('communications/messages/pins/unpin', { pinId }, { retryable: false })
+        .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed to unpin'); return r; }),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
+      qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
+    },
+  });
+}
+
+/** Online-now users (also a presence heartbeat for the caller). */
+export function useOnlineUsers() {
+  return useQuery({
+    queryKey: messageKeys.online(),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: OnlineUser[] }>('communications/messages/online', {}, { signal });
+      return res.success ? res.data : [];
+    },
+    refetchInterval: 60_000,   // also keeps the caller's presence fresh
+    staleTime: 30_000,
+  });
+}
+
+/** Get the caller's draft for a thread. */
+export function useDraft(threadId: string) {
+  return useQuery({
+    queryKey: messageKeys.draft(threadId),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: { body: string | null; replyToPostId: string | null } | null }>('communications/messages/draft/get', { threadId }, { signal });
+      return res.success ? res.data : null;
+    },
+    enabled: !!threadId,
+  });
+}
+
+export function useSaveDraft() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { threadId: string; body: string | null; replyToPostId?: string | null }) =>
+      apiPost<{ success: boolean }>('communications/messages/draft/save', input, { retryable: false }),
+    onSuccess: (_r, v) => { qc.invalidateQueries({ queryKey: messageKeys.draft(v.threadId) }); },
+  });
+}
+
+/** Fetch a permission-checked signed URL for an attachment, by purpose. */
+export function useAttachmentUrl() {
+  return useMutation({
+    mutationFn: (input: { attachmentId: string; purpose?: 'thumbnail' | 'preview' | 'download' }) =>
+      apiPost<{ success: boolean; data?: { url: string | null }; message?: string }>('communications/messages/attachments/get-url', input, { retryable: false })
+        .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed'); return r.data?.url ?? null; }),
   });
 }
 
@@ -529,7 +594,7 @@ export function useArchiveThread() {
   return useMutation({
     mutationFn: ({ threadId, archived }: { threadId: string; archived: boolean }) =>
       apiPost<{ success: boolean }>(
-        'communications/messages/archive', { args: { threadId, archived } }, { retryable: false },
+        'communications/messages/archive', { threadId, archived }, { retryable: false },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: messageKeys.all });
@@ -544,7 +609,7 @@ export function useAddThreadParticipants() {
   return useMutation({
     mutationFn: ({ threadId, userIds }: { threadId: string; userIds: string[] }) =>
       apiPost<{ success: boolean }>(
-        'communications/messages/participants/add', { args: { threadId, userIds } }, { retryable: false },
+        'communications/messages/participants/add', { threadId, userIds }, { retryable: false },
       ),
     onSuccess: (_r: unknown, { threadId }: { threadId: string; userIds: string[] }) => {
       qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
@@ -558,10 +623,90 @@ export function useRemoveThreadParticipant() {
   return useMutation({
     mutationFn: ({ threadId, userId }: { threadId: string; userId: string }) =>
       apiPost<{ success: boolean }>(
-        'communications/messages/participants/remove', { args: { threadId, userId } }, { retryable: false },
+        'communications/messages/participants/remove', { threadId, userId }, { retryable: false },
       ),
     onSuccess: (_r: unknown, { threadId }: { threadId: string; userId: string }) => {
       qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
+    },
+  });
+}
+
+// ── Compliance access (audited, time-boxed) ─────────────────────────────────────
+
+export const COMPLIANCE_REASON_OPTIONS = [
+  { value: 'investigation',    label: 'Investigation' },
+  { value: 'safety_incident',  label: 'Safety incident' },
+  { value: 'hr_complaint',     label: 'HR complaint' },
+  { value: 'legal_compliance', label: 'Legal / compliance request' },
+  { value: 'security_review',  label: 'Security review' },
+  { value: 'other',            label: 'Other' },
+] as const;
+
+export type ComplianceReason = typeof COMPLIANCE_REASON_OPTIONS[number]['value'];
+
+export interface RequestThreadAccessArgs extends Record<string, unknown> {
+  threadId:      string;
+  reason:        ComplianceReason;
+  caseRef?:      string | null;
+  notes?:        string | null;
+  durationHours?: number;
+}
+
+/**
+ * Request controlled, audited access to a private thread. Requires
+ * communications.compliance_read. On success a time-boxed grant is created and
+ * the thread becomes readable — invalidate the posts/thread queries to reload.
+ */
+export function useRequestThreadAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: RequestThreadAccessArgs) =>
+      apiPost<{ success: boolean; data?: { grantId: string; expiresAt: string }; message?: string }>(
+        'communications/messages/requestThreadAccess', args, { retryable: false },
+      ),
+    onSuccess: (_r: unknown, args: RequestThreadAccessArgs) => {
+      qc.invalidateQueries({ queryKey: messageKeys.posts(args.threadId) });
+      qc.invalidateQueries({ queryKey: messageKeys.thread(args.threadId) });
+    },
+  });
+}
+
+/**
+ * Compliance thread discovery — search ALL threads (not just yours). Requires
+ * communications.compliance_read. Returns metadata only; reading a thread still
+ * goes through the audited gate.
+ */
+export function useComplianceThreadSearch(search: string, enabled = true) {
+  return useQuery({
+    queryKey: ['messages', 'compliance', 'search', search] as const,
+    queryFn:  async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: ComplianceThreadRow[] }>(
+        'communications/messages/compliance/search',
+        { search: search || undefined, limit: 40 },
+        { signal },
+      );
+      if (!res.success) throw new Error('Compliance search failed');
+      return res.data;
+    },
+    enabled,
+    staleTime: 15_000,
+  });
+}
+
+/**
+ * Find-or-create the discussion thread for a business record, joining the caller.
+ * Requires communications.thread_create + view access to the record.
+ */
+export function useResolveRecordThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { sourceModule: string; sourceEntityType: string; sourceEntityId: string; recordRef?: string | null; subject?: string | null }) =>
+      apiPost<{ success: boolean; data?: { threadId: string; created: boolean }; message?: string }>(
+        'communications/messages/recordThread', args, { retryable: false },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: messageKeys.all });
+      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -573,7 +718,7 @@ export function useMessageSearch(query: string) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThreadListItem[] }>(
         'communications/messages/search',
-        { args: { query, limit: 20 } },
+        { query, limit: 20 },
         { signal },
       );
       if (!res.success) throw new Error('Search failed');
@@ -590,7 +735,7 @@ export function useMessageRecipients(query = '') {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageRecipient[] }>(
         'communications/messages/recipients',
-        { args: { query: query || undefined } },
+        { query: query || undefined },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load recipients');
@@ -614,7 +759,7 @@ export function useMyTickets(args: TicketListArgs = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicket[] }>(
         'communications/tickets/list',
-        { args: { mine: true, limit: 50, ...args } },
+        { mine: true, limit: 50, ...args },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load tickets');
@@ -629,7 +774,7 @@ export function useTicket(ticketId: string) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicketDetail }>(
         'communications/tickets/get',
-        { args: { ticketId } },
+        { ticketId },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load ticket');
@@ -654,7 +799,7 @@ export function useCreateTicket() {
   return useMutation({
     mutationFn: (args: CreateTicketArgs) =>
       apiPost<{ success: boolean; ticketId: string; ticketNumber: string }>(
-        'communications/tickets/create', { args }, { retryable: false },
+        'communications/tickets/create', args, { retryable: false },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ticketKeys.all });
@@ -674,7 +819,7 @@ export function useCommentTicket() {
   return useMutation({
     mutationFn: (args: CommentTicketArgs) =>
       apiPost<{ success: boolean }>(
-        'communications/tickets/comment', { args }, { retryable: false },
+        'communications/tickets/comment', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: CommentTicketArgs) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
@@ -695,7 +840,7 @@ export function useUpdateTicket() {
   return useMutation({
     mutationFn: (args: UpdateTicketArgs) =>
       apiPost<{ success: boolean }>(
-        'communications/tickets/update', { args }, { retryable: false },
+        'communications/tickets/update', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: UpdateTicketArgs) => {
       qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
