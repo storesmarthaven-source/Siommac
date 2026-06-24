@@ -151,7 +151,7 @@ p, li, td { font-weight: 400; }
    Class applied to html+body once app shell is active; login scrolls naturally. */
 html.app-active,
 body.app-active { overflow: hidden; height: 100%; }
-input, select, textarea { font-size: 16px !important; touch-action: manipulation; font-family: inherit; }
+input, select, textarea { font-size: 14px !important; touch-action: manipulation; font-family: inherit; }
 
 /* ── Global FontAwesome icon-chip centering ─────────────────────────────────
    FontAwesome sets `display: var(--fa-display, inline-block)` on its icon

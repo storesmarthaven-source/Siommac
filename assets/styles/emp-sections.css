@@ -259,10 +259,10 @@
 .emp-filters-bar .emp-search-box { flex: 1; }
 .emp-filters-bar .emp-filter-actions { margin-left: auto; }
 .emp-filter-select {
-  padding: 7px 14px; border-radius: 40px;
-  border: 1px solid var(--field-border);
+  padding: 6px 12px; border-radius: 40px;
+  border: 1.5px solid var(--field-border);
   background: var(--bg-card);
-  font-size: 0.8rem; font-family: inherit; color: var(--text-primary);
+  font-size: 0.78rem; font-family: inherit; color: var(--text-primary);
   outline: none; cursor: pointer; transition: border-color .2s;
 }
 .emp-filter-select:focus { border-color: var(--siomac-red); }
