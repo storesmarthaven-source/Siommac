@@ -81,14 +81,14 @@ export function MessageDropdown(): VNode {
 
   // Client-side filter for unread tab
   const rows = (data ?? []).filter(t => {
-    if (tab === 'unread') return t.unread_count > 0;
+    if (tab === 'unread') return t.unreadCount > 0;
     return true;
   }).slice(0, 12);
 
   const markRead = useMarkThreadRead();
 
   function openThread(t: MessageThreadListItem) {
-    if (t.unread_count > 0) markRead.mutate(t.id);
+    if (t.unreadCount > 0) markRead.mutate(t.id);
     closeModal();
     showSection('s-messages');
     // Broadcast selected thread id for MessageCenter to pick up

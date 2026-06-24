@@ -21,7 +21,7 @@ interface Props {
 }
 
 function initials(r: MessageRecipient): string {
-  const n = r.full_name ?? r.username ?? '?';
+  const n = r.displayName ?? r.username ?? '?';
   const parts = n.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
 }
@@ -61,7 +61,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
   }, [open]);
 
   function addRecipient(r: MessageRecipient) {
-    if (!selectedRecipients.find(x => x.user_id === r.user_id)) {
+    if (!selectedRecipients.find(x => x.userId === r.userId)) {
       setSelectedRecipients(prev => [...prev, r]);
     }
     setRecipientSearch('');
@@ -69,11 +69,11 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
   }
 
   function removeRecipient(userId: string) {
-    setSelectedRecipients(prev => prev.filter(r => r.user_id !== userId));
+    setSelectedRecipients(prev => prev.filter(r => r.userId !== userId));
   }
 
   const filteredSuggestions = suggestions.filter(
-    s => !selectedRecipients.find(r => r.user_id === s.user_id),
+    s => !selectedRecipients.find(r => r.userId === s.userId),
   );
 
   const canSend = selectedRecipients.length >= 1 && body.trim().length > 0 && !createThread.isPending;
@@ -83,7 +83,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
     createThread.mutate({
       threadType:         selectedRecipients.length === 1 ? 'direct' : 'group',
       subject:            subject.trim() || undefined,
-      participantUserIds: selectedRecipients.map(r => r.user_id),
+      participantUserIds: selectedRecipients.map(r => r.userId),
       body:               body.trim(),
     }, {
       onSuccess: (res) => {
@@ -115,7 +115,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
           {selectedRecipients.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px' }}>
               {selectedRecipients.map(r => (
-                <span key={r.user_id} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
+                <span key={r.userId} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
                   background: 'rgba(27,45,85,0.09)', borderRadius: '20px', padding: '3px 10px 3px 7px',
                   fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
                   <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--siomac-navy)',
@@ -123,8 +123,8 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
                     alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {initials(r)}
                   </span>
-                  {r.full_name ?? r.username}
-                  <button onClick={() => removeRecipient(r.user_id)}
+                  {r.displayName ?? r.username}
+                  <button onClick={() => removeRecipient(r.userId)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
                       padding: '0', lineHeight: 1, fontSize: '0.75rem' }} aria-label="Remove">
                     <i class="fas fa-xmark" />
@@ -150,7 +150,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
                 background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px',
                 boxShadow: 'var(--elev-4)', maxHeight: '200px', overflowY: 'auto' }}>
                 {filteredSuggestions.map(r => (
-                  <button key={r.user_id} onClick={() => addRecipient(r)}
+                  <button key={r.userId} onClick={() => addRecipient(r)}
                     style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '9px 12px',
                       background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
                       borderBottom: '1px solid var(--border)' }}>
@@ -161,7 +161,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
                     </span>
                     <div>
                       <div style={{ fontSize: '0.83rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
-                        {r.full_name ?? r.username}
+                        {r.displayName ?? r.username}
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                         {r.role}{r.department ? ` · ${r.department}` : ''}
