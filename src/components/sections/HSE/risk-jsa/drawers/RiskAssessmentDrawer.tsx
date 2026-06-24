@@ -12,8 +12,8 @@
 import { useState } from 'preact/hooks';
 import type { VNode } from 'preact';
 import {
-  Drawer, Tabs, StatusPill,
-  type TabDef,
+  Drawer, Tabs, StatusPill, DetailGrid,
+  type TabDef, type DetailItem,
 } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { RiskMatrixPicker } from '../shared/RiskMatrixPicker';
@@ -42,15 +42,6 @@ const DRAWER_TABS: ReadonlyArray<TabDef<DrawerTab>> = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function DetailRow({ label, children }: { label: string; children: VNode | string | null | undefined }): VNode {
-  return (
-    <div style={{ display: 'grid', gap: '2px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-      <div style={{ fontSize: '0.85rem' }}>{children ?? '—'}</div>
-    </div>
-  );
-}
-
 function EmptyState({ message }: { message: string }): VNode {
   return (
     <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem', padding: '28px 0' }}>
@@ -62,39 +53,17 @@ function EmptyState({ message }: { message: string }): VNode {
 // ── Tab panels ─────────────────────────────────────────────────────────────────
 
 function OverviewTab({ assessment }: { assessment: AssessmentRow }): VNode {
-  return (
-    <div style={{ display: 'grid', gap: '0' }}>
-      <DetailRow label="Title">{assessment.title}</DetailRow>
-      <DetailRow label="Assessment Type">
-        {assessment.assessment_type.replace(/_/g, ' ')}
-      </DetailRow>
-      <DetailRow label="Status">
-        <span class={hsePill(assessment.status)}>
-          {assessment.status.replace(/_/g, ' ')}
-        </span>
-      </DetailRow>
-      <DetailRow label="Risk Level">
-        <RiskScorePill
-          band={assessment.risk_level}
-          score={assessment.initial_score ?? undefined}
-        />
-      </DetailRow>
-      {assessment.residual_score != null && (
-        <DetailRow label="Residual Risk Score">
-          <RiskScorePill score={assessment.residual_score} />
-        </DetailRow>
-      )}
-      <DetailRow label="Site">{assessment.site_id ?? 'All sites'}</DetailRow>
-      <DetailRow label="Review Due">
-        {assessment.review_due_at
-          ? new Date(assessment.review_due_at).toLocaleDateString()
-          : null}
-      </DetailRow>
-      <DetailRow label="Created">
-        {new Date(assessment.created_at).toLocaleDateString()}
-      </DetailRow>
-    </div>
-  );
+  const items: DetailItem[] = [
+    { icon: 'fa-heading',               label: 'Title',           value: assessment.title },
+    { icon: 'fa-tag',                   label: 'Assessment Type', value: assessment.assessment_type.replace(/_/g, ' ') },
+    { icon: 'fa-circle-dot',            label: 'Status',          value: <span class={hsePill(assessment.status)}>{assessment.status.replace(/_/g, ' ')}</span> },
+    { icon: 'fa-triangle-exclamation',  label: 'Risk Level',      value: <RiskScorePill band={assessment.risk_level} score={assessment.initial_score ?? undefined} /> },
+    { icon: 'fa-arrow-down-wide-short', label: 'Residual Risk',   value: assessment.residual_score != null ? <RiskScorePill score={assessment.residual_score} /> : '' },
+    { icon: 'fa-location-dot',          label: 'Site',            value: assessment.site_id ?? 'All sites' },
+    { icon: 'fa-calendar-day',          label: 'Review Due',      value: assessment.review_due_at ? new Date(assessment.review_due_at).toLocaleDateString() : '' },
+    { icon: 'fa-calendar-plus',         label: 'Created',         value: new Date(assessment.created_at).toLocaleDateString() },
+  ];
+  return <DetailGrid items={items} hideEmpty />;
 }
 
 function HazardsTab({ hazards }: { hazards: unknown[] }): VNode {

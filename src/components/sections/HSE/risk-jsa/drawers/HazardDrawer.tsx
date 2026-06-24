@@ -7,7 +7,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, type TabDef } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useHazardDetail, type HazardRow } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
@@ -117,45 +117,17 @@ export function HazardDrawer({ hazard, onClose }: { hazard: HazardRow; onClose: 
 // ── Tab panels ────────────────────────────────────────────────────────────────
 
 function HazardOverviewTab({ hazard }: { hazard: HazardRow }): VNode {
-  return (
-    <div style={{ display: 'grid', gap: '12px' }}>
-      <DetailRow label="Title" value={hazard.title} />
-      <DetailRow label="Category" value={hazard.category} />
-      {hazard.site_id && <DetailRow label="Site" value={hazard.site_id} />}
-      <DetailRow
-        label="Initial Risk"
-        value={
-          <RiskScorePill
-            likelihood={hazard.initial_likelihood}
-            severity={hazard.initial_severity}
-          />
-        }
-      />
-      {hazard.residual_likelihood != null && hazard.residual_severity != null && (
-        <DetailRow
-          label="Residual Risk"
-          value={
-            <RiskScorePill
-              likelihood={hazard.residual_likelihood}
-              severity={hazard.residual_severity}
-            />
-          }
-        />
-      )}
-      <DetailRow
-        label="Status"
-        value={
-          <span class={hsePill(hazard.status)}>{hazard.status.replace(/_/g, ' ')}</span>
-        }
-      />
-      {hazard.review_due_at && (
-        <DetailRow
-          label="Review Due"
-          value={new Date(hazard.review_due_at).toLocaleDateString()}
-        />
-      )}
-    </div>
-  );
+  const items: DetailItem[] = [
+    { icon: 'fa-heading',               label: 'Title',         value: hazard.title },
+    { icon: 'fa-tag',                   label: 'Category',      value: hazard.category },
+    { icon: 'fa-location-dot',          label: 'Site',          value: hazard.site_id ?? '' },
+    { icon: 'fa-triangle-exclamation',  label: 'Initial Risk',  value: <RiskScorePill likelihood={hazard.initial_likelihood} severity={hazard.initial_severity} /> },
+    { icon: 'fa-arrow-down-wide-short', label: 'Residual Risk', value: hazard.residual_likelihood != null && hazard.residual_severity != null
+        ? <RiskScorePill likelihood={hazard.residual_likelihood} severity={hazard.residual_severity} /> : '' },
+    { icon: 'fa-circle-dot',            label: 'Status',        value: <span class={hsePill(hazard.status)}>{hazard.status.replace(/_/g, ' ')}</span> },
+    { icon: 'fa-calendar-day',          label: 'Review Due',    value: hazard.review_due_at ? new Date(hazard.review_due_at).toLocaleDateString() : '' },
+  ];
+  return <DetailGrid items={items} hideEmpty />;
 }
 
 function HazardControlsTab({ controls }: { controls: unknown[] }): VNode {
@@ -287,16 +259,6 @@ function HazardTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-function DetailRow({ label, value }: { label: string; value: VNode | string }): VNode {
-  return (
-    <div>
-      <strong style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
-        {label}
-      </strong>
-      <span style={{ fontSize: '0.85rem' }}>{value}</span>
-    </div>
-  );
-}
 
 function EmptyState({ message }: { message: string }): VNode {
   return (

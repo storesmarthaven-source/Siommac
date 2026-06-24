@@ -7,7 +7,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, type TabDef } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
 import { RiskScorePill } from '../shared/RiskScorePill';
 import { useJsaDetail, useAcknowledgeJsa, type JsaRow, type JsaCrewMember } from '@api/hse/riskJsa';
 import { hsePill } from '../../types';
@@ -125,29 +125,15 @@ export function JsaDrawer({ jsa, onClose }: { jsa: JsaRow; onClose: () => void }
 // ── Tab panels ────────────────────────────────────────────────────────────────
 
 function JsaOverviewTab({ jsa }: { jsa: JsaRow }): VNode {
-  return (
-    <div style={{ display: 'grid', gap: '12px' }}>
-      <DetailRow label="Job / Task" value={jsa.title} />
-      <DetailRow
-        label="Status"
-        value={
-          <span class={hsePill(jsa.status)}>{jsa.status.replace(/_/g, ' ')}</span>
-        }
-      />
-      <DetailRow
-        label="Risk Level"
-        value={<RiskScorePill band={jsa.risk_level} hideScore />}
-      />
-      <DetailRow label="Steps Documented" value={String(jsa.stepCount)} />
-      {jsa.site_id && <DetailRow label="Site" value={jsa.site_id} />}
-      {jsa.review_due_at && (
-        <DetailRow
-          label="Review Due"
-          value={new Date(jsa.review_due_at).toLocaleDateString()}
-        />
-      )}
-    </div>
-  );
+  const items: DetailItem[] = [
+    { icon: 'fa-list-ol',              label: 'Job / Task',       value: jsa.title },
+    { icon: 'fa-circle-dot',           label: 'Status',           value: <span class={hsePill(jsa.status)}>{jsa.status.replace(/_/g, ' ')}</span> },
+    { icon: 'fa-triangle-exclamation', label: 'Risk Level',       value: <RiskScorePill band={jsa.risk_level} hideScore /> },
+    { icon: 'fa-list-check',           label: 'Steps Documented', value: String(jsa.stepCount) },
+    { icon: 'fa-location-dot',         label: 'Site',             value: jsa.site_id ?? '' },
+    { icon: 'fa-calendar-day',         label: 'Review Due',       value: jsa.review_due_at ? new Date(jsa.review_due_at).toLocaleDateString() : '' },
+  ];
+  return <DetailGrid items={items} hideEmpty />;
 }
 
 function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
@@ -342,16 +328,6 @@ function JsaTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-function DetailRow({ label, value }: { label: string; value: VNode | string }): VNode {
-  return (
-    <div>
-      <strong style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
-        {label}
-      </strong>
-      <span style={{ fontSize: '0.85rem' }}>{value}</span>
-    </div>
-  );
-}
 
 function EmptyState({ message }: { message: string }): VNode {
   return (

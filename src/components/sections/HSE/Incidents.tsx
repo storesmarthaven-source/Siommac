@@ -17,7 +17,7 @@ import { useState, useMemo } from 'preact/hooks';
 import {
   PageHeader, TabBar, HseModal, HseDrawer, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
-  MetricRow, StatsCard, Sparkline, NewMenu, Pagination, usePagination, type AreaTab,
+  MetricRow, StatsCard, Sparkline, NewMenu, Pagination, usePagination, DetailGrid, type AreaTab,
 } from '@ui';
 import {
   hsePill, HSE_SITES,
@@ -3436,40 +3436,18 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
         )}
 
         {/* Info grid */}
-        <div class="hse-idrawer-grid">
-          <div class="hse-idrawer-cell"><i class="fas fa-circle-dot" /><span>Status</span>
-            <strong><span class={hsePill(inc?.status ?? '')}>{inc?.status ?? i?.status ?? '—'}</span></strong>
-          </div>
-          <div class="hse-idrawer-cell"><i class="fas fa-calendar-day" /><span>Date</span>
-            <strong>{inc?.incident_date ? new Date(inc.incident_date).toLocaleDateString('en-GB') : i?.date ?? '—'}</strong>
-          </div>
-          <div class="hse-idrawer-cell"><i class="fas fa-user-tie" /><span>Reporter</span>
-            <strong>{inc?.reported_by ?? i?.reporter ?? '—'}</strong>
-          </div>
-          <div class="hse-idrawer-cell"><i class="fas fa-tag" /><span>Type</span>
-            <strong>{inc?.incident_type ?? i?.type ?? '—'}</strong>
-          </div>
-          {inc?.location_text && (
-            <div class="hse-idrawer-cell"><i class="fas fa-location-dot" /><span>Location</span><strong>{inc.location_text}</strong></div>
-          )}
-          {inc?.osh_classification && (
-            <div class="hse-idrawer-cell"><i class="fas fa-gavel" /><span>OSH Class</span>
-              <strong>{OSH_CLASSES.find(o => o.value === inc.osh_classification)?.label ?? inc.osh_classification}</strong>
-            </div>
-          )}
-          {inc && inc.lost_days > 0 && (
-            <div class="hse-idrawer-cell"><i class="fas fa-calendar-xmark" /><span>Lost days</span><strong>{inc.lost_days}</strong></div>
-          )}
-          {inc?.regulatory_class && (
-            <div class="hse-idrawer-cell"><i class="fas fa-scale-balanced" /><span>Reg. class</span><strong>{inc.regulatory_class}</strong></div>
-          )}
-          <div class="hse-idrawer-cell"><i class="fas fa-flag" /><span>Recordable</span>
-            <strong>{inc ? (inc.recordable ? 'Yes' : 'No') : '—'}</strong>
-          </div>
-          <div class="hse-idrawer-cell"><i class="fas fa-clock-rotate-left" /><span>Lost Time</span>
-            <strong>{inc ? (inc.lost_time ? 'Yes' : 'No') : '—'}</strong>
-          </div>
-        </div>
+        <DetailGrid hideEmpty items={[
+          { icon: 'fa-circle-dot',        label: 'Status',     value: <span class={hsePill(inc?.status ?? '')}>{inc?.status ?? i?.status ?? '—'}</span> },
+          { icon: 'fa-calendar-day',      label: 'Date',       value: inc?.incident_date ? new Date(inc.incident_date).toLocaleDateString('en-GB') : (i?.date ?? '—') },
+          { icon: 'fa-user-tie',          label: 'Reporter',   value: inc?.reported_by ?? i?.reporter ?? '—' },
+          { icon: 'fa-tag',               label: 'Type',       value: inc?.incident_type ?? i?.type ?? '—' },
+          { icon: 'fa-location-dot',      label: 'Location',   value: inc?.location_text ?? '' },
+          { icon: 'fa-gavel',             label: 'OSH Class',  value: inc?.osh_classification ? (OSH_CLASSES.find(o => o.value === inc.osh_classification)?.label ?? inc.osh_classification) : '' },
+          { icon: 'fa-calendar-xmark',    label: 'Lost days',  value: inc && inc.lost_days > 0 ? inc.lost_days : '' },
+          { icon: 'fa-scale-balanced',    label: 'Reg. class', value: inc?.regulatory_class ?? '' },
+          { icon: 'fa-flag',              label: 'Recordable', value: inc ? (inc.recordable ? 'Yes' : 'No') : '—' },
+          { icon: 'fa-clock-rotate-left', label: 'Lost Time',  value: inc ? (inc.lost_time ? 'Yes' : 'No') : '—' },
+        ]} />
 
         {/* Description */}
         <div class="hse-idrawer-section">
