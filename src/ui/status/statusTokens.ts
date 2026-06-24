@@ -65,8 +65,8 @@ export function toneTint(tone: Tone): string {
 /* ── Free-text status → tone ──────────────────────────────────────────────────
    Keyword matching, used by HSE's free-text statuses. Order matters: the first
    matching family wins. This is the union of the hsePill() keyword list. */
-export function toneFromText(text: string): Tone {
-  const t = text.toLowerCase();
+export function toneFromText(text: string | null | undefined): Tone {
+  const t = (text ?? '').toLowerCase();
   if (/critical|blocked|overdue|stopped/.test(t)) return 'negative';
   if (/hold|pending|due|high|review/.test(t))     return 'caution';
   if (/live|ready|complete|open/.test(t))         return 'positive';

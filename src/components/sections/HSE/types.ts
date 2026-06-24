@@ -116,7 +116,7 @@ export const mockReadiness: ReadinessRow[] = [
 
 /** HSE status text → Siomac .vt-pill variant. Delegates to the shared
     status source of truth (@ui/status/statusTokens). */
-export function hsePill(text: string): string {
+export function hsePill(text: string | null | undefined): string {
   return toneClass(toneFromText(text));
 }
 
