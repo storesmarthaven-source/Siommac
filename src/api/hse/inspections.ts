@@ -360,6 +360,31 @@ export function useFindingTransition() {
   });
 }
 
+export interface CreateTemplateArgs {
+  name: string;
+  inspectionType: string;
+  description?: string | null;
+  items: Array<{
+    question: string;
+    helpText?: string | null;
+    responseType: string;
+    isRequired?: boolean;
+    isCritical?: boolean;
+    requiresEvidenceOnFail?: boolean;
+    autoCreateFindingOnFail?: boolean;
+    sortOrder?: number;
+  }>;
+}
+
+export function useCreateTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: CreateTemplateArgs) =>
+      apiPost<{ success: boolean; data: { id: string } }>('hse/inspection-templates/create', { args }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
+  });
+}
+
 export function useAddEvidence() {
   const qc = useQueryClient();
   return useMutation({

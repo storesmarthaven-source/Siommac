@@ -15,11 +15,14 @@ import {
 } from '@ui';
 import {
   useInspections, useFindings, useInspectionStats, useInspectionTemplates, useCreateInspection,
+  useInspectionTransition,
   type InspectionRow, type FindingRow,
 } from '@api/hse/inspections';
 import { hsePill, HSE_SITES } from './types';
 import { InspectionDetailDrawer } from './inspections/InspectionDetailDrawer';
 import { FindingDetailDrawer } from './inspections/FindingDetailDrawer';
+import { TemplateBuilderDialog } from './inspections/InspectionDialogs';
+import { useEmployeeOptions } from './inspections/useEmployeeOptions';
 
 const TABS: AreaTab[] = [
   { key: 'schedule', label: 'Schedule', sublabel: 'Upcoming & overdue', icon: 'fa-calendar-check' },
@@ -115,8 +118,10 @@ function Spark({ label, value, sub, color }: { label: string; value: ComponentCh
 export function InspectionsArea({ tab }: { tab: string }): VNode {
   const [active, setActive] = useState(TABS.some(t => t.key === tab) ? tab : 'schedule');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [openInspection, setOpenInspection] = useState<string | null>(null);
   const [openFinding, setOpenFinding] = useState<string | null>(null);
+  const rowTransition = useInspectionTransition();
 
   const { data: statsRes } = useInspectionStats();
   const s = statsRes?.data;
@@ -124,6 +129,10 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
   const inspections = inspRes?.data ?? [];
   const { data: findRes } = useFindings({ limit: 200 });
   const findings = findRes?.data ?? [];
+  const findingCountByInspection = findings.reduce<Record<string, number>>((m, f) => {
+    if (f.inspection_id) m[f.inspection_id] = (m[f.inspection_id] ?? 0) + 1;
+    return m;
+  }, {});
 
   const overdue = s?.overdue ?? inspections.filter(isOverdue).length;
   const openFindings = s?.openFindings ?? findings.filter(f => !['closed', 'cancelled'].includes(f.status)).length;
@@ -147,7 +156,24 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
-      <MetricRow pageKey="hse.inspections" rowClass="ui-stat-row" cards={[
+      <MetricRow pageKey={`hse.inspections.${active}`} rowClass="ui-stat-row" cards={active === 'findings' ? [
+        { key: 'open', node: (
+          <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
+            supporting="Require corrective action" footer="Across all inspections" />
+        ) },
+        { key: 'critical', node: (
+          <StatsCard icon="fa-triangle-exclamation" title="Critical Findings" metric={criticalFindings} metricColor={criticalFindings > 0 ? '#ef4444' : '#22c55e'}
+            supporting="Immediate action" footer={criticalFindings > 0 ? 'Action required' : 'None open'} />
+        ) },
+        { key: 'closed', node: (
+          <StatsCard icon="fa-circle-check" title="Closed YTD" metric={s?.closedFindingsYtd ?? 0}
+            supporting="Resolved this year" footer="Year to date" />
+        ) },
+        { key: 'closure', node: (
+          <StatsCard icon="fa-chart-pie" title="Closure Rate" metric={`${s?.closureRate ?? 0}%`}
+            supporting="Findings closed" percent={s?.closureRate ?? 0} percentTarget="Target 90%" />
+        ) },
+      ] : [
         { key: 'scheduled', node: (
           <StatsCard icon="fa-calendar-check" title="Scheduled This Month" metric={s?.scheduledThisMonth ?? 0}
             supporting="Upcoming inspections" footer="Confirmed schedule" />
@@ -173,6 +199,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         <div style={{ flexShrink: 0 }}>
           <NewMenu label="Schedule Inspection" fill items={[
             { label: 'Schedule Inspection', icon: 'fa-calendar-plus', sub: 'Create a new inspection or audit', onSelect: () => setDialogOpen(true) },
+            { label: 'New Checklist Template', icon: 'fa-list-check', sub: 'Build a reusable inspection checklist', onSelect: () => setTemplateOpen(true) },
           ]} />
         </div>
       </div>
@@ -203,12 +230,16 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                 <table class="vt-table">
                   <thead>
                     <tr>
-                      <th>Ref</th><th>Inspection</th><th>Type</th><th>Site / Area</th>
-                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                      <th>Ref</th><th>Inspection</th><th>Type</th><th>Site / Area</th><th>Assignee</th>
+                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Findings</th>
+                      <th style={{ textAlign: 'center' }}>Status</th><th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {inspections.map(i => (
+                    {inspections.map(i => {
+                      const fc = findingCountByInspection[i.id] ?? 0;
+                      const canStart = ['scheduled', 'due_soon', 'overdue', 'rescheduled'].includes(i.status);
+                      return (
                       <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => setOpenInspection(i.id)}>
                         <td><span class="vt-cell-mono">{i.inspection_no ?? i.ref ?? '—'}</span></td>
                         <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{i.title ?? '—'}</span></td>
@@ -218,11 +249,19 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                           </div>
                         </td>
                         <td class="vt-cell-subtext">{i.site_name ?? i.site_id ?? '—'}{i.area ? ` · ${i.area}` : ''}</td>
+                        <td class="vt-cell-subtext">{i.assignee_id ?? '—'}</td>
                         <td style={{ textAlign: 'center', color: isOverdue(i) ? 'var(--siomac-red)' : 'inherit', fontWeight: isOverdue(i) ? 600 : 400 }}>{fmtDate(i.due_at)}</td>
+                        <td style={{ textAlign: 'center' }}>{fc > 0 ? <span class="vt-pill is-warn">{fc}</span> : <span class="hse-muted">—</span>}</td>
                         <td style={{ textAlign: 'center' }}><span class={hsePill(i.status)}>{titleCase(i.status)}</span></td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+                          <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenInspection(i.id)}>View</button>
+                          {canStart && <button class="hse-btn primary" style={{ padding: '4px 10px', marginLeft: '4px' }} disabled={rowTransition.isPending}
+                            onClick={() => rowTransition.mutate({ action: 'start', inspectionId: i.id })}>Start</button>}
+                        </td>
                       </tr>
-                    ))}
-                    {inspections.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No inspections scheduled.</td></tr>}
+                      );
+                    })}
+                    {inspections.length === 0 && <tr><td colSpan={9} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No inspections scheduled.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -243,8 +282,9 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                 <table class="vt-table">
                   <thead>
                     <tr>
-                      <th>Ref</th><th>Finding</th><th style={{ textAlign: 'center' }}>Severity</th>
+                      <th>Ref</th><th>Finding</th><th>Site / Area</th><th style={{ textAlign: 'center' }}>Severity</th>
                       <th>Owner</th><th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -252,13 +292,17 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                       <tr key={f.id} style={{ cursor: 'pointer' }} onClick={() => setOpenFinding(f.id)}>
                         <td><span class="vt-cell-mono">{f.finding_no ?? '—'}</span></td>
                         <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{f.title ?? f.description ?? '—'}</span></td>
+                        <td class="vt-cell-subtext">{f.site_name ?? '—'}{f.area ? ` · ${f.area}` : ''}</td>
                         <td style={{ textAlign: 'center' }}>{severityPill(f.severity)}</td>
                         <td class="vt-cell-subtext">{f.owner_id ?? '—'}</td>
                         <td style={{ textAlign: 'center' }}>{fmtDate(f.due_at)}</td>
                         <td style={{ textAlign: 'center' }}><span class={hsePill(f.status)}>{titleCase(f.status)}</span></td>
+                        <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                          <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenFinding(f.id)}>View</button>
+                        </td>
                       </tr>
                     ))}
-                    {findings.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No findings raised.</td></tr>}
+                    {findings.length === 0 && <tr><td colSpan={8} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No findings raised.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -271,6 +315,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
       )}
 
       <ScheduleInspectionDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <TemplateBuilderDialog open={templateOpen} onClose={() => setTemplateOpen(false)} />
 
       <InspectionDetailDrawer inspectionId={openInspection} onClose={() => setOpenInspection(null)} />
       <FindingDetailDrawer findingId={openFinding} onClose={() => setOpenFinding(null)} />
@@ -284,6 +329,7 @@ function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: (
   const create = useCreateInspection();
   const { data: tplRes } = useInspectionTemplates();
   const templates = tplRes?.data ?? [];
+  const users = useEmployeeOptions();
 
   const [title, setTitle] = useState('');
   const [type, setType] = useState<string>(INSP_TYPES[0]);
@@ -292,8 +338,11 @@ function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: (
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
   const [due, setDue] = useState('');
   const [templateId, setTemplateId] = useState('');
+  const [assigneeId, setAssigneeId] = useState('');
+  const [reviewerId, setReviewerId] = useState('');
+  const [asDraft, setAsDraft] = useState(false);
 
-  const reset = () => { setTitle(''); setArea(''); setDue(''); setTemplateId(''); setPriority('medium'); };
+  const reset = () => { setTitle(''); setArea(''); setDue(''); setTemplateId(''); setPriority('medium'); setAssigneeId(''); setReviewerId(''); setAsDraft(false); };
 
   const submit = () => {
     if (!title.trim() || !due) return;
@@ -306,7 +355,9 @@ function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: (
       area: area || null,
       dueAt: new Date(due).toISOString(),
       templateId: templateId || null,
-      scheduleImmediately: true,
+      assigneeId: assigneeId || null,
+      reviewerId: reviewerId || null,
+      scheduleImmediately: !asDraft,
     }, { onSuccess: () => { reset(); onClose(); } });
   };
 
@@ -316,7 +367,7 @@ function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: (
     <HseModal
       open={open} onClose={onClose}
       title="Schedule Inspection" sub="Schedule a new inspection or audit for a site or area."
-      submitLabel={create.isPending ? 'Scheduling…' : 'Schedule'}
+      submitLabel={create.isPending ? 'Saving…' : (asDraft ? 'Save Draft' : 'Schedule')}
       onSubmit={submit}
     >
       <div class="hse-form-grid">
@@ -325,12 +376,20 @@ function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: (
         <Field label="Priority"><SelectInput value={priority} onInput={v => setPriority(v as 'low' | 'medium' | 'high' | 'critical')} options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: titleCase(p) }))} /></Field>
         <Field label="Site"><SelectInput value={site} onInput={setSite} options={[...HSE_SITES]} /></Field>
         <Field label="Area / location"><TextInput value={area} onInput={setArea} placeholder="e.g. Bay 3" /></Field>
+        <Field label="Assignee"><SelectInput value={assigneeId} onInput={setAssigneeId} options={[{ value: '', label: 'Unassigned' }, ...users]} /></Field>
+        <Field label="Reviewer"><SelectInput value={reviewerId} onInput={setReviewerId} options={[{ value: '', label: 'None' }, ...users]} /></Field>
         <Field label="Due date">
           <input class="ui-input" type="date" value={due} onInput={e => setDue((e.target as HTMLInputElement).value)} />
         </Field>
         <Field label="Checklist template">
           <SelectInput value={templateId} onInput={setTemplateId}
             options={[{ value: '', label: 'None' }, ...matchingTemplates.map(t => ({ value: t.id, label: t.name }))]} />
+        </Field>
+        <Field label="" wide>
+          <label style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.8rem' }}>
+            <input type="checkbox" checked={asDraft} onInput={e => setAsDraft((e.target as HTMLInputElement).checked)} />
+            <span>Save as draft (don't schedule yet)</span>
+          </label>
         </Field>
       </div>
     </HseModal>
