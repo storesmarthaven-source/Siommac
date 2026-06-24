@@ -17,6 +17,15 @@ export function requiresMfa(role: string): boolean {
   return REQUIRE_MFA_ROLES.includes(role);
 }
 
+/**
+ * Async policy check used by the auth routes (login / 2FA setup). Currently
+ * mirrors requiresMfa(), kept async so a DB-backed per-role policy
+ * (auth_security_policy) can be layered in later without changing callers.
+ */
+export async function isMfaRequiredForRole(role: string): Promise<boolean> {
+  return requiresMfa(role);
+}
+
 // ── Trusted-device policy ─────────────────────────────────────────────────────
 
 /**

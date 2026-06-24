@@ -54,6 +54,17 @@ export function shouldOfferTrustedDevice(role: string): boolean {
   return _shouldOffer(role);
 }
 
+/**
+ * Whether the request arrived over HTTPS — used to set the cookie `Secure` flag.
+ * Firefox drops Secure cookies on http://localhost, so dev (http) must be false.
+ * Honours x-forwarded-proto (behind Netlify/proxies); falls back to the URL.
+ */
+export function isSecureRequest(c: { req: { header: (name: string) => string | undefined; url: string } }): boolean {
+  const proto = c.req.header('x-forwarded-proto');
+  if (proto) return proto.split(',')[0]!.trim() === 'https';
+  try { return new URL(c.req.url).protocol === 'https:'; } catch { return false; }
+}
+
 // ── HMAC helpers ──────────────────────────────────────────────────────────────
 
 function hmacHex(data: string): string {
