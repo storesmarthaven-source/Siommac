@@ -53,7 +53,7 @@ export { Modal, HseModal, type ModalProps } from './components/Modal';
 export { Wizard, type WizardProps } from './components/Wizard';
 export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
 export { DetailGrid, type DetailGridProps, type DetailItem } from './components/DetailGrid';
-export { SidePanel, SidePanelItem, type SidePanelProps, type SidePanelItemProps, type SidePanelTab, type SidePanelTone } from './components/SidePanel';
+export { SidePanel, type SidePanelProps } from './components/SidePanel';
 
 // ── Layouts ──
 export { ModulePageLayout, type ModulePageLayoutProps } from './layouts/ModulePageLayout';

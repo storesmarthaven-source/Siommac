@@ -17,6 +17,7 @@ import {
   useHazards, useAssessments, useJsaList,
   type HazardRow, type AssessmentRow, type JsaRow,
 } from '@api/hse/riskJsa';
+import { SidePanel } from '@ui';
 
 function daysUntil(iso?: string | null): number | null {
   if (!iso) return null;
@@ -77,7 +78,7 @@ function HazardPanel({ onHazard }: { onHazard: (h: HazardRow) => void }): VNode 
   const overdue  = hz.filter(h => { const d = daysUntil(h.review_due_at); return d !== null && d < 0; });
   const gaps     = hz.filter(h => h.status === 'controls_required' || h.status === 'assessment_required');
   return (
-    <aside class="ppe-signals-panel">
+    <SidePanel title="Hazard Signals" icon="fa-bell" count={highRisk.length + overdue.length + gaps.length}>
       <Section icon="fa-circle-exclamation" title="High Risk Queue" count={highRisk.length} empty="No high-risk hazards">
         {highRisk.slice(0, 5).map(h => (
           <Signal key={h.id} icon="fa-radiation" iconTone={h.risk_level === 'critical' ? 'is-danger' : 'is-warn'}
@@ -100,7 +101,7 @@ function HazardPanel({ onHazard }: { onHazard: (h: HazardRow) => void }): VNode 
             tag={h.status === 'controls_required' ? 'Controls due' : 'Assess'} tagTone="is-due" onClick={() => onHazard(h)} />
         ))}
       </Section>
-    </aside>
+    </SidePanel>
   );
 }
 
@@ -112,7 +113,7 @@ function AssessmentPanel({ onAssessment }: { onAssessment: (a: AssessmentRow) =>
   const residual = list.filter(a => isHighRisk(a.risk_level));
   const expiring = list.filter(a => { const d = daysUntil(a.review_due_at); return a.status === 'expired' || (d !== null && d >= 0 && d <= 7); });
   return (
-    <aside class="ppe-signals-panel">
+    <SidePanel title="Assessment Signals" icon="fa-bell" count={approval.length + residual.length + expiring.length}>
       <Section icon="fa-clipboard-check" title="Approval Queue" count={approval.length} empty="Nothing awaiting review">
         {approval.slice(0, 5).map(a => (
           <Signal key={a.id} icon="fa-clipboard-check" iconTone="is-info" title={a.ref} sub={a.title}
@@ -136,7 +137,7 @@ function AssessmentPanel({ onAssessment }: { onAssessment: (a: AssessmentRow) =>
             tag={a.status === 'expired' ? 'Expired' : `${d}d`} tagTone="is-due" onClick={() => onAssessment(a)} />;
         })}
       </Section>
-    </aside>
+    </SidePanel>
   );
 }
 
@@ -148,7 +149,7 @@ function JsaPanel({ onJsa }: { onJsa: (j: JsaRow) => void }): VNode {
   const permitReq    = list.filter(j => isHighRisk(j.risk_level) && j.status === 'active'); // proxy: high-risk active jobs likely need a permit
   const trainingGaps = list.filter(j => j.status === 'draft' || j.status === 'returned');   // proxy until training links land
   return (
-    <aside class="ppe-signals-panel">
+    <SidePanel title="JSA Signals" icon="fa-bell" count={expiring.length + permitReq.length + trainingGaps.length}>
       <Section icon="fa-hourglass-half" title="Expiring JSAs" count={expiring.length} empty="None expiring soon">
         {expiring.slice(0, 4).map(j => {
           const d = daysUntil(j.review_due_at);
@@ -170,6 +171,6 @@ function JsaPanel({ onJsa }: { onJsa: (j: JsaRow) => void }): VNode {
             tag="Review" tagTone="is-info" onClick={() => onJsa(j)} />
         ))}
       </Section>
-    </aside>
+    </SidePanel>
   );
 }

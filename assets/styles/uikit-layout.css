@@ -1030,71 +1030,18 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 .wz-badge--ready   { background: rgba(74,222,128,.15); color: #4ade80; border-color: rgba(74,222,128,.3); }
 
 
-/* ── Side panel (owq-panel) — the kit right-side panel; navy variant is the rail
-   that replaces ppe-signals-panel. Header = owq-panel-header (title + count +
-   optional tabs). Token-based; adapted from the Attendance reference. ───────── */
-.owq-panel { border: 1px solid var(--border); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-card); }
-.owq-panel-header { padding: 14px 16px 0; border-bottom: 1px solid var(--border); }
-.owq-panel-title { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; color: var(--siomac-navy); }
+/* ── Side panel header (owq-panel-header) — the kit panel header adopted onto the
+   ppe-signals-panel right rail: title + icon + count badge. Body stays the
+   existing ppe-signal design. ──────────────────────────────────────────────── */
+.owq-panel-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.owq-panel-title { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--siomac-navy); }
 .owq-panel-title i { font-size: 0.82rem; color: var(--text-muted); }
 .owq-panel-count { margin-left: auto; color: #fff; background: var(--siomac-navy); font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
-.owq-panel-tabs { display: flex; gap: 2px; padding-bottom: 0; }
-.owq-tab { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-family: inherit; background: transparent; border: none; border-bottom: 2px solid transparent; padding: 6px 10px; font-size: 0.72rem; font-weight: 500; color: var(--text-muted); transition: color .15s, border-color .15s; margin-bottom: -1px; }
-.owq-tab:hover { color: var(--siomac-navy); }
-.owq-tab.active { color: var(--siomac-navy); border-bottom-color: var(--siomac-navy); font-weight: 600; }
-.owq-tab-count { font-size: 0.58rem; font-weight: 600; padding: 1px 5px; border-radius: 999px; background: var(--bg-subtle, #f8fafe); color: inherit; }
-.owq-panel-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 420px; }
-.owq-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
-.owq-item:last-child { border-bottom: none; }
-.owq-item:hover { background: var(--bg-subtle, #f8fafe); }
-.owq-item-critical { border-left: 3px solid #ef4444; }
-.owq-item-overdue { border-left: 3px solid #f59e0b; }
-.owq-item-normal { border-left: 3px solid transparent; }
-.owq-item-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.82rem; }
-.owq-item-body { flex: 1; min-width: 0; }
-.owq-item-ref { font-size: 0.68rem; font-weight: 600; font-family: var(--font-mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); }
-.owq-item-title { font-weight: 500; font-family: inherit; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.owq-item-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 3px; }
-.owq-item-meta span { display: inline-flex; align-items: center; gap: 3px; font-size: 0.65rem; color: var(--text-muted); }
-.owq-item-meta i { font-size: 0.58rem; }
-.owq-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.owq-item-action { font-size: 0.62rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; white-space: nowrap; background: var(--bg-subtle, #f8fafe); color: var(--text-muted); }
-.owq-item-chevron { font-size: 0.55rem; color: var(--text-muted); }
-.owq-icon-critical { background: rgba(239,68,68,0.12); color: #dc2626; }
-.owq-icon-overdue { background: rgba(245,158,11,0.12); color: #b45309; }
-.owq-icon-invest { background: rgba(59,130,246,0.12); color: #2563eb; }
-.owq-icon-capa { background: rgba(139,92,246,0.12); color: #7c3aed; }
-.owq-icon-ok { background: rgba(34,197,94,0.12); color: #15803d; }
-.owq-panel-footer { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-top: 1px solid var(--border); background: transparent; font-size: 0.76rem; font-weight: 500; cursor: pointer; font-family: inherit; color: var(--siomac-navy); transition: background .12s; }
-.owq-panel-footer:hover { background: var(--bg-subtle, #f8fafe); }
-.owq-panel-footer i { font-size: 0.7rem; }
-.owq-panel-empty { padding: 22px 16px; text-align: center; font-size: 0.76rem; color: var(--text-muted); }
 
-/* Navy variant — the right-rail look (supersedes ppe-signals-panel). */
-.owq-panel-navy { background: linear-gradient(160deg, #1e3461 0%, var(--siomac-navy) 100%); border-color: rgba(255,255,255,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2); color: rgba(255,255,255,0.85); }
-.owq-panel-navy .owq-panel-header { border-bottom-color: rgba(255,255,255,0.1); }
-.owq-panel-navy .owq-panel-title { color: rgba(255,255,255,0.9); }
-.owq-panel-navy .owq-panel-title i { color: rgba(255,255,255,0.55); }
-.owq-panel-navy .owq-panel-count { background: rgba(255,255,255,0.15); }
-.owq-panel-navy .owq-tab { color: rgba(255,255,255,0.45); border-bottom-color: transparent; }
-.owq-panel-navy .owq-tab:hover { color: rgba(255,255,255,0.85); }
-.owq-panel-navy .owq-tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.75); font-weight: 600; }
-.owq-panel-navy .owq-tab-count { background: rgba(255,255,255,0.1); }
-.owq-panel-navy .owq-tab.active .owq-tab-count { background: rgba(255,255,255,0.22); }
-.owq-panel-navy .owq-item { border-bottom-color: rgba(255,255,255,0.07); }
-.owq-panel-navy .owq-item:hover { background: rgba(255,255,255,0.06); }
-.owq-panel-navy .owq-item-ref { color: rgba(255,255,255,0.45); }
-.owq-panel-navy .owq-item-title { color: rgba(255,255,255,0.9); }
-.owq-panel-navy .owq-item-meta span { color: rgba(255,255,255,0.4); }
-.owq-panel-navy .owq-icon-critical { background: rgba(239,68,68,0.2); color: #fca5a5; }
-.owq-panel-navy .owq-icon-overdue { background: rgba(245,158,11,0.2); color: #fcd34d; }
-.owq-panel-navy .owq-icon-invest { background: rgba(59,130,246,0.2); color: #93c5fd; }
-.owq-panel-navy .owq-icon-capa { background: rgba(139,92,246,0.2); color: #c4b5fd; }
-.owq-panel-navy .owq-icon-ok { background: rgba(34,197,94,0.2); color: #86efac; }
-.owq-panel-navy .owq-item-action { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
-.owq-panel-navy .owq-item-chevron { color: rgba(255,255,255,0.25); }
-.owq-panel-navy .owq-panel-empty { color: rgba(255,255,255,0.5); }
-.owq-panel-navy .owq-panel-footer { border-top-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); }
-.owq-panel-navy .owq-panel-footer:hover { background: rgba(255,255,255,0.07); color: #fff; }
+/* On the navy rail the header inherits the panel padding and goes light. */
+.ppe-signals-panel .owq-panel-header { padding: 0 0 12px; margin: 2px 0 14px; border-bottom-color: rgba(255,255,255,0.12); }
+.ppe-signals-panel .owq-panel-title { color: rgba(255,255,255,0.92); }
+.ppe-signals-panel .owq-panel-title i { color: rgba(255,255,255,0.55); }
+.ppe-signals-panel .owq-panel-count { background: rgba(255,255,255,0.15); }
 
 }
