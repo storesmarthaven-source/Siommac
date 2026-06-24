@@ -346,6 +346,57 @@ router.post('/resetManagerModules', async c => {
 
 const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 
+// ── applyPermissionGrant — apply an APPROVED maker-checker grant to live RBAC ──
+// Called by routes/permissionApprovals.ts after a second superadmin approves a
+// pending permission_grant_approvals row. Writes the same tables the direct
+// admin routes use, so behaviour is identical to an immediate grant.
+
+export interface PermissionGrantInput {
+  request_type:    'role_permission' | 'user_override';
+  target_role?:    string;
+  target_user_id?: string;
+  permission_key:  string;
+  effect:          'allow' | 'deny';
+}
+
+export async function applyPermissionGrant(
+  grant: PermissionGrantInput,
+  actorUsername: string,
+): Promise<{ ok: boolean; message?: string }> {
+  if (grant.request_type === 'role_permission') {
+    const role = grant.target_role;
+    if (!role) return { ok: false, message: 'target_role is required for a role_permission grant' };
+    if (grant.effect === 'allow') {
+      // Role RBAC has no deny-rows: presence = granted. Add idempotently.
+      const { error } = await sb.from('role_permissions')
+        .upsert({ role_name: role, permission: grant.permission_key }, { onConflict: 'role_name,permission' });
+      if (error) return { ok: false, message: error.message };
+    } else {
+      const { error } = await sb.from('role_permissions')
+        .delete().eq('role_name', role).eq('permission', grant.permission_key);
+      if (error) return { ok: false, message: error.message };
+    }
+    invalidateRolePermissions(role);
+    return { ok: true };
+  }
+
+  // user_override — explicit per-user grant/deny row (granted = allow).
+  const userId = grant.target_user_id;
+  if (!userId) return { ok: false, message: 'target_user_id is required for a user_override grant' };
+  const { error } = await sb.from('user_permissions').upsert(
+    {
+      user_id:    userId,
+      permission: grant.permission_key,
+      granted:    grant.effect === 'allow',
+      set_by:     actorUsername,
+      set_at:     new Date().toISOString(),
+    },
+    { onConflict: 'user_id,permission' },
+  );
+  if (error) return { ok: false, message: error.message };
+  return { ok: true };
+}
+
 const GetUserPermsSchema = z.object({ userId: z.string().min(1) });
 const SetUserPermSchema  = z.object({
   userId:     z.string().min(1),

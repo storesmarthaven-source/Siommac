@@ -108,6 +108,12 @@ export const VerifyPasswordSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+/** Change-password: verify the current password, set a policy-compliant new one. */
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword:     zPassword,
+});
+
 // ── Employee schemas ──────────────────────────────────────────────────────────
 
 export const AddEmployeeSchema = z.object({
