@@ -82,15 +82,19 @@ function statusPill(status: PermitStatus): VNode {
   return <span class="vt-pill" style={{ background: c.bg, color: c.fg }}>{status.replace(/_/g, ' ')}</span>;
 }
 
-/** Map risk level → pill */
+/** Per-risk colour map — each level reads as its own tag (incl. medium). */
+const RISK_COLORS: Record<string, { bg: string; fg: string }> = {
+  low:      { bg: '#e6f4dd', fg: '#3b6d11' },
+  medium:   { bg: '#fdf0d9', fg: '#92600b' },
+  high:     { bg: '#fdeadf', fg: '#9a4516' },
+  critical: { bg: '#fde7e7', fg: '#a32d2d' },
+};
+
+/** Map risk level → a uniquely-coloured pill (Title Case via .vt-pill). */
 function riskPill(level: string | null): VNode {
   if (!level) return <span class="hse-muted">—</span>;
-  const cls =
-    level === 'critical' ? 'vt-pill is-off'
-    : level === 'high'   ? 'vt-pill is-warn'
-    : level === 'medium' ? 'vt-pill is-amber'
-    : 'vt-pill is-on';
-  return <span class={cls}>{level.charAt(0).toUpperCase() + level.slice(1)}</span>;
+  const c = RISK_COLORS[level] ?? { bg: '#eef0f2', fg: '#5b6b7f' };
+  return <span class="vt-pill" style={{ background: c.bg, color: c.fg }}>{level}</span>;
 }
 
 /** Permit type → icon. Falls back to fa-file-shield. */
@@ -270,13 +274,7 @@ function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Permit
   const deactivate  = useDeactivatePermitTemplate();
 
   function riskPillTemplate(level: string | null): VNode {
-    if (!level) return <span class="hse-muted">—</span>;
-    const cls =
-      level === 'critical' ? 'vt-pill is-off'
-      : level === 'high'   ? 'vt-pill is-warn'
-      : level === 'medium' ? 'vt-pill is-amber'
-      : 'vt-pill is-on';
-    return <span class={cls}>{level.charAt(0).toUpperCase() + level.slice(1)}</span>;
+    return riskPill(level);
   }
 
   function checkIcon(val: boolean): VNode {

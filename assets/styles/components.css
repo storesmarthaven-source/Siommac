@@ -151,7 +151,7 @@
 .vt-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
 .vt-table thead th {
   text-align: left; padding: 12px 16px; white-space: nowrap;
-  font-size: 0.7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  font-size: 0.7rem; font-weight: 500; letter-spacing: .05em; text-transform: uppercase;
   color: var(--text-muted); background: var(--bg-subtle, #F8FAFE);
   border-bottom: 1px solid var(--border);
 }
@@ -196,7 +196,7 @@
   font-size: 12.5px; font-weight: 700; text-transform: uppercase;
 }
 .vt-cell-account-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.vt-cell-name { font-weight: 600; color: var(--siomac-navy); }
+.vt-cell-name { font-weight: 500; color: var(--siomac-navy); }
 .vt-cell-subtext { font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
 .vt-cell-mono { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); }
 
@@ -206,7 +206,7 @@
 /* Status pill (green Enabled / grey Disabled / etc.) — tags are Title Case. */
 .vt-pill {
   display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;
-  font-size: 0.74rem; font-weight: 600; border-radius: 20px; padding: 3px 11px; text-transform: capitalize;
+  font-size: 0.74rem; font-weight: 500; border-radius: 20px; padding: 3px 11px; text-transform: capitalize;
 }
 .vt-pill.is-on   { background: rgba(22,163,74,.12);  color: #15803d; }
 .vt-pill.is-off  { background: rgba(100,116,139,.12); color: #64748b; }
