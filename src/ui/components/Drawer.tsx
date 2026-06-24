@@ -14,6 +14,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { createPortal } from 'preact/compat';
 
 export interface DrawerDetail { label: string; value: VNode | string; }
 
@@ -37,7 +38,10 @@ export interface DrawerProps {
 export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, panelClass }: DrawerProps): VNode {
   const subText = sub ?? subtitle;
   const footContent = foot ?? footer ?? <button class="hse-btn" onClick={onClose}>Close</button>;
-  return (
+  // Portal to <body> so the fixed-position panel is anchored to the viewport, not
+  // to an ancestor that establishes a containing block for fixed descendants
+  // (e.g. `.hse-dash { container-type: inline-size }`, or any `transform`).
+  return createPortal(
     <>
       <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={onClose} />
       <aside
@@ -60,7 +64,8 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
         </div>
         <div class="hse-drawer-foot">{footContent}</div>
       </aside>
-    </>
+    </>,
+    document.body,
   );
 }
 
