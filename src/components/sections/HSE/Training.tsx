@@ -1,327 +1,257 @@
 /**
  * src/components/sections/HSE/Training.tsx
- * Training & Competency area — competency matrix + certifications.
+ *
+ * Training / Competency area — Competency Matrix + Certifications tabs, wired to
+ * the live API (hse/training/*). Siomac page standard: PageHeader → StatsCard row
+ * → tab bar [TabBar | NewMenu] → compact spark row → register table (left) + navy
+ * signals rail (right). Matrix rows open the Worker Profile drawer; cert rows open
+ * the Certificate drawer.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
-  type AreaTab, type SparkDef,
+  PageHeader, TabBar, NewMenu, withCounts, SidePanel,
+  type AreaTab, type SidePanelSection,
 } from '@ui';
+import { TrainingInsightCards } from './training/TrainingInsightCards';
 import {
-  mockCompetency, mockCertifications, TRAINING_COURSES,
-  type CompetencyStatus, type CertificationRow,
-} from './types';
+  useTrainingStats, useCompetencyMatrix, useCertificates,
+  type MatrixRow, type CertificateRow,
+} from '@api/hse/training';
+import { hsePill } from './types';
+import { WorkerProfileDrawer } from './training/WorkerProfileDrawer';
+import { CertificateDetailDrawer } from './training/CertificateDetailDrawer';
+import { AddCertificateDialog, AssignTrainingDialog, CreateRequirementDialog } from './training/TrainingDialogs';
 
 const TABS: AreaTab[] = [
-  { key: 'matrix', label: 'Competency Matrix', sublabel: 'Team overview',    icon: 'fa-table-cells-large' },
-  { key: 'certs',  label: 'Certifications',    sublabel: 'Individual certs', icon: 'fa-certificate' },
+  { key: 'matrix', label: 'Competency Matrix', sublabel: 'Coverage by role',   icon: 'fa-table-cells' },
+  { key: 'certs',  label: 'Certifications',    sublabel: 'Certificate records', icon: 'fa-certificate' },
 ];
 
-const STATUS_STYLE: Record<CompetencyStatus, { bg: string; color: string; label: string }> = {
-  current:  { bg: 'rgba(34,197,94,.18)',   color: '#4ade80', label: 'OK'  },
-  due:      { bg: 'rgba(245,158,11,.18)',  color: '#fcd34d', label: 'Due' },
-  expired:  { bg: 'rgba(239,68,68,.18)',   color: '#fca5a5', label: 'Exp' },
-  none:     { bg: 'rgba(255,255,255,.06)', color: 'rgba(255,255,255,.3)', label: '–' },
-};
+const titleCase = (s?: string | null) => (s ?? '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+const WORKER_PILL: Record<string, string> = { compliant: 'is-on', due_soon: 'is-warn', non_compliant: 'is-critical', pending_verification: 'is-info', not_applicable: 'is-off' };
+const CERT_PILL: Record<string, string> = { current: 'is-on', due_soon: 'is-warn', pending_verification: 'is-info', expired: 'is-critical', rejected: 'is-critical', revoked: 'is-off', archived: 'is-off', draft: 'is-off' };
+const isExpiredCert = (c: CertificateRow) => c.status === 'expired' || (!!c.expires_at && new Date(c.expires_at).getTime() < Date.now() && !['revoked', 'archived', 'rejected'].includes(c.status));
 
-function MatrixTab(): VNode {
-  const totalCells = mockCompetency.length * TRAINING_COURSES.length;
-  const current    = mockCompetency.flatMap(r => r.cells).filter(c => c.status === 'current').length;
-  const expired    = mockCompetency.flatMap(r => r.cells).filter(c => c.status === 'expired').length;
-  const due        = mockCompetency.flatMap(r => r.cells).filter(c => c.status === 'due').length;
-  const compliance = Math.round((current / totalCells) * 100);
+// ── Right rail ────────────────────────────────────────────────────────────────
 
+function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
+  icon: string; tone: string; title: string; sub: string; tag: string; tagTone: string; onClick: () => void;
+}): VNode {
   return (
-    <div class="ppe-tab-content">
-      {/* Analytics strip */}
-      <div class="hse-spark-row">
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Overall Compliance</span></div>
-          <div class="hse-spark-val" style={{ color: compliance >= 85 ? '#22c55e' : '#f59e0b' }}>{compliance}%</div>
-          <div class="hse-spark-sub">Current / total competency slots</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Current</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{current}</div>
-          <div class="hse-spark-sub">Valid competencies</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Due for Renewal</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div>
-          <div class="hse-spark-sub">Renewal within 90 days</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div>
-          <div class="hse-spark-val" style={{ color: '#ef4444' }}>{expired}</div>
-          <div class="hse-spark-sub">Immediate action required</div>
-        </div>
-      </div>
-
-      <div class="vt-table-card">
-        <div class="vt-table-scroll">
-          <table class="vt-table">
-            <thead>
-              <tr>
-                <th>Worker</th><th>Role</th><th>Site</th>
-                {TRAINING_COURSES.map(c => <th key={c} style={{ whiteSpace: 'nowrap', fontSize: '0.66rem' }}>{c}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {mockCompetency.map(row => (
-                <tr key={row.worker.id}>
-                  <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{row.worker.name}</span></td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{row.worker.role}</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>{row.worker.site}</td>
-                  {row.cells.map(cell => {
-                    const s = STATUS_STYLE[cell.status];
-                    return (
-                      <td key={cell.course} style={{ padding: '6px 8px' }}>
-                        <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 600, background: s.bg, color: s.color }}>
-                          {s.label}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="ppe-signal" onClick={onClick}>
+      <i class={`fas ${icon} ${tone}`} />
+      <div class="ppe-signal-text"><strong>{title}</strong><span>{sub}</span></div>
+      <span class={`ppe-signal-tag ${tagTone}`}>{tag}</span>
     </div>
   );
 }
 
-function CertsTab({ certs, onAdd }: { certs: CertificationRow[]; onAdd: () => void }): VNode {
-  const expired = certs.filter(c => /expired/i.test(c.status)).length;
-  const due     = certs.filter(c => /due/i.test(c.status)).length;
+function MatrixRail({ matrix, onOpen }: { matrix: MatrixRow[]; onOpen: (row: MatrixRow) => void }): VNode {
+  const nonCompliant = matrix.filter(m => m.overallStatus === 'non_compliant');
+  const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
+  const pending      = matrix.filter(m => m.overallStatus === 'pending_verification');
+  const sections: SidePanelSection[] = [
+    { id: 'noncompliant', label: 'Gaps', icon: 'fa-user-xmark', title: 'Non-Compliant', count: nonCompliant.length, empty: 'All workers compliant',
+      children: nonCompliant.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-user-xmark" tone="is-danger" title={m.workerName} sub={`${m.expiredCount} expired · ${m.missingCount} missing`} tag="Gap" tagTone="is-high" onClick={() => onOpen(m)} />) },
+    { id: 'due', label: 'Due Soon', icon: 'fa-hourglass-half', title: 'Due Soon', count: dueWorkers.length, empty: 'None due soon',
+      children: dueWorkers.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-hourglass-half" tone="is-warn" title={m.workerName} sub={`${m.dueSoonCount} renewing`} tag="Due" tagTone="is-due" onClick={() => onOpen(m)} />) },
+    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pending.length, empty: 'None pending',
+      children: pending.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-clock" tone="is-info" title={m.workerName} sub="Awaiting verification" tag="Pending" tagTone="is-info" onClick={() => onOpen(m)} />) },
+  ];
+  return <SidePanel title="Competency Signals" icon="fa-bell" sections={sections} />;
+}
 
+function CertRail({ certs, onOpen }: { certs: CertificateRow[]; onOpen: (id: string) => void }): VNode {
+  const expiredCerts  = certs.filter(isExpiredCert);
+  const renewingCerts = certs.filter(c => c.status === 'due_soon');
+  const pendingCerts  = certs.filter(c => c.status === 'pending_verification');
+  const sections: SidePanelSection[] = [
+    { id: 'expired', label: 'Expired', icon: 'fa-triangle-exclamation', title: 'Expired', count: expiredCerts.length, empty: 'None expired',
+      children: expiredCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-triangle-exclamation" tone="is-danger" title={c.worker_name ?? c.worker_id} sub={c.course_name} tag="Expired" tagTone="is-high" onClick={() => onOpen(c.id)} />) },
+    { id: 'renewing', label: 'Renewing', icon: 'fa-hourglass-half', title: 'Renewing Soon', count: renewingCerts.length, empty: 'None renewing',
+      children: renewingCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-hourglass-half" tone="is-warn" title={c.worker_name ?? c.worker_id} sub={`${c.course_name} · ${fmtDate(c.expires_at)}`} tag="Due" tagTone="is-due" onClick={() => onOpen(c.id)} />) },
+    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pendingCerts.length, empty: 'Nothing to verify',
+      children: pendingCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-clock" tone="is-info" title={c.worker_name ?? c.worker_id} sub={c.course_name} tag="Verify" tagTone="is-info" onClick={() => onOpen(c.id)} />) },
+  ];
+  return <SidePanel title="Certificate Signals" icon="fa-bell" sections={sections} />;
+}
+
+// ── Spark row ─────────────────────────────────────────────────────────────────
+
+function Spark({ label, value, sub, color }: { label: string; value: ComponentChildren; sub: string; color?: string }): VNode {
   return (
-    <div class="ppe-tab-content">
-      {/* Analytics strip */}
-      <div class="hse-spark-row">
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Total Certificates</span></div>
-          <div class="hse-spark-val">{certs.length}</div>
-          <div class="hse-spark-sub">Across all workers and courses</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Due for Renewal</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div>
-          <div class="hse-spark-sub">Within 90 days</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Expired</span></div>
-          <div class="hse-spark-val" style={{ color: '#ef4444' }}>{expired}</div>
-          <div class="hse-spark-sub">Must not perform task</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Current</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>{certs.filter(c => /current/i.test(c.status)).length}</div>
-          <div class="hse-spark-sub">Valid certifications</div>
-        </div>
-      </div>
-
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-toolbar">
-            <div class="vt-search" style={{ flex: '1 1 220px' }}>
-              <i class="fas fa-search" /><input type="search" placeholder="Search certifications…" />
-            </div>
-            <select class="emp-filter-select">
-              <option>All courses</option>
-              {TRAINING_COURSES.map(c => <option key={c}>{c}</option>)}
-            </select>
-            <button class="hse-btn primary" onClick={onAdd}><i class="fas fa-circle-plus" /> Add Certificate</button>
-          </div>
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr><th>Ref</th><th>Worker</th><th>Course</th><th>Issued</th><th>Expiry</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {certs.map(c => (
-                    <tr key={c.ref}>
-                      <td><span class="vt-cell-mono">{c.ref}</span></td>
-                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{c.worker}</span></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.course}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.issued}</td>
-                      <td style={{ color: /expired/i.test(c.status) ? 'var(--siomac-red)' : /due/i.test(c.status) ? '#d97706' : 'inherit', fontWeight: /expired|due/i.test(c.status) ? 600 : 400 }}>{c.expiry}</td>
-                      <td>
-                        <span class={`vt-pill ${/current/i.test(c.status) ? 'is-on' : /due/i.test(c.status) ? 'is-warn' : 'is-off'}`}>{c.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-chart-bar" /> By Course · Expiry Status</h4>
-          <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
-            {TRAINING_COURSES.map(course => {
-              const courseCerts = certs.filter(c => c.course === course);
-              const expired = courseCerts.filter(c => /expired/i.test(c.status)).length;
-              const due     = courseCerts.filter(c => /due/i.test(c.status)).length;
-              const color   = expired > 0 ? '#ef4444' : due > 0 ? '#f59e0b' : '#4ade80';
-              return (
-                <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', flex: 1, minWidth: 0 }}>{course}</span>
-                  {expired > 0 && <span style={{ fontSize: '0.6rem', fontWeight: 600, color: '#fca5a5', background: 'rgba(239,68,68,.18)', padding: '2px 7px', borderRadius: '999px' }}>{expired} exp</span>}
-                  {due > 0     && <span style={{ fontSize: '0.6rem', fontWeight: 600, color: '#fcd34d', background: 'rgba(245,158,11,.18)', padding: '2px 7px', borderRadius: '999px' }}>{due} due</span>}
-                  {expired === 0 && due === 0 && <span style={{ fontSize: '0.6rem', fontWeight: 600, color: '#4ade80', background: 'rgba(34,197,94,.18)', padding: '2px 7px', borderRadius: '999px' }}>OK</span>}
-                </div>
-              );
-            })}
-          </div>
-          <div class="hse-panel-divider" />
-          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-circle-exclamation" /> Action Required</h4>
-          <div class="ppe-signals-list">
-            {certs.filter(c => /expired|due/i.test(c.status)).map(c => (
-              <div class="ppe-signal" key={c.ref}>
-                <i class={`fas fa-certificate ${/expired/i.test(c.status) ? 'is-danger' : 'is-warn'}`} />
-                <div class="ppe-signal-text">
-                  <strong>{c.worker}</strong>
-                  <span>{c.course} · Expires {c.expiry}</span>
-                </div>
-                <span class={`ppe-signal-tag ${/expired/i.test(c.status) ? 'is-high' : 'is-due'}`}>{c.status}</span>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
+    <div class="hse-spark">
+      <div class="hse-spark-header"><span class="hse-spark-label">{label}</span></div>
+      <div class="hse-spark-val" style={color ? { color } : undefined}>{value}</div>
+      <div class="hse-spark-sub">{sub}</div>
     </div>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function TrainingArea({ tab }: { tab: string }): VNode {
-  const [active, setActive]   = useState(tab);
-  const [certs, setCerts]     = useState<CertificationRow[]>(mockCertifications);
-  const [modalOpen, setModal] = useState(false);
-  const [newWorker, setWorker] = useState('');
-  const [newCourse, setCourse] = useState<string>(TRAINING_COURSES[0]);
-  const [newExpiry, setExpiry] = useState('');
+  const [active, setActive] = useState(TABS.some(t => t.key === tab) ? tab : 'matrix');
+  const [openWorker, setOpenWorker] = useState<MatrixRow | null>(null);
+  const [openCert, setOpenCert] = useState<string | null>(null);
+  const [addCertOpen, setAddCertOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [reqOpen, setReqOpen] = useState(false);
+  const [presetWorker, setPresetWorker] = useState<string | undefined>(undefined);
 
-  const totalCells = mockCompetency.length * TRAINING_COURSES.length;
-  const current    = mockCompetency.flatMap(r => r.cells).filter(c => c.status === 'current').length;
-  const expired    = certs.filter(c => /expired/i.test(c.status)).length;
-  const due        = certs.filter(c => /due/i.test(c.status)).length;
+  const s = useTrainingStats().data?.data;
+  const matrix = useCompetencyMatrix({}).data?.data ?? [];
+  const certs = useCertificates({ limit: 200 }).data?.data ?? [];
 
-  const compliance = totalCells > 0 ? Math.round((current / totalCells) * 100) : 0;
+  const compliancePct = s?.overallCompliancePercent ?? 0;
+  const currentCerts = s?.currentCerts ?? 0;
+  const dueForRenewal = s?.dueForRenewal ?? 0;
+  const expired = s?.expired ?? 0;
 
-  const sparks: SparkDef[] = [
-    {
-      label: 'Overall Compliance', value: `${compliance}%`, sub: 'Current / total competency slots',
-      progress: { pct: compliance, color: compliance >= 85 ? '#22c55e' : '#f59e0b', target: 'Target: 85%' },
-    },
-    {
-      label: 'Current Certs', value: String(current), sub: 'Valid competencies on file',
-      delta: `${mockCompetency.length} workers tracked`, deltaUp: false, color: '#22c55e',
-      sparkPoints: [0, 0, 0, 0, 0, current], sparkColor: '#22c55e',
-    },
-    {
-      label: 'Due for Renewal', value: String(due), sub: 'Within next 90 days',
-      delta: due > 0 ? 'Renew soon' : 'All current', deltaUp: due > 0, color: '#f59e0b',
-      sparkPoints: [0, 0, 0, 0, 0, due], sparkColor: '#f59e0b',
-    },
-    {
-      label: 'Expired', value: String(expired), sub: 'Must not perform task',
-      delta: expired > 0 ? 'Action required' : 'All clear', deltaUp: expired > 0, color: expired > 0 ? '#ef4444' : '#4ade80',
-      sparkPoints: [0, 0, 0, 0, 0, expired], sparkColor: '#ef4444',
-    },
-  ];
+  const nonCompliant = matrix.filter(m => m.overallStatus === 'non_compliant');
+  const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
+  const pendingCerts  = certs.filter(c => c.status === 'pending_verification');
 
-  const tabsWithCounts = withCounts(TABS, { matrix: mockCompetency.length, certs: certs.length });
+  const tabsWithCounts = withCounts(TABS, { matrix: matrix.length, certs: certs.length });
 
   return (
-    <div class="hse-tab hse-dash">
+    <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <PageHeader
-        icon="fa-graduation-cap"
-        module="HSE"
-        title="Training & Competency"
-        sub="Competency matrix, certifications, and renewal tracking across all workers and courses."
+        icon="fa-graduation-cap" module="HSE" title="Training & Competency"
+        sub="Worker competency, certificate verification, role requirements, and compliance readiness across all sites."
         meta={[
-          { icon: 'fa-users', label: `${mockCompetency.length} workers` },
-          { icon: 'fa-circle-check', label: `${compliance}% compliant` },
-          { icon: 'fa-clock', label: `${due} due for renewal` },
-          ...(expired > 0 ? [{ icon: 'fa-circle-xmark', label: `${expired} expired` }] : []),
+          { icon: 'fa-chart-pie', label: `${compliancePct}% compliant` },
+          { icon: 'fa-certificate', label: `${currentCerts} current certs` },
+          { icon: 'fa-hourglass-half', label: `${dueForRenewal} due for renewal` },
+          { icon: 'fa-triangle-exclamation', label: `${expired} expired` },
         ]}
       />
 
-      <MetricRow pageKey="hse.training" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+      <TrainingInsightCards active={active} />
 
-      <div class="hse-main-grid">
-        <div class="hse-left-col">
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '6px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
-
-          {active === 'matrix' && <MatrixTab />}
-          {active === 'certs'  && <CertsTab certs={certs} onAdd={() => setModal(true)} />}
         </div>
-
-        <div class="hse-right-col">
-          <div class="oq-dark-card">
-            <div class="oq-dark-header">
-              <i class="fas fa-circle-xmark" />
-              <span>Expired Certificates</span>
-              <span class="oq-dark-count">{expired}</span>
-            </div>
-            <div class="oq-dark-vertical">
-              {certs.filter(c => /expired/i.test(c.status)).slice(0, 5).map(c => (
-                <div class="oq-dark-item" key={c.ref}>
-                  <div class="icon-badge red"><i class="fas fa-certificate" /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{c.worker}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{c.course} · Expired {c.expiry}</div>
-                  </div>
-                  <span class="oq-dark-tag danger">Expired</span>
-                </div>
-              ))}
-              {expired === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No expired certificates</div>}
-            </div>
-            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
-              <i class="fas fa-clock" />
-              <span>Renewing Soon</span>
-              <span class="oq-dark-count">{due}</span>
-            </div>
-            <div class="oq-dark-vertical">
-              {certs.filter(c => /due/i.test(c.status)).slice(0, 4).map(c => (
-                <div class="oq-dark-item" key={c.ref}>
-                  <div class="icon-badge amber"><i class="fas fa-clock" /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{c.worker}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{c.course} · Due {c.expiry}</div>
-                  </div>
-                  <span class="oq-dark-tag warning">Due</span>
-                </div>
-              ))}
-              {due === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>All current</div>}
-            </div>
-          </div>
+        <div style={{ flexShrink: 0 }}>
+          <NewMenu label="Add Certificate" fill items={[
+            { label: 'Add Certificate', icon: 'fa-certificate', sub: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
+            { label: 'Assign Training', icon: 'fa-graduation-cap', sub: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
+            { label: 'Create Role Requirement', icon: 'fa-list-check', sub: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
+          ]} />
         </div>
       </div>
 
-      <HseModal
-        open={modalOpen} onClose={() => setModal(false)}
-        title="Add Certificate" sub="Record a training certificate for a worker."
-        submitLabel="Add Certificate"
-        onSubmit={() => {
-          const ref = `CERT-${1200 + certs.length}`;
-          setCerts([{ ref, worker: newWorker || 'Unknown', course: newCourse, issued: '19 Jun 2026', expiry: newExpiry || 'TBD', status: 'Current' }, ...certs]);
-          setModal(false); setWorker(''); setExpiry('');
-        }}
-      >
-        <div class="hse-form-grid">
-          <Field label="Worker name"><TextInput value={newWorker} onInput={setWorker} placeholder="Full name" /></Field>
-          <Field label="Course"><SelectInput value={newCourse} onInput={setCourse} options={[...TRAINING_COURSES]} /></Field>
-          <Field label="Expiry date"><TextInput value={newExpiry} onInput={setExpiry} placeholder="e.g. 19 Jun 2027" /></Field>
+      {/* Compact KPI spark row (under the nav) */}
+      {active === 'matrix' ? (
+        <div class="hse-spark-row">
+          <Spark label="Overall Compliance" value={`${compliancePct}%`} sub="Target 85%" color={compliancePct >= 85 ? '#22c55e' : '#f59e0b'} />
+          <Spark label="Non-compliant" value={nonCompliant.length} sub="Workers with gaps" color={nonCompliant.length > 0 ? '#ef4444' : '#22c55e'} />
+          <Spark label="Due Soon" value={dueWorkers.length} sub="Workers renewing" color="#f59e0b" />
+          <Spark label="Tracked" value={s?.trackedWorkers ?? matrix.length} sub="Workers in matrix" />
         </div>
-      </HseModal>
+      ) : (
+        <div class="hse-spark-row">
+          <Spark label="Current" value={currentCerts} sub="Valid on file" color="#22c55e" />
+          <Spark label="Due For Renewal" value={dueForRenewal} sub="Within 90 days" color="#f59e0b" />
+          <Spark label="Expired" value={expired} sub="Must not perform task" color={expired > 0 ? '#ef4444' : '#22c55e'} />
+          <Spark label="Pending" value={pendingCerts.length} sub="Awaiting verification" color="#60a5fa" />
+        </div>
+      )}
+
+      {/* Competency Matrix tab */}
+      {active === 'matrix' && (
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            <div class="vt-table-card">
+              <div class="vt-table-scroll">
+                <table class="vt-table">
+                  <thead>
+                    <tr>
+                      <th>Worker</th><th>Role</th>
+                      <th style={{ textAlign: 'center' }}>Compliance</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrix.map(m => (
+                      <tr key={m.workerId} style={{ cursor: 'pointer' }} onClick={() => setOpenWorker(m)}>
+                        <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{m.workerName}</span></td>
+                        <td class="vt-cell-subtext">{titleCase(m.roleName)}</td>
+                        <td style={{ textAlign: 'center' }}>{m.requiredCount > 0 ? `${m.compliantCount}/${m.requiredCount}` : '—'}</td>
+                        <td style={{ textAlign: 'center' }}><span class={`vt-pill ${WORKER_PILL[m.overallStatus] ?? 'is-off'}`}>{titleCase(m.overallStatus)}</span></td>
+                        <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                          <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenWorker(m)}>View</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {matrix.length === 0 && <tr><td colSpan={5} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No workers / requirements yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="hse-right-col">
+            <MatrixRail matrix={matrix} onOpen={setOpenWorker} />
+          </div>
+        </div>
+      )}
+
+      {/* Certifications tab */}
+      {active === 'certs' && (
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            <div class="vt-table-card">
+              <div class="vt-table-scroll">
+                <table class="vt-table">
+                  <thead>
+                    <tr>
+                      <th>Ref</th><th>Worker</th><th>Course</th>
+                      <th style={{ textAlign: 'center' }}>Expiry</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {certs.map(c => (
+                      <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => setOpenCert(c.id)}>
+                        <td><span class="vt-cell-mono">{c.certificate_no}</span></td>
+                        <td class="vt-cell-subtext">{c.worker_name ?? c.worker_id}</td>
+                        <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{c.course_name}</span></td>
+                        <td style={{ textAlign: 'center', color: isExpiredCert(c) ? 'var(--siomac-red)' : 'inherit', fontWeight: isExpiredCert(c) ? 600 : 400 }}>{fmtDate(c.expires_at)}</td>
+                        <td style={{ textAlign: 'center' }}><span class={`vt-pill ${CERT_PILL[c.status] ?? 'is-info'}`}>{titleCase(c.status)}</span></td>
+                        <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                          <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenCert(c.id)}>View</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {certs.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No certificates yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="hse-right-col">
+            <CertRail certs={certs} onOpen={setOpenCert} />
+          </div>
+        </div>
+      )}
+
+      <AddCertificateDialog open={addCertOpen} onClose={() => setAddCertOpen(false)} presetWorkerId={presetWorker} />
+      <AssignTrainingDialog open={assignOpen} onClose={() => setAssignOpen(false)} presetWorkerId={presetWorker} />
+      <CreateRequirementDialog open={reqOpen} onClose={() => setReqOpen(false)} />
+
+      <WorkerProfileDrawer
+        row={openWorker} onClose={() => setOpenWorker(null)}
+        onOpenCert={id => { setOpenWorker(null); setOpenCert(id); }}
+        onAssign={wid => { setPresetWorker(wid); setOpenWorker(null); setAssignOpen(true); }}
+        onAddCert={wid => { setPresetWorker(wid); setOpenWorker(null); setAddCertOpen(true); }}
+      />
+      <CertificateDetailDrawer certificateId={openCert} onClose={() => setOpenCert(null)} />
     </div>
   );
 }

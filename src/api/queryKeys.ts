@@ -242,6 +242,21 @@ export const inspectionKeys = {
   templateDetail:(id: string) => [...inspectionKeys.all, 'template', id]               as const,
 } as const;
 
+// ── HSE — Training / Competency ───────────────────────────────────────────────
+
+export const trainingKeys = {
+  all:           ['hse-training']                                                  as const,
+  matrix:        (f: Record<string, unknown>) => [...trainingKeys.all, 'matrix', f] as const,
+  stats:         () => [...trainingKeys.all, 'stats']                              as const,
+  certLists:     () => [...trainingKeys.all, 'certs']                              as const,
+  certList:      (f: Record<string, unknown>) => [...trainingKeys.certLists(), f]  as const,
+  certDetail:    (id: string) => [...trainingKeys.all, 'cert', id]                 as const,
+  competencies:  (f?: Record<string, unknown>) => [...trainingKeys.all, 'competencies', f ?? {}] as const,
+  courses:       (f?: Record<string, unknown>) => [...trainingKeys.all, 'courses', f ?? {}]       as const,
+  requirements:  (f?: Record<string, unknown>) => [...trainingKeys.all, 'requirements', f ?? {}]  as const,
+  assignments:   (f: Record<string, unknown>) => [...trainingKeys.all, 'assignments', f] as const,
+} as const;
+
 // ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
 
 export const hseIncidentKeys = {
