@@ -827,6 +827,8 @@ export interface PostMessageInput {
   threadId:      string;
   body:          string;
   attachmentIds?: string[];
+  replyToPostId?: string | null;
+  priority?:      'normal' | 'important' | 'urgent' | 'action_required';
 }
 
 export interface PostMessageResult {
@@ -850,8 +852,20 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
 
     if (!part) return { ok: false, message: 'Not an active participant in this thread' };
 
+    // Reply target (if any) must belong to the same thread.
+    if (input.replyToPostId) {
+      const { data: replyTarget } = await sb
+        .from('message_posts')
+        .select('id')
+        .eq('id', input.replyToPostId)
+        .eq('thread_id', input.threadId)
+        .maybeSingle<{ id: string }>();
+      if (!replyTarget) return { ok: false, message: 'Reply target does not belong to this thread' };
+    }
+
     const now = new Date().toISOString();
     const attachmentCount = (input.attachmentIds ?? []).length;
+    const priority = input.priority ?? 'normal';
 
     const { data: post, error: postErr } = await sb
       .from('message_posts')
@@ -860,6 +874,10 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
         author_user_id:   input.currentUserId,
         body:             input.body,
         attachment_count: attachmentCount,
+        post_type:        'message',
+        priority,
+        reply_to_post_id: input.replyToPostId ?? null,
+        delivery_status:  'sent',
       })
       .select('id, created_at')
       .single<{ id: string; created_at: string }>();
@@ -875,11 +893,12 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
         .in('id', input.attachmentIds);
     }
 
-    // Update thread last_post summary
-    const preview = input.body.slice(0, 140);
-    await sb.from('message_threads')
-      .update({ last_post_at: now, last_post_preview: preview })
-      .eq('id', input.threadId);
+    // Update thread last_post summary. An action_required post raises the thread
+    // flag so the Action-Required chip shows in the list/header.
+    const preview = input.body.slice(0, 140) || (attachmentCount > 0 ? `📎 ${attachmentCount} attachment${attachmentCount > 1 ? 's' : ''}` : '');
+    const threadPatch: Record<string, unknown> = { last_post_at: now, last_post_preview: preview };
+    if (priority === 'action_required') threadPatch.action_required = true;
+    await sb.from('message_threads').update(threadPatch).eq('id', input.threadId);
 
     // Fetch other active participants to notify
     const { data: othersData } = await sb
@@ -890,6 +909,14 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
       .is('removed_at', null) as { data: Array<{ user_id: string }> | null };
 
     const others = (othersData ?? []).map(o => o.user_id);
+
+    // Delivery receipts: one row per other participant (delivered now, unread).
+    // read_at is stamped later by markThreadRead. Powers "Read by N" + delivery state.
+    if (others.length > 0) {
+      await sb.from('message_post_receipts').insert(
+        others.map(uid => ({ post_id: post.id, user_id: uid, delivered_at: now })),
+      );
+    }
 
     if (others.length > 0) {
       // Fetch author name
@@ -1527,16 +1554,20 @@ export async function addThreadParticipants(
       .in('id', toAdd) as { data: Array<{ id: string; full_name: string | null; email: string }> | null };
     const addedNames = (addedUsers ?? []).map(u => u.full_name ?? u.email).join(', ');
 
-    // System post
+    // System-event post — rendered as a centered timeline announcement (ThreadEvent),
+    // not a message bubble. body kept as a plain-text fallback for legacy renderers.
     await sb.from('message_posts').insert({
-      thread_id:       threadId,
-      author_user_id:  null,
-      body:            `${actorName} added ${addedNames} to the conversation.`,
-      is_system:       true,
+      thread_id:            threadId,
+      author_user_id:       null,
+      body:                 `${actorName} added ${addedNames} to the conversation.`,
+      is_system:            true,
+      post_type:            'system_event',
+      system_event_type:    'participant_added',
+      system_event_payload: { actorUserId, actorName, addedUserIds: toAdd, addedUserName: addedNames },
     });
 
-    // Signal + notify added participants
-    void emitSignal(toAdd, 'messages');
+    // Signal all current participants so everyone's timeline + notify added ones.
+    void emitSignal([actorUserId, ...toAdd], 'messages');
     void emitAppEvent({
       eventType:          'communications.thread.created',
       sourceModule:       'communications',
@@ -1595,12 +1626,25 @@ export async function removeThreadParticipant(
     const actorName   = actorRes.data?.full_name   ?? actorRes.data?.email   ?? 'Someone';
     const removedName = removedRes.data?.full_name ?? removedRes.data?.email ?? 'a member';
 
+    // Self-removal reads as "left"; removing someone else reads as "removed".
+    const left = actorUserId === userId;
     await sb.from('message_posts').insert({
-      thread_id:       threadId,
-      author_user_id:  null,
-      body:            `${actorName} removed ${removedName} from the conversation.`,
-      is_system:       true,
+      thread_id:            threadId,
+      author_user_id:       null,
+      body:                 left ? `${removedName} left the conversation.` : `${actorName} removed ${removedName} from the conversation.`,
+      is_system:            true,
+      post_type:            'system_event',
+      system_event_type:    left ? 'participant_left' : 'participant_removed',
+      system_event_payload: left
+        ? { userId, userName: removedName }
+        : { actorUserId, actorName, removedUserId: userId, removedUserName: removedName },
     });
+
+    // Refresh everyone still in the thread.
+    void emitSignal(await (async () => {
+      const { data } = await sb.from('message_participants').select('user_id').eq('thread_id', threadId).is('removed_at', null) as { data: Array<{ user_id: string }> | null };
+      return (data ?? []).map(r => r.user_id);
+    })(), 'messages');
 
     return { ok: true };
   } catch (e) {

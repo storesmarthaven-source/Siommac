@@ -528,8 +528,12 @@ router.post('/communications/messages/createThread', async c => {
 // POST /api/communications/messages/post
 const PostMessageSchema = z.object({
   threadId:      z.string().uuid(),
-  body:          z.string().min(1).max(10000),
+  // Body OR at least one attachment required (enforced below) — allow empty body
+  // when sending an attachment-only message.
+  body:          z.string().max(10000).optional(),
   attachmentIds: z.array(z.string().uuid()).optional(),
+  replyToPostId: z.string().uuid().nullable().optional(),
+  priority:      z.enum(['normal','important','urgent','action_required']).optional(),
 });
 
 router.post('/communications/messages/post', async c => {
@@ -538,14 +542,21 @@ router.post('/communications/messages/post', async c => {
   const v = zv(c, PostMessageSchema, body.args);
   if (!v.ok) return v.response;
 
+  const text = (v.data.body ?? '').trim();
+  if (!text && (v.data.attachmentIds?.length ?? 0) === 0) {
+    return c.json({ success: false, message: 'Message requires text or at least one attachment' }, 400 as 200);
+  }
+
   const result = await postMessage({
     currentUserId: user.id,
     threadId:      v.data.threadId,
-    body:          v.data.body,
+    body:          text,
     attachmentIds: v.data.attachmentIds,
+    replyToPostId: v.data.replyToPostId ?? null,
+    priority:      v.data.priority,
   });
   if (!result.ok) {
-    const status = result.message === 'Not an active participant in this thread' ? 403 as 200 : 500 as 200;
+    const status = /participant|belong/.test(result.message ?? '') ? 403 as 200 : 500 as 200;
     return c.json({ success: false, message: result.message ?? 'Failed' }, status);
   }
   return c.json({ success: true, postId: result.postId, threadId: result.threadId, createdAt: result.createdAt });
