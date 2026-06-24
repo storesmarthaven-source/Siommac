@@ -32,8 +32,7 @@ insert into public.role_permissions (role_name, permission) values
   ('manager', 'hse.ptw.approve'),
   ('manager', 'hse.ptw.activate'),
 
-  -- employee: view only + can create/submit their own permits
-  ('employee', 'hse.ptw.view'),
-  ('employee', 'hse.ptw.create')
+  -- employee: view only (permit creation is supervisor+ per the code catalogue)
+  ('employee', 'hse.ptw.view')
 
 on conflict do nothing;
