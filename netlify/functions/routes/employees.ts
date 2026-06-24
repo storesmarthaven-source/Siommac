@@ -299,4 +299,27 @@ router.post('/listAssignableRoles', async c => {
   return c.json({ success: true, roles: (data ?? []).map(r => ({ name: r.name, label: r.label })) });
 });
 
+/**
+ * Lightweight active-user directory for assignment / picker dropdowns
+ * (assignee, reviewer, owner, worker). Any authenticated user may read it —
+ * it exposes only id / name / role / department, no sensitive fields, no
+ * attendance joins or signed-image work. This is the canonical primitive for
+ * every "pick a person" control; do NOT use the heavy /listEmployees for that.
+ */
+router.post('/listUserOptions', async c => {
+  await requireUser(c);
+  const { data, error } = await sb
+    .from('app_users')
+    .select('id, full_name, username, role, department_id')
+    .eq('status', 'active')
+    .neq('role', 'superadmin')
+    .order('full_name');
+  if (error) throw new Error('Failed to load user directory: ' + error.message);
+  return c.json({
+    success: true,
+    data: ((data ?? []) as { id: string; full_name: string | null; username: string; role: string | null; department_id: string | null }[])
+      .map(u => ({ id: u.id, full_name: u.full_name, username: u.username, role: u.role, departmentId: u.department_id })),
+  });
+});
+
 export default router;
