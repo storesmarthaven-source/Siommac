@@ -160,6 +160,7 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 | Section header in content | `SectionHead` (this is where action buttons go) |
 | Table | `RegisterTable` |
 | Create flow | `Wizard`; single dialog `Modal`; detail `Drawer` |
+| Drawer Overview field grid | `DetailGrid` — `items=[{ icon, label, value }]` (icon · label · value cells) |
 | Form | `FormGrid` + `Field` + inputs |
 | Status / risk | `StatusPill`, `riskPill` |
 | Layout inside a tab | `SplitLayout` (main + aside) |
