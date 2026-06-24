@@ -17,7 +17,7 @@ import {
   usePostMessage, useArchiveThread, useCommsSummary,
   useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
   useMessageAttachmentUploadUrl, useCreateMessageAttachment,
-  usePinMessage,
+  usePinMessage, useOnlineUsers, usePinnedSummary,
   ThreadAccessError,
   type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
   type MessageAttachment, type MessagePostRow,
@@ -52,33 +52,6 @@ function fileIcon(ct: string | null | undefined): string {
   if (ct.includes('excel') || ct.includes('spreadsheet') || ct === 'text/csv') return 'fa-file-excel';
   if (ct.startsWith('text/'))               return 'fa-file-lines';
   return 'fa-file';
-}
-
-/** A single downloadable attachment chip. */
-function AttachChip({ a }: { a: MessageAttachment }): VNode {
-  const href = a.url ?? undefined;
-  const Tag  = href ? 'a' : 'span';
-  return (
-    <Tag
-      href={href}
-      download={a.fileName}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={a.fileName}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: '5px',
-        padding: '3px 9px', borderRadius: '6px',
-        background: 'var(--bg-subtle, #f4f5f7)', border: '1px solid var(--border)',
-        fontSize: '0.72rem', color: 'var(--siomac-navy)', textDecoration: 'none',
-        cursor: href ? 'pointer' : 'default', flexShrink: 0,
-      }}>
-      <i class={`fas ${fileIcon(a.contentType)}`} style={{ fontSize: '0.68rem' }} />
-      <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {a.fileName}
-      </span>
-      {a.sizeBytes != null && <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{fmtBytes(a.sizeBytes)}</span>}
-    </Tag>
-  );
 }
 
 function moduleLabel(m: string | null | undefined): string {
@@ -117,6 +90,77 @@ function TagChip({ label, tone = 'info' }: { label: string; tone?: 'info' | 'pri
   );
 }
 
+// ── Rich attachment rendering (image grid + document cards) ─────────────────────
+
+function attTypeOf(a: MessageAttachment): string {
+  const ct  = (a.contentType ?? '').toLowerCase();
+  const ext = a.fileName.split('.').pop()?.toLowerCase() ?? '';
+  if (ct.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) return 'image';
+  if (ext === 'pdf' || ct === 'application/pdf')        return 'pdf';
+  if (['doc', 'docx'].includes(ext))                    return 'word';
+  if (['xls', 'xlsx', 'csv'].includes(ext))             return 'excel';
+  if (['ppt', 'pptx'].includes(ext))                    return 'powerpoint';
+  if (['txt', 'md', 'rtf'].includes(ext))               return 'text';
+  if (['zip', 'rar', '7z', 'gz'].includes(ext))         return 'archive';
+  return 'document';
+}
+function attIcon(t: string): { label: string; color: string } {
+  switch (t) {
+    case 'pdf':        return { label: 'PDF', color: '#ef4444' };
+    case 'word':       return { label: 'DOC', color: '#2563eb' };
+    case 'excel':      return { label: 'XLS', color: '#16a34a' };
+    case 'powerpoint': return { label: 'PPT', color: '#ea580c' };
+    case 'text':       return { label: 'TXT', color: '#64748b' };
+    case 'archive':    return { label: 'ZIP', color: '#7c3aed' };
+    default:           return { label: 'FILE', color: '#132957' };
+  }
+}
+
+/** Inline image grid (up to 4 + overflow) and document cards for a post. */
+function MessageAttachments({ attachments }: { attachments: MessageAttachment[] }): VNode | null {
+  if (!attachments.length) return null;
+  const images = attachments.filter(a => attTypeOf(a) === 'image');
+  const docs   = attachments.filter(a => attTypeOf(a) !== 'image');
+  const shown  = images.slice(0, 4);
+  const more   = images.length - shown.length;
+  return (
+    <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {images.length > 0 && (
+        <div style={{ display: 'grid', gap: '4px', maxWidth: '320px',
+          gridTemplateColumns: images.length === 1 ? '1fr' : 'repeat(2, 1fr)' }}>
+          {shown.map((im, i) => (
+            <a key={im.id} href={im.url ?? undefined} target="_blank" rel="noopener noreferrer"
+              style={{ position: 'relative', display: 'block', borderRadius: '10px', overflow: 'hidden', background: '#eef3fa', minHeight: '90px' }}>
+              {im.url
+                ? <img src={im.url} alt={im.fileName} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxHeight: '170px' }} />
+                : <span style={{ display: 'grid', placeItems: 'center', height: '90px', color: 'var(--text-muted)' }}>IMG</span>}
+              {i === 3 && more > 0 && (
+                <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(19,41,87,.6)', color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>+{more}</span>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+      {docs.map(d => {
+        const t  = attTypeOf(d);
+        const ic = attIcon(t);
+        return (
+          <a key={d.id} href={d.url ?? undefined} download={d.fileName} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', gap: '10px', alignItems: 'center', maxWidth: '320px',
+              padding: '8px', border: '1px solid var(--border)', borderRadius: '10px', background: '#fff', textDecoration: 'none' }}>
+            <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: ic.color, color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.58rem', fontWeight: 800 }}>{ic.label}</span>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.fileName}</span>
+              <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)' }}>{t.toUpperCase()}{d.sizeBytes ? ` · ${fmtBytes(d.sizeBytes)}` : ''}</span>
+            </span>
+            <i class="fas fa-download" style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }} />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Thread list (left pane) ────────────────────────────────────────────────────
 
 function ThreadList({ threads, selectedId, onSelect, isLoading }: {
@@ -126,6 +170,8 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
   isLoading:  boolean;
 }): VNode {
   const myId = useSessionStore(s => s.userId);
+  const { data: online = [] } = useOnlineUsers();
+  const { data: pinned = [] } = usePinnedSummary();
   const [search, setSearch] = useState('');
   const [chips, setChips] = useState({ unread: false, groups: false, records: false });
   const toggle = (k: 'unread' | 'groups' | 'records') => setChips(c => ({ ...c, [k]: !c[k] }));
@@ -182,6 +228,48 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
           );
         })}
       </div>
+
+      {/* Online now */}
+      {online.length > 0 && (
+        <div style={{ padding: '0 12px 10px', flexShrink: 0 }}>
+          <div style={{ fontSize: '0.64rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>Online now</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {online.slice(0, 7).map(u => (
+              <div key={u.userId} title={u.displayName ?? ''} style={{ position: 'relative', width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden',
+                background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {u.profileImage
+                  ? <img src={u.profileImage} alt={u.displayName ?? ''} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{u.initials}</span>}
+                <span style={{ position: 'absolute', right: '-1px', bottom: 0, width: '9px', height: '9px', borderRadius: '50%', border: '2px solid #fff', background: u.status === 'away' ? '#f59e0b' : '#38c878' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pinned conversations */}
+      {pinned.length > 0 && (
+        <div style={{ padding: '0 12px 8px', flexShrink: 0, borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+          <div style={{ fontSize: '0.64rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>
+            <i class="fas fa-thumbtack" style={{ fontSize: '0.58rem' }} /> Pinned
+          </div>
+          {pinned.slice(0, 3).map(p => {
+            const t = threads.find(x => x.id === p.threadId);
+            const label = p.subject ?? (t ? threadTitle(t, myId) : 'Conversation');
+            return (
+              <div key={p.threadId} onClick={() => t && onSelect(t)} style={{ display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-surface)', marginBottom: '4px' }}>
+                <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--siomac-navy)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.6rem', fontWeight: 700, flexShrink: 0 }}>{(label[0] ?? '?').toUpperCase()}</span>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                  <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.note ?? t?.lastPostPreview ?? ''}</span>
+                </span>
+                {t && t.unreadCount > 0 && <span style={{ minWidth: '16px', height: '16px', borderRadius: '8px', background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.56rem', fontWeight: 700, display: 'grid', placeItems: 'center', padding: '0 4px' }}>{t.unreadCount}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {isLoading && (
@@ -528,11 +616,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                   {isDeleted ? 'This message was deleted.' : post.body}
                 </div>
 
-                {attachments.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
-                    {attachments.map(a => <AttachChip key={a.id} a={a} />)}
-                  </div>
-                )}
+                <MessageAttachments attachments={attachments} />
 
                 {!isDeleted && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '0.66rem', color: 'var(--text-muted)' }}>
