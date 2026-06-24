@@ -38,11 +38,30 @@ export const MESSAGES_BUCKET = 'message-attachments';
  * area the planned redesign should revisit.)
  */
 function cachedProfileUrl(
-  u: { signed_url?: string | null; signed_url_expires_at?: string | null } | null | undefined,
+  u: {
+    profile_image_thumb_url?: string | null;
+    profile_image_url?:       string | null;
+    profile_image?:           string | null;
+    signed_url?:              string | null;
+    signed_url_expires_at?:   string | null;
+  } | null | undefined,
 ): string | null {
-  if (!u?.signed_url) return null;
+  if (!u) return null;
+  // Prefer the new public avatar (no signing, never stale, same for every viewer).
+  if (u.profile_image_thumb_url) return u.profile_image_thumb_url;
+  if (u.profile_image_url)       return u.profile_image_url;
+  if (u.profile_image && u.profile_image !== '__removed__' && /^https?:\/\//.test(u.profile_image)) return u.profile_image;
+  // Legacy fallback: a still-valid cached signed URL (private profile-photos bucket).
+  if (!u.signed_url) return null;
   const exp = u.signed_url_expires_at ? new Date(u.signed_url_expires_at).getTime() : 0;
   return exp > Date.now() ? u.signed_url : null;
+}
+
+/** Two-letter initials fallback for an avatar. */
+function initialsOf(name: string | null | undefined): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
 }
 
 // ── Thread read-access model (participant-default) ──────────────────────────────
@@ -1070,14 +1089,14 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     const { data: allParticipants } = threadIdSet.length > 0
       ? await sb
           .from('message_participants')
-          .select('thread_id, user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at)')
+          .select('thread_id, user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at, profile_image_url, profile_image_thumb_url, profile_image)')
           .in('thread_id', threadIdSet)
           .is('removed_at', null) as {
             data: Array<{
               thread_id: string;
               user_id:   string;
               role:      string;
-              app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null };
+              app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
             }> | null;
           }
       : { data: null };
@@ -1256,13 +1275,13 @@ export async function getThread(threadId: string, userId: string, userRole?: str
 
     const { data: participants } = await sb
       .from('message_participants')
-      .select('user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at)')
+      .select('user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at, profile_image_url, profile_image_thumb_url, profile_image)')
       .eq('thread_id', threadId)
       .is('removed_at', null) as {
         data: Array<{
           user_id:   string;
           role:      string;
-          app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null };
+          app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
         }> | null;
       };
 
@@ -1337,21 +1356,31 @@ export async function getThreadPosts(
     const limit = opts.limit ?? 50;
 
     type RawPost = {
-      id:              string;
-      thread_id:       string;
-      author_user_id:  string | null;
-      body:            string;
-      is_system:       boolean;
+      id:               string;
+      thread_id:        string;
+      author_user_id:   string | null;
+      body:             string | null;
+      is_system:        boolean;
       attachment_count: number;
-      edited_at:       string | null;
-      deleted_at:      string | null;
-      created_at:      string;
-      app_users:       { full_name: string | null; email: string } | null;
+      edited_at:        string | null;
+      deleted_at:       string | null;
+      created_at:       string;
+      post_type:            string | null;
+      system_event_type:    string | null;
+      system_event_payload: Record<string, unknown> | null;
+      priority:             string | null;
+      reply_to_post_id:     string | null;
+      delivery_status:      string | null;
+      app_users: {
+        full_name: string | null; email: string; role: string | null;
+        profile_image_url: string | null; profile_image_thumb_url: string | null;
+        profile_image: string | null; profile_image_version: number | null;
+      } | null;
     };
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, app_users!author_user_id(full_name, email)')
+      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
       .limit(limit);
@@ -1393,20 +1422,64 @@ export async function getThreadPosts(
       attachMap.set(a.post_id, list);
     }
 
-    const resultPosts: PostRow[] = (posts ?? []).map(p => ({
-      id:              p.id,
-      threadId:        p.thread_id,
-      authorUserId:    p.author_user_id,
-      authorName:      p.app_users?.full_name ?? null,
-      authorEmail:     p.app_users?.email ?? null,
-      body:            p.body,
-      isSystem:        p.is_system,
-      attachmentCount: p.attachment_count,
-      editedAt:        p.edited_at,
-      deletedAt:       p.deleted_at,
-      createdAt:       p.created_at,
-      attachments:     attachMap.get(p.id) ?? [],
-    }));
+    // Rich-context batches: reply-target previews, read-by counts (receipts),
+    // and which posts are pinned.
+    const replyIds = [...new Set((posts ?? []).map(p => p.reply_to_post_id).filter((x): x is string => !!x))];
+    const replyMap = new Map<string, { id: string; authorName: string | null; preview: string }>();
+    if (replyIds.length > 0) {
+      const { data: rp } = await sb
+        .from('message_posts')
+        .select('id, body, app_users!author_user_id(full_name, email)')
+        .in('id', replyIds) as { data: Array<{ id: string; body: string | null; app_users: { full_name: string | null; email: string } | null }> | null };
+      for (const r of rp ?? []) replyMap.set(r.id, { id: r.id, authorName: r.app_users?.full_name ?? null, preview: (r.body ?? '').slice(0, 120) });
+    }
+
+    const readCountMap = new Map<string, number>();
+    const pinnedPosts  = new Set<string>();
+    if (postIds.length > 0) {
+      const [receiptsRes, pinsRes] = await Promise.all([
+        sb.from('message_post_receipts').select('post_id, read_at').in('post_id', postIds),
+        sb.from('message_pins').select('post_id').eq('pin_type', 'post').is('unpinned_at', null).in('post_id', postIds),
+      ]);
+      for (const r of ((receiptsRes as { data: Array<{ post_id: string; read_at: string | null }> | null }).data) ?? []) {
+        if (r.read_at) readCountMap.set(r.post_id, (readCountMap.get(r.post_id) ?? 0) + 1);
+      }
+      for (const pin of ((pinsRes as { data: Array<{ post_id: string | null }> | null }).data) ?? []) {
+        if (pin.post_id) pinnedPosts.add(pin.post_id);
+      }
+    }
+
+    const resultPosts: PostRow[] = (posts ?? []).map(p => {
+      const au = p.app_users;
+      const authorName = au?.full_name ?? null;
+      return {
+        id:              p.id,
+        threadId:        p.thread_id,
+        authorUserId:    p.author_user_id,
+        authorName,
+        authorEmail:     au?.email ?? null,
+        body:            p.body,
+        isSystem:        p.is_system,
+        attachmentCount: p.attachment_count,
+        editedAt:        p.edited_at,
+        deletedAt:       p.deleted_at,
+        createdAt:       p.created_at,
+        attachments:     attachMap.get(p.id) ?? [],
+        // ── Rich Add-On ──
+        postType:           (p.post_type ?? 'message') as PostRow['postType'],
+        systemEventType:    (p.system_event_type ?? null) as PostRow['systemEventType'],
+        systemEventPayload: p.system_event_payload ?? {},
+        authorRoleKey:      au?.role ?? null,
+        authorProfileImage: cachedProfileUrl(au),
+        authorInitials:     initialsOf(authorName ?? au?.email),
+        authorProfileImageVersion: au?.profile_image_version ?? 1,
+        priority:           (p.priority ?? 'normal') as PostRow['priority'],
+        isPinned:           pinnedPosts.has(p.id),
+        replyToPost:        p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null,
+        deliveryStatus:     (p.delivery_status ?? undefined) as PostRow['deliveryStatus'],
+        readByCount:        readCountMap.get(p.id) ?? 0,
+      };
+    });
 
     const lastPost = resultPosts[resultPosts.length - 1];
     const nextCursor = resultPosts.length === limit && lastPost ? lastPost.createdAt : null;
@@ -1532,11 +1605,20 @@ export async function getAttachmentUrl(
 // ── markThreadRead ─────────────────────────────────────────────────────────────
 
 export async function markThreadRead(threadId: string, userId: string): Promise<void> {
+  const nowIso = new Date().toISOString();
   await sb.from('message_participants')
-    .update({ last_read_at: new Date().toISOString() })
+    .update({ last_read_at: nowIso })
     .eq('thread_id', threadId)
     .eq('user_id', userId)
     .is('removed_at', null);
+
+  // Stamp read receipts for this user's delivered-but-unread posts in the thread
+  // (powers each post's "Read by N"). Best-effort.
+  const { data: tp } = await sb.from('message_posts').select('id').eq('thread_id', threadId) as { data: Array<{ id: string }> | null };
+  const ids = (tp ?? []).map(r => r.id);
+  if (ids.length > 0) {
+    await sb.from('message_post_receipts').update({ read_at: nowIso }).eq('user_id', userId).is('read_at', null).in('post_id', ids);
+  }
 
   void emitSignal([userId], 'summary');
 }
@@ -1772,12 +1854,12 @@ export type RecipientProfile = MessageRecipient;
 
 export async function getMessageRecipients(userId: string, query?: string | null): Promise<RecipientProfile[]> {
   try {
-    type UserRow = { id: string; full_name: string | null; email: string; department_id: string | null; role: string; signed_url: string | null; signed_url_expires_at: string | null };
+    type UserRow = { id: string; full_name: string | null; email: string; department_id: string | null; role: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
 
     // Build query without complex cast — cast only the awaited result.
     const baseQ = sb
       .from('app_users')
-      .select('id, full_name, email, department_id, role, signed_url, signed_url_expires_at')
+      .select('id, full_name, email, department_id, role, signed_url, signed_url_expires_at, profile_image_url, profile_image_thumb_url, profile_image')
       .eq('status', 'active')
       .neq('id', userId)
       .order('full_name', { ascending: true })

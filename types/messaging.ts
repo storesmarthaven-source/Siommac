@@ -83,6 +83,9 @@ export interface MessagePost {
   systemEventType?:     MessageSystemEventType | null;
   systemEventPayload?:  Record<string, unknown>;
   authorRoleKey?:       string | null;
+  authorProfileImage?:        string | null;
+  authorInitials?:            string;
+  authorProfileImageVersion?: number;
   priority?:            MessagePriority;
   isPinned?:            boolean;
   replyToPost?: {
