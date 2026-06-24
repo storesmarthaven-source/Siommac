@@ -8,6 +8,8 @@
 
 import { type VNode } from 'preact';
 import type { MessageThreadListItem } from '@api/communications';
+import { useSessionStore } from '@store/session';
+import { threadTitle, threadAvatarParticipant } from './threadDisplay';
 
 function initials(name: string | null | undefined): string {
   if (!name) return '?';
@@ -32,24 +34,25 @@ export function MessageDropdownItem({ thread, onOpen }: {
   thread:  MessageThreadListItem;
   onOpen:  (t: MessageThreadListItem) => void;
 }): VNode {
-  const isUnread    = thread.unread_count > 0;
-  const displayName = thread.subject
-    ?? thread.participants.filter(p => p.role !== 'self').map(p => p.full_name ?? p.username ?? '?').join(', ')
-    ?? 'Thread';
-  const preview   = thread.last_post_body ?? '';
-  const timeStr   = relativeTime(thread.last_post_at ?? thread.created_at);
+  const myId        = useSessionStore(s => s.userId);
+  const isUnread    = thread.unreadCount > 0;
+  const displayName = threadTitle(thread, myId);
+  const preview   = thread.lastPostPreview ?? '';
+  const timeStr   = relativeTime(thread.lastPostAt ?? thread.createdAt);
 
-  // Avatar: first non-self participant's image or initials
-  const firstParticipant = thread.participants.find(p => p.role !== 'self') ?? thread.participants[0];
-  const avatarUrl  = firstParticipant?.profile_image ?? null;
-  const avatarText = initials(firstParticipant?.full_name ?? firstParticipant?.username);
+  // Avatar: the OTHER person (excluded by id, not by a non-existent 'self' role).
+  const firstParticipant = threadAvatarParticipant(thread.participants, myId);
+  const avatarUrl  = firstParticipant?.profileImage ?? null;
+  const avatarText = initials(firstParticipant?.displayName ?? firstParticipant?.username);
 
   return (
     <div
       onClick={() => onOpen(thread)}
       class={`nc-row${isUnread ? ' is-unread' : ''}`}
       style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '16px 14px',
-        borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+        borderBottom: '1px solid var(--border)', cursor: 'pointer',
+        background: isUnread ? 'rgba(27,45,85,0.06)' : 'transparent',
+        borderLeft: isUnread ? '3px solid var(--siomac-navy)' : '3px solid transparent' }}
     >
       {/* Avatar */}
       <div style={{ width: '42px', height: '42px', borderRadius: '50%', flexShrink: 0,
@@ -63,7 +66,7 @@ export function MessageDropdownItem({ thread, onOpen }: {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ flex: 1, minWidth: 0, fontSize: '0.85rem', fontWeight: isUnread ? 600 : 500,
+          <span style={{ flex: 1, minWidth: 0, fontSize: '0.85rem', fontWeight: isUnread ? 700 : 500,
             color: 'var(--siomac-navy)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {displayName}
           </span>
@@ -74,7 +77,7 @@ export function MessageDropdownItem({ thread, onOpen }: {
             <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
               background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.62rem', fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-              {thread.unread_count > 9 ? '9+' : thread.unread_count}
+              {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
             </span>
           )}
         </div>

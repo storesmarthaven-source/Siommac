@@ -17,11 +17,16 @@ import {
   usePostMessage, useArchiveThread, useCommsSummary,
   useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
   useMessageAttachmentUploadUrl, useCreateMessageAttachment,
+  ThreadAccessError,
   type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
   type MessageAttachment,
 } from '@api/communications';
 import { useSessionStore } from '@store/session';
+import { useCan } from '@lib/permissions';
 import { ComposeThreadDialog } from './ComposeThreadDialog';
+import { AccessThreadDialog } from './AccessThreadDialog';
+import { ComplianceBrowser } from './ComplianceBrowser';
+import { threadTitle, threadAvatarParticipant, otherParticipants } from './threadDisplay';
 
 const TABS: AreaTab[] = [
   { key: 'inbox',    label: 'Inbox',    icon: 'fa-inbox' },
@@ -83,29 +88,26 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
   onSelect:   (t: MessageThreadListItem) => void;
   isLoading:  boolean;
 }): VNode {
+  const myId = useSessionStore(s => s.userId);
   const [search, setSearch] = useState('');
   const [chips, setChips] = useState({ unread: false, groups: false, records: false });
   const toggle = (k: 'unread' | 'groups' | 'records') => setChips(c => ({ ...c, [k]: !c[k] }));
 
   const filtered = threads.filter(t => {
-    if (chips.unread  && !(t.unread_count > 0))     return false;
-    if (chips.groups  && !(t.participant_count > 2)) return false;
-    if (chips.records && !t.source_module)          return false;
+    if (chips.unread  && !(t.unreadCount > 0))     return false;
+    if (chips.groups  && !(t.participantCount > 2)) return false;
+    if (chips.records && !t.sourceModule)          return false;
     if (search.trim()) {
       const q = search.toLowerCase();
       const hit = (t.subject ?? '').toLowerCase().includes(q)
-        || t.participants.some(p => (p.full_name ?? '').toLowerCase().includes(q))
-        || (t.last_post_body ?? '').toLowerCase().includes(q);
+        || t.participants.some(p => (p.displayName ?? '').toLowerCase().includes(q))
+        || (t.lastPostPreview ?? '').toLowerCase().includes(q);
       if (!hit) return false;
     }
     return true;
   });
 
-  function displayName(t: MessageThreadListItem): string {
-    return t.subject
-      ?? t.participants.filter(p => p.role !== 'self').map(p => p.full_name ?? p.username ?? '?').join(', ')
-      ?? 'Thread';
-  }
+  const displayName = (t: MessageThreadListItem): string => threadTitle(t, myId);
 
   function relTime(iso: string | null | undefined): string {
     if (!iso) return '';
@@ -159,16 +161,17 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
         )}
         {filtered.map(t => {
           const isSelected = t.id === selectedId;
-          const isUnread   = t.unread_count > 0;
+          const isUnread   = t.unreadCount > 0;
           const name       = displayName(t);
-          const firstP     = t.participants.find(p => p.role !== 'self') ?? t.participants[0];
-          const ava        = firstP?.full_name ?? firstP?.username ?? '?';
+          const firstP     = threadAvatarParticipant(t.participants, myId);
+          const ava        = firstP?.displayName ?? firstP?.username ?? '?';
           const iniText    = ((ava[0] ?? '').toUpperCase());
           return (
             <div key={t.id} onClick={() => onSelect(t)}
               style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer',
-                background: isSelected ? 'rgba(27,45,85,0.07)' : 'transparent',
-                borderLeft: isSelected ? '3px solid var(--siomac-navy)' : '3px solid transparent' }}>
+                background: isSelected ? 'rgba(27,45,85,0.07)' : isUnread ? 'rgba(27,45,85,0.045)' : 'transparent',
+                borderLeft: isSelected ? '3px solid var(--siomac-navy)'
+                  : isUnread ? '3px solid var(--siomac-gold, #FFB712)' : '3px solid transparent' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
                   background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -181,19 +184,19 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
                       {name}
                     </span>
                     <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-                      {relTime(t.last_post_at ?? t.created_at)}
+                      {relTime(t.lastPostAt ?? t.createdAt)}
                     </span>
                     {isUnread && (
                       <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
                         background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-                        {t.unread_count > 9 ? '9+' : t.unread_count}
+                        {t.unreadCount > 9 ? '9+' : t.unreadCount}
                       </span>
                     )}
                   </div>
                   <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)', overflow: 'hidden',
                     textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
-                    {t.last_post_body ?? ''}
+                    {t.lastPostPreview ?? ''}
                   </div>
                 </div>
               </div>
@@ -226,7 +229,10 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   const [pending, setPending]         = useState<PendingAttachment[]>([]);
   const fileInputRef                  = useRef<HTMLInputElement>(null);
 
-  const { data: posts = [], isLoading } = useThreadPosts(thread.id);
+  const myId = useSessionStore(s => s.userId);
+  const { data: posts = [], isLoading, error, refetch } = useThreadPosts(thread.id);
+  const [accessOpen, setAccessOpen] = useState(false);
+  const accessErr   = error instanceof ThreadAccessError ? error : null;
   const postMsg     = usePostMessage();
   const archive     = useArchiveThread();
   const markRead    = useMarkThreadRead();
@@ -235,7 +241,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
 
   // Mark read when thread opens
   useEffect(() => {
-    if (thread.unread_count > 0) markRead.mutate(thread.id);
+    if (thread.unreadCount > 0) markRead.mutate(thread.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.id]);
 
@@ -311,9 +317,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
     }
   }
 
-  const displayName = thread.subject
-    ?? thread.participants.filter(p => p.role !== 'self').map(p => p.full_name ?? p.username ?? '?').join(', ')
-    ?? 'Thread';
+  const displayName = threadTitle(thread, myId);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -326,17 +330,17 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
             {displayName}
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '1px' }}>
-            {thread.participant_count} participants
-            {thread.source_module ? ` · ${thread.source_module}` : ''}
+            {thread.participantCount} participants
+            {thread.sourceModule ? ` · ${thread.sourceModule}` : ''}
           </div>
         </div>
         <button
-          onClick={() => archive.mutate({ threadId: thread.id, archived: !thread.is_archived })}
+          onClick={() => archive.mutate({ threadId: thread.id, archived: !thread.isArchived })}
           disabled={archive.isPending}
           style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '7px',
             cursor: 'pointer', color: 'var(--text-muted)', padding: '5px 10px', fontSize: '0.76rem' }}
-          title={thread.is_archived ? 'Unarchive' : 'Archive'}>
-          <i class={`fas ${thread.is_archived ? 'fa-inbox' : 'fa-box-archive'}`} />
+          title={thread.isArchived ? 'Unarchive' : 'Archive'}>
+          <i class={`fas ${thread.isArchived ? 'fa-inbox' : 'fa-box-archive'}`} />
         </button>
         {onToggleDetails && (
           <button onClick={onToggleDetails}
@@ -353,17 +357,47 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
         {isLoading && (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>
         )}
-        {posts.map(post => {
-          // Backend returns camelCase (PostRow). Support both camelCase and snake_case for safety.
-          const isSystem   = post.isSystem ?? post.is_system ?? false;
-          const isDeleted  = post.deletedAt != null || (post as { is_deleted?: boolean }).is_deleted === true;
-          const isEdited   = post.editedAt != null || (post as { is_edited?: boolean }).is_edited === true;
-          const createdAt  = post.createdAt ?? post.created_at;
-          const authorName = post.authorName
-            ?? post.author_profile?.full_name
-            ?? post.author_profile?.username
-            ?? (isSystem ? 'System' : 'Unknown');
-          const profileImg = post.author_profile?.profile_image ?? null;
+
+        {/* Access denied — compliance flow available */}
+        {!isLoading && accessErr?.code === 'compliance_required' && (
+          <div style={{ margin: 'auto', maxWidth: '420px', textAlign: 'center', display: 'flex',
+            flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '24px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(27,45,85,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i class="fas fa-user-shield" style={{ fontSize: '1.5rem', color: 'var(--siomac-navy)' }} />
+            </div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>
+              This is a private conversation
+            </div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              You are not a participant. Reading it requires controlled, audited compliance
+              access — your name, the time, and your reason will be logged.
+            </div>
+            <button class="hse-btn primary" onClick={() => setAccessOpen(true)}>
+              <i class="fas fa-key" /> Request Access
+            </button>
+          </div>
+        )}
+
+        {/* Access denied — no compliance capability */}
+        {!isLoading && accessErr?.code === 'forbidden' && (
+          <div style={{ margin: 'auto', maxWidth: '380px', textAlign: 'center', display: 'flex',
+            flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '24px', color: 'var(--text-muted)' }}>
+            <i class="fas fa-lock" style={{ fontSize: '1.6rem', opacity: 0.4 }} />
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>No access</div>
+            <div style={{ fontSize: '0.8rem' }}>
+              You don't have access to this conversation. Only its participants can view it.
+            </div>
+          </div>
+        )}
+
+        {!accessErr && posts.map(post => {
+          const isSystem   = post.isSystem;
+          const isDeleted  = post.deletedAt != null;
+          const isEdited   = post.editedAt != null;
+          const createdAt  = post.createdAt;
+          const authorName = post.authorName ?? (isSystem ? 'System' : 'Unknown');
+          const profileImg: string | null = null;
           const iniText    = ((authorName[0] ?? '').toUpperCase());
           const attachments: MessageAttachment[] = Array.isArray(post.attachments) ? post.attachments : [];
 
@@ -423,7 +457,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
       </div>
 
       {/* Composer */}
-      {!thread.is_archived && (
+      {!thread.isArchived && !accessErr && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           {/* Pending attachment chips */}
           {pending.length > 0 && (
@@ -498,13 +532,21 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
           </div>
         </div>
       )}
-      {thread.is_archived && (
+      {thread.isArchived && (
         <div style={{ padding: '10px 18px', borderTop: '1px solid var(--border)', flexShrink: 0,
           background: 'var(--bg-surface)', fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center' }}>
           <i class="fas fa-box-archive" style={{ marginRight: '5px' }} />
           This thread is archived. Unarchive to send messages.
         </div>
       )}
+
+      {/* Compliance access flow — only reachable when the read-gate denied access */}
+      <AccessThreadDialog
+        open={accessOpen}
+        threadId={thread.id}
+        onClose={() => setAccessOpen(false)}
+        onGranted={() => { void refetch(); }}
+      />
     </div>
   );
 }
@@ -539,14 +581,14 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
   const { data: detail }   = useThread(thread.id);
   const { data: allPosts = [] } = useThreadPosts(thread.id);
   const participants: MessageParticipantProfile[] = detail?.participants ?? thread.participants;
-  const isOwner = thread.role === 'owner';
+  const isOwner = thread.myRole === 'owner';
 
   // Flatten all attachments from all posts for the Files panel
   const allFiles: (MessageAttachment & { createdAt: string; authorName: string | null })[] = [];
   for (const post of allPosts) {
     const postAttachments: MessageAttachment[] = Array.isArray(post.attachments) ? post.attachments : [];
-    const createdAt = post.createdAt ?? post.created_at ?? '';
-    const authorName = post.authorName ?? post.author_profile?.full_name ?? null;
+    const createdAt = post.createdAt ?? '';
+    const authorName = post.authorName ?? null;
     for (const a of postAttachments) {
       allFiles.push({ ...a, createdAt, authorName });
     }
@@ -558,31 +600,31 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
   const [addOpen, setAddOpen] = useState(false);
   const [q, setQ] = useState('');
   const { data: recipients = [] } = useMessageRecipients(q);
-  const existing = new Set(participants.map(p => p.user_id));
-  const candidates = recipients.filter(r => !existing.has(r.user_id)).slice(0, 6);
+  const existing = new Set(participants.map(p => p.userId));
+  const candidates = recipients.filter(r => !existing.has(r.userId)).slice(0, 6);
 
-  const typeLabel = thread.thread_type === 'group'  ? 'Group conversation'
-                  : thread.thread_type === 'record' ? 'Record discussion'
-                  : thread.thread_type === 'system' ? 'System thread'
+  const typeLabel = thread.threadType === 'group'  ? 'Group conversation'
+                  : thread.threadType === 'record' ? 'Record discussion'
+                  : thread.threadType === 'system' ? 'System thread'
                   :                                    'Direct message';
-  const others = participants.filter(p => p.user_id !== myId);
-  const title  = thread.subject ?? (others.map(p => p.full_name ?? p.username ?? '?').join(', ') || 'Conversation');
+  const others = otherParticipants(participants, myId);
+  const title  = thread.subject ?? (others.map(p => p.displayName ?? p.username ?? '?').join(', ') || 'Conversation');
 
   return (
     <div style={{ padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
-        <Avatar name={title} img={others[0]?.profile_image} size={64} />
+        <Avatar name={title} img={others[0]?.profileImage} size={64} />
         <div>
           <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{title}</div>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {typeLabel} · {thread.participant_count} {thread.participant_count === 1 ? 'person' : 'people'}
+            {typeLabel} · {thread.participantCount} {thread.participantCount === 1 ? 'person' : 'people'}
           </div>
         </div>
       </div>
 
       {/* Linked record */}
-      {thread.source_module && thread.source_entity_id && (
+      {thread.sourceModule && thread.sourceEntityId && (
         <div>
           <SectionHead>Linked record</SectionHead>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
@@ -590,10 +632,10 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
             <i class="fas fa-link" style={{ color: 'var(--siomac-navy)' }} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {thread.source_entity_id}
+                {thread.sourceEntityId}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {thread.source_module}{thread.source_entity_type ? ` · ${thread.source_entity_type}` : ''}
+                {thread.sourceModule}{thread.sourceEntityType ? ` · ${thread.sourceEntityType}` : ''}
               </div>
             </div>
           </div>
@@ -621,12 +663,12 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
                 onInput={e => setQ((e.target as HTMLInputElement).value)} />
             </div>
             {candidates.map(r => (
-              <button key={r.user_id} disabled={addP.isPending}
-                onClick={() => { addP.mutate({ threadId: thread.id, userIds: [r.user_id] }); setQ(''); setAddOpen(false); }}
+              <button key={r.userId} disabled={addP.isPending}
+                onClick={() => { addP.mutate({ threadId: thread.id, userIds: [r.userId] }); setQ(''); setAddOpen(false); }}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px',
                   background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: '7px' }}>
-                <Avatar name={r.full_name ?? r.username ?? '?'} img={r.profile_image} size={26} />
-                <span style={{ fontSize: '0.8rem', color: 'var(--siomac-navy)' }}>{r.full_name ?? r.username}</span>
+                <Avatar name={r.displayName ?? r.username ?? '?'} img={r.profileImage} size={26} />
+                <span style={{ fontSize: '0.8rem', color: 'var(--siomac-navy)' }}>{r.displayName ?? r.username}</span>
               </button>
             ))}
           </div>
@@ -634,16 +676,16 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {participants.map(p => {
-            const name = (p.user_id === myId ? 'You' : (p.full_name ?? p.username ?? '?'));
+            const name = (p.userId === myId ? 'You' : (p.displayName ?? p.username ?? '?'));
             return (
-              <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Avatar name={p.full_name ?? p.username ?? '?'} img={p.profile_image} size={32} />
+              <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Avatar name={p.displayName ?? p.username ?? '?'} img={p.profileImage} size={32} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{p.role}</div>
                 </div>
-                {isOwner && p.user_id !== myId && (
-                  <button onClick={() => removeP.mutate({ threadId: thread.id, userId: p.user_id })} disabled={removeP.isPending}
+                {isOwner && p.userId !== myId && (
+                  <button onClick={() => removeP.mutate({ threadId: thread.id, userId: p.userId })} disabled={removeP.isPending}
                     title="Remove" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}>
                     <i class="fas fa-xmark" />
                   </button>
@@ -712,33 +754,77 @@ export function MessageCenter(): VNode {
   const { data: summary } = useCommsSummary();
   const unread = summary?.messagesUnread ?? 0;
 
+  const canCompliance = useCan('communications.compliance_read');
+  const isCompliance  = tab === 'compliance';
+
+  // The participant thread list isn't used in compliance view — avoid sending an
+  // invalid tab to the /threads route.
   const filters: ThreadFilters = {
-    tab:   tab as ThreadFilters['tab'],
+    tab:   (isCompliance ? 'inbox' : tab) as ThreadFilters['tab'],
     limit: 100,
   };
   const { data: threads = [], isLoading } = useMessageThreadsFull(filters);
 
-  // Listen for dropdown pre-selection events
+  // A thread id requested by the dropdown (or compose) before the list is ready.
+  // Held until `threads` loads, then resolved into a selection (see effect below).
+  const [pendingThreadId, setPendingThreadId] = useState<string | null>(null);
+
+  // Listen for dropdown pre-selection events. We DON'T try to resolve the thread
+  // here — the list may not be loaded yet — we just record the request.
   useEffect(() => {
     function onOpenThread(e: Event) {
       const { threadId } = (e as CustomEvent<{ threadId: string }>).detail;
-      const t = threads.find(x => x.id === threadId);
-      if (t) setSelectedThread(t);
+      setPendingThreadId(threadId);
+    }
+    // Notification deep-link: a `siomac:openRecord` for a message_thread (fired by
+    // openNotificationTarget when a message notification is clicked) opens the
+    // exact conversation. The Messages module owns resolving its own records.
+    function onOpenRecord(e: Event) {
+      const d = (e as CustomEvent<{ sourceType?: string; sourceId?: string }>).detail;
+      if (d?.sourceType === 'message_thread' && d.sourceId) setPendingThreadId(d.sourceId);
     }
     window.addEventListener('siomac:openThread', onOpenThread);
-    return () => window.removeEventListener('siomac:openThread', onOpenThread);
-  }, [threads]);
+    window.addEventListener('siomac:openRecord', onOpenRecord);
+    return () => {
+      window.removeEventListener('siomac:openThread', onOpenThread);
+      window.removeEventListener('siomac:openRecord', onOpenRecord);
+    };
+  }, []);
 
-  // Auto-deselect if thread no longer in list
+  // Resolve a pending open once the thread list actually contains it. This
+  // survives the race where the event fires before the inbox query resolves.
   useEffect(() => {
-    if (selectedThread && !threads.find(t => t.id === selectedThread.id)) {
+    if (!pendingThreadId) return;
+    const t = threads.find(x => x.id === pendingThreadId);
+    if (t) {
+      setSelectedThread(t);
+      setPendingThreadId(null);
+    }
+  }, [threads, pendingThreadId]);
+
+  // Auto-deselect if thread no longer in list (skip in compliance view — the
+  // selected thread there is a synthesized row that isn't in the participant list).
+  useEffect(() => {
+    if (!isCompliance && selectedThread && !threads.find(t => t.id === selectedThread.id)) {
       setSelectedThread(null);
     }
-  }, [threads, selectedThread]);
+  }, [threads, selectedThread, isCompliance]);
+
+  // Switching tabs clears the open conversation.
+  function switchTab(next: string) {
+    if (next === tab) return;
+    setTab(next);
+    setSelectedThread(null);
+  }
+
+  const TAB_LIST: AreaTab[] = canCompliance
+    ? [...TABS, { key: 'compliance', label: 'Compliance', icon: 'fa-user-shield' }]
+    : TABS;
 
   // 0 threads on this tab → full-width welcome state (no split). >0 → split.
+  // Compliance always uses the split layout (browser left, conversation right).
   const hasThreads = threads.length > 0;
-  const emptyAll   = !isLoading && !hasThreads;
+  const emptyAll   = !isCompliance && !isLoading && !hasThreads;
   const emptyTitle = tab === 'archived' ? 'No archived conversations'
                    : tab === 'sent'     ? 'Nothing sent yet'
                    :                       'No conversations yet';
@@ -758,11 +844,11 @@ export function MessageCenter(): VNode {
       {/* Compact tab row + New Message button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
-          {TABS.map(t => {
+          {TAB_LIST.map(t => {
             const on    = tab === t.key;
             const count = t.key === 'inbox' ? unread : undefined;
             return (
-              <button key={t.key} onClick={() => setTab(t.key)}
+              <button key={t.key} onClick={() => switchTab(t.key)}
                 style={{ display: 'flex', alignItems: 'center', gap: '7px', height: '34px', padding: '0 14px',
                   borderRadius: '9px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit',
                   border: 'none', background: on ? 'var(--siomac-navy)' : 'transparent',
@@ -804,15 +890,22 @@ export function MessageCenter(): VNode {
         /* ── Split layout (threads exist) ────────────────────────────────────── */
         <div style={{ height: 'calc(100vh - 230px)', minHeight: '420px', display: 'flex', gap: '0', overflow: 'hidden',
           background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '14px' }}>
-          {/* Left pane — thread list */}
+          {/* Left pane — thread list, or compliance browser */}
           <div style={{ width: '300px', minWidth: '260px', flexShrink: 0,
             borderRight: '1px solid var(--border)', overflow: 'hidden' }}>
-            <ThreadList
-              threads={threads}
-              selectedId={selectedThread?.id ?? null}
-              onSelect={setSelectedThread}
-              isLoading={isLoading}
-            />
+            {isCompliance ? (
+              <ComplianceBrowser
+                selectedId={selectedThread?.id ?? null}
+                onSelect={setSelectedThread}
+              />
+            ) : (
+              <ThreadList
+                threads={threads}
+                selectedId={selectedThread?.id ?? null}
+                onSelect={setSelectedThread}
+                isLoading={isLoading}
+              />
+            )}
           </div>
 
           {/* Right pane — conversation (+ details panel), or "select one" */}
