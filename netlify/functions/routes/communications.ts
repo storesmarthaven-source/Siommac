@@ -48,6 +48,7 @@ import {
   getThreadPosts,
   markThreadRead,
   archiveThread,
+  muteThread,
   addThreadParticipants,
   removeThreadParticipant,
   searchMessages,
@@ -640,6 +641,20 @@ router.post('/communications/messages/archive', async c => {
   if (!v.ok) return v.response;
 
   const result = await archiveThread(v.data.threadId, user.id, v.data.archived);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 500 as 200);
+  return c.json({ success: true });
+});
+
+// POST /api/communications/messages/mute  — mute/unmute thread notifications (per-user)
+const MuteThreadSchema = z.object({ threadId: z.string().uuid(), muted: z.boolean() });
+
+router.post('/communications/messages/mute', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, MuteThreadSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await muteThread(v.data.threadId, user.id, v.data.muted);
   if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 500 as 200);
   return c.json({ success: true });
 });

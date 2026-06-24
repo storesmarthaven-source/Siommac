@@ -605,6 +605,19 @@ export function useArchiveThread() {
   });
 }
 
+/** Mute / unmute thread notifications (per-user). */
+export function useMuteThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, muted }: { threadId: string; muted: boolean }) =>
+      apiPost<{ success: boolean }>('communications/messages/mute', { threadId, muted }, { retryable: false }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: messageKeys.all });
+      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+    },
+  });
+}
+
 /** Add participants to a thread. */
 export function useAddThreadParticipants() {
   const qc = useQueryClient();

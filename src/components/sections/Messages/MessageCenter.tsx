@@ -15,9 +15,9 @@ import { PageHeader, type AreaTab } from '@ui';
 import {
   useMessageThreadsFull, useThreadPosts, useMarkThreadRead,
   usePostMessage, useArchiveThread, useCommsSummary,
-  useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
+  useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients, useMuteThread,
   useMessageAttachmentUploadUrl, useCreateMessageAttachment,
-  usePinMessage, useOnlineUsers, usePinnedSummary,
+  usePinMessage, useUnpinMessage, usePins, useOnlineUsers, usePinnedSummary,
   ThreadAccessError,
   type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
   type MessageAttachment, type MessagePostRow,
@@ -383,7 +383,12 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   const getUploadUrl = useMessageAttachmentUploadUrl();
   const createAttach = useCreateMessageAttachment();
   const pinMsg       = usePinMessage();
+  const unpinMsg     = useUnpinMessage();
+  const { data: pins = [] } = usePins(thread.id);
   const [replyTo, setReplyTo] = useState<MessagePostRow | null>(null);
+
+  const isOwner   = thread.myRole === 'owner';
+  const pinByPost = new Map(pins.filter(p => p.pinType === 'post' && p.postId).map(p => [p.postId as string, p]));
 
   // Mark read when thread opens
   useEffect(() => {
@@ -624,8 +629,15 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                     {(post.readByCount ?? 0) > 0 && <span>Read by {post.readByCount}</span>}
                     {post.deliveryStatus && <span style={{ textTransform: 'capitalize' }}>{post.deliveryStatus}</span>}
                     <button onClick={() => setReplyTo(post)} style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Reply</button>
-                    <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'personal' })}
-                      style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin</button>
+                    {pinByPost.get(post.id)
+                      ? <button onClick={() => { const pin = pinByPost.get(post.id); if (pin) unpinMsg.mutate({ pinId: pin.id, threadId: thread.id }); }}
+                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Unpin</button>
+                      : <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'personal' })}
+                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin</button>}
+                    {isOwner && !pinByPost.get(post.id) && (
+                      <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'thread' })}
+                        style={{ border: 0, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin for all</button>
+                    )}
                   </div>
                 )}
               </div>
@@ -782,6 +794,15 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
       allFiles.push({ ...a, createdAt, authorName });
     }
   }
+  const mediaFiles = allFiles.filter(a => attTypeOf(a) === 'image');
+  const docFiles   = allFiles.filter(a => attTypeOf(a) !== 'image');
+
+  const { data: pins = [] } = usePins(thread.id);
+  const unpinMsg = useUnpinMessage();
+  const postPins = pins.filter(p => p.pinType === 'post');
+  const { data: online = [] } = useOnlineUsers();
+  const onlineMap = new Map(online.map(u => [u.userId, u.status]));
+  const muteThread = useMuteThread();
 
   const addP    = useAddThreadParticipants();
   const removeP = useRemoveThreadParticipant();
@@ -810,6 +831,20 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
             {typeLabel} · {thread.participantCount} {thread.participantCount === 1 ? 'person' : 'people'}
           </div>
         </div>
+      </div>
+
+      {/* Mute notifications */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px',
+        background: 'var(--bg-subtle, #f7f8fa)', border: '1px solid var(--border)', borderRadius: '10px' }}>
+        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
+          <i class="fas fa-bell-slash" style={{ marginRight: '8px', color: 'var(--text-muted)' }} />Mute notifications
+        </span>
+        <button onClick={() => muteThread.mutate({ threadId: thread.id, muted: !thread.isMuted })} disabled={muteThread.isPending}
+          title={thread.isMuted ? 'Unmute' : 'Mute'}
+          style={{ width: '40px', height: '22px', borderRadius: '999px', border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
+            background: thread.isMuted ? 'var(--siomac-navy)' : '#cbd5e1' }}>
+          <span style={{ position: 'absolute', top: '2px', left: thread.isMuted ? '20px' : '2px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff' }} />
+        </button>
       </div>
 
       {/* Linked record */}
@@ -868,7 +903,14 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
             const name = (p.userId === myId ? 'You' : (p.displayName ?? p.username ?? '?'));
             return (
               <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Avatar name={p.displayName ?? p.username ?? '?'} img={p.profileImage} size={32} />
+                <span style={{ position: 'relative', flexShrink: 0, lineHeight: 0 }}>
+                  <Avatar name={p.displayName ?? p.username ?? '?'} img={p.profileImage} size={32} />
+                  {(p.userId === myId || onlineMap.has(p.userId)) && (
+                    <span title={p.userId === myId ? 'You' : (onlineMap.get(p.userId) === 'away' ? 'Away' : 'Online')}
+                      style={{ position: 'absolute', right: 0, bottom: 0, width: '9px', height: '9px', borderRadius: '50%', border: '2px solid #fff',
+                        background: (p.userId !== myId && onlineMap.get(p.userId) === 'away') ? '#f59e0b' : '#38c878' }} />
+                  )}
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{p.role}</div>
@@ -885,17 +927,55 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
         </div>
       </div>
 
+      {/* Pinned messages */}
+      {postPins.length > 0 && (
+        <div>
+          <SectionHead>Pinned messages ({postPins.length})</SectionHead>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {postPins.map(pin => (
+              <div key={pin.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 9px',
+                borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-subtle, #f7f8fa)' }}>
+                <i class="fas fa-thumbtack" style={{ color: 'var(--siomac-navy)', fontSize: '0.72rem', marginTop: '2px', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.postPreview?.body ?? pin.note ?? 'Pinned message'}</div>
+                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>by {pin.pinnedBy.displayName}{pin.visibility === 'thread' ? ' · everyone' : ' · personal'}</div>
+                </div>
+                <button onClick={() => unpinMsg.mutate({ pinId: pin.id, threadId: thread.id })} title="Unpin"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}><i class="fas fa-xmark" /></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Shared media */}
+      {mediaFiles.length > 0 && (
+        <div>
+          <SectionHead>Shared media ({mediaFiles.length})</SectionHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+            {mediaFiles.slice(0, 9).map(a => (
+              <a key={a.id} href={a.url ?? undefined} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-subtle, #eef3fa)' }}>
+                {a.url
+                  ? <img src={a.url} alt={a.fileName} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.6rem' }}>IMG</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Files */}
       <div>
-        <SectionHead>Files ({allFiles.length})</SectionHead>
-        {allFiles.length === 0 ? (
+        <SectionHead>Files ({docFiles.length})</SectionHead>
+        {docFiles.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '18px 8px', color: 'var(--text-muted)' }}>
             <i class="fas fa-paperclip" style={{ fontSize: '1.3rem', opacity: 0.4 }} />
             <div style={{ fontSize: '0.76rem', marginTop: '6px' }}>No files shared yet.</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {allFiles.map(a => {
+            {docFiles.map(a => {
               const href = a.url ?? undefined;
               const Tag  = href ? 'a' : 'div';
               return (

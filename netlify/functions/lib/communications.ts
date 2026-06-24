@@ -1636,6 +1636,18 @@ export async function archiveThread(threadId: string, userId: string, archived: 
   return { ok: true };
 }
 
+/** Mute / unmute thread notifications for the caller (participant-scoped). */
+export async function muteThread(threadId: string, userId: string, muted: boolean): Promise<{ ok: boolean; message?: string }> {
+  const { error } = await sb.from('message_participants')
+    .update({ notifications_muted: muted, muted_until: null })
+    .eq('thread_id', threadId)
+    .eq('user_id', userId)
+    .is('removed_at', null);
+  if (error) return { ok: false, message: error.message };
+  void emitSignal([userId], 'summary');
+  return { ok: true };
+}
+
 // ── addThreadParticipants ──────────────────────────────────────────────────────
 
 export async function addThreadParticipants(
