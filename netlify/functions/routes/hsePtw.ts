@@ -523,7 +523,9 @@ router.post('/ptw/permits/create', async c => {
           .from('hse_permits')
           .insert({
             permit_number:         permitNo,
+            ref:                   permitNo,           // hse_permits.ref is NOT NULL — mirror the permit number
             permit_type:           v.data.permitType,
+            type:                  v.data.permitType,  // legacy NOT NULL `type` alongside permit_type
             title:                 v.data.title,
             description:           v.data.description,
             status:                initialStatus,
@@ -567,7 +569,7 @@ router.post('/ptw/permits/create', async c => {
           .select('id, permit_number')
           .single<{ id: string; permit_number: string }>();
 
-        if (error || !data) throw error ?? new Error('Permit insert failed');
+        if (error || !data) throw new Error(error?.message ?? 'Permit insert failed');
         return data;
       },
     });
