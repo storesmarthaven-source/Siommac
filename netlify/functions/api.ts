@@ -39,6 +39,7 @@ import webauthnRouter       from './routes/webauthn';
 import trustedDevicesRouter from './routes/trustedDevices';
 import authStepUpRouter     from './routes/authStepUp';
 import adminSecurityRouter, { policyReadRouter } from './routes/adminSecurity';
+import permissionApprovalsRouter from './routes/permissionApprovals';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -170,6 +171,7 @@ app.route('/api/auth/trusted-devices', trustedDevicesRouter);
 app.route('/api/auth/step-up',         authStepUpRouter);
 app.route('/api/auth/security',        policyReadRouter);
 app.route('/api/admin/security',       adminSecurityRouter);
+app.route('/api/admin/approvals',      permissionApprovalsRouter);
 
 // ── Legacy action-dispatch shim ───────────────────────────────────────────────
 // The frontend still sends { action: "routeName", args: {...} }.

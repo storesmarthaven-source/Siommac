@@ -393,3 +393,75 @@ export function useAdminRevokeUserTrustedDevices() {
     },
   });
 }
+
+// ── Organisation security policy (superadmin editor) ──────────────────────────
+//
+// Read:   POST /api/auth/security/policy           (any authenticated user)
+// Update: POST /api/admin/security/policy/update   (auth.security.manage_policy + step-up)
+//
+// NOTE: the backend update route is a v1 stub — it validates and returns
+// { success:false, code:'not_implemented' } until a persistent settings store
+// exists. SecurityPolicyTab handles that code/message gracefully.
+
+/** Non-secret policy fields returned by the read route (mirrors getPublicPolicy). */
+export interface PublicSecurityPolicy {
+  trustedDevicesEnabled:      boolean;
+  trustedDeviceTtlByRole:     Record<string, number>;
+  requireMfaRoles:            string[];
+  allowPasswordlessPasskey:   boolean;
+  allowPasskeyAsSecondFactor: boolean;
+  stepUpMaxAgeMinutes:        number;
+}
+export interface SecurityPolicyResponse { success: boolean; policy?: PublicSecurityPolicy; message?: string }
+
+/** Flat form payload from SecurityPolicyTab; mapped to the backend's nested schema below. */
+export interface SecurityPolicyUpdatePayload {
+  trustedDevicesEnabled:       boolean;
+  trustedDeviceDefaultDays:    number;
+  trustedDeviceAdminDays:      number;
+  trustedDeviceSuperAdminDays: number;
+  requireMfaForSuperAdmin:     boolean;
+  requireMfaForAdmin:          boolean;
+  requireMfaForManager:        boolean;
+  allowPasswordlessPasskey:    boolean;
+  allowPasskeyAsSecondFactor:  boolean;
+  stepUpMaxAgeMinutes:         number;
+}
+export interface SecurityPolicyUpdateResponse { success: boolean; code?: string; message?: string }
+
+export function useSecurityPolicy(enabled = true) {
+  return useQuery({
+    queryKey: ['security', 'policy'] as const,
+    queryFn:  () => apiPost<SecurityPolicyResponse>('/api/auth/security/policy', {}),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+/** Update the org policy. Maps the flat form to the backend's nested schema. */
+export function useUpdateSecurityPolicy() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: SecurityPolicyUpdatePayload) => {
+      const requireMfaRoles = [
+        ...(p.requireMfaForSuperAdmin ? ['superadmin'] : []),
+        ...(p.requireMfaForAdmin      ? ['admin']      : []),
+        ...(p.requireMfaForManager    ? ['manager']    : []),
+      ];
+      return apiPost<SecurityPolicyUpdateResponse>('/api/admin/security/policy/update', {
+        trustedDevicesEnabled:    p.trustedDevicesEnabled,
+        trustedDeviceTtlByRole: {
+          employee:   p.trustedDeviceDefaultDays,
+          manager:    p.trustedDeviceAdminDays,
+          admin:      p.trustedDeviceAdminDays,
+          superadmin: p.trustedDeviceSuperAdminDays,
+        },
+        requireMfaRoles,
+        allowPasswordlessPasskey:   p.allowPasswordlessPasskey,
+        allowPasskeyAsSecondFactor: p.allowPasskeyAsSecondFactor,
+        stepUpMaxAgeMinutes:        p.stepUpMaxAgeMinutes,
+      }, { retryable: false });
+    },
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['security', 'policy'] }); },
+  });
+}
