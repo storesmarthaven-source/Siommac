@@ -449,8 +449,14 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hse.training.manage': {
     module: 'HSE', group: 'Training & Competency',
     label: 'Manage Training',
-    description: 'Create and update training and competency records.',
+    description: 'Create and update competencies, courses, requirements, certificates, and assignments.',
     risk: 'medium',
+  },
+  'hse.training.verify': {
+    module: 'HSE', group: 'Training & Competency',
+    label: 'Verify Certificates',
+    description: 'Approve, reject, or revoke worker training certificates.',
+    risk: 'high',
   },
 
   // ── HSE — Toolbox Talks ───────────────────────────────────────────────────────

@@ -29,6 +29,8 @@ export type RefPrefix =
   | 'PTW'   // Permit to Work
   | 'INSP'  // HSE Inspection
   | 'FND'   // HSE Inspection Finding
+  | 'CERT'  // HSE Worker Certificate
+  | 'TRN'   // HSE Training Assignment
   | 'HRC';  // HR Case
 
 /**
