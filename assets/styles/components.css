@@ -38,7 +38,7 @@
 /* Search box */
 .vt-search {
   display: flex; align-items: center; gap: 8px;
-  background: var(--bg-subtle, #F8FAFE);
+  background: var(--bg-card);
   border: 1.5px solid var(--field-border); border-radius: 40px;
   padding: 6px 12px; min-width: 240px;
   transition: border-color .2s, box-shadow .2s;
@@ -211,6 +211,7 @@
 .vt-pill.is-on   { background: rgba(22,163,74,.12);  color: #15803d; }
 .vt-pill.is-off  { background: rgba(100,116,139,.12); color: #64748b; }
 .vt-pill.is-warn { background: rgba(198,124,0,.12);  color: #b45309; }
+.vt-pill.is-amber{ background: rgba(202,138,4,.14);  color: #854d0e; }
 .vt-pill.is-info { background: rgba(27,45,84,.10);   color: var(--siomac-navy); }
 
 /* Row ••• actions menu */

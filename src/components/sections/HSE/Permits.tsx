@@ -85,7 +85,7 @@ function statusPill(status: PermitStatus): VNode {
 /** Per-risk colour map — each level reads as its own tag (incl. medium). */
 const RISK_COLORS: Record<string, { bg: string; fg: string }> = {
   low:      { bg: '#e6f4dd', fg: '#3b6d11' },
-  medium:   { bg: '#fdf0d9', fg: '#92600b' },
+  medium:   { bg: '#fbf3c0', fg: '#7a6212' },
   high:     { bg: '#fdeadf', fg: '#9a4516' },
   critical: { bg: '#fde7e7', fg: '#a32d2d' },
 };

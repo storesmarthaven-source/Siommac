@@ -1030,18 +1030,11 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 .wz-badge--ready   { background: rgba(74,222,128,.15); color: #4ade80; border-color: rgba(74,222,128,.3); }
 
 
-/* ── Side panel header (owq-panel-header) — the kit panel header adopted onto the
-   ppe-signals-panel right rail: title + icon + count badge. Body stays the
-   existing ppe-signal design. ──────────────────────────────────────────────── */
-.owq-panel-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
-.owq-panel-title { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--siomac-navy); }
-.owq-panel-title i { font-size: 0.82rem; color: var(--text-muted); }
-.owq-panel-count { margin-left: auto; color: #fff; background: var(--siomac-navy); font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
-
-/* On the navy rail the header inherits the panel padding and goes light. */
-.ppe-signals-panel .owq-panel-header { padding: 0 0 12px; margin: 2px 0 14px; border-bottom-color: rgba(255,255,255,0.12); }
-.ppe-signals-panel .owq-panel-title { color: rgba(255,255,255,0.92); }
-.ppe-signals-panel .owq-panel-title i { color: rgba(255,255,255,0.55); }
-.ppe-signals-panel .owq-panel-count { background: rgba(255,255,255,0.15); }
+/* ── Side panel header / tabs (owq-panel-header + owq-tab) ───────────────────
+   The authoritative .owq-* rules (and the .ppe-signals-panel navy theme used by
+   the SidePanel @ui component) live in HSE.css, which is imported directly and
+   therefore sits in the winning `sections` sublayer. Anything declared here lands
+   in the nested `sections.sections` sublayer and would be overridden, so it is
+   intentionally kept in HSE.css instead. ─────────────────────────────────────── */
 
 }

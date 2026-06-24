@@ -3,15 +3,14 @@
  *
  * The navy signals right-rail for Permit to Work — the restored "navy blue nav
  * bar" from the original PTW design, rebuilt LIVE on the real permit list (the
- * old one was a static mock). Uses the standard HSE `ppe-signals-panel` look,
- * mirroring RiskJsaRightPanel. Clicking a signal opens that permit's drawer.
- *
- * Sections: Awaiting Approval · Expiring Soon · Suspended / Blocked.
+ * old one was a static mock). Uses the kit `SidePanel`: owq header + tab strip
+ * (All · Awaiting · Expiring · Suspended) that filters the signal sections.
+ * Clicking a signal opens that permit's drawer.
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
+import { type VNode } from 'preact';
 import { usePermits, type PermitListRow } from '@api/hse/ptw';
-import { SidePanel } from '@ui';
+import { SidePanel, type SidePanelSection } from '@ui';
 
 const ACTIVE = new Set(['active', 'approved']);
 function hoursUntil(iso?: string | null): number | null {
@@ -38,19 +37,6 @@ function Signal({ icon, iconTone, title, sub, tag, tagTone, onClick }: {
   );
 }
 
-function Section({ icon, title, count, empty, children }: {
-  icon: string; title: string; count: number; empty: string; children: ComponentChildren;
-}): VNode {
-  return (
-    <>
-      <h4><i class={`fas ${icon}`} /> {title}{count > 0 ? ` · ${count}` : ''}</h4>
-      <div class="ppe-signals-list">
-        {count > 0 ? children : <div class="ppe-signal-empty">{empty}</div>}
-      </div>
-    </>
-  );
-}
-
 /** Shared signal groups used by every PTW signals layout variant. */
 export function usePtwSignals() {
   const all = usePermits({}).data?.data ?? [];
@@ -63,39 +49,38 @@ export function usePtwSignals() {
 
 export function PtwRightPanel({ onOpenPermit }: { onOpenPermit: (p: PermitListRow) => void }): VNode {
   const { awaiting, expiring, suspended } = usePtwSignals();
-  const total = awaiting.length + expiring.length + suspended.length;
 
-  return (
-    <SidePanel title="Signals" icon="fa-bell" count={total}>
-      <Section icon="fa-clipboard-check" title="Awaiting Approval" count={awaiting.length} empty="Approval queue is clear">
-        {awaiting.slice(0, 5).map(p => (
-          <Signal key={p.id} icon="fa-clipboard-check" iconTone="is-info"
-            title={`${p.permit_number ?? '—'} · ${typeLabel(p.permit_type)}`} sub={p.title}
-            tag="Review" tagTone="is-info" onClick={() => onOpenPermit(p)} />
-        ))}
-      </Section>
+  const sections: SidePanelSection[] = [
+    {
+      id: 'awaiting', label: 'Awaiting', icon: 'fa-clipboard-check', title: 'Awaiting Approval',
+      count: awaiting.length, empty: 'Approval queue is clear',
+      children: awaiting.slice(0, 5).map(p => (
+        <Signal key={p.id} icon="fa-clipboard-check" iconTone="is-info"
+          title={`${p.permit_number ?? '—'} · ${typeLabel(p.permit_type)}`} sub={p.title}
+          tag="Review" tagTone="is-info" onClick={() => onOpenPermit(p)} />
+      )),
+    },
+    {
+      id: 'expiring', label: 'Expiring', icon: 'fa-clock', title: 'Expiring Soon',
+      count: expiring.length, empty: 'None expiring within 8h',
+      children: expiring.slice(0, 4).map(p => {
+        const h = Math.max(0, Math.round(hoursUntil(p.end_datetime) ?? 0));
+        const crit = (hoursUntil(p.end_datetime) ?? 99) <= 2;
+        return <Signal key={p.id} icon="fa-clock" iconTone={crit ? 'is-danger' : 'is-warn'}
+          title={p.permit_number ?? p.title} sub={p.title}
+          tag={`${h}h`} tagTone={crit ? 'is-high' : 'is-due'} onClick={() => onOpenPermit(p)} />;
+      }),
+    },
+    {
+      id: 'suspended', label: 'Suspended', icon: 'fa-circle-pause', title: 'Suspended / Blocked',
+      count: suspended.length, empty: 'No suspended permits',
+      children: suspended.slice(0, 4).map(p => (
+        <Signal key={p.id} icon="fa-circle-pause" iconTone="is-warn"
+          title={p.permit_number ?? p.title} sub={p.title}
+          tag="Suspended" tagTone="is-due" onClick={() => onOpenPermit(p)} />
+      )),
+    },
+  ];
 
-      <div class="hse-panel-divider" />
-
-      <Section icon="fa-clock" title="Expiring Soon" count={expiring.length} empty="None expiring within 8h">
-        {expiring.slice(0, 4).map(p => {
-          const h = Math.max(0, Math.round(hoursUntil(p.end_datetime) ?? 0));
-          const crit = (hoursUntil(p.end_datetime) ?? 99) <= 2;
-          return <Signal key={p.id} icon="fa-clock" iconTone={crit ? 'is-danger' : 'is-warn'}
-            title={p.permit_number ?? p.title} sub={p.title}
-            tag={`${h}h`} tagTone={crit ? 'is-high' : 'is-due'} onClick={() => onOpenPermit(p)} />;
-        })}
-      </Section>
-
-      <div class="hse-panel-divider" />
-
-      <Section icon="fa-circle-pause" title="Suspended / Blocked" count={suspended.length} empty="No suspended permits">
-        {suspended.slice(0, 4).map(p => (
-          <Signal key={p.id} icon="fa-circle-pause" iconTone="is-warn"
-            title={p.permit_number ?? p.title} sub={p.title}
-            tag="Suspended" tagTone="is-due" onClick={() => onOpenPermit(p)} />
-        ))}
-      </Section>
-    </SidePanel>
-  );
+  return <SidePanel title="Signals" icon="fa-bell" sections={sections} />;
 }

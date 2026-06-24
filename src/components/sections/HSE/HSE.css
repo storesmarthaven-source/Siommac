@@ -3067,6 +3067,28 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
 .owq-panel-navy .owq-tab:hover { color: rgba(255,255,255,0.85); }
 .owq-panel-navy .owq-tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.75); font-weight: 700; }
 .owq-panel-navy .owq-tab-count { background: rgba(255,255,255,0.1); }
+
+/* SidePanel (@ui) uses .ppe-signals-panel as its navy rail. The owq header is a
+   light .ui-stat-card-header bar capping the navy body. Lives here (not
+   uikit-layout.css) because HSE.css owns the authoritative .owq-* rules in the
+   winning cascade layer. */
+/* Header is the light bar from .ui-stat-card-header (default light variant):
+   #f8fafe background, navy title + dark tabs, bottom border. Bleeds to the panel
+   edges and caps the navy body. (Body title/tab colours fall back to the light
+   .owq-* base — only layout + the larger title are set here.) */
+.ppe-signals-panel .owq-panel-header {
+  margin: -16px -16px 14px; padding: 12px 16px 0;
+  background: #f8fafe;
+  border-bottom: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+}
+.ppe-signals-panel .owq-panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 11px; }
+/* All tabs on a single line — equal-width, compact, no wrap. */
+.ppe-signals-panel .owq-panel-tabs { flex-wrap: nowrap; gap: 2px; }
+.ppe-signals-panel .owq-tab { flex: 1 1 0; min-width: 0; justify-content: center; padding: 7px 6px; font-size: 0.7rem; white-space: nowrap; }
+.ppe-signals-panel .owq-tab > span:first-of-type { overflow: hidden; text-overflow: ellipsis; }
+.ppe-signals-panel .owq-tab i { color: inherit; flex-shrink: 0; }
+.ppe-signals-panel .owq-tab-count { flex-shrink: 0; }
 .owq-panel-navy .owq-tab.active .owq-tab-count { background: rgba(255,255,255,0.22); }
 .owq-panel-navy .owq-item { border-bottom-color: rgba(255,255,255,0.07); }
 .owq-panel-navy .owq-item:hover { background: rgba(255,255,255,0.06); }
