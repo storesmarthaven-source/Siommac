@@ -431,7 +431,7 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
     <div class="hse-spark-row" style={loadingStyle}>
       {/* Card 1 — Active Permits */}
       <button class="hse-spark" type="button" onClick={onFilterActive} title="View active permits"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'none', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px' }}>
+        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
         <div class="hse-spark-header">
           <span class="hse-spark-label"><i class="fas fa-file-shield" style={{ marginRight: '5px', opacity: 0.6 }} />Active Permits</span>
         </div>
@@ -459,7 +459,7 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
 
       {/* Card 2 — Expiring Soon */}
       <button class="hse-spark" type="button" onClick={onFilterExpiring} title="View expiring permits"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'none', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px' }}>
+        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
         <div class="hse-spark-header">
           <span class="hse-spark-label"><i class="fas fa-clock" style={{ marginRight: '5px', opacity: 0.6 }} />Expiring Soon</span>
         </div>
@@ -478,7 +478,7 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
       </button>
 
       {/* Card 3 — Isolation Readiness */}
-      <div class="hse-spark" style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px' }}>
+      <div class="hse-spark">
         <div class="hse-spark-header">
           <span class="hse-spark-label"><i class="fas fa-lock" style={{ marginRight: '5px', opacity: 0.6 }} />Isolation Readiness</span>
         </div>
@@ -491,7 +491,7 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
 
       {/* Card 4 — Approval Bottlenecks */}
       <button class="hse-spark" type="button" onClick={onFilterApprovals} title="View approval queue"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'none', border: `1px solid ${bottlenecks > 0 ? 'rgba(245,158,11,.4)' : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px' }}>
+        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
         <div class="hse-spark-header">
           <span class="hse-spark-label"><i class="fas fa-triangle-exclamation" style={{ marginRight: '5px', opacity: 0.6 }} />Approval Bottlenecks</span>
         </div>
