@@ -734,8 +734,11 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 .hse-main-grid {
   display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;
 }
-.hse-left-col { display: flex; flex-direction: column; gap: 16px; }
-.hse-right-col { display: flex; flex-direction: column; gap: 16px; }
+/* min-width: 0 lets the 1fr track shrink so a wide table scrolls inside its
+   own card (vt-table-scroll) instead of blowing out the grid and pushing the
+   right rail off-screen. */
+.hse-left-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.hse-right-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 /* ── Page-shape responsive (spark grid / main grid / hero footer) ───────── */
 @media (max-width: 1200px) { .hse-main-grid { grid-template-columns: 1fr; } .hse-spark-grid { grid-template-columns: 1fr 1fr; } }

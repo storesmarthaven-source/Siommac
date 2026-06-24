@@ -45,6 +45,26 @@ function severityPill(sev: string): VNode {
 }
 const isOverdue = (i: InspectionRow) => !!i.due_at && new Date(i.due_at).getTime() < Date.now() && !['completed', 'cancelled'].includes(i.status);
 
+// ── Small data-display helpers (real distributions for the StatsCards) ──────────
+const PALETTE = ['#60a5fa', '#f59e0b', '#a78bfa', '#34d399', '#fb923c', '#f472b6'];
+const SEV_COLOR: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#eab308', low: '#22c55e', observation: '#3b82f6' };
+const STATUS_COLOR: Record<string, string> = {
+  scheduled: '#60a5fa', due_soon: '#f59e0b', overdue: '#ef4444', in_progress: '#3b82f6',
+  submitted: '#a78bfa', under_review: '#8b5cf6', completed: '#22c55e', cancelled: '#94a3b8',
+  draft: '#94a3b8', rescheduled: '#fb923c', open: '#f59e0b', assigned: '#60a5fa',
+  awaiting_review: '#a78bfa', closed: '#22c55e', reopened: '#fb923c',
+};
+function tally<T>(rows: T[], key: (r: T) => string | null | undefined): Record<string, number> {
+  const m: Record<string, number> = {};
+  for (const r of rows) { const k = key(r); if (k) m[k] = (m[k] ?? 0) + 1; }
+  return m;
+}
+type Stat = { label: string; value: number; color: string };
+function topStatuses(t: Record<string, number>, colorOf: (k: string) => string, n = 4): Stat[] {
+  return Object.entries(t).sort((a, b) => b[1] - a[1]).slice(0, n)
+    .map(([k, v]) => ({ label: titleCase(k), value: v, color: colorOf(k) }));
+}
+
 // ── Right rail ────────────────────────────────────────────────────────────────
 
 function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
@@ -139,6 +159,18 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
   const completionRate = s?.completionRate ?? 0;
   const criticalFindings = s?.criticalFindings ?? 0;
 
+  // Real distributions for the StatsCard bodies
+  const openFindingsList = findings.filter(f => !['closed', 'cancelled'].includes(f.status));
+  const typeTally = tally(inspections, i => i.inspection_type ?? i.type);
+  const typeKeys = Object.keys(typeTally);
+  const typeStatuses    = topStatuses(typeTally, k => PALETTE[typeKeys.indexOf(k) % PALETTE.length] ?? '#60a5fa');
+  const overdueStatuses = topStatuses(tally(inspections.filter(isOverdue), i => i.inspection_type ?? i.type), () => '#ef4444', 4);
+  const sevOrder = ['critical', 'high', 'medium', 'low', 'observation'];
+  const sevTally = tally(openFindingsList, f => f.severity);
+  const sevStatuses: Stat[] = sevOrder.filter(s => sevTally[s]).map(s => ({ label: titleCase(s), value: sevTally[s] ?? 0, color: SEV_COLOR[s] ?? '#3b82f6' }));
+  const completionStatuses = topStatuses(tally(inspections, i => i.status), k => STATUS_COLOR[k] ?? '#94a3b8', 4);
+  const criticalByStatus = topStatuses(tally(findings.filter(f => f.severity === 'critical' && !['closed', 'cancelled'].includes(f.status)), f => f.status), k => STATUS_COLOR[k] ?? '#ef4444', 4);
+
   const tabsWithCounts = withCounts(TABS, { schedule: inspections.length, findings: findings.length });
 
   return (
@@ -159,36 +191,38 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
       <MetricRow pageKey={`hse.inspections.${active}`} rowClass="ui-stat-row" cards={active === 'findings' ? [
         { key: 'open', node: (
           <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
-            supporting="Require corrective action" footer="Across all inspections" />
+            supporting="By severity" statuses={sevStatuses} footer="Require corrective action" />
         ) },
         { key: 'critical', node: (
           <StatsCard icon="fa-triangle-exclamation" title="Critical Findings" metric={criticalFindings} metricColor={criticalFindings > 0 ? '#ef4444' : '#22c55e'}
-            supporting="Immediate action" footer={criticalFindings > 0 ? 'Action required' : 'None open'} />
+            supporting="By stage" statuses={criticalByStatus.length ? criticalByStatus : [{ label: 'None open', value: 0, color: '#22c55e' }]} footer={criticalFindings > 0 ? 'Action required' : 'None open'} />
         ) },
         { key: 'closed', node: (
           <StatsCard icon="fa-circle-check" title="Closed YTD" metric={s?.closedFindingsYtd ?? 0}
-            supporting="Resolved this year" footer="Year to date" />
+            supporting="Resolution progress"
+            statuses={[{ label: 'Closed', value: s?.closedFindingsYtd ?? 0, color: '#22c55e' }, { label: 'Open', value: openFindings, color: '#f59e0b' }]}
+            footer="Year to date" />
         ) },
         { key: 'closure', node: (
           <StatsCard icon="fa-chart-pie" title="Closure Rate" metric={`${s?.closureRate ?? 0}%`}
-            supporting="Findings closed" percent={s?.closureRate ?? 0} percentTarget="Target 90%" />
+            supporting="Findings closed within SLA" percent={s?.closureRate ?? 0} percentTarget="Target 90%" />
         ) },
       ] : [
         { key: 'scheduled', node: (
           <StatsCard icon="fa-calendar-check" title="Scheduled This Month" metric={s?.scheduledThisMonth ?? 0}
-            supporting="Upcoming inspections" footer="Confirmed schedule" />
+            supporting="By type" statuses={typeStatuses.length ? typeStatuses : [{ label: 'None', value: 0, color: '#94a3b8' }]} footer="Confirmed schedule" />
         ) },
         { key: 'overdue', node: (
           <StatsCard icon="fa-triangle-exclamation" title="Overdue" metric={overdue} metricColor={overdue > 0 ? '#ef4444' : '#22c55e'}
-            supporting="Past due date" footer={overdue > 0 ? 'Action required' : 'On track'} />
+            supporting="By type" statuses={overdueStatuses.length ? overdueStatuses : [{ label: 'On track', value: 0, color: '#22c55e' }]} footer={overdue > 0 ? 'Action required' : 'On track'} />
         ) },
         { key: 'completion', node: (
           <StatsCard icon="fa-chart-pie" title="Completion Rate" metric={`${completionRate}%`}
-            supporting="YTD completed" percent={completionRate} percentTarget="Target 90%" />
+            supporting="Status mix" statuses={completionStatuses} percent={completionRate} percentTarget="Target 90%" />
         ) },
         { key: 'findings', node: (
           <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
-            supporting={`${criticalFindings} critical`} footer="Require corrective action" />
+            supporting="By severity" statuses={sevStatuses.length ? sevStatuses : [{ label: 'None open', value: 0, color: '#22c55e' }]} footer="Require corrective action" />
         ) },
       ]} />
 
