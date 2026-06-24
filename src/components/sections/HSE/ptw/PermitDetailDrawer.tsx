@@ -11,7 +11,7 @@
 
 import { useState } from 'preact/hooks';
 import { type VNode } from 'preact';
-import { Drawer, Tabs, type TabDef } from '@ui';
+import { Drawer, Tabs, DetailGrid, type TabDef, type DetailItem } from '@ui';
 import { hsePill } from '../types';
 import {
   usePermit,
@@ -96,15 +96,6 @@ function riskPill(level: string | null): VNode {
     : level === 'medium' ? 'vt-pill is-amber'
     : 'vt-pill is-on';
   return <span class={cls}>{level.charAt(0).toUpperCase() + level.slice(1)}</span>;
-}
-
-function DetailRow({ label, value }: { label: string; value: VNode | string }): VNode {
-  return (
-    <div>
-      <strong style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>{label}</strong>
-      <span style={{ fontSize: '0.85rem' }}>{value}</span>
-    </div>
-  );
 }
 
 function EmptyState({ message }: { message: string }): VNode {
@@ -193,26 +184,30 @@ function ActionButtons({ status, onOpen, onAction }: {
 // ── Tab bodies ─────────────────────────────────────────────────────────────────
 
 function OverviewTab({ permit }: { permit: Record<string, unknown> }): VNode {
+  const str = (k: string) => permit[k] as string | null | undefined;
+  const items: DetailItem[] = [
+    { icon: 'fa-hashtag',              label: 'Permit No',     value: <span class="vt-cell-mono">{str('permit_number') ?? '—'}</span> },
+    { icon: 'fa-tag',                  label: 'Type',          value: (str('permit_type') ?? '').replace(/_/g, ' ') || '—' },
+    { icon: 'fa-circle-dot',           label: 'Status',        value: <span class={hsePill(str('status'))}>{(str('status') ?? '—').replace(/_/g, ' ')}</span> },
+    { icon: 'fa-triangle-exclamation', label: 'Risk Level',    value: riskPill(str('risk_level') ?? null) },
+    { icon: 'fa-location-dot',         label: 'Site',          value: str('site_id') ?? '—' },
+    { icon: 'fa-map-pin',              label: 'Location',      value: str('specific_location') ?? '' },
+    { icon: 'fa-play',                 label: 'Planned Start', value: fmtDt(str('start_datetime')) },
+    { icon: 'fa-flag-checkered',       label: 'Planned End',   value: fmtDt(str('end_datetime')) },
+    { icon: 'fa-clock',                label: 'Remaining',     value: remainingTime(str('end_datetime')) },
+    { icon: 'fa-list-ol',              label: 'Linked JSA',    value: str('linked_jsa_id')            ? <span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{str('linked_jsa_id')}</span> : '' },
+    { icon: 'fa-table-cells-large',    label: 'Linked RA',     value: str('linked_risk_assessment_id') ? <span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{str('linked_risk_assessment_id')}</span> : '' },
+    { icon: 'fa-calendar-day',         label: 'Created',       value: fmtDate(str('created_at')) },
+  ];
   return (
     <div style={{ display: 'grid', gap: '12px' }}>
-      <DetailRow label="Permit No" value={<span class="vt-cell-mono">{(permit['permit_number'] as string) ?? '—'}</span>} />
-      <DetailRow label="Type" value={(permit['permit_type'] as string ?? '').replace(/_/g, ' ')} />
-      <DetailRow label="Status" value={<span class={hsePill(permit['status'] as string)}>{(permit['status'] as string ?? '').replace(/_/g, ' ')}</span>} />
-      <DetailRow label="Risk Level" value={riskPill(permit['risk_level'] as string | null)} />
-      <DetailRow label="Site" value={(permit['site_id'] as string) ?? '—'} />
-      {permit['specific_location'] && <DetailRow label="Location" value={permit['specific_location'] as string} />}
-      <DetailRow label="Planned Start" value={fmtDt(permit['start_datetime'] as string)} />
-      <DetailRow label="Planned End" value={fmtDt(permit['end_datetime'] as string)} />
-      <DetailRow label="Remaining Time" value={remainingTime(permit['end_datetime'] as string)} />
-      {permit['description'] && (
+      <DetailGrid items={items} hideEmpty />
+      {str('description') && (
         <div>
           <strong style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Work Description</strong>
-          <p style={{ fontSize: '0.82rem', margin: 0, lineHeight: 1.6 }}>{permit['description'] as string}</p>
+          <p style={{ fontSize: '0.82rem', margin: 0, lineHeight: 1.6 }}>{str('description')}</p>
         </div>
       )}
-      {permit['linked_jsa_id'] && <DetailRow label="Linked JSA" value={<span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{permit['linked_jsa_id'] as string}</span>} />}
-      {permit['linked_risk_assessment_id'] && <DetailRow label="Linked RA" value={<span class="vt-cell-mono" style={{ fontSize: '0.72rem' }}>{permit['linked_risk_assessment_id'] as string}</span>} />}
-      <DetailRow label="Created" value={fmtDate(permit['created_at'] as string)} />
     </div>
   );
 }

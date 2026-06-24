@@ -52,6 +52,7 @@ export { Pagination, usePagination, DEFAULT_PAGE_SIZE, type PaginationProps, typ
 export { Modal, HseModal, type ModalProps } from './components/Modal';
 export { Wizard, type WizardProps } from './components/Wizard';
 export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
+export { DetailGrid, type DetailGridProps, type DetailItem } from './components/DetailGrid';
 
 // ── Layouts ──
 export { ModulePageLayout, type ModulePageLayoutProps } from './layouts/ModulePageLayout';
