@@ -83,7 +83,7 @@ function systemEventLabel(post: MessagePostRow): string {
 function TagChip({ label, tone = 'info' }: { label: string; tone?: 'info' | 'priority' | 'danger' }): VNode {
   const c = tone === 'priority' ? { bg: '#fff7ed', fg: '#b45309' }
           : tone === 'danger'   ? { bg: '#fff1f2', fg: '#be123c' }
-          :                       { bg: '#eff5ff', fg: '#1d6be3' };
+          :                       { bg: 'var(--bg-subtle, #f1f4f9)', fg: 'var(--text-muted, #68799a)' };
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', height: '18px', padding: '0 7px',
       borderRadius: '999px', background: c.bg, color: c.fg, fontSize: '0.62rem', fontWeight: 700 }}>{label}</span>
@@ -259,12 +259,12 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
             return (
               <div key={p.threadId} onClick={() => t && onSelect(t)} style={{ display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-surface)', marginBottom: '4px' }}>
-                <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--siomac-navy)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.6rem', fontWeight: 700, flexShrink: 0 }}>{(label[0] ?? '?').toUpperCase()}</span>
+                <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--bg-subtle, #eef1f6)', color: 'var(--siomac-navy)', display: 'grid', placeItems: 'center', fontSize: '0.6rem', fontWeight: 700, flexShrink: 0 }}>{(label[0] ?? '?').toUpperCase()}</span>
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <span style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
                   <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.note ?? t?.lastPostPreview ?? ''}</span>
                 </span>
-                {t && t.unreadCount > 0 && <span style={{ minWidth: '16px', height: '16px', borderRadius: '8px', background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.56rem', fontWeight: 700, display: 'grid', placeItems: 'center', padding: '0 4px' }}>{t.unreadCount}</span>}
+                {t && t.unreadCount > 0 && <span style={{ minWidth: '16px', height: '16px', borderRadius: '8px', background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.56rem', fontWeight: 700, display: 'grid', placeItems: 'center', padding: '0 4px' }}>{t.unreadCount}</span>}
               </div>
             );
           })}
@@ -298,9 +298,7 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
           return (
             <div key={t.id} onClick={() => onSelect(t)}
               style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer',
-                background: isSelected ? 'rgba(27,45,85,0.07)' : isUnread ? 'rgba(27,45,85,0.045)' : 'transparent',
-                borderLeft: isSelected ? '3px solid var(--siomac-navy)'
-                  : isUnread ? '3px solid var(--siomac-gold, #FFB712)' : '3px solid transparent' }}>
+                background: isSelected ? 'var(--bg-subtle, #f4f6fa)' : 'transparent' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                   background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -321,7 +319,7 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
                     </span>
                     {isUnread ? (
                       <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
-                        background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+                        background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                         {t.unreadCount > 9 ? '9+' : t.unreadCount}
                       </span>
@@ -754,7 +752,8 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
 
 // ── Thread details panel (right pane) ─────────────────────────────────────────
 
-function initials(name: string): string {
+function initials(name: string | null | undefined): string {
+  if (!name) return '?';
   const p = name.trim().split(/\s+/);
   return (((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()) || '?';
 }
@@ -820,145 +819,99 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
   const others = otherParticipants(participants, myId);
   const title  = thread.subject ?? (others.map(p => p.displayName ?? p.username ?? '?').join(', ') || 'Conversation');
 
+  const presenceOf = (uid: string): 'online' | 'away' | 'offline' =>
+    uid === myId ? 'online' : (onlineMap.get(uid) ?? 'offline');
+
   return (
-    <div style={{ padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
-        <Avatar name={title} img={others[0]?.profileImage} size={64} />
-        <div>
-          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{title}</div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {typeLabel} · {thread.participantCount} {thread.participantCount === 1 ? 'person' : 'people'}
-          </div>
+    <div class="mc-panel">
+      {/* Profile */}
+      <div class="mc-panel-profile">
+        <div class="mc-panel-avatar">
+          {others[0]?.profileImage
+            ? <img src={others[0].profileImage} alt={title} loading="lazy" referrerPolicy="no-referrer" />
+            : <span>{initials(title)}</span>}
+        </div>
+        <h3>{title}</h3>
+        <p>{typeLabel} · {thread.participantCount} {thread.participantCount === 1 ? 'person' : 'people'}</p>
+        <div class="mc-panel-pills">
+          {thread.actionRequired && <span class="mc-panel-pill is-warn">Action Required</span>}
+          {thread.isPinned && <span class="mc-panel-pill is-info">Pinned</span>}
+          {thread.sourceModule && <span class="mc-panel-pill">{moduleLabel(thread.sourceModule)}</span>}
         </div>
       </div>
 
       {/* Mute notifications */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px',
-        background: 'var(--bg-subtle, #f7f8fa)', border: '1px solid var(--border)', borderRadius: '10px' }}>
-        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
-          <i class="fas fa-bell-slash" style={{ marginRight: '8px', color: 'var(--text-muted)' }} />Mute notifications
-        </span>
-        <button onClick={() => muteThread.mutate({ threadId: thread.id, muted: !thread.isMuted })} disabled={muteThread.isPending}
-          title={thread.isMuted ? 'Unmute' : 'Mute'}
-          style={{ width: '40px', height: '22px', borderRadius: '999px', border: 'none', cursor: 'pointer', position: 'relative', flexShrink: 0,
-            background: thread.isMuted ? 'var(--siomac-navy)' : '#cbd5e1' }}>
-          <span style={{ position: 'absolute', top: '2px', left: thread.isMuted ? '20px' : '2px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff' }} />
-        </button>
+      <div class="mc-panel-section">
+        <div class="mc-toggle-row">
+          <span><i class="fas fa-bell-slash" style={{ marginRight: '8px', opacity: .55 }} />Mute notifications</span>
+          <button class={`mc-toggle${thread.isMuted ? ' on' : ''}`} disabled={muteThread.isPending}
+            title={thread.isMuted ? 'Unmute' : 'Mute'}
+            onClick={() => muteThread.mutate({ threadId: thread.id, muted: !thread.isMuted })} />
+        </div>
       </div>
 
-      {/* Linked record */}
-      {thread.sourceModule && thread.sourceEntityId && (
-        <div>
-          <SectionHead>Linked record</SectionHead>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-            background: 'var(--bg-subtle, #f7f8fa)', border: '1px solid var(--border)', borderRadius: '10px' }}>
-            <i class="fas fa-link" style={{ color: 'var(--siomac-navy)' }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {thread.sourceEntityId}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {thread.sourceModule}{thread.sourceEntityType ? ` · ${thread.sourceEntityType}` : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Participants */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <SectionHead>Participants ({participants.length})</SectionHead>
-          {isOwner && (
-            <button onClick={() => setAddOpen(o => !o)}
-              style={{ marginLeft: 'auto', marginTop: '-6px', background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--siomac-navy)', fontSize: '0.74rem', fontWeight: 600 }}>
-              <i class="fas fa-user-plus" /> Add
-            </button>
-          )}
+      <div class="mc-panel-section">
+        <div class="mc-panel-head">
+          <h4><i class="fas fa-users" /> Participants · {participants.length}</h4>
+          {isOwner && <button onClick={() => setAddOpen(o => !o)}><i class="fas fa-user-plus" /> Add</button>}
         </div>
-
         {isOwner && addOpen && (
-          <div style={{ marginBottom: '10px' }}>
+          <div style={{ marginBottom: '8px' }}>
             <div class="vt-search" style={{ marginBottom: '6px' }}>
               <i class="fas fa-search" />
-              <input type="search" placeholder="Search people…" value={q}
-                onInput={e => setQ((e.target as HTMLInputElement).value)} />
+              <input type="search" placeholder="Search people…" value={q} onInput={e => setQ((e.target as HTMLInputElement).value)} />
             </div>
             {candidates.map(r => (
-              <button key={r.userId} disabled={addP.isPending}
-                onClick={() => { addP.mutate({ threadId: thread.id, userIds: [r.userId] }); setQ(''); setAddOpen(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px',
-                  background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: '7px' }}>
-                <Avatar name={r.displayName ?? r.username ?? '?'} img={r.profileImage} size={26} />
-                <span style={{ fontSize: '0.8rem', color: 'var(--siomac-navy)' }}>{r.displayName ?? r.username}</span>
+              <button key={r.userId} disabled={addP.isPending} class="mc-signal clickable" style={{ width: '100%', marginTop: '4px', textAlign: 'left' }}
+                onClick={() => { addP.mutate({ threadId: thread.id, userIds: [r.userId] }); setQ(''); setAddOpen(false); }}>
+                <span class="mc-signal-chip">{r.profileImage ? <img src={r.profileImage} alt="" /> : initials(r.displayName ?? r.username)}</span>
+                <span class="mc-signal-text"><strong>{r.displayName ?? r.username}</strong><span>Add to conversation</span></span>
+                <i class="fas fa-plus" style={{ color: 'rgba(255,255,255,.5)' }} />
               </button>
             ))}
           </div>
         )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {participants.map(p => {
-            const name = (p.userId === myId ? 'You' : (p.displayName ?? p.username ?? '?'));
-            return (
-              <div key={p.userId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ position: 'relative', flexShrink: 0, lineHeight: 0 }}>
-                  <Avatar name={p.displayName ?? p.username ?? '?'} img={p.profileImage} size={32} />
-                  {(p.userId === myId || onlineMap.has(p.userId)) && (
-                    <span title={p.userId === myId ? 'You' : (onlineMap.get(p.userId) === 'away' ? 'Away' : 'Online')}
-                      style={{ position: 'absolute', right: 0, bottom: 0, width: '9px', height: '9px', borderRadius: '50%', border: '2px solid #fff',
-                        background: (p.userId !== myId && onlineMap.get(p.userId) === 'away') ? '#f59e0b' : '#38c878' }} />
-                  )}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{p.role}</div>
-                </div>
-                {isOwner && p.userId !== myId && (
-                  <button onClick={() => removeP.mutate({ threadId: thread.id, userId: p.userId })} disabled={removeP.isPending}
-                    title="Remove" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}>
-                    <i class="fas fa-xmark" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {participants.map(p => {
+          const name = p.userId === myId ? 'You' : (p.displayName ?? p.username ?? '?');
+          const st = presenceOf(p.userId);
+          return (
+            <div key={p.userId} class="mc-signal">
+              <span class="mc-signal-chip" style={{ position: 'relative' }}>
+                {p.profileImage ? <img src={p.profileImage} alt="" /> : initials(p.displayName ?? p.username)}
+                {st !== 'offline' && <span style={{ position: 'absolute', right: '-1px', bottom: '-1px', width: '9px', height: '9px', borderRadius: '50%', border: '2px solid #1b2d54', background: st === 'away' ? '#f59e0b' : '#22c55e' }} />}
+              </span>
+              <span class="mc-signal-text"><strong>{name}</strong><span style={{ textTransform: 'capitalize' }}>{p.role}</span></span>
+              {isOwner && p.userId !== myId
+                ? <button class="mc-signal-x" title="Remove" onClick={() => removeP.mutate({ threadId: thread.id, userId: p.userId })}><i class="fas fa-xmark" /></button>
+                : (st !== 'offline' && <span class={`mc-signal-tag ${st === 'away' ? 'is-due' : 'is-ok'}`}>{st === 'away' ? 'Away' : 'Online'}</span>)}
+            </div>
+          );
+        })}
       </div>
 
       {/* Pinned messages */}
       {postPins.length > 0 && (
-        <div>
-          <SectionHead>Pinned messages ({postPins.length})</SectionHead>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {postPins.map(pin => (
-              <div key={pin.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 9px',
-                borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-subtle, #f7f8fa)' }}>
-                <i class="fas fa-thumbtack" style={{ color: 'var(--siomac-navy)', fontSize: '0.72rem', marginTop: '2px', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pin.postPreview?.body ?? pin.note ?? 'Pinned message'}</div>
-                  <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>by {pin.pinnedBy.displayName}{pin.visibility === 'thread' ? ' · everyone' : ' · personal'}</div>
-                </div>
-                <button onClick={() => unpinMsg.mutate({ pinId: pin.id, threadId: thread.id })} title="Unpin"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}><i class="fas fa-xmark" /></button>
-              </div>
-            ))}
-          </div>
+        <div class="mc-panel-section">
+          <div class="mc-panel-head"><h4><i class="fas fa-thumbtack" /> Pinned messages · {postPins.length}</h4></div>
+          {postPins.map(pin => (
+            <div key={pin.id} class="mc-signal">
+              <span class="mc-signal-chip is-info"><i class="fas fa-thumbtack" /></span>
+              <span class="mc-signal-text"><strong>{pin.postPreview?.body ?? pin.note ?? 'Pinned message'}</strong><span>by {pin.pinnedBy.displayName}{pin.visibility === 'thread' ? ' · everyone' : ' · personal'}</span></span>
+              <button class="mc-signal-x" title="Unpin" onClick={() => unpinMsg.mutate({ pinId: pin.id, threadId: thread.id })}><i class="fas fa-xmark" /></button>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Shared media */}
       {mediaFiles.length > 0 && (
-        <div>
-          <SectionHead>Shared media ({mediaFiles.length})</SectionHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+        <div class="mc-panel-section">
+          <div class="mc-panel-head"><h4><i class="fas fa-images" /> Shared media · {mediaFiles.length}</h4></div>
+          <div class="mc-media-grid">
             {mediaFiles.slice(0, 9).map(a => (
-              <a key={a.id} href={a.url ?? undefined} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'block', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-subtle, #eef3fa)' }}>
-                {a.url
-                  ? <img src={a.url} alt={a.fileName} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.6rem' }}>IMG</span>}
+              <a key={a.id} class="mc-media-box" href={a.url ?? undefined} target="_blank" rel="noopener noreferrer">
+                {a.url ? <img src={a.url} alt={a.fileName} loading="lazy" /> : 'IMG'}
               </a>
             ))}
           </div>
@@ -966,47 +919,43 @@ function ThreadDetailsPanel({ thread }: { thread: MessageThreadListItem }): VNod
       )}
 
       {/* Files */}
-      <div>
-        <SectionHead>Files ({docFiles.length})</SectionHead>
-        {docFiles.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '18px 8px', color: 'var(--text-muted)' }}>
-            <i class="fas fa-paperclip" style={{ fontSize: '1.3rem', opacity: 0.4 }} />
-            <div style={{ fontSize: '0.76rem', marginTop: '6px' }}>No files shared yet.</div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {docFiles.map(a => {
-              const href = a.url ?? undefined;
-              const Tag  = href ? 'a' : 'div';
+      <div class="mc-panel-section">
+        <div class="mc-panel-head"><h4><i class="fas fa-paperclip" /> Files · {docFiles.length}</h4></div>
+        {docFiles.length === 0
+          ? <div style={{ color: 'rgba(255,255,255,.4)', fontSize: '0.7rem', padding: '4px 2px' }}>No files shared yet.</div>
+          : docFiles.map(a => {
+              const t = attTypeOf(a);
+              const chipCls = t === 'pdf' ? 'is-pdf' : t === 'word' ? 'is-word' : t === 'excel' ? 'is-excel' : 'is-file';
+              const label = t === 'pdf' ? 'PDF' : t === 'word' ? 'DOC' : t === 'excel' ? 'XLS' : 'FILE';
               return (
-                <Tag
-                  key={a.id}
-                  href={href}
-                  download={a.fileName}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 9px',
-                    borderRadius: '8px', border: '1px solid var(--border)',
-                    background: 'var(--bg-subtle, #f4f5f7)', textDecoration: 'none',
-                    cursor: href ? 'pointer' : 'default',
-                  }}>
-                  <i class={`fas ${fileIcon(a.contentType)}`} style={{ color: 'var(--siomac-navy)', fontSize: '1rem', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.77rem', fontWeight: 600, color: 'var(--siomac-navy)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {a.fileName}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                      {[fmtBytes(a.sizeBytes), a.authorName].filter(Boolean).join(' · ')}
-                    </div>
-                  </div>
-                  {href && <i class="fas fa-download" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', flexShrink: 0 }} />}
-                </Tag>
+                <a key={a.id} class="mc-signal clickable" href={a.url ?? undefined} download={a.fileName} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <span class={`mc-signal-chip ${chipCls}`}>{label}</span>
+                  <span class="mc-signal-text"><strong>{a.fileName}</strong><span>{[fmtBytes(a.sizeBytes), a.authorName].filter(Boolean).join(' · ')}</span></span>
+                  {a.url && <i class="fas fa-download" style={{ color: 'rgba(255,255,255,.5)' }} />}
+                </a>
               );
             })}
+      </div>
+
+      {/* Linked record */}
+      {thread.sourceModule && thread.sourceEntityId && (
+        <div class="mc-panel-section">
+          <div class="mc-panel-head"><h4><i class="fas fa-link" /> Linked record</h4></div>
+          <div class="mc-signal">
+            <span class="mc-signal-chip is-info">{moduleLabel(thread.sourceModule).slice(0, 3)}</span>
+            <span class="mc-signal-text"><strong>{thread.sourceEntityType ?? 'Record'}</strong><span>{thread.sourceEntityId}</span></span>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Details */}
+      <div class="mc-panel-section">
+        <div class="mc-panel-head"><h4><i class="fas fa-circle-info" /> Details</h4></div>
+        <div class="mc-detail-row"><span>Created</span><strong>{thread.createdAt ? new Date(thread.createdAt).toLocaleDateString() : '—'}</strong></div>
+        <div class="mc-detail-row"><span>Last activity</span><strong>{thread.lastPostAt ? new Date(thread.lastPostAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '—'}</strong></div>
+        <div class="mc-detail-row"><span>Unread</span><strong>{thread.unreadCount} messages</strong></div>
+        <div class="mc-detail-row"><span>Attachments</span><strong>{allFiles.length} files</strong></div>
+        <div class="mc-detail-row"><span>Priority</span><strong style={{ textTransform: 'capitalize' }}>{thread.priority ?? 'normal'}</strong></div>
       </div>
     </div>
   );
@@ -1120,13 +1069,13 @@ export function MessageCenter(): VNode {
               <button key={t.key} onClick={() => switchTab(t.key)}
                 style={{ display: 'flex', alignItems: 'center', gap: '7px', height: '34px', padding: '0 14px',
                   borderRadius: '9px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit',
-                  border: 'none', background: on ? 'var(--siomac-navy)' : 'transparent',
-                  color: on ? '#fff' : 'var(--text-muted)' }}>
+                  border: on ? '1px solid var(--border)' : '1px solid transparent', background: on ? 'var(--bg-subtle, #eef1f8)' : 'transparent',
+                  color: on ? 'var(--siomac-navy)' : 'var(--text-muted)' }}>
                 <i class={`fas ${t.icon}`} style={{ fontSize: '0.78rem' }} /> {t.label}
                 {count !== undefined && count > 0 && (
                   <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', padding: '0 5px',
-                    background: on ? 'rgba(255,255,255,0.25)' : 'var(--border)',
-                    color: on ? '#fff' : 'var(--siomac-navy)', fontSize: '0.66rem', fontWeight: 700,
+                    background: 'var(--border)',
+                    color: 'var(--siomac-navy)', fontSize: '0.66rem', fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
                 )}
               </button>
@@ -1186,7 +1135,7 @@ export function MessageCenter(): VNode {
                     <Conversation thread={selectedThread} detailsOpen={showDetails} onToggleDetails={() => setShowDetails(v => !v)} />
                   </div>
                   {showDetails && (
-                    <div style={{ width: '280px', flexShrink: 0, borderLeft: '1px solid var(--border)', overflowY: 'auto' }}>
+                    <div style={{ width: '324px', flexShrink: 0, padding: '12px', overflow: 'hidden' }}>
                       <ThreadDetailsPanel thread={selectedThread} />
                     </div>
                   )}
