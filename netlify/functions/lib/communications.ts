@@ -18,9 +18,463 @@ import { sb }          from './db';
 import { emitAppEvent } from './appEvents';
 import { getSignedUrl }  from './photos';
 import { createAttachmentUploadUrl } from './upload';
+import { userCan }       from './auth';
+import type {
+  MessageThread, MessageParticipant, MessagePost, MessageAttachment,
+  MessageRecipient, ComplianceThread,
+} from '../../../types/messaging';
 
 // ── Messaging attachments bucket ───────────────────────────────────────────────
 export const MESSAGES_BUCKET = 'message-attachments';
+
+/**
+ * Resolve a participant avatar from the CACHED signed-URL columns on app_users —
+ * the same 24h URL `getProfileSignedUrl` maintains (refreshed on the user's login
+ * or when <1h from expiry). Returns null when there's no fresh cached URL, so the
+ * UI falls back to initials. Adds ZERO extra round-trips: the columns ride along
+ * on the existing app_users join. (A signed URL per participant on every list
+ * request would be far too expensive — this is the deliberate trade-off, and the
+ * area the planned redesign should revisit.)
+ */
+function cachedProfileUrl(
+  u: { signed_url?: string | null; signed_url_expires_at?: string | null } | null | undefined,
+): string | null {
+  if (!u?.signed_url) return null;
+  const exp = u.signed_url_expires_at ? new Date(u.signed_url_expires_at).getTime() : 0;
+  return exp > Date.now() ? u.signed_url : null;
+}
+
+// ── Thread read-access model (participant-default) ──────────────────────────────
+//
+// SIOMAC messaging is participant-default. There is NO broad "admin reads every
+// thread" path. A thread is readable by a user only if ONE of:
+//   • participant   — they are an active participant in the thread
+//   • record        — the thread is linked to a business record (PTW/incident/…)
+//                     AND they hold communications.record_thread_read AND they can
+//                     view that record type
+//   • grant         — they have an ACTIVE compliance access grant on the thread
+//                     (audited, time-boxed; see message_thread_access_grants)
+// Otherwise access is denied. If the user holds communications.compliance_read we
+// signal `needsCompliance` so the UI can offer the audited access flow. Even
+// superadmin must obtain a grant — no role silently reads private DMs.
+
+export type ThreadAccessVia = 'participant' | 'record' | 'grant' | null;
+
+export interface ThreadAccessResult {
+  allowed:         boolean;
+  via:             ThreadAccessVia;
+  needsCompliance: boolean;   // not allowed, but user may request audited access
+  participantRole: string | null;   // their role IF a participant, else null
+}
+
+/**
+ * Map a record-linked thread's source to the permission that governs viewing
+ * that record. Conservative: unknown record types return null (no inheritance —
+ * participant/grant only). Keyed on module + entity-type text so it tolerates
+ * the various source_module/source_entity_type conventions in use.
+ */
+function recordViewPermissionKey(sourceModule: string | null, sourceEntityType: string | null): string | null {
+  const s = `${sourceModule ?? ''} ${sourceEntityType ?? ''}`.toLowerCase();
+  if (s.includes('permit') || s.includes('ptw'))         return 'hse.permits.view';
+  if (s.includes('incident'))                            return 'hse.incidents.view';
+  if (s.includes('capa') || s.includes('investigation')) return 'hse.incidents.view'; // CAPA/investigations inherit incident visibility
+  if (s.includes('risk') || s.includes('jsa') || s.includes('hazard')) return 'hse.risk.view';
+  return null;
+}
+
+/** True if the user has a live (non-revoked, non-expired) compliance grant on the thread. */
+async function hasActiveThreadGrant(threadId: string, userId: string): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  const { data } = await sb
+    .from('message_thread_access_grants')
+    .select('id')
+    .eq('thread_id', threadId)
+    .eq('user_id', userId)
+    .is('revoked_at', null)
+    .gt('expires_at', nowIso)
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+  return !!data;
+}
+
+/**
+ * Resolve whether `user` may READ `threadId`, role-agnostically. The single
+ * source of truth for messaging read access — used by getThread + getThreadPosts.
+ */
+export async function resolveThreadReadAccess(
+  threadId: string,
+  user: { id: string; role?: string },
+): Promise<ThreadAccessResult> {
+  // 1. Participant?
+  const { data: part } = await sb
+    .from('message_participants')
+    .select('role')
+    .eq('thread_id', threadId)
+    .eq('user_id', user.id)
+    .is('removed_at', null)
+    .maybeSingle<{ role: string }>();
+  if (part) return { allowed: true, via: 'participant', needsCompliance: false, participantRole: part.role };
+
+  // 2. Record-linked inheritance?
+  const { data: thread } = await sb
+    .from('message_threads')
+    .select('source_module, source_entity_type')
+    .eq('id', threadId)
+    .maybeSingle<{ source_module: string | null; source_entity_type: string | null }>();
+
+  const principal = { id: user.id, role: (user.role ?? 'employee') as string };
+
+  if (thread?.source_module) {
+    const recordPerm = recordViewPermissionKey(thread.source_module, thread.source_entity_type);
+    if (recordPerm) {
+      const [canReadRecordThreads, canViewRecord] = await Promise.all([
+        userCan(principal, 'communications.record_thread_read'),
+        userCan(principal, recordPerm),
+      ]);
+      if (canReadRecordThreads && canViewRecord) {
+        return { allowed: true, via: 'record', needsCompliance: false, participantRole: null };
+      }
+    }
+  }
+
+  // 3. Active compliance grant?
+  if (await hasActiveThreadGrant(threadId, user.id)) {
+    return { allowed: true, via: 'grant', needsCompliance: false, participantRole: null };
+  }
+
+  // 4. Denied — can they request audited access?
+  const needsCompliance = await userCan(principal, 'communications.compliance_read');
+  return { allowed: false, via: null, needsCompliance, participantRole: null };
+}
+
+// ── Compliance access flow (audited, time-boxed) ────────────────────────────────
+
+export const COMPLIANCE_REASONS = [
+  'investigation', 'safety_incident', 'hr_complaint',
+  'legal_compliance', 'security_review', 'other',
+] as const;
+export type ComplianceReason = typeof COMPLIANCE_REASONS[number];
+
+export interface RequestThreadAccessInput {
+  threadId:      string;
+  userId:        string;            // the requester (and grantee)
+  reason:        ComplianceReason;
+  caseRef?:      string | null;
+  notes?:        string | null;
+  durationHours?: number;           // access window length; default 24h
+}
+
+export interface RequestThreadAccessResult {
+  ok:        boolean;
+  message?:  string;
+  grantId?:  string;
+  expiresAt?: string;
+}
+
+/**
+ * Open an audited, time-boxed compliance grant on a thread. The caller must
+ * already hold communications.compliance_read (enforced at the route). Writes
+ * the grant row AND an app_events + audit_logs record (who / thread / when /
+ * reason / case ref / duration). Even superadmin reads a private thread only
+ * after going through this flow — the read-gate honours the grant, not the role.
+ */
+export async function requestThreadAccess(input: RequestThreadAccessInput): Promise<RequestThreadAccessResult> {
+  try {
+    // Thread must exist.
+    const { data: thread } = await sb
+      .from('message_threads')
+      .select('id, thread_type, subject')
+      .eq('id', input.threadId)
+      .maybeSingle<{ id: string; thread_type: string; subject: string }>();
+    if (!thread) return { ok: false, message: 'Thread not found' };
+
+    const hours     = Math.min(Math.max(input.durationHours ?? 24, 1), 168); // 1h..7d
+    const grantedAt = new Date();
+    const expiresAt = new Date(grantedAt.getTime() + hours * 3_600_000).toISOString();
+
+    const { data: grant, error } = await sb
+      .from('message_thread_access_grants')
+      .insert({
+        thread_id:  input.threadId,
+        user_id:    input.userId,
+        reason:     input.reason,
+        case_ref:   input.caseRef ?? null,
+        notes:      input.notes ?? null,
+        granted_at: grantedAt.toISOString(),
+        expires_at: expiresAt,
+      })
+      .select('id')
+      .maybeSingle<{ id: string }>();
+
+    if (error || !grant) return { ok: false, message: error?.message ?? 'Could not create access grant' };
+
+    // Audit trail (app_events + audit_logs). No recipient notification — compliance
+    // access must not tip off an active investigation.
+    void emitAppEvent({
+      eventType:        'communications.thread.compliance_access_granted',
+      sourceModule:     'communications',
+      sourceEntityType: 'message_thread',
+      sourceEntityId:   input.threadId,
+      actorUserId:      input.userId,
+      severity:         'warning',
+      payload: {
+        grantId:      grant.id,
+        reason:       input.reason,
+        caseRef:      input.caseRef ?? null,
+        notes:        input.notes ?? null,
+        durationHours: hours,
+        expiresAt,
+        threadType:   thread.thread_type,
+        threadSubject: thread.subject,
+      },
+    });
+
+    return { ok: true, grantId: grant.id, expiresAt };
+  } catch (e) {
+    console.error('[communications] requestThreadAccess failed:', e);
+    return { ok: false, message: 'Internal error' };
+  }
+}
+
+/**
+ * Record that message history was exported under a compliance grant. Requires
+ * communications.compliance_export (enforced at the route). Stamps the grant and
+ * writes an audit row. Returns the grant ids stamped.
+ */
+export async function recordThreadExport(threadId: string, userId: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const nowIso = new Date().toISOString();
+    const { error } = await sb
+      .from('message_thread_access_grants')
+      .update({ exported_at: nowIso })
+      .eq('thread_id', threadId)
+      .eq('user_id', userId)
+      .is('revoked_at', null)
+      .gt('expires_at', nowIso);
+    if (error) return { ok: false, message: error.message };
+
+    void emitAppEvent({
+      eventType:        'communications.thread.compliance_export',
+      sourceModule:     'communications',
+      sourceEntityType: 'message_thread',
+      sourceEntityId:   threadId,
+      actorUserId:      userId,
+      severity:         'warning',
+      payload: { exportedAt: nowIso },
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error('[communications] recordThreadExport failed:', e);
+    return { ok: false, message: 'Internal error' };
+  }
+}
+
+// ── Compliance thread browser (discovery for investigators) ─────────────────────
+//
+// Lets a holder of communications.compliance_read FIND threads they are not a
+// participant in. Returns METADATA ONLY — subject, participants, type, record
+// link, last-activity timestamp. NEVER returns post bodies or previews; reading
+// the actual messages still requires the audited grant flow (resolveThreadReadAccess).
+
+/** @see ComplianceThread in types/messaging.ts (shared contract) */
+export type ComplianceThreadRow = ComplianceThread;
+
+const COMPLIANCE_CANDIDATE_CAP = 200;
+
+/**
+ * Search ALL threads (not participant-filtered) for compliance discovery. Matches
+ * on subject OR participant name/email. Metadata only — no message content.
+ */
+export async function searchThreadsForCompliance(input: {
+  actorUserId: string;
+  search?:     string;
+  limit?:      number;
+}): Promise<{ rows: ComplianceThreadRow[] }> {
+  try {
+    const limit = Math.min(input.limit ?? 30, 100);
+    const needle = (input.search ?? '').trim().toLowerCase();
+
+    // Pull the most-recent candidate threads (bounded), then filter/rank in JS.
+    const { data: threads } = await sb
+      .from('message_threads')
+      .select('id, thread_type, subject, last_post_at, source_module, source_entity_type, source_entity_id')
+      .order('last_post_at', { ascending: false, nullsFirst: false })
+      .limit(COMPLIANCE_CANDIDATE_CAP) as {
+        data: Array<{
+          id: string; thread_type: string; subject: string; last_post_at: string | null;
+          source_module: string | null; source_entity_type: string | null; source_entity_id: string | null;
+        }> | null;
+      };
+    if (!threads || threads.length === 0) return { rows: [] };
+
+    const ids = threads.map(t => t.id);
+    const { data: parts } = await sb
+      .from('message_participants')
+      .select('thread_id, user_id, app_users!inner(full_name, email)')
+      .in('thread_id', ids)
+      .is('removed_at', null) as {
+        data: Array<{ thread_id: string; user_id: string; app_users: { full_name: string | null; email: string } }> | null;
+      };
+
+    const byThread = new Map<string, { names: string[]; emails: string[]; userIds: Set<string> }>();
+    for (const p of parts ?? []) {
+      const e = byThread.get(p.thread_id) ?? { names: [], emails: [], userIds: new Set<string>() };
+      if (p.app_users.full_name) e.names.push(p.app_users.full_name);
+      e.emails.push(p.app_users.email);
+      e.userIds.add(p.user_id);
+      byThread.set(p.thread_id, e);
+    }
+
+    const rows: ComplianceThreadRow[] = [];
+    for (const t of threads) {
+      const e = byThread.get(t.id) ?? { names: [], emails: [], userIds: new Set<string>() };
+      if (needle) {
+        const hit = t.subject.toLowerCase().includes(needle)
+          || e.names.some(n => n.toLowerCase().includes(needle))
+          || e.emails.some(m => m.toLowerCase().includes(needle));
+        if (!hit) continue;
+      }
+      rows.push({
+        threadId:         t.id,
+        threadType:       t.thread_type as ComplianceThread['threadType'],
+        subject:          t.subject,
+        lastPostAt:       t.last_post_at,
+        participantCount: e.userIds.size,
+        participantNames: e.names,
+        sourceModule:     t.source_module,
+        sourceEntityType: t.source_entity_type,
+        sourceEntityId:   t.source_entity_id,
+        isParticipant:    e.userIds.has(input.actorUserId),
+      });
+      if (rows.length >= limit) break;
+    }
+    return { rows };
+  } catch (e) {
+    console.error('[communications] searchThreadsForCompliance failed:', e);
+    return { rows: [] };
+  }
+}
+
+// ── Record-linked thread resolver (Discussion deep-links) ───────────────────────
+//
+// Find-or-create the discussion thread for a business record. The caller must be
+// able to VIEW that record type (checked here via the same mapping the read-gate
+// uses). Opening a record's discussion joins the caller as a participant so they
+// can take part — record discussions are collaborative for authorized viewers.
+
+export interface ResolveRecordThreadInput {
+  actorUserId:      string;
+  actorRole?:       string;
+  sourceModule:     string;
+  sourceEntityType: string;
+  sourceEntityId:   string;
+  recordRef?:       string | null;   // human label, e.g. 'PTW-000421'
+  subject?:         string | null;
+}
+
+export interface ResolveRecordThreadResult {
+  ok:       boolean;
+  message?: string;
+  code?:    'forbidden';
+  threadId?: string;
+  created?:  boolean;
+}
+
+export async function resolveRecordThread(input: ResolveRecordThreadInput): Promise<ResolveRecordThreadResult> {
+  try {
+    // The caller must be able to view this record type (record-view inheritance).
+    const recordPerm = recordViewPermissionKey(input.sourceModule, input.sourceEntityType);
+    if (recordPerm) {
+      const canView = await userCan({ id: input.actorUserId, role: input.actorRole }, recordPerm);
+      if (!canView) return { ok: false, code: 'forbidden', message: 'You do not have access to this record.' };
+    }
+
+    const now = new Date().toISOString();
+
+    // Find an existing record thread.
+    const { data: existing } = await sb
+      .from('message_threads')
+      .select('id')
+      .eq('thread_type', 'record')
+      .eq('source_module', input.sourceModule)
+      .eq('source_entity_type', input.sourceEntityType)
+      .eq('source_entity_id', input.sourceEntityId)
+      .limit(1)
+      .maybeSingle<{ id: string }>();
+
+    let threadId = existing?.id ?? null;
+    let created  = false;
+
+    if (!threadId) {
+      const subject = (input.subject ?? '').trim()
+        || `${input.recordRef ?? input.sourceEntityId} Discussion`;
+      const { data: t, error } = await sb
+        .from('message_threads')
+        .insert({
+          thread_type:        'record',
+          subject,
+          source_module:      input.sourceModule,
+          source_entity_type: input.sourceEntityType,
+          source_entity_id:   input.sourceEntityId,
+          created_by:         input.actorUserId,
+          last_post_at:       now,
+          last_post_preview:  'Discussion started',
+        })
+        .select('id')
+        .single<{ id: string }>();
+      if (error || !t) return { ok: false, message: error?.message ?? 'Could not start discussion' };
+      threadId = t.id;
+      created  = true;
+
+      await sb.from('message_posts').insert({
+        thread_id:      threadId,
+        author_user_id: null,
+        body:           `Discussion started for ${input.recordRef ?? input.sourceEntityId}.`,
+        is_system:      true,
+      });
+
+      void emitAppEvent({
+        eventType:        'communications.record_thread.created',
+        sourceModule:     'communications',
+        sourceEntityType: 'message_thread',
+        sourceEntityId:   threadId,
+        actorUserId:      input.actorUserId,
+        severity:         'info',
+        payload: {
+          recordModule: input.sourceModule,
+          recordType:   input.sourceEntityType,
+          recordId:     input.sourceEntityId,
+          recordRef:    input.recordRef ?? null,
+        },
+      });
+    }
+
+    // Ensure the opener is an active participant (re-activate if previously removed).
+    const { data: part } = await sb
+      .from('message_participants')
+      .select('id, removed_at')
+      .eq('thread_id', threadId)
+      .eq('user_id', input.actorUserId)
+      .maybeSingle<{ id: string; removed_at: string | null }>();
+
+    if (!part) {
+      await sb.from('message_participants').insert({
+        thread_id: threadId,
+        user_id:   input.actorUserId,
+        role:      created ? 'owner' : 'participant',
+        joined_at: now,
+      });
+    } else if (part.removed_at) {
+      await sb.from('message_participants').update({ removed_at: null }).eq('id', part.id);
+    }
+
+    void emitSignal([input.actorUserId], 'messages');
+    return { ok: true, threadId: threadId ?? undefined, created };
+  } catch (e) {
+    console.error('[communications] resolveRecordThread failed:', e);
+    return { ok: false, message: 'Internal error' };
+  }
+}
 
 // ── Realtime signal emission ───────────────────────────────────────────────────
 
@@ -76,39 +530,22 @@ export interface CommsSummary {
  * Called by POST /api/communications/summary.
  */
 export async function getCommsSummary(userId: string, role: string): Promise<CommsSummary> {
-  const channelKey = await _ensureRealtimeChannel(userId);
-
   const nowIso = new Date().toISOString();
-  // Active = not archived and not expired. `sb` is the untyped service client,
-  // so the chained filter builder is typed as `any` here by design.
-  const notActive = <T>(q: T): T =>
-    (q as { is: (c: string, v: null) => { or: (f: string) => T } })
-      .is('archived_at', null).or(`expires_at.is.null,expires_at.gt.${nowIso}`);
 
+  // ── Everything runs in ONE parallel batch (no serial prefix) ───────────────
+  // The 5 notification counts collapse into a single fetch of the active rows'
+  // flag columns — counted in JS below — instead of 5 round-trips on one table.
+  // `_ensureRealtimeChannel` joins the batch too, so it no longer adds a serial
+  // round-trip to the badge fetch.
   const [
-    notifRes, notifTotalRes, notifActionRes, notifCritRes, notifArchRes,
-    msgRes, ticketRes, workflowRes, handoffRes,
+    activeNotifsRes, notifArchRes,
+    msgRes, ticketRes, workflowRes, handoffRes, channelRes,
   ] = await Promise.allSettled([
-    notActive(sb.from('notifications')
-      .select('id', { count: 'exact', head: true })
+    sb.from('notifications')
+      .select('is_read, action_required, action_status, severity')
       .eq('user_id', userId)
-      .eq('is_read', false)),
-
-    notActive(sb.from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)),
-
-    notActive(sb.from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('action_required', true)
-      .eq('action_status', 'pending')),
-
-    notActive(sb.from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('severity', 'critical')
-      .eq('is_read', false)),
+      .is('archived_at', null)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`),
 
     sb.from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -133,21 +570,28 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
           .select('id', { count: 'exact', head: true })
           .eq('status', 'manual_review')
       : Promise.resolve({ count: 0 }),
+
+    _ensureRealtimeChannel(userId),
   ]);
 
+  // Derive the four active-notification counts from the single fetch.
+  type NotifFlags = { is_read: boolean; action_required: boolean; action_status: string; severity: string };
+  const activeNotifs: NotifFlags[] = activeNotifsRes.status === 'fulfilled'
+    ? ((activeNotifsRes.value as { data?: NotifFlags[] | null }).data ?? [])
+    : [];
+
   return {
-    notificationsUnread:         _countFromSettled(notifRes),
-    notificationsTotal:          _countFromSettled(notifTotalRes),
-    notificationsActionRequired: _countFromSettled(notifActionRes),
-    notificationsCritical:       _countFromSettled(notifCritRes),
+    notificationsUnread:         activeNotifs.filter(n => !n.is_read).length,
+    notificationsTotal:          activeNotifs.length,
+    notificationsActionRequired: activeNotifs.filter(n => n.action_required && n.action_status === 'pending').length,
+    notificationsCritical:       activeNotifs.filter(n => n.severity === 'critical' && !n.is_read).length,
     notificationsArchived:       _countFromSettled(notifArchRes),
     messagesUnread:      _countFromSettled(msgRes),
     ticketsOpen:         _countFromSettled(ticketRes),
     ticketsUnread:       0, // TODO: per-ticket unread tracking
-    workflowTasks:       typeof workflowRes === 'object' && workflowRes.status === 'fulfilled'
-                           ? (workflowRes.value as number) : 0,
+    workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value as number) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
-    realtimeChannelKey:  channelKey,
+    realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value as string) : crypto.randomUUID(),
   };
 }
 
@@ -158,20 +602,18 @@ function _countFromSettled(result: PromiseSettledResult<unknown>): number {
 }
 
 async function _countWorkflowTasks(userId: string, role: string): Promise<number> {
-  const { count: byUser } = await sb
-    .from('workflow_tasks')
-    .select('id', { count: 'exact', head: true })
-    .eq('assigned_user_id', userId)
-    .eq('status', 'open');
-
-  const { count: byRole } = await sb
-    .from('workflow_tasks')
-    .select('id', { count: 'exact', head: true })
-    .eq('assigned_role', role)
-    .is('assigned_user_id', null)
-    .eq('status', 'open');
-
-  return (byUser ?? 0) + (byRole ?? 0);
+  const [byUser, byRole] = await Promise.all([
+    sb.from('workflow_tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('assigned_user_id', userId)
+      .eq('status', 'open'),
+    sb.from('workflow_tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('assigned_role', role)
+      .is('assigned_user_id', null)
+      .eq('status', 'open'),
+  ]);
+  return (byUser.count ?? 0) + (byRole.count ?? 0);
 }
 
 // ── Realtime channel management ────────────────────────────────────────────────
@@ -200,39 +642,46 @@ async function _ensureRealtimeChannel(userId: string): Promise<string> {
  * This is a close-enough approximation that is fully server-side.
  */
 async function _countUnreadThreads(userId: string): Promise<{ count: number | null }> {
-  // Join participants → threads and count where last_post_at > coalesce(last_read_at, epoch)
-  // and the thread has at least one post not by this user.
-  // PostgREST doesn't support cross-column comparisons natively, so we run a
-  // manual count via the service client's `rpc` or a raw filter workaround.
-  // We use the approach of fetching participant rows with last_post_at embedded
-  // via a join and counting in JS — safe because active users typically have < 1000 threads.
-  const { data, error } = await sb
+  // A thread is unread when it has ≥1 post by ANOTHER author created after the
+  // user's last_read_at. This MUST match the per-thread unreadCount computed in
+  // listThreadsForUser — otherwise the badge (summary.messagesUnread) and the
+  // Unread tab disagree: the old version counted last_post_at > last_read_at
+  // regardless of author, so your OWN message bumped the badge while the Unread
+  // tab (others-only) stayed empty.
+  const epoch = new Date(0).toISOString();
+
+  const { data: parts, error } = await sb
     .from('message_participants')
-    .select('last_read_at, message_threads!inner(last_post_at)')
+    .select('thread_id, last_read_at')
     .eq('user_id', userId)
     .is('removed_at', null) as {
-      data: Array<{ last_read_at: string | null; message_threads: { last_post_at: string | null } }> | null;
+      data: Array<{ thread_id: string; last_read_at: string | null }> | null;
       error: { message: string } | null;
     };
+  if (error || !parts || parts.length === 0) return { count: 0 };
 
-  if (error || !data) return { count: 0 };
+  const readAt    = new Map(parts.map(p => [p.thread_id, p.last_read_at ?? epoch]));
+  const threadIds = parts.map(p => p.thread_id);
 
-  const epoch = new Date(0).toISOString();
-  const unread = data.filter(row => {
-    const lastPostAt = row.message_threads?.last_post_at;
-    if (!lastPostAt) return false;
-    const readAt = row.last_read_at ?? epoch;
-    return lastPostAt > readAt;
-  });
+  const { data: posts } = await sb
+    .from('message_posts')
+    .select('thread_id, created_at')
+    .in('thread_id', threadIds)
+    .neq('author_user_id', userId)
+    .is('deleted_at', null) as { data: Array<{ thread_id: string; created_at: string }> | null };
 
-  return { count: unread.length };
+  const unreadThreads = new Set<string>();
+  for (const p of posts ?? []) {
+    if (p.created_at > (readAt.get(p.thread_id) ?? epoch)) unreadThreads.add(p.thread_id);
+  }
+  return { count: unreadThreads.size };
 }
 
 // ── Message threads ────────────────────────────────────────────────────────────
 
 export interface CreateThreadInput {
   threadType:         'direct' | 'group' | 'record' | 'system';
-  subject:            string;
+  subject?:           string | null;   // optional — direct/group threads derive their name from participants
   sourceModule?:      string | null;
   sourceEntityType?:  string | null;
   sourceEntityId?:    string | null;
@@ -244,6 +693,7 @@ export interface CreateThreadInput {
 
 export interface CreateThreadResult {
   ok:       boolean;
+  message?: string;
   threadId?: string;
   postId?:   string;
 }
@@ -253,11 +703,27 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
     const now = new Date().toISOString();
     const preview = input.body.slice(0, 140);
 
+    // Resolve + VALIDATE participants BEFORE creating anything (creator is owner).
+    // A single bad FK fails the whole participant batch insert — author included —
+    // so an unchecked insert leaves an orphaned, participant-less thread that
+    // nobody can see. Reject unknown/inactive recipients up-front instead.
+    const participantIds = [...new Set([input.createdBy, ...input.participantUserIds])];
+    const { data: validUsers } = await sb
+      .from('app_users')
+      .select('id')
+      .in('id', participantIds)
+      .eq('status', 'active') as { data: Array<{ id: string }> | null };
+    const validSet = new Set((validUsers ?? []).map(u => u.id));
+    const missing  = participantIds.filter(id => !validSet.has(id));
+    if (missing.length > 0) {
+      return { ok: false, message: `Unknown or inactive recipient(s): ${missing.join(', ')}` };
+    }
+
     const { data: thread, error: threadErr } = await sb
       .from('message_threads')
       .insert({
         thread_type:        input.threadType,
-        subject:            input.subject,
+        subject:            input.subject ?? null,
         source_module:      input.sourceModule ?? null,
         source_entity_type: input.sourceEntityType ?? null,
         source_entity_id:   input.sourceEntityId ?? null,
@@ -270,14 +736,13 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
 
     if (threadErr || !thread) {
       console.error('[communications] createThread failed:', threadErr?.message);
-      return { ok: false };
+      return { ok: false, message: 'Failed to create thread' };
     }
 
     const threadId = thread.id;
 
-    // Add participants (deduplicate, creator is owner)
-    const participantIds = [...new Set([input.createdBy, ...input.participantUserIds])];
-    await sb.from('message_participants').insert(
+    // Participants — CHECK the result; a failure must not leave an orphan thread.
+    const { error: partErr } = await sb.from('message_participants').insert(
       participantIds.map(uid => ({
         thread_id:  threadId,
         user_id:    uid,
@@ -285,8 +750,13 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
         joined_at:  now,
       })),
     );
+    if (partErr) {
+      await sb.from('message_threads').delete().eq('id', threadId);
+      console.error('[communications] createThread participants failed:', partErr.message);
+      return { ok: false, message: 'Failed to add participants' };
+    }
 
-    // Add first post
+    // First post is required — clean up the thread + participants if it fails.
     const attachmentCount = (input.attachmentIds ?? []).length;
     const { data: post, error: postErr } = await sb
       .from('message_posts')
@@ -299,10 +769,15 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
       .select('id')
       .single<{ id: string }>();
 
-    if (postErr) console.warn('[communications] createThread first post failed:', postErr.message);
+    if (postErr || !post) {
+      await sb.from('message_participants').delete().eq('thread_id', threadId);
+      await sb.from('message_threads').delete().eq('id', threadId);
+      console.error('[communications] createThread first post failed:', postErr?.message);
+      return { ok: false, message: 'Failed to create the first message' };
+    }
 
     // Link any pre-uploaded attachments
-    if (post && input.attachmentIds && input.attachmentIds.length > 0) {
+    if (input.attachmentIds && input.attachmentIds.length > 0) {
       await sb.from('message_attachments')
         .update({ post_id: post.id })
         .in('id', input.attachmentIds);
@@ -311,10 +786,10 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
     // Fetch author display name for notification body
     const { data: actor } = await sb
       .from('app_users')
-      .select('display_name, email')
+      .select('full_name, email')
       .eq('id', input.createdBy)
-      .maybeSingle<{ display_name: string | null; email: string }>();
-    const actorName = actor?.display_name ?? actor?.email ?? 'Someone';
+      .maybeSingle<{ full_name: string | null; email: string }>();
+    const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
     // Signal + notify other participants
     const others = participantIds.filter(uid => uid !== input.createdBy);
@@ -330,16 +805,18 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
         explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
         notification: {
           title:       'New conversation',
-          body:        `${actorName} started a conversation: ${input.subject}`,
+          body:        input.subject
+            ? `${actorName} started a conversation: ${input.subject}`
+            : `${actorName} started a conversation`,
           actionRoute: 's-messages',
         },
       });
     }
 
-    return { ok: true, threadId, postId: post?.id };
+    return { ok: true, threadId, postId: post.id };
   } catch (e) {
     console.error('[communications] createMessageThread failed:', e);
-    return { ok: false };
+    return { ok: false, message: 'Internal error creating thread' };
   }
 }
 
@@ -418,17 +895,20 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
       // Fetch author name
       const { data: actor } = await sb
         .from('app_users')
-        .select('display_name, email')
+        .select('full_name, email')
         .eq('id', input.currentUserId)
-        .maybeSingle<{ display_name: string | null; email: string }>();
-      const actorName = actor?.display_name ?? actor?.email ?? 'Someone';
+        .maybeSingle<{ full_name: string | null; email: string }>();
+      const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
       void emitSignal(others, 'messages');
       void emitAppEvent({
         eventType:          'communications.message.received',
         sourceModule:       'communications',
-        sourceEntityType:   'message_post',
-        sourceEntityId:     post.id,
+        // Point at the navigable record (the THREAD), not the post — so the
+        // notification can deep-link the conversation open. Per-message dedup
+        // still uses the post id below.
+        sourceEntityType:   'message_thread',
+        sourceEntityId:     input.threadId,
         actorUserId:        input.currentUserId,
         severity:           'info',
         dedupeKey:          `msg:${input.threadId}:${post.id}`,
@@ -460,30 +940,9 @@ export interface ListThreadsInput {
   cursor?: string | null;
 }
 
-export interface ThreadRow {
-  threadId:          string;
-  threadType:        string;
-  subject:           string;
-  lastPostAt:        string | null;
-  lastPostPreview:   string | null;
-  myRole:            string;
-  myLastReadAt:      string | null;
-  archivedAt:        string | null;
-  unreadCount:       number;
-  isUnread:          boolean;
-  sourceModule:      string | null;
-  sourceEntityType:  string | null;
-  sourceEntityId:    string | null;
-  participants:      ParticipantProfile[];
-}
-
-export interface ParticipantProfile {
-  userId:      string;
-  displayName: string | null;
-  email:       string;
-  role:        string;
-  avatarUrl?:  string | null;
-}
+/** @see MessageThread / MessageParticipant in types/messaging.ts (shared contract) */
+export type ThreadRow = MessageThread;
+export type ParticipantProfile = MessageParticipant;
 
 export interface ListThreadsResult {
   rows:       ThreadRow[];
@@ -497,11 +956,12 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
   try {
     // Fetch participant rows for the user with thread data
     type ParticipantWithThread = {
-      thread_id:    string;
-      role:         string;
-      last_read_at: string | null;
-      archived_at:  string | null;
-      removed_at:   string | null;
+      thread_id:           string;
+      role:                string;
+      last_read_at:        string | null;
+      archived_at:         string | null;
+      removed_at:          string | null;
+      notifications_muted: boolean | null;
       message_threads: {
         id:                 string;
         thread_type:        string;
@@ -512,12 +972,14 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         source_entity_type: string | null;
         source_entity_id:   string | null;
         created_by:         string | null;
+        priority:           string | null;
+        action_required:    boolean | null;
       };
     };
 
     let q = sb
       .from('message_participants')
-      .select('thread_id, role, last_read_at, archived_at, removed_at, message_threads!inner(id, thread_type, subject, last_post_at, last_post_preview, source_module, source_entity_type, source_entity_id, created_by)')
+      .select('thread_id, role, last_read_at, archived_at, removed_at, notifications_muted, message_threads!inner(id, thread_type, subject, last_post_at, last_post_preview, source_module, source_entity_type, source_entity_id, created_by, priority, action_required)')
       .eq('user_id', userId)
       .is('removed_at', null)
       .order('thread_id', { ascending: false })
@@ -580,14 +1042,14 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     const { data: allParticipants } = threadIdSet.length > 0
       ? await sb
           .from('message_participants')
-          .select('thread_id, user_id, role, app_users!inner(display_name, email)')
+          .select('thread_id, user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at)')
           .in('thread_id', threadIdSet)
           .is('removed_at', null) as {
             data: Array<{
               thread_id: string;
               user_id:   string;
               role:      string;
-              app_users: { display_name: string | null; email: string };
+              app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null };
             }> | null;
           }
       : { data: null };
@@ -597,69 +1059,107 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     for (const p of allParticipants ?? []) {
       const list = participantMap.get(p.thread_id) ?? [];
       list.push({
-        userId:      p.user_id,
-        displayName: p.app_users.display_name,
-        email:       p.app_users.email,
-        role:        p.role,
+        userId:       p.user_id,
+        displayName:  p.app_users.full_name,
+        email:        p.app_users.email,
+        role:         p.role,
+        profileImage: cachedProfileUrl(p.app_users),
       });
       participantMap.set(p.thread_id, list);
     }
 
-    // Compute unread counts per thread
-    const { data: unreadPosts } = threadIdSet.length > 0
-      ? await sb
-          .from('message_participants')
-          .select('thread_id, last_read_at')
-          .in('thread_id', threadIdSet)
-          .eq('user_id', userId)
-          .is('removed_at', null) as {
-            data: Array<{ thread_id: string; last_read_at: string | null }> | null;
-          }
-      : { data: null };
-
+    // readAt per thread from the caller's own participant rows (already fetched).
     const readAtMap = new Map<string, string>();
-    for (const r of unreadPosts ?? []) {
-      readAtMap.set(r.thread_id, r.last_read_at ?? epoch);
-    }
+    for (const r of page) readAtMap.set(r.thread_id, r.last_read_at ?? epoch);
 
-    // For each thread, count posts after last_read_at not by this user
+    // One pass over the page's non-deleted posts computes unread (others' posts
+    // after readAt), hasAttachments, failedSendCount (own failed posts) and the
+    // latest post's author — replacing the previous unread-only fetch.
     const unreadCountMap = new Map<string, number>();
+    const hasAttachMap   = new Map<string, boolean>();
+    const failedCountMap = new Map<string, number>();
+    const lastAuthorMap  = new Map<string, { author: string | null; at: string }>();
     if (threadIdSet.length > 0) {
       const { data: posts } = await sb
         .from('message_posts')
-        .select('thread_id, author_user_id, created_at')
+        .select('thread_id, author_user_id, attachment_count, delivery_status, created_at')
         .in('thread_id', threadIdSet)
-        .neq('author_user_id', userId)
         .is('deleted_at', null) as {
-          data: Array<{ thread_id: string; author_user_id: string; created_at: string }> | null;
+          data: Array<{ thread_id: string; author_user_id: string | null; attachment_count: number | null; delivery_status: string | null; created_at: string }> | null;
         };
 
       for (const p of posts ?? []) {
         const readAt = readAtMap.get(p.thread_id) ?? epoch;
-        if (p.created_at > readAt) {
+        if (p.author_user_id !== userId && p.created_at > readAt) {
           unreadCountMap.set(p.thread_id, (unreadCountMap.get(p.thread_id) ?? 0) + 1);
         }
+        if ((p.attachment_count ?? 0) > 0) hasAttachMap.set(p.thread_id, true);
+        if (p.author_user_id === userId && p.delivery_status === 'failed') {
+          failedCountMap.set(p.thread_id, (failedCountMap.get(p.thread_id) ?? 0) + 1);
+        }
+        const cur = lastAuthorMap.get(p.thread_id);
+        if (!cur || p.created_at > cur.at) lastAuthorMap.set(p.thread_id, { author: p.author_user_id, at: p.created_at });
       }
     }
 
+    // Pinned threads (thread-pin visible to the caller) + the caller's drafts.
+    const pinnedSet = new Set<string>();
+    const draftMap  = new Map<string, string>();
+    if (threadIdSet.length > 0) {
+      const [pinsRes, draftsRes] = await Promise.all([
+        sb.from('message_pins').select('thread_id, visibility, pinned_by').eq('pin_type', 'thread').is('unpinned_at', null).in('thread_id', threadIdSet),
+        sb.from('message_thread_drafts').select('thread_id, body').eq('user_id', userId).in('thread_id', threadIdSet),
+      ]);
+      for (const p of ((pinsRes as { data: Array<{ thread_id: string; visibility: string; pinned_by: string }> | null }).data) ?? []) {
+        if (p.visibility === 'thread' || p.pinned_by === userId) pinnedSet.add(p.thread_id);
+      }
+      for (const d of ((draftsRes as { data: Array<{ thread_id: string; body: string | null }> | null }).data) ?? []) {
+        if (d.body && d.body.trim()) draftMap.set(d.thread_id, d.body);
+      }
+    }
+
+    // Name lookup for last-post author (participants already carry names).
+    const nameMap = new Map<string, string | null>();
+    for (const list of participantMap.values()) {
+      for (const pp of list) nameMap.set(pp.userId, pp.displayName ?? pp.email);
+    }
+
     const resultRows: ThreadRow[] = page.map(r => {
-      const mt       = r.message_threads;
-      const unread   = unreadCountMap.get(r.thread_id) ?? 0;
+      const mt           = r.message_threads;
+      const unread       = unreadCountMap.get(r.thread_id) ?? 0;
+      const participants = participantMap.get(r.thread_id) ?? [];
+      const draftBody    = draftMap.get(r.thread_id) ?? null;
+      const failed       = failedCountMap.get(r.thread_id) ?? 0;
+      const lastAuthorId = lastAuthorMap.get(r.thread_id)?.author ?? null;
       return {
-        threadId:         r.thread_id,
-        threadType:       mt.thread_type,
+        id:               r.thread_id,
+        threadType:       mt.thread_type as MessageThread['threadType'],
         subject:          mt.subject,
-        lastPostAt:       mt.last_post_at,
-        lastPostPreview:  mt.last_post_preview,
-        myRole:           r.role,
-        myLastReadAt:     r.last_read_at,
-        archivedAt:       r.archived_at,
-        unreadCount:      unread,
-        isUnread:         unread > 0,
         sourceModule:     mt.source_module,
         sourceEntityType: mt.source_entity_type,
         sourceEntityId:   mt.source_entity_id,
-        participants:     participantMap.get(r.thread_id) ?? [],
+        createdBy:        mt.created_by,
+        createdAt:        mt.last_post_at ?? '',
+        lastPostAt:       mt.last_post_at,
+        lastPostPreview:  mt.last_post_preview,
+        lastPostBy:       lastAuthorId,
+        unreadCount:      unread,
+        participantCount: participants.length,
+        participants,
+        isArchived:       r.archived_at != null,
+        myRole:           r.role,
+        // ── Rich Add-On fields ──
+        lastPostAuthorName: lastAuthorId ? (nameMap.get(lastAuthorId) ?? null) : null,
+        isUnread:           unread > 0,
+        isPinned:           pinnedSet.has(r.thread_id),
+        isMuted:            r.notifications_muted === true,
+        hasDraft:           draftBody != null,
+        draftPreview:       draftBody,
+        failedSendCount:    failed,
+        hasAttachments:     hasAttachMap.get(r.thread_id) ?? false,
+        actionRequired:     mt.action_required === true,
+        priority:           (mt.priority ?? 'normal') as MessageThread['priority'],
+        archivedAt:         r.archived_at,
       };
     });
 
@@ -680,18 +1180,8 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
 export interface GetThreadResult {
   ok:           boolean;
   message?:     string;
-  thread?:      {
-    id:                string;
-    threadType:        string;
-    subject:           string;
-    lastPostAt:        string | null;
-    lastPostPreview:   string | null;
-    sourceModule:      string | null;
-    sourceEntityType:  string | null;
-    sourceEntityId:    string | null;
-    createdBy:         string | null;
-    createdAt:         string;
-  };
+  code?:        'compliance_required' | 'forbidden';
+  thread?:      MessageThread;
   participants?: ParticipantProfile[];
   myRole?:       string;
   myLastReadAt?: string | null;
@@ -700,7 +1190,15 @@ export interface GetThreadResult {
 
 export async function getThread(threadId: string, userId: string, userRole?: string): Promise<GetThreadResult> {
   try {
-    // Check participation first (or admin bypass)
+    // Participant-default read-gate (participant / record-inherited / compliance grant).
+    const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
+    if (!access.allowed) {
+      return access.needsCompliance
+        ? { ok: false, code: 'compliance_required', message: 'Compliance access required to view this thread' }
+        : { ok: false, code: 'forbidden', message: 'Not a participant in this thread' };
+    }
+
+    // Their own participant row (for myRole / read state) — null when access is via record/grant.
     const { data: part } = await sb
       .from('message_participants')
       .select('role, last_read_at, archived_at')
@@ -708,9 +1206,6 @@ export async function getThread(threadId: string, userId: string, userRole?: str
       .eq('user_id', userId)
       .is('removed_at', null)
       .maybeSingle<{ role: string; last_read_at: string | null; archived_at: string | null }>();
-
-    const isAdmin = ['admin', 'superadmin', 'manager'].includes(userRole ?? '');
-    if (!part && !isAdmin) return { ok: false, message: 'Not a participant in this thread' };
 
     const { data: thread, error } = await sb
       .from('message_threads')
@@ -733,36 +1228,43 @@ export async function getThread(threadId: string, userId: string, userRole?: str
 
     const { data: participants } = await sb
       .from('message_participants')
-      .select('user_id, role, app_users!inner(display_name, email)')
+      .select('user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at)')
       .eq('thread_id', threadId)
       .is('removed_at', null) as {
         data: Array<{
           user_id:   string;
           role:      string;
-          app_users: { display_name: string | null; email: string };
+          app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null };
         }> | null;
       };
 
     const profiledParticipants: ParticipantProfile[] = (participants ?? []).map(p => ({
-      userId:      p.user_id,
-      displayName: p.app_users.display_name,
-      email:       p.app_users.email,
-      role:        p.role,
+      userId:       p.user_id,
+      displayName:  p.app_users.full_name,
+      email:        p.app_users.email,
+      role:         p.role,
+      profileImage: cachedProfileUrl(p.app_users),
     }));
 
     return {
       ok: true,
       thread: {
         id:               thread.id,
-        threadType:       thread.thread_type,
+        threadType:       thread.thread_type as MessageThread['threadType'],
         subject:          thread.subject,
-        lastPostAt:       thread.last_post_at,
-        lastPostPreview:  thread.last_post_preview,
         sourceModule:     thread.source_module,
         sourceEntityType: thread.source_entity_type,
         sourceEntityId:   thread.source_entity_id,
         createdBy:        thread.created_by,
         createdAt:        thread.created_at,
+        lastPostAt:       thread.last_post_at,
+        lastPostPreview:  thread.last_post_preview,
+        lastPostBy:       null,
+        unreadCount:      0,
+        participantCount: profiledParticipants.length,
+        participants:     profiledParticipants,
+        isArchived:       part?.archived_at != null,
+        myRole:           part?.role ?? 'viewer',
       },
       participants:  profiledParticipants,
       myRole:        part?.role,
@@ -777,33 +1279,14 @@ export async function getThread(threadId: string, userId: string, userRole?: str
 
 // ── getThreadPosts ─────────────────────────────────────────────────────────────
 
-export interface PostRow {
-  id:              string;
-  threadId:        string;
-  authorUserId:    string | null;
-  authorName:      string | null;
-  authorEmail:     string | null;
-  body:            string;
-  isSystem:        boolean;
-  attachmentCount: number;
-  editedAt:        string | null;
-  deletedAt:       string | null;
-  createdAt:       string;
-  attachments:     AttachmentRow[];
-}
-
-export interface AttachmentRow {
-  id:          string;
-  fileName:    string;
-  filePath:    string;
-  contentType: string | null;
-  sizeBytes:   number | null;
-  url:         string | null;  // signed download URL (24 h, best-effort)
-}
+/** @see MessagePost / MessageAttachment in types/messaging.ts (shared contract) */
+export type PostRow = MessagePost;
+export type AttachmentRow = MessageAttachment;
 
 export interface GetThreadPostsResult {
   ok:         boolean;
   message?:   string;
+  code?:      'compliance_required' | 'forbidden';
   posts?:     PostRow[];
   nextCursor?: string | null;
 }
@@ -815,17 +1298,13 @@ export async function getThreadPosts(
   userRole?: string,
 ): Promise<GetThreadPostsResult> {
   try {
-    // Access check
-    const { data: part } = await sb
-      .from('message_participants')
-      .select('thread_id')
-      .eq('thread_id', threadId)
-      .eq('user_id', userId)
-      .is('removed_at', null)
-      .maybeSingle<{ thread_id: string }>();
-
-    const isAdmin = ['admin', 'superadmin', 'manager'].includes(userRole ?? '');
-    if (!part && !isAdmin) return { ok: false, message: 'Not a participant in this thread' };
+    // Participant-default read-gate (participant / record-inherited / compliance grant).
+    const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
+    if (!access.allowed) {
+      return access.needsCompliance
+        ? { ok: false, code: 'compliance_required', message: 'Compliance access required to view this thread' }
+        : { ok: false, code: 'forbidden', message: 'Not a participant in this thread' };
+    }
 
     const limit = opts.limit ?? 50;
 
@@ -839,12 +1318,12 @@ export async function getThreadPosts(
       edited_at:       string | null;
       deleted_at:      string | null;
       created_at:      string;
-      app_users:       { display_name: string | null; email: string } | null;
+      app_users:       { full_name: string | null; email: string } | null;
     };
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, app_users(display_name, email)')
+      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, app_users(full_name, email)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
       .limit(limit);
@@ -890,7 +1369,7 @@ export async function getThreadPosts(
       id:              p.id,
       threadId:        p.thread_id,
       authorUserId:    p.author_user_id,
-      authorName:      p.app_users?.display_name ?? null,
+      authorName:      p.app_users?.full_name ?? null,
       authorEmail:     p.app_users?.email ?? null,
       body:            p.body,
       isSystem:        p.is_system,
@@ -1009,9 +1488,11 @@ export async function addThreadParticipants(
       .is('removed_at', null)
       .maybeSingle<{ role: string }>();
 
-    const isAdmin = ['admin', 'superadmin', 'manager'].includes(actorRole ?? '');
-    if (actorPart?.role !== 'owner' && !isAdmin) {
-      return { ok: false, message: 'Only thread owner or admin can add participants' };
+    // Owner of the thread, or a messaging admin (communications.admin) — no blanket role bypass.
+    const canManage = actorPart?.role === 'owner'
+      || await userCan({ id: actorUserId, role: actorRole }, 'communications.admin');
+    if (!canManage) {
+      return { ok: false, message: 'Only the thread owner or a messaging admin can add participants' };
     }
 
     // Deduplicate and skip existing active participants
@@ -1034,17 +1515,17 @@ export async function addThreadParticipants(
     // Fetch actor name for system post
     const { data: actor } = await sb
       .from('app_users')
-      .select('display_name, email')
+      .select('full_name, email')
       .eq('id', actorUserId)
-      .maybeSingle<{ display_name: string | null; email: string }>();
-    const actorName = actor?.display_name ?? actor?.email ?? 'Someone';
+      .maybeSingle<{ full_name: string | null; email: string }>();
+    const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
     // Fetch added user names
     const { data: addedUsers } = await sb
       .from('app_users')
-      .select('id, display_name, email')
-      .in('id', toAdd) as { data: Array<{ id: string; display_name: string | null; email: string }> | null };
-    const addedNames = (addedUsers ?? []).map(u => u.display_name ?? u.email).join(', ');
+      .select('id, full_name, email')
+      .in('id', toAdd) as { data: Array<{ id: string; full_name: string | null; email: string }> | null };
+    const addedNames = (addedUsers ?? []).map(u => u.full_name ?? u.email).join(', ');
 
     // System post
     await sb.from('message_posts').insert({
@@ -1095,9 +1576,10 @@ export async function removeThreadParticipant(
       .is('removed_at', null)
       .maybeSingle<{ role: string }>();
 
-    const isAdmin = ['admin', 'superadmin', 'manager'].includes(actorRole ?? '');
-    if (actorPart?.role !== 'owner' && !isAdmin) {
-      return { ok: false, message: 'Only thread owner or admin can remove participants' };
+    const canManage = actorPart?.role === 'owner'
+      || await userCan({ id: actorUserId, role: actorRole }, 'communications.admin');
+    if (!canManage) {
+      return { ok: false, message: 'Only the thread owner or a messaging admin can remove participants' };
     }
 
     await sb.from('message_participants')
@@ -1107,11 +1589,11 @@ export async function removeThreadParticipant(
 
     // Fetch names for system post
     const [actorRes, removedRes] = await Promise.all([
-      sb.from('app_users').select('display_name, email').eq('id', actorUserId).maybeSingle<{ display_name: string | null; email: string }>(),
-      sb.from('app_users').select('display_name, email').eq('id', userId).maybeSingle<{ display_name: string | null; email: string }>(),
+      sb.from('app_users').select('full_name, email').eq('id', actorUserId).maybeSingle<{ full_name: string | null; email: string }>(),
+      sb.from('app_users').select('full_name, email').eq('id', userId).maybeSingle<{ full_name: string | null; email: string }>(),
     ]);
-    const actorName   = actorRes.data?.display_name   ?? actorRes.data?.email   ?? 'Someone';
-    const removedName = removedRes.data?.display_name ?? removedRes.data?.email ?? 'a member';
+    const actorName   = actorRes.data?.full_name   ?? actorRes.data?.email   ?? 'Someone';
+    const removedName = removedRes.data?.full_name ?? removedRes.data?.email ?? 'a member';
 
     await sb.from('message_posts').insert({
       thread_id:       threadId,
@@ -1155,13 +1637,13 @@ export async function searchMessages(userId: string, query: string, limit = 20):
       thread_id:      string;
       body:           string;
       created_at:     string;
-      app_users:      { display_name: string | null; email: string } | null;
+      app_users:      { full_name: string | null; email: string } | null;
       message_threads: { subject: string } | null;
     };
 
     const { data: posts } = await sb
       .from('message_posts')
-      .select('id, thread_id, body, created_at, app_users(display_name, email), message_threads(subject)')
+      .select('id, thread_id, body, created_at, app_users(full_name, email), message_threads(subject)')
       .in('thread_id', threadIds)
       .is('deleted_at', null)
       .ilike('body', `%${query}%`)
@@ -1173,7 +1655,7 @@ export async function searchMessages(userId: string, query: string, limit = 20):
       threadSubject: p.message_threads?.subject ?? '',
       postId:        p.id,
       postPreview:   p.body.slice(0, 200),
-      authorName:    p.app_users?.display_name ?? p.app_users?.email ?? null,
+      authorName:    p.app_users?.full_name ?? p.app_users?.email ?? null,
       createdAt:     p.created_at,
     }));
   } catch (e) {
@@ -1184,41 +1666,36 @@ export async function searchMessages(userId: string, query: string, limit = 20):
 
 // ── getMessageRecipients ───────────────────────────────────────────────────────
 
-export interface RecipientProfile {
-  userId:      string;
-  displayName: string | null;
-  email:       string;
-  department?: string | null;
-  role?:       string;
-  avatarUrl?:  string | null;
-}
+/** @see MessageRecipient in types/messaging.ts (shared contract) */
+export type RecipientProfile = MessageRecipient;
 
 export async function getMessageRecipients(userId: string, query?: string | null): Promise<RecipientProfile[]> {
   try {
-    type UserRow = { id: string; display_name: string | null; email: string; department_id: string | null; role: string };
+    type UserRow = { id: string; full_name: string | null; email: string; department_id: string | null; role: string; signed_url: string | null; signed_url_expires_at: string | null };
 
     // Build query without complex cast — cast only the awaited result.
     const baseQ = sb
       .from('app_users')
-      .select('id, display_name, email, department_id, role')
+      .select('id, full_name, email, department_id, role, signed_url, signed_url_expires_at')
       .eq('status', 'active')
       .neq('id', userId)
-      .order('display_name', { ascending: true })
+      .order('full_name', { ascending: true })
       .limit(50);
 
     const resultQ = query
-      ? baseQ.or(`display_name.ilike.%${query}%,email.ilike.%${query}%`)
+      ? baseQ.or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
       : baseQ;
 
     const { data, error } = await resultQ as { data: UserRow[] | null; error: { message: string } | null };
     if (error || !data) return [];
 
     return data.map(u => ({
-      userId:      u.id,
-      displayName: u.display_name,
-      email:       u.email,
-      department:  u.department_id,
-      role:        u.role,
+      userId:       u.id,
+      displayName:  u.full_name,
+      email:        u.email,
+      department:   u.department_id,
+      role:         u.role,
+      profileImage: cachedProfileUrl(u),
     }));
   } catch (e) {
     console.error('[communications] getMessageRecipients failed:', e);
@@ -1261,7 +1738,7 @@ export async function createTicket(input: CreateTicketInput): Promise<CreateTick
         ticket_number:      ticketNumber,
         category:           input.category,
         priority:           input.priority ?? 'medium',
-        subject:            input.subject,
+        subject:            input.subject ?? null,
         description:        input.description,
         requester_user_id:  input.requesterUserId,
         source_module:      input.sourceModule ?? null,
