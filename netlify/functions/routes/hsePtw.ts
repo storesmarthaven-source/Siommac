@@ -29,10 +29,6 @@
  * POST /api/hse/ptw/permits/isolations/verify
  * POST /api/hse/ptw/permits/isolations/reject
  * POST /api/hse/ptw/permits/isolations/remove
- * POST /api/hse/ptw/permits/gas-tests/list
- * POST /api/hse/ptw/permits/gas-tests/create
- * POST /api/hse/ptw/permits/gas-tests/retest
- * POST /api/hse/ptw/permits/gas-tests/mark-invalid
  * POST /api/hse/ptw/permits/simops/list
  * POST /api/hse/ptw/permits/simops/check
  * POST /api/hse/ptw/permits/simops/resolve
@@ -59,9 +55,8 @@ const router = new Hono<{ Variables: HonoVariables }>();
 const PERMIT_TRANSITIONS: Record<string, string[]> = {
   draft:               ['submitted', 'cancelled'],
   submitted:           ['risk_review', 'changes_requested', 'cancelled'],
-  risk_review:         ['isolation_pending', 'gas_test_pending', 'awaiting_approval', 'changes_requested', 'rejected'],
-  isolation_pending:   ['gas_test_pending', 'awaiting_approval', 'changes_requested'],
-  gas_test_pending:    ['awaiting_approval', 'changes_requested'],
+  risk_review:         ['isolation_pending', 'awaiting_approval', 'changes_requested', 'rejected'],
+  isolation_pending:   ['awaiting_approval', 'changes_requested'],
   awaiting_approval:   ['approved', 'rejected', 'changes_requested'],
   changes_requested:   ['draft', 'submitted'],
   approved:            ['active', 'cancelled'],
@@ -84,7 +79,6 @@ function canTransition(from: string, to: string): boolean {
 interface PermitTypeConfig {
   requires_jsa:                boolean;
   requires_isolation:          boolean;
-  requires_gas_test:           boolean;
   requires_simops_check:       boolean;
   requires_height_plan:        boolean;
   requires_hot_work_cert:      boolean;
@@ -107,7 +101,6 @@ interface PermitRow {
   status: string;
   requires_jsa: boolean;
   requires_isolation: boolean;
-  requires_gas_test: boolean;
   requires_simops_check: boolean;
   linked_jsa_id: string | null;
   created_by: string | null;
@@ -156,19 +149,6 @@ async function canActivatePermit(
     const unverified = (isoRes.data ?? []).length;
     if (unverified > 0) {
       failures.push(`${unverified} isolation point(s) are not yet verified.`);
-    }
-  }
-
-  // 3. Gas test requirement — at least one gas test with result='pass'
-  if (permit.requires_gas_test) {
-    const gtRes = await sb
-      .from('hse_permit_gas_tests')
-      .select('id')
-      .eq('permit_id', permit.id)
-      .eq('result', 'pass')
-      .limit(1);
-    if ((gtRes.data ?? []).length === 0) {
-      failures.push('A passing gas test result is required before activation.');
     }
   }
 
@@ -223,7 +203,7 @@ async function applyPermitTransition(
 ): Promise<Response> {
   const cur = await sb
     .from('hse_permits')
-    .select('id, permit_number, status, created_by, requester_id, work_supervisor_id, area_authority_id, requires_jsa, requires_isolation, requires_gas_test, requires_simops_check, linked_jsa_id')
+    .select('id, permit_number, status, created_by, requester_id, work_supervisor_id, area_authority_id, requires_jsa, requires_isolation, requires_simops_check, linked_jsa_id')
     .eq('id', opts.permitId)
     .maybeSingle<PermitRow>();
 
@@ -473,9 +453,6 @@ const PermitCreateSchema = z.object({
   hazards:          z.array(PermitHazardSchema).optional(),
   /** Isolation points (status='planned') to insert after creation (best-effort). */
   isolations:       z.array(PermitIsolationSchema).optional(),
-  /** Gas test planned flag — stored in permit metadata. */
-  gasTestRequired:  z.boolean().optional(),
-  gasTestNote:      z.string().nullable().optional(),
   /** SIMOPS note — stored in permit metadata. */
   simopsNote:       z.string().nullable().optional(),
 });
@@ -489,7 +466,7 @@ router.post('/ptw/permits/create', async c => {
   // Read requires_* flags from permit type config
   const typeConfig = await sb
     .from('hse_permit_type_config')
-    .select('requires_jsa, requires_isolation, requires_gas_test, requires_simops_check, requires_height_plan, requires_hot_work_cert, requires_confined_space_cert, requires_radiation_badge, requires_excavation_survey, requires_lifting_plan, requires_line_break_cert, requires_energized_cert, max_duration_hours')
+    .select('requires_jsa, requires_isolation, requires_simops_check, requires_height_plan, requires_hot_work_cert, requires_confined_space_cert, requires_radiation_badge, requires_excavation_survey, requires_lifting_plan, requires_line_break_cert, requires_energized_cert, max_duration_hours')
     .eq('permit_type', v.data.permitType)
     .eq('active', true)
     .maybeSingle<PermitTypeConfig>();
@@ -575,7 +552,6 @@ router.post('/ptw/permits/create', async c => {
             // requires_* sourced from hse_permit_type_config
             requires_jsa:                cfg.requires_jsa,
             requires_isolation:          cfg.requires_isolation,
-            requires_gas_test:           cfg.requires_gas_test,
             requires_simops_check:       cfg.requires_simops_check,
             requires_height_plan:        cfg.requires_height_plan,
             requires_hot_work_cert:      cfg.requires_hot_work_cert,
@@ -682,14 +658,10 @@ router.post('/ptw/permits/create', async c => {
       }
     }
 
-    // Gas test / SIMOPS flags stored in metadata update (best-effort)
-    if (v.data.gasTestRequired !== undefined || v.data.simopsNote) {
+    // SIMOPS note stored in permit metadata (best-effort)
+    if (v.data.simopsNote) {
       void sb.from('hse_permits').update({
-        metadata: {
-          gas_test_planned: v.data.gasTestRequired ?? false,
-          gas_test_note:    v.data.gasTestNote ?? null,
-          simops_note:      v.data.simopsNote ?? null,
-        },
+        metadata: { simops_note: v.data.simopsNote },
         updated_at: new Date().toISOString(),
       }).eq('id', permitId);
     }
@@ -735,7 +707,6 @@ router.post('/ptw/permits/get', async c => {
     controlsRes,
     approvalsRes,
     isolationsRes,
-    gasTestsRes,
     simopsRes,
     extensionsRes,
     suspensionsRes,
@@ -747,7 +718,6 @@ router.post('/ptw/permits/get', async c => {
     sb.from('hse_permit_controls').select('*').eq('permit_id', permitId).order('sort_order'),
     sb.from('hse_permit_approvals').select('*').eq('permit_id', permitId).order('step_order'),
     sb.from('hse_permit_isolations').select('*').eq('permit_id', permitId).order('sort_order'),
-    sb.from('hse_permit_gas_tests').select('*').eq('permit_id', permitId).order('test_sequence'),
     sb.from('hse_permit_simops_conflicts').select('*').eq('permit_id', permitId).order('created_at'),
     sb.from('hse_permit_extensions').select('*').eq('permit_id', permitId).order('extension_number'),
     sb.from('hse_permit_suspensions').select('*').eq('permit_id', permitId).order('created_at', { ascending: false }),
@@ -768,7 +738,6 @@ router.post('/ptw/permits/get', async c => {
       controls:    controlsRes.data    ?? [],
       approvals:   approvalsRes.data   ?? [],
       isolations:  isolationsRes.data  ?? [],
-      gas_tests:   gasTestsRes.data    ?? [],
       simops:      simopsRes.data      ?? [],
       extensions:  extensionsRes.data  ?? [],
       suspensions: suspensionsRes.data ?? [],
@@ -959,7 +928,7 @@ router.post('/ptw/permits/activate', async c => {
   // Load permit for activation gate
   const permitRes = await sb
     .from('hse_permits')
-    .select('id, permit_number, status, requires_jsa, requires_isolation, requires_gas_test, requires_simops_check, linked_jsa_id, created_by, requester_id, work_supervisor_id, area_authority_id')
+    .select('id, permit_number, status, requires_jsa, requires_isolation, requires_simops_check, linked_jsa_id, created_by, requester_id, work_supervisor_id, area_authority_id')
     .eq('id', v.data.permitId)
     .maybeSingle<PermitRow>();
   if (!permitRes.data) return c.json({ success: false, message: 'Permit not found' }, 404 as 200);
@@ -1135,7 +1104,6 @@ router.post('/ptw/permits/stats', async c => {
     activeByTypeRes,
     expiringTwoHoursRes,
     expiringEightHoursRes,
-    isolationsRes,
     awaitingApprovalRes,
     stageCountsRes,
   ] = await Promise.all([
@@ -1165,14 +1133,6 @@ router.post('/ptw/permits/stats', async c => {
       .lte('end_datetime', eightHoursFromNow)
       .gte('end_datetime', nowIso),
 
-    // Isolation readiness — all isolation points for active permits
-    sb.from('hse_permit_isolations')
-      .select('id, status, permit_id')
-      .in('permit_id',
-        // Subquery-style: fetch active permit ids first
-        sb.from('hse_permits').select('id').eq('status', 'active') as unknown as string[]
-      ),
-
     // Awaiting approval total
     sb.from('hse_permit_approvals')
       .select('id', { count: 'exact', head: true })
@@ -1181,7 +1141,7 @@ router.post('/ptw/permits/stats', async c => {
     // Bottleneck by stage (permits in each pre-active status)
     sb.from('hse_permits')
       .select('status')
-      .in('status', ['submitted', 'risk_review', 'isolation_pending', 'gas_test_pending', 'awaiting_approval', 'changes_requested']),
+      .in('status', ['submitted', 'risk_review', 'isolation_pending', 'awaiting_approval', 'changes_requested']),
   ]);
 
   const activeRows = (activePermitsRes.data ?? []) as Array<{ id: string; risk_level: string | null; site_id: string | null }>;
@@ -1608,214 +1568,6 @@ router.post('/ptw/permits/isolations/remove', async c => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GAS TESTS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// ── POST /api/hse/ptw/permits/gas-tests/list ──────────────────────────────────
-// hse.ptw.view
-
-const GasTestListSchema = z.object({
-  permitId: z.string().uuid(),
-});
-
-router.post('/ptw/permits/gas-tests/list', async c => {
-  await requirePermission(c, 'hse.ptw.view');
-  const body = c.get('body') as Record<string, unknown>;
-  const v = zv(c, GasTestListSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const { data, error } = await sb
-    .from('hse_permit_gas_tests')
-    .select('*')
-    .eq('permit_id', v.data.permitId)
-    .order('test_sequence');
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
-});
-
-// ── Shared gas test insert helper ─────────────────────────────────────────────
-
-const GasTestCreateSchema = z.object({
-  permitId:               z.string().uuid(),
-  testLocation:           z.string().nullable().optional(),
-  instrumentId:           z.string().nullable().optional(),
-  oxygenPct:              z.number().nullable().optional(),
-  lelPct:                 z.number().nullable().optional(),
-  h2sPpm:                 z.number().nullable().optional(),
-  coPpm:                  z.number().nullable().optional(),
-  so2Ppm:                 z.number().nullable().optional(),
-  result:                 z.enum(['pass', 'fail', 'retest', 'pending']).default('pending'),
-  notes:                  z.string().nullable().optional(),
-  instrumentCalDate:      z.string().nullable().optional(),
-  metadata:               z.record(z.string(), z.unknown()).optional(),
-});
-
-async function insertGasTest(
-  c: Context<{ Variables: HonoVariables }>,
-  actorId: string,
-  args: z.infer<typeof GasTestCreateSchema>,
-): Promise<Response> {
-  // Verify permit exists
-  const permit = await getPermitMeta(args.permitId);
-  if (!permit) return c.json({ success: false, message: 'Permit not found.' }, 404 as 200);
-
-  // Determine next sequence number
-  const seqRes = await sb
-    .from('hse_permit_gas_tests')
-    .select('test_sequence')
-    .eq('permit_id', args.permitId)
-    .order('test_sequence', { ascending: false })
-    .limit(1)
-    .maybeSingle<{ test_sequence: number }>();
-  const nextSeq = (seqRes.data?.test_sequence ?? 0) + 1;
-
-  const now = new Date().toISOString();
-
-  const { data, error } = await sb
-    .from('hse_permit_gas_tests')
-    .insert({
-      permit_id:          args.permitId,
-      test_sequence:      nextSeq,
-      tested_at:          now,
-      tester_id:          actorId,
-      location:           args.testLocation ?? null,
-      instrument_id:      args.instrumentId ?? null,
-      oxygen_pct:         args.oxygenPct ?? null,
-      lel_pct:            args.lelPct ?? null,
-      h2s_ppm:            args.h2sPpm ?? null,
-      co_ppm:             args.coPpm ?? null,
-      so2_ppm:            args.so2Ppm ?? null,
-      result:             args.result,
-      notes:              args.notes ?? null,
-      instrument_cal_date: args.instrumentCalDate ?? null,
-      metadata:           args.metadata ?? {},
-    })
-    .select('id')
-    .single<{ id: string }>();
-
-  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Gas test insert failed' }, 500 as 200);
-
-  void sb.from('hse_permit_audit_events').insert({
-    permit_id:     args.permitId,
-    action:        'gas_test_recorded',
-    actor_user_id: actorId,
-    after_state:   { gas_test_id: data.id, test_sequence: nextSeq, result: args.result },
-    metadata:      { location: args.testLocation ?? null, oxygen_pct: args.oxygenPct ?? null, lel_pct: args.lelPct ?? null },
-  });
-
-  const isFail = args.result === 'fail';
-
-  void emitAppEvent({
-    eventType:        isFail ? 'ptw.permit.gas_test_failed' : 'ptw.gas_test.recorded',
-    sourceModule:     'hse',
-    sourceEntityType: 'permit',
-    sourceEntityId:   permit.permit_number ?? args.permitId,
-    actorUserId:      actorId,
-    severity:         isFail ? 'critical' : 'info',
-    payload:          { gasTestId: data.id, testSequence: nextSeq, result: args.result, location: args.testLocation ?? null },
-    // Notify requester + supervisor on gas test failure (critical safety event)
-    ...(isFail ? {
-      explicitRecipients: [
-        ...(permit.requester_id && permit.requester_id !== actorId
-          ? [{ userId: permit.requester_id, reason: 'owner' as const }] : []),
-        ...(permit.work_supervisor_id && permit.work_supervisor_id !== actorId
-          ? [{ userId: permit.work_supervisor_id, reason: 'participant' as const }] : []),
-      ].filter(r => r.userId),
-      notification: {
-        title:          `Gas test FAILED on permit ${permit.permit_number ?? args.permitId}`,
-        body:           `Test #${nextSeq} recorded a FAIL result. Work must stop until safe atmospheric conditions are confirmed.`,
-        actionRoute:    `hse/permits/${args.permitId}`,
-        type:           'ptw.permit.gas_test_failed',
-        actionRequired: true,
-      },
-      dedupeKey: null,
-    } : {}),
-  });
-
-  return c.json({ success: true, data: { id: data.id, testSequence: nextSeq, result: args.result } });
-}
-
-// ── POST /api/hse/ptw/permits/gas-tests/create ───────────────────────────────
-// hse.ptw.manage
-
-router.post('/ptw/permits/gas-tests/create', async c => {
-  const user = await requirePermission(c, 'hse.ptw.manage');
-  const body = c.get('body') as Record<string, unknown>;
-  const v = zv(c, GasTestCreateSchema, body.args);
-  if (!v.ok) return v.response;
-  return insertGasTest(c, user.id, v.data);
-});
-
-// ── POST /api/hse/ptw/permits/gas-tests/retest ───────────────────────────────
-// hse.ptw.manage — record a re-test (inserts a new row, incrementing sequence)
-
-router.post('/ptw/permits/gas-tests/retest', async c => {
-  const user = await requirePermission(c, 'hse.ptw.manage');
-  const body = c.get('body') as Record<string, unknown>;
-  const v = zv(c, GasTestCreateSchema, body.args);
-  if (!v.ok) return v.response;
-  return insertGasTest(c, user.id, v.data);
-});
-
-// ── POST /api/hse/ptw/permits/gas-tests/mark-invalid ─────────────────────────
-// hse.ptw.manage — invalidate a specific gas test result (e.g. instrument fault)
-// Note: hse_permit_gas_tests has no status column. We record the invalidation
-// via metadata update and an audit event, and set result to 'pending' to
-// exclude it from the passing gate. This is the most schema-safe approach.
-
-const GasTestInvalidateSchema = z.object({
-  gasTestId: z.string().uuid(),
-  reason:    z.string().nullable().optional(),
-});
-
-router.post('/ptw/permits/gas-tests/mark-invalid', async c => {
-  const user = await requirePermission(c, 'hse.ptw.manage');
-  const body = c.get('body') as Record<string, unknown>;
-  const v = zv(c, GasTestInvalidateSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const cur = await sb
-    .from('hse_permit_gas_tests')
-    .select('id, permit_id, test_sequence, result')
-    .eq('id', v.data.gasTestId)
-    .maybeSingle<{ id: string; permit_id: string; test_sequence: number; result: string }>();
-  if (!cur.data) return c.json({ success: false, message: 'Gas test not found.' }, 404 as 200);
-
-  const now = new Date().toISOString();
-  // Mark result as 'pending' to neutralise the result + store invalidation in metadata
-  const { error } = await sb
-    .from('hse_permit_gas_tests')
-    .update({
-      result:   'pending',
-      notes:    `[INVALIDATED ${now}]${v.data.reason ? ` Reason: ${v.data.reason}` : ''}`,
-      metadata: { invalidated: true, invalidated_by: user.id, invalidated_at: now, invalidation_reason: v.data.reason ?? null, original_result: cur.data.result },
-    })
-    .eq('id', v.data.gasTestId);
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-
-  const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
-    permit_id:     cur.data.permit_id,
-    action:        'gas_test_invalidated',
-    actor_user_id: user.id,
-    after_state:   { gas_test_id: v.data.gasTestId, test_sequence: cur.data.test_sequence, original_result: cur.data.result },
-    metadata:      { reason: v.data.reason ?? null },
-  });
-
-  void emitAppEvent({
-    eventType:        'ptw.gas_test.invalidated',
-    sourceModule:     'hse',
-    sourceEntityType: 'permit',
-    sourceEntityId:   permit?.permit_number ?? cur.data.permit_id,
-    actorUserId:      user.id,
-    severity:         'warning',
-    payload:          { gasTestId: v.data.gasTestId, testSequence: cur.data.test_sequence, originalResult: cur.data.result, reason: v.data.reason ?? null },
-  });
-
-  return c.json({ success: true });
-});
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // SIMOPS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1876,7 +1628,7 @@ router.post('/ptw/permits/simops/check', async c => {
   // Overlap condition: !(other.end < permit.start || other.start > permit.end)
   // We fetch candidates and filter; for large datasets a DB function is preferred
   // but this matches existing project patterns of fetching + JS filtering.
-  const CONFLICTING_STATUSES = ['submitted', 'risk_review', 'isolation_pending', 'gas_test_pending', 'awaiting_approval', 'approved', 'active'];
+  const CONFLICTING_STATUSES = ['submitted', 'risk_review', 'isolation_pending', 'awaiting_approval', 'approved', 'active'];
   const conflictCandidatesRes = await sb
     .from('hse_permits')
     .select('id, permit_number, status, site_id, area_id, start_datetime, end_datetime')
@@ -2326,7 +2078,7 @@ router.post('/ptw/permit-templates/list', async c => {
 
   let q = sb
     .from('hse_permit_templates')
-    .select('id, name, description, permit_type, risk_level, requires_jsa, requires_isolation, requires_gas_test, approval_route, hazards, controls, pre_work_checks, post_work_checks, active, config, created_by, created_at, updated_at')
+    .select('id, name, description, permit_type, risk_level, requires_jsa, requires_isolation, approval_route, hazards, controls, pre_work_checks, post_work_checks, active, config, created_by, created_at, updated_at')
     .order('name');
 
   if (v.data.activeOnly === true) q = q.eq('active', true);
@@ -2346,7 +2098,6 @@ const TemplateCreateSchema = z.object({
   riskLevel:         z.enum(['low', 'medium', 'high', 'critical']).nullable().optional(),
   requiresJsa:       z.boolean().optional(),
   requiresIsolation: z.boolean().optional(),
-  requiresGasTest:   z.boolean().optional(),
   approvalRoute:     z.array(z.unknown()).optional(),
   hazards:           z.array(z.unknown()).optional(),
   controls:          z.array(z.unknown()).optional(),
@@ -2371,7 +2122,6 @@ router.post('/ptw/permit-templates/create', async c => {
       risk_level:        v.data.riskLevel ?? null,
       requires_jsa:      v.data.requiresJsa       ?? false,
       requires_isolation:v.data.requiresIsolation ?? false,
-      requires_gas_test: v.data.requiresGasTest   ?? false,
       approval_route:    v.data.approvalRoute      ?? [],
       hazards:           v.data.hazards            ?? [],
       controls:          v.data.controls           ?? [],
@@ -2411,7 +2161,6 @@ const TemplateUpdateSchema = z.object({
   riskLevel:         z.enum(['low', 'medium', 'high', 'critical']).nullable().optional(),
   requiresJsa:       z.boolean().optional(),
   requiresIsolation: z.boolean().optional(),
-  requiresGasTest:   z.boolean().optional(),
   approvalRoute:     z.array(z.unknown()).optional(),
   hazards:           z.array(z.unknown()).optional(),
   controls:          z.array(z.unknown()).optional(),
@@ -2443,7 +2192,6 @@ router.post('/ptw/permit-templates/update', async c => {
   if (fields.riskLevel         !== undefined) updates.risk_level         = fields.riskLevel;
   if (fields.requiresJsa       !== undefined) updates.requires_jsa       = fields.requiresJsa;
   if (fields.requiresIsolation !== undefined) updates.requires_isolation = fields.requiresIsolation;
-  if (fields.requiresGasTest   !== undefined) updates.requires_gas_test  = fields.requiresGasTest;
   if (fields.approvalRoute     !== undefined) updates.approval_route     = fields.approvalRoute;
   if (fields.hazards           !== undefined) updates.hazards            = fields.hazards;
   if (fields.controls          !== undefined) updates.controls           = fields.controls;
@@ -2483,7 +2231,7 @@ router.post('/ptw/permit-templates/duplicate', async c => {
   // Load source template
   const src = await sb
     .from('hse_permit_templates')
-    .select('name, description, permit_type, risk_level, requires_jsa, requires_isolation, requires_gas_test, approval_route, hazards, controls, pre_work_checks, post_work_checks, config')
+    .select('name, description, permit_type, risk_level, requires_jsa, requires_isolation, approval_route, hazards, controls, pre_work_checks, post_work_checks, config')
     .eq('id', v.data.templateId)
     .maybeSingle<{
       name: string;
@@ -2492,7 +2240,6 @@ router.post('/ptw/permit-templates/duplicate', async c => {
       risk_level: string | null;
       requires_jsa: boolean;
       requires_isolation: boolean;
-      requires_gas_test: boolean;
       approval_route: unknown;
       hazards: unknown;
       controls: unknown;
@@ -2514,7 +2261,6 @@ router.post('/ptw/permit-templates/duplicate', async c => {
       risk_level:         s.risk_level,
       requires_jsa:       s.requires_jsa,
       requires_isolation: s.requires_isolation,
-      requires_gas_test:  s.requires_gas_test,
       approval_route:     s.approval_route,
       hazards:            s.hazards,
       controls:           s.controls,

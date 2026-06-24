@@ -4,7 +4,7 @@
  * Right-side detail drawer for a PTW permit record.
  * Mirrors JsaDrawer.tsx structure: Drawer + in-panel Tabs + per-tab bodies.
  *
- * Tabs: Overview · Hazards & Controls · Isolations · Gas Tests · SIMOPS · Approvals · Timeline
+ * Tabs: Overview · Hazards & Controls · Isolations · SIMOPS · Approvals · Timeline
  * Header: status-aware primary action buttons (per spec §9).
  * Opened from the Permits register row "Open" button.
  */
@@ -16,20 +16,16 @@ import { hsePill } from '../types';
 import {
   usePermit,
   usePermitIsolations,
-  usePermitGasTests,
   usePermitSimops,
   usePermitApprovals,
   useCreateIsolation,
   useIsolationAction,
-  useCreateGasTest,
-  useGasTestAction,
   useSimopsCheck,
   useSimopsAction,
   useDecideApproval,
   type PermitListRow,
   type PermitStatus,
   type PermitIsolation,
-  type PermitGasTest,
   type PermitSimops,
   type PermitApproval,
 } from '@api/hse/ptw';
@@ -44,16 +40,16 @@ import {
   CloseoutDialog,
   CancelPermitDialog,
 } from './dialogs/PermitLifecycleDialogs';
+import { DiscussionButton } from '@components/sections/Messages/DiscussionButton';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type DrawerTabKey = 'overview' | 'hazards' | 'isolations' | 'gastests' | 'simops' | 'approvals' | 'timeline';
+type DrawerTabKey = 'overview' | 'hazards' | 'isolations' | 'simops' | 'approvals' | 'timeline';
 
 const DRAWER_TABS: ReadonlyArray<TabDef<DrawerTabKey>> = [
   { key: 'overview',   label: 'Overview'   },
   { key: 'hazards',    label: 'Hazards'    },
   { key: 'isolations', label: 'Isolations' },
-  { key: 'gastests',   label: 'Gas Tests'  },
   { key: 'simops',     label: 'SIMOPS'     },
   { key: 'approvals',  label: 'Approvals'  },
   { key: 'timeline',   label: 'Timeline'   },
@@ -355,129 +351,6 @@ function IsolationsTab({ permitId, isolations, refetch }: {
   );
 }
 
-function GasTestsTab({ permitId, gasTests, refetch }: {
-  permitId: string;
-  gasTests: PermitGasTest[];
-  refetch:  () => void;
-}): VNode {
-  const [showAdd, setShowAdd] = useState(false);
-  const [loc,     setLoc]     = useState('');
-  const [type,    setType]    = useState('multi_gas');
-  const [o2,      setO2]      = useState('');
-  const [lel,     setLel]     = useState('');
-  const [co,      setCo]      = useState('');
-  const [h2s,     setH2s]     = useState('');
-  const [result,  setResult]  = useState('pass');
-  const [notes,   setNotes]   = useState('');
-  const [addErr,  setAddErr]  = useState('');
-  const create = useCreateGasTest();
-  const action = useGasTestAction();
-
-  async function handleAdd() {
-    if (!loc.trim()) { setAddErr('Test location is required.'); return; }
-    setAddErr('');
-    try {
-      await create.mutateAsync({
-        permitId, testLocation: loc, testType: type,
-        oxygenPct: o2  ? Number(o2)  : null,
-        lelPct:    lel ? Number(lel) : null,
-        coPpm:     co  ? Number(co)  : null,
-        h2sPpm:    h2s ? Number(h2s) : null,
-        result, notes: notes || null,
-      });
-      setShowAdd(false); setLoc(''); setO2(''); setLel(''); setCo(''); setH2s(''); setNotes('');
-      refetch();
-    } catch (e) { setAddErr(e instanceof Error ? e.message : 'Failed to log gas test.'); }
-  }
-
-  async function doAction(gt: PermitGasTest, act: 'retest' | 'mark-invalid') {
-    try { await action.mutateAsync({ action: act, gasTestId: gt.id, permitId }); refetch(); }
-    catch { /* swallow */ }
-  }
-
-  const resultColor = (r: string) => r === 'pass' ? 'var(--color-success)' : r === 'fail' ? 'var(--siomac-red)' : '#f59e0b';
-
-  return (
-    <div style={{ display: 'grid', gap: '10px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-          {gasTests.length} test record{gasTests.length !== 1 ? 's' : ''}
-        </span>
-        <button class="inc-action-btn primary" style={{ fontSize: '0.72rem' }} onClick={() => setShowAdd(v => !v)}>
-          <i class="fas fa-plus" /> Log Gas Test
-        </button>
-      </div>
-
-      {showAdd && (
-        <div style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)', display: 'grid', gap: '8px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Log Gas Test Reading</div>
-          <input class="emp-filter-select" placeholder="Test location *" value={loc} onInput={e => setLoc((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-          <select class="emp-filter-select" value={type} onChange={e => setType((e.target as HTMLSelectElement).value)} style={{ fontSize: '0.8rem' }}>
-            <option value="multi_gas">Multi-gas detector</option>
-            <option value="oxygen">Oxygen only</option>
-            <option value="lel">LEL only</option>
-            <option value="toxic">Toxic (CO / H₂S)</option>
-          </select>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-            <input class="emp-filter-select" placeholder="O₂ %" value={o2} type="number" step="0.1" onInput={e => setO2((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-            <input class="emp-filter-select" placeholder="LEL %" value={lel} type="number" step="0.1" onInput={e => setLel((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-            <input class="emp-filter-select" placeholder="CO ppm" value={co} type="number" onInput={e => setCo((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-            <input class="emp-filter-select" placeholder="H₂S ppm" value={h2s} type="number" onInput={e => setH2s((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-          </div>
-          <select class="emp-filter-select" value={result} onChange={e => setResult((e.target as HTMLSelectElement).value)} style={{ fontSize: '0.8rem' }}>
-            <option value="pass">Pass</option>
-            <option value="fail">Fail</option>
-            <option value="conditional">Conditional</option>
-          </select>
-          <input class="emp-filter-select" placeholder="Notes (optional)" value={notes} onInput={e => setNotes((e.target as HTMLInputElement).value)} style={{ fontSize: '0.8rem' }} />
-          {addErr && <div style={{ color: 'var(--siomac-red)', fontSize: '0.76rem' }}>{addErr}</div>}
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button class="inc-action-btn primary" style={{ fontSize: '0.72rem' }} disabled={create.isPending} onClick={() => void handleAdd()}>
-              {create.isPending ? 'Saving…' : 'Log Test'}
-            </button>
-            <button class="inc-action-btn" style={{ fontSize: '0.72rem' }} onClick={() => { setShowAdd(false); setAddErr(''); }}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {gasTests.length === 0 && !showAdd && <EmptyState message="No gas tests recorded." />}
-
-      {gasTests.map(gt => (
-        <div key={gt.id} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-card)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-            <div style={{ minWidth: 0 }}>
-              <span style={{ fontWeight: 600, fontSize: '0.82rem' }}>{gt.test_location}</span>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                {gt.test_type.replace(/_/g, ' ')} · {fmtDt(gt.tested_at)}
-              </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '0.72rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
-                {gt.oxygen_pct != null && <span>O₂: {gt.oxygen_pct}%</span>}
-                {gt.lel_pct    != null && <span>LEL: {gt.lel_pct}%</span>}
-                {gt.co_ppm     != null && <span>CO: {gt.co_ppm}ppm</span>}
-                {gt.h2s_ppm    != null && <span>H₂S: {gt.h2s_ppm}ppm</span>}
-              </div>
-            </div>
-            <span style={{ fontSize: '0.76rem', fontWeight: 700, color: resultColor(gt.result), whiteSpace: 'nowrap' }}>
-              {gt.result.toUpperCase()}
-            </span>
-          </div>
-          {gt.invalidated_at && (
-            <div style={{ marginTop: '4px', fontSize: '0.71rem', color: 'var(--text-muted)' }}>
-              Invalidated {fmtDate(gt.invalidated_at)}
-            </div>
-          )}
-          {!gt.invalidated_at && (
-            <div style={{ display: 'flex', gap: '5px', marginTop: '6px' }}>
-              <button class="inc-action-btn primary" style={{ fontSize: '0.68rem', padding: '2px 8px' }} disabled={action.isPending} onClick={() => void doAction(gt, 'retest')}>Retest</button>
-              <button class="inc-action-btn" style={{ fontSize: '0.68rem', padding: '2px 8px' }} disabled={action.isPending} onClick={() => void doAction(gt, 'mark-invalid')}>Mark Invalid</button>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function SimopsTab({ permitId, simops, refetch }: {
   permitId: string;
   simops:   PermitSimops[];
@@ -677,19 +550,16 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
 
   // Sub-register live data
   const { data: isoRes,       refetch: refetchIso  } = usePermitIsolations(permit.id);
-  const { data: gasRes,       refetch: refetchGas  } = usePermitGasTests(permit.id);
   const { data: simopsRes,    refetch: refetchSim  } = usePermitSimops(permit.id);
   const { data: approvalsRes, refetch: refetchAppr } = usePermitApprovals(permit.id);
 
   const isolations = isoRes?.data       ?? [];
-  const gasTests   = gasRes?.data        ?? [];
   const simops     = simopsRes?.data     ?? [];
   const approvals  = approvalsRes?.data  ?? [];
 
   // Count badges on tabs
   const tabCounts: Partial<Record<DrawerTabKey, number>> = {
     isolations: isolations.length > 0 ? isolations.length : undefined,
-    gastests:   gasTests.length   > 0 ? gasTests.length   : undefined,
     simops:     simops.filter(s => s.status !== 'resolved' && s.status !== 'overridden').length || undefined,
     approvals:  approvals.filter(a => a.status === 'pending').length || undefined,
   };
@@ -728,9 +598,12 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
               {permit.specific_location}
             </span>
           )}
-          <span style={{ marginLeft: 'auto', fontSize: '0.73rem' }}>
-            {remainingTime(permit.end_datetime)}
-          </span>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '0.73rem' }}>
+              {remainingTime(permit.end_datetime)}
+            </span>
+            <DiscussionButton module="hse" entityType="permit" entityId={permit.id} recordRef={permitNo} />
+          </div>
         </div>
 
         {/* In-panel tab bar (mirrors JsaDrawer) */}
@@ -749,9 +622,6 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
           {activeTab === 'hazards'    && <HazardsTab hazards={hazards} controls={controls} />}
           {activeTab === 'isolations' && (
             <IsolationsTab permitId={permit.id} isolations={isolations} refetch={() => void refetchIso()} />
-          )}
-          {activeTab === 'gastests' && (
-            <GasTestsTab permitId={permit.id} gasTests={gasTests} refetch={() => void refetchGas()} />
           )}
           {activeTab === 'simops' && (
             <SimopsTab permitId={permit.id} simops={simops} refetch={() => void refetchSim()} />

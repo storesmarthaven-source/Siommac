@@ -75,7 +75,6 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
   const [riskLevel,   setRiskLevel]   = useState<PermitRiskLevel | ''>('');
   const [requiresJsa,       setRequiresJsa]       = useState(false);
   const [requiresIsolation, setRequiresIsolation] = useState(false);
-  const [requiresGasTest,   setRequiresGasTest]   = useState(false);
   const [hazards,    setHazards]    = useState('');
   const [controls,   setControls]   = useState('');
   const [error,      setError]      = useState('');
@@ -96,7 +95,6 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
       setRiskLevel((template.risk_level as PermitRiskLevel | null) ?? '');
       setRequiresJsa(template.requires_jsa);
       setRequiresIsolation(template.requires_isolation);
-      setRequiresGasTest(template.requires_gas_test);
       setHazards(listToText(template.hazards));
       setControls(listToText(template.controls));
     } else {
@@ -106,7 +104,6 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
       setRiskLevel('');
       setRequiresJsa(false);
       setRequiresIsolation(false);
-      setRequiresGasTest(false);
       setHazards('');
       setControls('');
     }
@@ -130,7 +127,6 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
       riskLevel:          (riskLevel || null) as PermitRiskLevel | null,
       requiresJsa,
       requiresIsolation,
-      requiresGasTest,
       hazards,
       controls,
     };
@@ -230,7 +226,6 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px' }}>
             <ToggleField label="Requires JSA"       checked={requiresJsa}       onChange={setRequiresJsa} />
             <ToggleField label="Requires Isolation" checked={requiresIsolation} onChange={setRequiresIsolation} />
-            <ToggleField label="Requires Gas Test"  checked={requiresGasTest}   onChange={setRequiresGasTest} />
           </div>
         </div>
 

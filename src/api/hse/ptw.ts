@@ -19,7 +19,6 @@ export type PermitStatus =
   | 'submitted'
   | 'risk_review'
   | 'isolation_pending'
-  | 'gas_test_pending'
   | 'awaiting_approval'
   | 'changes_requested'
   | 'approved'
@@ -58,7 +57,6 @@ export interface PermitDetail {
   controls:    unknown[];
   approvals:   unknown[];
   isolations:  unknown[];
-  gas_tests:   unknown[];
   simops:      unknown[];
   extensions:  unknown[];
   suspensions: unknown[];
@@ -99,7 +97,6 @@ export interface PermitTypeConfig {
   display_name:               string;
   requires_jsa:               boolean;
   requires_isolation:         boolean;
-  requires_gas_test:          boolean;
   requires_simops_check:      boolean;
   requires_height_plan:       boolean;
   requires_hot_work_cert:     boolean;
@@ -175,9 +172,6 @@ export interface CreatePermitArgs extends Record<string, unknown> {
   hazards?:          CreatePermitHazard[];
   /** Isolation points to insert (status='planned'). */
   isolations?:       CreatePermitIsolation[];
-  /** Gas test flag — stored on the permit metadata. */
-  gasTestRequired?:  boolean;
-  gasTestNote?:      string | null;
   /** SIMOPS note. */
   simopsNote?:       string | null;
 }
@@ -318,24 +312,6 @@ export interface PermitIsolation {
   created_at:      string;
 }
 
-export interface PermitGasTest {
-  id:              string;
-  permit_id:       string;
-  test_location:   string;
-  test_type:       string;
-  tested_by:       string | null;
-  oxygen_pct:      number | null;
-  lel_pct:         number | null;
-  co_ppm:          number | null;
-  h2s_ppm:         number | null;
-  result:          string;
-  notes:           string | null;
-  tested_at:       string;
-  valid_until:     string | null;
-  invalidated_at:  string | null;
-  created_at:      string;
-}
-
 export interface PermitSimops {
   id:              string;
   permit_id:       string;
@@ -384,26 +360,6 @@ export interface IsolationActionArgs extends Record<string, unknown> {
   note?:       string | null;
 }
 
-export interface CreateGasTestArgs extends Record<string, unknown> {
-  permitId:      string;
-  testLocation:  string;
-  testType:      string;
-  testedBy?:     string | null;
-  oxygenPct?:    number | null;
-  lelPct?:       number | null;
-  coPpm?:        number | null;
-  h2sPpm?:       number | null;
-  result:        string;
-  notes?:        string | null;
-  validUntil?:   string | null;
-}
-
-export interface GasTestActionArgs extends Record<string, unknown> {
-  gasTestId: string;
-  permitId:  string;
-  note?:     string | null;
-}
-
 export interface SimopsCheckArgs extends Record<string, unknown> {
   permitId: string;
 }
@@ -429,17 +385,6 @@ export function usePermitIsolations(permitId: string | null) {
     queryKey: [...ptwKeys.detail(permitId ?? ''), 'isolations'],
     queryFn:  () => apiPost<{ success: boolean; data: PermitIsolation[] }>(
       'hse/ptw/permits/isolations/list', { args: { permitId } },
-    ),
-    enabled:   !!permitId,
-    staleTime: 15_000,
-  });
-}
-
-export function usePermitGasTests(permitId: string | null) {
-  return useQuery({
-    queryKey: [...ptwKeys.detail(permitId ?? ''), 'gas-tests'],
-    queryFn:  () => apiPost<{ success: boolean; data: PermitGasTest[] }>(
-      'hse/ptw/permits/gas-tests/list', { args: { permitId } },
     ),
     enabled:   !!permitId,
     staleTime: 15_000,
@@ -498,34 +443,6 @@ export function useIsolationAction() {
   });
 }
 
-export function useCreateGasTest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (args: CreateGasTestArgs) =>
-      apiPost<{ success: boolean; data: { id: string } }>(
-        'hse/ptw/permits/gas-tests/create', { args }, { retryable: false },
-      ),
-    onSuccess: (_res, vars) => {
-      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
-      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
-    },
-  });
-}
-
-export function useGasTestAction() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ action, ...args }: GasTestActionArgs & { action: 'retest' | 'mark-invalid' }) =>
-      apiPost<{ success: boolean }>(
-        `hse/ptw/permits/gas-tests/${action}`, { args }, { retryable: false },
-      ),
-    onSuccess: (_res, vars) => {
-      void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
-      void qc.invalidateQueries({ queryKey: ptwKeys.stats() });
-    },
-  });
-}
-
 export function useSimopsCheck() {
   const qc = useQueryClient();
   return useMutation({
@@ -576,7 +493,6 @@ export interface PermitTemplate {
   risk_level:         PermitRiskLevel | null;
   requires_jsa:       boolean;
   requires_isolation: boolean;
-  requires_gas_test:  boolean;
   approval_route:     unknown[];
   hazards:            unknown[];
   controls:           unknown[];
@@ -596,7 +512,6 @@ export interface CreateTemplateArgs extends Record<string, unknown> {
   riskLevel?:         PermitRiskLevel | null;
   requiresJsa?:       boolean;
   requiresIsolation?: boolean;
-  requiresGasTest?:   boolean;
   hazards?:           string;
   controls?:          string;
 }
@@ -609,7 +524,6 @@ export interface UpdateTemplateArgs extends Record<string, unknown> {
   riskLevel?:         PermitRiskLevel | null;
   requiresJsa?:       boolean;
   requiresIsolation?: boolean;
-  requiresGasTest?:   boolean;
   hazards?:           string;
   controls?:          string;
 }

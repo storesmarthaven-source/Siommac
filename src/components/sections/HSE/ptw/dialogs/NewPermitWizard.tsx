@@ -1,18 +1,17 @@
 /**
  * src/components/sections/HSE/ptw/dialogs/NewPermitWizard.tsx
  *
- * New Permit-to-Work wizard — 8 steps:
+ * New Permit-to-Work wizard — 7 steps:
  *   1. Permit Type          — select from usePermitTypes(), shows requires_* flags
  *   2. Work Scope           — title, description, site/location, start/end, supervisor
  *   3. Link JSA / Risk Assessment — typeahead search for approved JSA / RA
  *   4. Hazards & Controls   — profile-driven selectable cards + custom hazards
  *   5. Isolation            — lightweight repeatable isolation points list
- *   6. Gas Test             — planned gas test note
- *   7. SIMOPS               — conflict note
- *   8. Review & Submit      — full summary + missing-requirements check
+ *   6. SIMOPS               — conflict note
+ *   7. Review & Submit      — full summary + missing-requirements check
  *
  * Mirrors NewAssessmentWizard.tsx for UI-kit usage.
- * Backend: permits/create now accepts hazards[], isolations[], gasTestRequired, gasTestNote, simopsNote.
+ * Backend: permits/create now accepts hazards[], isolations[], simopsNote.
  */
 
 import { useState, useMemo, useRef, useEffect } from 'preact/hooks';
@@ -44,7 +43,6 @@ const WIZARD_STEPS = [
   { label: 'Link JSA / Risk Assessment', sub: 'Search for approved records' },
   { label: 'Hazards & Controls',      sub: 'Profile-driven hazard selection' },
   { label: 'Isolation',               sub: 'Planned isolation points' },
-  { label: 'Gas Test',                sub: 'Planned atmospheric testing' },
   { label: 'SIMOPS',                  sub: 'Simultaneous operations check' },
   { label: 'Review & Submit',         sub: 'Confirm & create' },
 ] as const;
@@ -137,7 +135,6 @@ function TypeCard({ cfg, selected, onSelect }: {
   const flags: string[] = [];
   if (cfg.requires_jsa)               flags.push('JSA');
   if (cfg.requires_isolation)         flags.push('Isolation');
-  if (cfg.requires_gas_test)          flags.push('Gas Test');
   if (cfg.requires_simops_check)      flags.push('SIMOPS');
   if (cfg.requires_height_plan)       flags.push('Height Plan');
   if (cfg.requires_hot_work_cert)     flags.push('Hot Work Cert');
@@ -580,10 +577,6 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
   // Step 5 — Isolation
   const [isolations, setIsolations] = useState<IsolationEntry[]>([]);
 
-  // Step 6 — Gas Test
-  const [gasTestRequired, setGasTestRequired] = useState(false);
-  const [gasTestNote,     setGasTestNote]     = useState('');
-
   // Step 7 — SIMOPS
   const [simopsNote, setSimopsNote] = useState('');
 
@@ -793,8 +786,6 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
       linkedRiskAssessmentId:    linkedRa?.id  ?? null,
       hazards:                   hazardPayload.length > 0 ? hazardPayload : undefined,
       isolations:                isolationPayload.length > 0 ? isolationPayload : undefined,
-      gasTestRequired:           gasTestRequired || undefined,
-      gasTestNote:               gasTestNote    || null,
       simopsNote:                simopsNote     || null,
       submitImmediately:         submit,
     };
@@ -836,7 +827,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
     setJsaQuery(''); setRaQuery('');
     setSelectedHazards(new Map()); setNaReasons(new Map());
     setHazardFilter('all'); setHazardSearch('');
-    setIsolations([]); setGasTestRequired(false); setGasTestNote('');
+    setIsolations([]);
     setSimopsNote(''); setError('');
   }
 
@@ -853,7 +844,6 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
     ? ([
         [selectedTypeCfg.requires_jsa,               'Linked JSA required',      !!linkedJsa],
         [selectedTypeCfg.requires_isolation,          'Isolation verification',    isolations.length > 0],
-        [selectedTypeCfg.requires_gas_test,           'Gas test (passing result)', gasTestRequired],
         [selectedTypeCfg.requires_simops_check,       'SIMOPS conflict check',    !!simopsNote],
         [selectedTypeCfg.requires_height_plan,        'Work-at-height plan',      false],
         [selectedTypeCfg.requires_hot_work_cert,      'Hot work certificate',     false],
@@ -1200,57 +1190,8 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
           </div>
         )}
 
-        {/* ── Step 5: Gas Test ─────────────────────────────────────────────── */}
+        {/* ── Step 5: SIMOPS ──────────────────────────────────────────────── */}
         {step === 5 && (
-          <div style={{ display: 'grid', gap: '14px' }}>
-            {selectedTypeCfg && !selectedTypeCfg.requires_gas_test && (
-              <div style={{ padding: '10px 14px', background: 'var(--surface-alt)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '8px' }}>
-                <i class="fas fa-info-circle" style={{ flexShrink: 0, marginTop: '2px' }} />
-                Gas testing is not required for this permit type, but you may still plan a test.
-              </div>
-            )}
-            {selectedTypeCfg?.requires_gas_test && (
-              <div style={{ padding: '10px 14px', background: 'rgba(245,158,11,.1)', borderRadius: '8px', border: '1px solid rgba(245,158,11,.3)', fontSize: '0.8rem', color: '#b45309' }}>
-                <i class="fas fa-triangle-exclamation" style={{ marginRight: '6px' }} />
-                This permit type requires a passing gas test before activation. Record your planned test here; actual results are logged from the Permit detail view.
-              </div>
-            )}
-
-            <FormGrid>
-              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  id="gasTestRequired"
-                  checked={gasTestRequired}
-                  onChange={e => setGasTestRequired((e.target as HTMLInputElement).checked)}
-                  style={{ accentColor: 'var(--siomac-navy)', width: '16px', height: '16px' }}
-                />
-                <label for="gasTestRequired" style={{ fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer' }}>
-                  Gas test planned before work commences
-                </label>
-              </div>
-              {gasTestRequired && (
-                <Field label="Gas test note" wide>
-                  <TextareaInput
-                    value={gasTestNote}
-                    onInput={setGasTestNote}
-                    placeholder="e.g. Test for H₂S, CO, LEL and O₂ at confined space entry point. Contractor: ABC Safety Services."
-                    rows={3}
-                  />
-                </Field>
-              )}
-            </FormGrid>
-
-            {!gasTestRequired && (
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                Run conflict check after creation — use the Permit detail view to log actual gas test results.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ── Step 6: SIMOPS ──────────────────────────────────────────────── */}
-        {step === 6 && (
           <div style={{ display: 'grid', gap: '14px' }}>
             {selectedTypeCfg && !selectedTypeCfg.requires_simops_check && (
               <div style={{ padding: '10px 14px', background: 'var(--surface-alt)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '8px' }}>
@@ -1283,8 +1224,8 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
           </div>
         )}
 
-        {/* ── Step 7: Review & Submit ─────────────────────────────────────── */}
-        {step === 7 && (
+        {/* ── Step 6: Review & Submit ─────────────────────────────────────── */}
+        {step === 6 && (
           <div style={{ display: 'grid', gap: '14px' }}>
             {/* Summary card */}
             <div style={{ padding: '16px', background: 'var(--surface-alt)', borderRadius: '10px', display: 'grid', gap: '8px', fontSize: '0.82rem' }}>
@@ -1320,11 +1261,6 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
               {/* Isolation */}
               {isolations.filter(i => i.isolationPoint.trim()).length > 0 && (
                 <div><strong style={{ color: 'var(--text-muted)' }}>Isolation points:</strong> {isolations.filter(i => i.isolationPoint.trim()).length}</div>
-              )}
-
-              {/* Gas test */}
-              {gasTestRequired && (
-                <div><strong style={{ color: 'var(--text-muted)' }}>Gas test:</strong> Planned{gasTestNote ? ` — ${gasTestNote}` : ''}</div>
               )}
 
               {/* SIMOPS */}

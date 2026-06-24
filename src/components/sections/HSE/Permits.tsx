@@ -4,8 +4,8 @@
  * Permit to Work (PTW) — real-data wired.
  * Mirrors RiskJsa.tsx: PageHeader + stats cards + TabBar + NewMenu + register table + wizard.
  *
- * Tabs: Permits | Approvals | Isolations | Gas Tests | SIMOPS | Templates | Archive
- * Coming-soon tabs (Isolations / Gas Tests / SIMOPS / Templates) render a clean empty state —
+ * Tabs: Permits | Approvals | Isolations | SIMOPS | Templates | Archive
+ * Coming-soon tabs (Isolations / SIMOPS / Templates) render a clean empty state —
  * those sub-registers are deferred to a later phase.
  */
 
@@ -38,14 +38,13 @@ const TABS: AreaTab[] = [
   { key: 'permits',   label: 'Permits',     sublabel: 'Active & recent',      icon: 'fa-file-shield' },
   { key: 'approvals', label: 'Approvals',   sublabel: 'Awaiting decision',     icon: 'fa-clipboard-check' },
   { key: 'isolations',label: 'Isolations',  sublabel: 'Lock-out / tag-out',   icon: 'fa-lock' },
-  { key: 'gastests',  label: 'Gas Tests',   sublabel: 'Atmospheric readings',  icon: 'fa-flask-vial' },
   { key: 'simops',    label: 'SIMOPS',      sublabel: 'Conflict management',   icon: 'fa-diagram-project' },
   { key: 'templates', label: 'Templates',   sublabel: 'Workflow blueprints',   icon: 'fa-copy' },
   { key: 'archive',   label: 'Archive',     sublabel: 'Closed & cancelled',    icon: 'fa-box-archive' },
 ];
 
 /** Page-level tabs whose sub-register management lives inside the permit drawer. */
-const DRAWER_MANAGED_TABS = ['isolations', 'gastests', 'simops'];
+const DRAWER_MANAGED_TABS = ['isolations', 'simops'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -318,7 +317,6 @@ function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Permit
                 <th style={{ width: '90px' }}>Risk Level</th>
                 <th style={{ width: '60px', textAlign: 'center' }}>JSA</th>
                 <th style={{ width: '80px', textAlign: 'center' }}>Isolation</th>
-                <th style={{ width: '80px', textAlign: 'center' }}>Gas Test</th>
                 <th style={{ width: '70px', textAlign: 'center' }}>Active</th>
                 <th style={{ width: '130px' }}>Last Updated</th>
                 <th style={{ width: '110px' }}>Actions</th>
@@ -326,11 +324,11 @@ function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Permit
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading templates…</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading templates…</td></tr>
               )}
               {!isLoading && templates.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
                     <i class="fas fa-copy" style={{ fontSize: '2rem', opacity: 0.2, marginBottom: '10px', display: 'block' }} />
                     No templates yet. Click <strong>New Template</strong> to create one.
                   </td>
@@ -346,7 +344,6 @@ function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Permit
                   <td>{riskPillTemplate(t.risk_level)}</td>
                   <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_jsa)}</td>
                   <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_isolation)}</td>
-                  <td style={{ textAlign: 'center' }}>{checkIcon(t.requires_gas_test)}</td>
                   <td style={{ textAlign: 'center' }}>
                     {t.active
                       ? <span class="vt-pill is-on" style={{ fontSize: '0.7rem' }}>Active</span>
@@ -529,7 +526,7 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         <PermitsTab statusFilter="archived" onOpenPermit={p => setSelectedPermit(p)} />
       )}
 
-      {/* Isolations / Gas Tests / SIMOPS: sub-register endpoints are per-permit.
+      {/* Isolations / SIMOPS: sub-register endpoints are per-permit.
           There is no list-all endpoint, so page-level tabs point users to the drawer. */}
       {DRAWER_MANAGED_TABS.includes(active) && (() => {
         const MAP: Record<string, { icon: string; label: string; detail: string }> = {
@@ -537,11 +534,6 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
             icon:   'fa-lock',
             label:  'Isolations',
             detail: 'Lock-out / tag-out isolation points are managed per permit. Open a permit from the Permits tab, then switch to the Isolations tab inside the drawer to apply, verify, or remove isolation points.',
-          },
-          gastests: {
-            icon:   'fa-flask-vial',
-            label:  'Gas Tests',
-            detail: 'Atmospheric readings and gas test results are recorded per permit. Open a permit from the Permits tab, then switch to the Gas Tests tab inside the drawer to log readings and manage results.',
           },
           simops: {
             icon:   'fa-diagram-project',

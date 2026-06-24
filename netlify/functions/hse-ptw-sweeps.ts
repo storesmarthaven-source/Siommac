@@ -13,11 +13,6 @@
 //     Updates status → 'expired' in-place, then emits ptw.permit.expired (critical).
 //     dedupeKey: ptw-expired:<ref>
 //
-//   Sweep 3 — Gas test due / overdue:
-//     hse_permit_gas_tests with result='pending' whose parent permit is still active.
-//     Emits ptw.permit.gas_test_expiring (warning) to requester + work_supervisor.
-//     dedupeKey: gas-test-expiring:<gas_test_id>:<yyyy-mm-dd-HH>  — hourly re-ping.
-//
 // Idempotency: per-user notification deduplication is enforced by notify.ts on the
 // (user_id, dedupe_key) unique index.  The per-bucket key for sweep 1 means each
 // permit fires at most once per bucket transition even across many 15-min runs.
@@ -26,25 +21,6 @@ import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
 import { emitAppEvent } from './lib/appEvents';
 
-// ── Timezone helper (used only for gas-test hour bucket) ─────────────────────
-const TZ = process.env.APP_TZ ?? 'America/Port_of_Spain';
-
-/** Returns 'yyyy-mm-dd-HH' in the configured timezone. */
-function hourBucketInTz(): string {
-  const now = new Date();
-  const date = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TZ,
-    year:   'numeric',
-    month:  '2-digit',
-    day:    '2-digit',
-  }).format(now);
-  const hour = new Intl.DateTimeFormat('en-US', {
-    timeZone: TZ,
-    hour:     '2-digit',
-    hour12:   false,
-  }).format(now).replace(/\D/g, '').padStart(2, '0');
-  return `${date}-${hour}`;
-}
 
 // ── Schedule guard type ───────────────────────────────────────────────────────
 interface ScheduleEvent {
@@ -67,24 +43,6 @@ interface ActivePermit {
   area_authority_id:   string | null;
   site_id:             string | null;
   department_id:       string | null;
-}
-
-interface PermitInfo {
-  ref:                string;
-  status:             string;
-  requester_id:       string | null;
-  work_supervisor_id: string | null;
-  department_id:      string | null;
-  site_id:            string | null;
-}
-
-interface PendingGasTest {
-  id:                  string;
-  permit_id:           string;
-  test_sequence:       number | null;
-  result:              string;
-  // Supabase returns joined rows as an array even with !inner
-  hse_permits:         PermitInfo[] | PermitInfo | null;
 }
 
 // ── Deduplicate and filter falsy user IDs ─────────────────────────────────────
@@ -114,7 +72,6 @@ export const handler = schedule('*/15 * * * *', async (event: ScheduleEvent) => 
   const in15m      = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
   const in1h       = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
   const in2h       = new Date(now.getTime() + 2  * 60 * 60 * 1000).toISOString();
-  const hourBucket = hourBucketInTz();
 
   // ────────────────────────────────────────────────────────────────────────────
   // SWEEP 1: Permits expiring soon (active, end_datetime within 2 hours)
@@ -252,88 +209,10 @@ export const handler = schedule('*/15 * * * *', async (event: ScheduleEvent) => 
     console.log(`hse-ptw-sweeps sweep2 (expired): ${sweep2Ok}/${sweep2Total}`);
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // SWEEP 3: Gas tests pending (result='pending') on active permits
-  //
-  // 'pending' result means the gas test record has been created but the test
-  // reading has not yet been recorded — i.e. the test is due/overdue.
-  // We join to hse_permits to confirm the parent permit is still active.
-  // dedupeKey uses an hourly bucket so the alert re-fires each hour (not every
-  // 15 min) until the test result is filled in.
-  // ────────────────────────────────────────────────────────────────────────────
-  const { data: pendingTests, error: err3 } = await sb
-    .from('hse_permit_gas_tests')
-    .select(`
-      id,
-      permit_id,
-      test_sequence,
-      result,
-      hse_permits!inner (
-        ref,
-        status,
-        requester_id,
-        work_supervisor_id,
-        department_id,
-        site_id
-      )
-    `)
-    .eq('result', 'pending')
-    .limit(1000);
-
-  if (err3) {
-    console.error('hse-ptw-sweeps sweep3 fetch error:', err3.message);
-  }
-
-  let sweep3Ok = 0;
-  let sweep3Total = 0;
-
-  if (pendingTests && pendingTests.length > 0) {
-    // Filter down to those whose parent permit is active.
-    // Supabase may return the !inner join as an array; normalise to single object.
-    const rows = (pendingTests as PendingGasTest[]).map(r => {
-      const permit = Array.isArray(r.hse_permits) ? r.hse_permits[0] : r.hse_permits;
-      return { ...r, _permit: permit as PermitInfo | null };
-    }).filter(r => r._permit?.status === 'active');
-    sweep3Total = rows.length;
-
-    const sweep3Results = await Promise.allSettled(rows.map(row => {
-      const p = row._permit!;
-      const seqLabel = row.test_sequence != null ? `#${row.test_sequence}` : '';
-
-      const recipients = uniqueUserIds(
-        p.requester_id,
-        p.work_supervisor_id,
-      ).map(userId => ({ userId, reason: 'explicit' as const }));
-
-      return emitAppEvent({
-        eventType:        'ptw.permit.gas_test_expiring',
-        sourceModule:     'hse',
-        sourceEntityType: 'gas_test',
-        sourceEntityId:   row.id,
-        actorUserId:      null,
-        siteId:           p.site_id,
-        departmentId:     p.department_id,
-        severity:         'warning',
-        payload:          { permitRef: p.ref, testSequence: row.test_sequence },
-        dedupeKey:        `gas-test-expiring:${row.id}:${hourBucket}`,
-        explicitRecipients: recipients.length > 0 ? recipients : undefined,
-        notification: {
-          title:          'Gas test due',
-          body:           `Gas test ${seqLabel} for permit ${p.ref} is pending — re-test before work continues.`,
-          actionRoute:    'hse/permits',
-          actionRequired: true,
-        },
-      });
-    }));
-
-    sweep3Ok = sweep3Results.filter(r => r.status === 'fulfilled').length;
-    console.log(`hse-ptw-sweeps sweep3 (gas tests pending): ${sweep3Ok}/${sweep3Total}`);
-  }
 
   const summary =
     `sweep1(expiring)=${sweep1Ok}/${sweep1Total} ` +
-    `sweep2(expired)=${sweep2Ok}/${sweep2Total} ` +
-    `sweep3(gas-test)=${sweep3Ok}/${sweep3Total}`;
+    `sweep2(expired)=${sweep2Ok}/${sweep2Total}`;
 
   console.log(`hse-ptw-sweeps complete: ${summary}`);
   return { statusCode: 200, body: summary };
