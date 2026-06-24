@@ -120,6 +120,8 @@ export interface EvidenceRow {
   evidence_type: string | null;
   uploaded_by:   string | null;
   uploaded_at:   string;
+  /** Signed download URL, added by the get endpoints. */
+  url?:          string;
 }
 
 export interface AuditEvent {
@@ -197,7 +199,7 @@ export type FindingLifecycleAction = 'close' | 'reopen' | 'escalate';
 export function useInspections(filter: InspectionFilter = {}) {
   return useQuery({
     queryKey: inspectionKeys.list(filter as Record<string, unknown>),
-    queryFn:  () => apiPost<{ success: boolean; data: InspectionRow[] }>('hse/inspections/list', { args: filter }),
+    queryFn:  () => apiPost<{ success: boolean; data: InspectionRow[] }>('hse/inspections/list', filter as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -205,7 +207,7 @@ export function useInspections(filter: InspectionFilter = {}) {
 export function useInspection(id: string | null) {
   return useQuery({
     queryKey: inspectionKeys.detail(id ?? ''),
-    queryFn:  () => apiPost<{ success: boolean; data: InspectionDetail }>('hse/inspections/get', { args: { inspectionId: id } }),
+    queryFn:  () => apiPost<{ success: boolean; data: InspectionDetail }>('hse/inspections/get', { inspectionId: id }),
     enabled:  !!id,
     staleTime: 15_000,
   });
@@ -222,7 +224,7 @@ export function useInspectionStats() {
 export function useFindings(filter: FindingFilter = {}) {
   return useQuery({
     queryKey: inspectionKeys.findingList(filter as Record<string, unknown>),
-    queryFn:  () => apiPost<{ success: boolean; data: FindingRow[] }>('hse/inspection-findings/list', { args: filter }),
+    queryFn:  () => apiPost<{ success: boolean; data: FindingRow[] }>('hse/inspection-findings/list', filter as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -230,7 +232,7 @@ export function useFindings(filter: FindingFilter = {}) {
 export function useFinding(id: string | null) {
   return useQuery({
     queryKey: inspectionKeys.findingDetail(id ?? ''),
-    queryFn:  () => apiPost<{ success: boolean; data: FindingDetail }>('hse/inspection-findings/get', { args: { findingId: id } }),
+    queryFn:  () => apiPost<{ success: boolean; data: FindingDetail }>('hse/inspection-findings/get', { findingId: id }),
     enabled:  !!id,
     staleTime: 15_000,
   });
@@ -240,7 +242,7 @@ export function useInspectionTemplates(inspectionType?: string) {
   const args = inspectionType ? { inspectionType } : {};
   return useQuery({
     queryKey: inspectionKeys.templates(args),
-    queryFn:  () => apiPost<{ success: boolean; data: TemplateRow[] }>('hse/inspection-templates/list', { args }),
+    queryFn:  () => apiPost<{ success: boolean; data: TemplateRow[] }>('hse/inspection-templates/list', args),
     staleTime: 5 * 60_000,
   });
 }
@@ -270,7 +272,7 @@ export function useCreateInspection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateInspectionArgs) =>
-      apiPost<{ success: boolean; data: { id: string; inspectionNo: string } }>('hse/inspections/create', { args }, { retryable: false }),
+      apiPost<{ success: boolean; data: { id: string; inspectionNo: string } }>('hse/inspections/create', args as unknown as Record<string, unknown>, { retryable: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -279,7 +281,7 @@ export function useUpdateInspection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { inspectionId: string } & Partial<CreateInspectionArgs>) =>
-      apiPost<{ success: boolean }>('hse/inspections/update', { args }),
+      apiPost<{ success: boolean }>('hse/inspections/update', args as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -288,7 +290,7 @@ export function useInspectionTransition() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ action, inspectionId, note }: { action: InspectionLifecycleAction; inspectionId: string; note?: string }) =>
-      apiPost<{ success: boolean; data?: { status: string } }>(`hse/inspections/${action}`, { args: { inspectionId, note: note ?? null } }),
+      apiPost<{ success: boolean; data?: { status: string } }>(`hse/inspections/${action}`, { inspectionId, note: note ?? null }),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -297,7 +299,7 @@ export function useRescheduleInspection() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { inspectionId: string; newDueAt: string; reason: string }) =>
-      apiPost<{ success: boolean }>('hse/inspections/reschedule', { args }),
+      apiPost<{ success: boolean }>('hse/inspections/reschedule', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -306,7 +308,7 @@ export function useSaveResponse() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { inspectionId: string; templateItemId: string; responseStatus: ResponseStatus; responseValue?: string | null; comment?: string | null }) =>
-      apiPost<{ success: boolean; data: { id: string; findingId: string | null } }>('hse/inspections/responses/save', { args }),
+      apiPost<{ success: boolean; data: { id: string; findingId: string | null } }>('hse/inspections/responses/save', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -328,7 +330,7 @@ export function useCreateFinding() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateFindingArgs) =>
-      apiPost<{ success: boolean; data: { id: string } }>('hse/inspections/responses/create-finding', { args }),
+      apiPost<{ success: boolean; data: { id: string } }>('hse/inspections/responses/create-finding', args as unknown as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -337,7 +339,7 @@ export function useAssignFindingAction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { findingId: string; actionDescription: string; ownerId?: string | null; dueAt?: string | null }) =>
-      apiPost<{ success: boolean; data: { id: string } }>('hse/inspection-findings/assign-action', { args }),
+      apiPost<{ success: boolean; data: { id: string } }>('hse/inspection-findings/assign-action', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -346,7 +348,7 @@ export function useUpdateFindingAction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { actionId: string; status: string; note?: string | null }) =>
-      apiPost<{ success: boolean }>('hse/inspection-findings/actions/update', { args }),
+      apiPost<{ success: boolean }>('hse/inspection-findings/actions/update', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -355,7 +357,7 @@ export function useFindingTransition() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ action, findingId, note }: { action: FindingLifecycleAction; findingId: string; note?: string }) =>
-      apiPost<{ success: boolean }>(`hse/inspection-findings/${action}`, { args: { findingId, note: note ?? null } }),
+      apiPost<{ success: boolean }>(`hse/inspection-findings/${action}`, { findingId, note: note ?? null }),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -380,7 +382,7 @@ export function useCreateTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateTemplateArgs) =>
-      apiPost<{ success: boolean; data: { id: string } }>('hse/inspection-templates/create', { args }),
+      apiPost<{ success: boolean; data: { id: string } }>('hse/inspection-templates/create', args as unknown as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }
@@ -389,7 +391,31 @@ export function useAddEvidence() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { inspectionId?: string | null; findingId?: string | null; responseId?: string | null; fileName: string; filePath: string; fileUrl?: string | null; fileType?: string | null; fileSize?: number | null; evidenceType?: string }) =>
-      apiPost<{ success: boolean; data: { id: string } }>('hse/inspections/evidence/add', { args }),
+      apiPost<{ success: boolean; data: { id: string } }>('hse/inspections/evidence/add', args),
+    onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
+  });
+}
+
+/** Full evidence upload: presigned URL → PUT the file → record the metadata row. */
+export function useUploadEvidence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ file, inspectionId, findingId, evidenceType }: {
+      file: File; inspectionId?: string | null; findingId?: string | null; evidenceType?: string;
+    }) => {
+      const signed = await apiPost<{ success: boolean; uploadUrl?: string; path?: string; message?: string }>(
+        'hse/inspections/evidence/upload-url', { fileName: file.name, mimeType: file.type }, { retryable: false });
+      if (!signed.success || !signed.uploadUrl || !signed.path) throw new Error(signed.message ?? 'Could not start upload');
+
+      const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+      if (!put.ok) throw new Error(`Upload failed (HTTP ${put.status})`);
+
+      return apiPost<{ success: boolean; data: { id: string } }>('hse/inspections/evidence/add', {
+        inspectionId: inspectionId ?? null, findingId: findingId ?? null,
+        fileName: file.name, filePath: signed.path, fileType: file.type, fileSize: file.size,
+        evidenceType: evidenceType ?? (file.type.startsWith('image/') ? 'photo' : 'document'),
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: inspectionKeys.all }),
   });
 }

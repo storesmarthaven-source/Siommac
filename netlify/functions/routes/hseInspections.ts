@@ -49,9 +49,22 @@ import { sb }                from '../lib/db';
 import { nextRef }           from '../lib/refGenerator';
 import { emitAppEvent }      from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
+import { createAttachmentUploadUrl } from '../lib/upload';
+import { getSignedUrl }      from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
+
+/** Evidence files live in the shared private HSE attachments bucket. */
+const EVIDENCE_BUCKET = 'hse-attachments';
+
+/** Add a short-lived signed download URL to each evidence row. */
+async function signEvidence(rows: Array<Record<string, unknown>>): Promise<Array<Record<string, unknown>>> {
+  return Promise.all(rows.map(async r => ({
+    ...r,
+    url: r.file_path ? await getSignedUrl(EVIDENCE_BUCKET, r.file_path as string).catch(() => '') : '',
+  })));
+}
 
 // ── Status machines (backend-owned) ───────────────────────────────────────────
 
@@ -192,7 +205,7 @@ router.post('/inspections/get', async c => {
       checklist,
       responses: responses.data ?? [],
       findings:  findings.data ?? [],
-      evidence:  evidence.data ?? [],
+      evidence:  await signEvidence(evidence.data ?? []),
       audit:     audit.data ?? [],
     },
   });
@@ -663,7 +676,7 @@ router.post('/inspection-findings/get', async c => {
     sb.from('hse_inspection_audit_events').select('*').eq('entity_type', 'finding').eq('entity_id', id).order('created_at', { ascending: false }).limit(100),
   ]);
 
-  return c.json({ success: true, data: { finding: finding.data, actions: actions.data ?? [], evidence: evidence.data ?? [], audit: audit.data ?? [] } });
+  return c.json({ success: true, data: { finding: finding.data, actions: actions.data ?? [], evidence: await signEvidence(evidence.data ?? []), audit: audit.data ?? [] } });
 });
 
 router.post('/inspection-findings/create', async c => {
@@ -816,6 +829,20 @@ const EvidenceSchema = z.object({
   fileType:     z.string().nullable().optional(),
   fileSize:     z.number().int().nullable().optional(),
   evidenceType: z.enum(['photo', 'document', 'signature', 'checklist', 'corrective_action', 'other']).default('document'),
+});
+
+// Presigned upload: returns a signed URL the client PUTs the file to, then
+// /evidence/add records the metadata row pointing at the returned path.
+router.post('/inspections/evidence/upload-url', async c => {
+  await requirePermission(c, 'hse.inspections.manage');
+  const v = zv(c, z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) }), (c.get('body') as Record<string, unknown>).args);
+  if (!v.ok) return v.response;
+  try {
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(EVIDENCE_BUCKET, v.data.fileName, v.data.mimeType);
+    return c.json({ success: true, uploadUrl, token, path, bucket: EVIDENCE_BUCKET });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Upload URL failed' }, 400 as 200);
+  }
 });
 
 router.post('/inspections/evidence/add', async c => {

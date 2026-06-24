@@ -57,11 +57,13 @@ export default async function run(h) {
 
   h.onCleanup(async () => {
     const refs = [...ctx.inspectionRefs, ...ctx.findingRefs];
-    if (refs.length) await sb.from('app_events').delete().in('source_entity_id', refs).catch(() => {});
-    await sb.from('notifications').delete().ilike('title', `%${TAG}%`).catch(() => {});
-    if (ctx.findingIds.length)     await sb.from('hse_inspection_findings').delete().in('id', ctx.findingIds).catch(() => {});
-    if (ctx.inspectionIds.length)  await sb.from('hse_inspections').delete().in('id', ctx.inspectionIds).catch(() => {});
-    if (ctx.templateIds.length)    await sb.from('hse_inspection_templates').delete().in('id', ctx.templateIds).catch(() => {});
+    try { if (refs.length) await sb.from('app_events').delete().in('source_entity_id', refs); } catch {}
+    try { await sb.from('notifications').delete().ilike('title', `%${TAG}%`); } catch {}
+    // Tag-based sweep (belt-and-suspenders): catches any row not tracked by id —
+    // every test inspection/finding title carries the TAG. Findings first (FK).
+    try { await sb.from('hse_inspection_findings').delete().ilike('title', `%${TAG}%`); } catch {}
+    try { await sb.from('hse_inspections').delete().ilike('title', `%${TAG}%`); } catch {}
+    try { await sb.from('hse_inspection_templates').delete().ilike('name', `%${TAG}%`); } catch {}
   });
 
   // ── Templates ───────────────────────────────────────────────────────────────

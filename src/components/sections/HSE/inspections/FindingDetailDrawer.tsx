@@ -9,7 +9,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { Drawer, DetailGrid, Tabs, type TabDef } from '@ui';
-import { useFinding, useFindingTransition, useUpdateFindingAction } from '@api/hse/inspections';
+import { useFinding, useFindingTransition, useUpdateFindingAction, useUploadEvidence } from '@api/hse/inspections';
 import { hsePill } from '../types';
 import { AssignActionDialog, CloseFindingDialog } from './InspectionDialogs';
 
@@ -27,6 +27,7 @@ export function FindingDetailDrawer({ findingId, onClose }: { findingId: string 
   const { data, isLoading } = useFinding(findingId);
   const transition = useFindingTransition();
   const updateAction = useUpdateFindingAction();
+  const uploadEvidence = useUploadEvidence();
   const [tab, setTab] = useState<TabKey>('overview');
   const [assignOpen, setAssignOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
@@ -94,11 +95,20 @@ export function FindingDetailDrawer({ findingId, onClose }: { findingId: string 
 
         {tab === 'evidence' && (
           <div style={{ marginTop: '12px', display: 'grid', gap: '6px' }}>
+            {findingId && (
+              <label class={`hse-btn primary${uploadEvidence.isPending ? ' is-disabled' : ''}`} style={{ justifySelf: 'start', cursor: 'pointer' }}>
+                <i class="fas fa-upload" /> {uploadEvidence.isPending ? 'Uploading…' : 'Attach Evidence'}
+                <input type="file" style={{ display: 'none' }} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                  onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadEvidence.mutate({ file: f, findingId }); (e.target as HTMLInputElement).value = ''; }} />
+              </label>
+            )}
+            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(uploadEvidence.error as Error)?.message ?? 'Upload failed'}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <i class="fas fa-paperclip" style={{ color: 'var(--text-muted)' }} />
                 <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: '0.8rem' }}>{ev.file_name}</div><div class="vt-cell-subtext">{ev.evidence_type} · {fmt(ev.uploaded_at)}</div></div>
+                {ev.url ? <a class="hse-btn" style={{ padding: '4px 10px' }} href={ev.url} target="_blank" rel="noreferrer"><i class="fas fa-download" /></a> : null}
               </div>
             ))}
           </div>
