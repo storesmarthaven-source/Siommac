@@ -467,7 +467,7 @@ body[data-theme="dark"] .hero-footer {
 }
 
 .hse-tabs-bar {
-  display: flex; gap: 4px; padding: 6px; align-items: stretch;
+  display: flex; gap: 4px; align-items: stretch;
   background: var(--bg-subtle, #F8FAFE);
 }
 /* Tab BUTTONS — scoped to .hse-tabs-bar so they never hit the page wrapper,
