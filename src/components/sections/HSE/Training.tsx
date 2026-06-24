@@ -16,8 +16,8 @@ import {
 } from '@ui';
 import { TrainingInsightCards } from './training/TrainingInsightCards';
 import {
-  useTrainingStats, useCompetencyMatrix, useCertificates,
-  type MatrixRow, type CertificateRow,
+  useTrainingStats, useCompetencyMatrix, useCertificates, useCompetencies,
+  type MatrixRow, type CertificateRow, type CellStatus,
 } from '@api/hse/training';
 import { hsePill } from './types';
 import { WorkerProfileDrawer } from './training/WorkerProfileDrawer';
@@ -35,6 +35,20 @@ const WORKER_PILL: Record<string, string> = { compliant: 'is-on', due_soon: 'is-
 const CERT_PILL: Record<string, string> = { current: 'is-on', due_soon: 'is-warn', pending_verification: 'is-info', expired: 'is-critical', rejected: 'is-critical', revoked: 'is-off', archived: 'is-off', draft: 'is-off' };
 const isExpiredCert = (c: CertificateRow) => c.status === 'expired' || (!!c.expires_at && new Date(c.expires_at).getTime() < Date.now() && !['revoked', 'archived', 'rejected'].includes(c.status));
 
+// Coloured matrix cell per competency status (light-theme readable).
+const CELL_STYLE: Record<CellStatus, { bg: string; color: string; label: string }> = {
+  ok:                   { bg: 'rgba(34,197,94,.16)',   color: '#15803d', label: 'OK'   },
+  due_soon:             { bg: 'rgba(245,158,11,.20)',  color: '#b45309', label: 'Due'  },
+  expired:              { bg: 'rgba(239,68,68,.18)',   color: '#b91c1c', label: 'Exp'  },
+  missing:              { bg: 'rgba(239,68,68,.09)',   color: '#dc2626', label: 'Miss' },
+  pending_verification: { bg: 'rgba(96,165,250,.20)',  color: '#1d4ed8', label: 'Pend' },
+  not_required:         { bg: 'rgba(148,163,184,.14)', color: '#94a3b8', label: '–'    },
+};
+const LEGEND: { bg: string; text: string }[] = [
+  { bg: '#15803d', text: 'Current' }, { bg: '#b45309', text: 'Due soon' }, { bg: '#b91c1c', text: 'Expired' },
+  { bg: '#dc2626', text: 'Missing' }, { bg: '#1d4ed8', text: 'Pending' }, { bg: '#94a3b8', text: 'Not required' },
+];
+
 // ── Right rail ────────────────────────────────────────────────────────────────
 
 function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
@@ -47,21 +61,6 @@ function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
       <span class={`ppe-signal-tag ${tagTone}`}>{tag}</span>
     </div>
   );
-}
-
-function MatrixRail({ matrix, onOpen }: { matrix: MatrixRow[]; onOpen: (row: MatrixRow) => void }): VNode {
-  const nonCompliant = matrix.filter(m => m.overallStatus === 'non_compliant');
-  const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
-  const pending      = matrix.filter(m => m.overallStatus === 'pending_verification');
-  const sections: SidePanelSection[] = [
-    { id: 'noncompliant', label: 'Gaps', icon: 'fa-user-xmark', title: 'Non-Compliant', count: nonCompliant.length, empty: 'All workers compliant',
-      children: nonCompliant.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-user-xmark" tone="is-danger" title={m.workerName} sub={`${m.expiredCount} expired · ${m.missingCount} missing`} tag="Gap" tagTone="is-high" onClick={() => onOpen(m)} />) },
-    { id: 'due', label: 'Due Soon', icon: 'fa-hourglass-half', title: 'Due Soon', count: dueWorkers.length, empty: 'None due soon',
-      children: dueWorkers.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-hourglass-half" tone="is-warn" title={m.workerName} sub={`${m.dueSoonCount} renewing`} tag="Due" tagTone="is-due" onClick={() => onOpen(m)} />) },
-    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pending.length, empty: 'None pending',
-      children: pending.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-clock" tone="is-info" title={m.workerName} sub="Awaiting verification" tag="Pending" tagTone="is-info" onClick={() => onOpen(m)} />) },
-  ];
-  return <SidePanel title="Competency Signals" icon="fa-bell" sections={sections} />;
 }
 
 function CertRail({ certs, onOpen }: { certs: CertificateRow[]; onOpen: (id: string) => void }): VNode {
@@ -105,6 +104,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
   const s = useTrainingStats().data?.data;
   const matrix = useCompetencyMatrix({}).data?.data ?? [];
   const certs = useCertificates({ limit: 200 }).data?.data ?? [];
+  const comps = useCompetencies().data?.data ?? [];
 
   const compliancePct = s?.overallCompliancePercent ?? 0;
   const currentCerts = s?.currentCerts ?? 0;
@@ -162,41 +162,52 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         </div>
       )}
 
-      {/* Competency Matrix tab */}
+      {/* Competency Matrix tab — workers × competencies grid (competency = column) */}
       {active === 'matrix' && (
-        <div class="hse-main-grid">
-          <div class="hse-left-col">
-            <div class="vt-table-card">
-              <div class="vt-table-scroll">
-                <table class="vt-table">
-                  <thead>
-                    <tr>
-                      <th>Worker</th><th>Role</th>
-                      <th style={{ textAlign: 'center' }}>Compliance</th>
-                      <th style={{ textAlign: 'center' }}>Status</th>
-                      <th style={{ textAlign: 'center' }}>Actions</th>
+        <div class="vt-table-card">
+          <div class="vt-table-scroll">
+            <table class="vt-table">
+              <thead>
+                <tr>
+                  <th>Worker</th><th>Role</th>
+                  {comps.map(cp => (
+                    <th key={cp.id} style={{ textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.66rem' }} title={cp.name}>{cp.code ?? cp.name}</th>
+                  ))}
+                  <th style={{ textAlign: 'center' }}>Overall</th>
+                </tr>
+              </thead>
+              <tbody>
+                {matrix.map(m => {
+                  const byComp = new Map(m.competencies.map(c => [c.competencyId, c]));
+                  return (
+                    <tr key={m.workerId} style={{ cursor: 'pointer' }} onClick={() => setOpenWorker(m)}>
+                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{m.workerName}</span></td>
+                      <td class="vt-cell-subtext">{titleCase(m.roleName)}</td>
+                      {comps.map(cp => {
+                        const cell = byComp.get(cp.id);
+                        const s = CELL_STYLE[(cell?.status ?? 'not_required') as CellStatus];
+                        const certId = cell?.certificateId ?? null;
+                        return (
+                          <td key={cp.id} style={{ textAlign: 'center', padding: '6px 8px' }}
+                            onClick={certId ? (e => { e.stopPropagation(); setOpenCert(certId); }) : undefined}>
+                            <span title={`${cp.name}: ${s.label}`} style={{ display: 'inline-block', minWidth: '40px', padding: '3px 6px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 700, background: s.bg, color: s.color, cursor: certId ? 'pointer' : 'default' }}>{s.label}</span>
+                          </td>
+                        );
+                      })}
+                      <td style={{ textAlign: 'center' }}><span class={`vt-pill ${WORKER_PILL[m.overallStatus] ?? 'is-off'}`}>{titleCase(m.overallStatus)}</span></td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {matrix.map(m => (
-                      <tr key={m.workerId} style={{ cursor: 'pointer' }} onClick={() => setOpenWorker(m)}>
-                        <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{m.workerName}</span></td>
-                        <td class="vt-cell-subtext">{titleCase(m.roleName)}</td>
-                        <td style={{ textAlign: 'center' }}>{m.requiredCount > 0 ? `${m.compliantCount}/${m.requiredCount}` : '—'}</td>
-                        <td style={{ textAlign: 'center' }}><span class={`vt-pill ${WORKER_PILL[m.overallStatus] ?? 'is-off'}`}>{titleCase(m.overallStatus)}</span></td>
-                        <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                          <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenWorker(m)}>View</button>
-                        </td>
-                      </tr>
-                    ))}
-                    {matrix.length === 0 && <tr><td colSpan={5} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No workers / requirements yet.</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  );
+                })}
+                {matrix.length === 0 && <tr><td colSpan={comps.length + 3} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No workers / requirements yet.</td></tr>}
+              </tbody>
+            </table>
           </div>
-          <div class="hse-right-col">
-            <MatrixRail matrix={matrix} onOpen={setOpenWorker} />
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '10px 14px', borderTop: '1px solid var(--border)', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+            {LEGEND.map(l => (
+              <span key={l.text} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '4px', background: l.bg }} /> {l.text}
+              </span>
+            ))}
           </div>
         </div>
       )}
