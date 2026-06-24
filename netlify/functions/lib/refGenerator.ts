@@ -27,6 +27,8 @@ export type RefPrefix =
   | 'FCE'   // Finance Cost Entry
   | 'OWO'   // Operations Work Order
   | 'PTW'   // Permit to Work
+  | 'INSP'  // HSE Inspection
+  | 'FND'   // HSE Inspection Finding
   | 'HRC';  // HR Case
 
 /**

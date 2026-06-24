@@ -420,11 +420,23 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'View inspection and audit records.',
     risk: 'low',
   },
+  'hse.inspections.create': {
+    module: 'HSE', group: 'Inspections & Audits',
+    label: 'Create Inspection',
+    description: 'Schedule and draft new inspections and audits.',
+    risk: 'medium',
+  },
   'hse.inspections.manage': {
     module: 'HSE', group: 'Inspections & Audits',
     label: 'Manage Inspections',
-    description: 'Create, update, and close inspection records.',
+    description: 'Update, execute checklists, record findings, assign corrective actions, and reschedule.',
     risk: 'medium',
+  },
+  'hse.inspections.review': {
+    module: 'HSE', group: 'Inspections & Audits',
+    label: 'Review Inspections',
+    description: 'Review and complete inspections, and close or reopen findings.',
+    risk: 'high',
   },
 
   // ── HSE — Training ───────────────────────────────────────────────────────────
