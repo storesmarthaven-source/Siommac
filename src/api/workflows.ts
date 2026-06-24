@@ -112,7 +112,7 @@ export function useWorkflowList(filters: WorkflowListFilters = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: WorkflowInstance[] }>(
         'workflows/list',
-        { args: { limit: 50, ...filters } },
+        { limit: 50, ...filters },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load workflows');
@@ -127,7 +127,7 @@ export function useWorkflow(workflowId: string) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: WorkflowDetail }>(
         'workflows/get',
-        { args: { workflowId } },
+        { workflowId },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load workflow');
@@ -143,7 +143,7 @@ export function useMyWorkflowTasks() {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: WorkflowTask[] }>(
         'workflows/tasks',
-        { args: {} },
+        {},
         { signal },
       );
       if (!res.success) throw new Error('Failed to load workflow tasks');
@@ -158,7 +158,7 @@ export function useHandoffList(filters: HandoffListFilters = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: HandoffRow[] }>(
         'handoffs/list',
-        { args: { limit: 50, ...filters } },
+        { limit: 50, ...filters },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load handoffs');
@@ -184,7 +184,7 @@ export function useCreateWorkflow() {
   return useMutation({
     mutationFn: (args: CreateWorkflowArgs) =>
       apiPost<{ success: boolean; workflowId: string; ref: string }>(
-        'workflows/create', { args }, { retryable: false },
+        'workflows/create', args, { retryable: false },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: workflowKeys.all });
@@ -204,7 +204,7 @@ export function useDecideWorkflowTask() {
   return useMutation({
     mutationFn: (args: DecideWorkflowTaskArgs) =>
       apiPost<{ success: boolean; workflowId: string; status: string }>(
-        'workflows/decision', { args }, { retryable: false },
+        'workflows/decision', args, { retryable: false },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: workflowKeys.tasks() });
@@ -219,7 +219,7 @@ export function useRetryHandoff() {
   return useMutation({
     mutationFn: (handoffId: string) =>
       apiPost<{ success: boolean }>(
-        'handoffs/retry', { args: { handoffId } }, { retryable: false },
+        'handoffs/retry', { handoffId }, { retryable: false },
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: handoffKeys.all });

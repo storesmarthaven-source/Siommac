@@ -232,7 +232,7 @@ async function applyPermitTransition(
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   // Write PTW-scoped audit event
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     opts.permitId,
     action:        opts.action,
     actor_user_id: opts.actorId,
@@ -496,7 +496,7 @@ router.post('/ptw/permits/create', async c => {
         getEntityIdentity: (r) => ({ id: r.id, ref: r.permit_number ?? r.id }),
         afterCommit: async ({ entityId }) => {
           // Write PTW audit event
-          void sb.from('hse_permit_audit_events').insert({
+          await sb.from('hse_permit_audit_events').insert({
             permit_id:     entityId,
             action:        'created',
             actor_user_id: user.id,
@@ -505,7 +505,7 @@ router.post('/ptw/permits/create', async c => {
           });
           // If submitted immediately, write the submit transition audit event too
           if (v.data.submitImmediately) {
-            void sb.from('hse_permit_audit_events').insert({
+            await sb.from('hse_permit_audit_events').insert({
               permit_id:     entityId,
               action:        'submitted',
               actor_user_id: user.id,
@@ -660,7 +660,7 @@ router.post('/ptw/permits/create', async c => {
 
     // SIMOPS note stored in permit metadata (best-effort)
     if (v.data.simopsNote) {
-      void sb.from('hse_permits').update({
+      await sb.from('hse_permits').update({
         metadata: { simops_note: v.data.simopsNote },
         updated_at: new Date().toISOString(),
       }).eq('id', permitId);
@@ -1347,7 +1347,7 @@ router.post('/ptw/permits/isolations/create', async c => {
 
   if (error || !data) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
 
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     v.data.permitId,
     action:        'isolation_created',
     actor_user_id: user.id,
@@ -1399,7 +1399,7 @@ router.post('/ptw/permits/isolations/apply', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'isolation_applied',
     actor_user_id: user.id,
@@ -1455,7 +1455,7 @@ router.post('/ptw/permits/isolations/verify', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'isolation_verified',
     actor_user_id: user.id,
@@ -1518,7 +1518,7 @@ router.post('/ptw/permits/isolations/reject', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'isolation_rejected',
     actor_user_id: user.id,
@@ -1577,7 +1577,7 @@ router.post('/ptw/permits/isolations/remove', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'isolation_removed',
     actor_user_id: user.id,
@@ -1733,7 +1733,7 @@ router.post('/ptw/permits/simops/check', async c => {
     }));
     await sb.from('hse_permit_simops_conflicts').insert(rows);
 
-    void sb.from('hse_permit_audit_events').insert({
+    await sb.from('hse_permit_audit_events').insert({
       permit_id:     v.data.permitId,
       action:        'simops_check_performed',
       actor_user_id: user.id,
@@ -1802,7 +1802,7 @@ router.post('/ptw/permits/simops/resolve', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'simops_conflict_resolved',
     actor_user_id: user.id,
@@ -1857,7 +1857,7 @@ router.post('/ptw/permits/simops/approve-override', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   const permit = await getPermitMeta(cur.data.permit_id);
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     cur.data.permit_id,
     action:        'simops_override_approved',
     actor_user_id: user.id,
@@ -1995,7 +1995,7 @@ router.post('/ptw/permits/approvals/decide', async c => {
   const allApproved = updatedApprovals.every(a => ['approved', 'skipped'].includes(a.status));
   const anyRejected = updatedApprovals.some(a => a.status === 'rejected');
 
-  void sb.from('hse_permit_audit_events').insert({
+  await sb.from('hse_permit_audit_events').insert({
     permit_id:     approval.permit_id,
     action:        `approval_${v.data.decision}`,
     actor_user_id: user.id,

@@ -215,7 +215,7 @@ export function usePermits(filter: PermitFilter = {}) {
   return useQuery({
     queryKey: ptwKeys.list(filter as Record<string, unknown>),
     queryFn:  () => apiPost<{ success: boolean; data: PermitListRow[] }>(
-      'hse/ptw/permits/list', { args: filter },
+      'hse/ptw/permits/list', filter,
     ),
     staleTime: 30_000,
   });
@@ -225,7 +225,7 @@ export function usePermit(id: string | null) {
   return useQuery({
     queryKey: ptwKeys.detail(id ?? ''),
     queryFn:  () => apiPost<{ success: boolean; data: PermitDetail }>(
-      'hse/ptw/permits/get', { args: { permitId: id } },
+      'hse/ptw/permits/get', { permitId: id },
     ),
     enabled:  !!id,
     staleTime: 15_000,
@@ -259,7 +259,7 @@ export function useCreatePermit() {
   return useMutation({
     mutationFn: (args: CreatePermitArgs) =>
       apiPost<{ success: boolean; data: { id: string; permitNo: string; status: string; eventId: string | null } }>(
-        'hse/ptw/permits/create', { args }, { retryable: false },
+        'hse/ptw/permits/create', args, { retryable: false },
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ptwKeys.all }),
   });
@@ -269,7 +269,7 @@ export function useUpdatePermit() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: UpdatePermitArgs) =>
-      apiPost<{ success: boolean }>('hse/ptw/permits/update', { args }),
+      apiPost<{ success: boolean }>('hse/ptw/permits/update', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: ptwKeys.all }),
   });
 }
@@ -278,7 +278,7 @@ export function useSaveDraft() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: UpdatePermitArgs) =>
-      apiPost<{ success: boolean }>('hse/ptw/permits/save-draft', { args }),
+      apiPost<{ success: boolean }>('hse/ptw/permits/save-draft', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: ptwKeys.all }),
   });
 }
@@ -289,7 +289,7 @@ export function usePermitTransition() {
   return useMutation({
     mutationFn: ({ action, permitId, note }: { action: PermitLifecycleAction; permitId: string; note?: string }) =>
       apiPost<{ success: boolean; status?: string }>(
-        `hse/ptw/permits/${action}`, { args: { permitId, note: note ?? null } },
+        `hse/ptw/permits/${action}`, { permitId, note: note ?? null },
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ptwKeys.all }),
   });
@@ -385,7 +385,7 @@ export function usePermitIsolations(permitId: string | null) {
   return useQuery({
     queryKey: [...ptwKeys.detail(permitId ?? ''), 'isolations'],
     queryFn:  () => apiPost<{ success: boolean; data: PermitIsolation[] }>(
-      'hse/ptw/permits/isolations/list', { args: { permitId } },
+      'hse/ptw/permits/isolations/list', { permitId },
     ),
     enabled:   !!permitId,
     staleTime: 15_000,
@@ -396,7 +396,7 @@ export function usePermitSimops(permitId: string | null) {
   return useQuery({
     queryKey: [...ptwKeys.detail(permitId ?? ''), 'simops'],
     queryFn:  () => apiPost<{ success: boolean; data: PermitSimops[] }>(
-      'hse/ptw/permits/simops/list', { args: { permitId } },
+      'hse/ptw/permits/simops/list', { permitId },
     ),
     enabled:   !!permitId,
     staleTime: 15_000,
@@ -407,7 +407,7 @@ export function usePermitApprovals(permitId: string | null) {
   return useQuery({
     queryKey: [...ptwKeys.detail(permitId ?? ''), 'approvals'],
     queryFn:  () => apiPost<{ success: boolean; data: PermitApproval[] }>(
-      'hse/ptw/permits/approvals/list', { args: { permitId } },
+      'hse/ptw/permits/approvals/list', { permitId },
     ),
     enabled:   !!permitId,
     staleTime: 15_000,
@@ -421,7 +421,7 @@ export function useCreateIsolation() {
   return useMutation({
     mutationFn: (args: CreateIsolationArgs) =>
       apiPost<{ success: boolean; data: { id: string } }>(
-        'hse/ptw/permits/isolations/create', { args }, { retryable: false },
+        'hse/ptw/permits/isolations/create', args, { retryable: false },
       ),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
@@ -435,7 +435,7 @@ export function useIsolationAction() {
   return useMutation({
     mutationFn: ({ action, ...args }: IsolationActionArgs & { action: 'apply' | 'verify' | 'reject' | 'remove' }) =>
       apiPost<{ success: boolean }>(
-        `hse/ptw/permits/isolations/${action}`, { args }, { retryable: false },
+        `hse/ptw/permits/isolations/${action}`, args, { retryable: false },
       ),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
@@ -449,7 +449,7 @@ export function useSimopsCheck() {
   return useMutation({
     mutationFn: (args: SimopsCheckArgs) =>
       apiPost<{ success: boolean; data: { conflictsFound: number } }>(
-        'hse/ptw/permits/simops/check', { args }, { retryable: false },
+        'hse/ptw/permits/simops/check', args, { retryable: false },
       ),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
@@ -462,7 +462,7 @@ export function useSimopsAction() {
   return useMutation({
     mutationFn: ({ action, ...args }: SimopsActionArgs & { action: 'resolve' | 'approve-override' }) =>
       apiPost<{ success: boolean }>(
-        `hse/ptw/permits/simops/${action}`, { args }, { retryable: false },
+        `hse/ptw/permits/simops/${action}`, args, { retryable: false },
       ),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
@@ -475,7 +475,7 @@ export function useDecideApproval() {
   return useMutation({
     mutationFn: (args: DecideApprovalArgs) =>
       apiPost<{ success: boolean }>(
-        'hse/ptw/permits/approvals/decide', { args }, { retryable: false },
+        'hse/ptw/permits/approvals/decide', args, { retryable: false },
       ),
     onSuccess: (_res, vars) => {
       void qc.invalidateQueries({ queryKey: ptwKeys.detail(vars.permitId) });
@@ -536,7 +536,7 @@ export function usePermitTemplates(activeOnly?: boolean) {
   return useQuery({
     queryKey: ptwKeys.templates(filter),
     queryFn:  () => apiPost<{ success: boolean; data: PermitTemplate[] }>(
-      'hse/ptw/permit-templates/list', { args: activeOnly !== undefined ? { activeOnly } : {} },
+      'hse/ptw/permit-templates/list', activeOnly !== undefined ? { activeOnly } : {},
     ),
     staleTime: 60_000,
   });
@@ -560,7 +560,7 @@ export function useCreatePermitTemplate() {
     mutationFn: ({ hazards, controls, ...rest }: CreateTemplateArgs) =>
       apiPost<{ success: boolean; data: { id: string } }>(
         'hse/ptw/permit-templates/create',
-        { args: { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) } },
+        { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) },
         { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
@@ -573,7 +573,7 @@ export function useUpdatePermitTemplate() {
     mutationFn: ({ hazards, controls, ...rest }: UpdateTemplateArgs) =>
       apiPost<{ success: boolean }>(
         'hse/ptw/permit-templates/update',
-        { args: { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) } },
+        { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) },
         { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
@@ -585,7 +585,7 @@ export function useDuplicatePermitTemplate() {
   return useMutation({
     mutationFn: (args: { templateId: string }) =>
       apiPost<{ success: boolean; data: { id: string } }>(
-        'hse/ptw/permit-templates/duplicate', { args }, { retryable: false },
+        'hse/ptw/permit-templates/duplicate', args, { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
   });
@@ -596,7 +596,7 @@ export function useDeactivatePermitTemplate() {
   return useMutation({
     mutationFn: (args: { templateId: string; active: boolean }) =>
       apiPost<{ success: boolean }>(
-        'hse/ptw/permit-templates/deactivate', { args }, { retryable: false },
+        'hse/ptw/permit-templates/deactivate', args, { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
   });
@@ -630,7 +630,7 @@ export function useApprovedJsaSearch(query: string) {
     queryKey: ['ptw', 'jsa-search', q] as const,
     queryFn:  () => apiPost<{ success: boolean; data: JsaSearchRow[] }>(
       'hse/risk-jsa/jsa/list',
-      { args: { status: 'approved', limit: 30 } },
+      { status: 'approved', limit: 30 },
     ).then(res => {
       // Client-side keyword filter (title / ref match)
       const lower = q.toLowerCase();
@@ -656,7 +656,7 @@ export function useApprovedRaSearch(query: string) {
     queryKey: ['ptw', 'ra-search', q] as const,
     queryFn:  () => apiPost<{ success: boolean; data: RaSearchRow[] }>(
       'hse/risk-jsa/assessments/list',
-      { args: { status: 'approved', limit: 30 } },
+      { status: 'approved', limit: 30 },
     ).then(res => {
       const lower = q.toLowerCase();
       return {
