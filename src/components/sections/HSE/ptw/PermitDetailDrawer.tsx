@@ -15,6 +15,7 @@ import { Drawer, Tabs, type TabDef } from '@ui';
 import { hsePill } from '../types';
 import {
   usePermit,
+  usePermitTransition,
   usePermitIsolations,
   usePermitSimops,
   usePermitApprovals,
@@ -124,14 +125,18 @@ function TabActionError({ message }: { message: string }): VNode {
 
 // ── Status-aware action buttons ───────────────────────────────────────────────
 
-function ActionButtons({ status, onOpen }: { status: PermitStatus; onOpen: (dlg: OpenDlg) => void }): VNode {
+function ActionButtons({ status, onOpen, onAction }: {
+  status: PermitStatus;
+  onOpen: (dlg: OpenDlg) => void;
+  onAction: (a: 'submit' | 'advance') => void;
+}): VNode {
   const btns: VNode[] = [];
 
   switch (status) {
     case 'draft':
       btns.push(
         <button key="cancel"   class="hse-btn" onClick={() => onOpen('cancel')}><i class="fas fa-xmark-circle" /> Delete Draft</button>,
-        <button key="submit"   class="hse-btn primary" onClick={() => onOpen('activate')}><i class="fas fa-paper-plane" /> Submit</button>,
+        <button key="submit"   class="hse-btn primary" onClick={() => onAction('submit')}><i class="fas fa-paper-plane" /> Submit</button>,
       );
       break;
     case 'submitted':
@@ -139,7 +144,7 @@ function ActionButtons({ status, onOpen }: { status: PermitStatus; onOpen: (dlg:
       btns.push(
         <button key="changes"  class="hse-btn" onClick={() => onOpen('changes')}><i class="fas fa-rotate-left" /> Request Changes</button>,
         <button key="reject"   class="hse-btn" onClick={() => onOpen('reject')}><i class="fas fa-ban" /> Reject</button>,
-        <button key="continue" class="hse-btn primary" onClick={() => onOpen('approve')}><i class="fas fa-clipboard-check" /> Continue Review</button>,
+        <button key="continue" class="hse-btn primary" onClick={() => onAction('advance')}><i class="fas fa-clipboard-check" /> Send for Approval</button>,
       );
       break;
     case 'awaiting_approval':
@@ -568,9 +573,17 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
 
   function closeDialog() { setOpenDlg('none'); void refetchDetail(); }
 
+  // Forward review steps that don't need a reason dialog: submit (draft →
+  // submitted) and advance (submitted → risk_review → … → awaiting_approval).
+  const transition = usePermitTransition();
+  async function doAction(action: 'submit' | 'advance') {
+    try { await transition.mutateAsync({ action, permitId: permit.id }); void refetchDetail(); }
+    catch { /* surfaced by the mutation error toast */ }
+  }
+
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      <ActionButtons status={permit.status} onOpen={setOpenDlg} />
+      <ActionButtons status={permit.status} onOpen={setOpenDlg} onAction={doAction} />
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button class="hse-btn" onClick={onClose}>Close</button>
       </div>

@@ -891,6 +891,37 @@ router.post('/ptw/permits/submit', async c => {
   return applyPermitTransition(c, { permitId: v.data.permitId, action: 'submitted', toStatus: 'submitted', actorId: user.id, note: v.data.note });
 });
 
+// advance: walk a permit through the review chain toward approval.
+//   submitted → risk_review → [isolation_pending] → awaiting_approval
+// This is the reviewer (maker-checker) step the workflow engine would otherwise
+// drive — it lets a submitted permit reach awaiting_approval purely via the API.
+router.post('/ptw/permits/advance', async c => {
+  const user = await requirePermission(c, 'hse.ptw.manage');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, TransitionSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const cur = await sb
+    .from('hse_permits')
+    .select('id, status, requires_isolation')
+    .eq('id', v.data.permitId)
+    .maybeSingle<{ id: string; status: string; requires_isolation: boolean }>();
+  if (!cur.data) return c.json({ success: false, message: 'Permit not found.' }, 404 as 200);
+
+  let toStatus: string;
+  if (cur.data.status === 'submitted') {
+    toStatus = 'risk_review';
+  } else if (cur.data.status === 'risk_review') {
+    toStatus = cur.data.requires_isolation ? 'isolation_pending' : 'awaiting_approval';
+  } else if (cur.data.status === 'isolation_pending') {
+    toStatus = 'awaiting_approval';
+  } else {
+    return c.json({ success: false, message: `Cannot advance a permit in status "${cur.data.status}". Advance only applies to submitted / risk_review / isolation_pending.` }, 400 as 200);
+  }
+
+  return applyPermitTransition(c, { permitId: v.data.permitId, action: 'advanced', toStatus, actorId: user.id, note: v.data.note });
+});
+
 // approve: awaiting_approval → approved
 router.post('/ptw/permits/approve', async c => {
   const user = await requirePermission(c, 'hse.ptw.approve');

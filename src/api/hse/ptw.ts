@@ -195,6 +195,7 @@ export interface UpdatePermitArgs extends Record<string, unknown> {
 
 export type PermitLifecycleAction =
   | 'submit'
+  | 'advance'
   | 'approve'
   | 'reject'
   | 'request-changes'

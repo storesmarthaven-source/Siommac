@@ -21,9 +21,9 @@
  * Gas Testing has been REMOVED — this suite asserts the gas-test endpoints are
  * gone and the permit detail no longer carries a gas_tests key.
  *
- * Note: there is no endpoint that advances a permit submitted → awaiting_approval
- * (the review stages are set by the workflow engine); the lifecycle tests bridge
- * that one gap with a service-role update so approve/activate can be exercised.
+ * The /advance endpoint walks the review chain (submitted → risk_review →
+ * [isolation_pending] → awaiting_approval) so approvals are reachable purely via
+ * the API; the lifecycle tests exercise it end-to-end.
  */
 
 export const title = 'HSE Permit-to-Work (PTW)';
@@ -245,8 +245,13 @@ export default async function run(h) {
     });
     expect(found, 'submitted audit event missing');
   });
+  await test('lifecycle: advance (submitted → risk_review → awaiting_approval)', async () => {
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: life.id }));
+    expect(await status(life.id) === 'risk_review', `expected risk_review, got ${await status(life.id)}`);
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: life.id }));
+    expect(await status(life.id) === 'awaiting_approval', `expected awaiting_approval, got ${await status(life.id)}`);
+  });
   await test('lifecycle: approve (awaiting_approval → approved)', async () => {
-    await sb.from('hse_permits').update({ status: 'awaiting_approval' }).eq('id', life.id);
     ok(await api('hse/ptw/permits/approve', T.admin, { permitId: life.id }));
     expect(await status(life.id) === 'approved', 'not approved');
   });
@@ -274,17 +279,24 @@ export default async function run(h) {
     fails(await api('hse/ptw/permits/approve', T.admin, { permitId: life.id }), 'archived is terminal');
   });
 
-  await test('lifecycle: reject from awaiting_approval', async () => {
-    const d = await createPermit();
-    await sb.from('hse_permits').update({ status: 'awaiting_approval' }).eq('id', d.id);
+  await test('lifecycle: reject from awaiting_approval (reached via advance)', async () => {
+    const d = await createPermit({ submitImmediately: true });
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: d.id }));
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: d.id }));
+    expect(await status(d.id) === 'awaiting_approval', 'advance did not reach awaiting_approval');
     ok(await api('hse/ptw/permits/reject', T.admin, { permitId: d.id, note: 'insufficient controls' }));
     expect(await status(d.id) === 'rejected', 'not rejected');
   });
-  await test('lifecycle: request-changes from awaiting_approval', async () => {
-    const d = await createPermit();
-    await sb.from('hse_permits').update({ status: 'awaiting_approval' }).eq('id', d.id);
+  await test('lifecycle: request-changes from awaiting_approval (reached via advance)', async () => {
+    const d = await createPermit({ submitImmediately: true });
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: d.id }));
+    ok(await api('hse/ptw/permits/advance', T.admin, { permitId: d.id }));
     ok(await api('hse/ptw/permits/request-changes', T.admin, { permitId: d.id, note: 'add isolation plan' }));
     expect(await status(d.id) === 'changes_requested', 'not changes_requested');
+  });
+  await test('GATE: advance from draft → rejected', async () => {
+    const d = await createPermit();
+    fails(await api('hse/ptw/permits/advance', T.admin, { permitId: d.id }), 'cannot advance a draft');
   });
   await test('lifecycle: cancel a draft', async () => {
     const d = await createPermit();
