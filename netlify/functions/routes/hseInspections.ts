@@ -91,8 +91,11 @@ function canFindingTransition(from: string, to: string): boolean {
 
 type AuditEntity = 'inspection' | 'finding' | 'finding_action' | 'evidence' | 'template';
 
-function writeAudit(entityType: AuditEntity, entityId: string, action: string, actorId: string, after?: Record<string, unknown>, before?: Record<string, unknown>): void {
-  void sb.from('hse_inspection_audit_events').insert({
+// Async so the insert actually fires: a supabase-js builder is a lazy thenable
+// that only executes on await/.then() — `void sb.insert()` would never run.
+// Invoked fire-and-forget (the internal await still triggers the request).
+async function writeAudit(entityType: AuditEntity, entityId: string, action: string, actorId: string, after?: Record<string, unknown>, before?: Record<string, unknown>): Promise<void> {
+  await sb.from('hse_inspection_audit_events').insert({
     entity_type:   entityType,
     entity_id:     entityId,
     action,
@@ -254,7 +257,7 @@ router.post('/inspections/create', async c => {
           },
         } : {}),
         afterCommit: async ({ entityId }) => {
-          writeAudit('inspection', entityId, 'created', user.id, { status: initialStatus });
+          await writeAudit('inspection', entityId, 'created', user.id, { status: initialStatus });
         },
       },
       writeRecord: async () => {

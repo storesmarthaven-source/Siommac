@@ -19,6 +19,7 @@
     "test:integration": "jest tests/integration",
     "test:frontend": "vitest",
     "test:frontend:ui": "vitest --ui",
+    "test:e2e": "node scripts/e2e/run.mjs",
     "gen:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase-generated.ts"
   },
   "jest": {
