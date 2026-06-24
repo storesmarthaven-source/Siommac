@@ -196,7 +196,9 @@ export async function notify(payload: NotifyPayload): Promise<void> {
         void sb.from('notification_deliveries').insert({
           notification_id: insRes.data.id,
           channel:         'in_app',
-          status:          'delivered',
+          // 'sent' is the success status allowed by notification_deliveries_status_check
+          // (pending|sent|failed|skipped); 'delivered' is not a permitted value.
+          status:          'sent',
           attempted_at:    new Date().toISOString(),
         }).then(({ error }) => {
           if (error) logger.warn('[notify] Failed to record in_app delivery', { error: error.message });
