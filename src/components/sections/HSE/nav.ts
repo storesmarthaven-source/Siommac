@@ -110,7 +110,7 @@ export const HSE_AREAS: HseArea[] = [
   },
   {
     key: 'permits', parentId: 's-hse-permits', label: 'Permits (PTW)', icon: 'fa-id-badge',
-    sub: 'Permit to work control gates', visNamespace: 'hse-permits', defaultTab: 'register', items: [],
+    sub: 'Permit to work control gates', visNamespace: 'hse-permits', defaultTab: 'permits', items: [],
   },
   {
     key: 'inspections', parentId: 's-hse-inspections', label: 'Inspections', icon: 'fa-clipboard-check',

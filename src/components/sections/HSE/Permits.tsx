@@ -513,7 +513,9 @@ function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
 }
 
 export function PermitsArea({ tab }: { tab: string }): VNode {
-  const [active,          setActive]          = useState(tab);
+  // Fall back to the Permits register for an unknown/stale tab key so the page
+  // never renders blank (e.g. the old 'register' default that matched no tab).
+  const [active,          setActive]          = useState(TABS.some(t => t.key === tab) ? tab : 'permits');
   const [wizardOpen,      setWizardOpen]      = useState(false);
   const [selectedPermit,  setSelectedPermit]  = useState<PermitListRow | null>(null);
   const [templateDialog,  setTemplateDialog]  = useState(false);
