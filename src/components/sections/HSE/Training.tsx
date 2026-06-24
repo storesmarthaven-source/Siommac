@@ -63,6 +63,21 @@ function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
   );
 }
 
+function MatrixRail({ matrix, onOpen }: { matrix: MatrixRow[]; onOpen: (row: MatrixRow) => void }): VNode {
+  const nonCompliant = matrix.filter(m => m.overallStatus === 'non_compliant');
+  const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
+  const pending      = matrix.filter(m => m.overallStatus === 'pending_verification');
+  const sections: SidePanelSection[] = [
+    { id: 'noncompliant', label: 'Gaps', icon: 'fa-user-xmark', title: 'Non-Compliant', count: nonCompliant.length, empty: 'All workers compliant',
+      children: nonCompliant.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-user-xmark" tone="is-danger" title={m.workerName} sub={`${m.expiredCount} expired · ${m.missingCount} missing`} tag="Gap" tagTone="is-high" onClick={() => onOpen(m)} />) },
+    { id: 'due', label: 'Due Soon', icon: 'fa-hourglass-half', title: 'Due Soon', count: dueWorkers.length, empty: 'None due soon',
+      children: dueWorkers.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-hourglass-half" tone="is-warn" title={m.workerName} sub={`${m.dueSoonCount} renewing`} tag="Due" tagTone="is-due" onClick={() => onOpen(m)} />) },
+    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pending.length, empty: 'None pending',
+      children: pending.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-clock" tone="is-info" title={m.workerName} sub="Awaiting verification" tag="Pending" tagTone="is-info" onClick={() => onOpen(m)} />) },
+  ];
+  return <SidePanel title="Competency Signals" icon="fa-bell" sections={sections} />;
+}
+
 function CertRail({ certs, onOpen }: { certs: CertificateRow[]; onOpen: (id: string) => void }): VNode {
   const expiredCerts  = certs.filter(isExpiredCert);
   const renewingCerts = certs.filter(c => c.status === 'due_soon');
@@ -162,52 +177,66 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         </div>
       )}
 
-      {/* Competency Matrix tab — workers × competencies grid (competency = column) */}
+      {/* Competency Matrix tab — workers × competencies grid (competency = column) + signals rail */}
       {active === 'matrix' && (
-        <div class="vt-table-card">
-          <div class="vt-table-scroll">
-            <table class="vt-table">
-              <thead>
-                <tr>
-                  <th>Worker</th><th>Role</th>
-                  {comps.map(cp => (
-                    <th key={cp.id} style={{ textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.66rem' }} title={cp.name}>{cp.code ?? cp.name}</th>
-                  ))}
-                  <th style={{ textAlign: 'center' }}>Overall</th>
-                </tr>
-              </thead>
-              <tbody>
-                {matrix.map(m => {
-                  const byComp = new Map(m.competencies.map(c => [c.competencyId, c]));
-                  return (
-                    <tr key={m.workerId} style={{ cursor: 'pointer' }} onClick={() => setOpenWorker(m)}>
-                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{m.workerName}</span></td>
-                      <td class="vt-cell-subtext">{titleCase(m.roleName)}</td>
-                      {comps.map(cp => {
-                        const cell = byComp.get(cp.id);
-                        const s = CELL_STYLE[(cell?.status ?? 'not_required') as CellStatus];
-                        const certId = cell?.certificateId ?? null;
-                        return (
-                          <td key={cp.id} style={{ textAlign: 'center', padding: '6px 8px' }}
-                            onClick={certId ? (e => { e.stopPropagation(); setOpenCert(certId); }) : undefined}>
-                            <span title={`${cp.name}: ${s.label}`} style={{ display: 'inline-block', minWidth: '40px', padding: '3px 6px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 700, background: s.bg, color: s.color, cursor: certId ? 'pointer' : 'default' }}>{s.label}</span>
-                          </td>
-                        );
-                      })}
-                      <td style={{ textAlign: 'center' }}><span class={`vt-pill ${WORKER_PILL[m.overallStatus] ?? 'is-off'}`}>{titleCase(m.overallStatus)}</span></td>
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            <div class="vt-table-card">
+              <div class="vt-table-scroll">
+                <table class="vt-table">
+                  <thead>
+                    <tr>
+                      <th>Worker</th><th>Role</th>
+                      {comps.map(cp => (
+                        <th key={cp.id} style={{ textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.66rem' }} title={cp.name}>{cp.code ?? cp.name}</th>
+                      ))}
+                      <th style={{ textAlign: 'center' }}>Overall</th>
                     </tr>
-                  );
-                })}
-                {matrix.length === 0 && <tr><td colSpan={comps.length + 3} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No workers / requirements yet.</td></tr>}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {matrix.map(m => {
+                      const byComp = new Map(m.competencies.map(c => [c.competencyId, c]));
+                      return (
+                        <tr key={m.workerId} style={{ cursor: 'pointer' }} onClick={() => setOpenWorker(m)}>
+                          <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{m.workerName}</span></td>
+                          <td class="vt-cell-subtext">{titleCase(m.roleName)}</td>
+                          {comps.map(cp => {
+                            const cell = byComp.get(cp.id);
+                            const s = CELL_STYLE[(cell?.status ?? 'not_required') as CellStatus];
+                            const certId = cell?.certificateId ?? null;
+                            return (
+                              <td key={cp.id} style={{ textAlign: 'center', padding: '6px 8px' }}
+                                onClick={certId ? (e => { e.stopPropagation(); setOpenCert(certId); }) : undefined}>
+                                <span title={`${cp.name}: ${s.label}`} style={{ display: 'inline-block', minWidth: '40px', padding: '3px 6px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 700, background: s.bg, color: s.color, cursor: certId ? 'pointer' : 'default' }}>{s.label}</span>
+                              </td>
+                            );
+                          })}
+                          <td style={{ textAlign: 'center' }}><span class={`vt-pill ${WORKER_PILL[m.overallStatus] ?? 'is-off'}`}>{titleCase(m.overallStatus)}</span></td>
+                        </tr>
+                      );
+                    })}
+                    {matrix.length === 0 && <tr><td colSpan={comps.length + 3} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No workers / requirements yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+              {comps.length > 0 && (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '8px 14px', borderTop: '1px solid var(--border)', fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>Competencies:</span>
+                  {comps.map(c => <span key={c.id}><strong style={{ color: 'var(--siomac-navy)' }}>{c.code ?? c.name}</strong> = {c.name}</span>)}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', padding: '8px 14px', borderTop: '1px solid var(--border)', fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>Status:</span>
+                {LEGEND.map(l => (
+                  <span key={l.text} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '11px', height: '11px', borderRadius: '4px', background: l.bg }} /> {l.text}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '10px 14px', borderTop: '1px solid var(--border)', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-            {LEGEND.map(l => (
-              <span key={l.text} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '12px', height: '12px', borderRadius: '4px', background: l.bg }} /> {l.text}
-              </span>
-            ))}
+          <div class="hse-right-col">
+            <MatrixRail matrix={matrix} onOpen={setOpenWorker} />
           </div>
         </div>
       )}
