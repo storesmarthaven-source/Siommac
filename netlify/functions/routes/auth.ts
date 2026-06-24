@@ -4,7 +4,7 @@ import { sb, createAnonClient } from '../lib/db';
 import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
 import type { AuthMethodClaims }       from '../lib/auth';
 import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/permissions';
-import { getProfileSignedUrl }         from '../lib/photos';
+import { getProfileSignedUrl, resolveProfileImageUrl } from '../lib/photos';
 import { setting }                     from '../lib/settings';
 import { checkLoginLimit, rateLimit, checkCodeVerifyLimit }  from '../lib/ratelimit';
 import { uploadBase64 }                from '../lib/upload';
@@ -16,12 +16,12 @@ import {
   z,
 } from '../lib/validate';
 import {
-  isTwoFactorMandatory,
   issueChallenge, validateChallenge, consumeChallenge, incrementChallengeAttempt,
   generateTotpSecret, verifyCode, buildQrCode,
   generateBackupCodes, consumeBackupCode,
 } from '../lib/totp';
-import { hasStrongFactor, getFactorMethods } from '../lib/webauthn';
+import { isMfaRequiredForRole } from '../lib/securityPolicy';
+import { hasStrongFactor, getFactorMethods, listCredentials } from '../lib/webauthn';
 import {
   COOKIE_NAME as TD_COOKIE_NAME,
   verifyTrustedDevice,
@@ -29,6 +29,7 @@ import {
   ttlDaysForRole,
   shouldOfferTrustedDevice,
   rotateSecurityStamp,
+  isSecureRequest,
 } from '../lib/trustedDevices';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables }          from '../../../types/api';
@@ -61,14 +62,32 @@ function deviceFrom(c: { req: { header: (k: string) => string | undefined }; get
   };
 }
 
+// ── Passkey prompt helpers ─────────────────────────────────────────────────────
+
+const PASSKEY_PROMPT_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/**
+ * Returns true when the user should be nudged to register a passkey.
+ * Fires when `last_passkey_prompt_at` is null (never prompted) or older than
+ * PASSKEY_PROMPT_INTERVAL_MS (7 days).
+ */
+function shouldPromptForPasskey(user: AppUser): boolean {
+  if (!user.last_passkey_prompt_at) return true;
+  const lastPrompt = new Date(user.last_passkey_prompt_at).getTime();
+  return Date.now() - lastPrompt > PASSKEY_PROMPT_INTERVAL_MS;
+}
+
 // ── Shared helper: build full session payload after successful auth ────────────
 export async function buildSessionPayload(
   u:       AppUser,
   device?: { userAgent?: string; ip?: string },
   amr?:    Partial<AuthMethodClaims>,
 ) {
-  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs, roleSet, isEmployee, roleScope] = await Promise.all([
-    getProfileSignedUrl(u.id, u.profile_image),
+  // Prefer the new public avatar URL (no signing, never stale); fall back to the
+  // legacy signed-URL path only for users who haven't re-uploaded yet.
+  const publicAvatar = resolveProfileImageUrl(u);
+  const [profileImage, companyLogoUrl, companyName, refreshToken, overrides, sessionIdleTimeoutMs, roleSet, isEmployee, roleScope, credentials] = await Promise.all([
+    publicAvatar ? Promise.resolve(publicAvatar) : getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
     issueRefreshToken(u.id, device),
@@ -80,7 +99,14 @@ export async function buildSessionPayload(
     loadRolePermissions(u.role),
     loadRoleIsEmployee(u.role),
     loadRoleScope(u.role),
+    listCredentials(u.id),
   ]);
+
+  const hasPasskey = credentials.length > 0;
+  // Show the optional passkey-setup nudge when the user has no passkey yet and
+  // the prompt cadence allows it (null or older than 7 days).
+  const showPrompt = !hasPasskey && shouldPromptForPasskey(u);
+
   return {
     success:      true as const,
     token:        signUser(u, amr),
@@ -94,6 +120,7 @@ export async function buildSessionPayload(
     colorScheme:  u.color_scheme  ?? 'navy',
     layoutMode:   u.layout_mode   ?? 'sidebar',
     profileImage,
+    profileImageVersion: u.profile_image_version ?? 1,
     companyLogoUrl,
     companyName,
     // Resolved per-role idle-timeout window (ms) — drives the client idle timer.
@@ -114,6 +141,9 @@ export async function buildSessionPayload(
       set_by:     '',
       set_at:     new Date(0).toISOString(),
     })),
+    // ── Passkey prompt signal (optional — UI shows a setup nudge) ───────────
+    hasPasskey,
+    ...(showPrompt ? { nextStep: 'passkey_prompt' as const, passkeyRequired: false as const } : {}),
   };
 }
 
@@ -154,17 +184,25 @@ router.post('/login', async c => {
   }
 
   // ── 2FA gate ──────────────────────────────────────────────────────────────
-  const mandatory = isTwoFactorMandatory(u.role);
+  const mandatory = await isMfaRequiredForRole(u.role);
 
   if (mandatory) {
     // Use hasStrongFactor: TOTP OR a registered passkey satisfies the gate.
     const strongFactor = await hasStrongFactor(u.id);
 
     if (!strongFactor) {
-      // No factor at all — prompt for TOTP setup (the existing enrolment flow)
+      // No factor at all — prompt for initial strong-factor setup.
+      // Advertise both methods so the frontend can offer passkey registration
+      // (pre-auth via /webauthn/register/preauth/*) OR TOTP enrolment.
       const setupToken = await issueChallenge(u.id, 'setup');
       await log_(u, 'login_requires_setup', 'user', u.id, '2FA setup required');
-      return c.json({ success: true, requiresSetup: true, preAuthToken: setupToken });
+      return c.json({
+        success:      true,
+        requiresSetup: true,
+        preAuthToken: setupToken,
+        setupMethods: ['webauthn', 'totp'],
+        reason:       'mandatory_mfa',
+      });
     }
 
     // ── Trusted device check ────────────────────────────────────────────────
@@ -198,9 +236,11 @@ router.post('/login', async c => {
     }
 
     // User has at least one strong factor — require them to use it
-    const [preAuthToken, factorMethods] = await Promise.all([
+    const [preAuthToken, factorMethods, tdEligible2, tdMaxDays2] = await Promise.all([
       issueChallenge(u.id, 'verify'),
       getFactorMethods(u.id),
+      shouldOfferTrustedDevice(u.role),
+      ttlDaysForRole(u.role),
     ]);
     const methods: string[] = [];
     if (factorMethods.hasTotp)          methods.push('totp');
@@ -211,8 +251,8 @@ router.post('/login', async c => {
       requiresTwoFactor:    true,
       preAuthToken,
       methods,
-      trustedDeviceEligible: shouldOfferTrustedDevice(u.role),
-      trustedDevicePolicy:   { enabled: true, maxDays: ttlDaysForRole(u.role) },
+      trustedDeviceEligible: tdEligible2,
+      trustedDevicePolicy:   { enabled: true, maxDays: tdMaxDays2 },
     });
   }
 
@@ -245,15 +285,19 @@ router.post('/login', async c => {
         return c.json(payload);
       }
     }
-    const preAuthToken = await issueChallenge(u.id, 'verify');
+    const [preAuthToken, tdEligible, tdMaxDays] = await Promise.all([
+      issueChallenge(u.id, 'verify'),
+      shouldOfferTrustedDevice(u.role),
+      ttlDaysForRole(u.role),
+    ]);
     await log_(u, 'login_requires_2fa', 'user', u.id, '');
     return c.json({
       success:              true,
       requiresTwoFactor:    true,
       preAuthToken,
       methods:              ['totp'],
-      trustedDeviceEligible: shouldOfferTrustedDevice(u.role),
-      trustedDevicePolicy:   { enabled: true, maxDays: ttlDaysForRole(u.role) },
+      trustedDeviceEligible: tdEligible,
+      trustedDevicePolicy:   { enabled: true, maxDays: tdMaxDays },
     });
   }
 
@@ -341,7 +385,7 @@ router.post('/verify2fa', async c => {
   // Issue trusted-device cookie ONLY for TOTP (not backup code)
   if (rememberDevice && !usedBackup) {
     try {
-      const ttlDays = ttlDaysForRole(u.role);
+      const ttlDays = await ttlDaysForRole(u.role);
       const { cookieValue } = await createTrustedDevice({
         userId:    u.id,
         method:    'totp',
@@ -352,7 +396,7 @@ router.post('/verify2fa', async c => {
       });
       setCookie(c, TD_COOKIE_NAME, cookieValue, {
         httpOnly: true,
-        secure:   true,
+        secure:   isSecureRequest(c),   // not over http://localhost (Firefox drops Secure cookies there)
         sameSite: 'Lax',
         path:     '/',
         maxAge:   ttlDays * 86400,
@@ -471,7 +515,7 @@ router.post('/get2faStatus', async c => {
     success:        true,
     enabled:        u.totp_enabled,
     enrolledAt:     u.totp_enrolled_at ?? null,
-    mandatory:      isTwoFactorMandatory(u.role),
+    mandatory:      await isMfaRequiredForRole(u.role),
     codesRemaining,
   });
 });
@@ -482,7 +526,7 @@ router.post('/disable2fa', async c => {
   const v = zv(c, Disable2faSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
 
-  if (isTwoFactorMandatory(u.role)) {
+  if (await isMfaRequiredForRole(u.role)) {
     return c.json({ success: false, message: '2FA cannot be disabled for your role.' }, 403);
   }
 

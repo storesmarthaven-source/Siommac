@@ -32,6 +32,7 @@ export interface LoginResponse extends ApiResponse {
   colorScheme?:    string;
   layoutMode?:     string;
   profileImage?:   string;
+  profileImageVersion?: number;
   companyLogoUrl?: string;
   companyName?:    string;
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];
@@ -43,6 +44,13 @@ export interface LoginResponse extends ApiResponse {
   requiresSetup?:     boolean;  // mandatory role, not yet enrolled
   preAuthToken?:      string;   // short-lived, grants only /verify2fa or /setup2fa
   methods?:           string[]; // ['totp', 'webauthn'] — which factors are available
+  // ── Mandatory MFA setup hints (returned when requiresSetup is true) ─────
+  setupMethods?: string[];      // ['webauthn','totp'] — methods available for initial setup
+  reason?:       string;        // 'mandatory_mfa' — why setup is required
+  // ── Post-login passkey prompt (returned on full session when !hasPasskey) ─
+  hasPasskey?:   boolean;       // true when the user has ≥1 registered passkey
+  nextStep?:     'passkey_prompt'; // signals the UI to show the setup nudge
+  passkeyRequired?: false;      // always false for the optional prompt case
   // ── Auth-method claims (present on full session responses) ───────────────
   /** Authentication Method References — mirrors JWT amr claim */
   amr?:           string[];
@@ -74,6 +82,7 @@ export interface Verify2faResponse extends ApiResponse {
   colorScheme?:    string;
   layoutMode?:     string;
   profileImage?:   string;
+  profileImageVersion?: number;
   companyLogoUrl?: string;
   companyName?:    string;
   permissionOverrides?: { user_id: string; permission: string; granted: boolean; set_by: string; set_at: string }[];

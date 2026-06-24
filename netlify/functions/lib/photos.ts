@@ -75,6 +75,35 @@ async function getProfileSignedUrl(userId: string, imagePath: string | null | un
   return data.signedUrl;
 }
 
+// ── Avatars (public bucket) ───────────────────────────────────────────────────
+// New profile-photo model: a PUBLIC `avatars` bucket + stored public URLs. No
+// signed-URL cache, no staleness. resolveProfileImageUrl reads the new fields
+// first and falls back to the legacy `profile_image` only when it's already an
+// http(s) URL — so it never hands back a private storage PATH.
+
+export const AVATARS_BUCKET = 'avatars';
+
+interface ProfileImageFields {
+  profile_image_url?:       string | null;
+  profile_image_thumb_url?: string | null;
+  profile_image?:           string | null;
+}
+
+/** The best avatar URL for a user row, or null. Thumb preferred (smaller). */
+function resolveProfileImageUrl(u: ProfileImageFields | null | undefined): string | null {
+  if (!u) return null;
+  if (u.profile_image_thumb_url) return u.profile_image_thumb_url;
+  if (u.profile_image_url)       return u.profile_image_url;
+  const legacy = u.profile_image;
+  if (!legacy || legacy === '__removed__') return null;
+  return /^https?:\/\//.test(legacy) ? legacy : null;  // never return a private path
+}
+
+/** Public read URL for an avatars-bucket object path. */
+function avatarPublicUrl(path: string): string {
+  return sb.storage.from(AVATARS_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
 interface AttendancePhotoRecord {
   check_in_photo_url?:  string | null;
   checkInPhotoUrl?:     string | null;
@@ -97,4 +126,4 @@ async function resolveAttendancePhotosBatch<T extends AttendancePhotoRecord>(
   return Promise.all((rows ?? []).map(r => resolveAttendancePhotos(r)));
 }
 
-export { noPhoto, getSignedUrl, getProfileSignedUrl, resolveAttendancePhotos, resolveAttendancePhotosBatch };
+export { noPhoto, getSignedUrl, getProfileSignedUrl, resolveProfileImageUrl, avatarPublicUrl, resolveAttendancePhotos, resolveAttendancePhotosBatch };

@@ -25,6 +25,14 @@ export interface AppUser {
   profile_image:               string | null;
   signed_url:                  string | null;
   signed_url_expires_at:       string | null;
+  // ── Avatars redesign (public bucket + stored public URLs) ──
+  profile_image_url?:          string | null;
+  profile_image_path?:         string | null;
+  profile_image_thumb_url?:    string | null;
+  profile_image_thumb_path?:   string | null;
+  profile_image_version?:      number | null;
+  profile_image_updated_at?:   string | null;
+  profile_image_removed_at?:   string | null;
   color_scheme:                string | null;
   layout_mode:                 string | null;
   totp_secret:                 string | null;   // AES-256-GCM encrypted
@@ -39,6 +47,7 @@ export interface AppUser {
   nis_applicable:              boolean | null;
   health_surcharge_applicable: boolean | null;
   tax_resident:                boolean | null;
+  last_passkey_prompt_at:      string | null;  // when the user last dismissed the passkey setup prompt
   created_at:                  string | null;
   updated_at:                  string | null;
 }
