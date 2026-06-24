@@ -49,6 +49,9 @@
    `sections` layer to preserve the exact precedence it had inside HSE.css. */
 @import '../../assets/styles/uikit-layout.css' layer(sections);
 
+/* ── Rich Message Center (v5 design → SIOMAC tokens; scoped to .message-center-shell) ── */
+@import '../../assets/styles/messageCenter.css' layer(sections);
+
 /* ── Standalone section styles NOT contained in views.css ─────────────────────
    live-map.css and payroll.css are genuine standalone stylesheets (not
    duplicates of views.css). They will be relocated beside their components in
