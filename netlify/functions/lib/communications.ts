@@ -1351,7 +1351,7 @@ export async function getThreadPosts(
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, app_users(full_name, email)')
+      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, app_users!author_user_id(full_name, email)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
       .limit(limit);
@@ -1744,7 +1744,7 @@ export async function searchMessages(userId: string, query: string, limit = 20):
 
     const { data: posts } = await sb
       .from('message_posts')
-      .select('id, thread_id, body, created_at, app_users(full_name, email), message_threads(subject)')
+      .select('id, thread_id, body, created_at, app_users!author_user_id(full_name, email), message_threads(subject)')
       .in('thread_id', threadIds)
       .is('deleted_at', null)
       .ilike('body', `%${query}%`)

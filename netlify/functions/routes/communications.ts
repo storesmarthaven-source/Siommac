@@ -538,7 +538,7 @@ const PostMessageSchema = z.object({
 });
 
 router.post('/communications/messages/post', async c => {
-  const user = await requirePermission(c, 'communications.messages.post');
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, PostMessageSchema, body.args);
   if (!v.ok) return v.response;
@@ -571,7 +571,7 @@ const AttachUploadUrlSchema = z.object({
 });
 
 router.post('/communications/messages/attachments/upload-url', async c => {
-  await requirePermission(c, 'communications.messages.attach');
+  await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, AttachUploadUrlSchema, body.args);
   if (!v.ok) return v.response;
@@ -595,7 +595,7 @@ const AttachCreateSchema = z.object({
 });
 
 router.post('/communications/messages/attachments/create', async c => {
-  const user = await requirePermission(c, 'communications.messages.attach');
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, AttachCreateSchema, body.args);
   if (!v.ok) return v.response;
@@ -651,7 +651,7 @@ const ParticipantsAddSchema = z.object({
 });
 
 router.post('/communications/messages/participants/add', async c => {
-  const user = await requirePermission(c, 'communications.participants.add');
+  const user = await requirePermission(c, 'communications.thread_manage_own');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ParticipantsAddSchema, body.args);
   if (!v.ok) return v.response;
@@ -671,7 +671,7 @@ const ParticipantsRemoveSchema = z.object({
 });
 
 router.post('/communications/messages/participants/remove', async c => {
-  const user = await requirePermission(c, 'communications.participants.remove');
+  const user = await requirePermission(c, 'communications.thread_manage_own');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ParticipantsRemoveSchema, body.args);
   if (!v.ok) return v.response;
@@ -723,7 +723,7 @@ const AttachUrlSchema = z.object({
 });
 
 router.post('/communications/messages/attachments/get-url', async c => {
-  const user = await requirePermission(c, 'communications.messages.download_attachment');
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, AttachUrlSchema, body.args);
   if (!v.ok) return v.response;
@@ -750,7 +750,7 @@ const PinSchema = z.object({
 });
 
 router.post('/communications/messages/pins/pin', async c => {
-  const user = await requirePermission(c, 'communications.messages.pin_own');
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, PinSchema, body.args);
   if (!v.ok) return v.response;
@@ -774,7 +774,7 @@ router.post('/communications/messages/pins/pin', async c => {
 const UnpinSchema = z.object({ pinId: z.string().uuid() });
 
 router.post('/communications/messages/pins/unpin', async c => {
-  const user = await requirePermission(c, 'communications.messages.unpin_own');
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, UnpinSchema, body.args);
   if (!v.ok) return v.response;
