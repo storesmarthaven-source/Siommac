@@ -15,7 +15,7 @@ import {
   PageHeader, TabBar, withCounts, NewMenu, Pagination, usePagination,
   type AreaTab,
 } from '@ui';
-import { hsePill, HSE_SITES } from './types';
+import { HSE_SITES } from './types';
 import {
   usePermits,
   usePermitStats,
@@ -57,10 +57,29 @@ function fmtDt(iso: string | null | undefined): string {
   });
 }
 
-/** Map permit status → .vt-pill tone class (reuses hsePill). */
+/** Per-status colour map — each permit status reads as its own colour. */
+const STATUS_COLORS: Record<PermitStatus, { bg: string; fg: string }> = {
+  draft:               { bg: '#eceff3', fg: '#5b6b7f' },
+  submitted:           { bg: '#e3eefb', fg: '#1d5fa5' },
+  risk_review:         { bg: '#ece9fb', fg: '#5b4ab7' },
+  isolation_pending:   { bg: '#e0f3ef', fg: '#0f6e56' },
+  awaiting_approval:   { bg: '#fdf0d9', fg: '#92600b' },
+  changes_requested:   { bg: '#fdeadf', fg: '#9a4516' },
+  approved:            { bg: '#e6f4dd', fg: '#3b6d11' },
+  active:              { bg: '#dcf2e6', fg: '#0f7a48' },
+  suspended:           { bg: '#fde7e7', fg: '#a32d2d' },
+  extension_requested: { bg: '#f3e8fb', fg: '#7a3ca8' },
+  expired:             { bg: '#f7dede', fg: '#7d1d1d' },
+  closed:              { bg: '#e6eaf0', fg: '#42536b' },
+  cancelled:           { bg: '#ede9e6', fg: '#6b5e54' },
+  rejected:            { bg: '#fce8ee', fg: '#9b2d50' },
+  archived:            { bg: '#eef0f2', fg: '#76838f' },
+};
+
+/** Map permit status → a uniquely-coloured pill (Title Case via .vt-pill). */
 function statusPill(status: PermitStatus): VNode {
-  const label = status.replace(/_/g, ' ');
-  return <span class={hsePill(status)}>{label}</span>;
+  const c = STATUS_COLORS[status] ?? { bg: '#eef0f2', fg: '#5b6b7f' };
+  return <span class="vt-pill" style={{ background: c.bg, color: c.fg }}>{status.replace(/_/g, ' ')}</span>;
 }
 
 /** Map risk level → pill */
@@ -180,9 +199,9 @@ function PermitsTab({ statusFilter, onOpenPermit }: { statusFilter?: string; onO
               <tr>
                 <th style={{ width: '130px' }}>Permit No</th>
                 <th>Title</th>
-                <th style={{ width: '120px' }}>Status</th>
-                <th style={{ width: '120px' }}>Ends</th>
-                <th style={{ width: '80px' }}>Risk</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+                <th style={{ width: '120px', textAlign: 'center' }}>Ends</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Risk</th>
               </tr>
             </thead>
             <tbody>
@@ -209,9 +228,9 @@ function PermitsTab({ statusFilter, onOpenPermit }: { statusFilter?: string; onO
                       </div>
                     </div>
                   </td>
-                  <td>{statusPill(p.status)}</td>
+                  <td style={{ textAlign: 'center' }}>{statusPill(p.status)}</td>
                   <td class="hse-muted" style={{ fontSize: '0.74rem' }}>{fmtDt(p.end_datetime)}</td>
-                  <td>{riskPill(p.risk_level)}</td>
+                  <td style={{ textAlign: 'center' }}>{riskPill(p.risk_level)}</td>
                 </tr>
               ))}
             </tbody>
