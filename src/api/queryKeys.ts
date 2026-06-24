@@ -223,6 +223,25 @@ export const ptwKeys = {
       : [...ptwKeys.all, 'templates', f] as const),
 } as const;
 
+// ── HSE — Inspections ─────────────────────────────────────────────────────────
+
+export const inspectionKeys = {
+  all:           ['hse-inspections']                                                   as const,
+  lists:         () => [...inspectionKeys.all, 'list']                                 as const,
+  list:          (f: Record<string, unknown>) => [...inspectionKeys.lists(), f]        as const,
+  details:       () => [...inspectionKeys.all, 'detail']                               as const,
+  detail:        (id: string) => [...inspectionKeys.details(), id]                     as const,
+  stats:         () => [...inspectionKeys.all, 'stats']                                as const,
+  findingLists:  () => [...inspectionKeys.all, 'findings']                             as const,
+  findingList:   (f: Record<string, unknown>) => [...inspectionKeys.findingLists(), f] as const,
+  findingDetail: (id: string) => [...inspectionKeys.all, 'finding', id]                as const,
+  templates:     (f?: Record<string, unknown>) =>
+    (f === undefined
+      ? [...inspectionKeys.all, 'templates'] as const
+      : [...inspectionKeys.all, 'templates', f] as const),
+  templateDetail:(id: string) => [...inspectionKeys.all, 'template', id]               as const,
+} as const;
+
 // ── HSE — Incidents / Investigations / CAPA ───────────────────────────────────
 
 export const hseIncidentKeys = {

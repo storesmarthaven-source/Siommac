@@ -1,381 +1,338 @@
 /**
  * src/components/sections/HSE/Inspections.tsx
- * Inspections & Audits area — schedule + findings tabs.
+ *
+ * Inspections & Audits area — Schedule + Findings tabs, wired to the live API
+ * (hse/inspections/*). Follows the Siomac page standard: PageHeader → StatsCard
+ * row → tab bar [TabBar | NewMenu] → compact spark row → register table (left) +
+ * navy signals rail (right). Rows open the detail drawers.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
-  type AreaTab, type SparkDef,
+  PageHeader, MetricRow, StatsCard, TabBar, NewMenu, withCounts, SidePanel, HseModal,
+  Field, SelectInput, TextInput, type AreaTab, type SidePanelSection,
 } from '@ui';
 import {
-  mockInspections, mockFindings, hsePill, HSE_SITES,
+  useInspections, useFindings, useInspectionStats, useInspectionTemplates, useCreateInspection,
   type InspectionRow, type FindingRow,
-} from './types';
+} from '@api/hse/inspections';
+import { hsePill, HSE_SITES } from './types';
+import { InspectionDetailDrawer } from './inspections/InspectionDetailDrawer';
+import { FindingDetailDrawer } from './inspections/FindingDetailDrawer';
 
 const TABS: AreaTab[] = [
-  { key: 'schedule', label: 'Schedule',  sublabel: 'Upcoming & overdue', icon: 'fa-calendar-check' },
-  { key: 'findings', label: 'Findings',  sublabel: 'Non-conformances',   icon: 'fa-magnifying-glass' },
+  { key: 'schedule', label: 'Schedule', sublabel: 'Upcoming & overdue', icon: 'fa-calendar-check' },
+  { key: 'findings', label: 'Findings', sublabel: 'Non-conformances',   icon: 'fa-magnifying-glass' },
 ];
 
-const INSP_TYPES = ['Fire', 'Equipment', 'Housekeeping', 'Chemical', 'Emergency', 'PPE', 'Environmental'] as const;
-
+const INSP_TYPES = ['housekeeping', 'fire', 'equipment', 'chemical', 'emergency', 'ppe', 'environmental', 'vehicle', 'site_audit'] as const;
 const TYPE_ICONS: Record<string, string> = {
-  Fire: 'fa-fire-extinguisher', Equipment: 'fa-wrench', Housekeeping: 'fa-broom',
-  Chemical: 'fa-flask', Emergency: 'fa-kit-medical', PPE: 'fa-helmet-safety', Environmental: 'fa-leaf',
+  fire: 'fa-fire-extinguisher', equipment: 'fa-wrench', housekeeping: 'fa-broom',
+  chemical: 'fa-flask', emergency: 'fa-kit-medical', ppe: 'fa-helmet-safety',
+  environmental: 'fa-leaf', vehicle: 'fa-truck', site_audit: 'fa-clipboard-list',
 };
 
-function ScheduleTab({ inspections, onNew }: { inspections: InspectionRow[]; onNew: () => void }): VNode {
-  const overdue   = inspections.filter(i => /overdue/i.test(i.status)).length;
-  const due       = inspections.filter(i => /^due$/i.test(i.status)).length;
-  const scheduled = inspections.filter(i => /scheduled/i.test(i.status)).length;
+const titleCase = (s?: string | null) => (s ?? '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 
+const SEV_PILL: Record<string, string> = { critical: 'is-critical', high: 'is-warn', medium: 'is-amber', low: 'is-on', observation: 'is-info' };
+function severityPill(sev: string): VNode {
+  return <span class={`vt-pill ${SEV_PILL[sev] ?? 'is-info'}`}>{sev}</span>;
+}
+const isOverdue = (i: InspectionRow) => !!i.due_at && new Date(i.due_at).getTime() < Date.now() && !['completed', 'cancelled'].includes(i.status);
+
+// ── Right rail ────────────────────────────────────────────────────────────────
+
+function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
+  icon: string; tone: string; title: string; sub: string; tag: string; tagTone: string; onClick: () => void;
+}): VNode {
   return (
-    <div class="ppe-tab-content">
-      {/* Analytics strip */}
-      <div class="hse-spark-row">
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Overdue</span></div>
-          <div class="hse-spark-val" style={{ color: overdue > 0 ? '#ef4444' : '#22c55e' }}>{overdue}</div>
-          <div class="hse-spark-sub">Past due date, not completed</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Due This Week</span></div>
-          <div class="hse-spark-val" style={{ color: '#f59e0b' }}>{due}</div>
-          <div class="hse-spark-sub">Action required by end of week</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Scheduled</span></div>
-          <div class="hse-spark-val">{scheduled}</div>
-          <div class="hse-spark-sub">Upcoming inspections confirmed</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Completion Rate</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>92%</div>
-          <div class="hse-spark-sub">YTD inspections completed on time</div>
-        </div>
-      </div>
-
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-            <span class="vt-section-icon"><i class="fas fa-calendar-check" /></span>
-            <div>
-              <div class="vt-section-title">Inspection Schedule</div>
-              <div class="vt-section-sub">Scheduled and overdue inspections across all sites. Click a row to record findings.</div>
-            </div>
-          </div>
-          <div class="vt-toolbar">
-            <div class="vt-search" style={{ flex: '1 1 220px' }}>
-              <i class="fas fa-search" /><input type="search" placeholder="Search inspections…" />
-            </div>
-            <select class="emp-filter-select">
-              <option>All types</option>
-              {INSP_TYPES.map(t => <option key={t}>{t}</option>)}
-            </select>
-            <button class="hse-btn primary" onClick={onNew}><i class="fas fa-circle-plus" /> Schedule Inspection</button>
-          </div>
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr><th>Ref</th><th>Inspection</th><th>Type</th><th>Site</th><th>Assignee</th><th>Due</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {inspections.map(i => (
-                    <tr key={i.ref} style={{ cursor: 'pointer' }}>
-                      <td><span class="vt-cell-mono">{i.ref}</span></td>
-                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{i.title}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                          <i class={`fas ${TYPE_ICONS[i.type] ?? 'fa-clipboard'}`} style={{ fontSize: '0.72rem' }} /> {i.type}
-                        </div>
-                      </td>
-                      <td style={{ color: 'var(--text-muted)' }}>{i.site}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{i.assignee}</td>
-                      <td style={{ color: /overdue/i.test(i.status) ? 'var(--siomac-red)' : 'inherit', fontWeight: /overdue/i.test(i.status) ? 600 : 400 }}>{i.due}</td>
-                      <td><span class={hsePill(i.status)}>{i.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar — inspection type breakdown */}
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-chart-bar" /> By Type · YTD</h4>
-          <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
-            {[
-              { label: 'Fire',         count: 18, color: '#ef4444' },
-              { label: 'Housekeeping', count: 14, color: '#f59e0b' },
-              { label: 'Equipment',    count: 12, color: '#60a5fa' },
-              { label: 'Chemical',     count: 9,  color: '#a78bfa' },
-              { label: 'PPE',          count: 7,  color: '#34d399' },
-              { label: 'Emergency',    count: 5,  color: '#fb923c' },
-            ].map(b => {
-              const pct = Math.round((b.count / 65) * 100);
-              return (
-                <div key={b.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', marginBottom: '4px' }}>
-                    <span>{b.label}</span><span style={{ fontWeight: 600, color: b.color }}>{b.count}</span>
-                  </div>
-                  <div style={{ height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,.12)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', background: b.color }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div class="hse-panel-divider" />
-          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-triangle-exclamation" /> Attention Required</h4>
-          <div class="ppe-signals-list">
-            {inspections.filter(i => /overdue|due/i.test(i.status)).map(i => (
-              <div class="ppe-signal" key={i.ref}>
-                <i class={`fas ${TYPE_ICONS[i.type] ?? 'fa-clipboard'} ${/overdue/i.test(i.status) ? 'is-danger' : 'is-warn'}`} />
-                <div class="ppe-signal-text">
-                  <strong>{i.title}</strong>
-                  <span>{i.assignee} · {i.due}</span>
-                </div>
-                <span class={`ppe-signal-tag ${/overdue/i.test(i.status) ? 'is-high' : 'is-due'}`}>{i.status}</span>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
+    <div class="ppe-signal" onClick={onClick}>
+      <i class={`fas ${icon} ${tone}`} />
+      <div class="ppe-signal-text"><strong>{title}</strong><span>{sub}</span></div>
+      <span class={`ppe-signal-tag ${tagTone}`}>{tag}</span>
     </div>
   );
 }
 
-function FindingsTab({ findings }: { findings: FindingRow[] }): VNode {
-  const open     = findings.filter(f => /open/i.test(f.status)).length;
-  const critical = findings.filter(f => f.severity === 'danger').length;
-
-  return (
-    <div class="ppe-tab-content">
-      {/* Analytics strip */}
-      <div class="hse-spark-row">
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Open Findings</span></div>
-          <div class="hse-spark-val" style={{ color: open > 0 ? '#f59e0b' : '#22c55e' }}>{open}</div>
-          <div class="hse-spark-sub">Require corrective action</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Critical</span></div>
-          <div class="hse-spark-val" style={{ color: critical > 0 ? '#ef4444' : '#22c55e' }}>{critical}</div>
-          <div class="hse-spark-sub">Immediate action required</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Closed YTD</span></div>
-          <div class="hse-spark-val">31</div>
-          <div class="hse-spark-sub">Findings resolved this year</div>
-        </div>
-        <div class="hse-spark">
-          <div class="hse-spark-header"><span class="hse-spark-label">Closure Rate</span></div>
-          <div class="hse-spark-val" style={{ color: '#22c55e' }}>91%</div>
-          <div class="hse-spark-sub">Findings closed within SLA</div>
-        </div>
-      </div>
-
-      <div class="ppe-screen-grid">
-        <div class="ppe-screen-main">
-          <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-            <span class="vt-section-icon"><i class="fas fa-magnifying-glass" /></span>
-            <div>
-              <div class="vt-section-title">Inspection Findings</div>
-              <div class="vt-section-sub">Non-conformances and observations raised from inspections. Critical findings auto-raise a CAPA.</div>
-            </div>
-          </div>
-          <div class="vt-table-card">
-            <div class="vt-table-scroll">
-              <table class="vt-table">
-                <thead>
-                  <tr><th>Ref</th><th>Finding</th><th>Inspection</th><th>Site</th><th>Severity</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  {findings.map(f => (
-                    <tr key={f.ref} style={{ cursor: 'pointer' }}>
-                      <td><span class="vt-cell-mono">{f.ref}</span></td>
-                      <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{f.finding}</span></td>
-                      <td style={{ color: 'var(--text-muted)' }}><span class="vt-cell-mono">{f.inspection}</span></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{f.site}</td>
-                      <td>
-                        <span class={`vt-pill ${f.severity === 'danger' ? 'is-off' : f.severity === 'warning' ? 'is-warn' : 'is-info'}`}>
-                          {f.severity === 'danger' ? 'Critical' : f.severity === 'warning' ? 'High' : 'Medium'}
-                        </span>
-                      </td>
-                      <td><span class={hsePill(f.status)}>{f.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <aside class="ppe-signals-panel">
-          <h4><i class="fas fa-gauge-high" /> Finding Summary</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
-            {[
-              { val: findings.length, label: 'Total findings',  color: '#fff' },
-              { val: open,            label: 'Open',            color: '#f59e0b' },
-              { val: critical,        label: 'Critical',        color: '#ef4444' },
-              { val: findings.filter(f => /closed/i.test(f.status)).length, label: 'Closed', color: '#4ade80' },
-            ].map(k => (
-              <div key={k.label} style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
-                <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-          <div class="hse-panel-divider" />
-          <h4 style={{ marginBottom: '8px' }}><i class="fas fa-circle-exclamation" /> Open Findings</h4>
-          <div class="ppe-signals-list">
-            {findings.filter(f => /open/i.test(f.status)).map(f => (
-              <div class="ppe-signal" key={f.ref}>
-                <i class={`fas fa-circle-exclamation ${f.severity === 'danger' ? 'is-danger' : 'is-warn'}`} />
-                <div class="ppe-signal-text">
-                  <strong>{f.finding}</strong>
-                  <span>{f.site} · {f.inspection}</span>
-                </div>
-                <span class={`ppe-signal-tag ${f.severity === 'danger' ? 'is-high' : 'is-due'}`}>
-                  {f.severity === 'danger' ? 'Critical' : 'High'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-export function InspectionsArea({ tab }: { tab: string }): VNode {
-  const [active, setActive]         = useState(tab);
-  const [inspections, setInspections] = useState<InspectionRow[]>(mockInspections);
-  const [findings]                  = useState<FindingRow[]>(mockFindings);
-  const [modalOpen, setModal]       = useState(false);
-  const [newType, setNewType]       = useState<string>(INSP_TYPES[0]);
-  const [newSite, setNewSite]       = useState<string>(HSE_SITES[0]);
-  const [newTitle, setNewTitle]     = useState('');
-
-  const overdue      = inspections.filter(i => /overdue/i.test(i.status)).length;
-  const scheduled    = inspections.filter(i => /scheduled/i.test(i.status)).length;
-  const openFindings = findings.filter(f => /open/i.test(f.status)).length;
-  const critFindings = findings.filter(f => f.severity === 'danger' && /open/i.test(f.status)).length;
-
-  const sparks: SparkDef[] = [
+function ScheduleRail({ inspections, onOpen }: { inspections: InspectionRow[]; onOpen: (id: string) => void }): VNode {
+  const overdue = inspections.filter(isOverdue);
+  const dueSoon = inspections.filter(i => i.due_at && !isOverdue(i) && new Date(i.due_at).getTime() < Date.now() + 7 * 86400e3 && !['completed', 'cancelled'].includes(i.status));
+  const inProg  = inspections.filter(i => i.status === 'in_progress');
+  const sections: SidePanelSection[] = [
     {
-      label: 'Scheduled', value: String(scheduled), sub: 'Upcoming inspections',
-      delta: 'Confirmed', deltaUp: false, color: '#60a5fa',
-      sparkPoints: [0, 0, 0, 0, 0, scheduled], sparkColor: '#60a5fa',
+      id: 'overdue', label: 'Overdue', icon: 'fa-clock', title: 'Overdue', count: overdue.length, empty: 'None overdue',
+      children: overdue.slice(0, 6).map(i => <Signal key={i.id} icon="fa-clock" tone="is-danger" title={i.inspection_no ?? i.title ?? '—'} sub={i.title ?? ''} tag="Overdue" tagTone="is-high" onClick={() => onOpen(i.id)} />),
     },
     {
-      label: 'Overdue', value: String(overdue), sub: 'Past due date',
-      delta: overdue > 0 ? 'Action required' : 'On track', deltaUp: overdue > 0, color: overdue > 0 ? '#ef4444' : '#4ade80',
-      sparkPoints: [0, 0, 0, 0, 0, overdue], sparkColor: '#ef4444',
+      id: 'due', label: 'Due Soon', icon: 'fa-calendar-day', title: 'Due This Week', count: dueSoon.length, empty: 'Nothing due this week',
+      children: dueSoon.slice(0, 6).map(i => <Signal key={i.id} icon="fa-calendar-day" tone="is-warn" title={i.inspection_no ?? i.title ?? '—'} sub={fmtDate(i.due_at)} tag="Due" tagTone="is-due" onClick={() => onOpen(i.id)} />),
     },
     {
-      label: 'Completion Rate', value: '92%', sub: 'YTD · Target 90%',
-      progress: { pct: 92, color: '#22c55e', target: 'Target: 90%' },
-    },
-    {
-      label: 'Open Findings', value: String(openFindings), sub: `${critFindings} critical · ${openFindings - critFindings} minor`,
-      delta: critFindings > 0 ? `${critFindings} critical` : 'No critical', deltaUp: critFindings > 0, color: openFindings > 0 ? '#f59e0b' : '#4ade80',
-      sparkPoints: [0, 0, 0, 0, 0, openFindings], sparkColor: '#f59e0b',
+      id: 'active', label: 'In Progress', icon: 'fa-spinner', title: 'In Progress', count: inProg.length, empty: 'None in progress',
+      children: inProg.slice(0, 6).map(i => <Signal key={i.id} icon="fa-spinner" tone="is-info" title={i.inspection_no ?? i.title ?? '—'} sub={i.title ?? ''} tag="Active" tagTone="is-info" onClick={() => onOpen(i.id)} />),
     },
   ];
+  return <SidePanel title="Inspection Signals" icon="fa-bell" sections={sections} />;
+}
+
+function FindingsRail({ findings, onOpen }: { findings: FindingRow[]; onOpen: (id: string) => void }): VNode {
+  const open     = findings.filter(f => !['closed', 'cancelled'].includes(f.status));
+  const critical = open.filter(f => f.severity === 'critical');
+  const overdueF = open.filter(f => f.due_at && new Date(f.due_at).getTime() < Date.now());
+  const sections: SidePanelSection[] = [
+    {
+      id: 'critical', label: 'Critical', icon: 'fa-triangle-exclamation', title: 'Critical', count: critical.length, empty: 'No critical findings',
+      children: critical.slice(0, 6).map(f => <Signal key={f.id} icon="fa-triangle-exclamation" tone="is-danger" title={f.finding_no ?? '—'} sub={f.title ?? ''} tag="Critical" tagTone="is-high" onClick={() => onOpen(f.id)} />),
+    },
+    {
+      id: 'open', label: 'Open', icon: 'fa-circle-exclamation', title: 'Open Findings', count: open.length, empty: 'No open findings',
+      children: open.slice(0, 6).map(f => <Signal key={f.id} icon="fa-circle-exclamation" tone="is-warn" title={f.finding_no ?? '—'} sub={f.title ?? ''} tag={titleCase(f.severity)} tagTone="is-due" onClick={() => onOpen(f.id)} />),
+    },
+    {
+      id: 'overdue', label: 'Overdue', icon: 'fa-clock', title: 'Overdue', count: overdueF.length, empty: 'None overdue',
+      children: overdueF.slice(0, 6).map(f => <Signal key={f.id} icon="fa-clock" tone="is-danger" title={f.finding_no ?? '—'} sub={fmtDate(f.due_at)} tag="Overdue" tagTone="is-high" onClick={() => onOpen(f.id)} />),
+    },
+  ];
+  return <SidePanel title="Finding Signals" icon="fa-bell" sections={sections} />;
+}
+
+// ── Spark row ─────────────────────────────────────────────────────────────────
+
+function Spark({ label, value, sub, color }: { label: string; value: ComponentChildren; sub: string; color?: string }): VNode {
+  return (
+    <div class="hse-spark">
+      <div class="hse-spark-header"><span class="hse-spark-label">{label}</span></div>
+      <div class="hse-spark-val" style={color ? { color } : undefined}>{value}</div>
+      <div class="hse-spark-sub">{sub}</div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export function InspectionsArea({ tab }: { tab: string }): VNode {
+  const [active, setActive] = useState(TABS.some(t => t.key === tab) ? tab : 'schedule');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [openInspection, setOpenInspection] = useState<string | null>(null);
+  const [openFinding, setOpenFinding] = useState<string | null>(null);
+
+  const { data: statsRes } = useInspectionStats();
+  const s = statsRes?.data;
+  const { data: inspRes } = useInspections({ limit: 200 });
+  const inspections = inspRes?.data ?? [];
+  const { data: findRes } = useFindings({ limit: 200 });
+  const findings = findRes?.data ?? [];
+
+  const overdue = s?.overdue ?? inspections.filter(isOverdue).length;
+  const openFindings = s?.openFindings ?? findings.filter(f => !['closed', 'cancelled'].includes(f.status)).length;
+  const completionRate = s?.completionRate ?? 0;
+  const criticalFindings = s?.criticalFindings ?? 0;
 
   const tabsWithCounts = withCounts(TABS, { schedule: inspections.length, findings: findings.length });
 
   return (
-    <div class="hse-tab hse-dash">
+    <div class="hse-tab hse-dash" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <PageHeader
         icon="fa-clipboard-check"
         module="HSE"
         title="Inspections & Audits"
-        sub="Schedule inspections, track findings, and manage non-conformances across all sites."
+        sub="Schedule inspections, execute checklists, and track findings to closure across all sites."
         meta={[
           { icon: 'fa-calendar-check', label: `${inspections.length} inspections` },
           { icon: 'fa-triangle-exclamation', label: `${overdue} overdue` },
-          { icon: 'fa-circle-exclamation', label: `${critFindings} critical findings` },
-          { icon: 'fa-chart-pie', label: '92% completion rate' },
+          { icon: 'fa-circle-exclamation', label: `${criticalFindings} critical findings` },
+          { icon: 'fa-chart-pie', label: `${completionRate}% completion` },
         ]}
       />
 
-      <MetricRow pageKey="hse.inspections" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />
+      <MetricRow pageKey="hse.inspections" rowClass="ui-stat-row" cards={[
+        { key: 'scheduled', node: (
+          <StatsCard icon="fa-calendar-check" title="Scheduled This Month" metric={s?.scheduledThisMonth ?? 0}
+            supporting="Upcoming inspections" footer="Confirmed schedule" />
+        ) },
+        { key: 'overdue', node: (
+          <StatsCard icon="fa-triangle-exclamation" title="Overdue" metric={overdue} metricColor={overdue > 0 ? '#ef4444' : '#22c55e'}
+            supporting="Past due date" footer={overdue > 0 ? 'Action required' : 'On track'} />
+        ) },
+        { key: 'completion', node: (
+          <StatsCard icon="fa-chart-pie" title="Completion Rate" metric={`${completionRate}%`}
+            supporting="YTD completed" percent={completionRate} percentTarget="Target 90%" />
+        ) },
+        { key: 'findings', node: (
+          <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
+            supporting={`${criticalFindings} critical`} footer="Require corrective action" />
+        ) },
+      ]} />
 
-      <div class="hse-main-grid">
-        <div class="hse-left-col">
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '6px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <TabBar tabs={tabsWithCounts} active={active} onSelect={setActive} />
-
-          {active === 'schedule' && (
-            <ScheduleTab inspections={inspections} onNew={() => setModal(true)} />
-          )}
-          {active === 'findings' && <FindingsTab findings={findings} />}
         </div>
-
-        <div class="hse-right-col">
-          <div class="oq-dark-card">
-            <div class="oq-dark-header">
-              <i class="fas fa-circle-exclamation" />
-              <span>Critical Findings</span>
-              <span class="oq-dark-count">{critFindings}</span>
-            </div>
-            <div class="oq-dark-vertical">
-              {findings.filter(f => f.severity === 'danger' && /open/i.test(f.status)).slice(0, 5).map(f => (
-                <div class="oq-dark-item" key={f.ref}>
-                  <div class="icon-badge red"><i class="fas fa-circle-exclamation" /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{f.ref}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{f.finding?.slice(0, 50)}</div>
-                  </div>
-                  <span class="oq-dark-tag danger">Critical</span>
-                </div>
-              ))}
-              {critFindings === 0 && <div style={{ padding: '16px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>No critical findings</div>}
-            </div>
-            <div class="oq-dark-header" style={{ marginTop: '12px' }}>
-              <i class="fas fa-calendar-clock" />
-              <span>Overdue Inspections</span>
-              <span class="oq-dark-count">{overdue}</span>
-            </div>
-            <div class="oq-dark-vertical">
-              {inspections.filter(i => /overdue/i.test(i.status)).slice(0, 4).map(i => (
-                <div class="oq-dark-item" key={i.ref}>
-                  <div class="icon-badge amber"><i class="fas fa-clock" /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f1f5f9' }}>{i.ref} — {i.type}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'rgba(241,245,249,.55)', marginTop: '2px' }}>{i.site}</div>
-                  </div>
-                  <span class="oq-dark-tag warning">Overdue</span>
-                </div>
-              ))}
-              {overdue === 0 && <div style={{ padding: '12px 0', textAlign: 'center', color: 'rgba(241,245,249,.4)', fontSize: '0.75rem' }}>Schedule on track</div>}
-            </div>
-          </div>
+        <div style={{ flexShrink: 0 }}>
+          <NewMenu label="Schedule Inspection" fill items={[
+            { label: 'Schedule Inspection', icon: 'fa-calendar-plus', sub: 'Create a new inspection or audit', onSelect: () => setDialogOpen(true) },
+          ]} />
         </div>
       </div>
 
-      <HseModal
-        open={modalOpen} onClose={() => setModal(false)}
-        title="Schedule Inspection" sub="Schedule a new inspection or audit for any site."
-        submitLabel="Schedule"
-        onSubmit={() => {
-          const ref = `INSP-${200 + inspections.length + 1}`;
-          setInspections([{ ref, title: newTitle || `${newType} inspection`, type: newType, site: newSite, due: 'TBD', status: 'Scheduled', assignee: 'Unassigned' }, ...inspections]);
-          setModal(false); setNewTitle('');
-        }}
-      >
-        <div class="hse-form-grid">
-          <Field label="Inspection type"><SelectInput value={newType} onInput={setNewType} options={[...INSP_TYPES]} /></Field>
-          <Field label="Site"><SelectInput value={newSite} onInput={setNewSite} options={[...HSE_SITES]} /></Field>
-          <Field label="Title / description" wide><TextInput value={newTitle} onInput={setNewTitle} placeholder="e.g. Monthly fire equipment check" /></Field>
+      {/* Compact KPI spark row (under the nav) */}
+      {active === 'schedule' ? (
+        <div class="hse-spark-row">
+          <Spark label="Overdue" value={overdue} sub="Past due, not completed" color={overdue > 0 ? '#ef4444' : '#22c55e'} />
+          <Spark label="Due This Week" value={s?.dueThisWeek ?? 0} sub="Action required soon" color="#f59e0b" />
+          <Spark label="Scheduled" value={s?.scheduledThisMonth ?? 0} sub="Confirmed this month" />
+          <Spark label="Completion Rate" value={`${completionRate}%`} sub="YTD · Target 90%" color="#22c55e" />
         </div>
-      </HseModal>
+      ) : (
+        <div class="hse-spark-row">
+          <Spark label="Open Findings" value={openFindings} sub="Require corrective action" color={openFindings > 0 ? '#f59e0b' : '#22c55e'} />
+          <Spark label="Critical" value={criticalFindings} sub="Immediate action" color={criticalFindings > 0 ? '#ef4444' : '#22c55e'} />
+          <Spark label="Closed YTD" value={s?.closedFindingsYtd ?? 0} sub="Resolved this year" />
+          <Spark label="Closure Rate" value={`${s?.closureRate ?? 0}%`} sub="Findings closed" color="#22c55e" />
+        </div>
+      )}
+
+      {/* Schedule tab */}
+      {active === 'schedule' && (
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            <div class="vt-table-card">
+              <div class="vt-table-scroll">
+                <table class="vt-table">
+                  <thead>
+                    <tr>
+                      <th>Ref</th><th>Inspection</th><th>Type</th><th>Site / Area</th>
+                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inspections.map(i => (
+                      <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => setOpenInspection(i.id)}>
+                        <td><span class="vt-cell-mono">{i.inspection_no ?? i.ref ?? '—'}</span></td>
+                        <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{i.title ?? '—'}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                            <i class={`fas ${TYPE_ICONS[i.inspection_type ?? i.type ?? ''] ?? 'fa-clipboard'}`} style={{ fontSize: '0.72rem' }} /> {titleCase(i.inspection_type ?? i.type)}
+                          </div>
+                        </td>
+                        <td class="vt-cell-subtext">{i.site_name ?? i.site_id ?? '—'}{i.area ? ` · ${i.area}` : ''}</td>
+                        <td style={{ textAlign: 'center', color: isOverdue(i) ? 'var(--siomac-red)' : 'inherit', fontWeight: isOverdue(i) ? 600 : 400 }}>{fmtDate(i.due_at)}</td>
+                        <td style={{ textAlign: 'center' }}><span class={hsePill(i.status)}>{titleCase(i.status)}</span></td>
+                      </tr>
+                    ))}
+                    {inspections.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No inspections scheduled.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="hse-right-col">
+            <ScheduleRail inspections={inspections} onOpen={setOpenInspection} />
+          </div>
+        </div>
+      )}
+
+      {/* Findings tab */}
+      {active === 'findings' && (
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            <div class="vt-table-card">
+              <div class="vt-table-scroll">
+                <table class="vt-table">
+                  <thead>
+                    <tr>
+                      <th>Ref</th><th>Finding</th><th style={{ textAlign: 'center' }}>Severity</th>
+                      <th>Owner</th><th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {findings.map(f => (
+                      <tr key={f.id} style={{ cursor: 'pointer' }} onClick={() => setOpenFinding(f.id)}>
+                        <td><span class="vt-cell-mono">{f.finding_no ?? '—'}</span></td>
+                        <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{f.title ?? f.description ?? '—'}</span></td>
+                        <td style={{ textAlign: 'center' }}>{severityPill(f.severity)}</td>
+                        <td class="vt-cell-subtext">{f.owner_id ?? '—'}</td>
+                        <td style={{ textAlign: 'center' }}>{fmtDate(f.due_at)}</td>
+                        <td style={{ textAlign: 'center' }}><span class={hsePill(f.status)}>{titleCase(f.status)}</span></td>
+                      </tr>
+                    ))}
+                    {findings.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No findings raised.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="hse-right-col">
+            <FindingsRail findings={findings} onOpen={setOpenFinding} />
+          </div>
+        </div>
+      )}
+
+      <ScheduleInspectionDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+
+      <InspectionDetailDrawer inspectionId={openInspection} onClose={() => setOpenInspection(null)} />
+      <FindingDetailDrawer findingId={openFinding} onClose={() => setOpenFinding(null)} />
     </div>
+  );
+}
+
+// ── Schedule dialog ───────────────────────────────────────────────────────────
+
+function ScheduleInspectionDialog({ open, onClose }: { open: boolean; onClose: () => void }): VNode {
+  const create = useCreateInspection();
+  const { data: tplRes } = useInspectionTemplates();
+  const templates = tplRes?.data ?? [];
+
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState<string>(INSP_TYPES[0]);
+  const [site, setSite] = useState<string>(HSE_SITES[0] ?? '');
+  const [area, setArea] = useState('');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+  const [due, setDue] = useState('');
+  const [templateId, setTemplateId] = useState('');
+
+  const reset = () => { setTitle(''); setArea(''); setDue(''); setTemplateId(''); setPriority('medium'); };
+
+  const submit = () => {
+    if (!title.trim() || !due) return;
+    create.mutate({
+      title: title.trim(),
+      inspectionType: type,
+      priority,
+      siteId: site || null,
+      siteName: site || null,
+      area: area || null,
+      dueAt: new Date(due).toISOString(),
+      templateId: templateId || null,
+      scheduleImmediately: true,
+    }, { onSuccess: () => { reset(); onClose(); } });
+  };
+
+  const matchingTemplates = templates.filter(t => t.inspection_type === type);
+
+  return (
+    <HseModal
+      open={open} onClose={onClose}
+      title="Schedule Inspection" sub="Schedule a new inspection or audit for a site or area."
+      submitLabel={create.isPending ? 'Scheduling…' : 'Schedule'}
+      onSubmit={submit}
+    >
+      <div class="hse-form-grid">
+        <Field label="Title / description" wide><TextInput value={title} onInput={setTitle} placeholder="e.g. Monthly housekeeping audit — Bay 3" /></Field>
+        <Field label="Inspection type"><SelectInput value={type} onInput={setType} options={INSP_TYPES.map(t => ({ value: t, label: titleCase(t) }))} /></Field>
+        <Field label="Priority"><SelectInput value={priority} onInput={v => setPriority(v as 'low' | 'medium' | 'high' | 'critical')} options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: titleCase(p) }))} /></Field>
+        <Field label="Site"><SelectInput value={site} onInput={setSite} options={[...HSE_SITES]} /></Field>
+        <Field label="Area / location"><TextInput value={area} onInput={setArea} placeholder="e.g. Bay 3" /></Field>
+        <Field label="Due date">
+          <input class="ui-input" type="date" value={due} onInput={e => setDue((e.target as HTMLInputElement).value)} />
+        </Field>
+        <Field label="Checklist template">
+          <SelectInput value={templateId} onInput={setTemplateId}
+            options={[{ value: '', label: 'None' }, ...matchingTemplates.map(t => ({ value: t.id, label: t.name }))]} />
+        </Field>
+      </div>
+    </HseModal>
   );
 }
