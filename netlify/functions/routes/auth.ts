@@ -7,7 +7,6 @@ import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/p
 import { getProfileSignedUrl, resolveProfileImageUrl } from '../lib/photos';
 import { setting }                     from '../lib/settings';
 import { checkLoginLimit, rateLimit, checkCodeVerifyLimit }  from '../lib/ratelimit';
-import { uploadBase64 }                from '../lib/upload';
 import { noPhoto }                     from '../lib/photos';
 import {
   zv, LoginSchema, UpdateColorSchemeSchema, UpdateLayoutModeSchema,
@@ -630,18 +629,18 @@ router.post('/updateMyProfile', async c => {
     if (upErr) return c.json({ success: false, message: 'Failed to update password.' });
   }
 
-  if (args.removeProfileImage) {
-    patch.profile_image = '__removed__';
-  } else if (args.profileImageBase64) {
-    patch.profile_image = await uploadBase64('profile-photos', args.profileImageBase64, `profile_${actor.username}`);
-  }
+  // Profile PHOTO is no longer handled here — it flows through the presigned
+  // /api/profile-photo/{upload-url,commit,remove} endpoints (public avatars bucket).
+  // This route handles name / email / phone / password only.
 
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id)
-    .select('profile_image, full_name, email, phone').single<Pick<AppUser, 'profile_image' | 'full_name' | 'email' | 'phone'>>();
+    .select('profile_image, profile_image_url, profile_image_thumb_url, full_name, email, phone')
+    .single<Pick<AppUser, 'profile_image' | 'profile_image_url' | 'profile_image_thumb_url' | 'full_name' | 'email' | 'phone'>>();
   if (error) { console.error('[auth] updateMyProfile', error); return c.json({ success: false, message: error.message }); }
 
-  const storedPath   = noPhoto(data.profile_image) ? '' : data.profile_image ?? '';
-  const profileImage = await getProfileSignedUrl(actor.id, storedPath);
+  // Resolve the (unchanged) avatar: prefer the public URL, else the legacy signed URL.
+  const profileImage = resolveProfileImageUrl(data)
+    ?? (noPhoto(data.profile_image) ? '' : await getProfileSignedUrl(actor.id, data.profile_image ?? ''));
   return c.json({ success: true, profileImage, fullName: data.full_name, email: data.email ?? '', phone: data.phone ?? '' });
 });
 

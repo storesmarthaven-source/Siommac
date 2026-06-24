@@ -22,7 +22,7 @@ import { type VNode }                         from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { useSessionStore }                    from '@store/session';
 import { toast }                              from '@store';
-import { fetchMyProfile, fetchMyActivity, updateMyProfile, updateMyPassword } from './api';
+import { fetchMyProfile, fetchMyActivity, updateMyProfile, updateMyPassword, uploadMyProfilePhoto, removeMyProfilePhoto } from './api';
 import type { ProfileData, ProfileTab, ActivityEvent, StaticDoc } from './types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -151,7 +151,8 @@ export function MyProfileSection(): VNode {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   // ── Photo state ───────────────────────────────────────────────────────────
-  const [photoB64,    setPhotoB64]    = useState<string>('');  // base64 pending upload
+  const [photoB64,    setPhotoB64]    = useState<string>('');  // data-URL preview only
+  const [photoFile,   setPhotoFile]   = useState<File | null>(null); // raw file → presigned upload
   const [removePhoto, setRemovePhoto] = useState<boolean>(false);
   const fileInputRef                  = useRef<HTMLInputElement>(null);
 
@@ -233,10 +234,10 @@ export function MyProfileSection(): VNode {
   const handleFileChange = useCallback((e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    setPhotoFile(file);
     const reader = new FileReader();
     reader.onload = ev => {
-      const b64 = ev.target?.result as string;
-      setPhotoB64(b64);
+      setPhotoB64(ev.target?.result as string);  // preview only
       setRemovePhoto(false);
     };
     reader.readAsDataURL(file);
@@ -244,6 +245,7 @@ export function MyProfileSection(): VNode {
 
   const handleRemovePhoto = useCallback(() => {
     setPhotoB64('');
+    setPhotoFile(null);
     setRemovePhoto(true);
   }, []);
 
@@ -256,30 +258,40 @@ export function MyProfileSection(): VNode {
 
     setSaving(true);
     try {
+      // 1. Photo (presigned upload to the public avatars bucket) — separate from
+      //    the text update. Tracks the new public URL to reflect into the session.
+      let newImg: string | null | undefined;
+      if (removePhoto) {
+        ({ profileImage: newImg } = await removeMyProfilePhoto());
+      } else if (photoFile) {
+        ({ profileImage: newImg } = await uploadMyProfilePhoto(photoFile));
+      }
+
+      // 2. Name / email / phone (no photo fields — handled above).
       const result = await updateMyProfile({
         username,
         fullName:           formName.trim(),
         email:              formEmail.trim(),
         phone:              formPhone,
-        profileImageBase64: photoB64,
-        removeProfileImage: removePhoto,
+        profileImageBase64: '',
+        removeProfileImage: false,
         oldPassword:        '',
         newPassword:        '',
       });
 
-      // Update session store so all pnp pills refresh reactively
-      const newImg = result.profileImage ?? '';
-      setProfileImg(newImg);
+      // Reflect the new avatar into the session store so every ProfilePill refreshes.
+      if (newImg !== undefined) setProfileImg(newImg ?? '');
+      const shownImg = newImg !== undefined ? (newImg ?? '') : (result.profileImage ?? profile.profileImage);
 
-      // Update local form state
       setProfile(p => ({
         ...p,
         fullName:     result.fullName,
         email:        formEmail.trim(),
         phone:        formPhone,
-        profileImage: newImg,
+        profileImage: shownImg,
       }));
       setPhotoB64('');
+      setPhotoFile(null);
       setRemovePhoto(false);
 
       toast.success('Profile updated successfully!');
@@ -288,7 +300,7 @@ export function MyProfileSection(): VNode {
     } finally {
       setSaving(false);
     }
-  }, [username, formName, formEmail, formPhone, photoB64, removePhoto, setProfileImg]);
+  }, [username, formName, formEmail, formPhone, photoFile, removePhoto, setProfileImg, profile.profileImage]);
 
   // ── Save password ─────────────────────────────────────────────────────────
   const handleSavePassword = useCallback(async () => {

@@ -132,6 +132,66 @@ export async function updateMyProfile(
   return { fullName: res.fullName ?? payload.fullName, profileImage: res.profileImage ?? '' };
 }
 
+// ── Profile photo: presigned direct upload to the public avatars bucket ───────
+
+/** Resize/crop an image File to a square WEBP blob of the given side length. */
+export async function resizeImageToWebp(file: File, size: number, quality = 0.86): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const side   = Math.min(bitmap.width, bitmap.height);          // center-crop to square
+  const sx     = (bitmap.width  - side) / 2;
+  const sy     = (bitmap.height - side) / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+  ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, size, size);
+  bitmap.close?.();
+  const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/webp', quality));
+  if (!blob) throw new Error('Image conversion failed');
+  return blob;
+}
+
+interface UploadUrlSlot { path: string; uploadUrl: string; publicUrl: string }
+interface UploadUrlResponse {
+  success: boolean; message?: string;
+  data?: { version: number; avatar: UploadUrlSlot; thumbnail: UploadUrlSlot; maxSizeBytes: number };
+}
+
+async function putToSignedUrl(uploadUrl: string, blob: Blob): Promise<void> {
+  const res = await fetch(uploadUrl, { method: 'PUT', body: blob, headers: { 'content-type': 'image/webp', 'x-upsert': 'true' } });
+  if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+}
+
+/** Full flow: resize → presign → PUT both → commit. Returns the new public URL + version. */
+export async function uploadMyProfilePhoto(file: File): Promise<{ profileImage: string; profileImageVersion: number }> {
+  const [avatarBlob, thumbBlob] = await Promise.all([
+    resizeImageToWebp(file, 512, 0.86),
+    resizeImageToWebp(file, 96, 0.82),
+  ]);
+
+  const pres = await apiPost<UploadUrlResponse>('profile-photo/upload-url', { mimeType: 'image/webp' });
+  if (!pres.success || !pres.data) throw new Error(pres.message ?? 'Could not start upload');
+  const { version, avatar, thumbnail, maxSizeBytes } = pres.data;
+  if (avatarBlob.size > maxSizeBytes) throw new Error('Image is too large');
+
+  await Promise.all([putToSignedUrl(avatar.uploadUrl, avatarBlob), putToSignedUrl(thumbnail.uploadUrl, thumbBlob)]);
+
+  const commit = await apiPost<{ success: boolean; message?: string; data?: { profileImage: string; profileImageVersion: number } }>(
+    'profile-photo/commit',
+    { version, avatarPath: avatar.path, avatarPublicUrl: avatar.publicUrl, thumbPath: thumbnail.path, thumbPublicUrl: thumbnail.publicUrl },
+  );
+  if (!commit.success || !commit.data) throw new Error(commit.message ?? 'Could not save photo');
+  return commit.data;
+}
+
+export async function removeMyProfilePhoto(): Promise<{ profileImage: string | null; profileImageVersion: number }> {
+  const res = await apiPost<{ success: boolean; message?: string; data?: { profileImage: string | null; profileImageVersion: number } }>(
+    'profile-photo/remove', {},
+  );
+  if (!res.success || !res.data) throw new Error(res.message ?? 'Could not remove photo');
+  return res.data;
+}
+
 export async function updateMyPassword(
   payload: { username: string; fullName: string; oldPassword: string; newPassword: string },
   signal?: AbortSignal,
