@@ -87,6 +87,13 @@ function ExpiryRunway({ pins }: { pins: number[] }): VNode {
   // pins = hours-until-expiry for each permit (0..8). x% = closer to right as h→0.
   const ticks = [{ h: 8, label: '8h' }, { h: 4, label: '4h' }, { h: 2, label: '2h' }, { h: 0, label: 'Now' }];
   const xFor = (h: number) => (1 - Math.max(0, Math.min(8, h)) / 8) * 100;
+  if (pins.length === 0) {
+    return (
+      <div style={{ width: '100%', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+        None expiring within 8 hours
+      </div>
+    );
+  }
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
       <div style={{ position: 'relative', height: '44px' }}>
@@ -96,11 +103,6 @@ function ExpiryRunway({ pins }: { pins: number[] }): VNode {
         {/* expiry cliff flag */}
         <i class="fas fa-flag-checkered" style={{ position: 'absolute', right: '-2px', top: '20px', fontSize: '0.8rem', color: '#ef4444' }} />
         {/* pins */}
-        {pins.length === 0 && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.76rem' }}>
-            None expiring within 8 hours
-          </div>
-        )}
         {pins.map((h, i) => {
           const crit = h <= 2;
           return (

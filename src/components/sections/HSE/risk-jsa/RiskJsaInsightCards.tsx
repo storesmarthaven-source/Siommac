@@ -99,7 +99,7 @@ function StatDonut({ total, centerLabel, segments }: {
 function StatBars({ bars }: { bars: { label: string; value: number; color: string }[] }): VNode {
   const max = Math.max(1, ...bars.map(b => b.value));
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '11px' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {bars.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>No data yet</div>}
       {bars.map(b => (
         <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
