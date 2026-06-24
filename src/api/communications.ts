@@ -317,6 +317,8 @@ export interface PostMessageArgs extends Record<string, unknown> {
   threadId:      string;
   body:          string;
   attachmentIds?: string[];
+  replyToPostId?: string | null;
+  priority?:      'normal' | 'important' | 'urgent' | 'action_required';
 }
 
 export function usePostMessage() {

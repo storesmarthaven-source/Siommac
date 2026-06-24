@@ -17,9 +17,10 @@ import {
   usePostMessage, useArchiveThread, useCommsSummary,
   useThread, useAddThreadParticipants, useRemoveThreadParticipant, useMessageRecipients,
   useMessageAttachmentUploadUrl, useCreateMessageAttachment,
+  usePinMessage,
   ThreadAccessError,
   type MessageThreadListItem, type MessageParticipantProfile, type ThreadFilters,
-  type MessageAttachment,
+  type MessageAttachment, type MessagePostRow,
 } from '@api/communications';
 import { useSessionStore } from '@store/session';
 import { useCan } from '@lib/permissions';
@@ -77,6 +78,42 @@ function AttachChip({ a }: { a: MessageAttachment }): VNode {
       </span>
       {a.sizeBytes != null && <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>{fmtBytes(a.sizeBytes)}</span>}
     </Tag>
+  );
+}
+
+function moduleLabel(m: string | null | undefined): string {
+  return m ? m.replace(/^hse[._-]?/i, '').replace(/[_-]/g, ' ').toUpperCase() : '';
+}
+
+type BubbleTone = 'admin' | 'outgoing' | 'incoming';
+function messageTone(post: MessagePostRow, myId: string | null): BubbleTone {
+  const r = (post.authorRoleKey ?? '').toLowerCase();
+  if (['superadmin', 'super_admin', 'system_admin', 'admin'].includes(r)) return 'admin';
+  if (post.authorUserId && post.authorUserId === myId)                     return 'outgoing';
+  return 'incoming';
+}
+/** Centered timeline label for a system-event post (from its payload). */
+function systemEventLabel(post: MessagePostRow): string {
+  const p = (post.systemEventPayload ?? {}) as Record<string, unknown>;
+  const s = (k: string) => String(p[k] ?? '');
+  switch (post.systemEventType) {
+    case 'participant_added':   return `${s('addedUserName')} was added to the conversation by ${s('actorName')}`;
+    case 'participant_removed': return `${s('removedUserName')} was removed by ${s('actorName')}`;
+    case 'participant_left':    return `${s('userName')} left the conversation`;
+    case 'thread_archived':     return 'Conversation archived';
+    case 'thread_reopened':     return 'Conversation reopened';
+    default:                    return post.body || 'Conversation updated';
+  }
+}
+
+/** Small pill used for thread-row tags (module / group / action-required / files). */
+function TagChip({ label, tone = 'info' }: { label: string; tone?: 'info' | 'priority' | 'danger' }): VNode {
+  const c = tone === 'priority' ? { bg: '#fff7ed', fg: '#b45309' }
+          : tone === 'danger'   ? { bg: '#fff1f2', fg: '#be123c' }
+          :                       { bg: '#eff5ff', fg: '#1d6be3' };
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', height: '18px', padding: '0 7px',
+      borderRadius: '999px', background: c.bg, color: c.fg, fontSize: '0.62rem', fontWeight: 700 }}>{label}</span>
   );
 }
 
@@ -166,6 +203,10 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
           const firstP     = threadAvatarParticipant(t.participants, myId);
           const ava        = firstP?.displayName ?? firstP?.username ?? '?';
           const iniText    = ((ava[0] ?? '').toUpperCase());
+          const failed     = (t.failedSendCount ?? 0) > 0;
+          const preview    = t.hasDraft ? `Draft: ${t.draftPreview ?? ''}` : failed ? 'Message failed to send' : (t.lastPostPreview ?? '');
+          const previewColor = t.hasDraft ? '#b45309' : failed ? 'var(--danger)' : 'var(--text-muted)';
+          const hasTags    = t.actionRequired || t.sourceModule || t.threadType === 'group' || t.hasAttachments || failed;
           return (
             <div key={t.id} onClick={() => onSelect(t)}
               style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer',
@@ -173,31 +214,46 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
                 borderLeft: isSelected ? '3px solid var(--siomac-navy)'
                   : isUnread ? '3px solid var(--siomac-gold, #FFB712)' : '3px solid transparent' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                   background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>
+                  {firstP?.profileImage
+                    ? <img src={firstP.profileImage} alt={ava} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ flex: 1, minWidth: 0, fontSize: '0.83rem', fontWeight: isUnread ? 700 : 500,
                       color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {name}
+                      {t.isPinned && <i class="fas fa-thumbtack" title="Pinned" style={{ fontSize: '0.58rem', color: 'var(--text-muted)', marginLeft: '6px' }} />}
+                      {t.isMuted && <i class="fas fa-bell-slash" title="Muted" style={{ fontSize: '0.58rem', color: 'var(--text-muted)', marginLeft: '6px' }} />}
                     </span>
                     <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', flexShrink: 0 }}>
                       {relTime(t.lastPostAt ?? t.createdAt)}
                     </span>
-                    {isUnread && (
+                    {isUnread ? (
                       <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
                         background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                         {t.unreadCount > 9 ? '9+' : t.unreadCount}
                       </span>
-                    )}
+                    ) : failed ? (
+                      <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 700, color: 'var(--danger)' }}>Failed</span>
+                    ) : null}
                   </div>
-                  <div style={{ fontSize: '0.71rem', color: 'var(--text-muted)', overflow: 'hidden',
-                    textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
-                    {t.lastPostPreview ?? ''}
+                  <div style={{ fontSize: '0.71rem', color: previewColor, overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px', fontWeight: t.hasDraft ? 700 : 400 }}>
+                    {preview}
                   </div>
+                  {hasTags && (
+                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px', flexWrap: 'wrap' }}>
+                      {t.actionRequired && <TagChip label="Action Required" tone="priority" />}
+                      {failed && <TagChip label="Retry" tone="danger" />}
+                      {t.sourceModule && <TagChip label={moduleLabel(t.sourceModule)} />}
+                      {t.threadType === 'group' && <TagChip label="Group" />}
+                      {t.hasAttachments && <TagChip label="📎 Files" />}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -238,6 +294,8 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   const markRead    = useMarkThreadRead();
   const getUploadUrl = useMessageAttachmentUploadUrl();
   const createAttach = useCreateMessageAttachment();
+  const pinMsg       = usePinMessage();
+  const [replyTo, setReplyTo] = useState<MessagePostRow | null>(null);
 
   // Mark read when thread opens
   useEffect(() => {
@@ -302,10 +360,11 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   function handleSend() {
     if (!canSend) return;
     const attachmentIds = pending.filter(p => p.state === 'done' && p.attachId).map(p => p.attachId as string);
-    postMsg.mutate({ threadId: thread.id, body: body.trim() || '​', attachmentIds: attachmentIds.length ? attachmentIds : undefined }, {
+    postMsg.mutate({ threadId: thread.id, body: body.trim() || '​', attachmentIds: attachmentIds.length ? attachmentIds : undefined, replyToPostId: replyTo?.id ?? null }, {
       onSuccess: () => {
         setBody('');
         setPending([]);
+        setReplyTo(null);
       },
     });
   }
@@ -392,14 +451,15 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
         )}
 
         {!accessErr && posts.map(post => {
+          const isSystemEvent = post.postType === 'system_event' || (post.isSystem && !!post.systemEventType);
           const isSystem   = post.isSystem;
           const isDeleted  = post.deletedAt != null;
           const isEdited   = post.editedAt != null;
           const createdAt  = post.createdAt;
           const authorName = post.authorName ?? (isSystem ? 'System' : 'Unknown');
-          const profileImg: string | null = null;
           const iniText    = ((authorName[0] ?? '').toUpperCase());
           const attachments: MessageAttachment[] = Array.isArray(post.attachments) ? post.attachments : [];
+          const tone       = messageTone(post, myId);
 
           const relTime = (() => {
             const d = Date.now() - new Date(createdAt).getTime();
@@ -411,26 +471,37 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
             return new Date(createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
           })();
 
-          if (isSystem) {
+          // Centered timeline announcement (participant added/removed/left, etc.).
+          if (isSystemEvent) {
             return (
               <div key={post.id} style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-surface)',
-                  padding: '3px 12px', borderRadius: '20px', border: '1px solid var(--border)' }}>
-                  {post.body}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.72rem', color: 'var(--text-muted)',
+                  background: 'var(--bg-surface)', padding: '4px 13px', borderRadius: '999px', border: '1px solid var(--border)' }}>
+                  <i class="fas fa-circle-info" style={{ fontSize: '0.6rem' }} /> {systemEventLabel(post)}
                 </span>
               </div>
             );
           }
+          if (isSystem) {
+            return (
+              <div key={post.id} style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-surface)',
+                  padding: '3px 12px', borderRadius: '20px', border: '1px solid var(--border)' }}>{post.body}</span>
+              </div>
+            );
+          }
+
+          const bubbleBg = isDeleted ? 'var(--bg-surface)' : tone === 'admin' ? 'var(--siomac-navy)' : tone === 'outgoing' ? '#f0edff' : 'var(--bg-surface)';
+          const bubbleFg = tone === 'admin' && !isDeleted ? '#fff' : 'var(--siomac-navy)';
+          const bubbleBd = tone === 'admin' ? 'var(--siomac-navy)' : tone === 'outgoing' ? '#e7e0ff' : 'var(--border)';
 
           return (
-            <div key={post.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+            <div key={post.id} class="msg-row" style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <div style={{ width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
                 background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {profileImg
-                  ? <img src={profileImg} alt={iniText}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                  : <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>
-                }
+                {post.authorProfileImage
+                  ? <img src={post.authorProfileImage} alt={iniText} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
@@ -438,16 +509,39 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                   <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{relTime}</span>
                   {isEdited && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(edited)</span>}
                 </div>
-                <div style={{ fontSize: '0.83rem', color: isDeleted ? 'var(--text-muted)' : 'var(--siomac-navy)',
+
+                {post.priority === 'action_required' && !isDeleted && (
+                  <div style={{ marginBottom: '5px', fontSize: '0.7rem', fontWeight: 700, color: '#b45309',
+                    background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '5px 9px' }}>⚠ Action required</div>
+                )}
+                {post.replyToPost && (
+                  <div style={{ marginBottom: '5px', fontSize: '0.7rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--siomac-navy)',
+                    background: 'rgba(27,45,85,0.04)', borderRadius: '0 8px 8px 0', padding: '5px 9px' }}>
+                    <strong style={{ display: 'block', color: 'var(--siomac-navy)', fontSize: '0.66rem' }}>Replying to {post.replyToPost.authorName ?? 'message'}</strong>
+                    {post.replyToPost.preview}
+                  </div>
+                )}
+
+                <div style={{ fontSize: '0.83rem', color: isDeleted ? 'var(--text-muted)' : bubbleFg,
                   lineHeight: 1.5, fontStyle: isDeleted ? 'italic' : 'normal',
-                  background: 'var(--bg-surface)', borderRadius: '10px', padding: '8px 12px',
-                  border: '1px solid var(--border)' }}>
+                  background: bubbleBg, borderRadius: '10px', padding: '8px 12px', border: `1px solid ${bubbleBd}` }}>
                   {isDeleted ? 'This message was deleted.' : post.body}
                 </div>
-                {/* Attachment chips */}
+
                 {attachments.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
                     {attachments.map(a => <AttachChip key={a.id} a={a} />)}
+                  </div>
+                )}
+
+                {!isDeleted && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '0.66rem', color: 'var(--text-muted)' }}>
+                    {post.isPinned && <span><i class="fas fa-thumbtack" /> Pinned</span>}
+                    {(post.readByCount ?? 0) > 0 && <span>Read by {post.readByCount}</span>}
+                    {post.deliveryStatus && <span style={{ textTransform: 'capitalize' }}>{post.deliveryStatus}</span>}
+                    <button onClick={() => setReplyTo(post)} style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Reply</button>
+                    <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'personal' })}
+                      style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin</button>
                   </div>
                 )}
               </div>
@@ -459,6 +553,17 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
       {/* Composer */}
       {!thread.isArchived && !accessErr && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          {/* Reply target preview */}
+          {replyTo && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', borderLeft: '3px solid var(--siomac-navy)',
+              background: 'rgba(27,45,85,0.04)', borderRadius: '0 8px 8px 0', padding: '6px 10px' }}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <strong style={{ display: 'block', color: 'var(--siomac-navy)', fontSize: '0.68rem' }}>Replying to {replyTo.authorName ?? 'message'}</strong>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{(replyTo.body ?? '').slice(0, 80)}</span>
+              </div>
+              <button onClick={() => setReplyTo(null)} style={{ border: 0, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+            </div>
+          )}
           {/* Pending attachment chips */}
           {pending.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
