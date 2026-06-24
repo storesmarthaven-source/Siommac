@@ -62,7 +62,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
       setOpen(true);
 
       // Fetch available methods
-      apiPost<StepUpOptions>('/api/auth/step-up/options', {}).then((res) => {
+      apiPost<StepUpOptions>('auth/step-up/options', {}).then((res) => {
         if (res.success) {
           setOptions(res);
         } else {
@@ -95,7 +95,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
     }
     setLoading(true);
     setError(null);
-    const res = await apiPost<StepUpVerifyResponse>('/api/auth/step-up/verify', {
+    const res = await apiPost<StepUpVerifyResponse>('auth/step-up/verify', {
       method: 'totp',
       code:   totpCode.trim(),
     });
@@ -116,7 +116,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
       const authResponse = await startAuthentication({
         optionsJSON: options.webauthn as unknown as Parameters<typeof startAuthentication>[0]['optionsJSON'],
       });
-      const res = await apiPost<StepUpVerifyResponse>('/api/auth/step-up/verify', {
+      const res = await apiPost<StepUpVerifyResponse>('auth/step-up/verify', {
         method:   'webauthn',
         response: authResponse as unknown as Record<string, unknown>,
       });

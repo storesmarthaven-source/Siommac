@@ -135,7 +135,7 @@ export const securityKeys = {
 export function useTotpStatus(enabled = true) {
   return useQuery({
     queryKey: securityKeys.totp(),
-    queryFn:  () => apiPost<TotpStatusResponse>('/api/auth/2fa/status', {}),
+    queryFn:  () => apiPost<TotpStatusResponse>('auth/2fa/status', {}),
     enabled,
     staleTime: 30_000,
   });
@@ -147,7 +147,7 @@ export function useTotpStatus(enabled = true) {
  */
 export function useStartTotpSetup() {
   return useMutation({
-    mutationFn: () => apiPost<TotpSetupResponse>('/api/auth/2fa/setup', {}),
+    mutationFn: () => apiPost<TotpSetupResponse>('auth/2fa/setup', {}),
   });
 }
 
@@ -159,7 +159,7 @@ export function useConfirmTotp() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (code: string) =>
-      apiPost<TotpConfirmResponse>('/api/auth/2fa/confirm', { code }),
+      apiPost<TotpConfirmResponse>('auth/2fa/confirm', { code }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.totp() });
     },
@@ -174,7 +174,7 @@ export function useDisableTotp() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (code: string) =>
-      apiPost<TotpDisableResponse>('/api/auth/2fa/disable', { code }),
+      apiPost<TotpDisableResponse>('auth/2fa/disable', { code }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.totp() });
     },
@@ -189,7 +189,7 @@ export function useRegenerateBackupCodes() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (code: string) =>
-      apiPost<TotpRegenResponse>('/api/auth/2fa/backup-codes/regenerate', { code }),
+      apiPost<TotpRegenResponse>('auth/2fa/backup-codes/regenerate', { code }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.totp() });
     },
@@ -204,7 +204,7 @@ export function useRegenerateBackupCodes() {
 export function usePasskeys(enabled = true) {
   return useQuery({
     queryKey: securityKeys.passkeys(),
-    queryFn:  () => apiPost<PasskeyListResponse>('/api/webauthn/credentials/list', {}),
+    queryFn:  () => apiPost<PasskeyListResponse>('webauthn/credentials/list', {}),
     enabled,
     staleTime: 30_000,
     select: (data) => data.credentials ?? [],
@@ -222,7 +222,7 @@ export function useRegisterPasskey() {
     mutationFn: async (label?: string) => {
       // 1. Get registration options from server
       const optionsRes = await apiPost<PasskeyRegisterOptionsResponse>(
-        '/api/webauthn/register/options',
+        'webauthn/register/options',
         {},
       );
       if (!optionsRes.success || !optionsRes.options) {
@@ -235,7 +235,7 @@ export function useRegisterPasskey() {
       });
 
       // 3. Verify with server
-      return apiPost<PasskeyRegisterVerifyResponse>('/api/webauthn/register/verify', {
+      return apiPost<PasskeyRegisterVerifyResponse>('webauthn/register/verify', {
         response: registrationResponse as unknown as Record<string, unknown>,
         ...(label ? { label } : {}),
       });
@@ -254,7 +254,7 @@ export function useRenamePasskey() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: { credentialId: string; label: string }) =>
-      apiPost<PasskeyMutateResponse>('/api/webauthn/credentials/rename', payload),
+      apiPost<PasskeyMutateResponse>('webauthn/credentials/rename', payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
     },
@@ -270,7 +270,7 @@ export function useDeletePasskey() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (credentialId: string) =>
-      apiPost<PasskeyMutateResponse>('/api/webauthn/credentials/delete', { credentialId }),
+      apiPost<PasskeyMutateResponse>('webauthn/credentials/delete', { credentialId }),
     onSuccess: (data) => {
       if (data.success) {
         void qc.invalidateQueries({ queryKey: securityKeys.passkeys() });
@@ -289,7 +289,7 @@ export function useDeletePasskey() {
 export function useTrustedDevices(enabled = true) {
   return useQuery({
     queryKey: securityKeys.trustedDevices(),
-    queryFn:  () => apiPost<TrustedDevicesListResponse>('/api/auth/trusted-devices/list', {}),
+    queryFn:  () => apiPost<TrustedDevicesListResponse>('auth/trusted-devices/list', {}),
     enabled,
     staleTime: 30_000,
     select: (data) => data.devices ?? [],
@@ -304,7 +304,7 @@ export function useRevokeTrustedDevice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (trustedDeviceId: string) =>
-      apiPost<TrustedDeviceMutateResponse>('/api/auth/trusted-devices/revoke', { trustedDeviceId }),
+      apiPost<TrustedDeviceMutateResponse>('auth/trusted-devices/revoke', { trustedDeviceId }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.trustedDevices() });
     },
@@ -319,7 +319,7 @@ export function useRevokeAllTrustedDevices() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
-      apiPost<TrustedDeviceMutateResponse>('/api/auth/trusted-devices/revoke-all', {}),
+      apiPost<TrustedDeviceMutateResponse>('auth/trusted-devices/revoke-all', {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: securityKeys.trustedDevices() });
     },
@@ -356,7 +356,7 @@ export function useAdminUserSecurityStatus(userId: string, enabled = true) {
   return useQuery({
     queryKey: adminSecurityKeys.userStatus(userId),
     queryFn:  () => apiPost<AdminUserSecurityStatusResponse>(
-      '/api/admin/security/users/status',
+      'admin/security/users/status',
       { userId },
     ),
     enabled: enabled && !!userId,
@@ -370,7 +370,7 @@ export function useAdminRevokeUserPasskeys() {
   return useMutation({
     mutationFn: (userId: string) =>
       apiPost<AdminRevokeMutateResponse>(
-        '/api/admin/security/users/passkeys/revoke-all',
+        'admin/security/users/passkeys/revoke-all',
         { userId },
       ),
     onSuccess: (_data, userId) => {
@@ -385,7 +385,7 @@ export function useAdminRevokeUserTrustedDevices() {
   return useMutation({
     mutationFn: (userId: string) =>
       apiPost<AdminRevokeMutateResponse>(
-        '/api/admin/security/users/trusted-devices/revoke-all',
+        'admin/security/users/trusted-devices/revoke-all',
         { userId },
       ),
     onSuccess: (_data, userId) => {
@@ -432,7 +432,7 @@ export interface SecurityPolicyUpdateResponse { success: boolean; code?: string;
 export function useSecurityPolicy(enabled = true) {
   return useQuery({
     queryKey: ['security', 'policy'] as const,
-    queryFn:  () => apiPost<SecurityPolicyResponse>('/api/auth/security/policy', {}),
+    queryFn:  () => apiPost<SecurityPolicyResponse>('auth/security/policy', {}),
     enabled,
     staleTime: 30_000,
   });
@@ -448,7 +448,7 @@ export function useUpdateSecurityPolicy() {
         ...(p.requireMfaForAdmin      ? ['admin']      : []),
         ...(p.requireMfaForManager    ? ['manager']    : []),
       ];
-      return apiPost<SecurityPolicyUpdateResponse>('/api/admin/security/policy/update', {
+      return apiPost<SecurityPolicyUpdateResponse>('admin/security/policy/update', {
         trustedDevicesEnabled:    p.trustedDevicesEnabled,
         trustedDeviceTtlByRole: {
           employee:   p.trustedDeviceDefaultDays,
