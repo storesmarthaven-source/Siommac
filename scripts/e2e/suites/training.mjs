@@ -46,17 +46,20 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
+    // NOTE: a supabase-js builder is a thenable but has no `.catch`; guard each
+    // delete with try/catch (matches the inspections suite) so one failure can't
+    // abort the rest and leak TEST-E2E rows.
     const refs = [...ctx.certRefs, ...ctx.assignmentRefs];
-    if (refs.length) await sb.from('app_events').delete().in('source_entity_id', refs).catch(() => {});
-    await sb.from('notifications').delete().ilike('title', '%Training%').catch(() => {});
+    try { if (refs.length) await sb.from('app_events').delete().in('source_entity_id', refs); } catch {}
+    try { await sb.from('notifications').delete().ilike('title', '%Training%'); } catch {}
     // tag sweeps (belt-and-suspenders) + tracked ids
-    await sb.from('hse_worker_certificates').delete().ilike('course_name', `%${TAG}%`).catch(() => {});
-    if (ctx.certIds.length) await sb.from('hse_worker_certificates').delete().in('id', ctx.certIds).catch(() => {});
-    if (ctx.assignmentIds.length) await sb.from('hse_training_assignments').delete().in('id', ctx.assignmentIds).catch(() => {});
-    if (ctx.requirementIds.length) await sb.from('hse_training_requirements').delete().in('id', ctx.requirementIds).catch(() => {});
-    if (ctx.courseIds.length) await sb.from('hse_training_courses').delete().in('id', ctx.courseIds).catch(() => {});
-    await sb.from('hse_training_competencies').delete().ilike('name', `%${TAG}%`).catch(() => {});
-    if (ctx.competencyIds.length) await sb.from('hse_training_competencies').delete().in('id', ctx.competencyIds).catch(() => {});
+    try { await sb.from('hse_worker_certificates').delete().ilike('course_name', `%${TAG}%`); } catch {}
+    try { if (ctx.certIds.length) await sb.from('hse_worker_certificates').delete().in('id', ctx.certIds); } catch {}
+    try { if (ctx.assignmentIds.length) await sb.from('hse_training_assignments').delete().in('id', ctx.assignmentIds); } catch {}
+    try { if (ctx.requirementIds.length) await sb.from('hse_training_requirements').delete().in('id', ctx.requirementIds); } catch {}
+    try { if (ctx.courseIds.length) await sb.from('hse_training_courses').delete().in('id', ctx.courseIds); } catch {}
+    try { await sb.from('hse_training_competencies').delete().ilike('name', `%${TAG}%`); } catch {}
+    try { if (ctx.competencyIds.length) await sb.from('hse_training_competencies').delete().in('id', ctx.competencyIds); } catch {}
   });
 
   // ── Setup: competency / course / requirement ──────────────────────────────────
