@@ -12,7 +12,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, withCounts, NewMenu, Pagination, usePagination, Drawer,
+  PageHeader, TabBar, withCounts, NewMenu, Pagination, usePagination,
   type AreaTab,
 } from '@ui';
 import { hsePill, HSE_SITES } from './types';
@@ -29,7 +29,7 @@ import {
 import { NewPermitWizard } from './ptw/dialogs/NewPermitWizard';
 import { PermitDetailDrawer } from './ptw/PermitDetailDrawer';
 import { PermitTemplateDialog } from './ptw/dialogs/PermitTemplateDialog';
-import { PtwRightPanel, PtwSignalsStrip, PtwSignalsChips, type PtwChipKey } from './ptw/PtwRightPanel';
+import { PtwRightPanel } from './ptw/PtwRightPanel';
 import { PtwInsightCards } from './ptw/PtwInsightCards';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -94,19 +94,18 @@ function typeIcon(permitType: string): string {
 
 // ── Permits table tab ─────────────────────────────────────────────────────────
 
-function PermitsTab({ statusFilter, expiringSoon, onOpenPermit }: { statusFilter?: string; expiringSoon?: boolean; onOpenPermit: (p: PermitListRow) => void }): VNode {
+function PermitsTab({ statusFilter, onOpenPermit }: { statusFilter?: string; onOpenPermit: (p: PermitListRow) => void }): VNode {
   const [search,    setSearch]    = useState('');
   const [type,      setType]      = useState('');
   const [site,      setSite]      = useState('');
   const [riskLevel, setRiskLevel] = useState('');
 
   const { data, isLoading } = usePermits({
-    status:       statusFilter ?? undefined,
-    permitType:   type         || undefined,
-    siteId:       site         || undefined,
-    riskLevel:    riskLevel    || undefined,
-    search:       search       || undefined,
-    expiringSoon: expiringSoon || undefined,
+    status:     statusFilter ?? undefined,
+    permitType: type         || undefined,
+    siteId:     site         || undefined,
+    riskLevel:  riskLevel    || undefined,
+    search:     search       || undefined,
   });
 
   const permits = data?.data ?? [];
@@ -179,23 +178,19 @@ function PermitsTab({ statusFilter, expiringSoon, onOpenPermit }: { statusFilter
           <table class="vt-table">
             <thead>
               <tr>
-                <th style={{ width: '120px' }}>Permit No</th>
-                <th style={{ width: '120px' }}>Type</th>
+                <th style={{ width: '130px' }}>Permit No</th>
                 <th>Title</th>
-                <th style={{ width: '140px' }}>Site / Location</th>
                 <th style={{ width: '120px' }}>Status</th>
+                <th style={{ width: '120px' }}>Ends</th>
                 <th style={{ width: '80px' }}>Risk</th>
-                <th style={{ width: '110px' }}>Start</th>
-                <th style={{ width: '110px' }}>End</th>
-                <th style={{ width: '60px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading permits…</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>Loading permits…</td></tr>
               )}
               {!isLoading && permits.length === 0 && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No permits match.</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '28px', color: 'var(--text-muted)' }}>No permits match.</td></tr>
               )}
               {pg.pageItems.map((p: PermitListRow) => (
                 <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => onOpenPermit(p)}>
@@ -204,30 +199,19 @@ function PermitsTab({ statusFilter, expiringSoon, onOpenPermit }: { statusFilter
                     <div class="vt-cell-subtext">{fmtDt(p.created_at).split(',')[0]}</div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <i class={`fas ${typeIcon(p.permit_type)}`} style={{ color: 'var(--siomac-navy)', opacity: 0.6, fontSize: '0.78rem', flexShrink: 0 }} />
-                      <span style={{ fontSize: '0.78rem' }}>{p.permit_type.replace(/_/g, ' ')}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <i class={`fas ${typeIcon(p.permit_type)}`} style={{ color: 'var(--siomac-navy)', opacity: 0.55, fontSize: '0.82rem', flexShrink: 0 }} title={p.permit_type.replace(/_/g, ' ')} />
+                      <div style={{ minWidth: 0 }}>
+                        <span class="vt-cell-name">{p.title}</span>
+                        <div class="vt-cell-subtext">
+                          {[p.permit_type.replace(/_/g, ' '), p.site_id, p.specific_location].filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td>
-                    <span class="vt-cell-name">{p.title}</span>
-                    {p.specific_location && <div class="vt-cell-subtext">{p.specific_location}</div>}
-                  </td>
-                  <td class="hse-muted" style={{ fontSize: '0.76rem' }}>{p.site_id ?? '—'}</td>
                   <td>{statusPill(p.status)}</td>
+                  <td class="hse-muted" style={{ fontSize: '0.74rem' }}>{fmtDt(p.end_datetime)}</td>
                   <td>{riskPill(p.risk_level)}</td>
-                  <td class="hse-muted" style={{ fontSize: '0.71rem' }}>{fmtDt(p.start_datetime)}</td>
-                  <td class="hse-muted" style={{ fontSize: '0.71rem' }}>{fmtDt(p.end_datetime)}</td>
-                  <td>
-                    <button
-                      class="inc-action-btn blue"
-                      style={{ padding: '3px 8px', fontSize: '0.7rem' }}
-                      onClick={e => { e.stopPropagation(); onOpenPermit(p); }}
-                      title="View permit"
-                    >
-                      Open
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -451,15 +435,6 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
   const [templateDialog,  setTemplateDialog]  = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<PermitTemplate | null>(null);
 
-  // ── Signals layout preview — temporary A/B/C/D switcher (remove after pick) ──
-  const [signalsLayout, setSignalsLayout] = useState<'A' | 'B' | 'C' | 'D'>(
-    () => ((typeof localStorage !== 'undefined' && localStorage.getItem('ptw_signals_layout')) as 'A' | 'B' | 'C' | 'D' | null) || 'A',
-  );
-  const pickLayout = (l: 'A' | 'B' | 'C' | 'D') => { setSignalsLayout(l); try { localStorage.setItem('ptw_signals_layout', l); } catch { /* ignore */ } };
-  const [signalsOpen, setSignalsOpen] = useState(false);   // B: slide-over open
-  const [railOpen,    setRailOpen]    = useState(true);    // C: rail expanded
-  const [chipFilter,  setChipFilter]  = useState<PtwChipKey | null>(null);  // D: active chip
-
   // Stats for meta chips in PageHeader
   const { data: statsRes } = usePermitStats();
   const stats = statsRes?.data;
@@ -518,82 +493,19 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
 
       {/* ── Tab content ── */}
 
-      {/* Register tabs: signals layout preview (A/B/C/D) + table */}
-      {(active === 'permits' || active === 'approvals') && (() => {
-        const LBL = { A: 'Strip', B: 'Slide-over', C: 'Rail', D: 'Chips' } as const;
-        const table = (statusFilter?: string, expiringSoon?: boolean): VNode =>
-          active === 'approvals'
-            ? <PermitsTab statusFilter="awaiting_approval" onOpenPermit={setSelectedPermit} />
-            : <PermitsTab statusFilter={statusFilter} expiringSoon={expiringSoon} onOpenPermit={setSelectedPermit} />;
-
-        const switcher = (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', padding: '8px 12px',
-            background: 'var(--bg-subtle, #f4f6fa)', border: '1px dashed var(--border)', borderRadius: '10px' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-              <i class="fas fa-flask" style={{ marginRight: '5px' }} />Signals layout preview
-            </span>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
-              {(['A', 'B', 'C', 'D'] as const).map(l => (
-                <button key={l} type="button" onClick={() => pickLayout(l)}
-                  style={{ fontSize: '0.72rem', fontWeight: 600, padding: '4px 10px', borderRadius: '7px', cursor: 'pointer',
-                    border: '1px solid ' + (signalsLayout === l ? 'var(--siomac-navy)' : 'var(--border)'),
-                    background: signalsLayout === l ? 'var(--siomac-navy)' : 'var(--bg-card)',
-                    color: signalsLayout === l ? '#fff' : 'var(--text-body)' }}>
-                  {l} · {LBL[l]}
-                </button>
-              ))}
-            </div>
+      {/* Register tabs: trimmed register (left) + navy signals rail (right) */}
+      {(active === 'permits' || active === 'approvals') && (
+        <div class="hse-main-grid">
+          <div class="hse-left-col">
+            {active === 'permits'
+              ? <PermitsTab onOpenPermit={setSelectedPermit} />
+              : <PermitsTab statusFilter="awaiting_approval" onOpenPermit={setSelectedPermit} />}
           </div>
-        );
-
-        let body: VNode;
-        if (signalsLayout === 'A') {
-          body = (
-            <>
-              <div style={{ marginBottom: '16px' }}><PtwSignalsStrip onOpenPermit={setSelectedPermit} /></div>
-              {table()}
-            </>
-          );
-        } else if (signalsLayout === 'B') {
-          body = (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-                <button class="hse-btn" type="button" onClick={() => setSignalsOpen(true)}><i class="fas fa-bell" /> Signals</button>
-              </div>
-              {table()}
-              {signalsOpen && (
-                <Drawer open title="Signals" onClose={() => setSignalsOpen(false)}>
-                  <PtwRightPanel onOpenPermit={p => { setSelectedPermit(p); setSignalsOpen(false); }} />
-                </Drawer>
-              )}
-            </>
-          );
-        } else if (signalsLayout === 'C') {
-          body = (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-                <button class="hse-btn" type="button" onClick={() => setRailOpen(o => !o)}>
-                  <i class={`fas ${railOpen ? 'fa-angles-right' : 'fa-angles-left'}`} /> {railOpen ? 'Hide signals' : 'Show signals'}
-                </button>
-              </div>
-              <div class="hse-main-grid" style={railOpen ? undefined : { gridTemplateColumns: '1fr' }}>
-                <div class="hse-left-col">{table()}</div>
-                {railOpen && <div class="hse-right-col"><PtwRightPanel onOpenPermit={setSelectedPermit} /></div>}
-              </div>
-            </>
-          );
-        } else {
-          const st = chipFilter && chipFilter !== 'expiring' ? chipFilter : undefined;
-          body = (
-            <>
-              <div style={{ marginBottom: '14px' }}><PtwSignalsChips active={chipFilter} onPick={setChipFilter} /></div>
-              {table(st, chipFilter === 'expiring')}
-            </>
-          );
-        }
-
-        return <>{switcher}{body}</>;
-      })()}
+          <div class="hse-right-col">
+            <PtwRightPanel onOpenPermit={setSelectedPermit} />
+          </div>
+        </div>
+      )}
 
       {active === 'archive' && (
         <PermitsTab statusFilter="archived" onOpenPermit={p => setSelectedPermit(p)} />
