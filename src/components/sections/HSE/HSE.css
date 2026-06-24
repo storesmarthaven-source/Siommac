@@ -503,10 +503,10 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   border-radius: 9px; font-size: 0.9rem; flex-shrink: 0;
   background: rgba(255,255,255,.12); color: rgba(255,255,255,.7);
 }
-.ppe-signal > i.is-danger { background: rgba(239,68,68,.2);  color: #fca5a5; }
-.ppe-signal > i.is-warn   { background: rgba(245,158,11,.2); color: #fcd34d; }
-.ppe-signal > i.is-ok     { background: rgba(34,197,94,.2);  color: #86efac; }
-.ppe-signal > i.is-info   { background: rgba(96,165,250,.2); color: #93c5fd; }
+.ppe-signal > i.is-danger { background: #ef4444; color: #fff; }
+.ppe-signal > i.is-warn   { background: #f59e0b; color: #fff; }
+.ppe-signal > i.is-ok     { background: #22c55e; color: #fff; }
+.ppe-signal > i.is-info   { background: #3b82f6; color: #fff; }
 
 .ppe-signal-text { min-width: 0; }
 .ppe-signal strong {
@@ -519,16 +519,16 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   font-weight: 400; line-height: 1.35; margin-top: 2px;
 }
 
-/* Tags — translucent, same palette as the icon chips */
+/* Tags — solid, same palette as the icon chips, white text */
 .ppe-signal-tag {
   font-size: 0.6rem; font-weight: 600; border-radius: 6px; padding: 3px 8px; white-space: nowrap;
-  background: rgba(255,255,255,.12); color: rgba(255,255,255,.6); border: none;
+  background: rgba(255,255,255,.18); color: #fff; border: none;
 }
-.ppe-signal-tag.is-high  { background: rgba(239,68,68,.22);  color: #fca5a5; }
+.ppe-signal-tag.is-high  { background: #ef4444; color: #fff; }
 .ppe-signal-tag.is-stock,
-.ppe-signal-tag.is-due   { background: rgba(245,158,11,.22); color: #fcd34d; }
-.ppe-signal-tag.is-ok    { background: rgba(34,197,94,.22);  color: #86efac; }
-.ppe-signal-tag.is-info  { background: rgba(96,165,250,.22); color: #93c5fd; }
+.ppe-signal-tag.is-due   { background: #f59e0b; color: #fff; }
+.ppe-signal-tag.is-ok    { background: #22c55e; color: #fff; }
+.ppe-signal-tag.is-info  { background: #3b82f6; color: #fff; }
 
 @media (max-width: 900px) { .ppe-screen-grid { grid-template-columns: 1fr; } }
 
@@ -3072,23 +3072,26 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
    light .ui-stat-card-header bar capping the navy body. Lives here (not
    uikit-layout.css) because HSE.css owns the authoritative .owq-* rules in the
    winning cascade layer. */
-/* Header is the light bar from .ui-stat-card-header (default light variant):
-   #f8fafe background, navy title + dark tabs, bottom border. Bleeds to the panel
-   edges and caps the navy body. (Body title/tab colours fall back to the light
-   .owq-* base — only layout + the larger title are set here.) */
+/* Header is a lighter-navy bar capping the navy body. Title + tabs stay light
+   (white) for contrast. */
 .ppe-signals-panel .owq-panel-header {
   margin: -16px -16px 14px; padding: 12px 16px 0;
-  background: #f8fafe;
-  border-bottom: 1px solid var(--border);
+  background: rgb(44, 61, 97);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px 16px 0 0;
 }
-.ppe-signals-panel .owq-panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 11px; }
+.ppe-signals-panel .owq-panel-title { color: rgba(255,255,255,0.95); font-size: 1rem; font-weight: 700; margin-bottom: 11px; }
+.ppe-signals-panel .owq-panel-title i { color: rgba(255,255,255,0.6); }
+.ppe-signals-panel .owq-panel-count { background: rgba(255,255,255,0.18); }
 /* All tabs on a single line — equal-width, compact, no wrap. */
 .ppe-signals-panel .owq-panel-tabs { flex-wrap: nowrap; gap: 2px; }
-.ppe-signals-panel .owq-tab { flex: 1 1 0; min-width: 0; justify-content: center; padding: 7px 6px; font-size: 0.7rem; white-space: nowrap; }
+.ppe-signals-panel .owq-tab { flex: 1 1 0; min-width: 0; justify-content: center; color: rgba(255,255,255,0.7); padding: 7px 6px; font-size: 0.7rem; white-space: nowrap; }
 .ppe-signals-panel .owq-tab > span:first-of-type { overflow: hidden; text-overflow: ellipsis; }
 .ppe-signals-panel .owq-tab i { color: inherit; flex-shrink: 0; }
-.ppe-signals-panel .owq-tab-count { flex-shrink: 0; }
+.ppe-signals-panel .owq-tab-count { flex-shrink: 0; background: rgba(255,255,255,0.14); }
+.ppe-signals-panel .owq-tab:hover { color: #fff; }
+.ppe-signals-panel .owq-tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.85); }
+.ppe-signals-panel .owq-tab.active .owq-tab-count { background: rgba(255,255,255,0.26); }
 .owq-panel-navy .owq-tab.active .owq-tab-count { background: rgba(255,255,255,0.22); }
 .owq-panel-navy .owq-item { border-bottom-color: rgba(255,255,255,0.07); }
 .owq-panel-navy .owq-item:hover { background: rgba(255,255,255,0.06); }

@@ -12,7 +12,7 @@ import {
   PageHeader, TabBar, withCounts, NewMenu, Pagination, usePagination,
   type AreaTab,
 } from '@ui';
-import { HSE_SITES, hsePill } from './types';
+import { HSE_SITES } from './types';
 import {
   useRiskJsaSummary,
   useHazards,
@@ -65,38 +65,64 @@ function riskLevelFrom(score: number): RiskLevel {
   return calculateRiskBand(score) as RiskLevel;
 }
 
+/** Per-risk colour map — each band reads as its own tag (Critical=red, not grey). */
+const RISK_COLORS: Record<string, { bg: string; fg: string }> = {
+  low:      { bg: '#e6f4dd', fg: '#3b6d11' },
+  medium:   { bg: '#fbf3c0', fg: '#7a6212' },
+  high:     { bg: '#fde0cf', fg: '#9a4516' },
+  critical: { bg: '#fde7e7', fg: '#a32d2d' },
+};
+
+/** Per-status colour map — every lifecycle state gets a distinct tint (mirrors
+ *  the PTW STATUS_COLORS approach). Covers hazard / assessment / JSA statuses. */
+const RJ_STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  draft:               { bg: '#eceff3', fg: '#5b6b7f' },
+  registered:          { bg: '#e7edf6', fg: '#3d5573' },
+  submitted:           { bg: '#e3eefb', fg: '#1d5fa5' },
+  assessment_required: { bg: '#faf0c8', fg: '#7a6212' },
+  controls_required:   { bg: '#fde7d6', fg: '#9a5b16' },
+  under_review:        { bg: '#ece9fb', fg: '#5b4ab7' },
+  hse_review:          { bg: '#e6e8fb', fg: '#43459e' },
+  returned:            { bg: '#fdeadf', fg: '#9a4516' },
+  changes_requested:   { bg: '#fdeede', fg: '#9a5a16' },
+  approved:            { bg: '#e6f4dd', fg: '#3b6d11' },
+  active:              { bg: '#dcf2e6', fg: '#0f7a48' },
+  monitoring:          { bg: '#d9eff2', fg: '#0e6b75' },
+  expired:             { bg: '#f7dede', fg: '#7d1d1d' },
+  rejected:            { bg: '#fce8ee', fg: '#9b2d50' },
+  closed:              { bg: '#e6eaf0', fg: '#42536b' },
+  archived:            { bg: '#eef0f2', fg: '#76838f' },
+};
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+function colorPill(label: string, c: { bg: string; fg: string }): VNode {
+  return <span class="vt-pill" style={{ background: c.bg, color: c.fg }}>{label}</span>;
+}
+function riskColors(level: RiskLevel): { bg: string; fg: string } {
+  return RISK_COLORS[level] ?? RISK_COLORS.low!;
+}
+
+/** Map a free-text risk/jsa status → its uniquely-coloured pill. */
+function rjStatusPill(status: string): VNode {
+  const c = RJ_STATUS_COLORS[status] ?? { bg: '#eef0f2', fg: '#5b6b7f' };
+  return colorPill(status.replace(/_/g, ' '), c);
+}
+
 function riskPill(likelihood: number, severity: number): VNode {
   const score = likelihood * severity;
   const level = riskLevelFrom(score);
-  const cls   = level === 'critical' ? 'is-off'
-              : level === 'high'     ? 'is-warn'
-              : level === 'medium'   ? 'is-amber'
-              : 'is-on';
-  const band  = level === 'critical' ? 'Critical'
-              : level === 'high'     ? 'High'
-              : level === 'medium'   ? 'Medium'
-              : 'Low';
-  return <span class={`vt-pill ${cls}`}>{band} · {score}</span>;
+  return colorPill(`${cap(level)} · ${score}`, riskColors(level));
 }
 
 function riskPillFromLevel(level: RiskLevel, score?: number | null): VNode {
-  const cls  = level === 'critical' ? 'is-off'
-             : level === 'high'     ? 'is-warn'
-             : level === 'medium'   ? 'is-amber'
-             : 'is-on';
-  const band = level.charAt(0).toUpperCase() + level.slice(1);
-  return <span class={`vt-pill ${cls}`}>{band}{score != null ? ` · ${score}` : ''}</span>;
+  return colorPill(`${cap(level)}${score != null ? ` · ${score}` : ''}`, riskColors(level));
 }
 
 /** Residual-risk pill from a residual score (L×S). Muted dash when not yet scored. */
 function residualPill(score: number | null | undefined): VNode {
   if (score == null) return <span class="hse-muted">—</span>;
-  return riskPill2(riskLevelFrom(score), score);
-}
-function riskPill2(level: RiskLevel, score: number): VNode {
-  const cls = level === 'critical' ? 'is-off' : level === 'high' ? 'is-warn' : level === 'medium' ? 'is-amber' : 'is-on';
-  const band = level.charAt(0).toUpperCase() + level.slice(1);
-  return <span class={`vt-pill ${cls}`}>{band} · {score}</span>;
+  const level = riskLevelFrom(score);
+  return colorPill(`${cap(level)} · ${score}`, riskColors(level));
 }
 
 /** Short locale date, or em-dash. */
@@ -419,7 +445,7 @@ function HazardTab({
                   <td>{h.category}</td>
                   <td>{riskPill(h.initial_likelihood, h.initial_severity)}</td>
                   <td>{residualPill(h.residual_score)}</td>
-                  <td><span class={hsePill(h.status)}>{h.status.replace(/_/g, ' ')}</span></td>
+                  <td>{rjStatusPill(h.status)}</td>
                   <td>{reviewSla(h.review_due_at)}</td>
                 </tr>
               ))}
@@ -512,7 +538,7 @@ function AssessmentsTab({
                   <td class="hse-muted" style={{ fontSize: '0.72rem' }}>{a.assessment_type.replace(/_/g, ' ')}</td>
                   <td>{riskPillFromLevel(a.risk_level, a.initial_score)}</td>
                   <td>{residualPill(a.residual_score)}</td>
-                  <td><span class={hsePill(a.status)}>{a.status.replace(/_/g, ' ')}</span></td>
+                  <td>{rjStatusPill(a.status)}</td>
                   <td>{reviewSla(a.review_due_at)}</td>
                 </tr>
               ))}
@@ -601,7 +627,7 @@ function JsaTab({
                   </td>
                   <td class="hse-muted">{j.stepCount}</td>
                   <td>{riskPillFromLevel(j.risk_level)}</td>
-                  <td><span class={hsePill(j.status)}>{j.status.replace(/_/g, ' ')}</span></td>
+                  <td>{rjStatusPill(j.status)}</td>
                   <td>{reviewSla(j.review_due_at)}</td>
                 </tr>
               ))}
