@@ -30,6 +30,7 @@ import { NewPermitWizard } from './ptw/dialogs/NewPermitWizard';
 import { PermitDetailDrawer } from './ptw/PermitDetailDrawer';
 import { PermitTemplateDialog } from './ptw/dialogs/PermitTemplateDialog';
 import { PtwRightPanel } from './ptw/PtwRightPanel';
+import { PtwInsightCards } from './ptw/PtwInsightCards';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -403,111 +404,42 @@ function TemplatesTab({ onNew, onEdit }: { onNew: () => void; onEdit: (t: Permit
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-// ── Stats cards strip (original hse-spark design) ──────────────────────────────
+// ── Compact KPI spark row (standard, under the nav — label / val / sub, no icons) ─
 
-function PtwStatsRow({ onFilterActive, onFilterExpiring, onFilterApprovals }: {
-  onFilterActive:    () => void;
-  onFilterExpiring:  () => void;
-  onFilterApprovals: () => void;
-}): VNode {
-  const { data, isLoading } = usePermitStats();
-  const stats = data?.data;
+function PtwSparkRow(): VNode {
+  const stats = usePermitStats().data?.data;
+  const all   = usePermits({}).data?.data ?? [];
 
-  const totalActive    = stats?.activePermits.total          ?? 0;
-  const highRisk       = stats?.activePermits.highRisk       ?? 0;
-  const criticalAreas  = stats?.activePermits.criticalAreas  ?? 0;
-  const byType         = stats?.activePermits.byType         ?? [];
-  const expiring       = stats?.expiringSoon.total           ?? 0;
-  const withinTwo      = stats?.expiringSoon.withinTwoHours  ?? 0;
-  const isoPct         = stats?.isolationReadiness.percentage ?? 100;
-  const isoVerified    = stats?.isolationReadiness.verified   ?? 0;
-  const isoRequired    = stats?.isolationReadiness.required   ?? 0;
-  const bottlenecks    = stats?.approvalBottlenecks.total     ?? 0;
-  const byStage        = stats?.approvalBottlenecks.byStage   ?? [];
-
-  const loadingStyle = isLoading ? { opacity: 0.45 } : {};
+  const active      = stats?.activePermits.total      ?? 0;
+  const highRisk    = stats?.activePermits.highRisk   ?? 0;
+  const bottlenecks = stats?.approvalBottlenecks.total ?? 0;
+  const awaiting    = all.filter(p => p.status === 'awaiting_approval').length;
+  const suspended   = all.filter(p => p.status === 'suspended').length;
 
   return (
-    <div class="hse-spark-row" style={loadingStyle}>
-      {/* Card 1 — Active Permits */}
-      <button class="hse-spark" type="button" onClick={onFilterActive} title="View active permits"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
-        <div class="hse-spark-header">
-          <span class="hse-spark-label"><i class="fas fa-file-shield" style={{ marginRight: '5px', opacity: 0.6 }} />Active Permits</span>
+    <div style={{ marginTop: '16px' }}>
+      <div class="hse-spark-row">
+        <div class="hse-spark">
+          <div class="hse-spark-header"><span class="hse-spark-label">Active Permits</span></div>
+          <div class="hse-spark-val">{active}</div>
+          <div class="hse-spark-sub">Live authorisations on site</div>
         </div>
-        <div class="hse-spark-val" style={{ color: '#22c55e' }}>{totalActive}</div>
-        <div class="hse-spark-sub">
-          {highRisk > 0 ? <span style={{ color: '#ef4444' }}>{highRisk} high / {criticalAreas} critical</span> : 'All within normal risk'}
+        <div class="hse-spark">
+          <div class="hse-spark-header"><span class="hse-spark-label">High Risk</span></div>
+          <div class="hse-spark-val" style={{ color: highRisk > 0 ? '#ef4444' : '#22c55e' }}>{highRisk}</div>
+          <div class="hse-spark-sub">{highRisk > 0 ? 'Priority oversight' : 'None active'}</div>
         </div>
-        {byType.length > 0 && (
-          <div style={{ marginTop: '8px', display: 'grid', gap: '3px' }}>
-            {byType.slice(0, 4).map(bt => {
-              const pct = totalActive > 0 ? Math.round((bt.count / totalActive) * 100) : 0;
-              return (
-                <div key={bt.type} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.67rem', color: 'var(--text-muted)' }}>
-                  <span style={{ width: '70px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bt.type.replace(/_/g, ' ')}</span>
-                  <div style={{ flex: 1, height: '3px', borderRadius: '99px', background: 'var(--border)' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: '99px', background: '#22c55e' }} />
-                  </div>
-                  <span style={{ minWidth: '12px', textAlign: 'right' }}>{bt.count}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </button>
-
-      {/* Card 2 — Expiring Soon */}
-      <button class="hse-spark" type="button" onClick={onFilterExpiring} title="View expiring permits"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
-        <div class="hse-spark-header">
-          <span class="hse-spark-label"><i class="fas fa-clock" style={{ marginRight: '5px', opacity: 0.6 }} />Expiring Soon</span>
+        <div class="hse-spark">
+          <div class="hse-spark-header"><span class="hse-spark-label">Awaiting Approval</span></div>
+          <div class="hse-spark-val" style={{ color: awaiting > 0 ? '#f59e0b' : '#22c55e' }}>{awaiting}</div>
+          <div class="hse-spark-sub">{bottlenecks > 0 ? `${bottlenecks} stalled in review` : 'Queue clear'}</div>
         </div>
-        <div class="hse-spark-val" style={{ color: expiring > 0 ? '#f59e0b' : '#22c55e' }}>{expiring}</div>
-        <div class="hse-spark-sub">
-          {withinTwo > 0 ? <span style={{ color: '#ef4444' }}>{withinTwo} within 2h</span> : 'None critical'}
-        </div>
-        <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-          {(stats?.expiringSoon.buckets ?? []).map(b => (
-            <div key={b.label} style={{ flex: 1, textAlign: 'center', background: 'var(--bg-subtle, #f4f6fa)', borderRadius: '6px', padding: '5px 0' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: b.label === '<2h' && b.count > 0 ? '#ef4444' : '#f59e0b' }}>{b.count}</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{b.label}</div>
-            </div>
-          ))}
-        </div>
-      </button>
-
-      {/* Card 3 — Isolation Readiness */}
-      <div class="hse-spark">
-        <div class="hse-spark-header">
-          <span class="hse-spark-label"><i class="fas fa-lock" style={{ marginRight: '5px', opacity: 0.6 }} />Isolation Readiness</span>
-        </div>
-        <div class="hse-spark-val" style={{ color: isoPct >= 90 ? '#22c55e' : isoPct >= 70 ? '#f59e0b' : '#ef4444' }}>{isoPct}%</div>
-        <div class="hse-spark-sub">{isoVerified} / {isoRequired} points verified</div>
-        <div style={{ marginTop: '10px', height: '6px', borderRadius: '99px', background: 'var(--border)' }}>
-          <div style={{ width: `${isoPct}%`, height: '100%', borderRadius: '99px', background: isoPct >= 90 ? '#22c55e' : isoPct >= 70 ? '#f59e0b' : '#ef4444', transition: 'width .4s' }} />
+        <div class="hse-spark">
+          <div class="hse-spark-header"><span class="hse-spark-label">Suspended / Blocked</span></div>
+          <div class="hse-spark-val" style={{ color: suspended > 0 ? '#ef4444' : '#22c55e' }}>{suspended}</div>
+          <div class="hse-spark-sub">{suspended > 0 ? 'Work stopped' : 'None blocked'}</div>
         </div>
       </div>
-
-      {/* Card 4 — Approval Bottlenecks */}
-      <button class="hse-spark" type="button" onClick={onFilterApprovals} title="View approval queue"
-        style={{ cursor: 'pointer', textAlign: 'left', background: 'var(--bg-card)', border: 'none', font: 'inherit', width: '100%' }}>
-        <div class="hse-spark-header">
-          <span class="hse-spark-label"><i class="fas fa-triangle-exclamation" style={{ marginRight: '5px', opacity: 0.6 }} />Approval Bottlenecks</span>
-        </div>
-        <div class="hse-spark-val" style={{ color: bottlenecks > 0 ? '#f59e0b' : '#22c55e' }}>{bottlenecks}</div>
-        <div class="hse-spark-sub">{bottlenecks > 0 ? 'Permits stalled in review' : 'All clear'}</div>
-        {byStage.length > 0 && (
-          <div style={{ marginTop: '8px', display: 'grid', gap: '3px' }}>
-            {byStage.slice(0, 4).map(s => (
-              <div key={s.stage} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.67rem', color: 'var(--text-muted)' }}>
-                <span>{s.stage.replace(/_/g, ' ')}</span>
-                <span style={{ fontWeight: 700, color: '#f59e0b' }}>{s.count}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </button>
     </div>
   );
 }
@@ -554,12 +486,8 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
-      {/* ── Stats cards (original hse-spark design) ── */}
-      <PtwStatsRow
-        onFilterActive={() => setActive('permits')}
-        onFilterExpiring={() => setActive('permits')}
-        onFilterApprovals={() => setActive('approvals')}
-      />
+      {/* ── Standard 4 StatsCards (donut · bars · % · trend), rearrangeable ── */}
+      <PtwInsightCards />
 
       {/* ── Tab bar + New Permit button ── */}
       <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '20px' }}>
@@ -577,6 +505,9 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
           ]} />
         </div>
       </div>
+
+      {/* ── Compact KPI spark row (under the nav) ── */}
+      <PtwSparkRow />
 
       {/* ── Tab content ── */}
 
