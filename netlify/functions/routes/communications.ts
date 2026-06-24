@@ -54,7 +54,23 @@ import {
   getMessageRecipients,
   createMessageAttachmentUploadUrl,
   createMessageAttachmentRecord,
+  requestThreadAccess,
+  recordThreadExport,
+  searchThreadsForCompliance,
+  resolveRecordThread,
+  COMPLIANCE_REASONS,
 } from '../lib/communications';
+import {
+  pinMessage,
+  unpinMessage,
+  listPins,
+  pinnedThreadSummary,
+  saveDraft,
+  getDraft,
+  deleteDraft,
+  updatePresence,
+  listOnlineUsers,
+} from '../lib/messagingRich';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -305,6 +321,8 @@ router.post('/communications/notifications/broadcast', async c => {
 });
 
 // ── Messages ──────────────────────────────────────────────────────────────────
+// Routes return the lib's objects verbatim — they already conform to the shared
+// camelCase contract in types/messaging.ts (MessageThread / MessagePost / …).
 
 // POST /api/communications/messages/threads
 const ThreadsListSchema = z.object({
@@ -342,7 +360,15 @@ router.post('/communications/messages/thread', async c => {
   if (!v.ok) return v.response;
 
   const result = await getThread(v.data.threadId, user.id, user.role);
-  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Not found' }, 404 as 200);
+  if (!result.ok) {
+    if (result.code === 'compliance_required') {
+      return c.json({ success: false, code: 'compliance_required', message: result.message }, 403 as 200);
+    }
+    if (result.code === 'forbidden') {
+      return c.json({ success: false, code: 'forbidden', message: result.message }, 403 as 200);
+    }
+    return c.json({ success: false, message: result.message ?? 'Not found' }, 404 as 200);
+  }
   return c.json({ success: true, data: result });
 });
 
@@ -360,14 +386,117 @@ router.post('/communications/messages/posts', async c => {
   if (!v.ok) return v.response;
 
   const result = await getThreadPosts(v.data.threadId, user.id, { limit: v.data.limit, cursor: v.data.cursor }, user.role);
-  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, result.message === 'Not a participant in this thread' ? 403 as 200 : 500 as 200);
+  if (!result.ok) {
+    if (result.code === 'compliance_required') {
+      return c.json({ success: false, code: 'compliance_required', message: result.message }, 403 as 200);
+    }
+    const status = result.code === 'forbidden' ? 403 as 200 : 500 as 200;
+    return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
+  }
   return c.json({ success: true, data: result.posts ?? [], nextCursor: result.nextCursor });
+});
+
+// POST /api/communications/messages/requestThreadAccess
+// Controlled, AUDITED compliance access to a private thread. Requires
+// communications.compliance_read. Creates a time-boxed grant + audit record.
+const RequestAccessSchema = z.object({
+  threadId:      z.string().uuid(),
+  reason:        z.enum(COMPLIANCE_REASONS),
+  caseRef:       z.string().max(120).nullable().optional(),
+  notes:         z.string().max(2000).nullable().optional(),
+  durationHours: z.number().int().min(1).max(168).optional(),
+});
+
+router.post('/communications/messages/requestThreadAccess', async c => {
+  const user = await requirePermission(c, 'communications.compliance_read');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, RequestAccessSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await requestThreadAccess({
+    threadId:      v.data.threadId,
+    userId:        user.id,
+    reason:        v.data.reason,
+    caseRef:       v.data.caseRef ?? null,
+    notes:         v.data.notes ?? null,
+    durationHours: v.data.durationHours,
+  });
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 400 as 200);
+  return c.json({ success: true, data: { grantId: result.grantId, expiresAt: result.expiresAt } });
+});
+
+// POST /api/communications/messages/recordExport
+// Stamp that message history was exported under an active compliance grant.
+// Requires communications.compliance_export. Audited.
+const RecordExportSchema = z.object({ threadId: z.string().uuid() });
+
+router.post('/communications/messages/recordExport', async c => {
+  const user = await requirePermission(c, 'communications.compliance_export');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, RecordExportSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await recordThreadExport(v.data.threadId, user.id);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 400 as 200);
+  return c.json({ success: true });
+});
+
+// POST /api/communications/messages/compliance/search
+// Discover threads for compliance review (metadata only — no message bodies).
+// Requires communications.compliance_read. Reading a thread still requires a grant.
+const ComplianceSearchSchema = z.object({
+  search: z.string().max(160).optional(),
+  limit:  z.number().int().min(1).max(100).default(30),
+});
+
+router.post('/communications/messages/compliance/search', async c => {
+  const user = await requirePermission(c, 'communications.compliance_read');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ComplianceSearchSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await searchThreadsForCompliance({ actorUserId: user.id, search: v.data.search, limit: v.data.limit });
+  return c.json({ success: true, data: result.rows });
+});
+
+// POST /api/communications/messages/recordThread
+// Find-or-create the discussion thread for a business record, and join the
+// caller. Requires communications.thread_create AND view access to that record.
+const RecordThreadSchema = z.object({
+  sourceModule:     z.string().min(1).max(60),
+  sourceEntityType: z.string().min(1).max(60),
+  sourceEntityId:   z.string().min(1).max(120),
+  recordRef:        z.string().max(120).nullable().optional(),
+  subject:          z.string().max(200).nullable().optional(),
+});
+
+router.post('/communications/messages/recordThread', async c => {
+  const user = await requirePermission(c, 'communications.thread_create');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, RecordThreadSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await resolveRecordThread({
+    actorUserId:      user.id,
+    actorRole:        user.role,
+    sourceModule:     v.data.sourceModule,
+    sourceEntityType: v.data.sourceEntityType,
+    sourceEntityId:   v.data.sourceEntityId,
+    recordRef:        v.data.recordRef ?? null,
+    subject:          v.data.subject ?? null,
+  });
+  if (!result.ok) {
+    const status = result.code === 'forbidden' ? 403 as 200 : 400 as 200;
+    return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
+  }
+  return c.json({ success: true, data: { threadId: result.threadId, created: result.created } });
 });
 
 // POST /api/communications/messages/createThread
 const CreateThreadSchema = z.object({
   threadType:         z.enum(['direct','group','record','system']).default('direct'),
-  subject:            z.string().min(1).max(200),
+  // Optional — direct/group threads derive their name from participants when blank.
+  subject:            z.string().max(200).nullable().optional(),
   sourceModule:       z.string().nullable().optional(),
   sourceEntityType:   z.string().nullable().optional(),
   sourceEntityId:     z.string().nullable().optional(),
@@ -377,7 +506,7 @@ const CreateThreadSchema = z.object({
 });
 
 router.post('/communications/messages/createThread', async c => {
-  const user = await requirePermission(c, 'communications.view');
+  const user = await requirePermission(c, 'communications.thread_create');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, CreateThreadSchema, body.args);
   if (!v.ok) return v.response;
@@ -392,7 +521,7 @@ router.post('/communications/messages/createThread', async c => {
   }
 
   const result = await createMessageThread({ ...v.data, createdBy: user.id });
-  if (!result.ok) return c.json({ success: false, message: 'Failed to create thread' }, 500 as 200);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed to create thread' }, 400 as 200);
   return c.json({ success: true, threadId: result.threadId, postId: result.postId });
 });
 
@@ -510,14 +639,14 @@ const ParticipantsAddSchema = z.object({
 });
 
 router.post('/communications/messages/participants/add', async c => {
-  const user = await requirePermission(c, 'communications.view');
+  const user = await requirePermission(c, 'communications.thread_manage_own');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ParticipantsAddSchema, body.args);
   if (!v.ok) return v.response;
 
   const result = await addThreadParticipants(v.data.threadId, user.id, v.data.userIds, user.role);
   if (!result.ok) {
-    const status = result.message?.includes('Only thread owner') ? 403 as 200 : 500 as 200;
+    const status = result.message?.includes('thread owner') ? 403 as 200 : 500 as 200;
     return c.json({ success: false, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true });
@@ -530,14 +659,14 @@ const ParticipantsRemoveSchema = z.object({
 });
 
 router.post('/communications/messages/participants/remove', async c => {
-  const user = await requirePermission(c, 'communications.view');
+  const user = await requirePermission(c, 'communications.thread_manage_own');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ParticipantsRemoveSchema, body.args);
   if (!v.ok) return v.response;
 
   const result = await removeThreadParticipant(v.data.threadId, user.id, v.data.userId, user.role);
   if (!result.ok) {
-    const status = result.message?.includes('Only thread owner') ? 403 as 200 : 500 as 200;
+    const status = result.message?.includes('thread owner') ? 403 as 200 : 500 as 200;
     return c.json({ success: false, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true });
@@ -572,6 +701,141 @@ router.post('/communications/messages/recipients', async c => {
 
   const results = await getMessageRecipients(user.id, v.data.query);
   return c.json({ success: true, data: results });
+});
+
+// ── Pins ────────────────────────────────────────────────────────────────────
+// Pin a whole conversation (pin_type 'thread') or a single post ('post'); shared
+// with the thread or kept personal. Participant required; thread-visible pins are
+// owner/admin only (enforced in the lib).
+
+const PinSchema = z.object({
+  threadId:   z.string().uuid(),
+  postId:     z.string().uuid().nullable().optional(),
+  pinType:    z.enum(['thread','post']),
+  visibility: z.enum(['thread','personal']).default('thread'),
+  note:       z.string().max(500).nullable().optional(),
+});
+
+router.post('/communications/messages/pins/pin', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, PinSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await pinMessage({
+    currentUserId:   user.id,
+    currentUserRole: user.role,
+    threadId:        v.data.threadId,
+    postId:          v.data.postId ?? null,
+    pinType:         v.data.pinType,
+    visibility:      v.data.visibility,
+    note:            v.data.note ?? null,
+  });
+  if (!result.ok) {
+    const status = /participant|owner/.test(result.message ?? '') ? 403 as 200 : 400 as 200;
+    return c.json({ success: false, message: result.message ?? 'Failed to pin' }, status);
+  }
+  return c.json({ success: true, data: result.pin });
+});
+
+const UnpinSchema = z.object({ pinId: z.string().uuid() });
+
+router.post('/communications/messages/pins/unpin', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, UnpinSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await unpinMessage(v.data.pinId, user.id, user.role);
+  if (!result.ok) {
+    const status = /own pins|not found/.test(result.message ?? '') ? 403 as 200 : 400 as 200;
+    return c.json({ success: false, message: result.message ?? 'Failed to unpin' }, status);
+  }
+  return c.json({ success: true });
+});
+
+const PinsListSchema = z.object({ threadId: z.string().uuid() });
+
+router.post('/communications/messages/pins/list', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, PinsListSchema, body.args);
+  if (!v.ok) return v.response;
+  const pins = await listPins(v.data.threadId, user.id);
+  return c.json({ success: true, data: pins });
+});
+
+router.post('/communications/messages/pins/pinned-summary', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const rows = await pinnedThreadSummary(user.id);
+  return c.json({ success: true, data: rows });
+});
+
+// ── Drafts ──────────────────────────────────────────────────────────────────
+// Per-thread, per-user composer draft. Empty body deletes the draft.
+
+const DraftSaveSchema = z.object({
+  threadId:      z.string().uuid(),
+  body:          z.string().max(10000).nullable().optional(),
+  replyToPostId: z.string().uuid().nullable().optional(),
+});
+
+router.post('/communications/messages/draft/save', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, DraftSaveSchema, body.args);
+  if (!v.ok) return v.response;
+  const result = await saveDraft(v.data.threadId, user.id, v.data.body ?? null, v.data.replyToPostId ?? null);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed' }, 500 as 200);
+  return c.json({ success: true });
+});
+
+const DraftGetSchema = z.object({ threadId: z.string().uuid() });
+
+router.post('/communications/messages/draft/get', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, DraftGetSchema, body.args);
+  if (!v.ok) return v.response;
+  const draft = await getDraft(v.data.threadId, user.id);
+  return c.json({ success: true, data: draft });
+});
+
+router.post('/communications/messages/draft/delete', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, DraftGetSchema, body.args);
+  if (!v.ok) return v.response;
+  const result = await deleteDraft(v.data.threadId, user.id);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed' }, 500 as 200);
+  return c.json({ success: true });
+});
+
+// ── Presence ─────────────────────────────────────────────────────────────────
+// Heartbeat + Online-Now strip. Read only through these authenticated routes
+// (no direct browser reads of user_presence).
+
+const PresenceSchema = z.object({
+  status:         z.enum(['online','away','offline']).default('online'),
+  activeThreadId: z.string().uuid().nullable().optional(),
+});
+
+router.post('/communications/messages/presence/update', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, PresenceSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  const result = await updatePresence(user.id, v.data.status, v.data.activeThreadId ?? null);
+  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed' }, 500 as 200);
+  return c.json({ success: true });
+});
+
+router.post('/communications/messages/online', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  // A request for the online list is itself a heartbeat — keep the caller online.
+  void updatePresence(user.id, 'online', null);
+  const rows = await listOnlineUsers(user.id);
+  return c.json({ success: true, data: rows });
 });
 
 // ── Tickets ───────────────────────────────────────────────────────────────────
