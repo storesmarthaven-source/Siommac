@@ -10,9 +10,10 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, MetricRow, StatsCard, TabBar, NewMenu, withCounts, SidePanel, HseModal,
+  PageHeader, TabBar, NewMenu, withCounts, SidePanel, HseModal,
   Field, SelectInput, TextInput, type AreaTab, type SidePanelSection,
 } from '@ui';
+import { InspectionInsightCards } from './inspections/InspectionInsightCards';
 import {
   useInspections, useFindings, useInspectionStats, useInspectionTemplates, useCreateInspection,
   useInspectionTransition,
@@ -44,26 +45,6 @@ function severityPill(sev: string): VNode {
   return <span class={`vt-pill ${SEV_PILL[sev] ?? 'is-info'}`}>{sev}</span>;
 }
 const isOverdue = (i: InspectionRow) => !!i.due_at && new Date(i.due_at).getTime() < Date.now() && !['completed', 'cancelled'].includes(i.status);
-
-// ── Small data-display helpers (real distributions for the StatsCards) ──────────
-const PALETTE = ['#60a5fa', '#f59e0b', '#a78bfa', '#34d399', '#fb923c', '#f472b6'];
-const SEV_COLOR: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#eab308', low: '#22c55e', observation: '#3b82f6' };
-const STATUS_COLOR: Record<string, string> = {
-  scheduled: '#60a5fa', due_soon: '#f59e0b', overdue: '#ef4444', in_progress: '#3b82f6',
-  submitted: '#a78bfa', under_review: '#8b5cf6', completed: '#22c55e', cancelled: '#94a3b8',
-  draft: '#94a3b8', rescheduled: '#fb923c', open: '#f59e0b', assigned: '#60a5fa',
-  awaiting_review: '#a78bfa', closed: '#22c55e', reopened: '#fb923c',
-};
-function tally<T>(rows: T[], key: (r: T) => string | null | undefined): Record<string, number> {
-  const m: Record<string, number> = {};
-  for (const r of rows) { const k = key(r); if (k) m[k] = (m[k] ?? 0) + 1; }
-  return m;
-}
-type Stat = { label: string; value: number; color: string };
-function topStatuses(t: Record<string, number>, colorOf: (k: string) => string, n = 4): Stat[] {
-  return Object.entries(t).sort((a, b) => b[1] - a[1]).slice(0, n)
-    .map(([k, v]) => ({ label: titleCase(k), value: v, color: colorOf(k) }));
-}
 
 // ── Right rail ────────────────────────────────────────────────────────────────
 
@@ -149,27 +130,11 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
   const inspections = inspRes?.data ?? [];
   const { data: findRes } = useFindings({ limit: 200 });
   const findings = findRes?.data ?? [];
-  const findingCountByInspection = findings.reduce<Record<string, number>>((m, f) => {
-    if (f.inspection_id) m[f.inspection_id] = (m[f.inspection_id] ?? 0) + 1;
-    return m;
-  }, {});
 
   const overdue = s?.overdue ?? inspections.filter(isOverdue).length;
   const openFindings = s?.openFindings ?? findings.filter(f => !['closed', 'cancelled'].includes(f.status)).length;
   const completionRate = s?.completionRate ?? 0;
   const criticalFindings = s?.criticalFindings ?? 0;
-
-  // Real distributions for the StatsCard bodies
-  const openFindingsList = findings.filter(f => !['closed', 'cancelled'].includes(f.status));
-  const typeTally = tally(inspections, i => i.inspection_type ?? i.type);
-  const typeKeys = Object.keys(typeTally);
-  const typeStatuses    = topStatuses(typeTally, k => PALETTE[typeKeys.indexOf(k) % PALETTE.length] ?? '#60a5fa');
-  const overdueStatuses = topStatuses(tally(inspections.filter(isOverdue), i => i.inspection_type ?? i.type), () => '#ef4444', 4);
-  const sevOrder = ['critical', 'high', 'medium', 'low', 'observation'];
-  const sevTally = tally(openFindingsList, f => f.severity);
-  const sevStatuses: Stat[] = sevOrder.filter(s => sevTally[s]).map(s => ({ label: titleCase(s), value: sevTally[s] ?? 0, color: SEV_COLOR[s] ?? '#3b82f6' }));
-  const completionStatuses = topStatuses(tally(inspections, i => i.status), k => STATUS_COLOR[k] ?? '#94a3b8', 4);
-  const criticalByStatus = topStatuses(tally(findings.filter(f => f.severity === 'critical' && !['closed', 'cancelled'].includes(f.status)), f => f.status), k => STATUS_COLOR[k] ?? '#ef4444', 4);
 
   const tabsWithCounts = withCounts(TABS, { schedule: inspections.length, findings: findings.length });
 
@@ -188,43 +153,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         ]}
       />
 
-      <MetricRow pageKey={`hse.inspections.${active}`} rowClass="ui-stat-row" cards={active === 'findings' ? [
-        { key: 'open', node: (
-          <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
-            supporting="By severity" statuses={sevStatuses} footer="Require corrective action" />
-        ) },
-        { key: 'critical', node: (
-          <StatsCard icon="fa-triangle-exclamation" title="Critical Findings" metric={criticalFindings} metricColor={criticalFindings > 0 ? '#ef4444' : '#22c55e'}
-            supporting="By stage" statuses={criticalByStatus.length ? criticalByStatus : [{ label: 'None open', value: 0, color: '#22c55e' }]} footer={criticalFindings > 0 ? 'Action required' : 'None open'} />
-        ) },
-        { key: 'closed', node: (
-          <StatsCard icon="fa-circle-check" title="Closed YTD" metric={s?.closedFindingsYtd ?? 0}
-            supporting="Resolution progress"
-            statuses={[{ label: 'Closed', value: s?.closedFindingsYtd ?? 0, color: '#22c55e' }, { label: 'Open', value: openFindings, color: '#f59e0b' }]}
-            footer="Year to date" />
-        ) },
-        { key: 'closure', node: (
-          <StatsCard icon="fa-chart-pie" title="Closure Rate" metric={`${s?.closureRate ?? 0}%`}
-            supporting="Findings closed within SLA" percent={s?.closureRate ?? 0} percentTarget="Target 90%" />
-        ) },
-      ] : [
-        { key: 'scheduled', node: (
-          <StatsCard icon="fa-calendar-check" title="Scheduled This Month" metric={s?.scheduledThisMonth ?? 0}
-            supporting="By type" statuses={typeStatuses.length ? typeStatuses : [{ label: 'None', value: 0, color: '#94a3b8' }]} footer="Confirmed schedule" />
-        ) },
-        { key: 'overdue', node: (
-          <StatsCard icon="fa-triangle-exclamation" title="Overdue" metric={overdue} metricColor={overdue > 0 ? '#ef4444' : '#22c55e'}
-            supporting="By type" statuses={overdueStatuses.length ? overdueStatuses : [{ label: 'On track', value: 0, color: '#22c55e' }]} footer={overdue > 0 ? 'Action required' : 'On track'} />
-        ) },
-        { key: 'completion', node: (
-          <StatsCard icon="fa-chart-pie" title="Completion Rate" metric={`${completionRate}%`}
-            supporting="Status mix" statuses={completionStatuses} percent={completionRate} percentTarget="Target 90%" />
-        ) },
-        { key: 'findings', node: (
-          <StatsCard icon="fa-magnifying-glass" title="Open Findings" metric={openFindings} metricColor={openFindings > 0 ? '#f59e0b' : '#22c55e'}
-            supporting="By severity" statuses={sevStatuses.length ? sevStatuses : [{ label: 'None open', value: 0, color: '#22c55e' }]} footer="Require corrective action" />
-        ) },
-      ]} />
+      <InspectionInsightCards active={active} />
 
       <div style={{ display: 'flex', alignItems: 'stretch', gap: '12px', marginTop: '6px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -264,14 +193,13 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                 <table class="vt-table">
                   <thead>
                     <tr>
-                      <th>Ref</th><th>Inspection</th><th>Type</th><th>Site / Area</th><th>Assignee</th>
-                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Findings</th>
-                      <th style={{ textAlign: 'center' }}>Status</th><th style={{ textAlign: 'center' }}>Actions</th>
+                      <th>Ref</th><th>Inspection</th><th>Type</th>
+                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {inspections.map(i => {
-                      const fc = findingCountByInspection[i.id] ?? 0;
                       const canStart = ['scheduled', 'due_soon', 'overdue', 'rescheduled'].includes(i.status);
                       return (
                       <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => setOpenInspection(i.id)}>
@@ -282,10 +210,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                             <i class={`fas ${TYPE_ICONS[i.inspection_type ?? i.type ?? ''] ?? 'fa-clipboard'}`} style={{ fontSize: '0.72rem' }} /> {titleCase(i.inspection_type ?? i.type)}
                           </div>
                         </td>
-                        <td class="vt-cell-subtext">{i.site_name ?? i.site_id ?? '—'}{i.area ? ` · ${i.area}` : ''}</td>
-                        <td class="vt-cell-subtext">{i.assignee_id ?? '—'}</td>
                         <td style={{ textAlign: 'center', color: isOverdue(i) ? 'var(--siomac-red)' : 'inherit', fontWeight: isOverdue(i) ? 600 : 400 }}>{fmtDate(i.due_at)}</td>
-                        <td style={{ textAlign: 'center' }}>{fc > 0 ? <span class="vt-pill is-warn">{fc}</span> : <span class="hse-muted">—</span>}</td>
                         <td style={{ textAlign: 'center' }}><span class={hsePill(i.status)}>{titleCase(i.status)}</span></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                           <button class="hse-btn" style={{ padding: '4px 10px' }} onClick={() => setOpenInspection(i.id)}>View</button>
@@ -295,7 +220,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                       </tr>
                       );
                     })}
-                    {inspections.length === 0 && <tr><td colSpan={9} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No inspections scheduled.</td></tr>}
+                    {inspections.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No inspections scheduled.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -316,8 +241,8 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                 <table class="vt-table">
                   <thead>
                     <tr>
-                      <th>Ref</th><th>Finding</th><th>Site / Area</th><th style={{ textAlign: 'center' }}>Severity</th>
-                      <th>Owner</th><th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
+                      <th>Ref</th><th>Finding</th><th style={{ textAlign: 'center' }}>Severity</th>
+                      <th style={{ textAlign: 'center' }}>Due</th><th style={{ textAlign: 'center' }}>Status</th>
                       <th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
@@ -326,9 +251,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                       <tr key={f.id} style={{ cursor: 'pointer' }} onClick={() => setOpenFinding(f.id)}>
                         <td><span class="vt-cell-mono">{f.finding_no ?? '—'}</span></td>
                         <td><span class="vt-cell-name" style={{ fontWeight: 500 }}>{f.title ?? f.description ?? '—'}</span></td>
-                        <td class="vt-cell-subtext">{f.site_name ?? '—'}{f.area ? ` · ${f.area}` : ''}</td>
                         <td style={{ textAlign: 'center' }}>{severityPill(f.severity)}</td>
-                        <td class="vt-cell-subtext">{f.owner_id ?? '—'}</td>
                         <td style={{ textAlign: 'center' }}>{fmtDate(f.due_at)}</td>
                         <td style={{ textAlign: 'center' }}><span class={hsePill(f.status)}>{titleCase(f.status)}</span></td>
                         <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
@@ -336,7 +259,7 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
                         </td>
                       </tr>
                     ))}
-                    {findings.length === 0 && <tr><td colSpan={8} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No findings raised.</td></tr>}
+                    {findings.length === 0 && <tr><td colSpan={6} class="hse-muted" style={{ textAlign: 'center', padding: '24px' }}>No findings raised.</td></tr>}
                   </tbody>
                 </table>
               </div>
