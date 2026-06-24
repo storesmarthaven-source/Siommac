@@ -13,6 +13,75 @@
  * @see docs/CODING_STANDARDS.md
  */
 
+import { forwardRef } from 'preact/compat';
+import { useRef, useEffect, useImperativeHandle } from 'preact/hooks';
+import type { VNode } from 'preact';
+
+// ─── <OtpInput> component (self-rendering 6-digit row) ────────────────────────
+//
+// Renders its own `.tfa-otp-row` of digit inputs and wires them via the
+// imperative helpers below, exposing an imperative handle. Used by
+// TotpSetupPanel / TwoFactorVerifyPanel (which render the row from scratch).
+
+export interface OtpInputHandle {
+  /** Concatenated digit value (may be < length if incomplete). */
+  getValue(): string;
+  /** Clear all digits + error styling. */
+  clear(): void;
+  /** Focus the first digit. */
+  focusFirst(): void;
+}
+
+export interface OtpInputProps {
+  /** DOM id for the row — also the handle target for the helpers. */
+  id: string;
+  /** Fired when all `length` digits are filled (or a full code is pasted). */
+  onComplete: (code: string) => void;
+  length?: number;
+  disabled?: boolean;
+  autoFocusFirst?: boolean;
+}
+
+export const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>(function OtpInput(
+  { id, onComplete, length = 6, disabled = false, autoFocusFirst = false },
+  ref,
+): VNode {
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const firstInput = () => containerRef.current?.querySelector<HTMLInputElement>('.tfa-otp-digit') ?? null;
+
+  useImperativeHandle(ref, () => ({
+    getValue:   () => otpValue(id),
+    clear:      () => otpClear(id),
+    focusFirst: () => firstInput()?.focus(),
+  }), [id]);
+
+  useEffect(() => {
+    const cleanup = wireOtpRow(id, () => onCompleteRef.current(otpValue(id)));
+    if (autoFocusFirst) firstInput()?.focus();
+    return cleanup;
+  }, [id, length]);  // re-wire if the row identity/size changes
+
+  return (
+    <div id={id} class="tfa-otp-row" ref={containerRef}>
+      {Array.from({ length }, (_, i) => (
+        <input
+          key={i}
+          class="tfa-otp-digit"
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          autoComplete={i === 0 ? 'one-time-code' : 'off'}
+          disabled={disabled}
+          aria-label={`Digit ${i + 1}`}
+        />
+      ))}
+    </div>
+  );
+});
+
 // ─── Imperative OTP helpers (used by LoginPage to wire existing DOM) ──────────
 
 /** Read the 6-digit value from an existing OTP row. */
