@@ -54,6 +54,7 @@ import {
   getMessageRecipients,
   createMessageAttachmentUploadUrl,
   createMessageAttachmentRecord,
+  getAttachmentUrl,
   requestThreadAccess,
   recordThreadExport,
   searchThreadsForCompliance,
@@ -712,6 +713,27 @@ router.post('/communications/messages/recipients', async c => {
 
   const results = await getMessageRecipients(user.id, v.data.query);
   return c.json({ success: true, data: results });
+});
+
+// POST /api/communications/messages/attachments/get-url
+// Permission-checked signed URL for a stored attachment, by purpose.
+const AttachUrlSchema = z.object({
+  attachmentId: z.string().uuid(),
+  purpose:      z.enum(['thumbnail','preview','download']).default('download'),
+});
+
+router.post('/communications/messages/attachments/get-url', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, AttachUrlSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await getAttachmentUrl(v.data.attachmentId, user.id, v.data.purpose, user.role);
+  if (!result.ok) {
+    const status = result.code === 'forbidden' || result.code === 'compliance_required' ? 403 as 200 : 404 as 200;
+    return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
+  }
+  return c.json({ success: true, data: { url: result.url ?? null } });
 });
 
 // ── Pins ────────────────────────────────────────────────────────────────────

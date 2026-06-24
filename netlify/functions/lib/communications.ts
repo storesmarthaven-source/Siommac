@@ -19,6 +19,7 @@ import { emitAppEvent } from './appEvents';
 import { getSignedUrl }  from './photos';
 import { createAttachmentUploadUrl } from './upload';
 import { userCan }       from './auth';
+import { classifyAttachment, fileExtension, assertAttachmentAllowed } from './attachmentClassifier';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
   MessageRecipient, ComplianceThread,
@@ -1456,12 +1457,24 @@ export interface CreateMessageAttachmentInput {
 export async function createMessageAttachmentRecord(
   input: CreateMessageAttachmentInput,
 ): Promise<{ ok: boolean; id?: string; message?: string }> {
+  // Policy gate (blocked executables / size) + classification for rich rendering.
+  try {
+    assertAttachmentAllowed(input.fileName, input.sizeBytes);
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'File not permitted' };
+  }
+  const attachmentType = classifyAttachment(input.fileName, input.contentType);
+  const ext            = fileExtension(input.fileName);
+
   const { data, error } = await sb.from('message_attachments').insert({
-    file_name:   input.fileName,
-    file_path:   input.filePath,
+    file_name:    input.fileName,
+    file_path:    input.filePath,
     content_type: input.contentType,
-    size_bytes:  input.sizeBytes,
-    uploaded_by: input.uploadedBy,
+    size_bytes:   input.sizeBytes,
+    uploaded_by:  input.uploadedBy,
+    attachment_type: attachmentType,
+    file_extension:  ext || null,
+    upload_status:   'uploaded',
     // post_id intentionally NULL — linked on send
   }).select('id').single<{ id: string }>();
 
@@ -1470,6 +1483,50 @@ export async function createMessageAttachmentRecord(
     return { ok: false, message: error?.message ?? 'Failed to create attachment record' };
   }
   return { ok: true, id: data.id };
+}
+
+// ── Signed attachment URL by purpose (thumbnail | preview | download) ───────────
+// Permission-checked: an attachment linked to a post is readable only by someone
+// with read access to its thread; an unlinked (draft) attachment is readable only
+// by its uploader.
+
+export async function getAttachmentUrl(
+  attachmentId: string,
+  userId:       string,
+  purpose:      'thumbnail' | 'preview' | 'download',
+  userRole?:    string,
+): Promise<{ ok: boolean; message?: string; code?: 'forbidden' | 'compliance_required'; url?: string }> {
+  try {
+    const { data: att } = await sb
+      .from('message_attachments')
+      .select('id, post_id, uploaded_by, file_path, thumbnail_path, preview_path')
+      .eq('id', attachmentId)
+      .maybeSingle<{ id: string; post_id: string | null; uploaded_by: string | null; file_path: string; thumbnail_path: string | null; preview_path: string | null }>();
+    if (!att) return { ok: false, message: 'Attachment not found' };
+
+    if (att.post_id) {
+      const { data: post } = await sb.from('message_posts').select('thread_id').eq('id', att.post_id).maybeSingle<{ thread_id: string }>();
+      if (!post) return { ok: false, message: 'Attachment not found' };
+      const access = await resolveThreadReadAccess(post.thread_id, { id: userId, role: userRole });
+      if (!access.allowed) {
+        return access.needsCompliance
+          ? { ok: false, code: 'compliance_required', message: 'Compliance access required' }
+          : { ok: false, code: 'forbidden', message: 'No access to this attachment' };
+      }
+    } else if (att.uploaded_by !== userId) {
+      // Draft attachment, not yet posted — only the uploader may fetch it.
+      return { ok: false, code: 'forbidden', message: 'No access to this attachment' };
+    }
+
+    const path = purpose === 'thumbnail' ? (att.thumbnail_path ?? att.file_path)
+               : purpose === 'preview'   ? (att.preview_path   ?? att.file_path)
+               :                            att.file_path;
+    const url = await getSignedUrl(MESSAGES_BUCKET, path).catch(() => '');
+    return { ok: true, url: url || undefined };
+  } catch (e) {
+    console.error('[communications] getAttachmentUrl failed:', e);
+    return { ok: false, message: 'Internal error' };
+  }
 }
 
 // ── markThreadRead ─────────────────────────────────────────────────────────────
