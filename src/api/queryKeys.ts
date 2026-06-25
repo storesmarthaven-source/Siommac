@@ -37,6 +37,21 @@ export const employeeKeys = {
   detail:   (id: string) => [...employeeKeys.details(), id] as const,
 } as const;
 
+// ── HR Employee Master (v36) ──────────────────────────────────────────────────
+// Distinct from the legacy employeeKeys above — this is the HR module's own
+// register / profile / stats / workflow-summary / statutory surface (routes/hr.ts).
+
+export const hrEmployeeKeys = {
+  all:             ['hrEmployees']                                            as const,
+  lists:           () => [...hrEmployeeKeys.all, 'list']                      as const,
+  list:            (filter: Record<string, unknown>) => [...hrEmployeeKeys.lists(), filter] as const,
+  details:         () => [...hrEmployeeKeys.all, 'detail']                    as const,
+  detail:          (id: string) => [...hrEmployeeKeys.details(), id]          as const,
+  dashboardStats:  (filter: Record<string, unknown>) => [...hrEmployeeKeys.all, 'dashboard-stats', filter] as const,
+  workflowSummary: (id: string) => [...hrEmployeeKeys.all, 'workflow-summary', id] as const,
+  statutory:       (id: string) => [...hrEmployeeKeys.all, 'statutory', id]   as const,
+} as const;
+
 // ── Departments ───────────────────────────────────────────────────────────────
 
 export const departmentKeys = {
