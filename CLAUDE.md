@@ -3,6 +3,29 @@
 ## Authoritative Specification
 The canonical build spec is the **SIOMAC ERP Build-Ready Technical Implementation Specification** (pasted into session on 2026-06-22). All decisions defer to it.
 
+## No Band-Aids — NON-NEGOTIABLE (read first)
+Every change fixes the ROOT cause, the enterprise way. No shortcuts, no transitional
+crutches, no "make-it-pass" hacks, no leaving/patching legacy. The following are band-aids
+and are NOT acceptable — each one bit this build:
+- **Accept-and-drop** — accepting an input/field the code doesn't actually honor (or returning
+  a faked value). If a feature isn't built yet, don't accept its inputs and don't pretend.
+- **Patch-on-top** — stacking a corrective migration/shim over a broken source. Fix the
+  SOURCE (correct the original migration/file); don't layer a fix over the symptom.
+- **Swallowed errors** — ignoring a DB/IO error result. Check it, fail atomically, roll back
+  (a create that ignores a satellite-insert error and returns 200 is a band-aid).
+- **Ceremony / mechanical conformance** — wrapping code in a pattern with no real benefit
+  (e.g. routing a plain insert through the mutation adapter, or a synthetic idempotency key
+  that can never dedupe). Use a pattern only where it adds real value; derive keys from content.
+- **Copy-stale** — cloning an existing call site without checking it's still correct against
+  CURRENT code (the copied `password_hash` write to a dropped column). Verify the canonical pattern.
+- **Assume-don't-verify** — claiming done/applied/works without proof. Verify against the live
+  DB/code/tests (PostgREST `head:true count` is NOT proof a table exists or is writable).
+- **Expedient deps** — never add a known-vulnerable or unmaintained dependency for convenience.
+
+Prefer **build-new → delete-legacy** (no dual systems, no gap) over keeping or patching legacy.
+Prefer **reuse over duplication** (extract a shared helper). When unsure whether something is a
+band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
+
 ## Worktree Rule
 Work ONLY in this worktree: `C:\Users\MSI Laptop\Desktop\Siomac\.claude\worktrees\wonderful-panini-34b331` (branch `claude/wonderful-panini-34b331`).  
 NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).

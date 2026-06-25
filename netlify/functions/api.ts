@@ -42,6 +42,7 @@ import authStepUpRouter     from './routes/authStepUp';
 import adminSecurityRouter, { policyReadRouter } from './routes/adminSecurity';
 import permissionApprovalsRouter from './routes/permissionApprovals';
 import hrRouter                   from './routes/hr';
+import hrEmployeeImportRouter     from './routes/hrEmployeeImport';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -147,6 +148,7 @@ app.post('/api/ping', c => c.json({ ok: true, ts: new Date().toISOString() }));
 app.route('/api', authRouter);
 app.route('/api', employeesRouter);
 app.route('/api/hr', hrRouter);
+app.route('/api/hr', hrEmployeeImportRouter);
 app.route('/api', departmentsRouter);
 app.route('/api', sitesRouter);
 app.route('/api', attendanceRouter);

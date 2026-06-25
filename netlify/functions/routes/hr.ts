@@ -17,6 +17,10 @@ import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl }      from '../lib/photos';
 import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
+import {
+  EMPLOYMENT_TYPES, NIS_STATUSES, statutoryPatch, statutoryWithDefaults, computePayrollReadiness,
+  writeHrAudit, provisionEmployee, todayISO, type StatutoryRow,
+} from '../lib/hr/employeeCore';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -29,104 +33,11 @@ const HR_COLS =
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
   'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image';
 
-// app_users.employment_type CHECK set (default 'employee'). Validated at the API
-// boundary so a bad value is a clean 400, not a raw DB 500.
-const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'] as const;
-
-const todayISO = () => new Date().toISOString().slice(0, 10);
-
-/** Fire-and-forget HR audit (async helper so the supabase builder actually executes). */
-async function writeHrAudit(a: {
-  employeeId?: string | null; submoduleKey: string; recordId?: string | null;
-  actorId?: string | null; action: string; previousState?: unknown; newState?: unknown; reason?: string | null;
-}): Promise<void> {
-  try {
-    await sb.from('hr_audit_log').insert({
-      employee_id: a.employeeId ?? null, submodule_key: a.submoduleKey, record_id: a.recordId ?? null,
-      actor_id: a.actorId ?? null, action: a.action,
-      previous_state: a.previousState ?? null, new_state: a.newState ?? null, reason: a.reason ?? null,
-    });
-  } catch (e) { console.error('[hr] audit failed:', e); }
-}
-
 interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; [k: string]: unknown }
 
 async function loadEmployee(id: string): Promise<EmpRow | null> {
   const { data } = await sb.from('app_users').select(HR_COLS).eq('id', id).maybeSingle<EmpRow>();
   return data ?? null;
-}
-
-/** Next EMP-#### reference (mirrors employees.ts so HR-created and core-created staff share one sequence). */
-async function nextEmployeeNumber(): Promise<string> {
-  const { data } = await sb.from('app_users')
-    .select('employee_number').like('employee_number', 'EMP-%')
-    .order('employee_number', { ascending: false }).limit(1);
-  const top = (data ?? [])[0] as { employee_number?: string } | undefined;
-  if (top?.employee_number) {
-    const n = parseInt(String(top.employee_number).replace('EMP-', ''), 10);
-    if (Number.isFinite(n)) return `EMP-${String(n + 1).padStart(4, '0')}`;
-  }
-  return 'EMP-0001';
-}
-
-// ── Statutory & payroll readiness (v36 §7.2) ────────────────────────────────────
-// HR owns the readiness snapshot; Finance/Payroll owns deduction calc + remittance.
-// Readiness is computed from the captured statutory fields — never hand-set.
-
-interface StatutoryRow {
-  nis_status: string; nis_number: string | null;
-  paye_applicable: boolean; bir_file_number: string | null; td1_received: boolean;
-  hs_applicable: boolean; hs_verification_required: boolean;
-  [k: string]: unknown;
-}
-
-/** Derive payroll readiness from the statutory fields. Blocked until required fields are complete. */
-function computePayrollReadiness(s: StatutoryRow): { status: 'ready' | 'blocked'; blockers: string[]; financeEligible: boolean } {
-  const blockers: string[] = [];
-  // NIS — must be registered (with a number) or explicitly exempt / not-applicable.
-  if (s.nis_status === 'pending') blockers.push('NIS registration pending');
-  if (s.nis_status === 'registered' && !s.nis_number) blockers.push('NIS number missing');
-  // BIR / PAYE — when PAYE applies, the BIR file number + a received TD1 are required.
-  if (s.paye_applicable) {
-    if (!s.bir_file_number) blockers.push('BIR file number missing');
-    if (!s.td1_received)    blockers.push('TD1 not received');
-  }
-  // Health surcharge — applicable + still-pending verification holds payroll.
-  if (s.hs_applicable && s.hs_verification_required) blockers.push('Health surcharge verification pending');
-  const status = blockers.length ? 'blocked' : 'ready';
-  return { status, blockers, financeEligible: status === 'ready' };
-}
-
-const NIS_STATUSES = ['pending', 'registered', 'exempt', 'not_applicable'] as const;
-
-/** camelCase statutory input → snake_case column patch (only provided keys). */
-function statutoryPatch(s: Record<string, unknown>): Record<string, unknown> {
-  const p: Record<string, unknown> = {};
-  if (s['nisNumber']              !== undefined) p['nis_number']               = s['nisNumber'];
-  if (s['nisStatus']              !== undefined) p['nis_status']               = s['nisStatus'];
-  if (s['nisEffectiveDate']       !== undefined) p['nis_effective_date']       = s['nisEffectiveDate'];
-  if (s['birFileNumber']          !== undefined) p['bir_file_number']          = s['birFileNumber'];
-  if (s['payeApplicable']         !== undefined) p['paye_applicable']          = s['payeApplicable'];
-  if (s['td1Received']            !== undefined) p['td1_received']             = s['td1Received'];
-  if (s['td1EffectiveYear']       !== undefined) p['td1_effective_year']       = s['td1EffectiveYear'];
-  if (s['hsApplicable']           !== undefined) p['hs_applicable']            = s['hsApplicable'];
-  if (s['hsExemptionReason']      !== undefined) p['hs_exemption_reason']      = s['hsExemptionReason'];
-  if (s['hsEffectiveDate']        !== undefined) p['hs_effective_date']        = s['hsEffectiveDate'];
-  if (s['hsVerificationRequired'] !== undefined) p['hs_verification_required'] = s['hsVerificationRequired'];
-  return p;
-}
-
-/** Merge a patch over satutory defaults to a full row for readiness computation. */
-function statutoryWithDefaults(p: Record<string, unknown>): StatutoryRow {
-  return {
-    nis_status:               (p['nis_status']               as string)        ?? 'pending',
-    nis_number:               (p['nis_number']               as string | null) ?? null,
-    paye_applicable:          (p['paye_applicable']          as boolean)       ?? true,
-    bir_file_number:          (p['bir_file_number']          as string | null) ?? null,
-    td1_received:             (p['td1_received']             as boolean)       ?? false,
-    hs_applicable:            (p['hs_applicable']            as boolean)       ?? true,
-    hs_verification_required: (p['hs_verification_required'] as boolean)       ?? false,
-  };
 }
 
 const TRAINING_TERMINAL = new Set(['revoked', 'archived', 'rejected']);
@@ -268,27 +179,19 @@ router.post('/employees/create', async c => {
   if (!v.ok) return v.response;
   const { identity, employment, assignment, access, statutory } = v.data;
 
-  const employeeNo = identity.employeeNumber?.trim()
-    ? identity.employeeNumber.trim().toUpperCase()
-    : await nextEmployeeNumber();
-  // Friendly pre-flight uniqueness (the DB unique constraints remain the backstop).
-  const [{ data: dupUser }, { data: dupNum }] = await Promise.all([
-    sb.from('app_users').select('id').eq('username', identity.username).maybeSingle(),
-    sb.from('app_users').select('id').eq('employee_number', employeeNo).maybeSingle(),
-  ]);
+  // Friendly pre-flight uniqueness (provisionEmployee + the DB constraints are the backstop).
+  const { data: dupUser } = await sb.from('app_users').select('id').eq('username', identity.username).maybeSingle();
   if (dupUser) return c.json({ success: false, message: `Username "${identity.username}" is already taken.` }, 400 as 200);
-  if (dupNum)  return c.json({ success: false, message: `Employee ID "${employeeNo}" is already in use.` }, 400 as 200);
+  if (identity.employeeNumber?.trim()) {
+    const num = identity.employeeNumber.trim().toUpperCase();
+    const { data: dupNum } = await sb.from('app_users').select('id').eq('employee_number', num).maybeSingle();
+    if (dupNum) return c.json({ success: false, message: `Employee ID "${num}" is already in use.` }, 400 as 200);
+  }
 
-  const authEmail = identity.email?.trim()
-    ? identity.email.trim().toLowerCase()
-    : `${identity.username.toLowerCase()}@siomac.internal`;
-  const startDate = employment?.startDate ?? todayISO();
-  const stPatch = statutory ? statutoryPatch(statutory) : {};
-  const readiness = Object.keys(stPatch).length
-    ? computePayrollReadiness(statutoryWithDefaults(stPatch))
-    : { status: 'pending' as const, blockers: [] as string[], financeEligible: false };
-
-  const result = await runModuleMutation<{ id: string; employeeNo: string; readiness: string }>({
+  // Provisioning (app_users + Supabase Auth + satellites, atomic) is the SHARED
+  // provisionEmployee() — the same path import/commit uses. The adapter emits the
+  // hr.employee.created app_event and tracks the run for idempotency.
+  const result = await runModuleMutation<{ id: string; employeeNo: string; readiness: 'pending' | 'ready' | 'blocked' }>({
     context: { actorUserId: actor.id, siteId: assignment?.siteId ?? null, departmentId: assignment?.departmentId ?? null },
     options: {
       module: 'hr', operation: 'create', entityType: 'employee',
@@ -297,77 +200,7 @@ router.post('/employees/create', async c => {
       getEntityIdentity: (r) => ({ id: r.id, ref: r.employeeNo }),
       buildEventPayload:  (r) => ({ employeeNumber: r.employeeNo, payrollReadiness: r.readiness }),
     },
-    // The record write = app_users + Supabase Auth account + assignment + statutory +
-    // status history + HR submodule audit. The adapter emits the hr.employee.created
-    // app_event (so we don't emit it here) and tracks the run for idempotency.
-    writeRecord: async () => {
-      const insertRow: Record<string, unknown> = {
-        username: identity.username, full_name: identity.fullName,
-        role: access?.role ?? 'employee', status: 'active', auth_email: authEmail,
-        email: identity.email?.trim() || null, personal_email: identity.personalEmail?.trim() || null,
-        phone: identity.phone?.trim() || null, employee_number: employeeNo,
-        // contractor_flag derives from employmentType unless explicitly set.
-        contractor_flag: employment?.contractorFlag ?? (employment?.employmentType === 'contractor'),
-        start_date: startDate, position: employment?.position ?? null, position_id: assignment?.positionId ?? null,
-        department_id: assignment?.departmentId ?? null, site_id: assignment?.siteId ?? null,
-        supervisor_id: assignment?.supervisorId ?? null,
-      };
-      // employment_type is NOT NULL with a DB default — only set it when provided.
-      if (employment?.employmentType) insertRow['employment_type'] = employment.employmentType;
-      if (identity.firstName) insertRow['first_name'] = identity.firstName;
-      if (identity.lastName)  insertRow['last_name']  = identity.lastName;
-
-      const { data: created, error: insErr } = await sb.from('app_users').insert(insertRow).select('id').single<{ id: string }>();
-      if (insErr) {
-        const dup = insErr.code === '23505';
-        const msg = dup
-          ? (insErr.message.includes('employee_number') ? `Employee ID "${employeeNo}" is already in use.` : `Username "${identity.username}" is already taken.`)
-          : insErr.message;
-        throw Object.assign(new Error(msg), { status: dup ? 400 : 500 });
-      }
-      const employeeId = created.id;
-
-      // Supabase Auth account (so the new hire can log in) — roll back app_users on failure.
-      const { data: authData, error: authErr } = await sb.auth.admin.createUser({
-        email: authEmail, password: identity.password, email_confirm: true,
-        user_metadata: { appUserId: employeeId, username: identity.username },
-      });
-      if (authErr) {
-        await sb.from('app_users').delete().eq('id', employeeId);
-        throw Object.assign(new Error('Failed to create auth account: ' + authErr.message), { status: 500 });
-      }
-      await sb.from('app_users').update({ auth_id: authData.user.id }).eq('id', employeeId);
-
-      // Satellites — assignment, statutory snapshot, initial status history. Errors are
-      // checked (not swallowed): if any fails we roll back the user + Auth account so we
-      // never leave a half-provisioned employee (e.g. one with no statutory row).
-      const { error: asgErr } = await sb.from('hr_employee_assignments').insert({
-        employee_id: employeeId, position_id: assignment?.positionId ?? null,
-        department_id: assignment?.departmentId ?? null, site_id: assignment?.siteId ?? null,
-        supervisor_id: assignment?.supervisorId ?? null, assignment_type: 'primary',
-        effective_from: startDate, is_current: true, created_by: actor.id,
-      });
-      const { error: stErr } = await sb.from('hr_employee_statutory').insert({
-        employee_id: employeeId, ...stPatch,
-        payroll_ready_status: readiness.status, missing_blockers: readiness.blockers,
-        finance_handoff_eligible: readiness.financeEligible, updated_by: actor.id,
-      });
-      const { error: histErr } = await sb.from('hr_employee_status_history').insert({
-        employee_id: employeeId, previous_status: null, new_status: 'active',
-        reason: 'Employee created', effective_date: startDate, changed_by: actor.id,
-      });
-      const satErr = asgErr ?? stErr ?? histErr;
-      if (satErr) {
-        await sb.from('app_users').delete().eq('id', employeeId);   // cascades any satellites written
-        try { await sb.auth.admin.deleteUser(authData.user.id); } catch { /* best-effort */ }
-        throw Object.assign(new Error('Failed to write employee records: ' + satErr.message), { status: 500 });
-      }
-
-      await writeHrAudit({ employeeId, submoduleKey: 'employees', recordId: employeeId, actorId: actor.id,
-        action: 'hr.employee.created', newState: { employee_number: employeeNo, role: access?.role ?? 'employee', payrollReadiness: readiness.status } });
-
-      return { id: employeeId, employeeNo, readiness: readiness.status };
-    },
+    writeRecord: () => provisionEmployee(actor.id, { identity, employment, assignment, access, statutory }),
   });
 
   return c.json({ success: true, data: {
