@@ -272,6 +272,36 @@ export const PERMISSION_KEYS = [
   'settings.manifests.review.security',
   'communications.participants.remove_required',
   'notifications.required_delivery.manage',
+  // ── Central Workflow Engine (Spec §22) ───────────────────────────────────────
+  'workflow.dashboard.view',
+  'workflow.my_tasks.view',
+  'workflow.register.view',
+  'workflow.tasks.approve',
+  'workflow.tasks.return',
+  'workflow.tasks.reject',
+  'workflow.tasks.delegate',
+  'workflow.instances.view',
+  'workflow.instances.reassign',
+  'workflow.instances.escalate',
+  'workflow.instances.cancel',
+  'workflow.instances.admin_override',
+  'workflow.instances.migrate',
+  'workflow.templates.view',
+  'workflow.templates.create',
+  'workflow.templates.update',
+  'workflow.templates.publish',
+  'workflow.templates.clone',
+  'workflow.templates.deprecate',
+  'workflow.bindings.view',
+  'workflow.bindings.create',
+  'workflow.bindings.update',
+  'workflow.bindings.activate',
+  'workflow.bindings.deactivate',
+  'workflow.handoffs.view',
+  'workflow.handoffs.retry',
+  'workflow.handoffs.cancel',
+  'workflow.audit.view',
+  'workflow.audit.export',
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -302,6 +332,8 @@ export const CRITICAL_GRANT_KEYS = new Set<string>([
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
 
   employee: new Set<PermissionKey>([
+    // Workflow — my tasks + decide when assigned (Spec §22)
+    'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
     // Settings — own personal preferences only (Spec §4)
     'settings.own_preferences.view', 'settings.own_preferences.manage',
     'attendance.view_own',
@@ -322,6 +354,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   manager: new Set<PermissionKey>([
+    // Workflow — run approvals + manage instances (Spec §22)
+    'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
+    'workflow.instances.view', 'workflow.instances.reassign', 'workflow.instances.escalate', 'workflow.instances.cancel',
+    'workflow.handoffs.view', 'workflow.audit.view',
     // Settings — own preferences + view module notification/message settings
     'settings.own_preferences.view', 'settings.own_preferences.manage',
     'settings.notifications.view', 'settings.messages.view',
@@ -362,6 +399,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   admin: new Set<PermissionKey>([
+    // Workflow — full except superadmin-only admin_override (Spec §22)
+    'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
+    'workflow.instances.view', 'workflow.instances.reassign', 'workflow.instances.escalate', 'workflow.instances.cancel', 'workflow.instances.migrate',
+    'workflow.templates.view', 'workflow.templates.create', 'workflow.templates.update', 'workflow.templates.publish', 'workflow.templates.clone', 'workflow.templates.deprecate',
+    'workflow.bindings.view', 'workflow.bindings.create', 'workflow.bindings.update', 'workflow.bindings.activate', 'workflow.bindings.deactivate',
+    'workflow.handoffs.view', 'workflow.handoffs.retry', 'workflow.handoffs.cancel',
+    'workflow.audit.view', 'workflow.audit.export',
     // Settings — module policy + non-critical governance (critical/safety/security/
     // audit + manifest approval are superadmin-only, Spec §16)
     'settings.manage',
@@ -464,6 +509,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   superadmin: new Set<PermissionKey>([
+    // Workflow — full governance incl. admin_override (Spec §22)
+    'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
+    'workflow.instances.view', 'workflow.instances.reassign', 'workflow.instances.escalate', 'workflow.instances.cancel', 'workflow.instances.admin_override', 'workflow.instances.migrate',
+    'workflow.templates.view', 'workflow.templates.create', 'workflow.templates.update', 'workflow.templates.publish', 'workflow.templates.clone', 'workflow.templates.deprecate',
+    'workflow.bindings.view', 'workflow.bindings.create', 'workflow.bindings.update', 'workflow.bindings.activate', 'workflow.bindings.deactivate',
+    'workflow.handoffs.view', 'workflow.handoffs.retry', 'workflow.handoffs.cancel',
+    'workflow.audit.view', 'workflow.audit.export',
     // Settings & Preferences — full governance (Spec §8)
     'settings.manage',
     'settings.own_preferences.view', 'settings.own_preferences.manage',
