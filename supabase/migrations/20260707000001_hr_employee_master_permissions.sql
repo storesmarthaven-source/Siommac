@@ -13,6 +13,7 @@ insert into public.role_permissions (role_name, permission) values
 
   -- Create + sensitive statutory/payroll/contact — full HR roles only (managers stay view-only)
   ('superadmin','hr.employees.create'),('admin','hr.employees.create'),('hr_manager','hr.employees.create'),
+  ('superadmin','hr.employees.update'),('admin','hr.employees.update'),('hr_manager','hr.employees.update'),
   ('superadmin','hr.employees.statutory.view'),('admin','hr.employees.statutory.view'),('hr_manager','hr.employees.statutory.view'),
   ('superadmin','hr.employees.statutory.update'),('admin','hr.employees.statutory.update'),('hr_manager','hr.employees.statutory.update'),
   ('superadmin','hr.employees.payroll_readiness.view'),('admin','hr.employees.payroll_readiness.view'),('hr_manager','hr.employees.payroll_readiness.view'),

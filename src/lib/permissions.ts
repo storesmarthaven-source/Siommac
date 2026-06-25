@@ -61,6 +61,7 @@ export const PERMISSION_KEYS = [
   'hr.settings.manage',
   'hr.employees.view',
   'hr.employees.create',
+  'hr.employees.update',
   'hr.employees.status_change',
   'hr.employees.transfer',
   'hr.employees.role_change',
@@ -449,7 +450,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Everything manager can do, plus:
     // HR — full people management
     'hr.view', 'hr.dashboard.view', 'hr.audit.view', 'hr.settings.view', 'hr.settings.manage',
-    'hr.employees.view', 'hr.employees.create', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
+    'hr.employees.view', 'hr.employees.create', 'hr.employees.update', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
     'hr.employees.payroll_readiness.view', 'hr.employees.restricted_contact.update',
     'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
     'hr.employees.supervisor_change', 'hr.employees.sensitive_view',
@@ -569,7 +570,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.remove_required', 'notifications.required_delivery.manage',
     // Everything — explicit list ensures PERMISSION_KEYS stays in sync
     'hr.view', 'hr.dashboard.view', 'hr.audit.view', 'hr.settings.view', 'hr.settings.manage',
-    'hr.employees.view', 'hr.employees.create', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
+    'hr.employees.view', 'hr.employees.create', 'hr.employees.update', 'hr.employees.statutory.view', 'hr.employees.statutory.update',
     'hr.employees.payroll_readiness.view', 'hr.employees.restricted_contact.update',
     'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
     'hr.employees.supervisor_change', 'hr.employees.sensitive_view',

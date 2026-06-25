@@ -56,6 +56,7 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.employees.sensitive_view':    { module: 'HR', group: 'Employee Master', label: 'View Sensitive HR Data',  description: 'View sensitive HR employee fields.', risk: 'high' },
   'hr.employees.view':              { module: 'HR', group: 'Employee Master', label: 'View Employee Master',    description: 'View the employee register, profiles and stats.', risk: 'low' },
   'hr.employees.create':            { module: 'HR', group: 'Employee Master', label: 'Create Employee',         description: 'Create a new employee via the Employee Master wizard.', risk: 'medium' },
+  'hr.employees.update':            { module: 'HR', group: 'Employee Master', label: 'Update Employee',         description: 'Edit employee profile and work-contact fields.', risk: 'medium' },
   'hr.employees.statutory.view':    { module: 'HR', group: 'Employee Master', label: 'View Statutory Data',     description: 'View NIS / BIR / PAYE / health-surcharge statutory fields.', risk: 'high' },
   'hr.employees.statutory.update':  { module: 'HR', group: 'Employee Master', label: 'Update Statutory Data',   description: 'Edit statutory and payroll-readiness fields.', risk: 'high' },
   'hr.employees.payroll_readiness.view': { module: 'HR', group: 'Employee Master', label: 'View Payroll Readiness', description: 'View an employee payroll-readiness status.', risk: 'medium' },

@@ -105,6 +105,7 @@ export const PERMISSION_KEYS = [
   'hr.settings.manage',
   'hr.employees.view',
   'hr.employees.create',
+  'hr.employees.update',
   'hr.employees.status_change',
   'hr.employees.transfer',
   'hr.employees.role_change',

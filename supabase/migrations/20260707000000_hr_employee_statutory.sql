@@ -48,13 +48,16 @@ create index if not exists hr_employee_statutory_ready_idx
 
 alter table public.hr_employee_statutory enable row level security;
 
--- Service-role (backend) bypasses RLS; statutory data is backend-only (sensitive,
--- gated by hr.employees.statutory.* — never a direct browser read).
-do $$ begin
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='hr_employee_statutory' and policyname='hr_employee_statutory_admin_read') then
-    create policy "hr_employee_statutory_admin_read" on public.hr_employee_statutory for select using (true);
-  end if;
-end $$;
+-- Backend-only access: the service role reads AND writes this satellite (gated by
+-- hr.employees.statutory.* in the API). Grant the table privileges EXPLICITLY —
+-- relying on default privileges left the relation readable-but-not-insertable in
+-- PostgREST's per-operation schema cache (INSERT → "table not in schema cache").
+-- RLS stays enabled with NO permissive policy, so anon/authenticated have no path to
+-- this sensitive data. (The earlier `using (true)` SELECT policy is dropped: it was
+-- dead for the service role, which bypasses RLS, and a latent exposure risk had a
+-- SELECT grant ever been added for another role.)
+drop policy if exists "hr_employee_statutory_admin_read" on public.hr_employee_statutory;
+grant select, insert, update, delete on table public.hr_employee_statutory to service_role;
 
 -- updated_at trigger (reuse the shared set_updated_at function).
 drop trigger if exists trg_hr_employee_statutory_updated_at on public.hr_employee_statutory;
