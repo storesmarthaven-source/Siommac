@@ -43,6 +43,22 @@ export interface PermissionMeta {
 
 export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
 
+  // ── HR (people backbone) ─────────────────────────────────────────────────────
+  'hr.view':                        { module: 'HR', group: 'General',        label: 'Access HR',                description: 'Open the HR module.', risk: 'low' },
+  'hr.dashboard.view':              { module: 'HR', group: 'General',        label: 'View HR Dashboard',        description: 'View the HR workforce dashboard and KPIs.', risk: 'low' },
+  'hr.audit.view':                  { module: 'HR', group: 'General',        label: 'View HR Audit',            description: 'View the HR audit log.', risk: 'medium' },
+  'hr.settings.view':               { module: 'HR', group: 'Settings',       label: 'View HR Settings',         description: 'View HR module settings.', risk: 'low' },
+  'hr.settings.manage':             { module: 'HR', group: 'Settings',       label: 'Manage HR Settings',       description: 'Change HR module settings.', risk: 'high' },
+  'hr.employees.status_change':     { module: 'HR', group: 'Employee Master', label: 'Change Employment Status', description: 'Change an employee employment status (probation, suspend, terminate, archive).', risk: 'high' },
+  'hr.employees.transfer':          { module: 'HR', group: 'Employee Master', label: 'Transfer Employee',       description: 'Transfer an employee between departments or sites.', risk: 'high' },
+  'hr.employees.role_change':       { module: 'HR', group: 'Employee Master', label: 'Change Role',             description: 'Request or apply an employee role change.', risk: 'high' },
+  'hr.employees.supervisor_change': { module: 'HR', group: 'Employee Master', label: 'Change Supervisor',       description: 'Change an employee reporting supervisor.', risk: 'medium' },
+  'hr.employees.sensitive_view':    { module: 'HR', group: 'Employee Master', label: 'View Sensitive HR Data',  description: 'View sensitive HR employee fields.', risk: 'high' },
+  'hr.organization.view':           { module: 'HR', group: 'Organization',   label: 'View Organization',        description: 'View the organization structure and departments tree.', risk: 'low' },
+  'hr.organization.manage':         { module: 'HR', group: 'Organization',   label: 'Manage Organization',      description: 'Create or edit org units and reporting lines.', risk: 'high' },
+  'hr.positions.view':              { module: 'HR', group: 'Organization',   label: 'View Positions',           description: 'View job positions.', risk: 'low' },
+  'hr.positions.manage':            { module: 'HR', group: 'Organization',   label: 'Manage Positions',         description: 'Create or edit job positions.', risk: 'high' },
+
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {
     module: 'Employees', group: 'Employee Directory',

@@ -53,6 +53,21 @@ import type { UserRole, PermissionOverride } from '@api/schemas/auth';
  *   3. Update docs/SECURITY.md §RBAC with the description.
  */
 export const PERMISSION_KEYS = [
+  // ── HR (people backbone) ─────────────────────────────────────────────────────
+  'hr.view',
+  'hr.dashboard.view',
+  'hr.audit.view',
+  'hr.settings.view',
+  'hr.settings.manage',
+  'hr.employees.status_change',
+  'hr.employees.transfer',
+  'hr.employees.role_change',
+  'hr.employees.supervisor_change',
+  'hr.employees.sensitive_view',
+  'hr.organization.view',
+  'hr.organization.manage',
+  'hr.positions.view',
+  'hr.positions.manage',
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -224,6 +239,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   manager: new Set<PermissionKey>([
+    // HR — view-only for managers (changes go through admin/HR)
+    'hr.view', 'hr.dashboard.view', 'hr.organization.view', 'hr.positions.view',
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
     'payroll.view_own',
@@ -259,6 +276,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
 
   admin: new Set<PermissionKey>([
     // Everything manager can do, plus:
+    // HR — full people management
+    'hr.view', 'hr.dashboard.view', 'hr.audit.view', 'hr.settings.view', 'hr.settings.manage',
+    'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
+    'hr.employees.supervisor_change', 'hr.employees.sensitive_view',
+    'hr.organization.view', 'hr.organization.manage', 'hr.positions.view', 'hr.positions.manage',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
@@ -323,6 +345,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
 
   superadmin: new Set<PermissionKey>([
     // Everything — explicit list ensures PERMISSION_KEYS stays in sync
+    'hr.view', 'hr.dashboard.view', 'hr.audit.view', 'hr.settings.view', 'hr.settings.manage',
+    'hr.employees.status_change', 'hr.employees.transfer', 'hr.employees.role_change',
+    'hr.employees.supervisor_change', 'hr.employees.sensitive_view',
+    'hr.organization.view', 'hr.organization.manage', 'hr.positions.view', 'hr.positions.manage',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
