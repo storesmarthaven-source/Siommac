@@ -2,10 +2,8 @@
 // Central Workflow Engine — service (Spec §10-§16)
 // ============================================================================
 // startWorkflowForRecord / decideTask / advance / return / reject / complete /
-// cancel / delegate / reassign + handoff + audit. Uses the spec columns but
-// DUAL-WRITES the legacy NOT-NULL columns (ref/source_module/source_entity_*/
-// current_step/created_by, tasks.task_type/assigned_user_id) so existing readers
-// keep working until the final cutover drops them. Notifications are emitted as
+// cancel / delegate / reassign + handoff + audit. Writes the spec columns only
+// (legacy columns dropped in 20260704000003). Notifications are emitted as
 // app_events (existing event_rules → notifications pipeline). Adapter callbacks
 // are null-safe so the engine runs before per-module adapters exist.
 // ============================================================================
@@ -24,10 +22,6 @@ import { getWorkflowAdapter } from './adapterRegistry';
 
 export interface WorkflowActor { id: string; role?: string }
 
-const LEGACY_TASK_TYPE: Record<string, string> = {
-  review: 'review', approval: 'approve', verification: 'verify', acknowledgement: 'review',
-  assignment: 'review', handoff: 'handoff', automation: 'review', closeout: 'review',
-};
 
 function addHoursIso(hours: number | undefined | null): string | null {
   if (!hours) return null;
@@ -100,8 +94,7 @@ async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, 
   await sb.from('workflow_tasks').insert({
     workflow_id: wf.id,
     step_key: step.stepKey, step_name: step.stepName, step_type: step.stepType, task_title: step.stepName,
-    task_type: LEGACY_TASK_TYPE[step.stepType] ?? 'review',                 // legacy NOT-NULL
-    assigned_to: assignee.userId ?? null, assigned_user_id: assignee.userId ?? null, assigned_role: assignee.roleKey ?? null,
+    assigned_to: assignee.userId ?? null, assigned_role: assignee.roleKey ?? null,
     status: 'pending', due_at: dueAt, is_required: step.required,
     metadata: { assignmentType: step.assignment.type },
   });
@@ -131,9 +124,6 @@ export async function startWorkflowForRecord(params: { context: ModuleWorkflowCo
     started_at: new Date().toISOString(),
     template_snapshot: definition, source_snapshot: context.recordData,
     metadata: { bindingId: binding.id, triggerEvent: context.triggerEvent },
-    // legacy NOT-NULL columns (dropped at cutover)
-    ref: workflowNo, source_module: context.moduleKey, source_entity_type: context.workflowType,
-    source_entity_id: context.sourceRecordId, current_step: firstKey ?? 'submitted', created_by: context.requestedBy,
   }).select('*').single<WorkflowRow>();
   if (error || !instance) throw new Error(`Failed to start workflow: ${error?.message}`);
 
@@ -170,7 +160,7 @@ export async function decideTask(params: {
 
   await sb.from('workflow_tasks').update({
     status: params.decision, decision: params.decision, decision_comment: params.comment ?? null,
-    decision_note: params.comment ?? null, completed_by: params.actor.id, completed_at: new Date().toISOString(), decided_at: new Date().toISOString(),
+    completed_by: params.actor.id, completed_at: new Date().toISOString(), decided_at: new Date().toISOString(),
   }).eq('id', task.id);
 
   await sb.from('workflow_decisions').insert({
@@ -195,7 +185,7 @@ async function advanceWorkflow(wf: WorkflowRow, completedStepKey: string, actor:
   const context = workflowToContext(wf);
   for (const step of nextSteps) await createTaskForStep(wf, step, context);
   const nextKey = nextSteps[0]!.stepKey;
-  await sb.from('workflow_instances').update({ current_step_key: nextKey, current_step: nextKey, status: 'in_progress' }).eq('id', wf.id);
+  await sb.from('workflow_instances').update({ current_step_key: nextKey, status: 'in_progress' }).eq('id', wf.id);
   return { ...wf, current_step_key: nextKey, status: 'in_progress' };
 }
 
@@ -243,14 +233,14 @@ export async function delegateTask(params: { taskId: string; actor: WorkflowActo
   const wf = await getWorkflow(task.workflow_id);
   const step = wf.template_snapshot.steps.find((s) => s.stepKey === task.step_key);
   if (!step?.decisionRules.canDelegate) throw new Error('This task cannot be delegated.');
-  await sb.from('workflow_tasks').update({ status: 'delegated', delegated_to: params.delegateTo, assigned_to: params.delegateTo, assigned_user_id: params.delegateTo }).eq('id', task.id);
+  await sb.from('workflow_tasks').update({ status: 'delegated', delegated_to: params.delegateTo, assigned_to: params.delegateTo }).eq('id', task.id);
   await writeWorkflowAudit({ workflowId: wf.id, taskId: task.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.task.delegated', reason: params.reason });
 }
 
 export async function reassignTask(params: { taskId: string; actor: WorkflowActor; reassignTo: string; reason: string }): Promise<void> {
   const task = await getTask(params.taskId);
   const wf = await getWorkflow(task.workflow_id);
-  await sb.from('workflow_tasks').update({ status: 'reassigned', assigned_to: params.reassignTo, assigned_user_id: params.reassignTo }).eq('id', task.id);
+  await sb.from('workflow_tasks').update({ status: 'reassigned', assigned_to: params.reassignTo }).eq('id', task.id);
   await writeWorkflowAudit({ workflowId: wf.id, taskId: task.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.task.reassigned', reason: params.reason });
 }
 

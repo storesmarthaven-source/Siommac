@@ -622,16 +622,17 @@ function _countFromSettled(result: PromiseSettledResult<unknown>): number {
 }
 
 async function _countWorkflowTasks(userId: string, role: string): Promise<number> {
+  const OPEN_TASK_STATES = ['open', 'pending', 'in_progress'];
   const [byUser, byRole] = await Promise.all([
     sb.from('workflow_tasks')
       .select('id', { count: 'exact', head: true })
-      .eq('assigned_user_id', userId)
-      .eq('status', 'open'),
+      .eq('assigned_to', userId)
+      .in('status', OPEN_TASK_STATES),
     sb.from('workflow_tasks')
       .select('id', { count: 'exact', head: true })
       .eq('assigned_role', role)
-      .is('assigned_user_id', null)
-      .eq('status', 'open'),
+      .is('assigned_to', null)
+      .in('status', OPEN_TASK_STATES),
   ]);
   return (byUser.count ?? 0) + (byRole.count ?? 0);
 }

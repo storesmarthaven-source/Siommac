@@ -356,7 +356,7 @@ router.post('/risk-jsa/hazards/detail', async c => {
       .order('created_at', { ascending: false })
       .limit(30),
     workflowId
-      ? sb.from('workflow_instances').select('*, workflow_tasks(*)').eq('id', workflowId).maybeSingle()
+      ? sb.from('workflow_instances').select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at, updated_at, closed_at, metadata, workflow_tasks(id, workflow_id, step_key, task_type:step_type, assigned_role, assigned_user_id:assigned_to, status, due_at, decision, decision_note:decision_comment, completed_by, completed_at, created_at)').eq('id', workflowId).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -692,7 +692,7 @@ router.post('/risk-jsa/assessments/detail', async c => {
       .order('created_at', { ascending: false })
       .limit(30),
     workflowId
-      ? sb.from('workflow_instances').select('*, workflow_tasks(*)').eq('id', workflowId).maybeSingle()
+      ? sb.from('workflow_instances').select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at, updated_at, closed_at, metadata, workflow_tasks(id, workflow_id, step_key, task_type:step_type, assigned_role, assigned_user_id:assigned_to, status, due_at, decision, decision_note:decision_comment, completed_by, completed_at, created_at)').eq('id', workflowId).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -1129,7 +1129,7 @@ router.post('/risk-jsa/jsa/detail', async c => {
       .order('created_at', { ascending: false })
       .limit(30),
     workflowId
-      ? sb.from('workflow_instances').select('*, workflow_tasks(*)').eq('id', workflowId).maybeSingle()
+      ? sb.from('workflow_instances').select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at, updated_at, closed_at, metadata, workflow_tasks(id, workflow_id, step_key, task_type:step_type, assigned_role, assigned_user_id:assigned_to, status, due_at, decision, decision_note:decision_comment, completed_by, completed_at, created_at)').eq('id', workflowId).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -1834,8 +1834,8 @@ router.post('/risk-jsa/controls/verify', async c => {
 router.post('/risk-jsa/templates/list', async c => {
   await requirePermission(c, 'hse.risk.manage');
   const { data, error } = await sb.from('workflow_templates')
-    .select('id, module, key, name, description, is_active, definition, created_at')
-    .eq('module', 'hse')
+    .select('id, module:module_key, key:template_key, name, description, is_active, definition, created_at')
+    .eq('module_key', 'hse')
     .order('name');
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   return c.json({ success: true, data: data ?? [] });
@@ -1856,9 +1856,9 @@ router.post('/risk-jsa/templates/duplicate', async c => {
   if (!v.ok) return v.response;
 
   const src = await sb.from('workflow_templates')
-    .select('module, key, name, description, definition')
+    .select('module:module_key, key:template_key, workflow_type, name, description, definition')
     .eq('id', v.data.templateId)
-    .maybeSingle<{ module: string; key: string; name: string; description: string; definition: unknown }>();
+    .maybeSingle<{ module: string; key: string; workflow_type: string | null; name: string; description: string; definition: unknown }>();
   if (!src.data) return c.json({ success: false, message: 'Template not found' }, 404 as 200);
 
   const newKey  = `${src.data.key}_copy_${Date.now().toString(36)}`;
@@ -1866,14 +1866,16 @@ router.post('/risk-jsa/templates/duplicate', async c => {
 
   const { data, error } = await sb.from('workflow_templates')
     .insert({
-      module:      src.data.module,
-      key:         newKey,
-      name:        newName,
-      description: src.data.description,
-      is_active:   false,
-      definition:  src.data.definition ?? {},
+      module_key:    src.data.module,
+      template_key:  newKey,
+      workflow_type: src.data.workflow_type,
+      name:          newName,
+      description:   src.data.description,
+      is_active:     false,
+      status:        'draft',
+      definition:    src.data.definition ?? {},
     })
-    .select('id, key, name')
+    .select('id, key:template_key, name')
     .single<{ id: string; key: string; name: string }>();
 
   if (error || !data) return c.json({ success: false, message: error?.message ?? 'Duplicate failed' }, 500 as 200);

@@ -374,7 +374,7 @@ router.post('/incidents/update', async c => {
       eventType:        'hse.incident.closed',
       sourceModule:     'hse',
       sourceEntityType: 'incident',
-      sourceEntityId:   closed.data?.ref ?? incidentId,
+      sourceEntityId:   incidentId,
       actorUserId:      user.id,
       severity:         'success',
       payload:          { status: 'closed' },
@@ -435,7 +435,8 @@ router.post('/dashboard/kpis', async c => {
     sb.from('hse_capa_actions').select('id', { count: 'exact', head: true })
       .not('status', 'in', '(closed,cancelled)').lt('due_at', now),
     sb.from('workflow_instances').select('id', { count: 'exact', head: true })
-      .eq('source_module', 'hse').not('status', 'in', '(approved,rejected,closed)'),
+      .in('module_key', ['hse','incidents','investigations','capa','jsa','ptw','inspections','training','documents','sds'])
+      .not('status', 'in', '(approved,rejected,closed,completed,cancelled)'),
     // OSH verbal notifications past their statutory deadline and still unfulfilled
     sb.from('hse_incidents').select('id', { count: 'exact', head: true })
       .not('osh_notification_due', 'is', null)
@@ -518,16 +519,15 @@ router.post('/incidents/detail', async c => {
       .eq('source_type', 'incident')
       .eq('source_id', incidentRef)
       .order('due_at', { ascending: true, nullsFirst: false }),
-    sb.from('workflow_instances')
-      .select('*')
-      .eq('source_module', 'hse')
-      .eq('source_entity_type', 'incident')
-      .eq('source_entity_id', incidentRef)
-      .order('created_at', { ascending: false })
-      .limit(1),
+    incident.workflow_id
+      ? sb.from('workflow_instances')
+          .select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at, updated_at, closed_at, metadata')
+          .eq('id', incident.workflow_id as string)
+          .limit(1)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     sb.from('app_events')
       .select('id, event_type, source_entity_type, source_entity_id, actor_user_id, severity, payload, created_at')
-      .eq('source_entity_id', incidentRef)
+      .eq('source_entity_id', incidentId)
       .order('created_at', { ascending: false })
       .limit(30),
   ]);

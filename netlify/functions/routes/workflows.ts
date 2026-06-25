@@ -64,18 +64,19 @@ router.post('/workflows/list', async c => {
   const v = zv(c, ListWorkflowsSchema, body.args);
   if (!v.ok) return v.response;
 
+  // Spec columns aliased back to the stable API field names the frontend uses.
   let q = sb
     .from('workflow_instances')
-    .select('id, ref, template_id, source_module, source_entity_type, source_entity_id, status, priority, current_step, owner_user_id, due_at, created_at')
+    .select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at')
     .order('created_at', { ascending: false })
     .limit(v.data.limit);
 
   if (v.data.status) q = q.eq('status', v.data.status);
-  if (v.data.module) q = q.eq('source_module', v.data.module);
+  if (v.data.module) q = q.eq('module_key', v.data.module);
 
   // For non-admin/manager, scope to owned or involved workflows
   if (!['admin','superadmin','manager'].includes(user.role)) {
-    q = q.eq('owner_user_id', user.id);
+    q = q.eq('owner_id', user.id);
   }
 
   const { data, error } = await q;
@@ -95,8 +96,8 @@ router.post('/workflows/get', async c => {
   if (!workflowId) return c.json({ success: false, message: 'workflowId required' }, 400 as 200);
 
   const [wfRes, tasksRes, eventsRes] = await Promise.all([
-    sb.from('workflow_instances').select('*').eq('id', workflowId).maybeSingle(),
-    sb.from('workflow_tasks').select('*').eq('workflow_id', workflowId).order('created_at'),
+    sb.from('workflow_instances').select('id, ref:workflow_no, template_id, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, status, priority, current_step:current_step_key, owner_user_id:owner_id, due_at, created_at, updated_at, closed_at, metadata').eq('id', workflowId).maybeSingle(),
+    sb.from('workflow_tasks').select('id, workflow_id, step_key, task_type:step_type, assigned_role, assigned_user_id:assigned_to, status, due_at, decision, decision_note:decision_comment, completed_by, completed_at, created_at').eq('workflow_id', workflowId).order('created_at'),
     sb.from('workflow_events').select('*').eq('workflow_id', workflowId).order('created_at'),
   ]);
 
@@ -119,9 +120,9 @@ router.post('/workflows/tasks', async c => {
 
   const { data, error } = await sb
     .from('workflow_tasks')
-    .select('*, workflow_instances(ref, source_module, source_entity_type, source_entity_id, priority)')
-    .eq('status', 'open')
-    .or(`assigned_user_id.eq.${user.id},and(assigned_role.eq.${user.role},assigned_user_id.is.null)`)
+    .select('id, workflow_id, step_key, task_type:step_type, assigned_role, assigned_user_id:assigned_to, status, due_at, decision, decision_note:decision_comment, completed_at, created_at, workflow_instances(ref:workflow_no, source_module:module_key, source_entity_type:workflow_type, source_entity_id:source_record_id, priority)')
+    .in('status', ['open', 'pending', 'in_progress'])
+    .or(`assigned_to.eq.${user.id},and(assigned_role.eq.${user.role},assigned_to.is.null)`)
     .order('due_at', { ascending: true, nullsFirst: false })
     .limit(50);
 

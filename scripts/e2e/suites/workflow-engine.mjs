@@ -47,7 +47,7 @@ export default async function run(h) {
   h.section('Workflow › Setup');
   await test('seed template + version + binding', async () => {
     const { data: tpl, error: e1 } = await sb.from('workflow_templates').insert({
-      key: tplKey, module: 'ptw', name: `E2E WF ${TAG}`, definition: {},
+      name: `E2E WF ${TAG}`, definition: {},
       template_key: tplKey, module_key: 'ptw', workflow_type: 'permit_approval', status: 'active',
     }).select('id').single();
     expect(!e1 && !!tpl, `template insert failed: ${e1?.message}`);

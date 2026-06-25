@@ -18,6 +18,11 @@ import { nextRef }        from './refGenerator';
 import { emitAppEvent }   from './appEvents';
 import { createHandoff }  from './handoffBus';
 
+// Old definition step.type → spec workflow_tasks.step_type enum.
+const STEP_TYPE: Record<string, string> = {
+  review: 'review', approve: 'approval', verify: 'verification', evidence: 'verification', handoff: 'handoff',
+};
+
 export interface CreateWorkflowInput {
   templateKey: string;
   sourceModule: string;
@@ -43,7 +48,7 @@ export async function createWorkflow(input: CreateWorkflowInput): Promise<Create
     const { data: tpl, error: tplErr } = await sb
       .from('workflow_templates')
       .select('id, definition')
-      .eq('key', input.templateKey)
+      .eq('template_key', input.templateKey)
       .eq('is_active', true)
       .maybeSingle<{ id: string; definition: WorkflowDefinition }>();
 
@@ -63,16 +68,17 @@ export async function createWorkflow(input: CreateWorkflowInput): Promise<Create
     const { data: wf, error: wfErr } = await sb
       .from('workflow_instances')
       .insert({
-        ref,
+        workflow_no:        ref,
         template_id:        tpl.id,
-        source_module:      input.sourceModule,
-        source_entity_type: input.sourceEntityType,
-        source_entity_id:   input.sourceEntityId,
+        module_key:         input.sourceModule,
+        workflow_type:      input.sourceEntityType,
+        source_record_id:   input.sourceEntityId,
         status:             'submitted',
         priority:           input.priority ?? 'medium',
-        current_step:       firstStep.key,
-        owner_user_id:      input.ownerUserId ?? null,
-        created_by:         input.createdBy,
+        current_step_key:   firstStep.key,
+        owner_id:           input.ownerUserId ?? null,
+        requested_by:       input.createdBy,
+        started_at:         new Date().toISOString(),
         metadata:           input.metadata ?? {},
       })
       .select('id')
@@ -95,7 +101,9 @@ export async function createWorkflow(input: CreateWorkflowInput): Promise<Create
       .insert({
         workflow_id:    workflowId,
         step_key:       firstStep.key,
-        task_type:      firstStep.type,
+        step_name:      firstStep.name,
+        step_type:      STEP_TYPE[firstStep.type] ?? 'review',
+        task_title:     firstStep.name,
         assigned_role:  firstStep.assigned_role ?? null,
         status:         'open',
         due_at:         dueAt,
@@ -162,7 +170,7 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
     // Load task + workflow in one query
     const { data: task, error: taskErr } = await sb
       .from('workflow_tasks')
-      .select('id, workflow_id, step_key, task_type, assigned_role, assigned_user_id')
+      .select('id, workflow_id, step_key, step_type, assigned_role, assigned_to')
       .eq('id', input.taskId)
       .eq('status', 'open')
       .maybeSingle<WorkflowTask>();
@@ -174,7 +182,7 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
 
     const { data: wf, error: wfErr } = await sb
       .from('workflow_instances')
-      .select('id, ref, template_id, status, source_module, source_entity_type, source_entity_id, owner_user_id, current_step, metadata')
+      .select('id, workflow_no, template_id, status, module_key, workflow_type, source_record_id, owner_id, current_step_key, metadata')
       .eq('id', task.workflow_id)
       .maybeSingle<WorkflowInstance>();
 
@@ -196,7 +204,7 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
 
     // Determine new workflow status
     let newStatus: string;
-    let nextStepKey: string = wf.current_step;
+    let nextStepKey: string = wf.current_step_key;
 
     if (input.decision === 'rejected') {
       newStatus = 'rejected';
@@ -217,16 +225,17 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
       status:       'completed',
       completed_by: input.actorUserId,
       decision:     input.decision,
-      decision_note: input.note ?? null,
+      decision_comment: input.note ?? null,
+      decided_at:   now,
       completed_at: now,
     }).eq('id', input.taskId);
 
     // Update workflow instance
     await sb.from('workflow_instances').update({
-      status:       newStatus,
-      current_step: nextStepKey,
-      updated_at:   now,
-      closed_at:    ['approved','rejected','closed'].includes(newStatus) ? now : null,
+      status:           newStatus,
+      current_step_key: nextStepKey,
+      updated_at:       now,
+      closed_at:        ['approved','rejected','closed'].includes(newStatus) ? now : null,
     }).eq('id', wf.id);
 
     // Write workflow_events row
@@ -247,7 +256,9 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
       await sb.from('workflow_tasks').insert({
         workflow_id:   wf.id,
         step_key:      nextStep.key,
-        task_type:     nextStep.type,
+        step_name:     nextStep.name,
+        step_type:     STEP_TYPE[nextStep.type] ?? 'review',
+        task_title:    nextStep.name,
         assigned_role: nextStep.assigned_role ?? null,
         status:        'open',
         due_at:        dueAt,
@@ -255,16 +266,16 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
 
       await emitAppEvent({
         eventType:        'workflow.task.assigned',
-        sourceModule:     wf.source_module,
+        sourceModule:     wf.module_key,
         sourceEntityType: 'workflow_task',
-        sourceEntityId:   wf.ref,
+        sourceEntityId:   wf.workflow_no,
         actorUserId:      input.actorUserId,
         severity:         'info',
         payload:          { stepKey: nextStep.key, assignedRole: nextStep.assigned_role },
         notification: {
           title: `Action required: ${nextStep.name}`,
-          body:  `${wf.ref} — ${wf.source_entity_id} needs ${nextStep.name.toLowerCase()}.`,
-          actionRoute: `${wf.source_module}/workflows/${wf.ref}`,
+          body:  `${wf.workflow_no} — ${wf.source_record_id} needs ${nextStep.name.toLowerCase()}.`,
+          actionRoute: `${wf.module_key}/workflows/${wf.workflow_no}`,
           type:  'workflow.task.assigned',
         },
       });
@@ -281,19 +292,19 @@ export async function decideWorkflowTask(input: DecideWorkflowTaskInput): Promis
     if (['approved','rejected','returned'].includes(newStatus)) {
       await emitAppEvent({
         eventType:        `workflow.${newStatus}`,
-        sourceModule:     wf.source_module,
+        sourceModule:     wf.module_key,
         sourceEntityType: 'workflow',
-        sourceEntityId:   wf.ref,
+        sourceEntityId:   wf.workflow_no,
         actorUserId:      input.actorUserId,
         severity:         newStatus === 'approved' ? 'success' : 'warning',
-        payload:          { note: input.note, sourceEntityId: wf.source_entity_id },
-        explicitRecipients: wf.owner_user_id
-          ? [{ userId: wf.owner_user_id, reason: 'owner' as const }]
+        payload:          { note: input.note, sourceEntityId: wf.source_record_id },
+        explicitRecipients: wf.owner_id
+          ? [{ userId: wf.owner_id, reason: 'owner' as const }]
           : [],
         notification: {
-          title: `Workflow ${newStatus}: ${wf.ref}`,
-          body:  input.note ?? `${wf.source_entity_id} has been ${newStatus}.`,
-          actionRoute: `${wf.source_module}/workflows/${wf.ref}`,
+          title: `Workflow ${newStatus}: ${wf.workflow_no}`,
+          body:  input.note ?? `${wf.source_record_id} has been ${newStatus}.`,
+          actionRoute: `${wf.module_key}/workflows/${wf.workflow_no}`,
           type:  `workflow.${newStatus}`,
         },
       } as Parameters<typeof emitAppEvent>[0]);
@@ -317,33 +328,33 @@ async function _triggerHandoffIfNeeded(
 
   if (handoffType === 'hr_injury_record' && meta.lostTime) {
     await createHandoff({
-      sourceModule:      wf.source_module,
+      sourceModule:      wf.module_key,
       targetModule:      'hr',
-      sourceEntityType:  wf.source_entity_type,
-      sourceEntityId:    wf.source_entity_id,
-      payload:           { employeeId: meta.employeeId, incidentRef: wf.source_entity_id, severity: meta.severity, lostDays: meta.lostDays },
+      sourceEntityType:  wf.workflow_type,
+      sourceEntityId:    wf.source_record_id,
+      payload:           { employeeId: meta.employeeId, incidentRef: wf.source_record_id, severity: meta.severity, lostDays: meta.lostDays },
       createdBy:         actorUserId,
     });
   }
 
   if (handoffType === 'finance_cost_claim' && meta.costImpact) {
     await createHandoff({
-      sourceModule:      wf.source_module,
+      sourceModule:      wf.module_key,
       targetModule:      'finance',
-      sourceEntityType:  wf.source_entity_type,
-      sourceEntityId:    wf.source_entity_id,
-      payload:           { incidentRef: wf.source_entity_id, estimatedCost: meta.estimatedCost, costCenter: meta.costCenter },
+      sourceEntityType:  wf.workflow_type,
+      sourceEntityId:    wf.source_record_id,
+      payload:           { incidentRef: wf.source_record_id, estimatedCost: meta.estimatedCost, costCenter: meta.costCenter },
       createdBy:         actorUserId,
     });
   }
 
   if (handoffType === 'ops_equipment_damage' && meta.equipmentDamage) {
     await createHandoff({
-      sourceModule:      wf.source_module,
+      sourceModule:      wf.module_key,
       targetModule:      'operations',
-      sourceEntityType:  wf.source_entity_type,
-      sourceEntityId:    wf.source_entity_id,
-      payload:           { incidentRef: wf.source_entity_id, assetId: meta.assetId, description: meta.damageDescription },
+      sourceEntityType:  wf.workflow_type,
+      sourceEntityId:    wf.source_record_id,
+      payload:           { incidentRef: wf.source_record_id, assetId: meta.assetId, description: meta.damageDescription },
       createdBy:         actorUserId,
     });
   }
@@ -369,20 +380,20 @@ interface WorkflowTask {
   id:               string;
   workflow_id:      string;
   step_key:         string;
-  task_type:        string;
+  step_type:        string;
   assigned_role:    string | null;
-  assigned_user_id: string | null;
+  assigned_to:      string | null;
 }
 
 interface WorkflowInstance {
   id:                 string;
-  ref:                string;
+  workflow_no:        string;
   template_id:        string;
   status:             string;
-  source_module:      string;
-  source_entity_type: string;
-  source_entity_id:   string;
-  owner_user_id:      string | null;
-  current_step:       string;
+  module_key:         string;
+  workflow_type:      string;
+  source_record_id:   string;
+  owner_id:           string | null;
+  current_step_key:   string;
   metadata:           unknown;
 }

@@ -216,12 +216,12 @@ export default async function run(h) {
     expect(found, 'no hse.incident.submitted event in app_events');
   });
   await test('SIDE-EFFECT: workflow instance created (if template seeded)', async () => {
-    const { data } = await sb.from('workflow_instances').select('id,source_module')
-      .eq('source_entity_id', ctx.incidentRef).limit(1);
+    const { data } = await sb.from('workflow_instances').select('id,module_key')
+      .eq('source_record_id', ctx.incidentRef).limit(1);
     if (!data || data.length === 0) {
       console.warn('\n      WARN: no workflow for incident — hse_incident_investigation template may not be seeded');
     } else {
-      expect(data[0].source_module === 'hse', 'workflow source_module != hse');
+      expect(data[0].module_key === 'hse', 'workflow module_key != hse');
     }
   });
   await test('CRITICAL incident → OSH deadlines computed and stored', async () => {
