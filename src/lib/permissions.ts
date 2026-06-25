@@ -151,6 +151,7 @@ export const PERMISSION_KEYS = [
   'hse.ptw.activate',       // activate an approved permit (on-site gate)
   'hse.ptw.manage',         // admin actions: extend, close, cancel, void
   // ── CAPA ─────────────────────────────────────────────────────────────────────
+  'hse.capa.view',          // see CAPAs (own actions for non-managers; all for manager+)
   'hse.capa.manage',        // manage corrective/preventive actions
   'hse.inspections.view',   'hse.inspections.create', 'hse.inspections.manage', 'hse.inspections.review',
   'hse.training.view',      'hse.training.manage', 'hse.training.verify',
@@ -341,7 +342,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'leaves.submit',
     'payroll.view_own',
     'dashboard.view',
-    'hse.incidents.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view', 'hse.inspections.create',
+    'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view', 'hse.inspections.create',
     'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
     'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
     'hse.dashboard.view', 'hse.workflows.view',
@@ -375,6 +376,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hse.risk.view',      'hse.risk.manage', 'hse.risk.approve',
     'hse.risk.library.manage',
     'hse.ptw.view',       'hse.ptw.create', 'hse.ptw.approve', 'hse.ptw.activate', 'hse.ptw.manage',
+    'hse.capa.view',
     'hse.capa.manage',
     'hse.inspections.view','hse.inspections.create','hse.inspections.manage','hse.inspections.review',
     'hse.training.view',  'hse.training.manage', 'hse.training.verify',
@@ -483,6 +485,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hse.risk.view',      'hse.risk.manage', 'hse.risk.approve',
     'hse.risk.library.manage',
     'hse.ptw.view',       'hse.ptw.create', 'hse.ptw.approve', 'hse.ptw.activate', 'hse.ptw.manage',
+    'hse.capa.view',
     'hse.capa.manage',
     'hse.inspections.view','hse.inspections.create','hse.inspections.manage','hse.inspections.review',
     'hse.training.view',  'hse.training.manage', 'hse.training.verify',
@@ -606,6 +609,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hse.risk.view',      'hse.risk.manage', 'hse.risk.approve',
     'hse.risk.library.manage',
     'hse.ptw.view',       'hse.ptw.create', 'hse.ptw.approve', 'hse.ptw.activate', 'hse.ptw.manage',
+    'hse.capa.view',
     'hse.capa.manage',
     'hse.inspections.view','hse.inspections.create','hse.inspections.manage','hse.inspections.review',
     'hse.training.view',  'hse.training.manage', 'hse.training.verify',

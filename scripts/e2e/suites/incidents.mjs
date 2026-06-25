@@ -58,6 +58,9 @@ export default async function run(h) {
       await sb.from('hse_incidents').delete().in('id', ctx.incidentIds);
     }
     await sb.from('notifications').delete().ilike('title', `%${TAG}%`);
+    // Idempotency ledger rows for this run (own try/catch so a missing table
+    // can never block the real teardown above).
+    try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `%${TAG}%`); } catch { /* ignore */ }
   });
 
   const baseIncident = () => ({
@@ -215,13 +218,13 @@ export default async function run(h) {
     });
     expect(found, 'no hse.incident.submitted event in app_events');
   });
-  await test('SIDE-EFFECT: workflow instance created (if template seeded)', async () => {
+  await test('SIDE-EFFECT: workflow instance created (if binding seeded)', async () => {
     const { data } = await sb.from('workflow_instances').select('id,module_key')
-      .eq('source_record_id', ctx.incidentRef).limit(1);
+      .eq('source_record_id', ctx.incidentId).limit(1);
     if (!data || data.length === 0) {
-      console.warn('\n      WARN: no workflow for incident — hse_incident_investigation template may not be seeded');
+      console.warn('\n      WARN: no workflow for incident — incident_investigation binding may not be seeded');
     } else {
-      expect(data[0].module_key === 'hse', 'workflow module_key != hse');
+      expect(data[0].module_key === 'hse_incidents', 'workflow module_key != hse_incidents');
     }
   });
   await test('CRITICAL incident → OSH deadlines computed and stored', async () => {
@@ -762,5 +765,17 @@ export default async function run(h) {
     ok(r2, 'second create should succeed (idempotent)');
     expect(r1.body.data?.id === r2.body.data?.id, 'idempotent creates returned different IDs — duplicate row created');
     if (r1.body.data?.id) ctx.incidentIds.push(r1.body.data.id);
+
+    // The dedup short-circuit can ONLY work when the module_mutation_runs ledger
+    // is actually written. Assert it directly so a missing/unexposed ledger
+    // table (PGRST205) can never silently regress this into a duplicate-row bug.
+    const idemKey = `hse.incident.create:${admin.id}:${payload.incidentDate}:${payload.title}`;
+    const { data: runs, error: runErr } = await sb
+      .from('module_mutation_runs')
+      .select('id, status')
+      .eq('idempotency_key', idemKey);
+    expect(!runErr, `module_mutation_runs not queryable [${runErr?.code ?? ''}] ${runErr?.message ?? ''} — apply migration 20260629000000_expose_module_mutation_runs.sql`);
+    expect((runs?.length ?? 0) === 1, `expected exactly 1 module_mutation_runs row for the idempotency key, got ${runs?.length ?? 0}`);
+    expect(runs?.[0]?.status === 'completed', `module_mutation_runs row did not reach 'completed' (got '${runs?.[0]?.status ?? 'none'}')`);
   });
 }

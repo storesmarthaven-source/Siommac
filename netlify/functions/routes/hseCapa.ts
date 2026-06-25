@@ -30,7 +30,7 @@ const ListCapaSchema = z.object({
 });
 
 router.post('/capa/list', async c => {
-  const user = await requirePermission(c, 'hse.capa.manage');
+  const user = await requirePermission(c, 'hse.capa.view');
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ListCapaSchema, body.args ?? {});
   if (!v.ok) return v.response;
@@ -61,7 +61,7 @@ router.post('/capa/list', async c => {
 // ── POST /api/hse/capa/get ────────────────────────────────────────────────────
 
 router.post('/capa/get', async c => {
-  await requirePermission(c, 'hse.capa.manage');
+  await requirePermission(c, 'hse.capa.view');
   const body = c.get('body') as Record<string, unknown>;
   const args = body.args as { capaId?: string; ref?: string } | undefined;
 
@@ -120,7 +120,9 @@ router.post('/capa/create', async c => {
           dueAt: v.data.dueAt ?? null,
         },
         workflow: {
-          templateKey: 'hse_capa_closure',
+          moduleKey:    'hse_capa',
+          workflowType: 'capa_closure',
+          triggerEvent: 'capa.created',
           priority:    v.data.priority,
           ownerUserId,
           reason:      `CAPA: ${v.data.title}`,

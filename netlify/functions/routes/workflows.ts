@@ -1,13 +1,15 @@
 /**
  * netlify/functions/routes/workflows.ts
  *
- * Platform workflow API — shared by all modules.
+ * Platform workflow API — shared by all modules. Thin facade over the central
+ * engine (lib/workflow/service.ts); reads return spec columns aliased to the
+ * stable DTO names.
  *
- * POST /api/workflows/create   → createWorkflow()
+ * POST /api/workflows/create   → startWorkflowByTemplate() (explicit start)
  * POST /api/workflows/list     → list open workflow_instances
  * POST /api/workflows/get      → single workflow + tasks + events
  * POST /api/workflows/tasks    → pending tasks for current user
- * POST /api/workflows/decision → decideWorkflowTask()
+ * POST /api/workflows/decision → decideTask()
  * POST /api/workflows/audit    → workflow_events feed
  */
 
@@ -15,7 +17,7 @@ import { Hono }              from 'hono';
 import { z, zv }             from '../lib/validate';
 import { requirePermission } from '../lib/auth';
 import { sb }                from '../lib/db';
-import { createWorkflow, decideWorkflowTask } from '../lib/workflowEngine';
+import { startWorkflowByTemplate, decideTask } from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -39,13 +41,26 @@ router.post('/workflows/create', async c => {
   const v = zv(c, CreateWorkflowSchema, body.args);
   if (!v.ok) return v.response;
 
-  const result = await createWorkflow({
-    ...v.data,
-    createdBy: user.id,
-  });
-
-  if (!result.ok) return c.json({ success: false, message: 'Failed to create workflow' }, 500 as 200);
-  return c.json({ success: true, workflowId: result.workflowId, ref: result.ref });
+  // Explicit start by template ref (key or id) on the central engine.
+  try {
+    const wf = await startWorkflowByTemplate({
+      templateKey: v.data.templateKey,
+      actor: { id: user.id, role: user.role },
+      context: {
+        moduleKey:      v.data.sourceModule,
+        workflowType:   v.data.sourceEntityType,
+        triggerEvent:   'manual.start',
+        sourceRecordId: v.data.sourceEntityId,
+        requestedBy:    user.id,
+        ownerId:        v.data.ownerUserId ?? null,
+        priority:       v.data.priority,
+        recordData:     { ...(v.data.metadata ?? {}), reason: v.data.reason },
+      },
+    });
+    return c.json({ success: true, workflowId: wf.id, ref: wf.workflow_no });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to create workflow' }, 500 as 200);
+  }
 });
 
 // ── POST /api/workflows/list ──────────────────────────────────────────────────
@@ -144,13 +159,17 @@ router.post('/workflows/decision', async c => {
   const v = zv(c, DecisionSchema, body.args);
   if (!v.ok) return v.response;
 
-  const result = await decideWorkflowTask({
-    ...v.data,
-    actorUserId: user.id,
-  });
+  // Look up the workflow from the task; map legacy decisions to the spec set.
+  const { data: task } = await sb.from('workflow_tasks').select('workflow_id').eq('id', v.data.taskId).maybeSingle<{ workflow_id: string }>();
+  if (!task) return c.json({ success: false, message: 'Task not found' }, 404 as 200);
+  const decision = v.data.decision === 'rejected' ? 'rejected' : v.data.decision === 'returned' ? 'returned' : 'approved';
 
-  if (!result.ok) return c.json({ success: false, message: 'Failed to process decision' }, 500 as 200);
-  return c.json({ success: true, workflowId: result.workflowId, status: result.workflowStatus });
+  try {
+    const wf = await decideTask({ workflowId: task.workflow_id, taskId: v.data.taskId, actor: { id: user.id, role: user.role }, decision, comment: v.data.note });
+    return c.json({ success: true, workflowId: wf.id, status: wf.status });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to process decision' }, 500 as 200);
+  }
 });
 
 // ── POST /api/workflows/audit ─────────────────────────────────────────────────

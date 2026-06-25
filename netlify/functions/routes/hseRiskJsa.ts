@@ -43,7 +43,7 @@ import { sb }                from '../lib/db';
 import { nextRef }           from '../lib/refGenerator';
 import { emitAppEvent }      from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
-import { createWorkflow }   from '../lib/workflowEngine';
+import { startWorkflowForRecord } from '../lib/workflow/service';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl }     from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
@@ -240,7 +240,9 @@ router.post('/risk-jsa/hazards/create', async c => {
           type:  'hse.hazard.registered',
         } : undefined,
         workflow: needsReview ? {
-          templateKey: 'hse_hazard_review',
+          moduleKey:    'hse_hazards',
+          workflowType: 'hazard_review',
+          triggerEvent: 'hazard.registered',
           priority:    level === 'critical' ? 'critical' : 'high',
           ownerUserId,
           reason:      `High-risk hazard: ${v.data.title} (score ${score})`,
@@ -739,17 +741,23 @@ router.post('/risk-jsa/assessments/submit', async c => {
   // Create or advance workflow
   let workflowId = ra.workflow_id;
   if (!workflowId) {
-    const wfResult = await createWorkflow({
-      templateKey:      'hse_risk_assessment_review',
-      sourceModule:     'hse',
-      sourceEntityType: 'risk_assessment',
-      sourceEntityId:   ra.ref,
-      priority:         ra.risk_level === 'critical' ? 'critical' : ra.risk_level === 'high' ? 'high' : 'medium',
-      ownerUserId:      ra.owner_user_id ?? user.id,
-      createdBy:        user.id,
-      metadata:         { submittedBy: user.id, note: args.note },
+    const wf = await startWorkflowForRecord({
+      actor: { id: user.id },
+      context: {
+        moduleKey:       'hse_risk_assessments',
+        workflowType:    'risk_assessment_review',
+        triggerEvent:    'risk_assessment.submitted',
+        sourceRecordId:  ra.id,
+        sourceRecordRef: ra.ref,
+        siteId:          null,
+        departmentId:    null,
+        requestedBy:     user.id,
+        ownerId:         ra.owner_user_id ?? user.id,
+        priority:        ra.risk_level === 'critical' ? 'critical' : ra.risk_level === 'high' ? 'high' : 'medium',
+        recordData:      { submittedBy: user.id, note: args.note, ownerId: ra.owner_user_id ?? user.id },
+      },
     });
-    workflowId = wfResult.workflowId ?? null;
+    workflowId = wf?.id ?? null;
     if (workflowId) {
       await sb.from('hse_risk_assessments').update({ workflow_id: workflowId }).eq('id', ra.id);
     }
@@ -1195,17 +1203,23 @@ router.post('/risk-jsa/jsa/submit', async c => {
 
   let workflowId = jsa.workflow_id;
   if (!workflowId) {
-    const wfResult = await createWorkflow({
-      templateKey:      'hse_jsa_review',
-      sourceModule:     'hse',
-      sourceEntityType: 'jsa',
-      sourceEntityId:   jsa.ref,
-      priority:         jsa.risk_level === 'critical' ? 'critical' : jsa.risk_level === 'high' ? 'high' : 'medium',
-      ownerUserId:      jsa.owner_user_id ?? user.id,
-      createdBy:        user.id,
-      metadata:         { submittedBy: user.id, note: args.note },
+    const wf = await startWorkflowForRecord({
+      actor: { id: user.id },
+      context: {
+        moduleKey:       'hse_jsa',
+        workflowType:    'jsa_review',
+        triggerEvent:    'jsa.submitted',
+        sourceRecordId:  jsa.id,
+        sourceRecordRef: jsa.ref,
+        siteId:          null,
+        departmentId:    null,
+        requestedBy:     user.id,
+        ownerId:         jsa.owner_user_id ?? user.id,
+        priority:        jsa.risk_level === 'critical' ? 'critical' : jsa.risk_level === 'high' ? 'high' : 'medium',
+        recordData:      { submittedBy: user.id, note: args.note, ownerId: jsa.owner_user_id ?? user.id },
+      },
     });
-    workflowId = wfResult.workflowId ?? null;
+    workflowId = wf?.id ?? null;
     if (workflowId) {
       await sb.from('hse_jsa').update({ workflow_id: workflowId }).eq('id', jsa.id);
     }
@@ -1282,8 +1296,13 @@ router.post('/risk-jsa/controls/create', async c => {
 
 // ── Workflow lifecycle — status transition engine ────────────────────────────
 // Canonical Risk/JSA status map (spec §12), as a superset across the three
-// entity types (hazards use under_review; JSAs use hse_review). A transition is
+// entity types. Submit lands an entity in a review-pending state — hazards in
+// under_review, assessments and JSAs in submitted — and every pending state can
+// be approved directly (draft→submitted→approved→active) or routed down a
+// review branch (changes_requested / rejected / returned). A transition is
 // allowed only if `to` is listed under the current status. Terminal: archived.
+// The DB status CHECK constraints (see 20260704000004_hse_risk_jsa_status_superset)
+// permit this full superset, so any map-reachable status is also DB-valid.
 
 const TABLE_MAP = {
   hazard:     'hse_hazards',
@@ -1296,7 +1315,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   registered:          ['under_review', 'assessment_required', 'controls_required', 'archived'],
   assessment_required: ['under_review', 'controls_required', 'archived'],
   controls_required:   ['under_review', 'archived'],
-  submitted:           ['under_review', 'hse_review', 'changes_requested', 'rejected', 'returned', 'archived'],
+  submitted:           ['under_review', 'hse_review', 'approved', 'changes_requested', 'rejected', 'returned', 'archived'],
   under_review:        ['approved', 'changes_requested', 'rejected', 'returned', 'archived'],
   hse_review:          ['approved', 'changes_requested', 'rejected', 'returned', 'archived'],
   returned:            ['draft', 'submitted', 'under_review', 'hse_review', 'archived'],
@@ -1747,17 +1766,23 @@ router.post('/risk-jsa/hazards/submit', async c => {
 
   let workflowId = hz.workflow_id;
   if (!workflowId) {
-    const wfResult = await createWorkflow({
-      templateKey:      'hse_hazard_review',
-      sourceModule:     'hse',
-      sourceEntityType: 'hazard',
-      sourceEntityId:   hz.ref,
-      priority:         hz.risk_level === 'critical' ? 'critical' : hz.risk_level === 'high' ? 'high' : 'medium',
-      ownerUserId:      hz.owner_user_id ?? user.id,
-      createdBy:        user.id,
-      metadata:         { submittedBy: user.id, note: args.note },
+    const wf = await startWorkflowForRecord({
+      actor: { id: user.id },
+      context: {
+        moduleKey:       'hse_hazards',
+        workflowType:    'hazard_review',
+        triggerEvent:    'hazard.submitted',
+        sourceRecordId:  hz.id,
+        sourceRecordRef: hz.ref,
+        siteId:          null,
+        departmentId:    null,
+        requestedBy:     user.id,
+        ownerId:         hz.owner_user_id ?? user.id,
+        priority:        hz.risk_level === 'critical' ? 'critical' : hz.risk_level === 'high' ? 'high' : 'medium',
+        recordData:      { submittedBy: user.id, note: args.note, ownerId: hz.owner_user_id ?? user.id },
+      },
     });
-    workflowId = wfResult.workflowId ?? null;
+    workflowId = wf?.id ?? null;
     if (workflowId) {
       await sb.from('hse_hazards').update({ workflow_id: workflowId }).eq('id', hz.id);
     }

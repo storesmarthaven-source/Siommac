@@ -34,12 +34,9 @@ export const operationsReceiver: ModuleReceiver = {
           actionRoute: 'operations/work-orders',
           type:  'operations.work_order.created_from_handoff',
         },
-        workflow: {
-          templateKey: 'ops_work_order_assignment',
-          priority:    priority === 'critical' ? 'critical' : 'medium',
-          reason:      `Work order generated from ${sourceModule} handoff: ${sourceEntityId}`,
-          condition:   true,
-        },
+        // No workflow yet — the Operations module/UI isn't built, so we don't
+        // auto-start an approval workflow here. Re-add via a seeded binding
+        // (module_key='operations') when Operations ships. (Audit Q-D.)
         getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
       },
       writeRecord: async () => {

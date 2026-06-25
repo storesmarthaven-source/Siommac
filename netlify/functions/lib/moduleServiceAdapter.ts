@@ -14,7 +14,7 @@
  */
 
 import { emitAppEvent }       from './appEvents';
-import { createWorkflow }     from './workflowEngine';
+import { startWorkflowForRecord } from './workflow/service';
 import { createHandoff }      from './handoffBus';
 import {
   startMutationRun,
@@ -56,12 +56,18 @@ export interface ModuleHandoffRequest {
 }
 
 export interface ModuleWorkflowRequest {
-  templateKey:    string;
+  /** Central engine binding selectors. moduleKey = the workflow-owning module
+   *  (e.g. 'hse_incidents'); defaults to the mutation's `module` if omitted. */
+  moduleKey?:     string;
+  workflowType:   string;
+  triggerEvent:   string;
   priority:       WorkflowPriority;
   ownerUserId?:   string | null;
   reason?:        string;
   /** When false the workflow is skipped. Omit or true to always create. */
   condition?:     boolean;
+  /** When true, a missing binding FAILS the mutation (no silent approval bypass). */
+  required?:      boolean;
   metadata?:      Record<string, unknown>;
 }
 
@@ -178,19 +184,28 @@ export async function runModuleMutation<TRecord>(args: {
     let workflowId: string | undefined;
 
     if (options.workflow && options.workflow.condition !== false) {
-      const wfResult = await createWorkflow({
-        templateKey:      options.workflow.templateKey,
-        sourceModule:     options.module,
-        sourceEntityType: options.entityType,
-        sourceEntityId:   identity.id,
-        priority:         options.workflow.priority,
-        ownerUserId:      options.workflow.ownerUserId ?? undefined,
-        createdBy:        actorUserId,
-        reason:           options.workflow.reason,
-        metadata:         options.workflow.metadata,
+      const wf = await startWorkflowForRecord({
+        actor: { id: actorUserId },
+        context: {
+          moduleKey:      options.workflow.moduleKey ?? options.module,
+          workflowType:   options.workflow.workflowType,
+          triggerEvent:   options.workflow.triggerEvent,
+          sourceRecordId: identity.id,
+          sourceRecordRef: identity.ref,
+          siteId:         context.siteId ?? null,
+          departmentId:   context.departmentId ?? null,
+          requestedBy:    actorUserId,
+          ownerId:        options.workflow.ownerUserId ?? null,
+          priority:       options.workflow.priority,
+          recordData:     { ...(options.workflow.metadata ?? {}), ownerId: options.workflow.ownerUserId ?? null },
+        },
       });
 
-      workflowId = wfResult.workflowId;
+      // null = no active binding. Required workflows MUST NOT silently bypass approval.
+      if (!wf && options.workflow.required) {
+        throw new Error(`Required workflow '${options.workflow.workflowType}' has no active binding for ${options.workflow.moduleKey ?? options.module}.`);
+      }
+      workflowId = wf?.id;
 
       await markMutationRunStage(options.idempotencyKey, {
         status:      'workflow_created',

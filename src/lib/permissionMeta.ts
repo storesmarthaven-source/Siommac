@@ -428,6 +428,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   },
 
   // ── HSE — CAPA ────────────────────────────────────────────────────────────────
+  'hse.capa.view': {
+    module: 'HSE', group: 'CAPA',
+    label: 'View CAPA',
+    description: 'View the CAPA register and CAPA details (own actions for non-managers).',
+    risk: 'low',
+  },
   'hse.capa.manage': {
     module: 'HSE', group: 'CAPA',
     label: 'Manage CAPA',

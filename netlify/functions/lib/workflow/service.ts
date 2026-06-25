@@ -74,8 +74,8 @@ async function getTask(id: string): Promise<TaskRow & Record<string, unknown>> {
   return data;
 }
 
-/** Resolve the definition for a binding: version → published version → legacy template.definition. */
-async function resolveDefinition(binding: WorkflowBindingRow): Promise<{ definition: WorkflowTemplateDefinition; versionId: string | null }> {
+/** Resolve the definition for a binding: bound version → newest published version. No legacy fallback. */
+async function resolveDefinition(binding: WorkflowBindingRow): Promise<{ definition: WorkflowTemplateDefinition; versionId: string }> {
   if (binding.template_version_id) {
     const { data } = await sb.from('workflow_template_versions').select('id, definition').eq('id', binding.template_version_id).maybeSingle<{ id: string; definition: WorkflowTemplateDefinition }>();
     if (data) return { definition: data.definition, versionId: data.id };
@@ -83,9 +83,7 @@ async function resolveDefinition(binding: WorkflowBindingRow): Promise<{ definit
   const { data: ver } = await sb.from('workflow_template_versions').select('id, definition')
     .eq('template_id', binding.template_id).eq('version_status', 'published').order('version_no', { ascending: false }).limit(1).maybeSingle<{ id: string; definition: WorkflowTemplateDefinition }>();
   if (ver) return { definition: ver.definition, versionId: ver.id };
-  const { data: tpl } = await sb.from('workflow_templates').select('definition').eq('id', binding.template_id).maybeSingle<{ definition: WorkflowTemplateDefinition }>();
-  if (tpl?.definition && Array.isArray((tpl.definition as WorkflowTemplateDefinition).steps)) return { definition: tpl.definition, versionId: null };
-  throw new Error('Workflow template has no published version or definition.');
+  throw new Error('Workflow binding has no published template version.');
 }
 
 async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, context: ModuleWorkflowContext): Promise<void> {
@@ -102,37 +100,67 @@ async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, 
 }
 
 // ── start ────────────────────────────────────────────────────────────────────
-export async function startWorkflowForRecord(params: { context: ModuleWorkflowContext; actor: WorkflowActor }): Promise<WorkflowRow | null> {
-  const { context, actor } = params;
-  const binding = await selectWorkflowBinding(sb, context);
-  if (!binding) return null;                                                // no binding → module proceeds without a workflow
 
-  const { definition, versionId } = await resolveDefinition(binding);
-  validateWorkflowDefinition(definition);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Resolve a published definition for an explicit start by template reference (template_key OR id).
+ * Requires a published version — no runtime translation of legacy definitions.
+ */
+async function resolveDefinitionByTemplateRef(ref: string): Promise<{ templateId: string; definition: WorkflowTemplateDefinition; versionId: string }> {
+  const col = UUID_RE.test(ref) ? 'id' : 'template_key';
+  const { data: tpl } = await sb.from('workflow_templates').select('id').eq(col, ref).maybeSingle<{ id: string }>();
+  if (!tpl) throw new Error(`Workflow template not found: ${ref}`);
+  const { data: ver } = await sb.from('workflow_template_versions').select('id, definition')
+    .eq('template_id', tpl.id).eq('version_status', 'published').order('version_no', { ascending: false }).limit(1)
+    .maybeSingle<{ id: string; definition: WorkflowTemplateDefinition }>();
+  if (!ver) throw new Error(`Workflow template has no published version: ${ref}`);
+  return { templateId: tpl.id, definition: ver.definition, versionId: ver.id };
+}
+
+/** Shared instance creation — insert the workflow_instance, spawn first task(s), audit + notify. */
+async function instantiateWorkflow(p: {
+  templateId: string; versionId: string | null; definition: WorkflowTemplateDefinition;
+  bindingId: string | null; context: ModuleWorkflowContext; actor: WorkflowActor;
+}): Promise<WorkflowRow> {
+  validateWorkflowDefinition(p.definition);
   const workflowNo = await nextRef('WF');
-  const starts = firstSteps(definition);
+  const starts = firstSteps(p.definition);
   const firstKey = starts[0]?.stepKey ?? null;
 
   const { data: instance, error } = await sb.from('workflow_instances').insert({
-    workflow_no: workflowNo, template_id: binding.template_id, template_version_id: versionId,
-    module_key: context.moduleKey, workflow_type: context.workflowType,
-    source_record_id: context.sourceRecordId, source_record_ref: context.sourceRecordRef ?? null,
-    status: 'in_progress', current_step_key: firstKey, priority: normalizePriority(context.priority),
-    site_id: context.siteId ?? null, department_id: context.departmentId ?? null,
-    requested_by: context.requestedBy, owner_id: context.ownerId ?? null,
+    workflow_no: workflowNo, template_id: p.templateId, template_version_id: p.versionId,
+    module_key: p.context.moduleKey, workflow_type: p.context.workflowType,
+    source_record_id: p.context.sourceRecordId, source_record_ref: p.context.sourceRecordRef ?? null,
+    status: 'in_progress', current_step_key: firstKey, priority: normalizePriority(p.context.priority),
+    site_id: p.context.siteId ?? null, department_id: p.context.departmentId ?? null,
+    requested_by: p.context.requestedBy, owner_id: p.context.ownerId ?? null,
     started_at: new Date().toISOString(),
-    template_snapshot: definition, source_snapshot: context.recordData,
-    metadata: { bindingId: binding.id, triggerEvent: context.triggerEvent },
+    template_snapshot: p.definition, source_snapshot: p.context.recordData,
+    metadata: { bindingId: p.bindingId, triggerEvent: p.context.triggerEvent },
   }).select('*').single<WorkflowRow>();
   if (error || !instance) throw new Error(`Failed to start workflow: ${error?.message}`);
 
-  for (const step of starts) await createTaskForStep(instance, step, context);
+  for (const step of starts) await createTaskForStep(instance, step, p.context);
 
-  await writeWorkflowAudit({ workflowId: instance.id, moduleKey: instance.module_key, sourceRecordId: instance.source_record_id, actorId: actor.id, action: 'workflow.started', newState: { status: instance.status } });
-  emitWf('workflow.started', instance, actor.id);
-  await getWorkflowAdapter(context.moduleKey)?.onWorkflowStarted({ workflowId: instance.id, sourceRecordId: context.sourceRecordId });
+  await writeWorkflowAudit({ workflowId: instance.id, moduleKey: instance.module_key, sourceRecordId: instance.source_record_id, actorId: p.actor.id, action: 'workflow.started', newState: { status: instance.status } });
+  emitWf('workflow.started', instance, p.actor.id);
+  await getWorkflowAdapter(p.context.moduleKey)?.onWorkflowStarted({ workflowId: instance.id, sourceRecordId: instance.source_record_id });
   return instance;
+}
+
+/** Module-event-driven start: resolve the active binding for the context, then instantiate. */
+export async function startWorkflowForRecord(params: { context: ModuleWorkflowContext; actor: WorkflowActor }): Promise<WorkflowRow | null> {
+  const binding = await selectWorkflowBinding(sb, params.context);
+  if (!binding) return null;                                                // no binding → module proceeds without a workflow
+  const { definition, versionId } = await resolveDefinition(binding);
+  return instantiateWorkflow({ templateId: binding.template_id, versionId, definition, bindingId: binding.id, context: params.context, actor: params.actor });
+}
+
+/** Explicit start by template reference (key or id) — manual "start workflow" actions; no binding required. */
+export async function startWorkflowByTemplate(params: { templateKey: string; context: ModuleWorkflowContext; actor: WorkflowActor }): Promise<WorkflowRow> {
+  const { templateId, definition, versionId } = await resolveDefinitionByTemplateRef(params.templateKey);
+  return instantiateWorkflow({ templateId, versionId, definition, bindingId: null, context: params.context, actor: params.actor });
 }
 
 // ── decide ───────────────────────────────────────────────────────────────────

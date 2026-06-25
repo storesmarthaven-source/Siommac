@@ -180,7 +180,9 @@ router.post('/incidents/create', async c => {
           type:  'hse.incident.submitted',
         },
         workflow: {
-          templateKey: 'hse_incident_investigation',
+          moduleKey:    'hse_incidents',
+          workflowType: 'incident_investigation',
+          triggerEvent: 'incident.reported',
           priority:    wfPriority,
           reason:      `Incident reported: ${v.data.title}`,
           condition:   true,
@@ -233,11 +235,11 @@ router.post('/incidents/create', async c => {
           },
         ],
         getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
+        // Status is owned by the workflow adapter (onStarted → 'triage'); the
+        // route only back-links the workflow id.
         afterCommit: async ({ entityId, workflowId }) => {
           if (workflowId) {
-            await sb.from('hse_incidents')
-              .update({ workflow_id: workflowId, status: 'triage' })
-              .eq('id', entityId);
+            await sb.from('hse_incidents').update({ workflow_id: workflowId }).eq('id', entityId);
           }
         },
       },
@@ -435,7 +437,7 @@ router.post('/dashboard/kpis', async c => {
     sb.from('hse_capa_actions').select('id', { count: 'exact', head: true })
       .not('status', 'in', '(closed,cancelled)').lt('due_at', now),
     sb.from('workflow_instances').select('id', { count: 'exact', head: true })
-      .in('module_key', ['hse','incidents','investigations','capa','jsa','ptw','inspections','training','documents','sds'])
+      .in('module_key', ['hse_incidents','hse_capa','hse_hazards','hse_risk_assessments','hse_jsa'])
       .not('status', 'in', '(approved,rejected,closed,completed,cancelled)'),
     // OSH verbal notifications past their statutory deadline and still unfulfilled
     sb.from('hse_incidents').select('id', { count: 'exact', head: true })
