@@ -1,0 +1,152 @@
+/**
+ * scripts/e2e/harness.mjs
+ *
+ * Reusable end-to-end test harness for the SIOMAC ERP. Suites under ./suites/
+ * use this core to hit the LIVE running dev server over HTTP — the only layer
+ * that exercises the full stack (frontend request shape → Hono route → Zod →
+ * lib → Supabase), which is where the real bugs live.
+ *
+ * The harness:
+ *   • loads .env and mints JWTs at runtime (HS256 / JWT_SECRET) for any user/role,
+ *   • exposes a service-role Supabase client (sb) for setup + teardown,
+ *   • provides a tiny assertion/runner API (section/test/expect/ok/fails),
+ *   • collects per-suite cleanup closures and runs them LIFO at the end.
+ *
+ * Suites never construct this directly — run.mjs creates one and passes it in.
+ *
+ * @see scripts/e2e/README.md  for how to write a new suite.
+ */
+
+import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
+
+const REQUIRED_ENV = ['JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'];
+
+/** Parse only the single-line keys we need from .env (ignores multiline PEM blocks). */
+function loadEnv() {
+  let txt = '';
+  try { txt = readFileSync(new URL('../../.env', import.meta.url), 'utf8'); }
+  catch { console.error('Could not read .env at project root'); process.exit(2); }
+  const out = {};
+  for (const line of txt.split(/\r?\n/)) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (m && REQUIRED_ENV.includes(m[1])) out[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
+  }
+  for (const k of REQUIRED_ENV) if (!out[k]) { console.error(`Missing ${k} in .env`); process.exit(2); }
+  return out;
+}
+
+export class Harness {
+  constructor() {
+    this.env  = loadEnv();
+    this.base = process.env.BASE_URL || 'http://localhost:8888';
+    this.TAG  = `TEST-E2E-${Date.now()}`;
+    this.sb   = createClient(this.env.SUPABASE_URL, this.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+    this.results   = [];
+    this._group    = '';
+    this._cleanups = [];
+    this.users     = null;   // { admin, b, c } after pickUsers()
+  }
+
+  /** A realtime-capable Supabase client using the ANON key — exactly what the
+   *  browser uses for postgres_changes subscriptions. */
+  anonClient = () => createClient(this.env.SUPABASE_URL, this.env.SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { params: { eventsPerSecond: 10 } },
+  });
+
+  // ── auth ────────────────────────────────────────────────────────────────────
+  /** Mint a 15-min HS256 access token for a user row ({ id, username, role, department_id }). */
+  mint = (u, amr = ['pwd']) => jwt.sign(
+    { sub: u.id, username: u.username, role: u.role, departmentId: u.department_id ?? '',
+      jti: randomUUID(), amr, mfaSatisfied: false, authStrength: 'password_only' },
+    this.env.JWT_SECRET, { expiresIn: '15m' },
+  );
+
+  // ── HTTP ────────────────────────────────────────────────────────────────────
+  /** POST /api/<path> with { args }. Never throws — returns { status, body }. */
+  api = async (path, token, args = {}) => {
+    let res;
+    try {
+      res = await fetch(`${this.base}/api/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ args }),
+      });
+    } catch (e) {
+      return { status: 0, body: { success: false, message: `network: ${e.message}` } };
+    }
+    let body;
+    try { body = await res.json(); } catch { body = { success: false, message: 'non-JSON response' }; }
+    return { status: res.status, body };
+  };
+
+  // ── runner / assertions ───────────────────────────────────────────────────
+  section = (name) => { this._group = name; };
+
+  test = async (name, fn) => {
+    try { await fn(); this.results.push({ group: this._group, name, ok: true }); process.stdout.write('.'); }
+    catch (e) { this.results.push({ group: this._group, name, ok: false, detail: e.message }); process.stdout.write('x'); }
+  };
+
+  expect = (cond, msg) => { if (!cond) throw new Error(msg || 'assertion failed'); };
+  ok     = (r, msg) => this.expect(r.body && r.body.success === true,  `${msg || 'expected success'} — got ${JSON.stringify(r.body).slice(0, 300)}`);
+  fails  = (r, msg) => this.expect(r.body && r.body.success === false, `${msg || 'expected failure'} — got ${JSON.stringify(r.body).slice(0, 300)}`);
+
+  // ── lifecycle ─────────────────────────────────────────────────────────────
+  /** Register a cleanup closure; run LIFO after all suites finish. */
+  onCleanup = (fn) => { this._cleanups.push(fn); };
+
+  /** Fail fast with a clear message if the dev server isn't up. */
+  async ping() {
+    try {
+      const res = await fetch(`${this.base}/api/communications/summary`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"args":{}}',
+      });
+      if (!res) throw new Error('no response');
+    } catch {
+      console.error(`\nCannot reach ${this.base}. Start the dev server first:  npm run dev:netlify\n`);
+      process.exit(2);
+    }
+  }
+
+  /** Pick 1 admin + 2 non-admin active users for participant / non-participant tests. */
+  async pickUsers() {
+    const { data: admins } = await this.sb.from('app_users')
+      .select('id, username, role, department_id').eq('status', 'active')
+      .in('role', ['admin', 'superadmin']).limit(1);
+    const { data: others } = await this.sb.from('app_users')
+      .select('id, username, role, department_id').eq('status', 'active')
+      .not('role', 'in', '("admin","superadmin")').limit(2);
+    const admin = admins?.[0], b = others?.[0], c = others?.[1];
+    if (!admin || !b || !c) {
+      console.error('\nNeed >=1 admin + 2 non-admin active users. Found:', { admin: !!admin, b: !!b, c: !!c });
+      process.exit(2);
+    }
+    this.users = { admin, b, c };
+    return this.users;
+  }
+
+  async runCleanup() {
+    if (process.env.KEEP_DATA) { console.log('\nKEEP_DATA set — skipping cleanup.'); return; }
+    for (const fn of this._cleanups.reverse()) {
+      try { await fn(); } catch (e) { console.warn('Cleanup warning:', e.message); }
+    }
+  }
+
+  /** Print the grouped pass/fail report. Returns the failure count. */
+  report() {
+    console.log('\n\n════════════════ RESULTS ════════════════');
+    let lastGroup = '', pass = 0, fail = 0;
+    for (const r of this.results) {
+      if (r.group !== lastGroup) { console.log(`\n▸ ${r.group}`); lastGroup = r.group; }
+      if (r.ok) { pass++; console.log(`   ✓ ${r.name}`); }
+      else { fail++; console.log(`   ✗ ${r.name}\n        → ${r.detail}`); }
+    }
+    console.log('\n═════════════════════════════════════════');
+    console.log(`${pass} passed · ${fail} failed · ${this.results.length} total   [tag ${this.TAG}]`);
+    return fail;
+  }
+}
