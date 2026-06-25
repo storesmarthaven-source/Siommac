@@ -35,8 +35,9 @@
 
 import { Hono }              from 'hono';
 import { z, zv }             from '../lib/validate';
-import { requirePermission, requireUser } from '../lib/auth';
+import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { sb }                from '../lib/db';
+import { assertCanRemoveParticipant, DeliveryProtectionError } from '../lib/deliveryProtection';
 import {
   getCommsSummary,
   createMessageThread,
@@ -690,6 +691,22 @@ router.post('/communications/messages/participants/remove', async c => {
   const body = c.get('body') as Record<string, unknown>;
   const v = zv(c, ParticipantsRemoveSchema, body.args);
   if (!v.ok) return v.response;
+
+  // §22 — module-locked / required participants cannot be removed without the
+  // remove_required override (or superadmin).
+  const { data: tp } = await sb.from('message_participants')
+    .select('is_required, can_be_removed_by_user')
+    .eq('thread_id', v.data.threadId).eq('user_id', v.data.userId)
+    .maybeSingle<{ is_required: boolean; can_be_removed_by_user: boolean }>();
+  if (tp) {
+    const canRemoveRequired = user.role === 'superadmin' || await userCan(user, 'communications.participants.remove_required');
+    try {
+      assertCanRemoveParticipant({ participant: tp, canRemoveRequired });
+    } catch (err) {
+      if (err instanceof DeliveryProtectionError) return c.json({ success: false, message: err.message }, err.statusCode as 200);
+      throw err;
+    }
+  }
 
   const result = await removeThreadParticipant(v.data.threadId, user.id, v.data.userId, user.role);
   if (!result.ok) {
