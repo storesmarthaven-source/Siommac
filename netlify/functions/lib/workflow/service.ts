@@ -76,15 +76,20 @@ async function assigneeRecipients(assignee: { userId?: string; roleKey?: string 
 }
 
 // Workflow-owning module_key → frontend section route for notification deep-links.
+// The FE resolver (notifAction.ts) accepts `s-…` ids or `hse/<area>` paths.
 const MODULE_ROUTE: Record<string, string> = {
   hse_incidents:        'hse/incidents',
   hse_capa:             'hse/capa',
   hse_hazards:          'hse/risk-jsa',
   hse_risk_assessments: 'hse/risk-jsa',
   hse_jsa:              'hse/risk-jsa',
+  ptw:                  'hse/ptw',
 };
 function moduleRoute(moduleKey: string): string {
-  return MODULE_ROUTE[moduleKey] ?? 'hse';
+  if (MODULE_ROUTE[moduleKey]) return MODULE_ROUTE[moduleKey];
+  // Derive an hse/<area> path the FE resolver can navigate (never a bare section).
+  const area = moduleKey.replace(/^hse_/, '').replace(/_/g, '-') || 'incidents';
+  return `hse/${area}`;
 }
 
 /** Requester + owner recipients for terminal workflow events. */
