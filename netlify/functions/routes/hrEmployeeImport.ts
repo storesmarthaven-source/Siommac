@@ -16,6 +16,7 @@ import { emitAppEvent } from '../lib/appEvents';
 import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
+import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { parseCsv }   from '../lib/hr/csvParse';
 import {
   provisionEmployee, writeHrAudit, statutoryPatch, statutoryWithDefaults, computePayrollReadiness,
@@ -218,9 +219,16 @@ router.post('/employees/import/upload', async c => {
   if (!parsed.rows.length)    return c.json({ success: false, message: 'The file has no data rows.' }, 400 as 200);
 
   const batchNo = await nextRef('HRI');
+  // Defaults come from the Employee Master settings catalog (employees.import_default_*)
+  // unless the request overrides them; set-policy can still override later.
+  const importMode = v.data.importMode ?? await resolveSettingValue<string>(sb, 'employees.import_default_mode', { moduleKey: 'employees' }, 'create');
+  const policyDefaults = {
+    createLogins:            await resolveSettingValue<boolean>(sb, 'employees.import_default_create_logins', { moduleKey: 'employees' }, true),
+    duplicateEmployeeNumber: await resolveSettingValue<string>(sb, 'employees.import_duplicate_employee_number', { moduleKey: 'employees' }, 'skip'),
+  };
   const { data: batch, error: bErr } = await sb.from('hr_employee_import_batches').insert({
     batch_no: batchNo, uploaded_by: actor.id, file_name: v.data.fileName, file_type: v.data.fileType,
-    import_mode: v.data.importMode ?? 'create', status: 'uploaded', total_rows: parsed.rows.length,
+    import_mode: importMode, status: 'uploaded', total_rows: parsed.rows.length, policy: policyDefaults,
     default_site_id: v.data.defaultSiteId ?? null, default_department_id: v.data.defaultDepartmentId ?? null,
   }).select('id, batch_no').single<{ id: string; batch_no: string }>();
   if (bErr) return c.json({ success: false, message: bErr.message }, 500 as 200);
