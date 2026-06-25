@@ -11,6 +11,7 @@
 import { sb } from '../db';
 import { nextRef } from '../refGenerator';
 import { emitAppEvent } from '../appEvents';
+import { createHandoff } from '../handoffBus';
 import type {
   ModuleWorkflowContext, WorkflowTemplateDefinition, WorkflowStepDefinition,
 } from './definitionTypes';
@@ -45,11 +46,53 @@ async function writeWorkflowAudit(p: {
   });
 }
 
-function emitWf(eventType: string, wf: WorkflowRow, actorId: string, payload: Record<string, unknown> = {}): void {
+type WfRecipient = { userId: string; reason: 'assignee' | 'owner' | 'reporter' };
+
+interface EmitWfOpts {
+  payload?: Record<string, unknown>;
+  severity?: 'info' | 'success' | 'warning' | 'critical';
+  notification?: { title: string; body?: string; actionRoute?: string; type?: string; actionRequired?: boolean };
+  explicitRecipients?: WfRecipient[];
+}
+
+function emitWf(eventType: string, wf: WorkflowRow, actorId: string, opts: EmitWfOpts = {}): void {
   void emitAppEvent({
     eventType, sourceModule: 'workflow', sourceEntityType: 'workflow', sourceEntityId: wf.workflow_no ?? wf.id,
-    actorUserId: actorId, severity: 'info', payload: { workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, ...payload },
-  });
+    actorUserId: actorId, severity: opts.severity ?? 'info',
+    payload: { workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, ...(opts.payload ?? {}) },
+    ...(opts.notification ? { notification: opts.notification } : {}),
+    ...(opts.explicitRecipients && opts.explicitRecipients.length ? { explicitRecipients: opts.explicitRecipients } : {}),
+  } as Parameters<typeof emitAppEvent>[0]);
+}
+
+/** Resolve a step assignee ({userId?|roleKey?}) to notification recipients (role → active users). */
+async function assigneeRecipients(assignee: { userId?: string; roleKey?: string }): Promise<WfRecipient[]> {
+  if (assignee.userId) return [{ userId: assignee.userId, reason: 'assignee' }];
+  if (assignee.roleKey) {
+    const { data } = await sb.from('app_users').select('id').eq('role', assignee.roleKey).eq('status', 'active');
+    return (data ?? []).map((u) => ({ userId: (u as { id: string }).id, reason: 'assignee' as const }));
+  }
+  return [];
+}
+
+// Workflow-owning module_key → frontend section route for notification deep-links.
+const MODULE_ROUTE: Record<string, string> = {
+  hse_incidents:        'hse/incidents',
+  hse_capa:             'hse/capa',
+  hse_hazards:          'hse/risk-jsa',
+  hse_risk_assessments: 'hse/risk-jsa',
+  hse_jsa:              'hse/risk-jsa',
+};
+function moduleRoute(moduleKey: string): string {
+  return MODULE_ROUTE[moduleKey] ?? 'hse';
+}
+
+/** Requester + owner recipients for terminal workflow events. */
+function ownerRecipients(wf: WorkflowRow): WfRecipient[] {
+  const out: WfRecipient[] = [];
+  if (wf.requested_by) out.push({ userId: wf.requested_by, reason: 'reporter' });
+  if (wf.owner_id && wf.owner_id !== wf.requested_by) out.push({ userId: wf.owner_id, reason: 'owner' });
+  return out;
 }
 
 interface WorkflowRow {
@@ -96,7 +139,18 @@ async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, 
     status: 'pending', due_at: dueAt, is_required: step.required,
     metadata: { assignmentType: step.assignment.type },
   });
-  emitWf('workflow.task.assigned', wf, wf.requested_by ?? '', { stepKey: step.stepKey, assignedRole: assignee.roleKey, assignedTo: assignee.userId });
+  const recipients = await assigneeRecipients(assignee);
+  emitWf('workflow.task.assigned', wf, wf.requested_by ?? '', {
+    payload: { stepKey: step.stepKey, assignedRole: assignee.roleKey, assignedTo: assignee.userId },
+    explicitRecipients: recipients,
+    notification: recipients.length ? {
+      title: `Action required: ${step.stepName}`,
+      body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} needs ${step.stepName.toLowerCase()}.`,
+      actionRoute: moduleRoute(wf.module_key),
+      type: 'workflow.task.assigned',
+      actionRequired: true,
+    } : undefined,
+  });
 }
 
 // ── start ────────────────────────────────────────────────────────────────────
@@ -221,9 +275,13 @@ async function completeWorkflow(wf: WorkflowRow, actor: WorkflowActor): Promise<
   const completedAt = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'completed', completed_at: completedAt, closed_at: completedAt }).eq('id', wf.id);
   await getWorkflowAdapter(wf.module_key)?.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
-  await runWorkflowHandoffs(wf, 'workflow.completed');
+  await runWorkflowHandoffs(wf, 'workflow.completed', actor.id);
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.completed', newState: { status: 'completed' } });
-  emitWf('workflow.completed', wf, actor.id);
+  emitWf('workflow.completed', wf, actor.id, {
+    severity: 'success',
+    explicitRecipients: ownerRecipients(wf),
+    notification: { title: 'Workflow approved', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was approved.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.completed' },
+  });
   return { ...wf, status: 'completed' };
 }
 
@@ -231,7 +289,11 @@ async function returnWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: st
   await sb.from('workflow_instances').update({ status: 'returned' }).eq('id', wf.id);
   await getWorkflowAdapter(wf.module_key)?.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.returned', reason: comment });
-  emitWf('workflow.returned', wf, actor.id);
+  emitWf('workflow.returned', wf, actor.id, {
+    severity: 'warning',
+    explicitRecipients: ownerRecipients(wf),
+    notification: { title: 'Workflow returned', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was returned${comment ? `: ${comment}` : ''}.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.returned', actionRequired: true },
+  });
   return { ...wf, status: 'returned' };
 }
 
@@ -240,7 +302,11 @@ async function rejectWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: st
   await sb.from('workflow_instances').update({ status: 'rejected', completed_at: at, closed_at: at }).eq('id', wf.id);
   await getWorkflowAdapter(wf.module_key)?.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.rejected', reason: comment });
-  emitWf('workflow.rejected', wf, actor.id);
+  emitWf('workflow.rejected', wf, actor.id, {
+    severity: 'warning',
+    explicitRecipients: ownerRecipients(wf),
+    notification: { title: 'Workflow rejected', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was rejected${comment ? `: ${comment}` : ''}.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.rejected' },
+  });
   return { ...wf, status: 'rejected' };
 }
 
@@ -251,7 +317,11 @@ export async function cancelWorkflow(params: { workflowId: string; actor: Workfl
   await sb.from('workflow_tasks').update({ status: 'cancelled' }).eq('workflow_id', wf.id).in('status', ['pending', 'open', 'in_progress']);
   await getWorkflowAdapter(wf.module_key)?.onWorkflowCancelled({ workflowId: wf.id, sourceRecordId: wf.source_record_id, reason: params.reason });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.cancelled', reason: params.reason });
-  emitWf('workflow.cancelled', wf, params.actor.id);
+  emitWf('workflow.cancelled', wf, params.actor.id, {
+    severity: 'warning',
+    explicitRecipients: ownerRecipients(wf),
+    notification: { title: 'Workflow cancelled', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was cancelled${params.reason ? `: ${params.reason}` : ''}.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.cancelled' },
+  });
   return { ...wf, status: 'cancelled' };
 }
 
@@ -272,14 +342,25 @@ export async function reassignTask(params: { taskId: string; actor: WorkflowActo
   await writeWorkflowAudit({ workflowId: wf.id, taskId: task.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.task.reassigned', reason: params.reason });
 }
 
-// ── handoffs (records the cross-module action; execution via adapters/intake) ──
-async function runWorkflowHandoffs(wf: WorkflowRow, event: string): Promise<void> {
+// ── handoffs ──────────────────────────────────────────────────────────────────
+// Canonical cross-module delivery uses the shared handoff_outbox bus (createHandoff →
+// module receivers). workflow_handoffs is kept only as an audit/projection row so a
+// workflow's handoffs are queryable from the workflow. (No second delivery mechanism.)
+async function runWorkflowHandoffs(wf: WorkflowRow, event: string, actorId: string): Promise<void> {
   const handoffs = (wf.template_snapshot.handoffs ?? []).filter((h) => h.event === event);
   for (const h of handoffs) {
+    const res = await createHandoff({
+      sourceModule:     wf.module_key,
+      targetModule:     h.targetModule,
+      sourceEntityType: wf.workflow_type,
+      sourceEntityId:   wf.source_record_id,
+      payload:          { ...wf.source_snapshot, action: h.action, mappedFields: h.fieldMap ?? {} },
+      createdBy:        actorId,
+    });
     await sb.from('workflow_handoffs').insert({
       workflow_id: wf.id, from_module: wf.module_key, to_module: h.targetModule,
       source_record_id: wf.source_record_id, trigger_event: event, action_key: h.action,
-      status: 'pending', payload: wf.source_snapshot, mapped_fields: h.fieldMap ?? {},
+      status: res.ok ? 'completed' : 'failed', payload: wf.source_snapshot, mapped_fields: h.fieldMap ?? {},
     });
   }
 }
