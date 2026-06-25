@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HR — Employee Master (layout mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  :root{
+    --navy:#1b2d54; --navy2:rgb(44,61,97); --border:#e5e7eb; --card:#fff; --bg:#f1f5f9;
+    --muted:#6b7280; --text:#111827; --green:#15803d; --amber:#b45309; --red:#b91c1c; --blue:#1d4ed8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
+
+  /* ── Page header ─────────────────────────────────────────────── */
+  .pg-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .pg-icon{width:46px;height:46px;border-radius:12px;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:1.2rem;flex-shrink:0}
+  .pg-titles h1{margin:0;font-size:1.25rem;color:var(--navy)}
+  .pg-eyebrow{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .pg-sub{margin:3px 0 0;font-size:.82rem;color:var(--muted);max-width:640px}
+  .pg-meta{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:.74rem;color:var(--muted)}
+  .pg-meta i{color:var(--navy2);margin-right:5px}
+  .pg-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--muted);min-width:240px}
+  .search input{border:none;outline:none;font:inherit;flex:1;background:transparent}
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:8px 14px;font-weight:600;font-size:.8rem;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text)}
+  .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  /* ── Submodule nav (changes the New button per submodule) ────── */
+  .subnav{display:flex;gap:4px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:12px;padding:6px;margin-bottom:16px}
+  .subnav button{display:inline-flex;align-items:center;gap:7px;border:none;background:transparent;border-radius:8px;padding:8px 13px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
+  .subnav button.active{background:var(--navy);color:#fff}
+  .subnav button .soon{font-size:.58rem;opacity:.6;font-weight:700}
+
+  /* ── Stat cards (the 4 HR overview cards) ────────────────────── */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .card-h{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border)}
+  .card-h i{width:26px;height:26px;border-radius:7px;background:rgba(27,45,84,.09);color:var(--navy);display:grid;place-items:center;font-size:.8rem}
+  .card-h span{font-size:.78rem;font-weight:700;color:var(--navy)}
+  .card-b{padding:12px 14px}
+  .card-metric{font-size:2rem;font-weight:800;color:var(--navy);line-height:1;letter-spacing:-.02em}
+  .card-sub{font-size:.68rem;color:var(--muted);margin-top:4px}
+  .card-rows{margin-top:10px;display:grid;gap:6px}
+  .card-row{display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+  .card-row b{color:var(--navy);font-weight:700}
+  .dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:6px}
+
+  /* ── Register table ───────────────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+  .tcard{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:.8rem}
+  thead th{text-align:left;padding:11px 14px;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:#fafbfc}
+  tbody td{padding:10px 14px;border-bottom:1px solid #f1f3f7}
+  tbody tr:hover{background:#f8fafc;cursor:pointer}
+  .name{font-weight:600;color:var(--navy)}
+  .muted{color:var(--muted)}
+  .ctr{text-align:center}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.66rem;font-weight:700}
+  .pill.on{background:rgba(34,197,94,.16);color:var(--green)}
+  .pill.warn{background:rgba(245,158,11,.18);color:var(--amber)}
+  .pill.off{background:rgba(148,163,184,.18);color:#475569}
+  .pill.info{background:rgba(96,165,250,.18);color:var(--blue)}
+  .pill.crit{background:rgba(239,68,68,.16);color:var(--red)}
+  .av{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:.6rem;font-weight:700;display:inline-grid;place-items:center;margin-right:8px;vertical-align:middle}
+  .linkbtn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:3px 10px;font-size:.72rem;cursor:pointer}
+
+  /* ── Right rail: HR signals (navy header) ─────────────────────── */
+  .rail{background:var(--navy);border-radius:14px;color:#fff;overflow:hidden}
+  .rail-h{background:var(--navy2);padding:12px 14px}
+  .rail-title{display:flex;align-items:center;gap:8px;font-weight:700}
+  .rail-title .count{margin-left:auto;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 8px;font-size:.62rem}
+  .rail-tabs{display:flex;gap:2px;margin-top:10px}
+  .rail-tabs button{flex:1;border:none;background:transparent;color:rgba(255,255,255,.7);border-bottom:2px solid transparent;padding:7px 4px;font:inherit;font-size:.68rem;font-weight:600;cursor:pointer}
+  .rail-tabs button.active{color:#fff;border-bottom-color:rgba(255,255,255,.85)}
+  .rail-b{padding:12px 14px;display:grid;gap:6px}
+  .sig{display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 11px}
+  .sig i{width:32px;height:32px;border-radius:8px;display:grid;place-items:center}
+  .sig .t strong{display:block;font-size:.74rem}
+  .sig .t span{display:block;font-size:.62rem;color:rgba(255,255,255,.45)}
+  .sig .tag{font-size:.58rem;font-weight:700;border-radius:6px;padding:3px 7px}
+  .bg-red{background:#ef4444}.bg-amber{background:#f59e0b}.bg-blue{background:#3b82f6}
+  .tag.high{background:#ef4444}.tag.due{background:#f59e0b}.tag.info{background:#3b82f6}
+  .note{font-size:.72rem;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+</style>
+</head>
+<body>
+
+  <!-- ── HR shell header ─────────────────────────────────────────── -->
+  <div class="pg-head">
+    <div class="pg-icon"><i class="fas fa-users"></i></div>
+    <div class="pg-titles">
+      <div class="pg-eyebrow">HR · People Backbone</div>
+      <h1>Employee Master</h1>
+      <p class="pg-sub">The single source of truth for people — identity, employment, org placement, supervisors, and lifecycle. Training, PTW, Finance and Operations all read from here.</p>
+      <div class="pg-meta">
+        <span><i class="fas fa-user-check"></i> 22 active</span>
+        <span><i class="fas fa-user-clock"></i> 3 on leave</span>
+        <span><i class="fas fa-user-tie"></i> 4 contractors</span>
+        <span><i class="fas fa-triangle-exclamation"></i> 2 risk items</span>
+      </div>
+    </div>
+    <div class="pg-actions">
+      <div class="search"><i class="fas fa-search"></i><input placeholder="Search employees…" /></div>
+      <button class="btn primary"><i class="fas fa-user-plus"></i> New Employee</button>
+    </div>
+  </div>
+
+  <!-- ── Submodule nav (New button + page swap per submodule) ────── -->
+  <div class="subnav">
+    <button><i class="fas fa-gauge-high"></i> Dashboard</button>
+    <button class="active"><i class="fas fa-id-badge"></i> Employee Master</button>
+    <button><i class="fas fa-sitemap"></i> Organization</button>
+    <button><i class="fas fa-user-plus"></i> Onboarding <span class="soon">soon</span></button>
+    <button><i class="fas fa-user-minus"></i> Offboarding <span class="soon">soon</span></button>
+    <button><i class="fas fa-plane-departure"></i> Leave <span class="soon">soon</span></button>
+    <button><i class="fas fa-folder-open"></i> Documents <span class="soon">soon</span></button>
+    <button><i class="fas fa-scale-balanced"></i> Cases <span class="soon">soon</span></button>
+    <button><i class="fas fa-gear"></i> Settings <span class="soon">soon</span></button>
+    <button><i class="fas fa-clock-rotate-left"></i> Audit <span class="soon">soon</span></button>
+  </div>
+
+  <!-- ── 4 HR overview cards ─────────────────────────────────────── -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-h"><i class="fas fa-users"></i><span>Active Workforce</span></div>
+      <div class="card-b">
+        <div class="card-metric">22</div><div class="card-sub">Active employees</div>
+        <div class="card-rows">
+          <div class="card-row"><span>New hires (mo)</span><b>2</b></div>
+          <div class="card-row"><span>Contractors</span><b>4</b></div>
+          <div class="card-row"><span>On leave</span><b>3</b></div>
+          <div class="card-row"><span>Inactive</span><b>5</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><i class="fas fa-list-check"></i><span>Pending HR Actions</span></div>
+      <div class="card-b">
+        <div class="card-metric" style="color:var(--amber)">7</div><div class="card-sub">Pending workflow tasks</div>
+        <div class="card-rows">
+          <div class="card-row"><span>Onboarding</span><b>2</b></div>
+          <div class="card-row"><span>Leave approvals</span><b>3</b></div>
+          <div class="card-row"><span>Employee changes</span><b>1</b></div>
+          <div class="card-row"><span>Doc verification</span><b>1</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><i class="fas fa-triangle-exclamation"></i><span>Workforce Risk</span></div>
+      <div class="card-b">
+        <div class="card-metric" style="color:var(--red)">2</div><div class="card-sub">Risk items</div>
+        <div class="card-rows">
+          <div class="card-row"><span><span class="dot" style="background:#ef4444"></span>Missing supervisor</span><b>1</b></div>
+          <div class="card-row"><span><span class="dot" style="background:#f59e0b"></span>Missing department</span><b>1</b></div>
+          <div class="card-row"><span><span class="dot" style="background:#ef4444"></span>Inactive w/ access</span><b>0</b></div>
+          <div class="card-row"><span><span class="dot" style="background:#f59e0b"></span>Offboarding overdue</span><b>0</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><i class="fas fa-calendar-check"></i><span>Availability</span></div>
+      <div class="card-b">
+        <div class="card-metric" style="color:var(--green)">19</div><div class="card-sub">Available today</div>
+        <div class="card-rows">
+          <div class="card-row"><span>On leave</span><b>3</b></div>
+          <div class="card-row"><span>Scheduled</span><b>16</b></div>
+          <div class="card-row"><span>Unassigned</span><b>2</b></div>
+          <div class="card-row"><span>Coverage conflicts</span><b>0</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Register table + signals rail ───────────────────────────── -->
+  <div class="grid">
+    <div class="tcard">
+      <table>
+        <thead><tr>
+          <th>Employee</th><th>ID</th><th>Department</th><th>Position</th><th>Supervisor</th>
+          <th class="ctr">Type</th><th class="ctr">Status</th><th class="ctr">Actions</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="av">AD</span><span class="name">Amara Diallo</span></td><td class="muted">EMP-0001</td><td class="muted">Operations</td><td class="muted">Field Technician</td><td class="muted">D. Okafor</td><td class="ctr"><span class="pill off">Employee</span></td><td class="ctr"><span class="pill on">Active</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+          <tr><td><span class="av">DO</span><span class="name">David Okafor</span></td><td class="muted">EMP-0005</td><td class="muted">Operations</td><td class="muted">Site Manager</td><td class="muted">—</td><td class="ctr"><span class="pill off">Employee</span></td><td class="ctr"><span class="pill on">Active</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+          <tr><td><span class="av">FK</span><span class="name">Fatima Khan</span></td><td class="muted">EMP-0008</td><td class="muted">Maintenance</td><td class="muted">Planner</td><td class="muted">D. Okafor</td><td class="ctr"><span class="pill off">Employee</span></td><td class="ctr"><span class="pill warn">Probation</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+          <tr><td><span class="av">RC</span><span class="name">Reuben Carter</span></td><td class="muted">CTR-0002</td><td class="muted">Projects</td><td class="muted">Welder</td><td class="muted">A. Diallo</td><td class="ctr"><span class="pill info">Contractor</span></td><td class="ctr"><span class="pill on">Active</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+          <tr><td><span class="av">SM</span><span class="name">Sara Mensah</span></td><td class="muted">EMP-0012</td><td class="muted">—</td><td class="muted">Analyst</td><td class="muted">—</td><td class="ctr"><span class="pill off">Employee</span></td><td class="ctr"><span class="pill off">On Leave</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+          <tr><td><span class="av">TB</span><span class="name">Tunde Bello</span></td><td class="muted">EMP-0017</td><td class="muted">Maintenance</td><td class="muted">Supervisor</td><td class="muted">D. Okafor</td><td class="ctr"><span class="pill off">Employee</span></td><td class="ctr"><span class="pill crit">Suspended</span></td><td class="ctr"><button class="linkbtn">View</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="rail">
+      <div class="rail-h">
+        <div class="rail-title"><i class="fas fa-bell"></i><span>HR Signals</span><span class="count">2</span></div>
+        <div class="rail-tabs">
+          <button class="active"><i class="fas fa-triangle-exclamation"></i> Risk</button>
+          <button><i class="fas fa-list-check"></i> Pending</button>
+          <button><i class="fas fa-cake-candles"></i> Milestones</button>
+        </div>
+      </div>
+      <div class="rail-b">
+        <div class="sig"><i class="bg-red"><i class="fas fa-user-slash" style="color:#fff"></i></i><div class="t"><strong>Sara Mensah</strong><span>No department assigned</span></div><span class="tag high" style="color:#fff">Risk</span></div>
+        <div class="sig"><i class="bg-amber"><i class="fas fa-user-xmark" style="color:#fff"></i></i><div class="t"><strong>David Okafor</strong><span>No supervisor (site mgr)</span></div><span class="tag due" style="color:#fff">Check</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ── Employee profile (drawer tabs) — sketch of what View opens ─ -->
+  <div class="note">Employee profile drawer (opens on a row) — proposed tabs</div>
+  <div class="tcard" style="padding:14px">
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+      <span class="av" style="width:44px;height:44px;font-size:.9rem">FK</span>
+      <div><div class="name" style="font-size:1rem">Fatima Khan</div><div class="muted" style="font-size:.76rem">Planner · Maintenance · EMP-0008 · <span class="pill warn">Probation</span></div></div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn">Change Status</button><button class="btn">Transfer</button><button class="btn">Change Supervisor</button>
+      </div>
+    </div>
+    <div class="subnav" style="margin:0">
+      <button class="active">Overview</button><button>Employment</button><button>Organization</button>
+      <button>Training</button><button>Documents</button><button>Audit</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;font-size:.78rem">
+      <div class="muted">Work email · <b style="color:var(--text)">fkhan@siomac.tt</b></div>
+      <div class="muted">Start date · <b style="color:var(--text)">14 Mar 2025</b></div>
+      <div class="muted">Supervisor · <b style="color:var(--text)">David Okafor</b></div>
+      <div class="muted">Employment · <b style="color:var(--text)">Employee</b></div>
+    </div>
+    <div class="note" style="margin:16px 0 8px">Training tab — READ-ONLY summary from the Training module</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="pill on">3 current</span><span class="pill warn">1 due soon</span><span class="pill crit">0 expired</span><span class="pill info">1 pending</span><span class="pill off">2 missing mandatory</span>
+    </div>
+  </div>
+
+</body>
+</html>
