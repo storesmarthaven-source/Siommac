@@ -92,6 +92,7 @@ import {
 import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
 import { mountMessageCenterSection, mountMessageDropdown } from '@sections/Messages';
 import '@sections/HSE';                 // self-registers the HSE module
+import '@sections/HR';                  // self-registers the HR module
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';

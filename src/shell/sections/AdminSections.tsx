@@ -615,6 +615,12 @@ export default function AdminSections() {
         <div id="preact-hse-root" />
       </AppSection>
 
+      {/* HR — Employee Master (+ future sub-modules). The HR module renders its
+          own page header (ProfilePill via PageHeader). */}
+      <AppSection id="s-hr" role="admin">
+        <div id="preact-hr-root" />
+      </AppSection>
+
       {/* Admin — Attendance Records */}
       <AppSection id="s-adm-attendance" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admAttProfileBtn', avatar: 'admAttProfileAvatar', profileName: 'admAttProfileName', profileRole: 'admAttProfileRole', notifBtn: 'admAttNotifBtn', notifBadge: 'admAttNotifBadge', msgBtn: 'admAttMsgBtn', msgBadge: 'admAttMsgBadge', ticketBtn: 'admAttTicketBtn', ticketBadge: 'admAttTicketBadge' }} />
