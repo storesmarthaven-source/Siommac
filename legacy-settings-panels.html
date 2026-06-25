@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIOMAC Legacy Settings Panels — extracted for restyling</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ── App design tokens (values from the live app) ─────────────────────────── */
+  :root{
+    --siomac-navy:#1B2D55; --siomac-red:#DC2626;
+    --bg-card:#ffffff; --bg-subtle:#f5f7fb; --bg-page:#f7f9fd;
+    --border:#e3e8f0;
+    --text-primary:#111827; --text-secondary:#5e6878; --text-muted:#9097a3;
+    --danger:#ef4444; --accent:#2563eb;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-page);color:var(--text-primary);font-size:14px;padding:24px;}
+  .page-wrap{max-width:1100px;margin:0 auto;}
+
+  /* ════════════════════════════════════════════════════════════════════════════
+     settings.css — VERBATIM from assets/styles/settings.css (the source of truth)
+     ════════════════════════════════════════════════════════════════════════════ */
+  .stg-page-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
+  .stg-page-hero-icon { width: 52px; height: 52px; border-radius: 16px; background: var(--siomac-navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stg-page-hero-icon i { color: #fff; font-size: 22px; }
+  .stg-page-hero-title { font-size: 1.55rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; }
+  .stg-page-hero-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+  .stg-layout { display: grid; grid-template-columns: 230px 1fr; gap: 24px; align-items: start; }
+
+  .stg-nav { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.03); position: sticky; top: 24px; }
+  .stg-nav-group { margin-bottom: 4px; }
+  .stg-nav-group:last-child { margin-bottom: 0; }
+  .stg-nav-group-label { font-size: 0.64rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); padding: 8px 12px 4px; }
+  .stg-nav-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: none; background: transparent; cursor: pointer; font-family: inherit; text-align: left; transition: background .15s, color .15s; color: var(--text-secondary); font-size: 0.83rem; font-weight: 500; }
+  .stg-nav-item:hover { background: var(--bg-subtle, #f5f7fb); color: var(--text-primary); }
+  .stg-nav-item.active { background: var(--siomac-navy); color: #fff; }
+  .stg-nav-item.active .stg-nav-arrow { opacity: 0; }
+  .stg-nav-icon { width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .stg-nav-item.active .stg-nav-icon { background: rgba(255,255,255,.15) !important; }
+  .stg-nav-item.active .stg-nav-icon i { color: #fff !important; }
+  .stg-nav-label { flex: 1; }
+  .stg-nav-arrow { font-size: 0.6rem; opacity: .35; }
+  .stg-nav-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+  .stg-content { min-width: 0; }
+  .stg-panel { display: block; margin-bottom: 36px; scroll-margin-top: 16px; padding-bottom: 36px; border-bottom: 1px solid var(--border); }
+  .stg-panel:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+  .stg-panel-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .stg-panel-icon { width: 48px; height: 48px; border-radius: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .stg-panel-icon i { font-size: 20px; }
+  .stg-panel-title { font-size: 1.2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1; }
+  .stg-panel-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+  .stg-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.03); }
+  .stg-card-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); display: flex; align-items: center; gap: 7px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .stg-card-label i { color: var(--siomac-red); font-size: 0.75rem; }
+  .stg-card-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+  .stg-form-group { margin-bottom: 18px; }
+  .stg-form-group:last-child { margin-bottom: 0; }
+  .stg-form-group label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .5px; }
+  .stg-form-group input, .stg-form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 14px; font-family: inherit; font-size: 0.85rem; transition: border-color .2s; background: var(--bg-card); color: var(--text-primary); box-sizing: border-box; }
+  .stg-form-group input:focus, .stg-form-group select:focus { outline: none; border-color: var(--siomac-navy); }
+  .stg-form-group select { cursor: pointer; }
+  .stg-form-group input[type="time"] { cursor: pointer; }
+  .stg-form-group small { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block; line-height: 1.4; }
+  .stg-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stg-readonly { background: var(--bg-subtle, #f5f7fb) !important; cursor: not-allowed !important; color: #999 !important; }
+
+  .stg-input-prefix-wrap, .stg-input-suffix-wrap { position: relative; }
+  .stg-input-prefix-wrap input { padding-left: 30px; }
+  .stg-input-suffix-wrap input { padding-right: 30px; }
+  .stg-input-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.82rem; color: var(--text-muted); pointer-events: none; }
+  .stg-input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.82rem; color: var(--text-muted); pointer-events: none; }
+
+  .stg-switch-group { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+  .stg-switch-group:last-child { border-bottom: none; padding-bottom: 0; }
+  .stg-switch-label { font-weight: 600; font-size: 0.86rem; color: var(--text-primary); }
+  .stg-switch-desc { font-size: 0.71rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+  .stg-toggle { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+  .stg-toggle input { opacity: 0; width: 0; height: 0; }
+  .stg-slider { position: absolute; cursor: pointer; inset: 0; background: #d1d5db; transition: .25s; border-radius: 34px; }
+  .stg-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; transition: .25s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .stg-toggle input:checked + .stg-slider { background: var(--siomac-navy); }
+  .stg-toggle input:checked + .stg-slider:before { transform: translateX(22px); }
+  .stg-toggle input:disabled + .stg-slider { opacity: .4; cursor: not-allowed; }
+
+  .stg-logo-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .stg-logo-preview-wrap { width: 120px; height: 80px; background: var(--bg-subtle, #f5f7fb); border-radius: 14px; border: 1.5px dashed var(--border); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+  .stg-danger-zone { background: #fff8f8; border-color: #fecdcd; }
+  .stg-danger-label { color: #c62828 !important; }
+  .stg-danger-label i { color: #c62828 !important; }
+
+  .stg-btn-primary { background: var(--siomac-navy); border: none; padding: 10px 22px; border-radius: 40px; color: white; font-weight: 700; font-size: 0.83rem; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: opacity .2s; font-family: inherit; }
+  .stg-btn-primary:hover { opacity: .87; }
+  .stg-btn-outline { background: transparent; border: 1.5px solid var(--border); padding: 9px 20px; border-radius: 40px; font-size: 0.83rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; transition: border-color .2s, color .2s; color: var(--text-primary); }
+  .stg-btn-outline:hover { border-color: var(--siomac-navy); color: var(--siomac-navy); }
+  .stg-btn-save { background: var(--siomac-navy); border: none; padding: 9px 18px; border-radius: 40px; color: white; font-weight: 600; font-size: 0.83rem; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; transition: opacity .2s; }
+  .stg-btn-save:disabled { opacity: .45; cursor: not-allowed; }
+  .stg-btn-save:not(:disabled):hover { opacity: .85; }
+  .stg-btn-danger { background: #c62828; border: none; padding: 10px 22px; border-radius: 40px; color: white; font-weight: 700; font-size: 0.83rem; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; transition: opacity .2s; }
+  .stg-btn-danger:hover { opacity: .88; }
+
+  @media (max-width: 860px) {
+    .stg-layout { grid-template-columns: 1fr; }
+    .stg-nav { position: static; display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
+    .stg-nav-group { display: contents; }
+    .stg-nav-group-label { display: none; }
+    .stg-nav-item { width: auto; flex: 0 0 auto; padding: 8px 14px; border-radius: 40px; font-size: 0.78rem; }
+    .stg-nav-arrow { display: none; }
+    .stg-nav-icon { width: 22px; height: 22px; border-radius: 6px; }
+  }
+  @media (max-width: 600px) { .stg-form-row { grid-template-columns: 1fr; } .stg-card { padding: 16px; } }
+
+  /* ── TOTP / 2FA self-service UI ───────────────────────────────────────────── */
+  .totp-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .totp-modal { background: var(--bg-card, #fff); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.18); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+  .totp-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px 14px; border-bottom: 1px solid var(--border, #e5e7eb); }
+  .totp-modal-title { font-size: 1rem; font-weight: 700; color: var(--text-primary, #111); display: flex; align-items: center; gap:8px; }
+  .totp-modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted, #9ca3af); font-size: 1.1rem; padding: 4px 8px; border-radius: 8px; line-height: 1; }
+  .totp-modal-close:hover { background: var(--bg-subtle, #f5f7fb); }
+  .totp-modal-body { padding: 20px 22px; }
+  .totp-modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .totp-step-desc { font-size: 0.83rem; color: var(--text-secondary, #6b7280); line-height: 1.6; margin: 0 0 16px; }
+  .totp-qr-wrap { display: flex; justify-content: center; margin: 12px 0 18px; }
+  .totp-qr-img { width: 180px; height: 180px; border-radius: 12px; border: 1px solid var(--border, #e5e7eb); }
+  .totp-manual-wrap { background: var(--bg-subtle, #f5f7fb); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .totp-manual-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted, #9ca3af); margin-bottom: 6px; }
+  .totp-manual-code { font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 700; letter-spacing: .1em; color: var(--siomac-navy, #1B2D55); word-break: break-all; }
+  .totp-manual-hint { font-size: 0.72rem; color: var(--text-muted, #9ca3af); margin-top: 8px; line-height: 1.5; }
+  .totp-code-input { font-size: 1.3rem; font-family: 'Courier New', monospace; letter-spacing: .15em; text-align: center; border: 2px solid var(--border, #e5e7eb) !important; border-radius: 12px !important; padding: 10px 16px !important; width: 100%; }
+  .totp-code-input:focus { border-color: var(--siomac-navy, #1B2D55) !important; outline: none; }
+  .totp-codes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
+  .totp-backup-code { background: var(--bg-subtle, #f5f7fb); border: 1px solid var(--border, #e5e7eb); border-radius: 8px; padding: 8px 12px; font-family: 'Courier New', monospace; font-size: 0.88rem; font-weight: 700; letter-spacing: .08em; color: var(--siomac-navy, #1B2D55); text-align: center; }
+  .totp-codes-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+  .totp-success-banner { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; border-radius: 10px; padding: 11px 14px; font-size: 0.83rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .totp-success-banner i { font-size: 1rem; }
+  .totp-error { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 10px; padding: 10px 14px; font-size: 0.8rem; display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; }
+  .totp-loading { text-align: center; padding: 24px 0; color: var(--text-muted, #9ca3af); font-size: 0.83rem; }
+  .totp-card { border: 1px solid var(--border, #e5e7eb); border-radius: 14px; padding: 16px; }
+  .totp-card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+  .totp-card-icon { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; background: rgba(27,45,85,.08); display: flex; align-items: center; justify-content: center; }
+  .totp-card-icon i { color: var(--siomac-navy, #1B2D55); font-size: 18px; }
+  .totp-card-info { flex: 1; min-width: 0; }
+  .totp-card-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #111); }
+  .totp-card-desc  { font-size: 0.78rem; color: var(--text-secondary, #6b7280); margin-top: 3px; line-height: 1.5; }
+  .totp-badge { flex-shrink: 0; border-radius: 20px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: .03em; }
+  .totp-badge--on  { background: #d1fae5; color: #065f46; }
+  .totp-badge--off { background: #f3f4f6; color: #6b7280; }
+  .totp-enrolled-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.75rem; color: var(--text-secondary, #6b7280); margin-bottom: 12px; }
+  .totp-enrolled-meta i { margin-right: 4px; }
+  .totp-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .totp-mandatory-note { font-size: 0.78rem; color: var(--siomac-navy, #1B2D55); background: rgba(27,45,85,.06); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; }
+
+  /* helper for stacked-panel headers in this extraction (panel icon tints from app NAV_ITEMS) */
+  .ic-navy{background:rgba(27,45,85,.08);} .ic-navy i{color:var(--siomac-navy);}
+  .ic-amber{background:rgba(202,138,4,.10);} .ic-amber i{color:#ca8a04;}
+  .ic-purple{background:rgba(124,58,237,.09);} .ic-purple i{color:#7c3aed;}
+  .ic-blue{background:rgba(37,99,235,.09);} .ic-blue i{color:#2563eb;}
+  .ic-green{background:rgba(71,144,74,.09);} .ic-green i{color:#47904a;}
+  .ic-red{background:rgba(228,12,12,.08);} .ic-red i{color:var(--siomac-red);}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ── Page hero ───────────────────────────────────────────────────────────── -->
+  <div class="stg-page-hero">
+    <div class="stg-page-hero-icon"><i class="fas fa-sliders"></i></div>
+    <div>
+      <div class="stg-page-hero-title">Settings</div>
+      <div class="stg-page-hero-sub">Manage your workspace, appearance, and account preferences</div>
+    </div>
+  </div>
+
+  <div class="stg-layout">
+
+    <!-- ── Left nav (3 groups: Workspace / Personal / System) ─────────────────── -->
+    <nav class="stg-nav">
+      <div class="stg-nav-group">
+        <div class="stg-nav-group-label">Workspace</div>
+        <button class="stg-nav-item active"><span class="stg-nav-icon ic-navy"><i class="fas fa-building"></i></span><span class="stg-nav-label">Company &amp; Branding</span><i class="fas fa-chevron-right stg-nav-arrow"></i></button>
+      </div>
+      <div class="stg-nav-group">
+        <div class="stg-nav-group-label">Personal</div>
+        <button class="stg-nav-item"><span class="stg-nav-icon ic-blue"><i class="fas fa-table-columns"></i></span><span class="stg-nav-label">Layout &amp; Navigation</span><i class="fas fa-chevron-right stg-nav-arrow"></i></button>
+        <button class="stg-nav-item"><span class="stg-nav-icon ic-green"><i class="fas fa-bell"></i></span><span class="stg-nav-label">Notifications</span><i class="fas fa-chevron-right stg-nav-arrow"></i></button>
+      </div>
+      <div class="stg-nav-group">
+        <div class="stg-nav-group-label">System</div>
+        <button class="stg-nav-item"><span class="stg-nav-icon ic-red"><i class="fas fa-shield-halved"></i></span><span class="stg-nav-label">Security &amp; Privacy</span><i class="fas fa-chevron-right stg-nav-arrow"></i></button>
+      </div>
+    </nav>
+
+    <!-- ── Content: all panels stacked (one .stg-panel each) ──────────────────── -->
+    <div class="stg-content">
+
+      <!-- ════ Company & Branding ════ -->
+      <section class="stg-panel">
+        <div class="stg-panel-header">
+          <div class="stg-panel-icon ic-navy"><i class="fas fa-building"></i></div>
+          <div><div class="stg-panel-title">Company &amp; Branding</div></div>
+        </div>
+
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-id-card"></i> Company Information</div>
+          <div class="stg-form-group">
+            <label>Company Name</label>
+            <input type="text" value="SIOMAC" maxlength="80" placeholder="My Company" />
+            <small>Shown in sidebar, About, payroll documents, and leave applications</small>
+          </div>
+          <div class="stg-form-group">
+            <label>Address</label>
+            <input type="text" value="" placeholder="e.g. #64-70 Lady Hailes Avenue, San Fernando" />
+          </div>
+          <div class="stg-form-row">
+            <div class="stg-form-group"><label>Phone</label><input type="text" placeholder="e.g. 657-2457" /></div>
+            <div class="stg-form-group"><label>Email</label><input type="email" placeholder="e.g. info@company.tt" /></div>
+          </div>
+          <div class="stg-form-row">
+            <div class="stg-form-group"><label>NIS Registration No.</label><input type="text" placeholder="e.g. 1234567" /></div>
+            <div class="stg-form-group"><label>BIR File No.</label><input type="text" placeholder="e.g. 100123456" /></div>
+          </div>
+          <div class="stg-form-row">
+            <div class="stg-form-group"><label>Currency</label><input type="text" value="TT" readonly class="stg-readonly" /><small>Fixed to TT — contact your administrator to change</small></div>
+            <div class="stg-form-group"><label>Time Zone</label><select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select><small>Contact your administrator to change</small></div>
+          </div>
+          <button class="stg-btn-save"><i class="fas fa-check"></i> Save Changes</button>
+        </div>
+
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-image"></i> Logo &amp; Branding</div>
+          <div class="stg-logo-row">
+            <div class="stg-logo-preview-wrap"><i class="fas fa-image" style="font-size:28px;color:var(--text-muted)"></i></div>
+            <div style="flex:1;min-width:0">
+              <div class="stg-card-actions" style="justify-content:flex-start;margin-bottom:8px">
+                <button class="stg-btn-outline"><i class="fas fa-upload"></i> Choose Logo</button>
+                <button class="stg-btn-save" disabled><i class="fas fa-check"></i> Save Logo</button>
+              </div>
+              <p style="font-size:0.7rem;color:var(--text-muted);line-height:1.5;margin:0">PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stg-card-actions" style="justify-content:flex-start">
+          <button class="stg-btn-outline"><i class="fas fa-rotate-left"></i> Reset Defaults</button>
+        </div>
+      </section>
+
+      <!-- ════ Layout & Navigation ════ -->
+      <section class="stg-panel">
+        <div class="stg-panel-header">
+          <div class="stg-panel-icon ic-blue"><i class="fas fa-table-columns"></i></div>
+          <div><div class="stg-panel-title">Layout &amp; Navigation</div></div>
+        </div>
+
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-sidebar"></i> Navigation Style</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button type="button" style="flex:1 1 0;min-width:140px;padding:16px;border:2px solid var(--siomac-navy);border-radius:14px;background:var(--bg-subtle);cursor:pointer;text-align:left"><i class="fas fa-sidebar" style="font-size:20px;color:var(--siomac-navy);display:block;margin-bottom:8px"></i><div style="font-size:0.83rem;font-weight:700;color:var(--siomac-navy)">Sidebar</div><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Fixed left navigation panel</div></button>
+            <button type="button" style="flex:1 1 0;min-width:140px;padding:16px;border:2px solid var(--border);border-radius:14px;background:var(--bg-card);cursor:pointer;text-align:left"><i class="fas fa-window-maximize" style="font-size:20px;color:var(--text-muted);display:block;margin-bottom:8px"></i><div style="font-size:0.83rem;font-weight:700;color:var(--text-primary)">Top Bar</div><div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Compact top navigation bar</div></button>
+          </div>
+        </div>
+
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-gauge"></i> Dashboard Preferences</div>
+          <div class="stg-form-group">
+            <label>Default Dashboard View</label>
+            <select disabled class="stg-readonly" style="opacity:.6"><option>Operations Overview</option><option>Attendance Analytics</option><option>Live Map</option></select>
+            <small>Coming soon</small>
+          </div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Auto-refresh dashboard</div><div class="stg-switch-desc">Refresh stats every 30 seconds — coming soon</div></div><label class="stg-toggle"><input type="checkbox" checked disabled /><span class="stg-slider"></span></label></div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Compact table rows</div><div class="stg-switch-desc">Reduce row height in all data tables — coming soon</div></div><label class="stg-toggle"><input type="checkbox" disabled /><span class="stg-slider"></span></label></div>
+        </div>
+      </section>
+
+      <!-- ════ Notifications ════ -->
+      <section class="stg-panel">
+        <div class="stg-panel-header">
+          <div class="stg-panel-icon ic-green"><i class="fas fa-bell"></i></div>
+          <div><div class="stg-panel-title">Notifications</div></div>
+        </div>
+
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-bell"></i> Notification Preferences</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Choose which types of in-app notifications you receive. Email and WhatsApp delivery will be available in a future update.</p>
+          <!-- NotificationPreferences component — represented as toggle rows -->
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Incidents &amp; HSE alerts</div><div class="stg-switch-desc">New incidents, investigations, and safety alerts</div></div><label class="stg-toggle"><input type="checkbox" checked /><span class="stg-slider"></span></label></div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Workflow &amp; approvals</div><div class="stg-switch-desc">Tasks assigned to you, approvals, and returns</div></div><label class="stg-toggle"><input type="checkbox" checked /><span class="stg-slider"></span></label></div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Messages &amp; mentions</div><div class="stg-switch-desc">Direct messages and thread mentions</div></div><label class="stg-toggle"><input type="checkbox" checked /><span class="stg-slider"></span></label></div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Attendance &amp; leave</div><div class="stg-switch-desc">Clock reminders, leave decisions, and corrections</div></div><label class="stg-toggle"><input type="checkbox" /><span class="stg-slider"></span></label></div>
+        </div>
+      </section>
+
+      <!-- ════ Security & Privacy ════ -->
+      <section class="stg-panel">
+        <div class="stg-panel-header">
+          <div class="stg-panel-icon ic-red"><i class="fas fa-shield-halved"></i></div>
+          <div><div class="stg-panel-title">Security &amp; Privacy</div></div>
+        </div>
+
+        <!-- Session timeout (per-role) -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-clock-rotate-left"></i> Session Timeout</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Automatically sign users out after a period of inactivity. Superadmin can edit; other roles are read-only.</p>
+          <div class="stg-form-row">
+            <div class="stg-form-group"><label>Superadmin</label><select><option>30 minutes</option><option>15 minutes</option><option>1 hour</option></select></div>
+            <div class="stg-form-group"><label>Admin</label><select><option>1 hour</option><option>30 minutes</option><option>2 hours</option></select></div>
+          </div>
+          <div class="stg-form-row">
+            <div class="stg-form-group"><label>Manager</label><select><option>2 hours</option><option>1 hour</option><option>4 hours</option></select></div>
+            <div class="stg-form-group"><label>Employee</label><select><option>8 hours</option><option>4 hours</option><option>12 hours</option></select></div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-key"></i> Password</div>
+          <div class="totp-card">
+            <div class="totp-card-header">
+              <div class="totp-card-icon"><i class="fas fa-lock"></i></div>
+              <div class="totp-card-info"><div class="totp-card-title">Account Password</div><div class="totp-card-desc">Managed via your account credentials.</div></div>
+            </div>
+            <div class="totp-card-actions"><button class="stg-btn-outline" disabled title="Coming soon"><i class="fas fa-key"></i> Change Password</button></div>
+          </div>
+        </div>
+
+        <!-- Two-Factor Authentication (Authenticator app) -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-shield-halved"></i> Two-Factor Authentication</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Protect your account with a second verification step at login. Each time you sign in, you'll need your password plus a code from your authenticator app.</p>
+          <div class="totp-card">
+            <div class="totp-card-header">
+              <div class="totp-card-icon"><i class="fas fa-mobile-screen-button"></i></div>
+              <div class="totp-card-info"><div class="totp-card-title">Authenticator App</div><div class="totp-card-desc">Use a TOTP app (Google Authenticator, Authy, 1Password) to generate one-time codes at login.</div></div>
+              <div class="totp-badge totp-badge--on">Enabled</div>
+            </div>
+            <div class="totp-enrolled-meta">
+              <span><i class="fas fa-calendar-check"></i> Enrolled 12 Jun 2026</span>
+              <span><i class="fas fa-key"></i> 8 backup codes remaining</span>
+            </div>
+            <div class="totp-card-actions">
+              <button class="stg-btn-outline"><i class="fas fa-lock-open"></i> Disable</button>
+              <button class="stg-btn-outline"><i class="fas fa-rotate"></i> Regenerate backup codes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passkeys -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-fingerprint"></i> Passkeys</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Register a biometric or hardware key to sign in without a password or one-time code.</p>
+          <div class="totp-card">
+            <div class="totp-card-header">
+              <div class="totp-card-icon"><i class="fas fa-fingerprint"></i></div>
+              <div class="totp-card-info"><div class="totp-card-title">Passkeys</div><div class="totp-card-desc">Sign in with biometrics or a hardware key — no password required.</div></div>
+              <div class="totp-badge totp-badge--on">1 registered</div>
+            </div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+              <div class="totp-enrolled-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                <div style="flex:1;min-width:0">
+                  <span style="font-weight:600;font-size:0.85rem">MacBook Touch ID</span>
+                  <span style="margin:0 8px;color:var(--text-secondary)">·</span>
+                  <span style="font-size:0.78rem;color:var(--text-secondary)">Synced · Backed up</span>
+                  <span style="margin:0 8px;color:var(--text-secondary)">·</span>
+                  <span style="font-size:0.78rem;color:var(--text-secondary)"><i class="fas fa-calendar-plus"></i> Added 10 Jun 2026</span>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="stg-btn-outline" style="padding:3px 10px;font-size:0.78rem"><i class="fas fa-pencil"></i> Rename</button>
+                  <button class="stg-btn-outline" style="padding:3px 10px;font-size:0.78rem;color:var(--danger);border-color:var(--danger)"><i class="fas fa-trash-can"></i> Remove</button>
+                </div>
+              </div>
+            </div>
+            <div class="totp-card-actions"><button class="stg-btn-save"><i class="fas fa-plus"></i> Add Passkey</button></div>
+          </div>
+        </div>
+
+        <!-- Trusted Devices -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-laptop-mobile"></i> Trusted Devices</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Devices you have marked as trusted can sign in without a 2FA code for a limited time.</p>
+          <div class="totp-card">
+            <div class="totp-card-header">
+              <div class="totp-card-icon"><i class="fas fa-laptop-mobile"></i></div>
+              <div class="totp-card-info"><div class="totp-card-title">Trusted Devices</div><div class="totp-card-desc">Devices that can skip two-factor verification for a limited time.</div></div>
+              <div class="totp-badge totp-badge--on">1 trusted</div>
+            </div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+              <div class="totp-enrolled-meta" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                    <span style="font-weight:600;font-size:0.85rem">Chrome on Windows</span>
+                    <span style="font-size:0.68rem;font-weight:700;padding:1px 7px;background:var(--accent);color:#fff;border-radius:20px;letter-spacing:.02em">This device</span>
+                  </div>
+                  <div style="font-size:0.76rem;color:var(--text-secondary);margin-top:1px">Chrome · Windows</div>
+                  <div style="font-size:0.74rem;color:var(--text-secondary);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+                    <span><i class="fas fa-calendar-check" style="margin-right:3px"></i>Trusted until 10 Jul 2026</span>
+                    <span><i class="fas fa-clock" style="margin-right:3px"></i>Last used Today</span>
+                  </div>
+                </div>
+                <button class="stg-btn-outline" style="padding:3px 10px;font-size:0.78rem;color:var(--danger);border-color:var(--danger);flex-shrink:0"><i class="fas fa-trash-can"></i> Revoke</button>
+              </div>
+            </div>
+            <div class="totp-card-actions" style="margin-top:14px"><button class="stg-btn-outline" style="color:var(--danger);border-color:var(--danger)"><i class="fas fa-ban"></i> Revoke all trusted devices</button></div>
+          </div>
+        </div>
+
+        <!-- Login alerts -->
+        <div class="stg-card">
+          <div class="stg-card-label"><i class="fas fa-bell"></i> Login Alerts</div>
+          <div class="stg-switch-group"><div><div class="stg-switch-label">Login alerts via email</div><div class="stg-switch-desc">Notify when a new device signs in — coming soon</div></div><label class="stg-toggle"><input type="checkbox" disabled /><span class="stg-slider"></span></label></div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="stg-card stg-danger-zone">
+          <div class="stg-card-label stg-danger-label"><i class="fas fa-triangle-exclamation"></i> Danger Zone</div>
+          <p style="font-size:0.83rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Clear all locally cached preferences, theme choices, and session tokens, then reload the page. Your server-side data is not affected.</p>
+          <button class="stg-btn-outline stg-danger-label"><i class="fas fa-trash-can"></i> Clear Local Settings</button>
+        </div>
+      </section>
+
+    </div><!-- /.stg-content -->
+  </div><!-- /.stg-layout -->
+
+  <!-- ── TOTP setup modal (shown statically so it can be styled) ─────────────── -->
+  <div class="totp-modal-overlay" style="position:static;background:transparent;justify-content:flex-start;padding:32px 0 0">
+    <div class="totp-modal">
+      <div class="totp-modal-header">
+        <div class="totp-modal-title"><i class="fas fa-mobile-screen-button"></i> Set up authenticator</div>
+        <button class="totp-modal-close"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="totp-modal-body">
+        <p class="totp-step-desc">Scan this QR code with your authenticator app, then enter the 6-digit code to confirm.</p>
+        <div class="totp-qr-wrap"><div class="totp-qr-img" style="display:grid;place-items:center;color:var(--text-muted)"><i class="fas fa-qrcode" style="font-size:90px"></i></div></div>
+        <div class="totp-manual-wrap">
+          <div class="totp-manual-label">Or enter this key manually</div>
+          <div class="totp-manual-code">JBSW Y3DP EHPK 3PXP</div>
+          <div class="totp-manual-hint">Type this into your app if you can't scan the code.</div>
+        </div>
+        <input class="totp-code-input" placeholder="000000" maxlength="6" />
+        <div class="totp-error"><i class="fas fa-circle-exclamation"></i> That code didn't match. Try the latest code from your app.</div>
+        <div class="totp-modal-footer">
+          <button class="stg-btn-outline">Cancel</button>
+          <button class="stg-btn-save"><i class="fas fa-check"></i> Verify &amp; enable</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.page-wrap -->
+</body>
+</html>
