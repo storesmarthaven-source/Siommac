@@ -619,7 +619,7 @@ export default async function run(h) {
     });
     expect(found, 'hse.assessment.rejected event not emitted');
   });
-  await test('request-changes: submit a third RA and request changes', async () => {
+  await test('request-changes: submit a third RA and request changes → returned (engine)', async () => {
     const ra = await api('hse/risk-jsa/assessments/create', T.admin, {
       assessmentType: 'general', title: `${TAG} RA Changes`,
     });
@@ -627,7 +627,9 @@ export default async function run(h) {
     ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: raId }));
     ok(await api('hse/risk-jsa/request-changes', T.admin, { entityType: 'assessment', entityId: raId, note: 'need more hazards' }));
     const { data } = await sb.from('hse_risk_assessments').select('status').eq('id', raId).single();
-    expect(data?.status === 'changes_requested', `expected changes_requested, got ${data?.status}`);
+    // M2b: request-changes is a workflow "return" decision → status 'returned'
+    // (the engine consolidates request-changes into the single returned outcome).
+    expect(data?.status === 'returned', `expected returned, got ${data?.status}`);
   });
 
   // ── JSA ──────────────────────────────────────────────────────────────────────
@@ -970,7 +972,7 @@ export default async function run(h) {
   // ── Review (legacy endpoint) ────────────────────────────────────────────────
   h.section('Risk & JSA › Legacy Review endpoint');
 
-  await test('review (legacy): approve outcome delegates to applyTransition', async () => {
+  await test('review (legacy): approve outcome → engine decideTask → approved', async () => {
     // Create a fresh hazard to review via legacy endpoint.
     const hz = await api('hse/risk-jsa/hazards/create', T.admin, {
       ...baseHazard(), title: `${TAG} Legacy Review`,

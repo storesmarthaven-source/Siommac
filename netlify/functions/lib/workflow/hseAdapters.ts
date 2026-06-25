@@ -7,11 +7,12 @@
 // `sourceStatusMap`. The engine never hardcodes a module table; the adapter does
 // (module_key → source table).
 //
-// MILESTONE 1: only modules that have NO separate approval state machine get an
-// adapter (incidents, capa) — so there is exactly one status authority and no
-// dual-authority drift. The risk-jsa adapters (hazards/assessments/jsa) land in
-// Milestone 2, together with retiring `transitionEntity` as an approval
-// authority (it currently approves/returns records outside the engine).
+// One status authority per module: a module either drives its own status OR has
+// an adapter, never both. incidents/capa: no separate approval route → adapter.
+// risk-jsa (M2b): approve/reject/request-changes route through the engine
+// (decideTask), so transitionEntity no longer approves records outside the
+// engine; these adapters sync the decision back. transitionEntity remains only
+// for non-approval lifecycle (activate/close/archive).
 // ============================================================================
 
 import { sb } from '../db';
@@ -45,6 +46,11 @@ function makeStatusSyncAdapter(moduleKey: string, table: string): ModuleWorkflow
 }
 
 export function registerHseWorkflowAdapters(): void {
-  registerWorkflowAdapter(makeStatusSyncAdapter('hse_incidents', 'hse_incidents'));
-  registerWorkflowAdapter(makeStatusSyncAdapter('hse_capa',      'hse_capa_actions'));
+  registerWorkflowAdapter(makeStatusSyncAdapter('hse_incidents',        'hse_incidents'));
+  registerWorkflowAdapter(makeStatusSyncAdapter('hse_capa',             'hse_capa_actions'));
+  // M2b: risk-jsa approvals are engine-driven (approve/reject/return route through
+  // decideTask); these adapters sync the decision back to the source record.
+  registerWorkflowAdapter(makeStatusSyncAdapter('hse_hazards',          'hse_hazards'));
+  registerWorkflowAdapter(makeStatusSyncAdapter('hse_risk_assessments', 'hse_risk_assessments'));
+  registerWorkflowAdapter(makeStatusSyncAdapter('hse_jsa',              'hse_jsa'));
 }

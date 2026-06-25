@@ -43,7 +43,7 @@ import { sb }                from '../lib/db';
 import { nextRef }           from '../lib/refGenerator';
 import { emitAppEvent }      from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
-import { startWorkflowForRecord } from '../lib/workflow/service';
+import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl }     from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
@@ -51,6 +51,14 @@ import type { HonoVariables } from '../../../types/api';
 const ATTACH_BUCKET = 'hse-attachments';
 
 const router = new Hono<{ Variables: HonoVariables }>();
+
+// Start (or restart) the approval workflow on submit: true if there's no workflow
+// yet, or the prior one is terminal (re-submit after return/reject → fresh workflow).
+async function shouldStartWorkflow(workflowId: string | null): Promise<boolean> {
+  if (!workflowId) return true;
+  const { data } = await sb.from('workflow_instances').select('status').eq('id', workflowId).maybeSingle<{ status: string }>();
+  return !data || ['returned', 'rejected', 'approved', 'completed', 'cancelled'].includes(data.status);
+}
 
 // ── Risk level helper ─────────────────────────────────────────────────────────
 // Canonical 5×5 bands (must match src/.../shared/RiskScorePill.ts calculateRiskBand):
@@ -740,7 +748,7 @@ router.post('/risk-jsa/assessments/submit', async c => {
 
   // Create or advance workflow
   let workflowId = ra.workflow_id;
-  if (!workflowId) {
+  if (await shouldStartWorkflow(workflowId)) {
     const wf = await startWorkflowForRecord({
       actor: { id: user.id },
       context: {
@@ -1202,7 +1210,7 @@ router.post('/risk-jsa/jsa/submit', async c => {
   await sb.from('hse_jsa').update({ status: 'submitted', updated_at: new Date().toISOString() }).eq('id', jsa.id);
 
   let workflowId = jsa.workflow_id;
-  if (!workflowId) {
+  if (await shouldStartWorkflow(workflowId)) {
     const wf = await startWorkflowForRecord({
       actor: { id: user.id },
       context: {
@@ -1428,20 +1436,91 @@ async function applyTransition(
   return c.json({ success: true, status: opts.toStatus });
 }
 
-// Distinct lifecycle endpoints. approve/reject/request-changes need approver
-// rights; activate/close/archive are manage-level operational transitions.
-const LIFECYCLE: Array<{ path: string; action: string; toStatus: string; permission: 'hse.risk.approve' | 'hse.risk.manage' }> = [
-  { path: 'approve',         action: 'approved',          toStatus: 'approved',          permission: 'hse.risk.approve' },
-  { path: 'reject',          action: 'rejected',          toStatus: 'rejected',          permission: 'hse.risk.approve' },
-  { path: 'request-changes', action: 'changes_requested', toStatus: 'changes_requested', permission: 'hse.risk.approve' },
-  { path: 'activate',        action: 'activated',         toStatus: 'active',            permission: 'hse.risk.manage' },
-  { path: 'close',           action: 'closed',            toStatus: 'closed',            permission: 'hse.risk.manage' },
-  { path: 'archive',         action: 'archived',          toStatus: 'archived',          permission: 'hse.risk.manage' },
+// Approval decision on a record → routed through the central engine: decide the
+// record's current open workflow task; the engine completes/returns/rejects and a
+// module adapter syncs the record status. The engine owns approval; the module
+// owns the record + the domain event. (M2b — no transitionEntity for approvals.)
+const APPROVAL_DECISION: Record<string, 'approved' | 'rejected' | 'returned'> = {
+  approve: 'approved', reject: 'rejected', 'request-changes': 'returned',
+};
+// Domain event action name (kept distinct so hse.{entity}.changes_requested still fires).
+const APPROVAL_ACTION: Record<string, string> = {
+  approve: 'approved', reject: 'rejected', 'request-changes': 'changes_requested',
+};
+
+async function decideRecordViaWorkflow(
+  c: Context<{ Variables: HonoVariables }>,
+  opts: { entityType: 'hazard' | 'assessment' | 'jsa'; entityId: string; decision: 'approved' | 'rejected' | 'returned'; action: string; actorId: string; note?: string | null; nextReviewDueAt?: string | null },
+) {
+  const table = TABLE_MAP[opts.entityType];
+  const cur = await sb.from(table as 'hse_hazards')
+    .select('id, ref, status, workflow_id')
+    .eq('id', opts.entityId)
+    .maybeSingle<{ id: string; ref: string; status: string; workflow_id: string | null }>();
+  if (!cur.data) return c.json({ success: false, message: 'Record not found' }, 404 as 200);
+  if (!cur.data.workflow_id) return c.json({ success: false, message: 'No active approval workflow for this record.' }, 400 as 200);
+
+  const task = await sb.from('workflow_tasks')
+    .select('id').eq('workflow_id', cur.data.workflow_id).in('status', ['pending', 'open', 'in_progress'])
+    .order('created_at').limit(1)
+    .maybeSingle<{ id: string }>();
+  if (!task.data) return c.json({ success: false, message: 'No open approval task for this record.' }, 400 as 200);
+
+  const fromStatus = cur.data.status;
+  try {
+    // Engine decides → completeWorkflow/return/reject → adapter sets the record status + notifies.
+    await decideTask({ workflowId: cur.data.workflow_id, taskId: task.data.id, actor: { id: opts.actorId }, decision: opts.decision, comment: opts.note ?? undefined });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Decision failed' }, 400 as 200);
+  }
+
+  // Approvers may set the next review date; the adapter doesn't, so apply it here.
+  if (opts.nextReviewDueAt) {
+    await sb.from(table as 'hse_hazards').update({ review_due_at: opts.nextReviewDueAt }).eq('id', opts.entityId);
+  }
+
+  const after = await sb.from(table as 'hse_hazards').select('status').eq('id', opts.entityId).maybeSingle<{ status: string }>();
+  const toStatus = after.data?.status ?? fromStatus;
+
+  // Module-domain event (consumers + reporting). No notification — the engine
+  // already notified the submitter on the workflow.{completed,returned,rejected} event.
+  void emitAppEvent({
+    eventType:        `hse.${opts.entityType}.${opts.action}`,
+    sourceModule:     'hse',
+    sourceEntityType: opts.entityType,
+    sourceEntityId:   cur.data.ref,
+    actorUserId:      opts.actorId,
+    severity:         toStatus === 'approved' ? 'success' : toStatus === 'rejected' ? 'warning' : 'info',
+    payload:          { action: opts.action, fromStatus, toStatus, note: opts.note ?? null },
+  });
+
+  return c.json({ success: true, status: toStatus });
+}
+
+for (const path of Object.keys(APPROVAL_DECISION)) {
+  router.post(`/risk-jsa/${path}`, async c => {
+    const user = await requirePermission(c, 'hse.risk.approve');
+    const body = c.get('body') as Record<string, unknown>;
+    const v = zv(c, ActionSchema, body.args);
+    if (!v.ok) return v.response;
+    return decideRecordViaWorkflow(c, {
+      entityType: v.data.entityType, entityId: v.data.entityId,
+      decision: APPROVAL_DECISION[path]!, action: APPROVAL_ACTION[path]!,
+      actorId: user.id, note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
+    });
+  });
+}
+
+// Post-approval lifecycle → module-owned transitions (no approval semantics).
+const LIFECYCLE: Array<{ path: string; action: string; toStatus: string }> = [
+  { path: 'activate', action: 'activated', toStatus: 'active'   },
+  { path: 'close',    action: 'closed',    toStatus: 'closed'   },
+  { path: 'archive',  action: 'archived',  toStatus: 'archived' },
 ];
 
 for (const L of LIFECYCLE) {
   router.post(`/risk-jsa/${L.path}`, async c => {
-    const user = await requirePermission(c, L.permission);
+    const user = await requirePermission(c, 'hse.risk.manage');
     const body = c.get('body') as Record<string, unknown>;
     const v = zv(c, ActionSchema, body.args);
     if (!v.ok) return v.response;
@@ -1513,13 +1592,19 @@ router.post('/risk-jsa/review', async c => {
   const v = zv(c, ReviewSchema, body.args);
   if (!v.ok) return v.response;
 
-  const toStatus = v.data.outcome === 'approve' ? 'approved'
-                 : v.data.outcome === 'archive' ? 'archived'
-                 : 'returned';
-
-  return applyTransition(c, {
+  // archive is a module lifecycle action; approve/return are approval decisions
+  // routed through the central engine (same as the dedicated approve/reject routes).
+  if (v.data.outcome === 'archive') {
+    return applyTransition(c, {
+      entityType: v.data.entityType, entityId: v.data.entityId,
+      action: 'archived', toStatus: 'archived', actorId: user.id,
+      note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
+    });
+  }
+  const decision = v.data.outcome === 'approve' ? 'approved' as const : 'returned' as const;
+  return decideRecordViaWorkflow(c, {
     entityType: v.data.entityType, entityId: v.data.entityId,
-    action: `${v.data.outcome}d`, toStatus, actorId: user.id,
+    decision, action: decision, actorId: user.id,
     note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
   });
 });
@@ -1765,7 +1850,7 @@ router.post('/risk-jsa/hazards/submit', async c => {
     .eq('id', hz.id);
 
   let workflowId = hz.workflow_id;
-  if (!workflowId) {
+  if (await shouldStartWorkflow(workflowId)) {
     const wf = await startWorkflowForRecord({
       actor: { id: user.id },
       context: {
