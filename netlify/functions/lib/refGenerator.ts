@@ -32,7 +32,8 @@ export type RefPrefix =
   | 'CERT'  // HSE Worker Certificate
   | 'TRN'   // HSE Training Assignment
   | 'HRC'   // HR Case
-  | 'HRI';  // HR Employee Import batch
+  | 'HRI'   // HR Employee Import batch
+  | 'ONB';  // HR Onboarding case
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.
