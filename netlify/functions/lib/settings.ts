@@ -3,6 +3,8 @@
 //   • Everything else — 60 s TTL
 
 import { sb } from './db';
+import { resolveSetting } from './settings/resolveSetting';
+import type { SettingScope } from './settings/types';
 
 const BRANDING_TTL_MS = 5  * 1000;
 const DEFAULT_TTL_MS  = 60 * 1000;
@@ -41,4 +43,21 @@ function invalidateSettingsCache(): void {
   _cache = null; _fetchedAt = 0;
 }
 
-export { getAllSettings, setting, invalidateSettingsCache };
+/**
+ * Transition read for settings folded from the legacy `settings` table into the
+ * catalog (Spec §29; Attendance / Company). The legacy flat value is the
+ * baseline; an EXPLICIT catalog override (site/role/global/etc.) wins once set in
+ * the new Settings UI. If the catalog isn't synced yet, or resolution fails, the
+ * legacy value is returned — so existing behaviour is fully preserved.
+ */
+async function settingFolded(newKey: string, legacyKey: string, scope: SettingScope, fallback = ''): Promise<string> {
+  const legacy = await setting(legacyKey, fallback);
+  try {
+    const r = await resolveSetting(sb, newKey, scope);
+    return r.source === 'default' ? legacy : String(r.value);
+  } catch {
+    return legacy;
+  }
+}
+
+export { getAllSettings, setting, settingFolded, invalidateSettingsCache };

@@ -3,7 +3,7 @@ import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
 import { deptScopeFilter, assertInScope }  from '../lib/permissions';
 import { dateOnly, r2 }                   from '../lib/helpers';
-import { setting, getAllSettings, invalidateSettingsCache } from '../lib/settings';
+import { setting, settingFolded, getAllSettings, invalidateSettingsCache } from '../lib/settings';
 import { zv, z, zPayCycle, zPayBasis, zDateStr } from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 import type { Payslip }                   from '../../../types/api';
@@ -246,14 +246,17 @@ router.post('/getPayroll', async c => {
   const end   = new Date(Date.UTC(y, mo + 1, 0)).toISOString().slice(0, 10);
   const label = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(Date.UTC(y, mo, 1)));
 
+  const empSiteId = (emp as unknown as { site_id?: string | null }).site_id ?? null;
   const [{ data: recs }, deptRow, [latePerDay, finePerDay, currency, companyName]] = await Promise.all([
     sb.from('attendance').select('*').eq('user_id', emp.id).gte('work_date', start).lte('work_date', end).order('work_date'),
     emp.department_id ? sb.from('departments').select('name').eq('id', emp.department_id).maybeSingle<{ name: string }>().then(r => r.data) : Promise.resolve(null),
     Promise.all([
-      setting('latePenaltyPerDay', '0'),
-      setting('leaveFinePerDay',   '0'),
-      setting('currency',          'TT'),
-      setting('companyName',       'Company'),
+      // Folded into the catalog (attendance.*/company.*); legacy values remain
+      // the baseline until overridden in the new Settings UI.
+      settingFolded('attendance.late_penalty_per_day', 'latePenaltyPerDay', { moduleKey: 'attendance', siteId: empSiteId }, '0'),
+      settingFolded('attendance.leave_fine_per_day',   'leaveFinePerDay',   { moduleKey: 'attendance', siteId: empSiteId }, '0'),
+      setting('currency', 'TT'),
+      settingFolded('company.display_name', 'companyName', { moduleKey: 'company' }, 'Company'),
     ]),
   ]);
 

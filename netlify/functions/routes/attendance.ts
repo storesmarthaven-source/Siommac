@@ -3,7 +3,7 @@ import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';
 import { deptScopeFilter, loadRoleScope }   from '../lib/permissions';
 import { today, hhmm24, dateOnly, num }   from '../lib/helpers';
-import { setting }                         from '../lib/settings';
+import { setting, settingFolded }          from '../lib/settings';
 import { getSignedUrl, getProfileSignedUrl, resolveAttendancePhotosBatch } from '../lib/photos';
 import { uploadBase64 }                    from '../lib/upload';
 import { zv, MarkAttendanceSchema, GetMyStatusSchema, GetMyHistorySchema, GetMyChartSchema, ListAttendanceSchema, ListDailyLogSchema, GetLiveAttendanceSchema, GetRecentAttendanceSchema, GetDeptStatsSchema } from '../lib/validate';
@@ -93,7 +93,7 @@ router.post('/markAttendance', async c => {
 
   const photo = args.photoBase64 ? await uploadBase64('attendance-photos', args.photoBase64, `${actor.username}_${action}_${work_date}`) : '';
   const { data: rec } = await sb.from('attendance').select('*').eq('user_id', actor.id).eq('work_date', work_date).maybeSingle();
-  const lateThreshold = await setting('lateThresholdHHMM', '09:15');
+  const lateThreshold = await settingFolded('attendance.late_threshold_time', 'lateThresholdHHMM', { moduleKey: 'attendance', siteId: near?.site.id ?? null }, '09:15');
   const late = hhmm24(now) > lateThreshold;
 
   if (isCheckIn) {
