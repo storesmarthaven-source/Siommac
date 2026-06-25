@@ -23,7 +23,6 @@ import {
   hsePill, HSE_SITES,
   type IncidentRecord, type Investigation, type CapaItem, type IncidentType,
 } from './types';
-import { useCreateWorkflow } from '@api/workflows';
 import { toneClass } from '@ui/status/statusTokens';
 import { exportCsv } from '@ui/lib/exportCsv';
 import {
@@ -973,7 +972,6 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   const kpisQ            = useHseDashboardKpis();
   const createIncident      = useCreateIncident();
   const createInvestigation = useCreateInvestigation();
-  const createWorkflow      = useCreateWorkflow();
 
   const incidents      = incidentsQ.data?.map(dbToIncidentRecord)     ?? [];
   const investigations = investigationsQ.data?.map(dbToInvestigation) ?? [];
@@ -1038,7 +1036,10 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
     ];
 
     try {
-      const result = await createIncident.mutateAsync({
+      // The backend starts the incident_investigation workflow on create
+      // (runModuleMutation → startWorkflowForRecord); the frontend must NOT
+      // start a second one by templateKey (that produced a duplicate workflow).
+      await createIncident.mutateAsync({
         title:           payload.description.slice(0, 120) || `${payload.type} incident`,
         incidentType:    dbType,
         severity:        dbSeverity,
@@ -1056,17 +1057,6 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         immediateAction: payload.immediateActions,
         people,
       });
-      const ref = result.ref;
-      if (ref) {
-        await createWorkflow.mutateAsync({
-          templateKey:      'hse_incident_investigation',
-          sourceModule:     'hse',
-          sourceEntityType: 'incident',
-          sourceEntityId:   ref,
-          priority:         dbSeverity === 'critical' ? 'critical' : 'high',
-          reason:           payload.description,
-        });
-      }
     } catch { /* non-fatal */ }
     setPageTab('incidents');
   }

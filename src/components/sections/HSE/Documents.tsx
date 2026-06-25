@@ -9,7 +9,6 @@ import {
   PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, SelectInput, TextInput,
   type AreaTab, type SparkDef,
 } from '@ui';
-import { useCreateWorkflow } from '@api/workflows';
 import {
   mockHseDocs, mockSds, hsePill, HSE_DOC_TYPES,
   type HseDocRow, type SdsRow,
@@ -265,7 +264,6 @@ function SdsTab({ sds }: { sds: SdsRow[] }): VNode {
 }
 
 export function DocumentsArea({ tab }: { tab: string }): VNode {
-  const createWorkflow = useCreateWorkflow();
   const [active, setActive] = useState(tab);
   const [docs, setDocs]     = useState<HseDocRow[]>(mockHseDocs);
   const [sds]               = useState<SdsRow[]>(mockSds);
@@ -378,7 +376,8 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
           const ref = `DOC-HSE-${String(docs.length + 300).padStart(4, '0')}`;
           const newDoc: HseDocRow = { ref, title: newTitle || 'Untitled document', type: newType, owner: newOwner, version: 'v1.0', status: 'Draft', review: '19 Jun 2027' };
           setDocs([newDoc, ...docs]);
-          void createWorkflow.mutate({ templateKey: 'hse_document_approval', sourceModule: 'hse', sourceEntityType: 'document', sourceEntityId: ref, reason: newDoc.title, priority: 'high' });
+          // Document approval will start from a backend document.submitted event
+          // (via a workflow binding) when the Documents module is wired to the API.
           setModal(false); setTitle('');
         }}
       >

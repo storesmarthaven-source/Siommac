@@ -10,7 +10,6 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, HseModal, Field, TextInput, SelectInput, TextareaInput, type AreaTab, type SparkDef } from '@ui';
 import { HSE_SITES, hsePill, type HseSeverity } from './types';
-import { useCreateWorkflow } from '@api/workflows';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +105,6 @@ const TABS: AreaTab[] = [
 ];
 
 function SpillsTab(): VNode {
-  const createWorkflow = useCreateWorkflow();
   const [spills, setSpills]   = useState(mockSpills);
   const [modalOpen, setModal] = useState(false);
   const [newSite, setSite]    = useState<string>(HSE_SITES[0]);
@@ -125,7 +123,8 @@ function SpillsTab(): VNode {
       volume: newVolume || 'TBD', tier: 'Tier 1', media: newMedia,
       reporter: 'S. Chen', emaNotified: false, status: 'Open', severity: 'warning',
     }, ...spills]);
-    void createWorkflow.mutate({ templateKey: 'hse_incident_investigation', sourceModule: 'hse', sourceEntityType: 'environmental_spill', sourceEntityId: ref, reason: `Environmental spill: ${newSubstance} at ${newSite} — ${newDesc || 'See spill register'}` });
+    // Spill follow-up will start from a backend spill event (via a workflow
+    // binding) when the Environmental module is wired to the API.
     setModal(false);
     setSubstance(''); setVolume(''); setDesc('');
   };

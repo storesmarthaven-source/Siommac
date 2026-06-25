@@ -12,7 +12,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { StatCard } from '../Employees/StatCard';
-import { useCreateWorkflow, useMyWorkflowTasks } from '@api/workflows';
+import { useMyWorkflowTasks } from '@api/workflows';
 import { HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
 import {
   mockPpeItems, mockPpeEmployees, mockRoleMatrix, PPE_MATRIX_COLUMNS, ppePillClass,
@@ -411,7 +411,6 @@ function ReturnsTab(): VNode {
 }
 
 function RequestsTab(): VNode {
-  const createWorkflow = useCreateWorkflow();
   const tasksQ = useMyWorkflowTasks();
   const [requests, setRequests] = useState<PpeRequestRow[]>(mockPpeRequests);
   const [modalOpen, setModal]   = useState(false);
@@ -433,7 +432,8 @@ function RequestsTab(): VNode {
       status: 'Pending', priority: 'pending',
     };
     setRequests(prev => [row, ...prev]);
-    void createWorkflow.mutate({ templateKey: 'ppe-request', sourceModule: 'hse', sourceEntityType: 'ppe_request', sourceEntityId: ref, reason: `${reqType}: ${reqItem} for ${reqEmp} at ${reqSite} — ${reqReason || 'See request record'}` });
+    // PPE-request approval will start from a backend ppe.requested event (via a
+    // workflow binding) when the PPE module is wired to the API.
     setModal(false);
     setReqItem(''); setReason('');
   };
