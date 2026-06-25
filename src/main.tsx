@@ -96,7 +96,6 @@ import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
-import { mountLoginPage }      from '@components/auth';
 import { mountNavController, mountCommandPalette, mountNavCustomizer }  from '@components/nav';
 import { useSessionStore }     from '@store/session';
 import '@cfg/index';            // registers window.SiomacConfig before any legacy script reads it
@@ -198,20 +197,9 @@ async function bootApp(): Promise<void> {
   // The pnp (profile-notif-pill) headers remain in the HTML shell so nav.js
   // badge wiring continues to work unchanged.
 
-  // Login / 2FA controller (replaces handleLogin + all 2FA helpers in app.js)
-  // onLoginSuccess calls AttendanceSystem._completeLogin which owns applySession.
-  const loginCtrlRoot = document.getElementById('preact-login-ctrl');
-  if (loginCtrlRoot) {
-    mountLoginPage(loginCtrlRoot, {
-      queryClient,
-      onLoginSuccess: (result) => {
-        const sys = (window as unknown as Record<string, { _completeLogin?: (r: unknown) => void }>)['AttendanceSystem'];
-        if (sys?._completeLogin) {
-          sys._completeLogin(result);
-        }
-      },
-    });
-  }
+  // Login / 2FA is now a fully Preact-controlled flow rendered by AppShell's
+  // <LoginShell />, which applies the session via AttendanceSystem._completeLogin.
+  // (The old headless controller + #preact-login-ctrl mount has been removed.)
 
   // Nav controller (replaces nav.js — sidebar, modals, notifications, messages, tickets)
   const navCtrlRoot = document.getElementById('preact-nav-ctrl');

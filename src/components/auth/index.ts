@@ -5,5 +5,4 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-export { mountLoginPage, unmountLoginPage } from './mount';
 export type { LoginResult } from './api';

@@ -39,6 +39,12 @@ export interface LoginResult {
   requiresSetup?:     boolean;
   preAuthToken?:      string;
   methods?:           string[]; // ['totp', 'webauthn']
+  // Mandatory-setup branch (requiresSetup): which methods the user may set up.
+  setupMethods?:      string[]; // ['webauthn', 'totp']
+  reason?:            string;   // e.g. 'mandatory_mfa'
+  // Optional post-login passkey enrolment prompt (direct success / post-2FA).
+  nextStep?:          'passkey_prompt';
+  passkeyRequired?:   boolean;
   // Trusted device offer (B3a) — present when requiresTwoFactor is true
   trustedDeviceEligible?: boolean;
   trustedDevicePolicy?:   { enabled: boolean; maxDays: number };

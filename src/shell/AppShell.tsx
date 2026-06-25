@@ -123,8 +123,7 @@ export default function AppShell() {
       {/* Login screen (visible until authentication) */}
       <LoginShell />
 
-      {/* Headless Preact controllers (legacy mount points — do not remove) */}
-      <div id="preact-login-ctrl" style="display:none;" aria-hidden="true" />
+      {/* Headless Preact controller mount point (nav badge wiring) */}
       <div id="preact-nav-ctrl"   style="display:none;" aria-hidden="true" />
 
       {/* Comms bridge: realtime signals + summary refresh (no DOM output) */}

@@ -1,24 +1,133 @@
 /**
  * src/shell/LoginShell.tsx
  *
- * Login screen with three panels (shown/hidden by attSystem.ts):
- *   1. #loginForm        — username + password
- *   2. #twoFaPanel       — TOTP 6-digit verification
- *   3. #twoFaSetupPanel  — first-time 2FA setup (QR → confirm → backup codes)
+ * Phase 2b — fully Preact-controlled login flow (replaces the headless
+ * LoginPage.tsx controller + static panels). A small state machine composes the
+ * self-contained auth panels:
  *
- * IDs are preserved exactly as in assets/partials/app-shell.html.
- * The #rememberMe checkbox is read by attSystem.ts _completeLogin() to
- * determine session persistence — do not rename or remove it.
+ *   credentials      → PasswordLoginPanel        (username/password + passkey)
+ *   tfa-verify       → TwoFactorVerifyPanel      (TOTP / backup / passkey 2FA)
+ *   tfa-setup        → TotpSetupPanel            (mandatory TOTP enrolment)
+ *   passkey-required → PasskeyRequiredPrompt     (mandatory MFA: passkey or TOTP)
+ *   passkey-prompt   → PasskeySetupPrompt        (optional post-login passkey)
  *
- * Phase 2b: This shell will be replaced by a fully Preact-controlled login flow
- * with state in @store/session and form submission via @lib/auth.signIn().
+ * Each panel owns its own API calls; this shell only routes the LoginResult and
+ * applies the final session via window.AttendanceSystem._completeLogin (the same
+ * integration point the old controller used).
  *
- * @see docs/SHELL_STRUCTURE.md §LoginShell
  * @see docs/ARCHITECTURE.md §Authentication
  * @see docs/CODING_STANDARDS.md
  */
 
+import { useState, useCallback } from 'preact/hooks';
+import { startAuthentication } from '@simplewebauthn/browser';
+import { PasswordLoginPanel } from '@components/auth/PasswordLoginPanel';
+import { TwoFactorVerifyPanel } from '@components/auth/TwoFactorVerifyPanel';
+import { TotpSetupPanel } from '@components/auth/TotpSetupPanel';
+import { PasskeyRequiredPrompt } from '@components/auth/PasskeyRequiredPrompt';
+import { PasskeySetupPrompt } from '@components/auth/PasskeySetupPrompt';
+import { webauthnAuthOptions, webauthnAuthVerify, type LoginResult } from '@components/auth/api';
+
+type Phase = 'credentials' | 'tfa-verify' | 'tfa-setup' | 'passkey-required' | 'passkey-prompt';
+
+interface FlowCtx {
+  preAuthToken:          string;
+  methods:               string[];
+  setupMethods:          string[];
+  username:              string;
+  rememberMe:            boolean;
+  trustedDeviceEligible: boolean;
+  trustedDevicePolicy:   { enabled: boolean; maxDays: number } | null;
+  pendingResult:         LoginResult | null;
+}
+
+const EMPTY_CTX: FlowCtx = {
+  preAuthToken: '', methods: [], setupMethods: [], username: '', rememberMe: false,
+  trustedDeviceEligible: false, trustedDevicePolicy: null, pendingResult: null,
+};
+
+const webauthnSupported = () => typeof window !== 'undefined' && !!window.PublicKeyCredential;
+
 export default function LoginShell() {
+  const [phase, setPhase] = useState<Phase>('credentials');
+  const [ctx, setCtx]     = useState<FlowCtx>(EMPTY_CTX);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+
+  // ── Apply the final session (same integration point as the old controller) ──
+  const complete = useCallback((result: LoginResult, username: string, rememberMe: boolean) => {
+    try {
+      if (rememberMe) localStorage.setItem('rememberedUser', username || (result.username ?? ''));
+      else            localStorage.removeItem('rememberedUser');
+    } catch { /* ignore storage errors */ }
+    const sys = (window as unknown as Record<string, { _completeLogin?: (r: LoginResult) => void }>)['AttendanceSystem'];
+    sys?._completeLogin?.(result);
+    // Reset for the next sign-in (e.g. after logout → remount).
+    setPhase('credentials');
+    setCtx(EMPTY_CTX);
+  }, []);
+
+  // ── Route a success result: optional passkey prompt, else complete ──────────
+  const routeComplete = useCallback((result: LoginResult, username: string, rememberMe: boolean) => {
+    if (result.nextStep === 'passkey_prompt' && result.token && webauthnSupported()) {
+      setCtx(c => ({ ...c, username, rememberMe, pendingResult: result }));
+      setPhase('passkey-prompt');
+      return;
+    }
+    complete(result, username, rememberMe);
+  }, [complete]);
+
+  // ── Credentials → next phase ────────────────────────────────────────────────
+  const onCredentials = useCallback((result: LoginResult, username: string, rememberMe: boolean) => {
+    setBanner(null);
+    if (result.requiresTwoFactor) {
+      setCtx({
+        ...EMPTY_CTX, username, rememberMe,
+        preAuthToken: result.preAuthToken ?? '',
+        methods: result.methods ?? [],
+        trustedDeviceEligible: result.trustedDeviceEligible ?? false,
+        trustedDevicePolicy: result.trustedDevicePolicy ?? null,
+      });
+      setPhase('tfa-verify');
+      return;
+    }
+    if (result.requiresSetup) {
+      const setupMethods = result.setupMethods ?? [];
+      setCtx({ ...EMPTY_CTX, username, rememberMe, preAuthToken: result.preAuthToken ?? '', setupMethods });
+      setPhase(webauthnSupported() && setupMethods.includes('webauthn') ? 'passkey-required' : 'tfa-setup');
+      return;
+    }
+    routeComplete(result, username, rememberMe);
+  }, [routeComplete]);
+
+  // ── Passwordless passkey sign-in (from the credentials panel) ───────────────
+  const onPasskeyClick = useCallback(async () => {
+    setBanner(null);
+    setPasskeyBusy(true);
+    try {
+      const optRes = await webauthnAuthOptions();
+      if (!optRes.success || !optRes.options) {
+        setBanner(optRes.message ?? 'Could not start passkey sign-in.');
+        return;
+      }
+      const assertion = await startAuthentication({
+        optionsJSON: optRes.options as unknown as Parameters<typeof startAuthentication>[0]['optionsJSON'],
+      });
+      const result = await webauthnAuthVerify({ flow: 'passwordless', response: assertion as unknown as Record<string, unknown> });
+      if (!result.success) {
+        setBanner(result.message ?? 'Passkey sign-in failed.');
+        return;
+      }
+      routeComplete(result, result.username ?? '', false);
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'NotAllowedError' || name === 'AbortError') return; // user cancelled
+      setBanner(err instanceof Error ? err.message : 'Passkey sign-in failed.');
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }, [routeComplete]);
+
   return (
     <div id="loginPage" class="login-container">
       <div class="login-split">
@@ -40,14 +149,8 @@ export default function LoginShell() {
         {/* RIGHT: Form side */}
         <div class="login-form-side">
           <div class="login-brand-header">
-            <img
-              id="loginLogo"
-              class="login-brand-logo"
-              src=""
-              alt="SIOMAC LTD."
-              style="display:none;"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
+            <img id="loginLogo" class="login-brand-logo" src="" alt="SIOMAC LTD." style="display:none;"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           </div>
 
           <div class="login-form-body">
@@ -58,161 +161,56 @@ export default function LoginShell() {
               </p>
             </div>
 
-            {/* ── Panel 1: Username + Password ───────────────────────────── */}
-            <form id="loginForm" noValidate>
-              <div class="login-input-group">
-                <input
-                  type="text"
-                  id="username"
-                  placeholder="Employee ID / Username"
-                  autoComplete="username"
-                  required
-                />
-                <div class="login-invalid" id="usernameError">Please enter a valid username</div>
+            {banner && <div class="login-error-banner" style={{ marginBottom: '12px' }}>{banner}</div>}
+            {passkeyBusy && phase === 'credentials' && (
+              <div class="login-error-banner" style={{ marginBottom: '12px', background: 'transparent', color: 'var(--text-secondary,#8896a4)' }}>
+                <i class="fas fa-spinner fa-spin" style="margin-right:6px" /> Waiting for your passkey…
               </div>
-              <div class="login-input-group">
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="Password"
-                  autoComplete="current-password"
-                  required
-                />
-                <div class="login-invalid" id="passwordError">Please enter your password</div>
-              </div>
+            )}
 
-              <div class="login-options-row">
-                <label class="login-remember">
-                  <input type="checkbox" id="rememberMe" />
-                  <span id="rememberMeLabel">Remember me</span>
-                </label>
-              </div>
+            {phase === 'credentials' && (
+              <PasswordLoginPanel onSuccess={onCredentials} onPasskeyClick={() => void onPasskeyClick()} />
+            )}
 
-              <div id="loginErrorBanner" class="login-error-banner" style="display:none;" />
+            {phase === 'tfa-verify' && (
+              <TwoFactorVerifyPanel
+                preAuthToken={ctx.preAuthToken}
+                methods={ctx.methods}
+                username={ctx.username}
+                rememberMe={ctx.rememberMe}
+                trustedDeviceEligible={ctx.trustedDeviceEligible}
+                trustedDevicePolicy={ctx.trustedDevicePolicy}
+                onSuccess={(result) => routeComplete(result, ctx.username, ctx.rememberMe)}
+                onBack={() => { setPhase('credentials'); setCtx(EMPTY_CTX); }}
+              />
+            )}
 
-              <button type="submit" id="loginBtn" class="login-cta-btn">
-                <i class="fas fa-sign-in-alt" />
-                <span id="loginButton">Sign in to Dashboard</span>
-              </button>
+            {phase === 'tfa-setup' && (
+              <TotpSetupPanel
+                preAuthToken={ctx.preAuthToken}
+                rememberMe={ctx.rememberMe}
+                setupMethods={ctx.setupMethods}
+                onSuccess={(result) => complete(result, ctx.username, ctx.rememberMe)}
+                onError={(msg) => { setPhase('credentials'); setCtx(EMPTY_CTX); setBanner(msg); }}
+              />
+            )}
 
-              <div class="login-security-note">
-                <i class="fas fa-fingerprint" />
-                <span><strong>Encrypted Access · SIOMAC Internal Systems</strong></span>
-                <i class="fas fa-shield-alt" />
-              </div>
-            </form>
+            {phase === 'passkey-required' && (
+              <PasskeyRequiredPrompt
+                preAuthToken={ctx.preAuthToken}
+                setupMethods={ctx.setupMethods}
+                onSessionReady={(result) => complete(result, ctx.username, ctx.rememberMe)}
+                onChooseTotp={() => setPhase('tfa-setup')}
+              />
+            )}
 
-            {/* ── Panel 2: TOTP verification ─────────────────────────────── */}
-            <div id="twoFaPanel" style="display:none;">
-              <div class="tfa-icon-row">
-                <span class="tfa-shield-icon"><i class="fas fa-shield-alt" /></span>
-              </div>
-              <p class="tfa-desc">Enter the 6-digit code from your authenticator app, or use a backup code.</p>
-
-              <div class="tfa-otp-row" id="tfaOtpRow">
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="0" autoComplete="one-time-code" />
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="1" />
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="2" />
-                <span class="tfa-otp-sep">·</span>
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="3" />
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="4" />
-                <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="5" />
-              </div>
-
-              <div id="tfaErrorBanner" class="login-error-banner" style="display:none;" />
-
-              <button id="tfaSubmitBtn" class="login-cta-btn" style="margin-top:8px;">
-                <i class="fas fa-lock-open" /> Verify
-              </button>
-
-              <div class="tfa-backup-row">
-                <button type="button" id="tfaBackupToggle" class="tfa-text-btn">Use a backup code instead</button>
-              </div>
-              <div id="tfaBackupSection" style="display:none;margin-top:8px;">
-                <input
-                  id="tfaBackupCode"
-                  type="text"
-                  class="tfa-backup-input"
-                  placeholder="XXXXXXXX"
-                  maxLength={8}
-                  autoComplete="off"
-                />
-                <button id="tfaBackupSubmit" class="login-cta-btn" style="margin-top:6px;">
-                  <i class="fas fa-key" /> Use Backup Code
-                </button>
-              </div>
-
-              <div class="tfa-back-row">
-                <button type="button" id="tfaBackBtn" class="tfa-text-btn">
-                  <i class="fas fa-arrow-left" /> Back to login
-                </button>
-              </div>
-            </div>
-
-            {/* ── Panel 3: First-time 2FA setup ──────────────────────────── */}
-            <div id="twoFaSetupPanel" style="display:none;">
-
-              {/* Step A: Show QR code */}
-              <div id="setupStepQr">
-                <div class="tfa-icon-row">
-                  <span class="tfa-shield-icon tfa-shield-warn"><i class="fas fa-mobile-alt" /></span>
-                </div>
-                <p class="tfa-desc">
-                  <strong>Two-Factor Authentication is required for your role.</strong><br />
-                  Scan this QR code with Google Authenticator, Authy, or any TOTP app.
-                </p>
-                <div id="setupQrWrapper" class="tfa-qr-wrapper">
-                  <img id="setupQrImg" src="" alt="QR Code" class="tfa-qr-img" />
-                </div>
-                <p class="tfa-manual-label">Can't scan? Enter this code manually:</p>
-                <div id="setupManualCode" class="tfa-manual-code" />
-                <button id="setupQrNextBtn" class="login-cta-btn" style="margin-top:16px;">
-                  <i class="fas fa-arrow-right" /> I've scanned it — Continue
-                </button>
-              </div>
-
-              {/* Step B: Confirm with code */}
-              <div id="setupStepConfirm" style="display:none;">
-                <div class="tfa-icon-row">
-                  <span class="tfa-shield-icon"><i class="fas fa-shield-alt" /></span>
-                </div>
-                <p class="tfa-desc">Enter the 6-digit code from your authenticator app to confirm setup.</p>
-                <div class="tfa-otp-row" id="setupOtpRow">
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="0" autoComplete="one-time-code" />
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="1" />
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="2" />
-                  <span class="tfa-otp-sep">·</span>
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="3" />
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="4" />
-                  <input class="tfa-otp-digit" type="text" inputMode="numeric" maxLength={1} data-idx="5" />
-                </div>
-                <div id="setupErrorBanner" class="login-error-banner" style="display:none;" />
-                <button id="setupConfirmBtn" class="login-cta-btn" style="margin-top:8px;">
-                  <i class="fas fa-check-circle" /> Enable Two-Factor Auth
-                </button>
-              </div>
-
-              {/* Step C: Backup codes */}
-              <div id="setupStepBackup" style="display:none;">
-                <div class="tfa-icon-row">
-                  <span class="tfa-shield-icon tfa-shield-ok"><i class="fas fa-check-circle" /></span>
-                </div>
-                <p class="tfa-desc">
-                  <strong>2FA enabled!</strong> Save these backup codes somewhere safe.<br />
-                  Each code can only be used <strong>once</strong>. You'll need them if you lose your phone.
-                </p>
-                <div id="setupBackupList" class="tfa-backup-list" />
-                <button id="setupBackupCopy" class="tfa-text-btn" style="margin:8px auto;display:block;">
-                  <i class="fas fa-copy" /> Copy all codes
-                </button>
-                <button id="setupDoneBtn" class="login-cta-btn" style="margin-top:8px;">
-                  <i class="fas fa-sign-in-alt" /> Continue to Dashboard
-                </button>
-              </div>
-
-            </div>{/* /#twoFaSetupPanel */}
-
-          </div>{/* /.login-form-body */}
+            {phase === 'passkey-prompt' && ctx.pendingResult && (
+              <PasskeySetupPrompt
+                result={ctx.pendingResult}
+                onDone={() => complete(ctx.pendingResult!, ctx.username, ctx.rememberMe)}
+              />
+            )}
+          </div>
         </div>
 
       </div>
