@@ -214,4 +214,96 @@ router.post('/audit/list', async c => {
   return c.json({ success: true, data: data ?? [] });
 });
 
+// ── Manifest review (Spec §17 Manifests, §26) ────────────────────────────────
+const REVIEWER_ROLES = ['product_owner', 'module_owner', 'engineering', 'super_admin', 'compliance', 'hse', 'security'] as const;
+const REVIEW_COL: Record<string, string> = {
+  product_owner: 'reviewed_by_product', module_owner: 'reviewed_by_module_owner', engineering: 'reviewed_by_engineering',
+  super_admin: 'reviewed_by_super_admin', compliance: 'reviewed_by_compliance', hse: 'reviewed_by_hse', security: 'reviewed_by_security',
+};
+
+// POST /api/settings/manifests/list
+router.post('/manifests/list', async c => {
+  await requirePermission(c, 'settings.manifests.view');
+  const v = zv(c, z.object({ reviewStatus: z.string().optional() }), body(c));
+  if (!v.ok) return v.response;
+  let q = sb.from('module_settings_manifests').select('*').order('module_key');
+  if (v.data.reviewStatus) q = q.eq('review_status', v.data.reviewStatus);
+  const { data } = await q;
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// POST /api/settings/manifests/get — manifest + sections + approvals
+router.post('/manifests/get', async c => {
+  await requirePermission(c, 'settings.manifests.view');
+  const v = zv(c, z.object({ moduleKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  const { data: manifest } = await sb.from('module_settings_manifests').select('*').eq('module_key', v.data.moduleKey).maybeSingle<{ id: string }>();
+  if (!manifest) return c.json({ success: false, message: 'Manifest not found.' }, 404 as 200);
+  const [{ data: sections }, { data: approvals }] = await Promise.all([
+    sb.from('module_settings_manifest_sections').select('*').eq('manifest_id', manifest.id),
+    sb.from('module_settings_review_approvals').select('*').eq('manifest_id', manifest.id).order('reviewed_at', { ascending: false }),
+  ]);
+  return c.json({ success: true, data: { manifest, sections: sections ?? [], approvals: approvals ?? [] } });
+});
+
+async function setManifestStatus(c: any, moduleKey: string, allowedFrom: string[], next: string, patch: Record<string, unknown>) {
+  const { data: m } = await sb.from('module_settings_manifests').select('id, review_status').eq('module_key', moduleKey).maybeSingle<{ id: string; review_status: string }>();
+  if (!m) return c.json({ success: false, message: 'Manifest not found.' }, 404 as 200);
+  if (allowedFrom.length && !allowedFrom.includes(m.review_status))
+    return c.json({ success: false, message: `Manifest is ${m.review_status}; expected ${allowedFrom.join('/')}.` }, 400 as 200);
+  const { error } = await sb.from('module_settings_manifests').update({ review_status: next, ...patch }).eq('id', m.id);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  return c.json({ success: true, data: { moduleKey, reviewStatus: next } });
+}
+
+// POST /api/settings/manifests/submit  (draft|returned → pending_review)
+router.post('/manifests/submit', async c => {
+  await requirePermission(c, 'settings.manifests.submit');
+  const v = zv(c, z.object({ moduleKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  return setManifestStatus(c, v.data.moduleKey, ['draft', 'returned'], 'pending_review', { returned_reason: null });
+});
+
+// POST /api/settings/manifests/review  (record a reviewer's sign-off)
+router.post('/manifests/review', async c => {
+  const actor = await requirePermission(c, 'settings.manifests.review');
+  const v = zv(c, z.object({
+    moduleKey: z.string().min(1), reviewerRole: z.enum(REVIEWER_ROLES),
+    decision: z.enum(['approved', 'returned', 'not_required']), comment: z.string().max(500).optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  const { data: m } = await sb.from('module_settings_manifests').select('id').eq('module_key', v.data.moduleKey).maybeSingle<{ id: string }>();
+  if (!m) return c.json({ success: false, message: 'Manifest not found.' }, 404 as 200);
+  await sb.from('module_settings_review_approvals').insert({
+    manifest_id: m.id, reviewer_role: v.data.reviewerRole, reviewer_id: actor.id, decision: v.data.decision, comment: v.data.comment ?? null,
+  });
+  const col = REVIEW_COL[v.data.reviewerRole];
+  if (col) await sb.from('module_settings_manifests').update({ [col]: v.data.decision === 'approved' }).eq('id', m.id);
+  return c.json({ success: true, data: { moduleKey: v.data.moduleKey, reviewerRole: v.data.reviewerRole, decision: v.data.decision } });
+});
+
+// POST /api/settings/manifests/approve  (pending_review → approved)
+router.post('/manifests/approve', async c => {
+  const actor = await requirePermission(c, 'settings.manifests.approve');
+  const v = zv(c, z.object({ moduleKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  return setManifestStatus(c, v.data.moduleKey, ['pending_review'], 'approved', { approved_by: actor.id, approved_at: new Date().toISOString(), returned_reason: null });
+});
+
+// POST /api/settings/manifests/return  (→ returned)
+router.post('/manifests/return', async c => {
+  await requirePermission(c, 'settings.manifests.return');
+  const v = zv(c, z.object({ moduleKey: z.string().min(1), reason: z.string().min(1).max(500) }), body(c));
+  if (!v.ok) return v.response;
+  return setManifestStatus(c, v.data.moduleKey, ['pending_review', 'approved'], 'returned', { returned_reason: v.data.reason });
+});
+
+// POST /api/settings/manifests/deprecate  (→ deprecated)
+router.post('/manifests/deprecate', async c => {
+  await requirePermission(c, 'settings.manifests.deprecate');
+  const v = zv(c, z.object({ moduleKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  return setManifestStatus(c, v.data.moduleKey, [], 'deprecated', {});
+});
+
 export default router;

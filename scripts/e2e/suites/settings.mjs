@@ -18,6 +18,14 @@ export default async function run(h) {
       try { await sb.from('app_setting_values').delete().eq('setting_key', k); } catch {}
       try { await sb.from('app_setting_audit_log').delete().eq('setting_key', k); } catch {}
     }
+    // reset the training manifest review state so re-runs start clean
+    try {
+      const { data: m } = await sb.from('module_settings_manifests').select('id').eq('module_key', 'training').maybeSingle();
+      if (m) {
+        await sb.from('module_settings_review_approvals').delete().eq('manifest_id', m.id);
+        await sb.from('module_settings_manifests').update({ review_status: 'draft', approved_by: null, approved_at: null, returned_reason: null }).eq('id', m.id);
+      }
+    } catch {}
   });
 
   const findSetting = (resp, key) => (resp.body.data?.settings ?? []).find(s => s.settingKey === key);
@@ -104,4 +112,48 @@ export default async function run(h) {
   await test('ACCESS: employee denied catalog/sync', async () => {
     fails(await api('settings/catalog/sync', T.b, {}), 'employee should not sync catalog');
   });
+
+  // ── Manifest review ──────────────────────────────────────────────────────────────
+  h.section('Settings › Manifest review');
+
+  const { data: superUser } = await sb.from('app_users').select('id, username, role').eq('role', 'superadmin').eq('status', 'active').limit(1).maybeSingle();
+  const Tsuper = superUser ? mint(superUser) : null;
+
+  await test('manifests/list returns synced manifests', async () => {
+    const r = await api('settings/manifests/list', T.admin, {});
+    ok(r, 'manifests list failed');
+    expect(r.body.data.some(m => m.module_key === 'training'), 'training manifest not listed');
+  });
+
+  await test('manifests/get returns manifest + sections + approvals', async () => {
+    const r = await api('settings/manifests/get', T.admin, { moduleKey: 'training' });
+    ok(r, 'manifests get failed');
+    expect(!!r.body.data?.manifest, 'no manifest body');
+    expect(Array.isArray(r.body.data.sections), 'no sections array');
+  });
+
+  await test('manifests/submit → pending_review', async () => {
+    const r = await api('settings/manifests/submit', T.admin, { moduleKey: 'training' });
+    ok(r, 'submit failed');
+    expect(r.body.data.reviewStatus === 'pending_review', `expected pending_review, got ${r.body.data.reviewStatus}`);
+  });
+
+  await test('ACCESS: employee denied manifests/submit', async () => {
+    fails(await api('settings/manifests/submit', T.b, { moduleKey: 'training' }), 'employee should not submit manifests');
+  });
+
+  await test('ACCESS: admin denied manifests/approve (superadmin-only governance)', async () => {
+    fails(await api('settings/manifests/approve', T.admin, { moduleKey: 'training' }), 'admin should not approve manifests');
+  });
+
+  if (Tsuper) {
+    await test('superadmin review + approve → approved', async () => {
+      ok(await api('settings/manifests/review', Tsuper, { moduleKey: 'training', reviewerRole: 'hse', decision: 'approved', comment: 'E2E' }), 'review failed');
+      const r = await api('settings/manifests/approve', Tsuper, { moduleKey: 'training' });
+      ok(r, 'approve failed');
+      expect(r.body.data.reviewStatus === 'approved', `expected approved, got ${r.body.data.reviewStatus}`);
+    });
+  } else {
+    h.log?.('No superadmin user found — skipping manifest review/approve happy-path.');
+  }
 }
