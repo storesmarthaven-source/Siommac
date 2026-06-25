@@ -19,6 +19,7 @@ import type { Context }      from 'hono';
 import { z, zv }             from '../lib/validate';
 import { requirePermission } from '../lib/auth';
 import { sb }                from '../lib/db';
+import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { nextRef }           from '../lib/refGenerator';
 import { emitAppEvent }      from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
@@ -90,6 +91,9 @@ async function buildMatrix(filter: { siteId?: string; departmentId?: string; rol
   const workers = (workersRes.data ?? []) as WorkerRow[];
   const reqs = ((reqsRes.data ?? []) as ReqRow[]).filter(r => REQUIRED_LEVELS.has(r.requirement_level));
   const comps = new Map((compsRes.data ?? []).map(c => [c.id, c as CompRow]));
+  // Configurable global fallback for competencies without their own renewal window
+  // (training.default_renewal_window_days; catalog default matches the legacy 90).
+  const globalRenewal = await resolveSettingValue<number>(sb, 'training.default_renewal_window_days', { moduleKey: 'training' }, 90);
 
   const workerIds = workers.map(w => w.id);
   const certs = workerIds.length
@@ -125,7 +129,7 @@ async function buildMatrix(filter: { siteId?: string; departmentId?: string; rol
         .filter(r => !filter.competencyId || r.competency_id === filter.competencyId)
         .map(r => {
           const comp = comps.get(r.competency_id);
-          const cell = cellFor(w, r.competency_id, comp?.default_renewal_window_days ?? 90);
+          const cell = cellFor(w, r.competency_id, comp?.default_renewal_window_days ?? globalRenewal);
           return { competencyId: r.competency_id, competencyName: comp?.name ?? r.competency_id, status: cell.status, certificateId: cell.certId, expiresAt: cell.expiresAt, requirementLevel: r.requirement_level };
         });
       const requiredCount  = competencies.length;

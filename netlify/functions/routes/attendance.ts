@@ -4,6 +4,7 @@ import { requireUser, requireRole, log_ } from '../lib/auth';
 import { deptScopeFilter, loadRoleScope }   from '../lib/permissions';
 import { today, hhmm24, dateOnly, num }   from '../lib/helpers';
 import { setting, settingFolded }          from '../lib/settings';
+import { resolveOverride }                  from '../lib/settings/resolveSetting';
 import { getSignedUrl, getProfileSignedUrl, resolveAttendancePhotosBatch } from '../lib/photos';
 import { uploadBase64 }                    from '../lib/upload';
 import { zv, MarkAttendanceSchema, GetMyStatusSchema, GetMyHistorySchema, GetMyChartSchema, ListAttendanceSchema, ListDailyLogSchema, GetLiveAttendanceSchema, GetRecentAttendanceSchema, GetDeptStatsSchema } from '../lib/validate';
@@ -86,6 +87,13 @@ router.post('/markAttendance', async c => {
     const whRaw = await setting('workHours', '{"start":"08:00","end":"17:00"}');
     let wh = { start: '08:00', end: '17:00' };
     try { wh = JSON.parse(whRaw); } catch { /* keep default */ }
+    // Folded to the catalog: an explicit attendance.work_hours_* override wins;
+    // otherwise the legacy workHours value is kept.
+    const whScope = { moduleKey: 'attendance', siteId: near?.site.id ?? null };
+    const ovStart = await resolveOverride<string>(sb, 'attendance.work_hours_start', whScope);
+    const ovEnd   = await resolveOverride<string>(sb, 'attendance.work_hours_end',   whScope);
+    if (ovStart != null) wh.start = String(ovStart);
+    if (ovEnd   != null) wh.end   = String(ovEnd);
     const nowHHMM = hhmm24(now);
     if (nowHHMM < wh.start || nowHHMM >= wh.end)
       return c.json({ success: false, message: `Check-in is only allowed between ${wh.start} and ${wh.end}.` });

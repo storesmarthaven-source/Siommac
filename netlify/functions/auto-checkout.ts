@@ -4,6 +4,7 @@
 
 import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
+import { resolveOverride } from './lib/settings/resolveSetting';
 
 const TZ = process.env.APP_TZ ?? 'America/Port_of_Spain';
 
@@ -51,6 +52,12 @@ export const handler = schedule('*/5 * * * *', async (event: ScheduleEvent) => {
   try {
     if (whRow?.value) wh = JSON.parse(whRow.value) as WorkHours;
   } catch { /* keep default */ }
+
+  // Folded to the catalog: an explicit attendance.work_hours_* override wins.
+  const ovStart = await resolveOverride<string>(sb, 'attendance.work_hours_start', { moduleKey: 'attendance' });
+  const ovEnd   = await resolveOverride<string>(sb, 'attendance.work_hours_end',   { moduleKey: 'attendance' });
+  if (ovStart != null) wh.start = String(ovStart);
+  if (ovEnd   != null) wh.end   = String(ovEnd);
 
   const now      = new Date();
   const nowHHMM  = hhmm24(now);

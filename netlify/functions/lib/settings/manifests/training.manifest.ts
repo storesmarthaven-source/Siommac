@@ -21,8 +21,8 @@ export const trainingManifest: ModuleSettingsManifest = {
   settings: [
     modulePolicy(M, 'training.default_renewal_window_days', {
       label: 'Default Renewal Window (days)',
-      description: 'Days before expiry that a certificate is treated as due-soon.',
-      dataType: 'number', defaultValue: 30, minValue: 1, maxValue: 365,
+      description: 'Days before expiry that a certificate is treated as due-soon, for competencies that do not set their own window. Default matches the legacy fallback (90).',
+      dataType: 'number', defaultValue: 90, minValue: 1, maxValue: 365,
       scope: ['global', 'site', 'role'],
       siteOverrideAllowed: true, roleOverrideAllowed: true,
     }),

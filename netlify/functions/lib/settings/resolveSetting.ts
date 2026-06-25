@@ -87,3 +87,42 @@ export async function resolveSetting<T = unknown>(
 
   return { settingKey, value: catalog.default_value as T, source: 'default', scopeId: null };
 }
+
+/**
+ * Resolve a setting to its effective value (override or catalog default),
+ * returning `fallback` if the setting is unknown / the catalog isn't synced yet.
+ * Use to make a hardcoded constant configurable while preserving behaviour — set
+ * the catalog default to match the old constant and pass the same value as fallback.
+ */
+export async function resolveSettingValue<T = unknown>(
+  client: SupabaseClient,
+  settingKey: string,
+  scope: SettingScope,
+  fallback: T,
+): Promise<T> {
+  try {
+    const r = await resolveSetting<T>(client, settingKey, scope);
+    return r.value as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Returns an EXPLICIT override value (site/role/dept/module/global/user) for a
+ * setting, or null when only the catalog default applies / the setting is
+ * unknown. Use when folding a legacy value: keep the legacy baseline unless an
+ * admin has explicitly overridden the setting in the new Settings UI.
+ */
+export async function resolveOverride<T = unknown>(
+  client: SupabaseClient,
+  settingKey: string,
+  scope: SettingScope,
+): Promise<T | null> {
+  try {
+    const r = await resolveSetting<T>(client, settingKey, scope);
+    return r.source === 'default' ? null : r.value;
+  } catch {
+    return null;
+  }
+}
