@@ -11,13 +11,13 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
-  PageHeader, TabBar, NewMenu, withCounts, SidePanel,
-  type AreaTab, type SidePanelSection,
+  PageHeader, TabBar, NewMenu, withCounts,
+  type AreaTab,
 } from '@ui';
 import { TrainingInsightCards } from './training/TrainingInsightCards';
 import {
   useTrainingStats, useCompetencyMatrix, useCertificates, useCompetencies,
-  type MatrixRow, type CertificateRow, type CellStatus,
+  type MatrixRow, type CertificateRow, type CellStatus, type CompetencyRow,
 } from '@api/hse/training';
 import { hsePill } from './types';
 import { WorkerProfileDrawer } from './training/WorkerProfileDrawer';
@@ -63,34 +63,108 @@ function Signal({ icon, tone, title, sub, tag, tagTone, onClick }: {
   );
 }
 
-function MatrixRail({ matrix, onOpen }: { matrix: MatrixRow[]; onOpen: (row: MatrixRow) => void }): VNode {
+/** Navy panel header bar (the "new header"), title + count, no filter tabs. */
+function PanelHeader({ icon, title, count }: { icon: string; title: string; count: number }): VNode {
+  return (
+    <div class="owq-panel-header">
+      <div class="owq-panel-title">
+        <i class={`fas ${icon}`} aria-hidden="true" />
+        <span>{title}</span>
+        <span class="owq-panel-count">{count}</span>
+      </div>
+    </div>
+  );
+}
+
+const MINI_PILL: Record<'gap' | 'due' | 'ok', { color: string; background: string }> = {
+  gap: { color: '#fca5a5', background: 'rgba(239,68,68,.18)' },
+  due: { color: '#fcd34d', background: 'rgba(245,158,11,.18)' },
+  ok:  { color: '#4ade80', background: 'rgba(34,197,94,.18)' },
+};
+function MiniPill({ text, kind }: { text: string; kind: 'gap' | 'due' | 'ok' }): VNode {
+  return <span style={{ fontSize: '0.6rem', fontWeight: 600, padding: '2px 7px', borderRadius: '999px', whiteSpace: 'nowrap', ...MINI_PILL[kind] }}>{text}</span>;
+}
+const panelH4 = { fontSize: '0.74rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '7px', margin: '0 0 2px' } as const;
+const breakdownLabel = { fontSize: '0.69rem', color: 'rgba(255,255,255,.7)', flex: 1, minWidth: 0 } as const;
+
+// Stacked "old" rail: a by-X breakdown + an Action Required list, under the navy header.
+function MatrixRail({ matrix, comps, onOpen }: { matrix: MatrixRow[]; comps: CompetencyRow[]; onOpen: (row: MatrixRow) => void }): VNode {
   const nonCompliant = matrix.filter(m => m.overallStatus === 'non_compliant');
-  const dueWorkers   = matrix.filter(m => m.overallStatus === 'due_soon');
-  const pending      = matrix.filter(m => m.overallStatus === 'pending_verification');
-  const sections: SidePanelSection[] = [
-    { id: 'noncompliant', label: 'Gaps', icon: 'fa-user-xmark', title: 'Non-Compliant', count: nonCompliant.length, empty: 'All workers compliant',
-      children: nonCompliant.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-user-xmark" tone="is-danger" title={m.workerName} sub={`${m.expiredCount} expired · ${m.missingCount} missing`} tag="Gap" tagTone="is-high" onClick={() => onOpen(m)} />) },
-    { id: 'due', label: 'Due Soon', icon: 'fa-hourglass-half', title: 'Due Soon', count: dueWorkers.length, empty: 'None due soon',
-      children: dueWorkers.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-hourglass-half" tone="is-warn" title={m.workerName} sub={`${m.dueSoonCount} renewing`} tag="Due" tagTone="is-due" onClick={() => onOpen(m)} />) },
-    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pending.length, empty: 'None pending',
-      children: pending.slice(0, 6).map(m => <Signal key={m.workerId} icon="fa-clock" tone="is-info" title={m.workerName} sub="Awaiting verification" tag="Pending" tagTone="is-info" onClick={() => onOpen(m)} />) },
-  ];
-  return <SidePanel title="Competency Signals" icon="fa-bell" sections={sections} />;
+  const byComp = comps.map(cp => {
+    let gap = 0, due = 0;
+    for (const m of matrix) {
+      const cell = m.competencies.find(c => c.competencyId === cp.id);
+      if (!cell) continue;
+      if (cell.status === 'missing' || cell.status === 'expired') gap++;
+      else if (cell.status === 'due_soon') due++;
+    }
+    return { id: cp.id, name: cp.code ?? cp.name, gap, due };
+  });
+  return (
+    <aside class="ppe-signals-panel">
+      <PanelHeader icon="fa-bell" title="Competency Signals" count={nonCompliant.length} />
+      <div style={{ padding: '12px 14px' }}>
+        <h4 style={panelH4}><i class="fas fa-chart-bar" /> By Competency · Gap Status</h4>
+        <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
+          {byComp.length === 0 && <div style={breakdownLabel}>No competencies defined.</div>}
+          {byComp.map(c => (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={breakdownLabel}>{c.name}</span>
+              {c.gap > 0 && <MiniPill text={`${c.gap} gap`} kind="gap" />}
+              {c.due > 0 && <MiniPill text={`${c.due} due`} kind="due" />}
+              {c.gap === 0 && c.due === 0 && <MiniPill text="OK" kind="ok" />}
+            </div>
+          ))}
+        </div>
+        <div class="hse-panel-divider" />
+        <h4 style={{ ...panelH4, marginBottom: '8px' }}><i class="fas fa-circle-exclamation" /> Action Required</h4>
+        <div class="ppe-signals-list">
+          {nonCompliant.length === 0 && <div class="ppe-signal-empty">All workers compliant</div>}
+          {nonCompliant.slice(0, 8).map(m => (
+            <Signal key={m.workerId} icon="fa-user-xmark" tone="is-danger" title={m.workerName} sub={`${m.expiredCount} expired · ${m.missingCount} missing`} tag="Gap" tagTone="is-high" onClick={() => onOpen(m)} />
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
 }
 
 function CertRail({ certs, onOpen }: { certs: CertificateRow[]; onOpen: (id: string) => void }): VNode {
-  const expiredCerts  = certs.filter(isExpiredCert);
-  const renewingCerts = certs.filter(c => c.status === 'due_soon');
-  const pendingCerts  = certs.filter(c => c.status === 'pending_verification');
-  const sections: SidePanelSection[] = [
-    { id: 'expired', label: 'Expired', icon: 'fa-triangle-exclamation', title: 'Expired', count: expiredCerts.length, empty: 'None expired',
-      children: expiredCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-triangle-exclamation" tone="is-danger" title={c.worker_name ?? c.worker_id} sub={c.course_name} tag="Expired" tagTone="is-high" onClick={() => onOpen(c.id)} />) },
-    { id: 'renewing', label: 'Renewing', icon: 'fa-hourglass-half', title: 'Renewing Soon', count: renewingCerts.length, empty: 'None renewing',
-      children: renewingCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-hourglass-half" tone="is-warn" title={c.worker_name ?? c.worker_id} sub={`${c.course_name} · ${fmtDate(c.expires_at)}`} tag="Due" tagTone="is-due" onClick={() => onOpen(c.id)} />) },
-    { id: 'pending', label: 'Pending', icon: 'fa-clock', title: 'Pending Verification', count: pendingCerts.length, empty: 'Nothing to verify',
-      children: pendingCerts.slice(0, 6).map(c => <Signal key={c.id} icon="fa-clock" tone="is-info" title={c.worker_name ?? c.worker_id} sub={c.course_name} tag="Verify" tagTone="is-info" onClick={() => onOpen(c.id)} />) },
-  ];
-  return <SidePanel title="Certificate Signals" icon="fa-bell" sections={sections} />;
+  const actionCerts = certs.filter(c => isExpiredCert(c) || c.status === 'due_soon');
+  const courseNames = [...new Set(certs.map(c => c.course_name))];
+  const byCourse = courseNames.map(name => {
+    const cc = certs.filter(c => c.course_name === name);
+    return { name, exp: cc.filter(isExpiredCert).length, due: cc.filter(c => c.status === 'due_soon').length };
+  });
+  return (
+    <aside class="ppe-signals-panel">
+      <PanelHeader icon="fa-bell" title="Certificate Signals" count={actionCerts.length} />
+      <div style={{ padding: '12px 14px' }}>
+        <h4 style={panelH4}><i class="fas fa-chart-bar" /> By Course · Expiry Status</h4>
+        <div style={{ display: 'grid', gap: '8px', marginTop: '6px', marginBottom: '14px' }}>
+          {byCourse.length === 0 && <div style={breakdownLabel}>No certificates yet.</div>}
+          {byCourse.map(c => (
+            <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={breakdownLabel}>{c.name}</span>
+              {c.exp > 0 && <MiniPill text={`${c.exp} exp`} kind="gap" />}
+              {c.due > 0 && <MiniPill text={`${c.due} due`} kind="due" />}
+              {c.exp === 0 && c.due === 0 && <MiniPill text="OK" kind="ok" />}
+            </div>
+          ))}
+        </div>
+        <div class="hse-panel-divider" />
+        <h4 style={{ ...panelH4, marginBottom: '8px' }}><i class="fas fa-circle-exclamation" /> Action Required</h4>
+        <div class="ppe-signals-list">
+          {actionCerts.length === 0 && <div class="ppe-signal-empty">Nothing needs attention</div>}
+          {actionCerts.slice(0, 8).map(c => (
+            <Signal key={c.id} icon="fa-certificate" tone={isExpiredCert(c) ? 'is-danger' : 'is-warn'}
+              title={c.worker_name ?? c.worker_id} sub={`${c.course_name} · ${fmtDate(c.expires_at)}`}
+              tag={isExpiredCert(c) ? 'Expired' : 'Due'} tagTone={isExpiredCert(c) ? 'is-high' : 'is-due'} onClick={() => onOpen(c.id)} />
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
 }
 
 // ── Spark row ─────────────────────────────────────────────────────────────────
@@ -236,7 +310,7 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
             </div>
           </div>
           <div class="hse-right-col">
-            <MatrixRail matrix={matrix} onOpen={setOpenWorker} />
+            <MatrixRail matrix={matrix} comps={comps} onOpen={setOpenWorker} />
           </div>
         </div>
       )}
