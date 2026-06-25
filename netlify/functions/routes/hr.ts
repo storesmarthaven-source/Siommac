@@ -10,10 +10,11 @@
 
 import { Hono }       from 'hono';
 import { sb }         from '../lib/db';
-import { requirePermission, userCan } from '../lib/auth';
+import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { emitAppEvent }      from '../lib/appEvents';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl }      from '../lib/photos';
+import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
@@ -357,6 +358,160 @@ router.post('/dashboard/kpis', async c => {
     pendingChangeRequests: pendingChanges.count ?? 0,
     totalTracked:          total.count ?? 0,
   } });
+});
+
+// ── Change requests (maker-checker; decoupled from the workflow engine) ─────────
+// Create = hr.view (managers may request changes for their reports). Decide
+// (approve→apply / reject / return) requires the change-type permission below.
+// When the central Workflow Engine lands, these re-point to it via workflow_id.
+
+const CHANGE_TYPES = ['status_change','department_transfer','site_transfer','supervisor_change','role_change','employment_type_change'] as const;
+type ChangeType = typeof CHANGE_TYPES[number];
+const CHANGE_PERM: Record<ChangeType, string> = {
+  status_change:          'hr.employees.status_change',
+  department_transfer:    'hr.employees.transfer',
+  site_transfer:          'hr.employees.transfer',
+  supervisor_change:      'hr.employees.supervisor_change',
+  role_change:            'hr.employees.role_change',
+  employment_type_change: 'hr.employees.role_change',
+};
+function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> {
+  switch (t) {
+    case 'status_change':          return { status: emp.status };
+    case 'department_transfer':    return { department_id: emp.department_id };
+    case 'site_transfer':          return { site_id: emp['site_id'] };
+    case 'supervisor_change':      return { supervisor_id: emp.supervisor_id };
+    case 'role_change':            return { role: emp['role'] };
+    case 'employment_type_change': return { employment_type: emp['employment_type'] };
+  }
+}
+const HR_BLOCKING = new Set(['suspended','inactive','terminated','archived']);
+
+/** Apply an approved change to app_users (+ history/assignment). */
+async function applyChange(req: { employee_id: string; change_type: ChangeType; requested_value: Record<string, unknown>; previous_value: Record<string, unknown> | null }, actorId: string): Promise<void> {
+  const rv = req.requested_value ?? {};
+  const eid = req.employee_id;
+  const stamp = { updated_at: new Date().toISOString() };
+  switch (req.change_type) {
+    case 'status_change': {
+      const newStatus = String(rv['newStatus'] ?? rv['status'] ?? '');
+      await sb.from('hr_employee_status_history').insert({
+        employee_id: eid, previous_status: (req.previous_value?.['status'] as string) ?? null, new_status: newStatus,
+        reason: 'Approved change request', effective_date: todayISO(), changed_by: actorId,
+      });
+      await sb.from('app_users').update({ status: HR_BLOCKING.has(newStatus) ? 'inactive' : 'active', ...stamp }).eq('id', eid);
+      break;
+    }
+    case 'department_transfer':
+    case 'site_transfer': {
+      const patch: Record<string, unknown> = { ...stamp };
+      if ('departmentId' in rv) patch['department_id'] = rv['departmentId'];
+      if ('siteId' in rv)       patch['site_id']       = rv['siteId'];
+      await sb.from('app_users').update(patch).eq('id', eid);
+      await sb.from('hr_employee_assignments').update({ is_current: false, effective_to: todayISO() }).eq('employee_id', eid).eq('is_current', true);
+      await sb.from('hr_employee_assignments').insert({
+        employee_id: eid, department_id: (rv['departmentId'] as string) ?? null, site_id: (rv['siteId'] as string) ?? null,
+        assignment_type: 'primary', effective_from: todayISO(), is_current: true, created_by: actorId,
+      });
+      break;
+    }
+    case 'supervisor_change':
+      await sb.from('app_users').update({ supervisor_id: (rv['supervisorId'] as string) ?? null, ...stamp }).eq('id', eid);
+      break;
+    case 'role_change':
+      await sb.from('app_users').update({ role: rv['role'], ...stamp }).eq('id', eid);
+      break;
+    case 'employment_type_change':
+      await sb.from('app_users').update({ employment_type: rv['employmentType'], ...stamp }).eq('id', eid);
+      break;
+  }
+}
+
+// POST /api/hr/employees/change-request — create (maker)
+router.post('/employees/change-request', async c => {
+  const actor = await requirePermission(c, 'hr.view');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1), changeType: z.enum(CHANGE_TYPES),
+    requestedValue: z.record(z.string(), z.unknown()), reason: z.string().max(500).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const emp = await loadEmployee(v.data.employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const changeNo = await nextRef('HRC');
+  const { data, error } = await sb.from('hr_employee_change_requests').insert({
+    change_no: changeNo, employee_id: v.data.employeeId, change_type: v.data.changeType, requested_by: actor.id,
+    previous_value: snapshotForChange(v.data.changeType, emp), requested_value: v.data.requestedValue,
+    status: 'submitted', metadata: { reason: v.data.reason ?? null },
+  }).select('id, change_no').single<{ id: string; change_no: string }>();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  await writeHrAudit({ employeeId: v.data.employeeId, submoduleKey: 'employees', recordId: data.id, actorId: actor.id,
+    action: 'hr.employee.change_requested', newState: { changeType: v.data.changeType, requestedValue: v.data.requestedValue }, reason: v.data.reason ?? null });
+  void emitAppEvent({ eventType: 'hr.employee.change_requested', sourceModule: 'hr', sourceEntityType: 'employee_change',
+    sourceEntityId: data.id, actorUserId: actor.id, severity: 'info', payload: { employeeId: v.data.employeeId, changeType: v.data.changeType } });
+  return c.json({ success: true, data });
+});
+
+// POST /api/hr/employee-change-requests/list
+router.post('/employee-change-requests/list', async c => {
+  await requirePermission(c, 'hr.view');
+  const v = zv(c, z.object({ status: z.string().optional(), employeeId: z.string().optional() }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  let q = sb.from('hr_employee_change_requests').select('*').order('requested_at', { ascending: false }).limit(200);
+  if (v.data.status)     q = q.eq('status', v.data.status);
+  if (v.data.employeeId) q = q.eq('employee_id', v.data.employeeId);
+  const { data } = await q;
+  return c.json({ success: true, data: data ?? [] });
+});
+
+// POST /api/hr/employee-change-requests/decide — approve (apply) / reject / return (checker)
+router.post('/employee-change-requests/decide', async c => {
+  const actor = await requireUser(c);
+  const v = zv(c, z.object({ requestId: z.string().uuid(), decision: z.enum(['approve','reject','return']), comment: z.string().max(500).optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data: req } = await sb.from('hr_employee_change_requests').select('*').eq('id', v.data.requestId)
+    .maybeSingle<{ id: string; employee_id: string; change_type: ChangeType; requested_value: Record<string, unknown>; previous_value: Record<string, unknown> | null; status: string }>();
+  if (!req) return c.json({ success: false, message: 'Change request not found.' }, 404 as 200);
+  if (!['submitted', 'in_review', 'returned'].includes(req.status))
+    return c.json({ success: false, message: `Change request already ${req.status}.` }, 400 as 200);
+  // Checker must hold the change-type permission.
+  if (!(await userCan(actor, CHANGE_PERM[req.change_type])))
+    return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
+
+  if (v.data.decision === 'reject' || v.data.decision === 'return') {
+    const status = v.data.decision === 'reject' ? 'rejected' : 'returned';
+    await sb.from('hr_employee_change_requests').update({ status, decided_at: new Date().toISOString(), metadata: { decisionComment: v.data.comment ?? null } }).eq('id', req.id);
+    await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: req.id, actorId: actor.id, action: `hr.employee.change_${status}`, reason: v.data.comment ?? null });
+    return c.json({ success: true, data: { requestId: req.id, status } });
+  }
+
+  // approve → apply
+  await applyChange(req, actor.id);
+  await sb.from('hr_employee_change_requests').update({ status: 'applied', decided_at: new Date().toISOString(), applied_at: new Date().toISOString() }).eq('id', req.id);
+  await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: req.id, actorId: actor.id,
+    action: 'hr.employee.change_applied', previousState: req.previous_value, newState: req.requested_value });
+  void emitAppEvent({ eventType: 'hr.employee.change_applied', sourceModule: 'hr', sourceEntityType: 'employee_change',
+    sourceEntityId: req.id, actorUserId: actor.id, severity: 'info', payload: { employeeId: req.employee_id, changeType: req.change_type } });
+  return c.json({ success: true, data: { requestId: req.id, status: 'applied' } });
+});
+
+// POST /api/hr/employee-change-requests/cancel — by the requester
+router.post('/employee-change-requests/cancel', async c => {
+  const actor = await requirePermission(c, 'hr.view');
+  const v = zv(c, z.object({ requestId: z.string().uuid() }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data: req } = await sb.from('hr_employee_change_requests').select('requested_by, status, employee_id').eq('id', v.data.requestId)
+    .maybeSingle<{ requested_by: string; status: string; employee_id: string }>();
+  if (!req) return c.json({ success: false, message: 'Change request not found.' }, 404 as 200);
+  if (req.requested_by !== actor.id && !(await userCan(actor, 'hr.employees.status_change')))
+    return c.json({ success: false, message: 'Only the requester or an HR approver can cancel.' }, 403 as 200);
+  if (['applied', 'rejected', 'cancelled'].includes(req.status))
+    return c.json({ success: false, message: `Cannot cancel a ${req.status} request.` }, 400 as 200);
+  await sb.from('hr_employee_change_requests').update({ status: 'cancelled', decided_at: new Date().toISOString() }).eq('id', v.data.requestId);
+  await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: v.data.requestId, actorId: actor.id, action: 'hr.employee.change_cancelled' });
+  return c.json({ success: true });
 });
 
 // ── Employee Documents (private bucket; verify/reject/archive; audited download) ─

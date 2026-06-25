@@ -37,6 +37,7 @@ export default async function run(h) {
     try { await sb.from('hr_employee_status_history').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('hr_employee_assignments').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('hr_employee_documents').delete().eq('employee_id', empId); } catch {}
+    try { await sb.from('hr_employee_change_requests').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('app_events').delete().eq('source_entity_id', empId); } catch {}
     try { await sb.from('hr_positions').delete().ilike('position_key', `%${TAG}%`); } catch {}
     try { await sb.from('app_users').delete().eq('id', empId); } catch {}
@@ -178,6 +179,51 @@ export default async function run(h) {
 
   await test('ACCESS: non-privileged employee denied on positions/create', async () => {
     fails(await api('hr/positions/create', T.b, { positionKey: `${TAG}-X`, title: 'x' }), 'B should not manage positions');
+  });
+
+  // ── Change requests (maker-checker) ──────────────────────────────────────────────
+  h.section('HR › Change requests');
+
+  let reqId = null;
+  await test('change-request create + list', async () => {
+    const r = await api('hr/employees/change-request', T.admin, { employeeId: empId, changeType: 'status_change', requestedValue: { newStatus: 'active' }, reason: `${TAG} reinstate` });
+    ok(r, 'change-request create failed');
+    reqId = r.body.data?.id ?? null;
+    expect(!!reqId, 'no change request id');
+    const lr = await api('hr/employee-change-requests/list', T.admin, { employeeId: empId });
+    ok(lr, 'change-request list failed');
+    expect(lr.body.data.some(x => x.id === reqId), 'change request not listed');
+  });
+
+  await test('decide approve → applied + change effected + event', async () => {
+    const r = await api('hr/employee-change-requests/decide', T.admin, { requestId: reqId, decision: 'approve' });
+    ok(r, 'decide approve failed');
+    expect(r.body.data.status === 'applied', `expected applied, got ${r.body.data.status}`);
+    const { data } = await sb.from('app_users').select('status').eq('id', empId).single();
+    expect(data?.status === 'active', 'approved status_change not applied to app_users');
+    const ev = await waitFor(async () => {
+      const { data: e } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.change_applied').eq('source_entity_id', reqId).limit(1);
+      return (e?.length ?? 0) > 0;
+    });
+    expect(ev, 'hr.employee.change_applied event not emitted');
+  });
+
+  await test('decide reject does NOT apply the change', async () => {
+    const cr = await api('hr/employees/change-request', T.admin, { employeeId: empId, changeType: 'role_change', requestedValue: { role: 'manager' } });
+    ok(cr, 'second change-request failed');
+    const r = await api('hr/employee-change-requests/decide', T.admin, { requestId: cr.body.data.id, decision: 'reject', comment: 'denied' });
+    ok(r, 'reject failed');
+    expect(r.body.data.status === 'rejected', 'not rejected');
+    const { data } = await sb.from('app_users').select('role').eq('id', empId).single();
+    expect(data?.role === 'employee', 'role must not change on reject');
+  });
+
+  await test('GATE: an applied request cannot be decided again', async () => {
+    fails(await api('hr/employee-change-requests/decide', T.admin, { requestId: reqId, decision: 'approve' }), 're-deciding an applied request should fail');
+  });
+
+  await test('ACCESS: non-HR employee denied on change-request create', async () => {
+    fails(await api('hr/employees/change-request', T.b, { employeeId: empId, changeType: 'status_change', requestedValue: { newStatus: 'suspended' } }), 'employee should not create change requests');
   });
 
   // ── Employee Documents (DB flow; bucket-backed upload/download covered manually) ─
