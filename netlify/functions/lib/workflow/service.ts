@@ -34,6 +34,12 @@ function addHoursIso(hours: number | undefined | null): string | null {
   return new Date(Date.now() + hours * 3_600_000).toISOString();
 }
 
+// The workflow_instances priority CHECK is (low/medium/high/critical); the spec's
+// 'normal' maps to 'medium'.
+function normalizePriority(p: string | undefined | null): string {
+  return !p || p === 'normal' ? 'medium' : p;
+}
+
 async function writeWorkflowAudit(p: {
   workflowId: string; taskId?: string | null; moduleKey: string; sourceRecordId: string;
   actorId: string; action: string; previousState?: unknown; newState?: unknown; reason?: string | null;
@@ -119,7 +125,7 @@ export async function startWorkflowForRecord(params: { context: ModuleWorkflowCo
     workflow_no: workflowNo, template_id: binding.template_id, template_version_id: versionId,
     module_key: context.moduleKey, workflow_type: context.workflowType,
     source_record_id: context.sourceRecordId, source_record_ref: context.sourceRecordRef ?? null,
-    status: 'in_progress', current_step_key: firstKey, priority: context.priority ?? 'normal',
+    status: 'in_progress', current_step_key: firstKey, priority: normalizePriority(context.priority),
     site_id: context.siteId ?? null, department_id: context.departmentId ?? null,
     requested_by: context.requestedBy, owner_id: context.ownerId ?? null,
     started_at: new Date().toISOString(),
