@@ -122,7 +122,8 @@ router.post('/webauthn/register/verify', async c => {
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
-  const v    = zv(c, RegisterVerifySchema, c.get('body') as Record<string, unknown>);
+  const raw  = c.get('body') as Record<string, unknown>;
+  const v    = zv(c, RegisterVerifySchema, (raw.args as Record<string, unknown>) ?? raw);
   if (!v.ok) return v.response;
 
   // Cast: our zod schema enforces the shape; the library accepts the same JSON
@@ -136,6 +137,96 @@ router.post('/webauthn/register/verify', async c => {
   void rotateSecurityStamp(user.id, 'passkey_registered');
 
   return c.json({ success: true, credential });
+});
+
+// ── Pre-auth passkey registration (mandatory-MFA setup at login) ───────────────
+// The user has cleared password auth (challenge type 'verify') but has no session
+// yet; register a passkey against the challenge, then issue the full session.
+// Public (no requireUser): authorisation is the preAuthToken in the body.
+
+const PreauthRegOptionsSchema = z.object({ preAuthToken: z.string().min(1) });
+const PreauthRegVerifySchema  = z.object({
+  preAuthToken: z.string().min(1),
+  response: z.object({
+    id: z.string(), rawId: z.string(), response: z.record(z.string(), z.unknown()),
+    authenticatorAttachment: z.string().optional(),
+    clientExtensionResults: z.record(z.string(), z.unknown()).optional().default({}),
+    type: z.string(),
+  }),
+  label:          z.string().max(80).optional(),
+  rememberDevice: z.boolean().optional().default(false),
+  deviceLabel:    z.string().max(80).optional(),
+});
+
+async function loadChallengeUser(preAuthToken: string): Promise<AppUser | null> {
+  const challenge = await validateChallenge(preAuthToken);
+  if (!challenge || challenge.type !== 'verify') return null;
+  const { data } = await sb.from('app_users').select('*').eq('id', challenge.user_id).single<AppUser>();
+  return data && data.status === 'active' ? data : null;
+}
+
+// POST /api/webauthn/register/preauth/options
+router.post('/webauthn/register/preauth/options', async c => {
+  const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
+  const rl = checkLoginLimit.check(ip);
+  if (!rl.ok) return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  const body = c.get('body') as Record<string, unknown>;
+  const v    = zv(c, PreauthRegOptionsSchema, (body.args as Record<string, unknown>) ?? body);
+  if (!v.ok) return v.response;
+  const user = await loadChallengeUser(v.data.preAuthToken);
+  if (!user) return c.json({ success: false, message: 'Invalid or expired session. Please log in again.' }, 401);
+  const { options } = await generateRegistrationOptions({ id: user.id, username: user.username, full_name: user.full_name });
+  return c.json({ success: true, options });
+});
+
+// POST /api/webauthn/register/preauth/verify
+router.post('/webauthn/register/preauth/verify', async c => {
+  const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
+  const rl = checkLoginLimit.check(ip);
+  if (!rl.ok) return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
+  const body = c.get('body') as Record<string, unknown>;
+  const v    = zv(c, PreauthRegVerifySchema, (body.args as Record<string, unknown>) ?? body);
+  if (!v.ok) return v.response;
+
+  const challenge = await validateChallenge(v.data.preAuthToken);
+  if (!challenge || challenge.type !== 'verify') {
+    return c.json({ success: false, message: 'Invalid or expired session. Please log in again.' }, 401);
+  }
+  const { data: user } = await sb.from('app_users').select('*').eq('id', challenge.user_id).single<AppUser>();
+  if (!user || user.status !== 'active') {
+    await consumeChallenge(challenge.id);
+    return c.json({ success: false, message: 'Authentication failed.' }, 401);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const credential = await verifyRegistration(user, v.data.response as any, v.data.label);
+  await consumeChallenge(challenge.id);
+  void rotateSecurityStamp(user.id, 'passkey_registered');
+  await log_(user, 'auth.passkey.registered', 'webauthn_credentials', credential.id, 'Passkey registered at mandatory setup');
+
+  const payload = await buildSessionPayload(user, deviceFrom(c), {
+    amr: ['pwd', 'webauthn'], mfaSatisfied: true, authStrength: 'mfa',
+  });
+
+  if (v.data.rememberDevice) {
+    try {
+      const ttlDays = ttlDaysForRole(user.role);
+      const { cookieValue } = await createTrustedDevice({
+        userId: user.id, method: 'webauthn', label: v.data.deviceLabel,
+        userAgent: c.req.header('user-agent') ?? undefined, ipAddress: ip, ttlDays,
+      });
+      setCookie(c, TD_COOKIE_NAME, cookieValue, { httpOnly: true, secure: true, sameSite: 'Lax', path: '/', maxAge: ttlDays * 86400 });
+    } catch (err) { console.error('[webauthn/register/preauth/verify] createTrustedDevice failed:', err); }
+  }
+
+  return c.json(payload);
+});
+
+// POST /api/webauthn/prompt/dismiss — reset the post-login passkey-prompt cadence
+router.post('/webauthn/prompt/dismiss', async c => {
+  const user = await requireUser(c);
+  await sb.from('app_users').update({ last_passkey_prompt_at: new Date().toISOString() }).eq('id', user.id);
+  return c.json({ success: true });
 });
 
 // POST /api/webauthn/credentials/list
@@ -244,7 +335,7 @@ router.post('/webauthn/auth/verify', async c => {
   }
 
   const body = c.get('body') as Record<string, unknown>;
-  const v    = zv(c, AuthVerifySchema, body);
+  const v    = zv(c, AuthVerifySchema, (body.args as Record<string, unknown>) ?? body);
   if (!v.ok) return v.response;
 
   const { flow, preAuthToken, rememberDevice, deviceLabel, response: assertionResp } = v.data;

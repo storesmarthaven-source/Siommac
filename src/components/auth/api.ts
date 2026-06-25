@@ -9,7 +9,7 @@
  * @see docs/PHASE_PLAN.md
  */
 
-import { authPost, apiAction } from '@lib/api';
+import { authPost, apiAction, apiPost } from '@lib/api';
 
 // ── Response shapes ───────────────────────────────────────────────────────────
 
@@ -137,4 +137,44 @@ export async function webauthnAuthVerify(payload: {
     'webauthn/auth/verify',
     payload as unknown as Record<string, unknown>,
   );
+}
+
+// ── WebAuthn post-login passkey setup (optional prompt) ───────────────────────
+// The full session token exists but isn't in the session store yet, so these
+// authenticate with an explicit bearer token via apiPost's `token` option.
+
+/** Registration options for the post-login passkey prompt. */
+export async function webauthnRegisterOptionsWithToken(token: string): Promise<WebAuthnOptionsResult> {
+  return apiPost<WebAuthnOptionsResult>('webauthn/register/options', {}, { token, retryable: false });
+}
+
+/** Verify + persist the passkey from the post-login prompt. */
+export async function webauthnRegisterVerifyWithToken(
+  token: string,
+  response: Record<string, unknown>,
+): Promise<{ success: boolean; message?: string }> {
+  return apiPost<{ success: boolean; message?: string }>('webauthn/register/verify', { response }, { token, retryable: false });
+}
+
+/** Dismiss the post-login passkey prompt (resets the 7-day cadence). */
+export async function webauthnPromptDismissWithToken(token: string): Promise<{ success: boolean; message?: string }> {
+  return apiPost<{ success: boolean; message?: string }>('webauthn/prompt/dismiss', {}, { token, retryable: false });
+}
+
+// ── WebAuthn pre-auth passkey registration (mandatory-MFA setup) ──────────────
+// No session yet — the preAuthToken in the body authorises the call (public).
+
+/** Pre-auth registration options (mandatory setup at login). */
+export async function webauthnPreauthRegisterOptions(payload: { preAuthToken: string }): Promise<WebAuthnOptionsResult> {
+  return authPost<WebAuthnOptionsResult>('webauthn/register/preauth/options', payload as unknown as Record<string, unknown>);
+}
+
+/** Pre-auth registration verify → issues a full session (same shape as /login). */
+export async function webauthnPreauthRegisterVerify(payload: {
+  preAuthToken: string;
+  response: Record<string, unknown>;
+  rememberDevice?: boolean;
+  deviceLabel?: string;
+}): Promise<LoginResult> {
+  return authPost<LoginResult>('webauthn/register/preauth/verify', payload as unknown as Record<string, unknown>);
 }

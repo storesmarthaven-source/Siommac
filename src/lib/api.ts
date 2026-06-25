@@ -192,6 +192,12 @@ export interface ApiFetchOptions {
   signal?:  AbortSignal;
   /** Skip Authorization header — use for /auth/login, /auth/refresh */
   public?:  boolean;
+  /**
+   * Explicit bearer token, overriding the session store. Used post-login when a
+   * full token exists but the store isn't populated yet (e.g. the passkey-setup
+   * interstitial). Ignored when `public` is set.
+   */
+  token?:   string;
   /** Internal: skip the proactive refresh check on retry */
   _skipRefreshCheck?: boolean;
   /**
@@ -222,7 +228,7 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
     await _refreshToken();
   }
 
-  const token = opts.public ? '' : getToken();
+  const token = opts.public ? '' : (opts.token ?? getToken());
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
