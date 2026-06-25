@@ -10,12 +10,17 @@
 
 import { Hono }       from 'hono';
 import { sb }         from '../lib/db';
-import { requirePermission } from '../lib/auth';
+import { requirePermission, userCan } from '../lib/auth';
 import { emitAppEvent }      from '../lib/appEvents';
+import { createAttachmentUploadUrl } from '../lib/upload';
+import { getSignedUrl }      from '../lib/photos';
 import { z, zv }      from '../lib/validate';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
+
+const HR_DOC_BUCKET = 'hr-employee-documents';
+const RESTRICTED_TIERS = new Set(['restricted_hr', 'legal', 'medical']);
 
 const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
@@ -352,6 +357,109 @@ router.post('/dashboard/kpis', async c => {
     pendingChangeRequests: pendingChanges.count ?? 0,
     totalTracked:          total.count ?? 0,
   } });
+});
+
+// ── Employee Documents (private bucket; verify/reject/archive; audited download) ─
+
+// POST /api/hr/employees/documents/list
+router.post('/employees/documents/list', async c => {
+  const user = await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1) }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data } = await sb.from('hr_employee_documents').select('*').eq('employee_id', v.data.employeeId)
+    .neq('status', 'archived').order('uploaded_at', { ascending: false });
+  let rows = (data ?? []) as { confidentiality: string }[];
+  // Restricted tiers require the sensitive-view permission.
+  if (!(await userCan(user, 'hr.employee_documents.sensitive_view'))) {
+    rows = rows.filter(d => !RESTRICTED_TIERS.has(d.confidentiality));
+  }
+  return c.json({ success: true, data: rows });
+});
+
+// POST /api/hr/employees/documents/upload-url
+router.post('/employees/documents/upload-url', async c => {
+  await requirePermission(c, 'hr.employee_documents.upload');
+  const v = zv(c, z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(HR_DOC_BUCKET, v.data.fileName, v.data.mimeType);
+    return c.json({ success: true, uploadUrl, token, path, bucket: HR_DOC_BUCKET });
+  } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Upload URL failed' }, 400 as 200); }
+});
+
+// POST /api/hr/employees/documents/commit
+router.post('/employees/documents/commit', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.upload');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1), documentType: z.string().min(1).max(80), title: z.string().min(1).max(200),
+    filePath: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().nullable().optional(),
+    fileSize: z.number().int().nullable().optional(),
+    confidentiality: z.enum(['internal', 'confidential', 'restricted_hr', 'legal', 'medical']).default('internal'),
+    expiryDate: z.string().nullable().optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data, error } = await sb.from('hr_employee_documents').insert({
+    employee_id: v.data.employeeId, document_type: v.data.documentType, title: v.data.title,
+    file_path: v.data.filePath, file_name: v.data.fileName, mime_type: v.data.mimeType ?? null,
+    file_size: v.data.fileSize ?? null, confidentiality: v.data.confidentiality, expiry_date: v.data.expiryDate ?? null,
+    uploaded_by: actor.id,
+  }).select('id').single<{ id: string }>();
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  await writeHrAudit({ employeeId: v.data.employeeId, submoduleKey: 'documents', recordId: data.id, actorId: actor.id,
+    action: 'hr.employee.document_uploaded', newState: { documentType: v.data.documentType, confidentiality: v.data.confidentiality } });
+  void emitAppEvent({ eventType: 'hr.employee.document_uploaded', sourceModule: 'hr', sourceEntityType: 'hr_document',
+    sourceEntityId: data.id, actorUserId: actor.id, severity: 'info', payload: { employeeId: v.data.employeeId } });
+  return c.json({ success: true, data });
+});
+
+// POST /api/hr/documents/verify  (decision: approve | reject)
+router.post('/documents/verify', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.verify');
+  const v = zv(c, z.object({ documentId: z.string().uuid(), decision: z.enum(['approve', 'reject']), reason: z.string().max(500).optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data: doc } = await sb.from('hr_employee_documents').select('employee_id, status').eq('id', v.data.documentId).maybeSingle<{ employee_id: string; status: string }>();
+  if (!doc) return c.json({ success: false, message: 'Document not found.' }, 404 as 200);
+  const newStatus = v.data.decision === 'approve' ? 'verified' : 'rejected';
+  const { error } = await sb.from('hr_employee_documents').update({
+    status: newStatus, verified_by: actor.id, verified_at: new Date().toISOString(),
+    rejected_reason: v.data.decision === 'reject' ? (v.data.reason ?? null) : null,
+  }).eq('id', v.data.documentId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  await writeHrAudit({ employeeId: doc.employee_id, submoduleKey: 'documents', recordId: v.data.documentId, actorId: actor.id,
+    action: v.data.decision === 'approve' ? 'hr.employee.document_verified' : 'hr.employee.document_rejected', reason: v.data.reason ?? null });
+  return c.json({ success: true, data: { documentId: v.data.documentId, status: newStatus } });
+});
+
+// POST /api/hr/documents/archive
+router.post('/documents/archive', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.archive');
+  const v = zv(c, z.object({ documentId: z.string().uuid() }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data: doc } = await sb.from('hr_employee_documents').select('employee_id').eq('id', v.data.documentId).maybeSingle<{ employee_id: string }>();
+  if (!doc) return c.json({ success: false, message: 'Document not found.' }, 404 as 200);
+  const { error } = await sb.from('hr_employee_documents').update({ status: 'archived', archived_at: new Date().toISOString() }).eq('id', v.data.documentId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  await writeHrAudit({ employeeId: doc.employee_id, submoduleKey: 'documents', recordId: v.data.documentId, actorId: actor.id, action: 'hr.employee.document_archived' });
+  return c.json({ success: true });
+});
+
+// POST /api/hr/documents/download-url  (audited; restricted tiers need sensitive_view)
+router.post('/documents/download-url', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.download');
+  const v = zv(c, z.object({ documentId: z.string().uuid() }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const { data: doc } = await sb.from('hr_employee_documents').select('employee_id, file_path, confidentiality')
+    .eq('id', v.data.documentId).maybeSingle<{ employee_id: string; file_path: string; confidentiality: string }>();
+  if (!doc) return c.json({ success: false, message: 'Document not found.' }, 404 as 200);
+  if (RESTRICTED_TIERS.has(doc.confidentiality) && !(await userCan(actor, 'hr.employee_documents.sensitive_view'))) {
+    return c.json({ success: false, message: 'You do not have permission to access this restricted document.' }, 403 as 200);
+  }
+  let url = '';
+  try { url = await getSignedUrl(HR_DOC_BUCKET, doc.file_path); }
+  catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Could not sign URL' }, 400 as 200); }
+  await writeHrAudit({ employeeId: doc.employee_id, submoduleKey: 'documents', recordId: v.data.documentId, actorId: actor.id, action: 'hr.employee.document_downloaded' });
+  return c.json({ success: true, url });
 });
 
 export default router;

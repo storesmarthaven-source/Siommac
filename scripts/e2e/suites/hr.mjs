@@ -36,6 +36,7 @@ export default async function run(h) {
     try { await sb.from('hr_audit_log').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('hr_employee_status_history').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('hr_employee_assignments').delete().eq('employee_id', empId); } catch {}
+    try { await sb.from('hr_employee_documents').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('app_events').delete().eq('source_entity_id', empId); } catch {}
     try { await sb.from('hr_positions').delete().ilike('position_key', `%${TAG}%`); } catch {}
     try { await sb.from('app_users').delete().eq('id', empId); } catch {}
@@ -177,6 +178,43 @@ export default async function run(h) {
 
   await test('ACCESS: non-privileged employee denied on positions/create', async () => {
     fails(await api('hr/positions/create', T.b, { positionKey: `${TAG}-X`, title: 'x' }), 'B should not manage positions');
+  });
+
+  // ── Employee Documents (DB flow; bucket-backed upload/download covered manually) ─
+  h.section('HR › Documents');
+
+  let docId = null;
+  await test('documents/commit + list', async () => {
+    const cr = await api('hr/employees/documents/commit', T.admin, {
+      employeeId: empId, documentType: 'contract', title: `${TAG} Employment Contract`,
+      filePath: `hr-employee-documents/${empId}/test/contract.pdf`, fileName: 'contract.pdf',
+      mimeType: 'application/pdf', confidentiality: 'confidential',
+    });
+    ok(cr, 'doc commit failed');
+    docId = cr.body.data?.id ?? null;
+    expect(!!docId, 'no doc id returned');
+    const lr = await api('hr/employees/documents/list', T.admin, { employeeId: empId });
+    ok(lr, 'doc list failed');
+    expect(lr.body.data.some(d => d.id === docId), 'committed doc not listed');
+  });
+
+  await test('documents/verify (approve) → verified + audit', async () => {
+    const r = await api('hr/documents/verify', T.admin, { documentId: docId, decision: 'approve' });
+    ok(r, 'verify failed');
+    const { data } = await sb.from('hr_employee_documents').select('status, verified_by').eq('id', docId).single();
+    expect(data?.status === 'verified', 'doc not verified');
+  });
+
+  await test('documents/archive → removed from active list', async () => {
+    const r = await api('hr/documents/archive', T.admin, { documentId: docId });
+    ok(r, 'archive failed');
+    const lr = await api('hr/employees/documents/list', T.admin, { employeeId: empId });
+    expect(!lr.body.data.some(d => d.id === docId), 'archived doc still in active list');
+  });
+
+  await test('ACCESS: non-privileged employee denied on documents/upload + list', async () => {
+    fails(await api('hr/employees/documents/upload-url', T.b, { fileName: 'x.pdf', mimeType: 'application/pdf' }), 'B should not upload HR docs');
+    fails(await api('hr/employees/documents/list', T.b, { employeeId: empId }), 'B should not view HR docs');
   });
 
   // ── Dashboard ──────────────────────────────────────────────────────────────────
