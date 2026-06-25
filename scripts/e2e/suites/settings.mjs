@@ -53,7 +53,7 @@ export default async function run(h) {
     ok(r, 'effective failed');
     const s = findSetting(r, RENEWAL);
     expect(!!s, 'renewal not in effective');
-    expect(s.effectiveValue === 30 && s.effectiveSource === 'default', `expected 30/default, got ${s.effectiveValue}/${s.effectiveSource}`);
+    expect(s.effectiveValue === 90 && s.effectiveSource === 'default', `expected 90/default, got ${s.effectiveValue}/${s.effectiveSource}`);
   });
 
   await test('admin sets a global override → effective + resolve reflect it', async () => {
@@ -82,7 +82,7 @@ export default async function run(h) {
     ok(r, 'reset failed');
     const eff = await api('settings/effective', T.admin, { moduleKey: 'training' });
     const s = findSetting(eff, RENEWAL);
-    expect(s.effectiveValue === 30 && s.effectiveSource === 'default', 'did not fall back to default');
+    expect(s.effectiveValue === 90 && s.effectiveSource === 'default', 'did not fall back to default');
   });
 
   // ── Governance limits ────────────────────────────────────────────────────────
