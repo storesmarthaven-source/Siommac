@@ -21,6 +21,7 @@ import {
   EMPLOYMENT_TYPES, NIS_STATUSES, statutoryPatch, statutoryWithDefaults, computePayrollReadiness,
   writeHrAudit, provisionEmployee, todayISO, type StatutoryRow,
 } from '../lib/hr/employeeCore';
+import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -31,7 +32,8 @@ const RESTRICTED_TIERS = new Set(['restricted_hr', 'legal', 'medical']);
 const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
-  'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image';
+  'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image, ' +
+  'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
 interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; [k: string]: unknown }
 
@@ -68,35 +70,47 @@ router.post('/employees/list', async c => {
   if (v.data.departmentId)   q = q.eq('department_id', v.data.departmentId);
   if (v.data.employmentType) q = q.eq('employment_type', v.data.employmentType);
   if (v.data.workerType)     q = q.eq('contractor_flag', v.data.workerType === 'contractor');
-  const [{ data: rows, error }, { data: depts }] = await Promise.all([
+  const [{ data: rows, error }, { data: depts }, { data: sites }] = await Promise.all([
     q,
     sb.from('departments').select('id, name'),
+    sb.from('project_sites').select('id, name'),
   ]);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   const deptMap = Object.fromEntries(((depts ?? []) as { id: string; name: string }[]).map(d => [d.id, d.name]));
+  const siteMap = Object.fromEntries(((sites ?? []) as { id: string; name: string }[]).map(s => [s.id, s.name]));
   let data = (rows ?? []) as unknown as EmpRow[];
   if (v.data.search) {
     const s = v.data.search.toLowerCase();
     data = data.filter(r => (r.full_name ?? '').toLowerCase().includes(s) || String(r['employee_number'] ?? '').toLowerCase().includes(s));
   }
 
-  // Training status — one bulk certificate read over the page, rolled up per worker.
+  // Bulk side-reads over the page: training certificates (rolled up per worker) and
+  // supervisor names. Supervisors are resolved over their actual ids — a supervisor
+  // can sit outside this page — so the contract carries the resolved name, not a raw id.
   const today = todayISO();
   const ids = data.map(r => r.id);
+  const supIds = Array.from(new Set(data.map(r => r.supervisor_id).filter((x): x is string => !!x)));
+  const [certsRes, supsRes] = await Promise.all([
+    ids.length
+      ? sb.from('hse_worker_certificates').select('worker_id, status, expires_at').in('worker_id', ids)
+      : Promise.resolve({ data: [] as { worker_id: string; status: string; expires_at: string | null }[] }),
+    supIds.length
+      ? sb.from('app_users').select('id, full_name').in('id', supIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+  ]);
   const certByWorker = new Map<string, { status: string; expires_at: string | null }[]>();
-  if (ids.length) {
-    const { data: certs } = await sb.from('hse_worker_certificates')
-      .select('worker_id, status, expires_at').in('worker_id', ids);
-    for (const cr of (certs ?? []) as { worker_id: string; status: string; expires_at: string | null }[]) {
-      const list = certByWorker.get(cr.worker_id) ?? [];
-      list.push({ status: cr.status, expires_at: cr.expires_at });
-      certByWorker.set(cr.worker_id, list);
-    }
+  for (const cr of (certsRes.data ?? []) as { worker_id: string; status: string; expires_at: string | null }[]) {
+    const list = certByWorker.get(cr.worker_id) ?? [];
+    list.push({ status: cr.status, expires_at: cr.expires_at });
+    certByWorker.set(cr.worker_id, list);
   }
+  const supMap = Object.fromEntries(((supsRes.data ?? []) as { id: string; full_name: string | null }[]).map(s => [s.id, s.full_name]));
 
   return c.json({ success: true, data: data.map(r => ({
     ...r,
     departmentName: deptMap[r.department_id ?? ''] ?? null,
+    siteName: siteMap[(r['site_id'] as string | null) ?? ''] ?? null,
+    supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
     workerType: r['contractor_flag'] ? 'contractor' : 'employee',
     trainingStatus: rollupTrainingStatus(certByWorker.get(r.id) ?? [], today),
   })) });
@@ -110,9 +124,10 @@ router.post('/employees/get', async c => {
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
-  const [{ data: supervisor }, { data: dept }, { data: statusHistory }, { data: assignment }, { data: statutory }] = await Promise.all([
+  const [{ data: supervisor }, { data: dept }, { data: site }, { data: statusHistory }, { data: assignment }, { data: statutory }] = await Promise.all([
     emp.supervisor_id ? sb.from('app_users').select('id, full_name').eq('id', emp.supervisor_id).maybeSingle() : Promise.resolve({ data: null }),
     emp.department_id ? sb.from('departments').select('id, name').eq('id', emp.department_id).maybeSingle() : Promise.resolve({ data: null }),
+    emp['site_id'] ? sb.from('project_sites').select('id, name').eq('id', emp['site_id'] as string).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('hr_employee_status_history').select('*').eq('employee_id', emp.id).order('changed_at', { ascending: false }).limit(20),
     sb.from('hr_employee_assignments').select('*').eq('employee_id', emp.id).eq('is_current', true).maybeSingle(),
     sb.from('hr_employee_statutory').select('*').eq('employee_id', emp.id).maybeSingle<StatutoryRow & Record<string, unknown>>(),
@@ -133,6 +148,7 @@ router.post('/employees/get', async c => {
     employee: { ...emp,
       supervisorName: (supervisor as { full_name?: string } | null)?.full_name ?? null,
       departmentName: (dept as { name?: string } | null)?.name ?? null,
+      siteName: (site as { name?: string } | null)?.name ?? null,
       workerType: emp['contractor_flag'] ? 'contractor' : 'employee',
     },
     statusHistory: statusHistory ?? [],
@@ -175,6 +191,10 @@ router.post('/employees/create', async c => {
     }).optional(),
     access:    z.object({ role: z.string().max(60).optional() }).optional(),
     statutory: z.record(z.string(), z.unknown()).optional(),
+    onboarding: z.object({
+      createOnboardingCase: z.boolean().optional(),
+      packageKey:           z.string().optional(),
+    }).optional(),
   }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
   const { identity, employment, assignment, access, statutory } = v.data;
@@ -203,9 +223,26 @@ router.post('/employees/create', async c => {
     writeRecord: () => provisionEmployee(actor.id, { identity, employment, assignment, access, statutory }),
   });
 
+  // Optional onboarding (v36 §10) — the employee is already committed, so starting
+  // onboarding is a best-effort follow-up via the shared startOnboardingCase(). A
+  // failure does NOT roll back the create (the employee is valid); it is SURFACED
+  // (onboarding_error), never swallowed or faked.
+  let onboardingCaseId: string | null = null;
+  let onboardingError: string | null = null;
+  if (v.data.onboarding?.createOnboardingCase) {
+    try {
+      const ob = await startOnboardingCase(actor.id, { employeeId: result.entityId, packageKey: v.data.onboarding.packageKey ?? 'standard_employee' });
+      onboardingCaseId = ob.caseId;
+    } catch (e) {
+      onboardingError = e instanceof Error ? e.message : 'Onboarding could not be started.';
+      console.error('[hr] onboarding start after create failed:', e);
+    }
+  }
+
   return c.json({ success: true, data: {
     employee_id: result.entityId, employee_no: result.entityRef, status: 'active',
-    payroll_readiness: result.record.readiness, onboarding_case_id: null, workflow_id: result.workflowId ?? null,
+    payroll_readiness: result.record.readiness, onboarding_case_id: onboardingCaseId,
+    onboarding_error: onboardingError, workflow_id: result.workflowId ?? null,
   } });
 });
 
@@ -382,13 +419,16 @@ router.post('/employees/statutory/update', async c => {
 
   await writeHrAudit({ employeeId: v.data.employeeId, submoduleKey: 'employees', recordId: v.data.employeeId, actorId: actor.id,
     action: 'hr.employee.statutory_updated', previousState: existing ?? null, newState: upd });
-  void emitAppEvent({ eventType: 'hr.employee.statutory_updated', sourceModule: 'hr', sourceEntityType: 'employee',
+  // Emits are AWAITED (emitAppEvent never throws): per Spec §2 the event is part of the
+  // mutation, and awaiting guarantees durability before we respond (a fire-and-forget
+  // void can be dropped when the serverless instance freezes after the response).
+  await emitAppEvent({ eventType: 'hr.employee.statutory_updated', sourceModule: 'hr', sourceEntityType: 'employee',
     sourceEntityId: v.data.employeeId, actorUserId: actor.id, severity: 'info', payload: { payrollReadiness: readiness.status } });
   // Crossing into payroll-ready emits the domain event the Finance/Payroll handoff will
   // key off. The actual handoff (handoff_outbox → payroll receiver) is build-order step
   // 14 — emitted here as an event, NOT faked as a handoff into the wrong receiver.
   if (!wasReady && readiness.status === 'ready') {
-    void emitAppEvent({ eventType: 'hr.employee.payroll_ready', sourceModule: 'hr', sourceEntityType: 'employee',
+    await emitAppEvent({ eventType: 'hr.employee.payroll_ready', sourceModule: 'hr', sourceEntityType: 'employee',
       sourceEntityId: v.data.employeeId, actorUserId: actor.id, severity: 'info', payload: { financeHandoffEligible: true } });
   }
   return c.json({ success: true, data: {
@@ -627,7 +667,15 @@ router.post('/employees/audit', async c => {
   if (!v.ok) return v.response;
   const { data } = await sb.from('hr_audit_log').select('*').eq('employee_id', v.data.employeeId)
     .order('created_at', { ascending: false }).limit(v.data.limit ?? 100);
-  return c.json({ success: true, data: data ?? [] });
+  const rows = (data ?? []) as Array<{ actor_id: string | null; [k: string]: unknown }>;
+  // Resolve actor display names server-side (an actor may be any app_user, not just
+  // someone on the employee page) — the audit row carries the name, never a raw id.
+  const actorIds = Array.from(new Set(rows.map(r => r.actor_id).filter((x): x is string => !!x)));
+  const { data: actors } = actorIds.length
+    ? await sb.from('app_users').select('id, full_name').in('id', actorIds)
+    : { data: [] as { id: string; full_name: string | null }[] };
+  const actorMap = Object.fromEntries(((actors ?? []) as { id: string; full_name: string | null }[]).map(a => [a.id, a.full_name]));
+  return c.json({ success: true, data: rows.map(r => ({ ...r, actorName: r.actor_id ? actorMap[r.actor_id] ?? null : null })) });
 });
 
 // ── Organization Structure ─────────────────────────────────────────────────────
@@ -642,6 +690,13 @@ router.post('/organization/tree', async c => {
 });
 
 // ── Positions ──────────────────────────────────────────────────────────────────
+
+// POST /api/hr/sites/list — project sites for assignment selectors (authenticated)
+router.post('/sites/list', async c => {
+  await requirePermission(c, 'hr.view');
+  const { data } = await sb.from('project_sites').select('id, name').order('name');
+  return c.json({ success: true, data: data ?? [] });
+});
 
 router.post('/positions/list', async c => {
   await requirePermission(c, 'hr.positions.view');

@@ -477,7 +477,7 @@ router.post('/employees/import/report', async c => {
   const batch = await loadBatch(v.data.batchId);
   if (!batch) return c.json({ success: false, message: 'Import batch not found.' }, 404 as 200);
   const [{ data: rows }, { data: errors }] = await Promise.all([
-    sb.from('hr_employee_import_rows').select('row_no, status, severity, resolution, target_employee_id, mapped_data').eq('batch_id', v.data.batchId).order('row_no'),
+    sb.from('hr_employee_import_rows').select('id, row_no, status, severity, resolution, target_employee_id, mapped_data').eq('batch_id', v.data.batchId).order('row_no'),
     sb.from('hr_employee_import_row_errors').select('row_id, field_key, error_code, severity, message').eq('batch_id', v.data.batchId),
   ]);
   return c.json({ success: true, data: {

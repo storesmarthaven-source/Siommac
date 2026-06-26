@@ -9,10 +9,9 @@ import { Hono }       from 'hono';
 import { sb }         from '../lib/db';
 import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { emitAppEvent } from '../lib/appEvents';
-import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
-import { runModuleMutation } from '../lib/moduleServiceAdapter';
 import { writeHrAudit } from '../lib/hr/employeeCore';
+import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import { ONBOARDING_PACKAGES, ONBOARDING_PACKAGE_KEYS } from '../lib/hr/onboardingPackages';
 import type { HonoVariables } from '../../../types/api';
 
@@ -40,58 +39,13 @@ router.post('/onboarding/start', async c => {
   }), body(c));
   if (!v.ok) return v.response;
 
-  const pkg = ONBOARDING_PACKAGES[v.data.packageKey]!;
-  const { data: emp } = await sb.from('app_users').select('id, supervisor_id, contractor_flag').eq('id', v.data.employeeId).maybeSingle<{ id: string; supervisor_id: string | null; contractor_flag: boolean | null }>();
-  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
-  const ownerId = v.data.ownerId ?? actor.id;
-
-  const result = await runModuleMutation<{ id: string; caseNo: string; taskCount: number; handoffCount: number }>({
-    context: { actorUserId: actor.id },
-    options: {
-      module: 'hr', operation: 'create', entityType: 'onboarding_case',
-      idempotencyKey: `hr.onboarding.start:${v.data.employeeId}:${v.data.packageKey}`,
-      eventType: 'onboarding.started', eventSeverity: 'info',
-      getEntityIdentity: (r) => ({ id: r.id, ref: r.caseNo }),
-      buildEventPayload: (r) => ({ employeeId: v.data.employeeId, packageKey: v.data.packageKey, taskCount: r.taskCount, handoffCount: r.handoffCount }),
-    },
-    writeRecord: async () => {
-      const caseNo = await nextRef('ONB');
-      const { data: kase, error: cErr } = await sb.from('hr_onboarding_cases').insert({
-        case_no: caseNo, employee_id: emp.id, worker_type: emp.contractor_flag ? 'contractor' : 'employee',
-        package_key: pkg.key, status: 'in_progress', owner_id: ownerId, due_at: v.data.dueAt ?? null, started_by: actor.id,
-      }).select('id, case_no').single<{ id: string; case_no: string }>();
-      if (cErr) throw Object.assign(new Error(cErr.message), { status: 500 });
-
-      const taskRows = pkg.tasks.map(t => ({
-        case_id: kase.id, task_key: t.taskKey, task_title: t.taskTitle, owner_role: t.ownerRole, module_key: t.moduleKey,
-        // Resolve the assignee where it's unambiguous: HR → case owner, Supervisor → the
-        // employee's supervisor. IT/HSE/Training/Payroll are assigned later (reassign).
-        assigned_to: t.ownerRole === 'hr' ? ownerId : t.ownerRole === 'supervisor' ? emp.supervisor_id : null,
-        status: 'pending',
-      }));
-      const { error: tErr } = await sb.from('hr_onboarding_tasks').insert(taskRows);
-      if (tErr) { await sb.from('hr_onboarding_cases').delete().eq('id', kase.id); throw Object.assign(new Error(tErr.message), { status: 500 }); }
-
-      if (pkg.handoffs.length) {
-        const { error: hErr } = await sb.from('hr_onboarding_handoffs').insert(
-          pkg.handoffs.map(h => ({ case_id: kase.id, target_module: h.targetModule, handoff_type: h.handoffType, status: 'pending', payload: { employeeId: emp.id, caseNo } })),
-        );
-        if (hErr) { await sb.from('hr_onboarding_cases').delete().eq('id', kase.id); throw Object.assign(new Error(hErr.message), { status: 500 }); }
-      }
-
-      await writeHrAudit({ employeeId: emp.id, submoduleKey: 'onboarding', recordId: kase.id, actorId: actor.id,
-        action: 'hr.onboarding.started', newState: { caseNo, packageKey: pkg.key, taskCount: taskRows.length } });
-      return { id: kase.id, caseNo: kase.case_no, taskCount: taskRows.length, handoffCount: pkg.handoffs.length };
-    },
-  });
-
-  // Handoff intents recorded above; surface the domain event for each (delivery is a later phase).
-  for (const h of pkg.handoffs) {
-    void emitAppEvent({ eventType: 'onboarding.handoff.created', sourceModule: 'hr', sourceEntityType: 'onboarding_case',
-      sourceEntityId: result.entityId, actorUserId: actor.id, severity: 'info', payload: { targetModule: h.targetModule, handoffType: h.handoffType } });
+  try {
+    const r = await startOnboardingCase(actor.id, v.data);
+    return c.json({ success: true, data: { caseId: r.caseId, caseNo: r.caseNo, status: 'in_progress', taskCount: r.taskCount, handoffCount: r.handoffCount } });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Onboarding start failed.' }, (err.status ?? 500) as 200);
   }
-
-  return c.json({ success: true, data: { caseId: result.entityId, caseNo: result.entityRef, status: 'in_progress', taskCount: result.record.taskCount, handoffCount: result.record.handoffCount } });
 });
 
 // ── 3. task/complete ──────────────────────────────────────────────────────────

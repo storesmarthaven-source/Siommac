@@ -44,6 +44,7 @@ export default async function run(h) {
     changeReqIds: [],    // contact change requests
     emp1: null, emp1No: null, emp1User: null, emp2: null,
     mgrTok: null, empTok: null,
+    siteId: null, siteName: null, supName: null, createdSiteId: null,
   };
 
   // ── teardown (registered up-front so partial runs still clean up) ─────────────
@@ -62,6 +63,7 @@ export default async function run(h) {
         if (r.auth_id) { try { await sb.auth.admin.deleteUser(r.auth_id); } catch { /* ignore */ } }
       }
     }
+    if (ctx.createdSiteId) { try { await sb.from('project_sites').delete().eq('id', ctx.createdSiteId); } catch { /* ignore */ } }
   });
 
   // ── identities: REAL active users of each role (permissions come from the genuine
@@ -78,13 +80,27 @@ export default async function run(h) {
     if (emp) ctx.empTok = mint(emp); else console.error('⚠ no active employee — employee-tier tests will misreport');
   }
 
+  // ── site + supervisor for the resolution assertions. Site/Supervisor are REAL,
+  //    resolved server-side (project_sites / app_users) — not client shortcuts. ──
+  {
+    const { data: s } = await sb.from('project_sites').select('id, name').limit(1).maybeSingle();
+    if (s) { ctx.siteId = s.id; ctx.siteName = s.name; }
+    else {
+      const { data: ns } = await sb.from('project_sites')
+        .insert({ name: `${TAG} Site`, latitude: 0, longitude: 0 }).select('id, name').maybeSingle();
+      if (ns) { ctx.siteId = ns.id; ctx.siteName = ns.name; ctx.createdSiteId = ns.id; }
+    }
+    const { data: adminRow } = await sb.from('app_users').select('full_name').eq('id', admin.id).maybeSingle();
+    ctx.supName = adminRow?.full_name ?? null;
+  }
+
   // ── create ───────────────────────────────────────────────────────────────────
   await test('create employee (admin) → active + payroll READY', async () => {
     const u = `e2e-${TAG}-alpha`.toLowerCase();
     const r = await api('hr/employees/create', A, {
       identity:   { username: u, password: 'Passw0rd!23', fullName: `${TAG} Alpha One`, phone: '555-0001' },
       employment: { employmentType: 'employee', startDate: '2026-01-15', position: 'Technician' },
-      assignment: { departmentId: null, siteId: null },
+      assignment: { departmentId: null, siteId: ctx.siteId, supervisorId: admin.id },
       access:     { role: 'employee' },
       statutory:  { nisStatus: 'registered', nisNumber: 'NIS-1001', payeApplicable: true, birFileNumber: 'BIR-1001', td1Received: true, hsApplicable: true, hsVerificationRequired: false },
     });
@@ -145,8 +161,25 @@ export default async function run(h) {
     fails(r, 'manager cannot create');
   });
 
+  await test('create employee (admin) with onboarding → starts a case + tasks', async () => {
+    const u = `e2e-${TAG}-gamma`.toLowerCase();
+    const r = await api('hr/employees/create', A, {
+      identity:   { username: u, password: 'Passw0rd!23', fullName: `${TAG} Gamma Three` },
+      employment: { employmentType: 'employee' },
+      onboarding: { createOnboardingCase: true, packageKey: 'standard_employee' },
+    });
+    ok(r, 'create gamma + onboarding');
+    ctx.empIds.push(r.body.data.employee_id);
+    expect(!!r.body.data.onboarding_case_id, `onboarding_case_id returned — got ${r.body.data.onboarding_case_id}`);
+    expect(!r.body.data.onboarding_error, `no onboarding error — got ${r.body.data.onboarding_error}`);
+    const { data: kase } = await sb.from('hr_onboarding_cases').select('status').eq('id', r.body.data.onboarding_case_id).maybeSingle();
+    expect(kase && kase.status === 'in_progress', 'onboarding case in_progress');
+    const { count } = await sb.from('hr_onboarding_tasks').select('id', { count: 'exact', head: true }).eq('case_id', r.body.data.onboarding_case_id);
+    expect((count ?? 0) > 0, 'onboarding tasks generated');
+  });
+
   // ── list (extended) ────────────────────────────────────────────────────────
-  await test('list (admin) → rows carry workerType + trainingStatus', async () => {
+  await test('list (admin) → rows carry workerType + trainingStatus + siteName + supervisorName', async () => {
     const r = await api('hr/employees/list', A, { search: TAG });
     ok(r, 'list');
     expect(Array.isArray(r.body.data), 'array');
@@ -154,6 +187,8 @@ export default async function run(h) {
     expect(!!e1, 'alpha present');
     expect(e1.workerType === 'employee', `workerType employee — got ${e1 && e1.workerType}`);
     expect(['none', 'current', 'due_soon', 'expired'].includes(e1.trainingStatus), `trainingStatus — got ${e1 && e1.trainingStatus}`);
+    expect(e1.siteName === ctx.siteName, `siteName resolved server-side from project_sites — got ${e1 && e1.siteName}`);
+    expect(e1.supervisorName === ctx.supName, `supervisorName resolved server-side from app_users — got ${e1 && e1.supervisorName}`);
   });
 
   await test('list workerType=contractor filter', async () => {
@@ -180,6 +215,8 @@ export default async function run(h) {
     ok(r, 'get alpha');
     expect(r.body.data.employee.id === ctx.emp1, 'employee');
     expect(r.body.data.employee.workerType === 'employee', 'workerType');
+    expect(r.body.data.employee.siteName === ctx.siteName, `siteName embedded — got ${r.body.data.employee.siteName}`);
+    expect(r.body.data.employee.supervisorName === ctx.supName, `supervisorName embedded — got ${r.body.data.employee.supervisorName}`);
     expect(r.body.data.statutory && r.body.data.statutory.payroll_ready_status === 'ready', 'statutory embedded');
     expect(r.body.data.payrollReadiness && r.body.data.payrollReadiness.status === 'ready', 'payrollReadiness present');
   });
@@ -229,6 +266,35 @@ export default async function run(h) {
     fails(r, 'employee cannot read workflow-summary');
   });
 
+  // ── drawer read sources (audit actor resolution / training-summary / documents) ──
+  await test('audit (admin) → entries with actor names resolved server-side', async () => {
+    const r = await api('hr/employees/audit', A, { employeeId: ctx.emp1 });
+    ok(r, 'audit');
+    expect(Array.isArray(r.body.data), 'array');
+    const created = r.body.data.find(x => x.action === 'hr.employee.created');
+    expect(!!created, 'created audit entry present');
+    expect(created.actorName === ctx.supName, `actorName resolved (not raw id) — got ${created && created.actorName}`);
+  });
+
+  await test('training-summary (admin) → counts + certificates shape', async () => {
+    const r = await api('hr/employees/training-summary', A, { employeeId: ctx.emp1 });
+    ok(r, 'training-summary');
+    const t = r.body.data;
+    expect(typeof t.total === 'number' && typeof t.current === 'number' && Array.isArray(t.certificates), 'counts + certificates');
+  });
+
+  await test('documents/list (admin) → array', async () => {
+    const r = await api('hr/employees/documents/list', A, { employeeId: ctx.emp1 });
+    ok(r, 'documents/list');
+    expect(Array.isArray(r.body.data), 'array');
+  });
+
+  await test('sites/list (admin) → array (Create wizard option source)', async () => {
+    const r = await api('hr/sites/list', A, {});
+    ok(r, 'sites/list');
+    expect(Array.isArray(r.body.data), 'array');
+  });
+
   // ── statutory ──────────────────────────────────────────────────────────────
   await test('statutory/get (admin) → statutory + readiness', async () => {
     const r = await api('hr/employees/statutory/get', A, { employeeId: ctx.emp2 });
@@ -275,6 +341,9 @@ export default async function run(h) {
     ok(r, 'contact direct emergency');
     const { data: u } = await sb.from('app_users').select('emergency_contact_name').eq('id', ctx.emp1).maybeSingle();
     expect(u && u.emergency_contact_name === `${TAG} Kin`, 'emergency name applied');
+    // get now returns emergency_contact_* (HR_COLS extended) so the Edit Contact modal can pre-fill
+    const g = await api('hr/employees/get', A, { employeeId: ctx.emp1 });
+    expect(g.body.data.employee.emergency_contact_name === `${TAG} Kin`, 'get returns emergency_contact_name for pre-fill');
   });
 
   await test('contact/update WORK direct (manager lacks hr.employees.update) → denied', async () => {
@@ -306,5 +375,14 @@ export default async function run(h) {
     expect(u && u.personal_email === `e2e-${TAG}@personal.test`, 'personal_email applied to record');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.change_applied').eq('source_entity_id', ctx.changeReqIds[0]).limit(1);
     expect(ev && ev.length === 1, 'change_applied event');
+  });
+
+  // ── status-change (Change Status / Offboarding dialogs) ──────────────────────
+  await test('status-change (admin) → status applied + history row', async () => {
+    const r = await api('hr/employees/status-change', A, { employeeId: ctx.emp2, newStatus: 'on_leave', reason: `${TAG} status test` });
+    ok(r, 'status-change');
+    expect(r.body.data.status === 'on_leave', `status applied — got ${r.body.data.status}`);
+    const { data: hist } = await sb.from('hr_employee_status_history').select('new_status').eq('employee_id', ctx.emp2).order('changed_at', { ascending: false }).limit(1).maybeSingle();
+    expect(hist && hist.new_status === 'on_leave', 'status history row written');
   });
 }

@@ -34,12 +34,17 @@ export interface HrEmployeeRow {
   email:              string | null;
   personal_email:     string | null;
   phone:              string | null;
+  emergency_contact_name:         string | null;
+  emergency_contact_phone:        string | null;
+  emergency_contact_relationship: string | null;
   employee_number:    string | null;
   start_date:         string | null;
   end_date:           string | null;
   contractor_flag:    boolean | null;
   profile_image_url:  string | null;
   departmentName:     string | null;
+  siteName:           string | null;
+  supervisorName:     string | null;
   workerType:         WorkerType;
   trainingStatus:     TrainingStatus;
 }
@@ -153,6 +158,95 @@ export function useHrStatutory(employeeId: string | null) {
   });
 }
 
+export interface HrAuditEntry {
+  id:             string;
+  employee_id:    string | null;
+  submodule_key:  string | null;
+  actor_id:       string | null;
+  actorName:      string | null;
+  action:         string;
+  reason:         string | null;
+  created_at:     string;
+  [k: string]: unknown;
+}
+
+export interface HrDocument {
+  id:              string;
+  employee_id:     string;
+  document_type:   string;
+  title:           string;
+  file_name:       string;
+  confidentiality: string;
+  status:          string;
+  expiry_date:     string | null;
+  uploaded_at:     string;
+  [k: string]: unknown;
+}
+
+export interface HrTrainingSummary {
+  total: number; current: number; dueSoon: number; expired: number; pending: number;
+  certificates: Array<{ status: string; expires_at: string | null; course_name: string }>;
+}
+
+export function useHrAudit(employeeId: string | null) {
+  return useQuery({
+    queryKey: hrEmployeeKeys.audit(employeeId ?? ''),
+    enabled:  !!employeeId,
+    retry:    false,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HrAuditEntry[] }>('hr/employees/audit', { employeeId }, { signal });
+      return res.data;
+    },
+  });
+}
+
+export function useHrDocuments(employeeId: string | null) {
+  return useQuery({
+    queryKey: hrEmployeeKeys.documents(employeeId ?? ''),
+    enabled:  !!employeeId,
+    retry:    false,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HrDocument[] }>('hr/employees/documents/list', { employeeId }, { signal });
+      return res.data;
+    },
+  });
+}
+
+export function useHrTrainingSummary(employeeId: string | null) {
+  return useQuery({
+    queryKey: hrEmployeeKeys.trainingSummary(employeeId ?? ''),
+    enabled:  !!employeeId,
+    retry:    false,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HrTrainingSummary }>('hr/employees/training-summary', { employeeId }, { signal });
+      return res.data;
+    },
+  });
+}
+
+export interface HrOrgUnit { id: string; name: string; parent_id: string | null; org_unit_type: string | null; [k: string]: unknown }
+export interface HrSite { id: string; name: string }
+
+export function useHrOrgUnits() {
+  return useQuery({
+    queryKey: hrEmployeeKeys.orgUnits(),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HrOrgUnit[] }>('hr/organization/tree', {}, { signal });
+      return res.data;
+    },
+  });
+}
+
+export function useHrSites() {
+  return useQuery({
+    queryKey: hrEmployeeKeys.sites(),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: HrSite[] }>('hr/sites/list', {}, { signal });
+      return res.data;
+    },
+  });
+}
+
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export interface CreateHrEmployeeArgs {
@@ -161,13 +255,14 @@ export interface CreateHrEmployeeArgs {
   assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null };
   access?:     { role?: string };
   statutory?:  Record<string, unknown>;
+  onboarding?: { createOnboardingCase?: boolean; packageKey?: string };
 }
 
 export function useCreateHrEmployee() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateHrEmployeeArgs) =>
-      apiPost<{ success: boolean; data: { employee_id: string; employee_no: string; status: string; payroll_readiness: PayrollReadinessStatus; onboarding_case_id: string | null; workflow_id: string | null } }>('hr/employees/create', args as unknown as Record<string, unknown>),
+      apiPost<{ success: boolean; data: { employee_id: string; employee_no: string; status: string; payroll_readiness: PayrollReadinessStatus; onboarding_case_id: string | null; onboarding_error?: string | null; workflow_id: string | null } }>('hr/employees/create', args as unknown as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.all }),
   });
 }
@@ -210,4 +305,75 @@ export function useUpdateHrStatutory() {
       qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
     },
   });
+}
+
+export interface StatusChangeArgs { employeeId: string; newStatus: string; reason?: string; effectiveDate?: string }
+
+export function useChangeHrStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: StatusChangeArgs) =>
+      apiPost<{ success: boolean; data: { employeeId: string; status: string } }>('hr/employees/status-change', args as unknown as Record<string, unknown>),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+      qc.invalidateQueries({ queryKey: hrEmployeeKeys.audit(vars.employeeId) });
+    },
+  });
+}
+
+export interface ChangeRequestArgs { employeeId: string; changeType: string; requestedValue: Record<string, unknown>; reason?: string }
+
+export function useCreateHrChangeRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: ChangeRequestArgs) =>
+      apiPost<{ success: boolean; data: { id: string; change_no: string } }>('hr/employees/change-request', args as unknown as Record<string, unknown>),
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) }),
+  });
+}
+
+export interface UploadDocArgs { employeeId: string; file: File; documentType: string; title: string; confidentiality: string; expiryDate?: string }
+
+export function useUploadHrDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    // Presigned-URL → direct PUT → commit (the standard HSE attachment flow): the
+    // Lambda never holds the file bytes.
+    mutationFn: async (a: UploadDocArgs) => {
+      const signed = await apiPost<{ success: boolean; uploadUrl: string; path: string }>(
+        'hr/employees/documents/upload-url', { fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' }, { retryable: false });
+      const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': a.file.type || 'application/octet-stream' }, body: a.file });
+      if (!put.ok) throw new Error('File upload failed.');
+      return apiPost<{ success: boolean; data: { id: string } }>('hr/employees/documents/commit', {
+        employeeId: a.employeeId, documentType: a.documentType, title: a.title, filePath: signed.path,
+        fileName: a.file.name, mimeType: a.file.type || null, fileSize: a.file.size,
+        confidentiality: a.confidentiality, expiryDate: a.expiryDate ?? null,
+      });
+    },
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: hrEmployeeKeys.documents(vars.employeeId) }),
+  });
+}
+
+export function useVerifyHrDocument(employeeId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (a: { documentId: string; decision: 'approve' | 'reject'; reason?: string }) =>
+      apiPost<{ success: boolean; data: { documentId: string; status: string } }>('hr/documents/verify', a as unknown as Record<string, unknown>),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.documents(employeeId ?? '') }),
+  });
+}
+
+export function useArchiveHrDocument(employeeId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: string) => apiPost<{ success: boolean }>('hr/documents/archive', { documentId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.documents(employeeId ?? '') }),
+  });
+}
+
+/** Audited presigned download — open the returned URL in a new tab. */
+export async function getHrDocumentDownloadUrl(documentId: string): Promise<string> {
+  const res = await apiPost<{ success: boolean; url: string }>('hr/documents/download-url', { documentId });
+  return res.url;
 }

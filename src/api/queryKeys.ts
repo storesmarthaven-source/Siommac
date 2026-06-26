@@ -50,6 +50,11 @@ export const hrEmployeeKeys = {
   dashboardStats:  (filter: Record<string, unknown>) => [...hrEmployeeKeys.all, 'dashboard-stats', filter] as const,
   workflowSummary: (id: string) => [...hrEmployeeKeys.all, 'workflow-summary', id] as const,
   statutory:       (id: string) => [...hrEmployeeKeys.all, 'statutory', id]   as const,
+  audit:           (id: string) => [...hrEmployeeKeys.all, 'audit', id]       as const,
+  documents:       (id: string) => [...hrEmployeeKeys.all, 'documents', id]   as const,
+  trainingSummary: (id: string) => [...hrEmployeeKeys.all, 'training-summary', id] as const,
+  orgUnits:        () => [...hrEmployeeKeys.all, 'org-units']                 as const,
+  sites:           () => [...hrEmployeeKeys.all, 'sites']                     as const,
 } as const;
 
 // ── Departments ───────────────────────────────────────────────────────────────
