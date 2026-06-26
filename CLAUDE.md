@@ -59,6 +59,12 @@ Each of these cost real debugging time. Don't relearn them.
   Re-run the FULL E2E (esp. realtime suites) before changing either.
 - **v36 mockup CSS has multiple cascade layers** — the WINNING rule is the LAST (the v32 "unify
   all wizards" block). Grep ALL declarations for a selector and take the last applicable one.
+- **Security-policy DB seed ≠ static code (lockout landmine).** `auth_security_policy` defaults
+  `require_mfa_for_super_admin = true`, but static `securityPolicy.REQUIRE_MFA_ROLES` is only
+  `['admin','manager']`. Wiring `isMfaRequiredForRole` to read the DB will START requiring MFA
+  for superadmin — locking out any superadmin (incl. the E2E's `admin=superadmin`) without an
+  enrolled factor. Before that wiring: confirm every superadmin has MFA, or default super-admin
+  MFA off. Don't flip it blind.
 
 ## Worktree Rule
 Work ONLY in this worktree: `C:\Users\MSI Laptop\Desktop\Siomac\.claude\worktrees\wonderful-panini-34b331` (branch `claude/wonderful-panini-34b331`).  
