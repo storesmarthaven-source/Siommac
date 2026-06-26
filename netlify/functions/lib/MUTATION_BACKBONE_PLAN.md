@@ -1,5 +1,20 @@
 # Strict Mutation Backbone — transactional-outbox via Postgres RPC
 
+> **STATUS: DEFERRED (decided 2026-06-26).** Scoping found 18 `runModuleMutation`
+> callers, 6 of which can't use a generic RPC — and `provisionEmployee` calls Supabase
+> Auth (external API), so it can NEVER be a single DB transaction. The cost/risk of an
+> 18-caller, multi-migration, every-module rewrite is disproportionate to the actual
+> failure it closes: a *rare, recoverable* transient DB error that commits a record
+> without its `app_event`/`audit_log`. The critical integrity paths are already sound
+> (idempotency via `module_mutation_runs`, satellite consistency via compensating
+> rollback + per-row tracking, audit fails loud). The per-family `hse_create_incident_tx`
+> was dropped (migration `20260712000001`). **If event/audit reliability ever needs
+> hardening, prefer the cheap options over this big-bang:** (a) a reconciliation sweep
+> that flags any record missing its expected `app_event` and re-emits, or (b)
+> transactionalize only the 2–3 highest-stakes mutations. Keep the design below for
+> reference only.
+
+
 > **CORRECTION — NO DUAL SYSTEM (CLAUDE.md).** An optional `txWrite` path *alongside*
 > the legacy `writeRecord` in `runModuleMutation` is a band-aid (transitional dual
 > system) and was reverted. The correct shape is **one** transactional commit path
