@@ -19,13 +19,18 @@ export async function writeHrAudit(a: {
   employeeId?: string | null; submoduleKey: string; recordId?: string | null;
   actorId?: string | null; action: string; previousState?: unknown; newState?: unknown; reason?: string | null;
 }): Promise<void> {
-  try {
-    await sb.from('hr_audit_log').insert({
-      employee_id: a.employeeId ?? null, submodule_key: a.submoduleKey, record_id: a.recordId ?? null,
-      actor_id: a.actorId ?? null, action: a.action,
-      previous_state: a.previousState ?? null, new_state: a.newState ?? null, reason: a.reason ?? null,
-    });
-  } catch (e) { console.error('[hr] audit failed:', e); }
+  // The audit trail is a mandatory §2 side-effect — a failed write must fail the
+  // mutation, not be swallowed. (PostgREST returns { error } rather than throwing,
+  // so the old try/catch ignored DB errors entirely.)
+  const { error } = await sb.from('hr_audit_log').insert({
+    employee_id: a.employeeId ?? null, submodule_key: a.submoduleKey, record_id: a.recordId ?? null,
+    actor_id: a.actorId ?? null, action: a.action,
+    previous_state: a.previousState ?? null, new_state: a.newState ?? null, reason: a.reason ?? null,
+  });
+  if (error) {
+    console.error('[hr] audit failed:', error);
+    throw Object.assign(new Error(`HR audit write failed (${a.action}): ${error.message}`), { status: 500 });
+  }
 }
 
 /** Next EMP-#### reference (shared sequence for HR-created and import-created staff). */
@@ -102,15 +107,20 @@ export interface ProvisionEmployeeInput {
   identity: {
     username: string; password?: string; fullName: string;
     firstName?: string; lastName?: string; email?: string; personalEmail?: string;
-    phone?: string; employeeNumber?: string;
+    phone?: string; employeeNumber?: string; dateOfBirth?: string; nationality?: string;
+    preferredName?: string; governmentId?: string;
   };
-  employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string };
-  assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null };
-  access?:     { role?: string };
+  employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string; positionTitle?: string; probationEndDate?: string; employeeGrade?: string; workSchedule?: string };
+  assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null; costCenter?: string | null; effectiveDate?: string };
+  access?:     { role?: string; permissionProfile?: string; selfServiceProfile?: string; requireMfa?: boolean; onboardingRequirements?: Record<string, boolean> };
   statutory?:  Record<string, unknown>;
   /** Create a Supabase Auth login (default true). False (e.g. an import with
    *  "create login accounts" off) provisions the app_user with no login yet. */
   createLogin?: boolean;
+  /** Initial app_users.status (default 'active'). An import with a "Draft"
+   *  default-record-status provisions 'draft' so the row is reviewed before it
+   *  can authenticate (auth requires status='active'). */
+  recordStatus?: string;
 }
 
 /**
@@ -147,7 +157,7 @@ export async function provisionEmployee(
 
   const insertRow: Record<string, unknown> = {
     username: identity.username, full_name: identity.fullName,
-    role: access?.role ?? 'employee', status: 'active', auth_email: authEmail,
+    role: access?.role ?? 'employee', status: input.recordStatus?.trim() || 'active', auth_email: authEmail,
     email: identity.email?.trim() || null, personal_email: identity.personalEmail?.trim() || null,
     phone: identity.phone?.trim() || null, employee_number: employeeNo,
     contractor_flag: employment?.contractorFlag ?? (employment?.employmentType === 'contractor'),
@@ -158,6 +168,19 @@ export async function provisionEmployee(
   if (employment?.employmentType) insertRow['employment_type'] = employment.employmentType;
   if (identity.firstName) insertRow['first_name'] = identity.firstName;
   if (identity.lastName)  insertRow['last_name']  = identity.lastName;
+  if (identity.dateOfBirth?.trim()) insertRow['date_of_birth'] = identity.dateOfBirth.trim();
+  if (identity.nationality?.trim()) insertRow['nationality']   = identity.nationality.trim();
+  if (identity.preferredName?.trim()) insertRow['display_name'] = identity.preferredName.trim();
+  if (identity.governmentId?.trim()) insertRow['government_id'] = identity.governmentId.trim();
+  if (employment?.positionTitle?.trim()) insertRow['position_title'] = employment.positionTitle.trim();
+  if (employment?.probationEndDate) insertRow['probation_end_date'] = employment.probationEndDate;
+  if (employment?.employeeGrade?.trim()) insertRow['employee_grade'] = employment.employeeGrade.trim();
+  if (employment?.workSchedule?.trim()) insertRow['work_schedule'] = employment.workSchedule.trim();
+  if (assignment?.costCenter?.trim()) insertRow['cost_center'] = assignment.costCenter.trim();
+  if (access?.permissionProfile?.trim()) insertRow['permission_profile'] = access.permissionProfile.trim();
+  if (access?.selfServiceProfile?.trim()) insertRow['self_service_profile'] = access.selfServiceProfile.trim();
+  if (access?.requireMfa !== undefined) insertRow['require_mfa'] = access.requireMfa;
+  if (access?.onboardingRequirements && Object.keys(access.onboardingRequirements).length) insertRow['onboarding_requirements'] = access.onboardingRequirements;
 
   const { data: created, error: insErr } = await sb.from('app_users').insert(insertRow).select('id').single<{ id: string }>();
   if (insErr) {
@@ -189,7 +212,7 @@ export async function provisionEmployee(
     employee_id: employeeId, position_id: assignment?.positionId ?? null,
     department_id: assignment?.departmentId ?? null, site_id: assignment?.siteId ?? null,
     supervisor_id: assignment?.supervisorId ?? null, assignment_type: 'primary',
-    effective_from: startDate, is_current: true, created_by: actorId,
+    effective_from: assignment?.effectiveDate || startDate, is_current: true, created_by: actorId,
   });
   const { error: stErr } = await sb.from('hr_employee_statutory').insert({
     employee_id: employeeId, ...stPatch,
@@ -197,7 +220,7 @@ export async function provisionEmployee(
     finance_handoff_eligible: readiness.financeEligible, updated_by: actorId,
   });
   const { error: histErr } = await sb.from('hr_employee_status_history').insert({
-    employee_id: employeeId, previous_status: null, new_status: 'active',
+    employee_id: employeeId, previous_status: null, new_status: input.recordStatus?.trim() || 'active',
     reason: 'Employee created', effective_date: startDate, changed_by: actorId,
   });
   const satErr = asgErr ?? stErr ?? histErr;

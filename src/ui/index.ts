@@ -49,11 +49,19 @@ export { RegisterTable, type Column } from './components/RegisterTable';
 export { Pagination, usePagination, DEFAULT_PAGE_SIZE, type PaginationProps, type PaginationState } from './components/Pagination';
 
 // ── Overlays (standard window) ──
-export { Modal, HseModal, type ModalProps } from './components/Modal';
+export { Modal, HseModal, ModalSection, type ModalProps } from './components/Modal';
 export { Wizard, type WizardProps } from './components/Wizard';
+export { WizardShell, type WizardShellProps, type WizardStepDef, type WizardInfoPanel, type WizardInfoRow } from './components/WizardShell';
 export { Drawer, HseDrawer, DetailDrawer, type DrawerProps, type DrawerDetail } from './components/Drawer';
 export { DetailGrid, type DetailGridProps, type DetailItem } from './components/DetailGrid';
 export { SidePanel, type SidePanelProps, type SidePanelSection } from './components/SidePanel';
+export { Menu, type MenuProps, type MenuItem } from './components/Menu';
+
+// ── Rich detail-panel primitives (SidePanel/Drawer body + dialogs) ──
+export { EntityHead, PanelStats, type EntityHeadProps, type PanelStatItem } from './components/EntityHead';
+export { PanelTabs, type PanelTabsProps } from './components/PanelTabs';
+export { InfoCard, FieldList, FieldRow, MiniTable, Pill, PanelEmpty, Callout, ActivityList, type PillTone, type ActivityEntry } from './components/InfoCard';
+export { SystemActionsPanel, type SystemActionsPanelProps } from './components/SystemActionsPanel';
 
 // ── Layouts ──
 export { ModulePageLayout, type ModulePageLayoutProps } from './layouts/ModulePageLayout';

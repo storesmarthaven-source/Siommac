@@ -33,7 +33,7 @@ import {
 } from './shared';
 import { ProfileDrawer } from './ProfileDrawer';
 import { CreateEmployeeWizard } from './CreateEmployeeWizard';
-import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog } from './ActionDialogs';
+import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { OnboardingWizard } from './OnboardingWizard';
 import './HR.css';
@@ -515,12 +515,14 @@ export function EmployeeMaster(): VNode {
   const trainingOptions = useMemo(() => distinct(rows.map(r => r.trainingStatus)), [rows]);
 
   function notify(message: string) { setToast(message); window.setTimeout(() => setToast(''), 2600); }
-  function nextPhase(label: string) { notify(`${label} — UI ships in the next build phase`); }
   function openAction(label: string, employeeId: string | null) {
-    const map: Record<string, string> = { 'Edit Contact': 'contact', 'Request Change': 'change', 'Change Status': 'status', 'Start Offboarding': 'offboard', 'Upload Document': 'document', 'Upload HR Document': 'document' };
+    const map: Record<string, string> = {
+      'Edit Contact': 'contact', 'Request Change': 'change', 'Change Status': 'status',
+      'Start Offboarding': 'offboard', 'Upload Document': 'document', 'Upload HR Document': 'document',
+      'Edit Statutory Profile': 'statutory',
+    };
     const type = map[label];
     if (type && employeeId) { setModal({ type, employeeId }); setOpenId(null); }
-    else nextPhase(label);
   }
 
   const filtered = useMemo(() => {
@@ -541,10 +543,14 @@ export function EmployeeMaster(): VNode {
   const curPage = Math.min(page, totalPages);
   const start = (curPage - 1) * pageSize;
   const paged = filtered.slice(start, start + pageSize);
-  const activeChips = [...filters.status, ...filters.department, ...filters.employmentType,
-    ...filters.training.map(t => TRAINING_LABEL[t as TrainingStatus] ?? t)];
-
   function setFiltersReset(f: Filters) { setFilters(f); setPage(1); }
+
+  const chipDefs: { label: string; onRemove: () => void }[] = [
+    ...filters.status.map(s => ({ label: humanize(s), onRemove: () => setFiltersReset({ ...filters, status: filters.status.filter(x => x !== s) }) })),
+    ...filters.department.map(s => ({ label: humanize(s), onRemove: () => setFiltersReset({ ...filters, department: filters.department.filter(x => x !== s) }) })),
+    ...filters.employmentType.map(s => ({ label: humanize(s), onRemove: () => setFiltersReset({ ...filters, employmentType: filters.employmentType.filter(x => x !== s) }) })),
+    ...filters.training.map(s => ({ label: TRAINING_LABEL[s as TrainingStatus] ?? humanize(s), onRemove: () => setFiltersReset({ ...filters, training: filters.training.filter(x => x !== s) }) })),
+  ];
 
   return (
     <div class="hr-emp-master" onClick={() => setOpenId(null)}>
@@ -555,7 +561,8 @@ export function EmployeeMaster(): VNode {
           <div class="subtitle">Manage workforce records, employment status, assignments, and HR actions.</div>
         </div>
         <div class="page-actions">
-          <button class="secondary-btn" type="button" onClick={e => { e.stopPropagation(); nextPhase('Settings'); }}>Settings</button>
+          <button class="secondary-btn" type="button" disabled
+            title="Employee Master settings are governed in Settings & Preferences; an in-page panel arrives in a later build.">Settings</button>
           <div class="dropdown-wrap">
             <button class="primary-btn" type="button" onClick={e => { e.stopPropagation(); setOpenId(openId === 'new-menu' ? null : 'new-menu'); }}>
               + New Employee <span class="caret">⌄</span>
@@ -572,7 +579,8 @@ export function EmployeeMaster(): VNode {
                   <button type="button" class="menu-row" onClick={() => { setModal({ type: 'onboarding', employeeId: null }); setOpenId(null); }}>
                     <span class="menu-ico"><i class="fas fa-list-check" /></span>Start Onboarding
                   </button>
-                  <button type="button" class="menu-row" onClick={() => { nextPhase('Create Contractor Worker'); setOpenId(null); }}>
+                  <button type="button" class="menu-row" disabled style={{ opacity: .5, cursor: 'not-allowed' }}
+                    title="Blocked on the HSE Contractor Management module, which isn't built yet.">
                     <span class="menu-ico"><i class="fas fa-helmet-safety" /></span>Create Contractor Worker
                   </button>
                 </div>
@@ -600,11 +608,11 @@ export function EmployeeMaster(): VNode {
           statusOptions={statusOptions} typeOptions={typeOptions} />
       </div>
 
-      {/* Active filter chips */}
+      {/* Active filter chips — each removes its own filter */}
       <div class="active-filter-bar">
-        {activeChips.length ? <strong>Active filters:</strong> : null}
-        {activeChips.map(c => <button class="chip-btn" type="button">{humanize(c)} ×</button>)}
-        {(filters.query || activeChips.length)
+        {chipDefs.length ? <strong>Active filters:</strong> : null}
+        {chipDefs.map(c => <button class="chip-btn" type="button" onClick={() => c.onRemove()}>{c.label} ×</button>)}
+        {(filters.query || chipDefs.length)
           ? <button class="ghost-btn" type="button" onClick={() => setFiltersReset(EMPTY_FILTERS)}>Clear all</button>
           : null}
       </div>
@@ -660,6 +668,7 @@ export function EmployeeMaster(): VNode {
       {modal?.type === 'offboard' && modal.employeeId && <OffboardingDialog  employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
       {modal?.type === 'change'   && modal.employeeId && <ChangeRequestDialog employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
       {modal?.type === 'document' && modal.employeeId && <DocumentDialog      employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
+      {modal?.type === 'statutory' && modal.employeeId && <StatutoryDialog     employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
 
       {/* Toast */}
       <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>

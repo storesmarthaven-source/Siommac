@@ -33,6 +33,13 @@ export interface HrEmployeeRow {
   supervisor_id:      string | null;
   email:              string | null;
   personal_email:     string | null;
+  date_of_birth:      string | null;
+  nationality:        string | null;
+  government_id:      string | null;
+  probation_end_date: string | null;
+  employee_grade:     string | null;
+  work_schedule:      string | null;
+  cost_center:        string | null;
   phone:              string | null;
   emergency_contact_name:         string | null;
   emergency_contact_phone:        string | null;
@@ -250,10 +257,12 @@ export function useHrSites() {
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export interface CreateHrEmployeeArgs {
-  identity:   { username: string; password: string; fullName: string; firstName?: string; lastName?: string; email?: string; personalEmail?: string; phone?: string; employeeNumber?: string };
-  employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string };
-  assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null };
-  access?:     { role?: string };
+  identity:   { username: string; password: string; fullName: string; firstName?: string; lastName?: string; email?: string; personalEmail?: string; phone?: string; employeeNumber?: string; dateOfBirth?: string; nationality?: string; preferredName?: string; governmentId?: string };
+  employment?: { employmentType?: string; contractorFlag?: boolean; startDate?: string; position?: string; positionTitle?: string; probationEndDate?: string; employeeGrade?: string; workSchedule?: string };
+  assignment?: { departmentId?: string | null; siteId?: string | null; positionId?: string | null; supervisorId?: string | null; costCenter?: string | null; effectiveDate?: string };
+  access?:     { role?: string; permissionProfile?: string; selfServiceProfile?: string; requireMfa?: boolean; onboardingRequirements?: Record<string, boolean> };
+  createLogin?: boolean;
+  recordStatus?: string;
   statutory?:  Record<string, unknown>;
   onboarding?: { createOnboardingCase?: boolean; packageKey?: string };
 }

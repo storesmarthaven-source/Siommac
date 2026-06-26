@@ -3,30 +3,47 @@
  *
  * HR ▸ Employee Master — the write-action dialogs invoked from the register kebab
  * and the profile drawer (v36 ContactDialog / StatusDialog / Offboarding /
- * ChangeRequest), ported into the Siomac shell and wired to the real endpoints:
+ * ChangeRequest / Document), wired to the real endpoints:
  *   Contact        → useUpdateHrContact (direct + maker-checker request)
  *   Change Status  → useChangeHrStatus
  *   Offboarding    → useChangeHrStatus (newStatus = terminated)
  *   Request Change → useCreateHrChangeRequest (maker side of maker-checker)
+ *   Document       → useUploadHrDocument
  *
- * Styling reuses the modal/form CSS in ./HR.css (scoped .hr-emp-master).
+ * The dialog SHELL keeps the v36 modal look (scoped `.hr-emp-master .modal*`);
+ * the CONTENT is composed from the shared @ui dialog primitives — <ModalSection>,
+ * <SystemActionsPanel>, `.ui-note`/`.ui-warn` — so the structure is reusable and
+ * the look is faithful to the mockup.
+ *
+ * NOTE (task #33): the v36 "Approval Route / Workflow Route" selects are NOT
+ * rendered — they would be dead routing controls until HR is wired onto the
+ * central workflow engine. The <SystemActionsPanel> is informational/view-only:
+ * it describes what the engine WILL do after approval, never runs anything.
  */
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { ModalSection, SystemActionsPanel } from '@ui';
 import {
   useUpdateHrContact, useChangeHrStatus, useCreateHrChangeRequest, useUploadHrDocument,
-  useHrOrgUnits, useHrSites, useHrEmployees, useHrEmployee,
+  useUpdateHrStatutory, useHrOrgUnits, useHrSites, useHrEmployees, useHrEmployee,
 } from '@api/hr/employees';
 import { rowName } from './shared';
 
 const HR_STATUSES = ['draft', 'pending_onboarding', 'active', 'probation', 'on_leave', 'suspended', 'inactive', 'terminated', 'archived'];
+const NIS_STATUSES = ['registered', 'pending', 'exempt', 'not_applicable'];
 const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager'];
 const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'];
 const CHANGE_TYPES = ['department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'status_change'];
 const cap = (s: string) => s.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-// ── shared modal shell + tiny controls ──────────────────────────────────────────
+// Downstream actions the Workflow Engine performs once a request is approved
+// (informational — see the file header note on task #33).
+const STATUS_SYS_ACTIONS = ['Disable login if inactive / terminated', 'Start offboarding if terminated', 'Flag open workflow tasks for reassignment', 'Notify supervisor, HR and Admin'];
+const CHANGE_SYS_ACTIONS = ['Apply approved value to app_users or the HR extension table', 'Close the previous assignment and create assignment history', 'Recalculate Training & Competency requirements', 'Send required notifications and write the HR audit event'];
+const OFFBOARD_SYS_ACTIONS = ['Disable login and revoke access', 'Recover assigned assets', 'Reassign open workflow tasks', 'Notify Finance, Admin and Operations'];
+
+// ── shared modal shell + tiny controls (faithful v36 modal) ─────────────────────
 
 function Modal(
   { title, onClose, footer, children, size = 'sm' }:
@@ -36,7 +53,7 @@ function Modal(
     <div class="modal-backdrop" onClick={onClose}>
       <div class={`modal ${size}`} onClick={e => e.stopPropagation()}>
         <div class="modal-head"><h3>{title}</h3><button class="modal-close" type="button" onClick={onClose} aria-label="Close">×</button></div>
-        <div class="modal-body"><section class="form-section">{children}</section></div>
+        <div class="modal-body"><div class="ui-dialog-stack">{children}</div></div>
         <div class="modal-foot">{footer}</div>
       </div>
     </div>
@@ -59,13 +76,22 @@ function S(
     </div>
   );
 }
-function Err({ m }: { m: string | null }): VNode | null { return m ? <div class="warning-card">{m}</div> : null; }
+function C({ label, checked, onInput }: { label: string; checked: boolean; onInput: (v: boolean) => void }): VNode {
+  return <label class="checkbox-row"><input type="checkbox" checked={checked} onChange={e => onInput(e.currentTarget.checked)} /> {label}</label>;
+}
+function Err({ m }: { m: string | null }): VNode | null { return m ? <div class="ui-warn">{m}</div> : null; }
+
+const footBtns = (onClose: () => void, label: string, pending: boolean, pendingLabel: string, submit: () => void, note?: string): VNode => (
+  <>
+    {note ? <span class="ui-foot-note">{note}</span> : null}
+    <button class="ui-btn-secondary" type="button" onClick={onClose}>Cancel</button>
+    <button class="ui-btn-primary" type="button" disabled={pending} onClick={submit}>{pending ? pendingLabel : label}</button>
+  </>
+);
 
 interface DialogProps { employeeId: string; onClose: () => void; onToast: (m: string) => void }
 
 // ── Contact ──────────────────────────────────────────────────────────────────────
-
-const SUBHEAD = { margin: '2px 0 0', fontSize: '13px', color: '#0f172a', fontWeight: 700 } as const;
 
 export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VNode {
   const detailQ = useHrEmployee(employeeId);
@@ -74,7 +100,7 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
   const [err, setErr] = useState<string | null>(null);
   const m = useUpdateHrContact();
   const set = (k: keyof typeof f, v: string) => setF(p => ({ ...p, [k]: v }));
-  // Pre-fill current values once the profile loads (emergency_contact_* now in the get select).
+  // Pre-fill current values once the profile loads (emergency_contact_* in the get select).
   useEffect(() => {
     const e = detailQ.data?.employee;
     if (e) setF(p => ({
@@ -96,33 +122,28 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
     });
   }
   return (
-    <Modal title="Edit Contact" size="lg" onClose={onClose} footer={
-      <><span class="left-note">Contact changes are audited. Personal/emergency may require HR review per policy.</span>
-      <button class="secondary-btn" type="button" onClick={onClose}>Cancel</button>
-      <button class="primary-btn" type="button" disabled={m.isPending} onClick={submit}>{m.isPending ? 'Saving…' : mode === 'request' ? 'Submit Request' : 'Save'}</button></>
-    }>
+    <Modal title="Edit Contact" size="lg" onClose={onClose}
+      footer={footBtns(onClose, mode === 'request' ? 'Submit Request' : 'Save', m.isPending, 'Saving…', submit,
+        'Contact changes are audited. Personal/emergency may require HR review per policy.')}>
+      <div class="ui-note">Contact updates are audited. With the request path, this saves an employee change request instead of a direct update.</div>
       <Err m={err} />
-      {detailQ.isLoading ? <div class="em-empty">Loading current contact…</div> : null}
-      <h4 style={SUBHEAD}>Work Contact</h4>
-      <div class="form-grid">
-        <L label="Work Email" value={f.email} onInput={v => set('email', v)} />
-        <L label="Work Phone" value={f.phone} onInput={v => set('phone', v)} />
-      </div>
-      <h4 style={SUBHEAD}>Personal Contact</h4>
-      <div class="form-grid">
-        <L label="Personal Email" value={f.personalEmail} onInput={v => set('personalEmail', v)} full />
-      </div>
-      <h4 style={SUBHEAD}>Emergency Contact <span style={{ fontWeight: 500, color: '#94a3b8', fontSize: '11px' }}>· restricted · audited</span></h4>
-      <div class="form-grid">
-        <L label="Name" value={f.emName} onInput={v => set('emName', v)} />
-        <L label="Phone" value={f.emPhone} onInput={v => set('emPhone', v)} />
-        <L label="Relationship" value={f.emRel} onInput={v => set('emRel', v)} full />
-      </div>
-      <h4 style={SUBHEAD}>Change Control</h4>
-      <div class="form-grid">
-        <S label="Update Path" value={mode} onInput={v => setMode(v as 'direct' | 'request')} options={['direct', 'request']} />
-        <L label={mode === 'request' ? 'Reason *' : 'Reason'} value={f.reason} onInput={v => set('reason', v)} />
-      </div>
+      {detailQ.isLoading ? <div class="ui-panel-empty">Loading current contact…</div> : null}
+      <ModalSection title="Contact Details" desc="Work, personal and emergency contact fields used by HR, Notifications and self-service.">
+        <div class="form-grid">
+          <L label="Work Email" value={f.email} onInput={v => set('email', v)} />
+          <L label="Work Phone" value={f.phone} onInput={v => set('phone', v)} />
+          <L label="Personal Email" value={f.personalEmail} onInput={v => set('personalEmail', v)} full />
+          <L label="Emergency Contact Name" value={f.emName} onInput={v => set('emName', v)} />
+          <L label="Emergency Contact Phone" value={f.emPhone} onInput={v => set('emPhone', v)} />
+          <L label="Emergency Relationship" value={f.emRel} onInput={v => set('emRel', v)} full />
+        </div>
+      </ModalSection>
+      <ModalSection title="Change Control" desc="Required for audit and sensitive field governance.">
+        <div class="form-grid">
+          <S label="Update Path" value={mode} onInput={v => setMode(v as 'direct' | 'request')} options={['direct', 'request']} />
+          <L label={mode === 'request' ? 'Reason *' : 'Reason'} value={f.reason} onInput={v => set('reason', v)} />
+        </div>
+      </ModalSection>
     </Modal>
   );
 }
@@ -130,11 +151,13 @@ export function ContactDialog({ employeeId, onClose, onToast }: DialogProps): VN
 // ── Change Status ─────────────────────────────────────────────────────────────────
 
 export function StatusDialog({ employeeId, onClose, onToast }: DialogProps): VNode {
+  const detailQ = useHrEmployee(employeeId);
   const [newStatus, setNewStatus] = useState('active');
   const [reason, setReason] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const m = useChangeHrStatus();
+  const current = detailQ.data?.employee.status;
   function submit() {
     m.mutate({ employeeId, newStatus, reason: reason.trim() || undefined, effectiveDate: effectiveDate || undefined }, {
       onSuccess: () => { onToast(`Status changed to ${cap(newStatus)}`); onClose(); },
@@ -142,16 +165,19 @@ export function StatusDialog({ employeeId, onClose, onToast }: DialogProps): VNo
     });
   }
   return (
-    <Modal title="Change Status" onClose={onClose} footer={
-      <><button class="secondary-btn" type="button" onClick={onClose}>Cancel</button>
-      <button class="primary-btn" type="button" disabled={m.isPending} onClick={submit}>{m.isPending ? 'Saving…' : 'Apply Status'}</button></>
-    }>
+    <Modal title="Change Status" onClose={onClose}
+      footer={footBtns(onClose, 'Apply Status', m.isPending, 'Saving…', submit)}>
+      <div class="ui-warn">Critical statuses (Suspended, Inactive, Terminated) disable new assignments and may trigger offboarding / access removal.</div>
       <Err m={err} />
-      <div class="form-grid">
-        <S label="New Status" value={newStatus} onInput={setNewStatus} options={HR_STATUSES} />
-        <L label="Effective Date" type="date" value={effectiveDate} onInput={setEffectiveDate} />
-        <L label="Reason" value={reason} onInput={setReason} full />
-      </div>
+      <ModalSection title="Status Change" desc="Controls employee lifecycle and access eligibility.">
+        <div class="form-grid">
+          {current ? <L label="Current Status" value={cap(current)} onInput={() => {}} /> : null}
+          <S label="New Status" value={newStatus} onInput={setNewStatus} options={HR_STATUSES} />
+          <L label="Effective Date" type="date" value={effectiveDate} onInput={setEffectiveDate} />
+          <L label="Reason" value={reason} onInput={setReason} full />
+        </div>
+      </ModalSection>
+      <SystemActionsPanel actions={STATUS_SYS_ACTIONS} />
     </Modal>
   );
 }
@@ -171,16 +197,17 @@ export function OffboardingDialog({ employeeId, onClose, onToast }: DialogProps)
     });
   }
   return (
-    <Modal title="Start Offboarding" onClose={onClose} footer={
-      <><button class="secondary-btn" type="button" onClick={onClose}>Cancel</button>
-      <button class="primary-btn" type="button" disabled={m.isPending} onClick={submit}>{m.isPending ? 'Working…' : 'Terminate'}</button></>
-    }>
+    <Modal title="Start Offboarding" onClose={onClose}
+      footer={footBtns(onClose, 'Terminate', m.isPending, 'Working…', submit)}>
+      <div class="ui-warn">This sets the employee to <strong>Terminated</strong> and disables their login. Audited and reversible only via a new status change.</div>
       <Err m={err} />
-      <div class="warning-card">This sets the employee to <strong>Terminated</strong> and disables their login. Audited and reversible only via a new status change.</div>
-      <div class="form-grid">
-        <L label="Last Working Day" type="date" value={lastDay} onInput={setLastDay} />
-        <L label="Reason *" value={reason} onInput={setReason} full />
-      </div>
+      <ModalSection title="Offboarding Case" desc="Starts the controlled offboarding workflow.">
+        <div class="form-grid">
+          <L label="Last Working Day" type="date" value={lastDay} onInput={setLastDay} />
+          <L label="Reason *" value={reason} onInput={setReason} full />
+        </div>
+      </ModalSection>
+      <SystemActionsPanel actions={OFFBOARD_SYS_ACTIONS} />
     </Modal>
   );
 }
@@ -230,17 +257,18 @@ export function ChangeRequestDialog({ employeeId, onClose, onToast }: DialogProp
     });
   }
   return (
-    <Modal title="Request Change" onClose={onClose} footer={
-      <><span class="left-note">Routed through maker-checker</span>
-      <button class="secondary-btn" type="button" onClick={onClose}>Cancel</button>
-      <button class="primary-btn" type="button" disabled={m.isPending} onClick={submit}>{m.isPending ? 'Submitting…' : 'Submit Request'}</button></>
-    }>
+    <Modal title="Request Change" size="lg" onClose={onClose}
+      footer={footBtns(onClose, 'Submit Request', m.isPending, 'Submitting…', submit, 'Routed through maker-checker')}>
+      <div class="ui-note">This creates a change request and routes the approval through Workflow before applying changes to app_users or the HR extension tables.</div>
       <Err m={err} />
-      <div class="form-grid">
-        <S label="Change Type" value={changeType} onInput={v => { setChangeType(v); setVal({}); }} options={CHANGE_TYPES} full />
-        {fields()}
-        <L label="Reason" value={reason} onInput={setReason} full />
-      </div>
+      <ModalSection title="Requested Change" desc="Select the sensitive employee record change being requested.">
+        <div class="form-grid">
+          <S label="Change Type" value={changeType} onInput={v => { setChangeType(v); setVal({}); }} options={CHANGE_TYPES} full />
+          {fields()}
+          <L label="Business Reason" value={reason} onInput={setReason} full />
+        </div>
+      </ModalSection>
+      <SystemActionsPanel actions={CHANGE_SYS_ACTIONS} />
     </Modal>
   );
 }
@@ -267,19 +295,86 @@ export function DocumentDialog({ employeeId, onClose, onToast }: DialogProps): V
     });
   }
   return (
-    <Modal title="Upload Document" onClose={onClose} footer={
-      <><span class="left-note">Restricted tiers need elevated permission</span>
-      <button class="secondary-btn" type="button" onClick={onClose}>Cancel</button>
-      <button class="primary-btn" type="button" disabled={m.isPending} onClick={submit}>{m.isPending ? 'Uploading…' : 'Upload'}</button></>
-    }>
+    <Modal title="Upload Document" onClose={onClose}
+      footer={footBtns(onClose, 'Upload', m.isPending, 'Uploading…', submit, 'Restricted tiers need elevated permission')}>
+      <div class="ui-note">HR employee documents are private and audited.</div>
       <Err m={err} />
-      <div class="form-grid">
-        <div class="form-field full"><label>File</label><input type="file" onChange={e => setFile(e.currentTarget.files?.[0] ?? null)} /></div>
-        <L label="Title" value={title} onInput={setTitle} full />
-        <S label="Document Type" value={documentType} onInput={setDocumentType} options={DOC_TYPES} />
-        <S label="Confidentiality" value={confidentiality} onInput={setConfidentiality} options={CONFIDENTIALITY} />
-        <L label="Expiry Date" type="date" value={expiryDate} onInput={setExpiryDate} full />
-      </div>
+      <ModalSection title="Document Details" desc="The file plus the metadata used to file and govern it.">
+        <div class="form-grid">
+          <div class="form-field full"><label>File</label><input type="file" onChange={e => setFile(e.currentTarget.files?.[0] ?? null)} /></div>
+          <L label="Title" value={title} onInput={setTitle} full />
+          <S label="Document Type" value={documentType} onInput={setDocumentType} options={DOC_TYPES} />
+          <S label="Confidentiality" value={confidentiality} onInput={setConfidentiality} options={CONFIDENTIALITY} />
+          <L label="Expiry Date" type="date" value={expiryDate} onInput={setExpiryDate} full />
+        </div>
+      </ModalSection>
+    </Modal>
+  );
+}
+
+// ── Edit Statutory Profile (Trinidad & Tobago) ──────────────────────────────────
+
+export function StatutoryDialog({ employeeId, onClose, onToast }: DialogProps): VNode {
+  const detailQ = useHrEmployee(employeeId);
+  const m = useUpdateHrStatutory();
+  const [err, setErr] = useState<string | null>(null);
+  const [f, setF] = useState({
+    nisNumber: '', nisStatus: 'pending', nisEffectiveDate: '', birFileNumber: '',
+    payeApplicable: true, td1Received: false, td1EffectiveYear: '',
+    hsApplicable: true, hsExemptionReason: '', markVerified: false,
+  });
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF(p => ({ ...p, [k]: v }));
+  useEffect(() => {
+    const s = detailQ.data?.statutory;
+    if (s) setF(p => ({
+      ...p,
+      nisNumber: s.nis_number ?? '', nisStatus: s.nis_status || 'pending', nisEffectiveDate: s.nis_effective_date ?? '',
+      birFileNumber: s.bir_file_number ?? '', payeApplicable: !!s.paye_applicable, td1Received: !!s.td1_received,
+      td1EffectiveYear: s.td1_effective_year != null ? String(s.td1_effective_year) : '',
+      hsApplicable: !!s.hs_applicable, hsExemptionReason: s.hs_exemption_reason ?? '',
+    }));
+  }, [detailQ.data]);
+  function submit() {
+    m.mutate({
+      employeeId,
+      nisNumber: f.nisNumber.trim() || null, nisStatus: f.nisStatus, nisEffectiveDate: f.nisEffectiveDate || null,
+      birFileNumber: f.birFileNumber.trim() || null, payeApplicable: f.payeApplicable, td1Received: f.td1Received,
+      td1EffectiveYear: f.td1EffectiveYear ? Number(f.td1EffectiveYear) : null,
+      hsApplicable: f.hsApplicable, hsExemptionReason: f.hsExemptionReason.trim() || null,
+      markVerified: f.markVerified,
+    }, {
+      onSuccess: () => { onToast('Statutory profile updated'); onClose(); },
+      onError: e => setErr(e instanceof Error ? e.message : 'Update failed.'),
+    });
+  }
+  return (
+    <Modal title="Edit Statutory Profile" size="lg" onClose={onClose}
+      footer={footBtns(onClose, 'Save Statutory', m.isPending, 'Saving…', submit, 'Payroll stays blocked until NIS, BIR/TD1 and Health Surcharge pass.')}>
+      <div class="ui-note">Trinidad &amp; Tobago statutory profile. Changes are audited and recompute payroll readiness.</div>
+      <Err m={err} />
+      {detailQ.isLoading ? <div class="ui-panel-empty">Loading current statutory profile…</div> : null}
+      <ModalSection title="NIS" desc="National Insurance registration.">
+        <div class="form-grid">
+          <L label="NIS Number" value={f.nisNumber} onInput={v => set('nisNumber', v)} />
+          <S label="NIS Status" value={f.nisStatus} onInput={v => set('nisStatus', v)} options={NIS_STATUSES} />
+          <L label="NIS Effective Date" type="date" value={f.nisEffectiveDate} onInput={v => set('nisEffectiveDate', v)} full />
+        </div>
+      </ModalSection>
+      <ModalSection title="BIR / PAYE & TD1" desc="Income-tax registration and declarations.">
+        <div class="form-grid">
+          <L label="BIR File Number" value={f.birFileNumber} onInput={v => set('birFileNumber', v)} />
+          <L label="TD1 Effective Year" value={f.td1EffectiveYear} onInput={v => set('td1EffectiveYear', v)} />
+          <C label="PAYE applicable" checked={f.payeApplicable} onInput={v => set('payeApplicable', v)} />
+          <C label="TD1 received" checked={f.td1Received} onInput={v => set('td1Received', v)} />
+        </div>
+      </ModalSection>
+      <ModalSection title="Health Surcharge" desc="Standard deduction unless exempt.">
+        <div class="form-grid">
+          <C label="HS applicable" checked={f.hsApplicable} onInput={v => set('hsApplicable', v)} />
+          <C label="Mark statutory profile verified" checked={f.markVerified} onInput={v => set('markVerified', v)} />
+          <L label="HS Exemption Reason" value={f.hsExemptionReason} onInput={v => set('hsExemptionReason', v)} full />
+        </div>
+      </ModalSection>
     </Modal>
   );
 }

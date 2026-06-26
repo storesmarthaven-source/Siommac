@@ -143,7 +143,18 @@ export default async function run(h) {
   });
 
   await test('ACCESS: admin denied manifests/approve (superadmin-only governance)', async () => {
-    fails(await api('settings/manifests/approve', T.admin, { moduleKey: 'training' }), 'admin should not approve manifests');
+    // h.users.admin can resolve to a superadmin (allow-all), and requireUser reads
+    // the role from the DB (not the JWT) — so provision a real admin-ROLE user to
+    // verify the admin role itself is denied (manifest approval is superadmin-only).
+    const adminId = `${h.TAG}_mfadmin`;
+    const { error: insErr } = await sb.from('app_users').insert({
+      id: adminId, username: adminId, full_name: 'Settings E2E Admin',
+      role: 'admin', status: 'active', employment_type: 'employee',
+    });
+    expect(!insErr, `seed admin failed: ${insErr?.message}`);
+    h.onCleanup(() => sb.from('app_users').delete().eq('id', adminId));
+    const Tadmin = mint({ id: adminId, username: adminId, role: 'admin' });
+    fails(await api('settings/manifests/approve', Tadmin, { moduleKey: 'training' }), 'admin should not approve manifests');
   });
 
   if (Tsuper) {

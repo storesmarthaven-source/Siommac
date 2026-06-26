@@ -247,7 +247,8 @@ router.post('/webauthn/credentials/rename', async c => {
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
-  const v    = zv(c, RenameSchema, c.get('body') as Record<string, unknown>);
+  const body = c.get('body') as Record<string, unknown>;
+  const v    = zv(c, RenameSchema, (body.args as Record<string, unknown>) ?? body);
   if (!v.ok) return v.response;
 
   await renameCredential(user.id, v.data.credentialId, v.data.label);
@@ -261,7 +262,8 @@ router.post('/webauthn/credentials/delete', async c => {
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
-  const v    = zv(c, CredentialIdSchema, c.get('body') as Record<string, unknown>);
+  const body = c.get('body') as Record<string, unknown>;
+  const v    = zv(c, CredentialIdSchema, (body.args as Record<string, unknown>) ?? body);
   if (!v.ok) return v.response;
 
   // Last-factor guard: block deletion if this is the user's only strong factor
@@ -303,7 +305,7 @@ router.post('/webauthn/auth/options', async c => {
   }
 
   const body = c.get('body') as Record<string, unknown>;
-  const v    = zv(c, AuthOptionsSchema, body);
+  const v    = zv(c, AuthOptionsSchema, (body.args as Record<string, unknown>) ?? body);
   if (!v.ok) return v.response;
 
   // If a username was supplied, scope the allowCredentials to that user

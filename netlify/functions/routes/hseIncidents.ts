@@ -239,7 +239,8 @@ router.post('/incidents/create', async c => {
         // route only back-links the workflow id.
         afterCommit: async ({ entityId, workflowId }) => {
           if (workflowId) {
-            await sb.from('hse_incidents').update({ workflow_id: workflowId }).eq('id', entityId);
+            const { error: linkErr } = await sb.from('hse_incidents').update({ workflow_id: workflowId }).eq('id', entityId);
+            if (linkErr) throw linkErr;   // surface the broken back-link, don't drop it
           }
         },
       },
@@ -280,7 +281,7 @@ router.post('/incidents/create', async c => {
         if (incErr || !incident) throw incErr ?? new Error('Incident insert failed');
 
         if (v.data.people.length > 0) {
-          await sb.from('hse_incident_people').insert(
+          const { error: peopleErr } = await sb.from('hse_incident_people').insert(
             v.data.people.map(p => ({
               incident_id:        incident.id,
               person_type:        p.personType,
@@ -290,6 +291,11 @@ router.post('/incidents/create', async c => {
               injury_description: p.injuryDescription ?? null,
             })),
           );
+          if (peopleErr) {
+            // Compensating rollback — never leave an incident without its people.
+            await sb.from('hse_incidents').delete().eq('id', incident.id);
+            throw peopleErr;
+          }
         }
 
         return incident;

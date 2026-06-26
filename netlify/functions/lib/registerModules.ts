@@ -10,6 +10,7 @@ import { hrReceiver }             from './receivers/hrReceiver';
 import { financeReceiver }        from './receivers/financeReceiver';
 import { operationsReceiver }     from './receivers/operationsReceiver';
 import { registerHseWorkflowAdapters } from './workflow/hseAdapters';
+import { registerHrWorkflowAdapters }  from './workflow/hrAdapters';
 
 let registered = false;
 
@@ -21,8 +22,9 @@ export function registerModulesOnce(): void {
   registerModuleReceiver(financeReceiver);
   registerModuleReceiver(operationsReceiver);
 
-  // Central workflow engine → module status-sync adapters.
+  // Central workflow engine → module adapters (status-sync + HR change-apply).
   registerHseWorkflowAdapters();
+  registerHrWorkflowAdapters();
 
   registered = true;
 }

@@ -1,0 +1,431 @@
+/* =============================================================================
+ * uikit-overlay.css — Siomac UI System: rich slide-in panel + dialog internals
+ *
+ * A FAITHFUL port of the v36 Employee Master design (the authoritative mockup),
+ * lifted out of the page-scoped `.hr-emp-master` CSS into GLOBAL, reusable @ui
+ * classes — defined ONCE here. The look is intentionally identical to v36 (the
+ * blue accent, the exact sizes/radii); the only deliberate change is the font
+ * weight ramp, which is clamped onto the live app's tokens (Inter is loaded to
+ * 800 only — 900/950 collapse to 800 and read over-bold). A later "Siomac-fit"
+ * pass can re-tint these to brand tokens; until then they reproduce the mockup.
+ *
+ * Components that render this markup: Drawer (rich mode), EntityHead, PanelStats,
+ * PanelTabs, Menu, InfoCard/FieldList/FieldRow/MiniTable/Pill/Callout, the stat
+ * tiles, ModalSection and SystemActionsPanel. Shared by HR ▸ Employee Master and
+ * (opt-in) the HSE Incident/Risk/CAPA panels.
+ *
+ * Lives in @layer components (after uikit.css); uses unique `.ui-*` class names
+ * so no section-layer rule collides with it.
+ * ========================================================================== */
+
+/* ── Faithful v36 palette (scoped to this file's components via the classes) ── */
+
+/* ── Buttons (v36 primary gradient / secondary outline / small outline) ─────── */
+.ui-btn-primary {
+  height: 42px; border: none; padding: 0 16px; border-radius: 8px; color: #fff;
+  font: inherit; font-weight: var(--font-weight-semibold, 600); cursor: pointer;
+  background: linear-gradient(180deg, #0b65f0 0%, #0751d4 100%);
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap;
+}
+.ui-btn-primary:disabled { opacity: .6; cursor: default; }
+.ui-btn-secondary {
+  height: 40px; border: 1px solid #d8e0ec; background: #fff; border-radius: 8px; color: #1e293b;
+  font: inherit; font-weight: var(--font-weight-semibold, 600); font-size: 13px; padding: 0 14px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+}
+.ui-btn-secondary:hover { background: #f8fbff; }
+.ui-btn-secondary:disabled { opacity: .6; cursor: default; }
+
+/* Small inline action button (card head action, mini-table row action). */
+.ui-mini-btn {
+  height: 32px; border: 1px solid #d8e0ec; background: #fff; border-radius: 8px; padding: 0 12px;
+  font: inherit; font-size: 12px; font-weight: var(--font-weight-semibold, 600); color: #334155;
+  cursor: pointer; white-space: nowrap;
+}
+.ui-mini-btn:hover { background: #f8fbff; }
+.ui-mini-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ui-mini-btn-row { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Square icon button — kebab / drawer head action. */
+.ui-icon-action {
+  width: 32px; height: 32px; border: 0; background: transparent; border-radius: 8px;
+  display: grid; place-items: center; color: #0f172a; cursor: pointer; font-size: 22px; line-height: 1;
+}
+.ui-icon-action:hover { background: #f1f5f9; }
+
+/* ── Rich slide-in shell (v36 .drawer.open — the DARK navy employee panel) ───── */
+.ui-rdrawer {
+  position: fixed; top: 0; right: 0; z-index: var(--z-drawer, 51);
+  width: min(500px, calc(100vw - 24px)); height: 100vh;
+  background: #1b2d54; color: #fff; border-left: 1px solid rgba(255,255,255,.10);
+  display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  transform: translateX(calc(100% + 18px)); opacity: 0; pointer-events: none;
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease;
+  box-shadow: -18px 0 50px rgba(15,23,42,.24);
+}
+.ui-rdrawer.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.ui-rdrawer-top {
+  min-height: 64px; flex: none; background: #1b2d54;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+}
+.ui-rdrawer-title { font-size: 20px; font-weight: var(--font-weight-bold, 700); color: #fff; letter-spacing: -.02em; }
+.ui-rdrawer-sub { font-size: 12px; color: rgba(226,238,252,.68); margin-top: 2px; }
+.ui-rdrawer-icons { display: flex; gap: 6px; align-items: center; }
+.ui-rdrawer-scroll { flex: 1; overflow: auto; padding: 20px 18px 24px; background: #1b2d54; color: #fff; }
+
+/* ── EntityHead — avatar + name + ref line + meta line (v36 .profile-head) ──── */
+.ui-entity-head { display: flex; align-items: center; gap: 16px; }
+.ui-entity-photo {
+  width: 76px; height: 76px; border-radius: 50%; flex: none; overflow: hidden;
+  background: #eaf2ff; border: 2px solid #dbeafe; display: grid; place-items: center;
+}
+.ui-entity-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ui-entity-photo span { font-weight: var(--font-weight-bold, 700); color: #0b55d8; font-size: 22px; }
+.ui-entity-name { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.ui-entity-name h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.ui-entity-ref { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #2563eb; font-size: 13px; font-weight: var(--font-weight-semibold, 600); }
+.ui-entity-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; color: #475569; font-size: 13px; }
+.ui-entity-meta .ui-entity-meta-sep { color: #cbd5e1; }
+
+/* ── Panel stat strip (v36 .profile-stats) + plain variant (v36 .training-row) ─ */
+.ui-panel-stats {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  border: 1px solid #e5eaf2; border-radius: 10px; overflow: hidden; margin: 18px 0;
+}
+.ui-panel-stat { padding: 12px 10px; border-right: 1px solid #e5eaf2; min-width: 0; min-height: 56px; }
+.ui-panel-stat:last-child { border-right: none; }
+.ui-panel-stat > small { display: block; color: #64748b; font-weight: var(--font-weight-semibold, 600); margin-bottom: 8px; font-size: 11px; }
+.ui-panel-stat-line { display: flex; align-items: center; gap: 8px; color: #0f172a; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+/* Plain: sits inside an InfoCard (no outer border / margin); larger numerals. */
+.ui-panel-stats.is-plain { border: 0; border-radius: 0; margin: 0; gap: 6px; }
+.ui-panel-stats.is-plain .ui-panel-stat { padding: 0; border-right: none; min-height: 0; }
+.ui-panel-stats.is-plain .ui-panel-stat > small { font-size: 10px; margin-bottom: 7px; }
+.ui-panel-stats.is-plain .ui-panel-stat-line { font-size: 12px; }
+.ui-panel-stats.is-plain .ui-panel-stat-line strong { font-size: 17px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+
+/* ── Panel action bar (v36 .drawer-actions) ────────────────────────────────── */
+.ui-panel-actions { display: grid; grid-template-columns: 1fr 1fr .9fr; gap: 10px; margin-bottom: 16px; position: relative; }
+.ui-panel-actions > .ui-btn-primary, .ui-panel-actions > .ui-btn-secondary { width: 100%; }
+.ui-panel-actions .ui-menu-wrap { display: block; }
+.ui-panel-actions .ui-menu-wrap > button { width: 100%; }
+
+/* ── Panel tabs (v36 .drawer-tabs) — bleeds to the .ui-rdrawer-scroll padding ── */
+.ui-panel-tabs {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid #e5eaf2; position: relative; margin: 0 -18px 18px; padding: 0 18px;
+}
+.ui-panel-tab-list { display: flex; align-items: center; gap: 12px; min-width: 0; flex-wrap: nowrap; }
+.ui-panel-tab-list .ui-panel-tab { flex: 0 0 auto; }
+.ui-panel-tab {
+  position: relative; height: 42px; display: flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: var(--font-weight-semibold, 600); color: #526178;
+  white-space: nowrap; border: 0; background: transparent; padding: 0; cursor: pointer;
+}
+.ui-panel-tab:hover { color: #0f172a; }
+.ui-panel-tab.active { color: #0757df; }
+.ui-panel-tab.active::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: #0757df; }
+.ui-panel-tab-caret { font-size: 12px; opacity: .65; }
+
+/* ── Reusable dropdown Menu (v36 .dropdown-menu / .menu-row) ────────────────── */
+.ui-menu-wrap { position: relative; display: inline-flex; }
+.ui-menu-overlay { position: fixed; inset: 0; z-index: 60; }
+.ui-menu {
+  position: absolute; top: calc(100% + 8px); z-index: 61;
+  min-width: 236px; max-width: 320px; background: #fff; border: 1px solid #d8e0ec;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15,23,42,.12); padding: 8px;
+}
+.ui-menu.is-right { right: 0; }
+.ui-menu.is-left { left: 0; }
+.ui-menu-item {
+  width: 100%; border: 0; background: #fff; min-height: 36px;
+  display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px;
+  text-align: left; color: #1e293b; font: inherit; font-size: 13px; cursor: pointer;
+}
+.ui-menu-item:hover { background: #f4f8ff; }
+.ui-menu-item:disabled { opacity: .5; cursor: not-allowed; }
+.ui-menu-ico { width: 25px; height: 25px; border-radius: 7px; flex: none; display: grid; place-items: center; background: #f1f5f9; color: #334155; font-size: 12px; }
+.ui-menu-item.danger { color: #b91c1c; }
+.ui-menu-item.danger .ui-menu-ico { background: #fee2e2; color: #dc2626; }
+
+/* ── Panel body — uniform 14px stack for a tab's cards (InfoCard, Callout, …) ── */
+.ui-panel-body { display: grid; gap: 14px; }
+
+/* ── InfoCard (v36 .info-card) ─────────────────────────────────────────────── */
+.ui-info-card { border: 1px solid #e5eaf2; border-radius: 12px; background: #fff; padding: 16px; }
+.ui-info-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ui-info-card-head h4 { margin: 0; font-size: 14px; letter-spacing: -.01em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.ui-info-stack { display: grid; gap: 8px; }
+
+/* ── FieldList (v36 .field-list / .field-row) ──────────────────────────────── */
+.ui-field-list { display: grid; gap: 12px; }
+.ui-field-row { display: grid; grid-template-columns: 132px 1fr; gap: 12px; align-items: center; font-size: 12px; }
+.ui-field-row-label { display: flex; align-items: center; gap: 8px; color: #64748b; font-weight: var(--font-weight-medium, 500); }
+.ui-field-row-ico { flex: none; width: 16px; text-align: center; font-size: 11px; opacity: .85; }
+.ui-field-row-value { color: #334155; font-weight: var(--font-weight-semibold, 600); }
+
+/* ── Workflow mini-summary (Open Workflows stat cell, v36) ─────────────────── */
+.ui-wf-mini {
+  width: 100%; border: 1px solid #d8e0ec; background: #f8fbff; border-radius: 10px; padding: 6px 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; cursor: pointer;
+}
+.ui-wf-mini:hover { background: #eef5ff; }
+.ui-wf-mini-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ui-wf-mini-ico { width: 24px; height: 24px; border-radius: 7px; background: #e8f1ff; color: #0b55d8; display: grid; place-items: center; flex: none; font-size: 11px; }
+.ui-wf-mini-copy { display: grid; min-width: 0; }
+.ui-wf-mini-copy strong { font-size: 12px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+.ui-wf-mini-copy em { font-style: normal; font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-wf-mini-action { font-size: 11px; font-weight: var(--font-weight-bold, 700); color: #0757df; white-space: nowrap; }
+
+/* ── Tiny avatar (supervisor stat, inline) ─────────────────────────────────── */
+.ui-avatar-xs {
+  width: 20px; height: 20px; border-radius: 50%; flex: none; overflow: hidden;
+  display: inline-grid; place-items: center; background: #eaf2ff; border: 1px solid #dbeafe;
+  color: #0b55d8; font-size: 9px; font-weight: var(--font-weight-semibold, 600);
+}
+
+/* ── MiniTable (v36 .mini-table) ───────────────────────────────────────────── */
+.ui-mini-table { width: 100%; border-collapse: collapse; }
+.ui-mini-table th {
+  height: 34px; text-align: left; font-size: 10px; padding: 0 8px; background: #fbfdff;
+  color: #0f172a; font-weight: var(--font-weight-bold, 700); border-bottom: 1px solid #e5eaf2;
+}
+.ui-mini-table td { height: 44px; font-size: 12px; padding: 0 8px; color: #334155; border-bottom: 1px solid #e5eaf2; vertical-align: middle; }
+.ui-mini-table tr:last-child td { border-bottom: none; }
+
+/* ── Activity list (v36 .activity-list) ────────────────────────────────────── */
+.ui-activity-list { display: grid; gap: 14px; }
+.ui-activity-item { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start; }
+.ui-activity-icon { color: #16a34a; font-size: 14px; padding-top: 1px; }
+.ui-activity-title { color: #0f172a; font-size: 12px; font-weight: var(--font-weight-bold, 700); margin-bottom: 3px; }
+.ui-activity-desc { color: #64748b; font-size: 11px; }
+.ui-activity-time { color: #64748b; font-size: 11px; white-space: nowrap; }
+
+/* ── Empty / gated state (v36 .em-empty) ───────────────────────────────────── */
+.ui-panel-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-bold, 700); }
+
+/* ── Pill (v36 .pill) ──────────────────────────────────────────────────────── */
+.ui-pill {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 26px;
+  padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: var(--font-weight-bold, 700); white-space: nowrap;
+}
+.ui-pill.green  { background: #dcfce7; color: #15803d; }
+.ui-pill.amber  { background: #fef3c7; color: #b45309; }
+.ui-pill.red    { background: #fee2e2; color: #dc2626; }
+.ui-pill.purple { background: #ede9fe; color: #7c3aed; }
+.ui-pill.blue   { background: #dbeafe; color: #1d4ed8; }
+.ui-pill.gray   { background: #eef2f7; color: #334155; }
+
+/* ── Callout (v36 .info-card.risk-card) ────────────────────────────────────── */
+.ui-callout { display: flex; gap: 12px; align-items: center; border: 1px solid #e5eaf2; border-radius: 12px; background: #fff; padding: 16px; }
+.ui-callout-mark { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 20px; font-weight: var(--font-weight-bold, 700); background: #dcfce7; color: #16a34a; }
+.ui-callout.is-alert .ui-callout-mark { background: #fee2e2; color: #dc2626; }
+.ui-callout-body strong { display: block; font-size: 13px; color: #0f172a; margin-bottom: 3px; font-weight: var(--font-weight-bold, 700); }
+.ui-callout-body span { display: block; color: #16a34a; font-size: 11px; font-weight: var(--font-weight-bold, 700); }
+.ui-callout.is-alert .ui-callout-body span { color: #dc2626; }
+.ui-callout-body p { margin: 3px 0 0; color: #64748b; font-size: 12px; line-height: 1.4; }
+
+/* ── Stat tiles (v36 .statutory-status-grid / .statutory-ready-card) ───────── */
+.ui-stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.ui-stat-tile { border: 1px solid #dbeafe; border-radius: 14px; padding: 13px; background: #fff; }
+.ui-stat-tile small { display: block; color: #64748b; font-size: 11px; font-weight: var(--font-weight-semibold, 600); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.ui-stat-tile strong { display: block; color: #0f172a; font-size: 17px; margin-bottom: 4px; font-weight: var(--font-weight-bold, 700); }
+.ui-stat-tile span { color: #64748b; font-size: 12px; line-height: 1.35; }
+
+/* ── Dialog: vertical stack of sections / banners ──────────────────────────── */
+.ui-dialog-stack { display: grid; gap: 16px; }
+
+/* ── Dialog: ModalSection — a v36 .form-section white card (border + head rule)
+   so dialog sections read identically to the wizard form-sections. ─────────── */
+.ui-modal-section { display: grid; gap: 13px; border: 1px solid #dbe5f2; border-radius: 13px; padding: 14px; background: #fff; }
+.ui-modal-section-head { border-bottom: 1px solid #e5edf6; padding-bottom: 10px; }
+.ui-modal-section-head h4 { margin: 0; font-size: 14px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+.ui-modal-section-head p { margin: 4px 0 0; color: #64748b; font-size: 12px; line-height: 1.4; }
+
+/* ── Dialog banners (v36 .info-strip / .warning-card) ──────────────────────── */
+.ui-note { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
+.ui-warn { border: 1px solid #fde68a; background: #fffbeb; color: #92400e; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
+
+/* ── Dialog footer left note (v36 .left-note) ──────────────────────────────── */
+.ui-foot-note { margin-right: auto; color: #64748b; font-size: 12px; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * WizardShell (v36 employee wizards: Onboarding / Import / Create)
+ * Light modal frame + dark navy (#1f3b6d) left rail: section title, step list,
+ * and info panels (Current Batch · Permissions & Audit). Global `.ui-wz-*`
+ * classes (no Bootstrap collision); rendered inside the page so scoped form CSS
+ * still applies to the content sections.
+ * ══════════════════════════════════════════════════════════════════════════ */
+.ui-wz-backdrop { position: fixed; inset: 0; z-index: var(--z-modal, 61); background: rgba(15,23,42,.34); display: grid; place-items: center; padding: 22px; }
+.ui-wz-modal { width: min(1160px, calc(100vw - 44px)); max-height: calc(100vh - 44px); background: #fff; border: 1px solid #d9e4f2; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.ui-wz-head { min-height: 64px; flex: none; border-bottom: 1px solid #dbe6f4; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; }
+.ui-wz-head h3 { margin: 0; font-size: 18px; letter-spacing: -.02em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.ui-wz-close { width: 34px; height: 34px; border: 1px solid #dbe6f4; background: #fff; border-radius: 8px; font-size: 18px; color: #334155; cursor: pointer; display: grid; place-items: center; }
+.ui-wz-close:hover { background: #eef2f7; }
+
+.ui-wz-shell { display: grid; grid-template-columns: 300px minmax(0, 1fr); flex: 1; min-height: 0; overflow: hidden; }
+
+/* Dark navy rail — v36 v32-unified wizard standard (#1f3b6d, small orange dot, normal-case title). */
+.ui-wz-rail { background: #1f3b6d; color: #fff; padding: 24px 20px; overflow: auto; display: flex; flex-direction: column; gap: 16px; border-right: 1px solid rgba(255,255,255,.10); }
+.ui-wz-rail-head { display: flex; align-items: flex-start; gap: 11px; padding-bottom: 4px; min-width: 0; }
+.ui-wz-rail-dot { width: 10px; height: 10px; border-radius: 999px; background: #ff8a33; margin-top: 4px; flex: none; }
+.ui-wz-rail-head strong { display: block; color: #fff; font-size: 15px; font-weight: var(--font-weight-bold, 700); letter-spacing: -.01em; line-height: 1.15; }
+.ui-wz-rail-head span { display: block; margin-top: 4px; color: rgba(229,238,251,.62); font-size: 11px; line-height: 1.35; }
+
+.ui-wz-steps { display: grid; gap: 7px; padding: 4px 0 16px; border-bottom: 1px solid rgba(255,255,255,.10); flex: none; }
+.ui-wz-step { min-height: 42px; width: 100%; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #c7d7eb; padding: 8px 10px; display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: center; gap: 9px; text-align: left; cursor: pointer; font: inherit; }
+.ui-wz-step:hover { background: rgba(255,255,255,.09); color: #fff; }
+.ui-wz-step.active { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.12); }
+.ui-wz-step:disabled { opacity: .55; cursor: default; }
+.ui-wz-step-ico { width: 22px; height: 22px; display: grid; place-items: center; color: #aebbd0; font-size: 14px; }
+.ui-wz-step.active .ui-wz-step-ico { color: #fff; }
+.ui-wz-step strong { display: block; color: inherit; font-size: 12px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-wz-step-sub { display: block; margin-top: 2px; color: rgba(229,238,251,.58); font-size: 10px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ui-wz-info { display: grid; gap: 16px; min-width: 0; }
+.ui-wz-info-title { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; color: rgba(229,238,251,.66); font-size: 11px; font-weight: var(--font-weight-bold, 700); letter-spacing: .08em; text-transform: uppercase; }
+.ui-wz-info-dot { width: 10px; height: 10px; border-radius: 50%; background: #aebbd0; box-shadow: inset 0 0 0 4px #1d3563; flex: none; }
+.ui-wz-info-panel { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 12px 13px; }
+.ui-wz-info-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 5px 0; }
+.ui-wz-info-row + .ui-wz-info-row { border-top: 1px solid rgba(255,255,255,.07); }
+.ui-wz-info-label { color: rgba(229,238,251,.6); font-size: 11px; }
+.ui-wz-info-value { color: #fff; font-size: 11px; font-weight: var(--font-weight-bold, 700); text-align: right; }
+.ui-wz-info-value.highlight { color: #ff8a33; }
+
+.ui-wz-content { background: #fff; padding: 18px; overflow: auto; display: grid; gap: 16px; align-content: start; }
+.ui-wz-section-num { display: flex; align-items: center; gap: 10px; }
+.ui-wz-foot { flex: none; border-top: 1px solid #dbe6f4; background: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.ui-wz-foot-note { margin-right: auto; color: #64748b; font-size: 12px; }
+
+/* Selectable package / option cards (v36 §2) */
+.ui-wz-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 1080px) { .ui-wz-card-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ui-wz-card { border: 1px solid #d8e0ec; border-radius: 12px; padding: 14px; background: #fff; cursor: pointer; text-align: center; transition: border-color .15s, background .15s, box-shadow .15s; }
+.ui-wz-card:hover { background: #f8fbff; }
+.ui-wz-card.active { border-color: #0757df; background: #f4f8ff; box-shadow: inset 0 0 0 1px #0757df; }
+.ui-wz-card strong { display: block; font-size: 14px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+.ui-wz-card-meta { color: #475569; font-size: 11px; margin-top: 6px; font-weight: var(--font-weight-semibold, 600); }
+.ui-wz-card-desc { color: #94a3b8; font-size: 11px; margin-top: 6px; line-height: 1.35; }
+
+@media (max-width: 860px) {
+  .ui-wz-shell { grid-template-columns: 1fr; }
+  .ui-wz-rail { max-height: 240px; }
+  .ui-wz-card-grid, .ui-wz-card-grid.cols-3 { grid-template-columns: 1fr; }
+}
+
+/* ── System Actions — restricted, view-only governance panel (v36) ──────────── */
+.ui-sysact { border: 1px solid rgba(147,197,253,.35); border-radius: 14px; overflow: hidden; background: #082f57; color: #fff; }
+.ui-sysact-summary { list-style: none; cursor: pointer; min-height: 58px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.ui-sysact-summary::-webkit-details-marker { display: none; }
+.ui-sysact-title { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.ui-sysact-ico { width: 34px; height: 34px; border-radius: 10px; flex: none; background: rgba(255,255,255,.12); color: #bfdbfe; display: grid; place-items: center; }
+.ui-sysact-title strong { display: block; font-size: 14px; letter-spacing: -.01em; }
+.ui-sysact-title span { display: block; margin-top: 3px; color: #c7d7eb; font-size: 11px; line-height: 1.35; }
+.ui-sysact-lock { display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-size: 11px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+.ui-sysact[open] .ui-sysact-chev { transform: rotate(180deg); }
+.ui-sysact-body { padding: 0 15px 15px; }
+.ui-sysact-grid { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.ui-sysact-row { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.08); color: #e5eefb; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: 8px 10px; font-size: 12px; }
+.ui-sysact-row i { color: #93c5fd; font-size: 12px; }
+.ui-sysact-note { margin-top: 10px; color: #c7d7eb; font-size: 11px; line-height: 1.45; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * Rich drawer DARK theme — a faithful port of v36's `.drawer.open` override layer
+ * (HTML lines 686–890). The base `.ui-*` panel primitives stay LIGHT (so the
+ * dialogs that reuse them are unaffected); these rules re-tint them ONLY inside
+ * the dark navy entity panel. #1b2d54 = --siomac-navy.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/* Head icon buttons (kebab / close) */
+.ui-rdrawer .ui-icon-action { background: rgba(255,255,255,.08); color: rgba(255,255,255,.80); border: 1px solid rgba(255,255,255,.12); }
+.ui-rdrawer .ui-icon-action:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* Entity head */
+.ui-rdrawer .ui-entity-name h2 { color: #fff; }
+.ui-rdrawer .ui-entity-ref { color: #bfdbfe; }
+.ui-rdrawer .ui-entity-meta { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-entity-meta .ui-entity-meta-sep { color: rgba(226,238,252,.35); }
+.ui-rdrawer .ui-entity-photo { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); box-shadow: 0 0 0 4px rgba(255,255,255,.05); }
+.ui-rdrawer .ui-entity-photo span { color: #bfdbfe; }
+
+/* Stat strip */
+.ui-rdrawer .ui-panel-stats { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.10); color: #fff; }
+.ui-rdrawer .ui-panel-stat { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.10); }
+.ui-rdrawer .ui-panel-stat:not(:last-child) { border-right-color: rgba(255,255,255,.10); }
+.ui-rdrawer .ui-panel-stats.is-plain, .ui-rdrawer .ui-panel-stats.is-plain .ui-panel-stat { background: transparent; }
+.ui-rdrawer .ui-panel-stat > small { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-panel-stat-line, .ui-rdrawer .ui-panel-stat-line strong { color: #fff; }
+.ui-rdrawer .ui-avatar-xs { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.18); color: #bfdbfe; }
+.ui-rdrawer .ui-wf-mini { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); }
+.ui-rdrawer .ui-wf-mini:hover { background: rgba(255,255,255,.10); }
+.ui-rdrawer .ui-wf-mini-ico { background: rgba(96,165,250,.22); color: #bfdbfe; }
+.ui-rdrawer .ui-wf-mini-copy strong { color: #fff; }
+.ui-rdrawer .ui-wf-mini-copy em { color: rgba(226,238,252,.60); }
+.ui-rdrawer .ui-wf-mini-action { color: #93c5fd; }
+
+/* Action bar (v18 final treatment — translucent, NOT the blue gradient) */
+.ui-rdrawer .ui-panel-actions > .ui-btn-primary {
+  background: rgba(255,255,255,.13); border: 1px solid rgba(191,219,254,.28); color: #f8fbff; box-shadow: none;
+}
+.ui-rdrawer .ui-panel-actions > .ui-btn-primary:hover { background: rgba(255,255,255,.18); border-color: rgba(191,219,254,.42); }
+.ui-rdrawer .ui-panel-actions .ui-btn-secondary {
+  background: rgba(7,20,38,.36); border: 1px solid rgba(148,163,184,.25); color: #dbeafe;
+}
+.ui-rdrawer .ui-panel-actions .ui-btn-secondary:hover { background: rgba(7,20,38,.48); color: #fff; }
+
+/* Tabs */
+.ui-rdrawer .ui-panel-tabs { border-bottom-color: rgba(255,255,255,.10); }
+.ui-rdrawer .ui-panel-tab { color: rgba(226,238,252,.62); }
+.ui-rdrawer .ui-panel-tab:hover { color: #fff; }
+.ui-rdrawer .ui-panel-tab.active { color: #fff; }
+.ui-rdrawer .ui-panel-tab.active::after { background: #60a5fa; }
+
+/* Small inline action buttons */
+.ui-rdrawer .ui-mini-btn { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color: #e5eefb; }
+.ui-rdrawer .ui-mini-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* Info cards / callouts / stat tiles */
+.ui-rdrawer .ui-info-card, .ui-rdrawer .ui-callout, .ui-rdrawer .ui-stat-tile {
+  background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.10); color: #fff;
+}
+.ui-rdrawer .ui-info-card-head h4 { color: #fff; }
+.ui-rdrawer .ui-callout-body strong { color: #fff; }
+.ui-rdrawer .ui-callout-body p { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-callout-mark { background: rgba(34,197,94,.18); color: #bbf7d0; }
+.ui-rdrawer .ui-callout.is-alert .ui-callout-mark { background: rgba(239,68,68,.18); color: #fecaca; }
+.ui-rdrawer .ui-stat-tile small { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-stat-tile strong { color: #fff; }
+.ui-rdrawer .ui-stat-tile span { color: rgba(226,238,252,.68); }
+
+/* Field lists */
+.ui-rdrawer .ui-field-row-label { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-field-row-value { color: #fff; }
+
+/* Mini tables */
+.ui-rdrawer .ui-mini-table th, .ui-rdrawer .ui-mini-table td { background: transparent; border-color: rgba(255,255,255,.10); }
+.ui-rdrawer .ui-mini-table th { color: rgba(226,238,252,.66); }
+.ui-rdrawer .ui-mini-table td { color: #fff; }
+
+/* Empty state */
+.ui-rdrawer .ui-panel-empty { color: rgba(226,238,252,.68); }
+
+/* Activity list */
+.ui-rdrawer .ui-activity-title { color: #fff; }
+.ui-rdrawer .ui-activity-desc, .ui-rdrawer .ui-activity-time { color: rgba(226,238,252,.68); }
+.ui-rdrawer .ui-activity-icon { color: #93c5fd; }
+
+/* Pills (translucent on navy) */
+.ui-rdrawer .ui-pill.gray   { background: rgba(255,255,255,.10); color: #dbeafe; }
+.ui-rdrawer .ui-pill.blue   { background: rgba(96,165,250,.20);  color: #bfdbfe; }
+.ui-rdrawer .ui-pill.green  { background: rgba(34,197,94,.18);   color: #bbf7d0; }
+.ui-rdrawer .ui-pill.amber  { background: rgba(245,158,11,.18);  color: #fde68a; }
+.ui-rdrawer .ui-pill.red    { background: rgba(239,68,68,.18);   color: #fecaca; }
+.ui-rdrawer .ui-pill.purple { background: rgba(139,92,246,.18);  color: #ddd6fe; }
+
+/* Dropdown menus inside the dark panel */
+.ui-rdrawer .ui-menu { background: #11294b; border-color: rgba(255,255,255,.14); color: #fff; }
+.ui-rdrawer .ui-menu-item { background: transparent; color: #e5eefb; }
+.ui-rdrawer .ui-menu-item:hover { background: rgba(255,255,255,.08); }
+.ui-rdrawer .ui-menu-ico { background: rgba(255,255,255,.10); color: #dbeafe; }
+.ui-rdrawer .ui-menu-item.danger { color: #fecaca; }
+.ui-rdrawer .ui-menu-item.danger .ui-menu-ico { background: rgba(239,68,68,.20); color: #fecaca; }

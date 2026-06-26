@@ -26,6 +26,12 @@ export interface ImportPolicy {
   missingStatutory:        'allow' | 'warn' | 'block';
   createLogins:            boolean;
   contractorRows:          'import' | 'reject';
+  // v36 batch ownership / governance (persisted on the batch policy jsonb).
+  defaultRecordStatus?:    'active' | 'draft';
+  batchOwner?:             string;
+  reviewRequired?:         boolean;
+  notifyOnComplete?:       string;
+  batchReference?:         string;
 }
 
 export interface ImportUploadResult {

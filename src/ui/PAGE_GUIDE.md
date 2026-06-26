@@ -4,6 +4,9 @@ Every page in every module (HSE, HR, Finance, Operations) is built from `@ui` on
 **Never hand-roll** a header, card, modal, drawer, table, or form control — if a
 primitive doesn't exist for what you need, add it to `@ui` first, then use it.
 
+> Porting a design mockup into a page (the workflow, the rich drawer/dialog/wizard
+> components, end-to-end wiring, and the gotchas) → see **[PORTING_GUIDE.md](./PORTING_GUIDE.md)**.
+
 There are exactly **two page shapes**. Pick one.
 
 ---

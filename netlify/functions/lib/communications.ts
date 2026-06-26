@@ -95,7 +95,7 @@ export interface ThreadAccessResult {
  */
 function recordViewPermissionKey(sourceModule: string | null, sourceEntityType: string | null): string | null {
   const s = `${sourceModule ?? ''} ${sourceEntityType ?? ''}`.toLowerCase();
-  if (s.includes('permit') || s.includes('ptw'))         return 'hse.permits.view';
+  if (s.includes('permit') || s.includes('ptw'))         return 'hse.ptw.view';
   if (s.includes('incident'))                            return 'hse.incidents.view';
   if (s.includes('capa') || s.includes('investigation')) return 'hse.incidents.view'; // CAPA/investigations inherit incident visibility
   if (s.includes('risk') || s.includes('jsa') || s.includes('hazard')) return 'hse.risk.view';

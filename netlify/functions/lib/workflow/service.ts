@@ -84,6 +84,7 @@ const MODULE_ROUTE: Record<string, string> = {
   hse_risk_assessments: 'hse/risk-jsa',
   hse_jsa:              'hse/risk-jsa',
   ptw:                  'hse/ptw',
+  hr_employee_master:   's-hr',   // bare section id (resolver uses s-… as-is)
 };
 function moduleRoute(moduleKey: string): string {
   if (MODULE_ROUTE[moduleKey]) return MODULE_ROUTE[moduleKey];

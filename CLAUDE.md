@@ -26,6 +26,40 @@ Prefer **build-new → delete-legacy** (no dual systems, no gap) over keeping or
 Prefer **reuse over duplication** (extract a shared helper). When unsure whether something is a
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
+## Known Pitfalls — verified this build (read before touching the area)
+Each of these cost real debugging time. Don't relearn them.
+
+- **Mutation atomicity needs a Postgres RPC — not JS.** supabase-js issues SEPARATE PostgREST
+  calls; you cannot wrap `business row + app_events + audit_logs + handoff_outbox` in one
+  transaction from the app layer. Throwing between the calls is a band-aid (partial state +
+  dup-on-retry, because `startMutationRun` only short-circuits `completed` runs — a `failed`
+  run re-runs `writeRecord`). The real fix is a transactional-outbox RPC, as ONE commit path
+  for ALL mutations with the legacy `writeRecord` path DELETED (no `txWrite`-alongside dual
+  system) — a big-bang migration. Design: `netlify/functions/lib/MUTATION_BACKBONE_PLAN.md`.
+  When no RPC exists yet, use a **compensating rollback** (e.g. delete the parent on a
+  satellite-insert failure), never a silent swallow.
+- **`requireUser` resolves role from the DB, not the JWT.** Minting a token with a forged
+  `role` does nothing — auth re-reads `app_users.role` by `sub`. E2E role-denial tests must
+  PROVISION a real user of that role (the harness's `admin` can be a superadmin = allow-all).
+- **`apiPost`/`apiPatch`/`authPost` wrap the body as `{ args: payload }`.** Every backend
+  route must validate `body.args ?? body`. Reading the raw body silently breaks the endpoint
+  (it was already broken on webauthn rename/delete/auth-options).
+- **Permission keys must match the catalogue EXACTLY** (`hse.ptw.view`, not `hse.permits.view`).
+  Read-gate / record-inheritance mappings are NOT covered by the enforced-key drift-guard —
+  grep the catalogue to confirm any key string before shipping it.
+- **`dev:netlify` serves compiled `dist/`.** Backend source changes need `npm run build:backend`
+  AND a dev-server restart — the running server does NOT hot-reload (module-adapter registration
+  especially). A passing test against a stale server is a false pass; restart before trusting E2E.
+- **Verify external audit claims against the code first.** The "admin can approve manifests"
+  finding was a TEST-FIXTURE bug (`T.admin` = superadmin), not a code bug. Don't implement
+  audit items blindly — reproduce the root cause.
+- **Dependency pins (do not bump blindly):** `@supabase/supabase-js` is pinned EXACTLY to
+  `2.105.3` + `overrides.ws ^8.21.0` — 2.105.4/2.108 drop `ws` and change realtime, which broke
+  ~29 E2E. `hono ^4.12.27` (CVE patch; we use our own `jsonwebtoken`, not hono's JWT middleware).
+  Re-run the FULL E2E (esp. realtime suites) before changing either.
+- **v36 mockup CSS has multiple cascade layers** — the WINNING rule is the LAST (the v32 "unify
+  all wizards" block). Grep ALL declarations for a selector and take the last applicable one.
+
 ## Worktree Rule
 Work ONLY in this worktree: `C:\Users\MSI Laptop\Desktop\Siomac\.claude\worktrees\wonderful-panini-34b331` (branch `claude/wonderful-panini-34b331`).  
 NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).

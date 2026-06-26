@@ -22,6 +22,8 @@ import {
   writeHrAudit, provisionEmployee, todayISO, type StatutoryRow,
 } from '../lib/hr/employeeCore';
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
+import { CHANGE_TYPES, type ChangeType, CONTACT_COLS, applyApprovedChange, markChangeRequestStatus } from '../lib/hr/changeApproval';
+import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -33,6 +35,7 @@ const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
   'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image, ' +
+  'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
 interface EmpRow { id: string; full_name: string | null; department_id: string | null; supervisor_id: string | null; status: string; [k: string]: unknown }
@@ -176,20 +179,38 @@ router.post('/employees/create', async c => {
       personalEmail:  z.string().max(160).optional(),
       phone:          z.string().max(60).optional(),
       employeeNumber: z.string().max(40).optional(),
+      dateOfBirth:    z.string().max(20).optional(),
+      nationality:    z.string().max(80).optional(),
+      preferredName:  z.string().max(160).optional(),
+      governmentId:   z.string().max(80).optional(),
     }),
     employment: z.object({
-      employmentType: z.enum(EMPLOYMENT_TYPES).optional(),
-      contractorFlag: z.boolean().optional(),
-      startDate:      z.string().optional(),
-      position:       z.string().max(160).optional(),
+      employmentType:   z.enum(EMPLOYMENT_TYPES).optional(),
+      contractorFlag:   z.boolean().optional(),
+      startDate:        z.string().optional(),
+      position:         z.string().max(160).optional(),
+      positionTitle:    z.string().max(120).optional(),
+      probationEndDate: z.string().max(20).optional(),
+      employeeGrade:    z.string().max(60).optional(),
+      workSchedule:     z.string().max(60).optional(),
     }).optional(),
     assignment: z.object({
       departmentId: z.string().nullable().optional(),
       siteId:       z.string().nullable().optional(),
       positionId:   z.string().uuid().nullable().optional(),
       supervisorId: z.string().nullable().optional(),
+      costCenter:   z.string().max(60).nullable().optional(),
+      effectiveDate: z.string().max(20).optional(),
     }).optional(),
-    access:    z.object({ role: z.string().max(60).optional() }).optional(),
+    access:    z.object({
+      role:                   z.string().max(60).optional(),
+      permissionProfile:      z.string().max(60).optional(),
+      selfServiceProfile:     z.string().max(60).optional(),
+      requireMfa:             z.boolean().optional(),
+      onboardingRequirements: z.record(z.string(), z.boolean()).optional(),
+    }).optional(),
+    createLogin:  z.boolean().optional(),
+    recordStatus: z.string().max(40).optional(),
     statutory: z.record(z.string(), z.unknown()).optional(),
     onboarding: z.object({
       createOnboardingCase: z.boolean().optional(),
@@ -220,7 +241,7 @@ router.post('/employees/create', async c => {
       getEntityIdentity: (r) => ({ id: r.id, ref: r.employeeNo }),
       buildEventPayload:  (r) => ({ employeeNumber: r.employeeNo, payrollReadiness: r.readiness }),
     },
-    writeRecord: () => provisionEmployee(actor.id, { identity, employment, assignment, access, statutory }),
+    writeRecord: () => provisionEmployee(actor.id, { identity, employment, assignment, access, statutory, createLogin: v.data.createLogin, recordStatus: v.data.recordStatus }),
   });
 
   // Optional onboarding (v36 §10) — the employee is already committed, so starting
@@ -767,13 +788,13 @@ router.post('/dashboard/kpis', async c => {
   } });
 });
 
-// ── Change requests (maker-checker; decoupled from the workflow engine) ─────────
-// Create = hr.view (managers may request changes for their reports). Decide
-// (approve→apply / reject / return) requires the change-type permission below.
-// When the central Workflow Engine lands, these re-point to it via workflow_id.
-
-const CHANGE_TYPES = ['status_change','department_transfer','site_transfer','supervisor_change','role_change','employment_type_change','contact_update'] as const;
-type ChangeType = typeof CHANGE_TYPES[number];
+// ── Change requests (maker-checker → central Workflow Engine, Spec §14) ─────────
+// Create = hr.view (managers may request changes for their reports). Sensitive
+// changes route through the engine: createChangeRequest starts a workflow (one
+// binding per change type) and stores workflow_id; the hr_employee_master adapter
+// applies the approved change to app_users. /decide delegates to decideTask when a
+// workflow exists, else applies directly (no binding). CHANGE_TYPES / ChangeType /
+// CONTACT_COLS / applyChange live in lib/hr/changeApproval.
 const CHANGE_PERM: Record<ChangeType, string> = {
   status_change:          'hr.employees.status_change',
   department_transfer:    'hr.employees.transfer',
@@ -783,8 +804,6 @@ const CHANGE_PERM: Record<ChangeType, string> = {
   employment_type_change: 'hr.employees.role_change',
   contact_update:         'hr.employees.restricted_contact.update',
 };
-// Contact columns a contact_update change request may touch (whitelist for apply).
-const CONTACT_COLS = ['email','phone','personal_email','emergency_contact_name','emergency_contact_phone','emergency_contact_relationship'] as const;
 function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> {
   switch (t) {
     case 'status_change':          return { status: emp.status };
@@ -796,55 +815,6 @@ function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> 
     case 'contact_update':         return Object.fromEntries(CONTACT_COLS.map(k => [k, emp[k] ?? null]));
   }
 }
-const HR_BLOCKING = new Set(['suspended','inactive','terminated','archived']);
-
-/** Apply an approved change to app_users (+ history/assignment). */
-async function applyChange(req: { employee_id: string; change_type: ChangeType; requested_value: Record<string, unknown>; previous_value: Record<string, unknown> | null }, actorId: string): Promise<void> {
-  const rv = req.requested_value ?? {};
-  const eid = req.employee_id;
-  const stamp = { updated_at: new Date().toISOString() };
-  switch (req.change_type) {
-    case 'status_change': {
-      const newStatus = String(rv['newStatus'] ?? rv['status'] ?? '');
-      await sb.from('hr_employee_status_history').insert({
-        employee_id: eid, previous_status: (req.previous_value?.['status'] as string) ?? null, new_status: newStatus,
-        reason: 'Approved change request', effective_date: todayISO(), changed_by: actorId,
-      });
-      await sb.from('app_users').update({ status: HR_BLOCKING.has(newStatus) ? 'inactive' : 'active', ...stamp }).eq('id', eid);
-      break;
-    }
-    case 'department_transfer':
-    case 'site_transfer': {
-      const patch: Record<string, unknown> = { ...stamp };
-      if ('departmentId' in rv) patch['department_id'] = rv['departmentId'];
-      if ('siteId' in rv)       patch['site_id']       = rv['siteId'];
-      await sb.from('app_users').update(patch).eq('id', eid);
-      await sb.from('hr_employee_assignments').update({ is_current: false, effective_to: todayISO() }).eq('employee_id', eid).eq('is_current', true);
-      await sb.from('hr_employee_assignments').insert({
-        employee_id: eid, department_id: (rv['departmentId'] as string) ?? null, site_id: (rv['siteId'] as string) ?? null,
-        assignment_type: 'primary', effective_from: todayISO(), is_current: true, created_by: actorId,
-      });
-      break;
-    }
-    case 'supervisor_change':
-      await sb.from('app_users').update({ supervisor_id: (rv['supervisorId'] as string) ?? null, ...stamp }).eq('id', eid);
-      break;
-    case 'role_change':
-      await sb.from('app_users').update({ role: rv['role'], ...stamp }).eq('id', eid);
-      break;
-    case 'employment_type_change':
-      await sb.from('app_users').update({ employment_type: rv['employmentType'], ...stamp }).eq('id', eid);
-      break;
-    case 'contact_update': {
-      // requested_value already holds snake_case contact columns; apply only the whitelist.
-      const patch: Record<string, unknown> = { ...stamp };
-      for (const k of CONTACT_COLS) if (k in rv) patch[k] = rv[k];
-      await sb.from('app_users').update(patch).eq('id', eid);
-      break;
-    }
-  }
-}
-
 /**
  * Create a maker-checker change request via the standard module-create path
  * (record → event → idempotency). Shared by /employees/change-request and the
@@ -880,7 +850,29 @@ async function createChangeRequest(actor: { id: string }, p: {
       return { id: data.id, changeNo: data.change_no };
     },
   });
-  return { id: result.entityId, changeNo: result.record.changeNo };
+  const id = result.entityId;
+  // Route the sensitive change through the central engine. Guard on workflow_id so
+  // a deduped retry of the same request doesn't start a second workflow. No binding
+  // (startWorkflowForRecord → null) leaves it as a direct maker-checker request.
+  const { data: crRow } = await sb.from('hr_employee_change_requests')
+    .select('workflow_id').eq('id', id).maybeSingle<{ workflow_id: string | null }>();
+  if (crRow && !crRow.workflow_id) {
+    const { data: emp } = await sb.from('app_users')
+      .select('department_id, site_id').eq('id', p.employeeId)
+      .maybeSingle<{ department_id: string | null; site_id: string | null }>();
+    const wf = await startWorkflowForRecord({
+      context: {
+        moduleKey: 'hr_employee_master', workflowType: 'hr_change_approval',
+        triggerEvent: `hr.employee.${p.changeType}`, sourceRecordId: id,
+        sourceRecordRef: result.record.changeNo, requestedBy: actor.id,
+        departmentId: emp?.department_id ?? null, siteId: emp?.site_id ?? null,
+        recordData: { employeeId: p.employeeId, changeType: p.changeType, requestedValue: p.requestedValue, previousValue: p.previousValue },
+      },
+      actor: { id: actor.id },
+    });
+    if (wf) await sb.from('hr_employee_change_requests').update({ workflow_id: wf.id }).eq('id', id);
+  }
+  return { id, changeNo: result.record.changeNo };
 }
 
 // POST /api/hr/employees/change-request — create (maker)
@@ -919,30 +911,37 @@ router.post('/employee-change-requests/decide', async c => {
   const v = zv(c, z.object({ requestId: z.string().uuid(), decision: z.enum(['approve','reject','return']), comment: z.string().max(500).optional() }),
     (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
-  const { data: req } = await sb.from('hr_employee_change_requests').select('*').eq('id', v.data.requestId)
-    .maybeSingle<{ id: string; employee_id: string; change_type: ChangeType; requested_value: Record<string, unknown>; previous_value: Record<string, unknown> | null; status: string }>();
+  const { data: req } = await sb.from('hr_employee_change_requests').select('id, employee_id, change_type, status, workflow_id').eq('id', v.data.requestId)
+    .maybeSingle<{ id: string; employee_id: string; change_type: ChangeType; status: string; workflow_id: string | null }>();
   if (!req) return c.json({ success: false, message: 'Change request not found.' }, 404 as 200);
   if (!['submitted', 'in_review', 'returned'].includes(req.status))
     return c.json({ success: false, message: `Change request already ${req.status}.` }, 400 as 200);
-  // Checker must hold the change-type permission.
+  // Checker must hold the change-type permission (enforced here; the engine task is role-assigned).
   if (!(await userCan(actor, CHANGE_PERM[req.change_type])))
     return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
 
-  if (v.data.decision === 'reject' || v.data.decision === 'return') {
-    const status = v.data.decision === 'reject' ? 'rejected' : 'returned';
-    await sb.from('hr_employee_change_requests').update({ status, decided_at: new Date().toISOString(), metadata: { decisionComment: v.data.comment ?? null } }).eq('id', req.id);
-    await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: req.id, actorId: actor.id, action: `hr.employee.change_${status}`, reason: v.data.comment ?? null });
-    return c.json({ success: true, data: { requestId: req.id, status } });
+  const outcome = v.data.decision === 'approve' ? 'applied' : v.data.decision === 'reject' ? 'rejected' : 'returned';
+
+  // Engine-driven (a binding started a workflow): delegate to the central decision
+  // API; the hr_employee_master adapter applies / sets status on the request.
+  if (req.workflow_id) {
+    const { data: task } = await sb.from('workflow_tasks').select('id')
+      .eq('workflow_id', req.workflow_id).in('status', ['pending', 'open', 'in_progress'])
+      .order('created_at', { ascending: true }).limit(1).maybeSingle<{ id: string }>();
+    if (!task) return c.json({ success: false, message: 'No open approval task for this request.' }, 400 as 200);
+    const decision = v.data.decision === 'approve' ? 'approved' : v.data.decision === 'reject' ? 'rejected' : 'returned';
+    await decideTask({ workflowId: req.workflow_id, taskId: task.id, actor: { id: actor.id }, decision, comment: v.data.comment });
+    // Report the TRUE outcome the adapter wrote — not an assumed one. A single-step
+    // approval completes → 'applied'; a multi-step approval only advances → still
+    // 'in_review'. (Never claim 'applied' when the change wasn't actually applied.)
+    const { data: after } = await sb.from('hr_employee_change_requests').select('status').eq('id', req.id).maybeSingle<{ status: string }>();
+    return c.json({ success: true, data: { requestId: req.id, status: after?.status ?? outcome } });
   }
 
-  // approve → apply
-  await applyChange(req, actor.id);
-  await sb.from('hr_employee_change_requests').update({ status: 'applied', decided_at: new Date().toISOString(), applied_at: new Date().toISOString() }).eq('id', req.id);
-  await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: req.id, actorId: actor.id,
-    action: 'hr.employee.change_applied', previousState: req.previous_value, newState: req.requested_value });
-  void emitAppEvent({ eventType: 'hr.employee.change_applied', sourceModule: 'hr', sourceEntityType: 'employee_change',
-    sourceEntityId: req.id, actorUserId: actor.id, severity: 'info', payload: { employeeId: req.employee_id, changeType: req.change_type } });
-  return c.json({ success: true, data: { requestId: req.id, status: 'applied' } });
+  // Fallback (no binding → no workflow): apply / set status directly via the shared lib.
+  if (v.data.decision === 'approve') await applyApprovedChange(req.id, actor.id);
+  else await markChangeRequestStatus(req.id, outcome as 'rejected' | 'returned', actor.id, v.data.comment ?? null);
+  return c.json({ success: true, data: { requestId: req.id, status: outcome } });
 });
 
 // POST /api/hr/employee-change-requests/cancel — by the requester

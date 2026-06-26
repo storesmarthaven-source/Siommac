@@ -60,8 +60,16 @@ declare global {
   const flatpickr: typeof flatpickrNS;
 }
 
-// ── Window extension — app-specific globals set by legacy scripts ─────────────
+// ── Legacy view shims set by NavController + the pre-Preact view modules ───────
+// Each is a bag of imperative functions the legacy boot sequence installs on
+// `window` (window.Nav.buildSidebar, window.Employees.loadEmployeeList, …).
+// NavController writes them via an `as unknown as Win` cast; declaring them here
+// gives the boot-invariant tests (src/lib/boot.test.ts) real types instead of
+// `any`. Retire a shim's entry here when its module is fully ported to Preact.
+type LegacyViewShim = Record<string, (...args: any[]) => unknown>;
+
 declare global {
+  // ── Window extension — app-specific globals set by legacy scripts ───────────
   interface Window {
     /** Preloaded profile image set by the inline preload script in index.html */
     _preloadedProfileImage?: HTMLImageElement;
@@ -74,6 +82,18 @@ declare global {
      */
     $:      JQueryNS.JQueryStatic;
     jQuery: JQueryNS.JQueryStatic;
+
+    // Legacy navigation + per-section view shims (see LegacyViewShim above).
+    Nav:            LegacyViewShim;
+    AppState:       { get: (key: string) => unknown; set: (key: string, value: unknown) => void; _photoCache: Record<string, unknown> };
+    Dashboard:      LegacyViewShim;
+    SettingsView:   LegacyViewShim;
+    Payroll:        LegacyViewShim;
+    Sites:          LegacyViewShim;
+    Employees:      LegacyViewShim;
+    Profile:        LegacyViewShim;
+    LeaveView:      LegacyViewShim;
+    AttendanceView: LegacyViewShim;
   }
 }
 

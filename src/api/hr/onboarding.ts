@@ -21,18 +21,22 @@ export interface OnboardingPreview { package: string; label: string; tasks: Onbo
 export interface OnboardingStartResult { caseId: string; caseNo: string; status: string; taskCount: number; handoffCount: number }
 
 /** Package keys + labels (mirror lib/hr/onboardingPackages.ts; no list endpoint). */
-export const ONBOARDING_PACKAGES: { key: string; label: string }[] = [
-  { key: 'standard_employee', label: 'Standard Employee' },
-  { key: 'safety_critical_employee', label: 'Safety-Critical Employee' },
-  { key: 'contractor_worker', label: 'Contractor Worker' },
-  { key: 'supervisor_manager', label: 'Supervisor / Manager' },
-  { key: 'office_admin', label: 'Office / Admin' },
+export interface OnboardingPackageOption { key: string; label: string; owners: string; desc: string }
+export const ONBOARDING_PACKAGES: OnboardingPackageOption[] = [
+  { key: 'standard_employee',        label: 'Standard Employee',     owners: 'HR, Supervisor, IT, Payroll',  desc: 'Best for ordinary employees' },
+  { key: 'safety_critical_employee', label: 'Safety-Critical Role',  owners: 'HR, HSE, Training, Operations', desc: 'Adds induction, PTW/JSA, competency, medical' },
+  { key: 'contractor_worker',        label: 'Contractor Worker',     owners: 'HR, HSE, Security, Sponsor',    desc: 'No payroll; strong access and HSE gate' },
+  { key: 'supervisor_manager',       label: 'Manager / Supervisor',  owners: 'HR, IT, Workflow, Training',    desc: 'Adds approval rights and management policy pack' },
+  { key: 'office_admin',             label: 'Office / Admin',        owners: 'HR, IT, Facilities',            desc: 'Standard office onboarding' },
 ];
 
 export const hrOnboardingApi = {
   preview: (a: { packageKey: string }) => call<OnboardingPreview>('hr/onboarding/preview-package', a),
-  start:   (a: { employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null }) =>
-    call<OnboardingStartResult>('hr/onboarding/start', a),
+  start:   (a: {
+    employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null;
+    reason?: string | null; priority?: string | null; targetStartDate?: string | null;
+    launchMode?: string | null; caseOwner?: string | null; workerType?: string | null;
+  }) => call<OnboardingStartResult>('hr/onboarding/start', a),
   get:     (a: { caseId?: string; employeeId?: string }) =>
     call<{ case: Record<string, unknown>; tasks: Record<string, unknown>[]; handoffs: Record<string, unknown>[] }>('hr/onboarding/get', a),
   completeTask: (a: { taskId: string }) => call<{ taskId: string; status: string; caseCompleted: boolean }>('hr/onboarding/task/complete', a),

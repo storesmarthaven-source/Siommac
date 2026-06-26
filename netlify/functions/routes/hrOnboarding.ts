@@ -36,6 +36,12 @@ router.post('/onboarding/start', async c => {
     packageKey: z.enum(ONBOARDING_PACKAGE_KEYS),
     ownerId:    z.string().nullable().optional(),
     dueAt:      z.string().nullable().optional(),
+    reason:          z.string().max(60).nullable().optional(),
+    priority:        z.string().max(30).nullable().optional(),
+    targetStartDate: z.string().max(20).nullable().optional(),
+    launchMode:      z.string().max(30).nullable().optional(),
+    caseOwner:       z.string().max(80).nullable().optional(),
+    workerType:      z.string().max(30).nullable().optional(),
   }), body(c));
   if (!v.ok) return v.response;
 

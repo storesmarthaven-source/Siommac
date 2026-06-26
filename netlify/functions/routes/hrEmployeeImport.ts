@@ -38,11 +38,19 @@ interface ImportPolicy {
   missingStatutory:        'allow' | 'warn' | 'block';
   createLogins:            boolean;
   contractorRows:          'import' | 'reject';
+  // v36 batch ownership / governance (persisted on the batch policy jsonb).
+  defaultRecordStatus?:    'active' | 'draft';
+  batchOwner?:             string;
+  reviewRequired?:         boolean;
+  notifyOnComplete?:       string;
+  batchReference?:         string;
 }
 const DEFAULT_POLICY: ImportPolicy = {
   duplicateEmployeeNumber: 'skip', duplicateUsername: 'skip',
   missingSupervisor: 'warn', missingStatutory: 'warn',
   createLogins: true, contractorRows: 'import',
+  defaultRecordStatus: 'active', batchOwner: 'HR Operations', reviewRequired: true,
+  notifyOnComplete: 'HR + Payroll', batchReference: '',
 };
 
 const PolicySchema = z.object({
@@ -52,6 +60,11 @@ const PolicySchema = z.object({
   missingStatutory:        z.enum(['allow', 'warn', 'block']).optional(),
   createLogins:            z.boolean().optional(),
   contractorRows:          z.enum(['import', 'reject']).optional(),
+  defaultRecordStatus:     z.enum(['active', 'draft']).optional(),
+  batchOwner:              z.string().max(80).optional(),
+  reviewRequired:          z.boolean().optional(),
+  notifyOnComplete:        z.string().max(80).optional(),
+  batchReference:          z.string().max(80).optional(),
 });
 
 const STATUTORY_KEYS = ['nisNumber', 'nisStatus', 'birFileNumber', 'td1Received', 'hsApplicable'] as const;
@@ -368,12 +381,14 @@ function toProvisionInput(m: Record<string, string>, policy: ImportPolicy, ctx: 
       firstName: norm(m['firstName']) || undefined, lastName: norm(m['lastName']) || undefined,
       email: norm(m['email']) || undefined, phone: norm(m['phone']) || undefined,
       employeeNumber: norm(m['employeeNumber']) || undefined,
+      dateOfBirth: norm(m['dateOfBirth']) || undefined, nationality: norm(m['nationality']) || undefined,
     },
     employment: { employmentType: norm(m['employmentType']) || undefined, contractorFlag: norm(m['workerType']).toLowerCase() === 'contractor', startDate: norm(m['startDate']) || undefined, position: norm(m['position']) || undefined },
     assignment: { departmentId: deptId, siteId, supervisorId: supId },
     access: { role: norm(m['role']) || 'employee' },
     statutory,
     createLogin: policy.createLogins,
+    recordStatus: policy.defaultRecordStatus,
   };
 }
 
@@ -388,7 +403,8 @@ async function updateFromImport(targetId: string, m: Record<string, string>, ctx
   if (deptId) patch['department_id'] = deptId;
   const supId = ctx.supervisorByKey.get(norm(m['supervisor']).toLowerCase());
   if (supId) patch['supervisor_id'] = supId;
-  await sb.from('app_users').update(patch).eq('id', targetId);
+  const { error: updErr } = await sb.from('app_users').update(patch).eq('id', targetId);
+  if (updErr) throw updErr;   // a failed update must fail the row, not count as 'updated'
 
   // Statutory upsert + readiness recompute (reuses the shared helpers).
   const stPatch = statutoryPatch({
@@ -399,8 +415,10 @@ async function updateFromImport(targetId: string, m: Record<string, string>, ctx
     const { data: existing } = await sb.from('hr_employee_statutory').select('*').eq('employee_id', targetId).maybeSingle<Record<string, unknown>>();
     const readiness = computePayrollReadiness(statutoryWithDefaults({ ...(existing ?? {}), ...stPatch }));
     const upd = { ...stPatch, payroll_ready_status: readiness.status, missing_blockers: readiness.blockers, finance_handoff_eligible: readiness.financeEligible, updated_by: actorId };
-    if (existing) await sb.from('hr_employee_statutory').update(upd).eq('employee_id', targetId);
-    else          await sb.from('hr_employee_statutory').insert({ employee_id: targetId, ...upd });
+    const { error: stErr } = existing
+      ? await sb.from('hr_employee_statutory').update(upd).eq('employee_id', targetId)
+      : await sb.from('hr_employee_statutory').insert({ employee_id: targetId, ...upd });
+    if (stErr) throw stErr;
   }
   await writeHrAudit({ employeeId: targetId, submoduleKey: 'import', recordId: targetId, actorId, action: 'hr.import.row_updated', newState: patch });
 }

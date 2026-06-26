@@ -361,8 +361,11 @@ export default async function run(h) {
     ok(r, 'contact request mode');
     expect(r.body.data.mode === 'request' && !!r.body.data.requestId, 'requestId returned');
     ctx.changeReqIds.push(r.body.data.requestId);
-    const { data: cr } = await sb.from('hr_employee_change_requests').select('change_type, status').eq('id', r.body.data.requestId).maybeSingle();
-    expect(cr && cr.change_type === 'contact_update' && cr.status === 'submitted', 'change request row (contact_update, submitted)');
+    // Engine-wired (Spec §14): createChangeRequest starts a workflow_instance and the
+    // hr_employee_master adapter moves the request to in_review on start.
+    const { data: cr } = await sb.from('hr_employee_change_requests').select('change_type, status, workflow_id').eq('id', r.body.data.requestId).maybeSingle();
+    expect(cr && cr.change_type === 'contact_update' && ['submitted', 'in_review'].includes(cr.status), `change request row (contact_update) — got ${cr?.status}`);
+    expect(!!cr.workflow_id, 'change request linked to a workflow_instance (central engine)');
     const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.change_requested').eq('source_entity_id', r.body.data.requestId).limit(1);
     expect(ev && ev.length === 1, 'change_requested event');
   });

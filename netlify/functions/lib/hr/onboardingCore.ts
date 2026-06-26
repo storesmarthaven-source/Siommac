@@ -12,7 +12,12 @@ import { runModuleMutation } from '../moduleServiceAdapter';
 import { writeHrAudit }    from './employeeCore';
 import { ONBOARDING_PACKAGES } from './onboardingPackages';
 
-export interface StartOnboardingArgs { employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null }
+export interface StartOnboardingArgs {
+  employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null;
+  // v36 §10 Worker & Trigger intake (optional; persisted on the case).
+  reason?: string | null; priority?: string | null; targetStartDate?: string | null;
+  launchMode?: string | null; caseOwner?: string | null; workerType?: string | null;
+}
 export interface StartOnboardingResult { caseId: string; caseNo: string; taskCount: number; handoffCount: number }
 
 /**
@@ -42,8 +47,12 @@ export async function startOnboardingCase(actorId: string, args: StartOnboarding
     writeRecord: async () => {
       const caseNo = await nextRef('ONB');
       const { data: kase, error: cErr } = await sb.from('hr_onboarding_cases').insert({
-        case_no: caseNo, employee_id: emp.id, worker_type: emp.contractor_flag ? 'contractor' : 'employee',
+        case_no: caseNo, employee_id: emp.id,
+        worker_type: args.workerType?.trim() || (emp.contractor_flag ? 'contractor' : 'employee'),
         package_key: pkg.key, status: 'in_progress', owner_id: ownerId, due_at: args.dueAt ?? null, started_by: actorId,
+        reason: args.reason?.trim() || null, priority: args.priority?.trim() || null,
+        target_start_date: args.targetStartDate || null, launch_mode: args.launchMode?.trim() || null,
+        case_owner: args.caseOwner?.trim() || null,
       }).select('id, case_no').single<{ id: string; case_no: string }>();
       if (cErr) throw Object.assign(new Error(cErr.message), { status: 500 });
 
