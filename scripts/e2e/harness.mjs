@@ -65,6 +65,14 @@ export class Harness {
     this.env.JWT_SECRET, { expiresIn: '15m' },
   );
 
+  /** A step-up-satisfying token (recent MFA) for endpoints behind requireStepUp. */
+  mintStepUp = (u) => jwt.sign(
+    { sub: u.id, username: u.username, role: u.role, departmentId: u.department_id ?? '',
+      jti: randomUUID(), amr: ['pwd', 'totp'], mfaSatisfied: true,
+      mfaVerifiedAt: new Date().toISOString(), authStrength: 'mfa' },
+    this.env.JWT_SECRET, { expiresIn: '15m' },
+  );
+
   // ── HTTP ────────────────────────────────────────────────────────────────────
   /** POST /api/<path> with { args }. Never throws — returns { status, body }. */
   api = async (path, token, args = {}) => {

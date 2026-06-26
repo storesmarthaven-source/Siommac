@@ -9,7 +9,7 @@
 // POST /api/admin/security/users/status              — view a user's security posture
 // POST /api/admin/security/users/passkeys/revoke-all — revoke all passkeys for a user
 // POST /api/admin/security/users/trusted-devices/revoke-all — revoke all trusted devices
-// POST /api/admin/security/policy/update             — update org security policy (v1: no-op)
+// POST /api/admin/security/policy/update             — set MFA-mandatory roles (DB-backed)
 
 import { Hono }             from 'hono';
 import { z }                from 'zod';
@@ -24,7 +24,7 @@ import {
   rotateSecurityStamp,
 } from '../lib/trustedDevices';
 import { isTwoFactorMandatory } from '../lib/totp';
-import { getPublicPolicy }      from '../lib/securityPolicy';
+import { getPublicPolicy, invalidatePolicyCache } from '../lib/securityPolicy';
 import type { HonoVariables } from '../../../types/api';
 import type { AppUser }       from '../../../types/db';
 
@@ -208,23 +208,19 @@ policyReadRouter.post('/policy', async c => {
 
   return c.json({
     success: true,
-    policy:  getPublicPolicy(),
+    policy:  await getPublicPolicy(),
   });
 });
 
 // ── POST /api/admin/security/policy/update ────────────────────────────────────
-// Superadmin-only: update the organisation security policy.
-// v1: validates input and returns not-implemented (no app_settings table yet).
-// When an app_settings store is added, replace the stub body below.
-
+// Superadmin-only (auth.security.manage_policy + step-up): set the MFA-mandatory
+// roles, persisted to auth_security_policy and enforced by lib/securityPolicy.
+// MFA is the DB-backed, enforceable knob; trusted-device / passkey / step-up knobs
+// remain env-controlled, so the schema is strict — it only accepts what it honours
+// (unknown fields are rejected, never silently dropped).
 const PolicyUpdateSchema = z.object({
-  trustedDevicesEnabled:      z.boolean().optional(),
-  trustedDeviceTtlByRole:     z.record(z.string(), z.number().int().positive()).optional(),
-  requireMfaRoles:            z.array(z.string()).optional(),
-  allowPasswordlessPasskey:   z.boolean().optional(),
-  allowPasskeyAsSecondFactor: z.boolean().optional(),
-  stepUpMaxAgeMinutes:        z.number().int().positive().max(60).optional(),
-});
+  requireMfaRoles: z.array(z.enum(['admin', 'manager', 'superadmin'])),
+}).strict();
 
 router.post('/policy/update', async c => {
   const actor = await requirePermission(c, 'auth.security.manage_policy');
@@ -238,15 +234,27 @@ router.post('/policy/update', async c => {
   const v    = zv(c, PolicyUpdateSchema, body.args ?? body);
   if (!v.ok) return v.response;
 
-  // v1: No persistent settings store exists yet. Validate the shape and
-  // return a clear not-implemented so the frontend can gate the feature.
-  // TODO: persist to app_settings when that table is created.
-  return c.json({
-    success: false,
-    code:    'not_implemented',
-    message: 'Policy persistence is not yet available. The policy is currently controlled via environment variables.',
-    received: v.data,
-  }, 501 as 200);
+  const roles = new Set(v.data.requireMfaRoles);
+  const { error } = await sb.from('auth_security_policy').update({
+    require_mfa_for_admin:       roles.has('admin'),
+    require_mfa_for_manager:     roles.has('manager'),
+    require_mfa_for_super_admin: roles.has('superadmin'),
+    updated_by: actor.id,
+    updated_at: new Date().toISOString(),
+  }).eq('id', 'default');
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  invalidatePolicyCache();   // next login reads the new policy without waiting out the TTL
+  void emitAppEvent({
+    eventType:        'auth.security.policy_updated',
+    sourceModule:     'auth',
+    sourceEntityType: 'security_policy',
+    sourceEntityId:   'default',
+    actorUserId:      actor.id,
+    severity:         'warning',
+    payload:          { requireMfaRoles: [...roles] },
+  });
+  return c.json({ success: true, policy: await getPublicPolicy() });
 });
 
 export default router;
