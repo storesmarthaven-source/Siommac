@@ -40,6 +40,7 @@ export default async function run(h) {
     expect(items.length >= 3, `expected >= 3 items, got ${items.length}`);
     expect(items.some(i => i.item_type === 'event'), 'has an event item');
     expect(items.some(i => i.item_type === 'handoff'), 'has a handoff item');
+    expect(items.some(i => i.actor_name), 'actor ids enriched to display names server-side');
     const ts = items.map(i => new Date(i.created_at).getTime());
     expect(ts.every((t, i) => i === 0 || ts[i - 1] >= t), 'items are sorted newest-first');
   });

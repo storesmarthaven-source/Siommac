@@ -429,3 +429,26 @@
 .ui-rdrawer .ui-menu-ico { background: rgba(255,255,255,.10); color: #dbeafe; }
 .ui-rdrawer .ui-menu-item.danger { color: #fecaca; }
 .ui-rdrawer .ui-menu-item.danger .ui-menu-ico { background: rgba(239,68,68,.20); color: #fecaca; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * Orchestration — ActivityTimeline (cross-module record feed). Severity drives
+ * the dot colour; the icon encodes the item kind. See
+ * src/components/shared/orchestration/ActivityTimeline.tsx.
+ * ══════════════════════════════════════════════════════════════════════════ */
+.orch-tl { position: relative; padding: 4px 0; }
+.orch-tl-line { position: absolute; left: 18px; top: 12px; bottom: 18px; width: 2px; background: #e5edf6; }
+.orch-tl-item { position: relative; display: flex; gap: 14px; padding: 0 0 18px; }
+.orch-tl-badge { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 15px; z-index: 1; background: #f1f5f9; color: #64748b; border: 1px solid #e5edf6; }
+.orch-tl-item.sev-warning  .orch-tl-badge { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.orch-tl-item.sev-critical .orch-tl-badge { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.orch-tl-item.sev-success  .orch-tl-badge { background: #ecfdf5; color: #15803d; border-color: #bbf7d0; }
+.orch-tl-body { flex: 1; min-width: 0; padding-top: 1px; }
+.orch-tl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.orch-tl-title { font-size: 14px; font-weight: var(--font-weight-semibold, 600); color: #0f172a; }
+.orch-tl-time { font-size: 11px; color: #94a3b8; white-space: nowrap; flex: none; }
+.orch-tl-desc { font-size: 12px; color: #64748b; margin-top: 2px; line-height: 1.45; }
+.orch-tl-meta { font-size: 10px; color: #94a3b8; margin-top: 5px; text-transform: uppercase; letter-spacing: .05em; }
+.orch-tl-state { padding: 18px; color: #64748b; font-size: 13px; }
+.orch-tl-empty { padding: 22px 18px; display: grid; gap: 4px; text-align: center; border: 1px dashed #dbe5f2; border-radius: 12px; color: #64748b; }
+.orch-tl-empty strong { color: #0f172a; font-size: 14px; }
+.orch-tl-empty span { font-size: 12px; }

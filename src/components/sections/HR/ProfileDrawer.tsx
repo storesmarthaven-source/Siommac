@@ -33,6 +33,7 @@ import {
   type HrWorkflowSummary,
 } from '@api/hr/employees';
 import { useHrOnboardingCase, useCompleteOnboardingTask, useCancelOnboarding } from '@api/hr/onboarding';
+import { ActivityTimeline } from '@shared/orchestration/ActivityTimeline';
 import {
   humanize, initials, statusTone, TRAINING_TONE, TRAINING_LABEL, type PillTone,
 } from './shared';
@@ -466,7 +467,7 @@ function ModuleLinkTab({ title, body }: { title: string; body: string }): VNode 
 // ── drawer shell ─────────────────────────────────────────────────────────────────
 
 const PRIMARY_TABS = ['Overview', 'Employment', 'Assignments', 'Documents', 'Training'];
-const MORE_TABS = ['Statutory Profile', 'Onboarding', 'Leave', 'Attendance', 'Workflows', 'Audit'];
+const MORE_TABS = ['Timeline', 'Statutory Profile', 'Onboarding', 'Leave', 'Attendance', 'Workflows', 'Audit'];
 
 export function ProfileDrawer(
   { employeeId, onClose, onAction }:
@@ -544,6 +545,7 @@ export function ProfileDrawer(
             {tab === 'Training'          && <TrainingTab trainQ={trainQ} />}
             {tab === 'Statutory Profile' && <StatutoryTab d={d!} onEdit={() => onAction('Edit Statutory Profile')} />}
             {tab === 'Onboarding'        && <OnboardingTab employeeId={employeeId} />}
+            {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
             {tab === 'Leave'             && <ModuleLinkTab title="Leave" body="Leave balances and requests are managed in the Leave module." />}
             {tab === 'Attendance'        && <ModuleLinkTab title="Attendance" body="Timesheets and clock events are managed in the Attendance module." />}
             {tab === 'Workflows'         && <WorkflowsTab wfQ={wfQ} />}

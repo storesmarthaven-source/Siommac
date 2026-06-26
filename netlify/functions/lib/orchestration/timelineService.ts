@@ -22,6 +22,7 @@ export interface TimelineItem {
   title: string;
   description?: string;
   actor_id?: string | null;
+  actor_name?: string;
   severity?: string;
   created_at: string;
   source_url?: string;
@@ -132,6 +133,15 @@ export async function getRecordTimeline(actor: TimelineActor, args: TimelineArgs
     for (const t of (tickets ?? []) as Array<{ id: string; ticket_number: string; subject: string; status: string; requester_user_id: string | null; created_at: string }>) {
       items.push({ id: t.id, item_type: 'ticket', title: t.subject, description: t.status, actor_id: t.requester_user_id, created_at: t.created_at, metadata: { ticket_number: t.ticket_number } });
     }
+  }
+
+  // Enrich actor_id → display name (one lookup) so the UI shows people, not ids.
+  const actorIds = [...new Set(items.map(i => i.actor_id).filter((x): x is string => !!x))];
+  if (actorIds.length) {
+    const { data: users } = await sb.from('app_users')
+      .select('id, full_name, username').in('id', actorIds);
+    const nameById = new Map((users ?? []).map((u: { id: string; full_name: string | null; username: string | null }) => [u.id, u.full_name || u.username || u.id]));
+    for (const it of items) if (it.actor_id) it.actor_name = nameById.get(it.actor_id) ?? undefined;
   }
 
   return items.sort(byNewestFirst);
