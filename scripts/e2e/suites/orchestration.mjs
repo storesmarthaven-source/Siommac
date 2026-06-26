@@ -62,4 +62,52 @@ export default async function run(h) {
     fails(await api('orchestration/timeline/get', mint(admin), { module: 'mystery', recordType: 'thing', recordId }),
       'unmapped module has no view permission → denied');
   });
+
+  // ── Record links (requires migration 20260713000000; skips cleanly if absent) ──
+  h.section('Orchestration › Record Links');
+  const { error: rlMissing } = await sb.from('record_links').select('id').limit(1);
+  if (rlMissing) {
+    h.log?.(`record_links not present (${rlMissing.message}) — apply migration 20260713000000; skipping link tests.`);
+    return;
+  }
+
+  const empId = `${h.TAG}-EMP`;
+  const linkArgs = {
+    source: { module: 'hse', recordType: 'incident', recordId, title: 'Test incident' },
+    target: { module: 'hr',  recordType: 'employee', recordId: empId, title: 'Test employee' },
+    relationshipType: 'related_to',
+  };
+  h.onCleanup(async () => { await sb.from('record_links').delete().eq('source_record_id', recordId); });
+
+  await test('record-links/create (admin) → links two records', async () => {
+    const r = await api('orchestration/record-links/create', mint(admin), linkArgs);
+    ok(r, 'link create');
+    expect(r.body.data?.relationship_type === 'related_to', 'relationship persisted');
+  });
+  await test('record-links/list shows the link on the SOURCE record', async () => {
+    const r = await api('orchestration/record-links/list', mint(admin), { module: 'hse', recordType: 'incident', recordId });
+    ok(r); expect((r.body.data ?? []).some(l => l.target_record_id === empId), 'link present on source');
+  });
+  await test('record-links/list shows the link on the TARGET record (bidirectional)', async () => {
+    const r = await api('orchestration/record-links/list', mint(admin), { module: 'hr', recordType: 'employee', recordId: empId });
+    ok(r); expect((r.body.data ?? []).some(l => l.source_record_id === recordId), 'link present on target');
+  });
+  await test('record-links/create is idempotent (upsert, no duplicate)', async () => {
+    await api('orchestration/record-links/create', mint(admin), linkArgs);
+    const r = await api('orchestration/record-links/list', mint(admin), { module: 'hse', recordType: 'incident', recordId });
+    const matches = (r.body.data ?? []).filter(l => l.target_record_id === empId && l.relationship_type === 'related_to');
+    expect(matches.length === 1, `expected exactly 1 link, got ${matches.length}`);
+  });
+  await test('ACCESS: linking an HR record without hr.view → denied', async () => {
+    // b can view the incident (source) but not the HR employee (target) → must be denied.
+    fails(await api('orchestration/record-links/create', mint(b), linkArgs), 'employee lacks hr.view on target → denied');
+  });
+  await test('record-links/delete (admin) → removed', async () => {
+    const list = await api('orchestration/record-links/list', mint(admin), { module: 'hse', recordType: 'incident', recordId });
+    const id = (list.body.data ?? []).find(l => l.target_record_id === empId)?.id;
+    expect(id, 'have a link id to delete');
+    ok(await api('orchestration/record-links/delete', mint(admin), { id }), 'delete');
+    const after = await api('orchestration/record-links/list', mint(admin), { module: 'hse', recordType: 'incident', recordId });
+    expect(!(after.body.data ?? []).some(l => l.id === id), 'link removed');
+  });
 }
