@@ -152,7 +152,7 @@ function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
             border: '1px solid var(--border)',
           }}
         >
-          <div style={{ fontWeight: 700, fontSize: '0.72rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
+          <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.72rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
             Step {s['step_number'] as number}
           </div>
           <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: '4px' }}>

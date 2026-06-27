@@ -9,6 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient, type QueryFunctionContext } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { useRecordQuery } from '@lib/recordQuery';
 import { hrEmployeeKeys } from '../queryKeys';
 
 // ── Canonical enums / shapes (match the backend) ──────────────────────────────
@@ -116,20 +117,56 @@ export function useHrEmployees(filter: HrEmployeeListFilter = {}) {
     queryKey: hrEmployeeKeys.list(f),
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: HrEmployeeRow[] }>('hr/employees/list', f, { signal });
-      return res.data;
+      return res.data ?? [];
     },
   });
 }
 
+// Shared fetch — used by the hook AND the hover-prefetch helper (no duplication).
+async function fetchHrEmployeeDetail(employeeId: string, signal?: AbortSignal): Promise<HrEmployeeDetail> {
+  const res = await apiPost<{ success: boolean; data: HrEmployeeDetail }>('hr/employees/get', { employeeId }, { signal });
+  return res.data;
+}
+
+// Record-scoped: returns RecordQueryResult — `.data` is surfaced ONLY when it
+// belongs to `employeeId` and `.ready` gates the drawer, so a previous employee's
+// data can never flash on switch. Instant open via a list-cache placeholder.
 export function useHrEmployee(employeeId: string | null) {
-  return useQuery({
+  const qc = useQueryClient();
+  return useRecordQuery<HrEmployeeDetail>({
+    recordId: employeeId,
     queryKey: hrEmployeeKeys.detail(employeeId ?? ''),
-    enabled:  !!employeeId,
-    queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrEmployeeDetail }>('hr/employees/get', { employeeId }, { signal });
-      return res.data;
+    queryFn:  (signal) => fetchHrEmployeeDetail(employeeId as string, signal),
+    getId:    d => d.employee.id,
+    // INSTANT OPEN: seed from the register row we already hold (real data, not a
+    // fake); the full detail (statutory / history / readiness) fills in on fetch.
+    placeholder: () => {
+      if (!employeeId) return undefined;
+      for (const [, rows] of qc.getQueriesData<HrEmployeeRow[]>({ queryKey: hrEmployeeKeys.lists() })) {
+        const row = rows?.find(r => r.id === employeeId);
+        if (row) return {
+          employee: { ...row, supervisorName: row.supervisorName ?? null, departmentName: row.departmentName ?? null },
+          statusHistory: [], currentAssignment: null, statutory: null, payrollReadiness: null,
+        } satisfies HrEmployeeDetail;
+      }
+      return undefined;
     },
   });
+}
+
+/** Warm the detail cache on row hover/focus so the drawer opens fully-loaded.
+ *  prefetchQuery is a no-op when the data is already cached + fresh, so repeated
+ *  hovers are cheap. Returns a stable callback: prefetch(employeeId). */
+export function usePrefetchHrEmployee() {
+  const qc = useQueryClient();
+  return (employeeId: string) => {
+    if (!employeeId) return;
+    void qc.prefetchQuery({
+      queryKey: hrEmployeeKeys.detail(employeeId),
+      queryFn:  ({ signal }: QueryFunctionContext) => fetchHrEmployeeDetail(employeeId, signal),
+      staleTime: 60_000,
+    });
+  };
 }
 
 export function useHrDashboardStats(filter: { siteId?: string; departmentId?: string } = {}) {

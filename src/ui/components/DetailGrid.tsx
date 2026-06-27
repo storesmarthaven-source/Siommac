@@ -16,6 +16,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { SkeletonFields } from './Skeleton';
 
 export interface DetailItem {
   /** Font Awesome class, e.g. 'fa-circle-dot'. Optional. */
@@ -30,9 +31,20 @@ export interface DetailGridProps {
   hideEmpty?: boolean;
   /** Extra class on the grid wrapper (e.g. a per-page meta grid tweak). */
   class?: string;
+  /** Cold-load — render field skeletons instead of values. */
+  loading?: boolean;
+  /** Skeleton row count when loading (default = items.length or 6). */
+  skeletonRows?: number;
 }
 
-export function DetailGrid({ items, hideEmpty = false, class: className }: DetailGridProps): VNode {
+export function DetailGrid({ items, hideEmpty = false, class: className, loading = false, skeletonRows }: DetailGridProps): VNode {
+  if (loading) {
+    return (
+      <div class={`hse-idrawer-grid${className ? ' ' + className : ''}`} aria-busy="true">
+        <SkeletonFields rows={skeletonRows ?? (items.length || 6)} />
+      </div>
+    );
+  }
   const shown = hideEmpty
     ? items.filter(it => it.value !== null && it.value !== undefined && it.value !== '')
     : items;

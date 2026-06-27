@@ -213,7 +213,7 @@ function HazardWorkflowTab({ workflow }: { workflow: Record<string, unknown> | n
         border: '1px solid var(--border)',
       }}
     >
-      <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '6px' }}>
+      <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.85rem', marginBottom: '6px' }}>
         {workflow['ref'] as string}
       </div>
       <span class={hsePill(workflow['status'] as string)}>

@@ -130,7 +130,7 @@ function AboutSection() {
           </div>
         </div>
         <div style="flex:1;min-width:220px;">
-          <div style="font-size:0.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--siomac-red);margin-bottom:8px;">Workforce Management Platform</div>
+          <div style="font-size:0.72rem;font-weight: var(--font-weight-bold);letter-spacing:1.5px;text-transform:uppercase;color:var(--siomac-red);margin-bottom:8px;">Workforce Management Platform</div>
           <h1 style="color:#fff;font-size:2rem;font-weight:800;margin-bottom:8px;line-height:1.15;"><span id="aboutCompanyName">SIOMAC</span></h1>
           <p style="color:rgba(255,255,255,0.65);font-size:0.9rem;line-height:1.65;margin-bottom:20px;max-width:560px;">A complete operations and maintenance management system built for field teams. Real-time attendance tracking, GPS-verified check-ins, leave management and payroll reporting — all in one platform.</p>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
@@ -164,7 +164,7 @@ function AboutSection() {
             <div style="width:42px;height:42px;border-radius:12px;background:rgba(228,12,12,0.08);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
               <i class={`fas ${card.icon}`} style="color:var(--siomac-red);font-size:18px;" />
             </div>
-            <div style="font-size:0.9rem;font-weight:700;color:var(--siomac-navy);margin-bottom:6px;">{card.title}</div>
+            <div style="font-size:0.9rem;font-weight: var(--font-weight-bold);color:var(--siomac-navy);margin-bottom:6px;">{card.title}</div>
             <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.6;">{card.desc}</div>
           </div>
         ))}
@@ -182,8 +182,8 @@ function AboutSection() {
           <div key={item.label} style="display:flex;align-items:center;gap:10px;">
             <i class={`fas ${item.icon}`} style="color:var(--siomac-red);width:18px;text-align:center;" />
             <div>
-              <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;">{item.label}</div>
-              <div style="font-size:0.85rem;font-weight:700;color:var(--siomac-navy);">{item.value}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;font-weight: var(--font-weight-bold);">{item.label}</div>
+              <div style="font-size:0.85rem;font-weight: var(--font-weight-bold);color:var(--siomac-navy);">{item.value}</div>
             </div>
           </div>
         ))}

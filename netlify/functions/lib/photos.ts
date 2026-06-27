@@ -87,6 +87,8 @@ interface ProfileImageFields {
   profile_image_url?:       string | null;
   profile_image_thumb_url?: string | null;
   profile_image?:           string | null;
+  signed_url?:              string | null;
+  signed_url_expires_at?:   string | null;
 }
 
 /** The best avatar URL for a user row, or null. Thumb preferred (smaller). */
@@ -94,9 +96,15 @@ function resolveProfileImageUrl(u: ProfileImageFields | null | undefined): strin
   if (!u) return null;
   if (u.profile_image_thumb_url) return u.profile_image_thumb_url;
   if (u.profile_image_url)       return u.profile_image_url;
+  // Cached signed URL — use if still valid (> 5 min remaining).
+  if (u.signed_url && u.signed_url_expires_at) {
+    const expiresAt = new Date(u.signed_url_expires_at).getTime();
+    if (expiresAt > Date.now() + 5 * 60 * 1000) return u.signed_url;
+  }
+  // Legacy profile_image — only safe if it's already a full https URL (not a private path).
   const legacy = u.profile_image;
   if (!legacy || legacy === '__removed__') return null;
-  return /^https?:\/\//.test(legacy) ? legacy : null;  // never return a private path
+  return /^https?:\/\//.test(legacy) ? legacy : null;
 }
 
 /** Public read URL for an avatars-bucket object path. */

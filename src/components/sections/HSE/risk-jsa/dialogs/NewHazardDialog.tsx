@@ -322,7 +322,7 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
       {step === 3 && (
         <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
           <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', background: 'var(--bg-subtle)' }}>
-            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
               <i class="fas fa-radiation" style={{ marginRight: '8px', color: 'var(--siomac-navy)' }} />
               Hazard Summary
             </h4>

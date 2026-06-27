@@ -27,6 +27,13 @@
   to = "/.netlify/functions/api"
   status = 200
 
+# SPA fallback for the public invite-accept page (HR Onboarding provisioning) so the
+# emailed /set-password?token=… deep link serves index.html in production.
+[[redirects]]
+  from = "/set-password"
+  to = "/index.html"
+  status = 200
+
 # ── Security headers — applied to every response ─────────────────────────────
 [[headers]]
   for = "/*"

@@ -60,7 +60,7 @@
 
 /* ── Drawer sections (stages + route) ── */
 .wf-section { display: grid; gap: 8px; }
-.wf-section-title { display: flex; align-items: center; gap: 7px; color: var(--siomac-navy); font-size: 0.78rem; font-weight: 700; }
+.wf-section-title { display: flex; align-items: center; gap: 7px; color: var(--siomac-navy); font-size: 0.78rem; font-weight: var(--font-weight-bold); }
 .wf-section-title i { color: var(--siomac-red); }
 .wf-stages { display: grid; gap: 6px; }
 .wf-stage { padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }

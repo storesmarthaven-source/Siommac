@@ -201,7 +201,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
               <i class="fas fa-shield-halved" style={{ fontSize: '18px', color: 'var(--siomac-navy, #1e3a5f)' }} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary, #111)' }}>
+              <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '15px', color: 'var(--text-primary, #111)' }}>
                 Confirm it's you
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', marginTop: '2px' }}>

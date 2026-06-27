@@ -7,8 +7,8 @@
 
 .leave-doc { background: #fff; padding: 18mm 16mm; max-width: 210mm; min-height: 290mm; margin: 0 auto; color: #000; font-family: 'Times New Roman', Times, serif; line-height: 1.6; font-size: 12pt; box-sizing: border-box; }
 .leave-doc-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 22px; }
-.leave-doc-header h1 { font-size: 22pt; margin: 6px 0 4px; font-weight: 700; }
-.leave-doc-header h2 { font-size: 14pt; margin: 0; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; color: #333; }
+.leave-doc-header h1 { font-size: 22pt; margin: 6px 0 4px; font-weight: var(--font-weight-bold); }
+.leave-doc-header h2 { font-size: 14pt; margin: 0; text-transform: uppercase; letter-spacing: 3px; font-weight: var(--font-weight-bold); color: #333; }
 .leave-doc-logo { max-height: 64px; max-width: 120px; object-fit: contain; margin-bottom: 6px; }
 .leave-doc-meta { display: flex; justify-content: space-between; margin-bottom: 22px; font-size: 11pt; }
 .leave-doc-to { margin-bottom: 18px; }
@@ -17,7 +17,7 @@
 .leave-doc-sign { margin-top: 36px; }
 .leave-doc-sign-line { margin-top: 50px; margin-bottom: 4px; }
 .leave-doc-hr { margin-top: 50px; border-top: 2px solid #000; padding-top: 16px; }
-.leave-doc-hr-title { text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
+.leave-doc-hr-title { text-align: center; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; }
 .leave-doc-hr table { width: 100%; border-collapse: collapse; font-size: 11pt; }
 .leave-doc-hr table td { padding: 6px 8px; border: 1px solid #000; }
 .leave-doc-hr table td:first-child { background: #f0f0f0; font-weight: 600; width: 28%; }

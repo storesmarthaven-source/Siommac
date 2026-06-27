@@ -100,7 +100,7 @@ export function NotificationDropdown(): VNode {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderBottom: '1px solid var(--border)' }}>
         <i class="fas fa-bell" style={{ color: 'var(--siomac-navy)' }} />
-        <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.9rem' }}>Notifications</span>
+        <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', fontSize: '0.9rem' }}>Notifications</span>
         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{unread} unread</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
           <button ref={menuBtnRef} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px 6px' }}
@@ -151,7 +151,7 @@ export function NotificationDropdown(): VNode {
         {!isLoading && rows.length === 0 && (
           <div style={{ padding: '32px 20px', textAlign: 'center' }}>
             <i class="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
-            <div style={{ fontWeight: 700, color: 'var(--siomac-navy)', marginTop: '10px' }}>You're all caught up</div>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '10px' }}>You're all caught up</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>No new notifications or required actions.</div>
             <button class="hse-btn" style={{ marginTop: '14px' }} onClick={goToCenter}>
               <i class="fas fa-bell" /> View Notification Center

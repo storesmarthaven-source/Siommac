@@ -60,7 +60,7 @@ export function MessageDropdownItem({ thread, onOpen }: {
         background: avatarUrl ? 'transparent' : 'rgba(27,45,85,0.12)', overflow: 'hidden' }}>
         {avatarUrl
           ? <img src={avatarUrl} alt={avatarText} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{avatarText}</span>
+          : <span style={{ fontSize: '0.78rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{avatarText}</span>
         }
       </div>
 
@@ -75,7 +75,7 @@ export function MessageDropdownItem({ thread, onOpen }: {
           </span>
           {isUnread && (
             <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
-              background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.62rem', fontWeight: 700,
+              background: 'var(--siomac-navy)', color: '#fff', fontSize: '0.62rem', fontWeight: 'var(--font-weight-bold)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
               {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
             </span>

@@ -10,6 +10,7 @@
 
 import { type VNode, type ComponentChildren, toChildArray } from 'preact';
 import { usePagination, Pagination, DEFAULT_PAGE_SIZE } from './Pagination';
+import { TableSkeleton } from './Skeleton';
 
 export interface Column {
   label: string;
@@ -27,16 +28,23 @@ interface RegisterTableProps {
   pageSize?: number;
   /** Count noun shown by the pager, e.g. "incidents". */
   noun?: string;
+  /** Cold-load — render a skeleton body (keeps the header) instead of rows.
+   *  Gate with `loading={q.isLoading && !q.data}`. */
+  loading?: boolean;
+  /** First skeleton cell mimics an avatar + two lines (registers with avatars). */
+  firstCellAvatar?: boolean;
 }
 
-export function RegisterTable({ columns, children, footer, pageSize = DEFAULT_PAGE_SIZE, noun }: RegisterTableProps): VNode {
+export function RegisterTable({ columns, children, footer, pageSize = DEFAULT_PAGE_SIZE, noun, loading = false, firstCellAvatar = false }: RegisterTableProps): VNode {
   const rows = toChildArray(children);
   const paged = pageSize > 0;
   const pg = usePagination(rows, paged ? pageSize : Math.max(1, rows.length));
+  const skeletonRows = paged ? pageSize : 10;
 
   return (
     <>
-      <div class="vt-table-scroll">
+      <div class="vt-table-scroll" aria-busy={loading ? 'true' : 'false'}>
+        {loading && <span class="sr-only" role="status">Loading records…</span>}
         <table class="vt-table">
           <thead>
             <tr>
@@ -45,7 +53,7 @@ export function RegisterTable({ columns, children, footer, pageSize = DEFAULT_PA
               ))}
             </tr>
           </thead>
-          <tbody>{paged ? pg.pageItems : rows}</tbody>
+          <tbody>{loading ? <TableSkeleton rows={skeletonRows} cols={columns.length} firstCellAvatar={firstCellAvatar} /> : paged ? pg.pageItems : rows}</tbody>
         </table>
       </div>
       {footer && (
@@ -60,7 +68,7 @@ export function RegisterTable({ columns, children, footer, pageSize = DEFAULT_PA
           {footer}
         </div>
       )}
-      {paged && (
+      {paged && !loading && (
         <Pagination page={pg.page} pageCount={pg.pageCount} total={pg.total} pageSize={pg.pageSize} onPage={pg.setPage} noun={noun} />
       )}
     </>

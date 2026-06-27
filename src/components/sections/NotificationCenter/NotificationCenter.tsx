@@ -220,7 +220,7 @@ export function NotificationCenter(): VNode {
         {!isLoading && rows.length === 0 && (
           <div style={{ padding: '46px 24px', textAlign: 'center' }}>
             <i class="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
-            <div style={{ fontWeight: 700, color: 'var(--siomac-navy)', marginTop: '12px', fontSize: '0.95rem' }}>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '12px', fontSize: '0.95rem' }}>
               You're all caught up
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>

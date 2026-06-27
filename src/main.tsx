@@ -97,6 +97,7 @@ import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
 import { AppShell }            from '@shell';
+import { SetPasswordPage }     from '@/components/auth/SetPasswordPage';
 import { mountNavController, mountCommandPalette, mountNavCustomizer }  from '@components/nav';
 import { useSessionStore }     from '@store/session';
 import '@cfg/index';            // registers window.SiomacConfig before any legacy script reads it
@@ -172,6 +173,15 @@ async function bootApp(): Promise<void> {
   // No network fetch — all HTML is compiled into the bundle via src/shell/.
   const root = document.getElementById('app-root');
   if (!root) throw new Error('#app-root element not found in DOM');
+
+  // Public invite-accept page (HR Onboarding provisioning) — render standalone,
+  // skipping the app shell + auth flow entirely. No session required.
+  if (window.location.pathname.replace(/\/+$/, '') === '/set-password') {
+    render(h(QueryClientProvider, { client: queryClient }, h(SetPasswordPage, null)), root);
+    logger.info('Set-password page mounted');
+    return;
+  }
+
   // Wrap AppShell in QueryClientProvider so slot components (AdminStatCards,
   // AdminRecentTable, etc.) that use useQuery have access to the client.
   render(

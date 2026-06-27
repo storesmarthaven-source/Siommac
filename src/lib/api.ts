@@ -48,8 +48,11 @@ import {
 const MAX_RETRIES    = 2;
 const RETRY_BASE_MS  = 300;   // first retry after 300 ms, second after 600 ms
 
-/** HTTP status codes that are safe to retry (transient server errors) */
-const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+/** HTTP status codes that are safe to retry (transient server errors).
+ *  429 is deliberately EXCLUDED — a rate-limited request must back off, not
+ *  hammer at 300ms; fast-retrying it amplifies the limit and ignores Retry-After.
+ *  Reads still get a gentle retry from the query layer (TanStack exponential). */
+const RETRYABLE_STATUS = new Set([408, 500, 502, 503, 504]);
 
 function _shouldRetry(status: number, attempt: number): boolean {
   return attempt < MAX_RETRIES && RETRYABLE_STATUS.has(status);

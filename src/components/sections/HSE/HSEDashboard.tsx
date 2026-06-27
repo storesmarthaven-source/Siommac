@@ -889,7 +889,7 @@ function SiteIntelligenceLayer({ onOpen }: { onOpen: (d: DD) => void }): VNode {
           <div class="hse-site-num" style={{ color: s.ptw.includes('blocked') ? C.red : 'var(--text-default)' }}>{s.ptw}</div>
           <div class="hse-site-num" style={{ color: s.capas >= 3 ? C.red : s.capas >= 1 ? C.amber : C.green }}>{s.capas}</div>
           <div>
-            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: s.readColor }}>{s.readiness}%</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 'var(--font-weight-bold)', color: s.readColor }}>{s.readiness}%</div>
             <div class="hse-site-risk-bar-wrap" style={{ marginTop: 3 }}>
               <div class="hse-site-risk-bar" style={{ width: `${s.readiness}%`, background: s.readColor }} />
             </div>

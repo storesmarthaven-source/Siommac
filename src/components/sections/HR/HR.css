@@ -40,7 +40,8 @@
 .hr-emp-master .primary-btn .caret { font-size: 13px; opacity: .9; margin-left: 4px; }
 .hr-emp-master .secondary-btn { height: 40px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; color: #1e293b; font-weight: var(--font-weight-semibold, 600); font-size: 13px; padding: 0 14px; }
 .hr-emp-master .ghost-btn { height: 38px; border: 1px solid var(--line-dark); border-radius: 9px; background: #fff; color: #334155; padding: 0 12px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); display: inline-flex; align-items: center; gap: 7px; }
-.hr-emp-master .secondary-btn:hover, .hr-emp-master .ghost-btn:hover, .hr-emp-master .multi-select:hover, .hr-emp-master .advanced-filter-btn:hover { background: #f8fbff; }
+.hr-emp-master .secondary-btn:hover, .hr-emp-master .ghost-btn:hover, .hr-emp-master .multi-select:hover { background: #f8fbff; }
+.hr-emp-master .advanced-filter-btn:hover { background: #23355c; }
 
 /* ── KPI stat cards (v34 one-line) ────────────────────────────────────────── */
 .hr-emp-master .em-stat-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0 0 18px; align-items: stretch; }
@@ -69,7 +70,7 @@
 
 .hr-emp-master .em-stat-chart { height: 116px; min-height: 116px; border: 1px solid #edf2f8; background: #fbfdff; border-radius: 12px; padding: 8px; overflow: hidden; }
 .hr-emp-master .em-stat-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.hr-emp-master .em-line-chart text { font-size: 11px; fill: #64748b; font-weight: 700; }
+.hr-emp-master .em-line-chart text { font-size: 11px; fill: #64748b; font-weight: var(--font-weight-bold); }
 
 /* Change-mix mini bars */
 .hr-emp-master .em-mini-bars { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
@@ -98,8 +99,12 @@
 .hr-emp-master .exception-row strong { text-align: right; color: #0f172a; }
 
 /* ── Toolbar ──────────────────────────────────────────────────────────────── */
-.hr-emp-master .employee-toolbar { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; grid-template-columns: minmax(360px, 1fr) minmax(138px, 170px) minmax(174px, 210px) minmax(150px, 180px); gap: 10px; align-items: center; margin-bottom: 12px; position: relative; }
-.hr-emp-master .table-search { position: relative; min-width: 0; }
+/* Flex-wrap so fields shrink/reflow as the table widget is resized. New Employee
+   (last child) stays fixed; search + filters flex and wrap to a new row when narrow. */
+.hr-emp-master .employee-toolbar { background: #fbfdff; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0; position: relative; }
+.hr-emp-master .employee-toolbar > .dropdown-wrap { flex: 0 1 auto; min-width: 130px; max-width: 220px; }
+.hr-emp-master .employee-toolbar > .dropdown-wrap:last-child { flex: 0 0 auto; min-width: 0; max-width: none; }
+.hr-emp-master .table-search { position: relative; flex: 1 1 240px; min-width: 160px; }
 .hr-emp-master .table-search .magnify { position: absolute; left: 14px; top: 12px; color: #718096; font-size: 15px; pointer-events: none; }
 .hr-emp-master .table-search input { width: 100%; height: 46px; border: 1px solid var(--line-dark); border-radius: 11px; padding: 0 14px 0 40px; background: #fff; outline: none; color: #334155; }
 
@@ -110,11 +115,15 @@
 .hr-emp-master .multi-select-value { color: #111827; font-size: 12px; font-weight: var(--font-weight-bold, 700); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hr-emp-master .multi-select-count { height: 18px; min-width: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center; background: #eaf2ff; color: #0757df; font-size: 10px; font-weight: var(--font-weight-bold, 700); }
 
-.hr-emp-master .advanced-filter-btn { height: 46px; width: 100%; border: 1px solid var(--line-dark); background: #fff; color: #1f2937; border-radius: 11px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .advanced-filter-btn { height: 46px; width: 100%; border: 1px solid #fff; background: #1b2d54; color: #fff; border-radius: 11px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: var(--font-weight-bold, 700); }
 .hr-emp-master .advanced-filter-btn .left { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.hr-emp-master .advanced-filter-btn small { display: block; color: #64748b; font-size: 10px; font-weight: var(--font-weight-bold, 700); text-transform: uppercase; letter-spacing: .04em; line-height: 1; margin-bottom: 3px; text-align: left; }
-.hr-emp-master .advanced-filter-btn strong { display: block; color: #111827; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hr-emp-master .advanced-filter-btn .sliders { width: 28px; height: 28px; border-radius: 8px; background: #eef5ff; color: #0757df; display: grid; place-items: center; flex: none; }
+.hr-emp-master .advanced-filter-btn small { display: block; color: rgba(255,255,255,.7); font-size: 10px; font-weight: var(--font-weight-bold, 700); text-transform: uppercase; letter-spacing: .04em; line-height: 1; margin-bottom: 3px; text-align: left; }
+.hr-emp-master .advanced-filter-btn strong { display: block; color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-emp-master .advanced-filter-btn .sliders { width: 28px; height: 28px; border-radius: 8px; color: #fff; display: grid; place-items: center; flex: none; }
+.hr-emp-master .advanced-filter-btn .adv-right { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.hr-emp-master .advanced-filter-btn .adv-caret { width: 25px; height: 25px; border-radius: 8px; background: #647394; color: #fff; display: grid; place-items: center; font-size: 11px; flex: none; }
+/* New Employee button matches the advanced-filter height (46px) in the toolbar */
+.hr-emp-master .employee-toolbar .hse-btn { height: 46px; border-radius: 11px; }
 .hr-emp-master .advanced-count { height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px; background: #0757df; color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: var(--font-weight-bold, 700); }
 
 /* ── Dropdown menus ───────────────────────────────────────────────────────── */
@@ -159,13 +168,33 @@
 .hr-emp-master .setting-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 22px; border: 1px solid #dbeafe; background: #eff6ff; color: #0757df; border-radius: 999px; padding: 0 9px; font-size: 10px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
 
 /* Active filter chips */
-.hr-emp-master .active-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -2px 0 12px; }
+.hr-emp-master .active-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .hr-emp-master .active-filter-bar strong { font-size: 12px; color: #475569; margin-right: 2px; }
 .hr-emp-master .chip-btn { height: 28px; border: 1px solid #cfe0ff; border-radius: 999px; background: #f4f8ff; color: #0757df; padding: 0 10px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
 
 /* ── Register table ───────────────────────────────────────────────────────── */
-.hr-emp-master .table-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
-.hr-emp-master table { width: 100%; min-width: 1180px; border-collapse: collapse; table-layout: auto; }
+/* Register table widget — fills its gridstack cell; toolbar + pagination fixed,
+   the table body scrolls internally so the widget is resizable. */
+.hr-emp-master .table-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.hr-emp-master .table-scroll { flex: 1; min-height: 0; overflow: auto; }
+
+/* ── Insight widget panels (widget board) ─────────────────────────────────────── */
+.hr-emp-master .hrw-dept { display: flex; gap: 14px; align-items: center; height: 100%; }
+.hr-emp-master .hrw-pie { width: 100px; height: 100px; border-radius: 50%; flex: none; position: relative; }
+.hr-emp-master .hrw-pie::after { content: ""; position: absolute; inset: 26px; background: #fff; border-radius: 50%; }
+.hr-emp-master .hrw-legend { display: grid; gap: 7px; min-width: 0; }
+.hr-emp-master .hrw-legend div { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 7px; font-size: 11px; color: #4e5d73; min-width: 0; }
+.hr-emp-master .hrw-legend span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .hrw-legend b { color: #1f2a3d; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+.hr-emp-master .hrw-dot { width: 8px; height: 8px; border-radius: 50%; }
+.hr-emp-master .hrw-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; }
+.hr-emp-master .hrw-demo-tile { border: 1px solid var(--line-2, #edf1f6); border-radius: 8px; padding: 10px; }
+.hr-emp-master .hrw-demo-tile small { display: block; font-size: 10px; color: #536177; margin-bottom: 6px; }
+.hr-emp-master .hrw-demo-tile strong { font-size: 18px; color: #061225; font-weight: var(--font-weight-bold, 700); letter-spacing: -.02em; }
+/* table-layout: fixed so columns never recompute width from content — the cold
+   skeleton and real rows share identical geometry (no layout jump). Row height is
+   pinned so skeleton rows (--register-row-height) match real rows exactly. */
+.hr-emp-master table { width: 100%; min-width: 1180px; border-collapse: collapse; table-layout: fixed; --register-row-height: 58px; }
 .hr-emp-master th { height: 46px; text-align: left; font-size: 11px; color: #0f172a; font-weight: var(--font-weight-bold, 700); border-bottom: 1px solid var(--line); padding: 0 10px; background: #fbfdff; }
 .hr-emp-master td { height: 58px; border-bottom: 1px solid var(--line); padding: 0 10px; font-size: 12px; color: #334155; vertical-align: middle; }
 .hr-emp-master tr:last-child td { border-bottom: none; }
@@ -173,6 +202,14 @@
 .hr-emp-master tr.employee-row:hover { background: #f8fbff; }
 .hr-emp-master tr.employee-row.selected { background: #f2f7ff; }
 .hr-emp-master table th:nth-child(1) { width: 22%; }
+.hr-emp-master table th:nth-child(2) { width: 10%; }
+.hr-emp-master table th:nth-child(3) { width: 11%; }
+.hr-emp-master table th:nth-child(4) { width: 11%; }
+.hr-emp-master table th:nth-child(5) { width: 10%; }
+.hr-emp-master table th:nth-child(6) { width: 10%; }
+.hr-emp-master table th:nth-child(7) { width: 9%; }
+.hr-emp-master table th:nth-child(8) { width: 9%; }
+.hr-emp-master table th:nth-child(9) { width: 8%; }
 .hr-emp-master table th:nth-child(10), .hr-emp-master table td:nth-child(10) { width: 72px; text-align: center; }
 
 .hr-emp-master .employee-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -197,7 +234,7 @@
 .hr-emp-master .kebab-btn:hover { background: #f1f5f9; }
 
 /* ── Pagination ───────────────────────────────────────────────────────────── */
-.hr-emp-master .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; color: #475569; font-size: 13px; }
+.hr-emp-master .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 0; padding: 10px 14px; border-top: 1px solid var(--line); color: #475569; font-size: 13px; flex: none; }
 .hr-emp-master .pages { display: flex; gap: 10px; align-items: center; }
 .hr-emp-master .page-btn { width: 34px; height: 34px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; display: grid; place-items: center; font-weight: var(--font-weight-semibold, 600); color: #334155; }
 .hr-emp-master .page-btn.active { background: #0757df; color: #fff; border-color: #0757df; }
@@ -211,8 +248,8 @@
 .hr-emp-master .toast.show { opacity: 1; }
 
 /* ── States ───────────────────────────────────────────────────────────────── */
-.hr-emp-master .em-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: 700; }
-.hr-emp-master .em-chart-empty { display: grid; place-items: center; height: 100%; color: #94a3b8; font-size: 11px; font-weight: 700; }
+.hr-emp-master .em-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-bold); }
+.hr-emp-master .em-chart-empty { display: grid; place-items: center; height: 100%; color: #94a3b8; font-size: 11px; font-weight: var(--font-weight-bold); }
 
 /* ── Profile drawer ───────────────────────────────────────────────────────── */
 .hr-emp-master .drawer { position: fixed; top: 0; right: 0; z-index: 80; width: min(500px, calc(100vw - 24px)); height: 100vh; background: #fff; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; overflow: hidden; transform: translateX(calc(100% + 18px)); opacity: 0; pointer-events: none; transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; box-shadow: -18px 0 38px rgba(15,23,42,.12); }

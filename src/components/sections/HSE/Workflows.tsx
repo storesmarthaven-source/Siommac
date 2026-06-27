@@ -56,7 +56,7 @@ const STATUS_TONE: Record<string, { bg: string; color: string; label: string }> 
 function StatusPill({ status }: { status: string }): VNode {
   const t = STATUS_TONE[status] ?? { bg: 'rgba(148,163,184,.12)', color: '#94a3b8', label: status };
   return (
-    <span style={{ background: t.bg, color: t.color, padding: '3px 10px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.03em' }}>
+    <span style={{ background: t.bg, color: t.color, padding: '3px 10px', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', letterSpacing: '0.03em' }}>
       {t.label}
     </span>
   );
@@ -65,7 +65,7 @@ function StatusPill({ status }: { status: string }): VNode {
 function PriorityChip({ priority }: { priority: string }): VNode {
   const color = PRIORITY_TONE[priority] ?? '#94a3b8';
   return (
-    <span style={{ background: `${color}22`, color, padding: '2px 8px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+    <span style={{ background: `${color}22`, color, padding: '2px 8px', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
       {priority}
     </span>
   );
@@ -359,7 +359,7 @@ function WorkflowDetailPanel({ inst, onClose }: { inst: WorkflowInstance; onClos
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h4 style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 700, margin: 0 }}>
+        <h4 style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 'var(--font-weight-bold)', margin: 0 }}>
           <i class={`fas ${MODULE_ICON[inst.source_module] ?? 'fa-diagram-project'}`} style={{ marginRight: '7px', color: 'rgba(255,255,255,.5)' }} />
           {inst.ref}
         </h4>
@@ -383,7 +383,7 @@ function WorkflowDetailPanel({ inst, onClose }: { inst: WorkflowInstance; onClos
 
       {detail && detail.tasks.length > 0 && (
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '10px' }}>
             Tasks
           </div>
           {detail.tasks.map(t => (
@@ -400,7 +400,7 @@ function WorkflowDetailPanel({ inst, onClose }: { inst: WorkflowInstance; onClos
 
       {detail && detail.events.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>
             Event history
           </div>
           {detail.events.slice(0, 8).map(ev => (
@@ -520,7 +520,7 @@ function AuditTab(): VNode {
             <div style={{ padding: '24px 16px', textAlign: 'center', color: 'rgba(255,255,255,.4)', fontSize: '0.8rem' }}>No events yet.</div>
           ) : (
             <div>
-              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>
                 Event log
               </div>
               {events.map(ev => (

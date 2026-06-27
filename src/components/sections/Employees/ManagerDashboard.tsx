@@ -30,7 +30,7 @@ export function ManagerDashboard({ currentUsername }: ManagerDashboardProps): VN
     <div style={{ padding: '24px' }}>
 
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>My Department</h1>
+        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'var(--font-weight-bold)', color: '#111827' }}>My Department</h1>
         <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>Real-time overview of your team's attendance.</p>
       </div>
 
@@ -61,7 +61,7 @@ export function ManagerDashboard({ currentUsername }: ManagerDashboardProps): VN
               <thead>
                 <tr style={{ background: '#f9fafb', borderBottom: '1px solid #f3f4f6' }}>
                   {['Name', 'Position', 'Status', 'Last Activity', 'Location'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', whiteSpace: 'nowrap' }}>
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#6b7280', whiteSpace: 'nowrap' }}>
                       {h}
                     </th>
                   ))}

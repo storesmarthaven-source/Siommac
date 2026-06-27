@@ -36,3 +36,31 @@ export async function saveLayoutDefault(pageKey: string, order: string[]): Promi
 export async function resetLayoutOverride(pageKey: string): Promise<void> {
   await apiPost('layout/resetOverride', { pageKey });
 }
+
+// ── Widget board geometry (gridstack) — see docs/WIDGET_BOARD_SPEC.md ─────────────
+
+export interface BoardItem { id: string; x: number; y: number; w: number; h: number; }
+
+export interface BoardLayoutResponse {
+  default:  BoardItem[] | null;
+  override: BoardItem[] | null;
+}
+
+/** Read a board page's geometry (org default + this user's override). Reuses
+ *  layout/get; the jsonb card_order holds the BoardItem[] for board pages. */
+export async function getBoardLayout(pageKey: string): Promise<BoardLayoutResponse> {
+  const res = await apiPost<{ success: boolean; data?: { default: unknown; override: unknown } }>('layout/get', { pageKey });
+  const asBoard = (v: unknown): BoardItem[] | null =>
+    Array.isArray(v) && v.every(o => o && typeof o === 'object' && 'id' in (o as object)) ? (v as BoardItem[]) : null;
+  return { default: asBoard(res.data?.default), override: asBoard(res.data?.override) };
+}
+
+export async function saveBoardOverride(pageKey: string, board: BoardItem[]): Promise<void> {
+  const res = await apiPost<{ success: boolean; message?: string }>('layout/saveBoardOverride', { pageKey, board });
+  if (!res.success) throw new Error(res.message ?? 'Failed to save board layout.');
+}
+
+export async function saveBoardDefault(pageKey: string, board: BoardItem[]): Promise<void> {
+  const res = await apiPost<{ success: boolean; message?: string }>('layout/saveBoardDefault', { pageKey, board });
+  if (!res.success) throw new Error(res.message ?? 'Failed to save default board layout.');
+}

@@ -6,7 +6,7 @@
   margin-bottom: 20px;
 }
 .ep-page-title {
-  font-size: 1.8rem; font-weight: 700; color: var(--siomac-navy); margin: 0 0 4px;
+  font-size: 1.8rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin: 0 0 4px;
 }
 .ep-page-sub {
   font-size: 0.85rem; color: var(--text-muted); margin: 0;
@@ -61,7 +61,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .ep-hero-name {
-  font-size: 1.4rem; font-weight: 700; color: var(--siomac-navy); margin: 0;
+  font-size: 1.4rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin: 0;
 }
 .ep-hero-role {
   font-size: 0.85rem; color: var(--text-muted); margin: 0;
@@ -175,7 +175,7 @@
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--siomac-red); color: white; border: none;
   padding: 11px 28px; border-radius: 40px;
-  font-size: 0.88rem; font-weight: 700; font-family: inherit;
+  font-size: 0.88rem; font-weight: var(--font-weight-bold); font-family: inherit;
   cursor: pointer; transition: opacity .18s;
 }
 .ep-save-btn:hover { opacity: .88; }

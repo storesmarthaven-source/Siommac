@@ -63,11 +63,11 @@ export function RiskMatrixPicker({ likelihood, severity, onChange, readonly }: R
       <div style={{ display: 'grid', gridTemplateColumns: 'auto repeat(5, 1fr)', gap: '4px', alignItems: 'center' }}>
         <div />
         {SCALE.map(s => (
-          <div key={`sh${s}`} style={{ textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 700 }}>{s}</div>
+          <div key={`sh${s}`} style={{ textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 'var(--font-weight-bold)' }}>{s}</div>
         ))}
         {[...SCALE].reverse().map(l => (
           <>
-            <div key={`lh${l}`} style={{ fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 700, textAlign: 'right', paddingRight: '6px' }}>{l}</div>
+            <div key={`lh${l}`} style={{ fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 'var(--font-weight-bold)', textAlign: 'right', paddingRight: '6px' }}>{l}</div>
             {SCALE.map(s => cell(l, s))}
           </>
         ))}

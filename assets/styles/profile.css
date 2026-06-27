@@ -11,7 +11,7 @@
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
 }
-.profile-page-title { font-size: 1.6rem; font-weight: 700; color: var(--siomac-navy); margin: 0; }
+.profile-page-title { font-size: 1.6rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin: 0; }
 .profile-page-sub { color: var(--text-muted); font-size: 0.82rem; margin: 4px 0 0; }
 
 .profile-card {
@@ -43,7 +43,7 @@
   text-align: center; padding: 0 24px 24px;
   border-bottom: 1px solid var(--border);
 }
-.profile-display-name { font-size: 1.5rem; font-weight: 700; color: var(--siomac-navy); }
+.profile-display-name { font-size: 1.5rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); }
 .profile-display-role {
   display: inline-block; background: rgba(228,12,12,0.1);
   padding: 4px 16px; border-radius: 30px;
@@ -74,7 +74,7 @@
   background: #F8FAFE; border-radius: 24px; padding: 24px;
 }
 .profile-section-title {
-  font-size: 1rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy);
   margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
   border-bottom: 2px solid var(--border); padding-bottom: 12px;
 }
@@ -177,7 +177,7 @@
 }
 .section-header h2 {
   font-size: 1rem; color: var(--siomac-navy);
-  display: flex; align-items: center; gap: 10px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px; font-weight: var(--font-weight-bold);
 }
 .section-header h2 i { color: var(--siomac-red); font-size: 1rem; }
 .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }

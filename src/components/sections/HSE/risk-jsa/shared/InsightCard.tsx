@@ -115,7 +115,7 @@ export function InsightCard({ title, icon, value, subtitle, footer, variant, ton
         <div style={{ marginTop: 'auto', paddingTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '0.66rem', color: navy ? 'rgba(255,255,255,.5)' : 'var(--text-muted)' }}>
           <span>{footer}</span>
           {actionLabel && onAction && (
-            <button type="button" onClick={onAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: navy ? '#93c5fd' : 'var(--siomac-navy)', fontWeight: 700, fontSize: '0.66rem', whiteSpace: 'nowrap' }}>
+            <button type="button" onClick={onAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: navy ? '#93c5fd' : 'var(--siomac-navy)', fontWeight: 'var(--font-weight-bold)', fontSize: '0.66rem', whiteSpace: 'nowrap' }}>
               {actionLabel} <i class="fas fa-arrow-right" style={{ fontSize: '0.56rem' }} />
             </button>
           )}

@@ -73,7 +73,7 @@ function StatStackBar({ segments }: { segments: { label: string; value: number; 
           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.72rem', minWidth: 0 }}>
             <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
             <span style={{ color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
-            <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{s.value}</span>
+            <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{s.value}</span>
           </div>
         ))}
       </div>
@@ -150,7 +150,7 @@ function StatColumns({ points, labels, color }: { points: number[]; labels: stri
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '8px', height: '78px' }}>
         {points.map((v, i) => (
           <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', height: '100%' }}>
-            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: v > 0 ? 'var(--siomac-navy)' : 'transparent' }}>{v}</span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', color: v > 0 ? 'var(--siomac-navy)' : 'transparent' }}>{v}</span>
             <div style={{ width: '100%', maxWidth: '22px', height: `${Math.max(3, (v / max) * 58)}px`, borderRadius: '5px 5px 2px 2px', background: v > 0 ? color : '#eef0f5' }} />
           </div>
         ))}

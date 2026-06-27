@@ -46,7 +46,7 @@
 }
 .hr-stat-icon i { font-size: 24px; color: var(--siomac-red); }
 .hr-stat-body { display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
-.hr-stat-value { font-size: 2rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; white-space: nowrap; }
+.hr-stat-value { font-size: 2rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); line-height: 1.1; white-space: nowrap; }
 .hr-stat-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; white-space: nowrap; }
 
 /* filters bar */
@@ -90,7 +90,7 @@
 #ratesTable { width: 100%; border-collapse: collapse; }
 #ratesTable th {
   text-align: left; padding: 14px 20px;
-  font-size: 0.72rem; font-weight: 700;
+  font-size: 0.72rem; font-weight: var(--font-weight-bold);
   color: #fff; background: #1A2C53;
   border-bottom: none;
   text-transform: uppercase; letter-spacing: .4px;
@@ -112,7 +112,7 @@
 /* role badges */
 .hr-role-badge {
   display: inline-block; padding: 4px 13px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+  font-size: 0.68rem; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .3px;
 }
 .hr-role-admin    { background: #FFEBEE; color: #C62828; }
 .hr-role-manager  { background: #E3F2FD; color: #1565C0; }
@@ -126,7 +126,7 @@
 .hr-rate-input {
   width: 84px !important; padding: 5px 8px !important;
   border: 1.5px solid var(--border); border-radius: 30px;
-  font-size: 0.82rem !important; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.82rem !important; font-weight: var(--font-weight-bold); color: var(--siomac-navy);
   text-align: center; background: white; font-family: inherit;
   transition: border-color .2s; line-height: 1.4;
 }
@@ -141,7 +141,7 @@
 /* save single button */
 .hr-save-btn {
   background: #2E7D32; border: none; padding: 7px 18px;
-  border-radius: 30px; color: white; font-size: 0.72rem; font-weight: 700;
+  border-radius: 30px; color: white; font-size: 0.72rem; font-weight: var(--font-weight-bold);
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
   transition: background .2s; font-family: inherit;
   white-space: nowrap;
@@ -171,7 +171,7 @@
 .hr-modal-overlay.active .hr-modal-container { transform: scale(1); }
 .hr-modal-header {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px; font-size: 1.15rem; font-weight: 700; color: var(--siomac-navy);
+  margin-bottom: 20px; font-size: 1.15rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy);
 }
 .hr-modal-close {
   background: none; border: none; font-size: 1.1rem; cursor: pointer;

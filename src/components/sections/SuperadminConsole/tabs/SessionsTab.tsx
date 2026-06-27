@@ -56,7 +56,7 @@ function SessionRow({ s, busy, onRevoke }: { s: ActiveSession; busy: boolean; on
   const initials = (s.fullName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0, background: 'var(--siomac-navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: '#fff' }}>{initials}</div>
+      <div style={{ width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0, background: 'var(--siomac-navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'var(--font-weight-bold)', color: '#fff' }}>{initials}</div>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
           {s.fullName}

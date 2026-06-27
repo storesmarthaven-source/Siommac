@@ -10,7 +10,7 @@
 }
 .dash-overview-title {
   display: flex; align-items: center; gap: 10px;
-  font-size: 1.25rem; font-weight: 700; color: #1b2d55;
+  font-size: 1.25rem; font-weight: var(--font-weight-bold); color: #1b2d55;
 }
 .dash-overview-title i { font-size: 1.15rem; color: #1b2d55; }
 .dash-overview-actions {
@@ -61,7 +61,7 @@
 .hdr-profile-avatar {
   width: 46px; height: 46px; border-radius: 50%;
   background: var(--siomac-red);
-  color: white; font-weight: 700; font-size: 1rem;
+  color: white; font-weight: var(--font-weight-bold); font-size: 1rem;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: .5px;
 }
@@ -156,7 +156,7 @@
   border-radius: 20px 20px 0 0;
 }
 .chart-card-header h3 {
-  font-size: 0.92rem; font-weight: 700; color: #fff;
+  font-size: 0.92rem; font-weight: var(--font-weight-bold); color: #fff;
   display: flex; align-items: center; margin: 0;
 }
 .chart-card-header h3 i {
@@ -188,7 +188,7 @@
 }
 @keyframes chartSpin { to { transform: rotate(360deg); } }
 .chart-badge {
-  font-size: 0.72rem; font-weight: 700;
+  font-size: 0.72rem; font-weight: var(--font-weight-bold);
   color: #fff; background: rgba(255,255,255,0.18);
   padding: 4px 12px; border-radius: 8px;
   white-space: nowrap;
@@ -217,7 +217,7 @@
   font-size: 0.77rem; color: var(--text-muted); min-width: 30px; text-align: right;
 }
 .dash-stat-val {
-  font-size: 0.92rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.92rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy);
   min-width: 22px; text-align: right;
 }
 .dash-stat-rate {

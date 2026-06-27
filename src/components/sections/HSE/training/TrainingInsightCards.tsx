@@ -89,7 +89,7 @@ function StatDonut({ total, centerLabel, segments }: { total: number; centerLabe
           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.73rem' }}>
             <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
             <span style={{ color: 'var(--text-muted)', flex: 1 }}>{s.label}</span>
-            <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{s.value}</span>
+            <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{s.value}</span>
           </div>
         ))}
         {segments.every(s => s.value === 0) && <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>None</div>}
@@ -109,7 +109,7 @@ function StatBars({ bars }: { bars: { label: string; value: number; color: strin
           <div style={{ flex: 1, height: '9px', borderRadius: '999px', background: '#eef0f5', overflow: 'hidden', minWidth: 0 }}>
             <div style={{ width: `${Math.round((b.value / max) * 100)}%`, height: '100%', background: b.color, borderRadius: '999px' }} />
           </div>
-          <span style={{ width: '22px', textAlign: 'right', fontWeight: 700, fontSize: '0.8rem', color: 'var(--siomac-navy)', flexShrink: 0 }}>{b.value}</span>
+          <span style={{ width: '22px', textAlign: 'right', fontWeight: 'var(--font-weight-bold)', fontSize: '0.8rem', color: 'var(--siomac-navy)', flexShrink: 0 }}>{b.value}</span>
         </div>
       ))}
     </div>
@@ -144,7 +144,7 @@ function StatColumns({ points, labels, color }: { points: number[]; labels: stri
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '8px', height: '78px' }}>
         {points.map((v, i) => (
           <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', height: '100%' }}>
-            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: v > 0 ? 'var(--siomac-navy)' : 'transparent' }}>{v}</span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', color: v > 0 ? 'var(--siomac-navy)' : 'transparent' }}>{v}</span>
             <div style={{ width: '100%', maxWidth: '22px', height: `${Math.max(3, (v / max) * 58)}px`, borderRadius: '5px 5px 2px 2px', background: v > 0 ? color : '#eef0f5' }} />
           </div>
         ))}

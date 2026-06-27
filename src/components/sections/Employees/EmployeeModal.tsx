@@ -612,7 +612,7 @@ function Section({ title, children }: { title: string; children: ComponentChildr
     <div>
       <div style={{
         fontSize:      '11px',
-        fontWeight:    '700',
+        fontWeight: 'var(--font-weight-bold)',
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
         color:         '#6b7280',

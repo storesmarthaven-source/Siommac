@@ -426,7 +426,7 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
             {stepRows.map((row, i) => (
               <div key={i} style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.85rem', minWidth: '20px' }}>{row.stepNumber}</span>
+                  <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', fontSize: '0.85rem', minWidth: '20px' }}>{row.stepNumber}</span>
                   <input class="ui-input" style={{ flex: 1 }} placeholder="Task step description *" value={row.taskStep}
                     onInput={e => patchStep(i, { taskStep: (e.target as HTMLInputElement).value })} />
                   <button class="hse-btn ghost" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => moveStepUp(i)} disabled={i === 0} title="Move up"><i class="fas fa-arrow-up" /></button>
@@ -645,7 +645,7 @@ export function NewJsaWizard({ open, onClose, prefill }: { open: boolean; onClos
               border: '1px solid var(--border)',
             }}
           >
-            <div style={{ fontWeight: 700, marginBottom: '10px', fontSize: '0.85rem' }}>JSA Summary</div>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', marginBottom: '10px', fontSize: '0.85rem' }}>JSA Summary</div>
             <div style={{ display: 'grid', gap: '8px', fontSize: '0.82rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '4px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Title</span>

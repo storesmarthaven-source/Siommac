@@ -15,6 +15,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { TableSkeleton, SkeletonFields } from './Skeleton';
 
 /** The six tonal families used by panel/dialog pills. */
 export type PillTone = 'green' | 'amber' | 'red' | 'purple' | 'blue' | 'gray';
@@ -31,8 +32,8 @@ export function InfoCard(
   );
 }
 
-export function FieldList({ children }: { children: ComponentChildren }): VNode {
-  return <div class="ui-field-list">{children}</div>;
+export function FieldList({ children, loading = false, skeletonRows = 4 }: { children: ComponentChildren; loading?: boolean; skeletonRows?: number }): VNode {
+  return <div class="ui-field-list" aria-busy={loading ? 'true' : undefined}>{loading ? <SkeletonFields rows={skeletonRows} /> : children}</div>;
 }
 
 export function FieldRow({ icon, label, value }: { icon?: string; label: string; value: ComponentChildren }): VNode {
@@ -48,9 +49,17 @@ export function FieldRow({ icon, label, value }: { icon?: string; label: string;
 }
 
 export function MiniTable(
-  { cols, empty, children }:
-  { cols: string[]; empty: string; children: VNode[] },
+  { cols, empty, children, loading }:
+  { cols: string[]; empty: ComponentChildren; children: VNode[]; loading?: boolean },
 ): VNode {
+  if (loading) {
+    return (
+      <table class="ui-mini-table">
+        <thead><tr>{cols.map(c => <th key={c}>{c}</th>)}</tr></thead>
+        <tbody><TableSkeleton rows={4} cols={cols.length} /></tbody>
+      </table>
+    );
+  }
   return children.length
     ? (
       <table class="ui-mini-table">
@@ -58,7 +67,7 @@ export function MiniTable(
         <tbody>{children}</tbody>
       </table>
     )
-    : <div class="ui-panel-empty">{empty}</div>;
+    : typeof empty === 'string' ? <div class="ui-panel-empty">{empty}</div> : <>{empty}</>;
 }
 
 export function Pill({ tone, children }: { tone: PillTone; children: ComponentChildren }): VNode {

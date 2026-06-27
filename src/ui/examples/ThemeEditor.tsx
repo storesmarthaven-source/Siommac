@@ -109,7 +109,7 @@ export function ThemeEditor(): VNode {
       }}>
         <span class="ui-modal-icon"><i class="fas fa-palette" /></span>
         <div style={{ marginRight: 'auto' }}>
-          <div style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.95rem' }}>Theme editor</div>
+          <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', fontSize: '0.95rem' }}>Theme editor</div>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
             Live, app-wide. Hover &amp; focus states update automatically — they reference these tokens.
           </div>
@@ -145,7 +145,7 @@ export function ThemeEditor(): VNode {
       <div style={{ padding: 'var(--space-4)' }}>
         {TOKEN_GROUPS.map(group => (
           <div key={group.id} style={{ marginBottom: 'var(--space-5)' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{group.label}</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{group.label}</div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>{group.desc}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
               {group.tokens.map(t => (

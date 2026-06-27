@@ -184,7 +184,7 @@ function PayslipModal({ row, dateFrom, dateTo, onClose }: PayslipModalProps) {
           <hr style="border:none;border-top:2px solid var(--siomac-navy,#1b2d55);margin:12px 0" />
 
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:16px;font-weight:700">Net Pay</span>
+            <span style="font-size:16px;font-weight: var(--font-weight-bold)">Net Pay</span>
             <span style="font-size:22px;font-weight:800;color:var(--siomac-navy,#1b2d55)">{fmtMoney(row.netPay)}</span>
           </div>
 
@@ -448,7 +448,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
     <div class="prs-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div class="prc-modal" onClick={(e) => e.stopPropagation()} style="max-width:540px;background:#fff;border-radius:12px;overflow:hidden">
         <div class="prs-header" style="padding:16px 20px">
-          <span style="font-weight:700"><i class="fas fa-scale-balanced" style="margin-right:8px"></i>T&amp;T Statutory Constants</span>
+          <span style="font-weight: var(--font-weight-bold)"><i class="fas fa-scale-balanced" style="margin-right:8px"></i>T&amp;T Statutory Constants</span>
           <button class="prs-close-btn" onClick={onClose}><i class="fas fa-times"></i></button>
         </div>
 

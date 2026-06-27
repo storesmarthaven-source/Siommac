@@ -3,7 +3,7 @@
   width: 88px; height: 88px; border-radius: 50%;
   background: var(--siomac-red);
   color: white; display: flex; align-items: center; justify-content: center;
-  font-size: 36px; font-weight: 700; margin: 0 auto 16px;
+  font-size: 36px; font-weight: var(--font-weight-bold); margin: 0 auto 16px;
   overflow: hidden; text-transform: uppercase; flex-shrink: 0;
 }
 
@@ -24,7 +24,7 @@
   color: white;
   display: flex; flex-direction: column; align-items: center;
 }
-.ea-welcome-card h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.ea-welcome-card h2 { font-size: 1.4rem; font-weight: var(--font-weight-bold); color: #fff; margin-bottom: 4px; }
 .ea-role-text { font-size: 0.82rem; color: rgba(255,255,255,.65); margin-bottom: 10px; }
 /* Status badge sits close to name, then spacer pushes button to bottom */
 .ea-status-wrapper { margin-top: 0; margin-bottom: auto; }
@@ -35,7 +35,7 @@
 .ea-action-btn {
   background: var(--siomac-red);
   border: none; padding: 13px 36px; border-radius: 60px;
-  color: white; font-weight: 700; font-size: 0.95rem;
+  color: white; font-weight: var(--font-weight-bold); font-size: 0.95rem;
   display: inline-flex; align-items: center; gap: 10px;
   cursor: pointer; transition: opacity .18s;
   font-family: inherit;
@@ -77,13 +77,13 @@
   margin-bottom: 0;
 }
 .ea-section-title {
-  font-weight: 700; color: var(--siomac-navy);
+  font-weight: var(--font-weight-bold); color: var(--siomac-navy);
   font-size: 1rem; margin-bottom: 16px;
   display: flex; align-items: center; gap: 8px;
 }
 .ea-clock-display {
   font-family: 'Courier New', monospace; font-size: 2.2rem;
-  font-weight: 700; color: var(--siomac-navy); text-align: center;
+  font-weight: var(--font-weight-bold); color: var(--siomac-navy); text-align: center;
   background: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md);
   margin-bottom: 6px;
 }
@@ -97,7 +97,7 @@
 }
 .ea-info-row i { font-size: 1.15rem; width: 22px; flex-shrink: 0; margin-top: 3px; }
 .ea-info-row strong { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); font-weight: 600; }
-.ea-info-row .ea-info-value { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px; display: block; }
+.ea-info-row .ea-info-value { font-size: 1.05rem; font-weight: var(--font-weight-bold); color: var(--text-primary); margin-top: 2px; display: block; }
 .ea-info-row:nth-child(odd) { padding-right: 20px; }
 .ea-info-row:nth-child(even) { padding-left: 20px; border-left: 1px solid var(--border); }
 .ea-info-row:nth-last-child(-n+2) { border-bottom: none; }
@@ -128,7 +128,7 @@
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 10px; font-size: 18px;
 }
-.ea-summary-value { font-size: 1.6rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; }
+.ea-summary-value { font-size: 1.6rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); line-height: 1.1; }
 .ea-summary-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 
 .ea-total-days-bar {
@@ -137,17 +137,17 @@
   display: flex; justify-content: space-between; align-items: center;
   color: white;
 }
-.ea-total-days-value { font-size: 1.5rem; font-weight: 700; }
+.ea-total-days-value { font-size: 1.5rem; font-weight: var(--font-weight-bold); }
 
 /* Clock / date (shared) */
 .clock-display {
   font-family: 'Courier New', monospace; font-size: 32px;
-  font-weight: 700; color: var(--siomac-navy); text-align: center;
+  font-weight: var(--font-weight-bold); color: var(--siomac-navy); text-align: center;
 }
 .iso-date { font-family: 'Courier New', monospace; font-size: 13px; color: var(--text-muted); text-align: center; }
 .stat-row { display: flex; justify-content: center; gap: 24px; margin: 20px 0; flex-wrap: wrap; }
 .stat-row > div { text-align: center; }
-.stat-row .stat-number { font-size: 28px; font-weight: 700; color: var(--siomac-navy); }
+.stat-row .stat-number { font-size: 28px; font-weight: var(--font-weight-bold); color: var(--siomac-navy); }
 .stat-row .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
 
 /* ─── Employee History Page ─── */
@@ -155,7 +155,7 @@
   display: flex; justify-content: space-between; align-items: flex-start;
   margin-bottom: 24px; flex-wrap: wrap; gap: 14px;
 }
-.eh-page-title { font-size: 1.5rem; font-weight: 700; color: var(--siomac-navy); margin-bottom: 4px; }
+.eh-page-title { font-size: 1.5rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin-bottom: 4px; }
 .eh-page-sub   { font-size: 0.82rem; color: var(--text-muted); }
 
 .eh-stats-row {
@@ -172,7 +172,7 @@
   background: rgba(228,12,12,0.1); display: flex; align-items: center;
   justify-content: center; font-size: 18px; color: var(--siomac-red); margin-bottom: 12px;
 }
-.eh-stat-value { font-size: 1.7rem; font-weight: 700; color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
+.eh-stat-value { font-size: 1.7rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); line-height: 1; margin-bottom: 4px; }
 .eh-stat-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
 
 .eh-filters-bar {
@@ -203,7 +203,7 @@
 .eh-table-container thead th,
 .eh-table-container table.dataTable thead th {
   background: var(--bg-subtle) !important; font-size: 0.72rem; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--text-muted) !important; font-weight: 700;
+  letter-spacing: .5px; color: var(--text-muted) !important; font-weight: var(--font-weight-bold);
   padding: 14px 18px; border-bottom: 1px solid var(--border); white-space: nowrap;
   border-radius: 0 !important;
 }
@@ -313,7 +313,7 @@
 }
 .cm-btn {
   flex: 1; padding: 13px 16px; border-radius: 60px;
-  font-size: 0.88rem; font-weight: 700; font-family: inherit;
+  font-size: 0.88rem; font-weight: var(--font-weight-bold); font-family: inherit;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; border: none; transition: opacity .18s;
   white-space: nowrap;
@@ -359,7 +359,7 @@
 }
 .cm-site-label {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--siomac-navy);
   display: flex;
   align-items: center;
@@ -387,7 +387,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   padding: 3px 9px;
   border-radius: 20px;
   white-space: nowrap;

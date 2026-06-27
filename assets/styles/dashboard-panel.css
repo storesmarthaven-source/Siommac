@@ -49,7 +49,7 @@
   display: flex !important; align-items: center !important; justify-content: center !important;
 }
 .overview-title-section h2 {
-  font-size: 1.35rem; font-weight: 700; color: var(--siomac-navy); letter-spacing: -0.2px;
+  font-size: 1.35rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); letter-spacing: -0.2px;
 }
 
 /* Profile + notif merged pill — stays navy */
@@ -165,7 +165,7 @@
   color: #fff; font-size: 1rem; flex-shrink: 0;
 }
 .odb-text { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.odb-day  { font-size: 0.83rem; font-weight: 700; color: rgba(255,255,255,0.9); }
+.odb-day  { font-size: 0.83rem; font-weight: var(--font-weight-bold); color: rgba(255,255,255,0.9); }
 .odb-sep  { font-size: 0.83rem; color: rgba(255,255,255,0.4); }
 .odb-date { font-size: 0.83rem; font-weight: 500; color: rgba(255,255,255,0.75); }
 

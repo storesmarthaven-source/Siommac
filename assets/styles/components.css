@@ -7,7 +7,7 @@
 }
 .page-breadcrumb-root { color: var(--text-muted); font-weight: 500; }
 .page-breadcrumb-sep { font-size: 0.62rem; color: #b8c2d4; }
-.page-breadcrumb-current { color: var(--siomac-navy); font-weight: 700; }
+.page-breadcrumb-current { color: var(--siomac-navy); font-weight: var(--font-weight-bold); }
 
 /* Page header: title/subtitle on the left, action buttons on the right */
 .page-head {
@@ -16,7 +16,7 @@
 }
 .page-head-titles { min-width: 0; }
 .page-head-title {
-  font-size: 1.55rem; font-weight: 700; letter-spacing: -0.01em;
+  font-size: 1.55rem; font-weight: var(--font-weight-bold); letter-spacing: -0.01em;
   color: var(--siomac-navy); line-height: 1.15;
 }
 .page-head-sub { font-size: 0.86rem; color: var(--text-muted); margin-top: 4px; }
@@ -86,7 +86,7 @@
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 14px;
 }
-.vt-popover-title { font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy); }
+.vt-popover-title { font-size: 0.82rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); }
 .vt-popover-clear {
   font-size: 0.76rem; font-weight: 600; color: #2563eb;
   background: none; border: none; cursor: pointer; font-family: inherit;
@@ -193,7 +193,7 @@
   width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
   background: var(--siomac-navy); color: #fff; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+  font-size: 12.5px; font-weight: var(--font-weight-bold); text-transform: uppercase;
 }
 .vt-cell-account-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .vt-cell-name { font-weight: 500; color: var(--siomac-navy); }
@@ -230,7 +230,7 @@
   padding: 6px; min-width: 168px;
 }
 .vt-row-menu-label {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  font-size: 0.64rem; font-weight: var(--font-weight-bold); letter-spacing: 1px; text-transform: uppercase;
   color: #98a4bb; padding: 7px 10px 5px;
 }
 .vt-row-menu button {
@@ -278,7 +278,7 @@
   background: rgba(27,45,84,.08); color: var(--siomac-navy);
   display: flex; align-items: center; justify-content: center; font-size: 1rem;
 }
-.vt-section-title { font-size: 1.12rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.2; }
+.vt-section-title { font-size: 1.12rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); line-height: 1.2; }
 .vt-section-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; }
 
 /* Role-summary card grid */
@@ -288,8 +288,8 @@
   display: flex; flex-direction: column; background: var(--bg-card);
 }
 .vt-rolecard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.vt-rolecard-title { font-size: 1rem; font-weight: 700; color: var(--siomac-navy); display: flex; align-items: center; gap: 8px; }
-.vt-rolecard-sys { font-size: 0.6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); background: var(--bg-subtle, #F8FAFE); border-radius: 7px; padding: 2px 6px; }
+.vt-rolecard-title { font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); display: flex; align-items: center; gap: 8px; }
+.vt-rolecard-sys { font-size: 0.6rem; font-weight: var(--font-weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); background: var(--bg-subtle, #F8FAFE); border-radius: 7px; padding: 2px 6px; }
 .vt-rolecard-seeall {
   font-size: 0.78rem; font-weight: 600; color: #2563eb;
   background: none; border: none; cursor: pointer; font-family: inherit;
@@ -302,7 +302,7 @@
   width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
   background: var(--siomac-navy); color: #fff; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+  font-size: 12.5px; font-weight: var(--font-weight-bold); text-transform: uppercase;
 }
 .vt-member-info { flex: 1; min-width: 0; }
 .vt-member-name { font-size: 0.86rem; font-weight: 600; color: var(--siomac-navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -527,7 +527,7 @@ input[type="time"] {
 .status-checkedin   { background: rgba(46,125,50,0.1);  color: #1b5e20; }
 .status-checkedout  { background: rgba(27,45,85,0.1);   color: var(--siomac-navy); }
 .status-notchecked  { background: rgba(198,40,40,0.1);  color: #b71c1c; }
-.leave-badge { display: inline-block; padding: 3px 10px; border-radius: 40px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.leave-badge { display: inline-block; padding: 3px 10px; border-radius: 40px; font-size: 11px; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: .5px; }
 .leave-badge.sick    { background: rgba(228,12,12,0.1);   color: var(--siomac-red); }
 .leave-badge.casual  { background: rgba(27,45,85,0.1);    color: var(--siomac-navy); }
 .leave-badge.annual  { background: rgba(46,125,50,0.1);   color: #1b5e20; }
@@ -535,7 +535,7 @@ input[type="time"] {
 
 /* ─── SweetAlert2 overrides ─── */
 .swal2-popup { border-radius: var(--radius-lg) !important; padding: 28px 24px !important; font-family: 'Inter', 'Poppins', -apple-system, sans-serif !important; box-shadow: 0 4px 20px rgba(27,45,85,0.1), 0 1px 4px rgba(0,0,0,0.04) !important; }
-.swal2-title { color: var(--siomac-navy) !important; font-size: 21px !important; font-weight: 700 !important; padding: 14px 0 6px !important; }
+.swal2-title { color: var(--siomac-navy) !important; font-size: 21px !important; font-weight: var(--font-weight-bold) !important; padding: 14px 0 6px !important; }
 .swal2-html-container { color: var(--text-muted) !important; font-size: 14.5px !important; margin-top: 6px !important; }
 .swal2-actions { gap: 10px !important; margin-top: 22px !important; }
 .swal2-styled.swal2-confirm { background: var(--siomac-red) !important; color: #fff !important; border-radius: var(--radius-md) !important; padding: 11px 28px !important; font-size: 14px !important; font-weight: 600 !important; box-shadow: 0 2px 8px rgba(228,12,12,0.15) !important; transition: all .2s !important; }

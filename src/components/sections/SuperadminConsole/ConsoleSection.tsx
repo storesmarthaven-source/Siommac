@@ -133,7 +133,7 @@ export function ConsoleSection(): VNode {
                 {t.label}
                 {t.id === 'approvals' && pendingCount > 0 && (
                   <span style={{
-                    marginLeft: '7px', fontSize: '10px', fontWeight: '700',
+                    marginLeft: '7px', fontSize: '10px', fontWeight: 'var(--font-weight-bold)',
                     padding: '1px 6px', borderRadius: '10px',
                     background: 'rgba(234,179,8,0.18)', color: '#713f12',
                     border: '1px solid rgba(234,179,8,0.35)',

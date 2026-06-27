@@ -87,7 +87,7 @@ function StatDonut({ total, centerLabel, segments }: {
           <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.74rem' }}>
             <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
             <span style={{ color: 'var(--text-muted)', flex: 1 }}>{s.label}</span>
-            <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{s.value}</span>
+            <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{s.value}</span>
           </div>
         ))}
       </div>
@@ -107,7 +107,7 @@ function StatBars({ bars }: { bars: { label: string; value: number; color: strin
           <div style={{ flex: 1, height: '9px', borderRadius: '999px', background: '#eef0f5', overflow: 'hidden', minWidth: 0 }}>
             <div style={{ width: `${Math.round((b.value / max) * 100)}%`, height: '100%', background: b.color, borderRadius: '999px' }} />
           </div>
-          <span style={{ width: '22px', textAlign: 'right', fontWeight: 700, fontSize: '0.8rem', color: 'var(--siomac-navy)', flexShrink: 0 }}>{b.value}</span>
+          <span style={{ width: '22px', textAlign: 'right', fontWeight: 'var(--font-weight-bold)', fontSize: '0.8rem', color: 'var(--siomac-navy)', flexShrink: 0 }}>{b.value}</span>
         </div>
       ))}
     </div>

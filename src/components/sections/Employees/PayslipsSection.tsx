@@ -61,7 +61,7 @@ export function PayslipsSection(): VNode {
 
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>My Payslips</h1>
+        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'var(--font-weight-bold)', color: '#111827' }}>My Payslips</h1>
         <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>View and print your pay statements.</p>
       </div>
 
@@ -199,7 +199,7 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
       @page { size: A4 landscape; margin: 10mm; }
       body { margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#1b2d55; background:#fff; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
       .ph { background:#1b2d55; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:16px 24px; }
-      .ph-name { font-size:18px; font-weight:700; }
+      .ph-name { font-size:18px; font-weight: var(--font-weight-bold); }
       .ph-role { font-size:11px; opacity:.7; margin-top:3px; }
       .section { border-bottom:1px solid #dce2ef; }
       .meta { display:grid; grid-template-columns:1fr 1fr; }
@@ -212,13 +212,13 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
       .tables { display:grid; grid-template-columns:1fr 1fr; }
       .tbl-col { padding:10px 0; }
       .tbl-col:first-child { border-right:1px solid #dce2ef; }
-      .tbl-title { padding:8px 18px 5px; font-size:9px; font-weight:700; text-transform:uppercase; color:#6b7a99; border-bottom:1px solid #dce2ef; }
+      .tbl-title { padding:8px 18px 5px; font-size:9px; font-weight: var(--font-weight-bold); text-transform:uppercase; color:#6b7a99; border-bottom:1px solid #dce2ef; }
       table { width:100%; border-collapse:collapse; font-size:11px; }
-      th { padding:5px 18px; text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; color:#6b7a99; background:#f5f7fc; border-bottom:1px solid #dce2ef; print-color-adjust:exact; }
+      th { padding:5px 18px; text-align:left; font-size:9px; font-weight: var(--font-weight-bold); text-transform:uppercase; color:#6b7a99; background:#f5f7fc; border-bottom:1px solid #dce2ef; print-color-adjust:exact; }
       td { padding:6px 18px; border-bottom:1px solid rgba(0,0,0,.04); }
-      .subtotal { display:flex; justify-content:space-between; padding:7px 18px; font-size:11px; font-weight:700; color:#166534; background:rgba(22,101,52,.07); border-top:2px solid #dce2ef; print-color-adjust:exact; }
+      .subtotal { display:flex; justify-content:space-between; padding:7px 18px; font-size:11px; font-weight: var(--font-weight-bold); color:#166534; background:rgba(22,101,52,.07); border-top:2px solid #dce2ef; print-color-adjust:exact; }
       .subtotal-ded { color:#b91c1c; background:rgba(185,28,28,.07); }
-      .net { display:flex; justify-content:space-between; padding:11px 20px; font-size:15px; font-weight:700; background:#1b2d55; color:#fff; print-color-adjust:exact; }
+      .net { display:flex; justify-content:space-between; padding:11px 20px; font-size:15px; font-weight: var(--font-weight-bold); background:#1b2d55; color:#fff; print-color-adjust:exact; }
     `;
 
     const printHeader = `
@@ -302,7 +302,7 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
         {ci.name && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0 16px', borderBottom: '1px solid #dce2ef', marginBottom: '16px' }}>
             <div>
-              <div style={{ fontWeight: '700', fontSize: '15px' }}>{ci.name}</div>
+              <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '15px' }}>{ci.name}</div>
               {ci.address && <div style={{ fontSize: '12px', color: '#6b7a99' }}>{ci.address}</div>}
             </div>
             {ci.logoUrl && <img src={ci.logoUrl} alt="Company logo" style={{ height: '48px', objectFit: 'contain' }} />}
@@ -326,19 +326,19 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
         {/* Earnings / Deductions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', border: '1px solid #dce2ef', borderRadius: '8px', overflow: 'hidden', marginBottom: '12px' }}>
           <div style={{ borderRight: '1px solid #dce2ef' }}>
-            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
+            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
               <i class="fas fa-plus-circle" style={{ marginRight: '4px' }} aria-hidden="true" />Earnings
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead><tr style={{ background: '#f9fafb' }}><th style={thStyle}>Description</th><th style={thStyle}>Amount</th></tr></thead>
               <tbody><tr><td style={tdStyle}>{p.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td><td style={tdStyle}>TTD {fmtAmount(gross)}</td></tr></tbody>
             </table>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: '700', fontSize: '12px', color: '#166534', background: 'rgba(22,101,52,.07)', borderTop: '2px solid #dce2ef' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: 'var(--font-weight-bold)', fontSize: '12px', color: '#166534', background: 'rgba(22,101,52,.07)', borderTop: '2px solid #dce2ef' }}>
               <span>Gross Pay</span><span>TTD {fmtAmount(gross)}</span>
             </div>
           </div>
           <div>
-            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
+            <div style={{ padding: '8px 16px', background: '#f5f7fc', fontSize: '11px', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7a99', borderBottom: '1px solid #dce2ef' }}>
               <i class="fas fa-minus-circle" style={{ marginRight: '4px' }} aria-hidden="true" />Deductions
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
@@ -349,14 +349,14 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
                 <tr><td style={tdStyle}>PAYE</td><td style={tdStyle}>TTD {fmtAmount(paye)}</td></tr>
               </tbody>
             </table>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: '700', fontSize: '12px', color: '#b91c1c', background: 'rgba(185,28,28,.07)', borderTop: '2px solid #dce2ef' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', fontWeight: 'var(--font-weight-bold)', fontSize: '12px', color: '#b91c1c', background: 'rgba(185,28,28,.07)', borderTop: '2px solid #dce2ef' }}>
               <span>Total Deductions</span><span>TTD {fmtAmount(ded)}</span>
             </div>
           </div>
         </div>
 
         {/* Net pay */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 20px', fontWeight: '700', fontSize: '16px', background: '#1b2d55', color: '#fff', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 20px', fontWeight: 'var(--font-weight-bold)', fontSize: '16px', background: '#1b2d55', color: '#fff', borderRadius: '8px' }}>
           <span>Net Pay</span><span>TTD {fmtAmount(net)}</span>
         </div>
 
@@ -381,5 +381,5 @@ function MetaRow({ label, value }: { label: string; value: string }): VNode {
   );
 }
 
-const thStyle: Record<string, string> = { padding: '5px 16px', textAlign: 'left', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', color: '#6b7a99', letterSpacing: '0.04em' };
+const thStyle: Record<string, string> = { padding: '5px 16px', textAlign: 'left', fontSize: '10px', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', color: '#6b7a99', letterSpacing: '0.04em' };
 const tdStyle: Record<string, string> = { padding: '6px 16px', borderBottom: '1px solid rgba(0,0,0,.04)', fontSize: '12px' };

@@ -66,7 +66,7 @@ function ReplyBubble({ reply: r, username }: { reply: TicketReply; username: str
         {r.fromPhoto
           ? <img src={r.fromPhoto} alt={name} crossOrigin="anonymous"
               style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${borderColor}` }} />
-          : <div style={{ width: 28, height: 28, borderRadius: '50%', background: avatarBg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, flexShrink: 0 }}>
+          : <div style={{ width: 28, height: 28, borderRadius: '50%', background: avatarBg, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', flexShrink: 0 }}>
               {inits}
             </div>
         }
@@ -182,7 +182,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
               {timeAgo(ticket.createdAt)}
             </span>
           </div>
-          <div style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: 6, textDecoration: isDeleted ? 'line-through' : undefined }}>
+          <div style={{ fontSize: '0.88rem', fontWeight: 'var(--font-weight-bold)', marginBottom: 6, textDecoration: isDeleted ? 'line-through' : undefined }}>
             {ticket.subject}
           </div>
           {isAdmin && (

@@ -153,7 +153,7 @@ function ApprovalRow({ approval, currentUserId }: {
               {permLabel(approval.permissionKey)}
             </span>
             {expired && (
-              <span style={{ fontSize: '10.5px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 'var(--font-weight-bold)', padding: '2px 6px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.25)' }}>
                 EXPIRED
               </span>
             )}
@@ -323,7 +323,7 @@ export function ApprovalsTab(): VNode {
               Pending requests
             </span>
             <span style={{
-              fontSize: '11px', fontWeight: '700', padding: '1px 7px', borderRadius: '10px',
+              fontSize: '11px', fontWeight: 'var(--font-weight-bold)', padding: '1px 7px', borderRadius: '10px',
               background: 'rgba(234,179,8,0.15)', color: '#713f12', border: '1px solid rgba(234,179,8,0.3)',
             }}>
               {approvals.length}

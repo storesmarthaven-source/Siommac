@@ -76,7 +76,7 @@
 }
 .dept-table thead th {
   padding: 13px 18px;
-  font-weight: 700; font-size: 11px; text-transform: uppercase;
+  font-weight: var(--font-weight-bold); font-size: 11px; text-transform: uppercase;
   letter-spacing: .6px; color: #fff;
   white-space: nowrap;
 }
@@ -94,7 +94,7 @@
   color: white; font-size: 14px; flex-shrink: 0;
 }
 .dept-table-name-cell { display: flex; align-items: center; gap: 12px; }
-.dept-table-name { font-weight: 700; color: var(--siomac-navy); margin-bottom: 2px; }
+.dept-table-name { font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin-bottom: 2px; }
 .dept-table-id { font-size: 11px; color: var(--text-muted); }
 .dept-table-badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -147,7 +147,7 @@
 }
 .dept-card-title-block { flex: 1; min-width: 0; }
 .dept-card-name {
-  font-size: 15px; font-weight: 700; color: white;
+  font-size: 15px; font-weight: var(--font-weight-bold); color: white;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-bottom: 4px;
 }
@@ -223,7 +223,7 @@
   display: flex; align-items: center; justify-content: space-between;
 }
 .dept-modal-header h5 {
-  color: white; font-size: 1rem; font-weight: 700; margin: 0;
+  color: white; font-size: 1rem; font-weight: var(--font-weight-bold); margin: 0;
   display: flex; align-items: center; gap: 10px;
 }
 .dept-modal-header h5 i { color: var(--siomac-gold); }
@@ -334,13 +334,13 @@
   width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
   background: rgba(255,255,255,0.22);
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden; font-size: 18px; font-weight: 700; color: #fff;
+  overflow: hidden; font-size: 18px; font-weight: var(--font-weight-bold); color: #fff;
   border: 2px solid rgba(255,255,255,0.35);
   -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 .emp-card-title-block { flex: 1; min-width: 0; }
 .emp-card-name {
-  font-size: 1.1rem; font-weight: 700; color: #fff;
+  font-size: 1.1rem; font-weight: var(--font-weight-bold); color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   margin-bottom: 4px;
 }
@@ -349,7 +349,7 @@
 /* Employee ID pill — right side of the role row */
 .emp-card-empid {
   margin-left: auto; flex-shrink: 0;
-  font-family: monospace; font-size: 0.72rem; font-weight: 700;
+  font-family: monospace; font-size: 0.72rem; font-weight: var(--font-weight-bold);
   color: #fff; letter-spacing: .6px;
   background: #63708d; border: 1px solid rgba(99,112,141,0.25);
   padding: 2px 9px; border-radius: 20px;
@@ -386,7 +386,7 @@
   width: 34px; height: 34px; border-radius: 50%;
   background: #1b2d54;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+  font-size: 12px; font-weight: var(--font-weight-bold); color: white; flex-shrink: 0;
 }
 
 /* Empty / error / loading */

@@ -13,7 +13,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/preact-query';
 import { WizardShell, type WizardStepDef } from '@ui';
-import { hrOnboardingApi, ONBOARDING_PACKAGES, type OnboardingPreview } from '@api/hr/onboarding';
+import { hrOnboardingApi, useOnboardingPackages, type OnboardingPreview } from '@api/hr/onboarding';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { hrEmployeeKeys } from '@api/queryKeys';
 import { rowName, Avatar } from './shared';
@@ -58,6 +58,7 @@ export function OnboardingWizard(
   const [step, setStep] = useState('worker');
   const [employeeId, setEmployeeId] = useState(preset ?? '');
   const [packageKey, setPackageKey] = useState('standard_employee');
+  const { data: packages = [] } = useOnboardingPackages();
   const [reason, setReason] = useState('New hire');
   const [priority, setPriority] = useState('Normal');
   const [targetStartDate, setTargetStartDate] = useState('');
@@ -75,7 +76,7 @@ export function OnboardingWizard(
   const empName = selectedEmp ? rowName(selectedEmp) : '';
   const ownerUser = employees.find(e => e.id === ownerId);
   const ownerName = ownerUser ? rowName(ownerUser) : '';
-  const pkg = ONBOARDING_PACKAGES.find(p => p.key === packageKey);
+  const pkg = packages.find(p => p.key === packageKey);
 
   // Default worker type from the chosen employee's contractor flag.
   useEffect(() => { if (selectedEmp) setWorkerType(selectedEmp.contractor_flag ? 'Contractor' : 'Employee'); }, [employeeId]);
@@ -164,11 +165,11 @@ export function OnboardingWizard(
 
       <Section id="package" title="2. Onboarding Package" desc="Choose the package that determines task templates, owners, dependencies, and required policy packs.">
         <div class="ui-wz-card-grid cols-3">
-          {ONBOARDING_PACKAGES.map(p => (
+          {packages.map(p => (
             <button type="button" key={p.key} class={`ui-wz-card${packageKey === p.key ? ' active' : ''}`} onClick={() => setPackageKey(p.key)}>
               <strong>{p.label}</strong>
               <div class="ui-wz-card-meta">{packageKey === p.key && preview ? `${preview.taskCount} tasks · ` : ''}{p.owners}</div>
-              <div class="ui-wz-card-desc">{p.desc}</div>
+              <div class="ui-wz-card-desc">{p.description}</div>
             </button>
           ))}
         </div>

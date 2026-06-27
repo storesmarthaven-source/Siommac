@@ -38,7 +38,7 @@
 .cpop-loading { width: 56px; height: 56px; border: 5px solid var(--border); border-top-color: var(--siomac-red); border-radius: 50%; animation: cpopSpin .8s linear infinite; }
 @keyframes cpopSpin { to { transform: rotate(360deg) } }
 
-.cpop-title { font-size: 21px; font-weight: 700; color: var(--siomac-navy); margin: 0 0 8px; line-height: 1.3; }
+.cpop-title { font-size: 21px; font-weight: var(--font-weight-bold); color: var(--siomac-navy); margin: 0 0 8px; line-height: 1.3; }
 .cpop-text  { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin: 0 0 22px; word-wrap: break-word; }
 .cpop-text:empty { display: none; }
 .cpop-text strong { color: var(--text-primary); }

@@ -79,7 +79,7 @@ function ticketBubbleHtml(r: TicketReply, seenIds: Set<string>, currentUser: str
   const photoUrl = r.fromPhoto || '';
   const avatar = photoUrl
     ? `<img src="${esc(photoUrl)}" alt="${esc(name)}" crossorigin="anonymous" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${borderColor};">`
-    : `<div style="width:28px;height:28px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;">${esc(inits)}</div>`;
+    : `<div style="width:28px;height:28px;border-radius:50%;background:${avatarBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight: var(--font-weight-bold);flex-shrink:0;">${esc(inits)}</div>`;
   const borderRadius = isMe ? '12px 12px 4px 12px' : '12px 12px 12px 4px';
   const bubble = `<div style="max-width:75%;background:${bubbleBg};color:${bubbleColor};padding:7px 11px;border-radius:${borderRadius};font-size:0.81rem;white-space:pre-wrap;line-height:1.4;">${esc(r.body)}</div>`;
   const textAlign = isMe ? 'right' : 'left';
@@ -190,7 +190,7 @@ export function mountTicketsPanel(): () => void {
       ? `<button data-delete-ticket-id="${esc(String(t.id))}" title="Delete ticket" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--siomac-red,#e40c0c);font-size:0.75rem;padding:2px 6px;border-radius:6px;opacity:.7;transition:opacity .15s;flex-shrink:0;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.7'"><i class="fas fa-trash-alt"></i></button>`
       : '';
     const indicator = !hasNewReply ? ''
-      : `<span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;align-self:center;background:rgba(228,12,12,0.09);border:1.5px solid rgba(228,12,12,0.22);border-radius:20px;padding:2px 7px 2px 5px;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;"></span><span style="font-size:0.65rem;font-weight:700;color:var(--siomac-red);">New reply</span></span>`;
+      : `<span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;align-self:center;background:rgba(228,12,12,0.09);border:1.5px solid rgba(228,12,12,0.22);border-radius:20px;padding:2px 7px 2px 5px;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:var(--siomac-red);flex-shrink:0;"></span><span style="font-size:0.65rem;font-weight: var(--font-weight-bold);color:var(--siomac-red);">New reply</span></span>`;
     const borderStyle   = hasNewReply ? 'border-left:3px solid var(--siomac-red);padding-left:11px;' : 'border-left:3px solid transparent;padding-left:11px;';
     const nameWeight    = hasNewReply ? '700' : '600';
     const nameColor     = hasNewReply ? 'var(--text-primary)' : 'var(--text-muted)';
@@ -301,7 +301,7 @@ export function mountTicketsPanel(): () => void {
             <span class="hdr-ticket-status ${css}">${esc(lbl)}</span>
             <span style="font-size:0.72rem;color:var(--text-muted);margin-left:auto;">${timeAgoShort(t.createdAt)}</span>
           </div>
-          <div style="font-size:0.88rem;font-weight:700;margin-bottom:6px;${subjectDecor}">${esc(t.subject)}</div>
+          <div style="font-size:0.88rem;font-weight: var(--font-weight-bold);margin-bottom:6px;${subjectDecor}">${esc(t.subject)}</div>
           ${adminReporter}
           <div style="font-size:0.83rem;color:var(--text-primary);white-space:pre-wrap;">${esc(t.body)}</div>
         </div>

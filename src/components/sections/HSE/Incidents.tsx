@@ -594,7 +594,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
             </div>
             {firstOverdue ? (
               <div style={{ background:'#fef2f2', border:'1px solid #fecaca', borderRadius:'8px', padding:'8px 10px' }}>
-                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#dc2626' }}>{firstOverdue.ref}</div>
+                <div style={{ fontSize:'0.72rem', fontWeight: 'var(--font-weight-bold)', color:'#dc2626' }}>{firstOverdue.ref}</div>
                 <div style={{ fontSize:'0.65rem', color:'#ef4444', marginTop:'2px' }}>Due {firstOverdue.due}</div>
               </div>
             ) : (
@@ -626,12 +626,12 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                     <div key={r.label} style={{ display:'flex', alignItems:'center', gap:'8px', fontSize:'0.72rem' }}>
                       <span style={{ width:'7px', height:'7px', borderRadius:'50%', background:r.color, flexShrink:0 }} />
                       <span style={{ color:'rgba(255,255,255,.7)', flex:1 }}>{r.label}</span>
-                      <span style={{ color:r.color, fontWeight:700 }}>{r.count}</span>
+                      <span style={{ color:r.color, fontWeight: 'var(--font-weight-bold)' }}>{r.count}</span>
                     </div>
                   ))}
                   {ready[0] && (
                     <div style={{ background:'rgba(74,222,128,.1)', border:'1px solid rgba(74,222,128,.2)', borderRadius:'8px', padding:'7px 10px', marginTop:'2px' }}>
-                      <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#4ade80' }}>{ready[0].ref}</div>
+                      <div style={{ fontSize:'0.72rem', fontWeight: 'var(--font-weight-bold)', color:'#4ade80' }}>{ready[0].ref}</div>
                       <div style={{ fontSize:'0.65rem', color:'rgba(255,255,255,.5)', marginTop:'2px' }}>Ready · {ready[0].owner}</div>
                     </div>
                   )}
@@ -660,7 +660,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                 return <div style={{ fontSize:'0.72rem', color:'rgba(255,255,255,.45)' }}>No open actions</div>;
               return [...ownerMap.entries()].slice(0, 4).map(([owner, s]) => (
                 <div key={owner} style={{ display:'flex', alignItems:'center', gap:'7px', fontSize:'0.7rem' }}>
-                  <div style={{ width:'20px', height:'20px', borderRadius:'50%', background:'rgba(255,255,255,.12)', display:'grid', placeItems:'center', fontSize:'0.55rem', fontWeight:700, color:'rgba(255,255,255,.7)', flexShrink:0 }}>
+                  <div style={{ width:'20px', height:'20px', borderRadius:'50%', background:'rgba(255,255,255,.12)', display:'grid', placeItems:'center', fontSize:'0.55rem', fontWeight: 'var(--font-weight-bold)', color:'rgba(255,255,255,.7)', flexShrink:0 }}>
                     {owner.split(' ').map((n: string) => n[0]).join('').slice(0,2)}
                   </div>
                   <span style={{ flex:1, color:'rgba(255,255,255,.7)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{owner.split(' ')[0]}</span>
@@ -730,8 +730,8 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                 <div style={{ width:`${evPct}%`, height:'100%', background: evPct===100 ? '#16a34a' : '#3b82f6', borderRadius:'99px', transition:'width .3s' }} />
               </div>
               <div style={{ display:'flex', gap:'10px', fontSize:'0.67rem', color:'var(--text-muted)', marginTop:'2px' }}>
-                <span><span style={{ color:'#16a34a', fontWeight:700 }}>{evDone}</span> collected</span>
-                <span><span style={{ color:'#d97706', fontWeight:700 }}>{evPending}</span> pending</span>
+                <span><span style={{ color:'#16a34a', fontWeight: 'var(--font-weight-bold)' }}>{evDone}</span> collected</span>
+                <span><span style={{ color:'#d97706', fontWeight: 'var(--font-weight-bold)' }}>{evPending}</span> pending</span>
               </div>
             </div>
           </div>
@@ -855,7 +855,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                   <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.74rem' }}>
                     <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: SEV_COLORS[k], flexShrink: 0 }} />
                     <span style={{ color: 'var(--text-muted)', flex: 1 }}>{label}</span>
-                    <span style={{ fontWeight: 700, color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
+                    <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{sevCounts[k]}</span>
                   </div>
                 ))}
               </div>
@@ -2118,7 +2118,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
             { val: severity,          label: 'Severity',                         color: sevMeta.color    },
           ].map(k => (
             <div key={k.label} style={{ padding:'10px', borderRadius:'10px', background:'rgba(255,255,255,.08)', textAlign:'center' }}>
-              <div style={{ fontSize:'0.85rem', fontWeight:700, color:k.color, lineHeight:1.2 }}>{k.val}</div>
+              <div style={{ fontSize:'0.85rem', fontWeight: 'var(--font-weight-bold)', color:k.color, lineHeight:1.2 }}>{k.val}</div>
               <div style={{ fontSize:'0.6rem', color:'rgba(255,255,255,.45)', marginTop:'3px' }}>{k.label}</div>
             </div>
           ))}
@@ -2301,7 +2301,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
               const pct = Math.round((b.count / 25) * 100);
               return (
                 <div key={b.label} class="ir-ytd-bar-row">
-                  <div class="ir-ytd-bar-label"><span>{b.label}</span><span style={{ color: b.color, fontWeight: 700 }}>{b.count}</span></div>
+                  <div class="ir-ytd-bar-label"><span>{b.label}</span><span style={{ color: b.color, fontWeight: 'var(--font-weight-bold)' }}>{b.count}</span></div>
                   <div class="ir-ytd-bar-track"><div class="ir-ytd-bar-fill" style={{ width: `${pct}%`, background: b.color }} /></div>
                 </div>
               );
@@ -2522,7 +2522,7 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
                       <div style={{ fontSize:'0.67rem', color:'var(--text-muted)', maxWidth:'180px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{inv.incidentDesc}</div>
                     </td>
                     <td>
-                      <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', fontSize:'0.7rem', fontWeight:700, color: sev?.color }}>
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', fontSize:'0.7rem', fontWeight: 'var(--font-weight-bold)', color: sev?.color }}>
                         <i class={`fas ${sev?.icon}`} style={{ fontSize:'0.6rem' }} /> {sev?.label ?? inv.severity}
                       </span>
                     </td>

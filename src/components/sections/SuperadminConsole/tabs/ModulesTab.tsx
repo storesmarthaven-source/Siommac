@@ -135,7 +135,7 @@ function ManagerModules({ managers }: { managers: ManagerEntry[] }): VNode {
     <div style={{ display: 'flex', gap: '16px', minHeight: '400px' }}>
       <div style={{ width: '220px', flexShrink: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-          <div class="stg-switch-desc" style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 0 }}>Managers ({managers.length})</div>
+          <div class="stg-switch-desc" style={{ fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 0 }}>Managers ({managers.length})</div>
         </div>
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {managers.map(m => {
@@ -143,7 +143,7 @@ function ManagerModules({ managers }: { managers: ManagerEntry[] }): VNode {
             const enabledCount = MODULES.filter(mod => m.modules[mod.key]).length;
             return (
               <button key={m.id} type="button" onClick={() => setSelectedId(m.id)} style={{ width: '100%', textAlign: 'left', padding: '12px 14px', background: isSel ? 'rgba(27,45,84,0.06)' : 'transparent', borderBottom: '1px solid var(--border)', border: 'none', borderLeft: isSel ? '3px solid var(--siomac-navy)' : '3px solid transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'background 0.15s' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0, background: isSel ? 'var(--siomac-navy)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: isSel ? '#fff' : 'var(--text-muted)' }}>{initials(m.fullName)}</div>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0, background: isSel ? 'var(--siomac-navy)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'var(--font-weight-bold)', color: isSel ? '#fff' : 'var(--text-muted)' }}>{initials(m.fullName)}</div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: isSel ? '700' : '500', color: isSel ? 'var(--siomac-navy)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.fullName}</div>
                   <div class="stg-switch-desc" style={{ marginTop: '1px' }}>{enabledCount}/{MODULES.length} modules</div>

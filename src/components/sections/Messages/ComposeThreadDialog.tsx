@@ -107,7 +107,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {/* Recipient picker */}
         <div>
-          <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)',
+          <label style={{ fontSize: '0.78rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
             To <span style={{ color: 'var(--siomac-red)' }}>*</span>
           </label>
@@ -119,7 +119,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
                   background: 'rgba(27,45,85,0.09)', borderRadius: '20px', padding: '3px 10px 3px 7px',
                   fontSize: '0.78rem', fontWeight: 600, color: 'var(--siomac-navy)' }}>
                   <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--siomac-navy)',
-                    color: '#fff', fontSize: '0.58rem', fontWeight: 700, display: 'inline-flex',
+                    color: '#fff', fontSize: '0.58rem', fontWeight: 'var(--font-weight-bold)', display: 'inline-flex',
                     alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {initials(r)}
                   </span>
@@ -155,7 +155,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
                       background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
                       borderBottom: '1px solid var(--border)' }}>
                     <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(27,45,85,0.12)',
-                      color: 'var(--siomac-navy)', fontSize: '0.7rem', fontWeight: 700, display: 'inline-flex',
+                      color: 'var(--siomac-navy)', fontSize: '0.7rem', fontWeight: 'var(--font-weight-bold)', display: 'inline-flex',
                       alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {initials(r)}
                     </span>
@@ -176,7 +176,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
 
         {/* Subject (optional) */}
         <div>
-          <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)',
+          <label style={{ fontSize: '0.78rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
             Subject <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span>
           </label>
@@ -194,7 +194,7 @@ export function ComposeThreadDialog({ open, onClose, onCreated }: Props): VNode 
 
         {/* Body */}
         <div>
-          <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)',
+          <label style={{ fontSize: '0.78rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
             Message <span style={{ color: 'var(--siomac-red)' }}>*</span>
           </label>

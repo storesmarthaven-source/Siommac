@@ -162,7 +162,7 @@ export function NotificationPreferencesPanel({ open, onClose }: { open: boolean;
         <>
           {/* Default channels block */}
           <div style={{ background: 'var(--bg-subtle, #f7f8fa)', border: '1px solid var(--border)', borderRadius: '10px', padding: '4px 12px 10px', marginBottom: '16px' }}>
-            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '10px 0 2px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '.04em', padding: '10px 0 2px' }}>
               Default channels
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', paddingBottom: '2px' }}>
@@ -175,7 +175,7 @@ export function NotificationPreferencesPanel({ open, onClose }: { open: boolean;
           {GROUPS.map(g => (
             <div key={g.title} style={{ marginBottom: '18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{g.title}</span>
+                <span style={{ fontSize: '0.74rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{g.title}</span>
                 {g.locked && <i class="fas fa-shield-halved" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }} />}
               </div>
               {g.sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '1px' }}>{g.sub}</div>}
@@ -185,7 +185,7 @@ export function NotificationPreferencesPanel({ open, onClose }: { open: boolean;
 
           {/* Snooze / Quiet mode — state-based */}
           <div style={{ marginTop: '6px', paddingTop: '14px', borderTop: '2px solid var(--border)' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--siomac-navy)', marginBottom: '4px' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
               <i class="fas fa-moon" style={{ marginRight: '6px' }} /> Snooze / quiet mode
             </div>
             {snoozed ? (

@@ -561,8 +561,8 @@ function plotLiveEmployees(rows: any[]): void {
     const color   = row.isCheckedOut ? '#6c757d' : (row.status === 'late' ? '#fbbc04' : '#34a853');
     const initial = (row.fullName || '?').charAt(0).toUpperCase();
     const markerHtml = row.profileImage
-      ? `<div style="width:52px;height:52px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 8px rgba(0,0,0,.4);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;\\'>${initial}</div>'"></div>`
-      : `<div style="background:${color};width:52px;height:52px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;">${initial}</div>`;
+      ? `<div style="width:52px;height:52px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 8px rgba(0,0,0,.4);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight: var(--font-weight-bold);font-size:20px;\\'>${initial}</div>'"></div>`
+      : `<div style="background:${color};width:52px;height:52px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-weight: var(--font-weight-bold);font-size:20px;">${initial}</div>`;
 
     const marker: any = L.marker([lat, lng], {
       icon: L.divIcon({ className: 'live-emp-marker', html: markerHtml, iconSize: [52, 52], iconAnchor: [26, 26] }),
@@ -739,8 +739,8 @@ function _buildEmpOverlayHtml(row: any): string {
   const statusColor = row.isCheckedOut ? '#546E7A' : (row.status === 'late' ? '#E65100' : '#2E7D32');
   const statusBg    = row.isCheckedOut ? '#ECEFF4'  : (row.status === 'late' ? '#FFF3E0' : '#E8F5E9');
   const avatarHtml  = profile
-    ? `<img src="${profile}" alt="${initial}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;\\'>${initial}</div>'">`
-    : `<div style="width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;">${initial}</div>`;
+    ? `<img src="${profile}" alt="${initial}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight: var(--font-weight-bold);color:white;flex-shrink:0;\\'>${initial}</div>'">`
+    : `<div style="width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight: var(--font-weight-bold);color:white;flex-shrink:0;">${initial}</div>`;
   const navLat = row.checkInLat || row.checkOutLat || '';
   const navLng = row.checkInLng || row.checkOutLng || '';
   const navBtn = (navLat && navLng)

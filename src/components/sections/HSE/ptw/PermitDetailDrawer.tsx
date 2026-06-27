@@ -291,7 +291,7 @@ function IsolationsTab({ permitId, isolations, refetch }: {
 
       {showAdd && (
         <div style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)', display: 'grid', gap: '8px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Isolation Point</div>
+          <div style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Isolation Point</div>
           <select class="emp-filter-select" value={isoType} onChange={e => setIsoType((e.target as HTMLSelectElement).value)} style={{ fontSize: '0.8rem' }}>
             <option value="">Select type…</option>
             <option value="lockout">Lockout</option>
@@ -329,7 +329,7 @@ function IsolationsTab({ permitId, isolations, refetch }: {
                 {iso.location && ` · ${iso.location}`}
               </div>
             </div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: statusColor(iso.status), whiteSpace: 'nowrap' }}>{iso.status}</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: statusColor(iso.status), whiteSpace: 'nowrap' }}>{iso.status}</span>
           </div>
           <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
             {iso.status === 'pending' && (
@@ -402,7 +402,7 @@ function SimopsTab({ permitId, simops, refetch }: {
                 {s.conflicting_permit_id && ` · Conflicts with ${s.conflicting_permit_id.slice(0, 8)}…`}
               </div>
             </div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: statusColor(s.status), whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: statusColor(s.status), whiteSpace: 'nowrap' }}>
               {s.status}
             </span>
           </div>
@@ -473,9 +473,9 @@ function ApprovalsTab({ permitId, approvals, refetch }: {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
               {a.required && (
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-red)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Required</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-red)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Required</span>
               )}
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: statusColor(a.status) }}>{a.status}</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: statusColor(a.status) }}>{a.status}</span>
             </div>
           </div>
 

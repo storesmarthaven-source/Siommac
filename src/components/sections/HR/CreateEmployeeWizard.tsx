@@ -20,7 +20,7 @@ import { WizardShell } from '@ui';
 import {
   useCreateHrEmployee, useHrOrgUnits, useHrSites, useHrEmployees, useUploadHrDocument, type CreateHrEmployeeArgs,
 } from '@api/hr/employees';
-import { ONBOARDING_PACKAGES } from '@api/hr/onboarding';
+import { useOnboardingPackages } from '@api/hr/onboarding';
 import { rowName } from './shared';
 
 const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'];
@@ -91,6 +91,7 @@ export function CreateEmployeeWizard({ onClose, onToast }: { onClose: () => void
   const siteQ = useHrSites();
   const supQ  = useHrEmployees({ limit: 500 });
   const create = useCreateHrEmployee();
+  const { data: onboardingPackages = [] } = useOnboardingPackages();
   const uploadDoc = useUploadHrDocument();
 
   const supervisors = useMemo(() => (supQ.data ?? []).map(r => ({ id: r.id, name: rowName(r) })), [supQ.data]);
@@ -297,7 +298,7 @@ export function CreateEmployeeWizard({ onClose, onToast }: { onClose: () => void
                   <div class="form-grid">
                     <Check label="Start an onboarding case on create" checked={form.createOnboardingCase} onInput={v => set('createOnboardingCase', v)} />
                     <div class="form-field" />
-                    {form.createOnboardingCase && <Sel label="Onboarding Package" value={form.onboardingPackage} onInput={v => set('onboardingPackage', v)} idOptions={ONBOARDING_PACKAGES.map(p => ({ id: p.key, name: p.label }))} full />}
+                    {form.createOnboardingCase && <Sel label="Onboarding Package" value={form.onboardingPackage} onInput={v => set('onboardingPackage', v)} idOptions={onboardingPackages.map(p => ({ id: p.key, name: p.label }))} full />}
                     {ONBOARDING_REQS.map(r => (
                       <Check label={r.label} checked={!!form.onboardingReqs[r.key]} onInput={v => set('onboardingReqs', { ...form.onboardingReqs, [r.key]: v })} />
                     ))}
@@ -320,7 +321,7 @@ export function CreateEmployeeWizard({ onClose, onToast }: { onClose: () => void
                     <div class="summary-item"><span>Payroll readiness</span><strong>Computed from statutory on create</strong></div>
                     <div class="summary-item"><span>Handoffs</span><strong>{Object.values(form.onboardingReqs).some(Boolean) || form.createOnboardingCase ? 'Training, Documents, IT, Supervisor' : 'None'}</strong></div>
                   </div>
-                  <div class="info-strip">{form.createOnboardingCase ? `An onboarding case (${ONBOARDING_PACKAGES.find(p => p.key === form.onboardingPackage)?.label ?? 'Standard Employee'}) will be started after creation.` : 'No onboarding case will be started — enable it on the Onboarding step if needed.'}</div>
+                  <div class="info-strip">{form.createOnboardingCase ? `An onboarding case (${onboardingPackages.find(p => p.key === form.onboardingPackage)?.label ?? 'Standard Employee'}) will be started after creation.` : 'No onboarding case will be started — enable it on the Onboarding step if needed.'}</div>
                 </section>
               )}
     </WizardShell>

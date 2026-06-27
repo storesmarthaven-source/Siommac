@@ -54,12 +54,26 @@ export function recordViewPermission(module: string, recordType: string): string
   if (s.includes('risk') || s.includes('jsa') || s.includes('hazard'))                 return 'hse.risk.view';
   if (s.includes('inspection'))                                                        return 'hse.inspections.view';
   if (s.includes('training') || s.includes('competenc') || s.includes('certificate'))  return 'hse.training.view';
-  if (s.includes('hr') || s.includes('employee') || s.includes('onboarding'))          return 'hr.view';
+  if (s.includes('onboarding'))                                                        return 'hr.onboarding.view';
+  if (s.includes('hr') || s.includes('employee'))                                      return 'hr.view';
   return null;
 }
 
 const byNewestFirst = (a: TimelineItem, b: TimelineItem): number =>
   new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
+/**
+ * Turn a dot-notation event key into a readable title.
+ * Drops the module prefix, replaces dots/underscores with spaces, title-cases.
+ * e.g. "hr.employee.contact_updated" → "Employee contact updated"
+ *      "hse.incident.reported"       → "Incident reported"
+ */
+function humanizeEventType(key: string): string {
+  const parts = key.split('.');
+  // drop the first segment (module name) if there are at least 2
+  const rest = parts.length >= 2 ? parts.slice(1) : parts;
+  return rest.join(' ').replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+}
 
 export async function getRecordTimeline(actor: TimelineActor, args: TimelineArgs): Promise<TimelineItem[]> {
   const perm = recordViewPermission(args.module, args.recordType);
@@ -81,7 +95,7 @@ export async function getRecordTimeline(actor: TimelineActor, args: TimelineArgs
     .eq('source_entity_type', recordType).eq('source_entity_id', recordId)
     .order('created_at', { ascending: false }).limit(200);
   for (const e of (events ?? []) as Array<{ id: string; event_type: string; actor_user_id: string | null; severity: string; payload: Record<string, unknown>; created_at: string }>) {
-    items.push({ id: e.id, item_type: 'event', title: e.event_type, actor_id: e.actor_user_id, severity: e.severity, created_at: e.created_at, metadata: e.payload });
+    items.push({ id: e.id, item_type: 'event', title: humanizeEventType(e.event_type), actor_id: e.actor_user_id, severity: e.severity, created_at: e.created_at, metadata: { ...e.payload, _event_type: e.event_type } });
   }
 
   // audit_logs — opt-in (sensitive); keyed on table_name = record type.
@@ -91,7 +105,7 @@ export async function getRecordTimeline(actor: TimelineActor, args: TimelineArgs
       .eq('table_name', recordType).eq('record_id', recordId)
       .order('created_at', { ascending: false }).limit(200);
     for (const a of (audit ?? []) as Array<{ id: string; action: string; user_id: string | null; changes: Record<string, unknown>; created_at: string }>) {
-      items.push({ id: a.id, item_type: 'audit', title: a.action, actor_id: a.user_id, created_at: a.created_at, metadata: a.changes });
+      items.push({ id: a.id, item_type: 'audit', title: humanizeEventType(a.action), actor_id: a.user_id, created_at: a.created_at, metadata: a.changes });
     }
   }
 

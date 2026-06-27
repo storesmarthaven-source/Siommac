@@ -23,7 +23,7 @@
   display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
   padding: 18px 20px; border-bottom: 1px solid var(--border);
 }
-.navcust-title { font-size: 1rem; font-weight: 700; color: var(--siomac-navy); display: flex; align-items: center; gap: 9px; }
+.navcust-title { font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); display: flex; align-items: center; gap: 9px; }
 .navcust-title i { color: var(--siomac-red); }
 .navcust-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
 .navcust-close { background: none; border: none; font-size: 1.5rem; line-height: 1; color: var(--text-muted); cursor: pointer; }

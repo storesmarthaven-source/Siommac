@@ -170,3 +170,22 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 
 See the live catalog: **Superadmin Console → UI Kit** (every component + variants, plus the
 theme editor).
+
+## Loading & skeletons (cold-path only)
+
+One ERP-wide rule: **cached/placeholder data renders instantly; cold loads show
+skeletons, never fake values.** Never render `?? 0`, `"—"`, or `"Loading…"` on a
+pending query. All loading visuals come from `@ui` primitives — no page-local
+shimmer. Full spec: `docs/SKELETON_LOADING_SYSTEM.md`.
+
+| Need | Use |
+|---|---|
+| KPI / stat row (cold) | `StatsCard loading` or `SkeletonStatGrid` — gate `loading={q.isLoading && !q.data}` |
+| Register table (cold) | `RegisterTable loading` (+ `firstCellAvatar` if rows have an avatar); table must be `table-layout: fixed` with pinned column widths so it never jumps |
+| Field grid / overview | `FieldList loading` · `DetailGrid loading` (→ `SkeletonFields`) |
+| Chart / spark | `ChartCard loading` |
+| Mini table in a drawer | `MiniTable loading` |
+| One-off blocks | `Skeleton` · `SkeletonText` · `ListSkeleton` |
+| Detail drawer (record) | `useRecordQuery` (`@lib/recordQuery`) → gate on `.ready`; never `keepPreviousData` on record reads (prevents cross-record flash) |
+| Instant list→detail | list-cache `placeholder` + debounced (~140ms) hover/focus prefetch |
+

@@ -150,7 +150,7 @@
 }
 .login-form-title h3 {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: #1B2D55;
   margin-bottom: 0.2rem;
 }
@@ -263,7 +263,7 @@
   border: none;
   border-radius: 999px;
   color: #fff;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   font-size: 1rem;
   font-family: inherit;
   display: flex;
@@ -386,7 +386,7 @@
   height: 52px;
   text-align: center;
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   border: 2px solid #d1d5db;
   border-radius: 10px;
   outline: none;
@@ -461,7 +461,7 @@
   text-align: center;
   font-family: 'Courier New', monospace;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 2px;
   color: #1B2D55;
   background: #f1f5f9;
@@ -482,7 +482,7 @@
   text-align: center;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 2px;
   padding: 6px 4px;
   background: #f1f5f9;

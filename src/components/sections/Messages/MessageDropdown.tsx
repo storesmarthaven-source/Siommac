@@ -100,7 +100,7 @@ export function MessageDropdown(): VNode {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', borderBottom: '1px solid var(--border)' }}>
         <i class="fas fa-comments" style={{ color: 'var(--siomac-navy)' }} />
-        <span style={{ fontWeight: 700, color: 'var(--siomac-navy)', fontSize: '0.9rem' }}>Messages</span>
+        <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', fontSize: '0.9rem' }}>Messages</span>
         {unread > 0 && (
           <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{unread} unread</span>
         )}
@@ -155,7 +155,7 @@ export function MessageDropdown(): VNode {
         {!isLoading && rows.length === 0 && (
           <div style={{ padding: '32px 20px', textAlign: 'center' }}>
             <i class="fas fa-comments" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
-            <div style={{ fontWeight: 700, color: 'var(--siomac-navy)', marginTop: '10px' }}>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '10px' }}>
               {tab === 'unread' ? 'No unread messages' : 'No messages yet'}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>

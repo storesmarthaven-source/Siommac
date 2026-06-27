@@ -70,7 +70,7 @@ function RiskBadge({ risk }: { risk: PermissionRisk }): VNode {
   const cfg = RISK_CONFIG[risk];
   return (
     <span style={{
-      fontSize: '10.5px', fontWeight: '700', padding: '2px 7px', borderRadius: '20px',
+      fontSize: '10.5px', fontWeight: 'var(--font-weight-bold)', padding: '2px 7px', borderRadius: '20px',
       background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
       textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap', flexShrink: 0,
     }}>
@@ -119,7 +119,7 @@ function CriticalGrantDialog({ permKey, onConfirm, onCancel }: {
         <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <i class="fas fa-shield-exclamation" style={{ color: 'var(--siomac-red, #dc2626)', fontSize: '14px' }} />
-            <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--siomac-red, #dc2626)' }}>Critical permission</span>
+            <span style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '13px', color: 'var(--siomac-red, #dc2626)' }}>Critical permission</span>
           </div>
           <div style={{ fontSize: '12.5px', color: 'var(--text-secondary, #6b7280)', lineHeight: '1.5' }}>
             <strong style={{ color: 'var(--text-primary)' }}>{meta?.label ?? permKey}</strong> is a critical permission.

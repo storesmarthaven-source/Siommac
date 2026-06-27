@@ -107,7 +107,7 @@
 .stg-form-group { margin-bottom: 18px; }
 .stg-form-group:last-child { margin-bottom: 0; }
 .stg-form-group label {
-  display: block; font-size: 0.7rem; font-weight: 700;
+  display: block; font-size: 0.7rem; font-weight: var(--font-weight-bold);
   color: var(--text-muted); margin-bottom: 7px;
   text-transform: uppercase; letter-spacing: .5px;
 }
@@ -183,7 +183,7 @@
 /* Buttons */
 .stg-btn-primary {
   background: var(--siomac-navy); border: none; padding: 10px 22px;
-  border-radius: 40px; color: white; font-weight: 700; font-size: 0.83rem;
+  border-radius: 40px; color: white; font-weight: var(--font-weight-bold); font-size: 0.83rem;
   cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
   transition: opacity .2s; font-family: inherit;
 }
@@ -206,7 +206,7 @@
 .stg-btn-save:not(:disabled):hover { opacity: .85; }
 .stg-btn-danger {
   background: #c62828; border: none; padding: 10px 22px; border-radius: 40px;
-  color: white; font-weight: 700; font-size: 0.83rem; cursor: pointer;
+  color: white; font-weight: var(--font-weight-bold); font-size: 0.83rem; cursor: pointer;
   font-family: inherit; display: inline-flex; align-items: center; gap: 7px;
   transition: opacity .2s;
 }
@@ -250,7 +250,7 @@
   border-bottom: 1px solid var(--border, #e5e7eb);
 }
 .totp-modal-title {
-  font-size: 1rem; font-weight: 700; color: var(--text-primary, #111);
+  font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--text-primary, #111);
   display: flex; align-items: center;
 }
 .totp-modal-close {
@@ -281,7 +281,7 @@
 }
 .totp-manual-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted, #9ca3af); margin-bottom: 6px; }
 .totp-manual-code {
-  font-family: 'Courier New', monospace; font-size: 1rem; font-weight: 700;
+  font-family: 'Courier New', monospace; font-size: 1rem; font-weight: var(--font-weight-bold);
   letter-spacing: .1em; color: var(--siomac-navy, #1B2D55);
   word-break: break-all;
 }
@@ -307,7 +307,7 @@
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 8px; padding: 8px 12px;
   font-family: 'Courier New', monospace; font-size: 0.88rem;
-  font-weight: 700; letter-spacing: .08em;
+  font-weight: var(--font-weight-bold); letter-spacing: .08em;
   color: var(--siomac-navy, #1B2D55); text-align: center;
 }
 .totp-codes-actions { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -351,11 +351,11 @@
 }
 .totp-card-icon i { color: var(--siomac-navy, #1B2D55); font-size: 18px; }
 .totp-card-info { flex: 1; min-width: 0; }
-.totp-card-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #111); }
+.totp-card-title { font-size: 0.9rem; font-weight: var(--font-weight-bold); color: var(--text-primary, #111); }
 .totp-card-desc  { font-size: 0.78rem; color: var(--text-secondary, #6b7280); margin-top: 3px; line-height: 1.5; }
 .totp-badge {
   flex-shrink: 0; border-radius: 20px; padding: 3px 12px;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: .03em;
+  font-size: 0.72rem; font-weight: var(--font-weight-bold); letter-spacing: .03em;
 }
 .totp-badge--on  { background: #d1fae5; color: #065f46; }
 .totp-badge--off { background: #f3f4f6; color: #6b7280; }

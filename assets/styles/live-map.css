@@ -94,7 +94,7 @@
   display: flex; align-items: center; justify-content: space-between;
 }
 .lm-panel-header h3 {
-  font-weight: 700; color: var(--siomac-navy); font-size: 0.95rem;
+  font-weight: var(--font-weight-bold); color: var(--siomac-navy); font-size: 0.95rem;
   margin: 0; display: flex; align-items: center; gap: 8px;
 }
 .lm-center-btn {
@@ -232,7 +232,7 @@
   letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 1px;
 }
 .lm-cs-label {
-  font-size: 0.82rem; font-weight: 700; color: var(--siomac-navy);
+  font-size: 0.82rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -297,7 +297,7 @@
 /* Text block inside option */
 .lm-cs-opt-text { flex: 1; min-width: 0; }
 .lm-cs-opt-name {
-  font-size: 0.82rem; font-weight: 700;
+  font-size: 0.82rem; font-weight: var(--font-weight-bold);
   color: var(--text-primary); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
@@ -309,7 +309,7 @@
 
 /* Count pill */
 .lm-cs-opt-pill {
-  font-size: 0.68rem; font-weight: 700;
+  font-size: 0.68rem; font-weight: var(--font-weight-bold);
   border-radius: 20px; padding: 2px 8px;
   white-space: nowrap; flex-shrink: 0;
 }
@@ -344,7 +344,7 @@
   background: var(--siomac-navy);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: white; font-weight: 700; font-size: 15px;
+  color: white; font-weight: var(--font-weight-bold); font-size: 15px;
   flex-shrink: 0; overflow: hidden;
 }
 .lm-emp-avatar img {
@@ -454,7 +454,7 @@
   border-radius: 50% !important;
   color: #fff !important;
   font-size: 14px !important;
-  font-weight: 700 !important;
+  font-weight: var(--font-weight-bold) !important;
   line-height: 22px !important;
   text-align: center !important;
   padding: 0 !important;
@@ -522,14 +522,14 @@
 }
 .lm-popup-site-info { flex: 1; min-width: 0; }
 .lm-popup-site-name {
-  font-size: 0.82rem; font-weight: 700;
+  font-size: 0.82rem; font-weight: var(--font-weight-bold);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .lm-popup-status-pill {
   flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 9px; border-radius: 40px;
-  font-size: 0.65rem; font-weight: 700;
+  font-size: 0.65rem; font-weight: var(--font-weight-bold);
 }
 
 /* ── Employee row ── */
@@ -540,7 +540,7 @@
 }
 .lm-popup-emp-info { min-width: 0; flex: 1; }
 .lm-popup-emp-name {
-  font-size: 0.88rem; font-weight: 700;
+  font-size: 0.88rem; font-weight: var(--font-weight-bold);
   color: var(--text-primary, #111);
   white-space: normal; word-break: break-word;
 }
@@ -562,7 +562,7 @@
 }
 .lm-popup-time-cell i { font-size: 0.75rem; color: var(--siomac-red, #d40000); }
 .lm-popup-time-label { font-size: 0.62rem; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: .04em; width: 100%; text-align: center; }
-.lm-popup-time-val   { font-size: 0.82rem; font-weight: 700; color: var(--text-primary, #111); width: 100%; text-align: center; }
+.lm-popup-time-val   { font-size: 0.82rem; font-weight: var(--font-weight-bold); color: var(--text-primary, #111); width: 100%; text-align: center; }
 .lm-popup-time-divider {
   width: 1px; background: var(--border, #eee); margin: 4px 10px;
 }
@@ -584,7 +584,7 @@
 }
 .lm-popup-btn {
   flex: 1; padding: 7px 10px; border-radius: 40px;
-  font-size: 0.68rem; font-weight: 700;
+  font-size: 0.68rem; font-weight: var(--font-weight-bold);
   display: inline-flex; align-items: center; justify-content: center;
   gap: 5px; cursor: pointer; border: none; transition: .18s;
   font-family: inherit; text-decoration: none;

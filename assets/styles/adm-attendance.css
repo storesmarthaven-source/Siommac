@@ -87,11 +87,11 @@
   width: 52px; height: 52px; border-radius: 50%;
   background: rgba(255,255,255,0.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700; flex-shrink: 0;
+  font-size: 18px; font-weight: var(--font-weight-bold); flex-shrink: 0;
   border: 2px solid rgba(255,255,255,0.25);
 }
 .adp-identity { flex: 1; min-width: 0; }
-.adp-name { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.adp-name { font-size: 18px; font-weight: var(--font-weight-bold); line-height: 1.2; }
 .adp-meta { display: flex; gap: 12px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
 .adp-dept, .adp-period {
   font-size: 11.5px; opacity: 0.78;
@@ -99,7 +99,7 @@
 }
 .adp-rate-pill {
   padding: 6px 14px; border-radius: 40px;
-  font-size: 13px; font-weight: 700;
+  font-size: 13px; font-weight: var(--font-weight-bold);
   display: flex; align-items: center; gap: 6px;
   flex-shrink: 0;
 }
@@ -114,7 +114,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .adp-stat:last-child { border-right: none; }
-.adp-stat-val { font-size: 22px; font-weight: 700; line-height: 1; }
+.adp-stat-val { font-size: 22px; font-weight: var(--font-weight-bold); line-height: 1; }
 .adp-stat-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
 .adp-stat--present .adp-stat-val { color: #2E7D32; }
 .adp-stat--late    .adp-stat-val { color: #7a5900; }
@@ -132,7 +132,7 @@
   padding: 20px 24px 24px;
 }
 .adp-section-title {
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  font-size: 11px; font-weight: var(--font-weight-bold); text-transform: uppercase;
   letter-spacing: .06em; color: var(--text-muted);
   margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
 }
@@ -150,7 +150,7 @@
 }
 .adp-log-table th {
   padding: 8px 12px; text-align: left;
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  font-size: 11px; font-weight: var(--font-weight-bold); text-transform: uppercase;
   letter-spacing: .04em; color: var(--text-muted);
 }
 .adp-log-row { border-bottom: 1px solid var(--border); transition: background .15s; }
@@ -175,7 +175,7 @@
   transition: width .4s;
 }
 .att-rate-val {
-  font-size: 12px; font-weight: 700;
+  font-size: 12px; font-weight: var(--font-weight-bold);
   color: var(--text-primary); white-space: nowrap;
 }
 

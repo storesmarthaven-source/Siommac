@@ -114,7 +114,7 @@ function HazardRow({ hazard, index, onChange, onRemove }: {
       display: 'grid', gap: '10px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Hazard {index + 1}
         </span>
         <button
@@ -399,7 +399,7 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
           {hazards.map((h, i) => (
             <div key={i} style={{ padding: '14px', background: 'var(--surface-alt)', borderRadius: '10px', display: 'grid', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Hazard {i + 1}
                 </span>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-body)' }}>
@@ -439,7 +439,7 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
             return (
               <div key={i} style={{ padding: '14px', background: 'var(--surface-alt)', borderRadius: '10px', display: 'grid', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Hazard {i + 1}
                   </span>
                   <span style={{ fontSize: '0.8rem' }}>{h.hazardDescription || '(no description)'}</span>
@@ -474,7 +474,7 @@ export function NewAssessmentWizard({ open, onClose }: { open: boolean; onClose:
       {step === 5 && (
         <div style={{ display: 'grid', gap: '14px' }}>
           <div style={{ padding: '16px', background: 'var(--surface-alt)', borderRadius: '10px', display: 'grid', gap: '8px', fontSize: '0.82rem' }}>
-            <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.88rem' }}>Assessment Summary</div>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', marginBottom: '4px', fontSize: '0.88rem' }}>Assessment Summary</div>
             <div><strong style={{ color: 'var(--text-muted)' }}>Type:</strong> {selectedTypeLabel}</div>
             <div><strong style={{ color: 'var(--text-muted)' }}>Title:</strong> {title || <em style={{ color: 'var(--text-muted)' }}>—</em>}</div>
             <div><strong style={{ color: 'var(--text-muted)' }}>Site:</strong> {siteId || 'All sites'}</div>

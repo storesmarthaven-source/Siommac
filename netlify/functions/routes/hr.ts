@@ -14,7 +14,7 @@ import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
 import { emitAppEvent }      from '../lib/appEvents';
 import { createAttachmentUploadUrl } from '../lib/upload';
-import { getSignedUrl }      from '../lib/photos';
+import { getSignedUrl, resolveProfileImageUrl } from '../lib/photos';
 import { nextRef }    from '../lib/refGenerator';
 import { z, zv }      from '../lib/validate';
 import {
@@ -34,7 +34,7 @@ const RESTRICTED_TIERS = new Set(['restricted_hr', 'legal', 'medical']);
 const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
-  'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image, ' +
+  'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image_thumb_url, profile_image, signed_url, signed_url_expires_at, ' +
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
@@ -111,6 +111,7 @@ router.post('/employees/list', async c => {
 
   return c.json({ success: true, data: data.map(r => ({
     ...r,
+    profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
     departmentName: deptMap[r.department_id ?? ''] ?? null,
     siteName: siteMap[(r['site_id'] as string | null) ?? ''] ?? null,
     supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
@@ -149,6 +150,7 @@ router.post('/employees/get', async c => {
 
   return c.json({ success: true, data: {
     employee: { ...emp,
+      profile_image_url: resolveProfileImageUrl(emp as Parameters<typeof resolveProfileImageUrl>[0]),
       supervisorName: (supervisor as { full_name?: string } | null)?.full_name ?? null,
       departmentName: (dept as { name?: string } | null)?.name ?? null,
       siteName: (site as { name?: string } | null)?.name ?? null,

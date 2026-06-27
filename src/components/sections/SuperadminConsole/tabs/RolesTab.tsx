@@ -94,7 +94,7 @@ function RolePermMatrix({ role }: { role: RoleRow }): VNode {
       )}
       {groups.map(group => (
         <div key={group.resource} style={{ marginBottom: '16px' }}>
-          <div class="stg-switch-desc" style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: 'var(--siomac-navy)' }}>
+          <div class="stg-switch-desc" style={{ fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: 'var(--siomac-navy)' }}>
             {RESOURCE_LABEL[group.resource] ?? group.resource}
           </div>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>

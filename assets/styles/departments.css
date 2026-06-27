@@ -73,12 +73,12 @@
   padding: 18px 20px 0;
 }
 .emp-payslip-card-month {
-  font-size: 1rem; font-weight: 700; color: var(--text-primary);
+  font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--text-primary);
 }
 .emp-payslip-card-cycle-tag {
   background: rgba(27,45,85,.08); color: var(--siomac-navy);
   border-radius: 20px; padding: 3px 10px;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: .3px;
+  font-size: 0.72rem; font-weight: var(--font-weight-bold); letter-spacing: .3px;
 }
 
 /* Net pay hero */

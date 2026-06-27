@@ -43,6 +43,21 @@ export { Button, type ButtonVariant } from './components/Button';
 export { Toolbar, SearchInput, FilterSelect } from './components/Toolbar';
 export { Field, TextInput, SelectInput, TextareaInput, FormGrid } from './components/Field';
 
+// ── Loading placeholders (cold-path only) ──
+export {
+  Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
+  type SkeletonProps, type SkeletonTextProps, type TableSkeletonProps, type ListSkeletonProps,
+  type SkeletonFieldsProps, type SkeletonStatGridProps,
+} from './components/Skeleton';
+export { Spinner, type SpinnerProps } from './components/Spinner';
+export { EmptyState, type EmptyStateProps, type EmptyTone } from './components/EmptyState';
+
+// ── Widget board (resizable dashboard, gridstack) ──
+export { WidgetBoard, type WidgetBoardProps } from './components/WidgetBoard';
+export { WidgetBoardZone, type WidgetBoardZoneProps } from './components/WidgetBoardZone';
+export { WidgetPicker, type WidgetPickerProps } from './components/WidgetPicker';
+export { defaultBoard, type WidgetDef, type WidgetRegistry } from './widgets/registry';
+
 // ── Data ──
 export { Tabs, type TabDef } from './components/Tabs';
 export { RegisterTable, type Column } from './components/RegisterTable';

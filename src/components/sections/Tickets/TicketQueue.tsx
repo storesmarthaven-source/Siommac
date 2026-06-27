@@ -122,7 +122,7 @@ function TicketRowItem({ ticket: t, isAdmin, username, seenIds, onOpen, onDelete
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <span class={`hdr-ticket-status ${css}`}>{lbl}</span>
             {isOverdue({ ...t }) && (
-              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#e40c0c', background: 'rgba(228,12,12,0.09)', border: '1.5px solid rgba(228,12,12,0.22)', borderRadius: 4, padding: '1px 5px' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 'var(--font-weight-bold)', color: '#e40c0c', background: 'rgba(228,12,12,0.09)', border: '1.5px solid rgba(228,12,12,0.22)', borderRadius: 4, padding: '1px 5px' }}>
                 Overdue
               </span>
             )}
@@ -144,7 +144,7 @@ function TicketRowItem({ ticket: t, isAdmin, username, seenIds, onOpen, onDelete
       {hasNew && (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, alignSelf: 'center', background: 'rgba(228,12,12,0.09)', border: '1.5px solid rgba(228,12,12,0.22)', borderRadius: 20, padding: '2px 7px 2px 5px', whiteSpace: 'nowrap' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--siomac-red)', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-red)' }}>New reply</span>
+          <span style={{ fontSize: '0.65rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-red)' }}>New reply</span>
         </span>
       )}
 

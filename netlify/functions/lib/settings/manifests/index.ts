@@ -9,6 +9,7 @@ import { incidentsManifest } from './incidents.manifest';
 import { capaJsaInspectionsManifest } from './capaJsaInspections.manifest';
 import { documentsPpeManifest } from './documentsPpe.manifest';
 import { employeesManifest } from './employees.manifest';
+import { onboardingManifest } from './onboarding.manifest';
 import { notificationsManifest } from './notifications.manifest';
 import { messagesManifest } from './messages.manifest';
 import { filesManifest } from './files.manifest';
@@ -25,6 +26,7 @@ export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   attendanceManifest,
   // Module Policy
   employeesManifest,
+  onboardingManifest,
   trainingManifest,
   ptwManifest,
   sdsManifest,

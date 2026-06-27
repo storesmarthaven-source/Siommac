@@ -26,6 +26,7 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { type JSX } from 'preact';
+import { Skeleton } from './Skeleton';
 
 export interface StatStatus {
   label: string;
@@ -62,12 +63,15 @@ export interface StatsCardProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>,
   footer?: ComponentChildren;
   /** Extra free-form body content. */
   children?: ComponentChildren;
+  /** Cold-load state — shows a shimmer body instead of metric/chart (never a "0").
+   *  Gate with `loading={q.isLoading && !q.data}` so cached data always wins. */
+  loading?: boolean;
 }
 
 export function StatsCard({
   icon, title, variant = 'light', headerBg, headerColor,
   metric, metricUnit, metricColor, supporting, statuses, chart,
-  percent, percentColor, percentTarget, footer, children,
+  percent, percentColor, percentTarget, footer, children, loading,
   class: className, ...rest
 }: StatsCardProps): VNode {
   const navy = variant === 'navy';
@@ -86,6 +90,15 @@ export function StatsCard({
       </div>
 
       <div class="ui-stat-card-body">
+        {loading ? (
+          <>
+            <Skeleton height={38} width="55%" radius={8} />
+            <Skeleton height={12} width="80%" />
+            <div class="ui-stat-spacer" />
+            <Skeleton height={56} width="100%" radius={10} />
+          </>
+        ) : (
+        <>
         {metric !== undefined && (
           <div class="ui-stat-metric-row">
             <span class="ui-stat-metric" style={metricColor ? { color: metricColor } : undefined}>{metric}</span>
@@ -131,6 +144,8 @@ export function StatsCard({
         )}
 
         {footer && <div class="ui-stat-footer">{footer}</div>}
+        </>
+        )}
       </div>
     </div>
   );

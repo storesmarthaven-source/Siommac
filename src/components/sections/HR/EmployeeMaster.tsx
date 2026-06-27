@@ -23,9 +23,9 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useRef } from 'preact/hooks';
 import {
-  useHrEmployees, useHrDashboardStats,
+  useHrEmployees, useHrDashboardStats, usePrefetchHrEmployee,
   type HrEmployeeRow, type HrDashboardStats, type TrainingStatus,
 } from '@api/hr/employees';
 import {
@@ -36,6 +36,9 @@ import { CreateEmployeeWizard } from './CreateEmployeeWizard';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { OnboardingWizard } from './OnboardingWizard';
+import { buildHrWidgets } from './widgets/hrWidgets';
+import { TableSkeleton, PageHeader, StatsCard, WidgetBoardZone, type WidgetDef, type WidgetRegistry } from '@ui';
+import { useSessionStore, selectIsManager } from '@store/session';
 import './HR.css';
 
 // ── small helpers ─────────────────────────────────────────────────────────────
@@ -46,40 +49,6 @@ function monthLabel(p: string): string {
   const m = /^\d{4}-(\d{2})$/.exec(p);
   if (m) { const i = Number(m[1]) - 1; return MONTHS[i] ?? p; }
   return p.length > 3 ? p.slice(0, 3) : p;
-}
-
-// ── KPI stat icons (ported from v36 StatSvgIcon) ───────────────────────────────
-
-function StatIcon({ type }: { type: 'users' | 'queue' | 'shield' | 'alert' }): VNode {
-  if (type === 'users') return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-  if (type === 'queue') return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 11l2 2 4-4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-      <path d="M17 3h4v4" />
-      <path d="M16 8l5-5" />
-    </svg>
-  );
-  if (type === 'shield') return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-      <path d="M9 12l2 2 4-5" />
-    </svg>
-  );
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-      <path d="M12 9v4" />
-      <path d="M12 17h.01" />
-    </svg>
-  );
 }
 
 // ── charts (wired to real dashboard-stats) ─────────────────────────────────────
@@ -167,77 +136,6 @@ function ExceptionChart({ items }: { items: { type: string; count: number }[] })
   );
 }
 
-// ── KPI cards ──────────────────────────────────────────────────────────────────
-
-function EmStatChip({ value, label }: { value: string; label: string }): VNode {
-  return <div class="em-stat-chip"><strong>{value}</strong><span>{label}</span></div>;
-}
-
-function EmStatCard(
-  { tone, icon, title, value, label, state, chart, children }:
-  { tone: string; icon: 'users' | 'queue' | 'shield' | 'alert'; title: string; value: string;
-    label: string; state: string; chart: VNode; children: VNode | VNode[] },
-): VNode {
-  return (
-    <section class={`em-stat-card em-stat-card-${tone}`}>
-      <div class="em-stat-head">
-        <div class="em-stat-title"><span class="em-stat-icon"><StatIcon type={icon} /></span><h3>{title}</h3></div>
-        <span class="em-stat-state">{state}</span>
-      </div>
-      <div class="em-stat-main">
-        <div class="em-stat-metric">
-          <div class="em-stat-value">{value}</div>
-          <div class="em-stat-label">{label}</div>
-          <div class="em-stat-bottom">{children}</div>
-        </div>
-        {chart}
-      </div>
-    </section>
-  );
-}
-
-function KpiGrid({ stats }: { stats?: HrDashboardStats }): VNode {
-  const aw = stats?.active_workforce;
-  const wq = stats?.hr_work_queue;
-  const rd = stats?.readiness;
-  const ex = stats?.exceptions;
-  const trend = aw?.trend ?? [];
-  const last = trend[trend.length - 1];
-  const prev = trend[trend.length - 2];
-  const net = last && prev ? last.count - prev.count : null;
-  return (
-    <div class="em-stat-grid">
-      <EmStatCard tone="blue" icon="users" title="Active Workforce" value={String(aw?.total ?? 0)}
-        label="Active people records across all sites"
-        state={net != null ? `${net >= 0 ? '+' : ''}${net} net this month` : 'Active'}
-        chart={<WorkforceTrendChart trend={trend} />}>
-        <EmStatChip value={String(aw?.employees ?? 0)} label="Employees" />
-        <EmStatChip value={String(aw?.contractors ?? 0)} label="Contractors" />
-      </EmStatCard>
-
-      <EmStatCard tone="amber" icon="queue" title="HR Work Queue" value={String(wq?.total ?? 0)}
-        label="Open HR actions requiring review" state={`${wq?.urgent ?? 0} urgent`}
-        chart={<ChangeMixChart mix={wq?.mix ?? []} />}>
-        {(wq?.mix ?? []).slice(0, 2).map(m => <EmStatChip value={String(m.count)} label={humanize(m.type)} />)}
-      </EmStatCard>
-
-      <EmStatCard tone="green" icon="shield" title="Readiness" value={`${rd?.percent ?? 0}%`}
-        label="Payroll, statutory and training readiness" state={`${rd?.blocked ?? 0} pending checks`}
-        chart={<ReadinessChart percent={rd?.percent ?? 0} payrollReady={rd?.payroll_ready ?? 0}
-          trainingCurrent={rd?.training_current ?? 0} needReview={rd?.blocked ?? 0} />}>
-        <EmStatChip value={String(rd?.payroll_ready ?? 0)} label="Payroll ready" />
-        <EmStatChip value={String(rd?.training_current ?? 0)} label="Training current" />
-      </EmStatCard>
-
-      <EmStatCard tone="red" icon="alert" title="Workforce Exceptions" value={String(ex?.total ?? 0)}
-        label="Records blocking clean handoff or assignment"
-        state={(ex?.total ?? 0) > 0 ? 'Needs action' : 'Clear'}
-        chart={<ExceptionChart items={ex?.items ?? []} />}>
-        {(ex?.items ?? []).slice(0, 2).map(i => <EmStatChip value={String(i.count)} label={humanize(i.type)} />)}
-      </EmStatCard>
-    </div>
-  );
-}
 
 // ── toolbar ────────────────────────────────────────────────────────────────────
 
@@ -322,7 +220,10 @@ function AdvancedFilters(
           <span class="sliders">≡</span>
           <span><small>Advanced</small><strong>{count ? `${count} filters active` : 'Advanced filters'}</strong></span>
         </span>
-        {count ? <span class="advanced-count">{count}</span> : <span>⌄</span>}
+        <span class="adv-right">
+          {count ? <span class="advanced-count">{count}</span> : null}
+          <span class="adv-caret"><i class="fas fa-chevron-down" aria-hidden="true" /></span>
+        </span>
       </button>
       {isOpen && (
         <div class="dropdown-menu advanced-menu right" onClick={e => e.stopPropagation()}>
@@ -382,55 +283,24 @@ function AdvancedFilters(
   );
 }
 
-function SavedViewsMenu(
-  { openId, setOpenId, apply, statusOptions, typeOptions }:
-  { openId: string | null; setOpenId: (v: string | null) => void; apply: (f: Filters) => void;
-    statusOptions: string[]; typeOptions: string[] },
-): VNode {
-  const isOpen = openId === 'saved-views';
-  const views: { label: string; build: () => Filters }[] = [
-    { label: 'Active employees', build: () => ({ ...EMPTY_FILTERS, status: statusOptions.filter(s => /active/i.test(s) && !/inactive/i.test(s)) }) },
-    { label: 'Contractors', build: () => ({ ...EMPTY_FILTERS, employmentType: typeOptions.filter(t => /contract/i.test(t)) }) },
-    { label: 'Training expired', build: () => ({ ...EMPTY_FILTERS, training: ['expired'] }) },
-    { label: 'Clear filters', build: () => ({ ...EMPTY_FILTERS }) },
-  ];
-  return (
-    <div class="dropdown-wrap">
-      <button type="button" class="advanced-filter-btn" title="Saved views" onClick={e => { e.stopPropagation(); setOpenId(isOpen ? null : 'saved-views'); }}>
-        <span class="left"><span class="sliders">☷</span><span><small>Views</small><strong>Saved Views</strong></span></span>
-        <span>⌄</span>
-      </button>
-      {isOpen && (
-        <div class="dropdown-menu right" onClick={e => e.stopPropagation()}>
-          <div class="dropdown-head"><strong>Saved Views</strong><span>Fast Employee Master presets.</span></div>
-          <div class="dropdown-list">
-            {views.map(v => (
-              <button type="button" class="menu-row" onClick={() => { apply(v.build()); setOpenId(null); }}>
-                <span class="menu-ico"><i class="fas fa-table-cells-large" /></span><span>{v.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── register table ─────────────────────────────────────────────────────────────
 
 const TABLE_COLS = ['Employee', 'Employee No.', 'Position / Role', 'Department', 'Site', 'Supervisor', 'Employment Type', 'Status', 'Training Status', 'Actions'];
 
 function EmployeeRow(
-  { emp, supervisorName, selected, openId, setOpenId, onSelect, onAction }:
+  { emp, supervisorName, selected, openId, setOpenId, onSelect, onPrefetch, onPrefetchEnd, onAction }:
   { emp: HrEmployeeRow; supervisorName: string | null; selected: boolean; openId: string | null;
-    setOpenId: (v: string | null) => void; onSelect: (id: string) => void; onAction: (label: string, id: string) => void },
+    setOpenId: (v: string | null) => void; onSelect: (id: string) => void;
+    onPrefetch: (id: string) => void; onPrefetchEnd: () => void;
+    onAction: (label: string, id: string) => void },
 ): VNode {
   const name = rowName(emp);
   const type = emp.employment_type ?? emp.workerType;
   const kebabId = `row-${emp.id}`;
   const isOpen = openId === kebabId;
   return (
-    <tr class={`employee-row ${selected ? 'selected' : ''}`} onClick={() => onSelect(emp.id)}>
+    <tr class={`employee-row ${selected ? 'selected' : ''}`} onClick={() => onSelect(emp.id)}
+      onMouseEnter={() => onPrefetch(emp.id)} onMouseLeave={onPrefetchEnd} onFocusCapture={() => onPrefetch(emp.id)}>
       <td>
         <div class="employee-cell">
           <Avatar name={name} img={emp.profile_image_url} />
@@ -507,6 +377,58 @@ export function EmployeeMaster(): VNode {
   const statsQ = useHrDashboardStats();
   const listQ = useHrEmployees({ limit: 500 });
   const rows = useMemo(() => listQ.data ?? [], [listQ.data]);
+  // Only managers/admins/superadmins may customize the board (drag/resize/add).
+  const canEdit = useSessionStore(selectIsManager);
+  // Unified widget board: the 4 KPI cards (bare StatsCards) + insight panels + locked
+  // widgets, all draggable/resizable as one board with a single Customize control.
+  const hrWidgets = useMemo<WidgetRegistry>(() => {
+    const aw = statsQ.data?.active_workforce;
+    const wq = statsQ.data?.hr_work_queue;
+    const rd = statsQ.data?.readiness;
+    const ex = statsQ.data?.exceptions;
+    const trend = aw?.trend ?? [];
+    const last = trend[trend.length - 1];
+    const prev = trend[trend.length - 2];
+    const net = last && prev ? last.count - prev.count : null;
+    const loading = statsQ.isLoading && !statsQ.data;
+    const kpi = (id: string, title: string, icon: string, node: VNode): WidgetDef =>
+      ({ id, title, icon, category: 'KPIs', defaultW: 3, defaultH: 3, minW: 2, minH: 2, bare: true, render: () => node });
+    return {
+      'hr.kpi.workforce': kpi('hr.kpi.workforce', 'Active Workforce', 'fa-users',
+        <StatsCard icon="fa-users" title="Active Workforce" loading={loading} metric={aw?.total ?? 0}
+          supporting="Active people records across all sites" chart={<WorkforceTrendChart trend={trend} />}
+          footer={`${aw?.employees ?? 0} employees · ${aw?.contractors ?? 0} contractors${net != null ? ` · ${net >= 0 ? '+' : ''}${net} net` : ''}`} />),
+      'hr.kpi.queue': kpi('hr.kpi.queue', 'HR Work Queue', 'fa-list-check',
+        <StatsCard icon="fa-list-check" title="HR Work Queue" loading={loading} metric={wq?.total ?? 0}
+          supporting="Open HR actions requiring review" chart={<ChangeMixChart mix={wq?.mix ?? []} />}
+          footer={`${wq?.urgent ?? 0} urgent`} />),
+      'hr.kpi.readiness': kpi('hr.kpi.readiness', 'Readiness', 'fa-shield-halved',
+        <StatsCard icon="fa-shield-halved" title="Readiness" loading={loading} metric={`${rd?.percent ?? 0}%`}
+          supporting="Payroll, statutory and training readiness"
+          chart={<ReadinessChart percent={rd?.percent ?? 0} payrollReady={rd?.payroll_ready ?? 0} trainingCurrent={rd?.training_current ?? 0} needReview={rd?.blocked ?? 0} />}
+          footer={`${rd?.payroll_ready ?? 0} payroll ready · ${rd?.training_current ?? 0} training current`} />),
+      'hr.kpi.exceptions': kpi('hr.kpi.exceptions', 'Workforce Exceptions', 'fa-triangle-exclamation',
+        <StatsCard icon="fa-triangle-exclamation" title="Workforce Exceptions" loading={loading} metric={ex?.total ?? 0}
+          supporting="Records blocking clean handoff or assignment" chart={<ExceptionChart items={ex?.items ?? []} />}
+          footer={(ex?.total ?? 0) > 0 ? 'Needs action' : 'Clear'} />),
+      ...buildHrWidgets(rows),
+    };
+  }, [rows, statsQ.data, statsQ.isLoading]);
+  // Default board = the 4 KPI cards + the employee register table (full width).
+  // Insight panels (Dept Distribution, Demographics, …) are opt-in via Add widget.
+  const BOARD_DEFAULTS = ['hr.kpi.workforce', 'hr.kpi.queue', 'hr.kpi.readiness', 'hr.kpi.exceptions', 'hr.table'];
+
+  // Debounced hover-prefetch: only warm a row's detail once the cursor RESTS on it
+  // (~140ms) — sweeping across the list fires nothing, so we never storm the API.
+  const prefetchEmployee = usePrefetchHrEmployee();
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onRowHover = (id: string) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => prefetchEmployee(id), 140);
+  };
+  const onRowHoverEnd = () => {
+    if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+  };
 
   const distinct = (vals: (string | null | undefined)[]) => Array.from(new Set(vals.filter((v): v is string => !!v))).sort();
   const statusOptions = useMemo(() => distinct(rows.map(r => r.status)), [rows]);
@@ -552,20 +474,26 @@ export function EmployeeMaster(): VNode {
     ...filters.training.map(s => ({ label: TRAINING_LABEL[s as TrainingStatus] ?? humanize(s), onRemove: () => setFiltersReset({ ...filters, training: filters.training.filter(x => x !== s) }) })),
   ];
 
-  return (
-    <div class="hr-emp-master" onClick={() => setOpenId(null)}>
-      {/* Page header */}
-      <div class="page-row">
-        <div>
-          <h1>Employee Master</h1>
-          <div class="subtitle">Manage workforce records, employment status, assignments, and HR actions.</div>
-        </div>
-        <div class="page-actions">
-          <button class="secondary-btn" type="button" disabled
-            title="Employee Master settings are governed in Settings & Preferences; an in-page panel arrives in a later build.">Settings</button>
+  // The register (toolbar + filters + table + pagination) as a full-width, resizable
+  // board widget. Built fresh each render so it tracks current filters/selection.
+  const registerWidget: WidgetDef = {
+    id: 'hr.table', title: 'Employee Register', icon: 'fa-table', category: 'Register',
+    defaultW: 12, defaultH: 9, minW: 6, minH: 4, bare: true,
+    render: () => (
+      <div class="table-card">
+        <div class="employee-toolbar compact">
+          <div class="table-search">
+            <span class="magnify">⌕</span>
+            <input value={filters.query} placeholder="Search employee, email, employee no, position, department…"
+              onInput={e => setFiltersReset({ ...filters, query: e.currentTarget.value })} />
+          </div>
+          <MultiDropdown id="status-filter" label="Status" options={statusOptions} selected={filters.status}
+            onChange={v => setFiltersReset({ ...filters, status: v })} openId={openId} setOpenId={setOpenId} labelFn={humanize} />
+          <AdvancedFilters filters={filters} setFilters={setFiltersReset} openId={openId} setOpenId={setOpenId}
+            deptOptions={deptOptions} typeOptions={typeOptions} trainingOptions={trainingOptions} />
           <div class="dropdown-wrap">
-            <button class="primary-btn" type="button" onClick={e => { e.stopPropagation(); setOpenId(openId === 'new-menu' ? null : 'new-menu'); }}>
-              + New Employee <span class="caret">⌄</span>
+            <button class="hse-btn accent" type="button" onClick={e => { e.stopPropagation(); setOpenId(openId === 'new-menu' ? null : 'new-menu'); }}>
+              <i class="fas fa-circle-plus" /> New Employee <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
             </button>
             {openId === 'new-menu' && (
               <div class="dropdown-menu right" onClick={e => e.stopPropagation()}>
@@ -588,73 +516,74 @@ export function EmployeeMaster(): VNode {
             )}
           </div>
         </div>
-      </div>
 
-      {/* KPI cards */}
-      <KpiGrid stats={statsQ.data} />
+        {(chipDefs.length || filters.query) ? (
+          <div class="active-filter-bar">
+            {chipDefs.length ? <strong>Active filters:</strong> : null}
+            {chipDefs.map(c => <button class="chip-btn" type="button" onClick={() => c.onRemove()}>{c.label} ×</button>)}
+            <button class="ghost-btn" type="button" onClick={() => setFiltersReset(EMPTY_FILTERS)}>Clear all</button>
+          </div>
+        ) : null}
 
-      {/* Toolbar */}
-      <div class="employee-toolbar compact">
-        <div class="table-search">
-          <span class="magnify">⌕</span>
-          <input value={filters.query} placeholder="Search employee, email, employee no, position, department…"
-            onInput={e => setFiltersReset({ ...filters, query: e.currentTarget.value })} />
+        <div class="table-scroll">
+          <table>
+            <thead><tr>{TABLE_COLS.map(c => <th>{c}</th>)}</tr></thead>
+            <tbody>
+              {listQ.isLoading && !listQ.data
+                ? <TableSkeleton rows={pageSize} cols={TABLE_COLS.length} firstCellAvatar />
+                : paged.length
+                  ? paged.map(emp => (
+                    <EmployeeRow emp={emp}
+                      supervisorName={emp.supervisorName}
+                      selected={selectedId === emp.id} openId={openId} setOpenId={setOpenId}
+                      onSelect={setSelectedId} onPrefetch={onRowHover} onPrefetchEnd={onRowHoverEnd}
+                      onAction={(label, id) => openAction(label, id)} />
+                  ))
+                  : <tr><td colSpan={TABLE_COLS.length}><div class="em-empty">No employees match these filters.</div></td></tr>}
+            </tbody>
+          </table>
         </div>
-        <MultiDropdown id="status-filter" label="Status" options={statusOptions} selected={filters.status}
-          onChange={v => setFiltersReset({ ...filters, status: v })} openId={openId} setOpenId={setOpenId} labelFn={humanize} />
-        <AdvancedFilters filters={filters} setFilters={setFiltersReset} openId={openId} setOpenId={setOpenId}
-          deptOptions={deptOptions} typeOptions={typeOptions} trainingOptions={trainingOptions} />
-        <SavedViewsMenu openId={openId} setOpenId={setOpenId} apply={setFiltersReset}
-          statusOptions={statusOptions} typeOptions={typeOptions} />
-      </div>
 
-      {/* Active filter chips — each removes its own filter */}
-      <div class="active-filter-bar">
-        {chipDefs.length ? <strong>Active filters:</strong> : null}
-        {chipDefs.map(c => <button class="chip-btn" type="button" onClick={() => c.onRemove()}>{c.label} ×</button>)}
-        {(filters.query || chipDefs.length)
-          ? <button class="ghost-btn" type="button" onClick={() => setFiltersReset(EMPTY_FILTERS)}>Clear all</button>
-          : null}
-      </div>
-
-      {/* Register */}
-      <div class="table-card">
-        <table>
-          <thead><tr>{TABLE_COLS.map(c => <th>{c}</th>)}</tr></thead>
-          <tbody>
-            {listQ.isLoading
-              ? <tr><td colSpan={TABLE_COLS.length}><div class="em-empty">Loading…</div></td></tr>
-              : paged.length
-                ? paged.map(emp => (
-                  <EmployeeRow emp={emp}
-                    supervisorName={emp.supervisorName}
-                    selected={selectedId === emp.id} openId={openId} setOpenId={setOpenId}
-                    onSelect={setSelectedId}
-                    onAction={(label, id) => openAction(label, id)} />
-                ))
-                : <tr><td colSpan={TABLE_COLS.length}><div class="em-empty">No employees match these filters.</div></td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div class="pagination">
-        <div>{filtered.length
-          ? `Showing ${start + 1} to ${Math.min(start + pageSize, filtered.length)} of ${filtered.length} results`
-          : 'No results'}</div>
-        <div class="pages">
-          <button class="page-btn" type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)}>‹</button>
-          {pageWindow(curPage, totalPages).map(p => p === '…'
-            ? <span>…</span>
-            : <button type="button" class={`page-btn ${p === curPage ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>)}
-          <button class="page-btn" type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)}>›</button>
-        </div>
-        <div class="rows-select">Rows per page:
-          <select value={String(pageSize)} onChange={e => { setPageSize(Number(e.currentTarget.value)); setPage(1); }}>
-            <option value="25">25</option><option value="50">50</option><option value="100">100</option>
-          </select>
+        <div class="pagination">
+          <div>{filtered.length
+            ? `Showing ${start + 1} to ${Math.min(start + pageSize, filtered.length)} of ${filtered.length} results`
+            : 'No results'}</div>
+          <div class="pages">
+            <button class="page-btn" type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)}>‹</button>
+            {pageWindow(curPage, totalPages).map(p => p === '…'
+              ? <span>…</span>
+              : <button type="button" class={`page-btn ${p === curPage ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>)}
+            <button class="page-btn" type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)}>›</button>
+          </div>
+          <div class="rows-select">Rows per page:
+            <select value={String(pageSize)} onChange={e => { setPageSize(Number(e.currentTarget.value)); setPage(1); }}>
+              <option value="25">25</option><option value="50">50</option><option value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
+    ),
+  };
+  const boardRegistry: WidgetRegistry = { ...hrWidgets, 'hr.table': registerWidget };
+
+  return (
+    <div class="hr-emp-master" onClick={() => setOpenId(null)}>
+      {/* Page header — standard, info-only (ProfilePill on the right, from PageHeader) */}
+      <PageHeader
+        icon="fa-users"
+        module="HR"
+        title="Employee Master"
+        sub="Manage workforce records, employment status, assignments, and HR actions."
+        meta={[
+          { icon: 'fa-id-badge', label: `${rows.length} employees` },
+          { icon: 'fa-location-dot', label: 'All sites' },
+        ]}
+      />
+
+      {/* Unified customizable board — KPI cards + the register table + insights, one
+          Customize control (drag/resize/add). Read-only unless manager/admin/superadmin. */}
+      <WidgetBoardZone pageKey="hr.employees.board" registry={boardRegistry}
+        defaultIds={BOARD_DEFAULTS} requiredIds={['hr.table']} canEdit={canEdit} />
 
       {/* Profile drawer */}
       <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)} onAction={(label) => openAction(label, selectedId)} />

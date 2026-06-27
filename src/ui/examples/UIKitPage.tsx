@@ -19,6 +19,8 @@ import {
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
   RegisterTable, Tabs,
+  Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
+  Spinner, EmptyState,
   Modal, Wizard, Drawer,
   SplitLayout,
   type ModuleTab, type TabDef, type Column,
@@ -31,7 +33,7 @@ function Section({ id, title, sub, children }: { id: string; title: string; sub:
   return (
     <section id={id} style={{ marginBottom: 'var(--space-10)', scrollMarginTop: '16px' }}>
       <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-        <h3 style={{ color: 'var(--siomac-navy)', fontSize: '1rem', fontWeight: 700, margin: 0 }}>{title}</h3>
+        <h3 style={{ color: 'var(--siomac-navy)', fontSize: '1rem', fontWeight: 'var(--font-weight-bold)', margin: 0 }}>{title}</h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: '4px 0 0' }}>{sub}</p>
       </div>
       {children}
@@ -47,7 +49,7 @@ function Demo({ label, children, wide }: { label: string; children: ComponentChi
       border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
       background: 'var(--bg-subtle)', padding: 'var(--space-4)',
     }}>
-      <div style={{ fontSize: '0.66rem', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>{label}</div>
+      <div style={{ fontSize: '0.66rem', fontWeight: 'var(--font-weight-bold)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>{label}</div>
       {children}
     </div>
   );
@@ -250,6 +252,41 @@ export function UIKitPage(): VNode {
         </div>
       </Section>
 
+      <Section id="uikit-skeleton" title="Skeletons — cold-load placeholders" sub="USE ONLY when there is no data yet. Where cached/placeholder data exists, render the real data. Never a fake '0'. Gate with loading={q.isLoading && !q.data}.">
+        <Grid>
+          <Demo label="StatsCard loading">
+            <StatsCard icon="fa-list-check" title="Open Actions" loading />
+          </Demo>
+          <Demo label="Skeleton + SkeletonText">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+              <Skeleton circle width={40} />
+              <Skeleton height={14} width={140} />
+            </div>
+            <SkeletonText lines={3} />
+          </Demo>
+          <Demo label="ListSkeleton">
+            <ListSkeleton rows={4} />
+          </Demo>
+          <Demo label="SkeletonFields (FieldList / DetailGrid loading)">
+            <SkeletonFields rows={4} />
+          </Demo>
+          <Demo label="TableSkeleton — firstCellAvatar (register rows with an avatar)" wide>
+            <table class="vt-table"><tbody><TableSkeleton rows={4} cols={5} firstCellAvatar /></tbody></table>
+          </Demo>
+          <Demo label="SkeletonStatGrid (KPI row cold load)" wide>
+            <SkeletonStatGrid count={4} />
+          </Demo>
+          <Demo label="Spinner — compact / numeric sections (not a full skeleton)">
+            <Spinner center label="Loading…" />
+          </Demo>
+          <Demo label="EmptyState — rich section empty (icon · title · text · note)" wide>
+            <EmptyState icon="fa-folder-open" title="No documents uploaded"
+              text="Add employee IDs, contracts, certificates or onboarding records."
+              note="Uploaded files appear here with type, expiry, verification status and audit history." />
+          </Demo>
+        </Grid>
+      </Section>
+
       <Section id="uikit-cards" title="Cards & metrics" sub="The metric vocabulary used in the spark row and inside tabs.">
         <Grid>
           <Demo label="SparkCard — sparkline">
@@ -267,13 +304,13 @@ export function UIKitPage(): VNode {
           </Demo>
           <Demo label="Card — standard shell (header + body)">
             <Card icon="fa-list-check" title="Open Actions" headerRight={<span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>MTD</span>}>
-              <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>27</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>27</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>5 due this week</div>
             </Card>
           </Demo>
           <Demo label="Card — navy variant (control/watch tiles)">
             <Card icon="fa-file-shield" title="Regulatory Watch" variant="navy">
-              <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fca5a5' }}>2</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 'var(--font-weight-bold)', color: '#fca5a5' }}>2</div>
               <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.55)' }}>OSH reviews due</div>
             </Card>
           </Demo>

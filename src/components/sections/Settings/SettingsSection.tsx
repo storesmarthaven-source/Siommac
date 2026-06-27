@@ -507,7 +507,7 @@ function LayoutPanel(): VNode {
                 }}
               >
                 <i class={`fas ${m.icon}`} style={{ fontSize: '20px', color: active ? 'var(--siomac-navy)' : 'var(--text-muted)', display: 'block', marginBottom: '8px' }} />
-                <div style={{ fontSize: '0.83rem', fontWeight: 700, color: active ? 'var(--siomac-navy)' : 'var(--text-primary)' }}>{m.label}</div>
+                <div style={{ fontSize: '0.83rem', fontWeight: 'var(--font-weight-bold)', color: active ? 'var(--siomac-navy)' : 'var(--text-primary)' }}>{m.label}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{m.desc}</div>
               </button>
             );
@@ -641,7 +641,7 @@ function TrustedDevicesCard(): VNode {
                     <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{displayLabel}</span>
                     {device.currentDevice && (
                       <span style={{
-                        fontSize: '0.68rem', fontWeight: 700, padding: '1px 7px',
+                        fontSize: '0.68rem', fontWeight: 'var(--font-weight-bold)', padding: '1px 7px',
                         background: 'var(--accent,#2563eb)', color: '#fff',
                         borderRadius: '20px', letterSpacing: '0.02em',
                       }}>

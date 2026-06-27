@@ -55,13 +55,13 @@ export function QueueItem({ icon, ref, category, title, tag, tagTone = 'neutral'
         </span>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.74rem', fontWeight: 700, color: textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontSize: '0.74rem', fontWeight: 'var(--font-weight-bold)', color: textMain, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {ref}{ref && category ? ' — ' : ''}{category}
         </div>
         <div style={{ fontSize: '0.66rem', color: textSub, marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
       </div>
       {tag && (
-        <span style={{ flexShrink: 0, fontSize: '0.6rem', fontWeight: 700, borderRadius: '6px', padding: '3px 8px', background: TAG_BG[tagTone][mode], color: TAG_FG[tagTone][mode] }}>{tag}</span>
+        <span style={{ flexShrink: 0, fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', borderRadius: '6px', padding: '3px 8px', background: TAG_BG[tagTone][mode], color: TAG_FG[tagTone][mode] }}>{tag}</span>
       )}
     </button>
   );

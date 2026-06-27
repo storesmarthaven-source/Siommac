@@ -337,21 +337,21 @@ function HazardCard({ hazard, isSelected, isRequired, naReason, onToggle, onMark
             <span style={{ fontWeight: 600, fontSize: '0.83rem' }}>{hazard.name}</span>
             {isRequired && (
               <span style={{
-                fontSize: '0.63rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
+                fontSize: '0.63rem', fontWeight: 'var(--font-weight-bold)', padding: '1px 6px', borderRadius: '4px',
                 background: 'rgba(220,38,38,.12)', color: '#dc2626',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
               }}>Required</span>
             )}
             {!isRequired && (
               <span style={{
-                fontSize: '0.63rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
+                fontSize: '0.63rem', fontWeight: 'var(--font-weight-bold)', padding: '1px 6px', borderRadius: '4px',
                 background: 'rgba(27,45,84,.1)', color: 'var(--siomac-navy)',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
               }}>Recommended</span>
             )}
             {isNA && (
               <span style={{
-                fontSize: '0.63rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
+                fontSize: '0.63rem', fontWeight: 'var(--font-weight-bold)', padding: '1px 6px', borderRadius: '4px',
                 background: 'rgba(100,116,139,.15)', color: 'var(--text-muted)',
                 textTransform: 'uppercase', letterSpacing: '0.04em',
               }}>N/A</span>
@@ -474,7 +474,7 @@ function CustomHazardCard({ hazard, onRemove }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 600, fontSize: '0.83rem' }}>{hazard.name}</span>
             <span style={{
-              fontSize: '0.63rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
+              fontSize: '0.63rem', fontWeight: 'var(--font-weight-bold)', padding: '1px 6px', borderRadius: '4px',
               background: 'rgba(27,45,84,.15)', color: 'var(--siomac-navy)',
               textTransform: 'uppercase', letterSpacing: '0.04em',
             }}>Custom</span>
@@ -515,7 +515,7 @@ function IsolationRow({ iso, index, onChange, onRemove }: {
   return (
     <div style={{ padding: '12px 14px', background: 'var(--surface-alt)', borderRadius: '8px', display: 'grid', gap: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Isolation Point {index + 1}
         </span>
         <button
@@ -861,7 +861,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
     <div style={{ display: 'grid', gap: '10px' }}>
       {/* Type header */}
       <div>
-        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,.6)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.6)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {selectedTypeCfg.display_name}
         </div>
         <div style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,.45)', marginTop: '2px' }}>
@@ -872,7 +872,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
       {/* Required hazards checklist */}
       {hazardProfile.required.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.67rem', fontWeight: 700, color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+          <div style={{ fontSize: '0.67rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
             Required Hazards ({requiredChecked.length}/{hazardProfile.required.length})
           </div>
           {hazardProfile.required.map(rh => {
@@ -890,7 +890,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
       {/* Controls summary */}
       {selectedCount > 0 && (
         <div>
-          <div style={{ fontSize: '0.67rem', fontWeight: 700, color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+          <div style={{ fontSize: '0.67rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
             Controls
           </div>
           <div style={{ fontSize: '0.73rem', color: 'rgba(255,255,255,.7)' }}>
@@ -903,7 +903,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
       {/* Pre-activation requirements */}
       {sidePanelFlags.length > 0 && (
         <div>
-          <div style={{ fontSize: '0.67rem', fontWeight: 700, color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+          <div style={{ fontSize: '0.67rem', fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
             Pre-Activation Requirements
           </div>
           {sidePanelFlags.map(([, label, done]) => (
@@ -1229,7 +1229,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
           <div style={{ display: 'grid', gap: '14px' }}>
             {/* Summary card */}
             <div style={{ padding: '16px', background: 'var(--surface-alt)', borderRadius: '10px', display: 'grid', gap: '8px', fontSize: '0.82rem' }}>
-              <div style={{ fontWeight: 700, marginBottom: '4px', fontSize: '0.88rem' }}>Permit Summary</div>
+              <div style={{ fontWeight: 'var(--font-weight-bold)', marginBottom: '4px', fontSize: '0.88rem' }}>Permit Summary</div>
               <div><strong style={{ color: 'var(--text-muted)' }}>Type:</strong> {selectedTypeCfg?.display_name ?? permitType}</div>
               <div><strong style={{ color: 'var(--text-muted)' }}>Title:</strong> {title || <em style={{ color: 'var(--text-muted)' }}>—</em>}</div>
               <div><strong style={{ color: 'var(--text-muted)' }}>Site:</strong> {siteId || '—'}</div>
@@ -1274,7 +1274,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
               const blockers = getSubmitBlockers();
               return blockers.length > 0 ? (
                 <div style={{ padding: '12px 14px', background: 'rgba(220,38,38,.06)', borderRadius: '8px', border: '1px solid rgba(220,38,38,.2)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#dc2626', marginBottom: '6px' }}>
+                  <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.82rem', color: '#dc2626', marginBottom: '6px' }}>
                     <i class="fas fa-exclamation-triangle" style={{ marginRight: '6px' }} />
                     Missing requirements — must resolve before submitting
                   </div>

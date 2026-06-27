@@ -196,7 +196,7 @@ export function EmployeesSection({ currentRole, currentUsername }: EmployeesSect
       {/* ── Page header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111827' }}>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'var(--font-weight-bold)', color: '#111827' }}>
             Employees
           </h1>
           <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#6b7280' }}>

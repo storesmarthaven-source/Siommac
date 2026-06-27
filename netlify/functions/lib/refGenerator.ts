@@ -43,7 +43,10 @@ export type RefPrefix =
  * conditions. The rpc `increment_ref_counter` must exist (created below as
  * a fallback-safe inline approach using raw SQL via service role).
  */
-export async function nextRef(prefix: RefPrefix): Promise<string> {
+// Accepts the known RefPrefix literals (with autocomplete) plus any admin-configured
+// prefix string (e.g. a custom onboarding case prefix) — the increment_ref_counter RPC
+// keys a counter by whatever prefix it's given, so arbitrary prefixes are safe.
+export async function nextRef(prefix: RefPrefix | (string & {})): Promise<string> {
   const year = new Date().getFullYear();
 
   try {

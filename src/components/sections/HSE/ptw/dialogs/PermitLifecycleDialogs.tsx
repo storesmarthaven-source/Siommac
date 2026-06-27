@@ -219,7 +219,7 @@ export function ActivatePermitDialog({ open, onClose, permitId, permitNo }: Acti
 
         {hasMissing && (
           <div style={{ gridColumn: '1 / -1' }}>
-            <div style={{ fontWeight: 700, fontSize: '0.82rem', marginBottom: '8px', color: 'var(--siomac-red)' }}>
+            <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.82rem', marginBottom: '8px', color: 'var(--siomac-red)' }}>
               <i class="fas fa-triangle-exclamation" style={{ marginRight: '6px' }} />
               Activation gate failed — missing requirements:
             </div>
@@ -444,7 +444,7 @@ export function CloseoutDialog({ open, onClose, permitId, permitNo }: CloseoutDi
       submitLabel={t.isPending ? 'Closing…' : 'Close Permit'} submitDisabled={t.isPending || !allChecked}>
       <FormGrid>
         <div style={{ gridColumn: '1 / -1', display: 'grid', gap: '6px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
             Closeout Checklist
           </div>
           {checkItem('Work site restored to safe condition', siteRestored, setSiteRestored)}

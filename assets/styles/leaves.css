@@ -36,7 +36,7 @@
 .lv-stat-icon.medical { background: rgba(239,108,0,0.1); }
 .lv-stat-icon.medical i { color: #EF6C00; }
 .lv-stat-body { flex: 1; }
-.lv-stat-value { font-size: 1.9rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.1; }
+.lv-stat-value { font-size: 1.9rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); line-height: 1.1; }
 .lv-stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 /* Smaller second stats row */
 .lv-stats-row--sm { margin-top: -8px; margin-bottom: 16px; }
@@ -96,7 +96,7 @@
   padding: 13px 16px;
   background: #1A2C53;
   border-bottom: none;
-  font-size: 0.72rem; font-weight: 700;
+  font-size: 0.72rem; font-weight: var(--font-weight-bold);
   text-transform: uppercase; letter-spacing: 0.5px;
   color: #fff; text-align: center;
 }
@@ -109,7 +109,7 @@
 .lv-table tbody tr:hover td { background: var(--bg-subtle, #F8FAFE); }
 
 /* Employee name in table */
-.lv-emp-name { font-weight: 700; color: var(--siomac-navy); font-size: 0.85rem; text-align: left; }
+.lv-emp-name { font-weight: var(--font-weight-bold); color: var(--siomac-navy); font-size: 0.85rem; text-align: left; }
 .lv-dept-label { font-size: 0.75rem; color: var(--text-muted); text-align: left; }
 .lv-reason-cell { max-width: 180px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
 
@@ -122,7 +122,7 @@
 /* Type badges */
 .lv-type-badge {
   display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
 }
 .lv-type-sick    { background: #FFEBEE; color: #C62828; }
 .lv-type-casual  { background: #E3F2FD; color: #1565C0; }
@@ -132,7 +132,7 @@
 /* Status badges */
 .lv-status-badge {
   display: inline-block; padding: 4px 12px; border-radius: 30px;
-  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+  font-size: 0.68rem; font-weight: var(--font-weight-bold); white-space: nowrap;
 }
 .lv-status-pending  { background: #FFF8E1; color: #F57C00; }
 .lv-status-approved { background: #E8F5E9; color: #2E7D32; }

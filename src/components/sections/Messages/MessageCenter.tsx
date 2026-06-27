@@ -86,7 +86,7 @@ function TagChip({ label, tone = 'info' }: { label: string; tone?: 'info' | 'pri
           :                       { bg: 'var(--bg-subtle, #f1f4f9)', fg: 'var(--text-muted, #68799a)' };
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', height: '18px', padding: '0 7px',
-      borderRadius: '999px', background: c.bg, color: c.fg, fontSize: '0.62rem', fontWeight: 700 }}>{label}</span>
+      borderRadius: '999px', background: c.bg, color: c.fg, fontSize: '0.62rem', fontWeight: 'var(--font-weight-bold)' }}>{label}</span>
   );
 }
 
@@ -150,7 +150,7 @@ function MessageAttachments({ attachments }: { attachments: MessageAttachment[] 
               padding: '8px', border: '1px solid var(--border)', borderRadius: '10px', background: '#fff', textDecoration: 'none' }}>
             <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: ic.color, color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.58rem', fontWeight: 800 }}>{ic.label}</span>
             <span style={{ minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.fileName}</span>
+              <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.fileName}</span>
               <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)' }}>{t.toUpperCase()}{d.sizeBytes ? ` · ${fmtBytes(d.sizeBytes)}` : ''}</span>
             </span>
             <i class="fas fa-download" style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }} />
@@ -232,14 +232,14 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
       {/* Online now */}
       {online.length > 0 && (
         <div style={{ padding: '0 12px 10px', flexShrink: 0 }}>
-          <div style={{ fontSize: '0.64rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>Online now</div>
+          <div style={{ fontSize: '0.64rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>Online now</div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {online.slice(0, 7).map(u => (
               <div key={u.userId} title={u.displayName ?? ''} style={{ position: 'relative', width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden',
                 background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {u.profileImage
                   ? <img src={u.profileImage} alt={u.displayName ?? ''} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{u.initials}</span>}
+                  : <span style={{ fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{u.initials}</span>}
                 <span style={{ position: 'absolute', right: '-1px', bottom: 0, width: '9px', height: '9px', borderRadius: '50%', border: '2px solid #fff', background: u.status === 'away' ? '#f59e0b' : '#38c878' }} />
               </div>
             ))}
@@ -250,7 +250,7 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
       {/* Pinned conversations */}
       {pinned.length > 0 && (
         <div style={{ padding: '0 12px 8px', flexShrink: 0, borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
-          <div style={{ fontSize: '0.64rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>
+          <div style={{ fontSize: '0.64rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '7px' }}>
             <i class="fas fa-thumbtack" style={{ fontSize: '0.58rem' }} /> Pinned
           </div>
           {pinned.slice(0, 3).map(p => {
@@ -259,12 +259,12 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
             return (
               <div key={p.threadId} onClick={() => t && onSelect(t)} style={{ display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-surface)', marginBottom: '4px' }}>
-                <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--bg-subtle, #eef1f6)', color: 'var(--siomac-navy)', display: 'grid', placeItems: 'center', fontSize: '0.6rem', fontWeight: 700, flexShrink: 0 }}>{(label[0] ?? '?').toUpperCase()}</span>
+                <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--bg-subtle, #eef1f6)', color: 'var(--siomac-navy)', display: 'grid', placeItems: 'center', fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)', flexShrink: 0 }}>{(label[0] ?? '?').toUpperCase()}</span>
                 <span style={{ minWidth: 0, flex: 1 }}>
-                  <span style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                  <span style={{ display: 'block', fontSize: '0.74rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
                   <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.note ?? t?.lastPostPreview ?? ''}</span>
                 </span>
-                {t && t.unreadCount > 0 && <span style={{ minWidth: '16px', height: '16px', borderRadius: '8px', background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.56rem', fontWeight: 700, display: 'grid', placeItems: 'center', padding: '0 4px' }}>{t.unreadCount}</span>}
+                {t && t.unreadCount > 0 && <span style={{ minWidth: '16px', height: '16px', borderRadius: '8px', background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.56rem', fontWeight: 'var(--font-weight-bold)', display: 'grid', placeItems: 'center', padding: '0 4px' }}>{t.unreadCount}</span>}
               </div>
             );
           })}
@@ -304,7 +304,7 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
                   background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {firstP?.profileImage
                     ? <img src={firstP.profileImage} alt={ava} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>}
+                    : <span style={{ fontSize: '0.75rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{iniText}</span>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -319,12 +319,12 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
                     </span>
                     {isUnread ? (
                       <span style={{ flexShrink: 0, minWidth: '18px', height: '18px', borderRadius: '9px',
-                        background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+                        background: 'var(--danger, #dc2626)', color: '#fff', fontSize: '0.6rem', fontWeight: 'var(--font-weight-bold)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
                         {t.unreadCount > 9 ? '9+' : t.unreadCount}
                       </span>
                     ) : failed ? (
-                      <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 700, color: 'var(--danger)' }}>Failed</span>
+                      <span style={{ flexShrink: 0, fontSize: '0.62rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--danger)' }}>Failed</span>
                     ) : null}
                   </div>
                   <div style={{ fontSize: '0.71rem', color: previewColor, overflow: 'hidden',
@@ -475,7 +475,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--siomac-navy)',
+          <div style={{ fontSize: '0.9rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {displayName}
           </div>
@@ -516,7 +516,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
               display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i class="fas fa-user-shield" style={{ fontSize: '1.5rem', color: 'var(--siomac-navy)' }} />
             </div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>
               This is a private conversation
             </div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -534,7 +534,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
           <div style={{ margin: 'auto', maxWidth: '380px', textAlign: 'center', display: 'flex',
             flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '24px', color: 'var(--text-muted)' }}>
             <i class="fas fa-lock" style={{ fontSize: '1.6rem', opacity: 0.4 }} />
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>No access</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>No access</div>
             <div style={{ fontSize: '0.8rem' }}>
               You don't have access to this conversation. Only its participants can view it.
             </div>
@@ -592,17 +592,17 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                 background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {post.authorProfileImage
                   ? <img src={post.authorProfileImage} alt={iniText} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{iniText}</span>}
+                  : <span style={{ fontSize: '0.65rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{iniText}</span>}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{authorName}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{authorName}</span>
                   <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{relTime}</span>
                   {isEdited && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(edited)</span>}
                 </div>
 
                 {post.priority === 'action_required' && !isDeleted && (
-                  <div style={{ marginBottom: '5px', fontSize: '0.7rem', fontWeight: 700, color: '#b45309',
+                  <div style={{ marginBottom: '5px', fontSize: '0.7rem', fontWeight: 'var(--font-weight-bold)', color: '#b45309',
                     background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '5px 9px' }}>⚠ Action required</div>
                 )}
                 {post.replyToPost && (
@@ -626,15 +626,15 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
                     {post.isPinned && <span><i class="fas fa-thumbtack" /> Pinned</span>}
                     {(post.readByCount ?? 0) > 0 && <span>Read by {post.readByCount}</span>}
                     {post.deliveryStatus && <span style={{ textTransform: 'capitalize' }}>{post.deliveryStatus}</span>}
-                    <button onClick={() => setReplyTo(post)} style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Reply</button>
+                    <button onClick={() => setReplyTo(post)} style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 'var(--font-weight-bold)', fontSize: '0.66rem', padding: 0 }}>Reply</button>
                     {pinByPost.get(post.id)
                       ? <button onClick={() => { const pin = pinByPost.get(post.id); if (pin) unpinMsg.mutate({ pinId: pin.id, threadId: thread.id }); }}
-                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Unpin</button>
+                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 'var(--font-weight-bold)', fontSize: '0.66rem', padding: 0 }}>Unpin</button>
                       : <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'personal' })}
-                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin</button>}
+                          style={{ border: 0, background: 'transparent', color: 'var(--siomac-navy)', cursor: 'pointer', fontWeight: 'var(--font-weight-bold)', fontSize: '0.66rem', padding: 0 }}>Pin</button>}
                     {isOwner && !pinByPost.get(post.id) && (
                       <button onClick={() => pinMsg.mutate({ threadId: thread.id, postId: post.id, pinType: 'post', visibility: 'thread' })}
-                        style={{ border: 0, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 700, fontSize: '0.66rem', padding: 0 }}>Pin for all</button>
+                        style={{ border: 0, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 'var(--font-weight-bold)', fontSize: '0.66rem', padding: 0 }}>Pin for all</button>
                     )}
                   </div>
                 )}
@@ -764,14 +764,14 @@ function Avatar({ name, img, size = 34 }: { name: string; img?: string | null; s
     : (
       <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', flexShrink: 0,
         background: 'rgba(27,45,85,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: `${size * 0.36}px`, fontWeight: 700, color: 'var(--siomac-navy)' }}>{initials(name)}</span>
+        <span style={{ fontSize: `${size * 0.36}px`, fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{initials(name)}</span>
       </div>
     );
 }
 
 function SectionHead({ children }: { children: ComponentChildren }): VNode {
   return (
-    <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
+    <div style={{ fontSize: '0.7rem', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '.05em',
       color: 'var(--text-muted)', marginBottom: '10px' }}>{children}</div>
   );
 }
@@ -1075,7 +1075,7 @@ export function MessageCenter(): VNode {
                 {count !== undefined && count > 0 && (
                   <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', padding: '0 5px',
                     background: 'var(--border)',
-                    color: 'var(--siomac-navy)', fontSize: '0.66rem', fontWeight: 700,
+                    color: 'var(--siomac-navy)', fontSize: '0.66rem', fontWeight: 'var(--font-weight-bold)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
                 )}
               </button>
@@ -1096,7 +1096,7 @@ export function MessageCenter(): VNode {
             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <i class="fas fa-comments" style={{ fontSize: '1.8rem', color: 'var(--siomac-navy)', opacity: 0.7 }} />
           </div>
-          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>{emptyTitle}</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>{emptyTitle}</div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '420px' }}>
             Start a direct message, group conversation, or record-linked discussion.
           </div>
@@ -1145,7 +1145,7 @@ export function MessageCenter(): VNode {
                 <div style={{ height: '100%', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-muted)', padding: '24px', textAlign: 'center' }}>
                   <i class="fas fa-comments" style={{ fontSize: '2.4rem', opacity: 0.25 }} />
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--siomac-navy)' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)' }}>
                     Select a conversation
                   </div>
                   <div style={{ fontSize: '0.82rem' }}>

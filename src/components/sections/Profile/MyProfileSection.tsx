@@ -110,7 +110,7 @@ function ProfileAvatar({ src, initial, size, onPick }: AvatarProps): VNode {
         <span
           style={{
             fontSize:   `${Math.round(size * 0.38)}px`,
-            fontWeight: '700',
+            fontWeight: 'var(--font-weight-bold)',
             color:      '#fff',
           }}
         >

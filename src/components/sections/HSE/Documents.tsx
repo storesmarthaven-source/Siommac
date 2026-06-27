@@ -238,7 +238,7 @@ function SdsTab({ sds }: { sds: SdsRow[] }): VNode {
               { val: expired,                                                 label: 'Expired',  color: '#fca5a5' },
             ].map(k => (
               <div key={k.label} style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,.08)', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: k.color, lineHeight: 1 }}>{k.val}</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 'var(--font-weight-bold)', color: k.color, lineHeight: 1 }}>{k.val}</div>
                 <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.5)', marginTop: '3px' }}>{k.label}</div>
               </div>
             ))}

@@ -9,7 +9,7 @@
 .text-warning  { color: var(--warning) !important; }
 .text-info     { color: var(--siomac-red) !important; }
 .text-secondary { color: #6c757d !important; }
-.fw-bold  { font-weight: 700; }
+.fw-bold  { font-weight: var(--font-weight-bold); }
 .text-center { text-align: center; }
 
 /* ═══════════════════════════════════════════════════

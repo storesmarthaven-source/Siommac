@@ -24,6 +24,7 @@ import { useState } from 'preact/hooks';
 import {
   Drawer, Menu, EntityHead, PanelStats, PanelTabs,
   InfoCard, FieldList, FieldRow, MiniTable, Pill, PanelEmpty, Callout, ActivityList,
+  Skeleton, SkeletonText, Spinner, EmptyState,
   type ActivityEntry,
 } from '@ui';
 import {
@@ -87,13 +88,18 @@ function trainBadge(s: string): { label: string; tone: PillTone } {
   return { label: label ?? humanize(s || 'none'), tone: tone ?? 'gray' };
 }
 
-// Map an audit action to its activity glyph (v36: ✓ approved · ↗ completed · ▤ document).
 function activityIcon(action: string): string {
   const a = action.toLowerCase();
-  if (/approv|complete|verif|done|pass/.test(a)) return '✓';
-  if (/document|upload|file|attach/.test(a)) return '▤';
-  if (/chang|transfer|updat|assign|move/.test(a)) return '↗';
-  return '•';
+  if (/approv|verif|pass/.test(a))              return 'fa-circle-check';
+  if (/complet|done|finish/.test(a))            return 'fa-check';
+  if (/document|upload|file|attach/.test(a))    return 'fa-file';
+  if (/status|transfer|offboard/.test(a))       return 'fa-arrow-right-arrow-left';
+  if (/assign|move/.test(a))                    return 'fa-user-group';
+  if (/creat|add|new|onboard/.test(a))          return 'fa-user-plus';
+  if (/delet|remov|archiv/.test(a))             return 'fa-trash';
+  if (/reject|deny|fail/.test(a))               return 'fa-circle-xmark';
+  if (/updat|edit|chang|modif/.test(a))         return 'fa-pen';
+  return 'fa-bolt';
 }
 
 function docTone(status: string): PillTone {
@@ -127,21 +133,23 @@ function TrainingSnapshot(
   return (
     <InfoCard title="Training Snapshot"
       action={onViewTraining ? <button class="ui-mini-btn" type="button" onClick={onViewTraining}>View Training Profile</button> : undefined}>
-      <PanelStats plain items={[
-        { label: 'Overall Status', value: <Pill tone={ov.tone}>{ov.label}</Pill> },
-        { label: 'Required', value: <strong>{t?.total ?? '—'}</strong> },
-        { label: 'Current', value: <strong>{t?.current ?? '—'}</strong> },
-        { label: 'Expired', value: <strong>{t?.expired ?? '—'}</strong> },
-        { label: 'Due Soon', value: <strong>{t?.dueSoon ?? '—'}</strong> },
-      ]} />
+      {trainQ.isLoading && !trainQ.data
+        ? <Spinner center label="Loading…" />
+        : <PanelStats plain items={[
+            { label: 'Overall Status', value: <Pill tone={ov.tone}>{ov.label}</Pill> },
+            { label: 'Required', value: <strong>{t?.total ?? '—'}</strong> },
+            { label: 'Current', value: <strong>{t?.current ?? '—'}</strong> },
+            { label: 'Expired', value: <strong>{t?.expired ?? '—'}</strong> },
+            { label: 'Due Soon', value: <strong>{t?.dueSoon ?? '—'}</strong> },
+          ]} />}
     </InfoCard>
   );
 }
 
 function OverviewTab(
-  { d, trainQ, auditQ, onEditContact, onViewHistory, onViewTraining }:
+  { d, trainQ, auditQ, onEditContact, onViewHistory, onViewTraining, onViewTimeline }:
   { d: HrEmployeeDetail; trainQ: ReturnType<typeof useHrTrainingSummary>; auditQ: ReturnType<typeof useHrAudit>;
-    onEditContact: () => void; onViewHistory: () => void; onViewTraining: () => void },
+    onEditContact: () => void; onViewHistory: () => void; onViewTraining: () => void; onViewTimeline: () => void },
 ): VNode {
   const e = d.employee;
   const riskRed = e.trainingStatus === 'expired';
@@ -180,15 +188,18 @@ function OverviewTab(
           : 'This employee has no workforce risks.'}
       </Callout>
       <TrainingSnapshot trainQ={trainQ} onViewTraining={onViewTraining} />
-      <InfoCard title="Recent Activity">
-        {auditQ.data && auditQ.data.length
-          ? <ActivityList items={auditQ.data.slice(0, 5).map((a): ActivityEntry => ({
-              icon: activityIcon(a.action),
-              title: humanize(a.action),
-              desc: a.reason ?? a.actorName ?? undefined,
-              time: relativeTime(a.created_at),
-            }))} />
-          : <PanelEmpty>{gated(auditQ, 'No recent activity.')}</PanelEmpty>}
+      <InfoCard title="Recent Activity"
+        action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View full timeline</button>}>
+        {auditQ.isLoading && !auditQ.data
+          ? <Spinner center label="Loading activity…" />
+          : auditQ.data && auditQ.data.length
+            ? <ActivityList items={auditQ.data.slice(0, 5).map((a): ActivityEntry => ({
+                icon: <i class={`fas ${activityIcon(a.action)}`} aria-hidden="true" />,
+                title: humanize(a.action),
+                desc: a.reason ?? a.actorName ?? undefined,
+                time: relativeTime(a.created_at),
+              }))} />
+            : <PanelEmpty>{gated(auditQ, 'No recent activity.')}</PanelEmpty>}
       </InfoCard>
     </>
   );
@@ -232,7 +243,10 @@ function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
         </FieldList>
       </InfoCard>
       <InfoCard title="Status History">
-        <MiniTable cols={['Effective', 'From', 'To', 'Reason']} empty="No status changes recorded.">
+        <MiniTable cols={['Effective', 'From', 'To', 'Reason']}
+          empty={<EmptyState icon="fa-clock-rotate-left" tone="purple" title="No status changes recorded"
+            text="Employment status updates appear here once a change is submitted."
+            note="Tracks active, suspended, terminated, leave and reinstatement changes with effective dates and workflow references." />}>
           {hist.map(r => (
             <tr>
               <td>{fmtDate((r['effective_date'] ?? r['changed_at']) as string)}</td>
@@ -263,9 +277,14 @@ function DocumentsTab({ docsQ, employeeId, onUpload }: { docsQ: ReturnType<typeo
       action={<button class="ui-mini-btn" type="button" onClick={onUpload}>Upload Document</button>}>
       {docErr ? <div class="ui-warn">{docErr}</div> : null}
       {actErr ? <div class="ui-warn">{actErr instanceof Error ? actErr.message : 'Action failed'}</div> : null}
-      {docsQ.isLoading || docsQ.isError
+      {docsQ.isLoading && !docsQ.data
+        ? <Spinner center label="Loading documents…" />
+        : docsQ.isError
         ? <PanelEmpty>{gated(docsQ, 'No documents on file.')}</PanelEmpty>
-        : <MiniTable cols={['Document', 'Type', 'Status', 'Expiry', '']} empty="No documents on file.">
+        : <MiniTable cols={['Document', 'Type', 'Status', 'Expiry', '']}
+            empty={<EmptyState icon="fa-folder-open" title="No documents uploaded"
+              text="Add employee IDs, contracts, certificates, medical files or onboarding records."
+              note="Uploaded files appear here with type, expiry, verification status and audit history." />}>
             {rows.map((doc: HrDocument) => {
               const pending = !['verified', 'rejected', 'archived'].includes(doc.status);
               return (
@@ -299,9 +318,12 @@ function TrainingTab(
     <>
       <TrainingSnapshot trainQ={trainQ} />
       <InfoCard title="Certificates">
-        {trainQ.isLoading || trainQ.isError
+        {trainQ.isError
           ? <PanelEmpty>{gated(trainQ, 'No certificates on file.')}</PanelEmpty>
-          : <MiniTable cols={['Course', 'Status', 'Expiry']} empty="No certificates on file.">
+          : <MiniTable loading={trainQ.isLoading && !trainQ.data} cols={['Course', 'Status', 'Expiry']}
+              empty={<EmptyState icon="fa-certificate" tone="green" title="No certificates on file"
+                text="Completed courses and competencies appear here."
+                note="Each certificate shows its course, current status and expiry, synced from the Training module." />}>
               {(t?.certificates ?? []).map(cert => (
                 <tr>
                   <td>{cert.course_name}</td>
@@ -320,7 +342,9 @@ function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit: () => void }
   const readiness = d.payrollReadiness;
   if (!s) {
     return <InfoCard title="Trinidad & Tobago Statutory Profile">
-      <PanelEmpty>Statutory details are not available — they require the statutory.view permission, or none are on file yet.</PanelEmpty>
+      <EmptyState icon="fa-shield-halved" tone="amber" title="Statutory profile unavailable"
+        text="Details require the statutory.view permission, or none are on file yet."
+        note="NIS, BIR / PAYE, TD1 and health-surcharge fields appear here once access is granted and the profile is completed." />
     </InfoCard>;
   }
   const readyLabel = readiness ? humanize(readiness.status) : '—';
@@ -366,9 +390,12 @@ function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> })
   const data: HrWorkflowSummary | undefined = wfQ.data;
   return (
     <InfoCard title="Open Workflows">
-      {wfQ.isLoading || wfQ.isError
+      {wfQ.isError
         ? <PanelEmpty>{gated(wfQ, 'No open workflows.')}</PanelEmpty>
-        : <MiniTable cols={['Workflow', 'Current Step', 'Status', 'Due']} empty="No open workflows.">
+        : <MiniTable loading={wfQ.isLoading && !wfQ.data} cols={['Workflow', 'Current Step', 'Status', 'Due']}
+            empty={<EmptyState icon="fa-list-check" title="No open workflows"
+              text="Approvals and change requests for this employee appear here."
+              note="Sensitive-change, onboarding and offboarding workflows show their current step, status and due date." />}>
             {(data?.items ?? []).map(w => (
               <tr>
                 <td>{humanize(w.workflow_type)}</td>
@@ -385,9 +412,12 @@ function WorkflowsTab({ wfQ }: { wfQ: ReturnType<typeof useHrWorkflowSummary> })
 function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode {
   return (
     <InfoCard title="Audit Trail">
-      {auditQ.isLoading || auditQ.isError
+      {auditQ.isError
         ? <PanelEmpty>{gated(auditQ, 'No audit entries.')}</PanelEmpty>
-        : <MiniTable cols={['Time', 'Actor', 'Action', 'Reason']} empty="No audit entries.">
+        : <MiniTable loading={auditQ.isLoading && !auditQ.data} cols={['Time', 'Actor', 'Action', 'Reason']}
+            empty={<EmptyState icon="fa-clipboard-list" tone="gray" title="No audit entries"
+              text="Changes to this employee's record will be logged here."
+              note="Every status change, contact edit, document action and approval is recorded with the actor and time." />}>
             {(auditQ.data ?? []).map((a: HrAuditEntry) => (
               <tr>
                 <td>{fmtDateTime(a.created_at)}</td>
@@ -405,8 +435,12 @@ function OnboardingTab({ employeeId }: { employeeId: string }): VNode {
   const q = useHrOnboardingCase(employeeId);
   const complete = useCompleteOnboardingTask(employeeId);
   const cancel = useCancelOnboarding(employeeId);
-  if (q.isLoading) return <InfoCard title="Onboarding"><PanelEmpty>Loading…</PanelEmpty></InfoCard>;
-  if (q.isError || !q.data) return <InfoCard title="Onboarding"><PanelEmpty>No onboarding case for this employee.</PanelEmpty></InfoCard>;
+  if (q.isLoading && !q.data) return <InfoCard title="Onboarding"><SkeletonText lines={4} /></InfoCard>;
+  if (q.isError || !q.data) return <InfoCard title="Onboarding">
+    <EmptyState icon="fa-list-check" title="No onboarding case"
+      text="This employee has no active onboarding case."
+      note="Start onboarding to generate the task checklist and IT / Finance handoffs that will appear here." />
+  </InfoCard>;
   const kase = q.data.case;
   const tasks = q.data.tasks;
   const handoffs = q.data.handoffs;
@@ -466,8 +500,31 @@ function ModuleLinkTab({ title, body }: { title: string; body: string }): VNode 
 
 // ── drawer shell ─────────────────────────────────────────────────────────────────
 
-const PRIMARY_TABS = ['Overview', 'Employment', 'Assignments', 'Documents', 'Training'];
-const MORE_TABS = ['Timeline', 'Statutory Profile', 'Onboarding', 'Leave', 'Attendance', 'Workflows', 'Audit'];
+const PRIMARY_TABS = ['Overview', 'Employment', 'Assignments', 'Documents', 'Timeline'];
+const MORE_TABS = ['Training', 'Statutory Profile', 'Onboarding', 'Leave', 'Attendance', 'Workflows', 'Audit'];
+
+// Whole-drawer skeleton — shown until the detail data belongs to the requested
+// employee, so a previous employee's header/tags never flash on switch.
+function DrawerSkeleton(): VNode {
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', margin: '4px 0 18px' }}>
+        <Skeleton circle width={56} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+          <Skeleton height={18} width="45%" />
+          <Skeleton height={12} width="65%" />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
+        <Skeleton height={56} width="33%" radius={10} />
+        <Skeleton height={56} width="33%" radius={10} />
+        <Skeleton height={56} width="33%" radius={10} />
+      </div>
+      <InfoCard title="Personal Summary"><SkeletonText lines={5} /></InfoCard>
+      <InfoCard title="Current Assignment"><SkeletonText lines={4} /></InfoCard>
+    </>
+  );
+}
 
 export function ProfileDrawer(
   { employeeId, onClose, onAction }:
@@ -483,7 +540,13 @@ export function ProfileDrawer(
 
   const d = detailQ.data;
   const e = d?.employee;
-  const openWf = wfQ.data?.open_count ?? 0;
+  // useRecordQuery guarantees `data`/`ready` belong to the requested employee, so
+  // a previous employee's header/tags can never flash through on an A→B switch.
+  // (`&& !!e` is redundant at runtime — ready implies data — but lets TS narrow e.)
+  const ready = detailQ.ready && !!e;
+  // Open-workflow count is only trustworthy when its query matches this employee.
+  const wfReady = wfQ.data?.employee_id === employeeId;
+  const openWf = wfReady ? (wfQ.data?.open_count ?? 0) : 0;
 
   const headMenu = (
     <Menu align="right" items={[
@@ -498,8 +561,10 @@ export function ProfileDrawer(
 
   return (
     <Drawer rich open={!!employeeId} title="Employee Profile" onClose={onClose} headActions={headMenu}>
-      {!employeeId ? null : !e ? (
-        <PanelEmpty>{detailQ.isError ? 'Could not load this employee.' : 'Loading…'}</PanelEmpty>
+      {!employeeId ? null : detailQ.isError ? (
+        <PanelEmpty>Could not load this employee.</PanelEmpty>
+      ) : !ready ? (
+        <DrawerSkeleton />
       ) : (
         <>
           <EntityHead
@@ -514,11 +579,9 @@ export function ProfileDrawer(
             { label: 'Supervisor', value: e.supervisorName ? <><span class="ui-avatar-xs">{initials(e.supervisorName)}</span>{e.supervisorName}</> : '—' },
             { label: 'Open Workflows', value: (
               <button class="ui-wf-mini" type="button" onClick={() => setTab('Workflows')} title="Open workflow queue">
-                <span class="ui-wf-mini-left">
-                  <span class="ui-wf-mini-ico"><i class="fas fa-list-check" /></span>
-                  <span class="ui-wf-mini-copy"><strong>{openWf} open</strong><em>{openWf ? 'Needs attention' : 'No pending approvals'}</em></span>
-                </span>
-                <span class="ui-wf-mini-action">{openWf ? 'Review' : 'Clear'}</span>
+                <span class="ui-wf-mini-ico"><i class="fas fa-list-check" /></span>
+                <span class="ui-wf-mini-text">{openWf} open</span>
+                <span class="ui-wf-mini-eye" aria-hidden="true"><i class="fas fa-eye" /></span>
               </button>
             ) },
           ]} />
@@ -538,7 +601,7 @@ export function ProfileDrawer(
           <PanelTabs primary={PRIMARY_TABS} more={MORE_TABS} active={tab} onChange={setTab} />
 
           <div class="ui-panel-body">
-            {tab === 'Overview'          && <OverviewTab d={d!} trainQ={trainQ} auditQ={auditQ} onEditContact={() => onAction('Edit Contact')} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} />}
+            {tab === 'Overview'          && <OverviewTab d={d!} trainQ={trainQ} auditQ={auditQ} onEditContact={() => onAction('Edit Contact')} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} />}
             {tab === 'Employment'        && <EmploymentTab d={d!} />}
             {tab === 'Assignments'       && <AssignmentsTab d={d!} />}
             {tab === 'Documents'         && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={() => onAction('Upload HR Document')} />}
