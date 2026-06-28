@@ -9,7 +9,7 @@
 
 import { navIconSvg } from '@/components/nav/navIcons';
 
-export type SwzPageKind = 'catalog' | 'myprefs' | 'critical' | 'manifests' | 'legacy';
+export type SwzPageKind = 'catalog' | 'myprefs' | 'critical' | 'manifests' | 'legacy' | 'console';
 export type SwzLegacy = 'company' | 'attendance' | 'layout' | 'security';
 
 export interface SwzPage {
@@ -24,6 +24,7 @@ export interface SwzPage {
   title: string;
   desc: string;
   adminOnly?: boolean;
+  superOnly?: boolean;
 }
 
 export const SWZ_PAGES: SwzPage[] = [
@@ -74,17 +75,37 @@ export const SWZ_PAGES: SwzPage[] = [
     title: 'Critical Governance', desc: 'Review settings that affect safety, security, audit, workflow, and compliance controls.' },
   { page: 'manifest-review', label: 'Manifest Review', faIcon: 'fa-clipboard-list', iconKey: 'CHECK', group: 'Governance', kind: 'manifests', adminOnly: true,
     title: 'Manifest Review', desc: 'Approve module settings manifests before modules are marked complete.' },
+
+  // ── Administration (superadmin) — former Console tools ──
+  { page: 'roles', label: 'Roles', faIcon: 'fa-user-shield', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Roles', desc: 'Create and manage roles and their default permission sets. System roles (superadmin, employee) are permanent; build custom roles like HSE Manager or Finance Officer on top.' },
+  { page: 'modules', label: 'Modules', faIcon: 'fa-table-cells', iconKey: 'LAYOUT', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Modules', desc: 'Control which feature modules are visible to each role and individual manager. Changes take effect at next login.' },
+  { page: 'permissions', label: 'Permissions', faIcon: 'fa-lock', iconKey: 'LOCK', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Permissions', desc: 'Grant or revoke individual capabilities per user. Overrides take priority over role defaults; clearing an override reverts to the role default.' },
+  { page: 'approvals', label: 'Approvals', faIcon: 'fa-clipboard-check', iconKey: 'CHECK', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Approvals', desc: 'Maker-checker queue for critical permission grants. A second superadmin must approve any grant of a critical capability before it takes effect.' },
+  { page: 'sessions', label: 'Sessions', faIcon: 'fa-clock', iconKey: 'CLOCK', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Sessions', desc: 'See who is logged in and from which device. Revoking a session signs the user out immediately; they must re-authenticate (including 2FA).' },
+  { page: 'audit-log', label: 'Audit Log', faIcon: 'fa-clipboard-list', iconKey: 'CHECK', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Audit Log', desc: 'A tamper-evident, append-only record of every privileged action — who did what, when, and from where. Filter, search and export to CSV.' },
+  { page: 'user-security', label: 'User Security', faIcon: 'fa-user-shield', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'User Security', desc: 'Inspect and manage authentication factors for individual users. Revoke passkeys or trusted devices (requires step-up verification).' },
+  { page: 'security-policy', label: 'Security Policy', faIcon: 'fa-shield-halved', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'Security Policy', desc: 'Organisation-wide authentication policy — MFA requirements, password rules, session timeout, and lockout policy.' },
+  { page: 'ui-kit', label: 'UI Kit', faIcon: 'fa-palette', iconKey: 'GEAR', group: 'Administration', kind: 'console', superOnly: true,
+    title: 'UI Kit', desc: 'The living catalog of the Siomac design system — every shared @ui component with all its variants.' },
 ];
 
-export const SWZ_GROUP_ORDER = ['My Settings', 'General', 'Module Policy', 'Platform Policy', 'Governance'];
+export const SWZ_GROUP_ORDER = ['My Settings', 'General', 'Module Policy', 'Platform Policy', 'Governance', 'Administration'];
 
 export function getSwzPage(page: string): SwzPage | undefined {
   return SWZ_PAGES.find(p => p.page === page);
 }
 
 /** Pages visible to the current actor. */
-export function visibleSwzPages(isAdmin: boolean): SwzPage[] {
-  return SWZ_PAGES.filter(p => isAdmin || !p.adminOnly);
+export function visibleSwzPages(isAdmin: boolean, isSuper: boolean): SwzPage[] {
+  return SWZ_PAGES.filter(p => (p.superOnly ? isSuper : p.adminOnly ? isAdmin : true));
 }
 
 const escAttr = (s: string) => s.replace(/"/g, '&quot;');
@@ -94,8 +115,8 @@ const escAttr = (s: string) => s.replace(/"/g, '&quot;');
  * a mode header (Back + "Settings"), then each group as a rounded container with
  * a larger label and its items nested inside.
  */
-export function buildSettingsMenuHtml(isAdmin: boolean, activePage: string): string {
-  const pages = visibleSwzPages(isAdmin);
+export function buildSettingsMenuHtml(isAdmin: boolean, isSuper: boolean, activePage: string): string {
+  const pages = visibleSwzPages(isAdmin, isSuper);
   let html =
     '<li class="stg-mode-head">'
     + '<button type="button" class="stg-back" data-stg-exit title="Back to app" aria-label="Back to app">' + navIconSvg('fa-arrow-left') + '</button>'

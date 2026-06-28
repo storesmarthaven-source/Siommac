@@ -136,7 +136,7 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
     { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
     { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
-    { id: 's-superadmin-console', label: 'Console',   icon: 'fa-shield-halved',       sub: 'Modules, permissions and administration tools', group: 'administration' },
+    // Console retired — its tools now live under Settings ▸ Administration (superadmin).
   ],
 };
 

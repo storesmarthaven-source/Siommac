@@ -18,7 +18,7 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { type VNode }      from 'preact';
+import { type VNode, type ComponentType } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { useSessionStore } from '@store/session';
 import { toast }           from '@store';
@@ -40,6 +40,15 @@ import { SwzCatalogPage } from './SwzCatalogPage';
 import { SwzIcon } from './swzIcons';
 import { getSwzPage, buildSettingsMenuHtml, type SwzPage } from './settingsNav';
 import { showSection, buildSidebar } from '@/components/nav/navCore';
+import { RolesTab }          from '@/components/sections/SuperadminConsole/tabs/RolesTab';
+import { ModulesTab }        from '@/components/sections/SuperadminConsole/tabs/ModulesTab';
+import { PermissionsTab }    from '@/components/sections/SuperadminConsole/tabs/PermissionsTab';
+import { ApprovalsTab }      from '@/components/sections/SuperadminConsole/tabs/ApprovalsTab';
+import { SessionsTab }       from '@/components/sections/SuperadminConsole/tabs/SessionsTab';
+import { AuditLogTab }       from '@/components/sections/SuperadminConsole/tabs/AuditLogTab';
+import { UserSecurityPanel } from '@/components/sections/SuperadminConsole/tabs/UserSecurityPanel';
+import { SecurityPolicyTab } from '@/components/sections/SuperadminConsole/tabs/SecurityPolicyTab';
+import { UIKitPage }         from '@ui/examples/UIKitPage';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
   useTotpStatus,
@@ -1571,11 +1580,40 @@ function LegacyPage({ meta, settings, onBrandingSaved }: {
   );
 }
 
+// ── Console (Administration) tools embedded in the v2 shell ────────────────────
+
+const CONSOLE_BODIES: Record<string, ComponentType> = {
+  'roles':           RolesTab,
+  'modules':         ModulesTab,
+  'permissions':     PermissionsTab,
+  'approvals':       ApprovalsTab,
+  'sessions':        SessionsTab,
+  'audit-log':       AuditLogTab,
+  'user-security':   UserSecurityPanel,
+  'security-policy': SecurityPolicyTab,
+  'ui-kit':          UIKitPage,
+};
+
+function ConsolePage({ meta }: { meta: SwzPage }): VNode {
+  const Body = CONSOLE_BODIES[meta.page];
+  return (
+    <div class="settings-content"><div class="content-shell">
+      <div class="breadcrumb"><span>Settings</span><span class="sep">›</span><span>{meta.group}</span><span class="sep">›</span><span>{meta.label}</span></div>
+      <section class="top-panel">
+        <div class="module-icon"><SwzIcon name={meta.iconKey} /></div>
+        <div><h1>{meta.title}</h1><p>{meta.desc}</p></div>
+      </section>
+      <div class="swz-embed">{Body ? <Body /> : null}</div>
+    </div></div>
+  );
+}
+
 // ── Main component (Settings v2 — faithful design, sidebar-swap nav) ───────────
 
 export function SettingsSection(): VNode {
   const role    = useSessionStore(s => s.role);
   const isAdmin = role === 'admin' || role === 'superadmin';
+  const isSuper = role === 'superadmin';
   const defaultPage = isAdmin ? 'training' : 'my-preferences';
 
   const [page, setPage] = useState<string>(defaultPage);
@@ -1611,7 +1649,7 @@ export function SettingsSection(): VNode {
       inSettingsRef.current = true;
       document.getElementById('sidebar')?.classList.add('settings-mode');
       const menu = document.getElementById('sidebarMenu');
-      if (menu) menu.innerHTML = buildSettingsMenuHtml(isAdmin, pageRef.current);
+      if (menu) menu.innerHTML = buildSettingsMenuHtml(isAdmin, isSuper, pageRef.current);
     };
     const exit = () => {
       inSettingsRef.current = false;
@@ -1662,9 +1700,9 @@ export function SettingsSection(): VNode {
 
   return (
     <div class="swz">
-      {catalogKind
-        ? <SwzCatalogPage pageMeta={meta} />
-        : <LegacyPage meta={meta} settings={settings} onBrandingSaved={handleBrandingSaved} />}
+      {catalogKind ? <SwzCatalogPage pageMeta={meta} />
+       : meta.kind === 'console' ? <ConsolePage meta={meta} />
+       : <LegacyPage meta={meta} settings={settings} onBrandingSaved={handleBrandingSaved} />}
     </div>
   );
 }
