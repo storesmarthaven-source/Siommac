@@ -43,6 +43,9 @@ let _progBar:   HTMLElement;
 let _okBtn:     HTMLButtonElement;
 let _cancelBtn: HTMLButtonElement;
 let _toastsEl:  HTMLElement;
+let _inputEl:    HTMLInputElement;
+let _textareaEl: HTMLTextAreaElement;
+let _activeInput: HTMLInputElement | HTMLTextAreaElement | null = null;
 
 let _activeResolve: ((v: CpopResult) => void) | null = null;
 let _activeTimer:   ReturnType<typeof setTimeout>    | null = null;
@@ -57,6 +60,8 @@ export interface CpopResult {
   isDismissed: boolean;
   isDenied:    boolean;
   value:       boolean;
+  /** For prompts (opts.input) — the field's value when confirmed. */
+  inputValue?: string;
 }
 
 // ── Fire options ──────────────────────────────────────────────────────────────
@@ -78,6 +83,10 @@ export interface CpopOptions {
   panelClass?:        string;
   position?:          string;
   didOpen?:           () => void;
+  /** Prompt input — renders a field; the value is returned in CpopResult.inputValue. */
+  input?:             'text' | 'password' | 'email' | 'number' | 'textarea';
+  inputValue?:        string;
+  inputPlaceholder?:  string;
 }
 
 // ── DOM bootstrap ─────────────────────────────────────────────────────────────
@@ -94,6 +103,8 @@ function _ensureDOM(): void {
       '<div class="cpop-icon"></div>' +
       '<h2 class="cpop-title"></h2>' +
       '<div class="cpop-text"></div>' +
+      '<input class="cpop-input hidden" type="text">' +
+      '<textarea class="cpop-textarea hidden" rows="3"></textarea>' +
       '<div class="cpop-progress" style="display:none;"><span></span></div>' +
       '<div class="cpop-actions">' +
         '<button class="cpop-btn cpop-btn-cancel hidden" type="button">Cancel</button>' +
@@ -105,6 +116,8 @@ function _ensureDOM(): void {
   _iconEl    = _modal.querySelector('.cpop-icon')    as HTMLElement;
   _titleEl   = _modal.querySelector('.cpop-title')   as HTMLElement;
   _textEl    = _modal.querySelector('.cpop-text')    as HTMLElement;
+  _inputEl    = _modal.querySelector('.cpop-input')    as HTMLInputElement;
+  _textareaEl = _modal.querySelector('.cpop-textarea') as HTMLTextAreaElement;
   _progEl    = _modal.querySelector('.cpop-progress') as HTMLElement;
   _progBar   = _progEl.querySelector('span')         as HTMLElement;
   _okBtn     = _modal.querySelector('.cpop-btn-ok')  as HTMLButtonElement;
@@ -179,11 +192,12 @@ function _close(confirmed: boolean): void {
   _unfreezeBsModals();
   _modal.classList.add('cpop-closing');
   const r = _activeResolve; _activeResolve = null;
+  const iv = _activeInput ? _activeInput.value : undefined;
   _closeTimer = setTimeout(() => {
     _closeTimer = null;
     _modal.classList.add('cpop-hidden');
     _modal.classList.remove('cpop-closing');
-    if (r) r({ isConfirmed: !!confirmed, isDismissed: !confirmed, isDenied: false, value: !!confirmed });
+    if (r) r({ isConfirmed: !!confirmed, isDismissed: !confirmed, isDenied: false, value: !!confirmed, inputValue: iv });
   }, 180);
 }
 
@@ -265,6 +279,23 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   if (opts.html) _textEl.innerHTML = opts.html;
   else           _textEl.textContent = opts.text ?? '';
 
+  // Prompt input
+  _activeInput = null;
+  _inputEl.classList.add('hidden');
+  _textareaEl.classList.add('hidden');
+  if (opts.input === 'textarea') {
+    _textareaEl.classList.remove('hidden');
+    _textareaEl.value = opts.inputValue ?? '';
+    _textareaEl.placeholder = opts.inputPlaceholder ?? '';
+    _activeInput = _textareaEl;
+  } else if (opts.input) {
+    _inputEl.classList.remove('hidden');
+    _inputEl.type = opts.input;
+    _inputEl.value = opts.inputValue ?? '';
+    _inputEl.placeholder = opts.inputPlaceholder ?? '';
+    _activeInput = _inputEl;
+  }
+
   // Buttons
   const showCancel  = opts.showCancelButton === true;
   const showConfirm = opts.showConfirmButton !== false && !opts.loading;
@@ -297,10 +328,12 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
 
   _escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && _modal.dataset['dismiss'] !== 'false') _close(false);
-    else if (e.key === 'Enter' && !_okBtn.classList.contains('hidden') && !opts.loading) _close(true);
+    // Enter confirms — except in a textarea (where it should insert a newline).
+    else if (e.key === 'Enter' && opts.input !== 'textarea' && !_okBtn.classList.contains('hidden') && !opts.loading) _close(true);
   };
   document.addEventListener('keydown', _escHandler);
 
+  if (_activeInput) setTimeout(() => { try { _activeInput?.focus(); _activeInput?.select?.(); } catch (_) {} }, 60);
   if (typeof opts.didOpen === 'function') {
     setTimeout(() => { try { opts.didOpen!(); } catch (_) {} }, 50);
   }

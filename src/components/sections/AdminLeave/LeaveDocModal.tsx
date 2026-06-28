@@ -12,6 +12,7 @@
 import { type VNode }   from 'preact';
 import { useRef }       from 'preact/hooks';
 import { Modal }        from '@shared/Modal';
+import { dialog }       from '@lib/dialog';
 import type { LeaveDetail } from './types';
 import { buildLeaveDocHtml, PRINT_CSS, capStr } from './utils';
 
@@ -36,7 +37,7 @@ export function LeaveDocModal({ detail, onClose }: Props): VNode {
     const docHtml = buildLeaveDocHtml(detail);
     const win = window.open('', '_blank', 'width=900,height=1000');
     if (!win) {
-      alert('Allow popups for this site to print.');
+      void dialog.warning('Pop-ups blocked', 'Allow pop-ups for this site to print.');
       return;
     }
     win.document.write(

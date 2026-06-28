@@ -42,6 +42,17 @@
 .cpop-text  { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin: 0 0 22px; word-wrap: break-word; }
 .cpop-text:empty { display: none; }
 .cpop-text strong { color: var(--text-primary); }
+
+/* prompt input (dialog.prompt) */
+.cpop-input, .cpop-textarea {
+  width: 100%; box-sizing: border-box; margin: 0 0 22px;
+  border: 1px solid var(--border, #dce5f1); border-radius: 10px;
+  padding: 11px 13px; font: inherit; font-size: 14px; color: var(--text-primary);
+  background: var(--bg-card, #fff); outline: none;
+}
+.cpop-input:focus, .cpop-textarea:focus { border-color: var(--siomac-navy, #1f3b6d); box-shadow: 0 0 0 3px rgba(31,59,109,.12); }
+.cpop-textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+.cpop-input.hidden, .cpop-textarea.hidden { display: none; }
 .cpop-progress { height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 0 0 18px; }
 .cpop-progress span { display: block; height: 100%; background: var(--siomac-red); width: 100%; }
 
