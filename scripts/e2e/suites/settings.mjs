@@ -113,6 +113,33 @@ export default async function run(h) {
     fails(await api('settings/catalog/sync', T.b, {}), 'employee should not sync catalog');
   });
 
+  // ── My Preferences (owner-scoped read) ───────────────────────────────────────────
+  h.section('Settings › My Preferences');
+
+  await test('my-preferences (employee) returns own prefs + reflects the set theme', async () => {
+    const r = await api('settings/my-preferences', T.b, {});
+    ok(r, 'my-preferences failed');
+    const list = r.body.data ?? [];
+    expect(Array.isArray(list) && list.length > 0, 'no preferences returned');
+    const theme = list.find(s => s.settingKey === PREF);
+    expect(!!theme, 'user_theme not in my-preferences');
+    // PREF was set to 'dark' at user scope earlier in the governance section.
+    expect(theme.effectiveValue === 'dark' && theme.effectiveSource === 'user', `expected dark/user, got ${theme?.effectiveValue}/${theme?.effectiveSource}`);
+  });
+
+  await test('my-preferences returns ONLY personal/ui preference classes (no policy leak)', async () => {
+    const r = await api('settings/my-preferences', T.b, {});
+    const list = r.body.data ?? [];
+    expect(list.every(s => s.settingClass === 'personal_preference' || s.settingClass === 'ui_preference'), 'my-preferences leaked non-preference settings');
+  });
+
+  await test('employee resets OWN preference → falls back to inherited', async () => {
+    ok(await api('settings/values/reset', T.b, { settingKey: PREF, scopeType: 'user', scopeId: b.id }), 'reset own pref failed');
+    const r = await api('settings/my-preferences', T.b, {});
+    const theme = (r.body.data ?? []).find(s => s.settingKey === PREF);
+    expect(theme && theme.effectiveSource !== 'user', 'pref override was not cleared');
+  });
+
   // ── Manifest review ──────────────────────────────────────────────────────────────
   h.section('Settings › Manifest review');
 

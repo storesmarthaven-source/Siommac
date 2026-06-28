@@ -9,26 +9,18 @@
  * surfaces inherited-vs-overridden source + a per-module change history.
  *
  * Personal/UI preferences (`personal_preference`, `ui_preference`) are NOT shown
- * here — those are per-user and need the owner-scoped preferences endpoint
- * (separate "My Preferences" page, tracked as a follow-up). Showing them in this
- * org-scope editor would be misleading.
+ * here — those are per-user and live on the My Preferences page. Showing them in
+ * this org-scope editor would be misleading.
  */
 
 import { type VNode }                from 'preact';
-import { useState, useEffect, useMemo, useCallback } from 'preact/hooks';
-import { toast }                     from '@store';
-import { dialog }                    from '@lib/dialog';
+import { useState, useMemo, useCallback } from 'preact/hooks';
 import { useCan }                    from '@lib/permissions';
 import {
-  useEffectiveSettings,
-  useSetSetting,
-  useResetSetting,
-  useSettingAudit,
-  type EffectiveSetting,
-  type SettingScopeType,
-  type SettingSource,
-  type SettingClass,
+  useEffectiveSettings, useSettingAudit,
+  type EffectiveSetting, type SettingScopeType, type SettingClass,
 } from '@api/settingsCatalog';
+import { SettingField, toInputValue } from './SettingField';
 
 // ── Module catalogue (mirrors netlify/functions/lib/settings/manifests) ─────────
 
@@ -74,169 +66,19 @@ const CLASS_LABEL: Record<string, string> = {
   audit_policy:      'Audit Policy',
 };
 
-const SOURCE_LABEL: Record<SettingSource, string> = {
-  user: 'You', role: 'Role', department: 'Dept', site: 'Site', module: 'Module', global: 'Org', default: 'Default',
-};
+// ── A setting, scoped to org-level editing ──────────────────────────────────────
 
-// ── Value coercion helpers ──────────────────────────────────────────────────────
-
-/** Stringify the current value for a text/number/time/select input. */
-function toInputValue(v: unknown): string {
-  if (v === null || v === undefined) return '';
-  if (typeof v === 'object') return JSON.stringify(v, null, 2);
-  return String(v);
-}
-
-// ── A single setting row ────────────────────────────────────────────────────────
-
-function SettingRow({ s, onChanged }: { s: EffectiveSetting; onChanged: () => void }): VNode {
-  const setMut   = useSetSetting();
-  const resetMut = useResetSetting();
-  const busy     = setMut.isPending || resetMut.isPending;
-
-  // Where an org-level edit writes. Most policy settings allow 'global'; some are
-  // module-scoped. Site/department/user-only settings can't be edited from this
-  // org editor — they're shown read-only with a hint.
+function OrgSettingField({ s, onChanged }: { s: EffectiveSetting; onChanged: () => void }): VNode {
+  // Org edits write at 'global'; some settings are module-scoped. Site/department/
+  // user-only settings can't be edited from this org editor (shown read-only).
   const editScope: SettingScopeType | null =
     s.scope.includes('global') ? 'global' : s.scope.includes('module') ? 'module' : null;
   const editScopeId = editScope === 'module' ? s.moduleKey : null;
-
   const canEdit = s.editable && editScope !== null;
-  const overridden = s.effectiveSource !== 'default';
-
-  const [draft, setDraft] = useState<string>(() => toInputValue(s.effectiveValue));
-  useEffect(() => { setDraft(toInputValue(s.effectiveValue)); }, [s.effectiveValue]);
-
-  const askReason = useCallback(async (): Promise<string | null | undefined> => {
-    if (!s.isAudited && !s.isCritical) return undefined; // no reason needed
-    const r = await dialog.prompt({
-      title: `Reason — ${s.label}`,
-      text: s.isCritical ? 'This is a critical setting. A reason is recorded in the audit log.' : 'Recorded in the audit log.',
-      placeholder: 'Why are you making this change?',
-    });
-    return r; // string, or null if cancelled
-  }, [s.isAudited, s.isCritical, s.label]);
-
-  const commit = useCallback(async (value: unknown) => {
-    if (!canEdit || editScope === null) return;
-    const reason = await askReason();
-    if (reason === null) { setDraft(toInputValue(s.effectiveValue)); return; } // cancelled → revert
-    try {
-      const res = await setMut.mutateAsync({ settingKey: s.settingKey, scopeType: editScope, scopeId: editScopeId, value, reason: reason || undefined });
-      if (!res.success) { toast.error(res.message ?? 'Change was blocked.'); setDraft(toInputValue(s.effectiveValue)); return; }
-      toast.success(`${s.label} updated.`);
-      onChanged();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Update failed.');
-      setDraft(toInputValue(s.effectiveValue));
-    }
-  }, [canEdit, editScope, editScopeId, s, setMut, askReason, onChanged]);
-
-  const reset = useCallback(async () => {
-    if (!canEdit || editScope === null) return;
-    if (!(await dialog.confirm({ title: 'Reset to inherited?', text: `"${s.label}" will fall back to its inherited / default value.`, confirmText: 'Reset' }))) return;
-    try {
-      const res = await resetMut.mutateAsync({ settingKey: s.settingKey, scopeType: editScope, scopeId: editScopeId });
-      if (!res.success) { toast.error(res.message ?? 'Reset was blocked.'); return; }
-      toast.success(`${s.label} reset.`);
-      onChanged();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Reset failed.');
-    }
-  }, [canEdit, editScope, editScopeId, s, resetMut, onChanged]);
-
-  // ── control by data type ──
-  const control = (() => {
-    if (!canEdit) {
-      // read-only display
-      if (s.dataType === 'boolean') {
-        return <span class={`stg-set-ro-pill ${s.effectiveValue ? 'on' : 'off'}`}>{s.effectiveValue ? 'On' : 'Off'}</span>;
-      }
-      return <span class="stg-set-ro-val">{toInputValue(s.effectiveValue) || '—'}</span>;
-    }
-    switch (s.dataType) {
-      case 'boolean':
-        return (
-          <label class="stg-toggle">
-            <input type="checkbox" checked={!!s.effectiveValue} disabled={busy} onChange={e => void commit((e.target as HTMLInputElement).checked)} />
-            <span class="stg-slider" />
-          </label>
-        );
-      case 'select':
-        return (
-          <select class="stg-set-input" disabled={busy} value={draft} onChange={e => void commit((e.target as HTMLSelectElement).value)}>
-            {!(s.allowedValues ?? []).some(v => String(v) === draft) && draft !== '' && <option value={draft}>{draft}</option>}
-            {(s.allowedValues ?? []).map(v => <option key={String(v)} value={String(v)}>{String(v)}</option>)}
-          </select>
-        );
-      case 'number':
-      case 'duration':
-        return (
-          <input
-            type="number" class="stg-set-input" value={draft} disabled={busy}
-            min={s.minValue ?? undefined} max={s.maxValue ?? undefined}
-            onInput={e => setDraft((e.target as HTMLInputElement).value)}
-            onBlur={() => { if (draft !== toInputValue(s.effectiveValue)) void commit(draft === '' ? null : Number(draft)); }}
-            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-          />
-        );
-      case 'time':
-        return (
-          <input type="time" class="stg-set-input" value={draft} disabled={busy}
-            onChange={e => void commit((e.target as HTMLInputElement).value)} />
-        );
-      case 'json':
-      case 'array':
-      case 'multi_select':
-        return (
-          <textarea
-            class="stg-set-input stg-set-textarea" rows={3} value={draft} disabled={busy}
-            onInput={e => setDraft((e.target as HTMLTextAreaElement).value)}
-            onBlur={() => {
-              if (draft === toInputValue(s.effectiveValue)) return;
-              try { void commit(draft.trim() === '' ? null : JSON.parse(draft)); }
-              catch { toast.error('Enter valid JSON.'); setDraft(toInputValue(s.effectiveValue)); }
-            }}
-          />
-        );
-      default: // string
-        return (
-          <input
-            type="text" class="stg-set-input" value={draft} disabled={busy}
-            onInput={e => setDraft((e.target as HTMLInputElement).value)}
-            onBlur={() => { if (draft !== toInputValue(s.effectiveValue)) void commit(draft); }}
-            onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-          />
-        );
-    }
-  })();
+  const note = !s.editable ? 'Read-only for your role' : (editScope === null ? 'Set per-site / department' : undefined);
 
   return (
-    <div class="stg-set-row">
-      <div class="stg-set-main">
-        <div class="stg-set-label">
-          {s.label}
-          {s.isCritical  && <span class="stg-set-badge crit"  title="Critical setting — change requires elevation"><i class="fas fa-shield-halved" /> Critical</span>}
-          {s.isSensitive && <span class="stg-set-badge sens"  title="Sensitive value"><i class="fas fa-eye-slash" /> Sensitive</span>}
-          {s.isAudited   && <span class="stg-set-badge audit" title="Changes are written to the audit log"><i class="fas fa-clock-rotate-left" /> Audited</span>}
-        </div>
-        {s.description && <div class="stg-set-desc">{s.description}</div>}
-        <div class="stg-set-meta">
-          <span class={`stg-set-source ${overridden ? 'over' : 'def'}`}>{SOURCE_LABEL[s.effectiveSource]}</span>
-          <span class="stg-set-key">{s.settingKey}</span>
-          {!canEdit && s.editable && editScope === null && <span class="stg-set-note">Set per-site / department</span>}
-          {!s.editable && <span class="stg-set-note">Read-only for your role</span>}
-        </div>
-      </div>
-      <div class="stg-set-control">{control}</div>
-      <div class="stg-set-actions">
-        {canEdit && overridden && (
-          <button type="button" class="stg-set-reset" disabled={busy} onClick={() => void reset()} title="Reset to inherited">
-            <i class="fas fa-rotate-left" />
-          </button>
-        )}
-      </div>
-    </div>
+    <SettingField s={s} scopeType={editScope ?? 'global'} scopeId={editScopeId} canEdit={canEdit} onChanged={onChanged} note={note} />
   );
 }
 
@@ -277,7 +119,6 @@ export function ModuleSettingsPanel(): VNode {
   const onChanged = useCallback(() => { void refetch(); }, [refetch]);
 
   const settings = data?.data?.settings ?? [];
-  // Exclude per-user preference classes from the org editor.
   const policy = useMemo(
     () => settings.filter(s => s.settingClass !== 'personal_preference' && s.settingClass !== 'ui_preference'),
     [settings],
@@ -349,7 +190,7 @@ export function ModuleSettingsPanel(): VNode {
         <div key={cls} class="stg-card">
           <div class="stg-set-section-title">{CLASS_LABEL[cls] ?? cls}</div>
           <div class="stg-set-list">
-            {byClass.get(cls)!.map(s => <SettingRow key={s.settingKey} s={s} onChanged={onChanged} />)}
+            {byClass.get(cls)!.map(s => <OrgSettingField key={s.settingKey} s={s} onChanged={onChanged} />)}
           </div>
         </div>
       ))}

@@ -455,3 +455,58 @@
   .stg-set-control .stg-set-input { width: 100%; }
   .stg-set-actions { justify-content: flex-start; }
 }
+
+/* ── Manifest review (ManifestReviewPanel) ────────────────────────────────────── */
+.stg-mf-layout { display: grid; grid-template-columns: 290px 1fr; gap: 16px; align-items: start; }
+.stg-mf-list { display: flex; flex-direction: column; gap: 8px; }
+.stg-mf-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 13px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px;
+  background: var(--bg-card, #fff); cursor: pointer; text-align: left; font-family: inherit; width: 100%;
+}
+.stg-mf-item:hover { background: var(--bg-subtle, #f8fafc); }
+.stg-mf-item.active { border-color: var(--siomac-navy, #1B2D55); box-shadow: 0 0 0 3px rgba(27,45,85,.08); }
+.stg-mf-item-main { min-width: 0; }
+.stg-mf-item-label { font-size: 0.84rem; font-weight: 600; color: var(--text-primary, #111); }
+.stg-mf-item-sub { font-size: 0.7rem; color: var(--text-muted, #9ca3af); margin-top: 2px; }
+
+.stg-mf-status { flex-shrink: 0; font-size: 0.64rem; font-weight: var(--font-weight-bold); padding: 2px 9px; border-radius: 20px; letter-spacing: .02em; white-space: nowrap; }
+.stg-mf-status.draft     { background: #f3f4f6; color: #6b7280; }
+.stg-mf-status.pending   { background: #fef3c7; color: #b45309; }
+.stg-mf-status.approved  { background: #d1fae5; color: #065f46; }
+.stg-mf-status.returned  { background: #fee2e2; color: #b91c1c; }
+.stg-mf-status.deprecated{ background: #ede9fe; color: #6d28d9; }
+
+.stg-mf-pane { align-self: start; }
+.stg-mf-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.stg-mf-detail-title { font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--text-primary, #111); }
+.stg-mf-detail-sub { font-size: 0.72rem; color: var(--text-muted, #9ca3af); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 2px; }
+
+.stg-mf-stats { display: flex; gap: 10px; margin: 14px 0; }
+.stg-mf-stats > div { flex: 1; background: var(--bg-subtle, #f8fafc); border: 1px solid var(--border-subtle, #eef2f7); border-radius: 10px; padding: 10px; text-align: center; }
+.stg-mf-stats b { display: block; font-size: 1.1rem; color: var(--siomac-navy, #1B2D55); }
+.stg-mf-stats span { font-size: 0.66rem; color: var(--text-muted, #9ca3af); text-transform: uppercase; letter-spacing: .04em; }
+
+.stg-mf-reqs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.stg-mf-reqs span { font-size: 0.68rem; font-weight: 600; color: var(--siomac-navy, #1B2D55); background: rgba(27,45,85,.06); border-radius: 20px; padding: 3px 10px; }
+.stg-mf-returned { font-size: 0.78rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 8px 12px; display: flex; gap: 6px; align-items: center; }
+.stg-mf-approved { font-size: 0.78rem; color: #065f46; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 8px 12px; display: flex; gap: 6px; align-items: center; }
+
+.stg-mf-signoffs { display: flex; flex-wrap: wrap; gap: 8px; }
+.stg-mf-signoff { font-size: 0.72rem; color: var(--text-muted, #9ca3af); display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border-subtle, #eef2f7); border-radius: 20px; padding: 3px 10px; }
+.stg-mf-signoff.done { color: #065f46; background: #ecfdf5; border-color: #a7f3d0; }
+.stg-mf-signoff.done i { color: #10b981; }
+
+.stg-mf-sections { display: flex; flex-wrap: wrap; gap: 6px; }
+.stg-mf-section { font-size: 0.68rem; border-radius: 6px; padding: 2px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.stg-mf-section.on  { background: rgba(27,45,85,.08); color: var(--siomac-navy, #1B2D55); }
+.stg-mf-section.off { background: #f3f4f6; color: #b0b7c3; text-decoration: line-through; }
+
+.stg-mf-reviewform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.stg-mf-reviewform .stg-set-input { width: auto; min-width: 160px; }
+
+.stg-mf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle, #eef2f7); }
+
+@media (max-width: 860px) {
+  .stg-mf-layout { grid-template-columns: 1fr; }
+}

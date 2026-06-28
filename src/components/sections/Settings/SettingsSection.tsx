@@ -36,6 +36,8 @@ import {
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
 import { ModuleSettingsPanel } from './ModuleSettingsPanel';
+import { ManifestReviewPanel } from './ManifestReviewPanel';
+import { MyPreferencesPanel } from './MyPreferencesPanel';
 import { NotificationPreferences } from '@components/notifications';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
@@ -57,7 +59,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type StgTab = 'company' | 'attendance-rules' | 'module-settings' | 'appearance' | 'layout' | 'notifications' | 'security';
+type StgTab = 'company' | 'attendance-rules' | 'module-settings' | 'manifests' | 'my-preferences' | 'appearance' | 'layout' | 'notifications' | 'security';
 
 // ── Shared presentational helpers ──────────────────────────────────────────────
 
@@ -94,6 +96,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'company',          label: 'Company & Branding',   icon: 'fa-building',       iconBg: 'rgba(27,45,85,.08)',    iconColor: '#1B2D55', adminOnly: true  },
   { id: 'attendance-rules', label: 'Attendance Rules',     icon: 'fa-clock',          iconBg: 'rgba(202,138,4,.10)',   iconColor: '#ca8a04', adminOnly: true  },
   { id: 'module-settings',  label: 'Module Settings',      icon: 'fa-sliders',        iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb', adminOnly: true  },
+  { id: 'manifests',        label: 'Manifest Review',      icon: 'fa-clipboard-check', iconBg: 'rgba(5,150,105,.10)',  iconColor: '#059669', adminOnly: true  },
+  { id: 'my-preferences',   label: 'My Preferences',       icon: 'fa-user-gear',      iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb'                   },
   { id: 'appearance',       label: 'Appearance',           icon: 'fa-palette',        iconBg: 'rgba(124,58,237,.09)', iconColor: '#7c3aed'                   },
   { id: 'layout',           label: 'Layout & Navigation',  icon: 'fa-table-columns',  iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb'                   },
   { id: 'notifications',    label: 'Notifications',        icon: 'fa-bell',           iconBg: 'rgba(71,144,74,.09)',  iconColor: '#47904a'                   },
@@ -1603,6 +1607,8 @@ export function SettingsSection(): VNode {
     'company':          'Company & Branding',
     'attendance-rules': 'Attendance Rules',
     'module-settings':  'Module Settings',
+    'manifests':        'Manifest Review',
+    'my-preferences':   'My Preferences',
     'appearance':       'Appearance',
     'layout':           'Layout & Navigation',
     'notifications':    'Notifications',
@@ -1640,7 +1646,7 @@ export function SettingsSection(): VNode {
           {/* Group: Personal */}
           <div class="stg-nav-group">
             <div class="stg-nav-group-label">Personal</div>
-            {navItems.filter(n => !n.adminOnly && ['appearance','layout','notifications'].includes(n.id)).map(n => (
+            {navItems.filter(n => !n.adminOnly && ['my-preferences','appearance','layout','notifications'].includes(n.id)).map(n => (
               <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
             ))}
           </div>
@@ -1682,6 +1688,8 @@ export function SettingsSection(): VNode {
             <AttendanceRulesPanel settings={settings ?? emptySettings()} />
           )}
           {activeTab === 'module-settings' && isAdmin && <ModuleSettingsPanel />}
+          {activeTab === 'manifests'       && isAdmin && <ManifestReviewPanel />}
+          {activeTab === 'my-preferences'  && <MyPreferencesPanel />}
           {activeTab === 'appearance'    && <AppearancePanel />}
           {activeTab === 'layout'        && <LayoutPanel />}
           {activeTab === 'notifications' && <NotificationsPanel />}

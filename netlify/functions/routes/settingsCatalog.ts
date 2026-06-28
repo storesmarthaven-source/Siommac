@@ -98,6 +98,33 @@ router.post('/effective', async c => {
   return c.json({ success: true, data: { moduleKey, settings } });
 });
 
+// POST /api/settings/my-preferences — the actor's OWN personal + UI preferences,
+// resolved at their user scope. Self-data, so gated on auth only (no module-view
+// perm needed); only personal_preference/ui_preference classes are returned, so
+// no policy settings can leak. Writes go through the normal values/set at
+// scopeType:'user' (assertCanUpdateSetting enforces own-scope ownership).
+router.post('/my-preferences', async c => {
+  const actor = await requireUser(c);
+  const { data: rows } = await sb.from('app_setting_catalog').select('*')
+    .in('setting_class', ['personal_preference', 'ui_preference'])
+    .eq('is_active', true).order('module_key').order('setting_key');
+
+  const settings = [];
+  for (const row of (rows ?? []) as Record<string, any>[]) {
+    const resolved = await resolveSetting(sb, row['setting_key'], scopeOf(actor, row['module_key']));
+    settings.push({
+      settingKey: row['setting_key'], moduleKey: row['module_key'], label: row['label'], description: row['description'],
+      dataType: row['data_type'], settingClass: row['setting_class'], defaultValue: row['default_value'],
+      effectiveValue: resolved.value, effectiveSource: resolved.source, effectiveScopeId: resolved.scopeId ?? null,
+      allowedValues: row['allowed_values'], minValue: row['min_value'], maxValue: row['max_value'],
+      isCritical: row['is_critical'], isSensitive: row['is_sensitive'], isAudited: row['is_audited'],
+      scope: row['scope'],
+      editable: ((row['scope'] ?? []) as string[]).includes('user') && (row['user_override_allowed'] ?? true),
+    });
+  }
+  return c.json({ success: true, data: settings });
+});
+
 // POST /api/settings/resolve — single effective value for the actor's scope
 router.post('/resolve', async c => {
   const actor = await requireUser(c);
