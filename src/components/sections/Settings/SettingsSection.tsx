@@ -70,22 +70,6 @@ import {
 
 // ── Shared presentational helpers ──────────────────────────────────────────────
 
-function SaveBtn({ loading, label, icon, onClick }: {
-  loading: boolean; label: string; icon: string; onClick: () => void;
-}): VNode {
-  return (
-    <button
-      type="button"
-      class="stg-btn-save"
-      onClick={onClick}
-      disabled={loading}
-    >
-      <i class={loading ? 'fas fa-spinner fa-spin' : `fas ${icon}`} />
-      {loading ? 'Saving…' : label}
-    </button>
-  );
-}
-
 function CardLabel({ icon, text }: { icon: string; text: string }): VNode {
   return (
     <div class="stg-card-label">
@@ -106,29 +90,23 @@ interface BrandingPanelProps {
 }
 
 function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
-  const [name,    setName]    = useState(settings.companyName);
-  const [addr,    setAddr]    = useState(settings.companyAddress);
-  const [phone,   setPhone]   = useState(settings.companyPhone);
-  const [email,   setEmail]   = useState(settings.companyEmail);
-  const [nis,     setNis]     = useState(settings.companyNIS);
-  const [bir,     setBir]     = useState(settings.companyBIR);
-  const [saving,  setSaving]  = useState(false);
+  const [name,  setName]  = useState(settings.companyName);
+  const [addr,  setAddr]  = useState(settings.companyAddress);
+  const [phone, setPhone] = useState(settings.companyPhone);
+  const [email, setEmail] = useState(settings.companyEmail);
+  const [nis,   setNis]   = useState(settings.companyNIS);
+  const [bir,   setBir]   = useState(settings.companyBIR);
+  const [saving, setSaving] = useState(false);
 
-  // Logo
-  const [logoB64,      setLogoB64]      = useState('');
-  const [logoFileName, setLogoFileName] = useState('');
-  const [logoPreview,  setLogoPreview]  = useState(settings.companyLogoUrl);
+  const [logoB64,       setLogoB64]       = useState('');
+  const [logoFileName,  setLogoFileName]  = useState('');
+  const [logoPreview,   setLogoPreview]   = useState(settings.companyLogoUrl);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Sync when settings prop changes (initial load)
   useEffect(() => {
-    setName(settings.companyName);
-    setAddr(settings.companyAddress);
-    setPhone(settings.companyPhone);
-    setEmail(settings.companyEmail);
-    setNis(settings.companyNIS);
-    setBir(settings.companyBIR);
+    setName(settings.companyName); setAddr(settings.companyAddress); setPhone(settings.companyPhone);
+    setEmail(settings.companyEmail); setNis(settings.companyNIS); setBir(settings.companyBIR);
     setLogoPreview(settings.companyLogoUrl);
   }, [settings]);
 
@@ -136,12 +114,7 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target?.result as string;
-      setLogoB64(b64);
-      setLogoPreview(b64);
-      setLogoFileName(file.name);
-    };
+    reader.onload = ev => { const b64 = ev.target?.result as string; setLogoB64(b64); setLogoPreview(b64); setLogoFileName(file.name); };
     reader.readAsDataURL(file);
   }, []);
 
@@ -150,17 +123,11 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
     setUploadingLogo(true);
     try {
       const url = await uploadLogoApi(logoB64);
-      setLogoPreview(url);
-      setLogoB64('');
-      setLogoFileName('');
-      applyCompanyLogoToDom(url);
-      onSaved(name, url);
+      setLogoPreview(url); setLogoB64(''); setLogoFileName('');
+      applyCompanyLogoToDom(url); onSaved(name, url);
       toast.success('Logo updated — login screen and sidebar now show the new logo.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      setUploadingLogo(false);
-    }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Upload failed'); }
+    finally { setUploadingLogo(false); }
   }, [logoB64, name, onSaved]);
 
   const handleSaveInfo = useCallback(async () => {
@@ -176,130 +143,60 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
       ]);
       applyCompanyNameToDom(name.trim() || 'My Company');
       onSaved(name.trim() || 'My Company', logoPreview);
-      toast.success('Company settings saved successfully.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setSaving(false);
-    }
+      toast.success('Company settings saved.');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Save failed'); }
+    finally { setSaving(false); }
   }, [name, addr, phone, email, nis, bir, logoPreview, onSaved]);
 
-  // Logo preview border radius (square → circle, wide → rounded rect)
-  const [logoRadius, setLogoRadius] = useState('10px');
-  const logoImgRef = useRef<HTMLImageElement>(null);
-  const handleLogoLoad = useCallback(() => {
-    const img = logoImgRef.current;
-    if (!img) return;
-    const r = img.naturalWidth / (img.naturalHeight || 1);
-    setLogoRadius(r >= 0.85 && r <= 1.15 ? '50%' : '10px');
-  }, []);
+  const field = (label: string, value: string, set: (v: string) => void, type = 'text', max = 80, ph = '', hint = '') => (
+    <div class="swz-field">
+      <label>{label}</label>
+      <input type={type} value={value} maxLength={max} placeholder={ph} onInput={e => set((e.target as HTMLInputElement).value)} />
+      {hint && <small>{hint}</small>}
+    </div>
+  );
 
   return (
-    <div>
-      {/* Company info */}
-      <div class="stg-card">
-        <CardLabel icon="fa-id-card" text="Company Information" />
-        <div class="stg-form-group">
-          <label>Company Name</label>
-          <input type="text" value={name} onInput={e => setName((e.target as HTMLInputElement).value)} maxLength={80} placeholder="My Company" />
-          <small>Shown in sidebar, About, payroll documents, and leave applications</small>
+    <div class="swz-form">
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-id-card" /> Company Information</h3>
+        <div class="swz-grid2">
+          {field('Company Name', name, setName, 'text', 80, 'My Company', 'Shown in the sidebar, About, payroll documents and leave applications')}
+          {field('Address', addr, setAddr, 'text', 160, 'e.g. #64-70 Lady Hailes Avenue, San Fernando')}
+          {field('Phone', phone, setPhone, 'text', 40, 'e.g. 657-2457')}
+          {field('Email', email, setEmail, 'email', 100, 'e.g. info@company.tt')}
+          {field('NIS Registration No.', nis, setNis, 'text', 40, 'e.g. 1234567')}
+          {field('BIR File No.', bir, setBir, 'text', 40, 'e.g. 100123456')}
         </div>
-        <div class="stg-form-group">
-          <label>Address</label>
-          <input type="text" value={addr} onInput={e => setAddr((e.target as HTMLInputElement).value)} maxLength={160} placeholder="e.g. #64-70 Lady Hailes Avenue, San Fernando" />
+        <div class="swz-form-actions">
+          <button type="button" class="action-btn save" disabled={saving} onClick={() => void handleSaveInfo()}>
+            <i class={saving ? 'fas fa-spinner fa-spin' : 'fas fa-check'} /> {saving ? 'Saving…' : 'Save changes'}
+          </button>
+          <button type="button" class="action-btn" disabled={saving}
+            onClick={() => { setName('My Company'); setAddr(''); setPhone(''); setEmail(''); setNis(''); setBir(''); toast.info('Fields reset — click Save changes to apply.'); }}>
+            <i class="fas fa-rotate-left" /> Reset
+          </button>
         </div>
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>Phone</label>
-            <input type="text" value={phone} onInput={e => setPhone((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 657-2457" />
-          </div>
-          <div class="stg-form-group">
-            <label>Email</label>
-            <input type="email" value={email} onInput={e => setEmail((e.target as HTMLInputElement).value)} maxLength={100} placeholder="e.g. info@company.tt" />
-          </div>
-        </div>
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>NIS Registration No.</label>
-            <input type="text" value={nis} onInput={e => setNis((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 1234567" />
-          </div>
-          <div class="stg-form-group">
-            <label>BIR File No.</label>
-            <input type="text" value={bir} onInput={e => setBir((e.target as HTMLInputElement).value)} maxLength={40} placeholder="e.g. 100123456" />
-          </div>
-        </div>
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>Currency</label>
-            <input type="text" value="TT" readonly class="stg-readonly" />
-            <small>Fixed to TT — contact your administrator to change</small>
-          </div>
-          <div class="stg-form-group">
-            <label>Time Zone</label>
-            <select disabled class="stg-readonly"><option>America/Port_of_Spain</option></select>
-            <small>Contact your administrator to change</small>
-          </div>
-        </div>
-        <SaveBtn loading={saving} label="Save Changes" icon="fa-check" onClick={() => void handleSaveInfo()} />
       </div>
 
-      {/* Logo & Branding */}
-      <div class="stg-card">
-        <CardLabel icon="fa-image" text="Logo & Branding" />
-        <div class="stg-logo-row">
-          {/* Preview */}
-          <div class="stg-logo-preview-wrap">
-            {logoPreview ? (
-              <img
-                ref={logoImgRef}
-                src={logoPreview}
-                alt="Logo"
-                onLoad={handleLogoLoad}
-                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: logoRadius }}
-              />
-            ) : (
-              <i class="fas fa-image" style={{ fontSize: '28px', color: 'var(--text-muted)' }} />
-            )}
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-image" /> Logo &amp; Branding</h3>
+        <div class="swz-logo-row">
+          <div class="swz-logo-preview">
+            {logoPreview ? <img src={logoPreview} alt="Company logo" /> : <i class="fas fa-image" />}
           </div>
-          {/* Controls */}
-          <div style={{ flex: 1, minWidth: '0' }}>
+          <div class="swz-logo-ctrls">
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
-            <div class="stg-card-actions" style={{ justifyContent: 'flex-start', marginBottom: '8px' }}>
-              <button
-                type="button"
-                class="stg-btn-outline"
-                onClick={() => fileRef.current?.click()}
-              >
-                <i class="fas fa-upload" /> Choose Logo
-              </button>
-              <button
-                type="button"
-                class="stg-btn-save"
-                onClick={() => void handleSaveLogo()}
-                disabled={!logoB64 || uploadingLogo}
-              >
-                <i class={uploadingLogo ? 'fas fa-spinner fa-spin' : 'fas fa-check'} />
-                {uploadingLogo ? 'Uploading…' : 'Save Logo'}
+            <div class="swz-form-actions" style={{ marginTop: 0 }}>
+              <button type="button" class="action-btn" onClick={() => fileRef.current?.click()}><i class="fas fa-upload" /> Choose logo</button>
+              <button type="button" class="action-btn save" disabled={!logoB64 || uploadingLogo} onClick={() => void handleSaveLogo()}>
+                <i class={uploadingLogo ? 'fas fa-spinner fa-spin' : 'fas fa-check'} /> {uploadingLogo ? 'Uploading…' : 'Save logo'}
               </button>
             </div>
-            {logoFileName && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>{logoFileName}</div>}
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page.</p>
+            {logoFileName && <p class="swz-logo-file">{logoFileName}</p>}
+            <p class="swz-logo-hint">PNG or JPG, up to 2 MB. Applies to the login screen, sidebar, and About page. Currency (TT) and timezone are managed under <b>System</b> settings.</p>
           </div>
         </div>
-      </div>
-
-      {/* Reset + Save all row */}
-      <div class="stg-card-actions" style={{ justifyContent: 'flex-start' }}>
-        <button
-          type="button"
-          class="stg-btn-outline"
-          onClick={() => {
-            setName('My Company'); setAddr(''); setPhone(''); setEmail(''); setNis(''); setBir('');
-            toast.info('Fields reset — click Save Changes to apply.');
-          }}
-        >
-          <i class="fas fa-rotate-left" /> Reset Defaults
-        </button>
       </div>
     </div>
   );

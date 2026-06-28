@@ -148,6 +148,27 @@
 .swz .swz-loading{padding:30px;text-align:center;color:#7a8597;font-size:13px;}
 .swz .swz-embed{border:1px solid var(--line);border-radius:12px;background:#fff;padding:6px 18px 18px;}
 
+/* ── Company & Branding form (v2) ── */
+.swz .swz-form{display:grid;gap:14px;}
+.swz .swz-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 18px;}
+.swz .swz-card-title{font-size:14px;font-weight:800;color:#111827;display:flex;align-items:center;gap:9px;margin:0 0 14px;letter-spacing:-.01em;}
+.swz .swz-card-title i{color:#0b408f;font-size:14px;}
+.swz .swz-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+@media (max-width:720px){.swz .swz-grid2{grid-template-columns:1fr;}}
+.swz .swz-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.swz .swz-field label{font-size:12px;font-weight:700;color:#344054;}
+.swz .swz-field input{height:40px;border:1px solid #ced8e8;border-radius:8px;padding:0 12px;font-size:13.5px;color:#111827;background:#fff;width:100%;}
+.swz .swz-field input:focus{outline:none;border-color:#0b4fb3;box-shadow:0 0 0 3px rgba(11,79,179,.12);}
+.swz .swz-field small{font-size:11px;color:#7a8597;line-height:1.4;}
+.swz .swz-form-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.swz .swz-logo-row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+.swz .swz-logo-preview{width:96px;height:96px;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;background:#f7f9fc;flex:0 0 auto;overflow:hidden;}
+.swz .swz-logo-preview img{max-width:100%;max-height:100%;object-fit:contain;}
+.swz .swz-logo-preview i{font-size:28px;color:#b9c4d4;}
+.swz .swz-logo-ctrls{flex:1;min-width:220px;}
+.swz .swz-logo-file{font-size:11px;color:#687386;margin:8px 0 0;}
+.swz .swz-logo-hint{font-size:11px;color:#7a8597;line-height:1.5;margin:8px 0 0;}
+
 /* ── Audit drawer (scoped, portaled to body) ── */
 .swz-backdrop{position:fixed;inset:0;background:rgba(10,20,35,.26);z-index:1200;}
 .swz-drawer{position:fixed;right:0;top:0;width:440px;max-width:92vw;height:100vh;background:#fff;border-left:1px solid #dbe4f0;z-index:1210;display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;box-shadow:-8px 0 30px rgba(10,20,35,.12);}
