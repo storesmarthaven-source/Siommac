@@ -26,7 +26,6 @@ import { dialog }          from '@lib/dialog';
 import {
   fetchSettings,
   updateSetting,
-  saveWorkHoursApi,
   uploadLogoApi,
   fetchSessionTimeouts,
   setSessionTimeout,
@@ -96,21 +95,8 @@ function CardLabel({ icon, text }: { icon: string; text: string }): VNode {
   );
 }
 
-// ── Colour themes ─────────────────────────────────────────────────────────────
-
-const COLOUR_THEMES = [
-  { id: 'navy',    label: 'Navy',    swatch: '#1B2D55' },
-  { id: 'slate',   label: 'Slate',   swatch: '#475569' },
-  { id: 'emerald', label: 'Emerald', swatch: '#059669' },
-  { id: 'rose',    label: 'Rose',    swatch: '#E11D48' },
-  { id: 'amber',   label: 'Amber',   swatch: '#D97706' },
-  { id: 'indigo',  label: 'Indigo',  swatch: '#4F46E5' },
-];
-
-const LAYOUT_MODES = [
-  { id: 'sidebar', label: 'Sidebar',   icon: 'fa-sidebar',       desc: 'Fixed left navigation panel' },
-  { id: 'topbar',  label: 'Top Bar',   icon: 'fa-window-maximize', desc: 'Compact top navigation bar' },
-];
+// (Colour-theme + layout-mode pickers removed — Appearance lives in My Preferences;
+//  Layout & Navigation and Attendance Rules are placeholders pending reimplementation.)
 
 // ── Company & Branding panel ──────────────────────────────────────────────────
 
@@ -319,230 +305,8 @@ function BrandingPanel({ settings, onSaved }: BrandingPanelProps): VNode {
   );
 }
 
-// ── Attendance Rules panel ────────────────────────────────────────────────────
-
-function AttendanceRulesPanel({ settings }: { settings: AppSettings }): VNode {
-  const [latePenalty,  setLatePenalty]  = useState(settings.latePenaltyPerDay);
-  const [leaveFine,    setLeaveFine]    = useState(settings.leaveFinePerDay);
-  const [lateThresh,   setLateThresh]   = useState(settings.lateThresholdHHMM);
-  const [maxDist,      setMaxDist]      = useState(settings.maxDistanceM);
-  const [workStart,    setWorkStart]    = useState(settings.workHoursStart);
-  const [workEnd,      setWorkEnd]      = useState(settings.workHoursEnd);
-  const [savingRules,  setSavingRules]  = useState(false);
-  const [savingHours,  setSavingHours]  = useState(false);
-
-  useEffect(() => {
-    setLatePenalty(settings.latePenaltyPerDay);
-    setLeaveFine(settings.leaveFinePerDay);
-    setLateThresh(settings.lateThresholdHHMM);
-    setMaxDist(settings.maxDistanceM);
-    setWorkStart(settings.workHoursStart);
-    setWorkEnd(settings.workHoursEnd);
-  }, [settings]);
-
-  const handleSaveRules = useCallback(async () => {
-    setSavingRules(true);
-    try {
-      await Promise.all([
-        updateSetting('latePenaltyPerDay', String(Math.max(0, Number(latePenalty) || 0))),
-        updateSetting('leaveFinePerDay',   String(Math.max(0, Number(leaveFine)   || 0))),
-        updateSetting('lateThresholdHHMM', lateThresh || '09:00'),
-        updateSetting('maxDistanceM',      String(Math.max(0, Number(maxDist) || 200))),
-      ]);
-      toast.success('Attendance rules saved.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setSavingRules(false);
-    }
-  }, [latePenalty, leaveFine, lateThresh, maxDist]);
-
-  const handleSaveHours = useCallback(async () => {
-    if (workStart >= workEnd) { toast.error('Work start must be before end time.'); return; }
-    setSavingHours(true);
-    try {
-      await saveWorkHoursApi(workStart, workEnd);
-      toast.success(`Work hours saved: ${workStart} – ${workEnd}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setSavingHours(false);
-    }
-  }, [workStart, workEnd]);
-
-  const prefixInput = (value: string, onChange: (v: string) => void, prefix: string, suffix?: string) => (
-    <div class={prefix ? 'stg-input-prefix-wrap' : suffix ? 'stg-input-suffix-wrap' : undefined}>
-      {prefix && <span class="stg-input-prefix">{prefix}</span>}
-      <input
-        type="number"
-        value={value}
-        onInput={e => onChange((e.target as HTMLInputElement).value)}
-        min="0"
-        step="0.01"
-      />
-      {suffix && <span class="stg-input-suffix">{suffix}</span>}
-    </div>
-  );
-
-  return (
-    <div>
-      <div class="stg-card">
-        <CardLabel icon="fa-triangle-exclamation" text="Late & Absence Penalties" />
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>Late Penalty (per late day)</label>
-            {prefixInput(latePenalty, setLatePenalty, '$')}
-            <small>Deducted for each late check-in during payroll</small>
-          </div>
-          <div class="stg-form-group">
-            <label>Absent / Leave Fine (per day)</label>
-            {prefixInput(leaveFine, setLeaveFine, '$')}
-            <small>Deducted for each absent day in the period</small>
-          </div>
-        </div>
-        <CardLabel icon="fa-map-pin" text="Check-In Thresholds" />
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>Late Check-In Time</label>
-            <input type="time" value={lateThresh} onInput={e => setLateThresh((e.target as HTMLInputElement).value)} />
-            <small>Check-ins after this time are flagged late</small>
-          </div>
-          <div class="stg-form-group">
-            <label>Max Geofence Distance</label>
-            {prefixInput(maxDist, setMaxDist, '', 'm')}
-            <small>Max metres from a site to allow check-in</small>
-          </div>
-        </div>
-        <SaveBtn loading={savingRules} label="Save Rules" icon="fa-check" onClick={() => void handleSaveRules()} />
-      </div>
-
-      <div class="stg-card">
-        <CardLabel icon="fa-business-time" text="Work Hours" />
-        <div class="stg-form-row">
-          <div class="stg-form-group">
-            <label>Work Start Time</label>
-            <input type="time" value={workStart} onInput={e => setWorkStart((e.target as HTMLInputElement).value)} />
-            <small>Earliest allowed check-in time</small>
-          </div>
-          <div class="stg-form-group">
-            <label>Work End Time</label>
-            <input type="time" value={workEnd} onInput={e => setWorkEnd((e.target as HTMLInputElement).value)} />
-            <small>Employees are auto signed-out at this time</small>
-          </div>
-        </div>
-        <SaveBtn loading={savingHours} label="Save Work Hours" icon="fa-business-time" onClick={() => void handleSaveHours()} />
-      </div>
-    </div>
-  );
-}
-
-// ── Appearance panel ──────────────────────────────────────────────────────────
-
-function AppearancePanel(): VNode {
-  const colorScheme   = useSessionStore(s => s.colorScheme);
-  const setColorScheme = useSessionStore(s => s.setColorScheme);
-
-  return (
-    <div class="stg-card">
-      <CardLabel icon="fa-swatchbook" text="Colour Theme" />
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        {COLOUR_THEMES.map(t => {
-          const active = colorScheme === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setColorScheme(t.id as typeof colorScheme)}
-              style={{
-                display:        'flex',
-                flexDirection:  'column',
-                alignItems:     'center',
-                gap:            '8px',
-                padding:        '12px 16px',
-                border:         active ? `2px solid ${t.swatch}` : '2px solid var(--border)',
-                borderRadius:   '14px',
-                background:     active ? `${t.swatch}12` : 'var(--bg-card)',
-                cursor:         'pointer',
-                minWidth:       '80px',
-              }}
-            >
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: t.swatch, boxShadow: active ? `0 0 0 3px ${t.swatch}44` : 'none' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: active ? t.swatch : 'var(--text-secondary)' }}>{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Layout panel ──────────────────────────────────────────────────────────────
-
-function LayoutPanel(): VNode {
-  const layoutMode    = useSessionStore(s => s.layoutMode);
-  const setLayoutMode = useSessionStore(s => s.setLayoutMode);
-
-  return (
-    <div>
-      <div class="stg-card">
-        <CardLabel icon="fa-sidebar" text="Navigation Style" />
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {LAYOUT_MODES.map(m => {
-            const active = layoutMode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setLayoutMode(m.id as typeof layoutMode)}
-                style={{
-                  flex:           '1 1 0',
-                  minWidth:       '140px',
-                  padding:        '16px',
-                  border:         active ? '2px solid var(--siomac-navy)' : '2px solid var(--border)',
-                  borderRadius:   '14px',
-                  background:     active ? 'var(--bg-subtle, #f5f7fb)' : 'var(--bg-card)',
-                  cursor:         'pointer',
-                  textAlign:      'left',
-                }}
-              >
-                <i class={`fas ${m.icon}`} style={{ fontSize: '20px', color: active ? 'var(--siomac-navy)' : 'var(--text-muted)', display: 'block', marginBottom: '8px' }} />
-                <div style={{ fontSize: '0.83rem', fontWeight: 'var(--font-weight-bold)', color: active ? 'var(--siomac-navy)' : 'var(--text-primary)' }}>{m.label}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{m.desc}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div class="stg-card">
-        <CardLabel icon="fa-gauge" text="Dashboard Preferences" />
-        <div class="stg-form-group">
-          <label>Default Dashboard View</label>
-          <select disabled class="stg-readonly" style={{ opacity: 0.6 }}>
-            <option>Operations Overview</option>
-            <option>Attendance Analytics</option>
-            <option>Live Map</option>
-          </select>
-          <small>Coming soon</small>
-        </div>
-        {[
-          { label: 'Auto-refresh dashboard',  desc: 'Refresh stats every 30 seconds — coming soon', checked: true  },
-          { label: 'Compact table rows',      desc: 'Reduce row height in all data tables — coming soon', checked: false },
-        ].map(sw => (
-          <div key={sw.label} class="stg-switch-group">
-            <div>
-              <div class="stg-switch-label">{sw.label}</div>
-              <div class="stg-switch-desc">{sw.desc}</div>
-            </div>
-            <label class="stg-toggle">
-              <input type="checkbox" checked={sw.checked} disabled />
-              <span class="stg-slider" />
-            </label>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Attendance Rules + Appearance + Layout panels removed — Layout & Navigation and
+// Attendance Rules are placeholders pending reimplementation (see settingsNav.ts).
 
 // (Per-type in-app Notification Preferences are folded into My Preferences in the
 //  v2 design; the standalone NotificationsPanel was removed with the old shell.)
@@ -1562,8 +1326,6 @@ function LegacyPage({ meta, settings, onBrandingSaved }: {
     if (meta.kind === 'manifests') return <ManifestReviewPanel />;
     switch (meta.legacy) {
       case 'company':    return <BrandingPanel settings={settings ?? emptySettings()} onSaved={onBrandingSaved} />;
-      case 'attendance': return <AttendanceRulesPanel settings={settings ?? emptySettings()} />;
-      case 'layout':     return <><LayoutPanel /><AppearancePanel /></>;
       case 'security':   return <SecurityPanel />;
       default:           return null;
     }
@@ -1576,6 +1338,24 @@ function LegacyPage({ meta, settings, onBrandingSaved }: {
         <div><h1>{meta.title}</h1><p>{meta.desc}</p></div>
       </section>
       <div class="swz-embed">{body}</div>
+    </div></div>
+  );
+}
+
+// ── Placeholder (feature pending reimplementation) ─────────────────────────────
+
+function PlaceholderPage({ meta }: { meta: SwzPage }): VNode {
+  return (
+    <div class="settings-content"><div class="content-shell">
+      <div class="breadcrumb"><span>Settings</span><span class="sep">›</span><span>{meta.group}</span><span class="sep">›</span><span>{meta.label}</span></div>
+      <section class="top-panel">
+        <div class="module-icon"><SwzIcon name={meta.iconKey} /></div>
+        <div><h1>{meta.title}</h1><p>{meta.desc}</p></div>
+      </section>
+      <div class="swz-empty" style={{ marginTop: '14px' }}>
+        <i class="fas fa-screwdriver-wrench" />
+        {meta.title} is being rebuilt and will be available soon.
+      </div>
     </div></div>
   );
 }
@@ -1702,6 +1482,7 @@ export function SettingsSection(): VNode {
     <div class="swz">
       {catalogKind ? <SwzCatalogPage pageMeta={meta} />
        : meta.kind === 'console' ? <ConsolePage meta={meta} />
+       : meta.kind === 'placeholder' ? <PlaceholderPage meta={meta} />
        : <LegacyPage meta={meta} settings={settings} onBrandingSaved={handleBrandingSaved} />}
     </div>
   );

@@ -9,7 +9,7 @@
 
 import { navIconSvg } from '@/components/nav/navIcons';
 
-export type SwzPageKind = 'catalog' | 'myprefs' | 'critical' | 'manifests' | 'legacy' | 'console';
+export type SwzPageKind = 'catalog' | 'myprefs' | 'critical' | 'manifests' | 'legacy' | 'console' | 'placeholder';
 export type SwzLegacy = 'company' | 'attendance' | 'layout' | 'security';
 
 export interface SwzPage {
@@ -37,9 +37,9 @@ export const SWZ_PAGES: SwzPage[] = [
   // ── General (admin) ──
   { page: 'company-branding', label: 'Company & Branding', faIcon: 'fa-building', iconKey: 'BUILDING', group: 'General', kind: 'legacy', legacy: 'company', adminOnly: true,
     title: 'Company & Branding', desc: 'Control company profile, brand marks, legal display name, and default identity shown across SIOMAC.' },
-  { page: 'attendance-rules', label: 'Attendance Rules', faIcon: 'fa-clock', iconKey: 'CLOCK', group: 'General', kind: 'legacy', legacy: 'attendance', adminOnly: true,
+  { page: 'attendance-rules', label: 'Attendance Rules', faIcon: 'fa-clock', iconKey: 'CLOCK', group: 'General', kind: 'placeholder', adminOnly: true,
     title: 'Attendance Rules', desc: 'Configure attendance thresholds, location requirements, exception review, and overtime policy.' },
-  { page: 'layout-navigation', label: 'Layout & Navigation', faIcon: 'fa-table-columns', iconKey: 'LAYOUT', group: 'General', kind: 'legacy', legacy: 'layout', adminOnly: true,
+  { page: 'layout-navigation', label: 'Layout & Navigation', faIcon: 'fa-table-columns', iconKey: 'LAYOUT', group: 'General', kind: 'placeholder', adminOnly: true,
     title: 'Layout & Navigation', desc: 'Control navigation behavior, dashboard layout, sidebar grouping, and module visibility defaults.' },
 
   // ── Module Policy (admin) ──
