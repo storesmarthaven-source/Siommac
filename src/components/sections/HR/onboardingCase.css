@@ -1,0 +1,50 @@
+/* src/components/sections/HR/onboardingCase.css
+ *
+ * Styling for the onboarding case-detail page's FUNCTIONAL local table widgets (.obx*) —
+ * Active Tasks / Blockers / Handoffs / Custom Actions — and the lifecycle action buttons that
+ * sit in the standard PageHeader. KPI tiles are styled separately (onboardingCaseWidgets.css).
+ */
+.obx-back { background: none; border: none; color: #2563eb; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; margin-bottom: 10px; }
+.obx-back:hover { color: #1c68d4; }
+
+/* lifecycle actions (PageHeader actions slot) */
+.obx-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.obx-btn { height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.obx-btn:hover { background: #f5f7fa; }
+.obx-btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.obx-btn.primary:hover { background: #1c68d4; }
+.obx-btn.amber { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+.obx-btn.danger { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.obx-btn.obx-btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.obx-owner { display: inline-flex; align-items: center; gap: 6px; color: #64748b; font-size: 12px; font-weight: 600; }
+.obx-owner select { height: 34px; border: 1px solid #d8e0ec; border-radius: 8px; padding: 0 10px; background: #fff; font-size: 13px; color: #334155; max-width: 180px; }
+
+/* widget card — local table widgets fill their grid cell */
+.obx-section { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.obx-wcard { height: 100%; }
+.obx-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #eef2f7; background: #fbfdff; flex: none; }
+.obx-section-head h2 { margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.obx-section-head h2 i { color: #2563eb; font-size: 13px; }
+.obx-section-body { flex: 1; min-height: 0; overflow: auto; }
+
+/* tables */
+.obx-table { width: 100%; border-collapse: collapse; }
+.obx-table th { text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; padding: 9px 16px; border-bottom: 1px solid #eef2f7; white-space: nowrap; background: #fbfdff; position: sticky; top: 0; z-index: 1; }
+.obx-table td { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: middle; }
+.obx-table tr:last-child td { border-bottom: none; }
+.obx-table tr:hover td { background: #f8fbff; }
+.obx-table b { color: #0f172a; font-weight: 700; }
+
+.obx-rowbtns { display: flex; gap: 6px; }
+.obx-mini { height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.obx-mini:hover { background: #f1f5f9; }
+
+.obx-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.obx-pill.green { background: #dcfce7; color: #15803d; }
+.obx-pill.amber { background: #fef3c7; color: #b45309; }
+.obx-pill.red   { background: #fee2e2; color: #dc2626; }
+.obx-pill.blue  { background: #dbeafe; color: #1d4ed8; }
+.obx-pill.gray  { background: #eef2f7; color: #334155; }
+
+.obx-empty { padding: 20px; text-align: center; color: #94a3b8; font-size: 13px; }
+.obx-meta { color: #64748b; font-size: 13px; }

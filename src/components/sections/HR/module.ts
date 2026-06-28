@@ -19,10 +19,17 @@ const EMPLOYEE_MASTER_ITEM: ModuleNavItem = {
   sub: 'People register, profiles, statutory readiness & workflows',
 };
 
+const ONBOARDING_ITEM: ModuleNavItem = {
+  id: 's-hr-onboarding',
+  label: 'Onboarding',
+  icon: 'fa-rocket',
+  sub: 'Activation readiness, active cases & onboarding board',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

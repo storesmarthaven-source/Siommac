@@ -197,10 +197,12 @@ function useOnboardingMutation<TArgs, TRes>(fn: (a: TArgs) => Promise<TRes>) {
   return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: ['hr', 'onboarding'] }) });
 }
 
+export const useOnboardingCompleteTask   = () => useOnboardingMutation(hrOnboardingApi.completeTask);
 export const useOnboardingAddTask        = () => useOnboardingMutation(hrOnboardingApi.addTask);
 export const useOnboardingBlockTask      = () => useOnboardingMutation(hrOnboardingApi.blockTask);
 export const useOnboardingUnblockTask    = () => useOnboardingMutation(hrOnboardingApi.unblockTask);
 export const useOnboardingCompleteCase   = () => useOnboardingMutation(hrOnboardingApi.completeCase);
+export const useOnboardingCancelCase     = () => useOnboardingMutation(hrOnboardingApi.cancel);
 export const useOnboardingPauseCase      = () => useOnboardingMutation(hrOnboardingApi.pauseCase);
 export const useOnboardingResumeCase     = () => useOnboardingMutation(hrOnboardingApi.resumeCase);
 export const useOnboardingReassignOwner  = () => useOnboardingMutation(hrOnboardingApi.reassignOwner);

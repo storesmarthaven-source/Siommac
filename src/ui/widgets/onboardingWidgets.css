@@ -1,0 +1,85 @@
+/* src/ui/widgets/onboardingWidgets.css
+ *
+ * Faithful port of the OnboardPro overview card design
+ * (onboarding_overview_exact_replica_no_sidebar_fluid_v3.html), ADAPTED so each panel FILLS its
+ * stack-grid board cell (the mockup's fixed px heights / 5-col grid become height:100% widgets).
+ * Class names mirror the mockup (`.obw-kpi`, `.obw-spark`, …) and are scoped under `.obw` so they
+ * can't bleed into the rest of the app. Used by registry.hrOnboarding.tsx.
+ */
+.obw {
+  --ob-line: #dfe7f2; --ob-line2: #edf2f8; --ob-text: #10264a; --ob-ink: #06183a; --ob-muted: #627394;
+  --ob-blue: #0b63f6; --ob-green: #0aa36c; --ob-orange: #f59e0b; --ob-red: #f04444; --ob-purple: #6746f2;
+  width: 100%; height: 100%; box-sizing: border-box;
+  background: #fff; border: 1px solid var(--ob-line); border-radius: 11px;
+  box-shadow: 0 2px 8px rgba(16, 35, 68, .04); overflow: hidden;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--ob-text); display: flex; flex-direction: column;
+  container-type: inline-size; /* enables cqw units on the KPI number so it scales with the cell width */
+}
+.obw * { box-sizing: border-box; }
+
+/* ── KPI card — mirrors mockup `.kpi`: [main: cap/number/delta] [spark] ─────────── */
+.obw-kpi { flex: 1; min-height: 0; padding: clamp(13px, 3.2%, 18px) clamp(13px, 3.4%, 17px);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.obw-kpi-main { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.obw-cap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  font-size: 13px; font-weight: 800; color: #0d2145; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obw-kpi-icon { width: 34px; height: 34px; flex: none; border-radius: 8px; display: grid; place-items: center;
+  background: #edf4ff; color: #0b63f6; font-size: 15px; }
+.obw-kpi-icon.purple { background: #f1edff; color: #6d49fa; } .obw-kpi-icon.red { background: #fff0f0; color: #f04444; }
+.obw-kpi-icon.green { background: #eafaf3; color: #10a065; } .obw-kpi-icon.orange { background: #fff5e6; color: #d97706; }
+.obw-num { margin: 0; font-size: clamp(22px, 6.5cqw, 30px); line-height: 1; color: var(--ob-ink); font-weight: 880; letter-spacing: -.04em; }
+.obw-num.word { font-size: clamp(18px, 5cqw, 23px); color: var(--ob-green); }
+.obw-delta { margin-top: 8px; font-size: 11px; color: var(--ob-green); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obw-delta.red { color: var(--ob-red); }
+.obw-delta .vs { color: #6a7c95; font-weight: 600; }
+/* spark / ring / growth on the right */
+.obw-spark { width: clamp(72px, 30%, 104px); height: 52px; align-self: center; }
+.obw-spark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.obw-ring { width: clamp(56px, 22%, 70px); aspect-ratio: 1; align-self: center; margin-left: auto; }
+.obw-ring svg { width: 100%; height: 100%; display: block; }
+.obw-growth { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 52px; align-self: center; }
+.obw-growth i { width: 8px; background: #14a06a; border-radius: 3px 3px 0 0; display: block; }
+
+/* ── generic panel (header + body) — mirrors `.panel-title` / table panels ──────── */
+.obw-pt { height: 43px; flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; border-bottom: 1px solid var(--ob-line2); }
+.obw-pt h3 { margin: 0; font-size: 14px; font-weight: 850; color: var(--ob-text); letter-spacing: -.01em;
+  display: flex; align-items: center; gap: 7px; }
+.obw-pt .obw-count { height: 19px; padding: 0 7px; border-radius: 5px; background: #eef2f6; color: #536179;
+  font-size: 10px; font-weight: 850; display: inline-flex; align-items: center; }
+.obw-pb { flex: 1; min-height: 0; overflow: auto; }
+
+/* work-queue rows — mirrors `.qrow` */
+.obw-q { padding: 0 16px 10px; }
+.obw-qtop, .obw-qrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) 34px 96px; align-items: center; }
+.obw-qtop { height: 30px; color: #657694; font-size: 10px; font-weight: 800; border-bottom: 1px solid var(--ob-line2); }
+.obw-qrow { height: 42px; font-size: 11px; color: #17294e; font-weight: 800; border-bottom: 1px solid var(--ob-line2); }
+.obw-qrow:last-child { border-bottom: 0; } .obw-qrow .qi { color: var(--ob-blue); }
+.obw-overdue { color: var(--ob-red); font-size: 10px; font-weight: 850; } .obw-ontime { color: var(--ob-green); font-size: 10px; font-weight: 850; }
+
+/* readiness / meter rows — mirrors `.ready-row` */
+.obw-rl { padding: 12px 16px; display: grid; gap: 11px; align-content: start; }
+.obw-ready { display: grid; grid-template-columns: 1fr 90px 36px; gap: 10px; align-items: center; font-size: 11px; font-weight: 750; color: #334766; }
+.obw-bar { height: 6px; border-radius: 999px; background: #e8edf5; overflow: hidden; }
+.obw-bar span { display: block; height: 100%; border-radius: inherit; background: var(--ob-green); }
+.obw-bar.blue span { background: var(--ob-blue); } .obw-bar.orange span { background: var(--ob-orange); } .obw-bar.red span { background: var(--ob-red); }
+
+/* donut legend — mirrors `.donut-wrap` / `.legend` */
+.obw-donut { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 16px; flex: 1; min-height: 0; }
+.obw-donut svg { width: clamp(96px, 38%, 140px); height: auto; flex: none; }
+.obw-legend { display: grid; gap: 8px; font-size: 11px; color: #394d6a; font-weight: 700; }
+.obw-legend-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; }
+.obw-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* activity feed — mirrors `.act` */
+.obw-acts { padding: 4px 14px 8px; }
+.obw-act { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; min-height: 47px; align-items: center; border-bottom: 1px solid var(--ob-line2); }
+.obw-act:last-child { border-bottom: 0; }
+.obw-act-icon { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: #eaf3ff; color: var(--ob-blue); flex: none; }
+.obw-act-title { font-size: 11px; line-height: 1.25; font-weight: 800; color: var(--ob-text); }
+.obw-act-meta { font-size: 9px; color: #6e7e98; margin-top: 3px; font-weight: 650; }
+.obw-act-time { font-size: 9px; color: #71819b; white-space: nowrap; font-weight: 700; }
+
+.obw-empty { flex: 1; display: grid; place-items: center; min-height: 70px; color: #94a3b8; font-size: 12px; text-align: center; padding: 16px; }
+.obw-skel { flex: 1; display: grid; place-items: center; min-height: 60px; color: #c2cdda; font-size: 11px; }

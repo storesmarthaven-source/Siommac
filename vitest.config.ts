@@ -93,6 +93,8 @@ export default defineConfig({
       { find: '@lib/navVisibility',  replacement: resolve(__dirname, 'src/lib/navVisibility')  },
       { find: /^@lib\/workflow$/,    replacement: resolve(__dirname, 'src/lib/workflow/index.ts') },
       { find: /^@lib\/workflow\/(.+)$/, replacement: resolve(__dirname, 'src/lib/workflow/$1') },
+      // Generic @lib subpath catch-all (mirrors vite.config) — after the specific entries.
+      { find: /^@lib\/(.+)$/,        replacement: resolve(__dirname, 'src/lib/$1') },
 
       // ── @store sub-paths (BEFORE bare @store) ─────────────────────────────
       { find: '@store/data',          replacement: resolve(__dirname, 'src/store/data')          },
@@ -100,6 +102,8 @@ export default defineConfig({
       { find: '@store/session',       replacement: resolve(__dirname, 'src/store/session')       },
       { find: '@store/realtime',      replacement: resolve(__dirname, 'src/store/realtime')      },
       { find: '@store/notifications', replacement: resolve(__dirname, 'src/store/notifications') },
+      // Generic @store subpath catch-all (mirrors vite.config) — after the specific entries.
+      { find: /^@store\/(.+)$/,       replacement: resolve(__dirname, 'src/store/$1')            },
 
       // ── @shared sub-paths (BEFORE bare @shared) ───────────────────────────
       { find: '@shared/ErrorBoundary', replacement: resolve(__dirname, 'src/components/shared/ErrorBoundary') },
@@ -135,12 +139,17 @@ export default defineConfig({
       { find: /^@api\/(.+)$/, replacement: resolve(__dirname, 'src/api/$1')   },
       { find: '@api',         replacement: resolve(__dirname, 'src/api/index.ts') },
 
+      // ── @ui sub-paths (BEFORE bare @ui) ───────────────────────────────────
+      { find: /^@ui\/(.+)$/,  replacement: resolve(__dirname, 'src/ui/$1')    },
+
       // ── @components sub-paths ─────────────────────────────────────────────
       { find: '@components/auth',     replacement: resolve(__dirname, 'src/components/auth')     },
       { find: '@components/nav',      replacement: resolve(__dirname, 'src/components/nav')      },
       { find: '@components/realtime', replacement: resolve(__dirname, 'src/components/realtime') },
       { find: '@components/livemap',  replacement: resolve(__dirname, 'src/components/livemap')  },
       { find: '@components/workflow', replacement: resolve(__dirname, 'src/components/workflow') },
+      // Generic @components subpath catch-all (mirrors vite.config) — after the specific entries.
+      { find: /^@components\/(.+)$/,  replacement: resolve(__dirname, 'src/components/$1') },
 
       // ── Bare aliases (LAST — fallback for index-file imports) ─────────────
       { find: '@store',    replacement: resolve(__dirname, 'src/store/index.ts')         },
@@ -148,6 +157,7 @@ export default defineConfig({
       { find: '@lib',      replacement: resolve(__dirname, 'src/lib/index.ts')           },
       { find: '@shared',   replacement: resolve(__dirname, 'src/components/shared')      },
       { find: '@sections', replacement: resolve(__dirname, 'src/components/sections')    },
+      { find: '@ui',       replacement: resolve(__dirname, 'src/ui/index.ts')           },
       { find: '@',         replacement: resolve(__dirname, 'src')                        },
     ],
   },
