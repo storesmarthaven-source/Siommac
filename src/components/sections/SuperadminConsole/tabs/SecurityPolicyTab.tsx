@@ -1,17 +1,10 @@
 /**
  * tabs/SecurityPolicyTab.tsx
  *
- * Superadmin "Security Policy" editor — allows a holder of
- * `auth.security.manage_policy` to view and update the organisation-wide
- * security knobs stored in `auth_security_policy`.
- *
- * All fields come from the DB-backed `/api/auth/security/policy` read route.
- * Saves go through `/api/admin/security/policy/update`, which requires step-up.
- * `withStepUp()` intercepts the step_up_required code and retries automatically.
- *
- * Gated: if the user lacks `auth.security.manage_policy`, the tab renders a
- * permission-denied notice (the tab still appears in the nav, consistent with
- * how UserSecurityPanel handles `auth.security.view`).
+ * Superadmin "Security Policy" editor — a holder of `auth.security.manage_policy`
+ * views/updates the organisation-wide security knobs in `auth_security_policy`.
+ * Reads from `/api/auth/security/policy`; saves via `/api/admin/security/policy/update`
+ * (requires step-up; withStepUp retries). Restyled to the v2 Settings design (.swz).
  */
 
 import { type VNode }       from 'preact';
@@ -25,7 +18,7 @@ import {
   type SecurityPolicyUpdatePayload,
 } from '@api/security';
 
-// ── Local form state (mirrors the DB columns we can edit) ─────────────────────
+// ── Local form state (mirrors the editable DB columns) ────────────────────────
 
 interface PolicyForm {
   trustedDevicesEnabled:       boolean;
@@ -53,84 +46,46 @@ const DEFAULT_FORM: PolicyForm = {
   stepUpMaxAgeMinutes:         10,
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
-function clamp(val: number, min: number, max: number): number {
-  return Math.min(Math.max(val, min), max);
-}
+// ── v2 row controls ───────────────────────────────────────────────────────────
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function Toggle({
-  label, checked, onChange, disabled,
-}: {
-  label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
+function ToggleRow({ label, desc, checked, onChange, disabled }: {
+  label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
 }): VNode {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0' }}>
-      <span style={{ fontSize: '13px', color: 'var(--text-primary, #111)' }}>{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        style={{
-          position: 'relative', display: 'inline-flex', alignItems: 'center',
-          width: '40px', height: '22px', borderRadius: '11px', border: 'none',
-          padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
-          background: checked ? 'var(--siomac-navy, #1e3a5f)' : '#d1d5db',
-          transition: 'background 0.15s',
-          opacity: disabled ? 0.5 : 1,
-        }}
-      >
-        <span style={{
-          position: 'absolute',
-          left: checked ? '20px' : '2px',
-          width: '18px', height: '18px', borderRadius: '50%',
-          background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-          transition: 'left 0.15s',
-        }} />
-      </button>
-    </div>
-  );
-}
-
-function NumberInput({
-  label, value, min, max, onChange, suffix, disabled,
-}: {
-  label: string; value: number; min: number; max: number;
-  onChange: (v: number) => void; suffix?: string; disabled?: boolean;
-}): VNode {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0' }}>
-      <span style={{ fontSize: '13px', color: 'var(--text-primary, #111)', flex: 1 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <input
-          type="number"
-          min={min}
-          max={max}
-          value={value}
-          disabled={disabled}
-          onInput={(e) => {
-            const raw = parseInt((e.target as HTMLInputElement).value, 10);
-            if (!isNaN(raw)) onChange(clamp(raw, min, max));
-          }}
-          style={{
-            width: '72px', padding: '5px 8px', textAlign: 'right',
-            border: '1px solid var(--border, #d1d5db)', borderRadius: '6px',
-            fontSize: '13px', background: disabled ? '#f9fafb' : '#fff',
-            color: 'var(--text-primary, #111)',
-          }}
-        />
-        {suffix && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{suffix}</span>}
+    <div class="swz-prow">
+      <div class="swz-prow-main">
+        <div class="swz-prow-label">{label}</div>
+        {desc && <div class="swz-prow-desc">{desc}</div>}
+      </div>
+      <div class="swz-prow-ctrl">
+        <button type="button" role="switch" aria-checked={checked} disabled={disabled}
+          class={`switch${checked ? '' : ' off'}`} onClick={() => onChange(!checked)}><span /></button>
       </div>
     </div>
   );
 }
 
-function Divider(): VNode {
-  return <div style={{ height: '1px', background: 'var(--border, #e5e7eb)', margin: '4px 0' }} />;
+function NumberRow({ label, desc, value, min, max, onChange, suffix, disabled }: {
+  label: string; desc?: string; value: number; min: number; max: number;
+  onChange: (v: number) => void; suffix?: string; disabled?: boolean;
+}): VNode {
+  return (
+    <div class="swz-prow">
+      <div class="swz-prow-main">
+        <div class="swz-prow-label">{label}</div>
+        {desc && <div class="swz-prow-desc">{desc}</div>}
+      </div>
+      <div class="swz-prow-ctrl">
+        <input
+          class="input-number" type="number" min={min} max={max} value={value} disabled={disabled}
+          onInput={(e) => { const raw = parseInt((e.target as HTMLInputElement).value, 10); if (!isNaN(raw)) onChange(clamp(raw, min, max)); }}
+        />
+        {suffix && <span class="swz-prow-suffix">{suffix}</span>}
+      </div>
+    </div>
+  );
 }
 
 // ── Main panel ────────────────────────────────────────────────────────────────
@@ -146,7 +101,6 @@ export function SecurityPolicyTab(): VNode {
   const [dirty, setDirty] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
-  // Sync form when the server data loads
   useEffect(() => {
     if (!policyRes?.success || !policyRes.policy) return;
     const p = policyRes.policy;
@@ -183,15 +137,11 @@ export function SecurityPolicyTab(): VNode {
       allowPasskeyAsSecondFactor:  form.allowPasskeyAsSecondFactor,
       stepUpMaxAgeMinutes:         form.stepUpMaxAgeMinutes,
     };
-
     try {
       const doUpdate = withStepUp(ensureStepUp, () => updateMut.mutateAsync(payload));
       const res = await doUpdate();
       if (!res.success && res.code === 'step_up_required') return; // user cancelled
-      if (!res.success) {
-        toast.error(res.message ?? 'Failed to save security policy.');
-        return;
-      }
+      if (!res.success) { toast.error(res.message ?? 'Failed to save security policy.'); return; }
       setDirty(false);
       setSavedAt(new Date());
       toast.success('Security policy saved.');
@@ -200,178 +150,60 @@ export function SecurityPolicyTab(): VNode {
     }
   }, [form, ensureStepUp, updateMut]);
 
-  // ── Not authorized ─────────────────────────────────────────────────────────
   if (!canManage) {
-    return (
-      <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        <i class="fas fa-lock" style={{ fontSize: '24px', marginBottom: '8px', display: 'block' }} />
-        You do not have permission to manage the security policy.
-      </div>
-    );
+    return <div class="swz-empty"><i class="fas fa-lock" /> You don't have permission to manage the security policy.</div>;
   }
-
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
-    return (
-      <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        <i class="fas fa-spinner fa-spin" style={{ marginRight: 8 }} />
-        Loading security policy…
-      </div>
-    );
+    return <div class="swz-loading"><i class="fas fa-spinner fa-spin" /> Loading security policy…</div>;
   }
 
   const busy = updateMut.isPending;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '640px' }}>
-
-      {/* ── Trusted-device settings ──────────────────────────────────────── */}
-      <div class="stg-card">
-        <div class="stg-card-label">
-          <i class="fas fa-laptop-mobile" />
-          <span>Trusted Devices</span>
-        </div>
-
-        <Toggle
-          label="Enable trusted-device bypass (remember this device)"
-          checked={form.trustedDevicesEnabled}
-          onChange={v => patch('trustedDevicesEnabled', v)}
-          disabled={busy}
-        />
-        <Divider />
-        <NumberInput
-          label="Employee / default TTL"
-          value={form.trustedDeviceDefaultDays}
-          min={1} max={365}
-          suffix="days"
-          onChange={v => patch('trustedDeviceDefaultDays', v)}
-          disabled={busy || !form.trustedDevicesEnabled}
-        />
-        <Divider />
-        <NumberInput
-          label="Admin / manager TTL"
-          value={form.trustedDeviceAdminDays}
-          min={1} max={365}
-          suffix="days"
-          onChange={v => patch('trustedDeviceAdminDays', v)}
-          disabled={busy || !form.trustedDevicesEnabled}
-        />
-        <Divider />
-        <NumberInput
-          label="Superadmin TTL"
-          value={form.trustedDeviceSuperAdminDays}
-          min={1} max={365}
-          suffix="days"
-          onChange={v => patch('trustedDeviceSuperAdminDays', v)}
-          disabled={busy || !form.trustedDevicesEnabled}
-        />
+    <div class="swz-form" style={{ maxWidth: '760px' }}>
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-laptop-mobile" /> Trusted Devices</h3>
+        <ToggleRow label="Enable trusted-device bypass" desc="Let users mark a device as trusted to skip 2FA for a limited time."
+          checked={form.trustedDevicesEnabled} onChange={v => patch('trustedDevicesEnabled', v)} disabled={busy} />
+        <NumberRow label="Employee / default TTL" value={form.trustedDeviceDefaultDays} min={1} max={365} suffix="days"
+          onChange={v => patch('trustedDeviceDefaultDays', v)} disabled={busy || !form.trustedDevicesEnabled} />
+        <NumberRow label="Admin / manager TTL" value={form.trustedDeviceAdminDays} min={1} max={365} suffix="days"
+          onChange={v => patch('trustedDeviceAdminDays', v)} disabled={busy || !form.trustedDevicesEnabled} />
+        <NumberRow label="Superadmin TTL" value={form.trustedDeviceSuperAdminDays} min={1} max={365} suffix="days"
+          onChange={v => patch('trustedDeviceSuperAdminDays', v)} disabled={busy || !form.trustedDevicesEnabled} />
       </div>
 
-      {/* ── MFA requirements ─────────────────────────────────────────────── */}
-      <div class="stg-card">
-        <div class="stg-card-label">
-          <i class="fas fa-shield-halved" />
-          <span>MFA Requirements</span>
-        </div>
-
-        <Toggle
-          label="Require MFA for super admin role"
-          checked={form.requireMfaForSuperAdmin}
-          onChange={v => patch('requireMfaForSuperAdmin', v)}
-          disabled={busy}
-        />
-        <Divider />
-        <Toggle
-          label="Require MFA for admin role"
-          checked={form.requireMfaForAdmin}
-          onChange={v => patch('requireMfaForAdmin', v)}
-          disabled={busy}
-        />
-        <Divider />
-        <Toggle
-          label="Require MFA for manager role"
-          checked={form.requireMfaForManager}
-          onChange={v => patch('requireMfaForManager', v)}
-          disabled={busy}
-        />
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-shield-halved" /> MFA Requirements</h3>
+        <ToggleRow label="Require MFA for super admin role" checked={form.requireMfaForSuperAdmin} onChange={v => patch('requireMfaForSuperAdmin', v)} disabled={busy} />
+        <ToggleRow label="Require MFA for admin role" checked={form.requireMfaForAdmin} onChange={v => patch('requireMfaForAdmin', v)} disabled={busy} />
+        <ToggleRow label="Require MFA for manager role" checked={form.requireMfaForManager} onChange={v => patch('requireMfaForManager', v)} disabled={busy} />
       </div>
 
-      {/* ── Passkey settings ─────────────────────────────────────────────── */}
-      <div class="stg-card">
-        <div class="stg-card-label">
-          <i class="fas fa-fingerprint" />
-          <span>Passkey Policy</span>
-        </div>
-
-        <Toggle
-          label="Allow passwordless passkey login"
-          checked={form.allowPasswordlessPasskey}
-          onChange={v => patch('allowPasswordlessPasskey', v)}
-          disabled={busy}
-        />
-        <Divider />
-        <Toggle
-          label="Allow passkey as second factor"
-          checked={form.allowPasskeyAsSecondFactor}
-          onChange={v => patch('allowPasskeyAsSecondFactor', v)}
-          disabled={busy}
-        />
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-fingerprint" /> Passkey Policy</h3>
+        <ToggleRow label="Allow passwordless passkey login" checked={form.allowPasswordlessPasskey} onChange={v => patch('allowPasswordlessPasskey', v)} disabled={busy} />
+        <ToggleRow label="Allow passkey as second factor" checked={form.allowPasskeyAsSecondFactor} onChange={v => patch('allowPasskeyAsSecondFactor', v)} disabled={busy} />
       </div>
 
-      {/* ── Step-up settings ─────────────────────────────────────────────── */}
-      <div class="stg-card">
-        <div class="stg-card-label">
-          <i class="fas fa-user-shield" />
-          <span>Step-up Authentication</span>
-        </div>
-
-        <NumberInput
-          label="Step-up verification validity window"
-          value={form.stepUpMaxAgeMinutes}
-          min={1} max={60}
-          suffix="minutes"
-          onChange={v => patch('stepUpMaxAgeMinutes', v)}
-          disabled={busy}
-        />
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-          How long a fresh MFA verification remains valid for sensitive actions (1–60 minutes).
-        </div>
+      <div class="swz-card">
+        <h3 class="swz-card-title"><i class="fas fa-user-shield" /> Step-up Authentication</h3>
+        <NumberRow label="Step-up verification validity window"
+          desc="How long a fresh MFA verification stays valid for sensitive actions (1–60 minutes)."
+          value={form.stepUpMaxAgeMinutes} min={1} max={60} suffix="minutes"
+          onChange={v => patch('stepUpMaxAgeMinutes', v)} disabled={busy} />
       </div>
 
-      {/* ── Save bar ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button
-          type="button"
-          class="stg-btn-primary"
-          onClick={() => void handleSave()}
-          disabled={busy || !dirty}
-          style={{
-            opacity: busy || !dirty ? 0.55 : 1,
-            cursor:  busy || !dirty ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {busy
-            ? <><i class="fas fa-spinner fa-spin" style={{ marginRight: 6 }} />Saving…</>
-            : <><i class="fas fa-floppy-disk" style={{ marginRight: 6 }} />Save policy</>
-          }
+      <div class="swz-savebar">
+        <button type="button" class="action-btn save" onClick={() => void handleSave()} disabled={busy || !dirty}>
+          {busy ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-floppy-disk" /> Save policy</>}
         </button>
-
-        {!dirty && savedAt && (
-          <span style={{ fontSize: '12px', color: '#16a34a' }}>
-            <i class="fas fa-circle-check" style={{ marginRight: 5 }} />
-            Saved {savedAt.toLocaleTimeString()}
-          </span>
-        )}
-
-        {dirty && (
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Unsaved changes
-          </span>
-        )}
+        {!dirty && savedAt && <span class="swz-saved"><i class="fas fa-circle-check" /> Saved {savedAt.toLocaleTimeString()}</span>}
+        {dirty && <span class="swz-dirty">Unsaved changes</span>}
       </div>
 
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '4px 0 8px' }}>
-        <i class="fas fa-circle-info" style={{ marginRight: 5 }} />
+      <div class="swz-policy-note">
+        <i class="fas fa-circle-info" />
         Saving requires a fresh step-up verification. Changes take effect within 30 seconds across all running instances.
       </div>
     </div>

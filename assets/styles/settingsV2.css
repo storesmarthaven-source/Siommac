@@ -169,6 +169,21 @@
 .swz .swz-logo-file{font-size:11px;color:#687386;margin:8px 0 0;}
 .swz .swz-logo-hint{font-size:11px;color:#7a8597;line-height:1.5;margin:8px 0 0;}
 
+/* ── Policy rows (Security Policy + other form-style console tools) ── */
+.swz .swz-prow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--section-border);}
+.swz .swz-prow:last-child{border-bottom:none;}
+.swz .swz-prow-main{min-width:0;}
+.swz .swz-prow-label{font-size:13px;font-weight:600;color:#111827;}
+.swz .swz-prow-desc{font-size:11.5px;color:#7a8597;margin-top:2px;line-height:1.4;}
+.swz .swz-prow-ctrl{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.swz .swz-prow-ctrl .input-number{width:92px;height:34px;text-align:right;}
+.swz .swz-prow-suffix{font-size:12px;color:#687386;}
+.swz .swz-policy-note{font-size:11.5px;color:#7a8597;line-height:1.5;display:flex;gap:7px;align-items:flex-start;}
+.swz .swz-policy-note i{color:#0b408f;margin-top:2px;}
+.swz .swz-savebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.swz .swz-saved{font-size:12px;color:#13783a;display:inline-flex;align-items:center;gap:5px;}
+.swz .swz-dirty{font-size:12px;color:#a96700;}
+
 /* ── Audit drawer (scoped, portaled to body) ── */
 .swz-backdrop{position:fixed;inset:0;background:rgba(10,20,35,.26);z-index:1200;}
 .swz-drawer{position:fixed;right:0;top:0;width:440px;max-width:92vw;height:100vh;background:#fff;border-left:1px solid #dbe4f0;z-index:1210;display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;box-shadow:-8px 0 30px rgba(10,20,35,.12);}
