@@ -52,11 +52,7 @@ export {
 export { Spinner, type SpinnerProps } from './components/Spinner';
 export { EmptyState, type EmptyStateProps, type EmptyTone } from './components/EmptyState';
 
-// ── Widget board (resizable dashboard, gridstack) ──
-export { WidgetBoard, type WidgetBoardProps } from './components/WidgetBoard';
-export { WidgetBoardZone, type WidgetBoardZoneProps } from './components/WidgetBoardZone';
-export { WidgetPicker, type WidgetPickerProps } from './components/WidgetPicker';
-export { defaultBoard, type WidgetDef, type WidgetRegistry } from './widgets/registry';
+// ── Widget library (v2: instance/zone board + preview-on-board) lives under '@ui/widgets' ──
 
 // ── Data ──
 export { Tabs, type TabDef } from './components/Tabs';

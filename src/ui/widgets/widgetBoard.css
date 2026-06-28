@@ -1,0 +1,168 @@
+/* src/ui/widgets/widgetBoard.css — chrome for the instance/zone widget board (.wbi-*).
+   Self-contained tokens (falls back to CDS vars if present). Scoped so it can't bleed
+   into the legacy board or page content. */
+.wbi-board {
+  --wbi-surface: var(--cds-surface, #ffffff);
+  --wbi-border: var(--cds-border, #e4e7ec);
+  --wbi-ink: var(--cds-text, #1f2a44);
+  --wbi-muted: var(--cds-text-muted, #667085);
+  --wbi-accent: var(--cds-accent, #f97316);
+  --wbi-blue: var(--cds-blue, #1f3b6d);
+  --wbi-radius: 12px;
+  --wbi-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Customize toolbar (top-right of the board) — v1 ArrangeControls styling.
+      NOTE: lives OUTSIDE .wbi-board, so it uses GLOBAL tokens, not the --wbi-* vars. ── */
+.wbi-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin: 0 0 12px; flex-wrap: nowrap; }
+.wbi-tb-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border: 1px solid var(--cds-border, #e4e7ec); border-radius: 8px;
+  background: var(--cds-surface, #fff); color: var(--siomac-navy, #1f3b6d);
+  font-size: .72rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.wbi-tb-btn:hover { background: #f6f8fb; }
+.wbi-tb-btn.solid { color: #fff; background: var(--siomac-navy, #1f3b6d); border-color: var(--siomac-navy, #1f3b6d); }
+.wbi-tb-btn i { font-size: .72rem; }
+
+/* expanded controls slide out right→left when customizing */
+.wbi-tb-slide {
+  display: inline-flex; align-items: center; gap: 6px;
+  overflow: hidden;
+  max-width: 0; opacity: 0; transform: translateX(18px);
+  transition: max-width .3s ease, opacity .22s ease, transform .3s ease;
+  pointer-events: none;
+}
+.wbi-tb-slide.open { max-width: 680px; opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+.wbi-zone-wrap { position: relative; }
+.wbi-zone.grid-stack { background: transparent; }
+
+/* gridstack content cell — let the frame own the visuals */
+.wbi-zone .grid-stack-item-content {
+  inset: 0;
+  overflow: visible;
+  background: transparent;
+  border: none;
+}
+
+/* ── widget frame ─────────────────────────────────────────────────────────── */
+.wbi-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--wbi-surface);
+  border: 1px solid var(--wbi-border);
+  border-radius: var(--wbi-radius);
+  box-shadow: var(--wbi-shadow);
+  overflow: hidden;
+}
+.wbi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--wbi-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wbi-ink);
+  min-height: 38px;
+}
+.wbi-title { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.wbi-title > :not(.wbi-grip) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wbi-grip { color: var(--wbi-muted); font-size: 12px; opacity: 0; transition: opacity .12s ease; }
+.wbi-drag { cursor: grab; }
+.wbi-drag:active { cursor: grabbing; }
+.wbi-frame:hover .wbi-grip { opacity: .7; }
+.wbi-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 12px; }
+
+.wbi-remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--wbi-muted);
+  cursor: pointer;
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.wbi-remove:hover { background: #fef2f2; color: #dc2626; }
+
+/* ── preview-on-board (ephemeral, dashed) ─────────────────────────────────── */
+.wbi-frame--preview {
+  border: 1.5px dashed var(--wbi-accent);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, .08);
+  background: linear-gradient(0deg, rgba(249, 115, 22, .03), rgba(249, 115, 22, .03)), var(--wbi-surface);
+}
+.wbi-frame--preview .wbi-head { border-bottom-color: rgba(249, 115, 22, .35); }
+.wbi-preview-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--wbi-accent);
+}
+.wbi-preview-actions { display: inline-flex; align-items: center; gap: 6px; }
+.wbi-act {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--wbi-accent);
+  background: var(--wbi-accent); color: #fff;
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 7px;
+}
+.wbi-act:hover { filter: brightness(.96); }
+.wbi-act.muted { background: transparent; color: var(--wbi-muted); border-color: var(--wbi-border); }
+.wbi-act.muted:hover { background: #f9fafb; color: var(--wbi-ink); }
+
+/* ── bare chrome (widget renders its own card; tools float) ────────────────── */
+.wbi-bare { position: relative; height: 100%; }
+.wbi-bare-body { height: 100%; }
+/* the widget's own card should fill the cell */
+.wbi-bare-body > * { height: 100%; }
+.wbi-bare-tools {
+  position: absolute;
+  top: 6px; right: 6px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--wbi-border);
+  box-shadow: var(--wbi-shadow);
+  cursor: grab;
+}
+.wbi-bare-tools:active { cursor: grabbing; }
+.wbi-bare-tools .wbi-grip { opacity: .7; }
+.wbi-bare--preview { outline: 1.5px dashed var(--wbi-accent); outline-offset: 2px; border-radius: var(--wbi-radius); }
+.wbi-bare--preview .wbi-bare-tools { border-color: rgba(249, 115, 22, .45); }
+
+/* a preview is draggable from its whole frame */
+.wbi-frame--preview.wbi-drag, .wbi-bare--preview.wbi-drag { cursor: grab; }
+.wbi-frame--preview.wbi-drag:active, .wbi-bare--preview.wbi-drag:active { cursor: grabbing; }
+
+/* Hide gridstack's default resize-handle glyphs (the diagonal double-arrows it draws on each
+   corner). Resize still works on every edge/corner — the cursor changes over each handle zone;
+   we just don't show the arrow icons. */
+.wbi-zone .grid-stack-item > .ui-resizable-handle { background-image: none !important; }
+
+/* ── host-page preview banner (preview-on-board mode) ─────────────────────── */
+.wmock-preview-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--cds-accent, #f97316);
+  border-radius: 10px;
+  background: rgba(249, 115, 22, .06);
+  color: var(--cds-text, #1f2a44);
+  font-size: 13px;
+}
+.wmock-preview-banner i { color: var(--cds-accent, #f97316); margin-right: 6px; }
+.wmock-preview-banner strong { font-weight: 700; }

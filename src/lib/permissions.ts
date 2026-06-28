@@ -332,6 +332,11 @@ export const PERMISSION_KEYS = [
   'workflow.handoffs.cancel',
   'workflow.audit.view',
   'workflow.audit.export',
+  // ── UI / dashboard boards + installable widgets ──
+  'ui.layout.manage',
+  'ui.layout.default.manage',
+  'ui.widgets.packages.view',
+  'ui.widgets.packages.manage',
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -381,6 +386,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.unpin_own',
     'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
   ]),
 
   manager: new Set<PermissionKey>([
@@ -427,6 +433,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.add', 'communications.participants.remove',
     'communications.participants.change_role',
     'auth.security.view',
+    'ui.layout.manage', 'ui.widgets.packages.view',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -546,6 +553,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -679,6 +687,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
   ]),
 };
 

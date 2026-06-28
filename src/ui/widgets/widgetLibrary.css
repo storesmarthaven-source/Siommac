@@ -1,0 +1,205 @@
+/* src/ui/widgets/widgetLibrary.css — scoped styles for the Widget Library modal.
+   Ported from the prototype; namespaced .wlib-* with a self-contained token block so
+   it can't leak into the rest of the app. */
+
+.wlib-shell {
+  --wlib-surface: #ffffff;
+  --wlib-surface-soft: #f7f9fd;
+  --wlib-surface-muted: #eef3fb;
+  --wlib-border: #dce5f1;
+  --wlib-border-soft: #e8eef7;
+  --wlib-text: #10203d;
+  --wlib-muted: #5c6f8e;
+  --wlib-subtle: #8492a8;
+  --wlib-primary: #0b63f6;
+  --wlib-primary-soft: #eef5ff;
+  --wlib-success: #12a66a;
+  --wlib-success-soft: #eaf9f1;
+  --wlib-warning: #f59e0b;
+  --wlib-warning-soft: #fff7e8;
+  --wlib-danger: #e5484d;
+  --wlib-danger-soft: #fff0f1;
+  --wlib-purple: #7c4dff;
+  --wlib-purple-soft: #f3efff;
+  --wlib-teal: #0f9f95;
+  --wlib-teal-soft: #eaf9f7;
+}
+
+.wlib-backdrop {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(16, 32, 61, .42);
+  display: grid; place-items: center; padding: 24px;
+}
+/* Configure dialog (@ui Modal) opened from the library must sit above the shell. */
+.wlib-over-top { z-index: 1300; }
+.wlib-shell {
+  width: min(1420px, 100%); max-height: calc(100vh - 48px); min-height: min(840px, calc(100vh - 48px));
+  background: var(--wlib-surface); border: 1px solid var(--wlib-border); border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(16, 32, 61, .22); overflow: hidden; display: flex; flex-direction: column;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--wlib-text);
+}
+
+.wlib-head { flex: 0 0 auto; min-height: 86px; padding: 18px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--wlib-border); }
+.wlib-head-icon { width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center; background: var(--wlib-primary-soft); color: var(--wlib-primary); flex: 0 0 auto; font-size: 20px; }
+.wlib-head-copy { min-width: 0; flex: 1; }
+.wlib-head-copy h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+.wlib-head-copy p { margin: 5px 0 0; color: var(--wlib-muted); font-size: 13px; }
+.wlib-close { width: 40px; height: 40px; border: 1px solid var(--wlib-border); border-radius: 10px; background: var(--wlib-surface); color: var(--wlib-muted); cursor: pointer; }
+
+.wlib-filters { flex: 0 0 auto; padding: 14px 24px; border-bottom: 1px solid var(--wlib-border); background: var(--wlib-surface-soft); display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(130px, .6fr)) auto; gap: 12px; align-items: center; }
+.wlib-control { height: 40px; border: 1px solid var(--wlib-border); background: var(--wlib-surface); border-radius: 10px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--wlib-muted); min-width: 0; }
+.wlib-control input, .wlib-control select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--wlib-text); font: inherit; }
+
+/* the preview-control cluster (Live preview + Demo data) sits in the last filter cell */
+.wlib-toggles { display: inline-flex; align-items: center; gap: 8px; justify-self: end; }
+
+/* Live-preview toggle chip (ported from v4) — controls live vs static preview in the detail pane. */
+.wlib-toggle-chip { height: 40px; border: 1px solid var(--wlib-border); background: var(--wlib-surface); color: var(--wlib-muted); border-radius: 10px; display: inline-flex; align-items: center; gap: 9px; padding: 0 14px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.wlib-toggle-chip.on { border-color: #cfe0ff; background: var(--wlib-primary-soft); color: var(--wlib-primary); }
+.wlib-toggle-switch { width: 38px; height: 22px; border-radius: 999px; background: #cbd5e1; position: relative; flex: 0 0 auto; transition: background .15s ease; }
+.wlib-toggle-switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(16,32,61,.25); transition: left .15s ease; }
+.wlib-toggle-chip.on .wlib-toggle-switch { background: var(--wlib-primary); }
+.wlib-toggle-chip.on .wlib-toggle-switch::after { left: 19px; }
+
+/* Long values (data source, etc.) must wrap — never force a horizontal scroll in the detail pane. */
+.wlib-detail .hse-idrawer-cell { min-width: 0; }
+.wlib-detail .hse-idrawer-cell strong { overflow-wrap: anywhere; }
+
+.wlib-body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 420px; overflow: hidden; }
+.wlib-catalog { min-width: 0; overflow: auto; padding: 22px; background: var(--wlib-surface); }
+.wlib-detail { min-width: 0; overflow: auto; border-left: 1px solid var(--wlib-border); background: var(--wlib-surface); }
+
+.wlib-section { margin-bottom: 28px; }
+.wlib-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.wlib-section-head h3 { margin: 0; font-size: 15px; font-weight: 500; }
+.wlib-section-head p { margin: 3px 0 0; color: var(--wlib-muted); font-size: 12px; }
+.wlib-section-count { color: var(--wlib-subtle); font-size: 12px; font-weight: 500; }
+
+.wlib-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: dense; gap: 14px; }
+.wlib-tile { grid-column: span 4; min-width: 0; border: 1px solid var(--wlib-border); border-radius: 16px; background: var(--wlib-surface); box-shadow: 0 1px 2px rgba(16,32,61,.04), 0 8px 24px rgba(16,32,61,.05); padding: 14px; display: flex; flex-direction: column; gap: 11px; cursor: pointer; position: relative; }
+.wlib-tile.size-compact { grid-column: span 3; }
+.wlib-tile.size-standard { grid-column: span 4; }
+.wlib-tile.size-wide { grid-column: span 6; }
+.wlib-tile.size-large { grid-column: span 6; }
+.wlib-tile.size-tall { grid-column: span 3; }
+.wlib-tile.size-hero { grid-column: span 8; }
+.wlib-tile.selected { border-color: #9fc2ff; box-shadow: 0 0 0 2px rgba(11,99,246,.10), 0 8px 24px rgba(16,32,61,.06); }
+.wlib-tile.locked { opacity: .7; cursor: not-allowed; background: linear-gradient(180deg, var(--wlib-surface), var(--wlib-surface-muted)); }
+.wlib-tile.added { filter: grayscale(1); opacity: .6; cursor: default; }
+.wlib-tile.added:hover { border-color: var(--wlib-border); box-shadow: 0 1px 2px rgba(16,32,61,.04), 0 8px 24px rgba(16,32,61,.05); }
+
+.wlib-tile-top { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: start; gap: 12px; }
+.wlib-tile-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--wlib-primary); background: var(--wlib-primary-soft); flex: 0 0 auto; }
+.wlib-tile-icon.success { color: var(--wlib-success); background: var(--wlib-success-soft); }
+.wlib-tile-icon.warning { color: var(--wlib-warning); background: var(--wlib-warning-soft); }
+.wlib-tile-icon.danger { color: var(--wlib-danger); background: var(--wlib-danger-soft); }
+.wlib-tile-icon.purple { color: var(--wlib-purple); background: var(--wlib-purple-soft); }
+.wlib-tile-icon.teal { color: var(--wlib-teal); background: var(--wlib-teal-soft); }
+.wlib-tile-title { min-width: 0; }
+.wlib-tile-title h3 { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+.wlib-tile-title p { margin: 3px 0 0; color: var(--wlib-muted); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+/* Preview sits DIRECTLY in the tile (no inner box) — the tile is the only card. */
+.wlib-tile-preview { min-height: 96px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+.wlib-tile-badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: auto; }
+
+.wlib-pill { min-height: 23px; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; border: 1px solid var(--wlib-border); color: var(--wlib-muted); background: var(--wlib-surface-soft); white-space: nowrap; }
+.wlib-pill.primary { color: var(--wlib-primary); background: var(--wlib-primary-soft); border-color: #cfe0ff; }
+.wlib-pill.success { color: var(--wlib-success); background: var(--wlib-success-soft); border-color: #ccefdc; }
+
+.wlib-detail-head { min-height: 72px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--wlib-border); }
+.wlib-detail-head h2 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+.wlib-detail-head p { margin: 3px 0 0; color: var(--wlib-muted); font-size: 12px; }
+.wlib-detail-body { padding: 18px 20px; display: grid; gap: 16px; }
+
+/* Live preview sits DIRECTLY (no inner box) — only the widget's own card shows. */
+.wlib-live { display: grid; gap: 10px; }
+.wlib-live-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wlib-live-top h4 { margin: 0; font-size: 13px; font-weight: 600; color: var(--wlib-muted); }
+
+/* Viewport-unit (HTML design) widgets preview via WidgetPreviewScaler: a board-like canvas rendered
+   then scaled to fit. The box keeps the card's aspect; the canvas is scaled with a JS-set transform. */
+.wlib-prev { position: relative; width: 100%; overflow: hidden; }
+.wlib-prev-canvas { position: absolute; top: 0; left: 0; transform-origin: top left; }
+.wlib-prev iframe { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
+
+.wlib-size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.wlib-size-option { border: 1px solid var(--wlib-border); border-radius: 10px; background: var(--wlib-surface); min-height: 58px; display: grid; place-items: center; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; }
+.wlib-size-option span { display: block; margin-top: 3px; color: var(--wlib-muted); font-size: 11px; font-weight: 400; }
+.wlib-size-option.active { border-color: #9fc2ff; background: var(--wlib-primary-soft); color: var(--wlib-primary); }
+.wlib-size-option.active span { color: var(--wlib-primary); }
+
+.wlib-deps { border: 1px solid #cfe0ff; background: var(--wlib-primary-soft); color: var(--wlib-muted); border-radius: 10px; padding: 12px; font-size: 12px; line-height: 1.45; }
+.wlib-deps strong { color: var(--wlib-text); display: block; margin-bottom: 4px; }
+
+.wlib-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wlib-actions .wlib-actions-wide { grid-column: 1 / -1; }
+
+/* ── native buttons (ported from the v4 prototype, NOT @ui Button) ─────────────── */
+.wlib-btn { height: 42px; padding: 0 16px; border: 1px solid var(--wlib-border); background: var(--wlib-surface); color: var(--wlib-text); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.wlib-btn:disabled { opacity: .5; cursor: not-allowed; }
+.wlib-btn-primary { background: var(--wlib-primary); color: #fff; border-color: var(--wlib-primary); }
+.wlib-btn-secondary { background: var(--wlib-primary-soft); border-color: #cfe0ff; color: var(--wlib-primary); }
+.wlib-btn-ghost { background: var(--wlib-surface); color: var(--wlib-muted); }
+
+/* split "Add widget ▾" — primary + package dropdown (Install / Manage).
+   Menu is a VERTICAL list of separate items, each on ONE line. Rendered position:fixed
+   (coords from the caret rect) so it escapes the detail pane's scroll/overflow clipping. */
+.wlib-split { position: relative; display: flex; }
+.wlib-split-main { flex: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.wlib-split-caret { width: 34px; padding: 0; border-left: 1px solid rgba(255, 255, 255, .35); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.wlib-split-scrim { position: fixed; inset: 0; z-index: 1399; background: transparent; }
+.wlib-split-menu { z-index: 1400; display: flex; flex-direction: column; gap: 2px; min-width: 240px; width: max-content;
+  background: var(--wlib-surface); border: 1px solid var(--wlib-border); border-radius: 11px; box-shadow: 0 14px 34px rgba(16, 32, 61, .22); padding: 6px; }
+.wlib-split-item { display: flex; align-items: flex-start; gap: 11px; width: 100%; padding: 10px 13px; border: 0;
+  background: transparent; border-radius: 8px; cursor: pointer; font: inherit; color: var(--wlib-text); text-align: left; }
+.wlib-split-item:hover { background: var(--wlib-surface-soft); }
+.wlib-split-item i { color: var(--wlib-primary); width: 16px; text-align: center; flex: none; margin-top: 2px; }
+.wlib-split-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wlib-split-text strong { font-size: 13px; font-weight: 600; color: var(--wlib-text); white-space: nowrap; }
+.wlib-split-text small { font-size: 11.5px; font-weight: 500; color: var(--wlib-muted); white-space: nowrap; }
+
+/* added-info popup (shown after a widget is added) */
+.wlib-added-backdrop { position: absolute; inset: 0; z-index: 40; background: rgba(16, 32, 61, .32); display: grid; place-items: center; padding: 24px; }
+.wlib-added-pop { width: min(440px, 100%); background: var(--wlib-surface); border: 1px solid var(--wlib-border); border-radius: 16px; box-shadow: 0 24px 60px rgba(16, 32, 61, .28); overflow: hidden; display: flex; flex-direction: column; }
+.wlib-added-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--wlib-border); font-size: 14px; font-weight: 600; color: var(--wlib-text); }
+.wlib-added-check { color: var(--wlib-success); font-size: 18px; }
+.wlib-added-title { flex: 1; }
+.wlib-added-body { padding: 16px; }
+.wlib-added-card { border: 1px solid var(--wlib-border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.wlib-added-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--wlib-border); }
+
+/* manage list (install/uninstall feedback now uses the app-wide cpop popup) */
+.wlib-pkg-list { display: flex; flex-direction: column; gap: 8px; }
+.wlib-pkg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--wlib-border); border-radius: 10px; padding: 10px 12px; }
+.wlib-pkg-meta { display: flex; flex-direction: column; min-width: 0; }
+.wlib-pkg-meta strong { font-size: 13px; color: var(--wlib-text); }
+.wlib-pkg-meta small { font-size: 11px; color: var(--wlib-muted); }
+
+/* header actions (Board preview + Close) */
+.wlib-head-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+
+/* info notice (the dense-grid explainer) */
+.wlib-notice { border: 1px solid #cfe0ff; background: var(--wlib-primary-soft); color: var(--wlib-muted); border-radius: 10px; padding: 12px; display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: 12px; line-height: 1.45; }
+.wlib-notice i { color: var(--wlib-primary); margin-top: 1px; }
+
+.wlib-foot { flex: 0 0 auto; min-height: 62px; border-top: 1px solid var(--wlib-border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.wlib-foot-left { color: var(--wlib-muted); font-size: 12px; display: flex; align-items: center; gap: 9px; }
+.wlib-foot-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wlib-success); flex: 0 0 auto; }
+.wlib-foot-right { display: flex; gap: 10px; }
+
+.wlib-section-head h3, .wlib-detail-head h2, .wlib-head-copy h2 { color: var(--wlib-text); }
+
+@media (max-width: 1180px) {
+  .wlib-filters { grid-template-columns: 1fr 1fr; }
+  .wlib-body { grid-template-columns: 1fr; overflow: auto; }
+  .wlib-detail { border-left: 0; border-top: 1px solid var(--wlib-border); }
+  .wlib-tile, .wlib-tile.size-compact, .wlib-tile.size-standard, .wlib-tile.size-wide, .wlib-tile.size-large, .wlib-tile.size-tall, .wlib-tile.size-hero { grid-column: span 6; }
+}
+@media (max-width: 720px) {
+  .wlib-backdrop { padding: 0; }
+  .wlib-shell { max-height: 100vh; min-height: 100vh; border-radius: 0; }
+  .wlib-filters { grid-template-columns: 1fr; }
+  .wlib-grid { grid-template-columns: 1fr; }
+  .wlib-tile, .wlib-tile.size-compact, .wlib-tile.size-standard, .wlib-tile.size-wide, .wlib-tile.size-large, .wlib-tile.size-tall, .wlib-tile.size-hero { grid-column: 1; }
+  .wlib-size-grid, .wlib-actions { grid-template-columns: 1fr; }
+}

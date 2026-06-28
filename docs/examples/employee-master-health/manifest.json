@@ -1,0 +1,186 @@
+{
+  "name": "Employee Master Health",
+  "version": "3.0.0",
+  "widgets": [
+    {
+      "id": "hr.employeeMaster.recordHealth",
+      "title": "Employee Record Health",
+      "description": "Data-quality score",
+      "icon": "fa-heart-pulse",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "record health",
+        "data quality"
+      ],
+      "size": "tall",
+      "sizes": [
+        "standard",
+        "wide",
+        "tall",
+        "large"
+      ],
+      "kind": "html",
+      "html": "recordHealth.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.changeTrend",
+      "title": "Data Change Trend",
+      "description": "Last 7 days of Employee Master changes",
+      "icon": "fa-chart-line",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "change trend",
+        "line chart"
+      ],
+      "size": "wide",
+      "sizes": [
+        "standard",
+        "wide",
+        "large"
+      ],
+      "kind": "html",
+      "html": "changeTrend.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.recordRisk",
+      "title": "Record Risk Monitor",
+      "description": "Employee record risk score",
+      "icon": "fa-triangle-exclamation",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "risk",
+        "gauge"
+      ],
+      "size": "tall",
+      "sizes": [
+        "standard",
+        "wide",
+        "tall",
+        "large"
+      ],
+      "kind": "html",
+      "html": "recordRisk.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.statusCoverage",
+      "title": "Workforce Coverage",
+      "description": "Current workforce coverage",
+      "icon": "fa-id-card",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "status coverage",
+        "workforce"
+      ],
+      "size": "tall",
+      "sizes": [
+        "standard",
+        "wide",
+        "tall",
+        "large"
+      ],
+      "kind": "html",
+      "html": "statusCoverage.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.profileCompleteness",
+      "title": "Profile Completeness",
+      "description": "Completeness of employee records",
+      "icon": "fa-clipboard-check",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "profile completeness"
+      ],
+      "size": "tall",
+      "sizes": [
+        "standard",
+        "wide",
+        "tall",
+        "large"
+      ],
+      "kind": "html",
+      "html": "profileCompleteness.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.adminWorkload",
+      "title": "Master Data Workload",
+      "description": "HR master data workload",
+      "icon": "fa-bolt",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "workload",
+        "pending changes"
+      ],
+      "size": "tall",
+      "sizes": [
+        "standard",
+        "wide",
+        "tall",
+        "large"
+      ],
+      "kind": "html",
+      "html": "adminWorkload.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.lifecycleActivity",
+      "title": "Lifecycle Activity",
+      "description": "Employee lifecycle changes today",
+      "icon": "fa-rotate",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "lifecycle",
+        "changes"
+      ],
+      "size": "wide",
+      "sizes": [
+        "standard",
+        "wide",
+        "large"
+      ],
+      "kind": "html",
+      "html": "lifecycleActivity.html",
+      "css": "styles.css"
+    },
+    {
+      "id": "hr.employeeMaster.weeklyActivity",
+      "title": "Weekly Activity",
+      "description": "Employee Master updates this week",
+      "icon": "fa-chart-column",
+      "category": "Employee Master",
+      "tags": [
+        "hr",
+        "employee master",
+        "weekly activity",
+        "bar chart"
+      ],
+      "size": "wide",
+      "sizes": [
+        "standard",
+        "wide",
+        "large"
+      ],
+      "kind": "html",
+      "html": "weeklyActivity.html",
+      "css": "styles.css"
+    }
+  ]
+}

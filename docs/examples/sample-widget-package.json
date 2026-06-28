@@ -1,0 +1,48 @@
+{
+  "name": "Sample Pack",
+  "version": "1.0.0",
+  "widgets": [
+    {
+      "id": "pack.revenue",
+      "title": "Revenue",
+      "description": "Quarterly revenue (sample, no code).",
+      "icon": "fa-sack-dollar",
+      "category": "Finance",
+      "tags": ["finance", "revenue", "sample"],
+      "defaultSize": "standard",
+      "allowedSizes": ["compact", "standard"],
+      "view": { "kind": "metric", "metric": "$1.24M", "supporting": "This quarter", "footer": "+8% vs last quarter" }
+    },
+    {
+      "id": "pack.pipeline",
+      "title": "Pipeline by Stage",
+      "description": "Open pipeline by stage (sample, no code).",
+      "icon": "fa-bars-progress",
+      "category": "Finance",
+      "tags": ["finance", "pipeline", "sample"],
+      "defaultSize": "standard",
+      "allowedSizes": ["standard", "wide"],
+      "view": { "kind": "bars", "rows": [
+        { "label": "Lead", "count": 24 },
+        { "label": "Qualified", "count": 15 },
+        { "label": "Proposal", "count": 8 },
+        { "label": "Won", "count": 5 }
+      ] }
+    },
+    {
+      "id": "pack.tasks",
+      "title": "Open Tasks",
+      "description": "Open tasks (sample, no code).",
+      "icon": "fa-list-check",
+      "category": "Operations",
+      "tags": ["ops", "tasks", "sample"],
+      "defaultSize": "tall",
+      "allowedSizes": ["tall", "large"],
+      "view": { "kind": "list", "rows": [
+        { "primary": "Review Q3 budget", "secondary": "Finance", "right": "Due Fri", "tone": "warn" },
+        { "primary": "Approve purchase orders", "secondary": "Operations", "right": "OK", "tone": "ok" },
+        { "primary": "Vendor compliance audit", "secondary": "Compliance", "right": "Late", "tone": "danger" }
+      ] }
+    }
+  ]
+}

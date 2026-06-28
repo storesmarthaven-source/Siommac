@@ -15,7 +15,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { sb } from '../lib/db';
-import { requireUser, requireRole, log_ } from '../lib/auth';
+import { requireUser, requireRole, requirePermission, log_ } from '../lib/auth';
 import { emitAppEvent } from '../lib/appEvents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -41,28 +41,6 @@ function cleanTokens(v: unknown): Record<string, string> | null {
 function cleanOrder(v: unknown): string[] | null {
   if (!Array.isArray(v)) return null;
   return v.filter(x => typeof x === 'string').map(x => (x as string).slice(0, 80)).slice(0, 24);
-}
-
-// Widget-board geometry: [{ id, x, y, w, h }] — bounds-checked + capped. Stored in
-// the SAME ui_layout.card_order jsonb column as the string-order pages (they coexist:
-// a board page's value is an object array instead of a string array).
-function cleanBoard(v: unknown): Array<{ id: string; x: number; y: number; w: number; h: number }> | null {
-  if (!Array.isArray(v)) return null;
-  const out: Array<{ id: string; x: number; y: number; w: number; h: number }> = [];
-  for (const o of v) {
-    if (!o || typeof o !== 'object') continue;
-    const r = o as Record<string, unknown>;
-    if (typeof r.id !== 'string') continue;
-    out.push({
-      id: r.id.slice(0, 80),
-      x: Math.max(0, Math.min(11, Number(r.x) | 0)),
-      y: Math.max(0, Number(r.y) | 0),
-      w: Math.max(1, Math.min(12, Number(r.w) | 0)),
-      h: Math.max(1, Math.min(40, Number(r.h) | 0)),
-    });
-    if (out.length >= 60) break;
-  }
-  return out;
 }
 
 // ── Theme ───────────────────────────────────────────────────────────────────────
@@ -149,36 +127,108 @@ router.post('/layout/resetOverride', async c => {
   return c.json({ success: true });
 });
 
-// ── Widget board geometry (gridstack) — see docs/WIDGET_BOARD_SPEC.md ─────────────
-router.post('/layout/saveBoardDefault', async c => {
-  const actor = await requireRole(c, ['admin']);
-  const a = getArgs(c);
-  const pageKey = String(a.pageKey ?? '');
-  const board = cleanBoard(a.board);
-  if (!pageKey || board === null) return c.json({ success: false, message: 'pageKey and board required' }, 400 as 200);
+// ── Widget-library board layout (instance/zone model) — src/ui/widgets ────────────
+// Stored in ui_layout.layout (jsonb), distinct from the legacy card_order geometry.
+const clampInt = (v: unknown, lo: number, hi: number): number => Math.max(lo, Math.min(hi, Math.trunc(Number(v) || 0)));
+// Cap every stored string so an authenticated user can't persist oversized layout JSON.
+const capStr = (v: unknown, max: number): string => (typeof v === 'string' ? v.slice(0, max) : '');
+// Per-widget config is opaque (widget-defined) but must be bounded — drop it if it serializes too large.
+function safeConfig(v: unknown): Record<string, unknown> {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return {};
+  try { return JSON.stringify(v).length <= 4_000 ? (v as Record<string, unknown>) : {}; }
+  catch { return {}; }
+}
 
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
-  const err = existing
-    ? (await sb.from('ui_layout').update({ card_order: board, updated_by: actor.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
-    : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: null, card_order: board, updated_by: actor.id })).error;
-  if (err) return c.json({ success: false, message: err.message }, 500 as 200);
+function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<string, unknown[]> } | null {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
+  const obj = v as Record<string, unknown>;
+  const zones = obj.zones;
+  if (typeof zones !== 'object' || zones === null || Array.isArray(zones)) return null;
+  const pageKey = capStr(obj.pageKey, 120);
+  const outZones: Record<string, unknown[]> = {};
+  let total = 0, zoneCount = 0;
+  for (const [zoneId, arr] of Object.entries(zones as Record<string, unknown>)) {
+    if (!Array.isArray(arr) || ++zoneCount > 20) break;       // cap zones
+    const zId = capStr(zoneId, 80);
+    const items: unknown[] = [];
+    for (const it of arr) {
+      if (typeof it !== 'object' || it === null) continue;
+      const w = it as Record<string, unknown>;
+      const instanceId = capStr(w.instanceId, 80), widgetId = capStr(w.widgetId, 120);
+      if (!instanceId || !widgetId) continue;                 // both required, non-empty after cap
+      items.push({
+        instanceId, widgetId,
+        pageKey: capStr(w.pageKey, 120) || pageKey,
+        zoneId: capStr(w.zoneId, 80) || zId,
+        x: clampInt(w.x, 0, 11), y: clampInt(w.y, 0, 9999), w: clampInt(w.w, 1, 12), h: clampInt(w.h, 1, 40),
+        sizeKey: capStr(w.sizeKey, 24) || 'standard',
+        config: safeConfig(w.config),
+        ...(typeof w.titleOverride === 'string' ? { titleOverride: capStr(w.titleOverride, 200) } : {}),
+      });
+      if (++total > 300) break;                               // cap total widgets
+    }
+    outZones[zId] = items;
+    if (total > 300) break;
+  }
+  return { pageKey: pageKey || undefined, zones: outZones };
+}
 
-  await log_(actor, 'update', 'ui_layout_board_default', pageKey, `${board.length} widgets`);
-  return c.json({ success: true });
-});
-
-router.post('/layout/saveBoardOverride', async c => {
+router.post('/layout/getInstanceLayout', async c => {
   const user = await requireUser(c);
   const a = getArgs(c);
   const pageKey = String(a.pageKey ?? '');
-  const board = cleanBoard(a.board);
-  if (!pageKey || board === null) return c.json({ success: false, message: 'pageKey and board required' }, 400 as 200);
+  if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
+  const [{ data: override, error: e1 }, { data: def, error: e2 }] = await Promise.all([
+    sb.from('ui_layout').select('layout').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle<{ layout: unknown }>(),
+    sb.from('ui_layout').select('layout').eq('page_key', pageKey).is('user_id', null).maybeSingle<{ layout: unknown }>(),
+  ]);
+  // Surface real DB errors (e.g. layout column missing = migration not applied) — never
+  // mask them as an empty board.
+  if (e1 || e2) return c.json({ success: false, message: (e1 ?? e2)!.message }, 500 as 200);
+  return c.json({ success: true, data: { layout: override?.layout ?? def?.layout ?? null } });
+});
 
+router.post('/layout/saveInstanceLayout', async c => {
+  const user = await requirePermission(c, 'ui.layout.manage');
+  const a = getArgs(c);
+  const pageKey = String(a.pageKey ?? '');
+  const layout = cleanInstanceLayout(a.layout);
+  if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
   const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
   const err = existing
-    ? (await sb.from('ui_layout').update({ card_order: board, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
-    : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: user.id, card_order: board, updated_by: user.id })).error;
+    ? (await sb.from('ui_layout').update({ layout, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
+    : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: user.id, layout, updated_by: user.id })).error;
   if (err) return c.json({ success: false, message: err.message }, 500 as 200);
+  return c.json({ success: true });
+});
+
+// Admin-only: save the current layout as the org-wide default (user_id = null).
+router.post('/layout/saveInstanceLayoutDefault', async c => {
+  const actor = await requirePermission(c, 'ui.layout.default.manage');
+  const a = getArgs(c);
+  const pageKey = String(a.pageKey ?? '');
+  const layout = cleanInstanceLayout(a.layout);
+  if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
+  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
+  const err = existing
+    ? (await sb.from('ui_layout').update({ layout, updated_by: actor.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
+    : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: null, layout, updated_by: actor.id })).error;
+  if (err) return c.json({ success: false, message: err.message }, 500 as 200);
+  const count = Object.values(layout.zones).reduce((n, z) => n + z.length, 0);
+  await log_(actor, 'update', 'ui_layout_instance_default', pageKey, `${count} widgets`);
+  return c.json({ success: true });
+});
+
+// Clear ONLY this user's layout override (revert to org/page default). Keeps card_order.
+router.post('/layout/resetInstanceLayout', async c => {
+  const user = await requirePermission(c, 'ui.layout.manage');
+  const pageKey = String(getArgs(c).pageKey ?? '');
+  if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
+  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  if (existing) {
+    const { error } = await sb.from('ui_layout').update({ layout: null, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  }
   return c.json({ success: true });
 });
 

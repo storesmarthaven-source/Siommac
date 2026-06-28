@@ -1,0 +1,191 @@
+/**
+ * src/ui/widgets/types.ts — the SIOMAC widget-library contract (v2).
+ *
+ * Adapted from the spec to our stack: Preact (`render`/`renderPreview` return VNode),
+ * single-tenant (no org_id), and the REUSE-HOOKS data model — a widget's render
+ * component fetches its own data via the module's existing TanStack hooks, so there
+ * is NO generic data resolver and WidgetRenderProps carries no `data`. `dataSource`
+ * stays as descriptive metadata (label/refresh/permissions/deps) for the detail panel
+ * + permission gating. `renderPreview` is a lightweight, representative catalog thumbnail.
+ *
+ * Four core concepts:
+ *   WidgetDef            — the reusable definition in the registry (code-based)
+ *   WidgetInstance       — a saved widget placed on a board (persisted)
+ *   PreviewWidgetInstance — a temporary widget on the board, NOT saved
+ *   BoardLayout          — the persisted layout (zones of WidgetInstance) in ui_layout jsonb
+ */
+
+import type { VNode } from 'preact';
+
+export type ModuleKey = 'hr' | 'hse' | 'finance' | 'operations' | 'enterprise';
+
+export type WidgetSizeKey = 'compact' | 'standard' | 'wide' | 'large' | 'tall' | 'hero';
+
+/** Board chrome around a widget. `standard` = framed header + bordered body;
+ *  `none` = bare (the widget renders its own card, e.g. StatsCard/ChartCard, or a
+ *  full interactive surface like the employee register) — edit/preview tools float. */
+export type WidgetChrome = 'standard' | 'none';
+
+export type WidgetPreviewVariant =
+  | 'metric' | 'trend' | 'donut' | 'task-board' | 'timeline' | 'people'
+  | 'table' | 'checklist' | 'risk' | 'flow-map' | 'matrix' | 'status-stack';
+
+export interface WidgetGridSize { w: number; h: number }
+
+export interface WidgetSizeDef {
+  key: WidgetSizeKey;
+  label: string;
+  grid: WidgetGridSize;
+  min?: WidgetGridSize;
+  max?: WidgetGridSize;
+  description?: string;
+}
+
+export interface WidgetConfigOption { label: string; value: string }
+
+export type WidgetConfigFieldType =
+  | 'text' | 'select' | 'multiSelect' | 'dateRange' | 'number' | 'boolean' | 'threshold' | 'statusFilter';
+
+export interface WidgetConfigField {
+  key: string;
+  label: string;
+  type: WidgetConfigFieldType;
+  defaultValue?: unknown;
+  required?: boolean;
+  options?: WidgetConfigOption[];
+  helpText?: string;
+}
+
+export interface WidgetDependencyDef {
+  key: string;
+  label: string;
+  required: boolean;
+  description?: string;
+}
+
+/** Descriptive metadata for the detail panel + permission gating — NOT a data resolver. */
+export interface WidgetDataSourceDef {
+  sourceKey: string;
+  label: string;
+  refreshIntervalMs?: number;
+  permissions: string[];
+  dependencies?: WidgetDependencyDef[];
+}
+
+export interface WidgetRenderProps<TConfig = Record<string, unknown>> {
+  widgetId: string;
+  instanceId: string;
+  pageKey: string;
+  zoneId: string;
+  sizeKey: WidgetSizeKey;
+  config: TConfig;
+  /** True when rendered as a board PREVIEW (unsaved) — render can lighten if desired. */
+  preview?: boolean;
+}
+
+export interface WidgetPreviewProps<TConfig = Record<string, unknown>> {
+  widgetId: string;
+  sizeKey: WidgetSizeKey;
+  config: TConfig;
+}
+
+export interface WidgetDef<TConfig = Record<string, unknown>> {
+  id: string;
+
+  module: ModuleKey;
+  area: string;
+
+  title: string;
+  description: string;
+  longDescription?: string;
+
+  icon: string;
+  category: string;
+  tags: string[];
+
+  previewVariant: WidgetPreviewVariant;
+
+  /** Board chrome (default 'standard'). Use 'none' when the widget renders its own card. */
+  chrome?: WidgetChrome;
+
+  supportedPages: string[];
+  supportedZones: string[];
+
+  defaultSize: WidgetSizeKey;
+  allowedSizes: WidgetSizeDef[];
+
+  /** Library-preview hint for widgets that size with viewport/relative units (HTML design widgets):
+   *  the thumbnail is rendered at a board-like canvas of this width/height ratio, then scaled down
+   *  to the preview box — so `vmin`/`clamp` text keeps real proportions instead of collapsing to its
+   *  min in a tiny box. Omit for fluid DOM widgets (StatsCard etc.), which preview fine at any size. */
+  previewAspect?: number;
+
+  defaultConfig: TConfig;
+  configSchema: WidgetConfigField[];
+
+  dataSource: WidgetDataSourceDef;
+
+  recommendedFor?: string[];
+  /** When set, the widget is shown LOCKED in the catalogue (no data/module/permission yet). */
+  lockedReason?: string;
+
+  /** Live render — a component that fetches its own data via the module's hooks. */
+  render: (props: WidgetRenderProps<TConfig>) => VNode;
+  /** Representative catalogue thumbnail (illustrative, not live data). */
+  renderPreview?: (props: WidgetPreviewProps<TConfig>) => VNode;
+}
+
+export interface WidgetInstance<TConfig = Record<string, unknown>> {
+  instanceId: string;
+  widgetId: string;
+
+  pageKey: string;
+  zoneId: string;
+
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+
+  sizeKey: WidgetSizeKey;
+
+  config: Partial<TConfig>;
+
+  titleOverride?: string;
+  isHidden?: boolean;
+  lockedByAdmin?: boolean;
+}
+
+export interface PreviewWidgetInstance<TConfig = Record<string, unknown>>
+  extends WidgetInstance<TConfig> {
+  preview: true;
+  previewId: string;
+  source: 'widget-library';
+}
+
+export type BoardWidgetInstance = WidgetInstance | PreviewWidgetInstance;
+
+/**
+ * A PAGE-LOCAL widget renderer — a render function the host page supplies for a
+ * board instance whose `widgetId` is NOT in the global registry (so it can close
+ * over page state, e.g. the employee register's filters/selection/modals). Local
+ * widgets are not offered in the library catalogue; they live in the page's
+ * default layout. The board resolves a board item's renderer from `localWidgets`
+ * first, then the global registry.
+ */
+export interface LocalWidget {
+  render: (props: WidgetRenderProps) => VNode;
+  chrome?: WidgetChrome;
+  title?: string;
+}
+export type LocalWidgetMap = Record<string, LocalWidget>;
+
+export interface BoardLayout {
+  pageKey: string;
+  zones: Record<string, WidgetInstance[]>;
+  updatedAt?: string;
+}
+
+export function isPreviewWidget(item: BoardWidgetInstance): item is PreviewWidgetInstance {
+  return (item as PreviewWidgetInstance).preview === true;
+}

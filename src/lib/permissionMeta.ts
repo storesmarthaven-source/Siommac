@@ -919,4 +919,9 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'workflow.handoffs.cancel': { module: 'Workflow', group: 'Handoffs', label: 'Cancel Handoff', description: 'Cancel a workflow handoff.', risk: 'high' },
   'workflow.audit.view': { module: 'Workflow', group: 'Audit', label: 'View Workflow Audit', description: 'View the workflow audit log.', risk: 'low' },
   'workflow.audit.export': { module: 'Workflow', group: 'Audit', label: 'Export Workflow Audit', description: 'Export the workflow audit log.', risk: 'high' },
+  // ── UI / dashboard boards + installable widgets ──
+  'ui.layout.manage':           { module: 'System', group: 'Dashboards', label: 'Customize Board Layout', description: 'Customize (save) a dashboard board layout for yourself.', risk: 'low' },
+  'ui.layout.default.manage':   { module: 'System', group: 'Dashboards', label: 'Set Default Board Layout', description: 'Set the organisation-wide default dashboard layout.', risk: 'medium' },
+  'ui.widgets.packages.view':   { module: 'System', group: 'Widgets', label: 'View Widget Packages', description: 'Read installed widget packages (needed to render boards).', risk: 'low' },
+  'ui.widgets.packages.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Packages', description: 'Install or uninstall org-wide widget packages.', risk: 'medium' },
 };

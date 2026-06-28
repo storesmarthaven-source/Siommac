@@ -252,6 +252,11 @@ export const PERMISSION_KEYS = [
   'workflow.handoffs.cancel',
   'workflow.audit.view',
   'workflow.audit.export',
+  // ── UI / dashboard boards + installable widgets ──
+  'ui.layout.manage',           // customize (save) a dashboard board layout
+  'ui.layout.default.manage',   // set the org-wide default board layout
+  'ui.widgets.packages.view',   // read installed widget packages (needed to render boards)
+  'ui.widgets.packages.manage', // install / uninstall widget packages (org-wide)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -297,6 +302,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.unpin_own',
     'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
   ]),
   manager: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
@@ -330,6 +336,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.participants.add', 'communications.participants.remove',
     'communications.participants.change_role',
     'auth.security.view',
+    'ui.layout.manage', 'ui.widgets.packages.view',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -371,6 +378,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
+    'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

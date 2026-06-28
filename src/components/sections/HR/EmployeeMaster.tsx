@@ -25,8 +25,8 @@
 import { type VNode } from 'preact';
 import { useMemo, useState, useRef } from 'preact/hooks';
 import {
-  useHrEmployees, useHrDashboardStats, usePrefetchHrEmployee,
-  type HrEmployeeRow, type HrDashboardStats, type TrainingStatus,
+  useHrEmployees, usePrefetchHrEmployee,
+  type HrEmployeeRow, type TrainingStatus,
 } from '@api/hr/employees';
 import {
   humanize, rowName, statusTone, TRAINING_TONE, TRAINING_LABEL, Avatar, TinyAvatar,
@@ -36,106 +36,16 @@ import { CreateEmployeeWizard } from './CreateEmployeeWizard';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { OnboardingWizard } from './OnboardingWizard';
-import { buildHrWidgets } from './widgets/hrWidgets';
-import { TableSkeleton, PageHeader, StatsCard, WidgetBoardZone, type WidgetDef, type WidgetRegistry } from '@ui';
-import { useSessionStore, selectIsManager } from '@store/session';
+import { TableSkeleton, PageHeader, Button } from '@ui';
+import {
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
+} from '@ui/widgets';
+import { can } from '@lib/permissions';
+import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import './HR.css';
 
-// ── small helpers ─────────────────────────────────────────────────────────────
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function monthLabel(p: string): string {
-  const m = /^\d{4}-(\d{2})$/.exec(p);
-  if (m) { const i = Number(m[1]) - 1; return MONTHS[i] ?? p; }
-  return p.length > 3 ? p.slice(0, 3) : p;
-}
-
-// ── charts (wired to real dashboard-stats) ─────────────────────────────────────
-
-function WorkforceTrendChart({ trend }: { trend: { period: string; count: number }[] }): VNode {
-  const pts = trend.slice(-6);
-  if (!pts.length) return <div class="em-stat-chart em-line-chart"><div class="em-chart-empty">No trend data</div></div>;
-  const counts = pts.map(p => p.count);
-  const max = Math.max(...counts), min = Math.min(...counts);
-  const span = max - min || 1;
-  const n = pts.length;
-  const X = (i: number) => (n === 1 ? 210 : 18 + (i * (402 - 18)) / (n - 1));
-  const Y = (c: number) => 132 - ((c - min) / span) * (132 - 24);
-  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${X(i).toFixed(1)} ${Y(p.count).toFixed(1)}`).join(' ');
-  const area = `${line} L ${X(n - 1).toFixed(1)} 145 L ${X(0).toFixed(1)} 145 Z`;
-  return (
-    <div class="em-stat-chart em-line-chart">
-      <svg viewBox="0 0 420 160" preserveAspectRatio="none" role="img" aria-label="Active workforce trend">
-        <path d="M18 132 H402 M18 96 H402 M18 60 H402 M18 24 H402" fill="none" stroke="#e7edf6" stroke-width="1" />
-        <path d={area} fill="#eff6ff" />
-        <path d={line} fill="none" stroke="#0b5bd3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-        {pts.map((p, i) => <circle cx={X(i)} cy={Y(p.count)} r={i === n - 1 ? 5 : 4} fill="#fff" stroke="#0b5bd3" stroke-width="3" />)}
-        {pts.map((p, i) => <text x={X(i)} y="157" text-anchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}>{monthLabel(p.period)}</text>)}
-      </svg>
-    </div>
-  );
-}
-
-function ChangeMixChart({ mix }: { mix: { type: string; count: number }[] }): VNode {
-  const rows = mix.slice(0, 4);
-  if (!rows.length) return <div class="em-stat-chart em-mini-bars"><div class="em-chart-empty">No open actions</div></div>;
-  const max = Math.max(...rows.map(r => r.count), 1);
-  return (
-    <div class="em-stat-chart em-mini-bars">
-      {rows.map(r => (
-        <div class="em-mini-bar-row">
-          <span>{humanize(r.type)}</span>
-          <i><b style={{ width: `${Math.round((r.count / max) * 100)}%` }} /></i>
-          <strong>{r.count}</strong>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ReadinessChart(
-  { percent, payrollReady, trainingCurrent, needReview }:
-  { percent: number; payrollReady: number; trainingCurrent: number; needReview: number },
-): VNode {
-  const C = 2 * Math.PI * 50;
-  const dash = (Math.max(0, Math.min(100, percent)) / 100) * C;
-  return (
-    <div class="em-stat-chart em-readiness-panel">
-      <svg viewBox="0 0 210 150" role="img" aria-label={`Readiness ${percent} percent`}>
-        <circle cx="75" cy="75" r="50" fill="none" stroke="#e7edf6" stroke-width="14" />
-        <circle cx="75" cy="75" r="50" fill="none" stroke="#16a34a" stroke-width="14" stroke-linecap="round"
-          stroke-dasharray={`${dash.toFixed(1)} ${(C - dash).toFixed(1)}`} transform="rotate(-90 75 75)" />
-        <text x="75" y="70" text-anchor="middle" class="ring-score">{percent}%</text>
-        <text x="75" y="91" text-anchor="middle" class="ring-sub">ready</text>
-      </svg>
-      <div class="em-readiness-list">
-        <div><b>{payrollReady}</b><span>Payroll ready</span></div>
-        <div><b>{trainingCurrent}</b><span>Training current</span></div>
-        <div><b>{needReview}</b><span>Need HR review</span></div>
-      </div>
-    </div>
-  );
-}
-
-const EXC_COLORS = ['red', 'amber', 'blue'];
-function ExceptionChart({ items }: { items: { type: string; count: number }[] }): VNode {
-  const rows = items.slice(0, 3);
-  if (!rows.length) return <div class="em-stat-chart em-exception-chart"><div class="em-chart-empty">No exceptions</div></div>;
-  const max = Math.max(...rows.map(r => r.count), 1);
-  return (
-    <div class="em-stat-chart em-exception-chart">
-      {rows.map((r, i) => (
-        <div class="exception-row">
-          <span>{humanize(r.type)}</span>
-          <i class={EXC_COLORS[i % 3]}><b style={{ width: `${Math.round((r.count / max) * 100)}%` }} /></i>
-          <strong>{r.count}</strong>
-        </div>
-      ))}
-    </div>
-  );
-}
-
+const PAGE_KEY = 'hr.employees.overview';
 
 // ── toolbar ────────────────────────────────────────────────────────────────────
 
@@ -363,6 +273,26 @@ function pageWindow(cur: number, total: number): (number | '…')[] {
   return out;
 }
 
+// ── default board layout (fresh user): 4 KPIs + the register, full width ────────
+
+function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
+  return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
+}
+function defaultEmployeeLayout(): BoardLayout {
+  return {
+    pageKey: PAGE_KEY,
+    zones: {
+      main: [
+        defInst('hr.employees.activeWorkforce', 0, 0, 3, 3, 'compact'),
+        defInst('hr.employees.workQueue',       3, 0, 3, 3, 'compact'),
+        defInst('hr.employees.readiness',       6, 0, 3, 3, 'compact'),
+        defInst('hr.employees.exceptions',      9, 0, 3, 3, 'compact'),
+        defInst('hr.employees.register',        0, 3, 12, 9, 'hero'),
+      ],
+    },
+  };
+}
+
 // ── page root ────────────────────────────────────────────────────────────────
 
 export function EmployeeMaster(): VNode {
@@ -373,50 +303,38 @@ export function EmployeeMaster(): VNode {
   const [pageSize, setPageSize] = useState(25);
   const [toast, setToast] = useState('');
   const [modal, setModal] = useState<{ type: string; employeeId: string | null } | null>(null);
+  // Board customize + widget-library (preview-on-board) state.
+  const [editing, setEditing] = useState(false);
+  const [libOpen, setLibOpen] = useState(false);
+  const [demo, setDemo] = useState(false);
+  const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
 
-  const statsQ = useHrDashboardStats();
   const listQ = useHrEmployees({ limit: 500 });
   const rows = useMemo(() => listQ.data ?? [], [listQ.data]);
   // Only managers/admins/superadmins may customize the board (drag/resize/add).
   const canEdit = useSessionStore(selectIsManager);
-  // Unified widget board: the 4 KPI cards (bare StatsCards) + insight panels + locked
-  // widgets, all draggable/resizable as one board with a single Customize control.
-  const hrWidgets = useMemo<WidgetRegistry>(() => {
-    const aw = statsQ.data?.active_workforce;
-    const wq = statsQ.data?.hr_work_queue;
-    const rd = statsQ.data?.readiness;
-    const ex = statsQ.data?.exceptions;
-    const trend = aw?.trend ?? [];
-    const last = trend[trend.length - 1];
-    const prev = trend[trend.length - 2];
-    const net = last && prev ? last.count - prev.count : null;
-    const loading = statsQ.isLoading && !statsQ.data;
-    const kpi = (id: string, title: string, icon: string, node: VNode): WidgetDef =>
-      ({ id, title, icon, category: 'KPIs', defaultW: 3, defaultH: 3, minW: 2, minH: 2, bare: true, render: () => node });
-    return {
-      'hr.kpi.workforce': kpi('hr.kpi.workforce', 'Active Workforce', 'fa-users',
-        <StatsCard icon="fa-users" title="Active Workforce" loading={loading} metric={aw?.total ?? 0}
-          supporting="Active people records across all sites" chart={<WorkforceTrendChart trend={trend} />}
-          footer={`${aw?.employees ?? 0} employees · ${aw?.contractors ?? 0} contractors${net != null ? ` · ${net >= 0 ? '+' : ''}${net} net` : ''}`} />),
-      'hr.kpi.queue': kpi('hr.kpi.queue', 'HR Work Queue', 'fa-list-check',
-        <StatsCard icon="fa-list-check" title="HR Work Queue" loading={loading} metric={wq?.total ?? 0}
-          supporting="Open HR actions requiring review" chart={<ChangeMixChart mix={wq?.mix ?? []} />}
-          footer={`${wq?.urgent ?? 0} urgent`} />),
-      'hr.kpi.readiness': kpi('hr.kpi.readiness', 'Readiness', 'fa-shield-halved',
-        <StatsCard icon="fa-shield-halved" title="Readiness" loading={loading} metric={`${rd?.percent ?? 0}%`}
-          supporting="Payroll, statutory and training readiness"
-          chart={<ReadinessChart percent={rd?.percent ?? 0} payrollReady={rd?.payroll_ready ?? 0} trainingCurrent={rd?.training_current ?? 0} needReview={rd?.blocked ?? 0} />}
-          footer={`${rd?.payroll_ready ?? 0} payroll ready · ${rd?.training_current ?? 0} training current`} />),
-      'hr.kpi.exceptions': kpi('hr.kpi.exceptions', 'Workforce Exceptions', 'fa-triangle-exclamation',
-        <StatsCard icon="fa-triangle-exclamation" title="Workforce Exceptions" loading={loading} metric={ex?.total ?? 0}
-          supporting="Records blocking clean handoff or assignment" chart={<ExceptionChart items={ex?.items ?? []} />}
-          footer={(ex?.total ?? 0) > 0 ? 'Needs action' : 'Clear'} />),
-      ...buildHrWidgets(rows),
-    };
-  }, [rows, statsQ.data, statsQ.isLoading]);
-  // Default board = the 4 KPI cards + the employee register table (full width).
-  // Insight panels (Dept Distribution, Demographics, …) are opt-in via Add widget.
-  const BOARD_DEFAULTS = ['hr.kpi.workforce', 'hr.kpi.queue', 'hr.kpi.readiness', 'hr.kpi.exceptions', 'hr.table'];
+  const isAdmin = useSessionStore(selectIsAdmin);
+
+  // The v2 board persists per-user; the register lives as a PAGE-LOCAL widget so it can
+  // close over the page's filter/selection/modal state. KPI + insight + workforce
+  // widgets come from the global registry (browsable in the Widget Library).
+  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout());
+  const boardItems = layout.zones['main'] ?? [];
+  const placedWidgetIds = boardItems.map(w => w.widgetId);
+  // New widgets/previews drop at the bottom of the board (never over the stats cards).
+  const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
+  const userPermissions = useMemo(
+    () => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can),
+    [],
+  );
+  function discardPreview(): void {
+    setPreview(null);
+    setLibOpen(true); // undecided → back to the library
+  }
+  function commitPreview(p: PreviewWidgetInstance): void {
+    void addWidget(p.zoneId, commitPreviewWidget(p));
+    setPreview(null);
+  }
 
   // Debounced hover-prefetch: only warm a row's detail once the cursor RESTS on it
   // (~140ms) — sweeping across the list fires nothing, so we never storm the API.
@@ -474,12 +392,9 @@ export function EmployeeMaster(): VNode {
     ...filters.training.map(s => ({ label: TRAINING_LABEL[s as TrainingStatus] ?? humanize(s), onRemove: () => setFiltersReset({ ...filters, training: filters.training.filter(x => x !== s) }) })),
   ];
 
-  // The register (toolbar + filters + table + pagination) as a full-width, resizable
-  // board widget. Built fresh each render so it tracks current filters/selection.
-  const registerWidget: WidgetDef = {
-    id: 'hr.table', title: 'Employee Register', icon: 'fa-table', category: 'Register',
-    defaultW: 12, defaultH: 9, minW: 6, minH: 4, bare: true,
-    render: () => (
+  // The register (toolbar + filters + table + pagination) as a PAGE-LOCAL widget — its
+  // render closes over current filters/selection/modal state (rebuilt each render).
+  const renderRegister = (): VNode => (
       <div class="table-card">
         <div class="employee-toolbar compact">
           <div class="table-search">
@@ -562,9 +477,10 @@ export function EmployeeMaster(): VNode {
           </div>
         </div>
       </div>
-    ),
+  );
+  const localWidgets: LocalWidgetMap = {
+    'hr.employees.register': { render: renderRegister, chrome: 'none', title: 'Employee Register' },
   };
-  const boardRegistry: WidgetRegistry = { ...hrWidgets, 'hr.table': registerWidget };
 
   return (
     <div class="hr-emp-master" onClick={() => setOpenId(null)}>
@@ -580,10 +496,39 @@ export function EmployeeMaster(): VNode {
         ]}
       />
 
-      {/* Unified customizable board — KPI cards + the register table + insights, one
-          Customize control (drag/resize/add). Read-only unless manager/admin/superadmin. */}
-      <WidgetBoardZone pageKey="hr.employees.board" registry={boardRegistry}
-        defaultIds={BOARD_DEFAULTS} requiredIds={['hr.table']} canEdit={canEdit} />
+      {/* Board Customize control (top-right) — Customize → Widget Library / Reset / Set as
+          default / Done. Only managers/admins/superadmins may customize. */}
+      {canEdit && (
+        <WidgetBoardToolbar
+          editing={editing} canSetDefault={isAdmin}
+          onToggleEdit={() => setEditing(e => !e)}
+          onOpenLibrary={() => setLibOpen(true)}
+          onReset={() => void resetLayout()}
+          onSetDefault={() => void setAsDefault()}
+        />
+      )}
+
+      {preview && (
+        <div class="wmock-preview-banner">
+          <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then <strong>Add to board</strong> or <strong>Discard</strong>.</span>
+          <Button variant="outline" icon="fa-xmark" onClick={discardPreview}>Discard preview</Button>
+        </div>
+      )}
+
+      {/* Unified customizable board — KPI/insight/workforce widgets (from the library) +
+          the employee register (page-local). Read-only unless manager/admin/superadmin. */}
+      <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEdit}
+        localWidgets={localWidgets} defaultLayout={defaultEmployeeLayout()} demo={demo}
+        preview={preview} onPreviewChange={setPreview}
+        onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
+
+      <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
+        placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
+        demo={demo} onToggleDemo={() => setDemo(d => !d)}
+        canManagePackages={isAdmin}
+        onClose={() => setLibOpen(false)}
+        onAddWidget={inst => addWidget('main', placeBottom(inst as WidgetInstance))}
+        onPreviewOnBoard={p => setPreview(placeBottom(p))} />
 
       {/* Profile drawer */}
       <ProfileDrawer employeeId={selectedId} onClose={() => setSelectedId(null)} onAction={(label) => openAction(label, selectedId)} />

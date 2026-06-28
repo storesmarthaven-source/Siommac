@@ -1,50 +1,67 @@
 /**
- * src/ui/widgets/registry.ts
+ * src/ui/widgets/registry.ts — cross-module widget catalogue for the v2 widget library.
  *
- * Widget catalogue types for the resizable widget board (gridstack). A page builds
- * a WidgetRegistry (id → WidgetDef) — the board renders placed widgets, the picker
- * lists available ones. `dataGate` locks a widget whose source data/module doesn't
- * exist yet (it shows in the picker as locked, never as fake data).
+ * SELF-REGISTERING. Every widget "package" is a file `registry.<name>.tsx` (e.g.
+ * registry.hr.tsx, registry.hrEmployees.tsx, future registry.hse.tsx) that does:
  *
- * @see docs/WIDGET_BOARD_SPEC.md
+ *     export const widgets: WidgetDef[] = [ … ]
+ *
+ * They are auto-collected here via `import.meta.glob` — drop a new package file and it
+ * registers itself; NO edits to this aggregator. Duplicate ids are dropped with a dev
+ * warning. Authoring format + scaffold: docs/WIDGET_AUTHORING_GUIDE.md.
  */
+import type { WidgetDef } from './types';
+import { getRuntimeWidgets } from './runtimeRegistry';
 
-import { type VNode } from 'preact';
+// Eager glob → { './registry.hr.tsx': { widgets }, './registry.hrEmployees.tsx': { widgets }, … }.
+// Each package file exports `widgets: WidgetDef[]` (multiple widgets in one file).
+// Single-segment names (no interior dots) keep the `*` match unambiguous.
+const packages = import.meta.glob('./registry.*.tsx', { eager: true }) as Record<string, { widgets?: WidgetDef[] }>;
 
-export interface WidgetDef {
-  /** Stable id, e.g. 'hr.deptDist'. Persisted in the board layout. */
-  id: string;
-  title: string;
-  /** Font Awesome class, e.g. 'fa-chart-pie'. */
-  icon: string;
-  /** Group shown in the picker, e.g. 'Workforce'. */
-  category: string;
-  /** Default grid span (columns 1–12) and height (row units). */
-  defaultW: number;
-  defaultH: number;
-  minW?: number;
-  minH?: number;
-  maxW?: number;
-  maxH?: number;
-  /** Render WITHOUT the board's card chrome — the widget is already a full card
-   *  (e.g. a StatsCard). Edit controls float over it instead. */
-  bare?: boolean;
-  /** Return a reason string to LOCK the widget (no data/module yet), or null when ready. */
-  dataGate?: () => string | null;
-  render: () => VNode;
+function collectWidgets(): WidgetDef[] {
+  const out: WidgetDef[] = [];
+  const seen = new Set<string>();
+  for (const path of Object.keys(packages).sort()) {
+    const list = packages[path]?.widgets;
+    if (!Array.isArray(list)) {
+      if (import.meta.env.DEV) console.warn(`[widgets] ${path} exports no \`widgets: WidgetDef[]\` — skipped.`);
+      continue;
+    }
+    for (const w of list) {
+      if (seen.has(w.id)) {
+        if (import.meta.env.DEV) console.warn(`[widgets] duplicate widget id "${w.id}" (${path}) — ignored.`);
+        continue;
+      }
+      seen.add(w.id);
+      out.push(w);
+    }
+  }
+  return out;
 }
 
-export type WidgetRegistry = Record<string, WidgetDef>;
+/** Code widgets (compiled, from the glob). Installed/declarative widgets are added at runtime. */
+export const WIDGET_REGISTRY: WidgetDef[] = collectWidgets();
 
-/** Default board = the widgets a page ships with, flowed left-to-right across the
- *  12-col grid (wrapping to a new row when the next widget won't fit). */
-export function defaultBoard(defs: WidgetDef[]): { id: string; x: number; y: number; w: number; h: number }[] {
-  let x = 0, y = 0, rowH = 0;
-  return defs.map(d => {
-    if (x + d.defaultW > 12) { x = 0; y += rowH; rowH = 0; }
-    const item = { id: d.id, x, y, w: d.defaultW, h: d.defaultH };
-    x += d.defaultW;
-    rowH = Math.max(rowH, d.defaultH);
-    return item;
-  });
+/** All widgets = code widgets + runtime-installed declarative widgets. */
+export function allWidgets(): WidgetDef[] {
+  const runtime = getRuntimeWidgets();
+  return runtime.length ? [...WIDGET_REGISTRY, ...runtime] : WIDGET_REGISTRY;
+}
+
+export function getWidgetDef(widgetId: string): WidgetDef {
+  const widget = findWidgetDef(widgetId);
+  if (!widget) throw new Error(`Widget not registered: ${widgetId}`);
+  return widget;
+}
+
+export function findWidgetDef(widgetId: string): WidgetDef | undefined {
+  return allWidgets().find(w => w.id === widgetId);
+}
+
+export function getWidgetsForPage(pageKey: string): WidgetDef[] {
+  return allWidgets().filter(w => w.supportedPages.includes(pageKey));
+}
+
+export function getWidgetsByModule(module: string): WidgetDef[] {
+  return allWidgets().filter(w => w.module === module);
 }
