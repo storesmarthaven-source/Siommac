@@ -1,0 +1,58 @@
+/* src/components/sections/Profile/profilePage.css
+ *
+ * Standardised "My Profile" page — clean single-scroll settings cards (PropXYZ-inspired),
+ * sitting under the standard PageHeader (title + ProfilePill). Scoped under `.pf`.
+ */
+.pf { display: flex; flex-direction: column; gap: 18px; max-width: 1100px; }
+.pf * { box-sizing: border-box; }
+
+/* ── hero ── */
+.pf-hero { background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; padding: 20px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 26px rgba(16,24,40,.05); }
+.pf-photo { position: relative; flex: none; cursor: pointer; }
+.pf-cam { position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; background: #2563eb; color: #fff; border: 3px solid #fff; display: grid; place-items: center; font-size: 12px; }
+.pf-id { min-width: 0; }
+.pf-name { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.pf-role { margin-top: 3px; color: #64748b; font-size: 13px; font-weight: 600; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pf-chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px; background: #f3f6fb; border: 1px solid #e7eef7; color: #334155; font-size: 12px; font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-chip i { color: #2563eb; font-size: 11px; flex: none; }
+.pf-photo-actions { display: flex; gap: 8px; margin-left: auto; align-self: flex-start; flex-wrap: wrap; }
+
+/* ── cards ── */
+.pf-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.pf-card-head { display: flex; align-items: baseline; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #eef2f7; }
+.pf-card-head i { color: #2563eb; font-size: 14px; align-self: center; }
+.pf-card-head h2 { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; }
+.pf-card-sub { color: #94a3b8; font-size: 12px; font-weight: 500; }
+.pf-card-body { padding: 20px; }
+
+/* ── form ── */
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+@media (max-width: 720px) { .pf-grid { grid-template-columns: 1fr; } }
+.pf-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pf-field label { font-size: 12px; font-weight: 700; color: #475569; }
+.pf-field input, .pf-field select { height: 42px; border: 1px solid #d8e0ec; border-radius: 10px; padding: 0 13px; font-size: 14px; color: #0f172a; background: #fff; font-family: inherit; width: 100%; }
+.pf-field input:focus, .pf-field select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.pf-field input[readonly] { background: #f8fafc; color: #64748b; }
+.pf-field .pf-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pf-hint { font-size: 11px; color: #94a3b8; }
+
+.pf-btn { height: 42px; padding: 0 18px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+.pf-btn:hover { background: #1c68d4; }
+.pf-btn:disabled { opacity: .65; cursor: not-allowed; }
+.pf-btn.ghost { background: #fff; border: 1px solid #d8e0ec; color: #334155; }
+.pf-btn.ghost:hover { background: #f5f7fa; }
+.pf-btn.sm { height: 34px; padding: 0 12px; font-size: 13px; }
+.pf-btn.danger { background: #fff; border: 1px solid #fecaca; color: #dc2626; }
+.pf-btn.danger:hover { background: #fef2f2; }
+.pf-actions { margin-top: 18px; }
+
+/* ── activity feed ── */
+.pf-feed { display: flex; flex-direction: column; gap: 14px; }
+.pf-feed-item { display: flex; gap: 12px; align-items: flex-start; }
+.pf-feed-ico { width: 36px; height: 36px; border-radius: 50%; background: #eff6ff; color: #1b2d55; display: grid; place-items: center; flex: none; font-size: 14px; }
+.pf-feed-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+.pf-feed-date { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.pf-empty { text-align: center; padding: 32px 24px; color: #94a3b8; font-size: 13px; }
+.pf-empty i { display: block; font-size: 30px; color: #d1d5db; margin-bottom: 10px; }
+.pf-skel { height: 46px; border-radius: 10px; background: #f3f4f6; }
