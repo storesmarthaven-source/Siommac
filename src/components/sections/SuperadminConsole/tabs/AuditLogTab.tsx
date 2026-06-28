@@ -1,17 +1,19 @@
 /**
  * tabs/AuditLogTab.tsx
  *
- * Enterprise audit-log viewer (v2 Settings design). Reads activity_logs with
- * filters (search / action / entity / date range), pagination, and CSV export.
+ * Enterprise audit log viewer. Every privileged action is written to
+ * activity_logs by the backend log_() helper (with IP + user-agent). This tab
+ * reads them with filters (search / action / entity / user / date range),
+ * pagination, and CSV export via the shared @lib/csv utility.
  */
 
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
+import { StatCard } from '../../Employees/StatCard';
 import { toast } from '@store/ui';
 import { downloadCsv } from '@lib/csv';
 import { getAuditLogsApi, type AuditLogRow, type AuditLogFilters } from '@lib/superadminApi';
 import { useAuditLogs } from '../hooks';
-import { SwzStat } from '@/components/sections/Settings/swzPrimitives';
 
 const PAGE_SIZE = 50;
 
@@ -19,21 +21,21 @@ function fmtWhen(iso: string): string {
   try { return new Date(iso).toLocaleString(); } catch { return iso; }
 }
 
-/** Map an action verb to a v2 status-pill tone. */
+/** Map an action verb to a VANTUS status-pill tone class. */
 function actionPill(action: string): string {
-  if (/delete|revoke|deny|reject/.test(action))              return 'swz-pill red';
-  if (/create|add|grant|approve|login|checkin/.test(action)) return 'swz-pill green';
-  if (/update|change|edit|reset|checkout/.test(action))      return 'swz-pill amber';
-  return 'swz-pill navy';
+  if (/delete|revoke|deny|reject/.test(action))              return 'vt-pill is-off';
+  if (/create|add|grant|approve|login|checkin/.test(action)) return 'vt-pill is-on';
+  if (/update|change|edit|reset|checkout/.test(action))      return 'vt-pill is-warn';
+  return 'vt-pill is-info';
 }
 
 export function AuditLogTab(): VNode {
-  const [search,    setSearch]    = useState('');
-  const [action,    setAction]    = useState('');
-  const [entity,    setEntity]    = useState('');
-  const [from,      setFrom]      = useState('');
-  const [to,        setTo]        = useState('');
-  const [page,      setPage]      = useState(0);
+  const [search,   setSearch]   = useState('');
+  const [action,   setAction]   = useState('');
+  const [entity,   setEntity]   = useState('');
+  const [from,     setFrom]     = useState('');
+  const [to,       setTo]       = useState('');
+  const [page,     setPage]     = useState(0);
   const [exporting, setExporting] = useState(false);
 
   const filters: AuditLogFilters = useMemo(() => ({
@@ -50,13 +52,18 @@ export function AuditLogTab(): VNode {
   const data = q.data ?? { logs: [], total: 0, actions: [], entities: [] };
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
 
-  const onFilter = (setter: (v: string) => void) => (v: string) => { setter(v); setPage(0); };
+  // Reset to page 0 whenever a filter changes.
+  function onFilter(setter: (v: string) => void) {
+    return (v: string) => { setter(v); setPage(0); };
+  }
 
+  // Export the CURRENT filter set (up to 5000 rows) to CSV.
   async function handleExport() {
     setExporting(true);
     try {
       const res = await getAuditLogsApi({ ...filters, limit: 500, offset: 0 });
       let rows: AuditLogRow[] = res.logs ?? [];
+      // Page through the rest up to a sane cap.
       let offset = 500;
       while ((res.total ?? 0) > offset && offset < 5000) {
         const more = await getAuditLogsApi({ ...filters, limit: 500, offset });
@@ -84,63 +91,78 @@ export function AuditLogTab(): VNode {
 
   return (
     <div>
-      <div class="swz-stats">
-        <SwzStat ico="fa-clipboard-list" color="#2563eb" val={data.total}           label="Total Events" />
-        <SwzStat ico="fa-bolt"           color="#d97706" val={data.actions.length}  label="Action Types" />
-        <SwzStat ico="fa-cubes"          color="#7c3aed" val={data.entities.length} label="Entity Types" />
+      {/* Stat cards */}
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <StatCard icon="fa-clipboard-list" label="Total Events"  value={data.total}            color="#2563eb" loading={q.isLoading} />
+        <StatCard icon="fa-bolt"           label="Action Types"  value={data.actions.length}   color="#d97706" loading={q.isLoading} />
+        <StatCard icon="fa-cubes"          label="Entity Types"  value={data.entities.length}  color="#7c3aed" loading={q.isLoading} />
       </div>
 
-      <div class="swz-toolbar">
-        <div class="swz-search">
+      {/* Toolbar */}
+      <div class="vt-toolbar">
+        <div class="vt-search" style={{ flex: '1 1 240px' }}>
           <i class="fas fa-search" aria-hidden="true" />
           <input type="search" value={search} onInput={e => onFilter(setSearch)((e.target as HTMLInputElement).value)} placeholder="Search details, user, ID…" aria-label="Search audit log" />
         </div>
-        <select class="swz-select" value={action} onChange={e => onFilter(setAction)((e.target as HTMLSelectElement).value)} aria-label="Filter by action">
+        <select class="emp-filter-select" value={action} onChange={e => onFilter(setAction)((e.target as HTMLSelectElement).value)} aria-label="Filter by action">
           <option value="">All actions</option>
           {data.actions.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <select class="swz-select" value={entity} onChange={e => onFilter(setEntity)((e.target as HTMLSelectElement).value)} aria-label="Filter by entity">
+        <select class="emp-filter-select" value={entity} onChange={e => onFilter(setEntity)((e.target as HTMLSelectElement).value)} aria-label="Filter by entity">
           <option value="">All entities</option>
           {data.entities.map(en => <option key={en} value={en}>{en}</option>)}
         </select>
-        <input type="date" class="swz-select" value={from} title="From date" onInput={e => onFilter(setFrom)((e.target as HTMLInputElement).value)} aria-label="From date" />
-        <input type="date" class="swz-select" value={to} title="To date" onInput={e => onFilter(setTo)((e.target as HTMLInputElement).value)} aria-label="To date" />
-        <div class="swz-toolbar-spacer" />
-        <button type="button" class="action-btn sm" disabled={exporting} onClick={() => void handleExport()}>
+        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>From<br /><input type="date" value={from} onInput={e => onFilter(setFrom)((e.target as HTMLInputElement).value)} class="emp-filter-select" /></label>
+        <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>To<br /><input type="date" value={to} onInput={e => onFilter(setTo)((e.target as HTMLInputElement).value)} class="emp-filter-select" /></label>
+        <button type="button" class="btn btn-sm btn-outline-secondary has-label" disabled={exporting} onClick={() => void handleExport()}>
           <i class={exporting ? 'fas fa-spinner fa-spin' : 'fas fa-file-csv'} /> Export CSV
         </button>
       </div>
 
       {q.isLoading ? (
-        <div class="swz-loading"><i class="fas fa-spinner fa-spin" /> Loading audit log…</div>
+        <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading audit log…</div>
       ) : q.isError ? (
-        <div class="swz-empty"><i class="fas fa-triangle-exclamation" /> Failed to load. <button type="button" class="action-btn sm" style={{ marginTop: '10px' }} onClick={() => void q.refetch()}>Retry</button></div>
+        <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load. <button type="button" onClick={() => void q.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>
       ) : data.logs.length === 0 ? (
-        <div class="swz-empty"><i class="fas fa-clipboard-list" /> No audit records match the current filters.</div>
+        <div class="emp-empty"><i class="fas fa-clipboard-list" /><p>No audit records match the current filters.</p></div>
       ) : (
-        <div class="swz-tablecard">
-          <table class="swz-table">
-            <thead><tr>{['When', 'User', 'Action', 'Entity', 'Details', 'IP'].map(h => <th key={h}>{h}</th>)}</tr></thead>
-            <tbody>
-              {data.logs.map(r => (
-                <tr key={r.id}>
-                  <td style={{ whiteSpace: 'nowrap', color: '#7a8597' }}>{fmtWhen(r.created_at)}</td>
-                  <td style={{ whiteSpace: 'nowrap' }}><b>{r.username || '—'}</b></td>
-                  <td><span class={actionPill(r.action)}>{r.action}</span></td>
-                  <td style={{ color: '#7a8597' }}>{r.entity}{r.entity_id ? <span class="swz-mono" style={{ marginLeft: '6px' }}>{r.entity_id}</span> : null}</td>
-                  <td style={{ maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.details}>{r.details}</td>
-                  <td class="swz-mono" style={{ whiteSpace: 'nowrap' }}>{r.ip_address ?? '—'}</td>
+        <div class="vt-table-card">
+          <div class="vt-table-scroll">
+            <table class="vt-table">
+              <thead>
+                <tr>
+                  {['When', 'User', 'Action', 'Entity', 'Details', 'IP'].map(h => <th key={h}>{h}</th>)}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.logs.map(r => (
+                  <tr key={r.id}>
+                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{fmtWhen(r.created_at)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}><span class="vt-cell-name">{r.username || '—'}</span></td>
+                    <td><span class={actionPill(r.action)}>{r.action}</span></td>
+                    <td style={{ color: 'var(--text-muted)' }}>{r.entity}{r.entity_id ? <span class="vt-cell-mono" style={{ marginLeft: '6px' }}>{r.entity_id}</span> : null}</td>
+                    <td style={{ maxWidth: '320px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.details}>{r.details}</td>
+                    <td class="vt-cell-mono" style={{ whiteSpace: 'nowrap' }}>{r.ip_address ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <div class="swz-pagination">
-            <span style={{ color: '#687386', fontSize: '12.5px' }}>{data.total.toLocaleString()} record{data.total === 1 ? '' : 's'}</span>
-            <span class="pg">
-              <button type="button" disabled={page === 0 || q.isFetching} onClick={() => setPage(p => Math.max(0, p - 1))}><i class="fas fa-chevron-left" /> Previous</button>
-              <span><span class="pgnum">{page + 1}</span> <span style={{ color: '#687386' }}>of {totalPages}</span></span>
-              <button type="button" disabled={page >= totalPages - 1 || q.isFetching} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>Next <i class="fas fa-chevron-right" /></button>
+          {/* Pagination */}
+          <div class="vt-pagination" style={{ justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid var(--border)', marginTop: 0 }}>
+            <span class="vt-result-count" style={{ margin: 0 }}>
+              {data.total.toLocaleString()} record{data.total === 1 ? '' : 's'}
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '14px' }}>
+              <button type="button" disabled={page === 0 || q.isFetching} onClick={() => setPage(p => Math.max(0, p - 1))}>
+                <i class="fas fa-chevron-left" /> Previous
+              </button>
+              <span class="vt-pagination-page">{page + 1}</span>
+              <span style={{ color: 'var(--text-muted)' }}>out of {totalPages}</span>
+              <button type="button" disabled={page >= totalPages - 1 || q.isFetching} onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}>
+                Next <i class="fas fa-chevron-right" />
+              </button>
             </span>
           </div>
         </div>
