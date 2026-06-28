@@ -16,6 +16,7 @@ import {
 } from '@api/hse/riskJsa';
 import { RiskScorePill } from './shared/RiskScorePill';
 import { hsePill } from '../types';
+import { dialog } from '@lib/dialog';
 
 // ── Shared helpers ──────────────────────────────────────────────────────────────
 
@@ -43,10 +44,10 @@ export function PendingApprovalTab(): VNode {
   const pg = usePagination(rows);
   const lifecycle = useRiskJsaLifecycle();
 
-  const act = (row: QueueRow, action: LifecycleAction, prompt?: string) => {
+  const act = async (row: QueueRow, action: LifecycleAction, prompt?: string) => {
     let note: string | null = null;
     if (prompt) {
-      const reason = window.prompt(prompt);
+      const reason = await dialog.prompt({ title: prompt, type: 'textarea' });
       if (reason === null) return;            // cancelled
       note = reason.trim() || null;
     }
@@ -98,13 +99,13 @@ export function PendingApprovalTab(): VNode {
                     <td><span class={`days-open${ageDays(r.updated_at) >= 5 ? ' overdue' : ''}`}>{ageDays(r.updated_at)}d</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <button class="inc-action-btn primary" disabled={lifecycle.isPending} onClick={() => act(r, 'approve')}>
+                        <button class="inc-action-btn primary" disabled={lifecycle.isPending} onClick={() => void act(r, 'approve')}>
                           <i class="fas fa-check" /> Approve
                         </button>
-                        <button class="inc-action-btn" disabled={lifecycle.isPending} onClick={() => act(r, 'request-changes', 'What changes are required?')}>
+                        <button class="inc-action-btn" disabled={lifecycle.isPending} onClick={() => void act(r, 'request-changes', 'What changes are required?')}>
                           <i class="fas fa-rotate-left" /> Changes
                         </button>
-                        <button class="inc-action-btn" disabled={lifecycle.isPending} onClick={() => act(r, 'reject', 'Reason for rejection?')}>
+                        <button class="inc-action-btn" disabled={lifecycle.isPending} onClick={() => void act(r, 'reject', 'Reason for rejection?')}>
                           <i class="fas fa-xmark" /> Reject
                         </button>
                       </div>

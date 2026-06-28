@@ -9,6 +9,7 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { PageHeader, MetricRow, TabBar, withCounts, SparkCard, type AreaTab, type SparkDef } from '@ui';
+import { dialog } from '@lib/dialog';
 import {
   useWorkflowList,
   useWorkflow,
@@ -119,7 +120,7 @@ function ApprovalsTab(): VNode {
   function handleDecide(task: WorkflowTask, decision: 'approved' | 'returned' | 'rejected'): void {
     const c = comment[task.id] ?? '';
     if ((decision === 'returned' || decision === 'rejected') && !c.trim()) {
-      alert('A comment is required when returning or rejecting a task.');
+      void dialog.warning('Comment required', 'A comment is required when returning or rejecting a task.');
       return;
     }
     decide.mutate({ taskId: task.id, decision, note: c.trim() || undefined }, {

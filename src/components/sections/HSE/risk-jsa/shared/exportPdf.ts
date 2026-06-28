@@ -5,6 +5,7 @@
  * HTML document from the loaded detail and opens the browser print dialog
  * (the user picks "Save as PDF"). No external library, no server round-trip.
  */
+import { dialog } from '@lib/dialog';
 
 type Dict = Record<string, unknown>;
 
@@ -49,7 +50,7 @@ function shell(title: string, sub: string, bodyHtml: string): string {
 
 function launch(html: string): void {
   const w = window.open('', '_blank');
-  if (!w) { alert('Pop-up blocked — allow pop-ups to export the PDF.'); return; }
+  if (!w) { void dialog.error('Pop-up blocked', 'Allow pop-ups to export the PDF.'); return; }
   w.document.write(html);
   w.document.close();
   w.focus();

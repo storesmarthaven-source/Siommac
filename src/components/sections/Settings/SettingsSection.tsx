@@ -22,6 +22,7 @@ import { type VNode }      from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { useSessionStore } from '@store/session';
 import { toast }           from '@store';
+import { dialog }          from '@lib/dialog';
 import {
   fetchSettings,
   updateSetting,
@@ -571,7 +572,7 @@ function TrustedDevicesCard(): VNode {
 
   const handleRevoke = useCallback(async (device: TrustedDevice) => {
     const name = device.label || `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
-    if (!window.confirm(`Remove trusted device "${name}"? You will need to re-verify 2FA from that device.`)) return;
+    if (!(await dialog.confirm({ title: 'Remove trusted device?', text: `Remove "${name}"? You will need to re-verify 2FA from that device.`, danger: true, confirmText: 'Remove' }))) return;
     try {
       await revokeMut.mutateAsync(device.id);
       toast.success('Trusted device removed.');
@@ -582,9 +583,11 @@ function TrustedDevicesCard(): VNode {
   }, [revokeMut, refetch]);
 
   const handleRevokeAll = useCallback(async () => {
-    if (!window.confirm(
-      'Revoke ALL trusted devices? You (and everyone else on all devices) will need to re-verify 2FA on the next login.'
-    )) return;
+    if (!(await dialog.confirm({
+      title: 'Revoke all trusted devices?',
+      text: 'You (and everyone else on all devices) will need to re-verify 2FA on the next login.',
+      danger: true, confirmText: 'Revoke all',
+    }))) return;
     try {
       const doRevoke = withStepUp(ensureStepUp, () => revokeAllMut.mutateAsync());
       const res = await doRevoke();
@@ -1195,7 +1198,7 @@ function PasskeysCard(): VNode {
 
   // ── Register new passkey ───────────────────────────────────────────────────
   const handleAdd = useCallback(async () => {
-    const rawLabel = window.prompt('Name this passkey (optional):', '');
+    const rawLabel = await dialog.prompt({ title: 'Name this passkey', placeholder: 'Optional name', value: '' });
     if (rawLabel === null) return; // user cancelled
     const label = rawLabel.trim() || undefined;
     try {
@@ -1211,7 +1214,7 @@ function PasskeysCard(): VNode {
 
   // ── Rename passkey ─────────────────────────────────────────────────────────
   const handleRename = useCallback(async (cred: PasskeyCredential) => {
-    const newLabel = window.prompt('New name for this passkey:', cred.label || '');
+    const newLabel = await dialog.prompt({ title: 'Rename passkey', value: cred.label || '', placeholder: 'New name' });
     if (newLabel === null || newLabel.trim() === '') return;
     try {
       await renameMut.mutateAsync({ credentialId: cred.id, label: newLabel.trim() });
@@ -1223,7 +1226,7 @@ function PasskeysCard(): VNode {
 
   // ── Delete passkey ─────────────────────────────────────────────────────────
   const handleDelete = useCallback(async (cred: PasskeyCredential) => {
-    if (!window.confirm(`Remove passkey "${cred.label || cred.id.slice(0, 8) + '…'}"?`)) return;
+    if (!(await dialog.confirm({ title: 'Remove passkey?', text: `Remove "${cred.label || cred.id.slice(0, 8) + '…'}"?`, danger: true, confirmText: 'Remove' }))) return;
     try {
       const doDelete = withStepUp(ensureStepUp, () =>
         deleteMut.mutateAsync(cred.id)
