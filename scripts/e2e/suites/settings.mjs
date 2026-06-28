@@ -140,6 +140,21 @@ export default async function run(h) {
     expect(theme && theme.effectiveSource !== 'user', 'pref override was not cleared');
   });
 
+  // ── Critical governance (cross-module) ───────────────────────────────────────────
+  h.section('Settings › Critical governance');
+
+  await test('critical (admin) returns ONLY critical settings across modules', async () => {
+    const r = await api('settings/critical', T.admin, {});
+    ok(r, 'critical failed');
+    const list = r.body.data ?? [];
+    expect(Array.isArray(list) && list.length > 0, 'no critical settings returned');
+    expect(list.every(s => s.isCritical === true), 'a non-critical setting leaked into critical view');
+  });
+
+  await test('ACCESS: employee denied settings/critical', async () => {
+    fails(await api('settings/critical', T.b, {}), 'employee should not read critical governance');
+  });
+
   // ── Manifest review ──────────────────────────────────────────────────────────────
   h.section('Settings › Manifest review');
 

@@ -11,7 +11,7 @@ import { Hono }       from 'hono';
 import { sb }         from '../lib/db';
 import { requireUser, requirePermission, userCan } from '../lib/auth';
 import { z, zv }      from '../lib/validate';
-import { resolveSetting }          from '../lib/settings/resolveSetting';
+import { resolveSetting, resolveSettingsBatch } from '../lib/settings/resolveSetting';
 import { validateSettingValue }    from '../lib/settings/validateSettingValue';
 import { assertCanUpdateSetting }  from '../lib/settings/assertCanUpdateSetting';
 import { seedSettingsFromManifests } from '../lib/settings/seedSettingsFromManifests';
@@ -82,9 +82,10 @@ router.post('/effective', async c => {
     return editCache.get(key)!;
   };
 
+  const resolvedMap = await resolveSettingsBatch(sb, (rows ?? []) as any[], scopeOf(actor, moduleKey));
   const settings = [];
   for (const row of (rows ?? []) as Record<string, any>[]) {
-    const resolved = await resolveSetting(sb, row['setting_key'], scopeOf(actor, moduleKey));
+    const resolved = resolvedMap.get(row['setting_key']) ?? { value: row['default_value'], source: 'default' as const, scopeId: null };
     settings.push({
       settingKey: row['setting_key'], moduleKey: row['module_key'], label: row['label'], description: row['description'],
       dataType: row['data_type'], settingClass: row['setting_class'], defaultValue: row['default_value'],
@@ -109,9 +110,10 @@ router.post('/my-preferences', async c => {
     .in('setting_class', ['personal_preference', 'ui_preference'])
     .eq('is_active', true).order('module_key').order('setting_key');
 
+  const resolvedMap = await resolveSettingsBatch(sb, (rows ?? []) as any[], scopeOf(actor, ''));
   const settings = [];
   for (const row of (rows ?? []) as Record<string, any>[]) {
-    const resolved = await resolveSetting(sb, row['setting_key'], scopeOf(actor, row['module_key']));
+    const resolved = resolvedMap.get(row['setting_key']) ?? { value: row['default_value'], source: 'default' as const, scopeId: null };
     settings.push({
       settingKey: row['setting_key'], moduleKey: row['module_key'], label: row['label'], description: row['description'],
       dataType: row['data_type'], settingClass: row['setting_class'], defaultValue: row['default_value'],
@@ -120,6 +122,40 @@ router.post('/my-preferences', async c => {
       isCritical: row['is_critical'], isSensitive: row['is_sensitive'], isAudited: row['is_audited'],
       scope: row['scope'],
       editable: ((row['scope'] ?? []) as string[]).includes('user') && (row['user_override_allowed'] ?? true),
+    });
+  }
+  return c.json({ success: true, data: settings });
+});
+
+// POST /api/settings/critical — every critical setting across modules, resolved
+// at global scope (Governance ▸ Critical view). Gated on settings.critical.view.
+router.post('/critical', async c => {
+  const actor = await requireUser(c);
+  if (!(isSuper(actor) || (await userCan(actor, 'settings.critical.view'))))
+    return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
+
+  const { data: rows } = await sb.from('app_setting_catalog').select('*')
+    .eq('is_critical', true).eq('is_active', true).order('module_key').order('setting_key');
+
+  const editCache = new Map<string, boolean>();
+  const canManage = async (key: string) => {
+    if (isSuper(actor)) return true;
+    if (!editCache.has(key)) editCache.set(key, await userCan(actor, key));
+    return editCache.get(key)!;
+  };
+
+  const resolvedMap = await resolveSettingsBatch(sb, (rows ?? []) as any[], scopeOf(actor, ''));
+  const settings = [];
+  for (const row of (rows ?? []) as Record<string, any>[]) {
+    const resolved = resolvedMap.get(row['setting_key']) ?? { value: row['default_value'], source: 'default' as const, scopeId: null };
+    settings.push({
+      settingKey: row['setting_key'], moduleKey: row['module_key'], label: row['label'], description: row['description'],
+      dataType: row['data_type'], settingClass: row['setting_class'], defaultValue: row['default_value'],
+      effectiveValue: resolved.value, effectiveSource: resolved.source, effectiveScopeId: resolved.scopeId ?? null,
+      allowedValues: row['allowed_values'], minValue: row['min_value'], maxValue: row['max_value'],
+      isCritical: row['is_critical'], isSensitive: row['is_sensitive'], isAudited: row['is_audited'],
+      scope: row['scope'],
+      editable: await canManage(row['minimum_manage_permission'] ?? row['requires_permission']),
     });
   }
   return c.json({ success: true, data: settings });

@@ -37,6 +37,7 @@
 @import '../../assets/styles/loading.css'     layer(components);
 @import '../../assets/styles/helpers.css'     layer(components);
 @import '../../assets/styles/login.css'       layer(components);
+@import '../../assets/styles/settings.css'    layer(components);
 
 /* ── views.css monolith — TEMPORARY during Phase 2 carving. ───────────────────
    Each section block is progressively moved out of views.css into a
@@ -62,3 +63,6 @@
 
 /* ── Responsive @media overrides — must win over section base rules ───────── */
 @import '../../assets/styles/responsive.css' layer(sections);
+
+/* ── Settings v2 — full-page navy design (faithful port, scoped under .swz) ──── */
+@import '../../assets/styles/settingsV2.css' layer(sections);

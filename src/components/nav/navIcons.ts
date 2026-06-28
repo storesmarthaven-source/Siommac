@@ -60,6 +60,17 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-folder-open':             'FolderOpen',
   'fa-file-lines':              'FileText',
   'fa-flask':                   'FlaskConical',
+  // Settings nav (v2) — keep the sidebar's Lucide line-icon style
+  'fa-user':                    'User',
+  'fa-clock':                   'Clock',
+  'fa-table-columns':           'PanelLeft',
+  'fa-bell':                    'Bell',
+  'fa-comments':                'MessageSquare',
+  'fa-file-shield':             'FileText',
+  'fa-diagram-project':         'Workflow',
+  'fa-gear':                    'Settings',
+  'fa-lock':                    'Lock',
+  'fa-arrow-left':              'ArrowLeft',
 };
 
 const FALLBACK: keyof typeof lucide = 'Circle';

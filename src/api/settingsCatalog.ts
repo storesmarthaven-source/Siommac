@@ -159,6 +159,16 @@ export function useMyPreferences(enabled = true) {
   });
 }
 
+/** Every critical setting across modules (Governance ▸ Critical), global scope. */
+export function useCriticalSettings(enabled = true) {
+  return useQuery({
+    queryKey: ['settings', 'critical'] as const,
+    queryFn:  () => apiPost<{ success: boolean; data: EffectiveSetting[] }>('settings/critical', {}),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
 // ── Manifest review (governance workflow) ───────────────────────────────────────
 
 export type ManifestReviewStatus = 'draft' | 'pending_review' | 'approved' | 'returned' | 'deprecated';

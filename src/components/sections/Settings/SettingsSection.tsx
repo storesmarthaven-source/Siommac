@@ -35,10 +35,11 @@ import {
   type TimeoutRole,
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
-import { ModuleSettingsPanel } from './ModuleSettingsPanel';
 import { ManifestReviewPanel } from './ManifestReviewPanel';
-import { MyPreferencesPanel } from './MyPreferencesPanel';
-import { NotificationPreferences } from '@components/notifications';
+import { SwzCatalogPage } from './SwzCatalogPage';
+import { SwzIcon } from './swzIcons';
+import { getSwzPage, buildSettingsMenuHtml, type SwzPage } from './settingsNav';
+import { showSection, buildSidebar } from '@/components/nav/navCore';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
   useTotpStatus,
@@ -57,9 +58,7 @@ import {
   type TrustedDevice,
 } from '@api/security';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type StgTab = 'company' | 'attendance-rules' | 'module-settings' | 'manifests' | 'my-preferences' | 'appearance' | 'layout' | 'notifications' | 'security';
+// Settings navigation model lives in ./settingsNav.ts (consumed by the shell).
 
 // ── Shared presentational helpers ──────────────────────────────────────────────
 
@@ -87,22 +86,6 @@ function CardLabel({ icon, text }: { icon: string; text: string }): VNode {
     </div>
   );
 }
-
-// ── Nav sidebar ───────────────────────────────────────────────────────────────
-
-interface NavItem { id: StgTab; label: string; icon: string; iconBg: string; iconColor: string; adminOnly?: boolean; }
-
-const NAV_ITEMS: NavItem[] = [
-  { id: 'company',          label: 'Company & Branding',   icon: 'fa-building',       iconBg: 'rgba(27,45,85,.08)',    iconColor: '#1B2D55', adminOnly: true  },
-  { id: 'attendance-rules', label: 'Attendance Rules',     icon: 'fa-clock',          iconBg: 'rgba(202,138,4,.10)',   iconColor: '#ca8a04', adminOnly: true  },
-  { id: 'module-settings',  label: 'Module Settings',      icon: 'fa-sliders',        iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb', adminOnly: true  },
-  { id: 'manifests',        label: 'Manifest Review',      icon: 'fa-clipboard-check', iconBg: 'rgba(5,150,105,.10)',  iconColor: '#059669', adminOnly: true  },
-  { id: 'my-preferences',   label: 'My Preferences',       icon: 'fa-user-gear',      iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb'                   },
-  { id: 'appearance',       label: 'Appearance',           icon: 'fa-palette',        iconBg: 'rgba(124,58,237,.09)', iconColor: '#7c3aed'                   },
-  { id: 'layout',           label: 'Layout & Navigation',  icon: 'fa-table-columns',  iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb'                   },
-  { id: 'notifications',    label: 'Notifications',        icon: 'fa-bell',           iconBg: 'rgba(71,144,74,.09)',  iconColor: '#47904a'                   },
-  { id: 'security',         label: 'Security & Privacy',   icon: 'fa-shield-halved',  iconBg: 'rgba(228,12,12,.08)', iconColor: '#DC2626'                   },
-];
 
 // ── Colour themes ─────────────────────────────────────────────────────────────
 
@@ -552,21 +535,8 @@ function LayoutPanel(): VNode {
   );
 }
 
-// ── Notifications panel ───────────────────────────────────────────────────────
-// Phase 2c: Uses NotificationPreferences component (TanStack Query + Supabase)
-
-function NotificationsPanel(): VNode {
-  return (
-    <div class="stg-card">
-      <CardLabel icon="fa-bell" text="Notification Preferences" />
-      <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
-        Choose which types of in-app notifications you receive. Email and WhatsApp
-        delivery will be available in a future update.
-      </p>
-      <NotificationPreferences />
-    </div>
-  );
-}
+// (Per-type in-app Notification Preferences are folded into My Preferences in the
+//  v2 design; the standalone NotificationsPanel was removed with the old shell.)
 
 // ── Trusted Devices card ──────────────────────────────────────────────────────
 
@@ -1574,25 +1544,48 @@ function SecurityPanel(): VNode {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Embedded legacy / auth panels (rendered inside the v2 shell) ───────────────
+
+function LegacyPage({ meta, settings, onBrandingSaved }: {
+  meta: SwzPage; settings: AppSettings | null; onBrandingSaved: (name: string, logoUrl: string) => void;
+}): VNode {
+  const body = (() => {
+    if (meta.kind === 'manifests') return <ManifestReviewPanel />;
+    switch (meta.legacy) {
+      case 'company':    return <BrandingPanel settings={settings ?? emptySettings()} onSaved={onBrandingSaved} />;
+      case 'attendance': return <AttendanceRulesPanel settings={settings ?? emptySettings()} />;
+      case 'layout':     return <><LayoutPanel /><AppearancePanel /></>;
+      case 'security':   return <SecurityPanel />;
+      default:           return null;
+    }
+  })();
+  return (
+    <div class="settings-content"><div class="content-shell">
+      <div class="breadcrumb"><span>Settings</span><span class="sep">›</span><span>{meta.group}</span><span class="sep">›</span><span>{meta.label}</span></div>
+      <section class="top-panel">
+        <div class="module-icon"><SwzIcon name={meta.iconKey} /></div>
+        <div><h1>{meta.title}</h1><p>{meta.desc}</p></div>
+      </section>
+      <div class="swz-embed">{body}</div>
+    </div></div>
+  );
+}
+
+// ── Main component (Settings v2 — faithful design, sidebar-swap nav) ───────────
 
 export function SettingsSection(): VNode {
   const role    = useSessionStore(s => s.role);
-  // Company/admin settings are available to admin AND superadmin.
   const isAdmin = role === 'admin' || role === 'superadmin';
+  const defaultPage = isAdmin ? 'training' : 'my-preferences';
 
-  const [activeTab,    setActiveTab]    = useState<StgTab>(isAdmin ? 'company' : 'appearance');
-  const [settings,     setSettings]     = useState<AppSettings | null>(null);
-  const [loadingStg,   setLoadingStg]   = useState(true);
+  const [page, setPage] = useState<string>(defaultPage);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
 
-  // Load settings on mount (admin only for the values; panel itself loads lazily)
+  // Company/attendance values for the embedded legacy panels (admin only).
   useEffect(() => {
-    if (!isAdmin) { setLoadingStg(false); return; }
+    if (!isAdmin) return;
     const ctrl = new AbortController();
-    fetchSettings(ctrl.signal)
-      .then(s => setSettings(s))
-      .catch(() => { /* non-fatal — show empty form */ })
-      .finally(() => setLoadingStg(false));
+    fetchSettings(ctrl.signal).then(s => setSettings(s)).catch(() => { /* non-fatal */ });
     return () => ctrl.abort();
   }, [isAdmin]);
 
@@ -1600,135 +1593,78 @@ export function SettingsSection(): VNode {
     setSettings(prev => prev ? { ...prev, companyName: name, companyLogoUrl: logoUrl } : prev);
   }, []);
 
-  // Visible nav items
-  const navItems = NAV_ITEMS.filter(n => !n.adminOnly || isAdmin);
+  // Refs so the mount-once nav listener reads current values.
+  const pageRef = useRef(page); pageRef.current = page;
+  const inSettingsRef = useRef(false);
+  const prevSectionRef = useRef('s-adm-dashboard');
 
-  const PANEL_LABEL: Record<StgTab, string> = {
-    'company':          'Company & Branding',
-    'attendance-rules': 'Attendance Rules',
-    'module-settings':  'Module Settings',
-    'manifests':        'Manifest Review',
-    'my-preferences':   'My Preferences',
-    'appearance':       'Appearance',
-    'layout':           'Layout & Navigation',
-    'notifications':    'Notifications',
-    'security':         'Security & Privacy',
-  };
+  // Swap the real Siomac sidebar menu to the settings categories while Settings
+  // is active; restore the normal menu on exit. Clicks on the swapped-in items
+  // (data-stg-page / data-stg-exit) are handled here — NavController ignores them
+  // (no data-section), so there's no navigation conflict.
+  useEffect(() => {
+    const enter = () => {
+      try {
+        const last = localStorage.getItem('siomac_last_section_' + (role || ''));
+        if (last && last !== 's-settings') prevSectionRef.current = last;
+      } catch { /* ignore */ }
+      inSettingsRef.current = true;
+      document.getElementById('sidebar')?.classList.add('settings-mode');
+      const menu = document.getElementById('sidebarMenu');
+      if (menu) menu.innerHTML = buildSettingsMenuHtml(isAdmin, pageRef.current);
+    };
+    const exit = () => {
+      inSettingsRef.current = false;
+      document.getElementById('sidebar')?.classList.remove('settings-mode');
+      try { buildSidebar(role || ''); } catch { /* ignore */ }
+    };
+    const onSection = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id === 's-settings') enter();
+      else if (inSettingsRef.current) exit();
+    };
+    const onMenuClick = (e: Event) => {
+      const target = e.target as Element;
+      if (target.closest('[data-stg-exit]')) {
+        e.preventDefault();
+        showSection(prevSectionRef.current || 's-adm-dashboard');
+        return;
+      }
+      const toggle = target.closest('[data-stg-group-toggle]');
+      if (toggle) {
+        e.preventDefault();
+        const grp = toggle.closest('.sb-group');
+        if (grp) { const open = grp.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); }
+        return;
+      }
+      const btn = target.closest<HTMLElement>('[data-stg-page]');
+      if (btn) {
+        e.preventDefault();
+        const p = btn.dataset['stgPage']!;
+        setPage(p);
+        document.querySelectorAll<HTMLElement>('#sidebarMenu [data-stg-page]')
+          .forEach(b => b.classList.toggle('active', b.dataset['stgPage'] === p));
+      }
+    };
+    window.addEventListener('siomac:section', onSection);
+    const menu = document.getElementById('sidebarMenu');
+    menu?.addEventListener('click', onMenuClick);
+    if (document.getElementById('s-settings')?.classList.contains('active')) enter();
+    return () => {
+      window.removeEventListener('siomac:section', onSection);
+      menu?.removeEventListener('click', onMenuClick);
+      if (inSettingsRef.current) { inSettingsRef.current = false; document.getElementById('sidebar')?.classList.remove('settings-mode'); try { buildSidebar(role || ''); } catch { /* ignore */ } }
+    };
+  }, [isAdmin, role]);
+
+  const meta = getSwzPage(page) ?? getSwzPage(defaultPage)!;
+  const catalogKind = meta.kind === 'catalog' || meta.kind === 'myprefs' || meta.kind === 'critical';
 
   return (
-    <div style={{ padding: '24px' }}>
-
-      {/* Page hero */}
-      <div class="stg-page-hero">
-        <div class="stg-page-hero-icon">
-          <i class="fas fa-sliders" />
-        </div>
-        <div>
-          <div class="stg-page-hero-title">Settings</div>
-          <div class="stg-page-hero-sub">Manage your workspace, appearance, and account preferences</div>
-        </div>
-      </div>
-
-      {/* Two-column layout */}
-      <div class="stg-layout">
-
-        {/* Left nav */}
-        <nav class="stg-nav">
-          {/* Group: Workspace (admin only) */}
-          {isAdmin && (
-            <div class="stg-nav-group">
-              <div class="stg-nav-group-label">Workspace</div>
-              {navItems.filter(n => n.adminOnly).map(n => (
-                <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
-              ))}
-            </div>
-          )}
-          {/* Group: Personal */}
-          <div class="stg-nav-group">
-            <div class="stg-nav-group-label">Personal</div>
-            {navItems.filter(n => !n.adminOnly && ['my-preferences','appearance','layout','notifications'].includes(n.id)).map(n => (
-              <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
-            ))}
-          </div>
-          {/* Group: System */}
-          <div class="stg-nav-group">
-            <div class="stg-nav-group-label">System</div>
-            {navItems.filter(n => n.id === 'security').map(n => (
-              <NavBtn key={n.id} item={n} active={activeTab === n.id} onClick={() => setActiveTab(n.id)} />
-            ))}
-          </div>
-        </nav>
-
-        {/* Right content */}
-        <div class="stg-content">
-          {/* Panel header */}
-          <div class="stg-panel-header">
-            {(() => {
-              const n = NAV_ITEMS.find(x => x.id === activeTab)!;
-              return (
-                <>
-                  <div class="stg-panel-icon" style={{ background: n.iconBg }}>
-                    <i class={`fas ${n.icon}`} style={{ color: n.iconColor }} />
-                  </div>
-                  <div>
-                    <div class="stg-panel-title">{PANEL_LABEL[activeTab]}</div>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-
-          {/* Panel body */}
-          {activeTab === 'company' && isAdmin && (
-            loadingStg ? <LoadingSkeleton /> :
-            <BrandingPanel settings={settings ?? emptySettings()} onSaved={handleBrandingSaved} />
-          )}
-          {activeTab === 'attendance-rules' && isAdmin && (
-            loadingStg ? <LoadingSkeleton /> :
-            <AttendanceRulesPanel settings={settings ?? emptySettings()} />
-          )}
-          {activeTab === 'module-settings' && isAdmin && <ModuleSettingsPanel />}
-          {activeTab === 'manifests'       && isAdmin && <ManifestReviewPanel />}
-          {activeTab === 'my-preferences'  && <MyPreferencesPanel />}
-          {activeTab === 'appearance'    && <AppearancePanel />}
-          {activeTab === 'layout'        && <LayoutPanel />}
-          {activeTab === 'notifications' && <NotificationsPanel />}
-          {activeTab === 'security'      && <SecurityPanel />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Nav button ────────────────────────────────────────────────────────────────
-
-function NavBtn({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }): VNode {
-  return (
-    <button
-      type="button"
-      class={active ? 'stg-nav-item active' : 'stg-nav-item'}
-      onClick={onClick}
-    >
-      <span class="stg-nav-icon" style={{ background: item.iconBg }}>
-        <i class={`fas ${item.icon}`} style={{ color: item.iconColor }} />
-      </span>
-      <span class="stg-nav-label">{item.label}</span>
-      <i class="fas fa-chevron-right stg-nav-arrow" />
-    </button>
-  );
-}
-
-// ── Loading skeleton ──────────────────────────────────────────────────────────
-
-function LoadingSkeleton(): VNode {
-  return (
-    <div class="stg-card">
-      {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} class="stg-form-group">
-          <div style={{ height: '13px', width: '120px', background: 'var(--bg-subtle, #f5f7fb)', borderRadius: '4px', marginBottom: '8px' }} />
-          <div style={{ height: '38px', background: 'var(--bg-subtle, #f5f7fb)', borderRadius: '14px' }} />
-        </div>
-      ))}
+    <div class="swz">
+      {catalogKind
+        ? <SwzCatalogPage pageMeta={meta} />
+        : <LegacyPage meta={meta} settings={settings} onBrandingSaved={handleBrandingSaved} />}
     </div>
   );
 }

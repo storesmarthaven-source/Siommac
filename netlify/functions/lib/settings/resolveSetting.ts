@@ -88,6 +88,83 @@ export async function resolveSetting<T = unknown>(
   return { settingKey, value: catalog.default_value as T, source: 'default', scopeId: null };
 }
 
+interface BatchCatalogRow {
+  setting_key: string;
+  module_key: string;
+  default_value: unknown;
+  user_override_allowed?: boolean;
+  role_override_allowed?: boolean;
+  site_override_allowed?: boolean;
+  department_override_allowed?: boolean;
+  module_override_allowed?: boolean;
+}
+
+/**
+ * Resolve MANY settings at once with the same most-specific-wins logic as
+ * resolveSetting, but in TWO queries total (catalog rows are passed in; all
+ * override rows for those keys are fetched in one `IN (...)` query and matched
+ * in memory) — instead of ~7 sequential queries PER setting. This is the hot
+ * path for the /effective, /my-preferences and /critical endpoints.
+ *
+ * The module-scope override is matched against each row's own `module_key`, so a
+ * single call can span multiple modules (My Preferences / Critical governance).
+ */
+export async function resolveSettingsBatch(
+  client: SupabaseClient,
+  catalogRows: readonly BatchCatalogRow[],
+  scope: SettingScope,
+): Promise<Map<string, ResolvedSetting>> {
+  const out = new Map<string, ResolvedSetting>();
+  if (catalogRows.length === 0) return out;
+
+  const keys = catalogRows.map(r => r.setting_key);
+  const { data: values } = await client
+    .from('app_setting_values')
+    .select('setting_key, scope_type, scope_id, value')
+    .in('setting_key', keys);
+
+  const byKey = new Map<string, { scope_type: string; scope_id: string | null; value: unknown }[]>();
+  for (const v of (values ?? []) as { setting_key: string; scope_type: string; scope_id: string | null; value: unknown }[]) {
+    (byKey.get(v.setting_key) ?? byKey.set(v.setting_key, []).get(v.setting_key)!).push(v);
+  }
+
+  for (const c of catalogRows) {
+    const ovs = byKey.get(c.setting_key) ?? [];
+    const pick = (scopeType: string, scopeId: string | null) =>
+      ovs.find(o => o.scope_type === scopeType && (scopeId === null ? o.scope_id === null : o.scope_id === scopeId));
+
+    let resolved: ResolvedSetting | null = null;
+    if (scope.userId && c.user_override_allowed) {
+      const o = pick('user', scope.userId);
+      if (o) resolved = { settingKey: c.setting_key, value: o.value, source: 'user', scopeId: scope.userId };
+    }
+    if (!resolved && c.role_override_allowed) {
+      for (const roleId of scope.roleIds ?? []) {
+        const o = pick('role', roleId);
+        if (o) { resolved = { settingKey: c.setting_key, value: o.value, source: 'role', scopeId: roleId }; break; }
+      }
+    }
+    if (!resolved && scope.departmentId && c.department_override_allowed) {
+      const o = pick('department', scope.departmentId);
+      if (o) resolved = { settingKey: c.setting_key, value: o.value, source: 'department', scopeId: scope.departmentId };
+    }
+    if (!resolved && scope.siteId && c.site_override_allowed) {
+      const o = pick('site', scope.siteId);
+      if (o) resolved = { settingKey: c.setting_key, value: o.value, source: 'site', scopeId: scope.siteId };
+    }
+    if (!resolved && c.module_override_allowed) {
+      const o = pick('module', c.module_key);
+      if (o) resolved = { settingKey: c.setting_key, value: o.value, source: 'module', scopeId: c.module_key };
+    }
+    if (!resolved) {
+      const o = pick('global', null);
+      if (o) resolved = { settingKey: c.setting_key, value: o.value, source: 'global', scopeId: null };
+    }
+    out.set(c.setting_key, resolved ?? { settingKey: c.setting_key, value: c.default_value, source: 'default', scopeId: null });
+  }
+  return out;
+}
+
 /**
  * Resolve a setting to its effective value (override or catalog default),
  * returning `fallback` if the setting is unknown / the catalog isn't synced yet.
