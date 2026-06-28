@@ -35,6 +35,7 @@ import {
   type TimeoutRole,
 } from './api';
 import { applyCompanyNameToDom, applyCompanyLogoToDom } from './domSync';
+import { ModuleSettingsPanel } from './ModuleSettingsPanel';
 import { NotificationPreferences } from '@components/notifications';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import {
@@ -56,7 +57,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type StgTab = 'company' | 'attendance-rules' | 'appearance' | 'layout' | 'notifications' | 'security';
+type StgTab = 'company' | 'attendance-rules' | 'module-settings' | 'appearance' | 'layout' | 'notifications' | 'security';
 
 // ── Shared presentational helpers ──────────────────────────────────────────────
 
@@ -92,6 +93,7 @@ interface NavItem { id: StgTab; label: string; icon: string; iconBg: string; ico
 const NAV_ITEMS: NavItem[] = [
   { id: 'company',          label: 'Company & Branding',   icon: 'fa-building',       iconBg: 'rgba(27,45,85,.08)',    iconColor: '#1B2D55', adminOnly: true  },
   { id: 'attendance-rules', label: 'Attendance Rules',     icon: 'fa-clock',          iconBg: 'rgba(202,138,4,.10)',   iconColor: '#ca8a04', adminOnly: true  },
+  { id: 'module-settings',  label: 'Module Settings',      icon: 'fa-sliders',        iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb', adminOnly: true  },
   { id: 'appearance',       label: 'Appearance',           icon: 'fa-palette',        iconBg: 'rgba(124,58,237,.09)', iconColor: '#7c3aed'                   },
   { id: 'layout',           label: 'Layout & Navigation',  icon: 'fa-table-columns',  iconBg: 'rgba(37,99,235,.09)',  iconColor: '#2563eb'                   },
   { id: 'notifications',    label: 'Notifications',        icon: 'fa-bell',           iconBg: 'rgba(71,144,74,.09)',  iconColor: '#47904a'                   },
@@ -1600,6 +1602,7 @@ export function SettingsSection(): VNode {
   const PANEL_LABEL: Record<StgTab, string> = {
     'company':          'Company & Branding',
     'attendance-rules': 'Attendance Rules',
+    'module-settings':  'Module Settings',
     'appearance':       'Appearance',
     'layout':           'Layout & Navigation',
     'notifications':    'Notifications',
@@ -1678,6 +1681,7 @@ export function SettingsSection(): VNode {
             loadingStg ? <LoadingSkeleton /> :
             <AttendanceRulesPanel settings={settings ?? emptySettings()} />
           )}
+          {activeTab === 'module-settings' && isAdmin && <ModuleSettingsPanel />}
           {activeTab === 'appearance'    && <AppearancePanel />}
           {activeTab === 'layout'        && <LayoutPanel />}
           {activeTab === 'notifications' && <NotificationsPanel />}
