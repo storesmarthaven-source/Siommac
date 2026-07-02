@@ -60,9 +60,9 @@ create table if not exists public.hr_leave_requests (
 create or replace trigger set_updated_at_hr_leave_requests
   before update on public.hr_leave_requests
   for each row execute function public.set_updated_at();
-create index hr_leave_requests_employee_id_idx on public.hr_leave_requests(employee_id);
-create index hr_leave_requests_status_idx      on public.hr_leave_requests(status);
-create index hr_leave_requests_from_date_idx   on public.hr_leave_requests(from_date);
+create index if not exists hr_leave_requests_employee_id_idx on public.hr_leave_requests(employee_id);
+create index if not exists hr_leave_requests_status_idx      on public.hr_leave_requests(status);
+create index if not exists hr_leave_requests_from_date_idx   on public.hr_leave_requests(from_date);
 alter table public.hr_leave_requests enable row level security;
 grant all on public.hr_leave_requests to service_role;
 
@@ -99,8 +99,8 @@ create table if not exists public.hr_leave_accruals (
   created_by        text references public.app_users(id),
   created_at        timestamptz not null default now()
 );
-create index hr_leave_accruals_employee_id_year_idx  on public.hr_leave_accruals(employee_id, year);
-create index hr_leave_accruals_source_request_id_idx on public.hr_leave_accruals(source_request_id);
+create index if not exists hr_leave_accruals_employee_id_year_idx  on public.hr_leave_accruals(employee_id, year);
+create index if not exists hr_leave_accruals_source_request_id_idx on public.hr_leave_accruals(source_request_id);
 alter table public.hr_leave_accruals enable row level security;
 grant all on public.hr_leave_accruals to service_role;
 
