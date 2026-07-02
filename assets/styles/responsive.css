@@ -19,7 +19,6 @@
   /* Sidebar — off-canvas drawer */
   .sidebar { position: fixed; z-index: 999; height: 100vh; transform: translateX(-100%); width: 272px; }
   .sidebar.mobile-open { transform: translateX(0); box-shadow: 8px 0 32px rgba(16,29,59,.3); }
-  .sidebar-toggle { display: none; }
 
   /* Main content tighter */
   .main-content { padding: 12px; }

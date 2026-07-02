@@ -32,7 +32,7 @@ import { rowName } from './shared';
 
 const HR_STATUSES = ['draft', 'pending_onboarding', 'active', 'probation', 'on_leave', 'suspended', 'inactive', 'terminated', 'archived'];
 const NIS_STATUSES = ['registered', 'pending', 'exempt', 'not_applicable'];
-const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager'];
+const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager', 'hr_staff', 'hse_staff'];
 const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'];
 const CHANGE_TYPES = ['department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'status_change'];
 const cap = (s: string) => s.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());

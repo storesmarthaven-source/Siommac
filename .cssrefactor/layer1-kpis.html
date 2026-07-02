@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Layer 1 — Command KPIs</title>
+<style>
+  /* ── tokens (mirrors HSE.css vars) ── */
+  :root {
+    --siomac-navy: #1b2d54;
+    --siomac-red:  #c0392b;
+    --hse-red:     #e24b4a;
+    --hse-amber:   #ef9f27;
+    --hse-green:   #3a9c6c;
+    --hse-blue:    #378add;
+    --hse-red-tint:   rgba(226,75,74,.10);
+    --hse-amber-tint: rgba(239,159,39,.10);
+    --hse-green-tint: rgba(58,156,108,.10);
+    --hse-blue-tint:  rgba(55,138,221,.10);
+    --hse-spark-bar-base: #e2e8f0;
+    --bg-card:   #fff;
+    --bg-subtle: #f8fafe;
+    --border:    #e2e8f0;
+    --text-muted: #64748b;
+    --shadow-card: 0 1px 4px rgba(0,0,0,.07);
+    --shadow-hover: 0 4px 14px rgba(0,0,0,.12);
+    --font-mono: 'Courier New', monospace;
+  }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; padding: 24px; }
+
+  /* ── KPI row ── */
+  .hse-kpi-row {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+  }
+  .hse-kpi-card {
+    flex: 1 1 150px; background: var(--bg-card);
+    border: 0.5px solid var(--border); border-radius: 16px;
+    padding: 14px 16px 12px; cursor: pointer; display: flex;
+    flex-direction: column; gap: 8px;
+    box-shadow: var(--shadow-card); transition: transform .15s, box-shadow .15s;
+  }
+  .hse-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .hse-kpi-top-row {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  }
+  .hse-kpi-label {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); line-height: 1.3;
+  }
+  .hse-kpi-icon-circle {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hse-kpi-icon-circle i { font-size: 0.85rem; }
+  .hse-kpi-value-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .hse-kpi-big {
+    font-size: 2rem; font-weight: 800; letter-spacing: -.04em; line-height: 1;
+    font-family: var(--font-mono);
+  }
+  .hse-delta-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+  }
+  .hse-delta-chip i { font-size: 0.6rem; }
+  .hse-delta-chip.good { background: var(--hse-green-tint); color: var(--hse-green); }
+  .hse-delta-chip.bad  { background: var(--hse-red-tint);   color: var(--hse-red);   }
+  .hse-kpi-note {
+    font-size: 0.68rem; color: var(--text-muted); line-height: 1.4; min-height: 28px;
+  }
+  /* bar sparkline */
+  .hse-bar-spark {
+    display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 2px;
+  }
+  .hse-bar-spark span { border-radius: 3px 3px 0 0; flex: 1; }
+  /* progress track (used for % KPIs) */
+  .hse-kpi-track {
+    height: 4px; border-radius: 2px; background: var(--hse-spark-bar-base);
+    overflow: hidden; margin-top: 4px;
+  }
+  .hse-kpi-track-fill { height: 100%; border-radius: inherit; }
+  /* donut ring placeholder — rendered as SVG inline in real app */
+  .donut-placeholder {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 5.5px solid var(--hse-spark-bar-base); position: relative; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!--
+  LAYER 1 — COMMAND KPIs
+  Classes to style:
+    .hse-kpi-row          — flex row container
+    .hse-kpi-card         — individual card (flex: 1 1 150px)
+    .hse-kpi-top-row      — label + icon circle row
+    .hse-kpi-label        — tiny caps label
+    .hse-kpi-icon-circle  — tinted circle icon (bg/color set inline)
+    .hse-kpi-value-row    — value + delta chip row
+    .hse-kpi-big          — large number (non-% KPIs)
+    .hse-delta-chip       — trend chip (.good / .bad)
+    .hse-kpi-note         — subtitle text
+    .hse-bar-spark        — sparkline bars (% KPIs get .hse-kpi-track instead)
+    .hse-kpi-track        — progress bar track
+    .hse-kpi-track-fill   — progress fill (width set inline)
+    DonutRing SVG — rendered as inline SVG in real app (see HSEDashboard.tsx DonutRing)
+-->
+
+<div class="hse-kpi-row">
+
+  <!-- OSH Recordables (number KPI) -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">OSH Recordables</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-red-tint);color:var(--hse-red);">
+        <i class="fas fa-triangle-exclamation"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <div class="hse-kpi-big" style="color:var(--hse-red);">3</div>
+      <span class="hse-delta-chip bad"><i class="fas fa-arrow-up"></i>2</span>
+    </div>
+    <div class="hse-kpi-note">YTD target: 0 · 1 EMA notification pending</div>
+    <div class="hse-bar-spark">
+      <span style="height:16%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:33%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:50%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:33%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:50%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-red)"></span>
+    </div>
+  </article>
+
+  <!-- Lost Time Cases (number KPI) -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">Lost Time Cases</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-red-tint);color:var(--hse-red);">
+        <i class="fas fa-person-walking-arrow-right"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <div class="hse-kpi-big" style="color:var(--hse-red);">1</div>
+    </div>
+    <div class="hse-kpi-note">47 LTI-free days before this event</div>
+    <div class="hse-bar-spark">
+      <span style="height:0%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:0%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:0%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-red)"></span>
+    </div>
+  </article>
+
+  <!-- HiPo Events -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">HiPo Events</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-red-tint);color:var(--hse-red);">
+        <i class="fas fa-bolt"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <div class="hse-kpi-big" style="color:var(--hse-red);">4</div>
+      <span class="hse-delta-chip bad"><i class="fas fa-arrow-up"></i>1</span>
+    </div>
+    <div class="hse-kpi-note">High-potential near misses YTD</div>
+    <div class="hse-bar-spark">
+      <span style="height:50%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:75%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:75%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-spark-bar-base)"></span>
+      <span style="height:100%;background:var(--hse-red)"></span>
+    </div>
+  </article>
+
+  <!-- CAPA Closure (% KPI — donut) -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">CAPA Closure</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-amber-tint);color:var(--hse-amber);">
+        <i class="fas fa-list-check"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <!-- In app: DonutRing SVG — replicate as SVG here -->
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-amber-tint)" stroke-width="5.5"/>
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-amber)" stroke-width="5.5"
+          stroke-dasharray="122.4 141.4" stroke-dashoffset="35.35" stroke-linecap="round"/>
+        <text x="26" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="var(--hse-amber)">87%</text>
+      </svg>
+    </div>
+    <div class="hse-kpi-note">13 of 15 CAPAs closed · 2 overdue</div>
+    <div class="hse-kpi-track">
+      <div class="hse-kpi-track-fill" style="width:87%;background:var(--hse-amber)"></div>
+    </div>
+  </article>
+
+  <!-- HSE Training (% KPI — donut) -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">HSE Training</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-green-tint);color:var(--hse-green);">
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-green-tint)" stroke-width="5.5"/>
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-green)" stroke-width="5.5"
+          stroke-dasharray="133.1 141.4" stroke-dashoffset="35.35" stroke-linecap="round"/>
+        <text x="26" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="var(--hse-green)">94%</text>
+      </svg>
+      <span class="hse-delta-chip good"><i class="fas fa-arrow-up"></i>2%</span>
+    </div>
+    <div class="hse-kpi-note">75 of 80 required certs current</div>
+    <div class="hse-kpi-track">
+      <div class="hse-kpi-track-fill" style="width:94%;background:var(--hse-green)"></div>
+    </div>
+  </article>
+
+  <!-- PPE Compliance (% KPI — donut) -->
+  <article class="hse-kpi-card">
+    <div class="hse-kpi-top-row">
+      <span class="hse-kpi-label">PPE Compliance</span>
+      <div class="hse-kpi-icon-circle" style="background:var(--hse-green-tint);color:var(--hse-green);">
+        <i class="fas fa-helmet-safety"></i>
+      </div>
+    </div>
+    <div class="hse-kpi-value-row">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-green-tint)" stroke-width="5.5"/>
+        <circle cx="26" cy="26" r="22.5" fill="none" stroke="var(--hse-green)" stroke-width="5.5"
+          stroke-dasharray="128.9 141.4" stroke-dashoffset="35.35" stroke-linecap="round"/>
+        <text x="26" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="var(--hse-green)">91%</text>
+      </svg>
+    </div>
+    <div class="hse-kpi-note">3 field hot spots · 9 item types tracked</div>
+    <div class="hse-kpi-track">
+      <div class="hse-kpi-track-fill" style="width:91%;background:var(--hse-green)"></div>
+    </div>
+  </article>
+
+</div>
+
+</body>
+</html>

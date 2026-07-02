@@ -98,8 +98,8 @@ export const UpdateMyProfileSchema = z.object({
   fullName:           zShortStr(128).optional(),
   email:              z.string().email().max(128).optional().or(z.literal('')),
   phone:              z.string().max(32).optional(),
-  oldPassword:        zPassword.optional(),
-  newPassword:        zPassword.optional(),
+  oldPassword:        zPassword.optional().or(z.literal('')),   // '' = no password change (personal-info save)
+  newPassword:        zPassword.optional().or(z.literal('')),   // route only changes pw when newPassword is non-empty
   profileImageBase64: zBase64Img,
   removeProfileImage: z.boolean().optional(),
 });

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Siomac — page mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Siomac tokens (from assets/styles/base.css) ───────────────────────────── */
+:root{
+  --siomac-navy:#1b2d54; --siomac-red:#E40C0C; --siomac-gold:#FFB712;
+  --bg-card:#FFFFFF; --border:#E9EEF3; --bg-subtle:#F8FAFE;
+  --text-primary:#1F2A44; --text-muted:#5E6F8D; --danger:#C62828;
+  --space-4:16px; --radius-pill:999px;
+  --font-weight-medium:500; --font-weight-semibold:600; --font-weight-bold:700;
+  --line:#e5eaf2; --line-dark:#d8e0ec; --green-bg:#dcfce7; --amber-bg:#fef3c7; --red-bg:#fee2e2; --purple-bg:#ede9fe; --bg:#f7f9fc;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#F9FAFC;color:var(--text-primary);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+.main-content{padding:24px 28px;max-width:1340px;margin:0 auto;}
+svg{display:block}
+
+/* ── PageHeader (assets/styles/uikit-layout.css) ───────────────────────────── */
+.ui-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.ui-page-head-main{display:flex;align-items:center;gap:14px;min-width:0;flex:1;}
+.ui-page-head-icon{width:40px;height:40px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;font-size:1rem;background:var(--siomac-navy);color:#fff;}
+.ui-page-head-text{min-width:0;}
+.ui-page-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.68rem;font-weight:500;color:var(--text-muted);margin-bottom:3px;}
+.ui-page-crumb-current{color:var(--siomac-navy);font-weight:600;}
+.ui-page-title{font-size:1.3rem;font-weight:700;color:var(--siomac-navy);line-height:1.15;letter-spacing:-.01em;}
+.ui-page-sub{font-size:.78rem;color:var(--text-muted);line-height:1.4;margin-top:4px;max-width:680px;}
+.ui-page-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.ui-page-meta-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);font-size:.68rem;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+.ui-page-meta-chip i{font-size:.62rem;color:var(--siomac-navy);}
+.ui-page-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+
+/* ── ProfilePill (assets/styles/dashboard-panel.css) — sits at the header's right ── */
+.profile-notif-pill{display:flex;align-items:center;background:var(--siomac-navy);border-radius:80px;border:none;padding:6px 12px 6px 6px;gap:8px;box-shadow:0 4px 12px rgba(27,45,85,.2);}
+.pnp-profile{display:flex;align-items:center;gap:10px;padding:4px 14px 4px 6px;border-radius:60px;cursor:pointer;}
+.pnp-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,var(--siomac-red),#8b0000);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff;overflow:hidden;flex-shrink:0;}
+.pnp-info{display:flex;flex-direction:column;line-height:1.3;}
+.pnp-name{font-size:.85rem;font-weight:800;color:#fff;}
+.pnp-role{font-size:.68rem;color:rgba(255,255,255,.75);}
+.pnp-divider{width:1px;height:36px;background:rgba(255,255,255,.2);margin:0 2px;flex-shrink:0;}
+.pnp-icons{display:flex;align-items:center;gap:6px;padding-right:4px;}
+.pnp-icon-btn{position:relative;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:1.1rem;}
+
+/* ── StatsCard (assets/styles/uikit-layout.css) — Employee Master KPI cards ──── */
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,.03);}
+.stat-card-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;}
+.stat-card-icon.blue{background:rgba(27,45,85,.09);color:var(--siomac-navy);}
+.stat-card-icon.green{background:rgba(46,125,50,.09);color:#2E7D32;}
+.stat-card-icon.gold{background:rgba(255,183,18,.14);color:#c67c00;}
+.stat-card-icon.red{background:rgba(228,12,12,.09);color:var(--siomac-red);}
+.stat-card-body{flex:1;min-width:0;}
+.stat-card-value{font-size:1.7rem;font-weight:800;color:var(--siomac-navy);line-height:1.05;}
+.stat-card-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-top:4px;}
+.stat-card-sub{font-size:.72rem;color:var(--text-muted);margin-top:6px;}
+
+/* ── Customize toolbar (assets/styles/widgetBoard.css) ─────────────────────── */
+.wbi-toolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 12px;}
+.wbi-tb-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--line-dark);background:#fff;color:#334155;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.wbi-tb-btn.solid{background:var(--siomac-navy);border-color:var(--siomac-navy);color:#fff;}
+
+/* ── MOCKUP-ONLY: static stand-in for the gridstack board (real page positions
+   widgets with gridstack JS; here it's a simple 12-col CSS grid so you can
+   restyle the widget CARDS + page chrome). class names: .mock-board / .mock-cell ── */
+.mock-board{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;}
+.mock-cell{min-width:0;}
+.mock-cell > *{height:100%;}
+@media (max-width:1100px){ .mock-board{grid-template-columns:repeat(6,1fr);} }
+@media (max-width:680px){ .mock-board{grid-template-columns:repeat(2,1fr);} }
+/* src/components/sections/HR/onboardingCase.css
+ *
+ * Styling for the onboarding case-detail page's FUNCTIONAL local table widgets (.obx*) —
+ * Active Tasks / Blockers / Handoffs / Custom Actions — and the lifecycle action buttons that
+ * sit in the standard PageHeader. KPI tiles are styled separately (onboardingCaseWidgets.css).
+ */
+.obx-back { background: none; border: none; color: #2563eb; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; margin-bottom: 10px; }
+.obx-back:hover { color: #1c68d4; }
+
+/* lifecycle actions (PageHeader actions slot) */
+.obx-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.obx-btn { height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.obx-btn:hover { background: #f5f7fa; }
+.obx-btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.obx-btn.primary:hover { background: #1c68d4; }
+.obx-btn.amber { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+.obx-btn.danger { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+.obx-btn.obx-btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.obx-owner { display: inline-flex; align-items: center; gap: 6px; color: #64748b; font-size: 12px; font-weight: 600; }
+.obx-owner select { height: 34px; border: 1px solid #d8e0ec; border-radius: 8px; padding: 0 10px; background: #fff; font-size: 13px; color: #334155; max-width: 180px; }
+
+/* widget card — local table widgets fill their grid cell */
+.obx-section { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.obx-wcard { height: 100%; }
+.obx-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #eef2f7; background: #fbfdff; flex: none; }
+.obx-section-head h2 { margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.obx-section-head h2 i { color: #2563eb; font-size: 13px; }
+.obx-section-body { flex: 1; min-height: 0; overflow: auto; }
+
+/* tables */
+.obx-table { width: 100%; border-collapse: collapse; }
+.obx-table th { text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; padding: 9px 16px; border-bottom: 1px solid #eef2f7; white-space: nowrap; background: #fbfdff; position: sticky; top: 0; z-index: 1; }
+.obx-table td { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: middle; }
+.obx-table tr:last-child td { border-bottom: none; }
+.obx-table tr:hover td { background: #f8fbff; }
+.obx-table b { color: #0f172a; font-weight: 700; }
+
+.obx-rowbtns { display: flex; gap: 6px; }
+.obx-mini { height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.obx-mini:hover { background: #f1f5f9; }
+
+.obx-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.obx-pill.green { background: #dcfce7; color: #15803d; }
+.obx-pill.amber { background: #fef3c7; color: #b45309; }
+.obx-pill.red   { background: #fee2e2; color: #dc2626; }
+.obx-pill.blue  { background: #dbeafe; color: #1d4ed8; }
+.obx-pill.gray  { background: #eef2f7; color: #334155; }
+
+.obx-empty { padding: 20px; text-align: center; color: #94a3b8; font-size: 13px; }
+.obx-meta { color: #64748b; font-size: 13px; }
+/* src/ui/widgets/onboardingCaseWidgets.css
+ *
+ * Case-detail board widgets (registry.hrOnboardingCase). A vibrant "iOS health/control-center"
+ * card grammar — white tiles with a soft per-widget gradient wash, a gradient icon chip, one big
+ * glanceable focal value, a rich viz (gauge / ring / spark / bars / liquid fill) and a bottom
+ * sub-stat strip — but kept in the SIOMAC page palette (navy/blue/green/amber/red/purple), so it
+ * reads as one family with the navy case hero above it. Every class is scoped under `.ocw`.
+ * Each tile FILLS its stack-grid cell (height:100%); text scales with cell width via cqw units.
+ */
+.ocw {
+  --c-line: #eef2f7; --c-text: #0f172a; --c-muted: #64748b; --c-faint: #94a3b8;
+  --c-blue: #2563eb; --c-green: #11a86b; --c-amber: #e08600; --c-red: #e11d48; --c-purple: #6746f2;
+  width: 100%; height: 100%; box-sizing: border-box;
+  background: #fff; border: 1px solid var(--c-line); border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 26px rgba(16,24,40,.05);
+  overflow: hidden; position: relative; isolation: isolate;
+  display: flex; flex-direction: column;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--c-text); container-type: inline-size;
+}
+.ocw * { box-sizing: border-box; }
+
+/* soft top wash per accent (vibrant but light) */
+.ocw::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 46%; z-index: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 88% -20%, var(--wash, rgba(37,99,235,.10)), transparent 70%);
+}
+.ocw.tint-blue   { --wash: rgba(37,99,235,.12); }
+.ocw.tint-green  { --wash: rgba(17,168,107,.13); }
+.ocw.tint-amber  { --wash: rgba(224,134,0,.14); }
+.ocw.tint-red    { --wash: rgba(225,29,72,.12); }
+.ocw.tint-purple { --wash: rgba(103,70,242,.13); }
+.ocw > * { position: relative; z-index: 1; }
+
+/* ── header: titles + gradient icon chip ─────────────────────────────────────────── */
+.ocw-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: clamp(13px,3.6%,18px) clamp(14px,3.8%,18px) 0; }
+.ocw-titles { min-width: 0; }
+.ocw-title { font-size: clamp(13px,3.6cqw,15px); font-weight: 850; letter-spacing: -.02em; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocw-sub { margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--c-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocw-chip { width: 42px; height: 42px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 16px; box-shadow: inset 0 -12px 20px rgba(0,0,0,.16); }
+.ocw-chip.blue   { background: linear-gradient(145deg,#4f94ff,#165bd7); }
+.ocw-chip.green  { background: linear-gradient(145deg,#46e08a,#0f9e5e); }
+.ocw-chip.amber  { background: linear-gradient(145deg,#ffb31b,#ff7d00); }
+.ocw-chip.red    { background: linear-gradient(145deg,#ff7995,#e11d48); }
+.ocw-chip.purple { background: linear-gradient(145deg,#be6dff,#7046ee); }
+
+/* ── body + focal number ─────────────────────────────────────────────────────────── */
+.ocw-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 10px clamp(14px,3.8%,18px); gap: 6px; }
+.ocw-body.center { align-items: center; text-align: center; }
+.ocw-body.row { flex-direction: row; align-items: center; gap: 14px; }
+.ocw-num { font-size: clamp(30px,12cqw,52px); line-height: .9; font-weight: 850; letter-spacing: -.05em; color: var(--c-text); }
+.ocw-num em { font-style: normal; font-size: .42em; font-weight: 700; color: var(--c-faint); margin-left: 4px; letter-spacing: 0; }
+.ocw-num.accent { color: var(--ac, var(--c-blue)); }
+.ocw-statline { font-size: 12px; font-weight: 700; color: var(--c-muted); }
+
+/* ── sub-stat foot strip (hairline dividers) ─────────────────────────────────────── */
+.ocw-foot { flex: none; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--c-line); }
+.ocw-foot-cell { padding: 11px 12px; border-right: 1px solid var(--c-line); min-width: 0; }
+.ocw-foot-cell:last-child { border-right: 0; }
+.ocw-foot-label { font-size: 10px; font-weight: 700; color: var(--c-faint); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocw-foot-val { margin-top: 6px; font-size: 16px; font-weight: 850; letter-spacing: -.03em; color: var(--c-text); white-space: nowrap; }
+.ocw-foot-val small { font-size: 10px; font-weight: 600; color: var(--c-faint); margin-left: 3px; }
+.ocw-foot-val.green { color: #15803d; } .ocw-foot-val.amber { color: #b45309; } .ocw-foot-val.red { color: #dc2626; } .ocw-foot-val.blue { color: #1d4ed8; }
+
+/* ── gauge arc (180°) ────────────────────────────────────────────────────────────── */
+.ocw-gauge { position: relative; width: 100%; max-width: 240px; margin: 0 auto; }
+.ocw-gauge svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ocw-gauge-center { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; }
+.ocw-gauge-center strong { display: block; font-size: clamp(26px,11cqw,40px); line-height: 1; font-weight: 850; letter-spacing: -.05em; }
+.ocw-gauge-center span { display: block; margin-top: 4px; font-size: 12px; font-weight: 750; }
+
+/* ── progress ring (with centre) ─────────────────────────────────────────────────── */
+.ocw-ring { position: relative; flex: none; }
+.ocw-ring svg { width: 100%; height: 100%; display: block; }
+.ocw-ring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.ocw-ring-mid strong { font-size: clamp(18px,7cqw,26px); font-weight: 850; letter-spacing: -.05em; }
+.ocw-ring-mid span { margin-top: 3px; font-size: 10px; font-weight: 700; color: var(--c-faint); }
+
+/* ── sparkline ───────────────────────────────────────────────────────────────────── */
+.ocw-spark { width: 100%; height: 56px; }
+.ocw-spark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* ── vertical bars ───────────────────────────────────────────────────────────────── */
+.ocw-bars { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; height: 100%; min-height: 70px; padding-top: 18px; }
+.ocw-bars i { position: relative; flex: 1; border-radius: 7px 7px 3px 3px; min-height: 6px; display: block; }
+.ocw-bars i b { position: absolute; top: -16px; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 800; color: var(--c-muted); }
+.ocw-bars-axis { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.ocw-bars-axis span { flex: 1; text-align: center; font-size: 10px; font-weight: 700; color: var(--c-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── pill list / rows ────────────────────────────────────────────────────────────── */
+.ocw-list { display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+.ocw-li { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 12px; background: #f7f9fc; }
+.ocw-li-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 12px; background: #eaf2ff; color: var(--c-blue); flex: none; }
+.ocw-li-ico.amber { background: #fff4df; color: #b45309; } .ocw-li-ico.red { background: #ffeef1; color: #e11d48; } .ocw-li-ico.green { background: #e7f8ef; color: #15803d; } .ocw-li-ico.purple { background: #f1edff; color: #6746f2; }
+.ocw-li-main { min-width: 0; }
+.ocw-li-title { font-size: 12px; font-weight: 800; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocw-li-sub { margin-top: 2px; font-size: 10px; font-weight: 600; color: var(--c-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocw-pill { display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.ocw-pill.green { background: #dcfce7; color: #15803d; } .ocw-pill.amber { background: #fef3c7; color: #b45309; } .ocw-pill.red { background: #fee2e2; color: #dc2626; } .ocw-pill.blue { background: #dbeafe; color: #1d4ed8; } .ocw-pill.gray { background: #eef2f7; color: #334155; } .ocw-pill.purple { background: #f1edff; color: #6746f2; }
+
+/* ── battery / liquid fill (provisioning, energy) ────────────────────────────────── */
+.ocw-batt { position: relative; width: 100%; max-width: 130px; height: 100%; min-height: 92px; border-radius: 16px; background: #eef2f7; border: 2px solid #e2e8f0; overflow: hidden; }
+.ocw-batt-fill { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 0 0 14px 14px; background: linear-gradient(180deg,#34d399,#0f9e5e); box-shadow: 0 0 22px rgba(17,168,107,.4); transition: height .4s; }
+.ocw-batt-bolt { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 26px; z-index: 2; text-shadow: 0 2px 6px rgba(0,0,0,.18); }
+
+/* ── bold hero tile (Blockers) ───────────────────────────────────────────────────── */
+.ocw.hero { border: none; color: #fff; }
+.ocw.hero::before { display: none; }
+.ocw.hero.red   { background: linear-gradient(150deg,#fb6f8e 0%,#e11d48 60%,#be123c 100%); }
+.ocw.hero.green { background: linear-gradient(150deg,#4fe09a 0%,#11a86b 62%,#0c8f5a 100%); }
+.ocw.hero .ocw-title, .ocw.hero .ocw-num { color: #fff; }
+.ocw.hero .ocw-sub { color: rgba(255,255,255,.82); }
+.ocw.hero .ocw-chip { background: rgba(255,255,255,.2); box-shadow: inset 0 -10px 18px rgba(0,0,0,.14); }
+.ocw.hero .ocw-foot { border-top-color: rgba(255,255,255,.22); }
+.ocw.hero .ocw-foot-cell { border-right-color: rgba(255,255,255,.22); }
+.ocw.hero .ocw-foot-label { color: rgba(255,255,255,.78); }
+.ocw.hero .ocw-foot-val { color: #fff; }
+.ocw.hero .ocw-li { background: rgba(255,255,255,.14); }
+.ocw.hero .ocw-li-title { color: #fff; } .ocw.hero .ocw-li-sub { color: rgba(255,255,255,.8); }
+.ocw.hero .ocw-li-ico { background: rgba(255,255,255,.22); color: #fff; }
+.ocw-act-btn { height: 28px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.16); color: #fff; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.ocw-act-btn:hover { background: rgba(255,255,255,.26); }
+
+/* ── segmented bar (handoff lifecycle) ───────────────────────────────────────────── */
+.ocw-seg { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: #eef2f7; }
+.ocw-seg i { display: block; height: 100%; }
+.ocw-seg-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
+.ocw-seg-key { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--c-muted); }
+.ocw-seg-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+/* ── tag row (training) ──────────────────────────────────────────────────────────── */
+.ocw-tags { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ocw-rise { font-size: 12px; font-weight: 800; color: #08b63f; }
+
+/* ── avatars (team) ──────────────────────────────────────────────────────────────── */
+.ocw-ava { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; color: #0b55d8; background: #e8f1ff; border: 1px solid #cfe0ff; flex: none; }
+.ocw-ava-stack { display: flex; }
+.ocw-ava-stack .ocw-ava { margin-left: -8px; box-shadow: 0 0 0 2px #fff; }
+.ocw-ava-stack .ocw-ava:first-child { margin-left: 0; }
+
+.ocw-empty { flex: 1; display: grid; place-items: center; min-height: 60px; color: var(--c-faint); font-size: 12px; font-weight: 600; text-align: center; padding: 14px; }
+</style>
+</head>
+<body>
+<div class="main-content">
+  <div class="hr-onboarding-case">
+    <button class="obx-back"><i class="fas fa-arrow-left"></i> Onboarding Cases</button>
+
+    <!-- ── PageHeader with lifecycle actions in the actions slot ─────────────── -->
+    <div class="ui-page-header">
+      <div class="ui-page-head-main">
+        <span class="ui-page-head-icon"><i class="fas fa-user-check"></i></span>
+        <div class="ui-page-head-text">
+          <div class="ui-page-crumb"><span class="ui-page-crumb-current">HR · Onboarding</span></div>
+          <div class="ui-page-title">Keisha Boodram</div>
+          <div class="ui-page-sub">ONB-0042 · Standard Employee</div>
+          <div class="ui-page-meta">
+            <span class="ui-page-meta-chip"><i class="fas fa-circle-dot"></i> In Progress</span>
+            <span class="ui-page-meta-chip"><i class="fas fa-percent"></i> 68% complete</span>
+            <span class="ui-page-meta-chip"><i class="fas fa-calendar"></i> Due Jul 12, 2026</span>
+          </div>
+        </div>
+      </div>
+      <div class="ui-page-head-actions">
+        <div class="obx-actions">
+          <button class="obx-btn amber">Pause</button>
+          <button class="obx-btn primary">Mark Ready</button>
+          <button class="obx-btn">Provision</button>
+          <button class="obx-btn danger">Cancel</button>
+          <label class="obx-owner">Owner
+            <select><option>S. Rampersad</option></select>
+          </label>
+        </div>
+        <div class="profile-notif-pill">
+          <button class="pnp-profile" type="button"><span class="pnp-avatar">AR</span><span class="pnp-info"><span class="pnp-name">Avinash Ramlogan</span><span class="pnp-role">Manager</span></span></button>
+          <div class="pnp-divider"></div>
+          <div class="pnp-icons"><button class="pnp-icon-btn"><i class="fas fa-bell"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customize toolbar (component: @ui/widgets WidgetBoardToolbar) ──────── -->
+    <div class="wbi-toolbar"><button class="wbi-tb-btn"><i class="fas fa-sliders"></i> Customize</button></div>
+
+    <!-- ── Customize grid. MOCKUP: the real page positions these with gridstack;
+         here it is a 12-col CSS grid (.mock-board) so you can restyle the cards.
+         KPI tiles = registry.hrOnboardingCase (scope .ocw); tables = page-local
+         widgets in OnboardingCaseDetail.tsx (scope .obx). ────────────────────── -->
+    <div class="mock-board">
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="ocw tint-blue">
+          <div class="ocw-head"><div class="ocw-titles"><div class="ocw-title">Package Progress</div><div class="ocw-sub">Overall completion</div></div><span class="ocw-chip blue"><i class="fas fa-rocket"></i></span></div>
+          <div class="ocw-body center"><div class="ocw-gauge"><svg viewBox="0 0 200 104" preserveAspectRatio="xMidYMid meet"><path d="M10 90 A90 90 0 0 1 190 90" fill="none" stroke="#eaf0f7" stroke-width="14" stroke-linecap="round"></path><path d="M10 90 A90 90 0 0 1 150 35" fill="none" stroke="#2563eb" stroke-width="14" stroke-linecap="round"></path></svg><div class="ocw-gauge-center"><strong style="color:#2563eb">68%</strong><span style="color:#2563eb">On track</span></div></div></div>
+          <div class="ocw-foot"><div class="ocw-foot-cell"><div class="ocw-foot-label">Done</div><div class="ocw-foot-val green">17</div></div><div class="ocw-foot-cell"><div class="ocw-foot-label">Open</div><div class="ocw-foot-val">8</div></div><div class="ocw-foot-cell"><div class="ocw-foot-label">Blocking</div><div class="ocw-foot-val red">2</div></div></div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="ocw tint-green">
+          <div class="ocw-head"><div class="ocw-titles"><div class="ocw-title">Activation Readiness</div><div class="ocw-sub">Ready to activate</div></div><span class="ocw-chip green"><i class="fas fa-shield-halved"></i></span></div>
+          <div class="ocw-body center"><div class="ocw-ring" style="width:118px;height:118px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#eaf0f7" stroke-width="10"></circle><circle cx="50" cy="50" r="38" fill="none" stroke="#11a86b" stroke-width="10" stroke-linecap="round" stroke-dasharray="186 53" transform="rotate(-90 50 50)"></circle></svg><div class="ocw-ring-mid"><strong style="color:#11a86b">78%</strong><span>ready</span></div></div></div>
+          <div class="ocw-foot"><div class="ocw-foot-cell"><div class="ocw-foot-label">Docs</div><div class="ocw-foot-val">84%</div></div><div class="ocw-foot-cell"><div class="ocw-foot-label">Training</div><div class="ocw-foot-val">71%</div></div><div class="ocw-foot-cell"><div class="ocw-foot-label">Access</div><div class="ocw-foot-val">66%</div></div></div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="ocw tint-amber">
+          <div class="ocw-head"><div class="ocw-titles"><div class="ocw-title">SLA Countdown</div><div class="ocw-sub">Time to target</div></div><span class="ocw-chip amber"><i class="fas fa-clock"></i></span></div>
+          <div class="ocw-body center"><div class="ocw-gauge"><svg viewBox="0 0 200 104" preserveAspectRatio="xMidYMid meet"><path d="M10 90 A90 90 0 0 1 190 90" fill="none" stroke="#eaf0f7" stroke-width="14" stroke-linecap="round"></path><path d="M10 90 A90 90 0 0 1 168 52" fill="none" stroke="#e08600" stroke-width="14" stroke-linecap="round"></path></svg><div class="ocw-gauge-center"><strong style="color:#e08600">9</strong><span style="color:#e08600">days left</span></div></div></div>
+          <div class="ocw-foot"><div class="ocw-foot-cell"><div class="ocw-foot-label">Target</div><div class="ocw-foot-val">Jul 12</div></div><div class="ocw-foot-cell"><div class="ocw-foot-label">Status</div><div class="ocw-foot-val amber">Due soon</div></div></div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="ocw tint-purple">
+          <div class="ocw-head"><div class="ocw-titles"><div class="ocw-title">Team</div><div class="ocw-sub">Owner and assignees</div></div><span class="ocw-chip purple"><i class="fas fa-user-group"></i></span></div>
+          <div class="ocw-body"><div class="ocw-statline" style="margin-bottom:8px"><span class="ocw-ava" style="display:inline-grid;margin-right:8px;vertical-align:middle">SR</span><b>S. Rampersad</b> · owner</div><div class="ocw-ava-stack"><span class="ocw-ava">IT</span><span class="ocw-ava">HS</span><span class="ocw-ava">PR</span><span class="ocw-ava">AK</span></div></div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 8">
+        <div class="obx-section obx-wcard">
+          <div class="obx-section-head"><h2><i class="fas fa-list-check"></i>Active Tasks</h2><button class="obx-btn primary obx-btn-sm">+ Add</button></div>
+          <div class="obx-section-body">
+            <table class="obx-table">
+              <thead><tr><th>Task</th><th>Owner / Assignee</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><b>Collect signed contract</b> <span class="obx-pill red" style="margin-left:8px">blocking</span></td><td>HR Officer</td><td>Jul 5, 2026</td><td><span class="obx-pill amber">In Progress</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Complete</button><button class="obx-mini">Block</button></div></td></tr>
+                <tr><td><b>Issue work email</b></td><td>IT Team</td><td>Jul 6, 2026</td><td><span class="obx-pill blue">Open</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Complete</button><button class="obx-mini">Block</button></div></td></tr>
+                <tr><td><b>Safety induction</b></td><td>HSE Officer</td><td>Jul 9, 2026</td><td><span class="obx-pill red">Blocked</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Complete</button><button class="obx-mini">Unblock</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 4">
+        <div class="obx-section obx-wcard">
+          <div class="obx-section-head"><h2><i class="fas fa-triangle-exclamation"></i>Blockers</h2></div>
+          <div class="obx-section-body">
+            <table class="obx-table">
+              <thead><tr><th>Blocker</th><th>Module</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><b>NIS number missing</b></td><td>Finance</td><td><span class="obx-pill red">Active</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Resolve</button></div></td></tr>
+                <tr><td><b>Induction pending</b></td><td>HSE</td><td><span class="obx-pill amber">Waiting</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Resolve</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 6">
+        <div class="obx-section obx-wcard">
+          <div class="obx-section-head"><h2><i class="fas fa-bolt"></i>Custom Actions</h2><button class="obx-btn primary obx-btn-sm">+ Add</button></div>
+          <div class="obx-section-body">
+            <table class="obx-table">
+              <thead><tr><th>Action</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><b>Issue access badge</b></td><td>Custom Task</td><td><span class="obx-pill amber">In Progress</span></td><td><div class="obx-rowbtns"><button class="obx-mini">Complete</button><button class="obx-mini">Cancel</button></div></td></tr>
+                <tr><td><b>Welcome kit</b></td><td>Custom Task</td><td><span class="obx-pill green">Completed</span></td><td><span class="obx-meta">—</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 6">
+        <div class="obx-section obx-wcard">
+          <div class="obx-section-head"><h2><i class="fas fa-arrow-right-arrow-left"></i>Handoffs</h2></div>
+          <div class="obx-section-body">
+            <table class="obx-table">
+              <thead><tr><th>Module</th><th>Type</th><th>Owner</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><b>Finance</b></td><td>Approval</td><td>Payroll</td><td><span class="obx-pill blue">Sent</span></td></tr>
+                <tr><td><b>IT</b></td><td>Provision</td><td>IT Team</td><td><span class="obx-pill green">Delivered</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

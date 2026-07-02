@@ -33,11 +33,19 @@ import {
   type HrEmployeeDetail, type HrStatutoryRow, type HrAuditEntry, type HrDocument, type HrTrainingSummary,
   type HrWorkflowSummary,
 } from '@api/hr/employees';
-import { useHrOnboardingCase, useCompleteOnboardingTask, useCancelOnboarding } from '@api/hr/onboarding';
 import { ActivityTimeline } from '@shared/orchestration/ActivityTimeline';
+import { EmployeeOnboardingSummary } from './EmployeeOnboardingSummary';
 import {
   humanize, initials, statusTone, TRAINING_TONE, TRAINING_LABEL, type PillTone,
 } from './shared';
+
+/** Employee Master only launches/shows onboarding — the full case workspace lives on
+ *  the Onboarding page. Switches the HR nav section AND tells it which case to land
+ *  on; HRSection.tsx listens for this dedicated event separately from the generic
+ *  'siomac:section' nav switch (which only ever carries a plain section-id string). */
+function openOnboardingCase(caseId: string): void {
+  window.dispatchEvent(new CustomEvent('siomac:hr-onboarding-open-case', { detail: { caseId } }));
+}
 
 // ── small presentational helpers ───────────────────────────────────────────────
 
@@ -431,63 +439,6 @@ function AuditTab({ auditQ }: { auditQ: ReturnType<typeof useHrAudit> }): VNode 
   );
 }
 
-function OnboardingTab({ employeeId }: { employeeId: string }): VNode {
-  const q = useHrOnboardingCase(employeeId);
-  const complete = useCompleteOnboardingTask(employeeId);
-  const cancel = useCancelOnboarding(employeeId);
-  if (q.isLoading && !q.data) return <InfoCard title="Onboarding"><SkeletonText lines={4} /></InfoCard>;
-  if (q.isError || !q.data) return <InfoCard title="Onboarding">
-    <EmptyState icon="fa-list-check" title="No onboarding case"
-      text="This employee has no active onboarding case."
-      note="Start onboarding to generate the task checklist and IT / Finance handoffs that will appear here." />
-  </InfoCard>;
-  const kase = q.data.case;
-  const tasks = q.data.tasks;
-  const handoffs = q.data.handoffs;
-  const status = String(kase['status'] ?? '');
-  const actErr = (complete.error ?? cancel.error);
-  return (
-    <>
-      <InfoCard title="Onboarding Case"
-        action={status === 'in_progress'
-          ? <button class="ui-mini-btn" type="button" disabled={cancel.isPending} onClick={() => cancel.mutate({ caseId: kase['id'] as string, reason: 'Cancelled from profile' })}>Cancel</button>
-          : undefined}>
-        <FieldList>
-          <FieldRow label="Case" value={String(kase['case_no'] ?? '—')} />
-          <FieldRow label="Package" value={humanize(String(kase['package_key'] ?? '—'))} />
-          <FieldRow label="Status" value={<Pill tone={status === 'completed' ? 'green' : status === 'cancelled' ? 'red' : status === 'blocked' ? 'amber' : 'blue'}>{humanize(status)}</Pill>} />
-          <FieldRow label="Started" value={fmtDate(kase['started_at'] as string)} />
-          <FieldRow label="Due" value={fmtDate(kase['due_at'] as string | null)} />
-        </FieldList>
-        {actErr ? <div class="ui-warn">{actErr instanceof Error ? actErr.message : 'Action failed'}</div> : null}
-      </InfoCard>
-      <InfoCard title={`Tasks (${tasks.length})`}>
-        <MiniTable cols={['Task', 'Owner', 'Status', '']} empty="No tasks.">
-          {tasks.map(t => {
-            const ts = String(t['status'] ?? '');
-            const open = ts === 'pending' || ts === 'in_progress';
-            return (
-              <tr>
-                <td>{String(t['task_title'] ?? '—')}</td>
-                <td>{humanize(String(t['owner_role'] ?? '—'))}</td>
-                <td><Pill tone={ts === 'completed' ? 'green' : ts === 'blocked' ? 'red' : ts === 'skipped' ? 'gray' : 'amber'}>{humanize(ts)}</Pill></td>
-                <td>{open ? <div class="ui-mini-btn-row"><button class="ui-mini-btn" type="button" disabled={complete.isPending} onClick={() => complete.mutate(t['id'] as string)}>Complete</button></div> : '—'}</td>
-              </tr>
-            );
-          })}
-        </MiniTable>
-      </InfoCard>
-      {handoffs.length > 0 && (
-        <InfoCard title="Handoffs">
-          <MiniTable cols={['Module', 'Type', 'Status']} empty="No handoffs.">
-            {handoffs.map(h => <tr><td>{humanize(String(h['target_module'] ?? '—'))}</td><td>{humanize(String(h['handoff_type'] ?? '—'))}</td><td>{humanize(String(h['status'] ?? '—'))}</td></tr>)}
-          </MiniTable>
-        </InfoCard>
-      )}
-    </>
-  );
-}
-
 // Leave / Attendance live in their own modules; there is no in-drawer action to
 // wire here yet, so this is an honest informational panel — no dead button.
 function ModuleLinkTab({ title, body }: { title: string; body: string }): VNode {
@@ -607,7 +558,7 @@ export function ProfileDrawer(
             {tab === 'Documents'         && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={() => onAction('Upload HR Document')} />}
             {tab === 'Training'          && <TrainingTab trainQ={trainQ} />}
             {tab === 'Statutory Profile' && <StatutoryTab d={d!} onEdit={() => onAction('Edit Statutory Profile')} />}
-            {tab === 'Onboarding'        && <OnboardingTab employeeId={employeeId} />}
+            {tab === 'Onboarding'        && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
             {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
             {tab === 'Leave'             && <ModuleLinkTab title="Leave" body="Leave balances and requests are managed in the Leave module." />}
             {tab === 'Attendance'        && <ModuleLinkTab title="Attendance" body="Timesheets and clock events are managed in the Attendance module." />}

@@ -44,7 +44,7 @@ const VerifySchema = z.object({
 
 router.post('/options', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthReadLimit.check(user.id);
+  const rl = await checkAuthReadLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -84,7 +84,7 @@ router.post('/options', async c => {
 
 router.post('/verify', async c => {
   const user = await requireUser(c);
-  const rl = checkCodeVerifyLimit.check(user.id);
+  const rl = await checkCodeVerifyLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }

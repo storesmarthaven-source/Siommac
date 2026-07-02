@@ -13,7 +13,7 @@ import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { taskCategory } from './onboardingTaskCategory';
-import type { OnboardingAuditRow } from '../../../../types/hrOnboarding';
+import type { OnboardingAuditRow, OnboardingHandoffStatus, OnboardingHandoffActionResult } from '../../../../types/hrOnboarding';
 
 const err = (status: number, message: string): Error => Object.assign(new Error(message), { status });
 const nowISO = (): string => new Date().toISOString();
@@ -21,6 +21,7 @@ const TERMINAL = ['completed', 'cancelled'];
 const ACTIVE_BLOCKER = ['active', 'acknowledged', 'waiting_on_owner', 'escalated'];
 const isOpenTask = (s: string): boolean => !['completed', 'skipped', 'cancelled'].includes(s);
 const slug = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+const humanizeModule = (s: string): string => s.replace(/[_.]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
 
 interface CaseRow { id: string; status: string; employee_id: string | null; case_no: string; owner_id: string | null }
 interface TaskRow { id: string; case_id: string; task_key: string; task_title: string; module_key: string | null; status: string; assigned_to: string | null; due_at: string | null }
@@ -129,6 +130,59 @@ export async function unblockOnboardingTask(actorId: string, args: { taskId: str
   await writeHrAudit({ submoduleKey: 'onboarding', recordId: task.case_id, actorId, action: 'hr.onboarding.task_unblocked', newState: { taskKey: task.task_key, reason: args.reason ?? null } });
   await recomputeCaseStatus(task.case_id);
   return { taskId: task.id, status: 'pending' };
+}
+
+// ── task notes / evidence (append-only, in task metadata; each append audited) ────
+async function loadTaskWithMeta(taskId: string): Promise<TaskRow & { metadata: Record<string, unknown> }> {
+  const { data: task } = await sb.from('hr_onboarding_tasks')
+    .select('id, case_id, task_key, task_title, module_key, status, assigned_to, due_at, metadata')
+    .eq('id', taskId).maybeSingle<TaskRow & { metadata: Record<string, unknown> | null }>();
+  if (!task) throw err(404, 'Onboarding task not found.');
+  return { ...task, metadata: (task.metadata && typeof task.metadata === 'object' ? task.metadata : {}) };
+}
+const metaArr = (meta: Record<string, unknown>, key: string): unknown[] => (Array.isArray(meta[key]) ? meta[key] as unknown[] : []);
+
+export async function addOnboardingTaskNote(actorId: string, args: { taskId: string; note: string }): Promise<{ taskId: string; noteId: string }> {
+  const note = (args.note ?? '').trim();
+  if (!note) throw err(400, 'A note is required.');
+  const task = await loadTaskWithMeta(args.taskId);
+  const entry = { id: crypto.randomUUID(), note, byId: actorId, byName: null, at: nowISO() };
+  const metadata = { ...task.metadata, notes: [...metaArr(task.metadata, 'notes'), entry] };
+  const { error } = await sb.from('hr_onboarding_tasks').update({ metadata }).eq('id', task.id);
+  if (error) throw err(500, error.message);
+  void emitAppEvent({ eventType: 'onboarding.task.note_added', sourceModule: 'hr', sourceEntityType: 'onboarding_case', sourceEntityId: task.case_id, actorUserId: actorId, severity: 'info', payload: { taskKey: task.task_key, note } });
+  await writeHrAudit({ submoduleKey: 'onboarding', recordId: task.case_id, actorId, action: 'hr.onboarding.task_note_added', newState: { taskKey: task.task_key, note } });
+  return { taskId: task.id, noteId: entry.id };
+}
+
+export async function attachOnboardingTaskEvidence(
+  actorId: string,
+  args: { taskId: string; fileName: string; filePath: string; mimeType?: string | null; fileSize?: number | null },
+): Promise<{ taskId: string; evidenceId: string }> {
+  const task = await loadTaskWithMeta(args.taskId);
+  if (!isOpenTask(task.status)) throw err(400, `Task already ${task.status}.`);
+  const entry = {
+    id: crypto.randomUUID(), fileName: args.fileName, filePath: args.filePath,
+    mimeType: args.mimeType ?? null, fileSize: args.fileSize ?? null, byId: actorId, byName: null, at: nowISO(),
+  };
+  const metadata = { ...task.metadata, evidence: [...metaArr(task.metadata, 'evidence'), entry] };
+  const { error } = await sb.from('hr_onboarding_tasks').update({ metadata }).eq('id', task.id);
+  if (error) throw err(500, error.message);
+  void emitAppEvent({ eventType: 'onboarding.task.evidence_attached', sourceModule: 'hr', sourceEntityType: 'onboarding_case', sourceEntityId: task.case_id, actorUserId: actorId, severity: 'info', payload: { taskKey: task.task_key, fileName: args.fileName } });
+  await writeHrAudit({ submoduleKey: 'onboarding', recordId: task.case_id, actorId, action: 'hr.onboarding.task_evidence_attached', newState: { taskKey: task.task_key, fileName: args.fileName, filePath: args.filePath } });
+  return { taskId: task.id, evidenceId: entry.id };
+}
+
+/** True when the settings gate hr_onboarding.task_completion_requires_evidence is ON,
+ *  this task requires evidence, and none has been attached — completion must be
+ *  rejected. Gate defaults OFF so existing flows are unchanged until an admin sets it. */
+export async function taskEvidenceMissing(taskId: string): Promise<boolean> {
+  const gate = await resolveSettingValue<unknown>(sb, 'hr_onboarding.task_completion_requires_evidence', { moduleKey: 'hr_onboarding' }, false);
+  if (gate !== true && gate !== 'true') return false;
+  const { data: task } = await sb.from('hr_onboarding_tasks').select('requires_evidence, metadata').eq('id', taskId).maybeSingle<{ requires_evidence: boolean | null; metadata: Record<string, unknown> | null }>();
+  if (!task?.requires_evidence) return false;
+  const meta = (task.metadata && typeof task.metadata === 'object' ? task.metadata : {}) as Record<string, unknown>;
+  return metaArr(meta, 'evidence').length === 0;
 }
 
 // ── case lifecycle ─────────────────────────────────────────────────────────────--
@@ -243,6 +297,32 @@ export async function escalateOnboardingBlocker(actorId: string, args: { blocker
   return { blockerId: b.id, status: 'escalated' };
 }
 
+/** Nudge the blocker's owner — sends a real in-app notification (app_event with an
+ *  explicit recipient) to whoever owns the blocker, so the Blocked board's "Notify
+ *  Owner" isn't a dead button. Requires an owner; the message is optional. */
+export async function notifyOnboardingBlockerOwner(
+  actorId: string, args: { blockerId: string; message?: string | null },
+): Promise<{ blockerId: string; notifiedOwnerId: string; notifiedAt: string }> {
+  const { data: b } = await sb.from('hr_onboarding_blockers')
+    .select('id, case_id, status, blocker_title, blocking_module, owner_id')
+    .eq('id', args.blockerId).maybeSingle<{ id: string; case_id: string; status: string; blocker_title: string; blocking_module: string; owner_id: string | null }>();
+  if (!b) throw err(404, 'Blocker not found.');
+  if (!ACTIVE_BLOCKER.includes(b.status)) throw err(400, `Blocker is ${b.status} — nothing to notify.`);
+  if (!b.owner_id) throw err(400, 'This blocker has no owner to notify. Assign an owner first (escalate).');
+
+  const at = nowISO();
+  const message = (args.message ?? '').trim() || `Action needed on onboarding blocker: ${b.blocker_title} (${humanizeModule(b.blocking_module)}).`;
+  await emitAppEvent({
+    eventType: 'onboarding.blocker.owner_notified', sourceModule: 'hr', sourceEntityType: 'onboarding_case', sourceEntityId: b.case_id,
+    actorUserId: actorId, severity: 'warning',
+    payload: { blockerId: b.id, blockerTitle: b.blocker_title, blockingModule: b.blocking_module, ownerId: b.owner_id, message },
+    explicitRecipients: [{ userId: b.owner_id, reason: 'owner' }],
+    notification: { title: 'Onboarding blocker needs attention', body: message, actionRoute: `hr/onboarding/${b.case_id}`, type: 'onboarding_blocker_reminder', actionRequired: true },
+  });
+  await writeHrAudit({ submoduleKey: 'onboarding', recordId: b.case_id, actorId, action: 'hr.onboarding.blocker_owner_notified', newState: { blockerTitle: b.blocker_title, ownerId: b.owner_id }, reason: args.message ?? null });
+  return { blockerId: b.id, notifiedOwnerId: b.owner_id, notifiedAt: at };
+}
+
 export async function waiveOnboardingBlocker(actorId: string, args: { blockerId: string; reason: string }): Promise<{ blockerId: string; status: string }> {
   const reason = (args.reason ?? '').trim();
   if (!reason) throw err(400, 'A waiver reason is required.');
@@ -260,6 +340,68 @@ export async function waiveOnboardingBlocker(actorId: string, args: { blockerId:
   await recomputeCaseStatus(b.case_id);
   return { blockerId: b.id, status: 'waived' };
 }
+
+// ── handoffs (cross-case control center — retry / accept / complete / cancel) ─────
+// The full lifecycle FSM. Includes 'delivered' (an intent a receiver auto-fulfils,
+// distinct from a human 'completed'); a delivered handoff can still be marked complete
+// or cancelled but never re-opened. Terminal states have no outgoing edges.
+const HANDOFF_TRANSITIONS: Record<string, OnboardingHandoffStatus[]> = {
+  pending:   ['sent', 'accepted', 'cancelled', 'failed'],
+  sent:      ['accepted', 'delivered', 'failed', 'cancelled'],
+  accepted:  ['delivered', 'completed', 'blocked', 'cancelled'],
+  delivered: ['completed', 'cancelled'],
+  blocked:   ['accepted', 'completed', 'cancelled'],
+  failed:    ['pending', 'cancelled'],
+  completed: [],
+  cancelled: [],
+};
+
+interface HandoffRow { id: string; case_id: string; status: string; target_module: string; handoff_type: string | null }
+async function loadHandoff(handoffId: string): Promise<HandoffRow> {
+  const { data } = await sb.from('hr_onboarding_handoffs').select('id, case_id, status, target_module, handoff_type').eq('id', handoffId).maybeSingle<HandoffRow>();
+  if (!data) throw err(404, 'Onboarding handoff not found.');
+  return data;
+}
+
+/** One transition, shared by all four handoff actions. Validates the FSM edge, stamps
+ *  the right timestamp/failure_reason columns, events + audits, and recomputes the case
+ *  (a blocked/failed handoff can gate the case; clearing it can unblock). */
+async function transitionHandoff(
+  actorId: string, handoffId: string, to: OnboardingHandoffStatus,
+  opts: { reason?: string | null; eventType: string; action: string; severity: 'info' | 'warning' } = {} as never,
+): Promise<OnboardingHandoffActionResult> {
+  const h = await loadHandoff(handoffId);
+  const allowed = HANDOFF_TRANSITIONS[h.status] ?? [];
+  if (!allowed.includes(to)) throw err(400, `Cannot move a ${h.status} handoff to ${to}.`);
+  const at = nowISO();
+  const patch: Record<string, unknown> = { status: to, last_event_at: at };
+  if (to === 'accepted')  patch['accepted_at'] = at;
+  if (to === 'completed') patch['completed_at'] = at;
+  if (to === 'failed')    patch['failure_reason'] = opts.reason ?? null;
+  if (to === 'pending')   patch['failure_reason'] = null;   // retry clears the prior failure
+  const { error } = await sb.from('hr_onboarding_handoffs').update(patch).eq('id', h.id);
+  if (error) throw err(500, error.message);
+  void emitAppEvent({ eventType: opts.eventType, sourceModule: 'hr', sourceEntityType: 'onboarding_case', sourceEntityId: h.case_id, actorUserId: actorId, severity: opts.severity, payload: { handoffId: h.id, targetModule: h.target_module, handoffType: h.handoff_type, from: h.status, to, reason: opts.reason ?? null } });
+  await writeHrAudit({ submoduleKey: 'onboarding', recordId: h.case_id, actorId, action: opts.action, previousState: { status: h.status }, newState: { status: to }, reason: opts.reason ?? null });
+  await recomputeCaseStatus(h.case_id);
+  return { handoffId: h.id, caseId: h.case_id, status: to, lastEventAt: at };
+}
+
+/** Failed → pending: re-queue a failed handoff for delivery. */
+export const retryOnboardingHandoff = (actorId: string, a: { handoffId: string; reason?: string | null }): Promise<OnboardingHandoffActionResult> =>
+  transitionHandoff(actorId, a.handoffId, 'pending', { reason: a.reason, eventType: 'onboarding.handoff.retried', action: 'hr.onboarding.handoff_retried', severity: 'info' });
+
+/** pending/sent → accepted: the target module acknowledged the handoff. */
+export const acceptOnboardingHandoff = (actorId: string, a: { handoffId: string; reason?: string | null }): Promise<OnboardingHandoffActionResult> =>
+  transitionHandoff(actorId, a.handoffId, 'accepted', { reason: a.reason, eventType: 'onboarding.handoff.accepted', action: 'hr.onboarding.handoff_accepted', severity: 'info' });
+
+/** → completed: the target module finished the work. */
+export const completeOnboardingHandoff = (actorId: string, a: { handoffId: string; reason?: string | null }): Promise<OnboardingHandoffActionResult> =>
+  transitionHandoff(actorId, a.handoffId, 'completed', { reason: a.reason, eventType: 'onboarding.handoff.completed', action: 'hr.onboarding.handoff_completed', severity: 'info' });
+
+/** → cancelled: abandon the handoff (any non-terminal state). */
+export const cancelOnboardingHandoff = (actorId: string, a: { handoffId: string; reason?: string | null }): Promise<OnboardingHandoffActionResult> =>
+  transitionHandoff(actorId, a.handoffId, 'cancelled', { reason: a.reason, eventType: 'onboarding.handoff.cancelled', action: 'hr.onboarding.handoff_cancelled', severity: 'warning' });
 
 // ── case audit (Audit tab) ─────────────────────────────────────────────────────--
 export async function listOnboardingAudit(caseId: string): Promise<OnboardingAuditRow[]> {

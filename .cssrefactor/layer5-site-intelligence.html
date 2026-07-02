@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Layer 5 — Site Intelligence</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --siomac-navy: #1b2d54;
+    --hse-red:   #e24b4a;
+    --hse-amber: #ef9f27;
+    --hse-green: #3a9c6c;
+    --hse-blue:  #378add;
+    --bg-card:   #fff;
+    --bg-subtle: #f8fafe;
+    --border:    #e2e8f0;
+    --text-muted: #64748b;
+    --shadow-card: 0 1px 4px rgba(0,0,0,.07);
+  }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; padding: 24px; }
+
+  /* ── Site table ── */
+  .hse-site-table {
+    background: var(--bg-card); border: 0.5px solid var(--border);
+    border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card);
+  }
+
+  /* shared grid: site | risk | incidents | ptws | capas | readiness | action */
+  .hse-site-thead,
+  .hse-site-row {
+    display: grid;
+    grid-template-columns: 2fr 1.6fr 80px 100px 80px 160px 110px;
+    align-items: center;
+  }
+
+  .hse-site-thead {
+    background: var(--bg-subtle); border-bottom: 1px solid var(--border); padding: 8px 16px;
+  }
+  .hse-site-th {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-muted);
+  }
+
+  .hse-site-row {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .hse-site-row:last-child { border-bottom: none; }
+  .hse-site-row:hover { background: var(--bg-subtle); }
+
+  .hse-site-name { font-size: 0.78rem; font-weight: 600; color: var(--siomac-navy); }
+  .hse-site-loc  { font-size: 0.66rem; color: var(--text-muted); margin-top: 1px; }
+  .hse-site-num  { font-size: 0.82rem; font-weight: 600; text-align: center; color: var(--siomac-navy); }
+
+  /* risk bar */
+  .hse-site-risk-bar-wrap {
+    height: 4px; background: var(--bg-subtle); border-radius: 2px; overflow: hidden; width: 100%; margin-top: 4px;
+  }
+  .hse-site-risk-bar { height: 100%; border-radius: 2px; }
+
+  /* chip */
+  .hse-alert-chip {
+    font-size: 0.62rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 6px; white-space: nowrap; display: inline-flex; margin-bottom: 5px;
+  }
+  .chip-red  { background: #fcebeb; color: #a32d2d; }
+  .chip-amb  { background: #faeeda; color: #854f0b; }
+  .chip-blue { background: #e6f1fb; color: #185fa5; }
+
+  /* open site button */
+  .hse-site-go-btn {
+    font-size: 0.7rem; font-weight: 600; padding: 6px 12px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg-subtle); color: var(--siomac-navy);
+    cursor: pointer; white-space: nowrap;
+  }
+  .hse-site-go-btn:hover { background: var(--siomac-navy); color: #fff; border-color: var(--siomac-navy); }
+</style>
+</head>
+<body>
+
+<!--
+  LAYER 5 — SITE INTELLIGENCE
+  Classes to style:
+    .hse-site-table        — card container (border-radius, shadow)
+    .hse-site-thead        — header row (bg-subtle + border-bottom)
+    .hse-site-th           — individual column header (tiny caps)
+    .hse-site-row          — data row (same grid as thead, hover state)
+    .hse-site-name         — site name
+    .hse-site-loc          — site subtitle (work types)
+    .hse-alert-chip        — risk level badge (.chip-red / .chip-amb / .chip-blue)
+    .hse-site-risk-bar-wrap — risk bar track
+    .hse-site-risk-bar     — risk bar fill (width + background set inline)
+    .hse-site-num          — centred numeric value cell
+    .hse-site-go-btn       — "Open site ↗" button
+
+  Grid columns: 2fr | 1.6fr | 80px | 100px | 80px | 160px | 110px
+  (Site | Risk level | Incidents | PTWs | CAPAs | Readiness | Action)
+
+  Readiness column contains: bold % value + risk bar underneath.
+  Color of number + bar set inline per row based on value.
+-->
+
+<section class="hse-site-table">
+
+  <div class="hse-site-thead">
+    <div class="hse-site-th">Site</div>
+    <div class="hse-site-th">Risk level</div>
+    <div class="hse-site-th" style="text-align:center">Incidents</div>
+    <div class="hse-site-th" style="text-align:center">PTWs</div>
+    <div class="hse-site-th" style="text-align:center">CAPAs</div>
+    <div class="hse-site-th">Readiness</div>
+    <div class="hse-site-th"></div>
+  </div>
+
+  <!-- Galeota Marine Base — Critical -->
+  <div class="hse-site-row">
+    <div>
+      <div class="hse-site-name">Galeota Marine Base</div>
+      <div class="hse-site-loc">Marine transfer · confined space</div>
+    </div>
+    <div>
+      <span class="hse-alert-chip chip-red">Critical</span>
+      <div class="hse-site-risk-bar-wrap">
+        <div class="hse-site-risk-bar" style="width:88%;background:var(--hse-red)"></div>
+      </div>
+    </div>
+    <div class="hse-site-num" style="color:var(--hse-red)">2</div>
+    <div class="hse-site-num" style="color:var(--hse-red)">1 blocked</div>
+    <div class="hse-site-num" style="color:var(--hse-red)">3</div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--hse-amber)">74%</div>
+      <div class="hse-site-risk-bar-wrap" style="margin-top:3px">
+        <div class="hse-site-risk-bar" style="width:74%;background:var(--hse-amber)"></div>
+      </div>
+    </div>
+    <button class="hse-site-go-btn" onclick="event.stopPropagation()">Open site ↗</button>
+  </div>
+
+  <!-- Point Lisas Plant — High -->
+  <div class="hse-site-row">
+    <div>
+      <div class="hse-site-name">Point Lisas Plant</div>
+      <div class="hse-site-loc">Hot work · chemicals · process</div>
+    </div>
+    <div>
+      <span class="hse-alert-chip chip-amb">High</span>
+      <div class="hse-site-risk-bar-wrap">
+        <div class="hse-site-risk-bar" style="width:72%;background:var(--hse-amber)"></div>
+      </div>
+    </div>
+    <div class="hse-site-num" style="color:var(--hse-red)">2</div>
+    <div class="hse-site-num">2 active</div>
+    <div class="hse-site-num" style="color:var(--hse-red)">4</div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--hse-amber)">81%</div>
+      <div class="hse-site-risk-bar-wrap" style="margin-top:3px">
+        <div class="hse-site-risk-bar" style="width:81%;background:var(--hse-amber)"></div>
+      </div>
+    </div>
+    <button class="hse-site-go-btn" onclick="event.stopPropagation()">Open site ↗</button>
+  </div>
+
+  <!-- Piarco Logistics — Medium -->
+  <div class="hse-site-row">
+    <div>
+      <div class="hse-site-name">Piarco Logistics</div>
+      <div class="hse-site-loc">Forklifts · pedestrian traffic</div>
+    </div>
+    <div>
+      <span class="hse-alert-chip chip-amb">Medium</span>
+      <div class="hse-site-risk-bar-wrap">
+        <div class="hse-site-risk-bar" style="width:55%;background:var(--hse-amber)"></div>
+      </div>
+    </div>
+    <div class="hse-site-num">1</div>
+    <div class="hse-site-num">—</div>
+    <div class="hse-site-num" style="color:var(--hse-amber)">2</div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--hse-green)">88%</div>
+      <div class="hse-site-risk-bar-wrap" style="margin-top:3px">
+        <div class="hse-site-risk-bar" style="width:88%;background:var(--hse-green)"></div>
+      </div>
+    </div>
+    <button class="hse-site-go-btn" onclick="event.stopPropagation()">Open site ↗</button>
+  </div>
+
+  <!-- La Brea Yard — Medium -->
+  <div class="hse-site-row">
+    <div>
+      <div class="hse-site-name">La Brea Yard</div>
+      <div class="hse-site-loc">Manual handling · chemicals</div>
+    </div>
+    <div>
+      <span class="hse-alert-chip chip-amb">Medium</span>
+      <div class="hse-site-risk-bar-wrap">
+        <div class="hse-site-risk-bar" style="width:48%;background:var(--hse-amber)"></div>
+      </div>
+    </div>
+    <div class="hse-site-num">1</div>
+    <div class="hse-site-num">—</div>
+    <div class="hse-site-num" style="color:var(--hse-amber)">1</div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--hse-green)">91%</div>
+      <div class="hse-site-risk-bar-wrap" style="margin-top:3px">
+        <div class="hse-site-risk-bar" style="width:91%;background:var(--hse-green)"></div>
+      </div>
+    </div>
+    <button class="hse-site-go-btn" onclick="event.stopPropagation()">Open site ↗</button>
+  </div>
+
+  <!-- Port of Spain Office — Low -->
+  <div class="hse-site-row">
+    <div>
+      <div class="hse-site-name">Port of Spain Office</div>
+      <div class="hse-site-loc">Work at height · facilities</div>
+    </div>
+    <div>
+      <span class="hse-alert-chip chip-blue">Low</span>
+      <div class="hse-site-risk-bar-wrap">
+        <div class="hse-site-risk-bar" style="width:28%;background:var(--hse-blue)"></div>
+      </div>
+    </div>
+    <div class="hse-site-num">1</div>
+    <div class="hse-site-num">1 live</div>
+    <div class="hse-site-num">0</div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:var(--hse-green)">96%</div>
+      <div class="hse-site-risk-bar-wrap" style="margin-top:3px">
+        <div class="hse-site-risk-bar" style="width:96%;background:var(--hse-green)"></div>
+      </div>
+    </div>
+    <button class="hse-site-go-btn" onclick="event.stopPropagation()">Open site ↗</button>
+  </div>
+
+</section>
+</body>
+</html>

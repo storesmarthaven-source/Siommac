@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Siomac — My Profile (mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Siomac tokens (from assets/styles/base.css) ───────────────────────────── */
+:root{
+  --siomac-navy:#1b2d54; --siomac-red:#E40C0C; --siomac-gold:#FFB712;
+  --bg-card:#FFFFFF; --border:#E9EEF3; --bg-subtle:#F8FAFE;
+  --text-primary:#1F2A44; --text-muted:#5E6F8D; --danger:#C62828;
+  --space-4:16px; --radius-pill:999px;
+  --font-weight-medium:500; --font-weight-semibold:600; --font-weight-bold:700;
+  --line:#e5eaf2; --line-dark:#d8e0ec; --green-bg:#dcfce7; --amber-bg:#fef3c7; --red-bg:#fee2e2; --purple-bg:#ede9fe; --bg:#f7f9fc;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#F9FAFC;color:var(--text-primary);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+.main-content{padding:24px 28px;max-width:1340px;margin:0 auto;}
+svg{display:block}
+
+/* ── PageHeader (assets/styles/uikit-layout.css) ───────────────────────────── */
+.ui-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.ui-page-head-main{display:flex;align-items:center;gap:14px;min-width:0;flex:1;}
+.ui-page-head-icon{width:40px;height:40px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;font-size:1rem;background:var(--siomac-navy);color:#fff;}
+.ui-page-head-text{min-width:0;}
+.ui-page-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.68rem;font-weight:500;color:var(--text-muted);margin-bottom:3px;}
+.ui-page-crumb-current{color:var(--siomac-navy);font-weight:600;}
+.ui-page-title{font-size:1.3rem;font-weight:700;color:var(--siomac-navy);line-height:1.15;letter-spacing:-.01em;}
+.ui-page-sub{font-size:.78rem;color:var(--text-muted);line-height:1.4;margin-top:4px;max-width:680px;}
+.ui-page-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.ui-page-meta-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);font-size:.68rem;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+.ui-page-meta-chip i{font-size:.62rem;color:var(--siomac-navy);}
+.ui-page-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+
+/* ── ProfilePill (assets/styles/dashboard-panel.css) — sits at the header's right ── */
+.profile-notif-pill{display:flex;align-items:center;background:var(--siomac-navy);border-radius:80px;border:none;padding:6px 12px 6px 6px;gap:8px;box-shadow:0 4px 12px rgba(27,45,85,.2);}
+.pnp-profile{display:flex;align-items:center;gap:10px;padding:4px 14px 4px 6px;border-radius:60px;cursor:pointer;}
+.pnp-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,var(--siomac-red),#8b0000);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff;overflow:hidden;flex-shrink:0;}
+.pnp-info{display:flex;flex-direction:column;line-height:1.3;}
+.pnp-name{font-size:.85rem;font-weight:800;color:#fff;}
+.pnp-role{font-size:.68rem;color:rgba(255,255,255,.75);}
+.pnp-divider{width:1px;height:36px;background:rgba(255,255,255,.2);margin:0 2px;flex-shrink:0;}
+.pnp-icons{display:flex;align-items:center;gap:6px;padding-right:4px;}
+.pnp-icon-btn{position:relative;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:1.1rem;}
+
+/* ── StatsCard (assets/styles/uikit-layout.css) — Employee Master KPI cards ──── */
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,.03);}
+.stat-card-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;}
+.stat-card-icon.blue{background:rgba(27,45,85,.09);color:var(--siomac-navy);}
+.stat-card-icon.green{background:rgba(46,125,50,.09);color:#2E7D32;}
+.stat-card-icon.gold{background:rgba(255,183,18,.14);color:#c67c00;}
+.stat-card-icon.red{background:rgba(228,12,12,.09);color:var(--siomac-red);}
+.stat-card-body{flex:1;min-width:0;}
+.stat-card-value{font-size:1.7rem;font-weight:800;color:var(--siomac-navy);line-height:1.05;}
+.stat-card-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-top:4px;}
+.stat-card-sub{font-size:.72rem;color:var(--text-muted);margin-top:6px;}
+
+/* ── Customize toolbar (assets/styles/widgetBoard.css) ─────────────────────── */
+.wbi-toolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 12px;}
+.wbi-tb-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--line-dark);background:#fff;color:#334155;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.wbi-tb-btn.solid{background:var(--siomac-navy);border-color:var(--siomac-navy);color:#fff;}
+
+/* ── MOCKUP-ONLY: static stand-in for the gridstack board (real page positions
+   widgets with gridstack JS; here it's a simple 12-col CSS grid so you can
+   restyle the widget CARDS + page chrome). class names: .mock-board / .mock-cell ── */
+.mock-board{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;}
+.mock-cell{min-width:0;}
+.mock-cell > *{height:100%;}
+@media (max-width:1100px){ .mock-board{grid-template-columns:repeat(6,1fr);} }
+@media (max-width:680px){ .mock-board{grid-template-columns:repeat(2,1fr);} }
+/* src/components/sections/Profile/profilePage.css
+ *
+ * Standardised "My Profile" page — clean single-scroll settings cards (PropXYZ-inspired),
+ * sitting under the standard PageHeader (title + ProfilePill). Scoped under `.pf`.
+ */
+.pf { display: flex; flex-direction: column; gap: 18px; max-width: 1100px; }
+.pf * { box-sizing: border-box; }
+
+/* ── hero ── */
+.pf-hero { background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; padding: 20px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 26px rgba(16,24,40,.05); }
+.pf-photo { position: relative; flex: none; cursor: pointer; }
+.pf-cam { position: absolute; right: -2px; bottom: -2px; width: 30px; height: 30px; border-radius: 50%; background: #2563eb; color: #fff; border: 3px solid #fff; display: grid; place-items: center; font-size: 12px; }
+.pf-id { min-width: 0; }
+.pf-name { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.pf-role { margin-top: 3px; color: #64748b; font-size: 13px; font-weight: 600; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pf-chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px; background: #f3f6fb; border: 1px solid #e7eef7; color: #334155; font-size: 12px; font-weight: 600; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-chip i { color: #2563eb; font-size: 11px; flex: none; }
+.pf-photo-actions { display: flex; gap: 8px; margin-left: auto; align-self: flex-start; flex-wrap: wrap; }
+
+/* ── cards ── */
+.pf-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+.pf-card-head { display: flex; align-items: baseline; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #eef2f7; }
+.pf-card-head i { color: #2563eb; font-size: 14px; align-self: center; }
+.pf-card-head h2 { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; }
+.pf-card-sub { color: #94a3b8; font-size: 12px; font-weight: 500; }
+.pf-card-body { padding: 20px; }
+
+/* ── form ── */
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+@media (max-width: 720px) { .pf-grid { grid-template-columns: 1fr; } }
+.pf-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pf-field label { font-size: 12px; font-weight: 700; color: #475569; }
+.pf-field input, .pf-field select { height: 42px; border: 1px solid #d8e0ec; border-radius: 10px; padding: 0 13px; font-size: 14px; color: #0f172a; background: #fff; font-family: inherit; width: 100%; }
+.pf-field input:focus, .pf-field select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.pf-field input[readonly] { background: #f8fafc; color: #64748b; }
+.pf-field .pf-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pf-hint { font-size: 11px; color: #94a3b8; }
+
+.pf-btn { height: 42px; padding: 0 18px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+.pf-btn:hover { background: #1c68d4; }
+.pf-btn:disabled { opacity: .65; cursor: not-allowed; }
+.pf-btn.ghost { background: #fff; border: 1px solid #d8e0ec; color: #334155; }
+.pf-btn.ghost:hover { background: #f5f7fa; }
+.pf-btn.sm { height: 34px; padding: 0 12px; font-size: 13px; }
+.pf-btn.danger { background: #fff; border: 1px solid #fecaca; color: #dc2626; }
+.pf-btn.danger:hover { background: #fef2f2; }
+.pf-actions { margin-top: 18px; }
+
+/* ── activity feed ── */
+.pf-feed { display: flex; flex-direction: column; gap: 14px; }
+.pf-feed-item { display: flex; gap: 12px; align-items: flex-start; }
+.pf-feed-ico { width: 36px; height: 36px; border-radius: 50%; background: #eff6ff; color: #1b2d55; display: grid; place-items: center; flex: none; font-size: 14px; }
+.pf-feed-title { font-size: 13px; font-weight: 600; color: #0f172a; }
+.pf-feed-date { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.pf-empty { text-align: center; padding: 32px 24px; color: #94a3b8; font-size: 13px; }
+.pf-empty i { display: block; font-size: 30px; color: #d1d5db; margin-bottom: 10px; }
+.pf-skel { height: 46px; border-radius: 10px; background: #f3f4f6; }
+</style>
+</head>
+<body>
+<div class="main-content">
+
+  <!-- ── PageHeader (component: @ui PageHeader) ─────────────────────────────── -->
+  <div class="ui-page-header">
+    <div class="ui-page-head-main">
+      <span class="ui-page-head-icon"><i class="fas fa-user"></i></span>
+      <div class="ui-page-head-text">
+        <div class="ui-page-title">My Profile</div>
+        <div class="ui-page-sub">Manage your personal information, security and activity.</div>
+      </div>
+    </div>
+    <div class="ui-page-head-actions">
+      <div class="profile-notif-pill">
+        <button class="pnp-profile" type="button">
+          <span class="pnp-avatar">AR</span>
+          <span class="pnp-info"><span class="pnp-name">Avinash Ramlogan</span><span class="pnp-role">Manager</span></span>
+        </button>
+        <div class="pnp-divider"></div>
+        <div class="pnp-icons">
+          <button class="pnp-icon-btn" type="button"><i class="fas fa-bell"></i></button>
+          <button class="pnp-icon-btn" type="button"><i class="fas fa-comment-dots"></i></button>
+          <button class="pnp-icon-btn" type="button"><i class="fas fa-ticket-alt"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Profile content (component: Profile/MyProfileSection.tsx, scope .pf) ── -->
+  <div class="pf">
+    <div class="pf-hero">
+      <div class="pf-photo">
+        <div style="width:88px;height:88px;border-radius:50%;background:#1B2D55;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:700;">AR</div>
+        <span class="pf-cam"><i class="fas fa-camera"></i></span>
+      </div>
+      <div class="pf-id">
+        <div class="pf-name">Avinash Ramlogan</div>
+        <div class="pf-role">Manager · Operations</div>
+        <div class="pf-chips">
+          <div class="pf-chip"><i class="fas fa-envelope"></i>avinash.r@siomac.com</div>
+          <div class="pf-chip"><i class="fas fa-phone"></i>(868) 555-0142</div>
+          <div class="pf-chip"><i class="fas fa-building"></i>Operations</div>
+          <div class="pf-chip"><i class="fas fa-id-badge"></i>aramlogan</div>
+          <div class="pf-chip"><i class="fas fa-briefcase"></i>Operations Manager</div>
+        </div>
+      </div>
+      <div class="pf-photo-actions">
+        <button type="button" class="pf-btn ghost sm"><i class="fas fa-camera"></i> Change photo</button>
+        <button type="button" class="pf-btn danger sm"><i class="fas fa-trash"></i> Remove</button>
+      </div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-card-head"><i class="fas fa-user"></i><h2>Account information</h2></div>
+      <div class="pf-card-body">
+        <div class="pf-grid">
+          <div class="pf-field"><label>Full name</label><input type="text" value="Avinash Ramlogan"></div>
+          <div class="pf-field"><label>Employee ID</label><input type="text" class="pf-mono" value="EMP-0142" readonly></div>
+          <div class="pf-field"><label>Email address</label><input type="email" value="avinash.r@siomac.com"></div>
+          <div class="pf-field"><label>Phone number</label><input type="tel" value="(868) 555-0142"></div>
+          <div class="pf-field"><label>Department</label><input type="text" value="Operations" readonly></div>
+          <div class="pf-field"><label>Position</label><input type="text" value="Operations Manager" readonly></div>
+          <div class="pf-field"><label>Username</label><input type="text" value="aramlogan" readonly></div>
+          <div class="pf-field"><label>Role</label><input type="text" value="Manager" readonly></div>
+        </div>
+        <div class="pf-actions"><button type="button" class="pf-btn"><i class="fas fa-save"></i> Save changes</button></div>
+      </div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-card-head"><i class="fas fa-lock"></i><h2>Security</h2><span class="pf-card-sub">Update the password used to sign in.</span></div>
+      <div class="pf-card-body">
+        <div class="pf-grid">
+          <div class="pf-field" style="grid-column:1 / -1;"><label>Current password</label><input type="password" placeholder="Required to change password"></div>
+          <div class="pf-field"><label>New password</label><input type="password" placeholder="Min. 6 characters"><span class="pf-hint">Use at least 6 characters.</span></div>
+          <div class="pf-field"><label>Confirm new password</label><input type="password" placeholder="Confirm new password"></div>
+          <div class="pf-field"><label>Two-factor authentication</label><select disabled><option>Disabled (coming soon)</option></select></div>
+        </div>
+        <div class="pf-actions"><button type="button" class="pf-btn"><i class="fas fa-shield-alt"></i> Update password</button></div>
+      </div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-card-head"><i class="fas fa-history"></i><h2>Recent activity</h2></div>
+      <div class="pf-card-body">
+        <div class="pf-feed">
+          <div class="pf-feed-item"><div class="pf-feed-ico"><i class="fas fa-right-to-bracket"></i></div><div><div class="pf-feed-title">Signed in</div><div class="pf-feed-date">Today, 8:02 AM</div></div></div>
+          <div class="pf-feed-item"><div class="pf-feed-ico"><i class="fas fa-pen"></i></div><div><div class="pf-feed-title">Updated phone number</div><div class="pf-feed-date">Jun 24, 2026</div></div></div>
+          <div class="pf-feed-item"><div class="pf-feed-ico"><i class="fas fa-shield-halved"></i></div><div><div class="pf-feed-title">Changed password</div><div class="pf-feed-date">Jun 18, 2026</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

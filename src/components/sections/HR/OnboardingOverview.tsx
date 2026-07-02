@@ -12,7 +12,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { PageHeader, TableSkeleton } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
@@ -26,6 +26,12 @@ import type {
 } from '../../../../types/hrOnboarding';
 import { OnboardingWizard } from './OnboardingWizard';
 import { OnboardingCaseDetail } from './OnboardingCaseDetail';
+import { OnboardingPackageManager } from './OnboardingPackageManager';
+import { OnboardingPackageDetail } from './OnboardingPackageDetail';
+import { OnboardingTasksWorkspace } from './OnboardingTasksWorkspace';
+import { OnboardingHandoffsWorkspace } from './OnboardingHandoffsWorkspace';
+import { OnboardingBlockedBoard } from './OnboardingBlockedBoard';
+import { OnboardingReportsWorkspace } from './OnboardingReportsWorkspace';
 import { caseStatusPill, pillClass, humanize, CASE_STATUS_OPTIONS, fmtDate } from './onboardingStatus';
 import { Avatar } from './shared';
 import './HR.css';
@@ -46,6 +52,8 @@ function defaultOnboardingLayout(): BoardLayout {
         defInst('hr.onboarding.blockedCases',        6, 0, 3, 2, 'compact'),
         defInst('hr.onboarding.activationReadiness', 9, 0, 3, 2, 'compact'),
         defInst('hr.onboarding.cases',               0, 2, 12, 9, 'hero'),
+        defInst('hr.onboarding.packageReadiness',    0, 11, 6, 3, 'wide'),
+        defInst('hr.onboarding.recentActivity',      6, 11, 6, 3, 'wide'),
       ],
     },
   };
@@ -189,14 +197,46 @@ function ObAdvancedFilters(p: ObAdvProps): VNode {
   );
 }
 
-export function OnboardingOverview(): VNode {
+// Full-page drill-in surfaces under HR ▸ Onboarding. Case Detail and Package Detail
+// carry their own data state (selectedCase / openPackageKey) on top of this.
+type OnboardingSurface = 'overview' | 'packages' | 'tasks' | 'handoffs' | 'blocked' | 'reports';
+
+export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: string | null } = {}): VNode {
   const [editing, setEditing] = useState(false);
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
   const [toast, setToast] = useState('');
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [surface, setSurface] = useState<OnboardingSurface>('overview');
   const [selectedCase, setSelectedCase] = useState<OnboardingCaseRow | null>(null);
+  const [openPackageKey, setOpenPackageKey] = useState<string | null>(null);
+  // Open-case-by-id: used by the Profile Drawer deep-link (initialCaseId prop) AND by
+  // the workspaces' "Open Case" actions. The id is resolved to the same rich, computed
+  // row the cases table uses, then Case Detail opens and the pending id clears (so the
+  // same case can be re-opened later without a stale-guard ref).
+  const [jumpCaseId, setJumpCaseId] = useState<string | null>(initialCaseId);
+  useEffect(() => { if (initialCaseId) setJumpCaseId(initialCaseId); }, [initialCaseId]);
+  const jumpCaseQ = useOnboardingCases({ caseIds: jumpCaseId ? [jumpCaseId] : [] }, { enabled: !!jumpCaseId });
+  useEffect(() => {
+    const row = jumpCaseQ.data?.rows[0];
+    if (row && jumpCaseId && row.caseId === jumpCaseId) {
+      setSelectedCase(row);
+      setSurface('overview');
+      setJumpCaseId(null);
+    }
+  }, [jumpCaseId, jumpCaseQ.data]);
+  const openCaseById = (caseId: string): void => setJumpCaseId(caseId);
+  // When this page is ALREADY mounted, the drawer's open-case event must work too —
+  // the initialCaseId prop can't retrigger for a repeat of the same case id.
+  useEffect(() => {
+    function onOpen(e: Event): void {
+      const caseId = (e as CustomEvent<{ caseId: string }>).detail?.caseId;
+      if (caseId) setJumpCaseId(caseId);
+    }
+    window.addEventListener('siomac:hr-onboarding-open-case', onOpen);
+    return () => window.removeEventListener('siomac:hr-onboarding-open-case', onOpen);
+  }, []);
   // Cases table state (the page-local widget closes over these).
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<OnboardingCaseStatus | ''>('');
@@ -264,6 +304,57 @@ export function OnboardingOverview(): VNode {
     );
   }
 
+  // Package Manager / Package Detail / Tasks Workspace — same full-page drill-in
+  // pattern as Case Detail, driven by the surface enum.
+  if (openPackageKey) {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingPackageDetail packageKey={openPackageKey} onBack={() => setOpenPackageKey(null)} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+  if (surface === 'packages') {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingPackageManager onBack={() => setSurface('overview')} onOpenPackage={setOpenPackageKey} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+  if (surface === 'tasks') {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingTasksWorkspace onBack={() => setSurface('overview')} onOpenCase={openCaseById} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+  if (surface === 'handoffs') {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingHandoffsWorkspace onBack={() => setSurface('overview')} onOpenCase={openCaseById} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+  if (surface === 'blocked') {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingBlockedBoard onBack={() => setSurface('overview')} onOpenCase={openCaseById} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+  if (surface === 'reports') {
+    return (
+      <div class="hr-onboarding-overview">
+        <OnboardingReportsWorkspace onBack={() => setSurface('overview')} onToast={notify} />
+        <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+      </div>
+    );
+  }
+
   // Cases table — a PAGE-LOCAL widget. Wrapped in the `.hr-emp-master` scope so it reuses the
   // Employee Master register styling verbatim (toolbar, table, pagination, advanced-filter dropdown).
   const renderCases = (): VNode => {
@@ -296,6 +387,25 @@ export function OnboardingOverview(): VNode {
           readinessState={readinessState} onReadiness={setReady}
           onReset={resetAdvanced}
         />
+        <button type="button" class="hse-btn" onClick={() => setSurface('tasks')}>
+          <i class="fas fa-list-check" /> Tasks
+        </button>
+        <button type="button" class="hse-btn" onClick={() => setSurface('handoffs')}>
+          <i class="fas fa-arrow-right-arrow-left" /> Handoffs
+        </button>
+        <button type="button" class="hse-btn" onClick={() => setSurface('blocked')}>
+          <i class="fas fa-triangle-exclamation" /> Blocked
+        </button>
+        {can('hr.onboarding.reports.view') && (
+          <button type="button" class="hse-btn" onClick={() => setSurface('reports')}>
+            <i class="fas fa-chart-column" /> Reports
+          </button>
+        )}
+        {can('hr.onboarding.packages.manage') && (
+          <button type="button" class="hse-btn" onClick={() => setSurface('packages')}>
+            <i class="fas fa-boxes-stacked" /> Packages
+          </button>
+        )}
         <button type="button" class="hse-btn accent" onClick={() => setWizardOpen(true)}>
           <i class="fas fa-circle-plus" /> New Case
         </button>

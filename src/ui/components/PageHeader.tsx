@@ -29,9 +29,13 @@ export interface PageHeaderProps {
   meta?: PageMetaChip[];
   /** Right-aligned action buttons. */
   actions?: ComponentChildren;
+  /** Hide the inline ProfilePill (e.g. when a global top bar already shows it). */
+  hidePill?: boolean;
+  /** Hide the title/subtext (e.g. when a global top bar already shows them). */
+  hideTitle?: boolean;
 }
 
-export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], actions }: PageHeaderProps): VNode {
+export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], actions, hidePill, hideTitle }: PageHeaderProps): VNode {
   // Breadcrumb = the parent trail only (module › crumbs). The title is the H1
   // below it, so we don't repeat it as a crumb.
   const trail = [module, ...crumbs].filter(Boolean) as string[];
@@ -50,8 +54,8 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
               ))}
             </div>
           )}
-          <div class="ui-page-title">{title}</div>
-          {sub && <div class="ui-page-sub">{sub}</div>}
+          {!hideTitle && <div class="ui-page-title">{title}</div>}
+          {!hideTitle && sub && <div class="ui-page-sub">{sub}</div>}
           {meta.length > 0 && (
             <div class="ui-page-meta">
               {meta.map((m, i) => (
@@ -65,7 +69,7 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
       </div>
       <div class="ui-page-head-actions">
         {actions}
-        <ProfilePill />
+        {!hidePill && <ProfilePill />}
       </div>
     </div>
   );

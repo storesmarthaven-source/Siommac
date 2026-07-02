@@ -15,7 +15,7 @@
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
-import { PageHeader } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
@@ -24,15 +24,16 @@ import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import {
   useOnboardingTasksList, useOnboardingHandoffsList, useOnboardingBlockersList, useOnboardingCaseActions,
-  useOnboardingCompleteTask, useOnboardingAddTask, useOnboardingBlockTask, useOnboardingUnblockTask,
+  useOnboardingCompleteTask, useOnboardingAddTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
   useOnboardingResolveBlocker, useOnboardingEscalateBlocker, useOnboardingWaiveBlocker,
   useOnboardingPauseCase, useOnboardingResumeCase, useOnboardingMarkReady, useOnboardingCompleteCase,
   useOnboardingCancelCase, useOnboardingReassignOwner, useOnboardingProvisionAccount,
-  useOnboardingAddCaseAction, useOnboardingCompleteCaseAction, useOnboardingCancelCaseAction,
+  useOnboardingAddCaseAction, useOnboardingUpdateCaseAction, useOnboardingCompleteCaseAction, useOnboardingCancelCaseAction,
 } from '@api/hr/onboarding';
 import { useHrEmployees } from '@api/hr/employees';
 import type {
   OnboardingCaseRow, OnboardingTaskRow, OnboardingBlockerRow, OnboardingCaseAction,
+  OnboardingActionType, OnboardingOwnerType, OnboardingActionPriority, OnboardingCaseActionStatus,
 } from '../../../../types/hrOnboarding';
 import { useOnboardingCaseStore } from '@store/onboardingCase';
 import { humanize, fmtDate, fmtDateTime } from './onboardingStatus';
@@ -72,9 +73,11 @@ function defaultCaseLayout(): BoardLayout {
         defInst('hr.onboarding.case.blockersTable', 8, 3, 4, 5, 'tall'),
         defInst('hr.onboarding.case.customActions', 0, 8, 6, 4, 'wide'),
         defInst('hr.onboarding.case.handoffsTable', 6, 8, 6, 4, 'wide'),
-        // activity feed (registry tile) + provisioning tile
-        defInst('hr.onboarding.case.activity',     0, 12, 8, 4, 'wide'),
+        // full timeline (supersedes the old activity feed) + provisioning tile
+        defInst('hr.onboarding.case.timeline',     0, 12, 8, 4, 'wide'),
         defInst('hr.onboarding.case.provisioning', 8, 12, 4, 3, 'tall'),
+        // communications (Audit trail is library-addable — permission-gated)
+        defInst('hr.onboarding.case.communications', 0, 16, 6, 4, 'wide'),
       ],
     },
   };
@@ -91,6 +94,16 @@ export function OnboardingCaseDetail({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
+  // Add Task / Add Custom Action modals (replace single-field prompts so the full
+  // set of fields the backend already accepts is actually reachable from the UI).
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [taskForm, setTaskForm] = useState({ taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false, requiresEvidence: false });
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [actionForm, setActionForm] = useState({
+    actionName: '', actionType: 'custom_task' as OnboardingActionType, ownerType: 'role' as OnboardingOwnerType,
+    ownerRole: '', ownerEmployeeId: '', dueDate: '', priority: 'normal' as OnboardingActionPriority,
+    blocksOnboarding: false, requiresEvidence: false,
+  });
   const canEdit = useSessionStore(selectIsManager);
   const isAdmin = useSessionStore(selectIsAdmin);
   const setCaseInStore = useOnboardingCaseStore(s => s.setCase);
@@ -124,9 +137,9 @@ export function OnboardingCaseDetail({
   const pauseMut = useOnboardingPauseCase(), resumeMut = useOnboardingResumeCase(), markReadyMut = useOnboardingMarkReady();
   const completeCaseMut = useOnboardingCompleteCase(), cancelMut = useOnboardingCancelCase(), reassignMut = useOnboardingReassignOwner();
   const provisionMut = useOnboardingProvisionAccount();
-  const completeTaskMut = useOnboardingCompleteTask(), addTaskMut = useOnboardingAddTask(), blockTaskMut = useOnboardingBlockTask(), unblockTaskMut = useOnboardingUnblockTask();
+  const completeTaskMut = useOnboardingCompleteTask(), addTaskMut = useOnboardingAddTask(), reassignTaskMut = useOnboardingReassignTask(), blockTaskMut = useOnboardingBlockTask(), unblockTaskMut = useOnboardingUnblockTask();
   const resolveMut = useOnboardingResolveBlocker(), escalateMut = useOnboardingEscalateBlocker(), waiveMut = useOnboardingWaiveBlocker();
-  const addActionMut = useOnboardingAddCaseAction(), completeActionMut = useOnboardingCompleteCaseAction(), cancelActionMut = useOnboardingCancelCaseAction();
+  const addActionMut = useOnboardingAddCaseAction(), updateActionMut = useOnboardingUpdateCaseAction(), completeActionMut = useOnboardingCompleteCaseAction(), cancelActionMut = useOnboardingCancelCaseAction();
 
   async function run(fn: () => Promise<unknown>, ok: string): Promise<void> {
     try { await fn(); onToast(ok); } catch (e) { onToast(e instanceof Error ? e.message : 'Action failed'); }
@@ -142,10 +155,19 @@ export function OnboardingCaseDetail({
   async function handleProvision(): Promise<void> { if (!caseRow.employeeId) { onToast('No employee linked'); return; } if (!await dialog.confirm({ title: 'Provision a work email & login for this employee?' })) return; await run(() => provisionMut.mutateAsync({ employeeId: caseRow.employeeId!, sendInvite: true }), 'Account provisioning started'); }
 
   // ── task handlers ────────────────────────────────────────────────────────────────
-  async function handleAddTask(): Promise<void> { const t = await dialog.prompt({ title: 'New task title' }); if (!t) return; await run(() => addTaskMut.mutateAsync({ caseId, taskTitle: t }), 'Task added'); }
+  function openAddTask(): void { setTaskForm({ taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false, requiresEvidence: false }); setTaskModalOpen(true); }
+  async function submitAddTask(): Promise<void> {
+    if (!taskForm.taskTitle.trim()) { onToast('Task title is required'); return; }
+    await run(() => addTaskMut.mutateAsync({
+      caseId, taskTitle: taskForm.taskTitle.trim(), assignedTo: taskForm.assignedTo || null,
+      dueAt: taskForm.dueAt || null, priority: taskForm.priority, isBlocking: taskForm.isBlocking, requiresEvidence: taskForm.requiresEvidence,
+    }), 'Task added');
+    setTaskModalOpen(false);
+  }
   async function handleCompleteTask(t: OnboardingTaskRow): Promise<void> { await run(() => completeTaskMut.mutateAsync({ taskId: t.taskId }), 'Task completed'); }
   async function handleBlockTask(t: OnboardingTaskRow): Promise<void> { const r = await dialog.prompt({ title: `Why is "${t.taskTitle}" blocked?` }); if (r === null) return; await run(() => blockTaskMut.mutateAsync({ taskId: t.taskId, reason: r || null }), 'Task blocked'); }
   async function handleUnblockTask(t: OnboardingTaskRow): Promise<void> { await run(() => unblockTaskMut.mutateAsync({ taskId: t.taskId }), 'Task unblocked'); }
+  async function handleReassignTask(t: OnboardingTaskRow, assignedTo: string): Promise<void> { await run(() => reassignTaskMut.mutateAsync({ taskId: t.taskId, assignedTo: assignedTo || null }), 'Task reassigned'); }
 
   // ── blocker handlers ──────────────────────────────────────────────────────────────
   async function handleResolve(b: OnboardingBlockerRow): Promise<void> { const n = await dialog.prompt({ title: `Resolution for: ${b.blockerTitle}` }); if (n === null) return; await run(() => resolveMut.mutateAsync({ blockerId: b.blockerId, note: n || null }), 'Blocker resolved'); }
@@ -153,9 +175,23 @@ export function OnboardingCaseDetail({
   async function handleWaive(b: OnboardingBlockerRow): Promise<void> { const r = await dialog.prompt({ title: `Waiver reason for: ${b.blockerTitle} (required)` }); if (!r) return; await run(() => waiveMut.mutateAsync({ blockerId: b.blockerId, reason: r }), 'Blocker waived'); }
 
   // ── custom action handlers ──────────────────────────────────────────────────────
-  async function handleAddAction(): Promise<void> { const n = await dialog.prompt({ title: 'New custom action name' }); if (!n) return; await run(() => addActionMut.mutateAsync({ caseId, actionName: n, actionType: 'custom_task' }), 'Custom action added'); }
+  function openAddAction(): void {
+    setActionForm({ actionName: '', actionType: 'custom_task', ownerType: 'role', ownerRole: '', ownerEmployeeId: '', dueDate: '', priority: 'normal', blocksOnboarding: false, requiresEvidence: false });
+    setActionModalOpen(true);
+  }
+  async function submitAddAction(): Promise<void> {
+    if (!actionForm.actionName.trim()) { onToast('Action name is required'); return; }
+    await run(() => addActionMut.mutateAsync({
+      caseId, actionName: actionForm.actionName.trim(), actionType: actionForm.actionType,
+      ownerType: actionForm.ownerType, ownerRole: actionForm.ownerRole || null, ownerEmployeeId: actionForm.ownerEmployeeId || null,
+      dueDate: actionForm.dueDate || null, priority: actionForm.priority,
+      blocksOnboarding: actionForm.blocksOnboarding, requiresEvidence: actionForm.requiresEvidence,
+    }), 'Custom action added');
+    setActionModalOpen(false);
+  }
   async function handleCompleteAction(a: OnboardingCaseAction): Promise<void> { await run(() => completeActionMut.mutateAsync({ id: a.id }), 'Action completed'); }
   async function handleCancelAction(a: OnboardingCaseAction): Promise<void> { const r = await dialog.prompt({ title: `Reason for cancelling "${a.actionName}"?` }); if (r === null) return; await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: r || null }), 'Action cancelled'); }
+  async function handleUpdateActionStatus(a: OnboardingCaseAction, status: OnboardingCaseActionStatus): Promise<void> { await run(() => updateActionMut.mutateAsync({ id: a.id, status }), 'Action updated'); }
 
   const blockerOpen = (s: string): boolean => ['active', 'acknowledged', 'waiting_on_owner', 'escalated'].includes(s);
 
@@ -170,11 +206,16 @@ export function OnboardingCaseDetail({
 
   const tasksBody = (): VNode => tasksQ.isLoading && !tasksQ.data ? empty('Loading…') : !tasks.length ? empty('No tasks for this case.') : (
     <table class="obx-table">
-      <thead><tr><th>Task</th><th>Owner / Assignee</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>{tasks.map(t => (
         <tr key={t.taskId}>
           <td><b>{t.taskTitle}</b>{t.isBlocking && <span class="obx-pill red" style={{ marginLeft: 8 }}>blocking</span>}</td>
-          <td>{t.assignedToName ?? humanize(t.ownerRole ?? '—')}</td>
+          <td>
+            <select class="obx-mini-select" value={t.assignedTo ?? ''} onChange={e => void handleReassignTask(t, (e.target as HTMLSelectElement).value)} title="Reassign">
+              <option value="">{humanize(t.ownerRole ?? 'Unassigned')}</option>
+              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
+            </select>
+          </td>
           <td>{fmtDate(t.dueAt)}</td>
           <td><Pill s={t.status} /></td>
           <td><div class="obx-rowbtns">
@@ -220,6 +261,7 @@ export function OnboardingCaseDetail({
     </table>
   );
 
+  const ACTION_STATUS_OPTIONS: OnboardingCaseActionStatus[] = ['open', 'in_progress', 'blocked', 'completed', 'cancelled'];
   const actionsBody = (): VNode => actionsQ.isLoading && !actionsQ.data ? empty('Loading…') : !actions.length ? empty('No custom actions.') : (
     <table class="obx-table">
       <thead><tr><th>Action</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
@@ -227,7 +269,11 @@ export function OnboardingCaseDetail({
         <tr key={a.id}>
           <td><b>{a.actionName}</b></td>
           <td>{humanize(a.actionType)}</td>
-          <td><Pill s={a.status} /></td>
+          <td>
+            <select class="obx-mini-select" value={a.status} onChange={e => void handleUpdateActionStatus(a, (e.target as HTMLSelectElement).value as OnboardingCaseActionStatus)}>
+              {ACTION_STATUS_OPTIONS.map(s => <option key={s} value={s}>{humanize(s)}</option>)}
+            </select>
+          </td>
           <td>{isOpen(a.status) ? <div class="obx-rowbtns">
             <button class="obx-mini" onClick={() => void handleCompleteAction(a)}>Complete</button>
             <button class="obx-mini" onClick={() => void handleCancelAction(a)}>Cancel</button>
@@ -238,10 +284,10 @@ export function OnboardingCaseDetail({
   );
 
   const localWidgets: LocalWidgetMap = {
-    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={() => void handleAddTask()}>+ Add</button>) },
+    'hr.onboarding.case.activeTasks':   { chrome: 'none', title: 'Active Tasks', render: () => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>) },
     'hr.onboarding.case.blockersTable': { chrome: 'none', title: 'Blockers', render: () => wcard('Blockers', 'fa-triangle-exclamation', blockersBody()) },
     'hr.onboarding.case.handoffsTable': { chrome: 'none', title: 'Handoffs', render: () => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody()) },
-    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={() => void handleAddAction()}>+ Add</button>) },
+    'hr.onboarding.case.customActions': { chrome: 'none', title: 'Custom Actions', render: () => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>) },
   };
 
   // ── lifecycle action buttons (PageHeader actions slot) ──────────────────────────
@@ -313,6 +359,63 @@ export function OnboardingCaseDetail({
         onAddWidget={inst => addWidget(CASE_ZONE, placeBottom(inst as WidgetInstance))}
         onPreviewOnBoard={p => setPreview(placeBottom(p))}
       />
+
+      <Modal
+        open={taskModalOpen} title="Add Task" icon="fa-list-check" onClose={() => setTaskModalOpen(false)}
+        onSubmit={() => void submitAddTask()} submitLabel="Add Task" submitDisabled={addTaskMut.isPending}
+      >
+        <FormGrid>
+          <Field label="Task title" wide><TextInput value={taskForm.taskTitle} onInput={v => setTaskForm(f => ({ ...f, taskTitle: v }))} placeholder="e.g. Collect signed contract" /></Field>
+          <Field label="Assignee">
+            <select class="ui-select" value={taskForm.assignedTo} onChange={e => setTaskForm(f => ({ ...f, assignedTo: (e.target as HTMLSelectElement).value }))}>
+              <option value="">Unassigned</option>
+              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
+            </select>
+          </Field>
+          <Field label="Due date"><TextInput type="date" value={taskForm.dueAt} onInput={v => setTaskForm(f => ({ ...f, dueAt: v }))} /></Field>
+          <Field label="Priority">
+            <SelectInput value={taskForm.priority} onInput={v => setTaskForm(f => ({ ...f, priority: v }))} options={['low', 'normal', 'high', 'critical']} />
+          </Field>
+        </FormGrid>
+        <label class="obx-checkline"><input type="checkbox" checked={taskForm.isBlocking} onChange={e => setTaskForm(f => ({ ...f, isBlocking: (e.target as HTMLInputElement).checked }))} /> Blocks activation until complete</label>
+        <label class="obx-checkline"><input type="checkbox" checked={taskForm.requiresEvidence} onChange={e => setTaskForm(f => ({ ...f, requiresEvidence: (e.target as HTMLInputElement).checked }))} /> Requires evidence to complete</label>
+      </Modal>
+
+      <Modal
+        open={actionModalOpen} title="Add Custom Action" icon="fa-bolt" onClose={() => setActionModalOpen(false)}
+        onSubmit={() => void submitAddAction()} submitLabel="Add Action" submitDisabled={addActionMut.isPending}
+      >
+        <FormGrid>
+          <Field label="Action name" wide><TextInput value={actionForm.actionName} onInput={v => setActionForm(f => ({ ...f, actionName: v }))} placeholder="e.g. Return company laptop" /></Field>
+          <Field label="Type">
+            <select class="ui-select" value={actionForm.actionType} onChange={e => setActionForm(f => ({ ...f, actionType: (e.target as HTMLSelectElement).value as OnboardingActionType }))}>
+              {(['custom_task', 'custom_checklist_item', 'custom_external_action', 'custom_handoff', 'custom_document_request', 'custom_training_request', 'custom_approval', 'custom_notification'] as OnboardingActionType[])
+                .map(t => <option key={t} value={t}>{humanize(t)}</option>)}
+            </select>
+          </Field>
+          <Field label="Priority">
+            <SelectInput value={actionForm.priority} onInput={v => setActionForm(f => ({ ...f, priority: v as OnboardingActionPriority }))} options={['low', 'normal', 'high', 'critical']} />
+          </Field>
+          <Field label="Owner type">
+            <select class="ui-select" value={actionForm.ownerType} onChange={e => setActionForm(f => ({ ...f, ownerType: (e.target as HTMLSelectElement).value as OnboardingOwnerType }))}>
+              {(['role', 'employee', 'department', 'system', 'external'] as OnboardingOwnerType[]).map(t => <option key={t} value={t}>{humanize(t)}</option>)}
+            </select>
+          </Field>
+          {actionForm.ownerType === 'employee'
+            ? <Field label="Owner (employee)">
+                <select class="ui-select" value={actionForm.ownerEmployeeId} onChange={e => setActionForm(f => ({ ...f, ownerEmployeeId: (e.target as HTMLSelectElement).value }))}>
+                  <option value="">Select…</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
+                </select>
+              </Field>
+            : actionForm.ownerType === 'role'
+              ? <Field label="Owner role"><TextInput value={actionForm.ownerRole} onInput={v => setActionForm(f => ({ ...f, ownerRole: v }))} placeholder="e.g. hr, it, supervisor" /></Field>
+              : null}
+          <Field label="Due date"><TextInput type="date" value={actionForm.dueDate} onInput={v => setActionForm(f => ({ ...f, dueDate: v }))} /></Field>
+        </FormGrid>
+        <label class="obx-checkline"><input type="checkbox" checked={actionForm.blocksOnboarding} onChange={e => setActionForm(f => ({ ...f, blocksOnboarding: (e.target as HTMLInputElement).checked }))} /> Blocks activation until complete</label>
+        <label class="obx-checkline"><input type="checkbox" checked={actionForm.requiresEvidence} onChange={e => setActionForm(f => ({ ...f, requiresEvidence: (e.target as HTMLInputElement).checked }))} /> Requires evidence to complete</label>
+      </Modal>
     </div>
   );
 }

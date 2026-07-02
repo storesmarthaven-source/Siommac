@@ -298,6 +298,92 @@
   color: #FFB712;
 }
 
+/* ─── Passkey setup prompt (optional post-login interstitial) ─── */
+.passkey-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.passkey-prompt-eyebrow {
+  width: 100%;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #1B2D55;
+  margin-bottom: 1rem;
+}
+
+.passkey-prompt-art-wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 1.1rem;
+}
+.passkey-prompt-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.passkey-prompt-success-icon {
+  font-size: 3rem;
+  color: #198754;
+}
+
+.passkey-prompt-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1B2D55;
+  line-height: 1.3;
+  margin: 0 0 0.7rem;
+}
+
+.passkey-prompt-body {
+  font-size: 0.86rem;
+  color: #62718E;
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0 0 0.9rem;
+}
+.passkey-prompt-hint {
+  font-size: 0.8rem;
+  color: #8896A4;
+}
+.passkey-prompt-strong {
+  font-weight: 700;
+  color: #1B2D55;
+}
+
+.passkey-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 1.8rem;
+}
+
+.passkey-prompt-btn {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  font-weight: var(--font-weight-bold);
+  font-size: 0.95rem;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.passkey-prompt-btn-primary { background: #E40C0C; color: #fff; }
+.passkey-prompt-btn-primary:hover { background: #C90B0B; }
+.passkey-prompt-btn-primary:disabled { opacity: 0.75; cursor: not-allowed; }
+.passkey-prompt-btn-secondary { background: transparent; color: #62718E; }
+.passkey-prompt-btn-secondary:hover:not(:disabled) { color: #1B2D55; }
+.passkey-prompt-btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ── Responsive ── */
 @media (max-width: 860px) {
   .login-split {

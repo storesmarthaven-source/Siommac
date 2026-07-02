@@ -242,18 +242,18 @@ async function revokeUserSessions(userId: string, revokedBy: string): Promise<vo
 
 // ── Token extraction ──────────────────────────────────────────────────────────
 
-/** Extract bearer token from Authorization header (preferred) or legacy body token. */
+/**
+ * Extract the bearer token from the Authorization header — the ONLY accepted
+ * location. A body/args token fallback used to exist for backwards compat, but
+ * every real caller (src/lib/apiLegacy.ts's _rawApi) already sends the header
+ * whenever it has a token, so the fallback was dead weight that just widened the
+ * attack surface (body content is far more likely to be logged/proxied/persisted
+ * than headers).
+ */
 function extractToken(c: Context<{ Variables: HonoVariables }>): string {
   const authHeader = c.req.header('authorization') ?? '';
   if (authHeader.toLowerCase().startsWith('bearer ')) return authHeader.slice(7).trim();
-  // Legacy: token in body or args (backwards compatibility)
-  const body = c.get('body') ?? {};
-  const args = (body as Record<string, unknown>).args as Record<string, unknown> | undefined;
-  return (
-    (body as Record<string, unknown>).token as string ??
-    (args?.token as string | undefined) ??
-    ''
-  );
+  return '';
 }
 
 // ── Middleware ────────────────────────────────────────────────────────────────

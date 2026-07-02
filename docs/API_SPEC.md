@@ -683,12 +683,6 @@ All fields optional except `username`.
 **Args:** `{ "base64": "data:image/png;base64,..." }`  
 **Response:** `{ "success": true, "url": "https://..." }`
 
-### `getSignedUrls`
-**Auth:** authenticated  
-**Args:** Single: `{ "bucket": "attendance-photos", "path": "john_CheckIn_2026-01-01_123.jpg" }`  
-OR batch: `{ "paths": [{ "bucket": "...", "path": "..." }] }`  
-**Response:** `{ "success": true, "data": "https://..." }` or array of URLs.
-
 ---
 
 ## Payroll

@@ -127,7 +127,13 @@ router.post('/widgets/packages/install', async c => {
     payload: { name, version, widgetCount: widgets.length, widgetIds: newIds },
   });
   if (!ev.ok) {
-    await sb.from('ui_widget_packages').delete().eq('id', id);
+    const { error: rollbackErr } = await sb.from('ui_widget_packages').delete().eq('id', id);
+    if (rollbackErr) {
+      // The compensating delete itself failed — the install is now a genuinely orphaned,
+      // unaudited row. Don't claim a clean rollback; escalate loudly for manual cleanup.
+      console.error('[widgetPackages] install rollback FAILED — orphaned row', { id, rollbackErr: rollbackErr.message });
+      return c.json({ success: false, message: `Install failed and rollback also failed — package "${id}" needs manual cleanup.` }, 500 as 200);
+    }
     return c.json({ success: false, message: 'Install rolled back — audit/event write failed.' }, 500 as 200);
   }
   return c.json({ success: true, data: { id } });
@@ -154,10 +160,16 @@ router.post('/widgets/packages/uninstall', async c => {
   });
   if (!ev.ok) {
     // Compensating restore — re-insert the captured row so we never leave a deleted-but-unaudited state.
-    await sb.from('ui_widget_packages').insert({
+    const { error: rollbackErr } = await sb.from('ui_widget_packages').insert({
       id: row.id, name: row.name, version: row.version, widgets: row.widgets,
       installed_by: row.installed_by, created_at: row.created_at,
     });
+    if (rollbackErr) {
+      // The compensating restore itself failed — the package is now genuinely gone without
+      // an audit trail. Don't claim a clean rollback; escalate loudly for manual recovery.
+      console.error('[widgetPackages] uninstall rollback FAILED — package lost', { id, rollbackErr: rollbackErr.message });
+      return c.json({ success: false, message: `Uninstall failed and restore also failed — package "${id}" was lost, needs manual recovery.` }, 500 as 200);
+    }
     return c.json({ success: false, message: 'Uninstall rolled back — audit/event write failed.' }, 500 as 200);
   }
   return c.json({ success: true });

@@ -15,9 +15,6 @@
 #s-settings.app-section { padding: 0; background: #fff; }
 
 /* ── Settings mode: real sidebar swapped to settings categories ── */
-/* Keep the SIOMAC logo; hide the app search (it searches app sections, not settings). */
-#sidebar.settings-mode .sidebar-search { display: none; }
-
 /* Mode header: Back button + "Settings" title */
 .sidebar-menu .stg-mode-head { list-style: none; display: flex; align-items: center; gap: 11px; padding: 2px 4px 12px; margin-bottom: 2px; }
 .sidebar-menu .stg-back {

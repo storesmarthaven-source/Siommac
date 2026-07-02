@@ -58,7 +58,7 @@ async function verifyAnyCode(u: AppUser, code: string): Promise<boolean> {
 
 router.post('/status', async c => {
   const u = await requireUser(c);
-  const rl = checkAuthReadLimit.check(u.id);
+  const rl = await checkAuthReadLimit.check(u.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -79,7 +79,7 @@ router.post('/status', async c => {
 
 router.post('/setup', async c => {
   const u = await requireUser(c);
-  const rl = checkAuthReadLimit.check(u.id);
+  const rl = await checkAuthReadLimit.check(u.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -110,7 +110,7 @@ router.post('/setup', async c => {
 
 router.post('/confirm', async c => {
   const u = await requireUser(c);
-  const rl = checkCodeVerifyLimit.check(u.id);
+  const rl = await checkCodeVerifyLimit.check(u.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -163,7 +163,7 @@ router.post('/confirm', async c => {
 
 router.post('/disable', async c => {
   const u = await requireUser(c);
-  const rl = checkAuthMutationLimit.check(u.id);
+  const rl = await checkAuthMutationLimit.check(u.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -226,7 +226,7 @@ router.post('/disable', async c => {
 
 router.post('/backup-codes/regenerate', async c => {
   const u = await requireUser(c);
-  const rl = checkAuthMutationLimit.check(u.id);
+  const rl = await checkAuthMutationLimit.check(u.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }

@@ -101,7 +101,7 @@ const AuthVerifySchema = z.object({
 // POST /api/webauthn/register/options
 router.post('/webauthn/register/options', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthReadLimit.check(user.id);
+  const rl = await checkAuthReadLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -118,7 +118,7 @@ router.post('/webauthn/register/options', async c => {
 // POST /api/webauthn/register/verify
 router.post('/webauthn/register/verify', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthMutationLimit.check(user.id);
+  const rl = await checkAuthMutationLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -168,7 +168,7 @@ async function loadChallengeUser(preAuthToken: string): Promise<AppUser | null> 
 // POST /api/webauthn/register/preauth/options
 router.post('/webauthn/register/preauth/options', async c => {
   const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
-  const rl = checkLoginLimit.check(ip);
+  const rl = await checkLoginLimit.check(ip);
   if (!rl.ok) return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, PreauthRegOptionsSchema, (body.args as Record<string, unknown>) ?? body);
@@ -182,7 +182,7 @@ router.post('/webauthn/register/preauth/options', async c => {
 // POST /api/webauthn/register/preauth/verify
 router.post('/webauthn/register/preauth/verify', async c => {
   const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
-  const rl = checkLoginLimit.check(ip);
+  const rl = await checkLoginLimit.check(ip);
   if (!rl.ok) return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   const body = c.get('body') as Record<string, unknown>;
   const v    = zv(c, PreauthRegVerifySchema, (body.args as Record<string, unknown>) ?? body);
@@ -232,7 +232,7 @@ router.post('/webauthn/prompt/dismiss', async c => {
 // POST /api/webauthn/credentials/list
 router.post('/webauthn/credentials/list', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthReadLimit.check(user.id);
+  const rl = await checkAuthReadLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -243,7 +243,7 @@ router.post('/webauthn/credentials/list', async c => {
 // POST /api/webauthn/credentials/rename
 router.post('/webauthn/credentials/rename', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthReadLimit.check(user.id);
+  const rl = await checkAuthReadLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -258,7 +258,7 @@ router.post('/webauthn/credentials/rename', async c => {
 // POST /api/webauthn/credentials/delete  (requires step-up)
 router.post('/webauthn/credentials/delete', async c => {
   const user = await requireStepUp(c);  // step-up: deleting a passkey is high-risk
-  const rl = checkAuthMutationLimit.check(user.id);
+  const rl = await checkAuthMutationLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -296,7 +296,7 @@ router.post('/webauthn/credentials/delete', async c => {
 // POST /api/webauthn/auth/options
 router.post('/webauthn/auth/options', async c => {
   const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
-  const rl = checkLoginLimit.check(ip);
+  const rl = await checkLoginLimit.check(ip);
   if (!rl.ok) {
     return c.json(
       { success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` },
@@ -328,7 +328,7 @@ router.post('/webauthn/auth/options', async c => {
 // POST /api/webauthn/auth/verify
 router.post('/webauthn/auth/verify', async c => {
   const ip = (c.get('clientIp') as string | undefined) ?? 'unknown';
-  const rl = checkLoginLimit.check(ip);
+  const rl = await checkLoginLimit.check(ip);
   if (!rl.ok) {
     return c.json(
       { success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` },

@@ -26,10 +26,17 @@ const ONBOARDING_ITEM: ModuleNavItem = {
   sub: 'Activation readiness, active cases & onboarding board',
 };
 
+const ORGANIZATION_ITEM: ModuleNavItem = {
+  id: 's-hr-organization',
+  label: 'Organization',
+  icon: 'fa-sitemap',
+  sub: 'Org units, positions, cost centres & reporting lines',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

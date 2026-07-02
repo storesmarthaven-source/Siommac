@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Layer 3 — Module Health</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --siomac-navy: #1b2d54;
+    --hse-red:   #e24b4a;
+    --hse-amber: #ef9f27;
+    --hse-green: #3a9c6c;
+    --hse-blue:  #378add;
+    --hse-red-tint:   rgba(226,75,74,.10);
+    --hse-amber-tint: rgba(239,159,39,.10);
+    --hse-green-tint: rgba(58,156,108,.10);
+    --hse-blue-tint:  rgba(55,138,221,.10);
+    --bg-card:   #fff;
+    --bg-subtle: #f8fafe;
+    --border:    #e2e8f0;
+    --text-muted: #64748b;
+    --shadow-card: 0 1px 4px rgba(0,0,0,.07);
+    --shadow-hover: 0 4px 14px rgba(0,0,0,.12);
+    --font-mono: 'Courier New', monospace;
+  }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; padding: 24px; }
+
+  /* ── Module health stack ── */
+  .hse-mod-health { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── Individual module row ── */
+  .hse-mod-row {
+    background: var(--bg-card); border: 0.5px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    display: grid;
+    grid-template-columns: 200px 160px 1fr 1fr 150px;
+    min-height: 130px;
+  }
+
+  /* Column 1 — Identity */
+  .hse-mod-id {
+    padding: 14px 16px; border-right: 1px solid var(--border);
+    display: flex; align-items: center;
+  }
+  .hse-mod-id-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .hse-mod-icon {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hse-mod-icon i { font-size: 0.9rem; }
+  .hse-mod-name { font-size: 0.84rem; font-weight: 700; color: var(--siomac-navy); line-height: 1.2; }
+  .hse-mod-desc { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
+  .hse-mod-status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.62rem; font-weight: 700; padding: 3px 8px;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .hse-mod-status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .sp-crit { background: #fcebeb; color: #a32d2d; }
+  .sp-crit .hse-mod-status-dot { background: #e24b4a; }
+  .sp-warn { background: #faeeda; color: #854f0b; }
+  .sp-warn .hse-mod-status-dot { background: #ef9f27; }
+  .sp-ok   { background: #eaf3de; color: #3b6d11; }
+  .sp-ok   .hse-mod-status-dot { background: #3b6d11; }
+  .sp-info { background: #e6f1fb; color: #185fa5; }
+  .sp-info .hse-mod-status-dot { background: #378add; }
+
+  /* Column 2 — Headline metric */
+  .hse-mod-metric {
+    padding: 14px 16px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  }
+  .hse-mod-metric-label {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-muted);
+  }
+  .hse-mod-metric-big   { font-size: 1.8rem; font-weight: 800; line-height: 1; letter-spacing: -.03em; font-family: var(--font-mono); }
+  .hse-mod-metric-sub   { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; line-height: 1.3; }
+  .hse-mod-delta {
+    display: inline-flex; align-items: center; gap: 3px; margin-top: 5px;
+    font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; width: fit-content;
+  }
+  .hse-mod-delta i { font-size: 0.58rem; }
+  .hse-mod-delta.good { background: #eaf3de; color: #3b6d11; }
+  .hse-mod-delta.bad  { background: #fcebeb; color: #a32d2d; }
+  .hse-mod-delta.flat { background: #faeeda; color: #854f0b; }
+
+  /* Column 3 — Progress bars */
+  .hse-mod-prog {
+    padding: 14px 16px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px; justify-content: center;
+  }
+  .hse-mod-prog-label {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-muted);
+  }
+  .hse-mod-prog-row  { display: flex; flex-direction: column; gap: 3px; }
+  .hse-mod-prog-head { display: flex; justify-content: space-between; }
+  .hse-mod-prog-lbl  { font-size: 0.68rem; color: var(--text-muted); }
+  .hse-mod-prog-val  { font-size: 0.68rem; font-weight: 700; }
+  .hse-mod-prog-track { height: 4px; border-radius: 2px; background: #e2e8f0; overflow: hidden; }
+  .hse-mod-prog-fill  { height: 100%; border-radius: 2px; }
+
+  /* Column 4 — Critical items */
+  .hse-mod-alerts {
+    padding: 14px 16px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 7px; justify-content: center;
+  }
+  .hse-mod-alerts-label {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-muted);
+  }
+  .hse-mod-alert-item { display: flex; align-items: flex-start; gap: 7px; }
+  .hse-mod-alert-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+  }
+  .hse-mod-alert-dot--red   { background: #e24b4a; }
+  .hse-mod-alert-dot--amber { background: #ef9f27; }
+  .hse-mod-alert-dot--blue  { background: #378add; }
+  .hse-mod-alert-text { font-size: 0.72rem; color: var(--siomac-navy); line-height: 1.3; }
+  .hse-mod-alert-ref  { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; }
+
+  /* Column 5 — Action counts + button */
+  .hse-mod-action {
+    padding: 14px 16px; display: flex; flex-direction: column;
+    justify-content: space-between; gap: 10px;
+  }
+  .hse-mod-action-counts { display: flex; flex-direction: column; gap: 5px; }
+  .hse-mod-ac-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; }
+  .hse-mod-ac-lbl { color: var(--text-muted); }
+  .hse-mod-ac-val { font-weight: 700; color: var(--siomac-navy); }
+  .hse-mod-open-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px 12px; border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--bg-subtle);
+    color: var(--siomac-navy); cursor: pointer; white-space: nowrap;
+  }
+  .hse-mod-open-btn:hover { background: var(--bg-card); border-color: var(--siomac-navy); }
+  .hse-mod-open-btn i { font-size: 0.68rem; }
+</style>
+</head>
+<body>
+
+<!--
+  LAYER 3 — MODULE HEALTH
+  Classes to style:
+    .hse-mod-health        — vertical stack of module rows
+    .hse-mod-row           — 5-column grid: 200px | 160px | 1fr | 1fr | 150px
+    .hse-mod-id            — col 1: icon + name + desc + status pill
+    .hse-mod-id-top        — flex: icon chip + name/desc
+    .hse-mod-icon          — tinted square icon chip (bg/color set inline)
+    .hse-mod-name          — module name
+    .hse-mod-desc          — subtitle
+    .hse-mod-status-pill   — status badge (.sp-crit / .sp-warn / .sp-ok / .sp-info)
+    .hse-mod-status-dot    — coloured dot inside pill
+    .hse-mod-metric        — col 2: headline metric
+    .hse-mod-metric-label  — tiny caps label
+    .hse-mod-metric-big    — large number/value (color set inline)
+    .hse-mod-metric-sub    — subtitle text
+    .hse-mod-delta         — trend chip (.good / .bad / .flat)
+    .hse-mod-prog          — col 3: progress bars
+    .hse-mod-prog-label    — section label
+    .hse-mod-prog-row      — individual bar row
+    .hse-mod-prog-head     — label + value row
+    .hse-mod-prog-lbl      — bar label
+    .hse-mod-prog-val      — bar value (color set inline)
+    .hse-mod-prog-track    — bar track
+    .hse-mod-prog-fill     — bar fill (width + background set inline)
+    .hse-mod-alerts        — col 4: critical items list
+    .hse-mod-alerts-label  — section label
+    .hse-mod-alert-item    — dot + text + ref row
+    .hse-mod-alert-dot     — coloured dot (.--red / .--amber / .--blue)
+    .hse-mod-alert-text    — item description
+    .hse-mod-alert-ref     — ref/location text
+    .hse-mod-action        — col 5: counts + open button
+    .hse-mod-action-counts — vertical list of stat rows
+    .hse-mod-ac-row        — label + value row
+    .hse-mod-ac-lbl        — stat label
+    .hse-mod-ac-val        — stat value (color set inline)
+    .hse-mod-open-btn      — open module button
+-->
+
+<div class="hse-mod-health">
+
+  <!-- Incidents -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-red-tint);color:var(--hse-red)">
+            <i class="fas fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">Incidents</div>
+            <div class="hse-mod-desc">OSH recordables, near misses, HiPo events</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-crit">
+          <span class="hse-mod-status-dot"></span>Critical — action required
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">OSH recordables YTD</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-red)">3</div>
+      <div class="hse-mod-metric-sub">Target: 0 · 1 pending EMA notification</div>
+      <span class="hse-mod-delta bad"><i class="fas fa-arrow-up"></i>+2 vs last yr</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">CAPA closure</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">87%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:87%;background:var(--hse-amber)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Investigations open</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">2 of 2</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:100%;background:var(--hse-red)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Near miss ratio</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-green)">9:1</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:75%;background:var(--hse-green)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">EMA notification overdue — diesel spill</div>
+          <div class="hse-mod-alert-ref">INC-2026-041 · Point Lisas</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">Confined space near miss — no rescue plan</div>
+          <div class="hse-mod-alert-ref">NM-2026-118 · Galeota</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">CA-303 glove restock overdue 3 days</div>
+          <div class="hse-mod-alert-ref">CAPA · La Brea Yard</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Open incidents</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">4</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Open CAPAs</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">6</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Overdue CAPAs</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">2</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">HiPo events</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">4</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open Incidents</button>
+    </div>
+  </div>
+
+  <!-- Permits to Work -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-amber-tint);color:var(--hse-amber)">
+            <i class="fas fa-id-badge"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">Permits to Work</div>
+            <div class="hse-mod-desc">Hot work, confined space, height, electrical</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-crit">
+          <span class="hse-mod-status-dot"></span>Blocked — permits held
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">Active permits today</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-amber)">11</div>
+      <div class="hse-mod-metric-sub">4 live · 2 blocked · 1 overdue</div>
+      <span class="hse-mod-delta bad"><i class="fas fa-arrow-up"></i>3 require action</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Gas test / rescue plan</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">Missing</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:0%;background:var(--hse-red)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Fire watch / gas-free</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">Overdue</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:20%;background:var(--hse-red)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Harness / edge control</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-green)">Complete</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:100%;background:var(--hse-green)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">PTW-0033 confined space — gas test missing</div>
+          <div class="hse-mod-alert-ref">Galeota Marine Base · expires today 18:00</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">PTW-0032 hot work — expired at 16:00</div>
+          <div class="hse-mod-alert-ref">Point Lisas Plant · T. Baptiste</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">PTW-0040 LOTO verification on hold</div>
+          <div class="hse-mod-alert-ref">Point Lisas Plant · T. Baptiste</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Live permits</span><span class="hse-mod-ac-val" style="color:var(--hse-green)">4</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Blocked</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">2</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Overdue</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">1</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">On hold</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">2</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open Permits</button>
+    </div>
+  </div>
+
+  <!-- Training & Competency -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-green-tint);color:var(--hse-green)">
+            <i class="fas fa-school"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">Training & Competency</div>
+            <div class="hse-mod-desc">Certifications, competency matrix, renewals</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-warn">
+          <span class="hse-mod-status-dot"></span>Watch — renewals due
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">Workforce compliance</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-green)">94%</div>
+      <div class="hse-mod-metric-sub">75 of 80 required certs current</div>
+      <span class="hse-mod-delta good"><i class="fas fa-arrow-up"></i>+2% vs last month</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Confined space</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">88%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:88%;background:var(--hse-amber)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Work at height</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-green)">95%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:95%;background:var(--hse-green)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">First aid</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">78%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:78%;background:var(--hse-red)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">CERT-1103 First Aid — Andre Williams expired</div>
+          <div class="hse-mod-alert-ref">Expired 20 Jan 2026 · Point Lisas</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">CERT-1101 Confined Space — Reza Khan due</div>
+          <div class="hse-mod-alert-ref">Due 12 Jul 2026 · Galeota</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">CERT-1105 Spill Response — K. Persad due</div>
+          <div class="hse-mod-alert-ref">Due 08 Jun 2026 · Point Lisas</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Compliant certs</span><span class="hse-mod-ac-val" style="color:var(--hse-green)">75</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Due this month</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">3</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Expired</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">2</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Workers at gap</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">2</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open Training</button>
+    </div>
+  </div>
+
+  <!-- PPE Manager -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-amber-tint);color:var(--hse-amber)">
+            <i class="fas fa-helmet-safety"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">PPE Manager</div>
+            <div class="hse-mod-desc">Inventory, compliance, assignments, renewals</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-warn">
+          <span class="hse-mod-status-dot"></span>Watch — 3 stock outs
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">Field compliance</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-amber)">91%</div>
+      <div class="hse-mod-metric-sub">3 hot spots · 9 item types tracked</div>
+      <span class="hse-mod-delta flat"><i class="fas fa-minus"></i>Flat vs last month</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Leather gloves (8 units)</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">Low</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:28%;background:var(--hse-red)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Fall harness (5 units)</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">Low</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:45%;background:var(--hse-amber)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Ear muffs (0 units)</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">Expired</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:0%;background:var(--hse-red)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">Ear muffs — 0 units, item expired Aug 2026</div>
+          <div class="hse-mod-alert-ref">Vehicle 12 · 3M brand</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">Leather gloves below threshold (8 vs 15 min)</div>
+          <div class="hse-mod-alert-ref">Site B · Ironclad</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">Welding shields low — 3 of 5 threshold</div>
+          <div class="hse-mod-alert-ref">Warehouse A · Fibre-Metal</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Available items</span><span class="hse-mod-ac-val" style="color:var(--hse-green)">6</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Low stock</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">3</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Expired</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">1</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Compliance %</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">91%</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open PPE</button>
+    </div>
+  </div>
+
+  <!-- Inspections & Risk -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-amber-tint);color:var(--hse-amber)">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">Inspections & Risk</div>
+            <div class="hse-mod-desc">Audits, findings, hazard register, JSAs</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-warn">
+          <span class="hse-mod-status-dot"></span>Overdue items
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">Inspection completion</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-amber)">75%</div>
+      <div class="hse-mod-metric-sub">3 of 4 scheduled this month done</div>
+      <span class="hse-mod-delta bad"><i class="fas fa-arrow-down"></i>1 overdue</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Inspections complete</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">75%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:75%;background:var(--hse-amber)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Findings closed</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-red)">33%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:33%;background:var(--hse-red)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Critical hazards controlled</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-green)">100%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:100%;background:var(--hse-green)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">INSP-203 housekeeping — 2 open findings</div>
+          <div class="hse-mod-alert-ref">Piarco Logistics · overdue</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--red"></div>
+        <div>
+          <div class="hse-mod-alert-text">FND-051 emergency exit blocked in bay 3</div>
+          <div class="hse-mod-alert-ref">Piarco Logistics · danger</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">RA-2026-13 vessel entry — still in review</div>
+          <div class="hse-mod-alert-ref">Risk assessment · Galeota</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Inspections overdue</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">1</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Open findings</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">3</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Active hazards</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">5</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">High/critical risk</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">2</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open Inspections</button>
+    </div>
+  </div>
+
+  <!-- Documents & Toolbox -->
+  <div class="hse-mod-row">
+    <div class="hse-mod-id">
+      <div>
+        <div class="hse-mod-id-top">
+          <div class="hse-mod-icon" style="background:var(--hse-blue-tint);color:var(--hse-blue)">
+            <i class="fas fa-files"></i>
+          </div>
+          <div>
+            <div class="hse-mod-name">Documents & Toolbox</div>
+            <div class="hse-mod-desc">Controlled docs, SDS library, talks log</div>
+          </div>
+        </div>
+        <div class="hse-mod-status-pill sp-info">
+          <span class="hse-mod-status-dot"></span>Review due
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-metric">
+      <div class="hse-mod-metric-label">Toolbox talks this week</div>
+      <div class="hse-mod-metric-big" style="color:var(--hse-green)">3</div>
+      <div class="hse-mod-metric-sub">22 attendees · 1 scheduled tomorrow</div>
+      <span class="hse-mod-delta good"><i class="fas fa-arrow-up"></i>All major sites covered</span>
+    </div>
+    <div class="hse-mod-prog">
+      <div class="hse-mod-prog-label">Progress</div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Docs published</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-green)">2 of 4</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:50%;background:var(--hse-green)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">SDS current</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">75%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:75%;background:var(--hse-amber)"></div></div>
+      </div>
+      <div class="hse-mod-prog-row">
+        <div class="hse-mod-prog-head">
+          <span class="hse-mod-prog-lbl">Talk site coverage</span>
+          <span class="hse-mod-prog-val" style="color:var(--hse-amber)">80%</span>
+        </div>
+        <div class="hse-mod-prog-track"><div class="hse-mod-prog-fill" style="width:80%;background:var(--hse-amber)"></div></div>
+      </div>
+    </div>
+    <div class="hse-mod-alerts">
+      <div class="hse-mod-alerts-label">Critical items</div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">DOC-HSE-0205 Emergency Response Plan — review due 30 Jun</div>
+          <div class="hse-mod-alert-ref">Documents · HSE · v1.4</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--amber"></div>
+        <div>
+          <div class="hse-mod-alert-text">SDS-004 Hydraulic Oil — expired revision 2023</div>
+          <div class="hse-mod-alert-ref">SDS Library · Lubricants Ltd</div>
+        </div>
+      </div>
+      <div class="hse-mod-alert-item">
+        <div class="hse-mod-alert-dot hse-mod-alert-dot--blue"></div>
+        <div>
+          <div class="hse-mod-alert-text">Galeota Marine Base — no toolbox talk this week</div>
+          <div class="hse-mod-alert-ref">Toolbox Talks · coverage gap</div>
+        </div>
+      </div>
+    </div>
+    <div class="hse-mod-action">
+      <div class="hse-mod-action-counts">
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Docs review due</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">1</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Draft pending</span><span class="hse-mod-ac-val" style="color:var(--hse-amber)">2</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">SDS expired</span><span class="hse-mod-ac-val" style="color:var(--hse-red)">1</span></div>
+        <div class="hse-mod-ac-row"><span class="hse-mod-ac-lbl">Site coverage gap</span><span class="hse-mod-ac-val" style="color:var(--hse-blue)">1</span></div>
+      </div>
+      <button class="hse-mod-open-btn"><i class="fas fa-arrow-right"></i> Open Documents</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

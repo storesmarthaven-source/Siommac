@@ -190,7 +190,6 @@
 | `saveWorkHours` | — | — | ✓ | |
 | `updateMyProfile` | ✓ (own) | ✓ (own) | ✓ (own) | Must match username in token |
 | `uploadLogo` | — | — | ✓ | |
-| `getSignedUrls` | ✓ | ✓ | ✓ | |
 | `listPayrollRun` | — | ✓ (dept) | ✓ | |
 | `approvePayroll` | — | ✓ | ✓ | |
 | `getMyPayslips` | ✓ | ✓ | ✓ | Own only |

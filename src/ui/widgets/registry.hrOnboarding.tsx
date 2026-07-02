@@ -12,7 +12,7 @@
  * Auto-registered via the `widgets` export (see the widget guide).
  */
 import type { WidgetDef } from './types';
-import { useOnboardingDashboard } from '@api/hr/onboarding';
+import { useOnboardingDashboard, useOnboardingRecentActivity } from '@api/hr/onboarding';
 import './onboardingWidgets.css';
 
 const ONB_PAGES = ['hr.onboarding.overview'];
@@ -23,6 +23,25 @@ const KPI_SIZES = [
   { key: 'compact' as const, label: 'Compact', grid: { w: 3, h: 2 }, description: 'Metric + chart.' },
   { key: 'standard' as const, label: 'Standard', grid: { w: 4, h: 3 }, description: 'Metric + chart, roomier.' },
 ];
+const LIST_SIZES = [
+  { key: 'wide' as const, label: 'Wide', grid: { w: 6, h: 3 }, description: 'Full list.' },
+  { key: 'standard' as const, label: 'Standard', grid: { w: 4, h: 3 }, description: 'Narrower list.' },
+];
+
+// ── relative time + action humanizer (Recent Activity feed) ──────────────────────
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.round(ms / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+}
+function humanizeAction(action: string): string {
+  const s = action.replace(/^hr\.onboarding\./, '').replace(/[_.]+/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 // ── tiny self-contained charts (match the mockup's spark / ring / growth) ─────────
 function sparkPath(points: number[], w = 110, h = 56, pad = 5): { line: string; area: string } {
@@ -292,6 +311,113 @@ export const widgets: WidgetDef[] = [
             <div class="obw-delta"><span class="vs">78% ready · 18 blocked of 248</span></div>
           </div>
           <Growth values={[13, 18, 24, 31, 38, 45]} color="#0aa36c" />
+        </div>
+      </div>
+    ),
+  },
+  // ── Package Readiness ─────────────────────────────────────────────────────────
+  {
+    id: 'hr.onboarding.packageReadiness', module: 'hr', area: 'onboarding',
+    title: 'Package Readiness',
+    description: 'Activation readiness broken down by onboarding package.',
+    icon: 'fa-chart-bar', category: 'KPIs', tags: ['onboarding', 'packages', 'readiness', 'kpi'],
+    previewVariant: 'status-stack', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
+    defaultSize: 'wide', allowedSizes: LIST_SIZES,
+    defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
+    render: () => {
+      const q = useOnboardingDashboard();
+      const rows = q.data?.packageReadiness ?? [];
+      return (
+        <div class="obw">
+          <div class="obw-pt"><h3><i class="fas fa-chart-bar" style={{ color: '#0b63f6' }} />Package Readiness</h3><span class="obw-count">{rows.length}</span></div>
+          <div class="obw-pb">
+            {rows.length ? (
+              <div class="obw-rl">
+                {rows.map(r => (
+                  <div class="obw-ready" key={r.packageKey}>
+                    <span>{r.packageLabel} <span style={{ color: '#94a3b8' }}>({r.activeCount})</span></span>
+                    <div class={`obw-bar${r.readyPercent >= 75 ? '' : r.readyPercent >= 40 ? ' orange' : ' red'}`}><span style={{ width: `${r.readyPercent}%` }} /></div>
+                    <span>{r.readyPercent}%</span>
+                  </div>
+                ))}
+              </div>
+            ) : <div class="obw-empty">No active packages.</div>}
+          </div>
+        </div>
+      );
+    },
+    renderPreview: () => (
+      <div class="obw">
+        <div class="obw-pt"><h3><i class="fas fa-chart-bar" style={{ color: '#0b63f6' }} />Package Readiness</h3><span class="obw-count">4</span></div>
+        <div class="obw-pb">
+          <div class="obw-rl">
+            {[{ n: 'Remote new hire', a: 12, p: 91 }, { n: 'Standard new hire', a: 34, p: 82 }, { n: 'Contractor fast-track', a: 19, p: 64 }, { n: 'Executive onboarding', a: 3, p: 40 }].map(r => (
+              <div class="obw-ready" key={r.n}>
+                <span>{r.n} <span style={{ color: '#94a3b8' }}>({r.a})</span></span>
+                <div class={`obw-bar${r.p >= 75 ? '' : r.p >= 40 ? ' orange' : ' red'}`}><span style={{ width: `${r.p}%` }} /></div>
+                <span>{r.p}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  // ── Recent Activity ────────────────────────────────────────────────────────────
+  {
+    id: 'hr.onboarding.recentActivity', module: 'hr', area: 'onboarding',
+    title: 'Recent Activity',
+    description: 'The latest onboarding actions across all cases and packages.',
+    icon: 'fa-timeline', category: 'KPIs', tags: ['onboarding', 'activity', 'audit', 'feed'],
+    previewVariant: 'status-stack', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
+    defaultSize: 'wide', allowedSizes: LIST_SIZES,
+    defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
+    render: () => {
+      const q = useOnboardingRecentActivity(8);
+      const rows = q.data ?? [];
+      return (
+        <div class="obw">
+          <div class="obw-pt"><h3><i class="fas fa-timeline" style={{ color: '#6746f2' }} />Recent Activity</h3></div>
+          <div class="obw-pb">
+            {rows.length ? (
+              <div class="obw-acts">
+                {rows.map(r => (
+                  <div class="obw-act" key={r.id}>
+                    <span class="obw-act-icon"><i class="fas fa-circle-check" /></span>
+                    <div>
+                      <div class="obw-act-title">{humanizeAction(r.action)}</div>
+                      <div class="obw-act-meta">{r.actorName ?? 'System'}</div>
+                    </div>
+                    <span class="obw-act-time">{timeAgo(r.createdAt)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <div class="obw-empty">No recent activity.</div>}
+          </div>
+        </div>
+      );
+    },
+    renderPreview: () => (
+      <div class="obw">
+        <div class="obw-pt"><h3><i class="fas fa-timeline" style={{ color: '#6746f2' }} />Recent Activity</h3></div>
+        <div class="obw-pb">
+          <div class="obw-acts">
+            {[
+              { t: 'Case marked ready for activation', w: 'A. Cole', a: '2h ago' },
+              { t: 'Task completed: Provision laptop', w: 'IT bot', a: '4h ago' },
+              { t: 'New case started', w: 'M. Reyes', a: '6h ago' },
+              { t: 'Blocker escalated', w: 'System', a: '9h ago' },
+            ].map((r, i) => (
+              <div class="obw-act" key={i}>
+                <span class="obw-act-icon"><i class="fas fa-circle-check" /></span>
+                <div>
+                  <div class="obw-act-title">{r.t}</div>
+                  <div class="obw-act-meta">{r.w}</div>
+                </div>
+                <span class="obw-act-time">{r.a}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     ),

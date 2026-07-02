@@ -12,12 +12,14 @@
  * Auto-registered via the `widgets` export + registry.ts glob.
  */
 import { type VNode } from 'preact';
+import { useState } from 'preact/hooks';
 import type { WidgetDef } from './types';
 import {
   useOnboardingTasksList, useOnboardingHandoffsList, useOnboardingBlockersList,
   useOnboardingAudit, useOnboardingResolveBlocker,
+  useOnboardingCommunications, useOnboardingTimeline, useOnboardingSendCommunication, useOnboardingResendCommunication,
 } from '@api/hr/onboarding';
-import type { OnboardingHandoffRow, OnboardingBlockerRow, OnboardingAuditRow } from '../../../types/hrOnboarding';
+import type { OnboardingHandoffRow, OnboardingBlockerRow, OnboardingAuditRow, OnboardingCommunicationType } from '../../../types/hrOnboarding';
 import { useOnboardingCaseStore, selectCaseId, selectCaseRow } from '@store/onboardingCase';
 import { dialog } from '@lib/dialog';
 import { humanize } from '@/components/sections/HR/onboardingStatus';
@@ -30,7 +32,10 @@ import './onboardingCaseWidgets.css';
 const CASE_PAGES = ['hr.onboarding.case'];
 const CASE_ZONES = ['main'];
 const CASE_SOURCE = { sourceKey: 'hr_onboarding', label: 'HR Onboarding', refreshIntervalMs: 120000, permissions: ['hr.onboarding.view'] };
-const SENTINEL = '__no_case__'; // truthy → backend `.eq(case_id, …)` matches nothing when no case is open
+// Nil UUID: passes the backend's z.string().uuid() validation (unlike a plain string,
+// which 400s) and `.eq(case_id, …)` legitimately matches zero rows, since no real case
+// is ever assigned this id — the intended "no case open ⇒ empty result" behavior.
+const SENTINEL = '00000000-0000-0000-0000-000000000000';
 
 const S  = { key: 'compact'  as const, label: 'Small',  grid: { w: 3, h: 2 }, description: 'Compact tile.' };
 const ST = { key: 'tall'     as const, label: 'Tall',   grid: { w: 3, h: 3 }, description: 'Compact + viz.' };
@@ -288,6 +293,130 @@ function TeamView({ owner, members }: { owner: string; members: string[] }): VNo
   );
 }
 
+// 11 · Communications ───────────────────────────────────────────────────────────--
+const COMM_TYPES: { v: OnboardingCommunicationType; label: string }[] = [
+  { v: 'employee_welcome', label: 'Welcome the employee' },
+  { v: 'supervisor_notification', label: 'Notify the supervisor' },
+  { v: 'owner_reminder', label: 'Remind the case owner' },
+  { v: 'escalation_notice', label: 'Send escalation notice' },
+];
+const commStatusTone = (s: string): string => s === 'sent' ? 'green' : s === 'failed' ? 'red' : s === 'cancelled' ? 'gray' : 'amber';
+function CommunicationsWidget(): VNode {
+  const caseId = useOnboardingCaseStore(selectCaseId);
+  const q = useOnboardingCommunications(caseId);
+  const sendMut = useOnboardingSendCommunication();
+  const resendMut = useOnboardingResendCommunication();
+  const [type, setType] = useState<OnboardingCommunicationType>('employee_welcome');
+  const rows = q.data ?? [];
+  const send = (): void => {
+    if (!caseId) return;
+    void (async () => {
+      try { const r = await sendMut.mutateAsync({ caseId, communicationType: type }); void dialog.toast({ text: r.status === 'sent' ? 'Message sent' : 'Saved as draft', icon: r.status === 'sent' ? 'success' : 'info' }); }
+      catch (e) { void dialog.error('Send failed', e instanceof Error ? e.message : 'Could not send'); }
+    })();
+  };
+  const resend = (id: string): void => {
+    void (async () => {
+      try { await resendMut.mutateAsync({ id }); void dialog.toast({ text: 'Resent', icon: 'success' }); }
+      catch (e) { void dialog.error('Resend failed', e instanceof Error ? e.message : 'Could not resend'); }
+    })();
+  };
+  return (
+    <div class="ocw tint-purple">
+      <Head title="Communications" sub="Welcome · notify · remind" icon="fa-envelope" color="purple" />
+      <div class="ocw-body">
+        <div class="ocw-commbar">
+          <select class="ocw-commsel" value={type} onChange={e => setType((e.target as HTMLSelectElement).value as OnboardingCommunicationType)}>
+            {COMM_TYPES.map(t => <option key={t.v} value={t.v}>{t.label}</option>)}
+          </select>
+          <button type="button" class="ocw-act-btn" disabled={sendMut.isPending || !caseId} onClick={send}>Send</button>
+        </div>
+        {rows.length === 0
+          ? <div class="ocw-empty">No communications sent yet.</div>
+          : <div class="ocw-list">
+              {rows.slice(0, 6).map(cmt => (
+                <div class="ocw-li" key={cmt.id}>
+                  <span class="ocw-li-ico purple"><i class="fas fa-paper-plane" /></span>
+                  <div class="ocw-li-main">
+                    <div class="ocw-li-title">{cmt.subject || humanize(cmt.communicationType)}</div>
+                    <div class="ocw-li-sub">{cmt.recipientName ?? '—'} · {cmt.sentAt ? relTime(cmt.sentAt) : 'draft'}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span class={`ocw-pill ${commStatusTone(cmt.status)}`}>{humanize(cmt.status)}</span>
+                    {cmt.status !== 'cancelled' && cmt.channel !== 'manual' && cmt.recipientUserId && <button type="button" class="ocw-act-btn" onClick={() => resend(cmt.id)}>Resend</button>}
+                  </div>
+                </div>
+              ))}
+            </div>}
+      </div>
+    </div>
+  );
+}
+
+// 12 · Timeline ─────────────────────────────────────────────────────────────────--
+function timelineDotColor(item: { item_type: string; severity?: string }): string {
+  if (item.severity === 'critical' || item.severity === 'warning') return AC.red;
+  if (item.item_type === 'handoff') return AC.amber;
+  if (item.item_type === 'workflow') return AC.purple;
+  if (item.item_type === 'audit') return AC.blue;
+  return AC.green;
+}
+function TimelineWidget(): VNode {
+  const caseId = useOnboardingCaseStore(selectCaseId);
+  const q = useOnboardingTimeline(caseId);
+  const rows = q.data ?? [];
+  return (
+    <div class="ocw tint-blue">
+      <Head title="Timeline" sub="Full case history" icon="fa-timeline" color="blue" />
+      <div class="ocw-body">
+        {rows.length === 0
+          ? <div class="ocw-empty">No events yet.</div>
+          : <div class="ocw-timeline">
+              {rows.slice(0, 12).map(it => (
+                <div class="ocw-tl-row" key={it.id}>
+                  <span class="ocw-tl-dot" style={{ background: timelineDotColor(it) }} />
+                  <div class="ocw-tl-main">
+                    <div class="ocw-li-title">{it.title}</div>
+                    <div class="ocw-li-sub">{it.actor_name ?? 'System'} · {relTime(it.created_at)}{it.description ? ` · ${humanize(it.description)}` : ''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>}
+      </div>
+    </div>
+  );
+}
+
+// 13 · Audit Trail ──────────────────────────────────────────────────────────────--
+function AuditWidget(): VNode {
+  const caseId = useOnboardingCaseStore(selectCaseId);
+  const q = useOnboardingAudit(caseId ?? null);
+  const rows = (q.data ?? []) as OnboardingAuditRow[];
+  const summarize = (s: unknown): string => {
+    if (!s || typeof s !== 'object') return '—';
+    const keys = Object.keys(s as Record<string, unknown>);
+    return keys.length ? keys.slice(0, 3).map(k => `${k}: ${String((s as Record<string, unknown>)[k])}`).join(', ') : '—';
+  };
+  return (
+    <div class="ocw tint-blue">
+      <Head title="Audit Trail" sub="Compliance record" icon="fa-clipboard-list" color="blue" />
+      <div class="ocw-body">
+        {q.isError ? <div class="ocw-empty">You don’t have permission to view the audit trail.</div>
+          : rows.length === 0 ? <div class="ocw-empty">No audit entries.</div>
+          : <div class="ocw-audit">
+              {rows.slice(0, 10).map(a => (
+                <div class="ocw-audit-row" key={a.id}>
+                  <div class="ocw-audit-head"><b>{humanize(a.action)}</b><span class="ocw-li-sub">{relTime(a.createdAt)}</span></div>
+                  <div class="ocw-li-sub">{a.actorName ?? (a.actorId ? '—' : 'System')}{a.reason ? ` · ${a.reason}` : ''}</div>
+                  {(a.previousState || a.newState) && <div class="ocw-audit-diff">{summarize(a.previousState)} → {summarize(a.newState)}</div>}
+                </div>
+              ))}
+            </div>}
+      </div>
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════════
 function def(
   id: string, title: string, description: string, icon: string, previewVariant: WidgetDef['previewVariant'],
@@ -378,4 +507,49 @@ export const widgets: WidgetDef[] = [
     const members = Array.from(new Set(rows.map(t => t.assignedToName).filter((n): n is string => !!n)));
     return <TeamView owner={caseRow?.ownerName ?? 'Unassigned'} members={members} />;
   }, () => <TeamView owner="S. Rampersad" members={['IT Team', 'HSE Officer', 'Payroll', 'A. Khan']} />, ['onboarding', 'team', 'people']),
+
+  def('hr.onboarding.case.communications', 'Communications', 'Send and track welcome, supervisor, owner-reminder and escalation messages for this case.', 'fa-envelope', 'timeline', 'wide', [M, ST], CommunicationsWidget, () => (
+    <div class="ocw tint-purple">
+      <Head title="Communications" sub="Welcome · notify · remind" icon="fa-envelope" color="purple" />
+      <div class="ocw-body">
+        <div class="ocw-commbar"><select class="ocw-commsel"><option>Welcome the employee</option></select><span class="ocw-act-btn">Send</span></div>
+        <div class="ocw-list">
+          <div class="ocw-li"><span class="ocw-li-ico purple"><i class="fas fa-paper-plane" /></span><div class="ocw-li-main"><div class="ocw-li-title">Welcome aboard</div><div class="ocw-li-sub">A. Cole · 2h</div></div><span class="ocw-pill green">Sent</span></div>
+          <div class="ocw-li"><span class="ocw-li-ico purple"><i class="fas fa-paper-plane" /></span><div class="ocw-li-main"><div class="ocw-li-title">New team member</div><div class="ocw-li-sub">S. Rampersad · 1d</div></div><span class="ocw-pill green">Sent</span></div>
+        </div>
+      </div>
+    </div>
+  ), ['onboarding', 'communications', 'messages']),
+
+  def('hr.onboarding.case.timeline', 'Timeline', 'Full chronological history of this case — events, handoffs, workflows and audit.', 'fa-timeline', 'timeline', 'wide', [M, ST], TimelineWidget, () => (
+    <div class="ocw tint-blue">
+      <Head title="Timeline" sub="Full case history" icon="fa-timeline" color="blue" />
+      <div class="ocw-body"><div class="ocw-timeline">
+        {[{ t: 'Case started', w: 'System', a: '3d' }, { t: 'Task completed: Provision laptop', w: 'IT bot', a: '2d' }, { t: 'Handoff → HSE', w: 'A. Cole', a: '1d' }, { t: 'Blocker resolved', w: 'HSE Officer', a: '4h' }].map((r, i) => (
+          <div class="ocw-tl-row" key={i}><span class="ocw-tl-dot" style={{ background: AC.green }} /><div class="ocw-tl-main"><div class="ocw-li-title">{r.t}</div><div class="ocw-li-sub">{r.w} · {r.a}</div></div></div>
+        ))}
+      </div></div>
+    </div>
+  ), ['onboarding', 'timeline', 'history']),
+
+  // Audit — permission-gated (locked in the library unless the user holds audit.view).
+  {
+    id: 'hr.onboarding.case.audit', module: 'hr', area: 'onboarding', title: 'Audit Trail',
+    description: 'Permission-gated compliance trail: every case action with before/after state and reason.',
+    icon: 'fa-clipboard-list', category: 'Case', tags: ['onboarding', 'audit', 'compliance'],
+    previewVariant: 'timeline', chrome: 'none', supportedPages: CASE_PAGES, supportedZones: CASE_ZONES,
+    defaultSize: 'wide', allowedSizes: [M, ST], defaultConfig: {}, configSchema: [],
+    dataSource: { sourceKey: 'hr_onboarding', label: 'HR Onboarding', refreshIntervalMs: 120000, permissions: ['hr.onboarding.audit.view'] },
+    recommendedFor: CASE_PAGES, render: AuditWidget,
+    renderPreview: () => (
+      <div class="ocw tint-blue">
+        <Head title="Audit Trail" sub="Compliance record" icon="fa-clipboard-list" color="blue" />
+        <div class="ocw-body"><div class="ocw-audit">
+          {[{ ac: 'Onboarding started', w: 'A. Cole', a: '3d' }, { ac: 'Owner changed', w: 'HR Ops', a: '2d' }].map((r, i) => (
+            <div class="ocw-audit-row" key={i}><div class="ocw-audit-head"><b>{r.ac}</b><span class="ocw-li-sub">{r.a}</span></div><div class="ocw-li-sub">{r.w}</div></div>
+          ))}
+        </div></div>
+      </div>
+    ),
+  },
 ];

@@ -147,17 +147,21 @@ export async function emitAppEvent(input: EmitAppEventInput): Promise<EmitAppEve
       await emitSignal(userIds, 'notifications').catch(() => void 0);
     }
 
-    // 6. Audit log (best-effort — never block on this)
-    void sb.from('audit_logs').insert({
+    // 6. Audit log — awaited (not fire-and-forget): in a serverless runtime, an
+    // un-awaited insert issued right before the handler returns can be frozen/
+    // dropped entirely once the response is sent, not just "occasionally slow".
+    // Still best-effort per the function's contract (never throws — a failed
+    // audit write must not break the business action), just no longer a promise
+    // dangling past the function's own lifetime.
+    const { error: auditErr } = await sb.from('audit_logs').insert({
       action:       input.eventType,
       table_name:   input.sourceEntityType,
       record_id:    input.sourceEntityId,
       user_id:      input.actorUserId ?? null,
       changes:      input.payload ?? {},
       created_at:   new Date().toISOString(),
-    }).then(({ error }) => {
-      if (error) console.warn('[appEvents] audit_logs insert failed:', error.message);
     });
+    if (auditErr) console.error('[appEvents] audit_logs insert failed:', auditErr.message, { eventId, eventType: input.eventType });
 
     return { ok: true, eventId, deduped: false, recipientCount };
   } catch (e) {

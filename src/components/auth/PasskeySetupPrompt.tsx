@@ -126,7 +126,7 @@ export function PasskeySetupPrompt({ result, onDone }: Props) {
 
   return (
     <div class="passkey-prompt">
-      <div class="passkey-prompt-eyebrow">Introducing passkeys</div>
+      <div class="passkey-prompt-eyebrow">Introducing Passkeys</div>
 
       <div class="passkey-prompt-art-wrap">
         <PasskeyArtwork />

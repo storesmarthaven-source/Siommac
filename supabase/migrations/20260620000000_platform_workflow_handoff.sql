@@ -1,3 +1,20 @@
+-- ============================================================================
+-- SUPERSEDED — NEVER APPLIED. Do not run this file.
+--
+-- The workflow_instances / approval_tasks / workflow_events / handoff_outbox /
+-- handoff_inbox tables below were a draft design (text PKs, uuid FKs to
+-- app_users(id) — WRONG, app_users.id is text and always has been). They were
+-- superseded the next day by 20260621100000_erp_backbone_core.sql (uuid PKs,
+-- correct text FKs), which is what the live application actually reads/writes.
+-- Confirmed dead: 20260704000003_workflow_engine_drop_legacy.sql's own comment
+-- says "20260620000000 created a record_ref/created_by(uuid) variant whose
+-- CREATE was superseded by 20260621100000's `if not exists`... never applied."
+--
+-- The ONLY still-live statement in this file is the payroll_approvals.nis_employer
+-- column addition at the bottom — that one is real and in use (netlify/functions/
+-- routes/payroll.ts). Left in place; do not delete this file for that reason.
+-- ============================================================================
+--
 -- Phase 0A: Platform-level workflow and cross-module handoff tables
 -- These are NOT module-specific — every module (HSE, HR, Finance, Operations, Payroll)
 -- shares these tables. Do not add module-specific columns here.

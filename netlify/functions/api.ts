@@ -57,9 +57,17 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
   .map(s => s.trim())
   .filter(Boolean);
 
+// Fails CLOSED: an unset/empty ALLOWED_ORIGINS denies every cross-origin request
+// (previously it allowed ALL origins — safe only by accident, dangerous the moment
+// the env var is forgotten in production). The one built-in exception is
+// localhost/127.0.0.1 — safe to always allow because the Origin header is set by
+// the browser itself and can't be spoofed by page JS: a request only ever carries
+// a `localhost` origin when it's genuinely served from the developer's own
+// machine, so local dev keeps working with zero env setup without weakening
+// production (a real attacker's page always presents ITS OWN remote origin).
 function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
-  if (ALLOWED_ORIGINS.length === 0) return true; // not configured → allow all (dev)
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   return ALLOWED_ORIGINS.some(
     o => origin === o || origin.endsWith('.' + o.replace(/^https?:\/\//, '')),
   );
@@ -97,11 +105,11 @@ app.use('*', async (c, next) => {
   );
 });
 
-// CORS — echo the origin back only if it is in the allowlist
+// CORS — echo the origin back only if it is in the allowlist (fail closed otherwise)
 app.use('*', async (c, next) => {
   const origin  = c.req.header('origin') ?? '';
-  const allowed = isAllowedOrigin(origin) || ALLOWED_ORIGINS.length === 0;
-  c.header('access-control-allow-origin',  allowed ? (origin || '*') : '');
+  const allowed = isAllowedOrigin(origin);
+  c.header('access-control-allow-origin',  allowed ? origin : '');
   c.header('access-control-allow-methods', 'POST, OPTIONS');
   c.header('access-control-allow-headers', 'content-type, authorization');
   if (c.req.method === 'OPTIONS') return c.body(null, 204);

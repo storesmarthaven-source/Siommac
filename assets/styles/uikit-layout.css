@@ -848,7 +848,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   background: var(--siomac-navy); color: #fff;
 }
 .ui-page-head-icon i { display: grid !important; place-items: center !important; }
-.ui-page-head-text { min-width: 0; }
+.ui-page-head-text { min-width: 0; position: relative; top: 6px; }
 .ui-page-crumb {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-size: 0.68rem; font-weight: 500; color: var(--text-muted); margin-bottom: 3px;

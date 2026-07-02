@@ -1302,10 +1302,6 @@ function setupEventListeners(): void {
   // Pinned user card → My Profile
   document.getElementById('sidebarUserCard')?.addEventListener('click', () => nav?.['showSection']?.('s-profile'));
 
-  // Sidebar search button → open the command palette (⌘K)
-  document.getElementById('sidebarSearchBtn')?.addEventListener('click', () => {
-    (w()['openCommandPalette'] as (() => void) | undefined)?.();
-  });
 }
 
 // ── init ──────────────────────────────────────────────────────────────────────

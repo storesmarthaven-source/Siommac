@@ -131,8 +131,8 @@ const ROUTE_MATRIX: RouteSpec[] = [
   { route: 'POST /getWorkHours',              guard: 'user'                  },
   { route: 'POST /saveWorkHours',             guard: ['admin']               },
   { route: 'POST /uploadLogo',                guard: ['admin']               },
-  { route: 'POST /getSignedUrls',             guard: 'user'                  },
-  { route: 'POST /getUploadUrl',              guard: 'user'                  },
+  // getSignedUrls / getUploadUrl removed — unused generic storage endpoints with
+  // no path/bucket scoping (IDOR risk). See settings.ts.
   // Project Sites
   { route: 'POST /listProjectSites',          guard: 'user'                  },
   { route: 'POST /addProjectSite',            guard: ['admin']               },

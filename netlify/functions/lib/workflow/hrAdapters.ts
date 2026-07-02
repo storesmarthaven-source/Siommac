@@ -16,6 +16,7 @@ import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { applyApprovedChange, markChangeRequestStatus } from '../hr/changeApproval';
+import { applyApprovedOrgChange, setOrgChangeStatus } from '../hr/organizationChangeRequests';
 
 /** The user who made the most recent decision on this workflow (the approver). */
 async function decidedBy(workflowId: string): Promise<string | null> {
@@ -39,6 +40,24 @@ const hrEmployeeMasterAdapter: ModuleWorkflowAdapter = {
   onWorkflowCancelled:     ({ sourceRecordId, reason }) => markChangeRequestStatus(sourceRecordId, 'cancelled', null, reason),
 };
 
+// Org Structure change approval (Phase B). The envelope (hr_org_change_requests) is
+// set to pending_approval at submit; this adapter drives it on the engine's decisions.
+// On completion, applyApprovedOrgChange applies the stored change (or marks it scheduled
+// when effective-dated). sourceStatusMap is empty — the adapter owns the status.
+const hrOrgStructureAdapter: ModuleWorkflowAdapter = {
+  moduleKey: 'hr_org_structure',
+  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+    throw new Error('hr_org_structure: workflow context is built at the call site, not via the adapter.');
+  },
+  onWorkflowStarted:       async () => {},
+  onWorkflowStepCompleted: async () => {},
+  onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => { await applyApprovedOrgChange(sourceRecordId, await decidedBy(workflowId)); },
+  onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => { await setOrgChangeStatus(sourceRecordId, 'pending_approval', { decidedBy: await decidedBy(workflowId), comment }); },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await setOrgChangeStatus(sourceRecordId, 'rejected', { decidedBy: await decidedBy(workflowId), comment }); },
+  onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setOrgChangeStatus(sourceRecordId, 'cancelled', { comment: reason }); },
+};
+
 export function registerHrWorkflowAdapters(): void {
   registerWorkflowAdapter(hrEmployeeMasterAdapter);
+  registerWorkflowAdapter(hrOrgStructureAdapter);
 }

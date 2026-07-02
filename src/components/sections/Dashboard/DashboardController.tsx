@@ -32,11 +32,14 @@ interface HiddenBarProps {
 }
 
 function HiddenBar({ hidden, onRestore }: HiddenBarProps) {
-  const container = document.getElementById('dashHiddenWidgets');
-  if (!container) return null;
-
-  // We use a portal-like approach: update the legacy DOM node's content
+  // The DOM lookup lives INSIDE the effect (not before it) so the hook is always
+  // called unconditionally — looking it up first and early-returning before the
+  // useEffect call violates the Rules of Hooks (the hook would be skipped on any
+  // render where the legacy DOM node isn't found yet, e.g. before the HTML shell
+  // has mounted, risking a "rendered fewer hooks than expected" crash if that
+  // ever flips between renders).
   useEffect(() => {
+    const container = document.getElementById('dashHiddenWidgets');
     if (!container) return;
     if (!hidden.length) {
       container.style.display = 'none';
@@ -54,7 +57,7 @@ function HiddenBar({ hidden, onRestore }: HiddenBarProps) {
     };
     container.addEventListener('click', clickHandler);
     return () => container.removeEventListener('click', clickHandler);
-  }, [hidden, onRestore, container]);
+  }, [hidden, onRestore]);
 
   return null; // renders nothing into the Preact tree
 }

@@ -8,7 +8,7 @@
 // the central Workflow Engine phase — for now changes apply directly (by an
 // actor who holds the change permission) and are fully audited + status-tracked.
 
-import { Hono }       from 'hono';
+import { Hono, type Context } from 'hono';
 import { sb }         from '../lib/db';
 import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
@@ -24,6 +24,15 @@ import {
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import { CHANGE_TYPES, type ChangeType, CONTACT_COLS, applyApprovedChange, markChangeRequestStatus } from '../lib/hr/changeApproval';
 import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
+import { listOrgUnits, getOrgUnit, listPositions, getPosition, listCostCenters, getOrgStats } from '../lib/hr/organizationQueries';
+import { getOrgHealthSummary } from '../lib/hr/organizationHealth';
+import { previewOrgChangeImpact } from '../lib/hr/organizationImpact';
+import {
+  createOrgUnit, updateOrgUnit, moveOrgUnit, archiveOrgUnit, deleteOrgUnit,
+  createPosition, updatePosition, retirePosition,
+  createCostCenter, updateCostCenter, retireCostCenter,
+} from '../lib/hr/organizationMutations';
+import { listOrgChangeRequests, getOrgChangeRequest, cancelOrgChangeRequest, applyDueOrgChanges } from '../lib/hr/organizationChangeRequests';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -701,15 +710,113 @@ router.post('/employees/audit', async c => {
   return c.json({ success: true, data: rows.map(r => ({ ...r, actorName: r.actor_id ? actorMap[r.actor_id] ?? null : null })) });
 });
 
-// ── Organization Structure ─────────────────────────────────────────────────────
+// ── Organization Structure (Phase A) ────────────────────────────────────────────
+// Org-unit tree + positions + cost centres. Reads via lib/hr/organizationQueries;
+// writes (event + audit + guards + concurrency) via lib/hr/organizationMutations.
 
-// POST /api/hr/organization/tree — flat list of org units (frontend builds the tree)
+const orgBody = (c: Context<{ Variables: HonoVariables }>) => (c.get('body') as Record<string, unknown>).args ?? {};
+function orgErr(c: Context<{ Variables: HonoVariables }>, e: unknown): Response {
+  const er = e as { status?: number; message?: string };
+  return c.json({ success: false, message: er.message ?? 'Request failed.' }, (er.status ?? 500) as 200);
+}
+const ORG_UNIT_TYPES = ['company', 'division', 'department', 'team', 'crew', 'site_department'] as const;
+// Optional fields on every gated mutation: a reason + an effective date (Phase B).
+const GATED = { reason: z.string().max(500).nullable().optional(), effectiveFrom: z.string().nullable().optional() };
+
+// POST /api/hr/organization/tree — enriched flat list; frontend builds the tree
 router.post('/organization/tree', async c => {
   await requirePermission(c, 'hr.organization.view');
-  const { data, error } = await sb.from('departments')
-    .select('id, name, description, parent_id, org_unit_type, site_id, manager_id, is_active').order('name');
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  try { return c.json({ success: true, data: await listOrgUnits() }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/get', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  const v = zv(c, z.object({ unitId: z.string().min(1) }), orgBody(c));
+  if (!v.ok) return v.response;
+  try {
+    const unit = await getOrgUnit(v.data.unitId);
+    if (!unit) return c.json({ success: false, message: 'Org unit not found.' }, 404 as 200);
+    return c.json({ success: true, data: unit });
+  } catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/create', async c => {
+  const actor = await requirePermission(c, 'hr.organization.manage');
+  const v = zv(c, z.object({
+    name: z.string().min(1).max(160), code: z.string().max(40).nullable().optional(),
+    orgUnitType: z.enum(ORG_UNIT_TYPES).optional(), parentId: z.string().nullable().optional(),
+    siteId: z.string().nullable().optional(), managerId: z.string().nullable().optional(),
+    costCenterId: z.string().uuid().nullable().optional(), description: z.string().max(500).nullable().optional(),
+    sortOrder: z.number().int().optional(),
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await createOrgUnit(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/update', async c => {
+  const actor = await requirePermission(c, 'hr.organization.manage');
+  const v = zv(c, z.object({
+    unitId: z.string().min(1), expectedUpdatedAt: z.string().nullable().optional(),
+    name: z.string().min(1).max(160).optional(), code: z.string().max(40).nullable().optional(),
+    orgUnitType: z.enum(ORG_UNIT_TYPES).optional(), siteId: z.string().nullable().optional(),
+    managerId: z.string().nullable().optional(), costCenterId: z.string().uuid().nullable().optional(),
+    description: z.string().max(500).nullable().optional(), isActive: z.boolean().optional(), sortOrder: z.number().int().optional(),
+    ...GATED,
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await updateOrgUnit(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/move', async c => {
+  const actor = await requirePermission(c, 'hr.organization.manage');
+  const v = zv(c, z.object({
+    unitId: z.string().min(1), newParentId: z.string().nullable(), expectedUpdatedAt: z.string().nullable().optional(), ...GATED,
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await moveOrgUnit(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/archive', async c => {
+  const actor = await requirePermission(c, 'hr.organization.manage');
+  const v = zv(c, z.object({ unitId: z.string().min(1), ...GATED }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await archiveOrgUnit(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/unit/delete', async c => {
+  const actor = await requirePermission(c, 'hr.organization.delete');
+  const v = zv(c, z.object({ unitId: z.string().min(1), ...GATED }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await deleteOrgUnit(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/stats', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  try { return c.json({ success: true, data: await getOrgStats() }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/health', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  try { return c.json({ success: true, data: await getOrgHealthSummary() }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/change/preview', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  const v = zv(c, z.object({
+    entityType: z.enum(['org_unit', 'position', 'cost_center']), entityId: z.string().min(1),
+    action: z.enum(['move', 'archive', 'delete', 'retire', 'update']), newParentId: z.string().nullable().optional(),
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await previewOrgChangeImpact(v.data) }); }
+  catch (e) { return orgErr(c, e); }
 });
 
 // ── Positions ──────────────────────────────────────────────────────────────────
@@ -723,47 +830,137 @@ router.post('/sites/list', async c => {
 
 router.post('/positions/list', async c => {
   await requirePermission(c, 'hr.positions.view');
-  const { data } = await sb.from('hr_positions').select('*').order('title');
-  return c.json({ success: true, data: data ?? [] });
+  try { return c.json({ success: true, data: await listPositions() }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/positions/get', async c => {
+  await requirePermission(c, 'hr.positions.view');
+  const v = zv(c, z.object({ positionId: z.string().uuid() }), orgBody(c));
+  if (!v.ok) return v.response;
+  try {
+    const pos = await getPosition(v.data.positionId);
+    if (!pos) return c.json({ success: false, message: 'Position not found.' }, 404 as 200);
+    return c.json({ success: true, data: pos });
+  } catch (e) { return orgErr(c, e); }
 });
 
 router.post('/positions/create', async c => {
   const actor = await requirePermission(c, 'hr.positions.manage');
   const v = zv(c, z.object({
-    positionKey: z.string().min(1).max(80), title: z.string().min(1).max(160),
+    positionKey: z.string().min(1).max(80), title: z.string().min(1).max(160), grade: z.string().max(60).nullable().optional(),
     departmentId: z.string().nullable().optional(), siteId: z.string().nullable().optional(),
-    defaultSupervisorId: z.string().nullable().optional(), isSafetyCritical: z.boolean().optional(),
-  }), (c.get('body') as Record<string, unknown>).args ?? {});
+    defaultSupervisorId: z.string().nullable().optional(), reportsToPositionId: z.string().uuid().nullable().optional(),
+    isSafetyCritical: z.boolean().optional(), headcountBudget: z.number().int().nullable().optional(),
+  }), orgBody(c));
   if (!v.ok) return v.response;
-  const { data, error } = await sb.from('hr_positions').insert({
-    position_key: v.data.positionKey, title: v.data.title, department_id: v.data.departmentId ?? null,
-    site_id: v.data.siteId ?? null, default_supervisor_id: v.data.defaultSupervisorId ?? null,
-    is_safety_critical: v.data.isSafetyCritical ?? false, created_by: actor.id,
-  }).select('id').single<{ id: string }>();
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  await writeHrAudit({ submoduleKey: 'organization', recordId: data.id, actorId: actor.id, action: 'hr.position.created', newState: v.data });
-  return c.json({ success: true, data });
+  try { return c.json({ success: true, data: await createPosition(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
 });
 
 router.post('/positions/update', async c => {
   const actor = await requirePermission(c, 'hr.positions.manage');
   const v = zv(c, z.object({
-    positionId: z.string().uuid(), title: z.string().max(160).optional(),
+    positionId: z.string().uuid(), expectedUpdatedAt: z.string().nullable().optional(),
+    title: z.string().max(160).optional(), grade: z.string().max(60).nullable().optional(),
     departmentId: z.string().nullable().optional(), siteId: z.string().nullable().optional(),
-    defaultSupervisorId: z.string().nullable().optional(), isSafetyCritical: z.boolean().optional(), isActive: z.boolean().optional(),
-  }), (c.get('body') as Record<string, unknown>).args ?? {});
+    defaultSupervisorId: z.string().nullable().optional(), reportsToPositionId: z.string().uuid().nullable().optional(),
+    isSafetyCritical: z.boolean().optional(), headcountBudget: z.number().int().nullable().optional(), isActive: z.boolean().optional(),
+    ...GATED,
+  }), orgBody(c));
   if (!v.ok) return v.response;
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (v.data.title               !== undefined) patch['title']                 = v.data.title;
-  if (v.data.departmentId        !== undefined) patch['department_id']         = v.data.departmentId;
-  if (v.data.siteId              !== undefined) patch['site_id']               = v.data.siteId;
-  if (v.data.defaultSupervisorId !== undefined) patch['default_supervisor_id'] = v.data.defaultSupervisorId;
-  if (v.data.isSafetyCritical    !== undefined) patch['is_safety_critical']    = v.data.isSafetyCritical;
-  if (v.data.isActive            !== undefined) patch['is_active']             = v.data.isActive;
-  const { error } = await sb.from('hr_positions').update(patch).eq('id', v.data.positionId);
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  await writeHrAudit({ submoduleKey: 'organization', recordId: v.data.positionId, actorId: actor.id, action: 'hr.position.updated', newState: patch });
-  return c.json({ success: true });
+  try { return c.json({ success: true, data: await updatePosition(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/positions/retire', async c => {
+  const actor = await requirePermission(c, 'hr.positions.manage');
+  const v = zv(c, z.object({ positionId: z.string().uuid(), ...GATED }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await retirePosition(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+// ── Cost centres (shared finance_cost_centers registry) ──────────────────────────
+
+router.post('/cost-centers/list', async c => {
+  await requirePermission(c, 'hr.cost_centers.view');
+  try { return c.json({ success: true, data: await listCostCenters() }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/cost-centers/create', async c => {
+  const actor = await requirePermission(c, 'hr.cost_centers.manage');
+  const v = zv(c, z.object({
+    code: z.string().max(40).nullable().optional(), name: z.string().min(1).max(160),
+    currency: z.string().max(8).optional(), annualBudget: z.number().nullable().optional(),
+    departmentId: z.string().nullable().optional(), managerId: z.string().nullable().optional(),
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await createCostCenter(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/cost-centers/update', async c => {
+  const actor = await requirePermission(c, 'hr.cost_centers.manage');
+  const v = zv(c, z.object({
+    costCenterId: z.string().uuid(), expectedUpdatedAt: z.string().nullable().optional(),
+    code: z.string().max(40).nullable().optional(), name: z.string().min(1).max(160).optional(),
+    currency: z.string().max(8).optional(), annualBudget: z.number().nullable().optional(),
+    departmentId: z.string().nullable().optional(), managerId: z.string().nullable().optional(), isActive: z.boolean().optional(),
+    ...GATED,
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await updateCostCenter(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/cost-centers/retire', async c => {
+  const actor = await requirePermission(c, 'hr.cost_centers.manage');
+  const v = zv(c, z.object({ costCenterId: z.string().uuid(), ...GATED }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await retireCostCenter(actor, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+// ── Org change requests (Phase B — approval envelope) ────────────────────────────
+
+router.post('/organization/changes/list', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  const v = zv(c, z.object({
+    status: z.string().optional(), entityType: z.enum(['org_unit', 'position', 'cost_center']).optional(), limit: z.number().int().optional(),
+  }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listOrgChangeRequests(v.data as never) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/change/get', async c => {
+  await requirePermission(c, 'hr.organization.view');
+  const v = zv(c, z.object({ changeRequestId: z.string().uuid() }), orgBody(c));
+  if (!v.ok) return v.response;
+  try {
+    const cr = await getOrgChangeRequest(v.data.changeRequestId);
+    if (!cr) return c.json({ success: false, message: 'Change request not found.' }, 404 as 200);
+    return c.json({ success: true, data: cr });
+  } catch (e) { return orgErr(c, e); }
+});
+
+router.post('/organization/change/cancel', async c => {
+  const actor = await requirePermission(c, 'hr.organization.manage');
+  const v = zv(c, z.object({ changeRequestId: z.string().uuid(), reason: z.string().max(500).nullable().optional() }), orgBody(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await cancelOrgChangeRequest(actor.id, v.data) }); }
+  catch (e) { return orgErr(c, e); }
+});
+
+// Effective-dating sweep — apply every 'scheduled' change whose effective_from passed.
+// Service-role only (no scheduler infra exists — trigger via external cron / operator).
+router.post('/organization/changes/apply-due', async c => {
+  const actor = await requireUser(c);
+  if (actor.role !== 'superadmin') return c.json({ success: false, message: 'Service-role only.' }, 403 as 200);
+  try { return c.json({ success: true, data: await applyDueOrgChanges(actor.id) }); }
+  catch (e) { return orgErr(c, e); }
 });
 
 // ── Dashboard ────────────────────────────────────────────────────────────────

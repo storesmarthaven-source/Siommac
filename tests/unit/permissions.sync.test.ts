@@ -14,12 +14,18 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-/** Extract the quoted 'resource.action' keys from a PERMISSION_KEYS array literal. */
+/**
+ * Extract the quoted permission keys from a PERMISSION_KEYS array literal.
+ * Keys are dot-separated with 2+ segments (e.g. 'hr.dashboard.view',
+ * 'auth.security.manage_policy') — the pattern below matches any number of
+ * segments, not just exactly two, so 3+-segment keys aren't silently dropped
+ * from the comparison (a dropped key can't be caught by this drift guard).
+ */
 function extractKeys(relPath: string): string[] {
   const src = readFileSync(join(__dirname, '../../', relPath), 'utf8');
   const m = src.match(/PERMISSION_KEYS\s*=\s*\[([\s\S]*?)\]\s*as const/);
   if (!m) throw new Error(`PERMISSION_KEYS array not found in ${relPath}`);
-  const keys = m[1].match(/'[a-z_]+\.[a-z_]+'/g) ?? [];
+  const keys = m[1].match(/'[a-z_]+(?:\.[a-z_]+)+'/g) ?? [];
   return keys.map(k => k.replace(/'/g, '')).sort();
 }
 

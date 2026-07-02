@@ -79,6 +79,20 @@ router.post('/deleteDepartment', async c => {
   const actor = await requirePermission(c, 'departments.delete');
   const v = zv(c, DeleteDepartmentSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
+  // Guarded delete — a department/org-unit may not be hard-deleted while it still
+  // has child units, assigned employees, or linked positions (orphaning them, or
+  // leaving app_users.department_id dangling). This mirrors the guard on the canonical
+  // HR ▸ Organization editor (/api/hr/organization/unit/delete). Deactivate instead.
+  // NOTE: the HR Organization Structure page is now the canonical org-unit editor;
+  // this legacy Employees ▸ Departments route is retained read/edit-only pending removal.
+  const [{ count: children }, { count: employees }, { count: positions }] = await Promise.all([
+    sb.from('departments').select('id', { count: 'exact', head: true }).eq('parent_id', v.data.id),
+    sb.from('app_users').select('id', { count: 'exact', head: true }).eq('department_id', v.data.id),
+    sb.from('hr_positions').select('id', { count: 'exact', head: true }).eq('department_id', v.data.id),
+  ]);
+  if ((children ?? 0) > 0)  return c.json({ success: false, message: `Cannot delete: ${children} child unit(s) exist. Move or delete them first, or deactivate this unit instead.` }, 409 as 200);
+  if ((employees ?? 0) > 0) return c.json({ success: false, message: `Cannot delete: ${employees} employee(s) are assigned. Reassign them first, or deactivate this unit instead.` }, 409 as 200);
+  if ((positions ?? 0) > 0) return c.json({ success: false, message: `Cannot delete: ${positions} position(s) are linked. Reassign them first, or deactivate this unit instead.` }, 409 as 200);
   const { error } = await sb.from('departments').delete().eq('id', v.data.id);
   if (error) return c.json({ success: false, message: error.message });
   await log_(actor, 'delete', 'department', v.data.id, '');

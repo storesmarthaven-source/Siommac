@@ -139,3 +139,25 @@
 .ocw-ava-stack .ocw-ava:first-child { margin-left: 0; }
 
 .ocw-empty { flex: 1; display: grid; place-items: center; min-height: 60px; color: var(--c-faint); font-size: 12px; font-weight: 600; text-align: center; padding: 14px; }
+
+/* ── communications (send bar + log) ─────────────────────────────────────────────── */
+.ocw-commbar { display: flex; gap: 8px; margin-bottom: 10px; }
+.ocw-commsel { flex: 1; min-width: 0; height: 30px; border-radius: 8px; border: 1px solid #d8e0ec; background: #fff; padding: 0 8px; font-size: 12px; font-weight: 600; color: #334155; font-family: inherit; }
+.ocw .ocw-commbar .ocw-act-btn { border-color: #cfc4ff; background: #efeaff; color: #6746f2; }
+.ocw-li-ico.purple { background: #efeaff; color: #6746f2; }
+.ocw-pill.green { background: #dcfce7; color: #15803d; } .ocw-pill.red { background: #fee2e2; color: #dc2626; }
+.ocw-pill.amber { background: #fef3c7; color: #b45309; } .ocw-pill.gray { background: #eef2f7; color: #475569; }
+
+/* ── timeline (dotted rail) ──────────────────────────────────────────────────────── */
+.ocw-timeline { display: grid; gap: 2px; }
+.ocw-tl-row { display: grid; grid-template-columns: 16px 1fr; gap: 8px; padding: 6px 0; position: relative; }
+.ocw-tl-row::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: #eef2f7; }
+.ocw-tl-row:first-child::before { top: 14px; } .ocw-tl-row:last-child::before { bottom: calc(100% - 14px); }
+.ocw-tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; z-index: 1; box-shadow: 0 0 0 2px #fff; }
+.ocw-tl-main { min-width: 0; }
+
+/* ── audit rows ──────────────────────────────────────────────────────────────────── */
+.ocw-audit { display: grid; gap: 8px; }
+.ocw-audit-row { border-bottom: 1px solid #f1f5f9; padding-bottom: 7px; }
+.ocw-audit-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: #0f172a; }
+.ocw-audit-diff { font-size: 11px; color: #64748b; margin-top: 3px; font-family: ui-monospace, monospace; word-break: break-word; }

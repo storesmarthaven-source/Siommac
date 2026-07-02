@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { sb, sbAnon } from '../lib/db';
 import { requireUser, requireRole, log_ }               from '../lib/auth';
 import { getAllSettings, setting, invalidateSettingsCache } from '../lib/settings';
-import { uploadBase64, createUploadUrl }                 from '../lib/upload';
-import { getSignedUrl, avatarPublicUrl, AVATARS_BUCKET } from '../lib/photos';
+import { uploadBase64 }                                  from '../lib/upload';
+import { avatarPublicUrl, AVATARS_BUCKET }               from '../lib/photos';
 import { emitAppEvent }                                  from '../lib/appEvents';
 import { zv, UpdateSettingSchema, SaveWorkHoursSchema, UploadLogoSchema, z } from '../lib/validate';
 import type { HonoVariables }                            from '../../../types/api';
@@ -168,39 +168,16 @@ router.post('/profile-photo/remove', async c => {
   return c.json({ success: true, data: { profileImage: null, profileImageVersion: nextVersion } });
 });
 
-router.post('/getSignedUrls', async c => {
-  await requireUser(c);
-  const args = (c.get('body').args ?? {}) as Record<string, unknown>;
-  if (args.paths) {
-    const paths = args.paths as Array<{ bucket: string; path: string }>;
-    if (!Array.isArray(paths) || paths.length > 100) return c.json({ success: false, message: 'Invalid paths array' }, 400);
-    const urls = await Promise.all(paths.map(({ bucket, path: p }) => getSignedUrl(String(bucket), String(p))));
-    return c.json({ success: true, data: urls });
-  }
-  const url = await getSignedUrl(String(args.bucket ?? ''), String(args.path ?? ''));
-  return c.json({ success: true, data: url });
-});
-
-// ── Presigned upload URL ──────────────────────────────────────────────────────
-// Returns a short-lived URL the client uses to PUT a file directly to Supabase
-// Storage — the Lambda never holds image bytes in memory.
-const GetUploadUrlSchema = z.object({
-  bucket:   z.enum(['profile-photos', 'attendance-photos', 'branding']),
-  name:     z.string().min(1).max(128),
-  mimeType: z.enum(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']),
-});
-
-router.post('/getUploadUrl', async c => {
-  await requireUser(c);
-  const v = zv(c, GetUploadUrlSchema, c.get('body').args ?? {});
-  if (!v.ok) return v.response;
-  const { bucket, name, mimeType } = v.data;
-  try {
-    const result = await createUploadUrl(bucket, name, mimeType);
-    return c.json({ success: true, ...result });
-  } catch (e) {
-    return c.json({ success: false, message: (e as Error).message }, 500);
-  }
-});
+// NOTE: the old generic `/getSignedUrls` (any authenticated user, caller-supplied
+// bucket+path — an IDOR: nothing scoped the path to the requester) and
+// `/getUploadUrl` (same auth gap, plus let ANY authenticated user request a write
+// URL into the admin-only `branding` bucket) were removed — both were unused by
+// every current caller (grepped clean across src/, scripts/e2e/, docs/). Photo
+// uploads now go through the properly-scoped, per-user-path routes:
+// /profile-photo/upload-url (below) and the module-specific attachment routes
+// (e.g. communications/messages/attachments/upload-url). Do not re-add a generic
+// signed-url/upload endpoint — new upload flows must be record-scoped,
+// permission-checked, and derive their own path (never take a bare path/bucket
+// from the client).
 
 export default router;

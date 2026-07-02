@@ -66,3 +66,6 @@
 
 /* ── Settings v2 — full-page navy design (faithful port, scoped under .swz) ──── */
 @import '../../assets/styles/settingsV2.css' layer(sections);
+/* Top bar — in the sections layer (after views.css) so .app-topbar overrides of the
+   ProfilePill (.profile-notif-pill/.pnp-*) win; views.css defines them in this layer. */
+@import '../../assets/styles/topbar.css'     layer(sections);

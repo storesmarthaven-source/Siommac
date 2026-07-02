@@ -59,20 +59,10 @@ function CommsBridge() {
 function Sidebar() {
   return (
     <aside class="sidebar" id="sidebar">
-      <button class="sidebar-toggle" id="sidebarToggleBtn" title="Toggle sidebar">
-        <i class="fas fa-chevron-left" id="sidebarToggleIcon" />
-      </button>
       <div class="sidebar-brand">
         <i class="fas fa-building" />
         <span class="sidebar-brand-text" id="companyName">My Company</span>
       </div>
-
-      {/* Command-palette launcher (⌘K) — opens CommandPalette overlay */}
-      <button class="sidebar-search" id="sidebarSearchBtn" type="button" title="Search & jump to (Ctrl/⌘K)">
-        <i class="fas fa-search" />
-        <span class="sidebar-search-text">Search</span>
-        <kbd class="sidebar-search-kbd">⌘K</kbd>
-      </button>
 
       <div class="sidebar-avatar" id="sidebarAvatar" style="display:none;">U</div>
       <div class="sidebar-menu-section">

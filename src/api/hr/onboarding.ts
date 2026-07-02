@@ -12,15 +12,20 @@ import { apiPost } from '@lib/api';
 import type {
   OnboardingCaseListArgs, OnboardingCaseListResult,
   OnboardingDashboardStats, OnboardingDashboardStatsArgs,
-  OnboardingTaskListArgs, OnboardingTaskRow,
-  OnboardingHandoffListArgs, OnboardingHandoffRow,
-  OnboardingBlockerListArgs, OnboardingBlockerRow,
-  OnboardingAuditRow, OnboardingPackageSummary,
+  OnboardingTaskListArgs, OnboardingTaskRow, OnboardingTaskDetail, AddTaskNoteArgs,
+  OnboardingHandoffListArgs, OnboardingHandoffRow, OnboardingHandoffActionArgs, OnboardingHandoffActionResult,
+  OnboardingBlockerListArgs, OnboardingBlockerRow, NotifyBlockerOwnerArgs, NotifyBlockerOwnerResult,
+  OnboardingAuditRow, OnboardingPackageSummary, OnboardingPackageDetail,
+  OnboardingCommunicationRow, OnboardingCommunicationPreview, PreviewCommunicationArgs, SendCommunicationArgs,
+  OnboardingReportMeta, OnboardingReportResult, RunOnboardingReportArgs,
   OnboardingActionTemplate, OnboardingCaseAction, OnboardingActionType, OnboardingOwnerType, OnboardingActionPriority,
+  CreatePackageArgs, UpdatePackageArgs, SetPackageStatusArgs,
+  CreateTaskTemplateArgs, UpdateTaskTemplateArgs, CreateHandoffTemplateArgs, UpdateHandoffTemplateArgs,
 } from '../../../types/hrOnboarding';
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
-  const res = await apiPost<{ success: boolean; data: T }>(path, args as Record<string, unknown>);
+  const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args as Record<string, unknown>);
+  if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
   return res.data;
 }
 
@@ -28,6 +33,21 @@ export interface OnboardingTaskTemplate { taskKey: string; taskTitle: string; ow
 export interface OnboardingHandoffTemplate { targetModule: string; handoffType: string }
 export interface OnboardingPreview { package: string; label: string; tasks: OnboardingTaskTemplate[]; handoffs: OnboardingHandoffTemplate[]; taskCount: number }
 export interface OnboardingStartResult { caseId: string; caseNo: string; status: string; taskCount: number; handoffCount: number }
+
+/** One row of the case timeline — mirrors the orchestration TimelineItem projection
+ *  (snake_case, since it comes from the generic /orchestration/timeline/get endpoint,
+ *  which predates the camelCase onboarding contract). */
+export interface OnboardingTimelineItem {
+  id: string;
+  item_type: 'event' | 'audit' | 'handoff' | 'workflow' | 'message' | 'ticket';
+  title: string;
+  description?: string;
+  actor_id?: string | null;
+  actor_name?: string;
+  severity?: string;
+  created_at: string;
+  metadata?: Record<string, unknown>;
+}
 
 // Packages are DB-driven (Phase 4) — fetch via useOnboardingPackages() / packages/list.
 // The former hardcoded ONBOARDING_PACKAGES constant was removed (no dual source).
@@ -38,11 +58,29 @@ export const hrOnboardingApi = {
     employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null;
     reason?: string | null; priority?: string | null; targetStartDate?: string | null;
     launchMode?: string | null; caseOwner?: string | null; workerType?: string | null;
+    includeActionTemplateIds?: string[] | null;
   }) => call<OnboardingStartResult>('hr/onboarding/start', a),
   get:     (a: { caseId?: string; employeeId?: string }) =>
     call<{ case: Record<string, unknown>; tasks: Record<string, unknown>[]; handoffs: Record<string, unknown>[] }>('hr/onboarding/get', a),
   completeTask: (a: { taskId: string }) => call<{ taskId: string; status: string; caseCompleted: boolean }>('hr/onboarding/task/complete', a),
   reassignTask: (a: { taskId: string; assignedTo: string | null }) => call<{ taskId: string; assignedTo: string | null }>('hr/onboarding/task/reassign', a),
+  getTask:      (a: { taskId: string }) => call<OnboardingTaskDetail>('hr/onboarding/task/get', a),
+  addTaskNote:  (a: AddTaskNoteArgs)    => call<{ taskId: string; noteId: string }>('hr/onboarding/task/add-note', a),
+  /** Presigned-URL → direct PUT → attach (the standard attachment flow): the Lambda
+   *  never holds the file bytes. */
+  attachTaskEvidence: async (a: { taskId: string; file: File }) => {
+    const signed = await apiPost<{ success: boolean; message?: string; uploadUrl: string; path: string }>(
+      'hr/onboarding/task/evidence-upload-url',
+      { taskId: a.taskId, fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' },
+      { retryable: false });
+    if (!signed.success) throw new Error(signed.message ?? 'Upload URL failed.');
+    const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': a.file.type || 'application/octet-stream' }, body: a.file });
+    if (!put.ok) throw new Error('File upload failed.');
+    return call<{ taskId: string; evidenceId: string }>('hr/onboarding/task/attach-evidence', {
+      taskId: a.taskId, fileName: a.file.name, filePath: signed.path,
+      mimeType: a.file.type || null, fileSize: a.file.size,
+    });
+  },
   cancel:  (a: { caseId: string; reason?: string }) => call<{ caseId: string; status: string }>('hr/onboarding/cancel', a),
 
   // ── Management module (Phase 2 reads) ───────────────────────────────────────────
@@ -50,6 +88,10 @@ export const hrOnboardingApi = {
   listCases:      (a: OnboardingCaseListArgs = {})       => call<OnboardingCaseListResult>('hr/onboarding/list', a),
   listTasks:      (a: OnboardingTaskListArgs = {})       => call<OnboardingTaskRow[]>('hr/onboarding/tasks/list', a),
   listHandoffs:   (a: OnboardingHandoffListArgs = {})    => call<OnboardingHandoffRow[]>('hr/onboarding/handoffs/list', a),
+  retryHandoff:    (a: OnboardingHandoffActionArgs) => call<OnboardingHandoffActionResult>('hr/onboarding/handoff/retry', a),
+  acceptHandoff:   (a: OnboardingHandoffActionArgs) => call<OnboardingHandoffActionResult>('hr/onboarding/handoff/accept', a),
+  completeHandoff: (a: OnboardingHandoffActionArgs) => call<OnboardingHandoffActionResult>('hr/onboarding/handoff/complete', a),
+  cancelHandoff:   (a: OnboardingHandoffActionArgs) => call<OnboardingHandoffActionResult>('hr/onboarding/handoff/cancel', a),
   listBlockers:   (a: OnboardingBlockerListArgs = {})    => call<OnboardingBlockerRow[]>('hr/onboarding/blockers/list', a),
 
   // ── Management module (Phase 3 writes) ──────────────────────────────────────────
@@ -64,10 +106,41 @@ export const hrOnboardingApi = {
   resolveBlocker:  (a: { blockerId: string; note?: string | null }) => call<{ blockerId: string; status: string }>('hr/onboarding/blocker/resolve', a),
   escalateBlocker: (a: { blockerId: string; note?: string | null; newOwnerId?: string | null }) => call<{ blockerId: string; status: string }>('hr/onboarding/blocker/escalate', a),
   waiveBlocker:    (a: { blockerId: string; reason: string }) => call<{ blockerId: string; status: string }>('hr/onboarding/blocker/waive', a),
+  notifyBlockerOwner: (a: NotifyBlockerOwnerArgs) => call<NotifyBlockerOwnerResult>('hr/onboarding/blocker/notify-owner', a),
   audit:           (a: { caseId: string }) => call<OnboardingAuditRow[]>('hr/onboarding/audit', a),
 
   // ── Packages (Phase 4) ──────────────────────────────────────────────────────────
   listPackages:    (a: { includeRetired?: boolean } = {}) => call<OnboardingPackageSummary[]>('hr/onboarding/packages/list', a),
+
+  // ── Package Manager (packages + task/handoff templates) ────────────────────────
+  getPackageDetail:       (a: { packageKey: string })  => call<OnboardingPackageDetail>('hr/onboarding/packages/get', a),
+  createPackage:          (a: CreatePackageArgs)        => call<{ id: string; key: string }>('hr/onboarding/packages/create', a),
+  updatePackage:          (a: UpdatePackageArgs)        => call<{ id: string }>('hr/onboarding/packages/update', a),
+  setPackageStatus:       (a: SetPackageStatusArgs)     => call<{ id: string; status: string }>('hr/onboarding/packages/set-status', a),
+  createTaskTemplate:     (a: CreateTaskTemplateArgs)   => call<{ id: string }>('hr/onboarding/packages/task-templates/create', a),
+  updateTaskTemplate:     (a: UpdateTaskTemplateArgs)   => call<{ id: string }>('hr/onboarding/packages/task-templates/update', a),
+  deleteTaskTemplate:     (a: { id: string })           => call<{ id: string }>('hr/onboarding/packages/task-templates/delete', a),
+  createHandoffTemplate:  (a: CreateHandoffTemplateArgs) => call<{ id: string }>('hr/onboarding/packages/handoff-templates/create', a),
+  updateHandoffTemplate:  (a: UpdateHandoffTemplateArgs) => call<{ id: string }>('hr/onboarding/packages/handoff-templates/update', a),
+  deleteHandoffTemplate:  (a: { id: string })           => call<{ id: string }>('hr/onboarding/packages/handoff-templates/delete', a),
+
+  // ── Overview analytics ───────────────────────────────────────────────────────────
+  recentActivity: (a: { limit?: number } = {}) => call<OnboardingAuditRow[]>('hr/onboarding/activity/recent', a),
+
+  // ── Case communications (Phase 5) ─────────────────────────────────────────────────
+  listCommunications:    (a: { caseId: string })        => call<OnboardingCommunicationRow[]>('hr/onboarding/communications/list', a),
+  previewCommunication:  (a: PreviewCommunicationArgs)  => call<OnboardingCommunicationPreview>('hr/onboarding/communications/preview', a),
+  sendCommunication:     (a: SendCommunicationArgs)     => call<{ id: string; status: string; recipientUserId: string | null }>('hr/onboarding/communications/send', a),
+  resendCommunication:   (a: { id: string })            => call<{ id: string; status: string }>('hr/onboarding/communications/resend', a),
+
+  // ── Case timeline — reuses the generic cross-module orchestration timeline (no
+  // onboarding-specific endpoint; one query already spans events/audit/handoffs/wf).
+  timeline: (a: { caseId: string }) => call<OnboardingTimelineItem[]>('orchestration/timeline/get', { module: 'hr', recordType: 'onboarding_case', recordId: a.caseId, includeAudit: true }),
+
+  // ── Reports (Phase 6) ──────────────────────────────────────────────────────────
+  listReports: () => call<OnboardingReportMeta[]>('hr/onboarding/reports/list', {}),
+  runReport:    (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/run', a as unknown as Record<string, unknown>),
+  exportReport: (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/export', a as unknown as Record<string, unknown>),
 
   // ── Custom Onboarding Actions (Phase 5) ─────────────────────────────────────────
   listActionTemplates:  (a: { packageKey: string; includeInactive?: boolean }) => call<OnboardingActionTemplate[]>('hr/onboarding/actions/templates/list', a),
@@ -101,35 +174,6 @@ export interface CaseActionArgs {
   externalSystemKey?: string | null; externalActionUrl?: string | null;
 }
 
-// ── hooks (case management) ─────────────────────────────────────────────────────
-
-const caseKey = (employeeId: string | null) => ['hr', 'onboarding', 'case', employeeId ?? ''] as const;
-
-export function useHrOnboardingCase(employeeId: string | null) {
-  return useQuery({
-    queryKey: caseKey(employeeId),
-    enabled:  !!employeeId,
-    retry:    false,
-    queryFn:  () => hrOnboardingApi.get({ employeeId: employeeId! }),
-  });
-}
-
-export function useCompleteOnboardingTask(employeeId: string | null) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (taskId: string) => hrOnboardingApi.completeTask({ taskId }),
-    onSuccess:  () => qc.invalidateQueries({ queryKey: caseKey(employeeId) }),
-  });
-}
-
-export function useCancelOnboarding(employeeId: string | null) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (a: { caseId: string; reason?: string }) => hrOnboardingApi.cancel(a),
-    onSuccess:  () => qc.invalidateQueries({ queryKey: caseKey(employeeId) }),
-  });
-}
-
 // ── hooks (management module — Phase 2 reads) ────────────────────────────────────
 // placeholderData keeps the previous page rendered while a new filter set loads
 // (instant-from-cache per the loading-state standard), instead of flashing a spinner.
@@ -141,11 +185,12 @@ export function useOnboardingDashboard(filters: OnboardingDashboardStatsArgs = {
   });
 }
 
-export function useOnboardingCases(filters: OnboardingCaseListArgs = {}) {
+export function useOnboardingCases(filters: OnboardingCaseListArgs = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey:        ['hr', 'onboarding', 'cases', filters],
     queryFn:         () => hrOnboardingApi.listCases(filters),
     placeholderData: prev => prev,
+    enabled:         options.enabled,
   });
 }
 
@@ -157,11 +202,12 @@ export function useOnboardingTasksList(filters: OnboardingTaskListArgs = {}) {
   });
 }
 
-export function useOnboardingHandoffsList(filters: OnboardingHandoffListArgs = {}) {
+export function useOnboardingHandoffsList(filters: OnboardingHandoffListArgs = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey:        ['hr', 'onboarding', 'handoffs', filters],
     queryFn:         () => hrOnboardingApi.listHandoffs(filters),
     placeholderData: prev => prev,
+    enabled:         options.enabled,
   });
 }
 
@@ -189,6 +235,62 @@ export function useOnboardingAudit(caseId: string | null) {
   });
 }
 
+export function useOnboardingRecentActivity(limit = 15) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'activity', limit],
+    queryFn:  () => hrOnboardingApi.recentActivity({ limit }),
+  });
+}
+
+export function useOnboardingPackageDetail(packageKey: string | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'package-detail', packageKey ?? ''],
+    enabled:  !!packageKey,
+    queryFn:  () => hrOnboardingApi.getPackageDetail({ packageKey: packageKey! }),
+  });
+}
+
+export function useOnboardingTaskDetail(taskId: string | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'task-detail', taskId ?? ''],
+    enabled:  !!taskId,
+    queryFn:  () => hrOnboardingApi.getTask({ taskId: taskId! }),
+  });
+}
+
+export function useOnboardingCommunications(caseId: string | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'communications', caseId ?? ''],
+    enabled:  !!caseId,
+    queryFn:  () => hrOnboardingApi.listCommunications({ caseId: caseId! }),
+  });
+}
+
+export function useOnboardingTimeline(caseId: string | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'timeline', caseId ?? ''],
+    enabled:  !!caseId,
+    queryFn:  () => hrOnboardingApi.timeline({ caseId: caseId! }),
+  });
+}
+
+export function useOnboardingReportList() {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'report-list'],
+    queryFn:  () => hrOnboardingApi.listReports(),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useOnboardingReport(args: RunOnboardingReportArgs | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'report', args],
+    enabled:  !!args,
+    placeholderData: prev => prev,
+    queryFn:  () => hrOnboardingApi.runReport(args!),
+  });
+}
+
 // ── hooks (management module — Phase 3 mutations) ────────────────────────────────
 // Each mutation invalidates ALL onboarding queries (dashboard / cases / tasks /
 // handoffs / blockers / case / audit) so every open view reflects the new state.
@@ -199,6 +301,13 @@ function useOnboardingMutation<TArgs, TRes>(fn: (a: TArgs) => Promise<TRes>) {
 
 export const useOnboardingCompleteTask   = () => useOnboardingMutation(hrOnboardingApi.completeTask);
 export const useOnboardingAddTask        = () => useOnboardingMutation(hrOnboardingApi.addTask);
+export const useOnboardingReassignTask   = () => useOnboardingMutation(hrOnboardingApi.reassignTask);
+export const useOnboardingAddTaskNote    = () => useOnboardingMutation(hrOnboardingApi.addTaskNote);
+export const useOnboardingAttachTaskEvidence = () => useOnboardingMutation(hrOnboardingApi.attachTaskEvidence);
+export const useOnboardingRetryHandoff    = () => useOnboardingMutation(hrOnboardingApi.retryHandoff);
+export const useOnboardingAcceptHandoff   = () => useOnboardingMutation(hrOnboardingApi.acceptHandoff);
+export const useOnboardingCompleteHandoff = () => useOnboardingMutation(hrOnboardingApi.completeHandoff);
+export const useOnboardingCancelHandoff   = () => useOnboardingMutation(hrOnboardingApi.cancelHandoff);
 export const useOnboardingBlockTask      = () => useOnboardingMutation(hrOnboardingApi.blockTask);
 export const useOnboardingUnblockTask    = () => useOnboardingMutation(hrOnboardingApi.unblockTask);
 export const useOnboardingCompleteCase   = () => useOnboardingMutation(hrOnboardingApi.completeCase);
@@ -210,6 +319,9 @@ export const useOnboardingMarkReady      = () => useOnboardingMutation(hrOnboard
 export const useOnboardingResolveBlocker = () => useOnboardingMutation(hrOnboardingApi.resolveBlocker);
 export const useOnboardingEscalateBlocker = () => useOnboardingMutation(hrOnboardingApi.escalateBlocker);
 export const useOnboardingWaiveBlocker   = () => useOnboardingMutation(hrOnboardingApi.waiveBlocker);
+export const useOnboardingNotifyBlockerOwner = () => useOnboardingMutation(hrOnboardingApi.notifyBlockerOwner);
+export const useOnboardingSendCommunication   = () => useOnboardingMutation(hrOnboardingApi.sendCommunication);
+export const useOnboardingResendCommunication = () => useOnboardingMutation(hrOnboardingApi.resendCommunication);
 
 // ── hooks (custom onboarding actions — Phase 5) ──────────────────────────────────
 export function useOnboardingActionTemplates(packageKey: string | null, includeInactive = false) {
@@ -236,3 +348,14 @@ export const useOnboardingUpdateCaseAction     = () => useOnboardingMutation(hrO
 export const useOnboardingCompleteCaseAction   = () => useOnboardingMutation(hrOnboardingApi.completeCaseAction);
 export const useOnboardingCancelCaseAction     = () => useOnboardingMutation(hrOnboardingApi.cancelCaseAction);
 export const useOnboardingProvisionAccount     = () => useOnboardingMutation(hrOnboardingApi.provisionAccount);
+
+// ── hooks (Package Manager mutations) ────────────────────────────────────────────
+export const useOnboardingCreatePackage         = () => useOnboardingMutation(hrOnboardingApi.createPackage);
+export const useOnboardingUpdatePackage         = () => useOnboardingMutation(hrOnboardingApi.updatePackage);
+export const useOnboardingSetPackageStatus      = () => useOnboardingMutation(hrOnboardingApi.setPackageStatus);
+export const useOnboardingCreateTaskTemplate    = () => useOnboardingMutation(hrOnboardingApi.createTaskTemplate);
+export const useOnboardingUpdateTaskTemplate    = () => useOnboardingMutation(hrOnboardingApi.updateTaskTemplate);
+export const useOnboardingDeleteTaskTemplate    = () => useOnboardingMutation(hrOnboardingApi.deleteTaskTemplate);
+export const useOnboardingCreateHandoffTemplate = () => useOnboardingMutation(hrOnboardingApi.createHandoffTemplate);
+export const useOnboardingUpdateHandoffTemplate = () => useOnboardingMutation(hrOnboardingApi.updateHandoffTemplate);
+export const useOnboardingDeleteHandoffTemplate = () => useOnboardingMutation(hrOnboardingApi.deleteHandoffTemplate);

@@ -153,7 +153,7 @@ router.post('/login', async c => {
   const { username, password } = v.data;
 
   const ip = c.get('clientIp') ?? 'unknown';
-  const rl = checkLoginLimit.check(ip);
+  const rl = await checkLoginLimit.check(ip);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many login attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -329,7 +329,7 @@ const Verify2faExtSchema = z.object({
 
 router.post('/verify2fa', async c => {
   const ip = c.get('clientIp') ?? 'unknown';
-  const rl = checkCodeVerifyLimit.check(ip);
+  const rl = await checkCodeVerifyLimit.check(ip);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -452,7 +452,7 @@ router.post('/setup2fa', async c => {
 // ── Setup 2FA (step 2) — confirm with a valid TOTP code ───────────────────────
 router.post('/confirm2faSetup', async c => {
   const ip = c.get('clientIp') ?? 'unknown';
-  const rl = checkCodeVerifyLimit.check(ip);
+  const rl = await checkCodeVerifyLimit.check(ip);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -660,7 +660,7 @@ const checkPasswordChangeLimit = rateLimit({ max: 5, windowMs: 15 * 60 * 1000, p
 router.post('/auth/password/change', async c => {
   // Rate limit first (before any DB work)
   const ip = c.get('clientIp') ?? 'unknown';
-  const rl = checkPasswordChangeLimit.check(ip);
+  const rl = await checkPasswordChangeLimit.check(ip);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }

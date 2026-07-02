@@ -13,15 +13,17 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/preact-query';
 import { WizardShell, type WizardStepDef } from '@ui';
-import { hrOnboardingApi, useOnboardingPackages, type OnboardingPreview } from '@api/hr/onboarding';
+import { hrOnboardingApi, useOnboardingPackages, useOnboardingActionTemplates, type OnboardingPreview } from '@api/hr/onboarding';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { hrEmployeeKeys } from '@api/queryKeys';
 import { rowName, Avatar } from './shared';
+import { humanize } from './onboardingStatus';
 
 const STEPS: WizardStepDef[] = [
   { key: 'worker',  label: 'Worker',  sub: 'Person and trigger',  icon: 'fa-user' },
   { key: 'package', label: 'Package', sub: 'Checklist package',    icon: 'fa-box-open' },
   { key: 'plan',    label: 'Plan',    sub: 'Tasks & handoffs',     icon: 'fa-list-check' },
+  { key: 'actions', label: 'Actions', sub: 'Custom action templates', icon: 'fa-bolt' },
   { key: 'options', label: 'Options', sub: 'Owner & due date',     icon: 'fa-sliders' },
   { key: 'review',  label: 'Review',  sub: 'Start case',           icon: 'fa-circle-check' },
 ];
@@ -71,12 +73,14 @@ export function OnboardingWizard(
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ caseNo: string; taskCount: number } | null>(null);
+  const [includedActionIds, setIncludedActionIds] = useState<Set<string>>(new Set());
 
   const selectedEmp = employees.find(e => e.id === employeeId);
   const empName = selectedEmp ? rowName(selectedEmp) : '';
   const ownerUser = employees.find(e => e.id === ownerId);
   const ownerName = ownerUser ? rowName(ownerUser) : '';
   const pkg = packages.find(p => p.key === packageKey);
+  const { data: actionTemplates = [] } = useOnboardingActionTemplates(packageKey);
 
   // Default worker type from the chosen employee's contractor flag.
   useEffect(() => { if (selectedEmp) setWorkerType(selectedEmp.contractor_flag ? 'Contractor' : 'Employee'); }, [employeeId]);
@@ -87,6 +91,15 @@ export function OnboardingWizard(
     hrOnboardingApi.preview({ packageKey }).then(p => { if (!off) setPreview(p); }).catch(() => { if (!off) setPreview(null); });
     return () => { off = true; };
   }, [packageKey]);
+
+  // The query already excludes inactive templates, so every returned template defaults to
+  // included (they're recommended by the package); switching packages resets the selection.
+  // Required templates stay included — see the disabled checkbox in the Actions step.
+  useEffect(() => { setIncludedActionIds(new Set(actionTemplates.map(t => t.id))); }, [actionTemplates]);
+  function toggleAction(id: string, isRequired: boolean): void {
+    if (isRequired) return;
+    setIncludedActionIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }
 
   function go(key: string) {
     setStep(key);
@@ -100,6 +113,7 @@ export function OnboardingWizard(
       employeeId, packageKey, ownerId: ownerId || null, dueAt: dueAt || null,
       reason, priority, targetStartDate: targetStartDate || null,
       launchMode, caseOwner, workerType: workerType.toLowerCase(),
+      includeActionTemplateIds: Array.from(includedActionIds),
     }).then(r => {
       setDone({ caseNo: r.caseNo, taskCount: r.taskCount });
       qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
@@ -195,7 +209,26 @@ export function OnboardingWizard(
           : <div class="em-empty">Loading task plan…</div>}
       </Section>
 
-      <Section id="options" title="4. Options" desc="Assign the case owner (a specific user) and an optional target due date.">
+      <Section id="actions" title="4. Custom Actions" desc="Package-level action templates. Included actions are created on the case when onboarding starts.">
+        {actionTemplates.length === 0
+          ? <div class="em-empty">This package has no custom action templates.</div>
+          : <div class="summary-list">
+              {actionTemplates.map(t => (
+                <label key={t.id} class="obx-checkline" style={{ marginTop: 0, padding: '8px 0', borderBottom: '1px solid var(--border, #eef2f7)' }}>
+                  <input type="checkbox" checked={includedActionIds.has(t.id)} disabled={t.isRequired}
+                    onChange={() => toggleAction(t.id, t.isRequired)} />
+                  <span style={{ flex: 1 }}>
+                    <strong>{t.actionName}</strong>
+                    <span style={{ color: 'var(--text-muted, #64748b)', marginLeft: 8 }}>{humanize(t.actionType)} · {humanize(t.ownerType)}{t.ownerRole ? ` (${t.ownerRole})` : ''}</span>
+                  </span>
+                  {t.isRequired && <span class="setting-pill">Required</span>}
+                  {t.blocksOnboarding && <span class="setting-pill">Blocking</span>}
+                </label>
+              ))}
+            </div>}
+      </Section>
+
+      <Section id="options" title="5. Options" desc="Assign the case owner (a specific user) and an optional target due date.">
         <div class="form-grid">
           <Fld label="Case Owner (user)">
             <select value={ownerId} onChange={e => setOwnerId(e.currentTarget.value)}>
@@ -207,12 +240,13 @@ export function OnboardingWizard(
         </div>
       </Section>
 
-      <Section id="review" title="5. Review" desc="Creates the onboarding case, its tasks, and the handoff intents.">
+      <Section id="review" title="6. Review" desc="Creates the onboarding case, its tasks, the handoff intents, and any included custom actions.">
         <div class="summary-list">
           <div class="summary-item"><span>Employee</span><strong>{empName || '—'}</strong></div>
           <div class="summary-item"><span>Reason · Priority</span><strong>{reason} · {priority}</strong></div>
           <div class="summary-item"><span>Package</span><strong>{pkg?.label ?? cap(packageKey)}</strong></div>
           <div class="summary-item"><span>Tasks</span><strong>{preview ? preview.taskCount : '—'}</strong></div>
+          <div class="summary-item"><span>Custom actions</span><strong>{includedActionIds.size} of {actionTemplates.length} included</strong></div>
           <div class="summary-item"><span>Case owner</span><strong>{caseOwner}{ownerName ? ` · ${ownerName}` : ''}</strong></div>
           <div class="summary-item"><span>Launch · Due</span><strong>{launchMode}{dueAt ? ` · ${dueAt}` : ''}</strong></div>
         </div>

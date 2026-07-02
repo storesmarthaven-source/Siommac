@@ -148,18 +148,22 @@ export default function LoginShell() {
 
         {/* RIGHT: Form side */}
         <div class="login-form-side">
-          <div class="login-brand-header">
-            <img id="loginLogo" class="login-brand-logo" src="" alt="SIOMAC LTD." style="display:none;"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          </div>
+          {phase !== 'passkey-prompt' && (
+            <div class="login-brand-header">
+              <img id="loginLogo" class="login-brand-logo" src="" alt="SIOMAC LTD." style="display:none;"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            </div>
+          )}
 
           <div class="login-form-body">
-            <div class="login-form-title">
-              <h3 id="loginTitle">Access Portal</h3>
-              <p id="loginSubtitle">
-                Sign in to manage attendance, track project sites, handle leave requests, and access real-time workforce insights.
-              </p>
-            </div>
+            {phase === 'credentials' && (
+              <div class="login-form-title">
+                <h3 id="loginTitle">Access Portal</h3>
+                <p id="loginSubtitle">
+                  Sign in to manage attendance, track project sites, handle leave requests, and access real-time workforce insights.
+                </p>
+              </div>
+            )}
 
             {banner && <div class="login-error-banner" style={{ marginBottom: '12px' }}>{banner}</div>}
             {passkeyBusy && phase === 'credentials' && (

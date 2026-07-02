@@ -31,6 +31,7 @@ export type ReadinessState = 'all' | 'ready' | 'not_ready';
 
 // ── Packages (Phase 4) ───────────────────────────────────────────────────────────
 export interface OnboardingPackageSummary {
+  id: string;
   key: string;
   label: string;
   description: string | null;
@@ -45,12 +46,91 @@ export interface OnboardingPackageSummary {
   versionNo: number;
 }
 
+// ── Package Manager (task templates, handoff templates, package CRUD) ───────────
+export interface OnboardingTaskTemplateRow {
+  id: string;
+  taskKey: string;
+  taskTitle: string;
+  ownerRole: string;
+  moduleKey: string | null;
+  isBlocking: boolean;
+  requiresEvidence: boolean;
+  dependencyKeys: string[];
+  sortOrder: number;
+}
+
+export interface OnboardingHandoffTemplateRow {
+  id: string;
+  handoffKey: string;
+  targetModule: string;
+  handoffType: string;
+  isRequired: boolean;
+  sortOrder: number;
+  payloadTemplate: Record<string, unknown>;
+}
+
+export interface OnboardingPackageDetail {
+  id: string;
+  key: string;
+  label: string;
+  description: string | null;
+  workerTypes: string[];
+  defaultSlaDays: number;
+  defaultOwnerRole: string | null;
+  appliesToDepartments: string[];
+  appliesToSites: string[];
+  status: 'draft' | 'active' | 'retired';
+  versionNo: number;
+  taskTemplates: OnboardingTaskTemplateRow[];
+  handoffTemplates: OnboardingHandoffTemplateRow[];
+}
+
+export interface CreatePackageArgs {
+  label: string;
+  description?: string | null;
+  workerTypes?: string[];
+  defaultSlaDays?: number;
+  defaultOwnerRole?: string | null;
+  appliesToDepartments?: string[];
+  appliesToSites?: string[];
+}
+export interface UpdatePackageArgs {
+  id: string;
+  label?: string;
+  description?: string | null;
+  workerTypes?: string[];
+  defaultSlaDays?: number;
+  defaultOwnerRole?: string | null;
+  appliesToDepartments?: string[];
+  appliesToSites?: string[];
+}
+export interface SetPackageStatusArgs { id: string; status: 'draft' | 'active' | 'retired' }
+
+export interface CreateTaskTemplateArgs {
+  packageId: string; taskKey: string; taskTitle: string; ownerRole: string; moduleKey?: string | null;
+  isBlocking?: boolean; requiresEvidence?: boolean; dependencyKeys?: string[]; sortOrder?: number;
+}
+export interface UpdateTaskTemplateArgs {
+  id: string; taskTitle?: string; ownerRole?: string; moduleKey?: string | null;
+  isBlocking?: boolean; requiresEvidence?: boolean; dependencyKeys?: string[]; sortOrder?: number;
+}
+export interface CreateHandoffTemplateArgs {
+  packageId: string; handoffKey: string; targetModule: string; handoffType: string;
+  isRequired?: boolean; sortOrder?: number; payloadTemplate?: Record<string, unknown>;
+}
+export interface UpdateHandoffTemplateArgs {
+  id: string; targetModule?: string; handoffType?: string;
+  isRequired?: boolean; sortOrder?: number; payloadTemplate?: Record<string, unknown>;
+}
+
 // ── Cases list ──────────────────────────────────────────────────────────────────
 export interface OnboardingCaseListArgs {
   query?: string;
   statuses?: string[];
   packageKeys?: string[];
   ownerIds?: string[];
+  employeeIds?: string[];
+  caseIds?: string[];
   departmentIds?: string[];
   siteIds?: string[];
   workerTypes?: string[];
@@ -130,6 +210,7 @@ export interface OnboardingDashboardStats {
     trainingReadyPercent: number;
     accessReadyPercent: number;
   };
+  packageReadiness: { packageKey: string; packageLabel: string; activeCount: number; readyPercent: number }[];
 }
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────--
@@ -138,6 +219,7 @@ export interface OnboardingTaskListArgs {
   statuses?: string[];
   ownerRoles?: string[];
   moduleKeys?: string[];
+  packageKeys?: string[];
   assignedTo?: string;
   blockingOnly?: boolean;
   dueState?: DueState;
@@ -159,9 +241,53 @@ export interface OnboardingTaskRow {
   assignedToName: string | null;
   status: OnboardingTaskStatus;
   dueAt: string | null;
+  completedAt: string | null;
   isBlocking: boolean;
   requiresEvidence: boolean;
   priority: string | null;
+}
+
+// ── Task notes / evidence (Tasks Workspace drawer) ────────────────────────────────
+// Stored as append-only arrays in hr_onboarding_tasks.metadata (notes / evidence) —
+// no satellite table: they are strictly task-scoped, never queried across tasks, and
+// every append is separately audited via hr_audit_log + app_events.
+export interface OnboardingTaskNote {
+  id: string;
+  note: string;
+  byId: string | null;
+  byName: string | null;
+  at: string;
+}
+
+export interface OnboardingTaskEvidence {
+  id: string;
+  fileName: string;
+  filePath: string;
+  mimeType: string | null;
+  fileSize: number | null;
+  byId: string | null;
+  byName: string | null;
+  at: string;
+}
+
+/** Full single-task view for the workspace drawer: the list row + notes/evidence +
+ *  flags the list omits. */
+export interface OnboardingTaskDetail extends OnboardingTaskRow {
+  blockedReason: string | null;
+  dependencyKeys: string[];
+  sortOrder: number;
+  completedBy: string | null;
+  completedByName: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  notes: OnboardingTaskNote[];
+  evidence: OnboardingTaskEvidence[];
+}
+
+export interface AddTaskNoteArgs { taskId: string; note: string }
+export interface AttachTaskEvidenceArgs {
+  taskId: string; fileName: string; filePath: string;
+  mimeType?: string | null; fileSize?: number | null;
 }
 
 // ── Handoffs ──────────────────────────────────────────────────────────────────--
@@ -182,8 +308,23 @@ export interface OnboardingHandoffRow {
   status: OnboardingHandoffStatus;
   ownerId: string | null;
   ownerName: string | null;
+  failureReason: string | null;
+  payload: Record<string, unknown>;
   createdAt: string;
   lastEventAt: string | null;
+}
+
+/** Handoff lifecycle transition. `note` becomes failure_reason on 'fail', or an audit
+ *  reason otherwise. The allowed source→target map lives in onboardingMutations.ts. */
+export interface OnboardingHandoffActionArgs {
+  handoffId: string;
+  reason?: string | null;
+}
+export interface OnboardingHandoffActionResult {
+  handoffId: string;
+  caseId: string;
+  status: OnboardingHandoffStatus;
+  lastEventAt: string;
 }
 
 // ── Blockers ──────────────────────────────────────────────────────────────────--
@@ -210,6 +351,54 @@ export interface OnboardingBlockerRow {
   ageDays: number;
   taskId: string | null;
   handoffId: string | null;
+}
+
+export interface NotifyBlockerOwnerArgs { blockerId: string; message?: string | null }
+export interface NotifyBlockerOwnerResult { blockerId: string; notifiedOwnerId: string; notifiedAt: string }
+
+// ── Case Communications (Phase 5) ─────────────────────────────────────────────────
+export type OnboardingCommunicationType =
+  | 'employee_welcome' | 'supervisor_notification' | 'owner_reminder' | 'escalation_notice' | 'manual_message';
+export type OnboardingCommunicationChannel = 'email' | 'in_app' | 'sms' | 'manual';
+export type OnboardingCommunicationStatus = 'draft' | 'queued' | 'sent' | 'failed' | 'cancelled';
+
+export interface OnboardingCommunicationRow {
+  id: string;
+  caseId: string;
+  communicationType: OnboardingCommunicationType;
+  channel: OnboardingCommunicationChannel;
+  recipientUserId: string | null;
+  recipientName: string | null;
+  recipientEmail: string | null;
+  subject: string | null;
+  body: string | null;
+  status: OnboardingCommunicationStatus;
+  failureReason: string | null;
+  sentByName: string | null;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+/** Resolved recipient + rendered subject/body for a communication, without sending. */
+export interface OnboardingCommunicationPreview {
+  communicationType: OnboardingCommunicationType;
+  recipientUserId: string | null;
+  recipientName: string | null;
+  subject: string;
+  body: string;
+  /** Set when the type resolves no recipient (e.g. no supervisor on file). */
+  warning: string | null;
+}
+
+export interface PreviewCommunicationArgs {
+  caseId: string;
+  communicationType: OnboardingCommunicationType;
+  subject?: string | null;
+  body?: string | null;
+  recipientUserId?: string | null;
+}
+export interface SendCommunicationArgs extends PreviewCommunicationArgs {
+  channel?: OnboardingCommunicationChannel;
 }
 
 // ── Custom Onboarding Actions (Phase 5) ──────────────────────────────────────────
@@ -261,6 +450,62 @@ export interface OnboardingCaseAction {
   addedByName: string | null;
   addedAt: string;
   completedAt: string | null;
+}
+
+// ── Reports (Phase 6) ─────────────────────────────────────────────────────────────
+export type OnboardingReportKey =
+  | 'cycle_time' | 'blocked_cases' | 'task_owner_performance' | 'handoff_completion'
+  | 'package_effectiveness' | 'activation_readiness' | 'overdue_tasks'
+  | 'contractor_onboarding' | 'safety_critical_onboarding';
+
+export interface OnboardingReportMeta {
+  key: OnboardingReportKey;
+  title: string;
+  description: string;
+  icon: string;
+  chartType: 'line' | 'bar' | 'stacked_bar' | 'donut' | null;
+  groupByOptions: ('day' | 'week' | 'month' | 'department' | 'package' | 'owner')[];
+}
+
+export interface RunOnboardingReportArgs {
+  reportKey: OnboardingReportKey;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  departmentIds?: string[];
+  siteIds?: string[];
+  packageKeys?: string[];
+  ownerIds?: string[];
+  workerTypes?: string[];
+  status?: string[];
+  groupBy?: 'day' | 'week' | 'month' | 'department' | 'package' | 'owner';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface OnboardingReportColumn {
+  key: string;
+  label: string;
+  type?: 'text' | 'number' | 'date' | 'percent' | 'status';
+}
+export interface OnboardingReportSummaryStat {
+  label: string;
+  value: string | number;
+  delta?: string;
+  state?: 'good' | 'warning' | 'critical' | 'neutral';
+}
+export interface OnboardingReportChart {
+  type: 'line' | 'bar' | 'stacked_bar' | 'donut';
+  labels: string[];
+  series: { name: string; values: number[] }[];
+}
+export interface OnboardingReportResult {
+  reportKey: OnboardingReportKey;
+  title: string;
+  summary: OnboardingReportSummaryStat[];
+  chart: OnboardingReportChart | null;
+  columns: OnboardingReportColumn[];
+  rows: Record<string, unknown>[];
+  totalRows: number;
 }
 
 // ── Audit (case Audit tab — Phase 3) ─────────────────────────────────────────────

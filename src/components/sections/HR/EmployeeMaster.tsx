@@ -37,6 +37,7 @@ import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, Do
 import { ImportWizard } from './ImportWizard';
 import { OnboardingWizard } from './OnboardingWizard';
 import { TableSkeleton, PageHeader, Button } from '@ui';
+import { AppTopBar } from '@shared/AppTopBar';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
@@ -483,17 +484,19 @@ export function EmployeeMaster(): VNode {
   };
 
   return (
-    <div class="hr-emp-master" onClick={() => setOpenId(null)}>
-      {/* Page header — standard, info-only (ProfilePill on the right, from PageHeader) */}
+    <>
+      {/* Global top bar (prototype on this page) — full-width bar pinned to the top,
+          OUTSIDE the 1480px-capped page body so it spans the page edge-to-edge:
+          icon+title + search on the left, profile cluster in the corner, and a
+          footer strip (breadcrumb) under a brand-accent underline. */}
+      <AppTopBar icon="fa-users" title="Employee Master" module="HR" />
+      <div class="hr-emp-master" onClick={() => setOpenId(null)}>
+      {/* Page header — icon only (title/sub/breadcrumb/meta/pill now live in the top bar) */}
       <PageHeader
         icon="fa-users"
-        module="HR"
         title="Employee Master"
-        sub="Manage workforce records, employment status, assignments, and HR actions."
-        meta={[
-          { icon: 'fa-id-badge', label: `${rows.length} employees` },
-          { icon: 'fa-location-dot', label: 'All sites' },
-        ]}
+        hidePill
+        hideTitle
       />
 
       {/* Board Customize control (top-right) — Customize → Widget Library / Reset / Set as
@@ -546,6 +549,7 @@ export function EmployeeMaster(): VNode {
 
       {/* Toast */}
       <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
-    </div>
+      </div>
+    </>
   );
 }

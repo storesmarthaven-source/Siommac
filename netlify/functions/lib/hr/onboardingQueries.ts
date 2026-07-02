@@ -12,16 +12,17 @@ import { taskCategory, READINESS_CATS, type TaskCategory } from './onboardingTas
 import type {
   OnboardingCaseListArgs, OnboardingCaseListResult, OnboardingCaseRow, OnboardingCaseStatus,
   OnboardingDashboardStats, OnboardingDashboardStatsArgs,
-  OnboardingTaskListArgs, OnboardingTaskRow, OnboardingTaskStatus,
+  OnboardingTaskListArgs, OnboardingTaskRow, OnboardingTaskStatus, OnboardingTaskDetail,
+  OnboardingTaskNote, OnboardingTaskEvidence,
   OnboardingHandoffListArgs, OnboardingHandoffRow, OnboardingHandoffStatus,
   OnboardingBlockerListArgs, OnboardingBlockerRow, OnboardingBlockerStatus, OnboardingSeverity,
-  DueState,
+  OnboardingAuditRow, DueState,
 } from '../../../../types/hrOnboarding';
 
 // ── DB row shapes (the columns we actually select) ──────────────────────────────
 interface CaseDB { id: string; case_no: string; employee_id: string | null; worker_type: string | null; package_key: string; status: string; owner_id: string | null; due_at: string | null; started_at: string | null; reason: string | null }
-interface TaskDB { id: string; case_id: string; task_key: string; task_title: string; owner_role: string | null; module_key: string | null; assigned_to: string | null; status: string; due_at: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; priority: string | null }
-interface HandoffDB { id: string; case_id: string; target_module: string; handoff_type: string | null; handoff_key: string | null; status: string; owner_id: string | null; created_at: string; last_event_at: string | null }
+interface TaskDB { id: string; case_id: string; task_key: string; task_title: string; owner_role: string | null; module_key: string | null; assigned_to: string | null; status: string; due_at: string | null; completed_at: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; priority: string | null }
+interface HandoffDB { id: string; case_id: string; target_module: string; handoff_type: string | null; handoff_key: string | null; status: string; owner_id: string | null; failure_reason: string | null; payload: unknown; created_at: string; last_event_at: string | null }
 interface BlockerDB { id: string; case_id: string; blocker_key: string; blocker_title: string; blocking_module: string; severity: string; status: string; owner_id: string | null; due_at: string | null; created_at: string; task_id: string | null; handoff_id: string | null }
 interface EmpDB { id: string; full_name: string | null; employee_number: string | null; department_id: string | null; site_id: string | null; contractor_flag: boolean | null }
 interface CaseLite { id: string; case_no: string; employee_id: string | null; package_key?: string }
@@ -58,7 +59,7 @@ function aggregateTasks(tasks: TaskDB[]): Map<string, CaseAgg> {
 async function loadTasks(caseIds: string[]): Promise<TaskDB[]> {
   if (!caseIds.length) return [];
   const { data } = await sb.from('hr_onboarding_tasks')
-    .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, is_blocking, requires_evidence, priority')
+    .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, completed_at, is_blocking, requires_evidence, priority')
     .in('case_id', caseIds);
   return (data ?? []) as TaskDB[];
 }
@@ -139,6 +140,8 @@ export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise
   if (args.statuses?.length)    q = q.in('status', args.statuses);
   if (args.packageKeys?.length) q = q.in('package_key', args.packageKeys);
   if (args.ownerIds?.length)    q = q.in('owner_id', args.ownerIds);
+  if (args.employeeIds?.length) q = q.in('employee_id', args.employeeIds);
+  if (args.caseIds?.length)     q = q.in('id', args.caseIds);
   if (args.workerTypes?.length) q = q.in('worker_type', args.workerTypes);
   if (args.reasons?.length)     q = q.in('reason', args.reasons);
   const { data: casesRaw, error } = await q;
@@ -297,7 +300,8 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
 
   // activation readiness — % of active cases ready overall + per category
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
-  const readyCount = cases.filter(c => { const a = agg.get(c.id); return c.status === 'ready_for_activation' || (!!a && a.total > 0 && a.open === 0); }).length;
+  const isReady = (c: CaseDB): boolean => { const a = agg.get(c.id); return c.status === 'ready_for_activation' || (!!a && a.total > 0 && a.open === 0); };
+  const readyCount = cases.filter(isReady).length;
   const catReady: Record<TaskCategory, number> = { profile: 0, documents: 0, training: 0, access: 0, payroll: 0, hse: 0, other: 0 };
   for (const c of cases) {
     const a = agg.get(c.id);
@@ -306,6 +310,19 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
       if (!cc || cc.openTasks === 0) catReady[cat] += 1;   // no pending in category ⇒ ready for it
     }
   }
+
+  // per-package readiness — same active-case set, grouped by package
+  const labels = await packageLabelMap();
+  const byPkg = new Map<string, { active: number; ready: number }>();
+  for (const c of cases) {
+    const e = byPkg.get(c.package_key) ?? { active: 0, ready: 0 };
+    e.active += 1;
+    if (isReady(c)) e.ready += 1;
+    byPkg.set(c.package_key, e);
+  }
+  const packageReadiness = Array.from(byPkg.entries())
+    .map(([packageKey, v]) => ({ packageKey, packageLabel: labels[packageKey] ?? packageKey, activeCount: v.active, readyPercent: v.active ? Math.round((v.ready / v.active) * 100) : 0 }))
+    .sort((a2, b2) => b2.activeCount - a2.activeCount);
 
   return {
     activeCases: { total, newHires, transfers, contractors, weeklyTrend: buckets },
@@ -318,7 +335,26 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
       trainingReadyPercent: pct(catReady.training),
       accessReadyPercent: pct(catReady.access),
     },
+    packageReadiness,
   };
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// 2b. Recent activity (Overview widget) — cross-case feed, reuses the case Audit
+// tab's DTO. hr_audit_log already captures every onboarding mutation (cases, tasks,
+// blockers, custom actions, packages) via writeHrAudit — nothing new to instrument.
+// ════════════════════════════════════════════════════════════════════════════════
+export async function listRecentOnboardingActivity(limit = 15): Promise<OnboardingAuditRow[]> {
+  const { data } = await sb.from('hr_audit_log')
+    .select('id, actor_id, action, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', 'onboarding')
+    .order('created_at', { ascending: false }).limit(limit);
+  const rows = (data ?? []) as { id: string; actor_id: string | null; action: string; previous_state: unknown; new_state: unknown; reason: string | null; created_at: string }[];
+  const names = await nameMap(rows.map(r => r.actor_id).filter((x): x is string => !!x));
+  return rows.map(r => ({
+    id: r.id, action: r.action, actorId: r.actor_id ?? null, actorName: r.actor_id ? names[r.actor_id] ?? null : null,
+    reason: r.reason ?? null, previousState: r.previous_state ?? null, newState: r.new_state ?? null, createdAt: r.created_at,
+  }));
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -326,7 +362,7 @@ export async function getOnboardingDashboardStats(args: OnboardingDashboardStats
 // ════════════════════════════════════════════════════════════════════════════════
 export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise<OnboardingTaskRow[]> {
   let q = sb.from('hr_onboarding_tasks')
-    .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, is_blocking, requires_evidence, priority')
+    .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, completed_at, is_blocking, requires_evidence, priority')
     .order('sort_order').limit(2000);
   if (args.caseId)            q = q.eq('case_id', args.caseId);
   if (args.statuses?.length)  q = q.in('status', args.statuses);
@@ -359,14 +395,71 @@ export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise
       assignedToName: t.assigned_to ? names[t.assigned_to] ?? null : null,
       status: t.status as OnboardingTaskStatus,
       dueAt: t.due_at ?? null,
+      completedAt: t.completed_at ?? null,
       isBlocking: !!t.is_blocking,
       requiresEvidence: !!t.requires_evidence,
       priority: t.priority ?? null,
     };
   });
   if (args.query) { const s = args.query.toLowerCase(); rows = rows.filter(r => r.taskTitle.toLowerCase().includes(s) || (r.employeeName ?? '').toLowerCase().includes(s) || r.caseNo.toLowerCase().includes(s)); }
+  if (args.packageKeys?.length) { const set = new Set(args.packageKeys); rows = rows.filter(r => set.has(r.packageKey)); }
   if (args.dueState && args.dueState !== 'all') { const now = new Date(); rows = rows.filter(r => matchDue(r.dueAt, args.dueState!, now, r.status)); }
   return rows;
+}
+
+// ── single-task detail (Tasks Workspace drawer) ──────────────────────────────────
+interface TaskDetailDB extends TaskDB {
+  blocked_reason: string | null; dependency_keys: unknown; sort_order: number;
+  completed_by: string | null; completed_at: string | null; created_at: string; metadata: unknown;
+}
+const asNoteArr = (v: unknown): OnboardingTaskNote[] => (Array.isArray(v) ? v.filter((x): x is OnboardingTaskNote => !!x && typeof x === 'object' && typeof (x as { note?: unknown }).note === 'string') : []);
+const asEvidenceArr = (v: unknown): OnboardingTaskEvidence[] => (Array.isArray(v) ? v.filter((x): x is OnboardingTaskEvidence => !!x && typeof x === 'object' && typeof (x as { filePath?: unknown }).filePath === 'string') : []);
+
+export async function getOnboardingTaskDetail(taskId: string): Promise<OnboardingTaskDetail> {
+  const { data: t } = await sb.from('hr_onboarding_tasks')
+    .select('id, case_id, task_key, task_title, owner_role, module_key, assigned_to, status, due_at, is_blocking, requires_evidence, priority, blocked_reason, dependency_keys, sort_order, completed_by, completed_at, created_at, metadata')
+    .eq('id', taskId).maybeSingle<TaskDetailDB>();
+  if (!t) throw Object.assign(new Error('Onboarding task not found.'), { status: 404 });
+
+  const meta = (t.metadata && typeof t.metadata === 'object' ? t.metadata : {}) as Record<string, unknown>;
+  const notes = asNoteArr(meta['notes']);
+  const evidence = asEvidenceArr(meta['evidence']);
+
+  const caseMap = await caseLiteMap([t.case_id], true);
+  const c = caseMap[t.case_id];
+  const names = await nameMap([
+    c?.employee_id ?? '', t.assigned_to ?? '', t.completed_by ?? '',
+    ...notes.map(n => n.byId ?? ''), ...evidence.map(e => e.byId ?? ''),
+  ].filter(Boolean));
+
+  return {
+    taskId: t.id,
+    caseId: t.case_id,
+    caseNo: c?.case_no ?? '',
+    employeeId: c?.employee_id ?? null,
+    employeeName: c?.employee_id ? names[c.employee_id] ?? null : null,
+    packageKey: c?.package_key ?? '',
+    taskKey: t.task_key,
+    taskTitle: t.task_title,
+    ownerRole: t.owner_role ?? null,
+    moduleKey: t.module_key ?? null,
+    assignedTo: t.assigned_to ?? null,
+    assignedToName: t.assigned_to ? names[t.assigned_to] ?? null : null,
+    status: t.status as OnboardingTaskStatus,
+    dueAt: t.due_at ?? null,
+    isBlocking: !!t.is_blocking,
+    requiresEvidence: !!t.requires_evidence,
+    priority: t.priority ?? null,
+    blockedReason: t.blocked_reason ?? null,
+    dependencyKeys: Array.isArray(t.dependency_keys) ? t.dependency_keys.filter((x): x is string => typeof x === 'string') : [],
+    sortOrder: t.sort_order,
+    completedBy: t.completed_by ?? null,
+    completedByName: t.completed_by ? names[t.completed_by] ?? null : null,
+    completedAt: t.completed_at ?? null,
+    createdAt: t.created_at,
+    notes: notes.map(n => ({ ...n, byName: n.byId ? names[n.byId] ?? null : null })),
+    evidence: evidence.map(e => ({ ...e, byName: e.byId ? names[e.byId] ?? null : null })),
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -374,7 +467,7 @@ export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise
 // ════════════════════════════════════════════════════════════════════════════════
 export async function listOnboardingHandoffs(args: OnboardingHandoffListArgs): Promise<OnboardingHandoffRow[]> {
   let q = sb.from('hr_onboarding_handoffs')
-    .select('id, case_id, target_module, handoff_type, handoff_key, status, owner_id, created_at, last_event_at')
+    .select('id, case_id, target_module, handoff_type, handoff_key, status, owner_id, failure_reason, payload, created_at, last_event_at')
     .order('created_at', { ascending: false }).limit(2000);
   if (args.caseId)              q = q.eq('case_id', args.caseId);
   if (args.targetModules?.length) q = q.in('target_module', args.targetModules);
@@ -400,6 +493,8 @@ export async function listOnboardingHandoffs(args: OnboardingHandoffListArgs): P
       status: h.status as OnboardingHandoffStatus,
       ownerId: h.owner_id ?? null,
       ownerName: h.owner_id ? names[h.owner_id] ?? null : null,
+      failureReason: h.failure_reason ?? null,
+      payload: (h.payload && typeof h.payload === 'object' ? h.payload : {}) as Record<string, unknown>,
       createdAt: h.created_at,
       lastEventAt: h.last_event_at ?? null,
     };

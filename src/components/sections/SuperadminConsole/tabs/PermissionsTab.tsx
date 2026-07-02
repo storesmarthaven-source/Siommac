@@ -38,6 +38,7 @@ import {
 
 const ROLE_LABEL: Record<string, string> = {
   superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
+  hr_manager: 'HR Manager', hr_staff: 'HR Staff', hse_staff: 'HSE Staff',
 };
 
 type SortKey = 'name' | 'role' | 'status';

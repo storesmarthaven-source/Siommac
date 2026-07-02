@@ -58,27 +58,8 @@ export function NavController(): h.JSX.Element {
         .AppState?.get('currentColorScheme') ?? 'navy',
     );
 
-    // ── 3. Sidebar collapse / expand toggle ─────────────────────────────────
-    const sidebar     = document.getElementById('sidebar');
-    const toggleBtn   = document.getElementById('sidebarToggleBtn');
-    const toggleIcon  = document.getElementById('sidebarToggleIcon');
-
-    if (sidebar && toggleIcon) {
-      if (localStorage.getItem('sb_collapsed') === '1') {
-        sidebar.classList.add('collapsed');
-        toggleIcon.className = 'fas fa-chevron-right';
-      }
-    }
-
-    function onSidebarToggle(): void {
-      if (!sidebar || !toggleIcon) return;
-      const collapsed = sidebar.classList.toggle('collapsed');
-      toggleIcon.className = 'fas fa-chevron-' + (collapsed ? 'right' : 'left');
-      localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
-      callWin('updateSessionWidget');
-    }
-    toggleBtn?.addEventListener('click', onSidebarToggle);
-    cleanups.push(() => toggleBtn?.removeEventListener('click', onSidebarToggle));
+    // ── 3. Sidebar element ───────────────────────────────────────────────────
+    const sidebar = document.getElementById('sidebar');
 
     // ── 4. Mobile open/close ─────────────────────────────────────────────────
     const backdrop    = document.getElementById('sidebarBackdrop');

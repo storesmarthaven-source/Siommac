@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Layer 4 — Analytics & Trends</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --siomac-navy: #1b2d54;
+    --hse-red:   #e24b4a;
+    --hse-amber: #ef9f27;
+    --hse-green: #3a9c6c;
+    --hse-blue:  #378add;
+    --bg-card:   #fff;
+    --bg-subtle: #f8fafe;
+    --border:    #e2e8f0;
+    --text-muted: #64748b;
+    --shadow-card: 0 1px 4px rgba(0,0,0,.07);
+    --font-mono: 'Courier New', monospace;
+  }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; padding: 24px; }
+
+  /* ── 2-col analytics row ── */
+  .hse-analytics-row {
+    display: grid; grid-template-columns: 1fr 340px; gap: 12px;
+  }
+
+  /* ── Shared chart card ── */
+  .hse-chart-card {
+    background: var(--bg-card); border: 0.5px solid var(--border);
+    border-radius: 16px; padding: 16px; box-shadow: var(--shadow-card);
+  }
+  .hse-chart-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .hse-chart-head h3 {
+    font-size: 0.95rem; font-weight: 700; color: var(--siomac-navy);
+    display: flex; align-items: center; gap: 8px; margin: 0;
+  }
+  .hse-chart-head h3 i { color: var(--hse-red); }
+  .hse-chart-head span { font-size: 0.72rem; color: var(--text-muted); }
+
+  /* ── Trend summary pills ── */
+  .hse-analytics-summaries {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;
+  }
+  .hse-analytics-summary {
+    padding: 9px 12px; border: 0.5px solid var(--border);
+    border-radius: 10px; background: var(--bg-subtle);
+  }
+  .hse-analytics-summary span {
+    display: block; font-size: 0.62rem; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+  }
+  .hse-analytics-summary strong {
+    display: block; font-size: 1.15rem; font-weight: 700;
+    font-family: var(--font-mono); line-height: 1; margin-bottom: 4px;
+  }
+
+  /* delta chip */
+  .hse-spark-delta {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+  }
+  .hse-spark-delta i { font-size: 0.55rem; }
+  .hse-spark-delta.down { background: #dcfce7; color: #16a34a; }
+  .hse-spark-delta.up   { background: #fee2e2; color: #dc2626; }
+  .hse-spark-delta.flat { background: #f1f5f9; color: #64748b; }
+
+  /* ── SVG chart area ── */
+  .hse-analytics-svg { width: 100%; height: 160px; display: block; }
+
+  /* ── X-axis labels ── */
+  .hse-trend-axis {
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px; color: var(--text-muted); font-size: 0.7rem; font-weight: 700;
+    text-align: center; padding: 0 8px; margin-top: 4px;
+  }
+
+  /* ── Legend ── */
+  .hse-legend {
+    display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 4px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--bg-card); color: var(--text-muted);
+    font-size: 0.68rem; font-weight: 700; margin-top: 12px;
+  }
+  .hse-legend span { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; background: var(--bg-subtle); }
+  .hse-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Donut ── */
+  .hse-donut-wrap   { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
+  .hse-donut-legend { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .hse-donut-row    { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; }
+  .hse-donut-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hse-donut-lbl    { color: var(--text-muted); flex: 1; }
+  .hse-donut-val    { font-weight: 700; color: var(--siomac-navy); }
+</style>
+</head>
+<body>
+
+<!--
+  LAYER 4 — ANALYTICS & TRENDS
+  Classes to style:
+    .hse-analytics-row        — 2-col grid: trend chart (1fr) | donut (340px)
+    .hse-chart-card           — shared card container
+    .hse-chart-head           — header: h3 + date range span
+    .hse-analytics-summaries  — 3-col summary pills grid
+    .hse-analytics-summary    — individual pill (span label + strong value + delta chip)
+    .hse-spark-delta          — delta chip (.down / .up / .flat)
+    .hse-analytics-svg        — inline SVG trend chart (100% × 160px)
+    .hse-trend-axis           — 6-col month label row
+    .hse-legend               — pill-style legend strip
+    .hse-legend i             — 8px coloured dot
+
+    Donut card:
+    .hse-donut-wrap           — flex row: SVG + legend
+    .hse-donut-legend         — vertical legend list
+    .hse-donut-row            — dot + label + value
+    .hse-donut-dot            — 8px coloured dot
+    .hse-donut-lbl            — category label
+    .hse-donut-val            — count
+
+  SVG internals (edit directly in SVG markup):
+    Gridlines — <line> elements at y positions
+    Area fills — <path> with fill + low opacity
+    Lines      — <path> with stroke, no fill, stroke-linecap/linejoin round
+    Data dots  — <circle r=3.5> with fill + white stroke
+    Closure line is dashed: stroke-dasharray="6 3"
+-->
+
+<div class="hse-analytics-row">
+
+  <!-- LEFT: Safety trend chart -->
+  <div class="hse-chart-card">
+    <div class="hse-chart-head">
+      <h3><i class="fas fa-chart-line"></i> Safety Performance Trend</h3>
+      <span>Jan – Jun 2026</span>
+    </div>
+
+    <div class="hse-analytics-summaries">
+      <div class="hse-analytics-summary hse-analytics-summary--inc">
+        <span>Incidents MTD</span>
+        <strong style="color:var(--hse-red)">4</strong>
+        <span class="hse-spark-delta up"><i class="fas fa-arrow-up"></i>1</span>
+      </div>
+      <div class="hse-analytics-summary hse-analytics-summary--near">
+        <span>Near Misses MTD</span>
+        <strong style="color:var(--hse-amber)">9</strong>
+        <span class="hse-spark-delta down"><i class="fas fa-arrow-down"></i>2</span>
+      </div>
+      <div class="hse-analytics-summary hse-analytics-summary--capa">
+        <span>CAPA Closure</span>
+        <strong style="color:var(--hse-green)">87%</strong>
+        <span class="hse-spark-delta down"><i class="fas fa-arrow-up"></i>5</span>
+      </div>
+    </div>
+
+    <!-- SVG trend chart — edit paths/circles to restyle -->
+    <svg class="hse-analytics-svg" viewBox="0 0 520 160" preserveAspectRatio="none">
+      <!-- gridlines -->
+      <line x1="16" y1="29"  x2="504" y2="29"  stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+      <line x1="16" y1="61"  x2="504" y2="61"  stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+      <line x1="16" y1="93"  x2="504" y2="93"  stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+      <line x1="16" y1="125" x2="504" y2="125" stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+
+      <!-- near miss area fill -->
+      <path d="M16 144 L16 78 L116 62 L216 94 L316 78 L416 62 L504 46 L504 144 Z"
+        fill="rgba(217,119,6,.07)"/>
+      <!-- incident area fill -->
+      <path d="M16 144 L16 93 L116 109 L216 77 L316 93 L416 77 L504 61 L504 144 Z"
+        fill="rgba(228,12,12,.08)"/>
+
+      <!-- near miss line -->
+      <path d="M16 78 L116 62 L216 94 L316 78 L416 62 L504 46"
+        fill="none" stroke="var(--hse-amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- incident line -->
+      <path d="M16 93 L116 109 L216 77 L316 93 L416 77 L504 61"
+        fill="none" stroke="var(--hse-red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- CAPA closure dashed line -->
+      <path d="M16 109 L116 93 L216 102 L316 77 L416 46 L504 48"
+        fill="none" stroke="var(--hse-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 3"/>
+
+      <!-- incident dots -->
+      <circle cx="16"  cy="93"  r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="116" cy="109" r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="216" cy="77"  r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="316" cy="93"  r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="416" cy="77"  r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="504" cy="61"  r="3.5" fill="var(--hse-red)"   stroke="var(--bg-card)" stroke-width="1.5"/>
+      <!-- near miss dots -->
+      <circle cx="16"  cy="78"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="116" cy="62"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="216" cy="94"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="316" cy="78"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="416" cy="62"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="504" cy="46"  r="3.5" fill="var(--hse-amber)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <!-- CAPA dots -->
+      <circle cx="16"  cy="109" r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="116" cy="93"  r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="216" cy="102" r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="316" cy="77"  r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="416" cy="46"  r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+      <circle cx="504" cy="48"  r="3.5" fill="var(--hse-green)" stroke="var(--bg-card)" stroke-width="1.5"/>
+    </svg>
+
+    <div class="hse-trend-axis">
+      <span>Jan</span><span>Feb</span><span>Mar</span>
+      <span>Apr</span><span>May</span><span>Jun</span>
+    </div>
+
+    <div class="hse-legend">
+      <span><i style="background:var(--hse-red)"></i>Incidents</span>
+      <span><i style="background:var(--hse-amber)"></i>Near misses</span>
+      <span><i style="background:var(--hse-green)"></i>CAPA closure</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Open actions donut -->
+  <div class="hse-chart-card">
+    <div class="hse-chart-head">
+      <h3><i class="fas fa-circle-half-stroke"></i> Open actions by module</h3>
+      <span>72 total</span>
+    </div>
+
+    <div class="hse-donut-wrap">
+      <!-- Donut SVG — edit stroke-dasharray segments to restyle ring -->
+      <svg width="100" height="100" viewBox="0 0 100 100" style="flex-shrink:0">
+        <!-- track ring -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#e2e8f0" stroke-width="14"/>
+        <!-- segments (butt linecap for clean joins) -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--hse-red)"
+          stroke-width="14" stroke-dasharray="112 227" stroke-dashoffset="56.75" stroke-linecap="butt"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--hse-amber)"
+          stroke-width="14" stroke-dasharray="66 227"  stroke-dashoffset="-55.25" stroke-linecap="butt"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--hse-blue)"
+          stroke-width="14" stroke-dasharray="34 227"  stroke-dashoffset="-121.25" stroke-linecap="butt"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--hse-green)"
+          stroke-width="14" stroke-dasharray="18 227"  stroke-dashoffset="-155.25" stroke-linecap="butt"/>
+        <!-- centre text -->
+        <text x="50" y="45" text-anchor="middle" font-size="18" font-weight="800" fill="var(--siomac-navy)">72</text>
+        <text x="50" y="59" text-anchor="middle" font-size="9" fill="var(--text-muted)">open</text>
+      </svg>
+
+      <div class="hse-donut-legend">
+        <div class="hse-donut-row">
+          <div class="hse-donut-dot" style="background:var(--hse-red)"></div>
+          <span class="hse-donut-lbl">Incidents / CAPA</span>
+          <span class="hse-donut-val">34</span>
+        </div>
+        <div class="hse-donut-row">
+          <div class="hse-donut-dot" style="background:var(--hse-amber)"></div>
+          <span class="hse-donut-lbl">Permits / Inspections</span>
+          <span class="hse-donut-val">21</span>
+        </div>
+        <div class="hse-donut-row">
+          <div class="hse-donut-dot" style="background:var(--hse-blue)"></div>
+          <span class="hse-donut-lbl">Training / Certs</span>
+          <span class="hse-donut-val">11</span>
+        </div>
+        <div class="hse-donut-row">
+          <div class="hse-donut-dot" style="background:var(--hse-green)"></div>
+          <span class="hse-donut-lbl">Docs / PPE</span>
+          <span class="hse-donut-val">6</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

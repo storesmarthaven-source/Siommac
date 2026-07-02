@@ -1,3 +1,16 @@
+-- ============================================================================
+-- SUPERSEDED — NEVER APPLIED. Do not run this file.
+--
+-- Draft schema (text PKs like 'INC-<ulid>', uuid FKs to app_users(id) — WRONG,
+-- app_users.id is text and always has been). Superseded the next day by
+-- 20260621100002_erp_hse_core.sql (uuid PKs, correct text FKs, different
+-- column names: reported_by not reporter_id, hse_capa_actions not hse_capa).
+-- The live routes (netlify/functions/routes/hseIncidents.ts, hseCapa.ts) query
+-- the erp_hse_core.sql shape exclusively — nothing here is live. See the
+-- sibling note in 20260620000000_platform_workflow_handoff.sql for the same
+-- pattern on the workflow tables this file depends on.
+-- ============================================================================
+--
 -- Phase 1A: HSE Incident → Investigation → CAPA vertical slice
 -- These are the first HSE module tables. Platform workflow tables (Phase 0A)
 -- must already exist before this migration runs.

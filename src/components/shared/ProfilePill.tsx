@@ -38,9 +38,13 @@ function gotoProfile(): void {
 export interface ProfilePillProps {
   /** Visual variant: 'light' (navy pill, default) or 'onDark' (for dark heroes). */
   variant?: 'light' | 'onDark';
+  /** When true, render the notification/message/ticket icons BEFORE the profile
+   *  (icons on the left, profile pill in the far-right corner). Used by the app
+   *  top bar; other heroes keep the default profile-first order. */
+  iconsFirst?: boolean;
 }
 
-export function ProfilePill({ variant = 'light' }: ProfilePillProps): VNode {
+export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePillProps): VNode {
   const fullName  = useSessionStore(selectFullName);
   const role      = useSessionStore(selectRole);
   const avatarUrl = useSessionStore(s => s.profileImage);
@@ -49,31 +53,38 @@ export function ProfilePill({ variant = 'light' }: ProfilePillProps): VNode {
   const name    = fullName || username || 'User';
   const initial = (name.trim()[0] ?? 'U').toUpperCase();
 
+  const profile = (
+    <button type="button" class="pnp-profile" onClick={gotoProfile} title="My Profile">
+      <span class="pnp-avatar">
+        {avatarUrl
+          ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+          : initial}
+      </span>
+      <span class="pnp-info">
+        <span class="pnp-name">{name}</span>
+        <span class="pnp-role">{roleLabel(role)}</span>
+      </span>
+    </button>
+  );
+  const icons = (
+    <div class="pnp-icons">
+      <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications">
+        <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={{ display: 'none' }} />
+      </button>
+      <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages">
+        <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={{ display: 'none' }} />
+      </button>
+      <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets">
+        <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={{ display: 'none' }} />
+      </button>
+    </div>
+  );
+
   return (
     <div class={`profile-notif-pill${variant === 'onDark' ? ' pnp-on-dark' : ''}`}>
-      <button type="button" class="pnp-profile" onClick={gotoProfile} title="My Profile">
-        <span class="pnp-avatar">
-          {avatarUrl
-            ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-            : initial}
-        </span>
-        <span class="pnp-info">
-          <span class="pnp-name">{name}</span>
-          <span class="pnp-role">{roleLabel(role)}</span>
-        </span>
-      </button>
-      <div class="pnp-divider" />
-      <div class="pnp-icons">
-        <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications">
-          <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={{ display: 'none' }} />
-        </button>
-        <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages">
-          <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={{ display: 'none' }} />
-        </button>
-        <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets">
-          <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={{ display: 'none' }} />
-        </button>
-      </div>
+      {iconsFirst
+        ? <>{icons}<div class="pnp-divider" />{profile}</>
+        : <>{profile}<div class="pnp-divider" />{icons}</>}
     </div>
   );
 }

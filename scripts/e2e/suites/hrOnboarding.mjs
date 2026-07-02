@@ -32,13 +32,22 @@ export default async function run(h) {
 
   const ctx = { caseId: null, cancelCaseId: null, mCaseId: null, cCaseId: null, templateId: null, tplName: `${TAG}-ca-tpl`, empId: null, empTok: null, mgrTok: null, taskIds: [], mTaskIds: [] };
 
+  // Poll a predicate until true (or timeout) — for fire-and-forget app_event asserts
+  // that can lose a race under full-suite load. Returns true on success, false on timeout.
+  const waitFor = async (check, ms = 5000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 250)); }
+    return false;
+  };
+
   h.onCleanup(async () => {
-    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId].filter(Boolean);
+    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId, ctx.hoCaseId, ctx.ownerCaseId].filter(Boolean);
     for (const id of caseIds) {
       await sb.from('app_events').delete().eq('source_entity_id', id);
       await sb.from('hr_audit_log').delete().eq('record_id', id);
     }
-    if (caseIds.length) await sb.from('hr_onboarding_cases').delete().in('id', caseIds);   // cascades tasks + handoffs + case_actions
+    if (caseIds.length) await sb.from('hr_onboarding_cases').delete().in('id', caseIds);   // cascades tasks + handoffs + case_actions + communications
+    if (ctx.exportAuditId) await sb.from('hr_audit_log').delete().eq('id', ctx.exportAuditId);   // report export has no record_id → delete by id
     // Custom-action template lives on a seeded package → remove it + its events/audit.
     if (ctx.templateId) {
       await sb.from('app_events').delete().eq('source_entity_id', ctx.templateId);
@@ -129,8 +138,13 @@ export default async function run(h) {
   await test('task/reassign (admin) → assign first task to the employee', async () => {
     const r = await api('hr/onboarding/task/reassign', A, { taskId: ctx.taskIds[0], assignedTo: ctx.empId });
     ok(r, 'reassign');
-    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.task.assigned').eq('source_entity_id', ctx.caseId).limit(1);
-    expect(ev && ev.length >= 1, 'task.assigned event');
+    // The event is emitted fire-and-forget (void emitAppEvent) — poll rather than read
+    // once, so a slow async insert under full-suite load isn't a false failure.
+    const seen = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.task.assigned').eq('source_entity_id', ctx.caseId).limit(1);
+      return !!(data && data.length);
+    });
+    expect(seen, 'task.assigned event');
   });
 
   await test('task/complete (assigned employee completes own task)', async () => {
@@ -262,6 +276,42 @@ export default async function run(h) {
     await api('hr/onboarding/blocker/resolve', A, { blockerId: b.blockerId, note: 'cleanup' });   // clear for ready test
   });
 
+  await test('blocker/notify-owner → notification to owner + audit; ownerless → fails', async () => {
+    // Fresh blocking task → blocker (owner defaults to the task's assignee, which is null
+    // for supervisor-owned tasks unless assigned). Assign it, block it, then notify.
+    const add = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} notify-src`, ownerRole: 'hr', assignedTo: ctx.empId, isBlocking: true });
+    ok(add, 'add task'); const notifyTaskId = add.body.data.taskId;
+    ok(await api('hr/onboarding/task/block', A, { taskId: notifyTaskId, reason: 'e2e notify' }), 'block it');
+    const list = await api('hr/onboarding/blockers/list', A, { caseId: ctx.mCaseId });
+    const owned = list.body.data.find(b => b.taskId === notifyTaskId && b.status === 'active');
+    expect(!!owned && owned.ownerId, 'blocker has an owner (the assignee)');
+    const r = await api('hr/onboarding/blocker/notify-owner', A, { blockerId: owned.blockerId, message: 'Please action this' });
+    ok(r, 'notify-owner'); expect(r.body.data.notifiedOwnerId === owned.ownerId, 'notified the owner');
+    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.blocker.owner_notified').eq('source_entity_id', ctx.mCaseId).limit(1);
+    expect(ev && ev.length >= 1, 'owner_notified event');
+    // Ownerless blocker (unassigned task) → notify fails with a clear message.
+    const add2 = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} notify-noowner`, ownerRole: 'supervisor', isBlocking: true });
+    await api('hr/onboarding/task/block', A, { taskId: add2.body.data.taskId, reason: 'e2e' });
+    const list2 = await api('hr/onboarding/blockers/list', A, { caseId: ctx.mCaseId });
+    const ownerless = list2.body.data.find(b => b.taskId === add2.body.data.taskId && b.status === 'active');
+    if (ownerless && !ownerless.ownerId) fails(await api('hr/onboarding/blocker/notify-owner', A, { blockerId: ownerless.blockerId }), 'ownerless blocker cannot notify');
+    // Clear both so the case can reach ready later.
+    await api('hr/onboarding/task/unblock', A, { taskId: notifyTaskId });
+    await api('hr/onboarding/task/complete', A, { taskId: notifyTaskId });
+    await api('hr/onboarding/task/unblock', A, { taskId: add2.body.data.taskId });
+    await api('hr/onboarding/task/complete', A, { taskId: add2.body.data.taskId });
+  });
+
+  await test('blocker/notify-owner unauthorized (employee) → denied', async () => {
+    const add = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} notify-authz`, ownerRole: 'hr', assignedTo: ctx.empId, isBlocking: true });
+    await api('hr/onboarding/task/block', A, { taskId: add.body.data.taskId, reason: 'e2e' });
+    const list = await api('hr/onboarding/blockers/list', A, { caseId: ctx.mCaseId });
+    const b = list.body.data.find(x => x.taskId === add.body.data.taskId && x.status === 'active');
+    fails(await api('hr/onboarding/blocker/notify-owner', ctx.empTok, { blockerId: b.blockerId }), 'employee cannot notify');
+    await api('hr/onboarding/task/unblock', A, { taskId: add.body.data.taskId });
+    await api('hr/onboarding/task/complete', A, { taskId: add.body.data.taskId });
+  });
+
   await test('task/add (admin) → blocking task + case re-blocked', async () => {
     const r = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} extra gate`, ownerRole: 'hr', isBlocking: true });
     ok(r, 'task/add'); ctx.addedTaskId = r.body.data.taskId;
@@ -325,6 +375,57 @@ export default async function run(h) {
     const r = await api('hr/onboarding/tasks/list', A, { caseId: ctx.mCaseId });
     ok(r, 'tasks/list');
     expect(Array.isArray(r.body.data) && r.body.data.length > 0, 'tasks returned');
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Tasks Workspace — task/get + notes + evidence (+ the settings evidence gate)
+  // ════════════════════════════════════════════════════════════════════════════
+  await test('tasks/list packageKeys filter → only that package\'s tasks', async () => {
+    const r = await api('hr/onboarding/tasks/list', A, { packageKeys: ['supervisor_manager'] });
+    ok(r, 'tasks/list packageKeys');
+    expect(r.body.data.length > 0 && r.body.data.every(t => t.packageKey === 'supervisor_manager'), 'rows scoped to package');
+  });
+
+  await test('task/add-note (admin) + task/get returns it with actor name', async () => {
+    const r = await api('hr/onboarding/task/add-note', A, { taskId: ctx.mTaskIds[0], note: `${TAG} first note` });
+    ok(r, 'add-note');
+    expect(!!r.body.data.noteId, 'noteId returned');
+    const g = await api('hr/onboarding/task/get', A, { taskId: ctx.mTaskIds[0] });
+    ok(g, 'task/get');
+    expect(Array.isArray(g.body.data.notes) && g.body.data.notes.some(n => n.note === `${TAG} first note`), 'note in detail');
+    expect(Array.isArray(g.body.data.evidence), 'evidence array present');
+    expect(g.body.data.caseNo && typeof g.body.data.completedAt !== 'undefined', 'detail shape (caseNo + completedAt)');
+    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.task.note_added').eq('source_entity_id', ctx.mCaseId).limit(1);
+    expect(ev && ev.length >= 1, 'note_added event');
+  });
+
+  await test('task/add-note by ASSIGNED employee → allowed; unassigned → denied', async () => {
+    ok(await api('hr/onboarding/task/reassign', A, { taskId: ctx.mTaskIds[0], assignedTo: ctx.empId }), 'assign to employee');
+    ok(await api('hr/onboarding/task/add-note', ctx.empTok, { taskId: ctx.mTaskIds[0], note: `${TAG} own-task note` }), 'assignee can note own task');
+    fails(await api('hr/onboarding/task/add-note', ctx.empTok, { taskId: ctx.mTaskIds[1], note: 'x' }), 'unassigned employee denied');
+  });
+
+  await test('task/attach-evidence records the file reference + audit', async () => {
+    const r = await api('hr/onboarding/task/attach-evidence', A, {
+      taskId: ctx.mTaskIds[0], fileName: `${TAG}.pdf`, filePath: `onboarding-evidence/${TAG}.pdf`, mimeType: 'application/pdf', fileSize: 1234,
+    });
+    ok(r, 'attach-evidence');
+    const g = await api('hr/onboarding/task/get', A, { taskId: ctx.mTaskIds[0] });
+    expect(g.body.data.evidence.some(e => e.fileName === `${TAG}.pdf`), 'evidence in detail');
+    const { data: au } = await sb.from('hr_audit_log').select('id').eq('record_id', ctx.mCaseId).eq('action', 'hr.onboarding.task_evidence_attached').limit(1);
+    expect(au && au.length >= 1, 'evidence audit row');
+  });
+
+  await test('evidence gate: requires_evidence task cannot complete until evidence attached — 7b', async () => {
+    const gateKey = 'hr_onboarding.task_completion_requires_evidence';
+    ctx.settingKeys.push(gateKey);
+    const add = await api('hr/onboarding/task/add', A, { caseId: ctx.mCaseId, taskTitle: `${TAG} evidence-gated`, requiresEvidence: true });
+    ok(add, 'add gated task'); const gatedId = add.body.data.taskId;
+    ok(await api('settings/values/set', A, { settingKey: gateKey, scopeType: 'global', scopeId: null, value: true }), 'gate on');
+    fails(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'complete blocked without evidence');
+    ok(await api('hr/onboarding/task/attach-evidence', A, { taskId: gatedId, fileName: `${TAG}-gate.pdf`, filePath: `onboarding-evidence/${TAG}-gate.pdf` }), 'attach evidence');
+    ok(await api('hr/onboarding/task/complete', A, { taskId: gatedId }), 'complete allowed with evidence');
+    ok(await api('settings/values/set', A, { settingKey: gateKey, scopeType: 'global', scopeId: null, value: false }), 'gate off');
   });
 
   await test('timeline reuse (orchestration) gated to hr.onboarding.view', async () => {
@@ -391,10 +492,144 @@ export default async function run(h) {
     expect(ho && ho.status === 'cancelled', 'linked handoff cancelled');
   });
 
-  await test('handoffs/list (caseId C) → includes the custom handoff', async () => {
+  await test('handoffs/list (caseId C) → includes the custom handoff + payload/failureReason shape', async () => {
     const r = await api('hr/onboarding/handoffs/list', A, { caseId: ctx.cCaseId });
     ok(r, 'handoffs/list');
     expect(Array.isArray(r.body.data) && r.body.data.length > 0, 'handoffs returned');
+    const row = r.body.data[0];
+    expect(typeof row.payload === 'object' && 'failureReason' in row, 'row exposes payload + failureReason');
+    // Pick a still-PENDING handoff for the lifecycle chain below (the custom
+    // document_request handoff on this case was already cancelled earlier).
+    const pending = r.body.data.find(h => h.status === 'pending');
+    expect(!!pending, 'a pending handoff exists on case C');
+    ctx.handoffId = pending.handoffId;
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Phase 3 — handoff lifecycle control center (FSM: retry / accept / complete / cancel)
+  // ════════════════════════════════════════════════════════════════════════════
+  await test('handoff/accept (pending → accepted) + event + case audit', async () => {
+    const r = await api('hr/onboarding/handoff/accept', A, { handoffId: ctx.handoffId });
+    ok(r, 'accept'); expect(r.body.data.status === 'accepted', 'accepted');
+    const { data: ho } = await sb.from('hr_onboarding_handoffs').select('status, accepted_at, last_event_at').eq('id', ctx.handoffId).maybeSingle();
+    expect(ho && ho.status === 'accepted' && !!ho.accepted_at && !!ho.last_event_at, 'timestamps stamped');
+    // Event is emitted fire-and-forget (void emitAppEvent) — poll to avoid a load-timing race.
+    const sawEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.handoff.accepted').eq('source_entity_id', ctx.cCaseId).limit(1);
+      return !!(data && data.length);
+    });
+    expect(sawEvent, 'accepted event');
+  });
+
+  await test('handoff/complete (accepted → completed)', async () => {
+    const r = await api('hr/onboarding/handoff/complete', A, { handoffId: ctx.handoffId });
+    ok(r, 'complete'); expect(r.body.data.status === 'completed', 'completed');
+    const { data: ho } = await sb.from('hr_onboarding_handoffs').select('status, completed_at').eq('id', ctx.handoffId).maybeSingle();
+    expect(ho && ho.status === 'completed' && !!ho.completed_at, 'completed_at stamped');
+  });
+
+  await test('handoff illegal transition (completed → accepted) → fails (FSM)', async () => {
+    fails(await api('hr/onboarding/handoff/accept', A, { handoffId: ctx.handoffId }), 'terminal handoff cannot transition');
+  });
+
+  await test('handoff retry: fail a fresh handoff then retry (failed → pending)', async () => {
+    // Create a fresh case with handoffs, drive one to failed via the DB, then retry over HTTP.
+    const start = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'safety_critical_employee' });
+    ok(start, 'start case for handoff retry'); ctx.hoCaseId = start.body.data.caseId;
+    const { data: hos } = await sb.from('hr_onboarding_handoffs').select('id').eq('case_id', ctx.hoCaseId).limit(1);
+    expect(hos && hos.length === 1, 'handoff present'); const hid = hos[0].id;
+    await sb.from('hr_onboarding_handoffs').update({ status: 'failed', failure_reason: 'e2e forced' }).eq('id', hid);
+    const r = await api('hr/onboarding/handoff/retry', A, { handoffId: hid });
+    ok(r, 'retry'); expect(r.body.data.status === 'pending', 're-queued to pending');
+    const { data: ho } = await sb.from('hr_onboarding_handoffs').select('status, failure_reason').eq('id', hid).maybeSingle();
+    expect(ho && ho.status === 'pending' && ho.failure_reason === null, 'retry clears failure_reason');
+  });
+
+  await test('handoff/cancel (pending → cancelled)', async () => {
+    const { data: hos } = await sb.from('hr_onboarding_handoffs').select('id').eq('case_id', ctx.hoCaseId).eq('status', 'pending').limit(1);
+    const r = await api('hr/onboarding/handoff/cancel', A, { handoffId: hos[0].id, reason: 'e2e cancel' });
+    ok(r, 'cancel'); expect(r.body.data.status === 'cancelled', 'cancelled');
+  });
+
+  await test('handoff action unauthorized (employee) → denied', async () => {
+    const { data: hos } = await sb.from('hr_onboarding_handoffs').select('id').eq('case_id', ctx.hoCaseId).limit(1);
+    fails(await api('hr/onboarding/handoff/accept', ctx.empTok, { handoffId: hos[0].id }), 'employee cannot act on handoffs');
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Phase 5 — case communications (log + real in-app delivery)
+  // ════════════════════════════════════════════════════════════════════════════
+  await test('communications/preview (owner_reminder) resolves the case owner', async () => {
+    const r = await api('hr/onboarding/communications/preview', A, { caseId: ctx.cCaseId, communicationType: 'owner_reminder' });
+    ok(r, 'preview'); expect(!!r.body.data.recipientUserId && !!r.body.data.subject && !!r.body.data.body, 'resolved recipient + rendered subject/body');
+  });
+
+  await test('communications/send (employee_welcome, in_app) → row + notification + audit', async () => {
+    const r = await api('hr/onboarding/communications/send', A, { caseId: ctx.cCaseId, communicationType: 'employee_welcome' });
+    ok(r, 'send'); expect(r.body.data.status === 'sent' && r.body.data.recipientUserId === ctx.empId, 'sent to the employee');
+    const list = await api('hr/onboarding/communications/list', A, { caseId: ctx.cCaseId });
+    ok(list, 'list'); const row = list.body.data.find(c => c.communicationType === 'employee_welcome');
+    expect(!!row && row.status === 'sent' && row.channel === 'in_app', 'logged as sent/in_app');
+    ctx.commId = row.id;
+    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.communication.sent').eq('source_entity_id', ctx.cCaseId).limit(1);
+    expect(ev && ev.length >= 1, 'communication.sent event');
+    const { data: au } = await sb.from('hr_audit_log').select('id').eq('record_id', ctx.cCaseId).eq('action', 'hr.onboarding.communication_sent').limit(1);
+    expect(au && au.length >= 1, 'communication audit row');
+  });
+
+  await test('communications/send (manual channel) records only, no delivery', async () => {
+    const r = await api('hr/onboarding/communications/send', A, { caseId: ctx.cCaseId, communicationType: 'manual_message', channel: 'manual', recipientUserId: ctx.empId, subject: `${TAG} call`, body: 'Called to confirm start date.' });
+    ok(r, 'manual send'); expect(r.body.data.status === 'sent', 'manual logged as sent');
+  });
+
+  await test('communications/resend re-delivers the sent message', async () => {
+    const r = await api('hr/onboarding/communications/resend', A, { id: ctx.commId });
+    ok(r, 'resend'); expect(r.body.data.status === 'sent', 'resent');
+    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.communication.resent').eq('source_entity_id', ctx.cCaseId).limit(1);
+    expect(ev && ev.length >= 1, 'communication.resent event');
+  });
+
+  await test('communications send unauthorized (employee) → denied; list allowed to viewers', async () => {
+    fails(await api('hr/onboarding/communications/send', ctx.empTok, { caseId: ctx.cCaseId, communicationType: 'owner_reminder' }), 'employee cannot send');
+    // (list is gated by hr.onboarding.view — the employee lacks it, so it's denied too; that's correct.)
+    fails(await api('hr/onboarding/communications/list', ctx.empTok, { caseId: ctx.cCaseId }), 'employee lacks onboarding.view');
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // Phase 6 — reports (9 report types + audited export)
+  // ════════════════════════════════════════════════════════════════════════════
+  await test('reports/list returns the 9-report catalogue', async () => {
+    const r = await api('hr/onboarding/reports/list', A);
+    ok(r, 'reports/list'); expect(Array.isArray(r.body.data) && r.body.data.length === 9, 'nine reports');
+    expect(r.body.data.every(m => m.key && m.title && ('chartType' in m)), 'catalogue shape');
+  });
+
+  for (const key of ['cycle_time', 'blocked_cases', 'task_owner_performance', 'handoff_completion', 'package_effectiveness', 'activation_readiness', 'overdue_tasks', 'contractor_onboarding', 'safety_critical_onboarding']) {
+    await test(`reports/run (${key}) returns the result contract`, async () => {
+      const r = await api('hr/onboarding/reports/run', A, { reportKey: key });
+      ok(r, `run ${key}`);
+      const d = r.body.data;
+      expect(d.reportKey === key && Array.isArray(d.summary) && Array.isArray(d.columns) && Array.isArray(d.rows) && typeof d.totalRows === 'number', 'result shape');
+    });
+  }
+
+  await test('reports/run honors the package filter', async () => {
+    const r = await api('hr/onboarding/reports/run', A, { reportKey: 'package_effectiveness', packageKeys: ['standard_employee'] });
+    ok(r, 'filtered run');
+    expect(r.body.data.rows.every(row => row.package), 'rows scoped');
+  });
+
+  await test('reports/export writes an audit row (data egress)', async () => {
+    const r = await api('hr/onboarding/reports/export', A, { reportKey: 'cycle_time' });
+    ok(r, 'export'); expect(r.body.data.reportKey === 'cycle_time', 'returns the report for client CSV');
+    const { data: au } = await sb.from('hr_audit_log').select('id').eq('action', 'hr.onboarding.report_exported').order('created_at', { ascending: false }).limit(1);
+    expect(au && au.length >= 1, 'export audit row written');
+    ctx.exportAuditId = au[0].id;
+  });
+
+  await test('reports unauthorized (employee) → denied', async () => {
+    fails(await api('hr/onboarding/reports/list', ctx.empTok), 'employee lacks reports.view');
+    fails(await api('hr/onboarding/reports/run', ctx.empTok, { reportKey: 'cycle_time' }), 'employee cannot run reports');
   });
 
   await test('actions/templates update → retire (admin)', async () => {
@@ -423,9 +658,17 @@ export default async function run(h) {
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.block_activation_until_documents_complete', scopeType: 'global', scopeId: null, value: false }), 'documents gate off');
   });
 
-  await test('require_owner_on_start blocks an ownerless start — 7b', async () => {
+  await test('require_owner_on_start: a start with no explicit owner defaults to the actor — 7b', async () => {
+    // Policy (Option 2): admins/HR managers shouldn't have to hand-pick an owner on every
+    // case. With require_owner_on_start = true, an ownerless start still SUCCEEDS and the
+    // case owner defaults to the creating actor (the gate only blocks a genuinely ownerless
+    // start, which never happens because the actor is the fallback owner).
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.require_owner_on_start', scopeType: 'global', scopeId: null, value: true }), 'require owner on');
-    fails(await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'safety_critical_employee' }), 'ownerless start blocked');
+    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'safety_critical_employee' });
+    ok(r, 'ownerless start succeeds (owner defaults to the actor)');
+    ctx.ownerCaseId = r.body.data.caseId;
+    const { data: kase } = await sb.from('hr_onboarding_cases').select('owner_id').eq('id', ctx.ownerCaseId).maybeSingle();
+    expect(kase && !!kase.owner_id, 'case has an owner (the actor) even with require_owner_on_start = true');
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.require_owner_on_start', scopeType: 'global', scopeId: null, value: false }), 'require owner off');
   });
 }

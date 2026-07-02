@@ -25,7 +25,7 @@ import { rowName } from './shared';
 
 const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'];
 const NIS_STATUSES = ['registered', 'pending', 'exempt', 'not_applicable'];
-const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager'];
+const ROLES = ['employee', 'supervisor', 'manager', 'hr_manager', 'hr_staff', 'hse_staff'];
 const POSITIONS = ['HSE Officer', 'Safety Engineer', 'Mechanical Tech', 'Electrician', 'HR Coordinator', 'Project Manager', 'Quality Inspector', 'Field Engineer', 'Administrator'];
 const EMPLOYEE_GRADES = ['Grade 1', 'Grade 2', 'Grade 3', 'Supervisor', 'Manager', 'Executive'];
 const WORK_SCHEDULES = ['Day Shift', 'Night Shift', 'Rotating Shift', 'Office Hours', 'Project Based'];

@@ -1,0 +1,436 @@
+# Plan: Full ERP Suite — HSE real backend + HR, Finance, Operations, Payroll modules
+
+## Context
+
+The HSE module is fully built as a **frontend-only mockup** (all data in `types.ts` mock arrays, workflow engine in `localStorage`). The next phase is two parallel tracks:
+
+1. **HSE → Real backend**: migrate every HSE area off mock data onto Supabase tables + Netlify/Hono API routes, following the exact same pattern as `employees.ts`, `payroll.ts`, etc.
+2. **New modules**: build HR, Finance, Operations, and Payroll as full registered modules (frontend + backend), wired into the existing module registry, RBAC, and workflow engine.
+
+All four new modules must define **integration seams** so that HSE actions (incident → finance cost, injury → HR record, permit → operations schedule) flow across them via the typed `Handoff` mechanism already in `src/lib/workflow/`.
+
+**Scope**: Trinidad & Tobago operations, ~20–30 employees, 5 active sites. OSH Act 2004 + EMA Act compliance shapes HSE. NIS + Health Surcharge + PAYE shapes Payroll (already partially built). The `app_users` table already has payroll fields (`pay_cycle`, `pay_basis`, `hourly_rate`, `monthly_salary`, NIS/PAYE flags). `payroll_approvals` table already exists.
+
+---
+
+## Current State (what's built)
+
+### Frontend (done)
+- HSE: 12 areas + PPE Manager + Dashboard — all UI complete, all mock data
+- Workflow engine: `src/lib/workflow/` — types, store, templates, useWorkflow hook — localStorage-only
+- Module registry: `src/lib/moduleRegistry.ts` — HSE self-registers; contract ready for new modules
+- RBAC: `src/lib/permissions.ts` — 40+ permission keys; `can()` + override resolution
+- TanStack Query client: `src/lib/queryClient.ts` — ready for HSE API hooks
+- Session store: `src/store/session.ts` — role, departmentId, roleScope already in session
+
+### Backend (done)
+- Auth, Employees, Departments, Attendance, Leaves, Payroll, Sites, Messages, Notifications, Tickets, SuperAdmin, Settings — all routes live
+- Pattern: Hono handler → `requireUser()` → `zv()` validation → Supabase query → `log_()` audit → JSON response
+- Tables: `app_users`, `departments`, `project_sites`, `project_site_employees`, `payroll_approvals`, `leaves`, `attendance`, `user_permissions`, `module_permissions`, `audit_logs`, `app_sessions`
+
+### Gaps
+- No HSE tables in Supabase (incidents, permits, risk assessments, etc.)
+- No HSE API routes in Netlify functions
+- HR, Finance, Operations modules don't exist (frontend or backend)
+- Workflow engine handoffs are mock — no DB persistence or cross-module API calls
+
+---
+
+## Architecture Decisions
+
+### Cross-module integration via Handoffs
+Every module exposes a small **intake API** (`POST /api/<module>/intake`) that accepts a `Handoff` record from another module. HSE writes handoffs; HR/Finance/Operations consume them. The workflow engine's `emitHandoff()` call becomes a real API call when the target module exists.
+
+Handoff types to implement:
+| HSE Event | Target | Payload |
+|---|---|---|
+| Incident approved | HR | `{ type:'injury-record', employeeId, incidentRef, severity, lostDays }` |
+| Incident approved | Finance | `{ type:'cost-claim', incidentRef, estimatedCost, costCenter }` |
+| Permit approved | Operations | `{ type:'work-clearance', permitRef, site, startDate, crew[] }` |
+| Environmental notification | Finance | `{ type:'ema-levy', ref, amount, dueDate }` |
+| Training completion | HR | `{ type:'competency-update', employeeId, courseId, expiryDate }` |
+| CAPA closed | HR | `{ type:'disciplinary-note', employeeId, capaRef }` |
+
+### Module registration pattern (reuse exactly)
+Each new module:
+1. Creates `src/components/sections/<Module>/module.ts` → calls `registerModule(def)` at import
+2. Adds nav items with `parent` + `defaultVisible` for nested sidebar
+3. Creates `src/components/sections/<Module>/<Module>Section.tsx` → routes sectionId → page
+4. Mounts via existing `mount.ts` pattern
+
+### Permission keys (extend `src/lib/permissions.ts` + `netlify/functions/lib/permissions.ts`)
+New keys per module follow the `<module>.<action>` pattern:
+- HSE: `hse.incidents.view`, `hse.incidents.manage`, `hse.permits.approve`, `hse.training.certify`, etc.
+- HR: `hr.employees.view`, `hr.records.manage`, `hr.disciplinary.view`
+- Finance: `finance.costs.view`, `finance.costs.approve`, `finance.levies.manage`
+- Operations: `operations.permits.view`, `operations.schedule.manage`
+- Payroll: already partially exists (`payroll.view`, `payroll.export`, `payroll.run`)
+
+---
+
+## Phase 1 — HSE Real Backend
+
+### 1A. Supabase migrations
+
+New tables (all with RLS, same pattern as existing):
+
+```sql
+-- Core HSE record tables
+hse_incidents          (id, ref, type, severity, site_id, status, reporter_id, description, immediate_actions, occurred_at, created_at)
+hse_investigations     (id, incident_id, root_cause_method, findings, status, lead_id, closed_at)
+hse_capa               (id, source_ref, source_type, description, owner_id, due_date, priority, status, verification_note, closed_at)
+hse_risks              (id, ref, hazard, category, likelihood, severity, rating, site_id, owner_id, status, review_date)
+hse_risk_assessments   (id, risk_id, assessed_by, controls[], residual_likelihood, residual_severity, approved_at)
+hse_jsas               (id, ref, task, site_id, steps jsonb, lead_id, status, approved_at)
+hse_permits            (id, ref, type, site_id, requestor_id, approver_id, start_date, end_date, status, conditions[], workflow_id)
+hse_inspections        (id, ref, type, site_id, inspector_id, scheduled_date, completed_date, status, score)
+hse_findings           (id, inspection_id, description, severity, owner_id, due_date, status, capa_id)
+hse_training_records   (id, employee_id, course_id, course_name, completed_at, expiry_date, provider, status, cert_url)
+hse_toolbox_talks      (id, ref, topic, presenter_id, site_id, date, attendees jsonb, duration_mins, notes)
+hse_documents          (id, ref, title, category, version, owner_id, review_date, status, file_url, approved_at)
+hse_sds                (id, chemical_name, supplier, cas_number, hazard_class, revision_date, file_url, site_ids jsonb)
+hse_contractors        (id, company_name, contact_name, contact_email, site_ids jsonb, induction_date, stow_expiry, status)
+hse_legal_obligations  (id, ref, act, section, description, owner_id, due_date, status, evidence_url)
+hse_drills             (id, ref, type, site_id, scheduled_date, completed_date, participants jsonb, outcome, notes)
+hse_environmental      (id, ref, type, site_id, reported_by, date, description, quantity, unit, status, ema_notification_ref)
+-- Workflow persistence (replaces localStorage)
+hse_workflows          (id, template_id, record_ref, record_module, status, stage_key, priority, due_date, created_by, created_at)
+hse_approvals          (id, workflow_id, approver_role, approver_id, status, evidence jsonb, comment, decided_at)
+hse_audit_events       (id, at, module, event, actor_id, record_ref, impact, metadata jsonb)
+hse_handoffs           (id, source_module, target_module, record_ref, summary, evidence jsonb, due_date, owner_id, status, created_at)
+```
+
+RLS policies: admins/managers full CRUD; employees read-only on their own records; superadmin full access.
+
+### 1B. Netlify function routes
+
+New file: `netlify/functions/routes/hse.ts` — single Hono sub-app mounted at `/api/hse`
+
+Route groups (same Hono pattern as `employees.ts`):
+```
+GET  /api/hse/incidents          → list (filters: site, status, severity, date range)
+POST /api/hse/incidents          → create + submit workflow
+GET  /api/hse/incidents/:id      → detail
+PUT  /api/hse/incidents/:id      → update
+GET  /api/hse/investigations     → list by incident
+POST /api/hse/investigations     → create
+GET  /api/hse/capa               → list (filters: status, owner, priority)
+POST /api/hse/capa               → create
+PUT  /api/hse/capa/:id           → update/close
+
+GET  /api/hse/risks              → list
+POST /api/hse/risks              → create
+POST /api/hse/risks/:id/assess   → add assessment
+
+GET  /api/hse/permits            → list
+POST /api/hse/permits            → create + submit workflow
+PUT  /api/hse/permits/:id        → update status
+
+GET  /api/hse/inspections        → list
+POST /api/hse/inspections        → create
+GET  /api/hse/findings           → list by inspection
+POST /api/hse/findings           → create + auto-CAPA if critical
+
+GET  /api/hse/training           → list (employee matrix view)
+POST /api/hse/training           → record completion → handoff to HR
+GET  /api/hse/toolbox            → list
+POST /api/hse/toolbox            → create
+
+GET  /api/hse/documents          → list
+POST /api/hse/documents          → create + submit doc-approval workflow
+GET  /api/hse/sds                → list
+POST /api/hse/sds                → create/update
+
+GET  /api/hse/contractors        → list
+POST /api/hse/contractors        → create/update
+
+GET  /api/hse/legal              → obligations list
+POST /api/hse/legal              → create obligation
+
+GET  /api/hse/drills             → list
+POST /api/hse/drills             → create
+
+GET  /api/hse/environmental      → list
+POST /api/hse/environmental      → create + EMA notification flag
+
+-- Workflow
+GET  /api/hse/workflows          → open workflows (current user's scope)
+GET  /api/hse/approvals          → pending approval tasks (by role)
+POST /api/hse/approvals/:id/decide → approve/return/reject + evidence
+GET  /api/hse/audit              → immutable audit feed (paginated)
+GET  /api/hse/handoffs           → cross-module handoffs (outbound)
+POST /api/hse/intake             → receive inbound handoffs from other modules
+
+-- Dashboard aggregates
+GET  /api/hse/dashboard/kpis     → computed KPI counts (incidents MTD, open permits, etc.)
+GET  /api/hse/dashboard/trend    → 6-month trend data
+```
+
+Every route: `requireUser(c)` → `requirePermission(c, 'hse.<area>.<action>')` → Supabase query → `log_()`.
+
+### 1C. Frontend migration
+
+Replace mock data with TanStack Query hooks in `src/api/hse.ts`:
+```typescript
+// Query hooks pattern (mirrors src/api/employees.ts)
+useHseIncidents(filters)        → GET /api/hse/incidents
+useHseIncident(id)              → GET /api/hse/incidents/:id
+useCreateIncident()             → POST /api/hse/incidents
+useHsePermits(filters)          → GET /api/hse/permits
+useHseWorkflows()               → GET /api/hse/workflows
+useHseApprovals()               → GET /api/hse/approvals
+useDecideApproval()             → POST /api/hse/approvals/:id/decide
+useHseDashboardKpis()           → GET /api/hse/dashboard/kpis
+// ... one hook per resource
+```
+
+Each HSE area TSX file: swap `mockIncidents` → `useHseIncidents().data`, loading/error states, optimistic updates on mutation.
+
+Workflow engine (`src/lib/workflow/store.ts`): add `syncToServer` flag — when true, `submitWorkflow()` calls `POST /api/hse/workflows` instead of writing localStorage. `decide()` calls `POST /api/hse/approvals/:id/decide`. `localStorage` becomes a cache layer only.
+
+---
+
+## Phase 2 — HR Module
+
+### What HR owns
+- Employee records (extends `app_users` + new `hr_*` tables)
+- Leave management (already exists as `leaves` table + routes — HR module surfaces the existing data)
+- Disciplinary records
+- Training history (receives handoffs from HSE training completions)
+- Injury register (receives handoffs from HSE incident approvals)
+- Org chart / reporting lines
+- Onboarding / offboarding checklists
+- Employee documents (contracts, ID, certifications)
+
+### New Supabase tables
+```sql
+hr_disciplinary        (id, employee_id, type, description, issued_by, issued_at, status, review_date, capa_ref)
+hr_injury_register     (id, employee_id, incident_ref, injury_type, body_part, lost_days, return_date, status)
+hr_competency_updates  (id, employee_id, course_id, course_name, completed_at, expiry_date, source_ref)  -- receives HSE handoffs
+hr_onboarding_tasks    (id, employee_id, task, due_date, assigned_to, completed_at, status)
+hr_documents           (id, employee_id, type, title, file_url, expiry_date, uploaded_at)
+```
+
+### New routes (`netlify/functions/routes/hr.ts`)
+```
+GET/POST /api/hr/employees          → extends existing employees (HR lens: full history, docs)
+GET/POST /api/hr/disciplinary       → disciplinary records
+GET/POST /api/hr/injury-register    → injury log (populated from HSE handoffs)
+GET/POST /api/hr/competency         → training history (populated from HSE handoffs)
+GET/POST /api/hr/onboarding         → checklist per employee
+GET/POST /api/hr/documents          → employee document vault
+POST     /api/hr/intake             → receive handoffs from HSE (incident→injury, training→competency, CAPA→disciplinary)
+```
+
+### Frontend (`src/components/sections/HR/`)
+Module areas:
+- **Workforce Overview** — headcount, turnover, site distribution (dashboard)
+- **Employee Records** — extend Employees section with HR-specific tabs (Documents, History, Disciplinary, Competency)
+- **Leave Management** — surfaces existing `leaves` data with approval workflow
+- **Injury Register** — populated from HSE incident handoffs; links back to HSE incident
+- **Training & Competency** — populated from HSE training handoffs; shows org-wide matrix
+- **Disciplinary** — formal disciplinary process (warning → hearing → outcome)
+- **Onboarding** — checklist per new hire
+- **Org Chart** — visual reporting-line hierarchy (frontend only, derived from `department_id` + manager flags)
+
+---
+
+## Phase 3 — Finance Module
+
+### What Finance owns
+- Cost centers and budgets
+- HSE cost claims (receives handoffs from incident approvals)
+- EMA levy tracking (receives handoffs from environmental events)
+- Purchase orders (PPE procurement, contractor invoices)
+- Payroll costs (reads from `payroll_approvals`)
+- Budget vs. actuals reporting
+
+### New Supabase tables
+```sql
+finance_cost_centers   (id, name, department_id, budget_ytd, currency)
+finance_claims         (id, ref, type, source_ref, source_module, amount, cost_center_id, description, status, approved_by, approved_at)
+finance_levies         (id, ref, type, authority, amount, due_date, status, payment_ref, ema_notification_ref)
+finance_purchase_orders (id, ref, vendor, description, amount, cost_center_id, status, approved_by, raised_by, created_at)
+```
+
+### New routes (`netlify/functions/routes/finance.ts`)
+```
+GET/POST /api/finance/claims          → HSE cost claims
+PUT      /api/finance/claims/:id      → approve/reject claim
+GET/POST /api/finance/levies          → EMA levy register
+GET/POST /api/finance/purchase-orders → PO register
+GET      /api/finance/payroll-costs   → reads payroll_approvals (already exists)
+GET      /api/finance/budget          → cost center budget vs. actuals
+POST     /api/finance/intake          → receive handoffs from HSE
+```
+
+### Frontend (`src/components/sections/Finance/`)
+Module areas:
+- **Finance Overview** — budget utilisation, open claims, levy calendar (dashboard)
+- **Cost Claims** — HSE incident cost claims + approval workflow
+- **EMA Levies** — environmental levy tracking + payment status
+- **Purchase Orders** — PPE/contractor POs
+- **Budget** — cost center budget vs. actuals
+- **Payroll Costs** — payroll ledger view (read-only, sourced from Payroll module)
+
+---
+
+## Phase 4 — Operations Module
+
+### What Operations owns
+- Work clearances (receives permit handoffs from HSE)
+- Site schedules / crew assignments
+- Equipment register
+- Maintenance schedule
+- Shutdown / turnaround planning
+
+### New Supabase tables
+```sql
+ops_work_clearances    (id, permit_ref, site_id, crew jsonb, start_date, end_date, status, supervisor_id)
+ops_equipment          (id, name, type, site_id, serial_no, last_serviced, next_service, status)
+ops_maintenance        (id, equipment_id, type, scheduled_date, completed_date, technician_id, notes, status)
+ops_schedules          (id, site_id, crew_lead_id, date, shift, crew_ids jsonb, notes)
+```
+
+### New routes (`netlify/functions/routes/operations.ts`)
+```
+GET/POST /api/operations/clearances    → work clearances (from HSE permit handoffs)
+GET/POST /api/operations/equipment     → equipment register
+GET/POST /api/operations/maintenance   → maintenance schedule
+GET/POST /api/operations/schedules     → crew schedules
+POST     /api/operations/intake        → receive handoffs from HSE
+```
+
+### Frontend (`src/components/sections/Operations/`)
+Module areas:
+- **Ops Overview** — site activity, open clearances, equipment alerts (dashboard)
+- **Work Clearances** — populated from HSE permit handoffs; crew assignment
+- **Equipment Register** — asset list + service status
+- **Maintenance Schedule** — planned/reactive maintenance
+- **Crew Schedules** — daily/weekly shift view per site
+
+---
+
+## Phase 5 — Payroll Module (complete existing)
+
+Payroll backend already exists (`payroll.ts`, `payroll_approvals` table). The Payroll **module** needs:
+
+### Frontend (`src/components/sections/Payroll/`)
+Module areas:
+- **Payroll Overview** — YTD cost, last run, upcoming runs (dashboard)
+- **Run Payroll** — existing flow, promoted to its own registered module area
+- **Payslips** — employee self-service payslip view
+- **Payroll History** — `payroll_approvals` ledger (already exists in backend)
+- **NIS & Tax** — NIS contributions + PAYE summary by period
+- **Settings** — pay cycles, rates, statutory deduction config (per-employee overrides)
+
+Register as a full module in `src/lib/moduleRegistry.ts` (currently surfaced via sidebar item, not a registered module).
+
+---
+
+## Build Sequence
+
+### HSE Backend (Phase 1) — start here
+1. Write Supabase migration for all HSE tables → test RLS
+2. Build `netlify/functions/routes/hse.ts` → test each route group
+3. Create `src/api/hse.ts` with TanStack Query hooks
+4. Migrate each HSE area TSX file: replace mock data → real hooks, add loading/error states
+5. Upgrade workflow engine: `syncToServer` mode, `hse_workflows` + `hse_approvals` tables
+6. Dashboard KPI route → wire HSEDashboard to live data
+7. Commit. Run 228 tests + typecheck.
+
+### HR Module (Phase 2)
+1. Supabase migration (`hr_*` tables)
+2. `netlify/functions/routes/hr.ts` + `/api/hr/intake`
+3. `src/components/sections/HR/` — module.ts, nav.ts, HRSection.tsx, area components
+4. Wire HSE handoffs → HR intake (incident → injury, training → competency)
+5. Commit + test.
+
+### Finance Module (Phase 3)
+1. Supabase migration (`finance_*` tables)
+2. `netlify/functions/routes/finance.ts` + `/api/finance/intake`
+3. `src/components/sections/Finance/` — module.ts, nav.ts, FinanceSection.tsx, area components
+4. Wire HSE handoffs → Finance intake (incident cost, EMA levy)
+5. Commit + test.
+
+### Operations Module (Phase 4)
+1. Supabase migration (`ops_*` tables)
+2. `netlify/functions/routes/operations.ts` + `/api/operations/intake`
+3. `src/components/sections/Operations/` — module.ts, nav.ts, OpsSection.tsx, area components
+4. Wire HSE handoffs → Operations intake (permit → work clearance)
+5. Commit + test.
+
+### Payroll Module (Phase 5)
+1. Register as full module in `moduleRegistry.ts`
+2. `src/components/sections/Payroll/` — module.ts, nav.ts, PayrollSection.tsx, area components
+3. Promote existing payroll UI into module areas
+4. Wire Finance → Payroll cost view
+5. Commit + test.
+
+---
+
+## UI Conventions (apply to all new modules)
+
+All new modules reuse the exact same primitives:
+- **Module hero**: `AreaHero` from `src/components/sections/HSE/_shared.tsx` — same dark navy panel, stat cards, watermark icon
+- **Tabs**: `AreaTabs` from `_shared.tsx`
+- **Modals / Drawers**: `HseModal`, `HseDrawer` — rename to generic `AppModal`, `AppDrawer` in `src/shared/` and re-export from `_shared.tsx` for backward compat
+- **Tables**: `.vt-table`, `.vt-toolbar`, `.vt-search`, `.vt-pill`, `.hse-data-table` classes
+- **Status pills**: `hsePill()` pattern — each module adds its own status map
+- **Cards**: `.hse-card`, `.hse-card-head`, `.hse-card-body`
+- **Form controls**: `Field`, `TextInput`, `SelectInput`, `TextareaInput` from `_shared.tsx` — promote to `src/shared/forms.tsx`
+
+### Module hero tabs (pending UI work)
+The `AreaHero` already has `AreaTabs` wired. The tabs strip goes **inside the hero panel**, flush at the bottom — dark underline style (white ghost tabs, white underline on active). This replaces the old floating tab bar below the hero.
+
+---
+
+## Permission Keys to Add
+
+Extend `src/lib/permissions.ts` (frontend) and `netlify/functions/lib/permissions.ts` (backend):
+
+```typescript
+// HSE
+'hse.dashboard.view', 'hse.incidents.view', 'hse.incidents.manage',
+'hse.permits.view', 'hse.permits.approve', 'hse.risk.view', 'hse.risk.manage',
+'hse.training.view', 'hse.training.certify', 'hse.documents.approve',
+'hse.contractors.manage', 'hse.legal.view', 'hse.environmental.manage',
+'hse.workflows.approve',
+
+// HR
+'hr.records.view', 'hr.records.manage', 'hr.disciplinary.view',
+'hr.disciplinary.manage', 'hr.injury.view', 'hr.onboarding.manage',
+'hr.documents.view', 'hr.documents.manage',
+
+// Finance
+'finance.costs.view', 'finance.costs.approve',
+'finance.levies.view', 'finance.levies.manage',
+'finance.po.view', 'finance.po.approve',
+'finance.budget.view', 'finance.budget.manage',
+
+// Operations
+'operations.clearances.view', 'operations.clearances.manage',
+'operations.equipment.view', 'operations.equipment.manage',
+'operations.schedules.view', 'operations.schedules.manage',
+
+// Payroll (extend existing)
+'payroll.settings.manage', 'payroll.nis.view',
+```
+
+Role defaults: superadmin → all; admin → all within their scope; manager → view + limited manage; employee → own records only.
+
+---
+
+## Verification
+
+For each phase:
+1. `npm run typecheck:frontend` — clean
+2. `npx vite build` — no errors
+3. `npx vitest run` — 228+ tests passing (add new tests for each API hook)
+4. `npx netlify dev` → log in as admin → navigate to module:
+   - Every area renders real data from Supabase (not mock arrays)
+   - Create/edit forms persist to DB and invalidate query cache
+   - Workflow: submit → approval task appears → decide → audit event written → handoff emitted to target module
+   - Target module shows received handoff in its intake view
+   - RBAC: employee role cannot see manage-gated actions
+5. Supabase dashboard: verify rows created in correct tables, RLS prevents cross-tenant reads

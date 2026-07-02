@@ -12,11 +12,18 @@ import { emitAppEvent } from '../lib/appEvents';
 import { z, zv }      from '../lib/validate';
 import { writeHrAudit } from '../lib/hr/employeeCore';
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
-import { loadPackagePlan, listPackageSummaries } from '../lib/hr/onboardingPackageService';
-import { getOnboardingDashboardStats, listOnboardingCases, listOnboardingTasks, listOnboardingHandoffs, listOnboardingBlockers } from '../lib/hr/onboardingQueries';
-import { addOnboardingTask, blockOnboardingTask, unblockOnboardingTask, completeOnboardingCase, pauseOnboardingCase, resumeOnboardingCase, reassignOnboardingOwner, markOnboardingReady, resolveOnboardingBlocker, escalateOnboardingBlocker, waiveOnboardingBlocker, listOnboardingAudit } from '../lib/hr/onboardingMutations';
+import {
+  loadPackagePlan, listPackageSummaries, getPackageDetail, createPackage, updatePackage, setPackageStatus,
+  createTaskTemplate, updateTaskTemplate, deleteTaskTemplate, createHandoffTemplate, updateHandoffTemplate, deleteHandoffTemplate,
+} from '../lib/hr/onboardingPackageService';
+import { getOnboardingDashboardStats, listOnboardingCases, listOnboardingTasks, listOnboardingHandoffs, listOnboardingBlockers, listRecentOnboardingActivity, getOnboardingTaskDetail } from '../lib/hr/onboardingQueries';
+import { addOnboardingTask, blockOnboardingTask, unblockOnboardingTask, completeOnboardingCase, pauseOnboardingCase, resumeOnboardingCase, reassignOnboardingOwner, markOnboardingReady, resolveOnboardingBlocker, escalateOnboardingBlocker, waiveOnboardingBlocker, notifyOnboardingBlockerOwner, listOnboardingAudit, addOnboardingTaskNote, attachOnboardingTaskEvidence, taskEvidenceMissing, retryOnboardingHandoff, acceptOnboardingHandoff, completeOnboardingHandoff, cancelOnboardingHandoff } from '../lib/hr/onboardingMutations';
+import { createAttachmentUploadUrl } from '../lib/upload';
 import { listActionTemplates, createActionTemplate, updateActionTemplate, retireActionTemplate, listCaseActions, addCaseAction, updateCaseAction, completeCaseAction, cancelCaseAction, type ActionTemplateInput, type AddCaseActionInput } from '../lib/hr/onboardingCustomActions';
 import { provisionAccount, acceptAccountInvite } from '../lib/hr/accountProvisioning';
+import { previewOnboardingCommunication, listOnboardingCommunications, sendOnboardingCommunication, resendOnboardingCommunication } from '../lib/hr/onboardingCommunications';
+import { listOnboardingReports, runOnboardingReport, exportOnboardingReport } from '../lib/hr/onboardingReports';
+import type { RunOnboardingReportArgs } from '../../../types/hrOnboarding';
 import type { OnboardingCaseListArgs, OnboardingDashboardStatsArgs, OnboardingTaskListArgs, OnboardingHandoffListArgs, OnboardingBlockerListArgs } from '../../../types/hrOnboarding';
 import type { HonoVariables } from '../../../types/api';
 
@@ -61,6 +68,7 @@ router.post('/onboarding/start', async c => {
     launchMode:      z.string().max(30).nullable().optional(),
     caseOwner:       z.string().max(80).nullable().optional(),
     workerType:      z.string().max(30).nullable().optional(),
+    includeActionTemplateIds: z.array(z.string().uuid()).nullable().optional(),
   }), body(c));
   if (!v.ok) return v.response;
 
@@ -86,6 +94,11 @@ router.post('/onboarding/task/complete', async c => {
     return c.json({ success: false, message: 'You are not assigned this task and lack the manage permission.' }, 403 as 200);
   }
   if (['completed', 'skipped'].includes(task.status)) return c.json({ success: false, message: `Task already ${task.status}.` }, 400 as 200);
+  // Evidence gate (settings-driven, default off): a requires_evidence task cannot be
+  // completed without at least one attached evidence file when the gate is on.
+  if (await taskEvidenceMissing(task.id)) {
+    return c.json({ success: false, message: 'This task requires evidence — attach it before completing (per settings).' }, 400 as 200);
+  }
 
   await sb.from('hr_onboarding_tasks').update({ status: 'completed', completed_by: actor.id, completed_at: new Date().toISOString() }).eq('id', task.id);
 
@@ -167,7 +180,8 @@ const DueEnum = z.enum(['all', 'overdue', 'due_today', 'due_this_week']).optiona
 const DashSchema = z.object({ departmentIds: StrArr, siteIds: StrArr, ownerIds: StrArr, packageKeys: StrArr });
 const CaseListSchema = z.object({
   query: z.string().optional(),
-  statuses: StrArr, packageKeys: StrArr, ownerIds: StrArr, departmentIds: StrArr, siteIds: StrArr, workerTypes: StrArr, reasons: StrArr,
+  statuses: StrArr, packageKeys: StrArr, ownerIds: StrArr, employeeIds: StrArr, caseIds: StrArr,
+  departmentIds: StrArr, siteIds: StrArr, workerTypes: StrArr, reasons: StrArr,
   dueState: DueEnum,
   blockingState: z.enum(['all', 'blocked', 'not_blocked']).optional(),
   readinessState: z.enum(['all', 'ready', 'not_ready']).optional(),
@@ -176,7 +190,7 @@ const CaseListSchema = z.object({
   sort: z.object({ field: z.enum(['case_no', 'due_at', 'started_at', 'status', 'progress']), direction: z.enum(['asc', 'desc']) }).optional(),
 });
 const TaskListSchema = z.object({
-  caseId: z.string().uuid().optional(), statuses: StrArr, ownerRoles: StrArr, moduleKeys: StrArr,
+  caseId: z.string().uuid().optional(), statuses: StrArr, ownerRoles: StrArr, moduleKeys: StrArr, packageKeys: StrArr,
   assignedTo: z.string().optional(), blockingOnly: z.boolean().optional(), dueState: DueEnum, query: z.string().optional(),
 });
 const HandoffListSchema = z.object({ caseId: z.string().uuid().optional(), targetModules: StrArr, statuses: StrArr });
@@ -236,6 +250,57 @@ async function mutate<T>(c: Context, fn: () => Promise<T>): Promise<Response> {
   catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Request failed.' }, (er.status ?? 500) as 200); }
 }
 const Sev = z.enum(['low', 'medium', 'high', 'critical']);
+
+// ── 11b. task/get (Tasks Workspace drawer) ───────────────────────────────────────
+router.post('/onboarding/task/get', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({ taskId: z.string().uuid() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => getOnboardingTaskDetail(v.data.taskId));
+});
+
+// ── 11c-e. task notes + evidence — the assignee may act on their own task; anyone
+// else needs task.manage (same access rule as task/complete).
+const TASK_EVIDENCE_BUCKET = 'hr-employee-documents';   // reuse the HR docs bucket (per-file rows stay on the task)
+async function requireTaskActor(c: Context, taskId: string): Promise<{ actorId: string } | Response> {
+  const actor = await requireUser(c);
+  const { data: task } = await sb.from('hr_onboarding_tasks').select('id, assigned_to').eq('id', taskId).maybeSingle<{ id: string; assigned_to: string | null }>();
+  if (!task) return c.json({ success: false, message: 'Onboarding task not found.' }, 404 as 200);
+  if (task.assigned_to !== actor.id && !(await userCan(actor, 'hr.onboarding.task.manage'))) {
+    return c.json({ success: false, message: 'You are not assigned this task and lack the manage permission.' }, 403 as 200);
+  }
+  return { actorId: actor.id };
+}
+
+router.post('/onboarding/task/add-note', async c => {
+  const v = zv(c, z.object({ taskId: z.string().uuid(), note: z.string().min(1).max(2000) }), body(c));
+  if (!v.ok) return v.response;
+  const gate = await requireTaskActor(c, v.data.taskId);
+  if (gate instanceof Response) return gate;
+  return mutate(c, () => addOnboardingTaskNote(gate.actorId, v.data));
+});
+
+router.post('/onboarding/task/evidence-upload-url', async c => {
+  const v = zv(c, z.object({ taskId: z.string().uuid(), fileName: z.string().min(1), mimeType: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  const gate = await requireTaskActor(c, v.data.taskId);
+  if (gate instanceof Response) return gate;
+  try {
+    const { uploadUrl, token, path } = await createAttachmentUploadUrl(TASK_EVIDENCE_BUCKET, `onboarding-evidence/${v.data.fileName}`, v.data.mimeType);
+    return c.json({ success: true, uploadUrl, token, path, bucket: TASK_EVIDENCE_BUCKET });
+  } catch (e) { return c.json({ success: false, message: e instanceof Error ? e.message : 'Upload URL failed' }, 400 as 200); }
+});
+
+router.post('/onboarding/task/attach-evidence', async c => {
+  const v = zv(c, z.object({
+    taskId: z.string().uuid(), fileName: z.string().min(1).max(200), filePath: z.string().min(1),
+    mimeType: z.string().nullable().optional(), fileSize: z.number().int().nullable().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  const gate = await requireTaskActor(c, v.data.taskId);
+  if (gate instanceof Response) return gate;
+  return mutate(c, () => attachOnboardingTaskEvidence(gate.actorId, v.data));
+});
 
 // ── 12. task/add (one-off task on a case) ────────────────────────────────────────
 router.post('/onboarding/task/add', async c => {
@@ -329,6 +394,95 @@ router.post('/onboarding/blocker/waive', async c => {
   const v = zv(c, z.object({ blockerId: z.string().uuid(), reason: z.string().min(1).max(500) }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => waiveOnboardingBlocker(actor.id, v.data));
+});
+
+// ── 22a. blocker/notify-owner (Blocked board) ────────────────────────────────────
+router.post('/onboarding/blocker/notify-owner', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, z.object({ blockerId: z.string().uuid(), message: z.string().max(500).nullable().optional() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => notifyOnboardingBlockerOwner(actor.id, v.data));
+});
+
+// ── 22b. handoff lifecycle (cross-case control center) ────────────────────────────
+// Gated by hr.onboarding.case.manage — the same tier as blocker/task-management
+// actions; no separate handoff-specific permission (per the Phase-3 plan).
+const HandoffAction = z.object({ handoffId: z.string().uuid(), reason: z.string().max(500).nullable().optional() });
+router.post('/onboarding/handoff/retry', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, HandoffAction, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => retryOnboardingHandoff(actor.id, v.data));
+});
+router.post('/onboarding/handoff/accept', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, HandoffAction, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => acceptOnboardingHandoff(actor.id, v.data));
+});
+router.post('/onboarding/handoff/complete', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, HandoffAction, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => completeOnboardingHandoff(actor.id, v.data));
+});
+router.post('/onboarding/handoff/cancel', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, HandoffAction, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => cancelOnboardingHandoff(actor.id, v.data));
+});
+
+// ── 22c. case communications (Case Detail Communications widget) ─────────────────
+const CommType = z.enum(['employee_welcome', 'supervisor_notification', 'owner_reminder', 'escalation_notice', 'manual_message']);
+router.post('/onboarding/communications/list', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({ caseId: z.string().uuid() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => listOnboardingCommunications(v.data.caseId));
+});
+router.post('/onboarding/communications/preview', async c => {
+  await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => previewOnboardingCommunication(v.data));
+});
+router.post('/onboarding/communications/send', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, z.object({ caseId: z.string().uuid(), communicationType: CommType, subject: nstr, body: nstr, recipientUserId: nstr, channel: z.enum(['email', 'in_app', 'sms', 'manual']).optional() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => sendOnboardingCommunication(actor.id, v.data));
+});
+router.post('/onboarding/communications/resend', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.case.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => resendOnboardingCommunication(actor.id, v.data));
+});
+
+// ── 22d. reports (Reports workspace) ─────────────────────────────────────────────
+const ReportKey = z.enum(['cycle_time', 'blocked_cases', 'task_owner_performance', 'handoff_completion', 'package_effectiveness', 'activation_readiness', 'overdue_tasks', 'contractor_onboarding', 'safety_critical_onboarding']);
+const RunReportSchema = z.object({
+  reportKey: ReportKey, dateFrom: z.string().nullable().optional(), dateTo: z.string().nullable().optional(),
+  departmentIds: StrArr, siteIds: StrArr, packageKeys: StrArr, ownerIds: StrArr, workerTypes: StrArr, status: StrArr,
+  groupBy: z.enum(['day', 'week', 'month', 'department', 'package', 'owner']).optional(),
+  page: z.number().int().positive().optional(), pageSize: z.number().int().positive().max(1000).optional(),
+});
+router.post('/onboarding/reports/list', async c => {
+  await requirePermission(c, 'hr.onboarding.reports.view');
+  return c.json({ success: true, data: listOnboardingReports() });
+});
+router.post('/onboarding/reports/run', async c => {
+  await requirePermission(c, 'hr.onboarding.reports.view');
+  const v = zv(c, RunReportSchema, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => runOnboardingReport(v.data as RunOnboardingReportArgs));
+});
+router.post('/onboarding/reports/export', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.reports.export');
+  const v = zv(c, RunReportSchema, body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => exportOnboardingReport(actor.id, v.data as RunOnboardingReportArgs));
 });
 
 // ── 23. audit (case Audit tab) ───────────────────────────────────────────────────
@@ -438,6 +592,114 @@ router.post('/onboarding/actions/case/cancel', async c => {
   const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).nullable().optional() }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => cancelCaseAction(actor.id, v.data));
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Package Manager. Package/template configuration is oversight-tier (org-wide
+// policy) — every mutation here is gated by hr.onboarding.packages.manage, NOT the
+// case-execution keys above. Reads stay on the existing hr.onboarding.view.
+// ════════════════════════════════════════════════════════════════════════════════
+
+// ── 33. packages/get (Package Detail page) ───────────────────────────────────────
+router.post('/onboarding/packages/get', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({ packageKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  const detail = await getPackageDetail(v.data.packageKey);
+  if (!detail) return c.json({ success: false, message: 'Onboarding package not found.' }, 404 as 200);
+  return c.json({ success: true, data: detail });
+});
+
+// ── 34. packages/create ──────────────────────────────────────────────────────────
+router.post('/onboarding/packages/create', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    label: z.string().min(1).max(200), description: nstr, workerTypes: z.array(z.string()).optional(),
+    defaultSlaDays: z.number().int().positive().optional(), defaultOwnerRole: nstr,
+    appliesToDepartments: z.array(z.string()).optional(), appliesToSites: z.array(z.string()).optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => createPackage(actor.id, v.data));
+});
+
+// ── 35. packages/update ──────────────────────────────────────────────────────────
+router.post('/onboarding/packages/update', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    id: z.string().uuid(), label: z.string().min(1).max(200).optional(), description: nstr, workerTypes: z.array(z.string()).optional(),
+    defaultSlaDays: z.number().int().positive().optional(), defaultOwnerRole: nstr,
+    appliesToDepartments: z.array(z.string()).optional(), appliesToSites: z.array(z.string()).optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => updatePackage(actor.id, v.data));
+});
+
+// ── 36. packages/set-status ───────────────────────────────────────────────────────
+router.post('/onboarding/packages/set-status', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({ id: z.string().uuid(), status: z.enum(['draft', 'active', 'retired']) }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => setPackageStatus(actor.id, v.data));
+});
+
+// ── 37-39. task-templates/{create,update,delete} ─────────────────────────────────
+router.post('/onboarding/packages/task-templates/create', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    packageId: z.string().uuid(), taskKey: z.string().min(1).max(60), taskTitle: z.string().min(1).max(200), ownerRole: z.string().min(1).max(40),
+    moduleKey: nstr, isBlocking: z.boolean().optional(), requiresEvidence: z.boolean().optional(), dependencyKeys: z.array(z.string()).optional(), sortOrder: z.number().int().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => createTaskTemplate(actor.id, v.data));
+});
+router.post('/onboarding/packages/task-templates/update', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    id: z.string().uuid(), taskTitle: z.string().min(1).max(200).optional(), ownerRole: z.string().min(1).max(40).optional(),
+    moduleKey: nstr, isBlocking: z.boolean().optional(), requiresEvidence: z.boolean().optional(), dependencyKeys: z.array(z.string()).optional(), sortOrder: z.number().int().optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => updateTaskTemplate(actor.id, v.data));
+});
+router.post('/onboarding/packages/task-templates/delete', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => deleteTaskTemplate(actor.id, v.data));
+});
+
+// ── 40-42. handoff-templates/{create,update,delete} ──────────────────────────────
+router.post('/onboarding/packages/handoff-templates/create', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    packageId: z.string().uuid(), handoffKey: z.string().min(1).max(60), targetModule: z.string().min(1).max(40), handoffType: z.string().min(1).max(60),
+    isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => createHandoffTemplate(actor.id, v.data));
+});
+router.post('/onboarding/packages/handoff-templates/update', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({
+    id: z.string().uuid(), targetModule: z.string().min(1).max(40).optional(), handoffType: z.string().min(1).max(60).optional(),
+    isRequired: z.boolean().optional(), sortOrder: z.number().int().optional(), payloadTemplate: z.record(z.string(), z.unknown()).optional(),
+  }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => updateHandoffTemplate(actor.id, v.data));
+});
+router.post('/onboarding/packages/handoff-templates/delete', async c => {
+  const actor = await requirePermission(c, 'hr.onboarding.packages.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => deleteHandoffTemplate(actor.id, v.data));
+});
+
+// ── 43. activity/recent (Overview widget) ────────────────────────────────────────
+router.post('/onboarding/activity/recent', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({ limit: z.number().int().positive().max(50).optional() }), body(c));
+  if (!v.ok) return v.response;
+  return mutate(c, () => listRecentOnboardingActivity(v.data.limit ?? 15));
 });
 
 // ════════════════════════════════════════════════════════════════════════════════

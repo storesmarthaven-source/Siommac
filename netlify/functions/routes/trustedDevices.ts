@@ -36,7 +36,7 @@ const RevokeSchema = z.object({
 
 router.post('/list', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthReadLimit.check(user.id);
+  const rl = await checkAuthReadLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many requests. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -80,7 +80,7 @@ router.post('/list', async c => {
 
 router.post('/revoke', async c => {
   const user = await requireUser(c);
-  const rl = checkAuthMutationLimit.check(user.id);
+  const rl = await checkAuthMutationLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }
@@ -119,7 +119,7 @@ router.post('/revoke', async c => {
 
 router.post('/revoke-all', async c => {
   const user = await requireStepUp(c);  // step-up: revoking all devices is high-risk
-  const rl = checkAuthMutationLimit.check(user.id);
+  const rl = await checkAuthMutationLimit.check(user.id);
   if (!rl.ok) {
     return c.json({ success: false, message: `Too many attempts. Try again in ${rl.retryAfter}s.` }, 429);
   }

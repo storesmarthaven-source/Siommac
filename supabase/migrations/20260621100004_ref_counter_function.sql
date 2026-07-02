@@ -8,6 +8,7 @@ create or replace function public.increment_ref_counter(p_prefix text, p_year in
 returns integer
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   v_next integer;

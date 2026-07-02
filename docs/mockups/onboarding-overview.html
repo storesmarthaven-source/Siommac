@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Siomac — page mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Siomac tokens (from assets/styles/base.css) ───────────────────────────── */
+:root{
+  --siomac-navy:#1b2d54; --siomac-red:#E40C0C; --siomac-gold:#FFB712;
+  --bg-card:#FFFFFF; --border:#E9EEF3; --bg-subtle:#F8FAFE;
+  --text-primary:#1F2A44; --text-muted:#5E6F8D; --danger:#C62828;
+  --space-4:16px; --radius-pill:999px;
+  --font-weight-medium:500; --font-weight-semibold:600; --font-weight-bold:700;
+  --line:#e5eaf2; --line-dark:#d8e0ec; --green-bg:#dcfce7; --amber-bg:#fef3c7; --red-bg:#fee2e2; --purple-bg:#ede9fe; --bg:#f7f9fc;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#F9FAFC;color:var(--text-primary);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+.main-content{padding:24px 28px;max-width:1340px;margin:0 auto;}
+svg{display:block}
+
+/* ── PageHeader (assets/styles/uikit-layout.css) ───────────────────────────── */
+.ui-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.ui-page-head-main{display:flex;align-items:center;gap:14px;min-width:0;flex:1;}
+.ui-page-head-icon{width:40px;height:40px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;font-size:1rem;background:var(--siomac-navy);color:#fff;}
+.ui-page-head-text{min-width:0;}
+.ui-page-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.68rem;font-weight:500;color:var(--text-muted);margin-bottom:3px;}
+.ui-page-crumb-current{color:var(--siomac-navy);font-weight:600;}
+.ui-page-title{font-size:1.3rem;font-weight:700;color:var(--siomac-navy);line-height:1.15;letter-spacing:-.01em;}
+.ui-page-sub{font-size:.78rem;color:var(--text-muted);line-height:1.4;margin-top:4px;max-width:680px;}
+.ui-page-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.ui-page-meta-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);font-size:.68rem;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+.ui-page-meta-chip i{font-size:.62rem;color:var(--siomac-navy);}
+.ui-page-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+
+/* ── ProfilePill (assets/styles/dashboard-panel.css) — sits at the header's right ── */
+.profile-notif-pill{display:flex;align-items:center;background:var(--siomac-navy);border-radius:80px;border:none;padding:6px 12px 6px 6px;gap:8px;box-shadow:0 4px 12px rgba(27,45,85,.2);}
+.pnp-profile{display:flex;align-items:center;gap:10px;padding:4px 14px 4px 6px;border-radius:60px;cursor:pointer;}
+.pnp-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,var(--siomac-red),#8b0000);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff;overflow:hidden;flex-shrink:0;}
+.pnp-info{display:flex;flex-direction:column;line-height:1.3;}
+.pnp-name{font-size:.85rem;font-weight:800;color:#fff;}
+.pnp-role{font-size:.68rem;color:rgba(255,255,255,.75);}
+.pnp-divider{width:1px;height:36px;background:rgba(255,255,255,.2);margin:0 2px;flex-shrink:0;}
+.pnp-icons{display:flex;align-items:center;gap:6px;padding-right:4px;}
+.pnp-icon-btn{position:relative;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:1.1rem;}
+
+/* ── StatsCard (assets/styles/uikit-layout.css) — Employee Master KPI cards ──── */
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,.03);}
+.stat-card-icon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;}
+.stat-card-icon.blue{background:rgba(27,45,85,.09);color:var(--siomac-navy);}
+.stat-card-icon.green{background:rgba(46,125,50,.09);color:#2E7D32;}
+.stat-card-icon.gold{background:rgba(255,183,18,.14);color:#c67c00;}
+.stat-card-icon.red{background:rgba(228,12,12,.09);color:var(--siomac-red);}
+.stat-card-body{flex:1;min-width:0;}
+.stat-card-value{font-size:1.7rem;font-weight:800;color:var(--siomac-navy);line-height:1.05;}
+.stat-card-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-top:4px;}
+.stat-card-sub{font-size:.72rem;color:var(--text-muted);margin-top:6px;}
+
+/* ── Customize toolbar (assets/styles/widgetBoard.css) ─────────────────────── */
+.wbi-toolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 12px;}
+.wbi-tb-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--line-dark);background:#fff;color:#334155;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.wbi-tb-btn.solid{background:var(--siomac-navy);border-color:var(--siomac-navy);color:#fff;}
+
+/* ── MOCKUP-ONLY: static stand-in for the gridstack board (real page positions
+   widgets with gridstack JS; here it's a simple 12-col CSS grid so you can
+   restyle the widget CARDS + page chrome). class names: .mock-board / .mock-cell ── */
+.mock-board{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;}
+.mock-cell{min-width:0;}
+.mock-cell > *{height:100%;}
+@media (max-width:1100px){ .mock-board{grid-template-columns:repeat(6,1fr);} }
+@media (max-width:680px){ .mock-board{grid-template-columns:repeat(2,1fr);} }
+/**
+ * src/components/sections/HR/HR.css — HR ▸ Employee Master (v36 faithful port).
+ *
+ * A faithful port of the v36 source mockup's CONTENT styles
+ * (siomac-hr-employee-master-preact-v36-settings-wizard-leftbar.html), rendered
+ * inside the Siomac AppShell (the mockup's own hr-sidebar/topbar are dropped —
+ * Siomac provides those). The final design layer in the source is "v34" (one-line
+ * 4-col stats); these values are taken from there. Everything is scoped under
+ * `.hr-emp-master` so the mockup's generic class names (.pill, .avatar, table, h1…)
+ * cannot leak into the rest of the app.
+ *
+ * NOTE: Siomac-token / @ui reconciliation is a deliberate later pass (see
+ * src/ui/PAGE_GUIDE.md and the "Siomac-fit" task). This file intentionally mirrors
+ * the source look first.
+ */
+@layer sections {
+
+.hr-emp-master {
+  --line: #e5eaf2;
+  --line-dark: #d8e0ec;
+  --green-bg: #dcfce7;
+  --amber-bg: #fef3c7;
+  --red-bg: #fee2e2;
+  --purple-bg: #ede9fe;
+  --bg: #f7f9fc;
+  max-width: 1480px;
+  color: #101827;
+  background: var(--bg);
+}
+.hr-emp-master *, .hr-emp-master *::before, .hr-emp-master *::after { box-sizing: border-box; }
+.hr-emp-master button { cursor: pointer; box-shadow: none; }
+
+/* ── Page header ──────────────────────────────────────────────────────────── */
+.hr-emp-master .page-row { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.hr-emp-master h1 { margin: 0; font-size: 30px; line-height: 1.1; letter-spacing: -0.03em; color: #0f172a; }
+.hr-emp-master .subtitle { margin-top: 8px; color: #526178; font-size: 15px; }
+.hr-emp-master .page-actions { display: flex; align-items: center; gap: 10px; position: relative; }
+
+.hr-emp-master .primary-btn { height: 42px; border: none; padding: 0 16px; border-radius: 8px; color: #fff; font-weight: var(--font-weight-semibold, 600); background: linear-gradient(180deg, #0b65f0 0%, #0751d4 100%); display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.hr-emp-master .primary-btn .caret { font-size: 13px; opacity: .9; margin-left: 4px; }
+.hr-emp-master .secondary-btn { height: 40px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; color: #1e293b; font-weight: var(--font-weight-semibold, 600); font-size: 13px; padding: 0 14px; }
+.hr-emp-master .ghost-btn { height: 38px; border: 1px solid var(--line-dark); border-radius: 9px; background: #fff; color: #334155; padding: 0 12px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); display: inline-flex; align-items: center; gap: 7px; }
+.hr-emp-master .secondary-btn:hover, .hr-emp-master .ghost-btn:hover, .hr-emp-master .multi-select:hover { background: #f8fbff; }
+.hr-emp-master .advanced-filter-btn:hover { background: #23355c; }
+
+/* ── KPI stat cards (v34 one-line) ────────────────────────────────────────── */
+.hr-emp-master .em-stat-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0 0 18px; align-items: stretch; }
+@media (min-width: 721px)  { .hr-emp-master .em-stat-grid { grid-template-columns: repeat(2, minmax(280px, 1fr)); } }
+@media (min-width: 1180px) { .hr-emp-master .em-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.hr-emp-master .em-stat-card { min-height: 244px; padding: 16px; border: 1px solid #d9e4f2; border-radius: 16px; background: #fff; display: flex; flex-direction: column; gap: 12px; }
+.hr-emp-master .em-stat-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
+.hr-emp-master .em-stat-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hr-emp-master .em-stat-title h3 { margin: 0; font-size: 13px; line-height: 1.2; color: #0f172a; font-weight: var(--font-weight-bold, 700); letter-spacing: -.01em; white-space: normal; }
+.hr-emp-master .em-stat-icon { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 11px; display: grid; place-items: center; color: #0b5bd3; background: #eef5ff; border: 1px solid #cfe0f6; }
+.hr-emp-master .em-stat-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.hr-emp-master .em-stat-card-green .em-stat-icon { background: #ecfdf5; color: #15803d; border-color: #bbf7d0; }
+.hr-emp-master .em-stat-card-amber .em-stat-icon { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.hr-emp-master .em-stat-card-red   .em-stat-icon { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.hr-emp-master .em-stat-state { background: #f6f8fc; color: #334155; border: 1px solid #dbe5f2; border-radius: 999px; padding: 4px 9px; font-size: 10px; font-weight: var(--font-weight-semibold, 600); white-space: nowrap; }
+
+.hr-emp-master .em-stat-main { display: grid; grid-template-columns: 1fr; gap: 10px; align-items: stretch; flex: 1; }
+.hr-emp-master .em-stat-metric { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; }
+.hr-emp-master .em-stat-value { font-size: 34px; line-height: .9; color: #0b172a; font-weight: var(--font-weight-bold, 700); letter-spacing: -.055em; margin: 0; }
+.hr-emp-master .em-stat-label { color: #64748b; font-size: 11px; line-height: 1.28; margin: 0; }
+.hr-emp-master .em-stat-bottom { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hr-emp-master .em-stat-chip { background: #f7f9fd; border: 1px solid #e2eaf4; border-radius: 10px; padding: 7px 8px; min-width: 0; }
+.hr-emp-master .em-stat-chip strong { color: #0f172a; display: block; font-size: 13px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .em-stat-chip span { display: block; margin-top: 2px; color: #64748b; font-size: 10px; font-weight: var(--font-weight-medium, 500); }
+
+.hr-emp-master .em-stat-chart { height: 116px; min-height: 116px; border: 1px solid #edf2f8; background: #fbfdff; border-radius: 12px; padding: 8px; overflow: hidden; }
+.hr-emp-master .em-stat-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hr-emp-master .em-line-chart text { font-size: 11px; fill: #64748b; font-weight: var(--font-weight-bold); }
+
+/* Change-mix mini bars */
+.hr-emp-master .em-mini-bars { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.hr-emp-master .em-mini-bar-row { display: grid; grid-template-columns: 74px minmax(0, 1fr) 22px; align-items: center; gap: 8px; color: #334155; font-size: 10px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .em-mini-bar-row i { display: block; height: 9px; background: #e8eef7; border-radius: 999px; overflow: hidden; }
+.hr-emp-master .em-mini-bar-row i b { display: block; height: 100%; background: #0b5bd3; border-radius: 999px; }
+.hr-emp-master .em-mini-bar-row strong { color: #0f172a; font-size: 12px; text-align: right; }
+
+/* Readiness ring + list */
+.hr-emp-master .em-readiness-panel { display: grid; grid-template-columns: 105px minmax(0, 1fr); gap: 6px; align-items: center; }
+.hr-emp-master .ring-score { fill: #0f172a; font-size: 24px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .ring-sub { fill: #64748b; font-size: 11px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .em-readiness-list { display: grid; gap: 6px; }
+.hr-emp-master .em-readiness-list div { border: 1px solid #e2eaf4; border-radius: 10px; padding: 5px 8px; background: #fff; }
+.hr-emp-master .em-readiness-list b { display: block; color: #0f172a; font-size: 13px; line-height: 1; }
+.hr-emp-master .em-readiness-list span { display: block; color: #64748b; font-size: 10px; margin-top: 3px; font-weight: var(--font-weight-medium, 500); }
+
+/* Exception rows */
+.hr-emp-master .em-exception-chart { display: flex; flex-direction: column; justify-content: center; gap: 9px; }
+.hr-emp-master .exception-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) 20px; gap: 8px; align-items: center; font-size: 10px; font-weight: var(--font-weight-semibold, 600); color: #334155; }
+.hr-emp-master .exception-row i { height: 10px; border-radius: 999px; background: #e8eef7; overflow: hidden; display: block; }
+.hr-emp-master .exception-row i b { display: block; height: 100%; border-radius: 999px; }
+.hr-emp-master .exception-row i.red b { background: #dc2626; }
+.hr-emp-master .exception-row i.amber b { background: #f59e0b; }
+.hr-emp-master .exception-row i.blue b { background: #0b5bd3; }
+.hr-emp-master .exception-row strong { text-align: right; color: #0f172a; }
+
+/* ── Toolbar ──────────────────────────────────────────────────────────────── */
+/* Flex-wrap so fields shrink/reflow as the table widget is resized. New Employee
+   (last child) stays fixed; search + filters flex and wrap to a new row when narrow. */
+.hr-emp-master .employee-toolbar { background: #fbfdff; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0; position: relative; }
+.hr-emp-master .employee-toolbar > .dropdown-wrap { flex: 0 1 auto; min-width: 130px; max-width: 220px; }
+.hr-emp-master .employee-toolbar > .dropdown-wrap:last-child { flex: 0 0 auto; min-width: 0; max-width: none; }
+.hr-emp-master .table-search { position: relative; flex: 1 1 240px; min-width: 160px; }
+.hr-emp-master .table-search .magnify { position: absolute; left: 14px; top: 12px; color: #718096; font-size: 15px; pointer-events: none; }
+.hr-emp-master .table-search input { width: 100%; height: 46px; border: 1px solid var(--line-dark); border-radius: 11px; padding: 0 14px 0 40px; background: #fff; outline: none; color: #334155; }
+
+.hr-emp-master .dropdown-wrap { position: relative; min-width: 0; }
+.hr-emp-master .multi-select { height: 46px; width: 100%; border: 1px solid var(--line-dark); background: #fff; color: #1f2937; border-radius: 11px; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.hr-emp-master .multi-select-text { min-width: 0; display: grid; gap: 3px; }
+.hr-emp-master .multi-select-label { color: #64748b; font-size: 10px; font-weight: var(--font-weight-semibold, 600); line-height: 1; text-transform: uppercase; letter-spacing: .04em; }
+.hr-emp-master .multi-select-value { color: #111827; font-size: 12px; font-weight: var(--font-weight-bold, 700); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-emp-master .multi-select-count { height: 18px; min-width: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center; background: #eaf2ff; color: #0757df; font-size: 10px; font-weight: var(--font-weight-bold, 700); }
+
+.hr-emp-master .advanced-filter-btn { height: 46px; width: 100%; border: 1px solid #fff; background: #1b2d54; color: #fff; border-radius: 11px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .advanced-filter-btn .left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.hr-emp-master .advanced-filter-btn small { display: block; color: rgba(255,255,255,.7); font-size: 10px; font-weight: var(--font-weight-bold, 700); text-transform: uppercase; letter-spacing: .04em; line-height: 1; margin-bottom: 3px; text-align: left; }
+.hr-emp-master .advanced-filter-btn strong { display: block; color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-emp-master .advanced-filter-btn .sliders { width: 28px; height: 28px; border-radius: 8px; color: #fff; display: grid; place-items: center; flex: none; }
+.hr-emp-master .advanced-filter-btn .adv-right { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.hr-emp-master .advanced-filter-btn .adv-caret { width: 25px; height: 25px; border-radius: 8px; background: #647394; color: #fff; display: grid; place-items: center; font-size: 11px; flex: none; }
+/* New Employee button matches the advanced-filter height (46px) in the toolbar */
+.hr-emp-master .employee-toolbar .hse-btn { height: 46px; border-radius: 11px; }
+.hr-emp-master .advanced-count { height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px; background: #0757df; color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: var(--font-weight-bold, 700); }
+
+/* ── Dropdown menus ───────────────────────────────────────────────────────── */
+/* `display: block` is REQUIRED — `.dropdown-menu` collides with Bootstrap's
+   `.dropdown-menu { display: none }` (loaded in @layer bootstrap); without an
+   explicit display the menu inherits that and renders invisible. */
+.hr-emp-master .dropdown-menu { display: block; position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 236px; max-width: 320px; background: #fff; border: 1px solid var(--line-dark); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15, 23, 42, .12); }
+.hr-emp-master .dropdown-menu.right { left: auto; right: 0; }
+.hr-emp-master .dropdown-head { padding: 12px 12px 8px; border-bottom: 1px solid var(--line); }
+.hr-emp-master .dropdown-head strong { display: block; font-size: 13px; color: #0f172a; }
+.hr-emp-master .dropdown-head span { display: block; font-size: 11px; color: #64748b; margin-top: 3px; }
+.hr-emp-master .dropdown-list { max-height: 278px; overflow: auto; padding: 8px; }
+.hr-emp-master .check-row, .hr-emp-master .menu-row { width: 100%; border: 0; background: #fff; min-height: 36px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; text-align: left; color: #1e293b; font-size: 13px; }
+.hr-emp-master .check-row:hover, .hr-emp-master .menu-row:hover { background: #f4f8ff; }
+.hr-emp-master .check-box { width: 17px; height: 17px; border-radius: 4px; border: 1px solid #b9c6d8; display: grid; place-items: center; flex: none; color: #fff; font-size: 12px; }
+.hr-emp-master .check-row.active .check-box { background: #0757df; border-color: #0757df; }
+.hr-emp-master .menu-row .menu-ico { width: 25px; height: 25px; border-radius: 7px; background: #f1f5f9; display: grid; place-items: center; flex: none; color: #334155; font-size: 12px; }
+.hr-emp-master .menu-row.danger { color: #b91c1c; }
+.hr-emp-master .menu-row.danger .menu-ico { background: #fee2e2; color: #dc2626; }
+.hr-emp-master .dropdown-foot { border-top: 1px solid var(--line); padding: 9px; display: flex; justify-content: space-between; gap: 8px; }
+.hr-emp-master .dropdown-foot button { height: 32px; border-radius: 8px; border: 1px solid var(--line-dark); background: #fff; padding: 0 11px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .dropdown-foot .apply { background: #0757df; border-color: #0757df; color: #fff; }
+
+/* Advanced filters — tabbed panel */
+.hr-emp-master .dropdown-menu.advanced-menu { width: min(780px, calc(100vw - 96px)); max-width: none; padding: 0; border-radius: 16px; }
+.hr-emp-master .advanced-panel.tabbed { padding: 0; display: grid; grid-template-columns: 178px minmax(0, 1fr); gap: 0; min-height: 360px; background: #fff; }
+.hr-emp-master .advanced-tabs { border-right: 1px solid var(--line); background: #f8fbff; padding: 12px; display: grid; align-content: start; gap: 8px; }
+.hr-emp-master .advanced-tab { width: 100%; min-height: 42px; border: 0; background: transparent; color: #475569; border-radius: 10px; padding: 0 12px; text-align: left; font-size: 12px; font-weight: var(--font-weight-bold, 700); display: flex; align-items: center; justify-content: space-between; }
+.hr-emp-master .advanced-tab:hover { background: #edf5ff; color: #0f172a; }
+.hr-emp-master .advanced-tab.active { background: #08345f; color: #fff; }
+.hr-emp-master .advanced-tab-body { padding: 16px; min-width: 0; overflow: auto; max-height: 360px; }
+.hr-emp-master .advanced-tab-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.hr-emp-master .advanced-tab-title strong { display: block; color: #0f172a; font-size: 15px; margin-bottom: 4px; }
+.hr-emp-master .advanced-tab-title span:not(.setting-pill) { display: block; color: #64748b; font-size: 12px; line-height: 1.45; }
+.hr-emp-master .filter-tab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.hr-emp-master .advanced-section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; padding-bottom: 7px; border-bottom: 1px solid #e8eef7; }
+.hr-emp-master .advanced-section-title strong { font-size: 12px; color: #0f172a; }
+.hr-emp-master .advanced-section-title span { color: #64748b; font-size: 11px; }
+.hr-emp-master .compact-checks { display: grid; gap: 5px; max-height: 188px; overflow: auto; padding-right: 3px; }
+.hr-emp-master .compact-checks .check-row { min-height: 31px; padding: 6px 7px; font-size: 12px; }
+.hr-emp-master .advanced-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 16px; background: #fbfdff; }
+.hr-emp-master .setting-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 22px; border: 1px solid #dbeafe; background: #eff6ff; color: #0757df; border-radius: 999px; padding: 0 9px; font-size: 10px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+
+/* Active filter chips */
+.hr-emp-master .active-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.hr-emp-master .active-filter-bar strong { font-size: 12px; color: #475569; margin-right: 2px; }
+.hr-emp-master .chip-btn { height: 28px; border: 1px solid #cfe0ff; border-radius: 999px; background: #f4f8ff; color: #0757df; padding: 0 10px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+
+/* ── Register table ───────────────────────────────────────────────────────── */
+/* Register table widget — fills its gridstack cell; toolbar + pagination fixed,
+   the table body scrolls internally so the widget is resizable. */
+.hr-emp-master .table-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.hr-emp-master .table-scroll { flex: 1; min-height: 0; overflow: auto; }
+
+/* ── Insight widget panels (widget board) ─────────────────────────────────────── */
+.hr-emp-master .hrw-dept { display: flex; gap: 14px; align-items: center; height: 100%; }
+.hr-emp-master .hrw-pie { width: 100px; height: 100px; border-radius: 50%; flex: none; position: relative; }
+.hr-emp-master .hrw-pie::after { content: ""; position: absolute; inset: 26px; background: #fff; border-radius: 50%; }
+.hr-emp-master .hrw-legend { display: grid; gap: 7px; min-width: 0; }
+.hr-emp-master .hrw-legend div { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 7px; font-size: 11px; color: #4e5d73; min-width: 0; }
+.hr-emp-master .hrw-legend span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-emp-master .hrw-legend b { color: #1f2a3d; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+.hr-emp-master .hrw-dot { width: 8px; height: 8px; border-radius: 50%; }
+.hr-emp-master .hrw-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; }
+.hr-emp-master .hrw-demo-tile { border: 1px solid var(--line-2, #edf1f6); border-radius: 8px; padding: 10px; }
+.hr-emp-master .hrw-demo-tile small { display: block; font-size: 10px; color: #536177; margin-bottom: 6px; }
+.hr-emp-master .hrw-demo-tile strong { font-size: 18px; color: #061225; font-weight: var(--font-weight-bold, 700); letter-spacing: -.02em; }
+/* table-layout: fixed so columns never recompute width from content — the cold
+   skeleton and real rows share identical geometry (no layout jump). Row height is
+   pinned so skeleton rows (--register-row-height) match real rows exactly. */
+.hr-emp-master table { width: 100%; min-width: 1180px; border-collapse: collapse; table-layout: fixed; --register-row-height: 58px; }
+.hr-emp-master th { height: 46px; text-align: left; font-size: 11px; color: #0f172a; font-weight: var(--font-weight-bold, 700); border-bottom: 1px solid var(--line); padding: 0 10px; background: #fbfdff; }
+.hr-emp-master td { height: 58px; border-bottom: 1px solid var(--line); padding: 0 10px; font-size: 12px; color: #334155; vertical-align: middle; }
+.hr-emp-master tr:last-child td { border-bottom: none; }
+.hr-emp-master tr.employee-row { cursor: pointer; transition: background .16s ease; }
+.hr-emp-master tr.employee-row:hover { background: #f8fbff; }
+.hr-emp-master tr.employee-row.selected { background: #f2f7ff; }
+.hr-emp-master table th:nth-child(1) { width: 22%; }
+.hr-emp-master table th:nth-child(2) { width: 10%; }
+.hr-emp-master table th:nth-child(3) { width: 11%; }
+.hr-emp-master table th:nth-child(4) { width: 11%; }
+.hr-emp-master table th:nth-child(5) { width: 10%; }
+.hr-emp-master table th:nth-child(6) { width: 10%; }
+.hr-emp-master table th:nth-child(7) { width: 9%; }
+.hr-emp-master table th:nth-child(8) { width: 9%; }
+.hr-emp-master table th:nth-child(9) { width: 8%; }
+.hr-emp-master table th:nth-child(10), .hr-emp-master table td:nth-child(10) { width: 72px; text-align: center; }
+
+.hr-emp-master .employee-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hr-emp-master .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; flex: none; font-weight: var(--font-weight-semibold, 600); font-size: 12px; color: #0b55d8; background: #e8f1ff; border: 1px solid #cfe0ff; }
+.hr-emp-master .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hr-emp-master .emp-name { font-weight: var(--font-weight-bold, 700); color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.hr-emp-master .emp-email { color: #64748b; font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-emp-master .supervisor-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.hr-emp-master .tiny-avatar { width: 20px; height: 20px; border-radius: 50%; background: #eaf2ff; display: inline-grid; place-items: center; flex: none; overflow: hidden; border: 1px solid #dbeafe; font-size: 9px; font-weight: var(--font-weight-semibold, 600); color: #0b55d8; }
+.hr-emp-master .tiny-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.hr-emp-master .pill { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+.hr-emp-master .pill.green  { background: var(--green-bg);  color: #15803d; }
+.hr-emp-master .pill.amber  { background: var(--amber-bg);  color: #b45309; }
+.hr-emp-master .pill.red    { background: var(--red-bg);    color: #dc2626; }
+.hr-emp-master .pill.purple { background: var(--purple-bg); color: #7c3aed; }
+.hr-emp-master .pill.blue   { background: #dbeafe; color: #1d4ed8; }
+.hr-emp-master .pill.gray   { background: #eef2f7; color: #334155; }
+
+.hr-emp-master .kebab { position: relative; text-align: center; }
+.hr-emp-master .kebab-btn { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; color: #0f172a; margin: auto; }
+.hr-emp-master .kebab-btn:hover { background: #f1f5f9; }
+
+/* ── Pagination ───────────────────────────────────────────────────────────── */
+.hr-emp-master .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 0; padding: 10px 14px; border-top: 1px solid var(--line); color: #475569; font-size: 13px; flex: none; }
+.hr-emp-master .pages { display: flex; gap: 10px; align-items: center; }
+.hr-emp-master .page-btn { width: 34px; height: 34px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; display: grid; place-items: center; font-weight: var(--font-weight-semibold, 600); color: #334155; }
+.hr-emp-master .page-btn.active { background: #0757df; color: #fff; border-color: #0757df; }
+.hr-emp-master .page-btn:disabled { opacity: .45; cursor: default; }
+.hr-emp-master .rows-select { display: flex; align-items: center; gap: 10px; }
+.hr-emp-master .rows-select select { height: 34px; border: 1px solid var(--line-dark); border-radius: 8px; padding: 0 28px 0 12px; background: #fff; }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+/* width/max-width reset — `.toast` collides with Bootstrap's `.toast` (350px). */
+.hr-emp-master .toast { width: auto; max-width: none; position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 120; background: #0f172a; color: #fff; border-radius: 999px; padding: 10px 16px; font-size: 13px; font-weight: var(--font-weight-semibold, 600); opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+.hr-emp-master .toast.show { opacity: 1; }
+
+/* ── States ───────────────────────────────────────────────────────────────── */
+.hr-emp-master .em-empty { padding: 22px; text-align: center; color: #64748b; font-size: 12px; font-weight: var(--font-weight-bold); }
+.hr-emp-master .em-chart-empty { display: grid; place-items: center; height: 100%; color: #94a3b8; font-size: 11px; font-weight: var(--font-weight-bold); }
+
+/* ── Profile drawer ───────────────────────────────────────────────────────── */
+.hr-emp-master .drawer { position: fixed; top: 0; right: 0; z-index: 80; width: min(500px, calc(100vw - 24px)); height: 100vh; background: #fff; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; overflow: hidden; transform: translateX(calc(100% + 18px)); opacity: 0; pointer-events: none; transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; box-shadow: -18px 0 38px rgba(15,23,42,.12); }
+.hr-emp-master .drawer.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.hr-emp-master .drawer-top { min-height: 64px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.hr-emp-master .drawer-title { font-size: 20px; font-weight: var(--font-weight-bold, 700); color: #111827; letter-spacing: -.02em; }
+.hr-emp-master .drawer-icons { display: flex; gap: 6px; align-items: center; position: relative; }
+.hr-emp-master .drawer-icon-btn { width: 32px; height: 32px; border: 0; background: transparent; border-radius: 8px; display: grid; place-items: center; color: #0f172a; font-size: 22px; line-height: 1; }
+.hr-emp-master .drawer-icon-btn:hover { background: #f1f5f9; }
+.hr-emp-master .drawer-scroll { overflow: auto; padding: 20px 18px 24px; background: var(--bg, #f7f9fc); }
+
+.hr-emp-master .profile-head { display: flex; align-items: center; gap: 16px; }
+.hr-emp-master .profile-photo { width: 76px; height: 76px; border-radius: 50%; background: #eaf2ff; border: 2px solid #dbeafe; flex: none; overflow: hidden; display: grid; place-items: center; }
+.hr-emp-master .profile-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hr-emp-master .profile-photo-initials { font-weight: var(--font-weight-bold, 700); color: #0b55d8; font-size: 22px; }
+.hr-emp-master .profile-name { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.hr-emp-master .profile-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hr-emp-master .profile-name h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.hr-emp-master .employee-ref { color: #2563eb; font-size: 13px; font-weight: var(--font-weight-semibold, 600); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hr-emp-master .profile-meta { font-size: 13px; color: #475569; display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.hr-emp-master .profile-meta span { color: #cbd5e1; }
+
+.hr-emp-master .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 18px 0; }
+.hr-emp-master .profile-stat { padding: 12px 10px; border-right: 1px solid var(--line); min-height: 56px; }
+.hr-emp-master .profile-stat:last-child { border-right: none; }
+.hr-emp-master .profile-stat small { display: block; color: #64748b; font-weight: var(--font-weight-semibold, 600); margin-bottom: 8px; font-size: 11px; }
+.hr-emp-master .stat-line { display: flex; align-items: center; gap: 8px; color: #0f172a; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+
+.hr-emp-master .workflow-mini-summary { width: 100%; border: 1px solid var(--line-dark); background: #f8fbff; border-radius: 10px; padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; }
+.hr-emp-master .workflow-mini-summary:hover { background: #eef5ff; }
+.hr-emp-master .workflow-mini-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hr-emp-master .workflow-mini-icon { width: 24px; height: 24px; border-radius: 7px; background: #e8f1ff; color: #0b55d8; display: grid; place-items: center; flex: none; font-size: 11px; }
+.hr-emp-master .workflow-mini-copy { display: grid; min-width: 0; }
+.hr-emp-master .workflow-mini-copy strong { font-size: 12px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .workflow-mini-copy em { font-style: normal; font-size: 10px; color: #64748b; }
+.hr-emp-master .workflow-mini-action { font-size: 11px; font-weight: var(--font-weight-bold, 700); color: #0757df; white-space: nowrap; }
+
+.hr-emp-master .drawer-actions { display: grid; grid-template-columns: 1fr 1fr .9fr; gap: 10px; margin-bottom: 16px; position: relative; }
+.hr-emp-master .drawer-actions .primary-btn, .hr-emp-master .drawer-actions .secondary-btn { width: 100%; justify-content: center; }
+.hr-emp-master .drawer-more-button { display: grid; place-items: center; }
+.hr-emp-master .more-ellipsis { letter-spacing: 1px; font-weight: var(--font-weight-bold, 700); }
+
+.hr-emp-master .drawer-tabs { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); margin: 0 -18px 18px; padding: 0 18px; position: relative; }
+.hr-emp-master .drawer-tab-list { display: flex; align-items: center; gap: 16px; min-width: 0; overflow-x: auto; }
+.hr-emp-master .tab { position: relative; height: 42px; display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: var(--font-weight-semibold, 600); color: #526178; white-space: nowrap; border: 0; background: transparent; padding: 0; }
+.hr-emp-master .tab.active { color: #0757df; }
+.hr-emp-master .tab.active::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: #0757df; }
+.hr-emp-master .tab-more-caret { font-size: 12px; opacity: .65; }
+
+.hr-emp-master .info-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 14px; padding: 16px; }
+.hr-emp-master .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.hr-emp-master .card-head h4 { margin: 0; font-size: 14px; letter-spacing: -.01em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.hr-emp-master .small-outline { height: 32px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); color: #334155; }
+.hr-emp-master .small-outline:hover { background: #f8fbff; }
+.hr-emp-master .field-list { display: grid; gap: 12px; }
+.hr-emp-master .field-row { display: grid; grid-template-columns: 132px 1fr; gap: 12px; align-items: center; font-size: 12px; }
+.hr-emp-master .field-label { display: flex; align-items: center; gap: 8px; color: #64748b; font-weight: var(--font-weight-medium, 500); }
+.hr-emp-master .field-value { color: #334155; font-weight: var(--font-weight-semibold, 600); }
+
+.hr-emp-master .mini-table { width: 100%; min-width: 0; border-collapse: collapse; }
+.hr-emp-master .mini-table th { height: 34px; font-size: 10px; background: #fbfdff; padding: 0 8px; }
+.hr-emp-master .mini-table td { height: 44px; font-size: 12px; padding: 0 8px; }
+
+.hr-emp-master .risk-card { display: flex; gap: 12px; align-items: center; }
+.hr-emp-master .shield { width: 38px; height: 38px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: grid; place-items: center; font-size: 20px; font-weight: var(--font-weight-bold, 700); flex: none; }
+.hr-emp-master .risk-card-alert .shield { background: #fee2e2; color: #dc2626; }
+.hr-emp-master .risk-card strong { display: block; font-size: 13px; margin-bottom: 3px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .risk-card span { color: #16a34a; font-size: 11px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .risk-card-alert span { color: #dc2626; }
+.hr-emp-master .risk-card p { margin: 3px 0 0; color: #64748b; font-size: 12px; }
+
+.hr-emp-master .training-row { display: grid; grid-template-columns: 1.3fr repeat(4, 1fr); gap: 6px; align-items: center; }
+.hr-emp-master .training-cell small { display: block; color: #64748b; font-size: 10px; margin-bottom: 7px; }
+.hr-emp-master .training-cell strong { font-size: 17px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+
+.hr-emp-master .activity-list { display: grid; gap: 14px; }
+.hr-emp-master .activity-item { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start; }
+.hr-emp-master .activity-icon { color: #16a34a; font-size: 14px; padding-top: 1px; }
+.hr-emp-master .activity-title { color: #0f172a; font-size: 12px; font-weight: var(--font-weight-bold, 700); margin-bottom: 3px; }
+.hr-emp-master .activity-desc { color: #64748b; font-size: 11px; }
+.hr-emp-master .activity-time { color: #64748b; font-size: 11px; white-space: nowrap; }
+
+.hr-emp-master .statutory-hero-card { border-color: #bfdbfe; background: linear-gradient(180deg, #fff 0%, #f8fbff 100%); }
+.hr-emp-master .statutory-status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.hr-emp-master .statutory-ready-card { border: 1px solid #dbeafe; border-radius: 14px; padding: 13px; background: #fff; }
+.hr-emp-master .statutory-ready-card small { display: block; color: #64748b; font-size: 11px; font-weight: var(--font-weight-semibold, 600); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.hr-emp-master .statutory-ready-card strong { display: block; color: #0f172a; font-size: 17px; margin-bottom: 4px; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .statutory-ready-card span { color: #64748b; font-size: 12px; line-height: 1.35; }
+.hr-emp-master .summary-list { display: grid; gap: 8px; }
+
+/* ── Modals + wizards ─────────────────────────────────────────────────────── */
+/* Action-dialog chrome shares the v36 modal family with the wizards (.ui-wz-*):
+   same backdrop, border (#d9e4f2), 18px/900 head, light-blue body (#f8fbff),
+   white foot — so dialogs and wizards read as one design system. */
+.hr-emp-master .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, .34); z-index: 90; display: grid; place-items: center; padding: 22px; }
+/* `position: relative; height: auto` are REQUIRED — `.modal` collides with
+   Bootstrap's `.modal { position: fixed; top:0; left:0; height:100% }`; without
+   them the dialog is pulled to the viewport's top-left instead of being centred
+   by the backdrop's grid. */
+.hr-emp-master .modal { position: relative; top: auto; left: auto; height: auto; width: min(760px, 100%); background: #fff; border-radius: 16px; border: 1px solid #d9e4f2; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 44px); }
+.hr-emp-master .modal.lg { width: min(1040px, 100%); }
+.hr-emp-master .modal.sm { width: min(580px, 100%); }
+.hr-emp-master .modal-head { min-height: 62px; border-bottom: 1px solid #e5edf6; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; flex: none; background: #fff; }
+.hr-emp-master .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.02em; font-weight: var(--font-weight-bold, 700); color: #0f172a; }
+.hr-emp-master .modal-close { background: #fff; width: 34px; height: 34px; border-radius: 8px; font-size: 22px; color: #334155; border: 1px solid #dbe6f4; }
+.hr-emp-master .modal-close:hover { background: #eef2f7; }
+.hr-emp-master .modal-body { padding: 18px; overflow: auto; min-height: 0; background: #f8fbff; }
+.hr-emp-master .modal-body.wizard-body { padding: 0; overflow: hidden; display: flex; background: #fff; }
+.hr-emp-master .modal-foot { padding: 14px 18px; border-top: 1px solid #e5edf6; display: flex; align-items: center; justify-content: flex-end; gap: 10px; background: #fff; flex: none; }
+.hr-emp-master .modal-foot .left-note { margin-right: auto; color: #64748b; font-size: 12px; }
+
+.hr-emp-master .primary-btn:disabled { opacity: .6; cursor: default; }
+
+.hr-emp-master .wizard-shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); width: 100%; min-height: 480px; max-height: calc(100vh - 150px); overflow: hidden; }
+.hr-emp-master .wizard-rail { background: linear-gradient(180deg, #08244d 0%, #0b3f85 55%, #0b5bd3 100%); color: #fff; padding: 18px 14px; overflow: auto; }
+.hr-emp-master .wizard-rail-head { display: flex; align-items: center; gap: 11px; padding-bottom: 13px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 12px; }
+.hr-emp-master .wizard-head-dot { width: 12px; height: 12px; border-radius: 50%; background: #ffd43b; flex: none; }
+.hr-emp-master .wizard-rail-head strong { display: block; font-size: 14px; }
+.hr-emp-master .wizard-rail-head span { display: block; font-size: 11px; color: rgba(255,255,255,.72); margin-top: 2px; }
+.hr-emp-master .wizard-rail-menu { display: grid; gap: 8px; }
+.hr-emp-master .wizard-step { min-height: 50px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07); color: rgba(255,255,255,.82); border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 11px; text-align: left; }
+.hr-emp-master .wizard-step.active, .hr-emp-master .wizard-step:hover { background: rgba(255,255,255,.16); color: #fff; border-color: rgba(255,255,255,.3); }
+.hr-emp-master .wizard-step-ico { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.12); display: grid; place-items: center; flex: none; color: #fff; font-size: 12px; }
+.hr-emp-master .wizard-step strong { display: block; font-size: 12px; color: #fff; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .wizard-step span { display: block; font-size: 10px; color: rgba(255,255,255,.7); margin-top: 2px; }
+.hr-emp-master .wizard-content { background: #fff; padding: 18px; overflow: auto; display: grid; gap: 14px; align-content: start; }
+
+.hr-emp-master .form-section { border: 1px solid var(--line); border-radius: 13px; padding: 16px; background: #fff; display: grid; gap: 14px; }
+.hr-emp-master .form-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 11px; }
+.hr-emp-master .form-section-head h4 { margin: 0; font-size: 14px; color: #0f172a; font-weight: var(--font-weight-bold, 700); }
+.hr-emp-master .form-section-head p { margin: 4px 0 0; color: #64748b; font-size: 12px; line-height: 1.4; }
+.hr-emp-master .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.hr-emp-master .form-field { display: grid; gap: 7px; align-content: start; }
+.hr-emp-master .form-field.full { grid-column: 1 / -1; }
+.hr-emp-master .form-field label { color: #334155; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .form-field input, .hr-emp-master .form-field select, .hr-emp-master .form-field textarea { min-height: 40px; border: 1px solid var(--line-dark); border-radius: 9px; padding: 9px 11px; outline: none; background: #fff; color: #0f172a; }
+.hr-emp-master .form-field textarea { min-height: 92px; resize: vertical; }
+.hr-emp-master .field-help { color: #64748b; font-size: 11px; line-height: 1.35; }
+.hr-emp-master .checkbox-row { min-height: 34px; display: flex; align-items: center; gap: 9px; color: #334155; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+.hr-emp-master .warning-card { border: 1px solid #fde68a; background: #fffbeb; color: #92400e; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
+.hr-emp-master .info-strip { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.45; }
+.hr-emp-master .summary-list { display: grid; gap: 8px; }
+.hr-emp-master .summary-item { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed #dbe3ef; padding-bottom: 7px; font-size: 12px; }
+.hr-emp-master .summary-item span { color: #64748b; }
+.hr-emp-master .summary-item strong { color: #0f172a; text-align: right; font-weight: var(--font-weight-bold, 700); }
+@media (max-width: 820px) { .hr-emp-master .wizard-shell { grid-template-columns: 1fr; max-height: none; } .hr-emp-master .form-grid { grid-template-columns: 1fr; } }
+
+/* ─── Onboarding Overview cases table ──────────────────────────────────────────
+   The cases table is wrapped in `.hr-emp-master` (display:contents) so it reuses the
+   Employee Master register styling verbatim — card, toolbar, table, pills, pagination,
+   AND the tabbed advanced-filter dropdown. Only the column count differs (7, not 10),
+   so we override just the widths / min-width (higher specificity wins) and add the two
+   onboarding-only controls (status select, advanced-filter overlay). */
+.hr-onboarding-overview .table-card table { min-width: 820px; }
+.hr-onboarding-overview .table-card table th:nth-child(1) { width: 26%; }
+.hr-onboarding-overview .table-card table th:nth-child(2) { width: 16%; }
+.hr-onboarding-overview .table-card table th:nth-child(3) { width: 16%; }
+.hr-onboarding-overview .table-card table th:nth-child(4) { width: 12%; }
+.hr-onboarding-overview .table-card table th:nth-child(5) { width: 14%; }
+.hr-onboarding-overview .table-card table th:nth-child(6),
+.hr-onboarding-overview .table-card table td:nth-child(6) { width: 8%; text-align: center; }
+.hr-onboarding-overview .table-card table th:nth-child(7) { width: 8%; }
+
+/* status select — matches the search-pill height/radius */
+.hr-onboarding-overview .onb-status-select { height: 46px; border: 1px solid var(--line-dark, #d8e0ec); border-radius: 11px; padding: 0 32px 0 14px; background: #fff; color: #334155; font-weight: var(--font-weight-semibold, 600); }
+
+/* advanced-filter click-away overlay (sits below the menu, above the page) */
+.hr-onboarding-overview .onb-adv-overlay { position: fixed; inset: 0; z-index: 59; }
+
+}
+/* src/ui/widgets/onboardingWidgets.css
+ *
+ * Faithful port of the OnboardPro overview card design
+ * (onboarding_overview_exact_replica_no_sidebar_fluid_v3.html), ADAPTED so each panel FILLS its
+ * stack-grid board cell (the mockup's fixed px heights / 5-col grid become height:100% widgets).
+ * Class names mirror the mockup (`.obw-kpi`, `.obw-spark`, …) and are scoped under `.obw` so they
+ * can't bleed into the rest of the app. Used by registry.hrOnboarding.tsx.
+ */
+.obw {
+  --ob-line: #dfe7f2; --ob-line2: #edf2f8; --ob-text: #10264a; --ob-ink: #06183a; --ob-muted: #627394;
+  --ob-blue: #0b63f6; --ob-green: #0aa36c; --ob-orange: #f59e0b; --ob-red: #f04444; --ob-purple: #6746f2;
+  width: 100%; height: 100%; box-sizing: border-box;
+  background: #fff; border: 1px solid var(--ob-line); border-radius: 11px;
+  box-shadow: 0 2px 8px rgba(16, 35, 68, .04); overflow: hidden;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--ob-text); display: flex; flex-direction: column;
+  container-type: inline-size; /* enables cqw units on the KPI number so it scales with the cell width */
+}
+.obw * { box-sizing: border-box; }
+
+/* ── KPI card — mirrors mockup `.kpi`: [main: cap/number/delta] [spark] ─────────── */
+.obw-kpi { flex: 1; min-height: 0; padding: clamp(13px, 3.2%, 18px) clamp(13px, 3.4%, 17px);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.obw-kpi-main { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.obw-cap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  font-size: 13px; font-weight: 800; color: #0d2145; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obw-kpi-icon { width: 34px; height: 34px; flex: none; border-radius: 8px; display: grid; place-items: center;
+  background: #edf4ff; color: #0b63f6; font-size: 15px; }
+.obw-kpi-icon.purple { background: #f1edff; color: #6d49fa; } .obw-kpi-icon.red { background: #fff0f0; color: #f04444; }
+.obw-kpi-icon.green { background: #eafaf3; color: #10a065; } .obw-kpi-icon.orange { background: #fff5e6; color: #d97706; }
+.obw-num { margin: 0; font-size: clamp(22px, 6.5cqw, 30px); line-height: 1; color: var(--ob-ink); font-weight: 880; letter-spacing: -.04em; }
+.obw-num.word { font-size: clamp(18px, 5cqw, 23px); color: var(--ob-green); }
+.obw-delta { margin-top: 8px; font-size: 11px; color: var(--ob-green); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obw-delta.red { color: var(--ob-red); }
+.obw-delta .vs { color: #6a7c95; font-weight: 600; }
+/* spark / ring / growth on the right */
+.obw-spark { width: clamp(72px, 30%, 104px); height: 52px; align-self: center; }
+.obw-spark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.obw-ring { width: clamp(56px, 22%, 70px); aspect-ratio: 1; align-self: center; margin-left: auto; }
+.obw-ring svg { width: 100%; height: 100%; display: block; }
+.obw-growth { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 52px; align-self: center; }
+.obw-growth i { width: 8px; background: #14a06a; border-radius: 3px 3px 0 0; display: block; }
+
+/* ── generic panel (header + body) — mirrors `.panel-title` / table panels ──────── */
+.obw-pt { height: 43px; flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; border-bottom: 1px solid var(--ob-line2); }
+.obw-pt h3 { margin: 0; font-size: 14px; font-weight: 850; color: var(--ob-text); letter-spacing: -.01em;
+  display: flex; align-items: center; gap: 7px; }
+.obw-pt .obw-count { height: 19px; padding: 0 7px; border-radius: 5px; background: #eef2f6; color: #536179;
+  font-size: 10px; font-weight: 850; display: inline-flex; align-items: center; }
+.obw-pb { flex: 1; min-height: 0; overflow: auto; }
+
+/* work-queue rows — mirrors `.qrow` */
+.obw-q { padding: 0 16px 10px; }
+.obw-qtop, .obw-qrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) 34px 96px; align-items: center; }
+.obw-qtop { height: 30px; color: #657694; font-size: 10px; font-weight: 800; border-bottom: 1px solid var(--ob-line2); }
+.obw-qrow { height: 42px; font-size: 11px; color: #17294e; font-weight: 800; border-bottom: 1px solid var(--ob-line2); }
+.obw-qrow:last-child { border-bottom: 0; } .obw-qrow .qi { color: var(--ob-blue); }
+.obw-overdue { color: var(--ob-red); font-size: 10px; font-weight: 850; } .obw-ontime { color: var(--ob-green); font-size: 10px; font-weight: 850; }
+
+/* readiness / meter rows — mirrors `.ready-row` */
+.obw-rl { padding: 12px 16px; display: grid; gap: 11px; align-content: start; }
+.obw-ready { display: grid; grid-template-columns: 1fr 90px 36px; gap: 10px; align-items: center; font-size: 11px; font-weight: 750; color: #334766; }
+.obw-bar { height: 6px; border-radius: 999px; background: #e8edf5; overflow: hidden; }
+.obw-bar span { display: block; height: 100%; border-radius: inherit; background: var(--ob-green); }
+.obw-bar.blue span { background: var(--ob-blue); } .obw-bar.orange span { background: var(--ob-orange); } .obw-bar.red span { background: var(--ob-red); }
+
+/* donut legend — mirrors `.donut-wrap` / `.legend` */
+.obw-donut { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 16px; flex: 1; min-height: 0; }
+.obw-donut svg { width: clamp(96px, 38%, 140px); height: auto; flex: none; }
+.obw-legend { display: grid; gap: 8px; font-size: 11px; color: #394d6a; font-weight: 700; }
+.obw-legend-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; }
+.obw-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* activity feed — mirrors `.act` */
+.obw-acts { padding: 4px 14px 8px; }
+.obw-act { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; min-height: 47px; align-items: center; border-bottom: 1px solid var(--ob-line2); }
+.obw-act:last-child { border-bottom: 0; }
+.obw-act-icon { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: #eaf3ff; color: var(--ob-blue); flex: none; }
+.obw-act-title { font-size: 11px; line-height: 1.25; font-weight: 800; color: var(--ob-text); }
+.obw-act-meta { font-size: 9px; color: #6e7e98; margin-top: 3px; font-weight: 650; }
+.obw-act-time { font-size: 9px; color: #71819b; white-space: nowrap; font-weight: 700; }
+
+.obw-empty { flex: 1; display: grid; place-items: center; min-height: 70px; color: #94a3b8; font-size: 12px; text-align: center; padding: 16px; }
+.obw-skel { flex: 1; display: grid; place-items: center; min-height: 60px; color: #c2cdda; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="main-content">
+  <div class="hr-onboarding-overview">
+
+    <!-- ── PageHeader (component: @ui PageHeader) ─────────────────────────────── -->
+    <div class="ui-page-header">
+      <div class="ui-page-head-main">
+        <span class="ui-page-head-icon"><i class="fas fa-rocket"></i></span>
+        <div class="ui-page-head-text">
+          <div class="ui-page-crumb"><span class="ui-page-crumb-current">HR</span></div>
+          <div class="ui-page-title">Onboarding</div>
+          <div class="ui-page-sub">Activation readiness, active cases &amp; onboarding health — a customizable board.</div>
+          <div class="ui-page-meta"><span class="ui-page-meta-chip"><i class="fas fa-list-check"></i> 42 cases</span></div>
+        </div>
+      </div>
+      <div class="ui-page-head-actions">
+        <div class="profile-notif-pill">
+          <button class="pnp-profile" type="button"><span class="pnp-avatar">AR</span><span class="pnp-info"><span class="pnp-name">Avinash Ramlogan</span><span class="pnp-role">Manager</span></span></button>
+          <div class="pnp-divider"></div>
+          <div class="pnp-icons"><button class="pnp-icon-btn"><i class="fas fa-bell"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customize toolbar (component: @ui/widgets WidgetBoardToolbar) ──────── -->
+    <div class="wbi-toolbar"><button class="wbi-tb-btn"><i class="fas fa-sliders"></i> Customize</button></div>
+
+    <!-- ── Customize grid. MOCKUP: real page uses gridstack; here a 12-col grid.
+         KPI tiles = registry.hrOnboarding (scope .obw); cases table = page-local
+         widget in OnboardingOverview.tsx (scope .hr-emp-master). ──────────────── -->
+    <div class="mock-board">
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="obw"><div class="obw-kpi"><div class="obw-kpi-main"><div class="obw-cap"><span class="obw-kpi-icon"><i class="fas fa-folder-open"></i></span>Active Cases</div><h2 class="obw-num">42</h2><div class="obw-delta">↑ 8% <span class="vs">over recent weeks</span></div></div><div class="obw-spark"><svg viewBox="0 0 120 56" preserveAspectRatio="none"><path d="M5 44 L30 32 L55 36 L80 20 L110 12 L115 12 L115 56 L5 56 Z" fill="#0b63f622"></path><path d="M5 44 L30 32 L55 36 L80 20 L110 12" fill="none" stroke="#0b63f6" stroke-width="3" stroke-linecap="round"></path></svg></div></div></div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="obw"><div class="obw-kpi"><div class="obw-kpi-main"><div class="obw-cap"><span class="obw-kpi-icon purple"><i class="fas fa-calendar-check"></i></span>Due This Week</div><h2 class="obw-num">9</h2><div class="obw-delta red">3 overdue <span class="vs">· 2 today</span></div></div><div class="obw-growth"><i style="height:18px;background:#6746f2"></i><i style="height:30px;background:#6746f2"></i><i style="height:14px;background:#6746f2"></i><i style="height:46px;background:#6746f2"></i></div></div></div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="obw"><div class="obw-kpi"><div class="obw-kpi-main"><div class="obw-cap"><span class="obw-kpi-icon red"><i class="fas fa-triangle-exclamation"></i></span>Blocked Cases</div><h2 class="obw-num">6</h2><div class="obw-delta red">9 open dependencies</div></div><div class="obw-growth"><i style="height:30px;background:#fb4e14"></i><i style="height:18px;background:#fb4e14"></i><i style="height:24px;background:#fb4e14"></i><i style="height:12px;background:#fb4e14"></i></div></div></div>
+      </div>
+
+      <div class="mock-cell" style="grid-column:span 3">
+        <div class="obw"><div class="obw-kpi"><div class="obw-kpi-main"><div class="obw-cap"><span class="obw-kpi-icon green"><i class="fas fa-shield-halved"></i></span>Activation Readiness</div><h2 class="obw-num">78%</h2><div class="obw-delta">84% docs ready</div></div><div class="obw-ring"><svg viewBox="0 0 86 86"><circle cx="43" cy="43" r="32" fill="none" stroke="#e6ecf3" stroke-width="8"></circle><circle cx="43" cy="43" r="32" fill="none" stroke="#0aa36c" stroke-width="8" stroke-dasharray="157 44" stroke-linecap="round" transform="rotate(-90 43 43)"></circle></svg></div></div></div>
+      </div>
+
+      <!-- cases table widget (scope .hr-emp-master) -->
+      <div class="mock-cell" style="grid-column:span 12">
+        <div class="hr-emp-master">
+          <div class="table-card">
+            <div class="employee-toolbar compact">
+              <div class="table-search"><span class="magnify">⌕</span><input type="search" placeholder="Search employee, case no, package…"></div>
+              <select class="onb-status-select"><option>All statuses</option></select>
+              <button type="button" class="advanced-filter-btn"><span class="left"><span class="sliders">≡</span><span><small>Advanced</small><strong>Advanced filters</strong></span></span><span class="adv-right"><span class="adv-caret"><i class="fas fa-chevron-down"></i></span></span></button>
+              <button type="button" class="hse-btn accent"><i class="fas fa-circle-plus"></i> New Case</button>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Employee</th><th>Package</th><th>Owner</th><th>Due Date</th><th>Progress</th><th>Blockers</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr class="employee-row">
+                    <td><div class="employee-cell"><div class="avatar">KB</div><div style="min-width:0"><div class="emp-name">Keisha Boodram</div><div class="emp-email">ONB-0042 · EMP-0142</div></div></div></td>
+                    <td>Standard Employee</td><td>S. Rampersad</td><td>Jul 12, 2026</td>
+                    <td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:54px;height:6px;border-radius:999px;background:#eef2f7;overflow:hidden"><i style="display:block;height:100%;width:68%;background:#2563eb"></i></div><b style="font-size:12px;color:#475569">68%</b></div></td>
+                    <td style="text-align:center"><span class="pill red">2</span></td>
+                    <td><span class="pill blue">In Progress</span></td>
+                  </tr>
+                  <tr class="employee-row">
+                    <td><div class="employee-cell"><div class="avatar">DM</div><div style="min-width:0"><div class="emp-name">Devon Maharaj</div><div class="emp-email">ONB-0041 · EMP-0139</div></div></div></td>
+                    <td>Contractor</td><td>A. Khan</td><td>Jul 3, 2026</td>
+                    <td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:54px;height:6px;border-radius:999px;background:#eef2f7;overflow:hidden"><i style="display:block;height:100%;width:92%;background:#2563eb"></i></div><b style="font-size:12px;color:#475569">92%</b></div></td>
+                    <td style="text-align:center"><span style="color:#94a3b8">—</span></td>
+                    <td><span class="pill green">Ready</span></td>
+                  </tr>
+                  <tr class="employee-row">
+                    <td><div class="employee-cell"><div class="avatar">RS</div><div style="min-width:0"><div class="emp-name">Reema Singh</div><div class="emp-email">ONB-0040 · EMP-0135</div></div></div></td>
+                    <td>Standard Employee</td><td><span style="color:#94a3b8">Unassigned</span></td><td>Jun 28, 2026</td>
+                    <td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:54px;height:6px;border-radius:999px;background:#eef2f7;overflow:hidden"><i style="display:block;height:100%;width:24%;background:#2563eb"></i></div><b style="font-size:12px;color:#475569">24%</b></div></td>
+                    <td style="text-align:center"><span class="pill red">1</span></td>
+                    <td><span class="pill red">Blocked</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <div>Showing 1 to 10 of 42 results</div>
+              <div class="pages"><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button></div>
+              <div class="rows-select">Rows per page: <select><option>10</option></select></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

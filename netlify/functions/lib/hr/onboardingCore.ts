@@ -12,12 +12,17 @@ import { runModuleMutation } from '../moduleServiceAdapter';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { writeHrAudit }    from './employeeCore';
 import { loadPackagePlan } from './onboardingPackageService';
+import { addCaseAction }   from './onboardingCustomActions';
 
 export interface StartOnboardingArgs {
   employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null;
   // v36 §10 Worker & Trigger intake (optional; persisted on the case).
   reason?: string | null; priority?: string | null; targetStartDate?: string | null;
   launchMode?: string | null; caseOwner?: string | null; workerType?: string | null;
+  /** Package action-template ids the wizard's Custom Actions step included — instantiated
+   *  into the case via addCaseAction after it's created. Best-effort: one failing template
+   *  doesn't fail case creation (the case itself is already committed by this point). */
+  includeActionTemplateIds?: string[] | null;
 }
 export interface StartOnboardingResult { caseId: string; caseNo: string; taskCount: number; handoffCount: number }
 
@@ -33,8 +38,15 @@ export async function startOnboardingCase(actorId: string, args: StartOnboarding
   const sScope = { moduleKey: 'hr_onboarding' };
   const enabled = await resolveSettingValue<unknown>(sb, 'hr_onboarding.enabled', sScope, true);
   if (enabled === false || enabled === 'false') throw Object.assign(new Error('Onboarding is disabled in settings.'), { status: 403 });
+  // Every case gets an owner — an explicit ownerId/caseOwner if the caller supplied one,
+  // otherwise the actor who started it (the create-employee path and the standalone start
+  // both rely on this default; an admin/HR manager shouldn't have to hand-pick an owner on
+  // every case — they can reassign in the onboarding module). The require-owner setting
+  // therefore gates on the EFFECTIVE owner (post-default), so it only ever blocks a
+  // genuinely ownerless start — never a create that would have defaulted to the actor.
+  const effectiveOwner = args.ownerId ?? args.caseOwner ?? actorId;
   const requireOwner = await resolveSettingValue<unknown>(sb, 'hr_onboarding.require_owner_on_start', sScope, false);
-  if ((requireOwner === true || requireOwner === 'true') && !(args.ownerId ?? args.caseOwner)) {
+  if ((requireOwner === true || requireOwner === 'true') && !effectiveOwner) {
     throw Object.assign(new Error('A case owner is required to start onboarding (per settings).'), { status: 400 });
   }
 
@@ -95,5 +107,14 @@ export async function startOnboardingCase(actorId: string, args: StartOnboarding
     void emitAppEvent({ eventType: 'onboarding.handoff.created', sourceModule: 'hr', sourceEntityType: 'onboarding_case',
       sourceEntityId: result.entityId, actorUserId: actorId, severity: 'info', payload: { targetModule: h.targetModule, handoffType: h.handoffType } });
   }
+
+  // Instantiate any package action templates the wizard's Custom Actions step included.
+  // Best-effort per template — the case is already committed, so one bad template must not
+  // undo the whole start; addCaseAction does its own real insert + event + audit per action.
+  for (const templateId of args.includeActionTemplateIds ?? []) {
+    try { await addCaseAction(actorId, { caseId: result.entityId, sourceTemplateId: templateId }); }
+    catch (e) { console.error('[onboarding] failed to instantiate action template at case start', { templateId, caseId: result.entityId, error: e instanceof Error ? e.message : e }); }
+  }
+
   return { caseId: result.entityId, caseNo: result.record.caseNo, taskCount: result.record.taskCount, handoffCount: result.record.handoffCount };
 }
