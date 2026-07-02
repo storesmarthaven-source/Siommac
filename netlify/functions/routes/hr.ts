@@ -1005,6 +1005,9 @@ const CHANGE_PERM: Record<ChangeType, string> = {
   role_change:            'hr.employees.role_change',
   employment_type_change: 'hr.employees.role_change',
   contact_update:         'hr.employees.restricted_contact.update',
+  // Bundled transfer/promotion — requires the dedicated transfers.approve gate since
+  // it can include role + salary changes (higher oversight than a simple transfer).
+  transfer_promotion:     'hr.transfers.approve',
 };
 function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> {
   switch (t) {
@@ -1015,6 +1018,16 @@ function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> 
     case 'role_change':            return { role: emp['role'] };
     case 'employment_type_change': return { employment_type: emp['employment_type'] };
     case 'contact_update':         return Object.fromEntries(CONTACT_COLS.map(k => [k, emp[k] ?? null]));
+    case 'transfer_promotion':     return {
+      department_id:  emp.department_id,
+      site_id:        emp['site_id'] ?? null,
+      position_id:    emp['position_id'] ?? null,
+      supervisor_id:  emp.supervisor_id,
+      role:           emp['role'] ?? null,
+      monthly_salary: emp['monthly_salary'] ?? null,
+      hourly_rate:    emp['hourly_rate'] ?? null,
+      pay_basis:      emp['pay_basis'] ?? null,
+    };
   }
 }
 /**
@@ -1078,19 +1091,24 @@ async function createChangeRequest(actor: { id: string }, p: {
 }
 
 // POST /api/hr/employees/change-request — create (maker)
+// NOTE: transfer_promotion is intentionally excluded from this route — it bundles
+// role + salary and must only be submitted through /transfers/request
+// (gated by hr.transfers.request, not the lower hr.view gate). See brief §3.5.
+const GENERIC_CHANGE_TYPES = CHANGE_TYPES.filter(t => t !== 'transfer_promotion') as readonly Exclude<ChangeType, 'transfer_promotion'>[];
 router.post('/employees/change-request', async c => {
   const actor = await requirePermission(c, 'hr.view');
   const v = zv(c, z.object({
-    employeeId: z.string().min(1), changeType: z.enum(CHANGE_TYPES),
+    employeeId: z.string().min(1), changeType: z.enum(GENERIC_CHANGE_TYPES as unknown as [string, ...string[]]),
     requestedValue: z.record(z.string(), z.unknown()), reason: z.string().max(500).optional(),
   }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
   const emp = await loadEmployee(v.data.employeeId);
   if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
 
+  const changeType = v.data.changeType as ChangeType;
   const cr = await createChangeRequest(actor, {
-    employeeId: v.data.employeeId, changeType: v.data.changeType,
-    previousValue: snapshotForChange(v.data.changeType, emp), requestedValue: v.data.requestedValue, reason: v.data.reason ?? null,
+    employeeId: v.data.employeeId, changeType,
+    previousValue: snapshotForChange(changeType, emp), requestedValue: v.data.requestedValue, reason: v.data.reason ?? null,
   });
   return c.json({ success: true, data: { id: cr.id, change_no: cr.changeNo } });
 });
@@ -1161,6 +1179,105 @@ router.post('/employee-change-requests/cancel', async c => {
   await sb.from('hr_employee_change_requests').update({ status: 'cancelled', decided_at: new Date().toISOString() }).eq('id', v.data.requestId);
   await writeHrAudit({ employeeId: req.employee_id, submoduleKey: 'employees', recordId: v.data.requestId, actorId: actor.id, action: 'hr.employee.change_cancelled' });
   return c.json({ success: true });
+});
+
+// ── Transfers & Promotions (scoped submit + filtered list; decide/cancel reuse the generic routes above) ──
+// The bundled transfer_promotion change type bundles dept/site/position/supervisor/role/salary + a
+// required effectiveDate and routes through the same hr_change_approval workflow as other change types.
+// Approve/reject/cancel go through the existing generic routes above (routed by CHANGE_PERM).
+
+// POST /api/hr/transfers/request — submit a bundled transfer/promotion request
+router.post('/transfers/request', async c => {
+  const actor = await requirePermission(c, 'hr.transfers.request');
+  const v = zv(c, z.object({
+    employeeId:    z.string().min(1),
+    departmentId:  z.string().nullable().optional(),
+    siteId:        z.string().nullable().optional(),
+    positionId:    z.string().uuid().nullable().optional(),
+    supervisorId:  z.string().nullable().optional(),
+    role:          z.string().nullable().optional(),
+    monthlySalary: z.number().positive().nullable().optional(),
+    hourlyRate:    z.number().positive().nullable().optional(),
+    effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),
+    reason:        z.string().max(500).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+
+  // At least one changing field (excluding effectiveDate/reason) is required.
+  const { employeeId, effectiveDate, reason, ...changedFields } = v.data;
+  const hasChange = Object.values(changedFields).some(val => val !== undefined && val !== null);
+  if (!hasChange) return c.json({ success: false, message: 'At least one field to change is required (department, site, position, supervisor, role, or salary).' }, 400 as 200);
+
+  const emp = await loadEmployee(employeeId);
+  if (!emp) return c.json({ success: false, message: 'Employee not found.' }, 404 as 200);
+
+  const requestedValue: Record<string, unknown> = { effectiveDate, reason: reason ?? null };
+  if (v.data.departmentId !== undefined)  requestedValue['departmentId']  = v.data.departmentId;
+  if (v.data.siteId       !== undefined)  requestedValue['siteId']        = v.data.siteId;
+  if (v.data.positionId   !== undefined)  requestedValue['positionId']    = v.data.positionId;
+  if (v.data.supervisorId !== undefined)  requestedValue['supervisorId']  = v.data.supervisorId;
+  if (v.data.role         !== undefined)  requestedValue['role']          = v.data.role;
+  if (v.data.monthlySalary !== undefined) requestedValue['monthlySalary'] = v.data.monthlySalary;
+  if (v.data.hourlyRate    !== undefined) requestedValue['hourlyRate']    = v.data.hourlyRate;
+
+  const cr = await createChangeRequest(actor, {
+    employeeId,
+    changeType:     'transfer_promotion',
+    previousValue:  snapshotForChange('transfer_promotion', emp),
+    requestedValue,
+    reason:         reason ?? null,
+  });
+  return c.json({ success: true, data: { id: cr.id, changeNo: cr.changeNo } });
+});
+
+// POST /api/hr/transfers/list — filtered view of transfer_promotion requests
+router.post('/transfers/list', async c => {
+  await requirePermission(c, 'hr.transfers.view');
+  const v = zv(c, z.object({
+    status:     z.string().optional(),
+    employeeId: z.string().optional(),
+    limit:      z.number().int().positive().max(500).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+
+  let q = sb.from('hr_employee_change_requests')
+    .select('id, change_no, employee_id, requested_value, previous_value, status, requested_by, requested_at, decided_at, applied_at, metadata, workflow_id')
+    .eq('change_type', 'transfer_promotion')
+    .order('requested_at', { ascending: false })
+    .limit(v.data.limit ?? 200);
+  if (v.data.status)     q = q.eq('status', v.data.status);
+  if (v.data.employeeId) q = q.eq('employee_id', v.data.employeeId);
+  const { data } = await q;
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+
+  // Enrich with employee and requester names from app_users.
+  const allIds = new Set<string>();
+  for (const r of rows) {
+    if (r['employee_id'])  allIds.add(r['employee_id']  as string);
+    if (r['requested_by']) allIds.add(r['requested_by'] as string);
+  }
+  const { data: users } = await sb.from('app_users').select('id, full_name').in('id', [...allIds]);
+  const nameMap = new Map((users ?? []).map((u: { id: string; full_name: string | null }) => [u.id, u.full_name]));
+
+  const enriched = rows.map(r => ({
+    id:            r['id'],
+    changeNo:      r['change_no'],
+    employeeId:    r['employee_id'],
+    employeeName:  nameMap.get(r['employee_id'] as string) ?? null,
+    requestedBy:   r['requested_by'],
+    requestedByName: nameMap.get(r['requested_by'] as string) ?? null,
+    status:        r['status'],
+    requestedValue: r['requested_value'],
+    previousValue:  r['previous_value'],
+    effectiveDate: (r['requested_value'] as Record<string, unknown> | null)?.['effectiveDate'] ?? null,
+    reason:        (r['metadata'] as Record<string, unknown> | null)?.['reason'] ?? null,
+    requestedAt:   r['requested_at'],
+    decidedAt:     r['decided_at'],
+    appliedAt:     r['applied_at'],
+    workflowId:    r['workflow_id'],
+  }));
+
+  return c.json({ success: true, data: enriched });
 });
 
 // ── Employee Documents (private bucket; verify/reject/archive; audited download) ─

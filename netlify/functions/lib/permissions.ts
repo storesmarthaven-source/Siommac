@@ -148,6 +148,11 @@ export const PERMISSION_KEYS = [
   'hr.offboarding.finalize',
   'hr.offboarding.cancel',
   'hr.offboarding.audit.view',
+  // ── HR Transfers & Promotions ────────────────────────────────────────────────
+  'hr.transfers.view',
+  'hr.transfers.request',
+  'hr.transfers.approve',
+  'hr.transfers.cancel',
   'hr.organization.view',
   'hr.organization.manage',
   'hr.positions.view',
@@ -177,6 +182,9 @@ export const PERMISSION_KEYS = [
   'hr.leave.reports.view',
   'hr.leave.reports.export',
   'hr.leave.manage',
+  // ── HR Requests (Request Center) ────────────────────────────────────────────
+  'hr.requests.submit_own', // submit + track own HR service requests (self-scope enforced server-side)
+  'hr.requests.manage',     // HR triage: view all, decide (approve/reject/return), fulfill
   // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
   'settings.manage',
   'settings.own_preferences.view',
@@ -334,6 +342,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.participants.add', 'communications.participants.remove',
     'ui.widgets.packages.view',
     'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
   ]),
   manager: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
@@ -369,6 +378,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'auth.security.view',
     'ui.layout.manage', 'ui.widgets.packages.view',
     'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.balances.view', 'hr.leave.calendar.view', 'hr.leave.reports.view',
+    'hr.transfers.view', 'hr.transfers.request',
+    'hr.requests.submit_own',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -412,6 +423,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.manage', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
+    'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
+    'hr.requests.submit_own', 'hr.requests.manage',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

@@ -54,10 +54,24 @@ const LEAVE_ITEM: ModuleNavItem = {
   sub: 'Leave requests, balances, accruals & calendar',
 };
 
+const TRANSFERS_ITEM: ModuleNavItem = {
+  id: 's-hr-transfers',
+  label: 'Transfers & Promotions',
+  icon: 'fa-right-left',
+  sub: 'Bundled dept / role / pay changes with approval workflow',
+};
+
+const REQUESTS_ITEM: ModuleNavItem = {
+  id: 's-hr-requests',
+  label: 'HR Requests',
+  icon: 'fa-inbox',
+  sub: 'Employee self-service requests & HR triage',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, REQUESTS_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

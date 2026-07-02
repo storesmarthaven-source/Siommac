@@ -20,16 +20,20 @@ import { OrgStructureOverview } from './OrgStructureOverview';
 import { HRDocumentsOverview } from './HRDocumentsOverview';
 import { OffboardingOverview } from './OffboardingOverview';
 import { LeaveOverview }      from './LeaveOverview';
+import { TransfersOverview }   from './TransfersOverview';
+import { HRRequestsOverview }  from './HRRequestsOverview';
 
-const EMP_ID = 's-hr-employees';
-const ONB_ID = 's-hr-onboarding';
-const ORG_ID = 's-hr-organization';
-const DOC_ID = 's-hr-documents';
-const OFF_ID = 's-hr-offboarding';
-const LEAVE_ID = 's-hr-leave';
+const EMP_ID       = 's-hr-employees';
+const ONB_ID       = 's-hr-onboarding';
+const ORG_ID       = 's-hr-organization';
+const DOC_ID       = 's-hr-documents';
+const OFF_ID       = 's-hr-offboarding';
+const LEAVE_ID     = 's-hr-leave';
+const TRANSFERS_ID = 's-hr-transfers';
+const REQ_ID       = 's-hr-requests';
 
 function isHrSection(id: string): boolean {
-  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID;
+  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID;
 }
 
 export function HRSection(): VNode {
@@ -61,10 +65,12 @@ export function HRSection(): VNode {
     };
   }, []);
 
-  if (sectionId === LEAVE_ID) return <LeaveOverview />;
-  if (sectionId === ORG_ID) return <OrgStructureOverview />;
-  if (sectionId === DOC_ID) return <HRDocumentsOverview />;
-  if (sectionId === OFF_ID) return <OffboardingOverview />;
+  if (sectionId === LEAVE_ID)     return <LeaveOverview />;
+  if (sectionId === ORG_ID)      return <OrgStructureOverview />;
+  if (sectionId === DOC_ID)      return <HRDocumentsOverview />;
+  if (sectionId === OFF_ID)      return <OffboardingOverview />;
+  if (sectionId === TRANSFERS_ID) return <TransfersOverview />;
+  if (sectionId === REQ_ID)       return <HRRequestsOverview />;
   return sectionId === ONB_ID
     ? <OnboardingOverview initialCaseId={pendingCaseId} />
     : <EmployeeMaster />;

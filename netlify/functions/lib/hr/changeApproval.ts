@@ -12,7 +12,7 @@ import { sb } from '../db';
 import { writeHrAudit, todayISO } from './employeeCore';
 import { emitAppEvent } from '../appEvents';
 
-export const CHANGE_TYPES = ['status_change', 'department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'contact_update'] as const;
+export const CHANGE_TYPES = ['status_change', 'department_transfer', 'site_transfer', 'supervisor_change', 'role_change', 'employment_type_change', 'contact_update', 'transfer_promotion'] as const;
 export type ChangeType = typeof CHANGE_TYPES[number];
 
 // Contact columns a contact_update change request may touch (whitelist for apply).
@@ -65,6 +65,54 @@ export async function applyChange(req: ChangeRow, actorId: string | null): Promi
       const patch: Record<string, unknown> = { ...stamp };
       for (const k of CONTACT_COLS) if (k in rv) patch[k] = rv[k];
       await sb.from('app_users').update(patch).eq('id', eid);
+      break;
+    }
+    case 'transfer_promotion': {
+      // Build the app_users patch from whichever fields are present in the bundle.
+      const patch: Record<string, unknown> = { ...stamp };
+      if ('departmentId'  in rv) patch['department_id']  = rv['departmentId'];
+      if ('siteId'        in rv) patch['site_id']        = rv['siteId'];
+      if ('positionId'    in rv) patch['position_id']    = rv['positionId'];
+      if ('supervisorId'  in rv) patch['supervisor_id']  = rv['supervisorId'];
+      if ('role'          in rv) patch['role']           = rv['role'];
+      if ('monthlySalary' in rv && rv['monthlySalary'] != null) {
+        patch['monthly_salary'] = rv['monthlySalary'];
+        patch['pay_basis']      = 'salary';
+      }
+      if ('hourlyRate' in rv && rv['hourlyRate'] != null) {
+        patch['hourly_rate'] = rv['hourlyRate'];
+        if (!('monthlySalary' in rv) || rv['monthlySalary'] == null) patch['pay_basis'] = 'hourly';
+      }
+      await sb.from('app_users').update(patch).eq('id', eid);
+
+      // Assignment history — close the current row and open a new one stamped with
+      // effectiveDate. Only create an assignment row when org fields actually changed.
+      const orgChanged = ('departmentId' in rv) || ('siteId' in rv) || ('positionId' in rv) || ('supervisorId' in rv);
+      if (orgChanged) {
+        const eff = String(rv['effectiveDate'] ?? todayISO());
+        // Merge: use the requested value if present, else fall back to previous_value.
+        const prev = req.previous_value ?? {};
+        const newDept       = ('departmentId' in rv)  ? (rv['departmentId']  as string | null) : (prev['department_id']  as string | null) ?? null;
+        const newSite       = ('siteId'        in rv)  ? (rv['siteId']        as string | null) : (prev['site_id']        as string | null) ?? null;
+        const newPosition   = ('positionId'    in rv)  ? (rv['positionId']    as string | null) : (prev['position_id']    as string | null) ?? null;
+        const newSupervisor = ('supervisorId'  in rv)  ? (rv['supervisorId']  as string | null) : (prev['supervisor_id']  as string | null) ?? null;
+
+        await sb.from('hr_employee_assignments')
+          .update({ is_current: false, effective_to: eff })
+          .eq('employee_id', eid).eq('is_current', true);
+
+        await sb.from('hr_employee_assignments').insert({
+          employee_id:     eid,
+          position_id:     newPosition,
+          department_id:   newDept,
+          site_id:         newSite,
+          supervisor_id:   newSupervisor,
+          assignment_type: 'primary',
+          effective_from:  eff,
+          is_current:      true,
+          created_by:      actorId,
+        });
+      }
       break;
     }
   }

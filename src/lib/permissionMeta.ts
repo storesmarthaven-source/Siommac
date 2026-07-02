@@ -94,6 +94,11 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.offboarding.finalize':    { module: 'HR', group: 'Offboarding', label: 'Finalize Exit',         description: 'Terminate the employee (disables login) and raise the IT access-removal handoff.', risk: 'high' },
   'hr.offboarding.cancel':      { module: 'HR', group: 'Offboarding', label: 'Cancel Offboarding',    description: 'Cancel an offboarding case.', risk: 'medium' },
   'hr.offboarding.audit.view':  { module: 'HR', group: 'Offboarding', label: 'View Offboarding Audit', description: 'View the offboarding case audit trail.', risk: 'low' },
+  // ── HR Transfers & Promotions ────────────────────────────────────────────────
+  'hr.transfers.view':    { module: 'HR', group: 'Transfers', label: 'View Transfers',           description: 'View transfer and promotion requests.', risk: 'low' },
+  'hr.transfers.request': { module: 'HR', group: 'Transfers', label: 'Request Transfer',         description: 'Submit a bundled transfer/promotion request for an employee.', risk: 'medium' },
+  'hr.transfers.approve': { module: 'HR', group: 'Transfers', label: 'Approve/Reject Transfer',  description: 'Approve, reject or return a transfer/promotion request (includes role + salary changes).', risk: 'high' },
+  'hr.transfers.cancel':  { module: 'HR', group: 'Transfers', label: 'Cancel Transfer',          description: 'Cancel a pending transfer/promotion request.', risk: 'medium' },
   'hr.organization.view':           { module: 'HR', group: 'Organization',   label: 'View Organization',        description: 'View the organization structure and departments tree.', risk: 'low' },
   'hr.organization.manage':         { module: 'HR', group: 'Organization',   label: 'Manage Organization',      description: 'Create or edit org units and reporting lines.', risk: 'high' },
   'hr.positions.view':              { module: 'HR', group: 'Organization',   label: 'View Positions',           description: 'View job positions.', risk: 'low' },
@@ -123,6 +128,10 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.leave.reports.view':        { module: 'HR', group: 'Leave & Absence', label: 'View Leave Reports',   description: 'Run and view leave utilization and compliance reports.', risk: 'medium' },
   'hr.leave.reports.export':      { module: 'HR', group: 'Leave & Absence', label: 'Export Leave Reports',  description: 'Export leave report data (audited data egress).', risk: 'high' },
   'hr.leave.manage':              { module: 'HR', group: 'Leave & Absence', label: 'Manage Leave',            description: 'Full leave management: override status, manage any request.', risk: 'high' },
+
+  // ── HR Requests (Request Center) ────────────────────────────────────────────
+  'hr.requests.submit_own': { module: 'HR', group: 'Requests', label: 'Submit Own HR Requests', description: 'Submit and track self-service HR requests (letters, copies, corrections, inquiries).', risk: 'low' },
+  'hr.requests.manage':     { module: 'HR', group: 'Requests', label: 'Manage HR Requests',      description: 'Triage, approve, reject, return, and fulfill HR service requests for any employee.', risk: 'medium' },
 
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {

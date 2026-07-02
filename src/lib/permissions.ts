@@ -104,6 +104,11 @@ export const PERMISSION_KEYS = [
   'hr.offboarding.finalize',
   'hr.offboarding.cancel',
   'hr.offboarding.audit.view',
+  // ── HR Transfers & Promotions ────────────────────────────────────────────────
+  'hr.transfers.view',
+  'hr.transfers.request',
+  'hr.transfers.approve',
+  'hr.transfers.cancel',
   'hr.organization.view',
   'hr.organization.manage',
   'hr.positions.view',
@@ -133,6 +138,9 @@ export const PERMISSION_KEYS = [
   'hr.leave.reports.view',
   'hr.leave.reports.export',
   'hr.leave.manage',
+  // ── HR Requests (Request Center) ────────────────────────────────────────────
+  'hr.requests.submit_own', // submit + track own HR service requests (self-scope enforced server-side)
+  'hr.requests.manage',     // HR triage: view all, decide (approve/reject/return), fulfill
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -418,6 +426,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.add', 'communications.participants.remove',
     'ui.widgets.packages.view',
     'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
   ]),
 
   manager: new Set<PermissionKey>([
@@ -467,6 +476,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'auth.security.view',
     'ui.layout.manage', 'ui.widgets.packages.view',
     'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.balances.view', 'hr.leave.calendar.view', 'hr.leave.reports.view',
+    'hr.transfers.view', 'hr.transfers.request',
+    'hr.requests.submit_own',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -591,6 +602,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
+    'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
+    'hr.requests.submit_own', 'hr.requests.manage',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -729,6 +742,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
+    'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
+    'hr.requests.submit_own', 'hr.requests.manage',
   ]),
 };
 
