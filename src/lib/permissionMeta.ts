@@ -122,6 +122,7 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.leave.calendar.view':       { module: 'HR', group: 'Leave & Absence', label: 'View Leave Calendar',  description: 'View the org-wide leave calendar.', risk: 'low' },
   'hr.leave.reports.view':        { module: 'HR', group: 'Leave & Absence', label: 'View Leave Reports',   description: 'Run and view leave utilization and compliance reports.', risk: 'medium' },
   'hr.leave.reports.export':      { module: 'HR', group: 'Leave & Absence', label: 'Export Leave Reports',  description: 'Export leave report data (audited data egress).', risk: 'high' },
+  'hr.leave.manage':              { module: 'HR', group: 'Leave & Absence', label: 'Manage Leave',            description: 'Full leave management: override status, manage any request.', risk: 'high' },
 
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {

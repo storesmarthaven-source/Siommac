@@ -176,6 +176,7 @@ export const PERMISSION_KEYS = [
   'hr.leave.calendar.view',
   'hr.leave.reports.view',
   'hr.leave.reports.export',
+  'hr.leave.manage',
   // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
   'settings.manage',
   'settings.own_preferences.view',
@@ -332,6 +333,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.messages.pin_own', 'communications.messages.unpin_own',
     'communications.participants.add', 'communications.participants.remove',
     'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
   ]),
   manager: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
@@ -366,6 +368,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view',
     'ui.layout.manage', 'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.balances.view', 'hr.leave.calendar.view', 'hr.leave.reports.view',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -408,6 +411,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'auth.security.view', 'auth.security.manage_policy',
     'auth.passkeys.admin_revoke', 'auth.trusted_devices.admin_revoke',
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
+    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.manage', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

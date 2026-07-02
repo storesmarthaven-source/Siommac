@@ -132,6 +132,7 @@ export const PERMISSION_KEYS = [
   'hr.leave.calendar.view',
   'hr.leave.reports.view',
   'hr.leave.reports.export',
+  'hr.leave.manage',
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -416,6 +417,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.messages.pin_own', 'communications.messages.unpin_own',
     'communications.participants.add', 'communications.participants.remove',
     'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
   ]),
 
   manager: new Set<PermissionKey>([
@@ -464,6 +466,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.participants.change_role',
     'auth.security.view',
     'ui.layout.manage', 'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.balances.view', 'hr.leave.calendar.view', 'hr.leave.reports.view',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -525,7 +528,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.employee_documents.view', 'hr.employee_documents.upload', 'hr.employee_documents.verify',
     'hr.employee_documents.archive', 'hr.employee_documents.download', 'hr.employee_documents.sensitive_view',
     'hr.employee_documents.requirements.manage',
-    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
+    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.manage', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
@@ -656,7 +659,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.employee_documents.view', 'hr.employee_documents.upload', 'hr.employee_documents.verify',
     'hr.employee_documents.archive', 'hr.employee_documents.download', 'hr.employee_documents.sensitive_view',
     'hr.employee_documents.requirements.manage',
-    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
+    'hr.leave.view', 'hr.leave.view_all', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.approve', 'hr.leave.manage', 'hr.leave.types.manage', 'hr.leave.balances.view', 'hr.leave.balances.adjust', 'hr.leave.accruals.run', 'hr.leave.calendar.view', 'hr.leave.reports.view', 'hr.leave.reports.export',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
