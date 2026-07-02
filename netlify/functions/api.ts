@@ -46,6 +46,7 @@ import permissionApprovalsRouter from './routes/permissionApprovals';
 import hrRouter                   from './routes/hr';
 import hrEmployeeImportRouter     from './routes/hrEmployeeImport';
 import hrOnboardingRouter         from './routes/hrOnboarding';
+import hrOffboardingRouter        from './routes/hrOffboarding';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -161,6 +162,7 @@ app.route('/api', employeesRouter);
 app.route('/api/hr', hrRouter);
 app.route('/api/hr', hrEmployeeImportRouter);
 app.route('/api/hr', hrOnboardingRouter);
+app.route('/api/hr', hrOffboardingRouter);
 app.route('/api', departmentsRouter);
 app.route('/api', sitesRouter);
 app.route('/api', attendanceRouter);
