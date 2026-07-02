@@ -184,6 +184,34 @@ export async function uploadMyProfilePhoto(file: File): Promise<{ profileImage: 
   return commit.data;
 }
 
+/**
+ * Server-side AI enhancement: sends the image as base64 to the backend
+ * (which calls OpenAI with the server-side API key — the key never touches the client).
+ * Returns the enhanced image as a base64 PNG string for the caller to preview.
+ * To persist, call uploadMyProfilePhoto with a File built from the base64.
+ *
+ * If the backend is not configured (OPENAI_API_KEY missing) the returned
+ * `data` is null and `message` explains why — the UI surfaces this honestly.
+ */
+export async function enhanceMyProfilePhoto(
+  file: File,
+): Promise<{ imageBase64: string; mimeType: string }> {
+  // Convert to base64 for the JSON body
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const res = await apiPost<{
+    success: boolean;
+    message?: string;
+    data?: { imageBase64: string; mimeType: string };
+  }>('profile-photo/enhance', { imageBase64: base64, mimeType: file.type });
+  if (!res.success || !res.data) throw new Error(res.message ?? 'Photo enhancement failed');
+  return res.data;
+}
+
 export async function removeMyProfilePhoto(): Promise<{ profileImage: string | null; profileImageVersion: number }> {
   const res = await apiPost<{ success: boolean; message?: string; data?: { profileImage: string | null; profileImageVersion: number } }>(
     'profile-photo/remove', {},

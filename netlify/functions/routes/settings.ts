@@ -168,6 +168,91 @@ router.post('/profile-photo/remove', async c => {
   return c.json({ success: true, data: { profileImage: null, profileImageVersion: nextVersion } });
 });
 
+// ── Profile photo enhancement (server-side OpenAI — key never sent to client) ──
+//
+// POST /api/profile-photo/enhance
+// Body: { args: { imageBase64: string; mimeType?: string } }
+//
+// The actor can only enhance their own photo.
+// If OPENAI_API_KEY is not configured the route returns a 503 with a clear message
+// so the UI can show an honest "not available" state instead of silently failing.
+// The enhanced image is returned as a base64 PNG in { data: { imageBase64, mimeType } }.
+// The caller must then run it through the normal uploadMyProfilePhoto / commit pipeline
+// to persist it — we do NOT commit here to keep the flow explicit and auditable on
+// the frontend.
+
+const ENHANCE_PROMPT = `Standardize this manually cropped employee profile photo for a
+professional SIOMAC employee record. Preserve the person's identity and natural appearance.
+Improve lighting, clarity, and background cleanliness. Use a clean neutral professional
+background. Keep the crop suitable for an employee profile and HR record. Do not change
+facial structure, age, skin tone, identity, or create an unrealistic image.`;
+
+router.post('/profile-photo/enhance', async c => {
+  const actor = await requireUser(c);
+
+  const apiKey = process.env['OPENAI_API_KEY'] ?? '';
+  if (!apiKey || !apiKey.startsWith('sk-')) {
+    return c.json({
+      success: false,
+      message: 'Photo enhancement is not configured on this server. Contact your system administrator to enable the OPENAI_API_KEY environment variable.',
+    }, 503 as 200);
+  }
+
+  const args = (c.get('body').args ?? {}) as { imageBase64?: string; mimeType?: string };
+  if (!args.imageBase64) {
+    return c.json({ success: false, message: 'Missing imageBase64.' }, 400 as 200);
+  }
+  if (args.imageBase64.length > 8 * 1024 * 1024 * 1.4) { // ~8 MB raw → ~11 MB base64
+    return c.json({ success: false, message: 'Image is too large (max 8 MB).' }, 400 as 200);
+  }
+
+  const inputMime = (args.mimeType ?? 'image/png').toLowerCase() as 'image/png' | 'image/jpeg';
+  const allowedMimes = new Set<string>(['image/png', 'image/jpeg']);
+  if (!allowedMimes.has(inputMime)) {
+    return c.json({ success: false, message: 'Only PNG and JPEG images are supported for enhancement.' }, 400 as 200);
+  }
+
+  // Lazily import openai to avoid cold-start cost on routes that don't use it
+  const { default: OpenAI, toFile } = await import('openai');
+  const client = new OpenAI({ apiKey });
+
+  const imgBuffer = Buffer.from(args.imageBase64, 'base64');
+  const imageFile = await toFile(imgBuffer, `profile.${inputMime === 'image/jpeg' ? 'jpg' : 'png'}`, { type: inputMime });
+
+  let result: { data?: Array<{ b64_json?: string | null }> };
+  try {
+    const raw = await client.images.edit({
+      model: 'gpt-image-1',
+      image: imageFile,
+      prompt: ENHANCE_PROMPT,
+      quality: 'medium',
+      size: '1024x1024',
+      response_format: 'b64_json',
+    } as Parameters<typeof client.images.edit>[0]);
+    result = raw as { data?: Array<{ b64_json?: string | null }> };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'OpenAI photo enhancement failed.';
+    return c.json({ success: false, message }, 502 as 200);
+  }
+
+  const imageBase64 = result.data?.[0]?.b64_json;
+  if (!imageBase64) {
+    return c.json({ success: false, message: 'OpenAI did not return an enhanced image.' }, 502 as 200);
+  }
+
+  void emitAppEvent({
+    eventType: 'auth.profile_photo.ai_enhanced',
+    sourceModule: 'auth',
+    sourceEntityType: 'app_user',
+    sourceEntityId: actor.id,
+    actorUserId: actor.id,
+    severity: 'info',
+    payload: {},
+  });
+
+  return c.json({ success: true, data: { imageBase64, mimeType: 'image/png' } });
+});
+
 // NOTE: the old generic `/getSignedUrls` (any authenticated user, caller-supplied
 // bucket+path — an IDOR: nothing scoped the path to the requester) and
 // `/getUploadUrl` (same auth gap, plus let ANY authenticated user request a write
