@@ -24,12 +24,15 @@ import {
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import { CHANGE_TYPES, type ChangeType, CONTACT_COLS, applyApprovedChange, markChangeRequestStatus } from '../lib/hr/changeApproval';
 import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
+import { HR_DOC_BUCKET, RESTRICTED_TIERS, filterVisibleDocs } from '../lib/hr/documentsCore';
+import { listAllDocuments, getDocumentsStats, listExpiring } from '../lib/hr/documentsQueries';
+import { listRequirements, createRequirement, updateRequirement, retireRequirement } from '../lib/hr/documentsRequirements';
+import { getComplianceForEmployee, getComplianceOverview, countMissingRequired } from '../lib/hr/documentsCompliance';
+import { runExpirySweep } from '../lib/hr/documentsExpirySweep';
+import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
-
-const HR_DOC_BUCKET = 'hr-employee-documents';
-const RESTRICTED_TIERS = new Set(['restricted_hr', 'legal', 'medical']);
 
 const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
@@ -972,11 +975,10 @@ router.post('/employees/documents/list', async c => {
   if (!v.ok) return v.response;
   const { data } = await sb.from('hr_employee_documents').select('*').eq('employee_id', v.data.employeeId)
     .neq('status', 'archived').order('uploaded_at', { ascending: false });
-  let rows = (data ?? []) as { confidentiality: string }[];
-  // Restricted tiers require the sensitive-view permission.
-  if (!(await userCan(user, 'hr.employee_documents.sensitive_view'))) {
-    rows = rows.filter(d => !RESTRICTED_TIERS.has(d.confidentiality));
-  }
+  const rawRows = (data ?? []) as { confidentiality: string }[];
+  // Restricted tiers require the sensitive-view permission (via filterVisibleDocs).
+  const canSeeSensitive = await userCan(user, 'hr.employee_documents.sensitive_view');
+  const rows = filterVisibleDocs(rawRows, canSeeSensitive);
   return c.json({ success: true, data: rows });
 });
 
@@ -1064,6 +1066,178 @@ router.post('/documents/download-url', async c => {
   catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Could not sign URL' }, 400 as 200); }
   await writeHrAudit({ employeeId: doc.employee_id, submoduleKey: 'documents', recordId: v.data.documentId, actorId: actor.id, action: 'hr.employee.document_downloaded' });
   return c.json({ success: true, url });
+});
+
+// ── HR Documents Module (cross-employee register, expiry, requirements, compliance) ─
+// All reads apply the confidentiality gate via filterVisibleDocs (canSeeSensitive
+// pre-computed once per request via userCan).
+
+// POST /api/hr/documents/list — cross-employee register
+router.post('/documents/list', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({
+    q: z.string().optional(), employeeId: z.string().optional(), departmentId: z.string().optional(),
+    documentType: z.string().optional(), status: z.string().optional(), confidentiality: z.string().optional(),
+    expiryState: z.enum(['valid','expiring','expired','none']).optional(),
+    expiringWithinDays: z.number().int().positive().optional(),
+    page: z.number().int().positive().optional(), pageSize: z.number().int().positive().max(200).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const canSeeSensitive = await userCan(actor, 'hr.employee_documents.sensitive_view');
+  try {
+    const result = await listAllDocuments(canSeeSensitive, v.data);
+    return c.json({ success: true, data: result });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Query failed' }, 500 as 200);
+  }
+});
+
+// POST /api/hr/documents/stats
+router.post('/documents/stats', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.view');
+  const canSeeSensitive = await userCan(actor, 'hr.employee_documents.sensitive_view');
+  try {
+    const missing = await countMissingRequired(canSeeSensitive);
+    const stats = await getDocumentsStats(canSeeSensitive, missing);
+    return c.json({ success: true, data: stats });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Stats failed' }, 500 as 200);
+  }
+});
+
+// POST /api/hr/documents/expiring
+router.post('/documents/expiring', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({ withinDays: z.number().int().positive().max(365).optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const canSeeSensitive = await userCan(actor, 'hr.employee_documents.sensitive_view');
+  try {
+    const rows = await listExpiring(canSeeSensitive, { withinDays: v.data.withinDays });
+    return c.json({ success: true, data: rows });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Query failed' }, 500 as 200);
+  }
+});
+
+// POST /api/hr/documents/compliance — per-employee or overview
+router.post('/documents/compliance', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({
+    employeeId: z.string().optional(), departmentId: z.string().optional(), overview: z.boolean().optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  const canSeeSensitive = await userCan(actor, 'hr.employee_documents.sensitive_view');
+  try {
+    if (v.data.overview || !v.data.employeeId) {
+      const rows = await getComplianceOverview(canSeeSensitive, {
+        departmentId: v.data.departmentId, employeeId: v.data.employeeId,
+      });
+      return c.json({ success: true, data: rows });
+    }
+    const rows = await getComplianceForEmployee(canSeeSensitive, v.data.employeeId);
+    return c.json({ success: true, data: rows });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Compliance query failed' }, 500 as 200);
+  }
+});
+
+// POST /api/hr/documents/requirements/list
+router.post('/documents/requirements/list', async c => {
+  await requirePermission(c, 'hr.employee_documents.view');
+  const v = zv(c, z.object({ activeOnly: z.boolean().optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const rows = await listRequirements(v.data.activeOnly ?? true);
+    return c.json({ success: true, data: rows });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'List failed' }, 500 as 200);
+  }
+});
+
+// POST /api/hr/documents/requirements/create
+router.post('/documents/requirements/create', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.requirements.manage');
+  const v = zv(c, z.object({
+    documentType: z.string().min(1).max(80), label: z.string().min(1).max(200),
+    appliesToScope: z.enum(['all','role','employment_type','department']),
+    appliesToValue: z.string().nullable().optional(),
+    requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),
+    minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const req = await createRequirement(actor, v.data);
+    return c.json({ success: true, data: req });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return c.json({ success: false, message: e.message ?? 'Create failed' }, (e.status ?? 500) as 200);
+  }
+});
+
+// POST /api/hr/documents/requirements/update
+router.post('/documents/requirements/update', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.requirements.manage');
+  const v = zv(c, z.object({
+    requirementId: z.string().uuid(), label: z.string().min(1).max(200).optional(),
+    requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),
+    minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  }), (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const req = await updateRequirement(actor, v.data);
+    return c.json({ success: true, data: req });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return c.json({ success: false, message: e.message ?? 'Update failed' }, (e.status ?? 500) as 200);
+  }
+});
+
+// POST /api/hr/documents/requirements/retire
+router.post('/documents/requirements/retire', async c => {
+  const actor = await requirePermission(c, 'hr.employee_documents.requirements.manage');
+  const v = zv(c, z.object({ requirementId: z.string().uuid() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    await retireRequirement(actor, v.data);
+    return c.json({ success: true });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return c.json({ success: false, message: e.message ?? 'Retire failed' }, (e.status ?? 500) as 200);
+  }
+});
+
+// POST /api/hr/documents/expiry/run-sweep — SERVICE-ROLE ONLY (no normal principal)
+router.post('/documents/expiry/run-sweep', async c => {
+  // Reject normal principals — only service-role callers (cron/ops) may trigger this.
+  const authHeader = (c.req.raw.headers.get('authorization') ?? '').trim();
+  const serviceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? '';
+  if (!serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return c.json({ success: false, message: 'Service-role authentication required.' }, 403 as 200);
+  }
+
+  const v = zv(c, z.object({ windows: z.array(z.number().int()).optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+
+  // Read reminder windows from settings (fall back to [30,7,0]).
+  let windows = v.data.windows;
+  if (!windows) {
+    const raw = await resolveSettingValue(sb, 'hr_documents.expiry_reminder_days', { moduleKey: 'hr_documents' }, '30,7,0');
+    windows = String(raw).split(',').map(s => parseInt(s.trim(), 10)).filter(n => Number.isFinite(n));
+  }
+  if (!windows.length) windows = [30, 7, 0];
+
+  try {
+    const result = await runExpirySweep(null, { windows });
+    return c.json({ success: true, data: result });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Sweep failed' }, 500 as 200);
+  }
 });
 
 export default router;

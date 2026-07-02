@@ -26,10 +26,17 @@ const ONBOARDING_ITEM: ModuleNavItem = {
   sub: 'Activation readiness, active cases & onboarding board',
 };
 
+const DOCUMENTS_ITEM: ModuleNavItem = {
+  id: 's-hr-documents',
+  label: 'Documents',
+  icon: 'fa-folder-open',
+  sub: 'Employee documents, expiry tracking & requirements',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, DOCUMENTS_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

@@ -10,12 +10,14 @@ import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { EmployeeMaster } from './EmployeeMaster';
 import { OnboardingOverview } from './OnboardingOverview';
+import { HRDocumentsOverview } from './HRDocumentsOverview';
 
 const EMP_ID = 's-hr-employees';
 const ONB_ID = 's-hr-onboarding';
+const DOC_ID = 's-hr-documents';
 
 function isHrSection(id: string): boolean {
-  return id === EMP_ID || id === ONB_ID;
+  return id === EMP_ID || id === ONB_ID || id === DOC_ID;
 }
 
 export function HRSection(): VNode {
@@ -35,5 +37,7 @@ export function HRSection(): VNode {
     return () => window.removeEventListener('siomac:section', onSection);
   }, []);
 
-  return sectionId === ONB_ID ? <OnboardingOverview /> : <EmployeeMaster />;
+  if (sectionId === ONB_ID) return <OnboardingOverview />;
+  if (sectionId === DOC_ID) return <HRDocumentsOverview />;
+  return <EmployeeMaster />;
 }

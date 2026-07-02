@@ -103,6 +103,7 @@ export const PERMISSION_KEYS = [
   'hr.employee_documents.archive',
   'hr.employee_documents.download',
   'hr.employee_documents.sensitive_view',
+  'hr.employee_documents.requirements.manage',
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -492,6 +493,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.organization.view', 'hr.organization.manage', 'hr.positions.view', 'hr.positions.manage',
     'hr.employee_documents.view', 'hr.employee_documents.upload', 'hr.employee_documents.verify',
     'hr.employee_documents.archive', 'hr.employee_documents.download', 'hr.employee_documents.sensitive_view',
+    'hr.employee_documents.requirements.manage',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
@@ -619,6 +621,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.organization.view', 'hr.organization.manage', 'hr.positions.view', 'hr.positions.manage',
     'hr.employee_documents.view', 'hr.employee_documents.upload', 'hr.employee_documents.verify',
     'hr.employee_documents.archive', 'hr.employee_documents.download', 'hr.employee_documents.sensitive_view',
+    'hr.employee_documents.requirements.manage',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',

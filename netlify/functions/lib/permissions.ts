@@ -147,6 +147,7 @@ export const PERMISSION_KEYS = [
   'hr.employee_documents.archive',
   'hr.employee_documents.download',
   'hr.employee_documents.sensitive_view',
+  'hr.employee_documents.requirements.manage',
   // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
   'settings.manage',
   'settings.own_preferences.view',

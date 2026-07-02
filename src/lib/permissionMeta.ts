@@ -92,7 +92,8 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.employee_documents.verify':         { module: 'HR', group: 'Documents', label: 'Verify/Reject HR Document', description: 'Verify or reject an HR employee document.', risk: 'high' },
   'hr.employee_documents.archive':        { module: 'HR', group: 'Documents', label: 'Archive HR Document',      description: 'Archive an HR employee document.', risk: 'medium' },
   'hr.employee_documents.download':       { module: 'HR', group: 'Documents', label: 'Download HR Document',     description: 'Download an HR employee document (audited).', risk: 'high' },
-  'hr.employee_documents.sensitive_view': { module: 'HR', group: 'Documents', label: 'View Restricted HR Docs',  description: 'View restricted / medical / legal HR documents.', risk: 'high' },
+  'hr.employee_documents.sensitive_view':         { module: 'HR', group: 'Documents', label: 'View Restricted HR Docs',          description: 'View restricted / medical / legal HR documents.', risk: 'high' },
+  'hr.employee_documents.requirements.manage':    { module: 'HR', group: 'Documents', label: 'Manage Document Requirements',      description: 'Define required document types and expiry policy.', risk: 'high' },
 
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {
