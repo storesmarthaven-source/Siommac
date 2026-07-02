@@ -8,7 +8,7 @@
 -- hr_leave_attachments — supporting documents for a leave request
 -- ============================================================================
 
-create table public.hr_leave_types (
+create table if not exists public.hr_leave_types (
   id                  uuid primary key default gen_random_uuid(),
   code                text unique not null,
   label               text not null,
@@ -26,13 +26,13 @@ create table public.hr_leave_types (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz
 );
-create trigger set_updated_at_hr_leave_types
+create or replace trigger set_updated_at_hr_leave_types
   before update on public.hr_leave_types
   for each row execute function public.set_updated_at();
 alter table public.hr_leave_types enable row level security;
 grant all on public.hr_leave_types to service_role;
 
-create table public.hr_leave_requests (
+create table if not exists public.hr_leave_requests (
   id              uuid primary key default gen_random_uuid(),
   case_no         text unique not null,
   employee_id     text not null references public.app_users(id),
@@ -57,7 +57,7 @@ create table public.hr_leave_requests (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz
 );
-create trigger set_updated_at_hr_leave_requests
+create or replace trigger set_updated_at_hr_leave_requests
   before update on public.hr_leave_requests
   for each row execute function public.set_updated_at();
 create index hr_leave_requests_employee_id_idx on public.hr_leave_requests(employee_id);
@@ -66,7 +66,7 @@ create index hr_leave_requests_from_date_idx   on public.hr_leave_requests(from_
 alter table public.hr_leave_requests enable row level security;
 grant all on public.hr_leave_requests to service_role;
 
-create table public.hr_leave_balances (
+create table if not exists public.hr_leave_balances (
   id            uuid primary key default gen_random_uuid(),
   employee_id   text not null references public.app_users(id),
   leave_type_id uuid not null references public.hr_leave_types(id),
@@ -80,13 +80,13 @@ create table public.hr_leave_balances (
   updated_at    timestamptz,
   unique(employee_id, leave_type_id, year)
 );
-create trigger set_updated_at_hr_leave_balances
+create or replace trigger set_updated_at_hr_leave_balances
   before update on public.hr_leave_balances
   for each row execute function public.set_updated_at();
 alter table public.hr_leave_balances enable row level security;
 grant all on public.hr_leave_balances to service_role;
 
-create table public.hr_leave_accruals (
+create table if not exists public.hr_leave_accruals (
   id                uuid primary key default gen_random_uuid(),
   employee_id       text not null references public.app_users(id),
   leave_type_id     uuid not null references public.hr_leave_types(id),
@@ -104,7 +104,7 @@ create index hr_leave_accruals_source_request_id_idx on public.hr_leave_accruals
 alter table public.hr_leave_accruals enable row level security;
 grant all on public.hr_leave_accruals to service_role;
 
-create table public.hr_leave_attachments (
+create table if not exists public.hr_leave_attachments (
   id           uuid primary key default gen_random_uuid(),
   request_id   uuid not null references public.hr_leave_requests(id) on delete cascade,
   file_path    text not null,
