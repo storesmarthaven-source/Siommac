@@ -40,10 +40,17 @@ const DOCUMENTS_ITEM: ModuleNavItem = {
   sub: 'Employee documents, expiry tracking & requirements',
 };
 
+const OFFBOARDING_ITEM: ModuleNavItem = {
+  id: 's-hr-offboarding',
+  label: 'Offboarding',
+  icon: 'fa-door-open',
+  sub: 'Employee exits — clearance, access removal & final pay',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',
