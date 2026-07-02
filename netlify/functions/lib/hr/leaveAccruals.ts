@@ -19,9 +19,10 @@ export async function runAccruals(actorId: string, args: RunAccrualsArgs): Promi
   const { data: types, error: ltErr } = await ltq;
   if (ltErr) throw err(500, `Failed to load leave types: ${ltErr.message}`);
 
-  // Load all active employees
+  // Load all active employees (app_users has no is_active column — status is the
+  // lifecycle field; exclude the system superadmin from accrual runs).
   const { data: employees, error: empErr } = await sb.from('app_users')
-    .select('id').eq('is_active', true);
+    .select('id').eq('status', 'active').neq('role', 'superadmin');
   if (empErr) throw err(500, `Failed to load employees: ${empErr.message}`);
 
   let processed = 0; let skipped = 0;
