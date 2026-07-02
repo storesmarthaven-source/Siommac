@@ -147,7 +147,7 @@ export async function submitLeaveRequest(
       buildEventPayload: (r) => ({ employeeId: args.employeeId, leaveTypeId: args.leaveTypeId, days, caseNo: r.caseNo }),
     },
     writeRecord: async () => {
-      const caseNo = await nextRef('LV');
+      const caseNo = await nextRef('LVR');
 
       const { data: requestRow, error: insertErr } = await sb.from('hr_leave_requests').insert({
         case_no:       caseNo,
