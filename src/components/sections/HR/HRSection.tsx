@@ -17,13 +17,15 @@ import { useEffect, useState } from 'preact/hooks';
 import { EmployeeMaster } from './EmployeeMaster';
 import { OnboardingOverview } from './OnboardingOverview';
 import { OrgStructureOverview } from './OrgStructureOverview';
+import { HRDocumentsOverview } from './HRDocumentsOverview';
 
 const EMP_ID = 's-hr-employees';
 const ONB_ID = 's-hr-onboarding';
 const ORG_ID = 's-hr-organization';
+const DOC_ID = 's-hr-documents';
 
 function isHrSection(id: string): boolean {
-  return id === EMP_ID || id === ONB_ID || id === ORG_ID;
+  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID;
 }
 
 export function HRSection(): VNode {
@@ -56,6 +58,7 @@ export function HRSection(): VNode {
   }, []);
 
   if (sectionId === ORG_ID) return <OrgStructureOverview />;
+  if (sectionId === DOC_ID) return <HRDocumentsOverview />;
   return sectionId === ONB_ID
     ? <OnboardingOverview initialCaseId={pendingCaseId} />
     : <EmployeeMaster />;
