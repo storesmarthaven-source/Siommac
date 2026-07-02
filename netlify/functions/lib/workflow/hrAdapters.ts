@@ -72,8 +72,56 @@ const hrLeaveAdapter: ModuleWorkflowAdapter = {
   onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setLeaveRequestStatus(sourceRecordId, 'cancelled', null, reason); },
 };
 
+// Transfer & Promotion approval. The envelope (hr_employee_change_requests with
+// change_type='transfer_promotion') is set to in_review at start; this adapter
+// drives it on the engine's decisions. On completion, applyApprovedChange applies
+// the stored bundle (org assignment + compensation history + app_users patch).
+const hrTransferPromotionAdapter: ModuleWorkflowAdapter = {
+  moduleKey: 'hr_transfer_promotion',
+  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+    throw new Error('hr_transfer_promotion: workflow context is built at the call site, not via the adapter.');
+  },
+  onWorkflowStarted:       ({ sourceRecordId }) => markChangeRequestStatus(sourceRecordId, 'in_review', null),
+  onWorkflowStepCompleted: async () => {},
+  onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => { await applyApprovedChange(sourceRecordId, await decidedBy(workflowId)); },
+  onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => { await markChangeRequestStatus(sourceRecordId, 'returned', await decidedBy(workflowId), comment); },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await markChangeRequestStatus(sourceRecordId, 'rejected', await decidedBy(workflowId), comment); },
+  onWorkflowCancelled:     ({ sourceRecordId, reason }) => markChangeRequestStatus(sourceRecordId, 'cancelled', null, reason),
+};
+
+// ── HR Requests adapter ───────────────────────────────────────────────────────
+// hr_requests is the request ENVELOPE; the engine owns the approval lifecycle.
+// On workflow completion/return/rejection we update hr_requests.status directly
+// (no field apply step — it's a service request, not a data mutation).
+async function setRequestStatus(
+  recordId: string,
+  status: string,
+  decidedBy: string | null,
+  comment?: string | null,
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (decidedBy) { patch['decided_by'] = decidedBy; patch['decided_at'] = new Date().toISOString(); }
+  if (comment !== undefined) patch['decision_comment'] = comment ?? null;
+  await sb.from('hr_requests').update(patch).eq('id', recordId);
+}
+
+const hrRequestsAdapter: ModuleWorkflowAdapter = {
+  moduleKey: 'hr_requests',
+  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+    throw new Error('hr_requests: workflow context is built at the call site, not via the adapter.');
+  },
+  onWorkflowStarted:       async ({ sourceRecordId }) => { await setRequestStatus(sourceRecordId, 'in_review', null); },
+  onWorkflowStepCompleted: async () => {},
+  onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => { await setRequestStatus(sourceRecordId, 'approved', await decidedBy(workflowId)); },
+  onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => { await setRequestStatus(sourceRecordId, 'returned', await decidedBy(workflowId), comment); },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await setRequestStatus(sourceRecordId, 'rejected', await decidedBy(workflowId), comment); },
+  onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setRequestStatus(sourceRecordId, 'cancelled', null, reason); },
+};
+
 export function registerHrWorkflowAdapters(): void {
   registerWorkflowAdapter(hrEmployeeMasterAdapter);
   registerWorkflowAdapter(hrOrgStructureAdapter);
   registerWorkflowAdapter(hrLeaveAdapter);
+  registerWorkflowAdapter(hrTransferPromotionAdapter);
+  registerWorkflowAdapter(hrRequestsAdapter);
 }
