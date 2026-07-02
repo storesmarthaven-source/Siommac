@@ -17,6 +17,7 @@ import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { applyApprovedChange, markChangeRequestStatus } from '../hr/changeApproval';
 import { applyApprovedOrgChange, setOrgChangeStatus } from '../hr/organizationChangeRequests';
+import { applyApprovedLeave, setLeaveRequestStatus } from '../hr/leaveCore';
 
 /** The user who made the most recent decision on this workflow (the approver). */
 async function decidedBy(workflowId: string): Promise<string | null> {
@@ -57,7 +58,22 @@ const hrOrgStructureAdapter: ModuleWorkflowAdapter = {
   onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setOrgChangeStatus(sourceRecordId, 'cancelled', { comment: reason }); },
 };
 
+
+const hrLeaveAdapter: ModuleWorkflowAdapter = {
+  moduleKey: 'hr_leave',
+  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+    throw new Error('hr_leave: workflow context is built at the call site, not via the adapter.');
+  },
+  onWorkflowStarted:       async ({ sourceRecordId }) => { await setLeaveRequestStatus(sourceRecordId, 'pending_approval', null); },
+  onWorkflowStepCompleted: async () => {},
+  onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => { await applyApprovedLeave(sourceRecordId, await decidedBy(workflowId)); },
+  onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => { await setLeaveRequestStatus(sourceRecordId, 'pending_approval', await decidedBy(workflowId), comment); },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await setLeaveRequestStatus(sourceRecordId, 'rejected', await decidedBy(workflowId), comment); },
+  onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setLeaveRequestStatus(sourceRecordId, 'cancelled', null, reason); },
+};
+
 export function registerHrWorkflowAdapters(): void {
   registerWorkflowAdapter(hrEmployeeMasterAdapter);
   registerWorkflowAdapter(hrOrgStructureAdapter);
+  registerWorkflowAdapter(hrLeaveAdapter);
 }

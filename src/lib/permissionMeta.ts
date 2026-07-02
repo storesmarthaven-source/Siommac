@@ -109,6 +109,19 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.employee_documents.download':       { module: 'HR', group: 'Documents', label: 'Download HR Document',     description: 'Download an HR employee document (audited).', risk: 'high' },
   'hr.employee_documents.sensitive_view':         { module: 'HR', group: 'Documents', label: 'View Restricted HR Docs',          description: 'View restricted / medical / legal HR documents.', risk: 'high' },
   'hr.employee_documents.requirements.manage':    { module: 'HR', group: 'Documents', label: 'Manage Document Requirements',      description: 'Define required document types and expiry policy.', risk: 'high' },
+  // ── HR Leave & Absence ───────────────────────────────────────────────────────
+  'hr.leave.view':                { module: 'HR', group: 'Leave & Absence', label: 'View Own Leave',      description: 'View own leave requests and balances.', risk: 'low' },
+  'hr.leave.view_all':            { module: 'HR', group: 'Leave & Absence', label: 'View All Leave',      description: "View all employees' leave requests.", risk: 'medium' },
+  'hr.leave.submit':              { module: 'HR', group: 'Leave & Absence', label: 'Submit Leave Request', description: 'Submit a leave request on behalf of self or a managed employee.', risk: 'low' },
+  'hr.leave.cancel_own':          { module: 'HR', group: 'Leave & Absence', label: 'Cancel Own Leave',    description: 'Cancel own pending leave request.', risk: 'low' },
+  'hr.leave.approve':             { module: 'HR', group: 'Leave & Absence', label: 'Approve/Reject Leave', description: 'Approve or reject leave requests.', risk: 'medium' },
+  'hr.leave.types.manage':        { module: 'HR', group: 'Leave & Absence', label: 'Manage Leave Types',   description: 'Create, update and retire leave type definitions.', risk: 'high' },
+  'hr.leave.balances.view':       { module: 'HR', group: 'Leave & Absence', label: 'View Leave Balances',  description: 'View leave balance ledgers for any employee.', risk: 'medium' },
+  'hr.leave.balances.adjust':     { module: 'HR', group: 'Leave & Absence', label: 'Adjust Leave Balance', description: 'Manually adjust an employee leave balance (audited).', risk: 'high' },
+  'hr.leave.accruals.run':        { module: 'HR', group: 'Leave & Absence', label: 'Run Accruals',          description: 'Trigger the leave accrual engine for a period.', risk: 'high' },
+  'hr.leave.calendar.view':       { module: 'HR', group: 'Leave & Absence', label: 'View Leave Calendar',  description: 'View the org-wide leave calendar.', risk: 'low' },
+  'hr.leave.reports.view':        { module: 'HR', group: 'Leave & Absence', label: 'View Leave Reports',   description: 'Run and view leave utilization and compliance reports.', risk: 'medium' },
+  'hr.leave.reports.export':      { module: 'HR', group: 'Leave & Absence', label: 'Export Leave Reports',  description: 'Export leave report data (audited data egress).', risk: 'high' },
 
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {

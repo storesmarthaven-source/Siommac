@@ -47,10 +47,17 @@ const OFFBOARDING_ITEM: ModuleNavItem = {
   sub: 'Employee exits — clearance, access removal & final pay',
 };
 
+const LEAVE_ITEM: ModuleNavItem = {
+  id: 's-hr-leave',
+  label: 'Leave & Absence',
+  icon: 'fa-calendar-check',
+  sub: 'Leave requests, balances, accruals & calendar',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',
