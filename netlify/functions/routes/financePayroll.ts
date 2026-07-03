@@ -1,13 +1,16 @@
-// routes/financePayroll.ts — Finance: Payroll Runs (Phase 3 Stage 2)
+// routes/financePayroll.ts — Finance: Payroll Runs (Phase 3 — all stages)
 // Mounted at /api/finance in api.ts.
 // All routes POST-only, JWT-gated via requirePermission. Envelope: body.args ?? {}.
 //
 // Stage 2 routes: list, get, create, lock-inputs, calculate
 //                 + run-lines/list, inputs/list, warnings/list
-// Stage 3 (submit, approve, lock, payslips, export) is NOT here yet.
+// Stage 3 routes: submit, lock, reopen, export
+//                 + payslips/{my,get,generate,signed-url}
+//                 + exports/list
+//                 + reports/*
 
 import { Hono } from 'hono';
-import { requirePermission } from '../lib/auth';
+import { requirePermission, userCan } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import {
   listPayrollRuns,
@@ -15,10 +18,24 @@ import {
   createPayrollRun,
   lockInputs,
   calculateRun,
+  submitRun,
+  lockRun,
+  reopenRun,
   listRunInputs,
   listRunLines,
   listRunWarnings,
 } from '../lib/finance/payrollRuns';
+import {
+  generatePayslips,
+  getMyPayslips,
+  getPayslip,
+  signedPayslipUrl,
+  listPayslipsForRun,
+} from '../lib/finance/payrollPayslips';
+import { exportRun, listRunExports } from '../lib/finance/payrollExports';
+import { runPayrollReport } from '../lib/finance/payrollReports';
+import type { ExportFormat } from '../lib/finance/payrollExports';
+import type { PayrollReportKey } from '../lib/finance/payrollReports';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -148,6 +165,202 @@ router.post('/payroll/warnings/list', async c => {
     const data = await listRunWarnings(v.data.runId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 3 — Run lifecycle: submit, lock, reopen, export
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/runs/submit
+// Submits a calculated run for approval via the central workflow engine.
+// Permission: finance.payroll.run.manage (finance_staff or finance_manager).
+router.post('/payroll/runs/submit', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.run.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await submitRun(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/lock
+// Locks an approved run so that payslips can be generated.
+// Permission: finance.payroll.lock (finance_manager / admin only — SoD).
+router.post('/payroll/runs/lock', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.lock');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await lockRun(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/reopen
+// Reopens a locked run back to draft with a mandatory reason.
+// Guard: run must NOT be exported.
+// Permission: finance.payroll.lock (same authority level as lock).
+router.post('/payroll/runs/reopen', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.lock');
+  const v = zv(c, z.object({
+    id:     z.string().uuid(),
+    reason: z.string().min(1, 'Reason is required'),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await reopenRun(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/export
+// Exports a locked run as an artifact. Re-export adds a new version.
+// Permission: finance.payroll.export.
+router.post('/payroll/runs/export', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.export');
+  const v = zv(c, z.object({
+    id:     z.string().uuid(),
+    format: z.enum(['csv', 'json', 'xlsx', 'pdf']).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await exportRun(v.data.id, actor.id, (v.data.format ?? 'csv') as ExportFormat);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Exports list
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/exports/list
+router.post('/payroll/exports/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listRunExports(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payslips
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/payslips/generate
+// Generate payslips for all employees in a locked run.
+// Finance-only: requires view_all.
+router.post('/payroll/payslips/generate', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await generatePayslips(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/list
+// List all payslips for a run — Finance only.
+router.post('/payroll/payslips/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listPayslipsForRun(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/my
+// Employee self-service: returns only the caller's own payslips.
+// Privacy: self-scope enforced server-side. Permission: finance.payroll.view_own.
+router.post('/payroll/payslips/my', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_own');
+  try {
+    const data = await getMyPayslips(actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/get
+// Get a single payslip. Employee self: self-scope enforced. Finance: no scope limit.
+router.post('/payroll/payslips/get', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_own');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    // Non-finance callers (view_own only) are scoped to own payslips.
+    // Finance (view_all) can retrieve any payslip.
+    const hasViewAll = await userCan(actor, 'finance.payroll.view_all');
+    const ownerFilter = hasViewAll ? undefined : actor.id;
+    const data = await getPayslip(v.data.id, ownerFilter);
+    if (!data) return c.json({ success: false, message: 'Payslip not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/signed-url
+// Return a short-lived signed URL for downloading a payslip file.
+// Ownership enforced for view_own callers; Finance (view_all) can generate for any.
+// Download is audited.
+router.post('/payroll/payslips/signed-url', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_own');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const hasViewAll = await userCan(actor, 'finance.payroll.view_all');
+    const ownerFilter = hasViewAll ? null : actor.id;
+    const data = await signedPayslipUrl(v.data.id, ownerFilter, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reports
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/reports/run
+// Dispatch to any of the §18 report handlers.
+// Permission: finance.payroll.reports.view
+router.post('/payroll/reports/run', async c => {
+  await requirePermission(c, 'finance.payroll.reports.view');
+  const v = zv(c, z.object({
+    report: z.string().min(1),
+    params: z.record(z.string(), z.unknown()).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await runPayrollReport(v.data.report as PayrollReportKey, v.data.params ?? {});
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/list
+// List available report keys (for the UI to build the report picker).
+router.post('/payroll/reports/list', async c => {
+  await requirePermission(c, 'finance.payroll.reports.view');
+  const reports: { key: string; label: string; requiresRunId: boolean }[] = [
+    { key: 'register',                  label: 'Payroll Run Register',           requiresRunId: false },
+    { key: 'payslip_register',           label: 'Payslip Register',               requiresRunId: false },
+    { key: 'net_pay_summary',            label: 'Net Pay Summary',                requiresRunId: true  },
+    { key: 'employer_nis_summary',       label: 'Employer NIS Summary',           requiresRunId: true  },
+    { key: 'nis_remittance',             label: 'NIS Remittance',                 requiresRunId: true  },
+    { key: 'paye_summary',               label: 'PAYE Summary',                   requiresRunId: true  },
+    { key: 'hs_summary',                 label: 'Health Surcharge Summary',       requiresRunId: true  },
+    { key: 'cost_by_department',         label: 'Cost by Department',             requiresRunId: true  },
+    { key: 'cost_by_cost_center',        label: 'Cost by Cost Center',            requiresRunId: true  },
+    { key: 'export_audit',               label: 'Export Audit',                   requiresRunId: false },
+    { key: 'nis_continuity',             label: 'NIS Continuity Register',        requiresRunId: true  },
+    { key: 'missing_nis_number',         label: 'Missing NIS Number',             requiresRunId: true  },
+    { key: 'unverified_nis',             label: 'Unverified NIS Profiles',        requiresRunId: false },
+    { key: 'new_employee_nis_onboarding',label: 'New Employee NIS Onboarding',    requiresRunId: false },
+    { key: 'nis_opening_balance',        label: 'NIS Opening Balance',            requiresRunId: false },
+    { key: 'nis_exceptions',             label: 'Payroll NIS Exceptions',         requiresRunId: true  },
+  ];
+  return c.json({ success: true, data: reports });
 });
 
 export default router;

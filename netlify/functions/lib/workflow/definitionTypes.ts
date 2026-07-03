@@ -128,6 +128,8 @@ export interface ModuleWorkflowContext {
 
 export interface ModuleWorkflowAdapter {
   moduleKey: string;
+  /** Optional: distinguish adapters that share a moduleKey but serve different workflow types. */
+  workflowType?: string;
   buildWorkflowContext(params: { recordId: string; actorId: string; triggerEvent: string }): Promise<ModuleWorkflowContext>;
   onWorkflowStarted(params: { workflowId: string; sourceRecordId: string }): Promise<void>;
   onWorkflowStepCompleted(params: { workflowId: string; sourceRecordId: string; stepKey: string; decision: string }): Promise<void>;

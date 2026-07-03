@@ -1,3 +1,15 @@
+// =============================================================================
+// DEPRECATED — Legacy payroll router (Spec §21 legacy removal)
+// =============================================================================
+// This file is QUARANTINED. The mount in api.ts has been removed (Phase 3 §21).
+// The new Finance Payroll module (routes/financePayroll.ts) replaces this.
+// DO NOT re-mount this router. DO NOT read legacy payroll_* tables from new code.
+// Tables: payroll_runs, payroll_run_lines, payroll_adjustments, payroll_approvals,
+//         payroll_remittances — these are the OLD legacy tables; new code uses
+//         finance_payroll_runs, finance_payroll_run_lines, finance_payslips,
+//         finance_payroll_exports (Phase 3 Stage 2+3).
+// =============================================================================
+
 import { Hono } from 'hono';
 import { sb }   from '../lib/db';
 import { requireUser, requireRole, log_ } from '../lib/auth';

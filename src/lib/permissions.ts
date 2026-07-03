@@ -431,6 +431,10 @@ export const PERMISSION_KEYS = [
   'finance.payroll.run.manage',     // finance staff/manager: create, lock-inputs, calculate runs
   'finance.payroll.reports.view',   // finance staff/manager: view payroll reports
   'finance.payroll.reports.export', // finance manager/admin: export payroll reports
+  // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────
+  'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
+  'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen
+  'finance.payroll.export',         // finance manager: export a locked run to CSV/JSON artifact
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -530,12 +534,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
-    // payroll run keys (stage 2) — all five
+    // payroll run keys (stage 2 + stage 3) — all eight
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
+    'finance.payroll.approve',
+    'finance.payroll.lock',
+    'finance.payroll.export',
   ]),
 
   employee: new Set<PermissionKey>([
@@ -770,12 +777,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
-    // Finance payroll run keys — ALL five
+    // Finance payroll run keys — ALL eight (stage 2 + stage 3)
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
+    'finance.payroll.approve',
+    'finance.payroll.lock',
+    'finance.payroll.export',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -938,12 +948,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
-    // Finance payroll run keys — ALL five
+    // Finance payroll run keys — ALL eight (stage 2 + stage 3)
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
+    'finance.payroll.approve',
+    'finance.payroll.lock',
+    'finance.payroll.export',
   ]),
 };
 

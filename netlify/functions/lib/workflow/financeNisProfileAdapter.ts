@@ -39,7 +39,8 @@ async function decidedBy(workflowId: string): Promise<string | null> {
 }
 
 const financeNisProfileAdapter: ModuleWorkflowAdapter = {
-  moduleKey: 'finance_payroll',
+  moduleKey:    'finance_payroll',
+  workflowType: 'finance_nis_profile_verification',
 
   async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     // Context is built at the call site (submitStatutoryProfile), not via the adapter.

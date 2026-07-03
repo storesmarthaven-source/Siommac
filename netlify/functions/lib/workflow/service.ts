@@ -206,7 +206,7 @@ async function instantiateWorkflow(p: {
 
   await writeWorkflowAudit({ workflowId: instance.id, moduleKey: instance.module_key, sourceRecordId: instance.source_record_id, actorId: p.actor.id, action: 'workflow.started', newState: { status: instance.status } });
   emitWf('workflow.started', instance, p.actor.id);
-  await getWorkflowAdapter(p.context.moduleKey)?.onWorkflowStarted({ workflowId: instance.id, sourceRecordId: instance.source_record_id });
+  await getWorkflowAdapter(p.context.moduleKey, p.context.workflowType)?.onWorkflowStarted({ workflowId: instance.id, sourceRecordId: instance.source_record_id });
   return instance;
 }
 
@@ -281,7 +281,7 @@ async function advanceWorkflow(wf: WorkflowRow, completedStepKey: string, actor:
 async function completeWorkflow(wf: WorkflowRow, actor: WorkflowActor): Promise<WorkflowRow> {
   const completedAt = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'completed', completed_at: completedAt, closed_at: completedAt }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key)?.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
+  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
   await runWorkflowHandoffs(wf, 'workflow.completed', actor.id);
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.completed', newState: { status: 'completed' } });
   emitWf('workflow.completed', wf, actor.id, {
@@ -294,7 +294,7 @@ async function completeWorkflow(wf: WorkflowRow, actor: WorkflowActor): Promise<
 
 async function returnWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: string): Promise<WorkflowRow> {
   await sb.from('workflow_instances').update({ status: 'returned' }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key)?.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
+  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.returned', reason: comment });
   emitWf('workflow.returned', wf, actor.id, {
     severity: 'warning',
@@ -307,7 +307,7 @@ async function returnWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: st
 async function rejectWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: string): Promise<WorkflowRow> {
   const at = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'rejected', completed_at: at, closed_at: at }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key)?.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
+  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.rejected', reason: comment });
   emitWf('workflow.rejected', wf, actor.id, {
     severity: 'warning',
@@ -322,7 +322,7 @@ export async function cancelWorkflow(params: { workflowId: string; actor: Workfl
   const at = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'cancelled', cancelled_at: at, closed_at: at }).eq('id', wf.id);
   await sb.from('workflow_tasks').update({ status: 'cancelled' }).eq('workflow_id', wf.id).in('status', ['pending', 'open', 'in_progress']);
-  await getWorkflowAdapter(wf.module_key)?.onWorkflowCancelled({ workflowId: wf.id, sourceRecordId: wf.source_record_id, reason: params.reason });
+  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowCancelled({ workflowId: wf.id, sourceRecordId: wf.source_record_id, reason: params.reason });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.cancelled', reason: params.reason });
   emitWf('workflow.cancelled', wf, params.actor.id, {
     severity: 'warning',

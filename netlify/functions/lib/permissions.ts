@@ -351,6 +351,10 @@ export const PERMISSION_KEYS = [
   'finance.payroll.run.manage',     // finance staff/manager: create, lock-inputs, calculate runs
   'finance.payroll.reports.view',   // finance staff/manager: view payroll reports
   'finance.payroll.reports.export', // finance manager/admin: export payroll reports
+  // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────
+  'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
+  'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen
+  'finance.payroll.export',         // finance manager: export a locked run to CSV/JSON artifact
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -475,6 +479,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
     'hse.dashboard.view', 'hse.workflows.view',
     'workflow.submit', 'workflow.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
+    'workflow.my_tasks.view',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.messages.post', 'communications.messages.attach',
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
@@ -496,12 +502,15 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
-    // payroll run keys (stage 2) — all five
+    // payroll run keys (stage 2 + stage 3) — all eight
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
+    'finance.payroll.approve',
+    'finance.payroll.lock',
+    'finance.payroll.export',
   ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -546,6 +555,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hse.ppe.view',       'hse.ppe.manage',
     'hse.dashboard.view', 'hse.workflows.view', 'hse.workflows.manage',
     'workflow.submit', 'workflow.approve', 'workflow.audit', 'workflow.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
+    'workflow.my_tasks.view',
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read',
@@ -597,6 +608,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hse.ppe.view',       'hse.ppe.manage',
     'hse.dashboard.view', 'hse.workflows.view', 'hse.workflows.manage',
     'workflow.submit', 'workflow.approve', 'workflow.audit', 'workflow.view',
+    'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
+    'workflow.my_tasks.view',
     'tickets.manage',
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
@@ -634,12 +647,15 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
-    // Finance payroll run keys — ALL five
+    // Finance payroll run keys — ALL eight (stage 2 + stage 3)
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
+    'finance.payroll.approve',
+    'finance.payroll.lock',
+    'finance.payroll.export',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

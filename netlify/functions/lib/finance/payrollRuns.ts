@@ -20,10 +20,11 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
-import { getActiveStatutoryVersion, listNisClasses } from './statutoryConfig';
+import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine } from './payrollStatutory';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
+import { startWorkflowForRecord } from '../workflow/service';
 import type { NisClassRow } from './statutoryConfig';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
@@ -848,4 +849,257 @@ function lastDayOfMonth(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00Z');
   const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
   return lastDay.toISOString().slice(0, 10);
+}
+
+// ── Submit Run ────────────────────────────────────────────────────────────────
+
+/**
+ * Submit a calculated run for approval via the central workflow engine.
+ * Transitions: calculated → pending_approval.
+ * On success: sets workflow_id on the run and starts the approval workflow.
+ * Compensating rollback: if startWorkflowForRecord fails, status is reverted to 'calculated'.
+ */
+export async function submitRun(runId: string, actorId: string): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'calculated') {
+    throw Object.assign(
+      new Error(`Cannot submit: run is in status '${run.status}'. Only 'calculated' runs can be submitted.`),
+      { status: 422 },
+    );
+  }
+
+  // Set to pending_approval first (workflow will manage the status from here)
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({ status: 'pending_approval' })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('submitRun/update: ' + updErr.message), { status: 500 });
+
+  let workflowInstance: { id: string } | null = null;
+  try {
+    workflowInstance = await startWorkflowForRecord({
+      context: {
+        moduleKey:      'finance_payroll',
+        workflowType:   'finance_payroll_approval',
+        triggerEvent:   'finance.payroll.run.submitted',
+        sourceRecordId: runId,
+        requestedBy:    actorId,
+        recordData:     {
+          runNo:       run.runNo,
+          periodMonth: run.periodMonth,
+          sourceType:  'payroll_run',
+          submittedBy: actorId,
+        },
+      },
+      actor: { id: actorId },
+    });
+  } catch (wfErr) {
+    // Compensating rollback: revert status back to 'calculated'
+    await sb.from('finance_payroll_runs')
+      .update({ status: 'calculated' })
+      .eq('id', runId);
+    throw Object.assign(
+      new Error('submitRun/workflow: ' + (wfErr as Error).message),
+      { status: 500 },
+    );
+  }
+
+  // Stamp workflow_id if one was created
+  if (workflowInstance) {
+    await sb.from('finance_payroll_runs')
+      .update({ workflow_id: workflowInstance.id })
+      .eq('id', runId);
+  }
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.submitted',
+    previousState: { status: 'calculated' },
+    newState: { status: 'pending_approval', workflowId: workflowInstance?.id ?? null },
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.submitted',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'info',
+    payload:          { runNo: updatedRun.runNo, workflowId: workflowInstance?.id ?? null },
+  });
+
+  return { ...updatedRun, status: 'pending_approval', workflowId: workflowInstance?.id ?? null };
+}
+
+// ── Approve Run (direct adapter path — called only by the workflow adapter) ───
+
+/**
+ * Approve a run (called by financePayrollAdapter on workflow completion).
+ * Transitions: pending_approval → approved.
+ * SoD enforced: actorId must differ from createdBy.
+ * This function is NOT exposed as a direct route — approval flows through the workflow.
+ */
+export async function approveRun(runId: string, actorId: string): Promise<void> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'pending_approval') {
+    throw Object.assign(
+      new Error(`Cannot approve: run is in status '${run.status}'.`),
+      { status: 422 },
+    );
+  }
+
+  assertDifferentApprover({ actorId, createdBy: run.createdBy, action: 'approve a payroll run' });
+
+  const { error } = await sb.from('finance_payroll_runs')
+    .update({ status: 'approved', approved_by: actorId })
+    .eq('id', runId);
+  if (error) throw Object.assign(new Error('approveRun: ' + error.message), { status: 500 });
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.approved',
+    previousState: { status: 'pending_approval' },
+    newState: { status: 'approved', approvedBy: actorId },
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.approved',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'success',
+    payload:          { approvedBy: actorId },
+  });
+}
+
+// ── Lock Run ──────────────────────────────────────────────────────────────────
+
+/**
+ * Lock an approved run: lines become immutable, payslips may be generated.
+ * Transitions: approved → locked.
+ * Requires finance.payroll.lock permission (gated in route).
+ */
+export async function lockRun(runId: string, actorId: string): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'approved') {
+    throw Object.assign(
+      new Error(`Cannot lock: run is in status '${run.status}'. Only 'approved' runs can be locked.`),
+      { status: 422 },
+    );
+  }
+
+  const now = new Date().toISOString();
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({ status: 'locked', locked_by: actorId, locked_at: now })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('lockRun/update: ' + updErr.message), { status: 500 });
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.locked',
+    previousState: { status: 'approved' },
+    newState: { status: 'locked', lockedAt: now },
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.locked',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'success',
+    payload:          { runNo: updatedRun.runNo, lockedAt: now },
+  });
+
+  return updatedRun;
+}
+
+// ── Reopen Run ────────────────────────────────────────────────────────────────
+
+/**
+ * Reopen a locked run back to draft (with a mandatory reason).
+ * Guard: run must be 'locked' — NOT if already 'exported'.
+ * Clears lines + inputs so the run must be recalculated from scratch.
+ */
+export async function reopenRun(
+  runId: string,
+  actorId: string,
+  reason: string,
+): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status === 'exported') {
+    throw Object.assign(
+      new Error('Cannot reopen an exported run. Create a new run for the next period.'),
+      { status: 422 },
+    );
+  }
+  if (run.status !== 'locked') {
+    throw Object.assign(
+      new Error(`Cannot reopen: run is in status '${run.status}'. Only 'locked' runs can be reopened.`),
+      { status: 422 },
+    );
+  }
+  if (!reason || reason.trim() === '') {
+    throw Object.assign(new Error('A reason is required to reopen a locked payroll run.'), { status: 422 });
+  }
+
+  const now = new Date().toISOString();
+
+  // Clear lines + inputs so the run must be fully re-locked and re-calculated
+  await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
+  await sb.from('finance_payroll_run_inputs').delete().eq('run_id', runId);
+  await sb.from('finance_payroll_run_warnings').delete().eq('run_id', runId);
+
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({
+      status:         'draft',
+      workflow_id:    null,
+      reopened_by:    actorId,
+      reopened_at:    now,
+      reopen_reason:  reason.trim(),
+      // Reset totals since lines are cleared
+      gross_total:         0,
+      deduction_total:     0,
+      net_total:           0,
+      nis_employer_total:  0,
+      employee_count:      0,
+    })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('reopenRun/update: ' + updErr.message), { status: 500 });
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.reopened',
+    previousState: { status: 'locked' },
+    newState: { status: 'draft', reopenReason: reason.trim() },
+    reason: reason.trim(),
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.reopened',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'warning',
+    payload:          { runNo: updatedRun.runNo, reason: reason.trim() },
+  });
+
+  return updatedRun;
 }

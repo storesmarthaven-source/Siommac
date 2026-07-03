@@ -1167,4 +1167,23 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export payroll reports in CSV, XLSX, or PDF format. Audited data egress — Finance Manager or Admin only.',
     risk: 'high',
   },
+  // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────
+  'finance.payroll.approve': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Approve Payroll Run',
+    description: 'Approve a submitted payroll run via the approval workflow. Segregation of duties: the Finance staff who created the run cannot be the approver.',
+    risk: 'high',
+  },
+  'finance.payroll.lock': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Lock Payroll Run',
+    description: 'Lock an approved payroll run so that lines become immutable and payslips can be generated. Also grants the reopen action (locked → draft with reason, not available for exported runs).',
+    risk: 'high',
+  },
+  'finance.payroll.export': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Export Payroll Run',
+    description: 'Export a locked payroll run as a CSV/JSON artifact. Re-export creates a new versioned artifact; prior artifacts are marked not-current. Does not disburse funds. Finance Manager or Admin only.',
+    risk: 'high',
+  },
 };
