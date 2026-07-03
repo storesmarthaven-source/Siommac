@@ -1,5 +1,5 @@
 /**
- * src/lib/dialog.ts — the app-wide popup / prompt / toast system.
+ * src/lib/dialog.ts — the app-wide modal system.
  *
  * A small, typed, ergonomic API over the `cpop` engine (src/lib/popup.ts) — the same
  * popup the rest of the app uses (e.g. the session-expired notice). Use THIS instead of
@@ -9,13 +9,13 @@
  *   const name = await dialog.prompt({ title: 'Rename', value: cur }); // → string | null
  *   dialog.success('Saved', 'Your changes are live.');
  *   dialog.error('Failed', err.message);
- *   dialog.toast({ text: 'Copied', icon: 'success' });
  *   dialog.loading(); … dialog.close();
+ *
+ * For toasts, import `toast` from '@store' / '@ui/toast' directly.
  *
  * Imperative + framework-free, so it works from components, hooks, stores, and plain modules.
  */
 import { cpop } from './popup';
-import { toast as uiToast } from '@ui/toast';
 
 export type DialogIcon = 'success' | 'error' | 'warning' | 'info' | 'question';
 
@@ -39,15 +39,6 @@ export interface PromptOptions {
   cancelText?: string;
   /** Single-line type, or a multi-line textarea. */
   type?: 'text' | 'password' | 'email' | 'number' | 'textarea';
-}
-
-export interface ToastOptions {
-  text?: string;
-  title?: string;
-  icon?: DialogIcon;
-  /** ms before auto-dismiss (default 3000). */
-  duration?: number;
-  position?: 'top-end' | 'top-start' | 'bottom-end' | 'bottom-start' | 'top' | 'bottom';
 }
 
 export const dialog = {
@@ -85,22 +76,6 @@ export const dialog = {
       cancelButtonText: o.cancelText ?? 'Cancel',
     });
     return r.isConfirmed ? (r.inputValue ?? '') : null;
-  },
-
-  /** Non-blocking corner toast — a thin alias that delegates to the single
-   *  app-wide toaster (@ui/toast), so existing dialog.toast(...) call sites
-   *  render through the ONE engine (no second toast system). New code should
-   *  import `toast` from '@store' / '@ui/toast' directly. */
-  toast: (o: ToastOptions) => {
-    const message = o.text ?? o.title ?? '';
-    const opts = { title: o.text && o.title ? o.title : undefined, duration: o.duration };
-    switch (o.icon) {
-      case 'error':    return uiToast.error(message, opts);
-      case 'warning':  return uiToast.warning(message, opts);
-      case 'info':     return uiToast.info(message, opts);
-      case 'question': return uiToast(message, opts);
-      default:         return uiToast.success(message, opts); // old default icon was 'success'
-    }
   },
 
   /** Blocking spinner — call dialog.close() when done. */

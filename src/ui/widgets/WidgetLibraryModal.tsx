@@ -14,6 +14,7 @@ import { createPreviewWidgetInstance } from './createPreviewWidgetInstance';
 import { parseWidgetPackageFile } from './declarative/parsePackageFile';
 import { installWidgetPackage, uninstallWidgetPackage } from '@api/widgets';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { WidgetCatalog } from './WidgetCatalog';
 import { WidgetDetailPanel } from './WidgetDetailPanel';
 
@@ -81,7 +82,7 @@ export function WidgetLibraryModal({
     if (!ok) return;
     try {
       await uninstallWidgetPackage(id); refreshPackages();
-      void dialog.toast({ text: `Removed “${name}”`, icon: 'success' });
+      void toast.success(`Removed “${name}”`);
     } catch (err) {
       void dialog.error('Uninstall failed', err instanceof Error ? err.message : 'Could not uninstall.');
     }

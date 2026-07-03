@@ -11,6 +11,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, SelectInput, Tabs, EmptyState } from '@ui';
 import {
@@ -31,7 +32,6 @@ import './orgStructure.css';
 
 type Opt = { value: string; label: string };
 const ORG_UNIT_TYPES: OrgUnitType[] = ['company', 'division', 'department', 'team', 'crew', 'site_department'];
-const toast = (m: string): void => { void dialog.toast({ title: m }); };
 /** Union-aware toast: applied vs held for approval (Phase B). */
 function toastResult(res: OrgMutationResult, appliedMsg: string): void {
   toast(res.mode === 'pendingApproval' ? `Submitted for approval — ${res.riskLevel} risk` : appliedMsg);

@@ -11,12 +11,16 @@
 
 .siomac-toaster {
   position:        fixed;
-  bottom:          24px;
+  top:             24px;
   right:           24px;
   z-index:         100001; /* above modals (cpop is 99999) */
   display:         flex;
-  flex-direction:  column;
-  gap:             8px;
+  /* column-reverse so the NEWEST toast (last in DOM) sits at the top, near the
+     corner, and pushes older ones down — the correct order for a top anchor.
+     The "+N more" pill (first in DOM) lands at the bottom of the stack. */
+  flex-direction:  column-reverse;
+  --toast-gap:     8px;
+  gap:             var(--toast-gap);
   align-items:     flex-end;
   pointer-events:  none; /* click-through between cards */
   max-width:       420px;
@@ -40,8 +44,34 @@
   min-width:      280px;
   max-width:      420px;
   outline:        none;
-  animation:      siomac-toast-in 0.22s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  animation:      siomac-toast-in 0.28s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  /* Exit + swipe-release ride these transitions; the entrance uses the keyframe
+     above. height/margin/padding carry the collapse that reflows the stack. */
+  transition:
+    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity   0.22s ease,
+    height    0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    margin    0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    padding   0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action:   pan-y; /* horizontal swipe = dismiss, vertical = page scroll */
   cursor:         default;
+}
+
+/* While the finger/pointer is dragging: follow it 1:1 (no transition lag). */
+.toast-card--dragging {
+  transition: none;
+  cursor:     grabbing;
+  user-select: none;
+}
+
+/* Exit: slide out to the right + fade. The JS collapses height/margin/padding
+   to 0 (inline) so the cards below glide up to fill the gap. */
+.toast-card--exiting {
+  animation:      none;
+  opacity:        0;
+  transform:      translateX(110%);
+  pointer-events: none;
+  overflow:       hidden;
 }
 
 .toast-card--clickable {
@@ -284,8 +314,8 @@
 /* ── Animations ────────────────────────────────────────────────────────────── */
 
 @keyframes siomac-toast-in {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0);    }
+  from { opacity: 0; transform: translateX(28px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0)    scale(1);    }
 }
 
 @keyframes toast-spin {
@@ -296,7 +326,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .toast-card {
-    animation: none;
+    animation:  none;
+    /* Keep opacity so exit still fades, but no slide/scale/collapse motion. */
+    transition: opacity 0.15s ease;
+  }
+  .toast-card--exiting {
+    transform: none;
   }
   .toast-progress-bar {
     transition: none;
@@ -310,7 +345,7 @@
 
 @media (max-width: 480px) {
   .siomac-toaster {
-    bottom:   12px;
+    top:      12px;
     right:    12px;
     left:     12px;
     max-width: none;

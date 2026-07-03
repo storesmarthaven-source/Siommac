@@ -8,6 +8,7 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
 import { PageHeader, Modal, Field, SelectInput, TextInput, EmptyState } from '@ui';
@@ -37,7 +38,6 @@ function humanize(str: string): string {
   return str.replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
 }
 
-const toast = (m: string): void => { void dialog.toast({ title: m }); };
 
 // -- Submit Leave Dialog
 interface SubmitDialogProps { onClose: () => void; }

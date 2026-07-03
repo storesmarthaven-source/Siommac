@@ -22,6 +22,7 @@ import {
 import type { OnboardingHandoffRow, OnboardingBlockerRow, OnboardingAuditRow, OnboardingCommunicationType } from '../../../types/hrOnboarding';
 import { useOnboardingCaseStore, selectCaseId, selectCaseRow } from '@store/onboardingCase';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { humanize } from '@/components/sections/HR/onboardingStatus';
 import {
   Ring, GaugeArc, bucket, matchDocs, matchTraining, matchProvision, matchIT,
@@ -311,13 +312,13 @@ function CommunicationsWidget(): VNode {
   const send = (): void => {
     if (!caseId) return;
     void (async () => {
-      try { const r = await sendMut.mutateAsync({ caseId, communicationType: type }); void dialog.toast({ text: r.status === 'sent' ? 'Message sent' : 'Saved as draft', icon: r.status === 'sent' ? 'success' : 'info' }); }
+      try { const r = await sendMut.mutateAsync({ caseId, communicationType: type }); r.status === 'sent' ? toast.success('Message sent') : toast.info('Saved as draft'); }
       catch (e) { void dialog.error('Send failed', e instanceof Error ? e.message : 'Could not send'); }
     })();
   };
   const resend = (id: string): void => {
     void (async () => {
-      try { await resendMut.mutateAsync({ id }); void dialog.toast({ text: 'Resent', icon: 'success' }); }
+      try { await resendMut.mutateAsync({ id }); toast.success('Resent'); }
       catch (e) { void dialog.error('Resend failed', e instanceof Error ? e.message : 'Could not resend'); }
     })();
   };

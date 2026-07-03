@@ -27,7 +27,7 @@ import type {
   RichToastInput,
   ToastPosition,
 } from './toastTypes';
-import { upsertToast, removeToast } from './toastStore';
+import { upsertToast, removeToast, dismissToast } from './toastStore';
 
 export type { ToastRecord, ToastVariant, ToastOptions, ToastAction, RichToastInput };
 export { Toaster } from './Toaster';
@@ -195,7 +195,9 @@ async function toastPromise<T>(
 // ── Dismiss ───────────────────────────────────────────────────────────────────
 
 function toastDismiss(id?: string): void {
-  removeToast(id);
+  // No id → clear everything instantly. A specific id animates out.
+  if (id === undefined) { removeToast(); return; }
+  dismissToast(id);
 }
 
 // ── Compose the public API object ─────────────────────────────────────────────

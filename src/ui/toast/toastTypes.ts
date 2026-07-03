@@ -66,6 +66,9 @@ export interface ToastRecord {
   createdAt:   number;
   paused:      boolean;
   remainingMs: number;
+  /** True once the toast is animating out; the card plays its exit + height
+   *  collapse, then the store removes it after the animation window. */
+  exiting?:    boolean;
   onClick?:    () => void;
   onDismiss?:  () => void;
 }

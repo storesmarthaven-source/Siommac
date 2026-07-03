@@ -18,6 +18,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import {
   PageHeader, Tabs, type TabDef, Modal, EmptyState, TableSkeleton,
   Field, TextInput, SelectInput, FormGrid,
@@ -103,7 +104,7 @@ function RegisterTab(): VNode {
       const url = await getHrDocumentDownloadUrl(docId);
       window.open(url, '_blank', 'noopener');
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Download failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Download failed');
     }
   }
 
@@ -112,9 +113,9 @@ function RegisterTab(): VNode {
     if (!ok) return;
     try {
       await verify.mutateAsync({ documentId: docId, decision: 'approve' });
-      void dialog.toast({ text: 'Document verified.', icon: 'success' });
+      void toast.success('Document verified.');
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Verification failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Verification failed');
     }
   }
 
@@ -123,9 +124,9 @@ function RegisterTab(): VNode {
     if (!ok) return;
     try {
       await archive.mutateAsync(docId);
-      void dialog.toast({ text: 'Document archived.', icon: 'success' });
+      void toast.success('Document archived.');
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Archive failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Archive failed');
     }
   }
 
@@ -255,7 +256,7 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
   async function handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
     if (!file || !employeeId || !documentType || !title) {
-      void dialog.toast({ text: 'All fields marked * are required.', icon: 'error' });
+      void toast.error('All fields marked * are required.');
       return;
     }
     const args: UploadDocArgs = {
@@ -264,10 +265,10 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
     };
     try {
       await upload.mutateAsync(args);
-      void dialog.toast({ text: 'Document uploaded successfully.', icon: 'success' });
+      void toast.success('Document uploaded successfully.');
       onClose();
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Upload failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Upload failed');
     }
   }
 
@@ -324,12 +325,9 @@ function ExpiringTab(): VNode {
     try {
       const res = await sweep.mutateAsync();
       const d = (res as { data?: { scanned: number; remindersSent: number } }).data;
-      void dialog.toast({
-        text: `Sweep complete — ${d?.scanned ?? 0} docs scanned, ${d?.remindersSent ?? 0} reminders sent.`,
-        icon: 'success',
-      });
+      void toast.success(`Sweep complete — ${d?.scanned ?? 0} docs scanned, ${d?.remindersSent ?? 0} reminders sent.`);
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Sweep failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Sweep failed');
     }
   }
 
@@ -400,9 +398,9 @@ function RequirementsTab(): VNode {
     if (!ok) return;
     try {
       await retire.mutateAsync(req.id);
-      void dialog.toast({ text: 'Requirement retired.', icon: 'success' });
+      void toast.success('Requirement retired.');
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Retire failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Retire failed');
     }
   }
 
@@ -525,7 +523,7 @@ function RequirementModal({ existing, onClose }: {
   async function handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
     if (!documentType || !label) {
-      void dialog.toast({ text: 'Document type and label are required.', icon: 'error' });
+      void toast.error('Document type and label are required.');
       return;
     }
     const days = reminderDays.split(',')
@@ -534,7 +532,7 @@ function RequirementModal({ existing, onClose }: {
     try {
       if (existing) {
         await update.mutateAsync({ requirementId: existing.id, label, requiresExpiry, reminderDays: days });
-        void dialog.toast({ text: 'Requirement updated.', icon: 'success' });
+        void toast.success('Requirement updated.');
       } else {
         await create.mutateAsync({
           documentType, label,
@@ -543,11 +541,11 @@ function RequirementModal({ existing, onClose }: {
           requiresExpiry,
           reminderDays: days,
         });
-        void dialog.toast({ text: 'Requirement created.', icon: 'success' });
+        void toast.success('Requirement created.');
       }
       onClose();
     } catch (err) {
-      void dialog.toast({ text: err instanceof Error ? err.message : 'Save failed', icon: 'error' });
+      void toast.error(err instanceof Error ? err.message : 'Save failed');
     }
   }
 

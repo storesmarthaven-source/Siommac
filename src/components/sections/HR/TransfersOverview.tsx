@@ -12,6 +12,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
 import {
@@ -23,7 +24,6 @@ import './onboardingCase.css';
 
 const STATUS_FILTERS = ['all', 'submitted', 'in_review', 'returned', 'applied', 'rejected', 'cancelled'] as const;
 
-const toast = (m: string): void => { void dialog.toast({ title: m }); };
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function statusTone(s: string): 'green' | 'gray' | 'red' {
   if (s === 'applied')   return 'green';

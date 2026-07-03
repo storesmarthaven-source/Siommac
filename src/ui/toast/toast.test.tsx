@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act, cleanup }         from '@testing-library/preact';
 import { toast, Toaster }                                  from '@ui/toast';
-import { getToasts, removeToast }                          from './toastStore';
+import { getToasts, removeToast, TOAST_EXIT_MS }           from './toastStore';
 
 // ── Reset store between tests ─────────────────────────────────────────────────
 
@@ -44,10 +44,12 @@ describe('toastStore', () => {
     expect(getToasts()).toHaveLength(0);
   });
 
-  it('dismiss(id) removes one', () => {
+  it('dismiss(id) removes one (after the exit animation)', () => {
     toast.success('Stay');
     const id = toast.success('Gone');
     toast.dismiss(id);
+    // Animated out first — still present until the exit window elapses.
+    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     const remaining = getToasts();
     expect(remaining).toHaveLength(1);
     expect(remaining[0]?.message).toBe('Stay');
@@ -198,6 +200,7 @@ describe('Toaster component', () => {
     expect(screen.getByText('Hello')).toBeTruthy();
     const dismissBtn = screen.getByLabelText('Dismiss notification');
     fireEvent.click(dismissBtn);
+    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText('Hello')).toBeNull();
   });
 
@@ -205,7 +208,8 @@ describe('Toaster component', () => {
     renderToaster();
     act(() => { toast.success('Auto gone', { duration: 1000 }); });
     expect(screen.getByText('Auto gone')).toBeTruthy();
-    act(() => { vi.advanceTimersByTime(1100); });
+    act(() => { vi.advanceTimersByTime(1100); });          // duration fires
+    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });  // exit animation
     expect(screen.queryByText('Auto gone')).toBeNull();
   });
 
@@ -239,6 +243,7 @@ describe('Toaster component', () => {
     const undoBtn = screen.getByText('Undo');
     await act(async () => { fireEvent.click(undoBtn); });
     expect(onClickMock).toHaveBeenCalledOnce();
+    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText('Something happened')).toBeNull();
   });
 
@@ -262,6 +267,7 @@ describe('Toaster component', () => {
     if (card) {
       fireEvent.keyDown(card, { key: 'Escape' });
     }
+    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText('Press Esc')).toBeNull();
   });
 

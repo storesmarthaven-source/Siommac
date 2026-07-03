@@ -10,6 +10,7 @@
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
 import {
@@ -22,7 +23,6 @@ import './onboardingCase.css';
 
 const REASONS: OffboardingReason[] = ['resignation', 'termination', 'redundancy', 'end_of_contract', 'retirement'];
 const STATUS_FILTERS = ['all', 'in_progress', 'open', 'paused', 'blocked', 'ready_for_exit', 'draft', 'completed', 'cancelled'] as const;
-const toast = (m: string): void => { void dialog.toast({ title: m }); };
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function statusTone(s: string): 'green' | 'gray' | 'red' {
   return s === 'completed' ? 'green' : s === 'cancelled' ? 'red' : 'gray';

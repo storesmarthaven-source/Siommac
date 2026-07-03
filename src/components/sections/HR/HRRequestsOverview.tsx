@@ -11,14 +11,13 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
 import type { HrRequestRow, HrRequestTypeDef } from '../../../../types/hrRequests';
-
-const toast = (m: string): void => { void dialog.toast({ title: m }); };
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
 function statusTone(s: string): 'green' | 'gray' | 'red' | 'blue' | 'orange' {
@@ -49,7 +48,7 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
   const selectedType = types.find(t => t.key === requestType);
 
   async function submit(): Promise<void> {
-    if (!title.trim()) { void dialog.toast({ title: 'Please enter a title.' }); return; }
+    if (!title.trim()) { toast('Please enter a title.'); return; }
     setBusy(true);
     try {
       await hrRequestsApi.submit({
@@ -181,7 +180,7 @@ function DecideModal({ req, onClose, onDone }: DecideModalProps): VNode {
 
   async function submit(): Promise<void> {
     if ((decision === 'rejected' || decision === 'returned') && !comment.trim()) {
-      void dialog.toast({ title: 'A comment is required to reject or return.' }); return;
+      toast('A comment is required to reject or return.'); return;
     }
     setBusy(true);
     try {
