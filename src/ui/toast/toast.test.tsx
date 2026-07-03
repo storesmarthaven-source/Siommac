@@ -237,13 +237,6 @@ describe('Toaster component', () => {
     expect(screen.getByText('Undo')).toBeTruthy();
   });
 
-  it('renders the title dot element', () => {
-    renderToaster();
-    act(() => { toast.success('Check'); });
-    const dot = document.querySelector('.cpop-toast-dot');
-    expect(dot).toBeTruthy();
-  });
-
   it('renders title in .cpop-toast-title', () => {
     renderToaster();
     act(() => { toast.rich({ title: 'My Title', body: 'Body text' }); });

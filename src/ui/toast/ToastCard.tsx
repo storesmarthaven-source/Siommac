@@ -337,7 +337,6 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
         {/* Body */}
         <div class="cpop-toast-body">
           <div class="cpop-toast-title-row">
-            <span class="cpop-toast-dot" aria-hidden="true" />
             <div class="cpop-toast-title">{displayTitle}</div>
           </div>
 

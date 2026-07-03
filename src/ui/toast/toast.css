@@ -19,7 +19,7 @@
 
 .cpop-toasts {
   position:       fixed;
-  top:            20px;
+  bottom:         20px;
   right:          20px;
   width:          344px;
   max-width:      calc(100% - 28px);
@@ -43,9 +43,9 @@
   grid-template-rows: auto auto auto 2px;   /* main · actions · footer · bar */
   overflow:     hidden;
 
-  /* archieamas position model, inverted to top-anchored (top-right) */
+  /* archieamas position model (bottom-anchored, bottom-right) */
   position:       absolute;
-  top:            0;
+  bottom:         0;
   right:          0;
   box-sizing:     border-box;
   pointer-events: all;
@@ -124,8 +124,8 @@
 
 .cpop-toast-icon {
   flex-shrink:     0;
-  width:           30px;
-  height:          30px;
+  width:           22px;
+  height:          22px;
   border-radius:   50%;
   display:         flex;
   align-items:     center;
@@ -133,8 +133,8 @@
 }
 
 .cpop-toast-icon svg {
-  width:        18px;
-  height:       18px;
+  width:        20px;
+  height:       20px;
   stroke-width: 3.6;
   fill:         none;
 }
@@ -509,7 +509,7 @@
 @keyframes toast-enter {
   from {
     opacity:   0;
-    transform: translateY(-100%) scale(0.9);
+    transform: translateY(100%) scale(0.9);
   }
   to {
     opacity:   1;
@@ -524,7 +524,7 @@
   }
   to {
     opacity:   0;
-    transform: translateY(-100%) scale(0.9);
+    transform: translateY(100%) scale(0.9);
   }
 }
 
@@ -570,11 +570,11 @@
     0 0 0 3px rgba(27, 45, 85, .22);
 }
 
-/* ── Mobile (top:12px right:12px left:12px) ──────────────────────────────────── */
+/* ── Mobile (bottom:12px right:12px left:12px) ───────────────────────────────── */
 
 @media (max-width: 480px) {
   .cpop-toasts {
-    top:       12px;
+    bottom:    12px;
     right:     12px;
     left:      12px;
     width:     auto;
