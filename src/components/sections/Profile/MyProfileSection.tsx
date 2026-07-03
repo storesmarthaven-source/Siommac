@@ -832,7 +832,7 @@ function ChangePhotoModal({
                 <div class="mp76-review-note">
                   <DlgIco d={IC_INFO} />
                   {canSelfApprove
-                    ? <span>As a reviewer, your photo change is <strong>applied immediately</strong> — no approval required.</span>
+                    ? <span>Your new profile photo will be <strong>applied immediately</strong>.</span>
                     : <span>Selected photos are submitted as <strong>Pending Review</strong>. HR approval is required before the profile image becomes official.</span>}
                 </div>
               </div>
