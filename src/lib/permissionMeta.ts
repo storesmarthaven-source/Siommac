@@ -1102,4 +1102,38 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export overtime reports (audited data egress).',
     risk: 'medium',
   },
+
+  // ── HR Employee Statutory Profile (NIS capture) ───────────────────────────────
+  'hr.employee.statutory.view': {
+    module: 'HR', group: 'Statutory Profile',
+    label: 'View Statutory Profile',
+    description: 'View the NIS / statutory profile section for an employee (NIS number, previous employer history, opening YTD balances).',
+    risk: 'high',
+  },
+  'hr.employee.statutory.capture': {
+    module: 'HR', group: 'Statutory Profile',
+    label: 'Capture Statutory Profile',
+    description: 'Create or update NIS continuity data for an employee. HR can capture data but cannot mark a profile as verified (Finance only).',
+    risk: 'high',
+  },
+
+  // ── Finance NIS Profile Verification ─────────────────────────────────────────
+  'finance.payroll.nis.view': {
+    module: 'Finance', group: 'NIS Verification',
+    label: 'View NIS Profiles',
+    description: 'View employee NIS statutory profiles submitted by HR for Finance review, including pending and verified profiles.',
+    risk: 'low',
+  },
+  'finance.payroll.nis.verify': {
+    module: 'Finance', group: 'NIS Verification',
+    label: 'Verify NIS Profile',
+    description: 'Set a NIS statutory profile status to verified after Finance review. Only Finance Manager may verify; HR cannot set this status.',
+    risk: 'high',
+  },
+  'finance.payroll.nis.manage': {
+    module: 'Finance', group: 'NIS Verification',
+    label: 'Manage NIS Profiles',
+    description: 'Reject NIS profiles that cannot be verified and manage the Finance side of the NIS continuity workflow.',
+    risk: 'high',
+  },
 };

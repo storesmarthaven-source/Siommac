@@ -418,6 +418,13 @@ export const PERMISSION_KEYS = [
   'hr.overtime.manage',             // HR admin: manage all overtime entries
   'hr.overtime.reports.view',       // view overtime register and summary reports
   'hr.overtime.reports.export',     // export overtime reports
+  // ── HR Employee Statutory Profile (NIS capture) ───────────────────────────────
+  'hr.employee.statutory.view',     // view the NIS / statutory profile section of an employee
+  'hr.employee.statutory.capture',  // create or update NIS / statutory profile data (HR side)
+  // ── Finance NIS Profile Verification ─────────────────────────────────────────
+  'finance.payroll.nis.view',       // Finance: view pending and verified NIS profiles
+  'finance.payroll.nis.verify',     // Finance Manager: verify a NIS profile (set status=verified)
+  'finance.payroll.nis.manage',     // Finance Manager: manage NIS profiles (reject, re-open)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -477,6 +484,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.compensation.view', 'hr.compensation.manage',
     // HR Overtime — view + admin manage
     'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
+    // HR statutory profile capture (NIS)
+    'hr.employee.statutory.view', 'hr.employee.statutory.capture',
   ]),
   hr_manager: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
@@ -486,14 +495,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR Overtime — full
     'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
+    // HR statutory profile capture (NIS)
+    'hr.employee.statutory.view', 'hr.employee.statutory.capture',
   ]),
   hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
 
-  // Finance roles — mirrors 20260802000000 + 20260802000003
+  // Finance roles — mirrors 20260802000000 + 20260802000003 + 20260802000011
   finance_staff: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
     'finance.statutory.view',
     'finance.payroll.components.view',
+    'finance.payroll.nis.view',
   ]),
   finance_manager: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
@@ -504,6 +516,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    'finance.payroll.nis.view',
+    'finance.payroll.nis.verify',
+    'finance.payroll.nis.manage',
   ]),
 
   employee: new Set<PermissionKey>([
@@ -734,6 +749,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
     'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
+    // HR statutory capture + Finance NIS verification — ALL keys
+    'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -893,6 +911,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
     'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
+    // HR statutory capture + Finance NIS verification — ALL keys
+    'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
   ]),
 };
 
