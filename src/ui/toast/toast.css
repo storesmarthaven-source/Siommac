@@ -20,7 +20,7 @@
 
 .siomac-toaster {
   position:       fixed;
-  bottom:         20px;
+  top:            20px;
   right:          20px;
   width:          344px;
   max-width:      calc(100% - 28px);
@@ -45,9 +45,9 @@
     0 1px 0 rgba(255, 255, 255, .9) inset;
   overflow:       hidden;
 
-  /* archieamas position model (bottom-anchored, bottom-right) */
+  /* archieamas position model, inverted to top-anchored (top-right) */
   position:       absolute;
-  bottom:         0;
+  top:            0;
   right:          0;
   box-sizing:     border-box;
   pointer-events: all;
@@ -454,7 +454,7 @@
 
 @media (max-width: 480px) {
   .siomac-toaster {
-    bottom:    12px;
+    top:       12px;
     right:     12px;
     left:      12px;
     width:     auto;
@@ -471,7 +471,7 @@
 @keyframes siomac-toast-enter {
   from {
     opacity:   0;
-    transform: translateY(100%) scale(0.9);
+    transform: translateY(-100%) scale(0.9);
   }
   to {
     opacity:   1;
@@ -486,7 +486,7 @@
   }
   to {
     opacity:   0;
-    transform: translateY(100%) scale(0.9);
+    transform: translateY(-100%) scale(0.9);
   }
 }
 
