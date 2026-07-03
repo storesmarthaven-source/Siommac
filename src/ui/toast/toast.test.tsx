@@ -2,7 +2,12 @@
  * src/ui/toast/toast.test.tsx
  *
  * Tests for the Siomac toast system (toastStore + toast API + Toaster component).
- * Updated for the verbatim reference port (cpop-toast grid, no deck stacking).
+ * Updated for the archieamas stacking effect:
+ *   - Container is .cpop-toasts (bottom-right, position:fixed)
+ *   - Cards are position:absolute with .entering on mount, .exiting on dismiss
+ *   - Collapsed: beyond MAX_VISIBLE_TOASTS (5) get display:none
+ *   - Hover adds .expanded-stack to container
+ *   - Oldest in DOM first; newest is last DOM child (visual front)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -336,19 +341,6 @@ describe('Toaster component', () => {
     expect(screen.queryByText('Auto gone')).toBeNull();
   });
 
-  it('renders all toast cards in the DOM (simple grid, no hidden cards)', () => {
-    renderToaster();
-    act(() => {
-      for (let i = 0; i < 6; i++) toast.info(`Toast ${i}`, { duration: 0 });
-    });
-    // All 6 cards must be in the DOM — simple grid, no stacking/hiding
-    const cards = document.querySelectorAll('.cpop-toast');
-    expect(cards.length).toBe(6);
-    // No deck-hidden or overflow-pill elements
-    const pill = document.querySelector('.toast-overflow-pill');
-    expect(pill).toBeNull();
-  });
-
   it('renders rich toast with title, body, and meta', () => {
     renderToaster();
     act(() => {
@@ -420,19 +412,29 @@ describe('Toaster component', () => {
     expect(document.querySelector('.cpop-toasts')).toBeTruthy();
   });
 
-  it('newest toast is rendered first in the DOM (top of grid)', () => {
+  // ── Stacking-specific tests (archieamas) ────────────────────────────────────
+
+  it('newest toast is last in the DOM (oldest-first order = newest = visual front)', () => {
     renderToaster();
     act(() => {
       toast.info('First', { duration: 0 });
       toast.info('Second', { duration: 0 });
     });
     const cards = document.querySelectorAll('.cpop-toast');
-    // Second (newest) should be first in DOM
-    expect(cards[0]?.textContent).toContain('Second');
-    expect(cards[1]?.textContent).toContain('First');
+    // Oldest first in DOM; newest is last (visual front/bottom in stack)
+    expect(cards[0]?.textContent).toContain('First');
+    expect(cards[1]?.textContent).toContain('Second');
   });
 
-  it('exiting toast gets toast-card--exiting class', () => {
+  it('card gets .entering class on mount', () => {
+    renderToaster();
+    act(() => { toast.info('Enter test', { duration: 0 }); });
+    // entering is added synchronously on mount before the 420ms removal
+    const card = document.querySelector('.cpop-toast.entering');
+    expect(card).toBeTruthy();
+  });
+
+  it('exiting toast gets .exiting class (not .toast-card--exiting)', () => {
     renderToaster();
     act(() => { toast.info('Exiting toast', { duration: 0 }); });
     const toastList = getToasts();
@@ -441,7 +443,70 @@ describe('Toaster component', () => {
     if (id) {
       act(() => { toast.dismiss(id); });
     }
-    const exiting = document.querySelector('.toast-card--exiting');
+    const exiting = document.querySelector('.cpop-toast.exiting');
     expect(exiting).toBeTruthy();
+    // Old class must NOT be used
+    expect(document.querySelector('.toast-card--exiting')).toBeNull();
+  });
+
+  it('collapsed mode: cards beyond MAX_VISIBLE_TOASTS (5) get display:none', () => {
+    // jsdom doesn't paint or execute rAF callbacks, so we flush rAF manually.
+    // Replace the global rAF with a synchronous shim for this test.
+    const realRaf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    };
+
+    renderToaster();
+    act(() => {
+      for (let i = 0; i < 7; i++) toast.info(`Toast ${i}`, { duration: 0 });
+    });
+
+    const allCards = document.querySelectorAll<HTMLElement>('.cpop-toast');
+    expect(allCards.length).toBe(7); // all in DOM
+
+    // The 2 oldest (beyond MAX_VISIBLE_TOASTS=5 newest) should be display:none
+    const hiddenCards = Array.from(allCards).filter((el) => el.style.display === 'none');
+    expect(hiddenCards.length).toBe(2);
+
+    globalThis.requestAnimationFrame = realRaf;
+  });
+
+  it('hover adds .expanded-stack to container', () => {
+    renderToaster();
+    act(() => {
+      toast.info('A', { duration: 0 });
+      toast.info('B', { duration: 0 });
+    });
+
+    const container = document.querySelector('.cpop-toasts')!;
+    expect(container).toBeTruthy();
+
+    // mouseenter → after 200ms debounce → expanded-stack added
+    fireEvent.mouseEnter(container);
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(container.classList.contains('expanded-stack')).toBe(true);
+
+    // mouseleave → after 200ms debounce → expanded-stack removed
+    fireEvent.mouseLeave(container);
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(container.classList.contains('expanded-stack')).toBe(false);
+  });
+
+  it('all toast cards are present in DOM (stacking hides via inline style, not removal)', () => {
+    renderToaster();
+    act(() => {
+      for (let i = 0; i < 6; i++) toast.info(`Toast ${i}`, { duration: 0 });
+    });
+    const cards = document.querySelectorAll('.cpop-toast');
+    // All 6 must be in DOM — stacking only sets display:none, never removes
+    expect(cards.length).toBe(6);
+    // No overflow pill
+    expect(document.querySelector('.toast-overflow-pill')).toBeNull();
+  });
+
+  it('TOAST_EXIT_MS is 450', () => {
+    expect(TOAST_EXIT_MS).toBe(450);
   });
 });

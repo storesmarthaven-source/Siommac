@@ -10,8 +10,9 @@ import type { ToastRecord } from './toastTypes';
 type Listener = () => void;
 
 /** How long the exit animation runs before the record is actually dropped.
- *  Must be >= the CSS transition duration on `.toast-card` (see toast.css). */
-export const TOAST_EXIT_MS = 320;
+ *  Must be >= the CSS exit animation duration (0.4s). 450ms gives a small
+ *  buffer so the animationend always fires before the record is pruned. */
+export const TOAST_EXIT_MS = 450;
 
 let records: ToastRecord[]  = [];
 let _globalPaused           = false;

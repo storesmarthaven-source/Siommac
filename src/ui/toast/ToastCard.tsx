@@ -1,16 +1,23 @@
 /**
  * src/ui/toast/ToastCard.tsx
  *
- * Single toast card — SIOMAC chosen normal + action design (verbatim port).
+ * Single toast card — SIOMAC card design preserved verbatim.
  *
- * Grid layout:
+ * Stacking effect integration (archieamas):
+ *   - On mount: card gets class `entering` → @keyframes toast-enter fires,
+ *     then class is removed so the stacking inline-style can take over.
+ *   - Exit: store `exiting` flag → class `exiting` → @keyframes toast-exit,
+ *     pointer-events:none. Store removes the record after TOAST_EXIT_MS (450ms).
+ *   - Inline bottom/transform/opacity/zIndex are set by Toaster's
+ *     updateToastPositions(); cards must NOT set those themselves.
+ *
+ * Card layout (unchanged):
  *   tier-normal:  grid-template-rows: auto 2px          (main · bar)
  *   action/rich:  grid-template-rows: auto auto 2px     (main · actions · bar)
  *
- * Enter: CSS keyframe toast-in (translateX(22px) translateY(6px) → identity, .28s).
- * Exit:  .toast-card--exiting → translateY(-100%) opacity:0 (deviation 2, slides UP).
- *
- * No deck stacking, no swipe-to-dismiss, no height-normalisation.
+ * Timer pause: hover/focus on the individual card still pauses auto-dismiss
+ * (archieamas has no timer pause, but we keep ours; the container hover
+ * also pauses via setGlobalPaused in Toaster).
  */
 
 import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
@@ -142,10 +149,11 @@ function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
 interface ToastCardProps {
-  record: ToastRecord;
+  record:           ToastRecord;
+  onPositionUpdate: () => void;
 }
 
-export function ToastCard({ record }: ToastCardProps) {
+export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
   const {
     id, tier, variant, title, message, body, icon, avatarUrl,
     meta, actions, summary, note, duration, dismissible,
@@ -156,6 +164,24 @@ export function ToastCard({ record }: ToastCardProps) {
   const startRef       = useRef<number>(0);
   const remaining      = useRef<number>(remainingMs);
   const localPausedRef = useRef<boolean>(false);
+  const cardRef        = useRef<HTMLElement | null>(null);
+
+  // ── Enter animation: add class on mount, remove after animation ──────────────
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.classList.add('entering');
+    // The toast-enter animation is 0.4s; remove the class after it so the
+    // stacking inline-styles (transform/opacity) from updateToastPositions
+    // can take effect without fighting the animation forwards fill.
+    const t = setTimeout(() => {
+      el.classList.remove('entering');
+      onPositionUpdate();
+    }, 420); // slightly past the 0.4s animation
+    return () => clearTimeout(t);
+  // Run once on mount only
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const role = (variant === 'error' || variant === 'critical') ? 'alert' : 'status';
 
@@ -251,13 +277,14 @@ export function ToastCard({ record }: ToastCardProps) {
 
   return (
     <article
+      ref={cardRef as any}
       role={role}
       tabIndex={0}
       class={[
         'cpop-toast',
         variantClass,
         isNormal    ? 'tier-normal'           : '',
-        !!exiting   ? 'toast-card--exiting'   : '',
+        !!exiting   ? 'exiting'               : '',
         isClickable ? 'toast-card--clickable' : '',
       ].filter(Boolean).join(' ')}
       onMouseEnter={handleMouseEnter}

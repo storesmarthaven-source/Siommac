@@ -1,37 +1,34 @@
 /**
  * src/ui/toast/toast.css
  *
- * Verbatim port of the reference design:
- *   siomac_toast_chosen_normal_action_with_countdown_close(1).html
+ * Stacking effect: verbatim port of archieamas/stacked-toast (test.css + test.js).
+ * Card design (cpop-toast, all inner elements): unchanged from the reference design.
  *
- * Deviations from reference (only two, as specified):
- *   1. Anchored TOP-RIGHT (top:24px right:24px) instead of bottom-right.
- *      Newest toast is rendered FIRST in DOM so it appears at the top.
- *   2. Exit animation slides UP (translateY(-100%) + opacity:0) instead of right.
- *      .toast-card--exiting rule handles this; store's exiting flag drives it.
- *
- * Everything else is verbatim: card width 344px, container gap 10px,
- * box-shadow, border-radius via --radius-md, paddings, font-sizes, colors,
- * @keyframes toast-in (translateX(22px) translateY(6px) → identity),
- * @keyframes cpop-toast-timer (scaleX 1→0), hover-pauses-bar, variant rules,
- * reduced-motion override.
+ * KEY ARCHIEAMAS RULES (do not deviate):
+ *   Container: position:fixed; bottom:20px; right:20px; pointer-events:none;
+ *              transition:height 0.3s cubic-bezier(0.23,1,0.32,1)
+ *              width matches card width (344px)
+ *   Card:      position:absolute; bottom:0; right:0; opacity:0 (initial);
+ *              transition:all 0.4s cubic-bezier(0.23,1,0.32,1); pointer-events:all
+ *   Enter:     .entering → @keyframes toast-enter (0.4s cubic-bezier(0.23,1,0.32,1) forwards)
+ *   Exit:      .exiting  → @keyframes toast-exit  (0.4s cubic-bezier(0.23,1,0.32,1) forwards; pointer-events:none)
+ *   Inline styles (bottom/transform/opacity/zIndex) set by updateToastPositions() in Toaster.tsx.
  */
 
-/* ── Container ───────────────────────────────────────────────────────────────── */
+/* ── Container (archieamas verbatim) ─────────────────────────────────────────── */
 
 .cpop-toasts {
   position:       fixed;
-  top:            24px;     /* deviation 1: top-right instead of bottom-right */
-  right:          24px;
-  z-index:        100001;   /* above modals (cpop is 99999) */
+  bottom:         20px;
+  right:          20px;
   width:          344px;
   max-width:      calc(100% - 28px);
-  display:        grid;
-  gap:            10px;
+  z-index:        100001;   /* above modals (cpop is 99999) */
   pointer-events: none;
+  transition:     height 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* ── Card base ───────────────────────────────────────────────────────────────── */
+/* ── Card base (archieamas position model; card design preserved) ────────────── */
 
 .cpop-toast {
   width:        344px;
@@ -44,19 +41,30 @@
   border:       1px solid var(--border);
   display:      grid;
   grid-template-rows: auto auto 2px;
-  position:     relative;
   overflow:     hidden;
-  pointer-events: auto;
 
-  /* Enter animation (reference verbatim) */
-  transform:    translateX(22px);
-  opacity:      0;
-  animation:    toast-in .28s ease forwards;
+  /* archieamas: absolute position, starts hidden, transition all */
+  position:       absolute;
+  bottom:         0;
+  right:          0;
+  box-sizing:     border-box;
+  pointer-events: all;
+  opacity:        0;
+  transition:     all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Staggered enter delays for 2nd and 3rd cards (reference verbatim) */
-.cpop-toast:nth-child(2) { animation-delay: .10s; }
-.cpop-toast:nth-child(3) { animation-delay: .20s; }
+/* ── Enter animation (archieamas verbatim) ───────────────────────────────────── */
+
+.cpop-toast.entering {
+  animation: toast-enter 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* ── Exit animation (archieamas verbatim) ────────────────────────────────────── */
+
+.cpop-toast.exiting {
+  animation:      toast-exit 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  pointer-events: none;
+}
 
 /* ── tier-normal: collapse action row ─────────────────────────────────────────── */
 
@@ -68,16 +76,10 @@
   display: none;
 }
 
-/* ── Exit: slides UP + fades (deviation 2) ────────────────────────────────────── */
+/* ── Clickable card cursor ────────────────────────────────────────────────────── */
 
-.toast-card--exiting {
-  animation:      none !important;
-  opacity:        0 !important;
-  transform:      translateY(-100%) !important;
-  pointer-events: none;
-  transition:
-    transform .28s cubic-bezier(0.4, 0, 1, 1),
-    opacity .28s ease !important;
+.toast-card--clickable {
+  cursor: pointer;
 }
 
 /* ── Main row: icon · body · tools ──────────────────────────────────────────── */
@@ -108,7 +110,7 @@
   fill:         none;
 }
 
-/* Avatar image (not in reference — kept for behavioral compat) */
+/* Avatar image */
 .toast-avatar {
   width:         30px;
   height:        30px;
@@ -116,7 +118,7 @@
   object-fit:    cover;
 }
 
-/* Loading spinner (not in reference — kept for behavioral compat) */
+/* Loading spinner */
 .toast-icon-spinner {
   width:        18px;
   height:       18px;
@@ -334,7 +336,7 @@
   transform: translateY(0);
 }
 
-/* ── Progress bar (row 3, 2px) — CSS animation per reference ─────────────────── */
+/* ── Progress bar (row 3, 2px) — CSS animation ───────────────────────────────── */
 
 .cpop-toast-bar {
   height:           2px;
@@ -344,7 +346,7 @@
   animation:        cpop-toast-timer 4000ms linear forwards;
 }
 
-/* Hover pauses the bar (reference verbatim) */
+/* Hover pauses the bar */
 .cpop-toasts:hover .cpop-toast-bar {
   animation-play-state: paused;
 }
@@ -473,17 +475,27 @@
   background: var(--siomac-red);
 }
 
-/* ── Keyframes (verbatim from reference) ─────────────────────────────────────── */
+/* ── Keyframes (archieamas verbatim) ─────────────────────────────────────────── */
 
-@keyframes toast-in {
+@keyframes toast-enter {
   from {
     opacity:   0;
-    transform: translateX(22px) translateY(6px);
+    transform: translateY(100%) scale(0.9);
   }
-
   to {
     opacity:   1;
-    transform: translateX(0) translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity:   1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity:   0;
+    transform: translateY(100%) scale(0.9);
   }
 }
 
@@ -496,19 +508,26 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Reduced motion (reference verbatim + exit-up fallback) ──────────────────── */
+/* ── Reduced motion ──────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .cpop-toast,
-  .cpop-toast-bar {
-    animation: none !important;
-    opacity:   1 !important;
-    transform: none !important;
+  .cpop-toast {
+    transition: none !important;
   }
 
-  .toast-card--exiting {
-    opacity:   0 !important;
-    transform: none !important;
+  .cpop-toast.entering,
+  .cpop-toast.exiting,
+  .cpop-toast-bar {
+    animation: none !important;
+  }
+
+  .cpop-toast.entering {
+    opacity: 1 !important;
+  }
+
+  .cpop-toast.exiting {
+    opacity:        0 !important;
+    pointer-events: none;
   }
 }
 
@@ -522,14 +541,18 @@
     0 0 0 3px rgba(27, 45, 85, .22);
 }
 
-/* ── Mobile (top:12px right:12px left:12px) ──────────────────────────────────── */
+/* ── Mobile (bottom:12px right:12px left:12px) ───────────────────────────────── */
 
 @media (max-width: 480px) {
   .cpop-toasts {
-    top:       12px;
+    bottom:    12px;
     right:     12px;
     left:      12px;
     width:     auto;
     max-width: none;
+  }
+
+  .cpop-toast {
+    width: 100%;
   }
 }
