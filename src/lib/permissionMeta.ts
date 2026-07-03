@@ -979,4 +979,50 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'ui.layout.default.manage':   { module: 'System', group: 'Dashboards', label: 'Set Default Board Layout', description: 'Set the organisation-wide default dashboard layout.', risk: 'medium' },
   'ui.widgets.packages.view':   { module: 'System', group: 'Widgets', label: 'View Widget Packages', description: 'Read installed widget packages (needed to render boards).', risk: 'low' },
   'ui.widgets.packages.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Packages', description: 'Install or uninstall org-wide widget packages.', risk: 'medium' },
+
+  // ── Finance statutory configuration ──────────────────────────────────────────
+  'finance.statutory.view': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'View Statutory Versions',
+    description: 'View statutory rate versions (NIS classes, PAYE bands, Health Surcharge thresholds) and their approval history.',
+    risk: 'low',
+  },
+  'finance.statutory.manage': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'Manage Statutory Config',
+    description: 'Create and edit draft statutory versions. Changes require approval before activation (creator ≠ approver enforced).',
+    risk: 'high',
+  },
+  'finance.statutory.approve': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'Approve Statutory Config',
+    description: 'Approve submitted statutory versions and activate them. Segregation of duties: creator cannot approve their own submission.',
+    risk: 'high',
+  },
+  'finance.statutory.reports.view': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'View Statutory Reports',
+    description: 'View statutory rate history, version audit reports, and approval audit trails.',
+    risk: 'low',
+  },
+  'finance.statutory.reports.export': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'Export Statutory Reports',
+    description: 'Export statutory configuration reports and approval audit data (audited data egress).',
+    risk: 'medium',
+  },
+
+  // ── Finance pay-component catalogue ──────────────────────────────────────────
+  'finance.payroll.components.view': {
+    module: 'Finance', group: 'Pay Components',
+    label: 'View Pay Components',
+    description: 'View the Finance-owned pay-component catalogue (earnings, deductions, statutory components).',
+    risk: 'low',
+  },
+  'finance.payroll.components.manage': {
+    module: 'Finance', group: 'Pay Components',
+    label: 'Manage Pay Components',
+    description: 'Create, update and retire pay components in the Finance catalogue. HR employees use these components but cannot create them.',
+    risk: 'high',
+  },
 };

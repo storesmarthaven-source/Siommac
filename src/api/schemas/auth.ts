@@ -19,7 +19,12 @@ import { z } from 'zod';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-export const UserRoleSchema = z.enum(['superadmin', 'admin', 'manager', 'employee']);
+export const UserRoleSchema = z.enum([
+  'superadmin', 'admin', 'manager', 'employee',
+  // Module-specific staff roles (flat; each inherits the employee baseline).
+  'hr_staff', 'hr_manager', 'hse_staff',
+  'finance_staff', 'finance_manager',
+]);
 export type  UserRole       = z.infer<typeof UserRoleSchema>;
 
 // ── Login payload ─────────────────────────────────────────────────────────────

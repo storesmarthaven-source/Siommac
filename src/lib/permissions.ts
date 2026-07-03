@@ -390,6 +390,15 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',
   'ui.widgets.packages.view',
   'ui.widgets.packages.manage',
+  // ── Finance statutory configuration ─────────────────────────────────────────
+  'finance.statutory.view',         // view statutory versions and NIS class tables
+  'finance.statutory.manage',       // create and edit draft statutory versions
+  'finance.statutory.approve',      // approve submitted statutory versions (creator ≠ approver)
+  'finance.statutory.reports.view', // view statutory history and approval-audit reports
+  'finance.statutory.reports.export', // export statutory reports (audited data egress)
+  // ── Finance pay-component catalogue ─────────────────────────────────────────
+  'finance.payroll.components.view',   // view the pay-component catalogue
+  'finance.payroll.components.manage', // create, update and retire pay components
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -417,7 +426,50 @@ export const CRITICAL_GRANT_KEYS = new Set<string>([
  *
  * Convention: list what the role CAN do, not what it cannot.
  */
+// Employee baseline — shared by every module-staff role (flat; no inheritance).
+const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
+  'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
+  'settings.own_preferences.view', 'settings.own_preferences.manage',
+  'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own', 'dashboard.view',
+  'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view', 'hse.inspections.create',
+  'hse.training.view', 'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+  'hse.legal.view', 'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+  'hse.dashboard.view', 'hse.workflows.view',
+  'workflow.submit', 'workflow.view',
+  'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+  'communications.messages.post', 'communications.messages.attach',
+  'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+  'communications.messages.pin_own', 'communications.messages.unpin_own',
+  'communications.participants.add', 'communications.participants.remove',
+  'ui.widgets.packages.view',
+  'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+  'hr.requests.submit_own',
+  'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+]);
+
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
+
+  // ── Module staff roles (flat; employee baseline + module keys) ───────────────
+  hr_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
+  hr_manager: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
+  hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
+
+  // Finance roles — mirrors 20260802000000 + 20260802000003
+  finance_staff: new Set<PermissionKey>([
+    ...EMPLOYEE_BASELINE,
+    'finance.statutory.view',
+    'finance.payroll.components.view',
+  ]),
+  finance_manager: new Set<PermissionKey>([
+    ...EMPLOYEE_BASELINE,
+    'finance.statutory.view',
+    'finance.statutory.manage',
+    'finance.statutory.approve',
+    'finance.statutory.reports.view',
+    'finance.statutory.reports.export',
+    'finance.payroll.components.view',
+    'finance.payroll.components.manage',
+  ]),
 
   employee: new Set<PermissionKey>([
     // Workflow — my tasks + decide when assigned (Spec §22)
@@ -628,6 +680,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
+    // Finance Phase-1 keys
+    'finance.statutory.view',
+    'finance.statutory.manage',
+    'finance.statutory.approve',
+    'finance.statutory.reports.view',
+    'finance.statutory.reports.export',
+    'finance.payroll.components.view',
+    'finance.payroll.components.manage',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -772,6 +832,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
+    // Finance Phase-1 keys
+    'finance.statutory.view',
+    'finance.statutory.manage',
+    'finance.statutory.approve',
+    'finance.statutory.reports.view',
+    'finance.statutory.reports.export',
+    'finance.payroll.components.view',
+    'finance.payroll.components.manage',
   ]),
 };
 

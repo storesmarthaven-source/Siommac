@@ -310,6 +310,15 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',   // set the org-wide default board layout
   'ui.widgets.packages.view',   // read installed widget packages (needed to render boards)
   'ui.widgets.packages.manage', // install / uninstall widget packages (org-wide)
+  // ── Finance statutory configuration ─────────────────────────────────────────
+  'finance.statutory.view',         // view statutory versions and NIS class tables
+  'finance.statutory.manage',       // create and edit draft statutory versions
+  'finance.statutory.approve',      // approve submitted statutory versions (creator ≠ approver)
+  'finance.statutory.reports.view', // view statutory history and approval-audit reports
+  'finance.statutory.reports.export', // export statutory reports (audited data egress)
+  // ── Finance pay-component catalogue ─────────────────────────────────────────
+  'finance.payroll.components.view',   // view the pay-component catalogue
+  'finance.payroll.components.manage', // create, update and retire pay components
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -342,6 +351,57 @@ export function isCriticalGrant(key: string): boolean {
 // is unreachable or a role has no rows yet. The sync test asserts it still
 // mirrors the frontend catalogue.
 const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
+  // Finance roles (flat; each carries the employee baseline + finance keys).
+  // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
+  finance_staff: new Set<PermissionKey>([
+    // employee baseline (same keys as employee role)
+    'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
+    'dashboard.view',
+    'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
+    'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+    'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+    'hse.dashboard.view', 'hse.workflows.view',
+    'workflow.submit', 'workflow.view',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
+    'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+    // finance_staff keys
+    'finance.statutory.view',
+    'finance.payroll.components.view',
+  ]),
+  finance_manager: new Set<PermissionKey>([
+    // employee baseline (same keys as employee role)
+    'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
+    'dashboard.view',
+    'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
+    'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+    'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+    'hse.dashboard.view', 'hse.workflows.view',
+    'workflow.submit', 'workflow.view',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
+    'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+    // finance_manager keys (all six Phase-1 finance keys)
+    'finance.statutory.view',
+    'finance.statutory.manage',
+    'finance.statutory.approve',
+    'finance.statutory.reports.view',
+    'finance.statutory.reports.export',
+    'finance.payroll.components.view',
+    'finance.payroll.components.manage',
+  ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
@@ -449,6 +509,14 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.timesheets.approve',
     'hr.attendance.exceptions.view', 'hr.attendance.exceptions.manage', 'hr.attendance.compute.run',
     'hr.attendance.policy.manage', 'hr.attendance.reports.view', 'hr.attendance.reports.export',
+    // Finance Phase-1 keys
+    'finance.statutory.view',
+    'finance.statutory.manage',
+    'finance.statutory.approve',
+    'finance.statutory.reports.view',
+    'finance.statutory.reports.export',
+    'finance.payroll.components.view',
+    'finance.payroll.components.manage',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

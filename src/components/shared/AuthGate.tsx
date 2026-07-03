@@ -67,10 +67,15 @@ interface AuthGateProps {
 // ── Role hierarchy ────────────────────────────────────────────────────────────
 
 const ROLE_RANK: Record<UserRole, number> = {
-  employee:   0,
-  manager:    1,
-  admin:      2,
-  superadmin: 3,
+  employee:        0,
+  hr_staff:        0,
+  hse_staff:       0,
+  finance_staff:   0,
+  manager:         1,
+  hr_manager:      1,
+  finance_manager: 1,
+  admin:           2,
+  superadmin:      3,
 };
 
 function roleAtLeast(actual: UserRole | null, required: UserRole): boolean {
