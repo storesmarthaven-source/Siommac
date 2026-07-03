@@ -1,0 +1,851 @@
+// ============================================================================
+// Finance — Payroll Runs (Phase 3 Stage 2)
+// ============================================================================
+// Implements the create → lock-inputs → calculate flow.
+// Stage 3 (submit → approve → lock → payslips → export) is NOT here.
+//
+// Flow:
+//   createRun       → resolves active statutory version; creates a 'draft' run
+//   lockInputs      → snapshots base pay + active-approved pay items + approved OT
+//                     → finance_payroll_run_inputs; sets status='input_locked'
+//   calculate       → reads inputs + statutory tables; computeRunLine per employee;
+//                     writes finance_payroll_run_lines incl. NIS snapshot;
+//                     rolls up run totals; sets status='calculated'
+//                     Before each line: emit NIS warnings per policy settings
+//
+// Spec §8.1 / §8.2 / §8.3 / §8.6 / §12 / §13
+// ============================================================================
+
+import { sb } from '../db';
+import { emitAppEvent } from '../appEvents';
+import { writeHrAudit } from '../hr/employeeCore';
+import { nextRef } from '../refGenerator';
+import { getActiveStatutoryVersion, listNisClasses } from './statutoryConfig';
+import { computeRunLine } from './payrollStatutory';
+import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
+import { resolveSettingValue } from '../settings/resolveSetting';
+import type { NisClassRow } from './statutoryConfig';
+
+// ── DTOs ─────────────────────────────────────────────────────────────────────
+
+export interface PayrollRunDto {
+  id: string;
+  runNo: string;
+  periodMonth: string;
+  payFrequency: string;
+  status: string;
+  statutoryVersionId: string;
+  weeksInPeriod: number;
+  employeeCount: number;
+  grossTotal: number;
+  deductionTotal: number;
+  netTotal: number;
+  nisEmployerTotal: number;
+  workflowId: string | null;
+  inputLockedBy: string | null;
+  inputLockedAt: string | null;
+  createdBy: string | null;
+  approvedBy: string | null;
+  lockedBy: string | null;
+  lockedAt: string | null;
+  reopenedBy: string | null;
+  reopenedAt: string | null;
+  reopenReason: string | null;
+  exportedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRunInputDto {
+  id: string;
+  runId: string;
+  employeeId: string;
+  sourceType: string;
+  sourceId: string | null;
+  componentCode: string | null;
+  label: string | null;
+  amount: number | null;
+  quantity: number | null;
+  rate: number | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface PayrollRunLineDto {
+  id: string;
+  runId: string;
+  employeeId: string;
+  base: number;
+  taxableGross: number;
+  gross: number;
+  nisEmployee: number;
+  nisEmployer: number;
+  healthSurcharge: number;
+  chargeableIncome: number;
+  paye: number;
+  voluntaryDeductions: number;
+  net: number;
+  breakdown: Record<string, unknown>;
+  departmentId: string | null;
+  costCenterId: string | null;
+  nisNumberMasked: string | null;
+  nisStatus: string | null;
+  nisClassNo: number | null;
+  openingYtdNisEmployee: number;
+  openingYtdNisEmployer: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollRunWarningDto {
+  id: string;
+  runId: string;
+  employeeId: string | null;
+  warningType: string;
+  severity: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  resolved: boolean;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+// ── DB row shapes ─────────────────────────────────────────────────────────────
+
+interface DbRunRow {
+  id: string; run_no: string; period_month: string; pay_frequency: string;
+  status: string; statutory_version_id: string; weeks_in_period: number;
+  employee_count: number; gross_total: number; deduction_total: number;
+  net_total: number; nis_employer_total: number;
+  workflow_id: string | null;
+  input_locked_by: string | null; input_locked_at: string | null;
+  created_by: string | null; approved_by: string | null;
+  locked_by: string | null; locked_at: string | null;
+  reopened_by: string | null; reopened_at: string | null;
+  reopen_reason: string | null; exported_at: string | null;
+  created_at: string; updated_at: string;
+}
+
+interface DbInputRow {
+  id: string; run_id: string; employee_id: string; source_type: string;
+  source_id: string | null; component_code: string | null; label: string | null;
+  amount: number | null; quantity: number | null; rate: number | null;
+  metadata: Record<string, unknown>; created_at: string;
+}
+
+interface DbLineRow {
+  id: string; run_id: string; employee_id: string;
+  base: number; taxable_gross: number; gross: number;
+  nis_employee: number; nis_employer: number; health_surcharge: number;
+  chargeable_income: number; paye: number; voluntary_deductions: number; net: number;
+  breakdown: Record<string, unknown>; department_id: string | null; cost_center_id: string | null;
+  nis_number_masked: string | null; nis_status: string | null; nis_class_no: number | null;
+  opening_ytd_nis_employee: number; opening_ytd_nis_employer: number;
+  created_at: string; updated_at: string;
+}
+
+interface DbWarningRow {
+  id: string; run_id: string; employee_id: string | null;
+  warning_type: string; severity: string; message: string;
+  metadata: Record<string, unknown>; resolved: boolean;
+  resolved_by: string | null; resolved_at: string | null; created_at: string;
+}
+
+// ── Mappers ───────────────────────────────────────────────────────────────────
+
+function toRunDto(r: DbRunRow): PayrollRunDto {
+  return {
+    id: r.id, runNo: r.run_no, periodMonth: r.period_month,
+    payFrequency: r.pay_frequency, status: r.status,
+    statutoryVersionId: r.statutory_version_id,
+    weeksInPeriod: Number(r.weeks_in_period),
+    employeeCount: r.employee_count,
+    grossTotal: Number(r.gross_total), deductionTotal: Number(r.deduction_total),
+    netTotal: Number(r.net_total), nisEmployerTotal: Number(r.nis_employer_total),
+    workflowId: r.workflow_id,
+    inputLockedBy: r.input_locked_by, inputLockedAt: r.input_locked_at,
+    createdBy: r.created_by, approvedBy: r.approved_by,
+    lockedBy: r.locked_by, lockedAt: r.locked_at,
+    reopenedBy: r.reopened_by, reopenedAt: r.reopened_at,
+    reopenReason: r.reopen_reason, exportedAt: r.exported_at,
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function toInputDto(r: DbInputRow): PayrollRunInputDto {
+  return {
+    id: r.id, runId: r.run_id, employeeId: r.employee_id,
+    sourceType: r.source_type, sourceId: r.source_id,
+    componentCode: r.component_code, label: r.label,
+    amount: r.amount !== null ? Number(r.amount) : null,
+    quantity: r.quantity !== null ? Number(r.quantity) : null,
+    rate: r.rate !== null ? Number(r.rate) : null,
+    metadata: r.metadata, createdAt: r.created_at,
+  };
+}
+
+function toLineDto(r: DbLineRow): PayrollRunLineDto {
+  return {
+    id: r.id, runId: r.run_id, employeeId: r.employee_id,
+    base: Number(r.base), taxableGross: Number(r.taxable_gross),
+    gross: Number(r.gross), nisEmployee: Number(r.nis_employee),
+    nisEmployer: Number(r.nis_employer), healthSurcharge: Number(r.health_surcharge),
+    chargeableIncome: Number(r.chargeable_income), paye: Number(r.paye),
+    voluntaryDeductions: Number(r.voluntary_deductions), net: Number(r.net),
+    breakdown: r.breakdown, departmentId: r.department_id, costCenterId: r.cost_center_id,
+    nisNumberMasked: r.nis_number_masked, nisStatus: r.nis_status,
+    nisClassNo: r.nis_class_no,
+    openingYtdNisEmployee: Number(r.opening_ytd_nis_employee),
+    openingYtdNisEmployer: Number(r.opening_ytd_nis_employer),
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function toWarningDto(r: DbWarningRow): PayrollRunWarningDto {
+  return {
+    id: r.id, runId: r.run_id, employeeId: r.employee_id,
+    warningType: r.warning_type, severity: r.severity, message: r.message,
+    metadata: r.metadata, resolved: r.resolved,
+    resolvedBy: r.resolved_by, resolvedAt: r.resolved_at, createdAt: r.created_at,
+  };
+}
+
+// ── Policy settings loader ────────────────────────────────────────────────────
+
+interface PayrollPolicy {
+  requireVerifiedNis: boolean;       // finance_payroll.require_verified_nis_for_payroll
+  warnMissingNisNumber: boolean;     // finance_payroll.warn_missing_nis_number
+  blockMissingNisNewEmployee: boolean; // finance_payroll.block_missing_nis_for_new_employee
+  requireApprovedTimesheetForHourly: boolean;
+  warnMissingTimesheetForSalary: boolean;
+}
+
+async function loadPayrollPolicy(): Promise<PayrollPolicy> {
+  const scope = { moduleKey: 'finance_payroll' };
+  const [
+    requireVerifiedNis,
+    warnMissingNisNumber,
+    blockMissingNisNewEmployee,
+    requireApprovedTimesheetForHourly,
+    warnMissingTimesheetForSalary,
+  ] = await Promise.all([
+    resolveSettingValue<boolean>(sb, 'finance_payroll.require_verified_nis_for_payroll', scope, false),
+    resolveSettingValue<boolean>(sb, 'finance_payroll.warn_missing_nis_number', scope, true),
+    resolveSettingValue<boolean>(sb, 'finance_payroll.block_missing_nis_for_new_employee', scope, false),
+    resolveSettingValue<boolean>(sb, 'finance_payroll.require_approved_timesheet_for_hourly', scope, true),
+    resolveSettingValue<boolean>(sb, 'finance_payroll.warn_missing_timesheet_for_salary', scope, true),
+  ]);
+  return {
+    requireVerifiedNis:                    Boolean(requireVerifiedNis),
+    warnMissingNisNumber:                  Boolean(warnMissingNisNumber),
+    blockMissingNisNewEmployee:            Boolean(blockMissingNisNewEmployee),
+    requireApprovedTimesheetForHourly:     Boolean(requireApprovedTimesheetForHourly),
+    warnMissingTimesheetForSalary:         Boolean(warnMissingTimesheetForSalary),
+  };
+}
+
+// ── List / Get ────────────────────────────────────────────────────────────────
+
+export interface ListRunsOptions {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listPayrollRuns(opts: ListRunsOptions = {}): Promise<PayrollRunDto[]> {
+  let q = sb.from('finance_payroll_runs').select('*')
+    .order('period_month', { ascending: false })
+    .limit(opts.limit ?? 50)
+    .range(opts.offset ?? 0, (opts.offset ?? 0) + (opts.limit ?? 50) - 1);
+  if (opts.status) q = q.eq('status', opts.status);
+  const { data, error } = await q;
+  if (error) throw Object.assign(new Error('listPayrollRuns: ' + error.message), { status: 500 });
+  return ((data ?? []) as DbRunRow[]).map(toRunDto);
+}
+
+export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
+  const { data, error } = await sb.from('finance_payroll_runs')
+    .select('*').eq('id', id).maybeSingle<DbRunRow>();
+  if (error) throw Object.assign(new Error('getPayrollRun: ' + error.message), { status: 500 });
+  return data ? toRunDto(data) : null;
+}
+
+export async function listRunInputs(runId: string): Promise<PayrollRunInputDto[]> {
+  const { data, error } = await sb.from('finance_payroll_run_inputs')
+    .select('*').eq('run_id', runId).order('employee_id').order('source_type');
+  if (error) throw Object.assign(new Error('listRunInputs: ' + error.message), { status: 500 });
+  return ((data ?? []) as DbInputRow[]).map(toInputDto);
+}
+
+export async function listRunLines(runId: string): Promise<PayrollRunLineDto[]> {
+  const { data, error } = await sb.from('finance_payroll_run_lines')
+    .select('*').eq('run_id', runId).order('employee_id');
+  if (error) throw Object.assign(new Error('listRunLines: ' + error.message), { status: 500 });
+  return ((data ?? []) as DbLineRow[]).map(toLineDto);
+}
+
+export async function listRunWarnings(runId: string): Promise<PayrollRunWarningDto[]> {
+  const { data, error } = await sb.from('finance_payroll_run_warnings')
+    .select('*').eq('run_id', runId).order('created_at');
+  if (error) throw Object.assign(new Error('listRunWarnings: ' + error.message), { status: 500 });
+  return ((data ?? []) as DbWarningRow[]).map(toWarningDto);
+}
+
+// ── Create Run ────────────────────────────────────────────────────────────────
+
+export interface CreateRunInput {
+  /** First day of the pay month (YYYY-MM-DD, e.g. '2026-07-01'). */
+  periodMonth: string;
+  payFrequency?: string;
+  weeksInPeriod?: number;
+  actorId: string;
+}
+
+/**
+ * Create a new payroll run in 'draft' status.
+ * Resolves the active statutory version for TT; rejects if none is active.
+ * Unique constraint on period_month prevents duplicate runs for the same month.
+ */
+export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRunDto> {
+  // Resolve active statutory version
+  const version = await getActiveStatutoryVersion('TT');
+  if (!version) {
+    throw Object.assign(
+      new Error('No active TT statutory version found. Activate a statutory version before creating a payroll run.'),
+      { status: 422 },
+    );
+  }
+
+  const runNo = await nextRef('PAY');
+
+  const { data, error } = await sb.from('finance_payroll_runs').insert({
+    run_no:               runNo,
+    period_month:         input.periodMonth,
+    pay_frequency:        input.payFrequency ?? 'monthly',
+    status:               'draft',
+    statutory_version_id: version.id,
+    weeks_in_period:      input.weeksInPeriod ?? 4.333,
+    created_by:           input.actorId,
+  }).select().single<DbRunRow>();
+
+  if (error) {
+    if (error.code === '23505') {
+      throw Object.assign(
+        new Error(`A payroll run for period ${input.periodMonth} already exists.`),
+        { status: 409 },
+      );
+    }
+    throw Object.assign(new Error('createPayrollRun: ' + error.message), { status: 500 });
+  }
+
+  const run = toRunDto(data);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: run.id, actorId: input.actorId,
+    action: 'payroll_run.created',
+    previousState: null,
+    newState: { status: 'draft', periodMonth: run.periodMonth, runNo: run.runNo, statutoryVersionId: run.statutoryVersionId },
+  });
+
+  void emitAppEvent({
+    eventType: 'finance.payroll.run.created',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: run.id,
+    actorUserId: input.actorId, severity: 'info',
+    payload: { runNo: run.runNo, periodMonth: run.periodMonth },
+  });
+
+  return run;
+}
+
+// ── Lock Inputs ───────────────────────────────────────────────────────────────
+
+/**
+ * Lock inputs for a payroll run:
+ * 1. Verify run is in 'draft' status.
+ * 2. Collect all active employees with pay data.
+ * 3. Snapshot base pay + active-approved pay items + approved OT into run_inputs.
+ * 4. Set status='input_locked'.
+ *
+ * Idempotency: clears any prior inputs before re-snapshotting (only allowed from 'draft').
+ */
+export async function lockInputs(runId: string, actorId: string): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'draft') {
+    throw Object.assign(
+      new Error(`Cannot lock inputs: run is in status '${run.status}'. Only 'draft' runs can have inputs locked.`),
+      { status: 422 },
+    );
+  }
+
+  // Period boundary: first/last day of the period_month
+  const periodStart = run.periodMonth; // already YYYY-MM-01
+  const periodEnd = lastDayOfMonth(run.periodMonth);
+
+  // ── 1. Collect active employees ───────────────────────────────────────────
+  const { data: employees, error: empErr } = await sb.from('app_users')
+    .select('id, pay_basis, monthly_salary, hourly_rate, department_id')
+    .eq('status', 'active')
+    .not('pay_basis', 'is', null);
+  if (empErr) throw Object.assign(new Error('lockInputs/employees: ' + empErr.message), { status: 500 });
+
+  const empList = (employees ?? []) as {
+    id: string; pay_basis: string | null;
+    monthly_salary: number | null; hourly_rate: number | null;
+    department_id: string | null;
+  }[];
+
+  if (empList.length === 0) {
+    throw Object.assign(new Error('No active employees with pay_basis found.'), { status: 422 });
+  }
+
+  // ── 2. Collect approved-active pay items effective in this period ─────────
+  const { data: payItems, error: piErr } = await sb
+    .from('hr_employee_pay_items')
+    .select('id, employee_id, component_id, amount, percent, effective_from, effective_to, metadata')
+    .eq('is_active', true)
+    .eq('status', 'active')
+    .lte('effective_from', periodEnd)
+    .or(`effective_to.is.null,effective_to.gte.${periodStart}`);
+  if (piErr) throw Object.assign(new Error('lockInputs/payItems: ' + piErr.message), { status: 500 });
+
+  // Resolve component codes for pay items (need code + is_taxable + reduces_chargeable + kind)
+  const componentIds = [...new Set((payItems ?? []).map((p: { component_id: string }) => p.component_id))];
+  let componentMap = new Map<string, { code: string; kind: string; isTaxable: boolean; reducesChargeable: boolean }>();
+  if (componentIds.length > 0) {
+    const { data: comps, error: compErr } = await sb.from('finance_pay_components')
+      .select('id, code, kind, is_taxable, reduces_chargeable')
+      .in('id', componentIds)
+      .eq('is_active', true);
+    if (compErr) throw Object.assign(new Error('lockInputs/components: ' + compErr.message), { status: 500 });
+    for (const c of (comps ?? []) as { id: string; code: string; kind: string; is_taxable: boolean; reduces_chargeable: boolean }[]) {
+      componentMap.set(c.id, { code: c.code, kind: c.kind, isTaxable: c.is_taxable, reducesChargeable: c.reduces_chargeable });
+    }
+  }
+
+  // ── 3. Collect approved OT in this period ────────────────────────────────
+  const { data: overtimeEntries, error: otErr } = await sb
+    .from('hr_overtime_entries')
+    .select('id, employee_id, work_date, hours, multiplier')
+    .eq('status', 'approved')
+    .gte('work_date', periodStart)
+    .lte('work_date', periodEnd);
+  if (otErr) throw Object.assign(new Error('lockInputs/overtime: ' + otErr.message), { status: 500 });
+
+  // ── 4. Build input rows ───────────────────────────────────────────────────
+  const now = new Date().toISOString();
+  const inputRows: Record<string, unknown>[] = [];
+
+  // Delete any prior inputs (allows re-lock from draft — shouldn't happen but safe)
+  await sb.from('finance_payroll_run_inputs').delete().eq('run_id', runId);
+
+  for (const emp of empList) {
+    // Base pay
+    const basePay = emp.pay_basis === 'salary'
+      ? (emp.monthly_salary ?? 0)
+      : (emp.hourly_rate ?? 0); // hourly: actual hours come from timesheets (Phase 3 s3)
+
+    inputRows.push({
+      run_id:         runId,
+      employee_id:    emp.id,
+      source_type:    'base_pay',
+      source_id:      emp.id,
+      component_code: emp.pay_basis === 'salary' ? 'basic' : 'hourly',
+      label:          emp.pay_basis === 'salary' ? 'Monthly Salary' : 'Hourly Rate',
+      amount:         basePay,
+      quantity:       null,
+      rate:           null,
+      metadata:       { pay_basis: emp.pay_basis },
+    });
+
+    // Pay items for this employee
+    const empItems = (payItems ?? []).filter((p: { employee_id: string }) => p.employee_id === emp.id);
+    for (const item of empItems as {
+      id: string; employee_id: string; component_id: string;
+      amount: number | null; percent: number | null;
+      effective_from: string; effective_to: string | null;
+      metadata: Record<string, unknown>;
+    }[]) {
+      const comp = componentMap.get(item.component_id);
+      if (!comp) continue; // component was deactivated after approval — skip
+
+      const amount = item.amount !== null
+        ? Number(item.amount)
+        : (basePay * Number(item.percent ?? 0)) / 100;
+
+      inputRows.push({
+        run_id:         runId,
+        employee_id:    emp.id,
+        source_type:    'pay_item',
+        source_id:      item.id,
+        component_code: comp.code,
+        label:          comp.code,
+        amount,
+        quantity:       null,
+        rate:           null,
+        metadata:       {
+          kind:               comp.kind,
+          is_taxable:         comp.isTaxable,
+          reduces_chargeable: comp.reducesChargeable,
+          effective_from:     item.effective_from,
+          effective_to:       item.effective_to,
+        },
+      });
+    }
+
+    // Approved OT for this employee
+    const empOt = (overtimeEntries ?? []).filter((o: { employee_id: string }) => o.employee_id === emp.id);
+    for (const ot of empOt as {
+      id: string; employee_id: string; work_date: string;
+      hours: number; multiplier: number;
+    }[]) {
+      // OT pay = hours × multiplier × (monthly_salary / (4.333 × 8))
+      // Use the effective hourly equivalent from the employee's monthly salary
+      const hourlyEquivalent = emp.pay_basis === 'salary'
+        ? (emp.monthly_salary ?? 0) / (4.333 * 8 * 20) // rough daily-rate equivalent
+        : (emp.hourly_rate ?? 0);
+      const otAmount = Number(ot.hours) * Number(ot.multiplier) * hourlyEquivalent;
+
+      inputRows.push({
+        run_id:         runId,
+        employee_id:    emp.id,
+        source_type:    'overtime',
+        source_id:      ot.id,
+        component_code: 'overtime',
+        label:          `OT ${ot.work_date}`,
+        amount:         Math.round(otAmount * 100) / 100,
+        quantity:       Number(ot.hours),
+        rate:           Number(ot.multiplier),
+        metadata:       { work_date: ot.work_date, multiplier: ot.multiplier },
+      });
+    }
+  }
+
+  // Batch insert inputs
+  if (inputRows.length > 0) {
+    const { error: insertErr } = await sb.from('finance_payroll_run_inputs').insert(inputRows);
+    if (insertErr) throw Object.assign(new Error('lockInputs/insert: ' + insertErr.message), { status: 500 });
+  }
+
+  // ── 5. Update run status ──────────────────────────────────────────────────
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({
+      status:          'input_locked',
+      employee_count:  empList.length,
+      input_locked_by: actorId,
+      input_locked_at: now,
+    })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('lockInputs/update: ' + updErr.message), { status: 500 });
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.inputs_locked',
+    previousState: { status: 'draft' },
+    newState: { status: 'input_locked', employeeCount: empList.length, inputCount: inputRows.length },
+  });
+
+  void emitAppEvent({
+    eventType: 'finance.payroll.run.inputs_locked',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
+    actorUserId: actorId, severity: 'info',
+    payload: { runNo: updatedRun.runNo, employeeCount: empList.length },
+  });
+
+  return updatedRun;
+}
+
+// ── Calculate ─────────────────────────────────────────────────────────────────
+
+/**
+ * Calculate payroll lines for an 'input_locked' run.
+ * For each employee:
+ *   1. Run NIS checks → insert warnings per policy
+ *   2. computeRunLine() → write finance_payroll_run_lines (incl. NIS snapshot)
+ * 3. Roll up run totals → set status='calculated'
+ */
+export async function calculateRun(runId: string, actorId: string): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'input_locked') {
+    throw Object.assign(
+      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked' runs can be calculated.`),
+      { status: 422 },
+    );
+  }
+
+  // Load statutory version (must exist — was checked at create time)
+  const version = await getActiveStatutoryVersion('TT');
+  if (!version) {
+    throw Object.assign(new Error('Active statutory version not found.'), { status: 422 });
+  }
+
+  const nisClasses: NisClassRow[] = await listNisClasses(run.statutoryVersionId);
+  const policy = await loadPayrollPolicy();
+
+  // Load all inputs for this run, grouped by employee
+  const allInputs = await listRunInputs(runId);
+  const empIds = [...new Set(allInputs.map(i => i.employeeId))];
+
+  if (empIds.length === 0) {
+    throw Object.assign(new Error('No inputs found for this run. Lock inputs first.'), { status: 422 });
+  }
+
+  // Clear any prior lines and warnings (allows re-calculate after a fix)
+  await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
+  await sb.from('finance_payroll_run_warnings').delete().eq('run_id', runId);
+
+  const lineRows: Record<string, unknown>[] = [];
+  const warningRows: Record<string, unknown>[] = [];
+
+  let totalGross = 0;
+  let totalDeductions = 0;
+  let totalNet = 0;
+  let totalNisEmployer = 0;
+
+  for (const empId of empIds) {
+    const empInputs = allInputs.filter(i => i.employeeId === empId);
+
+    // ── NIS checks (§13) ────────────────────────────────────────────────────
+    const profile = await getStatutoryProfileByEmployee(empId, 'TT');
+    const nisApplicable = profile ? profile.nisApplicable : true; // default: applicable
+
+    if (nisApplicable) {
+      // Warning: missing NIS number
+      if (policy.warnMissingNisNumber && (!profile || !profile.nisNumber)) {
+        warningRows.push({
+          run_id:       runId,
+          employee_id:  empId,
+          warning_type: 'missing_nis_number',
+          severity:     policy.blockMissingNisNewEmployee ? 'blocker' : 'warning',
+          message:      `Employee ${empId} has no NIS number on record.`,
+          metadata:     {},
+        });
+      }
+
+      // Warning: NIS profile not verified
+      if (profile && profile.nisStatus !== 'verified') {
+        warningRows.push({
+          run_id:       runId,
+          employee_id:  empId,
+          warning_type: 'nis_pending_verification',
+          severity:     policy.requireVerifiedNis ? 'blocker' : 'warning',
+          message:      `Employee ${empId} NIS profile status is '${profile.nisStatus}' — Finance verification pending.`,
+          metadata:     { nisStatus: profile.nisStatus },
+        });
+      }
+
+      // Warning: previous employer data missing (for continuity)
+      if (profile && (!profile.previousEmployerName && profile.openingYtdNisEmployee > 0)) {
+        warningRows.push({
+          run_id:       runId,
+          employee_id:  empId,
+          warning_type: 'previous_employer_data_missing',
+          severity:     'info',
+          message:      `Employee ${empId} has opening NIS balance but no previous employer name.`,
+          metadata:     {},
+        });
+      }
+
+      // Warning: opening balance missing when previous employer name provided
+      if (profile && profile.previousEmployerName && !profile.openingBalanceAsOf) {
+        warningRows.push({
+          run_id:       runId,
+          employee_id:  empId,
+          warning_type: 'opening_balance_missing',
+          severity:     'info',
+          message:      `Employee ${empId} has previous employer but no opening balance date.`,
+          metadata:     {},
+        });
+      }
+    }
+
+    // ── Aggregate inputs ────────────────────────────────────────────────────
+    let basePay = 0;
+    let taxableAllowances = 0;
+    let nonTaxableAllowances = 0;
+    let approvedOtAmount = 0;
+    let preTaxPensionDeductions = 0;
+    let voluntaryDeductions = 0;
+
+    for (const input of empInputs) {
+      const meta = input.metadata as {
+        kind?: string; is_taxable?: boolean; reduces_chargeable?: boolean;
+        pay_basis?: string;
+      };
+
+      if (input.sourceType === 'base_pay') {
+        basePay += Number(input.amount ?? 0);
+      } else if (input.sourceType === 'overtime') {
+        approvedOtAmount += Number(input.amount ?? 0);
+      } else if (input.sourceType === 'pay_item') {
+        const amount = Number(input.amount ?? 0);
+        if (meta.kind === 'earning') {
+          if (meta.is_taxable !== false) {
+            taxableAllowances += amount;
+          } else {
+            nonTaxableAllowances += amount;
+          }
+        } else if (meta.kind === 'deduction') {
+          if (meta.reduces_chargeable === true) {
+            preTaxPensionDeductions += amount;
+          } else {
+            voluntaryDeductions += amount;
+          }
+        }
+      }
+    }
+
+    // ── Compute the line ─────────────────────────────────────────────────────
+    const result = computeRunLine({
+      basePay,
+      taxableAllowances,
+      nonTaxableAllowances,
+      approvedOtAmount,
+      preTaxPensionDeductions,
+      voluntaryDeductions,
+      nisApplicable,
+      nisClasses,
+      weeksInPeriod: run.weeksInPeriod,
+      statutory: {
+        payePersonalAllowance: version.payePersonalAllowance,
+        payeBand1Ceiling:      version.payeBand1Ceiling,
+        payeBand1Rate:         version.payeBand1Rate,
+        payeBand2Rate:         version.payeBand2Rate,
+        hsMonthlyThreshold:    version.hsMonthlyThreshold,
+        hsWeeklyHigh:          version.hsWeeklyHigh,
+        hsWeeklyLow:           version.hsWeeklyLow,
+      },
+    });
+
+    // Warn if NIS class not found despite being applicable
+    if (nisApplicable && result.nisClassNo === null && result.gross > 0) {
+      warningRows.push({
+        run_id:       runId,
+        employee_id:  empId,
+        warning_type: 'nis_class_not_found',
+        severity:     'warning',
+        message:      `No NIS class found for employee ${empId} (weekly insurable = ${(result.taxableGross / run.weeksInPeriod).toFixed(2)}).`,
+        metadata:     { weeklyInsurable: result.taxableGross / run.weeksInPeriod },
+      });
+    }
+
+    // ── NIS snapshot from profile ────────────────────────────────────────────
+    const nisNumberMasked = profile?.nisNumber
+      ? maskNisNumber(profile.nisNumber)
+      : null;
+
+    lineRows.push({
+      run_id:                  runId,
+      employee_id:             empId,
+      base:                    result.base,
+      taxable_gross:           result.taxableGross,
+      gross:                   result.gross,
+      nis_employee:            result.nisEmployee,
+      nis_employer:            result.nisEmployer,
+      health_surcharge:        result.healthSurcharge,
+      chargeable_income:       result.chargeableIncome,
+      paye:                    result.paye,
+      voluntary_deductions:    result.voluntaryDeductions,
+      net:                     result.net,
+      breakdown:               {
+        basePay, taxableAllowances, nonTaxableAllowances,
+        approvedOtAmount, preTaxPensionDeductions,
+        nisClassNo:     result.nisClassNo,
+        weeksInPeriod:  run.weeksInPeriod,
+        statutoryVersionId: run.statutoryVersionId,
+      },
+      department_id:           null, // resolved from app_users in a later phase
+      cost_center_id:          null,
+      nis_number_masked:       nisNumberMasked,
+      nis_status:              profile?.nisStatus ?? null,
+      nis_class_no:            result.nisClassNo,
+      opening_ytd_nis_employee: profile?.openingYtdNisEmployee ?? 0,
+      opening_ytd_nis_employer: profile?.openingYtdNisEmployer ?? 0,
+    });
+
+    // Accumulate totals
+    totalGross       += result.gross;
+    totalDeductions  += result.nisEmployee + result.healthSurcharge + result.paye + result.voluntaryDeductions;
+    totalNet         += result.net;
+    totalNisEmployer += result.nisEmployer;
+  }
+
+  // ── Insert warnings ──────────────────────────────────────────────────────
+  if (warningRows.length > 0) {
+    const { error: warnErr } = await sb.from('finance_payroll_run_warnings').insert(warningRows);
+    if (warnErr) throw Object.assign(new Error('calculateRun/warnings: ' + warnErr.message), { status: 500 });
+  }
+
+  // ── Insert lines ─────────────────────────────────────────────────────────
+  if (lineRows.length > 0) {
+    const { error: lineErr } = await sb.from('finance_payroll_run_lines').insert(lineRows);
+    if (lineErr) throw Object.assign(new Error('calculateRun/lines: ' + lineErr.message), { status: 500 });
+  }
+
+  // ── Roll up totals and set status ────────────────────────────────────────
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({
+      status:            'calculated',
+      gross_total:       round2(totalGross),
+      deduction_total:   round2(totalDeductions),
+      net_total:         round2(totalNet),
+      nis_employer_total: round2(totalNisEmployer),
+      employee_count:    empIds.length,
+    })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('calculateRun/update: ' + updErr.message), { status: 500 });
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.calculated',
+    previousState: { status: 'input_locked' },
+    newState: {
+      status: 'calculated',
+      employeeCount: empIds.length,
+      grossTotal: round2(totalGross),
+      netTotal: round2(totalNet),
+      warningCount: warningRows.length,
+    },
+  });
+
+  void emitAppEvent({
+    eventType: 'finance.payroll.run.calculated',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
+    actorUserId: actorId, severity: warningRows.length > 0 ? 'warning' : 'success',
+    payload: {
+      runNo: updatedRun.runNo,
+      employeeCount: empIds.length,
+      grossTotal: round2(totalGross),
+      netTotal: round2(totalNet),
+      warningCount: warningRows.length,
+    },
+  });
+
+  return updatedRun;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Mask NIS number for display — show last 4 characters only, e.g. ***-1234. */
+function maskNisNumber(nisNumber: string): string {
+  if (nisNumber.length <= 4) return '***' + nisNumber;
+  return '***-' + nisNumber.slice(-4);
+}
+
+/** Return the last day of the month containing the given YYYY-MM-DD date. */
+function lastDayOfMonth(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
+  return lastDay.toISOString().slice(0, 10);
+}

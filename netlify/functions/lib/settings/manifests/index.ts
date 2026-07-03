@@ -21,6 +21,7 @@ import { attendanceManifest } from './attendance.manifest';
 import { companyManifest } from './company.manifest';
 import { hrLeaveManifest } from './hrLeave.manifest';
 import { hrAttendanceManifest } from './hrAttendance.manifest';
+import { financePayrollManifest } from './financePayroll.manifest';
 
 export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   // My Settings / General
@@ -46,4 +47,5 @@ export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   workflowManifest,
   adminManifest,
   commandCenterManifest,
+  financePayrollManifest,
 ];

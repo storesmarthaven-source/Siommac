@@ -1136,4 +1136,35 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Reject NIS profiles that cannot be verified and manage the Finance side of the NIS continuity workflow.',
     risk: 'high',
   },
+  // ── Finance Payroll Runs (Phase 3 Stage 2) ────────────────────────────────────
+  'finance.payroll.view_own': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'View Own Payroll Line',
+    description: 'View the employee\'s own calculated payroll line (self-scope enforced server-side). Does not grant access to payslips or other employees\' data.',
+    risk: 'low',
+  },
+  'finance.payroll.view_all': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'View All Payroll Data',
+    description: 'View all payroll runs, run inputs, run lines, and warnings. Required for Finance staff to prepare and review payroll.',
+    risk: 'high',
+  },
+  'finance.payroll.run.manage': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Payroll Runs',
+    description: 'Create payroll runs, lock inputs, and trigger the calculation step. Stage-3 actions (approve, lock, export) require additional keys added in stage 3.',
+    risk: 'high',
+  },
+  'finance.payroll.reports.view': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'View Payroll Reports',
+    description: 'View payroll registers, NIS remittance summaries, PAYE summaries, and other Finance payroll reports.',
+    risk: 'medium',
+  },
+  'finance.payroll.reports.export': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Export Payroll Reports',
+    description: 'Export payroll reports in CSV, XLSX, or PDF format. Audited data egress — Finance Manager or Admin only.',
+    risk: 'high',
+  },
 };

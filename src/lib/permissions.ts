@@ -425,6 +425,12 @@ export const PERMISSION_KEYS = [
   'finance.payroll.nis.view',       // Finance: view pending and verified NIS profiles
   'finance.payroll.nis.verify',     // Finance Manager: verify a NIS profile (set status=verified)
   'finance.payroll.nis.manage',     // Finance Manager: manage NIS profiles (reject, re-open)
+  // ── Finance Payroll Runs (Phase 3 Stage 2) ───────────────────────────────────
+  'finance.payroll.view_own',       // employee: view own payslip line (self-scope enforced server-side)
+  'finance.payroll.view_all',       // finance staff/manager: view all payroll run data
+  'finance.payroll.run.manage',     // finance staff/manager: create, lock-inputs, calculate runs
+  'finance.payroll.reports.view',   // finance staff/manager: view payroll reports
+  'finance.payroll.reports.export', // finance manager/admin: export payroll reports
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -506,6 +512,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.view',
     'finance.payroll.components.view',
     'finance.payroll.nis.view',
+    // payroll run keys (stage 2)
+    'finance.payroll.view_own',
+    'finance.payroll.view_all',
+    'finance.payroll.run.manage',
+    'finance.payroll.reports.view',
   ]),
   finance_manager: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
@@ -519,6 +530,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
+    // payroll run keys (stage 2) — all five
+    'finance.payroll.view_own',
+    'finance.payroll.view_all',
+    'finance.payroll.run.manage',
+    'finance.payroll.reports.view',
+    'finance.payroll.reports.export',
   ]),
 
   employee: new Set<PermissionKey>([
@@ -531,6 +548,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'leaves.view_own',
     'leaves.submit',
     'payroll.view_own',
+    'finance.payroll.view_own',
     'dashboard.view',
     'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view', 'hse.inspections.create',
     'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
@@ -752,6 +770,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
+    // Finance payroll run keys — ALL five
+    'finance.payroll.view_own',
+    'finance.payroll.view_all',
+    'finance.payroll.run.manage',
+    'finance.payroll.reports.view',
+    'finance.payroll.reports.export',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -914,6 +938,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
+    // Finance payroll run keys — ALL five
+    'finance.payroll.view_own',
+    'finance.payroll.view_all',
+    'finance.payroll.run.manage',
+    'finance.payroll.reports.view',
+    'finance.payroll.reports.export',
   ]),
 };
 
