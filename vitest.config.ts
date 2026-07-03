@@ -109,7 +109,6 @@ export default defineConfig({
       { find: '@shared/ErrorBoundary', replacement: resolve(__dirname, 'src/components/shared/ErrorBoundary') },
       { find: '@shared/Modal',         replacement: resolve(__dirname, 'src/components/shared/Modal')         },
       { find: '@shared/Spinner',       replacement: resolve(__dirname, 'src/components/shared/Spinner')       },
-      { find: '@shared/Toast',         replacement: resolve(__dirname, 'src/components/shared/Toast')         },
       { find: '@shared/Avatar',        replacement: resolve(__dirname, 'src/components/shared/Avatar')        },
       { find: '@shared/Badge',         replacement: resolve(__dirname, 'src/components/shared/Badge')         },
       { find: '@shared/ConfirmDialog', replacement: resolve(__dirname, 'src/components/shared/ConfirmDialog') },

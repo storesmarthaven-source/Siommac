@@ -22,7 +22,6 @@
 import { render, h } from 'preact';
 import { QueryClientProvider } from '@tanstack/preact-query';
 import type { QueryClient } from '@tanstack/query-core';
-import { ToastContainer } from '@shared/Toast';
 import { AttendanceSection } from './AttendanceSection';
 
 // ── Mount options ─────────────────────────────────────────────────────────────
@@ -50,7 +49,6 @@ export function mountAttendanceSection(
       QueryClientProvider,
       { client: opts.queryClient },
       h(AttendanceSection, null),
-      h(ToastContainer, null),
     ),
     container,
   );

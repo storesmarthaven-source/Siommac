@@ -11,6 +11,10 @@
  * Deliberately free of any data or session logic — this store only controls
  * what the user sees on-screen, not what data is loaded.
  *
+ * Toast API: re-exported from @ui/toast (single engine — no dual system).
+ * All 192 call sites that do `import { toast } from '@store'` keep working
+ * unchanged; the implementation has moved to the canonical toastStore.
+ *
  * @see docs/ARCHITECTURE.md
  * @see docs/CODING_STANDARDS.md
  * @see docs/PHASE_PLAN.md
@@ -18,6 +22,10 @@
 
 import { create } from 'zustand';
 import type { Theme } from '@cfg';
+
+// ── Re-export the canonical toast API ────────────────────────────────────────
+// Import sites: `import { toast } from '@store'` or `import { toast } from '@store/ui'`
+export { toast } from '@ui/toast';
 
 // ── State shape ───────────────────────────────────────────────────────────────
 
@@ -42,9 +50,6 @@ export interface UiState {
   /** Global overlay spinner (used for full-page operations like logout) */
   globalLoading:   boolean;
 
-  // ── Toast / banner notifications ───────────────────────────────────────────
-  toasts:          Toast[];
-
   // ── Actions ────────────────────────────────────────────────────────────────
   navigateTo:      (id: SectionId) => void;
   setSidebarOpen:  (open: boolean) => void;
@@ -53,20 +58,6 @@ export interface UiState {
   toggleTheme:     () => void;
   setSectionLoading: (v: boolean) => void;
   setGlobalLoading: (v: boolean) => void;
-  addToast:        (t: Omit<Toast, 'id'>) => void;
-  removeToast:     (id: string) => void;
-}
-
-// ── Toast type ────────────────────────────────────────────────────────────────
-
-export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
-
-export interface Toast {
-  id:       string;
-  variant:  ToastVariant;
-  message:  string;
-  /** Auto-dismiss after this many ms (default 4000, 0 = never) */
-  duration: number;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -79,11 +70,6 @@ function readTheme(): Theme {
   }
 }
 
-let _toastCounter = 0;
-function makeToastId(): string {
-  return `toast-${Date.now()}-${++_toastCounter}`;
-}
-
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 export const useUiStore = create<UiState>()((set, get) => ({
@@ -93,7 +79,6 @@ export const useUiStore = create<UiState>()((set, get) => ({
   theme:           readTheme(),
   sectionLoading:  false,
   globalLoading:   false,
-  toasts:          [],
 
   navigateTo(id) {
     const prev = get().activeSection;
@@ -130,41 +115,7 @@ export const useUiStore = create<UiState>()((set, get) => ({
   setGlobalLoading(v) {
     set({ globalLoading: v });
   },
-
-  addToast(t) {
-    const toast: Toast = {
-      id:       makeToastId(),
-      duration: t.duration ?? 4000,
-      variant:  t.variant,
-      message:  t.message,
-    };
-    set((s) => ({ toasts: [...s.toasts, toast] }));
-
-    if (toast.duration > 0) {
-      setTimeout(() => get().removeToast(toast.id), toast.duration);
-    }
-  },
-
-  removeToast(id) {
-    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
-  },
 }));
-
-// ── Convenience toast helpers ─────────────────────────────────────────────────
-// Always reads from the live store instance — never captures getState() at
-// module-load time, which would produce a stale closure if the store is reset
-// (e.g. between test cases).
-
-export const toast = {
-  success: (message: string, duration?: number) =>
-    useUiStore.getState().addToast({ variant: 'success', message, duration: duration ?? 4000 }),
-  error: (message: string, duration?: number) =>
-    useUiStore.getState().addToast({ variant: 'error', message, duration: duration ?? 6000 }),
-  warning: (message: string, duration?: number) =>
-    useUiStore.getState().addToast({ variant: 'warning', message, duration: duration ?? 5000 }),
-  info: (message: string, duration?: number) =>
-    useUiStore.getState().addToast({ variant: 'info', message, duration: duration ?? 4000 }),
-};
 
 // ── Selectors ─────────────────────────────────────────────────────────────────
 

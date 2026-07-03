@@ -5,7 +5,6 @@
  *
  * Provides:
  *   - QueryClientProvider (wraps ALL employee sub-sections so they share one cache)
- *   - ToastContainer (renders toast notifications produced by mutations)
  *   - SectionRouter — mounts the correct section based on `sectionId` prop
  *
  * Usage (called from main.tsx or a legacy shim):
@@ -26,7 +25,6 @@ import { render }                   from 'preact';
 import { type VNode }               from 'preact';
 import { QueryClientProvider }      from '@tanstack/preact-query';
 import type { QueryClient }         from '@tanstack/query-core';
-import { ToastContainer }           from '@shared/Toast';
 import { ErrorBoundary }            from '@shared/ErrorBoundary';
 import type { UserRole }            from './types';
 import { EmployeesSection }         from './EmployeesSection';
@@ -69,8 +67,6 @@ function EmployeesRoot({ sectionId, currentRole, currentUsername, queryClient }:
           currentUsername={currentUsername}
         />
       </ErrorBoundary>
-      {/* Toast container renders at the bottom of the body via portal */}
-      <ToastContainer />
     </QueryClientProvider>
   );
 }

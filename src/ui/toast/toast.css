@@ -1,0 +1,323 @@
+/**
+ * src/ui/toast/toast.css
+ *
+ * Siomac toast system styles.
+ * Extends .cpop-toast tokens from assets/styles/popup.css.
+ * Uses existing CSS vars: --siomac-blue (#1a2c53), --siomac-navy, --bg-card,
+ * --text-muted, --radius-md, --success, --warning, --siomac-red.
+ */
+
+/* ── Container ─────────────────────────────────────────────────────────────── */
+
+.siomac-toaster {
+  position:        fixed;
+  bottom:          24px;
+  right:           24px;
+  z-index:         100001; /* above modals (cpop is 99999) */
+  display:         flex;
+  flex-direction:  column;
+  gap:             8px;
+  align-items:     flex-end;
+  pointer-events:  none; /* click-through between cards */
+  max-width:       420px;
+  width:           100%;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────────── */
+
+.toast-card {
+  background:     var(--bg-card);
+  border-radius:  var(--radius-md);
+  box-shadow:     0 8px 28px rgba(0, 0, 0, 0.14);
+  border:         1px solid var(--border, #dce5f1);
+  padding:        12px 14px 14px;
+  display:        flex;
+  gap:            12px;
+  align-items:    flex-start;
+  pointer-events: auto;
+  position:       relative;
+  overflow:       hidden;
+  min-width:      280px;
+  max-width:      420px;
+  outline:        none;
+  animation:      siomac-toast-in 0.22s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  cursor:         default;
+}
+
+.toast-card--clickable {
+  cursor: pointer;
+}
+
+.toast-card--clickable:hover {
+  border-color: var(--siomac-blue, #1a2c53);
+}
+
+.toast-card:focus-visible {
+  box-shadow: 0 0 0 3px rgba(26, 44, 83, 0.25);
+}
+
+/* ── Icon chip ────────────────────────────────────────────────────────────── */
+
+.toast-icon-chip {
+  flex-shrink:    0;
+  width:          30px;
+  height:         30px;
+  border-radius:  50%;
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+}
+
+.toast-icon-chip svg {
+  width:        18px;
+  height:       18px;
+  stroke-width: 4;
+  fill:         none;
+}
+
+.toast-icon-chip--success  { background: rgba(46,  125, 50,  0.12); }
+.toast-icon-chip--success  svg { stroke: var(--success); }
+.toast-icon-chip--error    { background: rgba(228, 12,  12,  0.12); }
+.toast-icon-chip--error    svg { stroke: var(--siomac-red); }
+.toast-icon-chip--critical { background: rgba(228, 12,  12,  0.15); }
+.toast-icon-chip--critical svg { stroke: var(--siomac-red); }
+.toast-icon-chip--warning  { background: rgba(198, 124, 0,   0.14); }
+.toast-icon-chip--warning  svg { stroke: var(--warning); }
+.toast-icon-chip--info     { background: rgba(27,  45,  85,  0.10); }
+.toast-icon-chip--info     svg { stroke: var(--siomac-navy); }
+.toast-icon-chip--neutral  { background: rgba(27,  45,  85,  0.07); }
+.toast-icon-chip--neutral  svg { stroke: var(--text-muted, #7a8aa0); }
+
+/* Avatar image in icon chip */
+.toast-avatar {
+  width:         30px;
+  height:        30px;
+  border-radius: 50%;
+  object-fit:    cover;
+}
+
+/* Loading spinner */
+.toast-icon-spinner {
+  width:     18px;
+  height:    18px;
+  animation: toast-spin 0.8s linear infinite;
+  fill:      none;
+  stroke:    var(--siomac-navy, #1f3b6d);
+  stroke-width: 3;
+}
+
+/* Inline icon font (e.g. Font Awesome) */
+.toast-icon-chip i {
+  font-size: 14px;
+  color:     var(--siomac-navy, #1f3b6d);
+}
+
+/* ── Body ──────────────────────────────────────────────────────────────────── */
+
+.toast-body {
+  flex:       1;
+  min-width:  0;
+}
+
+.toast-title {
+  font-size:   13px;
+  font-weight: 600;
+  color:       var(--siomac-navy, #1f3b6d);
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.toast-message {
+  font-size:   13px;
+  color:       var(--siomac-navy, #1f3b6d);
+  line-height: 1.4;
+}
+
+.toast-body-text {
+  font-size:   12px;
+  color:       var(--text-muted, #7a8aa0);
+  line-height: 1.4;
+  margin-top:  2px;
+  word-break:  break-word;
+}
+
+/* ── Meta chips ────────────────────────────────────────────────────────────── */
+
+.toast-meta {
+  display:    flex;
+  flex-wrap:  wrap;
+  gap:        4px;
+  margin-top: 6px;
+}
+
+.toast-meta-chip {
+  font-size:     10px;
+  font-weight:   600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color:         var(--text-muted, #7a8aa0);
+  background:    var(--bg-subtle, #f4f6fa);
+  border:        1px solid var(--border, #dce5f1);
+  border-radius: 4px;
+  padding:       1px 5px;
+}
+
+/* ── Action buttons ────────────────────────────────────────────────────────── */
+
+.toast-actions {
+  display:    flex;
+  gap:        6px;
+  margin-top: 8px;
+  flex-wrap:  wrap;
+}
+
+.toast-action {
+  font-size:     11px;
+  font-weight:   600;
+  font-family:   inherit;
+  padding:       4px 10px;
+  border-radius: var(--radius-md);
+  border:        1px solid transparent;
+  cursor:        pointer;
+  transition:    background 0.15s, border-color 0.15s;
+  line-height:   1.4;
+}
+
+.toast-action--primary {
+  background:    var(--siomac-blue, #1a2c53);
+  color:         #fff;
+  border-color:  var(--siomac-blue, #1a2c53);
+}
+
+.toast-action--primary:hover {
+  filter: brightness(1.12);
+}
+
+.toast-action--secondary {
+  background:   var(--bg-subtle, #f4f6fa);
+  color:        var(--text-primary, #1f3b6d);
+  border-color: var(--border, #dce5f1);
+}
+
+.toast-action--secondary:hover {
+  background: var(--border, #dce5f1);
+}
+
+.toast-action--danger {
+  background:   transparent;
+  color:        var(--siomac-red, #e40c0c);
+  border-color: var(--siomac-red, #e40c0c);
+}
+
+.toast-action--danger:hover {
+  background: rgba(228, 12, 12, 0.08);
+}
+
+/* ── Close button ──────────────────────────────────────────────────────────── */
+
+.toast-close {
+  flex-shrink:  0;
+  background:   none;
+  border:       none;
+  cursor:       pointer;
+  color:        var(--text-muted, #7a8aa0);
+  padding:      2px;
+  line-height:  1;
+  opacity:      0.65;
+  transition:   opacity 0.15s;
+  margin-top:   -1px;
+  display:      flex;
+  align-items:  center;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.toast-close svg {
+  stroke:       currentColor;
+  fill:         none;
+  stroke-width: 2.5;
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+
+.toast-progress-track {
+  position:     absolute;
+  bottom:       0;
+  left:         0;
+  right:        0;
+  height:       3px;
+  background:   var(--border, #dce5f1);
+  overflow:     hidden;
+}
+
+.toast-progress-bar {
+  height:     100%;
+  background: var(--siomac-blue, #1a2c53);
+  transition: width 1s linear;
+}
+
+.toast-progress--success  { background: var(--success);     }
+.toast-progress--error    { background: var(--siomac-red);  }
+.toast-progress--critical { background: var(--siomac-red);  }
+.toast-progress--warning  { background: var(--warning);     }
+.toast-progress--info     { background: var(--siomac-blue, #1a2c53); }
+.toast-progress--neutral  { background: var(--siomac-navy, #1f3b6d); }
+
+/* ── +N more overflow pill ─────────────────────────────────────────────────── */
+
+.toast-overflow-pill {
+  pointer-events: auto;
+  font-size:      11px;
+  font-weight:    600;
+  color:          var(--text-muted, #7a8aa0);
+  background:     var(--bg-card);
+  border:         1px solid var(--border, #dce5f1);
+  border-radius:  999px;
+  padding:        3px 10px;
+  box-shadow:     0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor:         default;
+  user-select:    none;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+
+@keyframes siomac-toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+@keyframes toast-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-card {
+    animation: none;
+  }
+  .toast-progress-bar {
+    transition: none;
+  }
+  .toast-icon-spinner {
+    animation: none;
+  }
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .siomac-toaster {
+    bottom:   12px;
+    right:    12px;
+    left:     12px;
+    max-width: none;
+  }
+  .toast-card {
+    max-width: none;
+    min-width: 0;
+    width:     100%;
+  }
+}

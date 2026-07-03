@@ -13,7 +13,6 @@ export * from './ErrorBoundary';
 export * from './Spinner';
 export * from './Avatar';
 export * from './Badge';
-export * from './Toast';
 export * from './Modal';
 export * from './ConfirmDialog';
 export * from './DataTable';

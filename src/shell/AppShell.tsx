@@ -37,6 +37,7 @@ import { useSessionStore, selectUserId } from '@store/session';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
 import { StepUpProvider }                from '@/hooks/useStepUp';
+import { Toaster }                       from '@ui/toast';
 
 // ── Communications bridge ─────────────────────────────────────────────────────
 // Headless component: subscribes to realtime signals and keeps summary fresh.
@@ -151,6 +152,9 @@ export default function AppShell() {
 
       {/* Reusable nav sub-menu customizer mount root */}
       <div id="preact-navcust-root" />
+
+      {/* App-wide toast engine — ONE mount, portalled to document.body */}
+      <Toaster />
     </>
     </StepUpProvider>
   );
