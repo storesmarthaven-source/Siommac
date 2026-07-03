@@ -156,6 +156,12 @@ export const PERMISSION_KEYS = [
   // ── HR Requests (Request Center) ────────────────────────────────────────────
   'hr.requests.submit_own', // submit + track own HR service requests (self-scope enforced server-side)
   'hr.requests.manage',     // HR triage: view all, decide (approve/reject/return), fulfill
+  // ── HR Roster (Shift Scheduling) ─────────────────────────────────────────────
+  'hr.roster.view',              // view rosters for their scope
+  'hr.roster.view_own',          // employee self-view of own published shifts
+  'hr.roster.manage',            // create/edit/assign/generate roster entries
+  'hr.roster.publish',           // lock + notify assignees (publish a roster)
+  'hr.roster.templates.manage',  // manage shift templates, rotation patterns & coverage requirements
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -445,6 +451,7 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
   'hr.requests.submit_own',
   'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+  'hr.roster.view_own',
 ]);
 
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
@@ -550,6 +557,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.timesheets.approve',
     'hr.attendance.exceptions.view', 'hr.attendance.exceptions.manage', 'hr.attendance.compute.run',
     'hr.attendance.reports.view', 'hr.attendance.reports.export',
+    'hr.roster.view', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -616,6 +624,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.timesheets.approve',
     'hr.attendance.exceptions.view', 'hr.attendance.exceptions.manage', 'hr.attendance.compute.run',
     'hr.attendance.policy.manage', 'hr.attendance.reports.view', 'hr.attendance.reports.export',
+    // Roster keys
+    'hr.roster.view', 'hr.roster.view_own', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
     'attendance.view_own',
     'attendance.view_all',
     'attendance.edit',
@@ -832,6 +842,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
+    // Roster keys
+    'hr.roster.view', 'hr.roster.view_own', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
     // Finance Phase-1 keys
     'finance.statutory.view',
     'finance.statutory.manage',

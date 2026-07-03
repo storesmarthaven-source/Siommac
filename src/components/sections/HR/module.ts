@@ -75,10 +75,17 @@ const REQUESTS_ITEM: ModuleNavItem = {
   sub: 'Employee self-service requests & HR triage',
 };
 
+const ROSTER_ITEM: ModuleNavItem = {
+  id: 's-hr-roster',
+  label: 'Shift Roster',
+  icon: 'fa-calendar-days',
+  sub: 'Shift schedules, rotation patterns & coverage management',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'Human Resources' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM, ROSTER_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

@@ -149,6 +149,13 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.attendance.reports.view':       { module: 'HR', group: 'Attendance', label: 'View Attendance Reports',     description: 'View attendance reports and analytics.', risk: 'low' },
   'hr.attendance.reports.export':     { module: 'HR', group: 'Attendance', label: 'Export Attendance Reports',   description: 'Export attendance data and reports.', risk: 'high' },
 
+  // ── HR Roster (Shift Scheduling) ─────────────────────────────────────────────
+  'hr.roster.view':             { module: 'HR', group: 'Roster', label: 'View Rosters',              description: 'View shift rosters for the accessible scope (dept or org-wide).', risk: 'low' },
+  'hr.roster.view_own':         { module: 'HR', group: 'Roster', label: 'View Own Shifts',           description: 'View own published shift assignments (employee self-service).', risk: 'low' },
+  'hr.roster.manage':           { module: 'HR', group: 'Roster', label: 'Manage Roster',             description: 'Create, edit, assign and generate roster entries and shift assignments.', risk: 'medium' },
+  'hr.roster.publish':          { module: 'HR', group: 'Roster', label: 'Publish Roster',            description: 'Lock and publish a roster period, notifying assigned employees of their shifts.', risk: 'high' },
+  'hr.roster.templates.manage': { module: 'HR', group: 'Roster', label: 'Manage Roster Templates',   description: 'Create and update shift templates, rotation patterns and coverage requirements.', risk: 'medium' },
+
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {
     module: 'Employees', group: 'Employee Directory',

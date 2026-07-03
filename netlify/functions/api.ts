@@ -52,6 +52,7 @@ import hrOffboardingRouter        from './routes/hrOffboarding';
 import hrLeaveRouter             from './routes/hrLeave';
 import hrRequestsRouter          from './routes/hrRequests';
 import hrAttendanceRouter        from './routes/hrAttendance';
+import hrRosterRouter            from './routes/hrRoster';
 import financeStatutoryRouter    from './routes/financeStatutory';
 
 // Register module handoff receivers once at cold-start
@@ -172,6 +173,7 @@ app.route('/api/hr', hrOffboardingRouter);
 app.route('/api/hr', hrLeaveRouter);
 app.route('/api/hr', hrRequestsRouter);
 app.route('/api/hr', hrAttendanceRouter);
+app.route('/api/hr/roster', hrRosterRouter);
 app.route('/api/finance', financeStatutoryRouter);
 app.route('/api', departmentsRouter);
 app.route('/api', sitesRouter);

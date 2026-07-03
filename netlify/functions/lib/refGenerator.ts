@@ -33,7 +33,8 @@ export type RefPrefix =
   | 'TRN'   // HSE Training Assignment
   | 'HRC'   // HR Case
   | 'HRI'   // HR Employee Import batch
-  | 'ONB';  // HR Onboarding case
+  | 'ONB'   // HR Onboarding case
+  | 'ROS';  // HR Roster
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.
