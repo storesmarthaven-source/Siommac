@@ -18,7 +18,7 @@
 
 .siomac-toaster {
   position:       fixed;
-  top:            24px;
+  bottom:         24px;
   right:          24px;
   z-index:        100001;        /* above modals (cpop is 99999) */
   width:          420px;
@@ -32,7 +32,7 @@
 
 .toast-card {
   position:       absolute;
-  top:            0;
+  bottom:         0;
   right:          0;
   left:           0;
   background:     var(--bg-card);
@@ -64,7 +64,7 @@
 .toast-card::after {
   content:  '';
   position: absolute;
-  bottom:   -8px;     /* covers the 8px gap */
+  top:      -8px;     /* covers the 8px gap ABOVE (older cards stack upward) */
   left:     0;
   right:    0;
   height:   8px;
@@ -72,26 +72,27 @@
 }
 
 /* ── Entry: unmounted (before first paint) ───────────────────────────────────
-   New toasts start slid-in from the right + slightly scaled down + invisible.
+   New toasts start below their slot + slightly scaled down + invisible, then
+   slide UP into place (bottom-anchored, like the reference implementation).
    The .toast-card--mounted class (added after first RAF) transitions to identity.
    This uses CSS transitions (not keyframes) so a second toast arriving mid-
    animation retargets smoothly. */
 
 .toast-card:not(.toast-card--mounted) {
-  transform: translateX(28px) scale(0.96);
+  transform: translateY(100%) scale(0.9);   /* slides UP from below (bottom-anchored) */
   opacity:   0;
 }
 
 /* ── Mounted / collapsed state (default) ─────────────────────────────────────
    Stacked cards deck behind the front:
-   - translateY(lift * toasts-before)          → peek out below
+   - translateY(-lift * toasts-before)         → peek out ABOVE (stack grows up)
    - scale(1 - toasts-before * 0.05)           → shrink slightly
    - height: var(--front-toast-height)          → normalised to front height
    The front card (toasts-before = 0) sits at transform: identity, full height. */
 
 .toast-card--mounted:not(.toast-card--expanded):not(.toast-card--exiting):not(.toast-card--dragging) {
   transform:
-    translateY(calc(var(--lift-amount) * var(--toasts-before)))
+    translateY(calc(-1 * var(--lift-amount) * var(--toasts-before)))
     scale(calc(1 - var(--toasts-before) * 0.05));
   opacity: 1;
 }
@@ -114,7 +115,7 @@
    Scale returns to 1, height is natural. */
 
 .toast-card--expanded.toast-card--mounted:not(.toast-card--exiting) {
-  transform:  translateY(var(--offset));
+  transform:  translateY(calc(-1 * var(--offset)));   /* fan UPWARD from the bottom anchor */
   scale:      1;
   height:     auto;
   opacity:    1;
@@ -140,12 +141,12 @@
 }
 
 /* ── Exit ─────────────────────────────────────────────────────────────────────
-   Slide right + fade. No height-collapse needed (absolute positioning means
-   remaining cards just retarget their transforms automatically). */
+   Slide down + shrink + fade. No height-collapse needed (absolute positioning
+   means remaining cards just retarget their transforms automatically). */
 
 .toast-card--exiting {
   opacity:        0 !important;
-  transform:      translateX(110%) !important;
+  transform:      translateY(100%) scale(0.9) !important;   /* slides DOWN + shrinks out */
   pointer-events: none;
   transition:
     transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
@@ -438,7 +439,7 @@
 
 @media (max-width: 480px) {
   .siomac-toaster {
-    top:       12px;
+    bottom:    12px;
     right:     12px;
     left:      12px;
     width:     auto;
