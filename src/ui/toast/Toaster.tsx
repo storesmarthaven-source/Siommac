@@ -67,7 +67,7 @@ function ToasterInner({ toasts }: ToasterInnerProps) {
         el.style.display   = '';
         el.style.opacity   = '1';
         el.style.transform = 'scale(1)';
-        el.style.bottom    = `${cumulativeHeight}px`;
+        el.style.top       = `${cumulativeHeight}px`;   // top-anchored: fan down
         el.style.zIndex    = String(activeCards.length - index);
         cumulativeHeight  += el.offsetHeight + TOAST_GAP;
       });
@@ -89,7 +89,7 @@ function ToasterInner({ toasts }: ToasterInnerProps) {
       });
 
       visibleInStack.forEach((el, i) => {
-        el.style.bottom    = `${i * STACK_ITEM_OFFSET_Y}px`;
+        el.style.top       = `${i * STACK_ITEM_OFFSET_Y}px`;   // top-anchored: older peek down
         el.style.transform = `scale(${1 - i * STACK_ITEM_SCALE_DECREMENT})`;
         const opacity      = i === 0
           ? 1
