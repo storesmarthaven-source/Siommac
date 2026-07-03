@@ -15,6 +15,7 @@
  * Imperative + framework-free, so it works from components, hooks, stores, and plain modules.
  */
 import { cpop } from './popup';
+import { toast as uiToast } from '@ui/toast';
 
 export type DialogIcon = 'success' | 'error' | 'warning' | 'info' | 'question';
 
@@ -86,11 +87,21 @@ export const dialog = {
     return r.isConfirmed ? (r.inputValue ?? '') : null;
   },
 
-  /** Non-blocking corner toast. */
-  toast: (o: ToastOptions) => cpop.fire({
-    toast: true, icon: o.icon ?? 'success', title: o.title, text: o.text,
-    timer: o.duration ?? 3000, timerProgressBar: true, position: o.position ?? 'top-end',
-  }),
+  /** Non-blocking corner toast — a thin alias that delegates to the single
+   *  app-wide toaster (@ui/toast), so existing dialog.toast(...) call sites
+   *  render through the ONE engine (no second toast system). New code should
+   *  import `toast` from '@store' / '@ui/toast' directly. */
+  toast: (o: ToastOptions) => {
+    const message = o.text ?? o.title ?? '';
+    const opts = { title: o.text && o.title ? o.title : undefined, duration: o.duration };
+    switch (o.icon) {
+      case 'error':    return uiToast.error(message, opts);
+      case 'warning':  return uiToast.warning(message, opts);
+      case 'info':     return uiToast.info(message, opts);
+      case 'question': return uiToast(message, opts);
+      default:         return uiToast.success(message, opts); // old default icon was 'success'
+    }
+  },
 
   /** Blocking spinner — call dialog.close() when done. */
   loading: () => cpop.showLoading(),

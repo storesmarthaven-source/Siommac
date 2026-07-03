@@ -21,6 +21,8 @@
  * @see docs/PHASE_PLAN.md
  */
 
+import { toast as uiToast } from '@ui/toast';
+
 // ── CDN-global type shims ─────────────────────────────────────────────────────
 declare const flatpickr: ((sel: string, opts: Record<string, unknown>) => { selectedDates: Date[]; formatDate: (d: Date, f: string) => string; set: (k: string, v: unknown) => void; setDate: (d: string, trigger: boolean) => void; destroy: () => void }) | undefined;
 declare const L: { latLng: (lat: number, lng: number) => { toBounds: (r: number) => unknown }; featureGroup: (arr: unknown[]) => { getBounds: () => { pad: (n: number) => unknown } } };
@@ -539,7 +541,7 @@ function stopSessionTimer(): void {
 function handleSessionWarning(): void {
   if (_sessWarned) return;
   _sessWarned = true;
-  _Swal()?.fire({ icon: 'warning', title: 'Session Expiring', text: 'Your session will end in 5 minutes. Save your work.', timer: 6000, timerProgressBar: true, toast: true, position: 'top-end', showConfirmButton: false });
+  uiToast.warning('Your session will end in 5 minutes. Save your work.', { title: 'Session Expiring', duration: 6000 });
 }
 
 function handleSessionExpired(): void {
