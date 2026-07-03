@@ -235,15 +235,10 @@ export default function SharedSections() {
         <div id="preact-payroll-root" />
       </AppSection>
 
-      {/* My Profile — every role */}
+      {/* My Profile — every role.
+          NO wrapper <ProfilePill> here: the Preact component's <PageHeader>
+          already renders the single standard pill. A second one duplicates it. */}
       <AppSection id="s-profile">
-        <ProfilePill ids={{
-          profileBtn: 'admProfProfileBtn', avatar: 'admProfProfileAvatar',
-          profileName: 'admProfProfileName', profileRole: 'admProfProfileRole',
-          notifBtn: 'admProfNotifBtn', notifBadge: 'admProfNotifBadge',
-          msgBtn: 'admProfMsgBtn', msgBadge: 'admProfMsgBadge',
-          ticketBtn: 'admProfTicketBtn', ticketBadge: 'admProfTicketBadge',
-        }} />
         <div id="preact-profile-root" />
       </AppSection>
 

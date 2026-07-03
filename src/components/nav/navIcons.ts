@@ -71,6 +71,22 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-gear':                    'Settings',
   'fa-lock':                    'Lock',
   'fa-arrow-left':              'ArrowLeft',
+  // HR sub-modules (were falling back to the generic Circle)
+  'fa-rocket':                  'Rocket',
+  'fa-sitemap':                 'Network',
+  'fa-door-open':               'DoorOpen',
+  'fa-right-left':              'ArrowRightLeft',
+  'fa-inbox':                   'Inbox',
+  // Other nav icons missing from the map
+  'fa-bolt':                    'Zap',
+  'fa-camera':                  'Camera',
+  'fa-code-branch':             'GitBranch',
+  'fa-database':                'Database',
+  'fa-globe':                   'Globe',
+  'fa-map-pin':                 'MapPin',
+  'fa-shield-alt':              'Shield',
+  'fa-user-check':              'UserCheck',
+  'fa-bars':                    'Menu',
 };
 
 const FALLBACK: keyof typeof lucide = 'Circle';

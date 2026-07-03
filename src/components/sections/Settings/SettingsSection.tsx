@@ -431,7 +431,7 @@ interface TotpSetupModalProps {
   onEnabled: () => void;
 }
 
-function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNode {
+export function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNode {
   const [step,        setStep]        = useState<SetupStep>('qr');
   const [qrDataUrl,   setQrDataUrl]   = useState('');
   const [secret,      setSecret]      = useState('');
@@ -631,7 +631,7 @@ interface TotpDisableModalProps {
   onDisabled: () => void;
 }
 
-function TotpDisableModal({ onClose, onDisabled }: TotpDisableModalProps): VNode {
+export function TotpDisableModal({ onClose, onDisabled }: TotpDisableModalProps): VNode {
   const [code,  setCode]  = useState('');
   const [error, setError] = useState('');
   const disableTotp = useDisableTotp();

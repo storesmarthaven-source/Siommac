@@ -23,6 +23,7 @@
 // (user_id, dedupe_key) unique index; status updates are naturally idempotent
 // (the row leaves the queried set once transitioned).
 
+import './lib/bootstrapEnv'; // must be first — see that module for why
 import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
 import { emitAppEvent } from './lib/appEvents';

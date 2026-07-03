@@ -15,7 +15,9 @@ insert into public.role_permissions (role_name, permission) values
   -- self-service: every employee-baseline role can file their own requests
   ('employee',   'hr.requests.submit_own'),
   ('manager',    'hr.requests.submit_own'),
-  ('supervisor', 'hr.requests.submit_own'),
+  -- NOTE: 'supervisor' is NOT a row in public.roles in this deployment (role_permissions
+  -- has a FK to roles.name) — granting to it fails 23503. Omitted; add a real supervisor
+  -- role first if one is ever introduced.
   ('hr_staff',   'hr.requests.submit_own'),
   ('hr_manager', 'hr.requests.submit_own'),
   ('admin',      'hr.requests.submit_own'),

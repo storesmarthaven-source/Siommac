@@ -18,6 +18,8 @@ export interface AppUser {
   role:                        UserRole;
   status:                      UserStatus;
   department_id:               string | null;
+  supervisor_id:               string | null;   // reporting manager (app_users.id)
+  site_id:                     string | null;   // work site (project_sites.id)
   position:                    string | null;
   email:                       string | null;
   phone:                       string | null;

@@ -20,6 +20,7 @@ import { commandCenterManifest } from './commandCenter.manifest';
 import { attendanceManifest } from './attendance.manifest';
 import { companyManifest } from './company.manifest';
 import { hrLeaveManifest } from './hrLeave.manifest';
+import { hrAttendanceManifest } from './hrAttendance.manifest';
 
 export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   // My Settings / General
@@ -30,6 +31,7 @@ export const moduleSettingsManifests: ModuleSettingsManifest[] = [
   employeesManifest,
   onboardingManifest,
   hrLeaveManifest,
+  hrAttendanceManifest,
   hrDocumentsManifest,
   trainingManifest,
   ptwManifest,

@@ -132,7 +132,7 @@ function MyRequestsTab(): VNode {
       </div>
 
       {requestsQ.isLoading && !requestsQ.data
-        ? <TableSkeleton rows={4} cols={5} />
+        ? <div class="obx-section"><div class="obx-section-body"><table class="obx-table"><tbody><TableSkeleton rows={4} cols={7} /></tbody></table></div></div>
         : !rows.length
           ? <EmptyState icon="fa-inbox" title="No requests yet" text="Submit a request to get started." />
           : (
@@ -311,7 +311,7 @@ function TriageTab(): VNode {
       </div>
 
       {requestsQ.isLoading && !requestsQ.data
-        ? <TableSkeleton rows={5} cols={7} />
+        ? <div class="obx-section"><div class="obx-section-body"><table class="obx-table"><tbody><TableSkeleton rows={5} cols={7} /></tbody></table></div></div>
         : !rows.length
           ? <EmptyState icon="fa-inbox" title="No requests" text="No HR requests match this filter." />
           : (

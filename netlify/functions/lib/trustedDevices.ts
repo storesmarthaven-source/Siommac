@@ -412,12 +412,17 @@ export async function verifyTrustedDevice(input: {
       return { trusted: false, reason: 'secret_mismatch' };
     }
 
-    // 6. Update last_used_at and last_ip (best-effort, non-blocking)
+    // 6. Update last_used_at and last_ip. Awaited (not fire-and-forget): an
+    // un-awaited write can be dropped when the serverless handler returns first,
+    // which is why device rows previously showed last_used_at === created_at
+    // even on reuse. A failure here must NOT deny an otherwise-valid device, so
+    // it's caught and ignored rather than thrown.
     const now = new Date().toISOString();
-    void sb
+    const { error: touchErr } = await sb
       .from('auth_trusted_devices')
       .update({ last_used_at: now, last_ip: ipAddress ?? row.last_ip })
       .eq('id', row.id);
+    if (touchErr) console.warn('[trustedDevices] last_used_at touch failed:', touchErr.message);
 
     void emitAppEvent({
       eventType:        'auth.trusted_device.used',

@@ -61,6 +61,13 @@ const TRANSFERS_ITEM: ModuleNavItem = {
   sub: 'Bundled dept / role / pay changes with approval workflow',
 };
 
+const ATTENDANCE_ITEM: ModuleNavItem = {
+  id: 's-hr-attendance',
+  label: 'Attendance & Timekeeping',
+  icon: 'fa-clock',
+  sub: 'Punch records, daily log, exceptions & timesheet approval',
+};
+
 const REQUESTS_ITEM: ModuleNavItem = {
   id: 's-hr-requests',
   label: 'HR Requests',
@@ -70,8 +77,8 @@ const REQUESTS_ITEM: ModuleNavItem = {
 
 export const hrModule: ModuleDefinition = {
   id: 'hr',
-  navGroup: { id: 'hr', label: 'HR' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, REQUESTS_ITEM],
+  navGroup: { id: 'hr', label: 'Human Resources' },
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',

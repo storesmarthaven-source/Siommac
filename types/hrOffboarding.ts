@@ -73,12 +73,30 @@ export interface OffboardingCaseDetail {
   blockers: OffboardingBlockerRow[];
 }
 
+export interface OffboardingStatusSlice { status: OffboardingStatus; count: number }
+export interface OffboardingModuleClearance { module: string; pending: number; delivered: number; total: number }
+
 export interface OffboardingDashboardStats {
   activeCases: number;
   readyForExit: number;
   blocked: number;
   completedThisMonth: number;
+  totalCases: number;
   byReason: Array<{ reason: OffboardingReason; count: number }>;
+  byStatus: OffboardingStatusSlice[];
+  /** Exit-task completion across all non-terminal cases (real clearance ratio). */
+  taskClearance: { done: number; total: number };
+  /** Open blocking tasks on non-terminal cases (activation risk). */
+  blockingTasksOpen: number;
+  openBlockers: number;
+  criticalBlockers: number;
+  handoffs: { pending: number; delivered: number; cancelled: number; total: number };
+  /** Cross-module clearance progress (IT / Finance / HSE …). */
+  handoffsByModule: OffboardingModuleClearance[];
+  /** Pending IT access-removal handoffs — the signature exit control. */
+  pendingAccessRemovals: number;
+  /** Mean days from case start to ready/complete, or null when none have reached it. */
+  avgClearanceDays: number | null;
 }
 
 // ── Mutation payloads ──────────────────────────────────────────────────────────

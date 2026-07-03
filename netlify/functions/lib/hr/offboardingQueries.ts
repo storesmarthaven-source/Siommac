@@ -4,6 +4,7 @@ import { sb } from '../db';
 import type {
   OffboardingCaseRow, OffboardingCaseDetail, OffboardingTaskRow, OffboardingHandoffRow,
   OffboardingBlockerRow, OffboardingDashboardStats, OffboardingReason, OffboardingStatus,
+  OffboardingModuleClearance,
 } from '../../../../types/hrOffboarding';
 
 interface CaseDbRow {
@@ -88,17 +89,101 @@ export async function getOffboardingCase(caseId: string): Promise<OffboardingCas
   };
 }
 
+// Fixed display order for the status donut (unknown statuses fall through to the end).
+const STATUS_ORDER: OffboardingStatus[] = ['in_progress', 'ready_for_exit', 'blocked', 'paused', 'open', 'draft', 'completed', 'cancelled'];
+const TERMINAL_STATUSES = new Set<string>(['completed', 'cancelled']);
+const DONE_TASK_STATUSES = new Set<string>(['completed', 'skipped']);
+
 export async function getOffboardingDashboardStats(): Promise<OffboardingDashboardStats> {
   const monthStart = new Date(); monthStart.setDate(1);
-  const { data } = await sb.from('hr_offboarding_cases').select('status, reason, completed_at');
-  const rows = (data ?? []) as { status: string; reason: OffboardingReason; completed_at: string | null }[];
-  const byReasonMap = new Map<OffboardingReason, number>();
-  for (const r of rows) if (r.status !== 'cancelled') byReasonMap.set(r.reason, (byReasonMap.get(r.reason) ?? 0) + 1);
+
+  const [{ data: caseData }, { data: taskData }, { data: handoffData }, { data: blockerData }] = await Promise.all([
+    sb.from('hr_offboarding_cases').select('id, status, reason, started_at, ready_at, completed_at'),
+    sb.from('hr_offboarding_tasks').select('case_id, status, is_blocking'),
+    sb.from('hr_offboarding_handoffs').select('status, target_module, handoff_type'),
+    sb.from('hr_offboarding_blockers').select('status, severity'),
+  ]);
+  const cases    = (caseData ?? [])    as { id: string; status: string; reason: OffboardingReason; started_at: string; ready_at: string | null; completed_at: string | null }[];
+  const tasks    = (taskData ?? [])    as { case_id: string; status: string; is_blocking: boolean }[];
+  const handoffs = (handoffData ?? []) as { status: string; target_module: string; handoff_type: string | null }[];
+  const blockers = (blockerData ?? []) as { status: string; severity: string }[];
+
+  // ── case status + reason mix ──
+  const statusMap = new Map<string, number>();
+  const reasonMap = new Map<OffboardingReason, number>();
+  for (const c of cases) {
+    statusMap.set(c.status, (statusMap.get(c.status) ?? 0) + 1);
+    if (c.status !== 'cancelled') reasonMap.set(c.reason, (reasonMap.get(c.reason) ?? 0) + 1);
+  }
+  const byStatus = [...statusMap.entries()]
+    .map(([status, count]) => ({ status: status as OffboardingStatus, count }))
+    .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+
+  // ── task clearance across non-terminal cases (real ratio of exit work done) ──
+  const activeCaseIds = new Set(cases.filter(c => !TERMINAL_STATUSES.has(c.status)).map(c => c.id));
+  let taskDone = 0, taskTotal = 0, blockingTasksOpen = 0;
+  for (const t of tasks) {
+    if (!activeCaseIds.has(t.case_id)) continue;
+    taskTotal++;
+    if (DONE_TASK_STATUSES.has(t.status)) taskDone++;
+    else if (t.is_blocking) blockingTasksOpen++;
+  }
+
+  // ── cross-module handoff clearance ──
+  const handoffAgg = { pending: 0, delivered: 0, cancelled: 0, total: 0 };
+  const moduleMap = new Map<string, { pending: number; delivered: number; total: number }>();
+  let pendingAccessRemovals = 0;
+  for (const h of handoffs) {
+    handoffAgg.total++;
+    if (h.status === 'pending') handoffAgg.pending++;
+    else if (h.status === 'delivered') handoffAgg.delivered++;
+    else if (h.status === 'cancelled') handoffAgg.cancelled++;
+    const m = moduleMap.get(h.target_module) ?? { pending: 0, delivered: 0, total: 0 };
+    m.total++;
+    if (h.status === 'pending') m.pending++;
+    else if (h.status === 'delivered') m.delivered++;
+    moduleMap.set(h.target_module, m);
+    if (h.status === 'pending' && h.handoff_type === 'access_removal') pendingAccessRemovals++;
+  }
+  const handoffsByModule: OffboardingModuleClearance[] = [...moduleMap.entries()]
+    .map(([module, m]) => ({ module, ...m }))
+    .sort((a, b) => b.total - a.total);
+
+  // ── blockers ──
+  let openBlockers = 0, criticalBlockers = 0;
+  for (const b of blockers) {
+    if (b.status !== 'open') continue;
+    openBlockers++;
+    if (b.severity === 'high' || b.severity === 'critical') criticalBlockers++;
+  }
+
+  // ── mean clearance time (start → ready/complete) ──
+  const durations: number[] = [];
+  for (const c of cases) {
+    const end = c.completed_at ?? c.ready_at;
+    if (!end || !c.started_at) continue;
+    const days = (new Date(end).getTime() - new Date(c.started_at).getTime()) / 86_400_000;
+    if (days >= 0) durations.push(days);
+  }
+  const avgClearanceDays = durations.length
+    ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10
+    : null;
+
   return {
-    activeCases: rows.filter(r => ['open', 'in_progress', 'blocked', 'paused'].includes(r.status)).length,
-    readyForExit: rows.filter(r => r.status === 'ready_for_exit').length,
-    blocked: rows.filter(r => r.status === 'blocked').length,
-    completedThisMonth: rows.filter(r => r.status === 'completed' && r.completed_at && new Date(r.completed_at) >= monthStart).length,
-    byReason: Array.from(byReasonMap.entries()).map(([reason, count]) => ({ reason, count })),
+    activeCases: cases.filter(c => ['open', 'in_progress', 'blocked', 'paused'].includes(c.status)).length,
+    readyForExit: cases.filter(c => c.status === 'ready_for_exit').length,
+    blocked: cases.filter(c => c.status === 'blocked').length,
+    completedThisMonth: cases.filter(c => c.status === 'completed' && c.completed_at && new Date(c.completed_at) >= monthStart).length,
+    totalCases: cases.length,
+    byReason: [...reasonMap.entries()].map(([reason, count]) => ({ reason, count })),
+    byStatus,
+    taskClearance: { done: taskDone, total: taskTotal },
+    blockingTasksOpen,
+    openBlockers,
+    criticalBlockers,
+    handoffs: handoffAgg,
+    handoffsByModule,
+    pendingAccessRemovals,
+    avgClearanceDays,
   };
 }

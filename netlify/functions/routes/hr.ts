@@ -47,6 +47,7 @@ const HR_COLS =
   'id, username, full_name, first_name, last_name, display_name, role, status, ' +
   'employment_type, department_id, site_id, position, supervisor_id, email, personal_email, ' +
   'phone, employee_number, start_date, end_date, contractor_flag, profile_image_url, profile_image_thumb_url, profile_image, signed_url, signed_url_expires_at, ' +
+  'profile_image_pending_thumb_url, profile_image_pending_submitted_at, ' +
   'date_of_birth, nationality, government_id, probation_end_date, employee_grade, work_schedule, cost_center, ' +
   'emergency_contact_name, emergency_contact_phone, emergency_contact_relationship';
 
@@ -173,6 +174,60 @@ router.post('/employees/get', async c => {
     statutory: canStatutory ? (statutory ?? null) : null,
     payrollReadiness: (canStatutory || canReadiness) ? payrollReadiness : null,
   } });
+});
+
+// POST /api/hr/employees/photo/decide — approve or reject a pending profile
+// photo submitted via the self-service Change Profile Photo dialog. Approve
+// promotes the pending image to live; reject discards it. Either way the
+// pending columns are cleared so the drawer's banner disappears.
+router.post('/employees/photo/decide', async c => {
+  const actor = await requirePermission(c, 'hr.employees.photo_approve');
+  const v = zv(c, z.object({ employeeId: z.string().min(1), approve: z.boolean(), reason: z.string().max(500).optional() }),
+    (c.get('body') as Record<string, unknown>).args ?? {});
+  if (!v.ok) return v.response;
+
+  const { data: row, error: fetchErr } = await sb.from('app_users')
+    .select('profile_image_pending_url, profile_image_pending_path, profile_image_pending_thumb_url, profile_image_pending_thumb_path, profile_image_pending_version, profile_image_pending_submitted_at')
+    .eq('id', v.data.employeeId).maybeSingle<{
+      profile_image_pending_url: string | null; profile_image_pending_path: string | null;
+      profile_image_pending_thumb_url: string | null; profile_image_pending_thumb_path: string | null;
+      profile_image_pending_version: number | null; profile_image_pending_submitted_at: string | null;
+    }>();
+  if (fetchErr) return c.json({ success: false, message: fetchErr.message }, 500 as 200);
+  if (!row?.profile_image_pending_submitted_at) return c.json({ success: false, message: 'No pending photo for this employee.' }, 400 as 200);
+
+  const clearPending = {
+    profile_image_pending_url: null, profile_image_pending_path: null,
+    profile_image_pending_thumb_url: null, profile_image_pending_thumb_path: null,
+    profile_image_pending_version: null, profile_image_pending_submitted_at: null,
+  };
+
+  const patch = v.data.approve ? {
+    ...clearPending,
+    profile_image_url:        row.profile_image_pending_url,
+    profile_image_path:       row.profile_image_pending_path,
+    profile_image_thumb_url:  row.profile_image_pending_thumb_url,
+    profile_image_thumb_path: row.profile_image_pending_thumb_path,
+    profile_image_version:    row.profile_image_pending_version,
+    profile_image_updated_at: new Date().toISOString(),
+    profile_image_removed_at: null,
+    profile_image:            row.profile_image_pending_url,
+    signed_url: null, signed_url_expires_at: null,
+  } : clearPending;
+
+  const { error } = await sb.from('app_users').update(patch).eq('id', v.data.employeeId);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+  await writeHrAudit({ employeeId: v.data.employeeId, submoduleKey: 'employees', recordId: v.data.employeeId, actorId: actor.id,
+    action: v.data.approve ? 'hr.employee.photo_approved' : 'hr.employee.photo_rejected',
+    previousState: { pendingVersion: row.profile_image_pending_version }, newState: { approved: v.data.approve, reason: v.data.reason ?? null } });
+  await emitAppEvent({
+    eventType: v.data.approve ? 'auth.profile_photo.approved' : 'auth.profile_photo.rejected',
+    sourceModule: 'hr', sourceEntityType: 'app_user', sourceEntityId: v.data.employeeId, actorUserId: actor.id,
+    severity: 'info', payload: { reason: v.data.reason ?? null },
+  });
+
+  return c.json({ success: true });
 });
 
 // POST /api/hr/employees/create — v36 Create Employee wizard (identity → statutory).

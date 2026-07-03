@@ -66,10 +66,21 @@ export async function loadMfaPolicy(): Promise<MfaPolicy> {
 export function invalidatePolicyCache(): void { _mfaCache = null; }
 
 /**
+ * Dev/CI escape hatch. Time-based TOTP cannot work in an environment running on
+ * a simulated clock (codes never match a real authenticator's real-time codes),
+ * so enforcing *mandatory* MFA there only locks users out with no UI recovery
+ * (disabling TOTP just forces a re-enrol that also fails). Set
+ * `TOTP_ENFORCEMENT=off` in such environments to stand mandatory MFA down.
+ * Default (unset/any other value) = enforcement ON.
+ */
+export const mfaEnforcementEnabled: boolean = process.env.TOTP_ENFORCEMENT !== 'off';
+
+/**
  * Policy check used by the auth routes (login / 2FA setup). DB-backed via
  * loadMfaPolicy(); unknown roles never require MFA.
  */
 export async function isMfaRequiredForRole(role: string): Promise<boolean> {
+  if (!mfaEnforcementEnabled) return false;
   const p = await loadMfaPolicy();
   if (role === 'admin')      return p.admin;
   if (role === 'manager')    return p.manager;

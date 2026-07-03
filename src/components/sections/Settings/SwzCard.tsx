@@ -128,6 +128,15 @@ export function SwzCard({ s, index, scopeType, scopeId, canEdit, canAudit = true
           }} />
       );
     }
+    if (s.dataType === 'text') {
+      // Plain multi-line prose (e.g. an AI prompt template) — commits the raw
+      // string as-is, unlike the JSON textarea above.
+      return (
+        <textarea class="input-number" rows={8} value={draft} disabled={!canEdit || busy}
+          onInput={e => setDraft((e.target as HTMLTextAreaElement).value)}
+          onBlur={() => { if (draft !== toInput(s.effectiveValue)) void commit(draft); }} />
+      );
+    }
     return (
       <input type="text" class="input-number" value={draft} disabled={!canEdit || busy}
         onInput={e => setDraft((e.target as HTMLInputElement).value)}

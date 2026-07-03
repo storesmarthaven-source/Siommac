@@ -1,0 +1,150 @@
+/* src/components/sections/HR/offboardingWidgets.css
+ *
+ * The Offboarding overview widget dashboard (.ofw-*). A composed, mixed-size layout
+ * of real-data cards that sits between the page header and the cases table. Flexbox
+ * grid so cards share a row proportionally and wrap gracefully at any container width.
+ * Palette matches the HR light theme (see onboardingCase.css).
+ */
+.ofw { margin: 4px 0 18px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── metric strip ─────────────────────────────────────────────────────────────── */
+.ofw-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 12px; }
+.ofw-metric { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 118px; }
+.ofw-metric.is-alert { border-color: #fbcfe0; background: #fff7fa; }
+.ofw-metric-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #64748b; }
+.ofw-metric-ico { width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+.ofw-metric-ico.blue { background: #dbeafe; color: #1d4ed8; }
+.ofw-metric-ico.purple { background: #ede9fe; color: #6d28d9; }
+.ofw-metric-ico.slate { background: #eef2f7; color: #475569; }
+.ofw-metric-ico.red { background: #fee2e2; color: #dc2626; }
+.ofw-metric-num { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; line-height: 1.05; }
+.ofw-metric-num em { font-size: 14px; font-weight: 600; color: #94a3b8; font-style: normal; }
+.ofw-metric-foot { margin: 0; font-size: 11.5px; color: #94a3b8; }
+.ofw-metric-gauge { align-items: center; text-align: center; }
+.ofw-metric-gauge .ofw-metric-head { align-self: flex-start; }
+.ofw-metric-gaugewrap { position: relative; width: 118px; }
+.ofw-gauge { width: 118px; display: block; }
+.ofw-gauge-track { stroke: #eef2f7; }
+.ofw-gauge-center { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; }
+.ofw-gauge-center strong { font-size: 21px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.ofw-gauge-center.lg strong { display: block; font-size: 26px; }
+.ofw-gauge-center.lg span { font-size: 11px; color: #94a3b8; font-weight: 600; }
+
+/* ── flexible card grid ───────────────────────────────────────────────────────── */
+.ofw-grid { display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; }
+.ofw-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; padding: 15px 17px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ofw-sm { flex: 1 1 236px; }
+.ofw-md { flex: 1.35 1 330px; }
+.ofw-lg { flex: 2 1 440px; }
+.ofw-xl { flex: 1 1 100%; }
+.ofw-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ofw-card-head h3 { margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.ofw-card-head h3 i { color: #2563eb; font-size: 13px; }
+.ofw-head-meta { font-size: 12px; font-weight: 700; color: #64748b; }
+.ofw-muted { color: #94a3b8; font-size: 12.5px; margin: 0; }
+.ofw-btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ofw-btn:hover { background: #f1f5f9; }
+.ofw-btn:disabled { opacity: .5; cursor: default; }
+.ofw-btn i { font-size: 10px; }
+
+.ofw-bar-track { display: block; height: 8px; border-radius: 999px; background: #eef2f7; overflow: hidden; flex: 1; }
+.ofw-bar-fill { display: block; height: 100%; border-radius: inherit; }
+.ofw-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #94a3b8; font-size: 12.5px; padding: 18px 0; text-align: center; }
+.ofw-empty i { font-size: 20px; color: #cbd5e1; }
+.ofw-empty.ok i { color: #86efac; }
+
+/* ── exit readiness (large) ───────────────────────────────────────────────────── */
+.ofw-readiness-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.ofw-readiness-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: .04em; }
+.ofw-readiness-top h3 { margin: 5px 0 3px; font-size: 16px; font-weight: 800; color: #0f172a; }
+.ofw-readiness-gauge { position: relative; width: 118px; flex: none; }
+.ofw-readiness-gauge .ofw-gauge { width: 118px; }
+.ofw-readiness-gauge .ofw-gauge-center { bottom: 2px; }
+.ofw-readiness-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ofw-fact { background: #f8fafc; border-radius: 10px; padding: 9px 12px; }
+.ofw-fact strong { display: block; font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.ofw-fact strong.tone-red { color: #dc2626; } .ofw-fact strong.tone-green { color: #16a34a; }
+.ofw-fact span { font-size: 11.5px; color: #64748b; }
+.ofw-readiness-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; border-top: 1px solid #f1f5f9; }
+.ofw-riskline { font-size: 12px; color: #64748b; display: inline-flex; align-items: center; gap: 6px; }
+.ofw-riskline i { color: #f59e0b; }
+.ofw-riskline strong { color: #0f172a; }
+.ofw-riskline .crit { color: #dc2626; font-style: normal; font-weight: 700; }
+
+/* ── donut (medium) ───────────────────────────────────────────────────────────── */
+.ofw-donut-body { display: flex; align-items: center; gap: 16px; flex: 1; }
+.ofw-donut-wrap { position: relative; width: 128px; flex: none; }
+.ofw-donut-svg { width: 128px; display: block; }
+.ofw-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ofw-donut-center strong { font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.ofw-donut-center span { font-size: 11px; color: #94a3b8; }
+.ofw-legend { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ofw-legend-row { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 8px; padding: 4px 6px; border: none; background: none; border-radius: 7px; cursor: pointer; font-family: inherit; text-align: left; }
+.ofw-legend-row:hover { background: #f8fbff; }
+.ofw-dot { width: 10px; height: 10px; border-radius: 3px; }
+.ofw-legend-label { font-size: 12.5px; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ofw-legend-row strong { font-size: 12.5px; color: #0f172a; font-weight: 700; }
+.ofw-legend-row em { font-size: 11px; color: #94a3b8; font-style: normal; min-width: 30px; text-align: right; }
+
+/* ── reason bars (small) ──────────────────────────────────────────────────────── */
+.ofw-bars { display: flex; flex-direction: column; gap: 11px; flex: 1; justify-content: center; }
+.ofw-bar-row { display: grid; grid-template-columns: 92px 1fr 22px; align-items: center; gap: 9px; }
+.ofw-bar-label { font-size: 12px; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ofw-bar-val { font-size: 12.5px; font-weight: 700; color: #0f172a; text-align: right; }
+
+/* ── cross-module clearance (large) ───────────────────────────────────────────── */
+.ofw-mod-summary { display: flex; gap: 10px; }
+.ofw-mod-chip { flex: 1; border-radius: 10px; padding: 9px 12px; display: flex; flex-direction: column; }
+.ofw-mod-chip strong { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.ofw-mod-chip span { font-size: 11px; font-weight: 600; }
+.ofw-mod-chip.amber { background: #fff7ed; } .ofw-mod-chip.amber strong { color: #b45309; } .ofw-mod-chip.amber span { color: #d97706; }
+.ofw-mod-chip.green { background: #f0fdf4; } .ofw-mod-chip.green strong { color: #15803d; } .ofw-mod-chip.green span { color: #16a34a; }
+.ofw-mod-chip.red { background: #fef2f2; } .ofw-mod-chip.red strong { color: #dc2626; } .ofw-mod-chip.red span { color: #ef4444; }
+.ofw-mod-list { display: flex; flex-direction: column; gap: 11px; }
+.ofw-mod-row { display: grid; grid-template-columns: 34px 1fr 1.1fr; align-items: center; gap: 11px; }
+.ofw-mod-ico { width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+.ofw-mod-copy { min-width: 0; }
+.ofw-mod-copy strong { display: block; font-size: 13px; font-weight: 700; color: #0f172a; }
+.ofw-mod-copy span { font-size: 11.5px; color: #94a3b8; }
+.ofw-mod-progress { display: flex; align-items: center; gap: 9px; }
+.ofw-mod-progress em { font-size: 11px; color: #64748b; font-style: normal; white-space: nowrap; }
+
+/* ── upcoming exits (medium) ──────────────────────────────────────────────────── */
+.ofw-exits { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ofw-exit-row { display: flex; align-items: center; gap: 11px; padding: 7px 6px; border: none; background: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; width: 100%; }
+.ofw-exit-row:hover { background: #f8fbff; }
+.ofw-exit-date { width: 42px; flex: none; border-radius: 9px; background: #eef2f7; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 0; }
+.ofw-exit-date em { font-size: 9.5px; font-weight: 800; color: #64748b; font-style: normal; letter-spacing: .04em; }
+.ofw-exit-date strong { font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1; }
+.ofw-exit-date.soon { background: #fff7ed; } .ofw-exit-date.soon em { color: #b45309; } .ofw-exit-date.soon strong { color: #b45309; }
+.ofw-exit-date.overdue { background: #fee2e2; } .ofw-exit-date.overdue em, .ofw-exit-date.overdue strong { color: #dc2626; }
+.ofw-exit-copy { flex: 1; min-width: 0; }
+.ofw-exit-copy strong { display: block; font-size: 13px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ofw-exit-copy span { font-size: 11.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 5px; }
+.ofw-reason-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.ofw-exit-rel { font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap; flex: none; }
+.ofw-exit-rel.soon { color: #b45309; } .ofw-exit-rel.overdue { color: #dc2626; }
+
+/* ── blocked & at-risk (wide) ─────────────────────────────────────────────────── */
+.ofw-risk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(216px, 1fr)); gap: 11px; }
+.ofw-risk-card { text-align: left; background: #fbfdff; border: 1px solid #e9eef6; border-radius: 11px; padding: 11px 13px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; gap: 5px; }
+.ofw-risk-card:hover { border-color: #b9c8e2; box-shadow: 0 2px 8px rgba(16,35,68,.06); }
+.ofw-risk-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ofw-risk-pill { font-size: 10.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px; }
+.ofw-risk-blockers { font-size: 11px; font-weight: 800; color: #dc2626; display: inline-flex; align-items: center; gap: 4px; }
+.ofw-risk-name { font-size: 13.5px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ofw-risk-sub { font-size: 11.5px; color: #94a3b8; }
+.ofw-risk-meter { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.ofw-risk-meter em { font-size: 11px; font-weight: 700; color: #64748b; font-style: normal; }
+.ofw-risk-owner { font-size: 11.5px; color: #64748b; display: inline-flex; align-items: center; gap: 6px; margin-top: 1px; }
+.ofw-risk-owner i { color: #cbd5e1; font-size: 11px; }
+
+/* ── skeleton ─────────────────────────────────────────────────────────────────── */
+.ofw-skel { position: relative; overflow: hidden; background: #f1f5f9; border-color: #eef2f7; }
+.ofw-skel::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: ofw-shimmer 1.3s infinite; }
+@keyframes ofw-shimmer { 100% { transform: translateX(100%); } }
+
+@media (max-width: 720px) {
+  .ofw-readiness-facts { grid-template-columns: repeat(2, 1fr); }
+  .ofw-mod-summary { flex-wrap: wrap; }
+}

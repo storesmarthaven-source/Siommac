@@ -2,6 +2,8 @@
 // All routes live in ./routes/*.  Shared infrastructure is in ./lib/*.
 // This file wires them together and adapts Hono to the Netlify Lambda handler.
 
+import './lib/bootstrapEnv'; // must be first — see that module for why
+
 import { Hono }   from 'hono';
 import type { Context } from 'hono';
 
@@ -49,6 +51,7 @@ import hrOnboardingRouter         from './routes/hrOnboarding';
 import hrOffboardingRouter        from './routes/hrOffboarding';
 import hrLeaveRouter             from './routes/hrLeave';
 import hrRequestsRouter          from './routes/hrRequests';
+import hrAttendanceRouter        from './routes/hrAttendance';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -167,6 +170,7 @@ app.route('/api/hr', hrOnboardingRouter);
 app.route('/api/hr', hrOffboardingRouter);
 app.route('/api/hr', hrLeaveRouter);
 app.route('/api/hr', hrRequestsRouter);
+app.route('/api/hr', hrAttendanceRouter);
 app.route('/api', departmentsRouter);
 app.route('/api', sitesRouter);
 app.route('/api', attendanceRouter);

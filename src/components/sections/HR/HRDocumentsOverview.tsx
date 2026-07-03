@@ -176,7 +176,7 @@ function RegisterTab(): VNode {
 
       {/* Table */}
       {isLoading && !data ? (
-        <TableSkeleton rows={8} cols={7} />
+        <table class="obx-table vt-table"><tbody><TableSkeleton rows={8} cols={8} /></tbody></table>
       ) : rows.length === 0 ? (
         <EmptyState icon="fa-folder-open" title="No documents found" text="Adjust filters or upload a document." />
       ) : (
@@ -348,7 +348,7 @@ function ExpiringTab(): VNode {
       </div>
 
       {isLoading && !safeRows.length ? (
-        <TableSkeleton rows={6} cols={6} />
+        <table class="obx-table vt-table"><tbody><TableSkeleton rows={6} cols={6} /></tbody></table>
       ) : !safeRows.length ? (
         <EmptyState icon="fa-check-circle" title="No expiring documents" text="All employee documents are valid." />
       ) : (
@@ -419,7 +419,7 @@ function RequirementsTab(): VNode {
       </div>
 
       {reqLoading && !safeReqs.length ? (
-        <TableSkeleton rows={4} cols={5} />
+        <table class="obx-table vt-table"><tbody><TableSkeleton rows={4} cols={6} /></tbody></table>
       ) : !safeReqs.length ? (
         <EmptyState icon="fa-clipboard-list" title="No requirements defined"
           text="Create a requirement to track which document types employees must provide." />
@@ -465,7 +465,7 @@ function RequirementsTab(): VNode {
       </div>
 
       {compLoading && !safeComp.length ? (
-        <TableSkeleton rows={4} cols={5} />
+        <table class="obx-table vt-table"><tbody><TableSkeleton rows={4} cols={5} /></tbody></table>
       ) : !safeComp.length ? (
         <EmptyState icon="fa-check-circle" title="All employees compliant"
           text="No employees have missing or expired required documents." />

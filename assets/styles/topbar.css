@@ -7,6 +7,20 @@
  * Prototype: currently used on Employee Master only.
  */
 
+/* Page heading — icon + title + subtext, sitting UNDER the full-width navy top bar,
+   left-aligned (no longer beside the bar). */
+.em-pagehead { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
+.em-headrow-icon {
+  width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.15rem;
+  background: linear-gradient(145deg, var(--siomac-navy-light), var(--siomac-navy));
+  box-shadow: 0 4px 12px rgba(27, 45, 84, 0.18);
+}
+.em-headrow-text { min-width: 0; }
+.em-headrow-name { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.em-headrow-sub { font-size: 0.78rem; color: var(--text-muted); line-height: 1.3; margin-top: 2px; }
+
 .app-topbar {
   display: flex; flex-direction: column;
   background: var(--siomac-navy);   /* same token as .sidebar — cannot drift */
@@ -75,11 +89,22 @@
   border-radius: 0; box-shadow: none; align-self: stretch; height: auto;
   padding: 0 30px 0 18px; gap: 22px; align-items: center;
 }
-.app-topbar .pnp-profile { border-radius: 0; padding: 0 10px 0 2px; gap: 13px; }
-/* Accent ring around the avatar (navy gap + blue ring, floats against the bar). */
+/* Profile pill button — rounded with a light highlight on hover (was flush/square). */
+.app-topbar .pnp-profile {
+  border-radius: 12px; padding: 5px 12px 5px 5px; gap: 13px;
+  transition: background 0.15s ease;
+}
+.app-topbar .pnp-profile:hover { background: rgba(255,255,255,0.10); }
+/* Accent ring around the avatar — a muted slate-blue on a thin navy gap so it floats
+   and reads against the navy bar (the old --siomac-blue #1a2c53 ring was ≈ navy, i.e.
+   invisible). Ring brightens/thickens on hover. */
 .app-topbar .pnp-avatar {
   width: 34px; height: 34px; font-size: 0.82rem;
-  box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 4px var(--siomac-blue);
+  box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 3.5px #647394;
+  transition: box-shadow 0.15s ease;
+}
+.app-topbar .pnp-profile:hover .pnp-avatar {
+  box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 4px #7d8cad, 0 0 10px rgba(100, 115, 148, 0.40);
 }
 .app-topbar .pnp-name { font-size: 0.78rem; font-weight: 700; }
 .app-topbar .pnp-role { font-size: 0.62rem; }

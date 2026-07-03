@@ -15,6 +15,10 @@
   margin: 0 auto;
 }
 .mp76 * { box-sizing: border-box; }
+/* Icon safety net — the icon components carry no width/height attributes, so any
+   context that forgets an explicit svg size would blow the icon up to 100%. This
+   sane default is overridden by every more-specific per-context rule below. */
+.mp76 svg { width: 1.05em; height: 1.05em; flex: none; }
 
 /* ── TOP GRID ── */
 .mp76-grid-top {
@@ -199,11 +203,13 @@
 }
 .mp76 .profile-sep { color: rgba(226,238,252,0.35); }
 
-/* Solid-icon helper (filled SVGs in the dark card) */
+/* Solid-icon helper (filled SVGs in the dark card) — light muted slate so the
+   icons stay visible on the navy card (matches the v76 reference). */
 .mp76 .profile-solid-icon,
 .mp76 .profile-solid-icon path {
   fill: currentColor !important;
   stroke: none !important;
+  color: rgba(226,238,252,0.68) !important;
 }
 
 /* Stats grid (2-col) */
@@ -382,13 +388,13 @@
   white-space: nowrap !important; box-shadow: none !important;
 }
 .mp76 .profile-access-list.redesigned-access-list .access-status.enabled {
-  color: rgba(226,238,252,0.78) !important;
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: #bbf7d0 !important;
+  background: rgba(34,197,94,0.18) !important;
+  border: 1px solid rgba(34,197,94,0.28) !important;
 }
 .mp76 .profile-access-list.redesigned-access-list .access-status.disabled {
   color: #fecaca !important;
-  background: rgba(239,68,68,0.14) !important;
+  background: rgba(248,113,113,0.16) !important;
   border: 1px solid rgba(248,113,113,0.28) !important;
 }
 
@@ -413,8 +419,9 @@
 .mp76 .profile-action:hover { background: rgba(255,255,255,0.20); border-color: rgba(191,219,254,0.45); }
 .mp76 .profile-action:active { background: rgba(7,20,38,0.50); border-color: rgba(148,163,184,0.35); color: #fff; transform: translateY(1px); }
 .mp76 .profile-action:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
+.mp76 .profile-action svg { width: 16px; height: 16px; flex: none; }
 .mp76 .profile-action svg,
-.mp76 .profile-action svg path { fill: currentColor !important; stroke: none !important; color: currentColor !important; }
+.mp76 .profile-action svg path { stroke: currentColor !important; fill: none !important; color: currentColor !important; }
 
 @media (max-width: 430px) {
   .mp76 .profile-actions { grid-template-columns: 1fr; }
@@ -442,7 +449,7 @@
 }
 .mp76 .compact-profile-activity .compact-activity-title svg,
 .mp76 .compact-profile-activity .compact-activity-title svg path {
-  color: #1b2d54 !important; fill: currentColor !important; stroke: none !important;
+  color: #1b2d54 !important; stroke: currentColor !important; fill: none !important;
   width: 16px !important; height: 16px !important;
 }
 .mp76 .compact-profile-activity .compact-activity-count {
@@ -452,10 +459,17 @@
   font-size: 0.62rem; font-weight: 600; white-space: nowrap;
 }
 
-/* Activity feed (timeline-style, white card version) */
+/* Activity feed (timeline-style, white card version). Caps the visible list
+   to ~5 entries; anything beyond that scrolls instead of growing the card. */
 .mp76 .compact-profile-activity .compact-activity-table {
   display: grid !important; gap: 12px !important; position: relative !important;
+  max-height: 280px !important; overflow-y: auto !important; padding-right: 6px !important;
+  scrollbar-width: thin !important; scrollbar-color: #cbd5e1 transparent !important;
 }
+.mp76 .compact-profile-activity .compact-activity-table::-webkit-scrollbar { width: 6px; }
+.mp76 .compact-profile-activity .compact-activity-table::-webkit-scrollbar-track { background: transparent; }
+.mp76 .compact-profile-activity .compact-activity-table::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.mp76 .compact-profile-activity .compact-activity-table::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .mp76 .compact-profile-activity .compact-activity-row {
   display: grid !important;
   grid-template-columns: 30px minmax(0,1fr) !important;
@@ -490,10 +504,10 @@
 }
 .mp76 .compact-profile-activity .compact-activity-icon svg {
   width: 14px !important; height: 14px !important;
-  display: block !important; fill: currentColor !important;
-  color: currentColor !important; stroke: none !important;
+  display: block !important; stroke: currentColor !important;
+  color: currentColor !important; fill: none !important;
 }
-.mp76 .compact-profile-activity .compact-activity-icon svg path { fill: currentColor !important; }
+.mp76 .compact-profile-activity .compact-activity-icon svg path { stroke: currentColor !important; fill: none !important; }
 .mp76 .compact-profile-activity .compact-activity-content {
   grid-area: content;
   display: flex; flex-direction: column; gap: 0;
@@ -532,7 +546,14 @@
 }
 
 /* card-header */
-.mp76 .card-header { display: flex; flex-direction: column; gap: 8px; }
+/* Bootstrap ships an unscoped .card-header (background/padding/border-bottom) in
+   the lowest-priority @layer bootstrap — since we never redeclared `background`
+   here, its rule was the only one setting that property and won by default.
+   Neutralize the vendor styles explicitly rather than relying on layer order. */
+.mp76 .card-header {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 0; margin-bottom: 0; background: transparent; border-bottom: 0;
+}
 .mp76 .card-header-start { align-items: flex-start; text-align: left; }
 .mp76 .card-title {
   display: flex; align-items: center; gap: 8px;
@@ -597,10 +618,10 @@
 }
 .mp76 .account-section-title span { display: inline-flex; align-items: center; gap: 8px; }
 .mp76 .account-section-title svg {
-  width: 18px; height: 18px; fill: currentColor !important; stroke: none !important; flex: none;
+  width: 18px; height: 18px; stroke: currentColor !important; fill: none !important; flex: none;
   color: #1b2d54 !important;
 }
-.mp76 .account-section-title svg path { fill: currentColor !important; stroke: none !important; }
+.mp76 .account-section-title svg path { stroke: currentColor !important; fill: none !important; }
 
 .mp76 .security-row {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
@@ -629,8 +650,8 @@
   font-family: inherit;
 }
 .mp76 .btn-sm:hover { background: #263a68; border-color: #263a68; }
-.mp76 .btn-sm svg { width: 15px; height: 15px; fill: currentColor !important; stroke: none !important; flex: none; }
-.mp76 .btn-sm svg path { fill: currentColor !important; stroke: none !important; color: #ffffff !important; }
+.mp76 .btn-sm svg { width: 15px; height: 15px; stroke: currentColor !important; fill: none !important; flex: none; }
+.mp76 .btn-sm svg path { stroke: currentColor !important; fill: none !important; color: #ffffff !important; }
 .mp76 .logout-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 8px 16px; border-radius: 32px;
@@ -641,7 +662,7 @@
 }
 .mp76 .logout-btn:hover { background: #263a68; border-color: #263a68; }
 .mp76 .logout-btn svg,
-.mp76 .logout-btn svg path { fill: currentColor !important; color: #ffffff !important; stroke: none !important; }
+.mp76 .logout-btn svg path { stroke: currentColor !important; color: #ffffff !important; fill: none !important; }
 
 /* Switch toggle */
 .mp76 .switch {
@@ -667,8 +688,8 @@
 }
 .mp76 .account-simple-note span { display: block; }
 
-/* Logout-box clock icon */
-.mp76 .logout-box svg[data-clock] { width: 20px; height: 20px; fill: currentColor !important; stroke: none !important; color: #1b2d54 !important; }
+/* Logout-box clock icon (the lone icon in the left label group, not the button) */
+.mp76 .logout-box > div svg { width: 20px; height: 20px; stroke: currentColor !important; fill: none !important; color: #1b2d54 !important; }
 
 /* Security icon overrides */
 .mp76 .card:not(.profile-card) .card-title svg,
@@ -683,12 +704,22 @@
 .mp76 .card:not(.profile-card) .logout-box svg path {
   color: currentColor !important; stroke: currentColor !important; fill: none !important;
 }
+/* Exception: the icons that sit ON the navy action buttons (Change Password,
+   Sign Out) must be WHITE — the shared navy rule above would hide them against
+   the #1b2d54 button. Scoped to the button only (leaves input/title/clock
+   icons navy); the extra class out-specifies the shared rule. */
+.mp76 .card:not(.profile-card) .security-row .btn-sm svg,
+.mp76 .card:not(.profile-card) .security-row .btn-sm svg path,
+.mp76 .card:not(.profile-card) .logout-box .logout-btn svg,
+.mp76 .card:not(.profile-card) .logout-box .logout-btn svg path {
+  color: #ffffff !important; stroke: currentColor !important; fill: none !important;
+}
 
 /* Notifications */
 .mp76 .account-notifications-block { margin-top: 16px; padding-top: 16px; border-top: 1px solid #dfe6ee; }
 .mp76 .account-notification-title { margin-bottom: 5px; }
 .mp76 .account-notification-title svg,
-.mp76 .account-notification-title svg path { color: #1b2d54 !important; fill: currentColor !important; stroke: none !important; }
+.mp76 .account-notification-title svg path { color: #1b2d54 !important; stroke: currentColor !important; fill: none !important; }
 .mp76 .account-notification-note { margin: 0 0 12px; color: #67787c; font-size: 0.82rem; line-height: 1.45; }
 .mp76 .account-notification-list { display: grid; gap: 9px; }
 .mp76 .account-notification-row {
@@ -737,8 +768,8 @@
   border-radius: 14px; background: rgba(27,45,84,0.08); color: #1b2d54;
   border: 1px solid rgba(27,45,84,0.16);
 }
-.mp76-modal-icon svg { width: 19px; height: 19px; fill: currentColor !important; stroke: none !important; }
-.mp76-modal-icon svg path { fill: currentColor !important; stroke: none !important; }
+.mp76-modal-icon svg { width: 19px; height: 19px; stroke: currentColor !important; fill: none !important; }
+.mp76-modal-icon svg path { stroke: currentColor !important; fill: none !important; }
 .mp76-modal-title { display: grid; gap: 3px; }
 .mp76-modal-title strong { font-size: 1.05rem; line-height: 1.15; letter-spacing: -0.02em; color: #090b0c; }
 .mp76-modal-title span { font-size: 0.82rem; color: #67787c; }
@@ -748,8 +779,8 @@
   cursor: pointer; transition: 0.15s;
 }
 .mp76-modal-close:hover { background: #f1f3f3; color: #090b0c; }
-.mp76-modal-close svg { width: 15px; height: 15px; fill: currentColor !important; stroke: none !important; }
-.mp76-modal-close svg path { fill: currentColor !important; stroke: none !important; }
+.mp76-modal-close svg { width: 15px; height: 15px; stroke: currentColor !important; fill: none !important; }
+.mp76-modal-close svg path { stroke: currentColor !important; fill: none !important; }
 
 .mp76-modal-body {
   padding: 20px; overflow: auto; display: grid; gap: 16px;
@@ -780,7 +811,7 @@
   font-size: 0.77rem; font-weight: 700; color: #090b0c;
   text-transform: uppercase; letter-spacing: 0.04em;
 }
-.mp76-security-form-row label svg { width: 13px; height: 13px; color: #67787c; opacity: 0.78; fill: currentColor !important; stroke: none !important; flex: none; }
+.mp76-security-form-row label svg { width: 13px; height: 13px; color: #67787c; opacity: 0.78; stroke: currentColor !important; fill: none !important; flex: none; }
 .mp76-security-form-row input {
   width: 100%; height: 44px; border-radius: 16px;
   border: 1px solid #e3e7e8; background: rgba(241,243,243,0.5); color: #090b0c;
@@ -802,7 +833,7 @@
   display: flex; align-items: center; gap: 9px;
   color: rgba(255,255,255,0.82); font-weight: 400;
 }
-.mp76-check-list svg { width: 14px; height: 14px; fill: rgba(255,255,255,0.9) !important; stroke: none !important; opacity: 0.86; flex: none; }
+.mp76-check-list svg { width: 14px; height: 14px; stroke: rgba(255,255,255,0.9) !important; fill: none !important; opacity: 0.86; flex: none; }
 .mp76-modal-error {
   display: none; padding: 10px 12px;
   border: 1px solid rgba(228,0,20,0.18); border-radius: 14px;
@@ -823,7 +854,7 @@
   background: rgba(255,255,255,0.12); color: #ffffff;
   border: 1px solid rgba(255,255,255,0.14); flex: none;
 }
-.mp76-logout-panel-icon svg { width: 18px; height: 18px; fill: currentColor !important; stroke: none !important; }
+.mp76-logout-panel-icon svg { width: 18px; height: 18px; stroke: currentColor !important; fill: none !important; }
 .mp76-logout-warning-copy { color: #ffffff; font-size: 0.95rem; font-weight: 500; line-height: 1.5; }
 .mp76-logout-support-copy { color: rgba(255,255,255,0.76); font-size: 0.83rem; line-height: 1.45; margin-top: 6px; }
 .mp76-session-box {
@@ -831,55 +862,75 @@
   border: 1px solid #e3e7e8; border-radius: 16px; background: #f9fbfb;
   color: #67787c; font-size: 0.84rem; line-height: 1.4;
 }
-.mp76-session-box svg { width: 18px; height: 18px; fill: #1b2d54 !important; stroke: none !important; flex: none; }
+.mp76-session-box svg { width: 18px; height: 18px; stroke: #1b2d54 !important; fill: none !important; flex: none; }
 
 /* Change Photo modal */
-.mp76-photo-modal { width: min(920px, calc(100vw - 32px)); }
+.mp76-photo-modal { width: min(950px, calc(100vw - 32px)); }
 .mp76-clean-photo-layout { display: grid; gap: 18px; }
 .mp76-clean-photo-top {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.9fr 1.55fr;
   gap: 16px;
-  align-items: stretch;
+  align-items: start;
 }
 @media (max-width: 760px) { .mp76-clean-photo-top { grid-template-columns: 1fr; } }
 
-.mp76-clean-photo-panel { display: grid; gap: 0; }
-.mp76-clean-photo-panel-head {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding-bottom: 12px; border-bottom: 1px solid #e8edf3;
-  margin-bottom: 12px;
+.mp76-clean-photo-panel {
+  border: 1px solid #e3e9f2; background: #ffffff;
+  border-radius: 16px; overflow: hidden;
 }
-.mp76-clean-photo-title { display: flex; align-items: flex-start; gap: 10px; }
-.mp76-clean-photo-title svg { width: 17px; height: 17px; flex: none; color: #1b2d54; stroke: currentColor; stroke-width: 1.8; fill: none; margin-top: 2px; }
-.mp76-clean-photo-title strong { display: block; color: #1b2d54; font-size: 0.9rem; font-weight: 650; }
-.mp76-clean-photo-title span { display: block; margin-top: 3px; color: #667085; font-size: 0.78rem; line-height: 1.35; }
-.mp76-clean-photo-panel-body { display: grid; gap: 14px; }
+.mp76-clean-photo-panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid #edf1f6; background: #fbfcfe;
+}
+.mp76-clean-photo-title { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.mp76-clean-photo-title svg { width: 18px; height: 18px; flex: none; color: #1b2d54; stroke: currentColor; stroke-width: 1.8; fill: none; margin-top: 1px; }
+.mp76-clean-photo-title strong { display: block; color: #1b2d54; font-size: 0.88rem; font-weight: 650; letter-spacing: -0.01em; }
+.mp76-clean-photo-title span { display: block; margin-top: 2px; color: #667085; font-size: 0.74rem; line-height: 1.45; }
+.mp76-clean-photo-panel-body { padding: 16px; display: grid; gap: 14px; }
 
 /* Upload drop zone */
 .mp76-clean-upload-drop {
-  min-height: 132px; border: 1px dashed #b8c4d3; border-radius: 14px;
+  position: relative;
+  min-height: 168px; border: 1.5px dashed #b9c5d3; border-radius: 14px;
   background: #f8fafc; display: grid; place-items: center; text-align: center;
-  padding: 18px; color: #667085; cursor: pointer; transition: border-color 0.15s;
+  padding: 18px; color: #667085; cursor: pointer; transition: border-color 0.15s, background 0.15s;
 }
-.mp76-clean-upload-drop:hover { border-color: #1b2d54; }
-.mp76-clean-upload-drop svg { width: 32px; height: 32px; color: #1b2d54; stroke: currentColor; stroke-width: 1.5; fill: none; margin-bottom: 8px; }
+.mp76-clean-upload-drop:hover { border-color: #1b2d54; background: #f4f7fb; }
+.mp76-clean-upload-drop svg { width: 34px; height: 34px; color: #1b2d54; stroke: currentColor; stroke-width: 1.5; fill: none; margin-bottom: 10px; }
 .mp76-clean-upload-drop strong { display: block; color: #1b2d54; font-size: 0.92rem; margin-bottom: 4px; }
-.mp76-clean-upload-drop span { display: block; color: #667085; font-size: 0.8rem; }
+.mp76-clean-upload-drop span { display: block; color: #667085; font-size: 0.76rem; line-height: 1.45; margin-top: 4px; }
+/* White pill browse button (matches v76 reference). It is itself a <span>
+   inside .mp76-clean-upload-drop, so the generic "…drop span" rule above
+   (specificity 0,1,1) would otherwise beat this single-class selector
+   (0,1,0) and collapse it back to plain block text — same collision the
+   reference hits, fixed the same way: !important on the contested props. */
 .mp76-clean-browse-btn {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
-  height: 32px; padding: 0 12px; border-radius: 8px;
-  background: #1b2d54; color: #fff;
-  font-size: 0.74rem; font-weight: 700;
+  position: relative; z-index: 2;
+  display: inline-flex !important; align-items: center; justify-content: center; gap: 8px;
+  margin: 14px auto 0 !important;
+  height: 38px; min-width: 148px; padding: 0 18px; border-radius: 999px;
+  background: #ffffff; color: #1b2d54 !important; border: 1px solid #cbd5e1;
+  font-size: 0.78rem !important; font-weight: 650; line-height: 1;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
 }
+.mp76-clean-browse-btn:hover { background: #f8fafc; border-color: #1b2d54; }
+.mp76-clean-browse-btn svg { display: block !important; width: 15px !important; height: 15px !important; margin: 0 !important; color: #1b2d54 !important; stroke: none !important; fill: currentColor !important; flex: none; }
+/* White requirements card (NOT navy) with navy-dot bullets */
 .mp76-clean-rules-card {
-  border-radius: 14px; background: #1b2d54; color: rgba(255,255,255,0.82); padding: 16px;
-  display: grid; gap: 12px;
+  border: 1px solid #e6ebf2; border-radius: 12px; background: #ffffff; padding: 12px 13px;
+  display: grid; gap: 0;
 }
-.mp76-clean-rules-card strong { color: #fff; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-.mp76-clean-rules-card strong svg { width: 16px; height: 16px; fill: currentColor !important; stroke: none !important; }
-.mp76-clean-rules-card ul { display: grid; gap: 7px; padding-left: 18px; margin: 0; font-size: 0.8rem; line-height: 1.35; }
-.mp76-clean-rules-card li { color: rgba(255,255,255,0.82); }
+.mp76-clean-rules-card strong { display: flex; align-items: center; gap: 8px; color: #1b2d54; font-size: 0.78rem; font-weight: 650; margin-bottom: 8px; }
+.mp76-clean-rules-card strong svg { width: 14px; height: 14px; color: #1b2d54; stroke: currentColor !important; fill: none !important; }
+.mp76-clean-rules-card ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+/* Keeps the longest bullet ("Plain or low-distraction background preferred")
+   on one line — at the reference's own column width (~248px available) it
+   wraps even at the reference's own 0.74rem, so a small size/tracking nudge
+   (verified live: 0.71rem + -0.03em is the minimum that fits) closes the gap
+   uniformly across the list rather than shrinking just the one line. */
+.mp76-clean-rules-card li { position: relative; padding-left: 18px; color: #667085; font-size: 0.71rem; line-height: 1.35; letter-spacing: -0.03em; }
+.mp76-clean-rules-card li::before { content: ""; position: absolute; left: 3px; top: 0.52em; width: 6px; height: 6px; border-radius: 999px; background: #1b2d54; }
 
 /* Photo compare section */
 .mp76-clean-photo-compare-grid {
@@ -890,25 +941,26 @@
 @media (max-width: 760px) { .mp76-clean-photo-compare-grid { grid-template-columns: 1fr; } }
 
 .mp76-clean-preview-card {
-  border: 1px solid #d9e2ee; border-radius: 14px; background: #fff; overflow: hidden;
+  border: 1px solid #e3e9f2; border-radius: 14px; background: #fff; overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .mp76-clean-preview-head {
-  min-height: 44px; display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; padding: 0 14px;
-  border-bottom: 1px solid #e8edf3; color: #1b2d54; font-size: 0.84rem; font-weight: 700;
+  height: 42px; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 0 12px;
+  background: #fbfcfe; border-bottom: 1px solid #edf1f6; color: #1b2d54; font-size: 0.8rem; font-weight: 650;
 }
-.mp76-clean-preview-head strong { display: flex; align-items: center; gap: 8px; }
-.mp76-clean-preview-head strong svg { width: 15px; height: 15px; fill: currentColor !important; stroke: none !important; }
+.mp76-clean-preview-head strong { display: inline-flex; align-items: center; gap: 7px; color: #1b2d54; font-weight: 650; }
+.mp76-clean-preview-head strong svg { width: 14px; height: 14px; color: #1b2d54; stroke: currentColor !important; fill: none !important; }
 .mp76-clean-status-pill {
   min-height: 24px; display: inline-flex; align-items: center;
   padding: 0 9px; border-radius: 999px;
   background: #eef2f6; color: #667085; border: 1px solid #e3e9f2;
-  font-size: 0.65rem; font-weight: 700; white-space: nowrap;
+  font-size: 0.65rem; font-weight: 700; font-style: normal; white-space: nowrap;
 }
 .mp76-clean-status-pill.ready { color: #166534; background: #ecfdf3; border-color: #bbf7d0; }
 
 .mp76-clean-photo-stage {
-  position: relative; aspect-ratio: 1/1;
+  position: relative; height: 255px;
   display: grid; place-items: center;
   background: #f7f9fc; overflow: hidden;
 }
@@ -918,46 +970,59 @@
   display: block;
   border-radius: 0 !important; border: 0 !important; box-shadow: none !important;
 }
-.mp76-clean-photo-stage.has-cropper { display: block; background: #f7f9fc; contain: paint; }
-.mp76-clean-photo-stage.has-cropper img { object-fit: contain !important; }
+/* During crop the Original stage becomes a dark square (no distortion — the
+   380² canvas fills a 1:1 box) so the zoom/pan cropper reads clearly. */
+.mp76-clean-photo-stage.has-cropper {
+  height: auto; aspect-ratio: 1 / 1; display: block; padding: 0;
+  background: #101828; contain: paint;
+}
+/* Transparent remove/clear overlay pinned to the image's top-right corner */
+.mp76-photo-remove-overlay {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  height: 24px; padding: 0 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(180,35,24,0.55); border: 1px solid rgba(180,35,24,0.6); color: #ffffff;
+  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+  cursor: pointer; transition: background 0.15s;
+}
+.mp76-photo-remove-overlay:hover { background: rgba(180,35,24,0.75); }
+.mp76-photo-remove-overlay:disabled { opacity: 0.5; cursor: not-allowed; }
 .mp76-photo-stage-empty {
   display: grid; place-items: center; gap: 8px; text-align: center;
   color: #667085; font-size: 0.78rem; padding: 20px;
 }
-.mp76-photo-stage-empty svg { width: 32px; height: 32px; color: #98a2b3; stroke: currentColor; stroke-width: 1.5; fill: none; }
+.mp76-photo-stage-empty svg { width: 32px; height: 32px; color: #1b2d54; opacity: 0.85; }
 
-/* Inline crop toolbar */
+/* Inline crop toolbar — the reference's final ("v74") layout: copy stacked
+   full-width on top (title then description, each on their own line), a
+   centered row of 4 icon-only buttons below. An earlier side-by-side flex
+   layout caused the title/description to sit on one line instead of stacked. */
 .mp76-inline-crop-toolbar {
   border-top: 1px solid #e3e9f2; padding: 12px;
-  display: grid; grid-template-columns: 1fr !important; gap: 10px !important;
+  display: grid; grid-template-columns: 1fr; gap: 10px; align-items: stretch;
   background: #ffffff;
 }
-.mp76-inline-crop-toolbar[hidden] { display: none !important; }
-.mp76-inline-crop-note { display: block; width: 100%; }
-.mp76-inline-crop-note strong { display: block; color: #1b2d54; font-size: 0.8rem; font-weight: 700; letter-spacing: -0.01em; }
-.mp76-inline-crop-note span { display: block; color: #667085; font-size: 0.72rem; line-height: 1.4; }
+.mp76-inline-crop-note { display: block; width: 100%; min-width: 0; text-align: left; }
+.mp76-inline-crop-copy { display: grid; gap: 3px; max-width: none; min-width: 0; }
+.mp76-inline-crop-note strong { display: block; color: #1b2d54; font-size: 0.78rem; font-weight: 700; text-align: left; }
+.mp76-inline-crop-note span { display: block; color: #667085; font-size: 0.72rem; line-height: 1.35; text-align: left; max-width: none; }
 .mp76-inline-crop-actions {
-  display: grid !important;
-  grid-template-columns: repeat(4, 38px) !important;
-  gap: 8px !important; justify-content: center !important;
-  width: 100% !important;
+  display: grid; grid-template-columns: repeat(4, 38px); gap: 8px;
+  justify-content: center; align-items: center; width: 100%;
 }
-.mp76-crop-btn {
-  width: 38px !important; min-width: 38px !important;
-  height: 38px !important; min-height: 38px !important;
-  border-radius: 10px !important; padding: 0 !important;
-  display: grid; place-items: center;
-  border: 1px solid #d9e2ee; background: #ffffff; color: #1b2d54;
-  cursor: pointer; font: inherit; font-size: 0;
+.mp76-manual-crop-btn {
+  width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #d9e2ee; background: #ffffff; color: #1b2d54; border-radius: 10px;
+  font: inherit; font-size: 0; font-weight: 650; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.mp76-crop-btn:hover { background: #f5f7fb; border-color: #c9d4e2; }
-.mp76-crop-btn.primary { background: #1b2d54; border-color: #1b2d54; color: #ffffff; }
-.mp76-crop-btn.primary:hover { background: #263d6b; border-color: #263d6b; }
-.mp76-crop-btn svg {
-  width: 16px !important; height: 16px !important;
-  display: block !important; fill: currentColor !important;
-  color: currentColor !important; stroke: none !important;
-}
+.mp76-manual-crop-btn:hover { background: #f8fafc; border-color: #b8c4d3; }
+.mp76-manual-crop-btn.primary { background: #1b2d54; border-color: #1b2d54; color: #ffffff; }
+.mp76-manual-crop-btn.primary:hover { background: #263b69; border-color: #263b69; }
+.mp76-manual-crop-btn svg { display: block; width: 16px; height: 16px; color: currentColor; fill: currentColor; stroke: none; flex: none; }
+.mp76-manual-crop-btn.primary svg { color: #ffffff; fill: #ffffff; }
+@media (max-width: 760px) { .mp76-inline-crop-actions { justify-content: flex-start; } }
 
 /* AI loading overlay */
 .mp76-ai-loading {
@@ -994,28 +1059,28 @@
 }
 .mp76-enhance-strip strong { display: block; color: #ffffff; font-size: 0.84rem; font-weight: 650; line-height: 1.2; }
 .mp76-enhance-strip span { display: block; margin-top: 4px; color: rgba(226,238,252,0.76); font-size: 0.74rem; line-height: 1.45; }
-.mp76-enhance-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+/* Tags align under the copy text (past the 36px icon + 12px gap) */
+.mp76-enhance-tags { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 7px; margin-left: 48px; }
 .mp76-enhance-tags em {
   display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px;
   border-radius: 999px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.14);
   color: rgba(255,255,255,0.92); font-size: 0.67rem; font-weight: 600; font-style: normal; white-space: nowrap;
 }
+@media (max-width: 560px) { .mp76-enhance-tags { margin-left: 0; } }
 
-/* Generate row */
-.mp76-generate-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-}
-.mp76-revision-line { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #64748b; }
-.mp76-revision-tabs { display: flex; gap: 6px; }
+/* Generate row — vertical grid (button on top, revision line below) */
+.mp76-generate-row { display: grid; gap: 10px; }
+.mp76-revision-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.73rem; color: #667085; }
+.mp76-revision-tabs { display: inline-flex; align-items: center; gap: 6px; }
 .mp76-revision-tab {
-  min-height: 30px; padding: 0 12px;
-  border-radius: 8px; border: 1px solid #d9e2ee; background: #ffffff;
-  color: #5f6b7a; font: inherit; font-size: 0.72rem; font-weight: 600;
+  width: 28px; height: 24px; padding: 0;
+  border-radius: 7px; border: 1px solid #d9e2ee; background: #ffffff;
+  color: #667085; font: inherit; font-size: 0.7rem; font-weight: 650;
   cursor: pointer; transition: 0.15s;
 }
 .mp76-revision-tab:hover:not(:disabled) { border-color: #1b2d54; color: #1b2d54; }
 .mp76-revision-tab.active { background: #1b2d54; border-color: #1b2d54; color: #ffffff; }
-.mp76-revision-tab:disabled { opacity: 0.48; cursor: not-allowed; }
+.mp76-revision-tab:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Photo error */
 .mp76-photo-error {
@@ -1040,7 +1105,6 @@
 
 /* Selected card highlight */
 .mp76-clean-preview-card.selected {
-  outline: 3px solid rgba(27,45,84,0.26); outline-offset: -3px;
   border-color: rgba(27,45,84,0.45);
 }
 
@@ -1048,7 +1112,9 @@
 @media (max-width: 560px) {
   .mp76-modal-footer { flex-direction: column-reverse; }
   .mp76-modal-btn { width: 100%; }
-  .mp76-inline-crop-actions { grid-template-columns: repeat(4, 38px) !important; }
+  .mp76-inline-crop-note { flex-direction: column; align-items: flex-start; }
+  .mp76-inline-crop-note span { text-align: left; }
+  .mp76-inline-crop-actions { justify-content: flex-start; }
 }
 
 /* ── SKELETON LOADERS ── */

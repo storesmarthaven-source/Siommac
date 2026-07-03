@@ -9,6 +9,7 @@
 // a CAPA that stays overdue produces exactly one notification per user per day
 // (notify.ts dedupes on the per-user unique index), not one every run.
 
+import './lib/bootstrapEnv'; // must be first — see that module for why
 import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
 import { emitAppEvent } from './lib/appEvents';

@@ -29,10 +29,12 @@ import {
 } from '@ui';
 import {
   useHrEmployee, useHrWorkflowSummary, useHrAudit, useHrDocuments, useHrTrainingSummary,
-  useVerifyHrDocument, useArchiveHrDocument, getHrDocumentDownloadUrl,
+  useVerifyHrDocument, useArchiveHrDocument, getHrDocumentDownloadUrl, useDecideHrEmployeePhoto,
   type HrEmployeeDetail, type HrStatutoryRow, type HrAuditEntry, type HrDocument, type HrTrainingSummary,
   type HrWorkflowSummary,
 } from '@api/hr/employees';
+import { can } from '@lib/permissions';
+import { toast } from '@store';
 import { ActivityTimeline } from '@shared/orchestration/ActivityTimeline';
 import { EmployeeOnboardingSummary } from './EmployeeOnboardingSummary';
 import {
@@ -488,6 +490,15 @@ export function ProfileDrawer(
   const trainQ  = useHrTrainingSummary((tab === 'Overview' || tab === 'Training') ? employeeId : null);
   const auditQ  = useHrAudit((tab === 'Overview' || tab === 'Audit') ? employeeId : null);
   const docsQ   = useHrDocuments(tab === 'Documents' ? employeeId : null);
+  const decidePhoto = useDecideHrEmployeePhoto();
+
+  const handlePhotoDecision = (approve: boolean): void => {
+    if (!employeeId) return;
+    decidePhoto.mutate({ employeeId, approve }, {
+      onSuccess: () => toast.success(approve ? 'Profile photo approved.' : 'Profile photo rejected.'),
+      onError:   (err) => toast.error(err instanceof Error ? err.message : 'Could not update the photo.'),
+    });
+  };
 
   const d = detailQ.data;
   const e = d?.employee;
@@ -524,6 +535,22 @@ export function ProfileDrawer(
             reference={<>ⓘ {e.employee_number ?? '—'} <Pill tone={statusTone(e.status)}>{humanize(e.status)}</Pill></>}
             meta={[e.position, e.departmentName, e.siteName]}
           />
+
+          {/* Pending profile photo — reviewers (hr.employees.photo_approve) can
+              approve/reject a self-submitted photo before it goes live. */}
+          {can('hr.employees.photo_approve') && e.profile_image_pending_thumb_url && (
+            <div class="ui-pending-photo">
+              <img class="ui-pending-photo-thumb" src={e.profile_image_pending_thumb_url} alt="Pending profile photo" />
+              <div class="ui-pending-photo-copy">
+                <strong>Profile photo pending review</strong>
+                <span>Submitted {relativeTime(e.profile_image_pending_submitted_at)}. The current photo stays active until you approve.</span>
+              </div>
+              <div class="ui-pending-photo-actions">
+                <button class="ui-btn-primary" type="button" disabled={decidePhoto.isPending} onClick={() => handlePhotoDecision(true)}>Approve</button>
+                <button class="ui-btn-secondary" type="button" disabled={decidePhoto.isPending} onClick={() => handlePhotoDecision(false)}>Reject</button>
+              </div>
+            </div>
+          )}
 
           <PanelStats items={[
             { label: 'Training', value: (() => { const b = trainBadge(e.trainingStatus as string); return <Pill tone={b.tone}>{b.label}</Pill>; })() },

@@ -16,11 +16,12 @@ import {
   useOffboardingCases, useOffboardingCase, useOffboardingStats, useOffboardingMutation, hrOffboardingApi,
 } from '@api/hr/offboarding';
 import { useHrEmployees } from '@api/hr/employees';
-import type { OffboardingCaseRow, OffboardingReason } from '../../../../types/hrOffboarding';
+import type { OffboardingReason } from '../../../../types/hrOffboarding';
+import { OffboardingDashboard, OffboardingDashboardSkeleton } from './offboardingWidgets';
 import './onboardingCase.css';
 
 const REASONS: OffboardingReason[] = ['resignation', 'termination', 'redundancy', 'end_of_contract', 'retirement'];
-const STATUS_FILTERS = ['all', 'in_progress', 'paused', 'blocked', 'ready_for_exit', 'completed', 'cancelled'] as const;
+const STATUS_FILTERS = ['all', 'in_progress', 'open', 'paused', 'blocked', 'ready_for_exit', 'draft', 'completed', 'cancelled'] as const;
 const toast = (m: string): void => { void dialog.toast({ title: m }); };
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
 function statusTone(s: string): 'green' | 'gray' | 'red' {
@@ -33,35 +34,26 @@ export function OffboardingOverview(): VNode {
   const [newOpen, setNewOpen] = useState(false);
 
   const casesQ = useOffboardingCases(statusFilter === 'all' ? undefined : statusFilter);
+  const allCasesQ = useOffboardingCases();          // unfiltered — feeds the dashboard widgets
   const statsQ = useOffboardingStats();
   const canStart = can('hr.offboarding.start');
 
   if (selectedId) return <CaseDetail caseId={selectedId} onBack={() => setSelectedId(null)} />;
 
   const rows = casesQ.data ?? [];
-  const s = statsQ.data;
-  const cells: Array<[string, number | string]> = [
-    ['Active', s?.activeCases ?? 0], ['Ready for exit', s?.readyForExit ?? 0],
-    ['Blocked', s?.blocked ?? 0], ['Completed (mo)', s?.completedThisMonth ?? 0],
-  ];
 
   return (
     <div class="hr-offboarding">
       <PageHeader
         icon="fa-door-open" module="HR · Offboarding" title="Offboarding"
         sub="Employee exits — clearance, asset return, access removal & final pay."
-        meta={[{ icon: 'fa-list-check', label: `${rows.length} cases` }]}
+        meta={[{ icon: 'fa-list-check', label: `${(allCasesQ.data ?? rows).length} cases` }]}
         actions={canStart ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Case</button> : undefined}
       />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, margin: '14px 0' }}>
-        {cells.map(([l, n]) => (
-          <div key={l} style={{ flex: '1 1 140px', border: '1px solid var(--border,#e2e8f0)', borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{n}</div>
-            <div class="obx-meta" style={{ fontSize: 12 }}>{l}</div>
-          </div>
-        ))}
-      </div>
+      {statsQ.data
+        ? <OffboardingDashboard stats={statsQ.data} cases={allCasesQ.data ?? []} onOpenCase={setSelectedId} onFilterStatus={st => setStatusFilter(st)} />
+        : <OffboardingDashboardSkeleton />}
 
       <div style={{ display: 'flex', gap: 10, margin: '10px 0' }}>
         <select class="ui-select" style={{ width: 180 }} value={statusFilter} onChange={e => setStatusFilter((e.target as HTMLSelectElement).value)}>

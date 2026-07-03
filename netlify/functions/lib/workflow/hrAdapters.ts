@@ -18,6 +18,8 @@ import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionT
 import { applyApprovedChange, markChangeRequestStatus } from '../hr/changeApproval';
 import { applyApprovedOrgChange, setOrgChangeStatus } from '../hr/organizationChangeRequests';
 import { applyApprovedLeave, setLeaveRequestStatus } from '../hr/leaveCore';
+import { writeHrAudit } from '../hr/employeeCore';
+import { emitAppEvent } from '../appEvents';
 
 /** The user who made the most recent decision on this workflow (the approver). */
 async function decidedBy(workflowId: string): Promise<string | null> {
@@ -118,10 +120,61 @@ const hrRequestsAdapter: ModuleWorkflowAdapter = {
   onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setRequestStatus(sourceRecordId, 'cancelled', null, reason); },
 };
 
+// ── HR Attendance timesheet approval adapter ────────────────────────────────────────────
+// On workflow completion/return/rejection, updates hr_timesheets.status +
+// writes hr_audit_log + emits the app event.
+// NO postModuleSystemMessage: collaboration rail is deferred (spec §0.2).
+// No second approval authority -- the engine owns the lifecycle.
+
+async function setTimesheetStatus(
+  recordId: string,
+  status: string,
+  approvedBy: string | null,
+  opts?: { note?: string | null },
+): Promise<void> {
+  const patch: Record<string, unknown> = { status };
+  if (approvedBy && status === 'approved') {
+    patch['approved_by'] = approvedBy;
+    patch['approved_at'] = new Date().toISOString();
+  }
+  if (opts?.note !== undefined) patch['rejection_note'] = opts.note ?? null;
+  const { error } = await sb.from('hr_timesheets').update(patch).eq('id', recordId);
+  if (error) throw new Error('setTimesheetStatus failed: ' + error.message);
+}
+
+const hrAttendanceAdapter: ModuleWorkflowAdapter = {
+  moduleKey: 'hr_attendance',
+  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+    throw new Error('hr_attendance: workflow context is built at the call site (submitTimesheet), not via the adapter.');
+  },
+  onWorkflowStarted:       async ({ sourceRecordId }) => { await setTimesheetStatus(sourceRecordId, 'in_review', null); },
+  onWorkflowStepCompleted: async () => {},
+  onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => {
+    const approver = await decidedBy(workflowId);
+    await setTimesheetStatus(sourceRecordId, 'approved', approver);
+    await writeHrAudit({ submoduleKey: 'hr_attendance', recordId: sourceRecordId, actorId: approver ?? 'workflow', action: 'timesheet.approved', previousState: { status: 'in_review' }, newState: { status: 'approved' } });
+    void emitAppEvent({ eventType: 'hr.timesheet.approved', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: sourceRecordId, actorUserId: approver ?? 'workflow', severity: 'success', payload: {} });
+  },
+  onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => {
+    const actor = await decidedBy(workflowId);
+    await setTimesheetStatus(sourceRecordId, 'draft', null, { note: comment });
+    await writeHrAudit({ submoduleKey: 'hr_attendance', recordId: sourceRecordId, actorId: actor ?? 'workflow', action: 'timesheet.returned', previousState: { status: 'in_review' }, newState: { status: 'draft' }, reason: comment });
+    void emitAppEvent({ eventType: 'hr.timesheet.returned', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow', severity: 'warning', payload: { note: comment } });
+  },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => {
+    const actor = await decidedBy(workflowId);
+    await setTimesheetStatus(sourceRecordId, 'rejected', null, { note: comment });
+    await writeHrAudit({ submoduleKey: 'hr_attendance', recordId: sourceRecordId, actorId: actor ?? 'workflow', action: 'timesheet.rejected', previousState: { status: 'in_review' }, newState: { status: 'rejected' }, reason: comment });
+    void emitAppEvent({ eventType: 'hr.timesheet.rejected', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow', severity: 'warning', payload: { note: comment } });
+  },
+  onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setTimesheetStatus(sourceRecordId, 'draft', null, { note: reason }); },
+};
+
 export function registerHrWorkflowAdapters(): void {
   registerWorkflowAdapter(hrEmployeeMasterAdapter);
   registerWorkflowAdapter(hrOrgStructureAdapter);
   registerWorkflowAdapter(hrLeaveAdapter);
   registerWorkflowAdapter(hrTransferPromotionAdapter);
   registerWorkflowAdapter(hrRequestsAdapter);
+  registerWorkflowAdapter(hrAttendanceAdapter);
 }

@@ -9,6 +9,7 @@ export type SettingDataType =
   | 'boolean'
   | 'number'
   | 'string'
+  | 'text'
   | 'select'
   | 'multi_select'
   | 'json'

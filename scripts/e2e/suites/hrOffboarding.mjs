@@ -84,7 +84,18 @@ export default async function run(h) {
     expect(l.body.data.some(x => x.id === ctx.caseId), 'case not in list');
     const s = await api('hr/offboarding/dashboard-stats', A, {});
     ok(s, 'stats failed');
-    expect('activeCases' in s.body.data && 'byReason' in s.body.data, 'stats shape wrong');
+    const d = s.body.data;
+    expect('activeCases' in d && 'byReason' in d, 'stats shape wrong');
+    // enriched aggregates the dashboard widgets consume — all real, no faked numbers
+    for (const k of ['totalCases', 'byStatus', 'taskClearance', 'blockingTasksOpen', 'openBlockers', 'criticalBlockers', 'handoffs', 'handoffsByModule', 'pendingAccessRemovals', 'avgClearanceDays'])
+      expect(k in d, `stats missing enriched field: ${k}`);
+    expect(Array.isArray(d.byStatus) && d.byStatus.some(x => x.status === 'in_progress' && x.count >= 1), 'byStatus missing in_progress');
+    // our fresh case contributes 7 exit tasks (4 blocking) + it/finance/hse handoffs incl. a pending IT access-removal
+    expect(d.taskClearance.total >= 7, `taskClearance.total too low: ${d.taskClearance.total}`);
+    expect(d.blockingTasksOpen >= 4, `blockingTasksOpen too low: ${d.blockingTasksOpen}`);
+    expect(d.handoffs.pending >= 3 && d.handoffs.total >= 3, 'handoffs aggregate too low');
+    expect(d.handoffsByModule.some(m => m.module === 'it'), 'handoffsByModule missing it lane');
+    expect(d.pendingAccessRemovals >= 1, 'pendingAccessRemovals should count the fresh IT access-removal handoff');
   });
 
   // ── Tasks + lifecycle ────────────────────────────────────────────────────────

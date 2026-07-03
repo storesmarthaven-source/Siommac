@@ -232,6 +232,13 @@ router.post('/login', async c => {
         await log_(u, 'login', 'user', u.id, 'login ok (trusted device)');
         return c.json(payload);
       }
+      // Cookie present but rejected — record WHY (device_expired / security_stamp_mismatch /
+      // secret_mismatch / device_not_found / invalid_cookie_signature) so an unexpected
+      // re-prompt inside the trust window is diagnosable instead of silently falling through.
+      console.log('[login] trusted-device cookie NOT honored', { userId: u.id, reason: tdResult.reason });
+      await log_(u, 'trusted_device_rejected', 'user', u.id, tdResult.reason);
+    } else {
+      console.log('[login] no trusted-device cookie sent', { userId: u.id });
     }
 
     // User has at least one strong factor — require them to use it
@@ -283,6 +290,10 @@ router.post('/login', async c => {
         await log_(u, 'login', 'user', u.id, 'login ok (trusted device)');
         return c.json(payload);
       }
+      console.log('[login] trusted-device cookie NOT honored', { userId: u.id, reason: tdResult.reason });
+      await log_(u, 'trusted_device_rejected', 'user', u.id, tdResult.reason);
+    } else {
+      console.log('[login] no trusted-device cookie sent', { userId: u.id });
     }
     const [preAuthToken, tdEligible, tdMaxDays] = await Promise.all([
       issueChallenge(u.id, 'verify'),
@@ -614,34 +625,43 @@ router.post('/updateMyProfile', async c => {
   if (args.email !== undefined) patch.email     = args.email.trim();
   if (args.phone !== undefined) patch.phone     = args.phone.trim();
 
-  if (args.newPassword) {
-    if (!args.oldPassword) return c.json({ success: false, message: 'Current password is required' });
-    if (!actor.auth_email) return c.json({ success: false, message: 'Account not linked to auth.' });
-    // Verify old password and update new password via the Supabase Admin API to avoid
-    // shared-singleton session state on sbAnon leaking between concurrent requests.
-    const { error: pwErr } = await createAnonClient().auth.signInWithPassword({ email: actor.auth_email, password: args.oldPassword });
-    if (pwErr) return c.json({ success: false, message: 'Current password is incorrect' });
-    // Use admin API to update password — avoids needing a live session on a shared client.
-    const { data: authUser } = await sb.auth.admin.listUsers();
-    const match = authUser?.users?.find(u => u.email === actor.auth_email);
-    if (!match) return c.json({ success: false, message: 'Auth account not found.' });
-    const { error: upErr } = await sb.auth.admin.updateUserById(match.id, { password: args.newPassword });
-    if (upErr) return c.json({ success: false, message: 'Failed to update password.' });
-  }
-
-  // Profile PHOTO is no longer handled here — it flows through the presigned
-  // /api/profile-photo/{upload-url,commit,remove} endpoints (public avatars bucket).
-  // This route handles name / email / phone / password only.
+  // Profile PHOTO flows through the presigned /api/profile-photo/* endpoints, and
+  // PASSWORD changes go through the canonical /api/auth/password/change route (which
+  // rotates the security stamp + revokes other sessions). This route is name /
+  // email / phone ONLY — one password path, no dual system.
 
   const { data, error } = await sb.from('app_users').update(patch).eq('id', actor.id)
     .select('profile_image, profile_image_url, profile_image_thumb_url, full_name, email, phone')
     .single<Pick<AppUser, 'profile_image' | 'profile_image_url' | 'profile_image_thumb_url' | 'full_name' | 'email' | 'phone'>>();
   if (error) { console.error('[auth] updateMyProfile', error); return c.json({ success: false, message: error.message }); }
 
+  if (args.fullName || args.email !== undefined || args.phone !== undefined) {
+    void emitAppEvent({ eventType: 'auth.profile.updated', sourceModule: 'auth', sourceEntityType: 'app_user', sourceEntityId: actor.id, actorUserId: actor.id, severity: 'info', payload: {
+      fullNameChanged: !!args.fullName, emailChanged: args.email !== undefined, phoneChanged: args.phone !== undefined,
+    } });
+  }
+
   // Resolve the (unchanged) avatar: prefer the public URL, else the legacy signed URL.
   const profileImage = resolveProfileImageUrl(data)
     ?? (noPhoto(data.profile_image) ? '' : await getProfileSignedUrl(actor.id, data.profile_image ?? ''));
   return c.json({ success: true, profileImage, fullName: data.full_name, email: data.email ?? '', phone: data.phone ?? '' });
+});
+
+// ── Self-service activity feed — real app_events for MY account, not the
+// deprecated attendance/leave "history" endpoints. ────────────────────────────
+router.post('/getMyRecentActivity', async c => {
+  const actor = await requireUser(c);
+  const { data, error } = await sb
+    .from('app_events')
+    .select('event_type, created_at, payload')
+    .eq('source_entity_type', 'app_user')
+    .eq('source_entity_id', actor.id)
+    .order('created_at', { ascending: false })
+    .limit(15);
+  if (error) return c.json({ success: false, message: error.message });
+  return c.json({ success: true, data: (data ?? []).map(r => ({
+    eventType: r.event_type, createdAt: r.created_at, payload: r.payload,
+  })) });
 });
 
 router.post('/verifyPassword', async c => {

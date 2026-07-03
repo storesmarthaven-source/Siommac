@@ -50,6 +50,8 @@ export interface HrEmployeeRow {
   end_date:           string | null;
   contractor_flag:    boolean | null;
   profile_image_url:  string | null;
+  profile_image_pending_thumb_url:    string | null;
+  profile_image_pending_submitted_at: string | null;
   departmentName:     string | null;
   siteName:           string | null;
   supervisorName:     string | null;
@@ -326,6 +328,20 @@ export function useUpdateHrContact() {
   return useMutation({
     mutationFn: (args: ContactUpdateArgs) =>
       apiPost<{ success: boolean; data: { mode: string; employee?: HrEmployeeRow; requestId?: string; changeNo?: string } }>('hr/employees/contact/update', args as unknown as Record<string, unknown>),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+    },
+  });
+}
+
+export interface PhotoDecideArgs { employeeId: string; approve: boolean; reason?: string }
+
+export function useDecideHrEmployeePhoto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: PhotoDecideArgs) =>
+      apiPost<{ success: boolean; message?: string }>('hr/employees/photo/decide', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
       qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });

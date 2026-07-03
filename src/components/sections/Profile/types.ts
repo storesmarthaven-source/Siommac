@@ -14,6 +14,8 @@ export interface ProfileData {
   email:          string;
   phone:          string;
   department:     string;
+  site:           string;   // work site (project_sites.name)
+  manager:        string;   // reporting manager (full_name)
   position:       string;
   employeeNumber: string;
   profileImage:   string;

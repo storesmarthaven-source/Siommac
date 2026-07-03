@@ -22,6 +22,7 @@ import { OffboardingOverview } from './OffboardingOverview';
 import { LeaveOverview }      from './LeaveOverview';
 import { TransfersOverview }   from './TransfersOverview';
 import { HRRequestsOverview }  from './HRRequestsOverview';
+import { AttendanceOverview }  from './AttendanceOverview';
 
 const EMP_ID       = 's-hr-employees';
 const ONB_ID       = 's-hr-onboarding';
@@ -31,9 +32,10 @@ const OFF_ID       = 's-hr-offboarding';
 const LEAVE_ID     = 's-hr-leave';
 const TRANSFERS_ID = 's-hr-transfers';
 const REQ_ID       = 's-hr-requests';
+const ATTENDANCE_ID = 's-hr-attendance';
 
 function isHrSection(id: string): boolean {
-  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID;
+  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID || id === ATTENDANCE_ID;
 }
 
 export function HRSection(): VNode {
@@ -71,6 +73,7 @@ export function HRSection(): VNode {
   if (sectionId === OFF_ID)      return <OffboardingOverview />;
   if (sectionId === TRANSFERS_ID) return <TransfersOverview />;
   if (sectionId === REQ_ID)       return <HRRequestsOverview />;
+  if (sectionId === ATTENDANCE_ID) return <AttendanceOverview />;
   return sectionId === ONB_ID
     ? <OnboardingOverview initialCaseId={pendingCaseId} />
     : <EmployeeMaster />;

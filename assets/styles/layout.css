@@ -171,10 +171,16 @@
 .sb-group-header:hover .sb-group-label,
 .sb-group-header:hover .sb-group-chevron { color: rgba(255,255,255,0.72); }
 
-.sb-group-items { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.sb-group-items {
+  list-style: none; margin: 0; padding: 0; overflow: hidden;
+  max-height: 720px; opacity: 1;
+  transition: max-height 0.3s ease, opacity 0.22s ease;
+}
 /* Collapse only applies to labeled (toggleable) groups — flat groups (overview)
-   have no .open state and must always show their items. */
-.sb-group:not(.sb-group--flat):not(.open) .sb-group-items { display: none; }
+   have no .open state and must always show their items. Animated via max-height
+   (the group lists are short + bounded; height:auto / display can't transition). */
+.sb-group:not(.sb-group--flat):not(.open) .sb-group-items { max-height: 0; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .sb-group-items { transition: none; } }
 
 /* ── Collapsible parent item (module sub-menu, e.g. PPE Manager) ── */
 .sb-parent { list-style: none; }
@@ -204,8 +210,11 @@
 .sb-children {
   list-style: none; margin: 2px 0 4px; padding: 0 0 0 18px;
   border-left: 1px solid rgba(255,255,255,0.08); margin-left: 16px;
+  overflow: hidden; max-height: 600px; opacity: 1;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
 }
-.sb-parent:not(.open) .sb-children { display: none; }
+.sb-parent:not(.open) .sb-children { max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .sb-children { transition: none; } }
 /* Child rows are slightly smaller/dimmer than top-level rows. */
 .sb-children button[data-section] { font-size: 12.75px; padding: 7px 12px; }
 .sb-children button[data-section] > .sb-ico { width: 16px; height: 16px; }
@@ -223,14 +232,16 @@
 }
 /* hover: 4.5% white wash, white text (Meridian spec) */
 .sidebar-menu button[data-section]:hover { background: rgba(255,255,255,0.045); color: #fff; }
-/* active: 3px red accent bar + 13% red fill, white 600 (sub-item active #fff) */
+/* active: clean solid slate-blue pill (lifts off the dark navy), white 600,
+   thin white accent bar. No gradient/glow. */
 .sidebar-menu button[data-section].active {
-  background: rgba(228,12,12,0.13);
+  background: #536489;
   color: #fff; font-weight: 600;
 }
+.sidebar-menu button[data-section].active:hover { background: #5c6e96; }
 .sidebar-menu button[data-section].active::before {
-  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: 0 3px 3px 0; background: var(--siomac-red);
+  content: ''; position: absolute; left: 0; top: 5px; bottom: 5px;
+  width: 3px; border-radius: 0 3px 3px 0; background: rgba(255,255,255,0.55);
 }
 /* Meridian nav token: 19px row icon — scope to item buttons so it doesn't
    inflate the small group-header chevron / count badge. */
@@ -243,7 +254,7 @@
 .sidebar.collapsed .sb-group-count,
 .sidebar.collapsed .sb-group-chevron { display: none; }
 .sidebar.collapsed .sb-group-header { padding: 4px 0; min-height: 6px; }
-.sidebar.collapsed .sb-group:not(.open) .sb-group-items { display: block; } /* always show icons when collapsed */
+.sidebar.collapsed .sb-group:not(.open) .sb-group-items { max-height: none; opacity: 1; } /* always show icons when collapsed */
 
 /* ── Pinned user card (Meridian-style) ── */
 .sidebar-user-card {

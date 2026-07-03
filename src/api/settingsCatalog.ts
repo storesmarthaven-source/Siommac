@@ -13,7 +13,7 @@ import { apiPost } from '@lib/api';
 // ── Types (mirror the route DTOs) ─────────────────────────────────────────────
 
 export type SettingDataType =
-  | 'boolean' | 'number' | 'string' | 'select' | 'multi_select' | 'json' | 'duration' | 'time' | 'array';
+  | 'boolean' | 'number' | 'string' | 'text' | 'select' | 'multi_select' | 'json' | 'duration' | 'time' | 'array';
 export type SettingClass =
   | 'system_security' | 'system_policy' | 'module_policy' | 'safety_rule' | 'workflow_rule'
   | 'notification_rule' | 'message_policy' | 'file_policy' | 'audit_policy'

@@ -17,6 +17,7 @@
 // (user_id, dedupe_key) unique index.  The per-bucket key for sweep 1 means each
 // permit fires at most once per bucket transition even across many 15-min runs.
 
+import './lib/bootstrapEnv'; // must be first — see that module for why
 import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
 import { emitAppEvent } from './lib/appEvents';

@@ -248,10 +248,16 @@ router.post('/getEmployeeByUsername', async c => {
   const { data: u } = await sb.from('app_users').select('*').eq('username', username).maybeSingle<AppUser>();
   if (!u) return c.json({ success: false, message: 'User not found' });
 
-  const [profileImage, deptRow] = await Promise.all([
+  const [profileImage, deptRow, siteRow, mgrRow] = await Promise.all([
     getProfileSignedUrl(u.id, u.profile_image),
     u.department_id
       ? sb.from('departments').select('name').eq('id', u.department_id).maybeSingle<{ name: string }>().then(r => r.data)
+      : Promise.resolve(null),
+    u.site_id
+      ? sb.from('project_sites').select('name').eq('id', u.site_id).maybeSingle<{ name: string }>().then(r => r.data)
+      : Promise.resolve(null),
+    u.supervisor_id
+      ? sb.from('app_users').select('full_name').eq('id', u.supervisor_id).maybeSingle<{ full_name: string }>().then(r => r.data)
       : Promise.resolve(null),
   ]);
 
@@ -259,6 +265,7 @@ router.post('/getEmployeeByUsername', async c => {
     id: u.id, username: u.username, fullName: u.full_name, role: u.role,
     employeeNumber: u.employee_number ?? '',
     departmentId: u.department_id ?? '', department: deptRow?.name ?? '',
+    site: siteRow?.name ?? '', manager: mgrRow?.full_name ?? '',
     position: u.position ?? '', status: u.status,
     email: u.email ?? '', phone: u.phone ?? '',
     colorScheme: u.color_scheme ?? 'navy', layoutMode: u.layout_mode ?? 'sidebar',

@@ -15,23 +15,36 @@ interface RawEmployee {
   email:          string;
   phone:          string;
   department:     string;
+  site:           string;
+  manager:        string;
   position:       string;
   employeeNumber: string;
   profileImage:   string;
 }
 
-interface RawAttRow {
-  date:     string;
-  checkIn:  string | null;
-  checkOut: string | null;
+interface RawActivityRow {
+  eventType: string;
+  createdAt: string;
+  payload:   unknown;
 }
 
-interface RawLeaveRow {
-  id:        string;
-  type:      string;
-  appliedOn: string;
-  from?:     string;
-  status:    string;
+/** Real, known self-account event types → friendly title + icon key. */
+const ACTIVITY_LABELS: Record<string, { title: string; icon: string }> = {
+  'auth.profile_photo.submitted':        { title: 'Profile Photo Submitted for Review', icon: 'photo' },
+  'auth.profile_photo.approved':         { title: 'Profile Photo Approved',             icon: 'photo' },
+  'auth.profile_photo.rejected':         { title: 'Profile Photo Rejected',             icon: 'photo-removed' },
+  'auth.profile_photo.updated':          { title: 'Profile Photo Updated',              icon: 'photo' },
+  'auth.profile_photo.removed':          { title: 'Profile Photo Removed',              icon: 'photo-removed' },
+  'auth.profile.updated':                { title: 'Profile Information Updated',        icon: 'profile' },
+  'auth.password.changed':               { title: 'Password Changed',                   icon: 'password' },
+  'auth.totp.enabled':                   { title: 'Two-Factor Authentication Enabled',  icon: 'security-on' },
+  'auth.totp.disabled':                  { title: 'Two-Factor Authentication Disabled', icon: 'security-off' },
+  'auth.totp.backup_codes_regenerated':  { title: 'Backup Codes Regenerated',           icon: 'security' },
+};
+
+function humanizeEventType(eventType: string): string {
+  const last = eventType.split('.').pop() ?? eventType;
+  return last.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
 }
 
 export async function fetchMyProfile(username: string, signal?: AbortSignal): Promise<RawEmployee> {
@@ -63,44 +76,21 @@ function fmtActivity(d: string | undefined): string {
 }
 
 export async function fetchMyActivity(signal?: AbortSignal): Promise<ActivityEvent[]> {
-  const [attRows, leaveRows] = await Promise.all([
-    apiPost<{ success: boolean }>('getMyHistory',  {}, signal ? { signal } : undefined).catch(() => null),
-    apiPost<{ success: boolean }>('getMyLeaves',   {}, signal ? { signal } : undefined).catch(() => null),
-  ]);
+  const res = await apiPost<{ success: boolean; data?: RawActivityRow[]; message?: string }>(
+    'getMyRecentActivity', {}, signal ? { signal } : undefined,
+  );
+  if (!res.success) throw new Error(res.message ?? 'Cannot load recent activity');
 
-  const events: ActivityEvent[] = [];
-
-  // These endpoints return array-directly or {success,data:[]} — normalise via unknown
-  const rawAtt: unknown    = attRows;
-  const rawLeave: unknown  = leaveRows;
-
-  const attData: RawAttRow[] = Array.isArray(rawAtt)
-    ? (rawAtt as unknown as RawAttRow[])
-    : (rawAtt && Array.isArray((rawAtt as Record<string, unknown>)['data'])
-        ? ((rawAtt as Record<string, unknown>)['data'] as RawAttRow[])
-        : []);
-
-  attData.slice(0, 15).forEach(r => {
-    if (r.checkIn)  events.push({ icon: 'fa-sign-in-alt',  title: 'Clocked In',  date: r.date + ', ' + fmtLocalTime(r.checkIn),  raw: new Date(r.checkIn)  });
-    if (r.checkOut) events.push({ icon: 'fa-sign-out-alt', title: 'Clocked Out', date: r.date + ', ' + fmtLocalTime(r.checkOut), raw: new Date(r.checkOut) });
+  return (res.data ?? []).map(r => {
+    const known = ACTIVITY_LABELS[r.eventType];
+    const raw = new Date(r.createdAt);
+    return {
+      icon:  known?.icon ?? 'generic',
+      title: known?.title ?? humanizeEventType(r.eventType),
+      date:  fmtActivity(r.createdAt),
+      raw,
+    };
   });
-
-  const leaveData: RawLeaveRow[] = Array.isArray(rawLeave)
-    ? (rawLeave as unknown as RawLeaveRow[])
-    : (rawLeave && Array.isArray((rawLeave as Record<string, unknown>)['data'])
-        ? ((rawLeave as Record<string, unknown>)['data'] as RawLeaveRow[])
-        : []);
-
-  leaveData.slice(0, 10).forEach(r => {
-    const status = r.status || '';
-    const label  = status === 'Approved' ? 'Leave Approved' : status === 'Rejected' ? 'Leave Rejected' : 'Leave Requested';
-    const icon   = status === 'Approved' ? 'fa-check-circle' : status === 'Rejected' ? 'fa-times-circle' : 'fa-calendar-plus';
-    const dateRaw = r.appliedOn || r.from || '';
-    events.push({ icon, title: label + (r.type ? ` (${r.type})` : ''), date: fmtActivity(dateRaw), raw: new Date(dateRaw) });
-  });
-
-  events.sort((a, b) => b.raw.getTime() - a.raw.getTime());
-  return events.slice(0, 15);
 }
 
 export interface UpdateProfilePayload {
@@ -110,8 +100,6 @@ export interface UpdateProfilePayload {
   phone:              string;
   profileImageBase64: string;
   removeProfileImage: boolean;
-  oldPassword:        string;
-  newPassword:        string;
 }
 
 export interface UpdateProfileResult {
@@ -162,8 +150,11 @@ async function putToSignedUrl(uploadUrl: string, blob: Blob): Promise<void> {
   if (!res.ok) throw new Error(`Upload failed (${res.status})`);
 }
 
-/** Full flow: resize → presign → PUT both → commit. Returns the new public URL + version. */
-export async function uploadMyProfilePhoto(file: File): Promise<{ profileImage: string; profileImageVersion: number }> {
+/** Full flow: resize → presign → PUT both → commit. The commit does NOT change the
+ *  live avatar — it stays pending until an authorized reviewer approves it from the
+ *  Employee Master profile drawer. Returns the pending thumb URL (for a "submitted"
+ *  confirmation only) + `pending: true`. */
+export async function uploadMyProfilePhoto(file: File): Promise<{ profileImage: string; profileImageVersion: number; pending: boolean }> {
   const [avatarBlob, thumbBlob] = await Promise.all([
     resizeImageToWebp(file, 512, 0.86),
     resizeImageToWebp(file, 96, 0.82),
@@ -176,7 +167,7 @@ export async function uploadMyProfilePhoto(file: File): Promise<{ profileImage: 
 
   await Promise.all([putToSignedUrl(avatar.uploadUrl, avatarBlob), putToSignedUrl(thumbnail.uploadUrl, thumbBlob)]);
 
-  const commit = await apiPost<{ success: boolean; message?: string; data?: { profileImage: string; profileImageVersion: number } }>(
+  const commit = await apiPost<{ success: boolean; message?: string; data?: { profileImage: string; profileImageVersion: number; pending: boolean } }>(
     'profile-photo/commit',
     { version, avatarPath: avatar.path, avatarPublicUrl: avatar.publicUrl, thumbPath: thumbnail.path, thumbPublicUrl: thumbnail.publicUrl },
   );
@@ -220,18 +211,18 @@ export async function removeMyProfilePhoto(): Promise<{ profileImage: string | n
   return res.data;
 }
 
+/** Change the current user's password via the canonical /auth/password/change
+ *  route — the ONLY password path. It verifies the current password, rotates the
+ *  security stamp (invalidating trusted devices), revokes other sessions, and is
+ *  rate-limited. `updateMyProfile` intentionally no longer touches passwords. */
 export async function updateMyPassword(
-  payload: { username: string; fullName: string; oldPassword: string; newPassword: string },
+  payload: { oldPassword: string; newPassword: string },
   signal?: AbortSignal,
 ): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
-    'updateMyProfile',
-    {
-      ...payload,
-      profileImageBase64: '',
-      removeProfileImage: false,
-    } as unknown as Record<string, unknown>,
+    'auth/password/change',
+    { currentPassword: payload.oldPassword, newPassword: payload.newPassword } as unknown as Record<string, unknown>,
     signal ? { signal } : undefined,
   );
-  if (!res.success) throw new Error(res.message ?? 'Update failed');
+  if (!res.success) throw new Error(res.message ?? 'Password change failed');
 }

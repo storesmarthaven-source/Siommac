@@ -61,6 +61,7 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.employees.statutory.update':  { module: 'HR', group: 'Employee Master', label: 'Update Statutory Data',   description: 'Edit statutory and payroll-readiness fields.', risk: 'high' },
   'hr.employees.payroll_readiness.view': { module: 'HR', group: 'Employee Master', label: 'View Payroll Readiness', description: 'View an employee payroll-readiness status.', risk: 'medium' },
   'hr.employees.restricted_contact.update': { module: 'HR', group: 'Employee Master', label: 'Update Restricted Contact', description: 'Update restricted / sensitive contact fields.', risk: 'high' },
+  'hr.employees.photo_approve':      { module: 'HR', group: 'Employee Master', label: 'Approve Profile Photos',   description: 'Approve or reject a submitted profile photo change.', risk: 'medium' },
   'hr.employees.import':                 { module: 'HR', group: 'Employee Master', label: 'Import Employees',        description: 'Access the bulk employee import wizard.', risk: 'medium' },
   'hr.employees.import.upload':          { module: 'HR', group: 'Employee Master', label: 'Import: Upload',          description: 'Upload an import file and stage rows.', risk: 'medium' },
   'hr.employees.import.map':             { module: 'HR', group: 'Employee Master', label: 'Import: Map & Policy',     description: 'Map columns and set import policy.', risk: 'medium' },
@@ -132,6 +133,21 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   // ── HR Requests (Request Center) ────────────────────────────────────────────
   'hr.requests.submit_own': { module: 'HR', group: 'Requests', label: 'Submit Own HR Requests', description: 'Submit and track self-service HR requests (letters, copies, corrections, inquiries).', risk: 'low' },
   'hr.requests.manage':     { module: 'HR', group: 'Requests', label: 'Manage HR Requests',      description: 'Triage, approve, reject, return, and fulfill HR service requests for any employee.', risk: 'medium' },
+
+  // ── HR Attendance ─────────────────────────────────────────────────────────────
+  'hr.attendance.view':               { module: 'HR', group: 'Attendance', label: 'View Attendance',             description: 'View own attendance records and daily log.', risk: 'low' },
+  'hr.attendance.view_all':           { module: 'HR', group: 'Attendance', label: 'View All Attendance',         description: 'View attendance records for all employees.', risk: 'medium' },
+  'hr.attendance.punch':              { module: 'HR', group: 'Attendance', label: 'Punch In/Out',                description: 'Record own check-in and check-out times.', risk: 'low' },
+  'hr.attendance.correct':            { module: 'HR', group: 'Attendance', label: 'Correct Attendance',          description: 'Apply corrections to attendance records.', risk: 'medium' },
+  'hr.attendance.timesheets.view':    { module: 'HR', group: 'Attendance', label: 'View Timesheets',             description: 'View own timesheets.', risk: 'low' },
+  'hr.attendance.timesheets.submit':  { module: 'HR', group: 'Attendance', label: 'Submit Timesheet',            description: 'Submit a timesheet for manager approval.', risk: 'low' },
+  'hr.attendance.timesheets.approve': { module: 'HR', group: 'Attendance', label: 'Approve Timesheets',          description: 'Approve or reject submitted timesheets.', risk: 'medium' },
+  'hr.attendance.exceptions.view':    { module: 'HR', group: 'Attendance', label: 'View Exceptions',             description: 'View attendance exceptions and alerts.', risk: 'low' },
+  'hr.attendance.exceptions.manage':  { module: 'HR', group: 'Attendance', label: 'Manage Exceptions',           description: 'Waive or resolve attendance exceptions.', risk: 'medium' },
+  'hr.attendance.compute.run':        { module: 'HR', group: 'Attendance', label: 'Run Compute',                 description: 'Trigger recomputation of daily attendance records.', risk: 'medium' },
+  'hr.attendance.policy.manage':      { module: 'HR', group: 'Attendance', label: 'Manage Attendance Policy',    description: 'Configure attendance policy settings (shift times, grace, geofence).', risk: 'high' },
+  'hr.attendance.reports.view':       { module: 'HR', group: 'Attendance', label: 'View Attendance Reports',     description: 'View attendance reports and analytics.', risk: 'low' },
+  'hr.attendance.reports.export':     { module: 'HR', group: 'Attendance', label: 'Export Attendance Reports',   description: 'Export attendance data and reports.', risk: 'high' },
 
   // ── Employees ────────────────────────────────────────────────────────────────
   'employees.view': {

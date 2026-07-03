@@ -2,6 +2,7 @@
 // Fires every 5 minutes. At or after work end time, auto-checks-out any
 // employees who are still checked in.
 
+import './lib/bootstrapEnv'; // must be first — see that module for why
 import { schedule } from '@netlify/functions';
 import { sb }       from './lib/db';
 import { resolveOverride } from './lib/settings/resolveSetting';

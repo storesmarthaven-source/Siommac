@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { sb, sbAnon } from '../lib/db';
 import { requireUser, requireRole, log_ }               from '../lib/auth';
 import { getAllSettings, setting, invalidateSettingsCache } from '../lib/settings';
+import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { uploadBase64 }                                  from '../lib/upload';
 import { avatarPublicUrl, AVATARS_BUCKET }               from '../lib/photos';
 import { emitAppEvent }                                  from '../lib/appEvents';
@@ -119,6 +120,11 @@ const ProfilePhotoCommitSchema = z.object({
   thumbPublicUrl:  z.string().url(),
 });
 
+// Commits to PENDING columns, not the live avatar — the submitted photo does
+// NOT become official until a reviewer with `hr.employees.photo_approve`
+// approves it from the Employee Master profile drawer (see hr.ts
+// `/hr/employees/photo/decide`). The old photo (if any) keeps showing until
+// then, so this is a real review gate, not a same-request no-op.
 router.post('/profile-photo/commit', async c => {
   const actor = await requireUser(c);
   const v = zv(c, ProfilePhotoCommitSchema, c.get('body').args ?? {});
@@ -129,21 +135,19 @@ router.post('/profile-photo/commit', async c => {
   }
 
   const { error } = await sb.from('app_users').update({
-    profile_image_url:        v.data.avatarPublicUrl,
-    profile_image_path:       v.data.avatarPath,
-    profile_image_thumb_url:  v.data.thumbPublicUrl,
-    profile_image_thumb_path: v.data.thumbPath,
-    profile_image_version:    v.data.version,
-    profile_image_updated_at: new Date().toISOString(),
-    profile_image_removed_at: null,
-    profile_image:            v.data.avatarPublicUrl,  // back-compat mirror (public URL)
-    signed_url:               null,                    // clear legacy signed cache
-    signed_url_expires_at:    null,
+    profile_image_pending_url:         v.data.avatarPublicUrl,
+    profile_image_pending_path:        v.data.avatarPath,
+    profile_image_pending_thumb_url:   v.data.thumbPublicUrl,
+    profile_image_pending_thumb_path:  v.data.thumbPath,
+    profile_image_pending_version:     v.data.version,
+    profile_image_pending_submitted_at: new Date().toISOString(),
   }).eq('id', actor.id);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
-  void emitAppEvent({ eventType: 'auth.profile_photo.updated', sourceModule: 'auth', sourceEntityType: 'app_user', sourceEntityId: actor.id, actorUserId: actor.id, severity: 'info', payload: { version: v.data.version } });
-  return c.json({ success: true, data: { profileImage: v.data.thumbPublicUrl, profileImageVersion: v.data.version } });
+  void emitAppEvent({ eventType: 'auth.profile_photo.submitted', sourceModule: 'auth', sourceEntityType: 'app_user', sourceEntityId: actor.id, actorUserId: actor.id, severity: 'info', payload: { version: v.data.version } });
+  // The live avatar is unchanged — return the PENDING thumb so the UI can show
+  // "submitted" state without claiming the live photo already changed.
+  return c.json({ success: true, data: { profileImage: v.data.thumbPublicUrl, profileImageVersion: v.data.version, pending: true } });
 });
 
 router.post('/profile-photo/remove', async c => {
@@ -181,7 +185,11 @@ router.post('/profile-photo/remove', async c => {
 // to persist it — we do NOT commit here to keep the flow explicit and auditable on
 // the frontend.
 
-const ENHANCE_PROMPT = `Standardize this manually cropped employee profile photo for a
+// Fallback used only if the 'auth.profile_photo.enhance_prompt' setting is
+// unavailable (catalog row missing / not yet migrated) — see the catalog seed
+// in supabase/migrations/20260801000000_ai_photo_enhance_prompt_setting.sql,
+// which carries the same text as its default_value.
+const ENHANCE_PROMPT_FALLBACK = `Standardize this manually cropped employee profile photo for a
 professional SIOMAC employee record. Preserve the person's identity and natural appearance.
 Improve lighting, clarity, and background cleanliness. Use a clean neutral professional
 background. Keep the crop suitable for an employee profile and HR record. Do not change
@@ -206,28 +214,39 @@ router.post('/profile-photo/enhance', async c => {
     return c.json({ success: false, message: 'Image is too large (max 8 MB).' }, 400 as 200);
   }
 
-  const inputMime = (args.mimeType ?? 'image/png').toLowerCase() as 'image/png' | 'image/jpeg';
-  const allowedMimes = new Set<string>(['image/png', 'image/jpeg']);
-  if (!allowedMimes.has(inputMime)) {
-    return c.json({ success: false, message: 'Only PNG and JPEG images are supported for enhancement.' }, 400 as 200);
+  // WebP is included because the frontend cropper exports its crop as
+  // image/webp; gpt-image-1 accepts png/webp/jpg inputs natively.
+  const inputMime = (args.mimeType ?? 'image/png').toLowerCase() as 'image/png' | 'image/jpeg' | 'image/webp';
+  const EXT_BY_MIME: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+  const ext = EXT_BY_MIME[inputMime];
+  if (!ext) {
+    return c.json({ success: false, message: 'Only PNG, JPEG, and WebP images are supported for enhancement.' }, 400 as 200);
   }
 
   // Lazily import openai to avoid cold-start cost on routes that don't use it
   const { default: OpenAI, toFile } = await import('openai');
-  const client = new OpenAI({ apiKey });
+  // Pin the base URL so a stray OPENAI_BASE_URL in the environment can't
+  // redirect calls to a gateway that rejects the key.
+  const client = new OpenAI({ apiKey, baseURL: 'https://api.openai.com/v1' });
 
   const imgBuffer = Buffer.from(args.imageBase64, 'base64');
-  const imageFile = await toFile(imgBuffer, `profile.${inputMime === 'image/jpeg' ? 'jpg' : 'png'}`, { type: inputMime });
+  const imageFile = await toFile(imgBuffer, `profile.${ext}`, { type: inputMime });
+
+  const prompt = await resolveSettingValue(
+    sb, 'auth.profile_photo.enhance_prompt', { moduleKey: 'system' }, ENHANCE_PROMPT_FALLBACK,
+  );
 
   let result: { data?: Array<{ b64_json?: string | null }> };
   try {
+    // NB: gpt-image-1 always returns base64 in data[0].b64_json and REJECTS the
+    // `response_format` param (that's dall-e-2/3 only) — passing it 400s at
+    // OpenAI, which surfaces here as a 502. Do not re-add it.
     const raw = await client.images.edit({
       model: 'gpt-image-1',
       image: imageFile,
-      prompt: ENHANCE_PROMPT,
+      prompt,
       quality: 'medium',
       size: '1024x1024',
-      response_format: 'b64_json',
     } as Parameters<typeof client.images.edit>[0]);
     result = raw as { data?: Array<{ b64_json?: string | null }> };
   } catch (err) {

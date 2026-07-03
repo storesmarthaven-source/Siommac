@@ -12,6 +12,7 @@
 import { type VNode } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { PageHeader } from '@ui';
+import { AppTopBar } from '@shared/AppTopBar';
 import { useSessionStore, toast } from '@store';
 import {
   fetchMyProfile,
@@ -23,9 +24,24 @@ import {
   enhanceMyProfilePhoto,
 } from './api';
 import type { ProfileData, ActivityEvent } from './types';
+import { useTotpStatus } from '@api/security';
+import { TotpSetupModal, TotpDisableModal } from '@/components/sections/Settings/SettingsSection';
 import './profilePage.css';
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
+
+/** The "(868) " area code is permanent — the user only edits the 7 local digits.
+ *  Strips any leading 868/1868 from pasted/loaded numbers, then formats the
+ *  remainder as (868) xxx-xxxx while typing; caps at 7 local digits. */
+function formatPhoneInput(raw: string): string {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('1868')) digits = digits.slice(4);
+  else if (digits.startsWith('868')) digits = digits.slice(3);
+  digits = digits.slice(0, 7);
+  if (digits.length === 0) return '(868) ';
+  if (digits.length <= 3) return `(868) ${digits}`;
+  return `(868) ${digits.slice(0, 3)}-${digits.slice(3)}`;
+}
 
 function capRole(r: string | null | undefined): string {
   if (!r) return '—';
@@ -49,73 +65,135 @@ function b64ToFile(b64: string, mimeType: string, filename: string): File {
 
 // ── Inline SVG icons (zero FA dependency, scope-safe) ────────────────────────
 
+/* True Feather-style outline icons — built from open paths/lines/polylines, so
+   they MUST be stroked (fill="none"), never filled. Forcing `fill` on these in
+   CSS renders them invisible (lines have zero fill area) or as wrong blobs. */
 const IcoUser = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 );
 const IcoShield = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 );
 const IcoBell = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
 );
 const IcoLogOut = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 );
 const IcoMail = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 );
 const IcoPhone = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6.09 6.09l.91-1.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6.09 6.09l.91-1.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+);
+const IcoMapPin = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
 );
 const IcoBriefcase = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
 );
 const IcoBuilding = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-);
-const IcoId = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="16" y2="10"/><line x1="12" y1="14" x2="16" y2="14"/><circle cx="8" cy="10" r="1"/><circle cx="8" cy="14" r="1"/></svg>
-);
-const IcoKey = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-);
-const IcoLock = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-);
-const IcoCamera = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-);
-const IcoSparkles = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
-);
-const IcoUpload = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-);
-const IcoCheck = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20 6L9 17l-5-5"/></svg>
-);
-const IcoX = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-);
-const IcoHistory = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4M3 3v5h5"/></svg>
-);
-const IcoChevron = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M6 9l6 6 6-6"/></svg>
-);
-const IcoClock = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-);
-const IcoInfo = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-);
-const IcoCrop = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></svg>
-);
-const IcoTrash = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 );
 
+/* ── Solid (filled) icons ported verbatim from the v76 reference mockup.
+   Used inside the navy profile card (class `profile-solid-icon`) + access rows. ── */
+const SolActiveCheck = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.15 13.15-3.5-3.5 1.4-1.4 2.1 2.1 4.4-4.4 1.4 1.4-5.8 5.8Z"/></svg>
+);
+const SolBriefcase = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 1 3-3h0a3 3 0 0 1 3 3v1h3.25A2.75 2.75 0 0 1 21 7.75V10H3V7.75A2.75 2.75 0 0 1 5.75 5H9V4Zm2 1h2V4a1 1 0 1 0-2 0v1Zm10 7v5.25A2.75 2.75 0 0 1 18.25 20H5.75A2.75 2.75 0 0 1 3 17.25V12h7v1a1 1 0 1 0 2 0v-1h9Z"/></svg>
+);
+const SolBuilding = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 21V5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75V21h2v1H3v-1h2Zm4-13h2V6H9v2Zm4 0h2V6h-2v2Zm-4 4h2v-2H9v2Zm4 0h2v-2h-2v2Zm-4 4h2v-2H9v2Zm4 0h2v-2h-2v2Z"/></svg>
+);
+const SolPin = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.75A2.75 2.75 0 1 1 12 6.25a2.75 2.75 0 0 1 0 5.5Z"/></svg>
+);
+const SolIdCard = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M5.75 4h12.5A2.75 2.75 0 0 1 21 6.75v10.5A2.75 2.75 0 0 1 18.25 20H5.75A2.75 2.75 0 0 1 3 17.25V6.75A2.75 2.75 0 0 1 5.75 4Zm1.75 4.5a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0Zm9-.5a1 1 0 1 0 0 2h1.25a1 1 0 1 0 0-2H16.5Zm0 4a1 1 0 1 0 0 2h1.25a1 1 0 1 0 0-2H16.5ZM7 16.5h6a3 3 0 0 0-6 0Z"/></svg>
+);
+const SolUserCheck = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0v1H5v-1Zm13.5-8.5 1.1 1.1 2.15-2.15 1.05 1.05-3.2 3.2-2.15-2.15 1.05-1.05Z"/></svg>
+);
+const SolUser = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z"/></svg>
+);
+const SolMail = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"/></svg>
+);
+const SolPhone = () => (
+  <svg class="profile-solid-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2Z"/></svg>
+);
+const SolShieldLock = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v1h2.25A2.75 2.75 0 0 1 20 9.75v7.5A2.75 2.75 0 0 1 17.25 20H6.75A2.75 2.75 0 0 1 4 17.25v-7.5A2.75 2.75 0 0 1 6.75 7H9V6a3 3 0 0 1 3-3Zm-1 4h2V6a1 1 0 1 0-2 0v1Z"/></svg>
+);
+const SolChevron = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z"/></svg>
+);
+const SolGrid = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>
+);
+const SolShieldCheck = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2 4 5.5v6.25C4 16.7 7.38 21.33 12 22c4.62-.67 8-5.3 8-10.25V5.5L12 2Zm-1 14-3.5-3.5 1.4-1.4 2.1 2.1 4.4-4.4 1.4 1.4L11 16Z"/></svg>
+);
+const SolClipboard = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h2a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2-2Zm0 2v2h6V4H9Zm-2 7h7V9H7v2Zm0 4h5v-2H7v2Zm9.2 4.2 4.6-4.6-1.4-1.4-3.2 3.2-1.4-1.4-1.4 1.4 2.8 2.8Z"/></svg>
+);
+const SolCheck = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9.5 16.6 4.9 12l-1.4 1.4 6 6L21 7.9 19.6 6.5 9.5 16.6Z"/></svg>
+);
+/* Change-Photo dialog icons — ported VERBATIM from the v76 reference. All are
+   solid (filled); the shared dialog containers stroke icons, so force fill via
+   an inline !important style (inline !important beats the container rules). */
+const DLG_ICO = 'fill:currentColor !important;stroke:none !important';
+const DlgIco = ({ d }: { d: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" style={DLG_ICO}><path d={d} style={DLG_ICO} /></svg>
+);
+// exact reference paths
+const IC_CAMERA   = 'M9.5 4 8.25 6H5.75A2.75 2.75 0 0 0 3 8.75v8.5A2.75 2.75 0 0 0 5.75 20h12.5A2.75 2.75 0 0 0 21 17.25v-8.5A2.75 2.75 0 0 0 18.25 6h-2.5L14.5 4h-5ZM12 17a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z';
+const IC_CLOSE    = 'M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6 6.4 5Z';
+const IC_UPLOAD   = 'M12 3 7 8h3v5h4V8h3l-5-5ZM5 14h2v4h10v-4h2v4.25A1.75 1.75 0 0 1 17.25 20H6.75A1.75 1.75 0 0 1 5 18.25V14Z';
+const IC_IMAGE    = 'M4 6.75A2.75 2.75 0 0 1 6.75 4h10.5A2.75 2.75 0 0 1 20 6.75v10.5A2.75 2.75 0 0 1 17.25 20H6.75A2.75 2.75 0 0 1 4 17.25V6.75ZM8.5 9.5a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Zm9.5 7.25-4.2-4.2a1 1 0 0 0-1.42 0L10.75 14.2l-.65-.65a1 1 0 0 0-1.42 0L6 16.25v1h12v-.5Z';
+const IC_BROWSE   = 'M5 20h14a2 2 0 0 0 2-2v-5h-2v5H5v-5H3v5a2 2 0 0 0 2 2Zm8-16h-2v8.17L8.41 9.59 7 11l5 5 5-5-1.41-1.41L13 12.17V4Z';
+const IC_SHIELD   = 'M12 2 4 5.5V11c0 5.2 3.4 9.8 8 11 4.6-1.2 8-5.8 8-11V5.5L12 2Zm3.7 7.7-4.6 4.6-2.3-2.3 1.4-1.4.9.9 3.2-3.2 1.4 1.4Z';
+const IC_WINDOW   = 'M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Zm2 0v14h12V5H6Zm2 2h8v2H8V7Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z';
+const IC_USER     = 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-9 9a9 9 0 0 1 18 0v1H3v-1Z';
+const IC_SPARK_AI = 'M12 2 9.7 8.2 4 10.5l5.7 2.3L12 19l2.3-6.2 5.7-2.3-5.7-2.3L12 2Z';
+const IC_SPARK_E  = 'M12 2 9.5 8.5 3 11l6.5 2.5L12 20l2.5-6.5L21 11l-6.5-2.5L12 2Z';
+const IC_SPARK_S  = 'M12 2 14.15 7.85 20 10l-5.85 2.15L12 18l-2.15-5.85L4 10l5.85-2.15L12 2Zm6 13 1.1 3 2.9 1-2.9 1-1.1 3-1.1-3-2.9-1 2.9-1 1.1-3Z';
+const IC_ZOUT     = 'M5 11h14v2H5v-2Z';
+const IC_ZIN      = 'M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z';
+const IC_RESET    = 'M12 5a7 7 0 1 1-6.32 4H3l3.6-3.6L10.2 9H7.85A5 5 0 1 0 12 7V5Z';
+const IC_CHECK    = 'M9.55 15.15 5.8 11.4l-1.4 1.4 5.15 5.15L20.1 7.4 18.7 6 9.55 15.15Z';
+const IC_INFO     = 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z';
+const SolX = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6 6.4 5Z"/></svg>
+);
+const IcoId = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="16" y2="10"/><line x1="12" y1="14" x2="16" y2="14"/><circle cx="8" cy="10" r="1"/><circle cx="8" cy="14" r="1"/></svg>
+);
+const IcoKey = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+);
+const IcoLock = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+);
+const IcoCamera = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+);
+const IcoCheck = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+);
+const IcoX = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+);
+const IcoHistory = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4M3 3v5h5"/></svg>
+);
+const IcoClock = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+);
 // ── Spinner ───────────────────────────────────────────────────────────────────
 function Spin({ dark }: { dark?: boolean }): VNode {
   return <span class={`mp76-spinner${dark ? ' dark' : ''}`} aria-hidden="true" />;
@@ -168,7 +246,7 @@ function ChangePasswordModal({
     if (newPwd !== confirmPwd) { setError('Passwords do not match.'); return; }
     setSaving(true);
     try {
-      await updateMyPassword({ username, fullName, oldPassword: oldPwd, newPassword: newPwd });
+      await updateMyPassword({ oldPassword: oldPwd, newPassword: newPwd });
       reset();
       onClose();
       toast.success('Password updated successfully.');
@@ -298,137 +376,134 @@ function LogoutModal({ open, onClose }: { open: boolean; onClose: () => void }):
  *  in image-space coordinates via getCropBlob(). */
 interface CanvasCropper {
   destroy: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  reset: () => void;
   getCropBlob: () => Promise<Blob>;
+  hideGuides: () => void;
 }
 
+/**
+ * Zoom + pan square cropper (Cropper.js-style, matches the v76 reference):
+ * the image "covers" a square viewport; drag to pan, Zoom In/Out to scale,
+ * Reset to re-fit. The visible square viewport IS the 1:1 crop.
+ */
 function initCanvasCropper(img: HTMLImageElement, canvas: HTMLCanvasElement): CanvasCropper {
   const ctx = canvas.getContext('2d')!;
   const CW = canvas.width;
   const CH = canvas.height;
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
 
-  // Fit image into canvas (letterbox)
-  const scale = Math.min(CW / img.naturalWidth, CH / img.naturalHeight);
-  const iw = img.naturalWidth * scale;
-  const ih = img.naturalHeight * scale;
-  const ox = (CW - iw) / 2;
-  const oy = (CH - ih) / 2;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-  // Initial crop square = largest square that fits in the image area
-  const side = Math.min(iw, ih) * 0.85;
-  let cx = ox + (iw - side) / 2;
-  let cy = oy + (ih - side) / 2;
-  let cs = side;
+  const minScale = Math.max(CW / iw, CH / ih);   // cover-fit (image always fills the square)
+  const maxScale = minScale * 6;
+  let scale = minScale;
+  let offX  = (CW - iw * scale) / 2;
+  let offY  = (CH - ih * scale) / 2;
+  let showGuides = true;
 
-  type DragMode = 'none' | 'move' | 'resize-br';
-  let drag: DragMode = 'none';
-  let dragStartX = 0, dragStartY = 0, dragStartCx = 0, dragStartCy = 0, dragStartCs = 0;
+  function clampOffsets() {
+    const w = iw * scale, h = ih * scale;
+    offX = w <= CW ? (CW - w) / 2 : clamp(offX, CW - w, 0);
+    offY = h <= CH ? (CH - h) / 2 : clamp(offY, CH - h, 0);
+  }
 
   function draw() {
     ctx.clearRect(0, 0, CW, CH);
-    ctx.drawImage(img, ox, oy, iw, ih);
+    ctx.drawImage(img, offX, offY, iw * scale, ih * scale);
 
-    // Dim outside crop
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(0, 0, CW, cy);
-    ctx.fillRect(0, cy + cs, CW, CH - cy - cs);
-    ctx.fillRect(0, cy, cx, cs);
-    ctx.fillRect(cx + cs, cy, CW - cx - cs, cs);
+    // Circular crop guide overlay (darkened mask + rule-of-thirds grid + ring)
+    // — a framing aid for positioning, hidden once the crop is applied so the
+    // final result reads clean.
+    if (!showGuides) return;
 
-    // Crop border
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(cx, cy, cs, cs);
+    const cx = CW / 2, cy = CH / 2, r = Math.min(CW, CH) / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,23,42,0.18)';
+    ctx.beginPath();
+    ctx.rect(0, 0, CW, CH);
+    ctx.moveTo(cx + r, cy);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2, true);
+    ctx.fill('evenodd');
+    ctx.restore();
 
-    // Rule-of-thirds grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    // Rule-of-thirds guide lines, clipped to the circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 1;
     for (let i = 1; i < 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(cx + (cs / 3) * i, cy);
-      ctx.lineTo(cx + (cs / 3) * i, cy + cs);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx, cy + (cs / 3) * i);
-      ctx.lineTo(cx + cs, cy + (cs / 3) * i);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo((CW / 3) * i, 0); ctx.lineTo((CW / 3) * i, CH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, (CH / 3) * i); ctx.lineTo(CW, (CH / 3) * i); ctx.stroke();
     }
+    ctx.restore();
 
-    // Resize handle (bottom-right)
-    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(cx + cs, cy + cs, 7, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Corner handles
-    const hs = 10;
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    const corners: Array<[number, number]> = [[cx, cy], [cx + cs - hs, cy], [cx, cy + cs - hs]];
-    for (const [hx, hy] of corners) ctx.fillRect(hx, hy, hs, hs);
+    ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.98)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
-  function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
+  function zoomBy(delta: number) {
+    showGuides = true;
+    const prev = scale;
+    scale = clamp(scale * (1 + delta), minScale, maxScale);
+    // zoom toward the centre of the viewport
+    const cx = CW / 2, cy = CH / 2;
+    offX = cx - (cx - offX) * (scale / prev);
+    offY = cy - (cy - offY) * (scale / prev);
+    clampOffsets(); draw();
+  }
 
-  function onMouseDown(e: MouseEvent) {
+  let dragging = false, sx = 0, sy = 0, ox0 = 0, oy0 = 0;
+  function pt(e: MouseEvent) {
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX - r.left;
-    const my = e.clientY - r.top;
-    dragStartX = mx; dragStartY = my;
-    dragStartCx = cx; dragStartCy = cy; dragStartCs = cs;
-
-    // Resize handle hit test
-    const dist = Math.hypot(mx - (cx + cs), my - (cy + cs));
-    if (dist <= 14) { drag = 'resize-br'; return; }
-
-    // Move hit test
-    if (mx >= cx && mx <= cx + cs && my >= cy && my <= cy + cs) { drag = 'move'; return; }
-    drag = 'none';
+    return { x: (e.clientX - r.left) * (CW / r.width), y: (e.clientY - r.top) * (CH / r.height) };
   }
-
-  function onMouseMove(e: MouseEvent) {
-    if (drag === 'none') return;
-    const r = canvas.getBoundingClientRect();
-    const mx = e.clientX - r.left;
-    const my = e.clientY - r.top;
-    const dx = mx - dragStartX;
-    const dy = my - dragStartY;
-
-    if (drag === 'move') {
-      cx = clamp(dragStartCx + dx, ox, ox + iw - cs);
-      cy = clamp(dragStartCy + dy, oy, oy + ih - cs);
-    } else if (drag === 'resize-br') {
-      const newSize = clamp(dragStartCs + Math.max(dx, dy), 40, Math.min(iw, ih));
-      cx = clamp(dragStartCx, ox, ox + iw - newSize);
-      cy = clamp(dragStartCy, oy, oy + ih - newSize);
-      cs = newSize;
-    }
-    draw();
+  function onDown(e: MouseEvent) { const p = pt(e); dragging = true; sx = p.x; sy = p.y; ox0 = offX; oy0 = offY; }
+  function onMove(e: MouseEvent) {
+    if (!dragging) return;
+    showGuides = true;
+    const p = pt(e);
+    offX = ox0 + (p.x - sx); offY = oy0 + (p.y - sy);
+    clampOffsets(); draw();
   }
+  function onUp() { dragging = false; }
+  function onWheel(e: WheelEvent) { e.preventDefault(); zoomBy(e.deltaY < 0 ? 0.08 : -0.08); }
 
-  function onMouseUp() { drag = 'none'; }
-
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', onMouseUp);
-  canvas.addEventListener('mouseleave', onMouseUp);
+  canvas.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
 
   draw();
 
   return {
     destroy() {
-      canvas.removeEventListener('mousedown', onMouseDown);
-      canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseup', onMouseUp);
-      canvas.removeEventListener('mouseleave', onMouseUp);
+      canvas.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      canvas.removeEventListener('wheel', onWheel);
     },
+    zoomIn()  { zoomBy(0.1); },
+    zoomOut() { zoomBy(-0.1); },
+    reset()   { showGuides = true; scale = minScale; offX = (CW - iw * scale) / 2; offY = (CH - ih * scale) / 2; draw(); },
+    hideGuides() { showGuides = false; draw(); },
     getCropBlob(): Promise<Blob> {
-      // Map canvas crop coords back to image-space
-      const srcX = (cx - ox) / scale;
-      const srcY = (cy - oy) / scale;
-      const srcS = cs / scale;
+      // The visible square viewport maps back to image space.
+      const srcX = -offX / scale;
+      const srcY = -offY / scale;
+      const srcW = CW / scale;
+      const srcH = CH / scale;
       const out = document.createElement('canvas');
       out.width = 512; out.height = 512;
       const oc = out.getContext('2d')!;
-      oc.drawImage(img, srcX, srcY, srcS, srcS, 0, 0, 512, 512);
+      oc.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 512, 512);
       return new Promise<Blob>((resolve, reject) => {
         out.toBlob(b => b ? resolve(b) : reject(new Error('Crop failed')), 'image/webp', 0.90);
       });
@@ -452,7 +527,6 @@ function ChangePhotoModal({
   const cropperRef    = useRef<CanvasCropper | null>(null);
   const cropImgRef    = useRef<HTMLImageElement>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
-  const removeBtnRef  = useRef<HTMLButtonElement>(null);
 
   const [rawFile, setRawFile]             = useState<File | null>(null);
   const [rawDataUrl, setRawDataUrl]       = useState('');           // preview of original
@@ -464,6 +538,7 @@ function ChangePhotoModal({
   const [enhancedUrl, setEnhancedUrl]     = useState('');           // data url for enhanced
   const [enhancing, setEnhancing]         = useState(false);
   const [enhanceError, setEnhanceError]   = useState('');
+  const [revisionCount, setRevisionCount] = useState(0);            // AI revisions generated this session (max 3)
 
   const [selected, setSelected]           = useState<PhotoSelection>('original');
   const [uploading, setUploading]         = useState(false);
@@ -482,6 +557,7 @@ function ChangePhotoModal({
       setEnhancedB64(''); setEnhancedUrl('');
       setEnhancing(false); setEnhanceError('');
       setSelected('original'); setUploading(false);
+      setRevisionCount(0);
     }
   // We only want to run cleanup when `open` flips to false
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -498,9 +574,10 @@ function ChangePhotoModal({
       toast.error('Only JPEG, PNG, and WebP images are supported.');
       return;
     }
-    // Validate size (10 MB UI limit — server also validates)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image exceeds 10 MB. Please choose a smaller image.');
+    // Validate size (8 MB UI limit — matches the "under 8 MB" copy; the image
+    // is resized to webp before upload, so this only guards the source read).
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('Image exceeds 8 MB. Please choose a smaller image.');
       return;
     }
 
@@ -511,6 +588,7 @@ function ChangePhotoModal({
     setCroppedBlob(null); setCroppedUrl('');
     setEnhancedB64(''); setEnhancedUrl(''); setEnhanceError('');
     setSelected('original');
+    setRevisionCount(0);
     setRawFile(file);
 
     // Read as data URL for the preview / cropper
@@ -521,56 +599,54 @@ function ChangePhotoModal({
       reader.readAsDataURL(file);
     });
     setRawDataUrl(url);
+    setCropperActive(true);   // auto-open the zoom/pan cropper on upload
     // Reset file input so the same file can be re-selected
     (e.target as HTMLInputElement).value = '';
   }, [croppedUrl]);
 
-  // ── Canvas cropper init ──
-  const initCropper = useCallback(() => {
+  // ── Canvas cropper (zoom/pan) ──
+  const mountCropper = useCallback(() => {
     const img    = cropImgRef.current;
     const canvas = cropCanvasRef.current;
-    if (!img || !canvas || !rawDataUrl) return;
-    if (cropperRef.current) { cropperRef.current.destroy(); cropperRef.current = null; }
-
+    if (!img || !canvas || !rawDataUrl || cropperRef.current) return;
     const runInit = () => {
-      const CANVAS_SIZE = 380;
-      canvas.width  = CANVAS_SIZE;
-      canvas.height = CANVAS_SIZE;
+      if (!cropCanvasRef.current || cropperRef.current) return;
+      canvas.width = 380; canvas.height = 380;
       cropperRef.current = initCanvasCropper(img, canvas);
-      setCropperActive(true);
     };
-
-    if (img.complete && img.naturalWidth > 0) {
-      runInit();
-    } else {
-      img.onload = runInit;
-    }
+    if (img.complete && img.naturalWidth > 0) runInit();
+    else img.onload = runInit;
   }, [rawDataUrl]);
+
+  // Auto-open the cropper whenever the canvas mounts for a loaded photo.
+  useEffect(() => {
+    if (cropperActive && rawDataUrl) mountCropper();
+  }, [cropperActive, rawDataUrl, mountCropper]);
+
+  const handleZoomIn    = useCallback(() => cropperRef.current?.zoomIn(), []);
+  const handleZoomOut   = useCallback(() => cropperRef.current?.zoomOut(), []);
+  const handleResetCrop = useCallback(() => cropperRef.current?.reset(), []);
 
   const handleApplyCrop = useCallback(async () => {
     if (!cropperRef.current) return;
     try {
       const blob = await cropperRef.current.getCropBlob();
       if (croppedUrl.startsWith('blob:')) URL.revokeObjectURL(croppedUrl);
-      const url = URL.createObjectURL(blob);
       setCroppedBlob(blob);
-      setCroppedUrl(url);
-      cropperRef.current.destroy();
-      cropperRef.current = null;
-      setCropperActive(false);
+      setCroppedUrl(URL.createObjectURL(blob));
+      setSelected('original');
+      // Keep the cropper live for further adjustment (matches the reference Cropper.js UX),
+      // but drop the rule-of-thirds guide lines now that the crop is final.
+      cropperRef.current.hideGuides();
+      toast.success('Crop applied.');
     } catch {
       toast.error('Crop failed. Try again.');
     }
   }, [croppedUrl]);
 
-  const handleCancelCrop = useCallback(() => {
-    cropperRef.current?.destroy();
-    cropperRef.current = null;
-    setCropperActive(false);
-  }, []);
-
-  // ── AI enhance ──
+  // ── AI enhance (up to 3 revisions per upload) ──
   const handleEnhance = useCallback(async () => {
+    if (revisionCount >= 3) { toast.error('Maximum of 3 AI revisions reached — upload a new photo to try again.'); return; }
     // Build a File from whichever image is available: cropped → raw
     let sourceFile: File | null = null;
     if (croppedBlob) {
@@ -592,13 +668,14 @@ function ChangePhotoModal({
       setEnhancedB64(result.imageBase64);
       setEnhancedUrl(dataUrl);
       setSelected('enhanced');
+      setRevisionCount(n => Math.min(3, n + 1));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Photo enhancement failed.';
       setEnhanceError(msg);
     } finally {
       setEnhancing(false);
     }
-  }, [croppedBlob, rawFile, enhancedUrl]);
+  }, [croppedBlob, rawFile, enhancedUrl, revisionCount]);
 
   // ── Upload + commit ──
   const handleUse = useCallback(async () => {
@@ -616,16 +693,18 @@ function ChangePhotoModal({
 
     setUploading(true);
     try {
-      const { profileImage } = await uploadMyProfilePhoto(fileToUpload);
-      onSaved(profileImage);
-      toast.success('Profile photo updated.');
+      // Pending gate — the live avatar does NOT change here, so don't call
+      // onSaved (which would optimistically swap the displayed photo). It
+      // updates once an authorized reviewer approves it in Employee Master.
+      await uploadMyProfilePhoto(fileToUpload);
+      toast.success('Photo submitted for review. It will update your profile once approved.');
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed. Try again.');
     } finally {
       setUploading(false);
     }
-  }, [selected, enhancedB64, croppedBlob, rawFile, onSaved, onClose]);
+  }, [selected, enhancedB64, croppedBlob, rawFile, onClose]);
 
   const handleRemove = useCallback(async () => {
     setUploading(true);
@@ -642,234 +721,250 @@ function ChangePhotoModal({
   }, [onSaved, onClose]);
 
   // Which image to show in the "Original" preview panel
-  const originalDisplayUrl = croppedUrl || rawDataUrl || currentUrl;
   const hasPhoto = !!(rawFile || rawDataUrl);
+  // Showing the account's existing photo (pre-loaded), no new upload yet
+  const showingCurrentPhoto = !hasPhoto && !!currentUrl;
+  const originalDisplayUrl = rawDataUrl || currentUrl;
+
+  // Top-right overlay X on the Original image: clears an in-progress upload
+  // (back to the current photo) or, if none, deletes the account's photo.
+  const handleRemoveOverlay = useCallback(async () => {
+    if (hasPhoto) {
+      if (cropperRef.current) { cropperRef.current.destroy(); cropperRef.current = null; }
+      setCropperActive(false);
+      if (croppedUrl.startsWith('blob:')) URL.revokeObjectURL(croppedUrl);
+      setCroppedBlob(null); setCroppedUrl('');
+      if (enhancedUrl.startsWith('blob:')) URL.revokeObjectURL(enhancedUrl);
+      setEnhancedB64(''); setEnhancedUrl(''); setEnhanceError('');
+      setSelected('original'); setRevisionCount(0);
+      setRawFile(null); setRawDataUrl('');
+      return;
+    }
+    await handleRemove();
+  }, [hasPhoto, croppedUrl, enhancedUrl, handleRemove]);
 
   return (
     <Modal open={open} onClose={onClose} cls="mp76-photo-modal">
       <div class="mp76-modal-head">
         <div class="mp76-modal-title-wrap">
-          <div class="mp76-modal-icon"><IcoCamera /></div>
+          <div class="mp76-modal-icon"><DlgIco d={IC_CAMERA} /></div>
           <div class="mp76-modal-title">
             <strong>Change Profile Photo</strong>
-            <span>Upload and enhance your profile picture</span>
+            <span>Upload a photo, crop it manually, generate up to three AI revisions, then submit the selected version for HR review.</span>
           </div>
         </div>
-        <button type="button" class="mp76-modal-close" onClick={onClose} aria-label="Close"><IcoX /></button>
+        <button type="button" class="mp76-modal-close" onClick={onClose} aria-label="Close"><DlgIco d={IC_CLOSE} /></button>
       </div>
 
       <div class="mp76-modal-body">
         <div class="mp76-clean-photo-layout">
 
-          {/* ── Upload + Rules row ── */}
+          {/* ── Upload Photo panel (drop zone + requirements + AI generate) ── */}
           <div class="mp76-clean-photo-top">
-            {/* Left: drop zone */}
             <div class="mp76-clean-photo-panel">
               <div class="mp76-clean-photo-panel-head">
                 <div class="mp76-clean-photo-title">
-                  <IcoUpload />
+                  <DlgIco d={IC_UPLOAD} />
                   <div>
                     <strong>Upload Photo</strong>
-                    <span>Choose a clear photo — you can crop and enhance it below</span>
+                    <span>Use a clear JPG or PNG under 8 MB.</span>
                   </div>
                 </div>
               </div>
               <div class="mp76-clean-photo-panel-body">
                 <div class="mp76-clean-upload-drop" onClick={handlePickFile}>
-                  <IcoUpload />
-                  <strong>Click to upload</strong>
-                  <span>or drag and drop</span>
-                  <span class="mp76-clean-browse-btn">Browse Files</span>
+                  <DlgIco d={IC_IMAGE} />
+                  <strong>Select Employee Photo</strong>
+                  <span>{showingCurrentPhoto ? 'Upload a new photo to replace your current one.' : 'Original preview appears immediately after upload.'}</span>
+                  <span class="mp76-clean-browse-btn"><DlgIco d={IC_BROWSE} />Browse Photo</span>
+                </div>
+
+                <div class="mp76-clean-rules-card">
+                  <strong><DlgIco d={IC_SHIELD} /> Photo Requirements</strong>
+                  <ul>
+                    <li>Face visible, centered, and well lit</li>
+                    <li>No sunglasses or face covering</li>
+                    <li>Plain or low-distraction background preferred</li>
+                  </ul>
+                </div>
+
+                <div class="mp76-generate-row">
+                  <button
+                    type="button"
+                    class="mp76-modal-btn primary"
+                    onClick={() => void handleEnhance()}
+                    disabled={enhancing || !croppedUrl || revisionCount >= 3}
+                  >
+                    {enhancing ? <><Spin /> Enhancing…</> : 'Generate AI Preview'}
+                  </button>
+                  <div class="mp76-revision-line">
+                    <span>AI Revisions</span>
+                    <div class="mp76-revision-tabs" aria-label="AI photo revisions">
+                      {[1, 2, 3].map(n => (
+                        <button
+                          type="button"
+                          class={`mp76-revision-tab${revisionCount >= n ? ' active' : ''}`}
+                          disabled
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mp76-review-note">
+                  <DlgIco d={IC_INFO} />
+                  <span>Selected photos are submitted as <strong>Pending Review</strong>. HR approval is required before the profile image becomes official.</span>
                 </div>
               </div>
             </div>
 
-            {/* Right: guidelines */}
+            {/* ── Compare Versions panel — always visible, empty states when no photo yet ── */}
             <div class="mp76-clean-photo-panel">
               <div class="mp76-clean-photo-panel-head">
                 <div class="mp76-clean-photo-title">
-                  <IcoInfo />
+                  <DlgIco d={IC_WINDOW} />
                   <div>
-                    <strong>Photo Guidelines</strong>
-                    <span>Best practices for an approved profile photo</span>
+                    <strong>Compare Versions</strong>
+                    <span>Choose original or AI enhanced before submitting.</span>
                   </div>
                 </div>
               </div>
               <div class="mp76-clean-photo-panel-body">
-                <div class="mp76-clean-rules-card">
-                  <strong><IcoCamera /> Requirements</strong>
-                  <ul>
-                    <li>JPG or PNG, max 10 MB</li>
-                    <li>Clear face, neutral expression</li>
-                    <li>Professional attire where possible</li>
-                    <li>Good lighting, plain background preferred</li>
-                    <li>Will be cropped to a square (1:1)</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+                <div class="mp76-clean-photo-compare-grid">
+                  {/* Original / Crop panel */}
+                  <div class={`mp76-clean-preview-card${selected === 'original' ? ' selected' : ''}`}
+                       onClick={() => hasPhoto && setSelected('original')}
+                       style={{ cursor: hasPhoto ? 'pointer' : 'default' }}>
+                    <div class="mp76-clean-preview-head">
+                      <strong><DlgIco d={IC_USER} /> Original</strong>
+                      {croppedUrl
+                        ? <em class="mp76-clean-status-pill ready">Cropped</em>
+                        : <em class="mp76-clean-status-pill">{hasPhoto ? 'Preview' : showingCurrentPhoto ? 'Current' : 'Waiting'}</em>}
+                    </div>
 
-          {/* ── Preview + compare row (shown once a file is picked) ── */}
-          {hasPhoto && (
-            <div class="mp76-clean-photo-compare-grid">
-              {/* Original / Crop panel */}
-              <div class={`mp76-clean-preview-card${selected === 'original' ? ' selected' : ''}`}
-                   onClick={() => !cropperActive && setSelected('original')}
-                   style={{ cursor: cropperActive ? 'default' : 'pointer' }}>
-                <div class="mp76-clean-preview-head">
-                  <strong><IcoUser /> Original</strong>
-                  {croppedUrl
-                    ? <span class="mp76-clean-status-pill ready">Cropped</span>
-                    : <span class="mp76-clean-status-pill">Preview</span>}
-                </div>
+                    {/* Hidden img = source for the canvas cropper */}
+                    <img ref={cropImgRef} src={rawDataUrl} alt="" style={{ display: 'none', position: 'absolute' }} aria-hidden="true" />
 
-                {/* Hidden img used as source for the canvas cropper */}
-                <img
-                  ref={cropImgRef}
-                  src={rawDataUrl}
-                  alt=""
-                  style={{ display: 'none', position: 'absolute' }}
-                  aria-hidden="true"
-                />
-
-                <div class="mp76-clean-photo-stage" style={cropperActive ? { display: 'block', padding: 0 } : undefined}>
-                  {cropperActive
-                    ? (
-                      <canvas
-                        ref={cropCanvasRef}
-                        style={{ display: 'block', width: '100%', height: '100%', cursor: 'crosshair' }}
-                      />
-                    )
-                    : originalDisplayUrl
-                      ? <img src={originalDisplayUrl} alt="Original preview" />
-                      : <div class="mp76-photo-stage-empty"><IcoUser /><span>No image selected</span></div>
-                  }
-                </div>
-
-                {/* Crop toolbar */}
-                <div class="mp76-inline-crop-toolbar" hidden={!rawDataUrl}>
-                  <span class="mp76-inline-crop-note">
-                    <strong>Crop &amp; Adjust</strong>
-                    <span>{cropperActive ? 'Drag the box to reposition. Drag the corner handle to resize. Then apply.' : 'Click Crop to adjust the square framing.'}</span>
-                  </span>
-                  <div class="mp76-inline-crop-actions">
-                    {cropperActive ? (
-                      <>
-                        <button type="button" class="mp76-crop-btn primary" style={{ gridColumn: 'span 2' }}
-                          onClick={() => void handleApplyCrop()} title="Apply crop"><IcoCheck /></button>
-                        <button type="button" class="mp76-crop-btn" style={{ gridColumn: 'span 2' }}
-                          onClick={handleCancelCrop} title="Cancel crop"><IcoX /></button>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" class="mp76-crop-btn" onClick={initCropper} title="Start crop"><IcoCrop /></button>
-                        <button type="button" class="mp76-crop-btn" onClick={handlePickFile} title="Change photo"><IcoUpload /></button>
-                        <button type="button" class="mp76-crop-btn" style={{ gridColumn: 'span 2' }}
-                          onClick={() => void handleEnhance()} disabled={enhancing}
-                          title="Generate AI enhanced version">
-                          <IcoSparkles />
+                    <div class={`mp76-clean-photo-stage${hasPhoto ? ' has-cropper' : ''}`}>
+                      {hasPhoto
+                        ? <canvas ref={cropCanvasRef} style={{ display: 'block', width: '100%', height: '100%', cursor: 'grab' }} />
+                        : showingCurrentPhoto
+                          ? <img src={originalDisplayUrl} alt="Current profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <div class="mp76-photo-stage-empty"><DlgIco d={IC_USER} /><span>Upload a photo to preview</span></div>}
+                      {(hasPhoto || showingCurrentPhoto) && (
+                        <button
+                          type="button"
+                          class="mp76-photo-remove-overlay"
+                          onClick={e => { e.stopPropagation(); void handleRemoveOverlay(); }}
+                          disabled={uploading}
+                          aria-label={hasPhoto ? 'Clear selected photo' : 'Remove current photo'}
+                          title={hasPhoto ? 'Clear selected photo' : 'Remove current photo'}
+                        >
+                          Remove
                         </button>
-                      </>
+                      )}
+                    </div>
+
+                    {hasPhoto && (
+                      <div class="mp76-inline-crop-toolbar">
+                        <div class="mp76-inline-crop-note">
+                          <div class="mp76-inline-crop-copy">
+                            <strong>Manual Crop</strong>
+                            <span>Adjust the photo in the preview, then apply the crop before generating the AI preview.</span>
+                          </div>
+                        </div>
+                        <div class="mp76-inline-crop-actions">
+                          <button type="button" class="mp76-manual-crop-btn" onClick={handleZoomOut} aria-label="Zoom Out" title="Zoom Out"><DlgIco d={IC_ZOUT} /></button>
+                          <button type="button" class="mp76-manual-crop-btn" onClick={handleZoomIn} aria-label="Zoom In" title="Zoom In"><DlgIco d={IC_ZIN} /></button>
+                          <button type="button" class="mp76-manual-crop-btn" onClick={handleResetCrop} aria-label="Reset Crop" title="Reset Crop"><DlgIco d={IC_RESET} /></button>
+                          <button type="button" class="mp76-manual-crop-btn primary" onClick={() => void handleApplyCrop()} aria-label="Apply Crop" title="Apply Crop"><DlgIco d={IC_CHECK} /></button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              </div>
 
-              {/* AI Enhanced panel */}
-              <div class={`mp76-clean-preview-card${selected === 'enhanced' ? ' selected' : ''}`}
-                   onClick={() => enhancedUrl && setSelected('enhanced')}
-                   style={{ cursor: enhancedUrl ? 'pointer' : 'default' }}>
-                <div class="mp76-clean-preview-head">
-                  <strong><IcoSparkles /> AI Enhanced</strong>
-                  {enhancedUrl
-                    ? <span class="mp76-clean-status-pill ready">Ready</span>
-                    : <span class="mp76-clean-status-pill">{enhancing ? 'Processing…' : 'Not generated'}</span>}
-                </div>
-
-                <div class="mp76-clean-photo-stage" style={{ position: 'relative' }}>
-                  {enhancedUrl
-                    ? <img src={enhancedUrl} alt="AI enhanced preview" />
-                    : (
-                      <div class="mp76-photo-stage-empty">
-                        {enhancing
-                          ? <><div class="mp76-ai-spinner" /><span>Enhancing…</span></>
-                          : <><IcoSparkles /><span>Generate an AI-enhanced version using the button on the left</span></>
-                        }
-                      </div>
-                    )
-                  }
-                  {enhancing && (
-                    <div class="mp76-ai-loading show">
-                      <div>
-                        <div class="mp76-ai-spinner" />
-                        <span>Enhancing…</span>
-                      </div>
+                  {/* AI Enhanced panel */}
+                  <div class={`mp76-clean-preview-card${selected === 'enhanced' ? ' selected' : ''}`}
+                       onClick={() => enhancedUrl && setSelected('enhanced')}
+                       style={{ cursor: enhancedUrl ? 'pointer' : 'default' }}>
+                    <div class="mp76-clean-preview-head">
+                      <strong><DlgIco d={IC_SPARK_AI} /> AI Enhanced</strong>
+                      {enhancedUrl
+                        ? <em class="mp76-clean-status-pill ready">Ready</em>
+                        : <em class="mp76-clean-status-pill">{enhancing ? 'Processing…' : 'Not Generated'}</em>}
                     </div>
-                  )}
+
+                    <div class="mp76-clean-photo-stage" style={{ position: 'relative' }}>
+                      {enhancedUrl
+                        ? <img src={enhancedUrl} alt="AI enhanced preview" />
+                        : (
+                          <div class="mp76-photo-stage-empty">
+                            <DlgIco d={IC_SPARK_E} /><span>Generate preview after upload</span>
+                          </div>
+                        )
+                      }
+                      {enhancing && (
+                        <div class="mp76-ai-loading show">
+                          <div>
+                            <div class="mp76-ai-spinner" />
+                            <span>Enhancing employee photo…</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+                {/* AI Enhancement info strip — sits below the compare grid, not tied to any one card */}
                 <div class="mp76-enhance-strip">
                   <div class="mp76-enhance-copy">
-                    <div class="mp76-enhance-icon"><IcoSparkles /></div>
+                    <div class="mp76-enhance-icon"><DlgIco d={IC_SPARK_S} /></div>
                     <div>
-                      <strong>AI Photo Enhancement</strong>
-                      <span>Improves lighting, background, and clarity using the SIOMAC photo model — your identity is preserved.</span>
+                      <strong>AI Enhancement Applied</strong>
+                      <span>Standardizes crop, lighting, background, and profile framing while preserving identity.</span>
                     </div>
                   </div>
                   <div class="mp76-enhance-tags">
-                    <em>Professional background</em>
-                    <em>Lighting correction</em>
-                    <em>Identity preserved</em>
+                    <em>Centered Crop</em>
+                    <em>Lighting</em>
+                    <em>Clean Background</em>
                   </div>
-                  <div class="mp76-generate-row">
-                    <button
-                      type="button"
-                      class="mp76-modal-btn primary"
-                      style={{ flex: 1 }}
-                      onClick={() => void handleEnhance()}
-                      disabled={enhancing || !hasPhoto}
-                    >
-                      {enhancing ? <><Spin /> Enhancing…</> : <><IcoSparkles /> Generate AI Preview</>}
-                    </button>
-                  </div>
+                </div>
+
+                {/* Error from enhance */}
+                <div class={`mp76-photo-error${enhanceError ? ' show' : ''}`}>
+                  {enhanceError}
+                </div>
+
+                {/* Use Original / Use AI Enhanced — selects which version Submit for Review uploads */}
+                <div class="mp76-clean-photo-actions">
+                  <button
+                    type="button"
+                    class={`mp76-modal-btn${selected === 'original' ? ' primary' : ''}`}
+                    onClick={() => setSelected('original')}
+                    disabled={!hasPhoto}
+                  >
+                    Use Original
+                  </button>
+                  <button
+                    type="button"
+                    class={`mp76-modal-btn${selected === 'enhanced' ? ' primary' : ''}`}
+                    onClick={() => setSelected('enhanced')}
+                    disabled={!enhancedUrl}
+                  >
+                    Use AI Enhanced
+                  </button>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Error from enhance */}
-          <div class={`mp76-photo-error${enhanceError ? ' show' : ''}`}>
-            {enhanceError}
           </div>
-
-          {/* Review note */}
-          {hasPhoto && (
-            <div class="mp76-review-note">
-              <IcoInfo />
-              <span>
-                Click the panel you want to use, then click <strong>Use Selected Photo</strong>.
-                {selected === 'original' ? ' Currently using the original/cropped version.' : ' Currently using the AI-enhanced version.'}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Footer */}
       <div class="mp76-modal-footer" style={{ flexWrap: 'wrap', gap: '10px' }}>
-        {currentUrl && (
-          <button
-            type="button"
-            class="mp76-modal-btn"
-            style={{ marginRight: 'auto', color: '#b42318', borderColor: '#fecaca' }}
-            ref={removeBtnRef}
-            onClick={() => void handleRemove()}
-            disabled={uploading}
-          >
-            <IcoTrash /> Remove Photo
-          </button>
-        )}
         <button type="button" class="mp76-modal-btn" onClick={onClose} disabled={uploading}>Cancel</button>
         <button
           type="button"
@@ -877,7 +972,7 @@ function ChangePhotoModal({
           onClick={() => void handleUse()}
           disabled={uploading || !hasPhoto}
         >
-          {uploading ? <><Spin /> Uploading…</> : 'Use Selected Photo'}
+          {uploading ? <><Spin /> Uploading…</> : 'Submit for Review'}
         </button>
       </div>
 
@@ -895,10 +990,16 @@ function ChangePhotoModal({
 
 // ── Activity icon map ─────────────────────────────────────────────────────────
 function ActivityIcon({ icon }: { icon: string }): VNode {
-  const approved = icon === 'fa-check-circle';
+  const approved = icon === 'photo' || icon === 'profile' || icon === 'password' || icon === 'security-on';
+  const glyph =
+    icon === 'photo' || icon === 'photo-removed' ? <IcoCamera /> :
+    icon === 'password'                          ? <IcoKey />    :
+    icon === 'security-on' || icon === 'security-off' || icon === 'security' ? <IcoShield /> :
+    icon === 'profile'                           ? <IcoUser />   :
+                                                     <IcoHistory />;
   return (
     <div class={`compact-activity-icon${approved ? ' approved' : ''}`}>
-      {approved ? <IcoCheck /> : icon.includes('sign-out') ? <IcoLogOut /> : icon.includes('calendar') ? <IcoClock /> : <IcoHistory />}
+      {glyph}
     </div>
   );
 }
@@ -916,7 +1017,7 @@ export function MyProfileSection(): VNode {
   // ── Profile data ──
   const [profile, setProfile] = useState<ProfileData>({
     fullName, username, email: '', phone: '',
-    department: '', position: '', employeeNumber: '',
+    department: '', site: '', manager: '', position: '', employeeNumber: '',
     profileImage: storedImg, role,
   });
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -928,7 +1029,7 @@ export function MyProfileSection(): VNode {
   // ── Inline editable form state (account card) ──
   const [formName, setFormName]   = useState('');
   const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
+  const [formPhone, setFormPhone] = useState('(868) ');
   const [savingInfo, setSavingInfo] = useState(false);
 
   // ── Access panel toggle ──
@@ -938,6 +1039,11 @@ export function MyProfileSection(): VNode {
   const [photoModalOpen, setPhotoModalOpen]     = useState(false);
   const [pwdModalOpen, setPwdModalOpen]         = useState(false);
   const [logoutModalOpen, setLogoutModalOpen]   = useState(false);
+  const [totpSetupOpen, setTotpSetupOpen]       = useState(false);
+  const [totpDisableOpen, setTotpDisableOpen]   = useState(false);
+
+  // ── Two-factor authentication — real state from the authenticated 2FA API ──
+  const { data: totpStatus, isLoading: totpStatusLoading, refetch: refetchTotpStatus } = useTotpStatus();
 
   // ── Load profile ──
   useEffect(() => {
@@ -952,19 +1058,20 @@ export function MyProfileSection(): VNode {
         const p: ProfileData = {
           fullName: u.fullName || fullName, username,
           email: u.email || '', phone: u.phone || '',
-          department: u.department || '', position: u.position || '',
+          department: u.department || '', site: u.site || '', manager: u.manager || '',
+          position: u.position || '',
           employeeNumber: u.employeeNumber || '',
           profileImage: u.profileImage || storedImg, role,
         };
         setProfile(p);
         setFormName(p.fullName);
         setFormEmail(p.email);
-        setFormPhone(p.phone);
+        setFormPhone(formatPhoneInput(p.phone));
         if (u.profileImage && u.profileImage !== storedImg) setProfileImg(u.profileImage);
       })
       .catch(() => {
         if (!cancelled) {
-          setFormName(fullName); setFormEmail(''); setFormPhone('');
+          setFormName(fullName); setFormEmail(''); setFormPhone('(868) ');
         }
       })
       .finally(() => { if (!cancelled) setLoadingProfile(false); });
@@ -991,13 +1098,15 @@ export function MyProfileSection(): VNode {
     if (!formEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail)) {
       toast.error('A valid email address is required.'); return;
     }
+    // "(868) " with no local digits means no phone on file — don't save a bare prefix.
+    const phoneToSave = formPhone.replace(/\D/g, '').length > 3 ? formPhone : '';
     setSavingInfo(true);
     try {
       const result = await updateMyProfile({
-        username, fullName: formName.trim(), email: formEmail.trim(), phone: formPhone,
-        profileImageBase64: '', removeProfileImage: false, oldPassword: '', newPassword: '',
+        username, fullName: formName.trim(), email: formEmail.trim(), phone: phoneToSave,
+        profileImageBase64: '', removeProfileImage: false,
       });
-      setProfile(p => ({ ...p, fullName: result.fullName, email: formEmail.trim(), phone: formPhone }));
+      setProfile(p => ({ ...p, fullName: result.fullName, email: formEmail.trim(), phone: phoneToSave }));
       toast.success('Account information updated.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Update failed.');
@@ -1019,7 +1128,8 @@ export function MyProfileSection(): VNode {
 
   return (
     <div class="mp76">
-      <PageHeader icon="fa-user" title="My Profile" sub="Manage your personal information and account security." />
+      <AppTopBar />
+      <PageHeader icon="fa-user" title="My Profile" sub="Manage your personal information and account security." hidePill />
 
       <div class="mp76-grid-top">
 
@@ -1057,10 +1167,14 @@ export function MyProfileSection(): VNode {
                     {loadingProfile
                       ? <div class="mp76-skel" style={{ width: '140px', height: '22px' }} />
                       : <h2>{displayName}</h2>}
-                    <span class="profile-status-badge">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>
-                      Active
-                    </span>
+                    {/* Superadmin is a platform account, not an HR-tracked employee —
+                        an "Active" employee-status badge doesn't apply to it. */}
+                    {role !== 'superadmin' && (
+                      <span class="profile-status-badge">
+                        <SolActiveCheck />
+                        Active
+                      </span>
+                    )}
                   </div>
 
                   {loadingProfile ? (
@@ -1071,17 +1185,17 @@ export function MyProfileSection(): VNode {
 
                   {loadingProfile ? null : (
                     <div class="profile-meta">
-                      {profile.department && (
+                      {profile.position && (
                         <span>
-                          <IcoBuilding />
-                          {profile.department}
+                          <SolBriefcase />
+                          {profile.position}
                         </span>
                       )}
                       {profile.position && profile.department && <span class="profile-sep">·</span>}
-                      {profile.position && (
+                      {profile.department && (
                         <span>
-                          <IcoBriefcase />
-                          {profile.position}
+                          <SolBuilding />
+                          {profile.department}
                         </span>
                       )}
                     </div>
@@ -1089,49 +1203,57 @@ export function MyProfileSection(): VNode {
                 </div>
               </div>
 
-              {/* Stats grid — real fields only */}
+              {/* Stats grid. Superadmin is a platform account with no HR record, so
+                  Job Site/Department/Employee ID/Manager are all meaningless for it —
+                  show account-level facts instead. Everyone else gets the stable 2×2
+                  (Job Site · Department · Employee ID · Manager), "—" for unset fields
+                  so the grid never collapses to a lonely box. */}
               {!loadingProfile && (
                 <div class="profile-stats profile-facts">
-                  {profile.department && (
-                    <div class="profile-stat">
-                      <small>
-                        <IcoBuilding />
-                        Department
-                      </small>
-                      <div class="profile-stat-line"><strong>{profile.department}</strong></div>
-                    </div>
-                  )}
-                  {profile.employeeNumber && (
-                    <div class="profile-stat">
-                      <small>
-                        <IcoId />
-                        Employee ID
-                      </small>
-                      <div class="profile-stat-line"><strong>{profile.employeeNumber}</strong></div>
-                    </div>
-                  )}
-                  {profile.position && (
-                    <div class="profile-stat">
-                      <small>
-                        <IcoBriefcase />
-                        Position
-                      </small>
-                      <div class="profile-stat-line"><strong>{profile.position}</strong></div>
-                    </div>
-                  )}
-                  {profile.email && (
-                    <div class="profile-stat">
-                      <small>
-                        <IcoMail />
-                        Email
-                      </small>
-                      <div class="profile-stat-line"><strong style={{ wordBreak: 'break-all' }}>{profile.email}</strong></div>
-                    </div>
+                  {role === 'superadmin' ? (
+                    <>
+                      <div class="profile-stat">
+                        <small><SolUser />Username</small>
+                        <div class="profile-stat-line"><strong>{username || '—'}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolShieldCheck />Role</small>
+                        <div class="profile-stat-line"><strong>{capRole(role)}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolMail />Email</small>
+                        <div class="profile-stat-line"><strong style={{ wordBreak: 'break-all' }}>{profile.email || '—'}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolPhone />Phone</small>
+                        <div class="profile-stat-line"><strong>{profile.phone || '—'}</strong></div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div class="profile-stat">
+                        <small><SolPin />Job Site</small>
+                        <div class="profile-stat-line"><strong>{profile.site || '—'}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolBuilding />Department</small>
+                        <div class="profile-stat-line"><strong>{profile.department || '—'}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolIdCard />Employee ID</small>
+                        <div class="profile-stat-line"><strong>{profile.employeeNumber || '—'}</strong></div>
+                      </div>
+                      <div class="profile-stat">
+                        <small><SolUserCheck />Manager</small>
+                        <div class="profile-stat-line"><strong>{profile.manager || '—'}</strong></div>
+                      </div>
+                    </>
                   )}
                 </div>
               )}
 
-              {/* Access profile panel (collapsible) — shows role + username only since we have no permissions list */}
+              {/* Access profile panel (collapsible) — module access derived from the
+                  signed-in user's real role (not mocked). */}
               <div class={`profile-panel profile-access-panel pad${accessOpen ? '' : ' is-collapsed'}`}>
                 <button
                   type="button"
@@ -1141,36 +1263,39 @@ export function MyProfileSection(): VNode {
                 >
                   <div class="profile-panel-head">
                     <span class="profile-panel-title">
-                      <IcoShield />
+                      <SolShieldLock />
                       Access Profile
                     </span>
-                    <span class="profile-access-chevron"><IcoChevron /></span>
+                    <span class="profile-access-chevron" aria-hidden="true"><SolChevron /></span>
                   </div>
                 </button>
 
                 <div class="profile-access-collapse">
-                  <ul class="profile-access-list redesigned-access-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                    <li class="profile-access-item">
-                      <span class="access-icon">
-                        <IcoUser />
-                      </span>
-                      <span class="access-copy">
-                        <strong>Role</strong>
-                        <span>{capRole(role)}</span>
-                      </span>
-                      <span class="access-status enabled">Active</span>
-                    </li>
-                    <li class="profile-access-item">
-                      <span class="access-icon">
-                        <IcoId />
-                      </span>
-                      <span class="access-copy">
-                        <strong>Username</strong>
-                        <span>{username || '—'}</span>
-                      </span>
-                      <span class="access-status enabled">Verified</span>
-                    </li>
-                  </ul>
+                  <div class="profile-panel-note">Dashboard and module access assigned to this account.</div>
+                  <div class="profile-access-list redesigned-access-list">
+                    {(() => {
+                      const managerial = ['admin', 'superadmin', 'manager'].includes(role) || /_manager$/.test(role);
+                      const isAdmin    = ['admin', 'superadmin'].includes(role);
+                      const rows = [
+                        { icon: <SolGrid />,        title: 'Employee Dashboard', desc: 'Self-service profile, security, and documents', on: true },
+                        { icon: <SolClipboard />,   title: 'Manager Approvals',  desc: 'Team approvals and workflow sign-off',        on: managerial },
+                        { icon: <SolShieldCheck />, title: 'Administration',     desc: 'System settings, users, roles, and security', on: isAdmin },
+                      ];
+                      return rows.map(r => (
+                        <div class={`profile-access-item ${r.on ? 'access-enabled' : 'access-disabled'}`}>
+                          <span class={`access-icon${r.on ? '' : ' disabled-icon'}`} aria-hidden="true">{r.icon}</span>
+                          <div class="access-copy">
+                            <strong>{r.title}</strong>
+                            <span>{r.desc}</span>
+                          </div>
+                          <span class={`access-status ${r.on ? 'enabled' : 'disabled'}`}>
+                            {r.on ? <SolCheck /> : <SolX />}
+                            {r.on ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
                 </div>
               </div>
 
@@ -1302,35 +1427,83 @@ export function MyProfileSection(): VNode {
                     class="mp76-editable"
                     value={formPhone}
                     placeholder="(868) xxx-xxxx"
-                    onInput={e => setFormPhone((e.target as HTMLInputElement).value)}
+                    maxLength={14}
+                    onInput={e => setFormPhone(formatPhoneInput((e.target as HTMLInputElement).value))}
                   />
                 </div>
               </div>
 
-              {/* Readonly: Department */}
+              {/* Department / Position / Job Site / Manager — HR-record fields that
+                  don't apply to superadmin (a platform account, not an employee). */}
+              {role !== 'superadmin' && (
+                <>
+                  <div class="field">
+                    <label for="mp76-dept">Department</label>
+                    <div class="input-icon">
+                      <IcoBuilding />
+                      <input
+                        id="mp76-dept"
+                        type="text"
+                        value={profile.department || (loadingProfile ? '…' : '—')}
+                        readonly
+                        tabIndex={-1}
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="mp76-pos">Position</label>
+                    <div class="input-icon">
+                      <IcoBriefcase />
+                      <input
+                        id="mp76-pos"
+                        type="text"
+                        value={profile.position || (loadingProfile ? '…' : '—')}
+                        readonly
+                        tabIndex={-1}
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="mp76-site">Job Site</label>
+                    <div class="input-icon">
+                      <IcoMapPin />
+                      <input
+                        id="mp76-site"
+                        type="text"
+                        value={profile.site || (loadingProfile ? '…' : '—')}
+                        readonly
+                        tabIndex={-1}
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="mp76-manager">Manager</label>
+                    <div class="input-icon">
+                      <IcoUser />
+                      <input
+                        id="mp76-manager"
+                        type="text"
+                        value={profile.manager || (loadingProfile ? '…' : '—')}
+                        readonly
+                        tabIndex={-1}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Readonly: Company (real value from company branding settings) */}
               <div class="field">
-                <label for="mp76-dept">Department</label>
+                <label for="mp76-company">Company</label>
                 <div class="input-icon">
                   <IcoBuilding />
                   <input
-                    id="mp76-dept"
+                    id="mp76-company"
                     type="text"
-                    value={profile.department || (loadingProfile ? '…' : '—')}
-                    readonly
-                    tabIndex={-1}
-                  />
-                </div>
-              </div>
-
-              {/* Readonly: Position */}
-              <div class="field">
-                <label for="mp76-pos">Position</label>
-                <div class="input-icon">
-                  <IcoBriefcase />
-                  <input
-                    id="mp76-pos"
-                    type="text"
-                    value={profile.position || (loadingProfile ? '…' : '—')}
+                    value={session.companyName || '—'}
                     readonly
                     tabIndex={-1}
                   />
@@ -1404,15 +1577,39 @@ export function MyProfileSection(): VNode {
                 </button>
               </div>
 
-              {/* Two-factor auth row — deferred, shown as informational */}
-              <div class="security-row" style={{ opacity: 0.72 }}>
+              {/* Two-factor auth row — real state from the authenticated 2FA API.
+                  Mandatory roles (admin/manager, per security policy) can't disable
+                  it here, so it's shown informationally. Superadmin is ALSO routed
+                  to Settings regardless of the mandatory flag — account security for
+                  a platform-level account shouldn't be a casual inline toggle here.
+                  Everyone else gets a real, working switch backed by the same
+                  setup/disable flow as Settings (which already gates Disable behind
+                  the same mandatory check, server-side). */}
+              <div class="security-row">
                 <div>
                   <div class="font-medium text-sm">Two-Factor Authentication</div>
                   <div class="text-muted text-sm" style={{ marginTop: '2px' }}>
-                    Manage 2FA via the Security settings page
+                    {totpStatus?.mandatory || role === 'superadmin'
+                      ? 'Manage via the Security settings page'
+                      : 'Require a second verification step at sign in'}
                   </div>
                 </div>
-                <span class="mp76-clean-status-pill">In Security Settings</span>
+                {totpStatusLoading ? (
+                  <span class="mp76-clean-status-pill">Loading…</span>
+                ) : totpStatus?.mandatory || role === 'superadmin' ? (
+                  <span class="mp76-clean-status-pill">In Security Settings</span>
+                ) : (
+                  <div
+                    class={`switch${totpStatus?.enabled ? '' : ' off'}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={totpStatus?.enabled ? 'Disable two-factor authentication' : 'Set up two-factor authentication'}
+                    onClick={() => (totpStatus?.enabled ? setTotpDisableOpen(true) : setTotpSetupOpen(true))}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); totpStatus?.enabled ? setTotpDisableOpen(true) : setTotpSetupOpen(true); } }}
+                  >
+                    <span class="thumb" />
+                  </div>
+                )}
               </div>
 
               {/* Sign out row */}
@@ -1433,10 +1630,15 @@ export function MyProfileSection(): VNode {
                   Sign Out
                 </button>
               </div>
-            </div>
 
-            {/* ── Notifications block — informational only (no backend yet) ── */}
-            <div class="account-notifications-block">
+              {/* Security Review note */}
+              <div class="account-simple-note">
+                <strong>Security Review</strong>
+                <span>Password changes, two-factor updates, and logout events are recorded for employee account auditing.</span>
+              </div>
+
+              {/* ── Notifications block — informational (preferences managed system-wide) ── */}
+              <div class="account-notifications-block">
               <div class="account-section-title account-notification-title">
                 <span><IcoBell /> Notifications</span>
               </div>
@@ -1476,7 +1678,8 @@ export function MyProfileSection(): VNode {
                 <strong>Note</strong>
                 <span>Per-category notification preferences can be configured in Settings → Notifications.</span>
               </div>
-            </div>
+              </div>{/* /account-notifications-block */}
+            </div>{/* /account-security-block */}
 
           </div>{/* /card-body */}
         </div>{/* /account-security-card */}
@@ -1500,6 +1703,18 @@ export function MyProfileSection(): VNode {
         open={logoutModalOpen}
         onClose={() => setLogoutModalOpen(false)}
       />
+      {totpSetupOpen && (
+        <TotpSetupModal
+          onClose={() => setTotpSetupOpen(false)}
+          onEnabled={() => { void refetchTotpStatus(); setTotpSetupOpen(false); }}
+        />
+      )}
+      {totpDisableOpen && (
+        <TotpDisableModal
+          onClose={() => setTotpDisableOpen(false)}
+          onDisabled={() => { void refetchTotpStatus(); setTotpDisableOpen(false); }}
+        />
+      )}
     </div>
   );
 }

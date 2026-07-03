@@ -36,7 +36,7 @@ import { CreateEmployeeWizard } from './CreateEmployeeWizard';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
 import { OnboardingWizard } from './OnboardingWizard';
-import { TableSkeleton, PageHeader, Button } from '@ui';
+import { TableSkeleton, Button } from '@ui';
 import { AppTopBar } from '@shared/AppTopBar';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
@@ -485,19 +485,17 @@ export function EmployeeMaster(): VNode {
 
   return (
     <>
-      {/* Global top bar (prototype on this page) — full-width bar pinned to the top,
-          OUTSIDE the 1480px-capped page body so it spans the page edge-to-edge:
-          icon+title + search on the left, profile cluster in the corner, and a
-          footer strip (breadcrumb) under a brand-accent underline. */}
-      <AppTopBar icon="fa-users" title="Employee Master" module="HR" />
+      {/* Navy top bar (search + profile), full width; the page title + subtext sit in a
+          heading BELOW it, left-aligned. */}
+      <AppTopBar />
       <div class="hr-emp-master" onClick={() => setOpenId(null)}>
-      {/* Page header — icon only (title/sub/breadcrumb/meta/pill now live in the top bar) */}
-      <PageHeader
-        icon="fa-users"
-        title="Employee Master"
-        hidePill
-        hideTitle
-      />
+      <div class="em-pagehead">
+        <span class="em-headrow-icon"><i class="fas fa-users" aria-hidden="true" /></span>
+        <div class="em-headrow-text">
+          <div class="em-headrow-name">Employee Master</div>
+          <div class="em-headrow-sub">Central register of every employee — roles, records, and readiness.</div>
+        </div>
+      </div>
 
       {/* Board Customize control (top-right) — Customize → Widget Library / Reset / Set as
           default / Done. Only managers/admins/superadmins may customize. */}
