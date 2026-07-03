@@ -1,26 +1,39 @@
 /**
  * src/ui/toast/ToastCard.tsx
  *
- * Single toast card component.
- * - Pauses dismiss timer and progress bar on hover/focus
- * - Esc key dismisses
- * - action buttons stop propagation
- * - avatar OR variant icon chip
- * - role="alert" for error/critical, role="status" for others
- * - Respects prefers-reduced-motion
+ * Single toast card component — Sonner deck-stacking architecture.
+ *
+ * Layout: position:absolute within the Toaster's fixed region.
+ * - Collapsed: translateY(lift * toastsBefore) + scale(1 - toastsBefore * 0.05)
+ *              height normalised to frontHeight for stacked cards
+ * - Expanded:  translateY(expandedOffset) + scale(1) + natural height
+ *
+ * Entry: mounts with slide-from-right start state, transitions to identity
+ *        after first paint (via `mounted` flag in useEffect). CSS transitions
+ *        handle all motion — no keyframes — so retargeting is smooth.
+ *
+ * Exit: `exiting` flag triggers slide-right + fade via CSS transition.
+ *       Remaining cards retarget their transforms (no height-collapse needed
+ *       because layout is absolute, not flex flow).
+ *
+ * Swipe: pointer-capture + rightward drag sets --swipe-amount CSS var.
+ *        Dismisses on release if dx >= 45px OR velocity > 0.11 px/ms.
+ *        Springs back otherwise.
+ *
+ * Timers: per-card hover pause; also respects globalPaused (expand/tab-hidden).
  */
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'preact/hooks';
 import type { ToastRecord, ToastAction } from './toastTypes';
-import { dismissToast, updateToast } from './toastStore';
+import { dismissToast, updateToast, getGlobalPaused } from './toastStore';
 import { ToastProgress } from './ToastProgress';
 
-/** Horizontal distance (px) a swipe must travel before it dismisses on release. */
-const SWIPE_CLOSE_PX = 80;
-/** Opacity reaches ~0 as the swipe approaches this distance. */
-const SWIPE_FADE_PX  = 160;
-/** Entry height-expand window; must cover the height transition in toast.css. */
-const ENTER_MS       = 300;
+/** Horizontal swipe threshold (px) — release past here = dismiss. */
+const SWIPE_CLOSE_PX   = 45;
+/** Swipe velocity threshold (px/ms) — fast flick also dismisses. */
+const SWIPE_VELOCITY   = 0.11;
+/** Opacity fully reaches 0 at this swipe distance. */
+const SWIPE_FADE_PX    = 160;
 
 // ── Icon SVGs per variant ─────────────────────────────────────────────────────
 
@@ -73,15 +86,15 @@ function LoadingSpinner() {
 // ── Action button ─────────────────────────────────────────────────────────────
 
 interface ActionButtonProps {
-  action:    ToastAction;
-  toastId:   string;
-  isFirst?:  boolean;
+  action:   ToastAction;
+  toastId:  string;
+  isFirst?: boolean;
 }
 
 function ActionButton({ action, toastId, isFirst }: ActionButtonProps) {
   const tone = action.tone ?? (isFirst ? 'primary' : 'secondary');
-  const toneClass = tone === 'danger' ? 'toast-action--danger'
-    : tone === 'primary' ? 'toast-action--primary'
+  const toneClass = tone === 'danger'   ? 'toast-action--danger'
+    : tone === 'primary'   ? 'toast-action--primary'
     : 'toast-action--secondary';
 
   const handleClick = useCallback(async (e: MouseEvent) => {
@@ -91,7 +104,6 @@ function ActionButton({ action, toastId, isFirst }: ActionButtonProps) {
       return;
     }
     const result = await action.onClick();
-    // onClick returning false keeps the toast open; anything else dismisses
     if (result !== false) {
       dismissToast(toastId);
     }
@@ -111,31 +123,78 @@ function ActionButton({ action, toastId, isFirst }: ActionButtonProps) {
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
 interface ToastCardProps {
-  record: ToastRecord;
+  record:         ToastRecord;
+  /** Cards newer than this one (front = 0). */
+  toastsBefore:   number;
+  /** px each stacked card translates DOWN behind the front. */
+  liftAmount:     number;
+  /** Height of the front (newest) toast in px — used for height-normalisation. */
+  frontHeight:    number;
+  /** Whether the deck is expanded (hovered). */
+  expanded:       boolean;
+  /** translateY offset in expanded state (px from top of container). */
+  expandedOffset: number;
+  /** Whether this card is within the peek window (toastsBefore < MAX_PEEK). */
+  visible:        boolean;
+  /** Report measured height back to Toaster for offset calculation. */
+  onMeasure:      (id: string, height: number) => void;
 }
 
-export function ToastCard({ record }: ToastCardProps) {
+export function ToastCard({
+  record,
+  toastsBefore,
+  liftAmount,
+  frontHeight,
+  expanded,
+  expandedOffset,
+  visible,
+  onMeasure,
+}: ToastCardProps) {
   const {
     id, tier, variant, title, message, body, icon, avatarUrl,
     meta, actions, duration, dismissible, paused, remainingMs, exiting,
     onClick, onDismiss,
   } = record;
 
-  const cardRef      = useRef<HTMLDivElement>(null);
-  const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startRef     = useRef<number>(0);
-  const remaining    = useRef<number>(remainingMs);
+  const cardRef         = useRef<HTMLDivElement>(null);
+  const timerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startRef        = useRef<number>(0);
+  const remaining       = useRef<number>(remainingMs);
+  const localPausedRef  = useRef<boolean>(false);
 
-  // Swipe-to-dismiss state: dragX drives the live transform; the ref mirrors it
-  // so the release handler reads the latest value without a stale closure.
-  const [dragX, setDragX] = useState(0);
-  const dragXRef    = useRef(0);
-  const dragging    = useRef(false);
-  const dragStartX  = useRef(0);
-  const movedRef    = useRef(false);
+  // Entry animation: start collapsed/offscreen, transition to identity after mount
+  const [mounted, setMounted] = useState(false);
+
+  // Swipe state
+  const [swipeX, setSwipeX]  = useState(0);
+  const swipeXRef            = useRef(0);
+  const dragging             = useRef(false);
+  const dragStartX           = useRef(0);
+  const dragStartTime        = useRef(0);
+  const movedRef             = useRef(false);
 
   const role = (variant === 'error' || variant === 'critical') ? 'alert' : 'status';
+
+  // ── Measure height for Toaster layout ────────────────────────────────────
+
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const h = el.offsetHeight;
+    if (h > 0) onMeasure(id, h);
+  });
+
+  // ── Entry: set mounted=true after first paint ─────────────────────────────
+
+  useEffect(() => {
+    // requestAnimationFrame ensures the browser has painted the initial (unmounted)
+    // transform before we apply the mounted state, triggering the CSS transition.
+    const raf = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Timer management ──────────────────────────────────────────────────────
 
@@ -145,13 +204,15 @@ export function ToastCard({ record }: ToastCardProps) {
 
   const startTimer = useCallback(() => {
     if (duration <= 0 || remaining.current <= 0) return;
-    startRef.current = Date.now();
-    timerRef.current = setTimeout(() => {
+    if (localPausedRef.current || getGlobalPaused()) return;
+    startRef.current  = Date.now();
+    timerRef.current  = setTimeout(() => {
       onDismiss?.();
       dismissToast(id);
     }, remaining.current);
   }, [id, duration, onDismiss]);
 
+  // Start timer on mount
   useEffect(() => {
     remaining.current = remainingMs;
     startTimer();
@@ -159,49 +220,25 @@ export function ToastCard({ record }: ToastCardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Entry: expand height 0 → natural so the stack pushes down smoothly ──────
-  // Mirror of the exit collapse; runs once on mount. The CSS keyframe carries
-  // the slide + scale while height/margin animate the reflow. useLayoutEffect
-  // runs before paint so there's no full-height flash before the collapse.
-  useLayoutEffect(() => {
-    const el = cardRef.current;
-    if (!el || exiting) return;
-    const h = el.offsetHeight;                        // natural height
-    el.style.height    = '0px';
-    el.style.marginTop = 'calc(var(--toast-gap) * -1)';
-    void el.offsetHeight;                             // reflow: pin collapsed start
-    el.style.height    = `${h}px`;                    // → transitions open
-    el.style.marginTop = '';
-    enterTimerRef.current = setTimeout(() => {
-      // Release the fixed height so later content changes reflow naturally.
-      if (cardRef.current) cardRef.current.style.height = '';
-    }, ENTER_MS);
-    return () => { if (enterTimerRef.current) clearTimeout(enterTimerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // ── React to globalPaused changes ─────────────────────────────────────────
 
-  // ── Exit: measure current height, then collapse to 0 so the stack glides up ──
-  // Driven off the record's `exiting` flag (set by dismissToast). We pin the
-  // live height, force a reflow, then animate height/margin/padding to 0 — the
-  // CSS transition on `.toast-card` carries the slide + fade at the same time.
   useEffect(() => {
-    if (!exiting) return;
-    clearTimer();
-    // Cancel any pending entry height-release so it can't clobber the collapse.
-    if (enterTimerRef.current) { clearTimeout(enterTimerRef.current); enterTimerRef.current = null; }
-    const el = cardRef.current;
-    if (!el) return;
-    const h = el.offsetHeight;
-    el.style.height = `${h}px`;
-    void el.offsetHeight; // force reflow so 0 animates from a concrete start
-    el.style.height        = '0px';
-    el.style.marginTop     = 'calc(var(--toast-gap) * -1)'; // eat one flex gap
-    el.style.paddingTop    = '0px';
-    el.style.paddingBottom = '0px';
-  }, [exiting, clearTimer]);
+    if (paused || localPausedRef.current) return; // card-level pause takes precedence
+    if (getGlobalPaused()) {
+      clearTimer();
+      const elapsed = Date.now() - startRef.current;
+      remaining.current = Math.max(0, remaining.current - elapsed);
+    } else {
+      startTimer();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused]); // fires when store updates propagate via record.paused
+
+  // ── Hover: pause/resume this card's timer ─────────────────────────────────
 
   const handleMouseEnter = useCallback(() => {
     if (duration <= 0) return;
+    localPausedRef.current = true;
     clearTimer();
     const elapsed = Date.now() - startRef.current;
     remaining.current = Math.max(0, remaining.current - elapsed);
@@ -210,6 +247,7 @@ export function ToastCard({ record }: ToastCardProps) {
 
   const handleMouseLeave = useCallback(() => {
     if (duration <= 0) return;
+    localPausedRef.current = false;
     updateToast(id, { paused: false, remainingMs: remaining.current });
     startTimer();
   }, [id, duration, startTimer]);
@@ -225,7 +263,6 @@ export function ToastCard({ record }: ToastCardProps) {
   }, [id, dismissible, onDismiss]);
 
   const handleCardClick = useCallback(() => {
-    // Suppress the click that ends a swipe/drag.
     if (movedRef.current) { movedRef.current = false; return; }
     onClick?.();
   }, [onClick]);
@@ -237,66 +274,92 @@ export function ToastCard({ record }: ToastCardProps) {
   }, [id, onDismiss]);
 
   // ── Swipe-to-dismiss (pointer drag toward the right edge) ─────────────────
-  const setDrag = useCallback((px: number) => {
-    dragXRef.current = px;
-    setDragX(px);
+
+  const applySwipe = useCallback((px: number) => {
+    swipeXRef.current = px;
+    setSwipeX(px);
+    if (cardRef.current) {
+      cardRef.current.style.setProperty('--swipe-amount', `${px}px`);
+    }
   }, []);
 
   const handlePointerDown = useCallback((e: PointerEvent) => {
     if (!dismissible || exiting || e.button !== 0) return;
-    // Don't start a swipe from the action or close buttons.
     if ((e.target as HTMLElement).closest?.('.toast-action, .toast-close')) return;
     dragging.current   = true;
     movedRef.current   = false;
     dragStartX.current = e.clientX;
-    clearTimer(); // hold the auto-dismiss while the user is interacting
+    dragStartTime.current = Date.now();
+    clearTimer();
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   }, [dismissible, exiting, clearTimer]);
 
   const handlePointerMove = useCallback((e: PointerEvent) => {
     if (!dragging.current) return;
-    const dx = Math.max(0, e.clientX - dragStartX.current); // rightward only
+    const dx = Math.max(0, e.clientX - dragStartX.current);
     if (dx > 4) movedRef.current = true;
-    setDrag(dx);
-  }, [setDrag]);
+    applySwipe(dx);
+  }, [applySwipe]);
 
   const endDrag = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
-    if (dragXRef.current > SWIPE_CLOSE_PX) {
+    const dx       = swipeXRef.current;
+    const elapsed  = Math.max(1, Date.now() - dragStartTime.current);
+    const velocity = dx / elapsed;
+    if (dx >= SWIPE_CLOSE_PX || velocity > SWIPE_VELOCITY) {
       onDismiss?.();
-      dismissToast(id);           // exit animation takes over from here
+      dismissToast(id);
     } else {
-      setDrag(0);                 // spring back
-      startTimer();               // resume the auto-dismiss
+      applySwipe(0);
+      startTimer();
     }
-  }, [id, onDismiss, setDrag, startTimer]);
+  }, [id, onDismiss, applySwipe, startTimer]);
 
-  // ── Variant class ─────────────────────────────────────────────────────────
+  // ── Derive CSS variables and inline styles ────────────────────────────────
 
-  const variantClass = `toast-card--${variant}`;
-  const tierClass    = tier === 'rich' ? 'toast-card--rich'
-    : tier === 'loading' ? 'toast-card--loading'
-    : tier === 'action' ? 'toast-card--action'
-    : '';
-
+  const isFront     = toastsBefore === 0;
+  const isExiting   = !!exiting;
+  const isDragging  = swipeX > 0;
   const isClickable = !!onClick;
 
-  const isDragging = dragX > 0;
+  const variantClass = `toast-card--${variant}`;
+  const tierClass    = tier === 'rich'    ? 'toast-card--rich'
+    : tier === 'loading' ? 'toast-card--loading'
+    : tier === 'action'  ? 'toast-card--action'
+    : '';
+
+  // Build style object — CSS vars drive the animation via CSS rules
+  const style: Record<string, string | number> = {
+    '--toasts-before':     toastsBefore,
+    '--lift-amount':       `${liftAmount}px`,
+    '--front-toast-height': `${frontHeight}px`,
+    '--offset':            `${expandedOffset}px`,
+  };
+
+  // Swipe opacity (fade while dragging)
+  if (isDragging && !isExiting) {
+    style['opacity'] = Math.max(0, 1 - swipeX / SWIPE_FADE_PX);
+  }
 
   return (
     <div
       ref={cardRef}
       role={role}
       tabIndex={0}
-      class={`toast-card ${variantClass} ${tierClass}`
-        + `${isClickable ? ' toast-card--clickable' : ''}`
-        + `${isDragging ? ' toast-card--dragging' : ''}`
-        + `${exiting ? ' toast-card--exiting' : ''}`}
-      style={isDragging && !exiting ? {
-        transform: `translateX(${dragX}px)`,
-        opacity:   Math.max(0, 1 - dragX / SWIPE_FADE_PX),
-      } : undefined}
+      class={[
+        'toast-card',
+        variantClass,
+        tierClass,
+        mounted   ? 'toast-card--mounted'   : '',
+        expanded  ? 'toast-card--expanded'  : '',
+        isFront   ? 'toast-card--front'     : '',
+        !visible  ? 'toast-card--hidden'    : '',
+        isDragging ? 'toast-card--dragging' : '',
+        isExiting  ? 'toast-card--exiting'  : '',
+        isClickable ? 'toast-card--clickable' : '',
+      ].filter(Boolean).join(' ')}
+      style={style as Record<string, string>}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
@@ -312,8 +375,8 @@ export function ToastCard({ record }: ToastCardProps) {
       {/* Icon chip */}
       <div class={`toast-icon-chip toast-icon-chip--${variant}`} aria-hidden="true">
         {tier === 'loading' ? <LoadingSpinner />
-          : icon ? <i class={icon} aria-hidden="true" />
-          : avatarUrl ? <img src={avatarUrl} alt="" class="toast-avatar" />
+          : icon       ? <i class={icon} aria-hidden="true" />
+          : avatarUrl  ? <img src={avatarUrl} alt="" class="toast-avatar" />
           : <VariantIcon variant={variant} />
         }
       </div>
@@ -324,7 +387,6 @@ export function ToastCard({ record }: ToastCardProps) {
         {message && <div class="toast-message">{message}</div>}
         {body    && <div class="toast-body-text">{body}</div>}
 
-        {/* Meta chips */}
         {meta && meta.length > 0 && (
           <div class="toast-meta">
             {meta.map((m) => (
@@ -333,7 +395,6 @@ export function ToastCard({ record }: ToastCardProps) {
           </div>
         )}
 
-        {/* Action buttons (up to 2) */}
         {actions && actions.length > 0 && (
           <div class="toast-actions">
             {actions.slice(0, 2).map((action, i) => (
@@ -352,8 +413,8 @@ export function ToastCard({ record }: ToastCardProps) {
           onClick={handleDismiss}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14">
-            <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round" stroke-width="2.5" />
-            <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round" stroke-width="2.5" />
+            <line x1="18" y1="6" x2="6"  y2="18" stroke-linecap="round" stroke-width="2.5" />
+            <line x1="6"  y1="6" x2="18" y2="18" stroke-linecap="round" stroke-width="2.5" />
           </svg>
         </button>
       )}

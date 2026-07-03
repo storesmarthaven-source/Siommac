@@ -11,9 +11,10 @@ type Listener = () => void;
 
 /** How long the exit animation runs before the record is actually dropped.
  *  Must be >= the CSS transition duration on `.toast-card` (see toast.css). */
-export const TOAST_EXIT_MS = 260;
+export const TOAST_EXIT_MS = 320;
 
-let records: ToastRecord[] = [];
+let records: ToastRecord[]  = [];
+let _globalPaused           = false;
 const listeners = new Set<Listener>();
 
 function notify(): void {
@@ -27,6 +28,17 @@ export function subscribe(fn: Listener): () => void {
 
 export function getToasts(): ToastRecord[] {
   return records;
+}
+
+export function getGlobalPaused(): boolean {
+  return _globalPaused;
+}
+
+/** Pause or resume ALL toasts globally (used by expand-on-hover and tab-hidden). */
+export function setGlobalPaused(paused: boolean): void {
+  if (_globalPaused === paused) return;
+  _globalPaused = paused;
+  notify();
 }
 
 /** Insert or patch a toast by id. New id appends; existing id patches. */
@@ -57,7 +69,7 @@ export function removeToast(id?: string): void {
 }
 
 /** Animate a toast out, then remove it. Flips `exiting` so the card plays its
- *  slide + height-collapse, then drops the record after `TOAST_EXIT_MS`.
+ *  exit slide + fade, then drops the record after `TOAST_EXIT_MS`.
  *  Idempotent — a second call while already exiting is a no-op. This is the
  *  single path for ALL dismissals (timer, Esc, close, action, swipe, API). */
 export function dismissToast(id: string): void {

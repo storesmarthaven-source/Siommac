@@ -213,14 +213,20 @@ describe('Toaster component', () => {
     expect(screen.queryByText('Auto gone')).toBeNull();
   });
 
-  it('shows at most MAX_VISIBLE (4) toasts when collapsed', () => {
+  it('renders all toast cards in the DOM (deck stacking — no overflow pill)', () => {
     renderToaster();
     act(() => {
       for (let i = 0; i < 6; i++) toast.info(`Toast ${i}`, { duration: 0 });
     });
-    // Should show overflow pill, not all 6 cards directly
+    // All 6 cards must be in the DOM (stacked via absolute transforms, not hidden)
+    const cards = document.querySelectorAll('.toast-card');
+    expect(cards.length).toBe(6);
+    // No "+N more" pill in the new architecture
     const pill = document.querySelector('.toast-overflow-pill');
-    expect(pill).toBeTruthy();
+    expect(pill).toBeNull();
+    // Older toasts (beyond MAX_PEEK=3) carry the hidden class
+    const hiddenCards = document.querySelectorAll('.toast-card--hidden');
+    expect(hiddenCards.length).toBeGreaterThan(0);
   });
 
   it('renders rich toast with title, body, and meta', () => {
@@ -272,10 +278,19 @@ describe('Toaster component', () => {
   });
 
   it('renders without crashing under prefers-reduced-motion', () => {
-    // Simulate reduced motion by checking the component renders at all
-    // (actual animation suppression is CSS-only, verified via the media query)
+    // Actual animation suppression is CSS-only; this confirms rendering doesn't break
     renderToaster();
     act(() => { toast.success('Motion safe'); });
     expect(screen.getByText('Motion safe')).toBeTruthy();
+  });
+
+  it('front toast has toast-card--front class', () => {
+    renderToaster();
+    act(() => {
+      toast.info('First', { duration: 0 });
+      toast.info('Second', { duration: 0 });
+    });
+    const frontCards = document.querySelectorAll('.toast-card--front');
+    expect(frontCards.length).toBe(1);
   });
 });

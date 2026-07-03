@@ -1,35 +1,40 @@
 /**
  * src/ui/toast/toast.css
  *
- * Siomac toast system styles.
+ * Siomac toast system — Sonner-style deck-stacking.
  * Extends .cpop-toast tokens from assets/styles/popup.css.
  * Uses existing CSS vars: --siomac-blue (#1a2c53), --siomac-navy, --bg-card,
  * --text-muted, --radius-md, --success, --warning, --siomac-red.
+ *
+ * CSS variable scheme:
+ *   --toasts-before       integer  — cards newer than this one; front = 0
+ *   --lift-amount         px       — how far each stacked card translates DOWN
+ *   --front-toast-height  px       — height of the newest (front) card
+ *   --offset              px       — translateY in expanded mode (sum of heights above)
+ *   --swipe-amount        px       — live horizontal drag distance (set by JS)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────────── */
 
 .siomac-toaster {
-  position:        fixed;
-  top:             24px;
-  right:           24px;
-  z-index:         100001; /* above modals (cpop is 99999) */
-  display:         flex;
-  /* column-reverse so the NEWEST toast (last in DOM) sits at the top, near the
-     corner, and pushes older ones down — the correct order for a top anchor.
-     The "+N more" pill (first in DOM) lands at the bottom of the stack. */
-  flex-direction:  column-reverse;
-  --toast-gap:     8px;
-  gap:             var(--toast-gap);
-  align-items:     flex-end;
-  pointer-events:  none; /* click-through between cards */
-  max-width:       420px;
-  width:           100%;
+  position:       fixed;
+  top:            24px;
+  right:          24px;
+  z-index:        100001;        /* above modals (cpop is 99999) */
+  width:          420px;
+  max-width:      calc(100vw - 48px);
+  pointer-events: none;          /* click-through between cards */
+  /* Height is driven by JS (collapsed vs expanded); transitions smoothly. */
+  transition:     height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Card ──────────────────────────────────────────────────────────────────── */
+/* ── Card — absolute positioned within the toaster ─────────────────────────── */
 
 .toast-card {
+  position:       absolute;
+  top:            0;
+  right:          0;
+  left:           0;
   background:     var(--bg-card);
   border-radius:  var(--radius-md);
   box-shadow:     0 8px 28px rgba(0, 0, 0, 0.14);
@@ -39,40 +44,115 @@
   gap:            12px;
   align-items:    flex-start;
   pointer-events: auto;
-  position:       relative;
   overflow:       hidden;
-  min-width:      280px;
-  max-width:      420px;
   outline:        none;
-  animation:      siomac-toast-in 0.28s cubic-bezier(0.21, 1.02, 0.73, 1) both;
-  /* Exit + swipe-release ride these transitions; the entrance uses the keyframe
-     above. height/margin/padding carry the collapse that reflows the stack. */
-  transition:
-    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity   0.22s ease,
-    height    0.24s cubic-bezier(0.4, 0, 0.2, 1),
-    margin    0.24s cubic-bezier(0.4, 0, 0.2, 1),
-    padding   0.24s cubic-bezier(0.4, 0, 0.2, 1);
-  touch-action:   pan-y; /* horizontal swipe = dismiss, vertical = page scroll */
+  touch-action:   pan-y;          /* horizontal swipe = dismiss, vertical = page scroll */
   cursor:         default;
+  will-change:    transform, opacity;
+
+  /* All positional/opacity changes animate via these transitions.
+     NO keyframes — transitions allow mid-flight retargeting. */
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity   0.28s ease,
+    height    0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* While the finger/pointer is dragging: follow it 1:1 (no transition lag). */
-.toast-card--dragging {
-  transition: none;
-  cursor:     grabbing;
-  user-select: none;
+/* ── Hover bridge: ::after pseudo-element fills the gap so hover doesn't ──────
+   flicker as the pointer crosses between cards in expanded mode. ────────────── */
+
+.toast-card::after {
+  content:  '';
+  position: absolute;
+  bottom:   -8px;     /* covers the 8px gap */
+  left:     0;
+  right:    0;
+  height:   8px;
+  /* transparent — purely a hit-target bridge */
 }
 
-/* Exit: slide out to the right + fade. The JS collapses height/margin/padding
-   to 0 (inline) so the cards below glide up to fill the gap. */
-.toast-card--exiting {
-  animation:      none;
+/* ── Entry: unmounted (before first paint) ───────────────────────────────────
+   New toasts start slid-in from the right + slightly scaled down + invisible.
+   The .toast-card--mounted class (added after first RAF) transitions to identity.
+   This uses CSS transitions (not keyframes) so a second toast arriving mid-
+   animation retargets smoothly. */
+
+.toast-card:not(.toast-card--mounted) {
+  transform: translateX(28px) scale(0.96);
+  opacity:   0;
+}
+
+/* ── Mounted / collapsed state (default) ─────────────────────────────────────
+   Stacked cards deck behind the front:
+   - translateY(lift * toasts-before)          → peek out below
+   - scale(1 - toasts-before * 0.05)           → shrink slightly
+   - height: var(--front-toast-height)          → normalised to front height
+   The front card (toasts-before = 0) sits at transform: identity, full height. */
+
+.toast-card--mounted:not(.toast-card--expanded):not(.toast-card--exiting):not(.toast-card--dragging) {
+  transform:
+    translateY(calc(var(--lift-amount) * var(--toasts-before)))
+    scale(calc(1 - var(--toasts-before) * 0.05));
+  opacity: 1;
+}
+
+/* Non-front stacked cards are height-normalised to the front card's height so
+   peeking bottom edges align cleanly (Sonner --front-toast-height technique). */
+.toast-card--mounted:not(.toast-card--front):not(.toast-card--expanded):not(.toast-card--exiting) {
+  height:   var(--front-toast-height);
+  overflow: hidden;
+}
+
+/* Front card — never height-constrained */
+.toast-card--front {
+  height: auto !important;
+  overflow: visible;
+}
+
+/* ── Expanded state ───────────────────────────────────────────────────────────
+   Each card translates to its true vertical offset (computed from heights above it).
+   Scale returns to 1, height is natural. */
+
+.toast-card--expanded.toast-card--mounted:not(.toast-card--exiting) {
+  transform:  translateY(var(--offset));
+  scale:      1;
+  height:     auto;
+  opacity:    1;
+  overflow:   visible;
+}
+
+/* ── Hidden (outside peek window) ────────────────────────────────────────────
+   Toasts beyond MAX_PEEK are invisible and non-interactive in collapsed state. */
+
+.toast-card--hidden:not(.toast-card--expanded) {
   opacity:        0;
-  transform:      translateX(110%);
   pointer-events: none;
-  overflow:       hidden;
 }
+
+/* ── Dragging: follow pointer 1:1 (no transition lag) ────────────────────────
+   --swipe-amount is set inline by JS via setProperty(). */
+
+.toast-card--dragging {
+  transition:  none !important;
+  cursor:      grabbing;
+  user-select: none;
+  transform:   translateX(var(--swipe-amount, 0px));
+}
+
+/* ── Exit ─────────────────────────────────────────────────────────────────────
+   Slide right + fade. No height-collapse needed (absolute positioning means
+   remaining cards just retarget their transforms automatically). */
+
+.toast-card--exiting {
+  opacity:        0 !important;
+  transform:      translateX(110%) !important;
+  pointer-events: none;
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity   0.22s ease !important;
+}
+
+/* ── Clickable cards ─────────────────────────────────────────────────────────── */
 
 .toast-card--clickable {
   cursor: pointer;
@@ -89,12 +169,12 @@
 /* ── Icon chip ────────────────────────────────────────────────────────────── */
 
 .toast-icon-chip {
-  flex-shrink:    0;
-  width:          30px;
-  height:         30px;
-  border-radius:  50%;
-  display:        flex;
-  align-items:    center;
+  flex-shrink:     0;
+  width:           30px;
+  height:          30px;
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
   justify-content: center;
 }
 
@@ -128,11 +208,11 @@
 
 /* Loading spinner */
 .toast-icon-spinner {
-  width:     18px;
-  height:    18px;
-  animation: toast-spin 0.8s linear infinite;
-  fill:      none;
-  stroke:    var(--siomac-navy, #1f3b6d);
+  width:        18px;
+  height:       18px;
+  animation:    toast-spin 0.8s linear infinite;
+  fill:         none;
+  stroke:       var(--siomac-navy, #1f3b6d);
   stroke-width: 3;
 }
 
@@ -145,16 +225,16 @@
 /* ── Body ──────────────────────────────────────────────────────────────────── */
 
 .toast-body {
-  flex:       1;
-  min-width:  0;
+  flex:      1;
+  min-width: 0;
 }
 
 .toast-title {
-  font-size:   13px;
-  font-weight: 600;
-  color:       var(--siomac-navy, #1f3b6d);
+  font-size:     13px;
+  font-weight:   600;
+  color:         var(--siomac-navy, #1f3b6d);
   margin-bottom: 2px;
-  line-height: 1.3;
+  line-height:   1.3;
 }
 
 .toast-message {
@@ -181,15 +261,15 @@
 }
 
 .toast-meta-chip {
-  font-size:     10px;
-  font-weight:   600;
+  font-size:      10px;
+  font-weight:    600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color:         var(--text-muted, #7a8aa0);
-  background:    var(--bg-subtle, #f4f6fa);
-  border:        1px solid var(--border, #dce5f1);
-  border-radius: 4px;
-  padding:       1px 5px;
+  color:          var(--text-muted, #7a8aa0);
+  background:     var(--bg-subtle, #f4f6fa);
+  border:         1px solid var(--border, #dce5f1);
+  border-radius:  4px;
+  padding:        1px 5px;
 }
 
 /* ── Action buttons ────────────────────────────────────────────────────────── */
@@ -214,9 +294,9 @@
 }
 
 .toast-action--primary {
-  background:    var(--siomac-blue, #1a2c53);
-  color:         #fff;
-  border-color:  var(--siomac-blue, #1a2c53);
+  background:   var(--siomac-blue, #1a2c53);
+  color:        #fff;
+  border-color: var(--siomac-blue, #1a2c53);
 }
 
 .toast-action--primary:hover {
@@ -246,18 +326,18 @@
 /* ── Close button ──────────────────────────────────────────────────────────── */
 
 .toast-close {
-  flex-shrink:  0;
-  background:   none;
-  border:       none;
-  cursor:       pointer;
-  color:        var(--text-muted, #7a8aa0);
-  padding:      2px;
-  line-height:  1;
-  opacity:      0.65;
-  transition:   opacity 0.15s;
-  margin-top:   -1px;
-  display:      flex;
-  align-items:  center;
+  flex-shrink: 0;
+  background:  none;
+  border:      none;
+  cursor:      pointer;
+  color:       var(--text-muted, #7a8aa0);
+  padding:     2px;
+  line-height: 1;
+  opacity:     0.65;
+  transition:  opacity 0.15s;
+  margin-top:  -1px;
+  display:     flex;
+  align-items: center;
 }
 
 .toast-close:hover {
@@ -273,13 +353,13 @@
 /* ── Progress bar ──────────────────────────────────────────────────────────── */
 
 .toast-progress-track {
-  position:     absolute;
-  bottom:       0;
-  left:         0;
-  right:        0;
-  height:       3px;
-  background:   var(--border, #dce5f1);
-  overflow:     hidden;
+  position:   absolute;
+  bottom:     0;
+  left:       0;
+  right:      0;
+  height:     3px;
+  background: var(--border, #dce5f1);
+  overflow:   hidden;
 }
 
 .toast-progress-bar {
@@ -288,71 +368,84 @@
   transition: width 1s linear;
 }
 
-.toast-progress--success  { background: var(--success);     }
-.toast-progress--error    { background: var(--siomac-red);  }
-.toast-progress--critical { background: var(--siomac-red);  }
-.toast-progress--warning  { background: var(--warning);     }
-.toast-progress--info     { background: var(--siomac-blue, #1a2c53); }
-.toast-progress--neutral  { background: var(--siomac-navy, #1f3b6d); }
-
-/* ── +N more overflow pill ─────────────────────────────────────────────────── */
-
-.toast-overflow-pill {
-  pointer-events: auto;
-  font-size:      11px;
-  font-weight:    600;
-  color:          var(--text-muted, #7a8aa0);
-  background:     var(--bg-card);
-  border:         1px solid var(--border, #dce5f1);
-  border-radius:  999px;
-  padding:        3px 10px;
-  box-shadow:     0 2px 8px rgba(0, 0, 0, 0.08);
-  cursor:         default;
-  user-select:    none;
-}
+.toast-progress--success  { background: var(--success);                  }
+.toast-progress--error    { background: var(--siomac-red);               }
+.toast-progress--critical { background: var(--siomac-red);               }
+.toast-progress--warning  { background: var(--warning);                  }
+.toast-progress--info     { background: var(--siomac-blue, #1a2c53);    }
+.toast-progress--neutral  { background: var(--siomac-navy, #1f3b6d);    }
 
 /* ── Animations ────────────────────────────────────────────────────────────── */
-
-@keyframes siomac-toast-in {
-  from { opacity: 0; transform: translateX(28px) scale(0.96); }
-  to   { opacity: 1; transform: translateX(0)    scale(1);    }
-}
 
 @keyframes toast-spin {
   to { transform: rotate(360deg); }
 }
 
-/* ── Reduced motion ────────────────────────────────────────────────────────── */
+/* ── Reduced motion ─────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .toast-card {
-    animation:  none;
-    /* Keep opacity so exit still fades, but no slide/scale/collapse motion. */
-    transition: opacity 0.15s ease;
+  .siomac-toaster {
+    transition: none;
   }
-  .toast-card--exiting {
+
+  .toast-card {
+    transition: opacity 0.15s ease;
+    /* In reduced-motion mode, render as a simple list (no transforms/deck). */
+    position:   relative !important;
+    transform:  none !important;
+    height:     auto !important;
+    opacity:    1;
+    margin-bottom: 8px;
+    overflow:   visible;
+  }
+
+  .toast-card:not(.toast-card--mounted) {
+    opacity: 0;
     transform: none;
   }
+
+  .toast-card--exiting {
+    opacity:   0 !important;
+    transform: none !important;
+  }
+
+  .toast-card--hidden {
+    display: none;
+  }
+
+  .siomac-toaster {
+    /* revert to normal flow in reduced motion */
+    display:  flex;
+    flex-direction: column-reverse;
+    height:   auto !important;
+    gap:      8px;
+  }
+
   .toast-progress-bar {
     transition: none;
   }
+
   .toast-icon-spinner {
     animation: none;
   }
+
+  .toast-card::after {
+    display: none;
+  }
 }
 
-/* ── Mobile ────────────────────────────────────────────────────────────────── */
+/* ── Mobile ─────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .siomac-toaster {
-    top:      12px;
-    right:    12px;
-    left:     12px;
+    top:       12px;
+    right:     12px;
+    left:      12px;
+    width:     auto;
     max-width: none;
   }
+
   .toast-card {
     max-width: none;
-    min-width: 0;
-    width:     100%;
   }
 }
