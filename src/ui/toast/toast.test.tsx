@@ -253,8 +253,8 @@ describe("Toaster component", () => {
 
     const footer = document.querySelector(".siomac-toast__timer");
     expect(footer).toBeTruthy();
-    // The span contains the countdown seconds (initial value = ceil(5000/1000) = 5)
-    const span = footer?.querySelector("span");
+    // The nested span inside the text holds the countdown seconds (ceil(5000/1000) = 5)
+    const span = footer?.querySelector(".siomac-toast__timer-text span");
     // Initial state: remainingMs starts at duration (5000ms) → 5 seconds
     expect(Number(span?.textContent)).toBeGreaterThan(0);
   });

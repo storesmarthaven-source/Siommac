@@ -212,7 +212,9 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
 
       {toast.tier === "normal" && hasTimer ? (
         <footer className="siomac-toast__timer">
-          This message will close in <span>{seconds}</span> seconds.{" "}
+          <span className="siomac-toast__timer-text">
+            This message will close in <span>{seconds}</span> seconds.
+          </span>
           <button type="button" onClick={handleToggleStop}>
             {stopped ? "Resume." : "Click to stop."}
           </button>
