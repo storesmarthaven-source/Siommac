@@ -232,14 +232,14 @@
 }
 /* hover: 4.5% white wash, white text (Meridian spec) */
 .sidebar-menu button[data-section]:hover { background: rgba(255,255,255,0.045); color: #fff; }
-/* active: 3px red accent bar + 13% red fill, white 600 (sub-item active #fff) */
+/* active: translucent slate fill + 3px slate accent bar, white 600 */
 .sidebar-menu button[data-section].active {
-  background: rgba(228,12,12,0.13);
+  background: rgba(99, 112, 141, 0.3);
   color: #fff; font-weight: 600;
 }
 .sidebar-menu button[data-section].active::before {
   content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: 0 3px 3px 0; background: var(--siomac-red);
+  width: 3px; border-radius: 0 3px 3px 0; background: #7382a1;
 }
 /* Meridian nav token: 19px row icon — scope to item buttons so it doesn't
    inflate the small group-header chevron / count badge. */
