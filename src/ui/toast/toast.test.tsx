@@ -2,9 +2,7 @@
  * src/ui/toast/toast.test.tsx
  *
  * Tests for the Siomac toast system (toastStore + toast API + Toaster component).
- *
- * @see docs/ARCHITECTURE.md
- * @see docs/CODING_STANDARDS.md
+ * Updated for the new SIOMAC card design (cpop-toast markup).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -123,6 +121,17 @@ describe('toast API', () => {
     expect(t?.meta).toEqual(['hr', 'employee']);
   });
 
+  it('toast.rich() stores summary and note fields', () => {
+    toast.rich({
+      title:   'Test',
+      summary: [{ label: 'Employee', value: 'Jane Doe' }],
+      note:    'This is a note',
+    });
+    const t = getToasts()[0];
+    expect(t?.summary).toEqual([{ label: 'Employee', value: 'Jane Doe' }]);
+    expect(t?.note).toBe('This is a note');
+  });
+
   it('toast.promise() shows loading then success', async () => {
     const p = Promise.resolve('result');
     const promise = toast.promise(p, { loading: 'Loading…', success: 'Done!', error: 'Failed' });
@@ -194,6 +203,120 @@ describe('Toaster component', () => {
     expect(alerts.length).toBeGreaterThan(0);
   });
 
+  it('card element uses the cpop-toast class', () => {
+    renderToaster();
+    act(() => { toast.info('Hello'); });
+    const card = document.querySelector('.cpop-toast');
+    expect(card).toBeTruthy();
+  });
+
+  it('card has the variant class (cpop-toast-info for info)', () => {
+    renderToaster();
+    act(() => { toast.info('Hello'); });
+    const card = document.querySelector('.cpop-toast-info');
+    expect(card).toBeTruthy();
+  });
+
+  it('card has tier-normal class for normal toasts', () => {
+    renderToaster();
+    act(() => { toast.success('Simple'); });
+    const card = document.querySelector('.tier-normal');
+    expect(card).toBeTruthy();
+  });
+
+  it('action toast does NOT have tier-normal class', () => {
+    renderToaster();
+    act(() => { toast.action('Done', { label: 'Undo', onClick: vi.fn() }); });
+    // The action card should not have tier-normal
+    const actionCard = document.querySelector('.toast-card--action, .cpop-toast:not(.tier-normal)');
+    // Absence of tier-normal on any card that has an action strip
+    const tieredNormal = document.querySelector('.tier-normal');
+    // If there is one toast and it's an action toast, tier-normal should be absent
+    const cards = document.querySelectorAll('.cpop-toast');
+    expect(cards.length).toBe(1);
+    expect(tieredNormal).toBeNull();
+    // The action button should be visible
+    expect(screen.getByText('Undo')).toBeTruthy();
+  });
+
+  it('renders the title dot element', () => {
+    renderToaster();
+    act(() => { toast.success('Check'); });
+    const dot = document.querySelector('.cpop-toast-dot');
+    expect(dot).toBeTruthy();
+  });
+
+  it('renders title in .cpop-toast-title', () => {
+    renderToaster();
+    act(() => { toast.rich({ title: 'My Title', body: 'Body text' }); });
+    const titleEl = document.querySelector('.cpop-toast-title');
+    expect(titleEl?.textContent).toBe('My Title');
+  });
+
+  it('renders body text in .cpop-toast-text', () => {
+    renderToaster();
+    act(() => { toast.rich({ title: 'Title', body: 'Body text here' }); });
+    const textEl = document.querySelector('.cpop-toast-text');
+    expect(textEl?.textContent).toBe('Body text here');
+  });
+
+  it('renders kicker chips in .cpop-toast-chip', () => {
+    renderToaster();
+    act(() => {
+      toast.rich({ title: 'Tagged', meta: ['Finance Payroll', 'Due today'] });
+    });
+    const chips = document.querySelectorAll('.cpop-toast-chip');
+    expect(chips.length).toBe(2);
+    expect(chips[0]?.textContent).toBe('Finance Payroll');
+    expect(chips[1]?.textContent).toBe('Due today');
+  });
+
+  it('renders summary rows in .cpop-action-line', () => {
+    renderToaster();
+    act(() => {
+      toast.rich({
+        title: 'Approval',
+        summary: [
+          { label: 'Employee', value: 'Marcus James' },
+          { label: 'Ref',      value: 'PIT-1042' },
+        ],
+      });
+    });
+    const lines = document.querySelectorAll('.cpop-action-line');
+    expect(lines.length).toBe(2);
+    const labels = document.querySelectorAll('.cpop-action-label');
+    expect(labels[0]?.textContent).toBe('Employee');
+    expect(labels[1]?.textContent).toBe('Ref');
+    const values = document.querySelectorAll('.cpop-action-value');
+    expect(values[0]?.textContent).toBe('Marcus James');
+    expect(values[1]?.textContent).toBe('PIT-1042');
+  });
+
+  it('renders note in .cpop-action-note', () => {
+    renderToaster();
+    act(() => {
+      toast.rich({ title: 'Note toast', note: 'This is the note line.' });
+    });
+    const noteEl = document.querySelector('.cpop-action-note');
+    expect(noteEl?.textContent).toBe('This is the note line.');
+  });
+
+  it('renders a countdown badge when duration > 0', () => {
+    renderToaster();
+    act(() => { toast.success('With countdown', { duration: 5000 }); });
+    const badge = document.querySelector('.cpop-toast-countdown');
+    expect(badge).toBeTruthy();
+    // Should show a number followed by 's'
+    expect(badge?.textContent).toMatch(/^\d+s$/);
+  });
+
+  it('does NOT render countdown badge when duration is 0 (sticky)', () => {
+    renderToaster();
+    act(() => { toast.rich({ title: 'Sticky', duration: 0 }); });
+    const badge = document.querySelector('.cpop-toast-countdown');
+    expect(badge).toBeNull();
+  });
+
   it('dismisses a toast when the dismiss button is clicked', () => {
     renderToaster();
     act(() => { toast.info('Hello'); });
@@ -202,6 +325,14 @@ describe('Toaster component', () => {
     fireEvent.click(dismissBtn);
     act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText('Hello')).toBeNull();
+  });
+
+  it('dismiss button has aria-label="Dismiss notification"', () => {
+    renderToaster();
+    act(() => { toast.warning('Warn me'); });
+    const btn = screen.getByLabelText('Dismiss notification');
+    expect(btn).toBeTruthy();
+    expect(btn.tagName.toLowerCase()).toBe('button');
   });
 
   it('auto-dismisses after the duration expires', () => {
@@ -262,6 +393,7 @@ describe('Toaster component', () => {
     const cancelBtn = screen.getByText('Cancel');
     await act(async () => { fireEvent.click(cancelBtn); });
     expect(keepOpen).toHaveBeenCalledOnce();
+    // Toast message is in the title for action toasts (message → displayTitle)
     expect(screen.getByText('Pending')).toBeTruthy();
   });
 
@@ -292,5 +424,16 @@ describe('Toaster component', () => {
     });
     const frontCards = document.querySelectorAll('.toast-card--front');
     expect(frontCards.length).toBe(1);
+  });
+
+  it('action strip buttons are in .cpop-toast-actions container', () => {
+    renderToaster();
+    act(() => {
+      toast.action('NIS pending', { label: 'Verify', onClick: vi.fn() });
+    });
+    const actionsRow = document.querySelector('.cpop-toast-actions');
+    expect(actionsRow).toBeTruthy();
+    const btn = actionsRow?.querySelector('.cpop-toast-action');
+    expect(btn?.textContent).toBe('Verify');
   });
 });

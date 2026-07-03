@@ -38,6 +38,11 @@ export interface ToastOptions {
   onDismiss?:   () => void;
 }
 
+export interface ToastSummaryRow {
+  label: string;
+  value: string;
+}
+
 export interface RichToastInput extends ToastOptions {
   title:       string;
   body?:       string;
@@ -47,6 +52,10 @@ export interface RichToastInput extends ToastOptions {
   meta?:       string[];
   actions?:    ToastAction[];
   onClick?:    () => void;
+  /** Optional key/value rows rendered as the action-summary block. */
+  summary?:    ToastSummaryRow[];
+  /** Optional note line rendered below the summary. */
+  note?:       string;
 }
 
 export interface ToastRecord {
@@ -60,6 +69,10 @@ export interface ToastRecord {
   avatarUrl?:  string;
   meta?:       string[];
   actions?:    ToastAction[];
+  /** Optional key/value rows rendered as the action-summary block. */
+  summary?:    ToastSummaryRow[];
+  /** Optional note line rendered below the summary. */
+  note?:       string;
   duration:    number;
   position:    ToastPosition;
   dismissible: boolean;

@@ -24,12 +24,13 @@ import type {
   ToastVariant,
   ToastRecord,
   ToastAction,
+  ToastSummaryRow,
   RichToastInput,
   ToastPosition,
 } from './toastTypes';
 import { upsertToast, removeToast, dismissToast } from './toastStore';
 
-export type { ToastRecord, ToastVariant, ToastOptions, ToastAction, RichToastInput };
+export type { ToastRecord, ToastVariant, ToastOptions, ToastAction, ToastSummaryRow, RichToastInput };
 export { Toaster } from './Toaster';
 
 // ── ID generation ─────────────────────────────────────────────────────────────
@@ -59,6 +60,8 @@ function buildRecord(
     avatarUrl?: string;
     meta?:      string[];
     actions?:   ToastAction[];
+    summary?:   ToastSummaryRow[];
+    note?:      string;
     onClick?:   () => void;
   },
 ): ToastRecord {
@@ -75,6 +78,8 @@ function buildRecord(
     avatarUrl:   opts.avatarUrl,
     meta:        opts.meta,
     actions:     opts.actions,
+    summary:     opts.summary,
+    note:        opts.note,
     duration,
     position:    opts.position ?? 'bottom-right',
     dismissible: opts.dismissible ?? true,
@@ -146,7 +151,7 @@ function toastAction(message: string, actionOpts: ActionOpts): string {
 // ── Rich (full-card) toast — sticky by default ────────────────────────────────
 
 function toastRich(input: RichToastInput): string {
-  const { title, body, icon, avatarUrl, variant = 'info', meta, actions, onClick, ...rest } = input;
+  const { title, body, icon, avatarUrl, variant = 'info', meta, actions, summary, note, onClick, ...rest } = input;
   const record = buildRecord(undefined, variant, {
     tier: 'rich',
     title,
@@ -155,6 +160,8 @@ function toastRich(input: RichToastInput): string {
     avatarUrl,
     meta,
     actions,
+    summary,
+    note,
     onClick,
     duration: rest.duration ?? 0,  // sticky by default
     ...rest,
