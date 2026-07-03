@@ -299,19 +299,20 @@ describe('Toaster component', () => {
     expect(noteEl?.textContent).toBe('This is the note line.');
   });
 
-  it('renders a countdown badge when duration > 0', () => {
+  it('renders the countdown footer when duration > 0', () => {
     renderToaster();
     act(() => { toast.success('With countdown', { duration: 5000 }); });
-    const badge = document.querySelector('.cpop-toast-countdown');
-    expect(badge).toBeTruthy();
-    expect(badge?.textContent).toMatch(/^\d+s$/);
+    const footer = document.querySelector('.cpop-toast-footer');
+    expect(footer).toBeTruthy();
+    expect(footer?.textContent).toMatch(/This message will close in \d+ seconds?\./);
+    expect(footer?.querySelector('.cpop-toast-stop')?.textContent).toBe('Click to stop.');
   });
 
-  it('does NOT render countdown badge when duration is 0 (sticky)', () => {
+  it('does NOT render countdown footer when duration is 0 (sticky)', () => {
     renderToaster();
     act(() => { toast.rich({ title: 'Sticky', duration: 0 }); });
-    const badge = document.querySelector('.cpop-toast-countdown');
-    expect(badge).toBeNull();
+    const footer = document.querySelector('.cpop-toast-footer');
+    expect(footer).toBeNull();
   });
 
   it('dismisses a toast when the dismiss button is clicked', () => {

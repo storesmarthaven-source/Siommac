@@ -40,7 +40,7 @@
     0 1px 0 rgba(255, 255, 255, .9) inset;
   border:       1px solid var(--border);
   display:      grid;
-  grid-template-rows: auto auto 2px;
+  grid-template-rows: auto auto auto 2px;   /* main · actions · footer · bar */
   overflow:     hidden;
 
   /* archieamas position model, inverted to top-anchored (top-right) */
@@ -69,11 +69,40 @@
 /* ── tier-normal: collapse action row ─────────────────────────────────────────── */
 
 .tier-normal {
-  grid-template-rows: auto 2px;
+  grid-template-rows: auto auto 2px;   /* main · footer · bar (actions hidden) */
 }
 
 .tier-normal .cpop-toast-actions {
   display: none;
+}
+
+/* ── Countdown footer ("This message will close in N seconds. Click to stop.") ── */
+
+.cpop-toast-footer {
+  padding:     7px 13px 8px;
+  font-size:   11.5px;
+  line-height: 1.35;
+  color:       var(--text-muted, #5e6f8d);
+  border-top:  1px solid rgba(27, 45, 85, .05);
+}
+
+.cpop-toast-footer b {
+  font-weight: 600;
+  color:       var(--siomac-navy, #1b2d54);
+}
+
+.cpop-toast-stop {
+  border:        0;
+  background:    transparent;
+  font:          inherit;
+  font-weight:   700;
+  color:         var(--siomac-navy, #1b2d54);
+  cursor:        pointer;
+  padding:       0;
+}
+
+.cpop-toast-stop:hover {
+  text-decoration: underline;
 }
 
 /* ── Clickable card cursor ────────────────────────────────────────────────────── */

@@ -101,21 +101,25 @@ function ActionButton({ action, toastId }: ActionButtonProps) {
   );
 }
 
-// ── Countdown badge ───────────────────────────────────────────────────────────
+// ── Countdown footer ──────────────────────────────────────────────────────────
+// "This message will close in N seconds. Click to stop." — live countdown with a
+// click-to-stop / click-to-resume toggle. Sits above the progress bar.
 
-interface CountdownProps {
-  duration:    number;
-  remainingMs: number;
-  paused:      boolean;
+interface CountdownFooterProps {
+  duration:     number;
+  remainingMs:  number;
+  paused:       boolean;
+  stopped:      boolean;
+  onToggleStop: () => void;
 }
 
-function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
+function CountdownFooter({ duration, remainingMs, paused, stopped, onToggleStop }: CountdownFooterProps) {
   if (duration <= 0) return null;
 
-  const [secs, setSecs]    = useState(() => Math.ceil(remainingMs / 1000));
-  const rafRef             = useRef<number | null>(null);
-  const startWallRef       = useRef<number>(Date.now());
-  const startRemRef        = useRef<number>(remainingMs);
+  const [secs, setSecs] = useState(() => Math.ceil(remainingMs / 1000));
+  const rafRef          = useRef<number | null>(null);
+  const startWallRef    = useRef<number>(Date.now());
+  const startRemRef     = useRef<number>(remainingMs);
 
   useEffect(() => {
     if (paused) {
@@ -130,19 +134,22 @@ function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
       const elapsed   = Date.now() - startWallRef.current;
       const remaining = Math.max(0, startRemRef.current - elapsed);
       setSecs(Math.ceil(remaining / 1000));
-      if (remaining > 0) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
+      if (remaining > 0) rafRef.current = requestAnimationFrame(tick);
     }
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused, remainingMs]);
 
+  const handleClick = useCallback((e: MouseEvent) => { e.stopPropagation(); onToggleStop(); }, [onToggleStop]);
+
   return (
-    <span class="cpop-toast-countdown" aria-hidden="true">
-      {secs}s
-    </span>
+    <div class="cpop-toast-footer">
+      {stopped
+        ? <span>Timer paused. <button type="button" class="cpop-toast-stop" onClick={handleClick}>Click to resume.</button></span>
+        : <span>This message will close in <b>{secs}</b> second{secs === 1 ? '' : 's'}. <button type="button" class="cpop-toast-stop" onClick={handleClick}>Click to stop.</button></span>
+      }
+    </div>
   );
 }
 
@@ -165,6 +172,8 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
   const remaining      = useRef<number>(remainingMs);
   const localPausedRef = useRef<boolean>(false);
   const cardRef        = useRef<HTMLElement | null>(null);
+  const stoppedRef     = useRef<boolean>(false);   // persistent "Click to stop"
+  const [stopped, setStopped] = useState(false);
 
   // ── Enter animation: add class on mount, remove after animation ──────────────
   useEffect(() => {
@@ -225,7 +234,7 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
   // ── Hover: pause/resume timer ─────────────────────────────────────────────
 
   const handleMouseEnter = useCallback(() => {
-    if (duration <= 0) return;
+    if (duration <= 0 || stoppedRef.current) return;   // manual stop overrides hover
     localPausedRef.current = true;
     clearTimer();
     const elapsed = Date.now() - startRef.current;
@@ -234,11 +243,29 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
   }, [id, duration, clearTimer]);
 
   const handleMouseLeave = useCallback(() => {
-    if (duration <= 0) return;
+    if (duration <= 0 || stoppedRef.current) return;   // stay paused if manually stopped
     localPausedRef.current = false;
     updateToast(id, { paused: false, remainingMs: remaining.current });
     startTimer();
   }, [id, duration, startTimer]);
+
+  // ── "Click to stop" — persistent pause toggle (survives mouseleave) ──────────
+  const handleToggleStop = useCallback(() => {
+    const next = !stoppedRef.current;
+    stoppedRef.current = next;
+    setStopped(next);
+    if (next) {
+      localPausedRef.current = true;
+      clearTimer();
+      const elapsed = Date.now() - startRef.current;
+      remaining.current = Math.max(0, remaining.current - elapsed);
+      updateToast(id, { paused: true, remainingMs: remaining.current });
+    } else {
+      localPausedRef.current = false;
+      updateToast(id, { paused: false, remainingMs: remaining.current });
+      startTimer();
+    }
+  }, [id, clearTimer, startTimer]);
 
   const handleFocus = handleMouseEnter;
   const handleBlur  = handleMouseLeave;
@@ -342,14 +369,8 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
           )}
         </div>
 
-        {/* Tools: countdown + close */}
+        {/* Tools: close */}
         <div class="cpop-toast-tools">
-          <CountdownBadge
-            duration={duration}
-            remainingMs={remainingMs}
-            paused={paused}
-          />
-
           {dismissible && (
             <button
               type="button"
@@ -372,7 +393,16 @@ export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
         ))}
       </div>
 
-      {/* ── Row 3: progress bar (2px, CSS animation) ── */}
+      {/* ── Row 3: countdown footer ("This message will close in N seconds…") ── */}
+      <CountdownFooter
+        duration={duration}
+        remainingMs={remainingMs}
+        paused={paused}
+        stopped={stopped}
+        onToggleStop={handleToggleStop}
+      />
+
+      {/* ── Row 4: progress bar (2px, CSS animation) ── */}
       {duration > 0 && (
         <div
           class="cpop-toast-bar"
