@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { sb, sbAnon } from '../lib/db';
-import { requireUser, requireRole, log_ }               from '../lib/auth';
+import { requireUser, requireRole, userCan, log_ }      from '../lib/auth';
 import { getAllSettings, setting, invalidateSettingsCache } from '../lib/settings';
 import { resolveSettingValue } from '../lib/settings/resolveSetting';
 import { uploadBase64 }                                  from '../lib/upload';
@@ -96,9 +96,13 @@ router.post('/profile-photo/upload-url', async c => {
   const avatarPath = `${actor.id}/avatar-v${nextVersion}.webp`;
   const thumbPath  = `${actor.id}/avatar-v${nextVersion}-thumb.webp`;
 
+  // upsert: a re-submit reuses the same versioned path while a photo is still
+  // pending (the live profile_image_version only advances on approval), so the
+  // object can already exist. Overwriting your OWN avatar slot is correct —
+  // without this the second attempt fails with "The resource already exists".
   const [avatarUp, thumbUp] = await Promise.all([
-    sb.storage.from(AVATARS_BUCKET).createSignedUploadUrl(avatarPath),
-    sb.storage.from(AVATARS_BUCKET).createSignedUploadUrl(thumbPath),
+    sb.storage.from(AVATARS_BUCKET).createSignedUploadUrl(avatarPath, { upsert: true }),
+    sb.storage.from(AVATARS_BUCKET).createSignedUploadUrl(thumbPath, { upsert: true }),
   ]);
   if (avatarUp.error || thumbUp.error || !avatarUp.data || !thumbUp.data) {
     return c.json({ success: false, message: avatarUp.error?.message ?? thumbUp.error?.message ?? 'Failed to create upload URL' }, 400 as 200);
@@ -120,11 +124,13 @@ const ProfilePhotoCommitSchema = z.object({
   thumbPublicUrl:  z.string().url(),
 });
 
-// Commits to PENDING columns, not the live avatar — the submitted photo does
-// NOT become official until a reviewer with `hr.employees.photo_approve`
-// approves it from the Employee Master profile drawer (see hr.ts
-// `/hr/employees/photo/decide`). The old photo (if any) keeps showing until
-// then, so this is a real review gate, not a same-request no-op.
+// Commits a submitted photo. Two paths, decided by authorization:
+//   • Reviewers (anyone who can approve photos — superadmin/admin/hr_manager, or
+//     any role granted `hr.employees.photo_approve`) have NO one to review them,
+//     so their change applies to the LIVE avatar immediately. No self-review.
+//   • Everyone else: the photo stays PENDING (old photo still live) until a
+//     reviewer approves it from the Employee Master profile drawer (see hr.ts
+//     `/hr/employees/photo/decide`) — a real review gate, not a no-op.
 router.post('/profile-photo/commit', async c => {
   const actor = await requireUser(c);
   const v = zv(c, ProfilePhotoCommitSchema, c.get('body').args ?? {});
@@ -132,6 +138,34 @@ router.post('/profile-photo/commit', async c => {
   // Path ownership — both objects must live under this user's prefix.
   if (!v.data.avatarPath.startsWith(`${actor.id}/`) || !v.data.thumbPath.startsWith(`${actor.id}/`)) {
     return c.json({ success: false, message: 'Path does not belong to you' }, 403 as 200);
+  }
+
+  const clearPending = {
+    profile_image_pending_url: null, profile_image_pending_path: null,
+    profile_image_pending_thumb_url: null, profile_image_pending_thumb_path: null,
+    profile_image_pending_version: null, profile_image_pending_submitted_at: null,
+  };
+
+  const canSelfApprove = await userCan(actor, 'hr.employees.photo_approve');
+
+  if (canSelfApprove) {
+    // Promote straight to the live avatar (mirrors hr.ts photo/decide approve).
+    const { error } = await sb.from('app_users').update({
+      ...clearPending,
+      profile_image_url:        v.data.avatarPublicUrl,
+      profile_image_path:       v.data.avatarPath,
+      profile_image_thumb_url:  v.data.thumbPublicUrl,
+      profile_image_thumb_path: v.data.thumbPath,
+      profile_image_version:    v.data.version,
+      profile_image_updated_at: new Date().toISOString(),
+      profile_image_removed_at: null,
+      profile_image:            v.data.avatarPublicUrl,   // back-compat mirror (http url)
+      signed_url: null, signed_url_expires_at: null,
+    }).eq('id', actor.id);
+    if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+
+    void emitAppEvent({ eventType: 'auth.profile_photo.updated', sourceModule: 'auth', sourceEntityType: 'app_user', sourceEntityId: actor.id, actorUserId: actor.id, severity: 'info', payload: { version: v.data.version, selfApproved: true } });
+    return c.json({ success: true, data: { profileImage: v.data.avatarPublicUrl, profileImageVersion: v.data.version, pending: false } });
   }
 
   const { error } = await sb.from('app_users').update({

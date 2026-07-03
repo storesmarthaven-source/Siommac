@@ -14,6 +14,7 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { PageHeader } from '@ui';
 import { AppTopBar } from '@shared/AppTopBar';
 import { useSessionStore, toast } from '@store';
+import { resolvePermission } from '@lib/permissions';
 import {
   fetchMyProfile,
   fetchMyActivity,
@@ -543,6 +544,16 @@ function ChangePhotoModal({
   const [selected, setSelected]           = useState<PhotoSelection>('original');
   const [uploading, setUploading]         = useState(false);
 
+  // Reviewers (superadmin/admin/hr_manager, or anyone granted the key) self-approve:
+  // their photo change applies to the live avatar immediately, no pending review.
+  // Same resolution the backend commit route uses (userCan → hr.employees.photo_approve).
+  const role                = useSessionStore(s => s.role);
+  const rolePermissions     = useSessionStore(s => s.rolePermissions);
+  const permissionOverrides = useSessionStore(s => s.permissionOverrides);
+  const canSelfApprove = role
+    ? resolvePermission('hr.employees.photo_approve', { role, rolePermissions, overrides: permissionOverrides })
+    : false;
+
   // Revoke object URLs on cleanup
   useEffect(() => {
     if (!open) {
@@ -693,18 +704,23 @@ function ChangePhotoModal({
 
     setUploading(true);
     try {
-      // Pending gate — the live avatar does NOT change here, so don't call
-      // onSaved (which would optimistically swap the displayed photo). It
-      // updates once an authorized reviewer approves it in Employee Master.
-      await uploadMyProfilePhoto(fileToUpload);
-      toast.success('Photo submitted for review. It will update your profile once approved.');
+      const result = await uploadMyProfilePhoto(fileToUpload);
+      if (result.pending) {
+        // Review gate — the live avatar does NOT change until a reviewer approves
+        // it in Employee Master, so don't optimistically swap the displayed photo.
+        toast.success('Photo submitted for review. It will update your profile once approved.');
+      } else {
+        // Reviewer self-approve — applied to the live avatar now; reflect it.
+        onSaved(result.profileImage);
+        toast.success('Profile photo updated.');
+      }
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed. Try again.');
     } finally {
       setUploading(false);
     }
-  }, [selected, enhancedB64, croppedBlob, rawFile, onClose]);
+  }, [selected, enhancedB64, croppedBlob, rawFile, onSaved, onClose]);
 
   const handleRemove = useCallback(async () => {
     setUploading(true);
@@ -815,7 +831,9 @@ function ChangePhotoModal({
 
                 <div class="mp76-review-note">
                   <DlgIco d={IC_INFO} />
-                  <span>Selected photos are submitted as <strong>Pending Review</strong>. HR approval is required before the profile image becomes official.</span>
+                  {canSelfApprove
+                    ? <span>As a reviewer, your photo change is <strong>applied immediately</strong> — no approval required.</span>
+                    : <span>Selected photos are submitted as <strong>Pending Review</strong>. HR approval is required before the profile image becomes official.</span>}
                 </div>
               </div>
             </div>
@@ -972,7 +990,7 @@ function ChangePhotoModal({
           onClick={() => void handleUse()}
           disabled={uploading || !hasPhoto}
         >
-          {uploading ? <><Spin /> Uploading…</> : 'Submit for Review'}
+          {uploading ? <><Spin /> Uploading…</> : (canSelfApprove ? 'Apply Photo' : 'Submit for Review')}
         </button>
       </div>
 
