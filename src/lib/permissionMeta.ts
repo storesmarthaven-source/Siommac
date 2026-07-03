@@ -1032,4 +1032,74 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create, update and retire pay components in the Finance catalogue. HR employees use these components but cannot create them.',
     risk: 'high',
   },
+
+  // ── HR Compensation (pay items — allowances / deductions) ────────────────────
+  'hr.compensation.view': {
+    module: 'HR', group: 'Compensation',
+    label: 'View Compensation',
+    description: 'View employee compensation pay items (allowances and deductions).',
+    risk: 'low',
+  },
+  'hr.compensation.manage': {
+    module: 'HR', group: 'Compensation',
+    label: 'Manage Compensation',
+    description: 'Create, submit and retire compensation pay items. Only active Finance pay components may be used.',
+    risk: 'medium',
+  },
+  'hr.compensation.approve': {
+    module: 'HR', group: 'Compensation',
+    label: 'Approve Compensation',
+    description: 'Approve submitted compensation pay items before they become active. Creator cannot approve their own submission (SoD).',
+    risk: 'high',
+  },
+  'hr.compensation.reports.view': {
+    module: 'HR', group: 'Compensation',
+    label: 'View Compensation Reports',
+    description: 'View compensation history, pay item register, and change audit reports.',
+    risk: 'low',
+  },
+  'hr.compensation.reports.export': {
+    module: 'HR', group: 'Compensation',
+    label: 'Export Compensation Reports',
+    description: 'Export compensation reports (audited data egress).',
+    risk: 'medium',
+  },
+
+  // ── HR Overtime ───────────────────────────────────────────────────────────────
+  'hr.overtime.view': {
+    module: 'HR', group: 'Overtime',
+    label: 'View Overtime',
+    description: 'View overtime entries within the user\'s scope (own or team).',
+    risk: 'low',
+  },
+  'hr.overtime.submit': {
+    module: 'HR', group: 'Overtime',
+    label: 'Submit Overtime',
+    description: 'Submit own overtime entries for manager approval.',
+    risk: 'low',
+  },
+  'hr.overtime.approve': {
+    module: 'HR', group: 'Overtime',
+    label: 'Approve Overtime',
+    description: 'Approve or reject overtime entries submitted by employees.',
+    risk: 'medium',
+  },
+  'hr.overtime.manage': {
+    module: 'HR', group: 'Overtime',
+    label: 'Manage Overtime',
+    description: 'HR admin: view and manage all overtime entries across the organisation.',
+    risk: 'medium',
+  },
+  'hr.overtime.reports.view': {
+    module: 'HR', group: 'Overtime',
+    label: 'View Overtime Reports',
+    description: 'View overtime register and summary reports.',
+    risk: 'low',
+  },
+  'hr.overtime.reports.export': {
+    module: 'HR', group: 'Overtime',
+    label: 'Export Overtime Reports',
+    description: 'Export overtime reports (audited data egress).',
+    risk: 'medium',
+  },
 };

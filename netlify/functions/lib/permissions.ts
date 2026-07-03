@@ -325,6 +325,19 @@ export const PERMISSION_KEYS = [
   // ── Finance pay-component catalogue ─────────────────────────────────────────
   'finance.payroll.components.view',   // view the pay-component catalogue
   'finance.payroll.components.manage', // create, update and retire pay components
+  // ── HR Compensation (pay items — allowances / deductions) ────────────────────
+  'hr.compensation.view',           // view compensation pay items for employees
+  'hr.compensation.manage',         // create, submit and retire compensation pay items
+  'hr.compensation.approve',        // approve submitted pay items (creator ≠ approver)
+  'hr.compensation.reports.view',   // view compensation history and change reports
+  'hr.compensation.reports.export', // export compensation reports
+  // ── HR Overtime ───────────────────────────────────────────────────────────────
+  'hr.overtime.view',               // view overtime entries (own or team by scope)
+  'hr.overtime.submit',             // submit own overtime entry
+  'hr.overtime.approve',            // approve/reject overtime entries
+  'hr.overtime.manage',             // HR admin: manage all overtime entries
+  'hr.overtime.reports.view',       // view overtime register and summary reports
+  'hr.overtime.reports.export',     // export overtime reports
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -357,6 +370,56 @@ export function isCriticalGrant(key: string): boolean {
 // is unreachable or a role has no rows yet. The sync test asserts it still
 // mirrors the frontend catalogue.
 const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
+  // HR module staff roles (flat; employee baseline + HR keys).
+  // Mirrors 20260802000007_hr_compensation_overtime_permissions.sql.
+  hr_staff: new Set<PermissionKey>([
+    'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
+    'dashboard.view',
+    'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
+    'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+    'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+    'hse.dashboard.view', 'hse.workflows.view',
+    'workflow.submit', 'workflow.view',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
+    'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+    'hr.roster.view_own',
+    'hr.overtime.submit',
+    // hr_staff compensation + overtime keys
+    'hr.compensation.view', 'hr.compensation.manage',
+    'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
+  ]),
+  hr_manager: new Set<PermissionKey>([
+    'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
+    'dashboard.view',
+    'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
+    'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
+    'hse.legal.view',     'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
+    'hse.dashboard.view', 'hse.workflows.view',
+    'workflow.submit', 'workflow.view',
+    'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
+    'communications.messages.post', 'communications.messages.attach',
+    'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
+    'communications.messages.pin_own', 'communications.messages.unpin_own',
+    'communications.participants.add', 'communications.participants.remove',
+    'ui.widgets.packages.view',
+    'hr.leave.view', 'hr.leave.submit', 'hr.leave.cancel_own', 'hr.leave.balances.view', 'hr.leave.calendar.view',
+    'hr.requests.submit_own',
+    'hr.attendance.view', 'hr.attendance.punch', 'hr.attendance.timesheets.view', 'hr.attendance.timesheets.submit', 'hr.attendance.exceptions.view',
+    'hr.roster.view_own',
+    'hr.overtime.submit',
+    // hr_manager compensation + overtime keys (ALL)
+    'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+    'hr.compensation.reports.view', 'hr.compensation.reports.export',
+    'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.manage',
+    'hr.overtime.reports.view', 'hr.overtime.reports.export',
+  ]),
   // Finance roles (flat; each carries the employee baseline + finance keys).
   // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
   finance_staff: new Set<PermissionKey>([
@@ -412,6 +475,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
+    'hr.overtime.submit',
     'dashboard.view',
     'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
     'hse.training.view',  'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
@@ -470,6 +534,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.attendance.exceptions.view', 'hr.attendance.exceptions.manage', 'hr.attendance.compute.run',
     'hr.attendance.reports.view', 'hr.attendance.reports.export',
     'hr.roster.view', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
+    // Overtime — managers approve team OT
+    'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.reports.view',
   ]),
   admin: new Set<PermissionKey>([
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
@@ -529,6 +595,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    // HR Compensation + Overtime — ALL keys
+    'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+    'hr.compensation.reports.view', 'hr.compensation.reports.export',
+    'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
+    'hr.overtime.reports.view', 'hr.overtime.reports.export',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

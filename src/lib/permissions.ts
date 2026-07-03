@@ -405,6 +405,19 @@ export const PERMISSION_KEYS = [
   // ── Finance pay-component catalogue ─────────────────────────────────────────
   'finance.payroll.components.view',   // view the pay-component catalogue
   'finance.payroll.components.manage', // create, update and retire pay components
+  // ── HR Compensation (pay items — allowances / deductions) ────────────────────
+  'hr.compensation.view',           // view compensation pay items for employees
+  'hr.compensation.manage',         // create, submit and retire compensation pay items
+  'hr.compensation.approve',        // approve submitted pay items (creator ≠ approver)
+  'hr.compensation.reports.view',   // view compensation history and change reports
+  'hr.compensation.reports.export', // export compensation reports
+  // ── HR Overtime ───────────────────────────────────────────────────────────────
+  'hr.overtime.view',               // view overtime entries (own or team by scope)
+  'hr.overtime.submit',             // submit own overtime entry
+  'hr.overtime.approve',            // approve/reject overtime entries
+  'hr.overtime.manage',             // HR admin: manage all overtime entries
+  'hr.overtime.reports.view',       // view overtime register and summary reports
+  'hr.overtime.reports.export',     // export overtime reports
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -437,6 +450,7 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
   'settings.own_preferences.view', 'settings.own_preferences.manage',
   'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own', 'dashboard.view',
+  'hr.overtime.submit',
   'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view', 'hse.inspections.create',
   'hse.training.view', 'hse.toolbox.view', 'hse.documents.view', 'hse.contractors.view',
   'hse.legal.view', 'hse.emergency.view', 'hse.environmental.view', 'hse.ppe.view',
@@ -457,8 +471,22 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
 
   // ── Module staff roles (flat; employee baseline + module keys) ───────────────
-  hr_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
-  hr_manager: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
+  hr_staff: new Set<PermissionKey>([
+    ...EMPLOYEE_BASELINE,
+    // HR Compensation — manage pay items
+    'hr.compensation.view', 'hr.compensation.manage',
+    // HR Overtime — view + admin manage
+    'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
+  ]),
+  hr_manager: new Set<PermissionKey>([
+    ...EMPLOYEE_BASELINE,
+    // HR Compensation — full
+    'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+    'hr.compensation.reports.view', 'hr.compensation.reports.export',
+    // HR Overtime — full
+    'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.manage',
+    'hr.overtime.reports.view', 'hr.overtime.reports.export',
+  ]),
   hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
 
   // Finance roles — mirrors 20260802000000 + 20260802000003
@@ -483,6 +511,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
     // Settings — own personal preferences only (Spec §4)
     'settings.own_preferences.view', 'settings.own_preferences.manage',
+    'hr.overtime.submit',
     'attendance.view_own',
     'leaves.view_own',
     'leaves.submit',
@@ -558,6 +587,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.attendance.exceptions.view', 'hr.attendance.exceptions.manage', 'hr.attendance.compute.run',
     'hr.attendance.reports.view', 'hr.attendance.reports.export',
     'hr.roster.view', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
+    // Overtime — managers approve team OT
+    'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.reports.view',
   ]),
 
   admin: new Set<PermissionKey>([
@@ -698,6 +729,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    // HR Compensation + Overtime — ALL keys
+    'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+    'hr.compensation.reports.view', 'hr.compensation.reports.export',
+    'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
+    'hr.overtime.reports.view', 'hr.overtime.reports.export',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -852,6 +888,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    // HR Compensation + Overtime — ALL keys
+    'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+    'hr.compensation.reports.view', 'hr.compensation.reports.export',
+    'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
+    'hr.overtime.reports.view', 'hr.overtime.reports.export',
   ]),
 };
 

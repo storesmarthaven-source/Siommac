@@ -9,9 +9,11 @@ import { registerModuleReceiver } from './moduleRegistry';
 import { hrReceiver }             from './receivers/hrReceiver';
 import { financeReceiver }        from './receivers/financeReceiver';
 import { operationsReceiver }     from './receivers/operationsReceiver';
-import { registerHseWorkflowAdapters }     from './workflow/hseAdapters';
-import { registerHrWorkflowAdapters }      from './workflow/hrAdapters';
-import { registerFinanceWorkflowAdapters } from './workflow/financeAdapters';
+import { registerHseWorkflowAdapters }         from './workflow/hseAdapters';
+import { registerHrWorkflowAdapters }          from './workflow/hrAdapters';
+import { registerFinanceWorkflowAdapters }     from './workflow/financeAdapters';
+import { registerHrCompensationAdapter }       from './workflow/hrCompensationAdapter';
+import { registerHrOvertimeAdapter }           from './workflow/hrOvertimeAdapter';
 
 let registered = false;
 
@@ -27,6 +29,8 @@ export function registerModulesOnce(): void {
   registerHseWorkflowAdapters();
   registerHrWorkflowAdapters();
   registerFinanceWorkflowAdapters();
+  registerHrCompensationAdapter();
+  registerHrOvertimeAdapter();
 
   registered = true;
 }
