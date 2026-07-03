@@ -14,9 +14,9 @@
  * - Tickets: open the shared header ticket modal (data-pill-action="ticket"), not showSection.
  */
 
-import { toast }                                    from '@ui/toast';
-import type { CanonicalNotification }               from '@api/communications';
-import type { NotificationPreferencesData }         from '@api/communications';
+import { toast }                                    from "@ui/toast";
+import type { CanonicalNotification }               from "@api/communications";
+import type { NotificationPreferencesData }         from "@api/communications";
 
 // ── Re-export the canonical notification type for consumers ───────────────────
 export type { CanonicalNotification };
@@ -64,90 +64,109 @@ function openTicketPanel(): void {
     btn.click();
   } else {
     // Fallback: navigate to notification center
-    window.Nav?.showSection?.('s-notification-center');
+    window.Nav?.showSection?.("s-notification-center");
   }
 }
 
 function navigateToRoute(route?: string | null): void {
   // §0.3 guard: only call showSection for section ids (start with 's-')
-  if (route && route.startsWith('s-')) {
+  if (route && route.startsWith("s-")) {
     window.Nav?.showSection?.(route);
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav?.showSection?.('s-notification-center');
+    window.Nav?.showSection?.("s-notification-center");
   }
 }
 
 function navigateToDomain(domain: string): void {
-  if (domain === 'messages') {
+  if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    window.Nav?.showSection?.('s-messages');
-  } else if (domain === 'tickets') {
+    window.Nav?.showSection?.("s-messages");
+  } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav?.showSection?.('s-notification-center');
+    window.Nav?.showSection?.("s-notification-center");
   }
 }
 
 // ── Severity → ToastVariant map ───────────────────────────────────────────────
 
-type ToastVariant = 'info' | 'warning' | 'error' | 'critical' | 'success' | 'neutral';
-
-function severityToVariant(severity: string): ToastVariant {
-  switch (severity) {
-    case 'critical': return 'critical';
-    case 'warning':  return 'warning';
-    case 'error':    return 'error';
-    default:         return 'info';
-  }
+function mapSeverityToVariant(severity?: string) {
+  if (severity === "success") return "success" as const;
+  if (severity === "error" || severity === "critical" || severity === "blocker") return "error" as const;
+  if (severity === "warning") return "warning" as const;
+  return "info" as const;
 }
 
 // ── Main toast function for a single notification ─────────────────────────────
 
 function fireNotificationToast(notification: CanonicalNotification, domain: string): void {
-  const variant = severityToVariant(notification.severity);
+  const variant = mapSeverityToVariant(notification.severity);
   const { action_route } = notification;
 
-  toast.rich({
-    title:   notification.title,
-    body:    notification.body ?? undefined,
-    variant,
-    meta:    [notification.module, notification.source_type].filter((x): x is string => Boolean(x)),
-    actions: [{
-      label:   'View',
-      tone:    'primary',
-      onClick: () => {
-        navigateToRoute(action_route);
-        return true;
+  if (notification.source_type === "report" || notification.source_type === "export") {
+    toast.rich({
+      variant,
+      title: notification.title,
+      description: notification.body ?? undefined,
+      moduleLabel: notification.module ?? "SIOMAC",
+      statusLabel: "Report",
+      file: {
+        name: notification.title,
+        type: "file",
+        subtitle: notification.body ?? undefined
       },
-    }],
-    onClick:  () => navigateToRoute(action_route),
-    duration: 0,  // rich toasts are sticky
+      actions: action_route
+        ? [{ label: "Open", href: action_route, dismissOnClick: true }]
+        : undefined
+    });
+    return;
+  }
+
+  if (action_route) {
+    toast.action({
+      variant,
+      title: notification.title,
+      description: notification.body ?? undefined,
+      moduleLabel: notification.module ?? "SIOMAC",
+      statusLabel: notification.source_type ?? "Workflow",
+      details: [
+        { label: "Module", value: notification.module ?? "SIOMAC" },
+        { label: "Source", value: notification.source_type ?? "Notification" }
+      ],
+      actions: [
+        { label: "Dismiss", dismissOnClick: true },
+        { label: "Open", href: action_route, dismissOnClick: true }
+      ]
+    });
+    return;
+  }
+
+  // Plain notification without route
+  void domain; // domain used only for burst toast label below
+  toast(notification.title, {
+    description: notification.body ?? undefined,
+    variant
   });
 }
 
 // ── Burst "N new <domain>" toast ──────────────────────────────────────────────
 
 function fireBurstToast(count: number, domain: string): void {
-  const label = domain === 'messages' ? 'messages'
-    : domain === 'tickets' ? 'tickets'
-    : 'notifications';
+  const label = domain === "messages" ? "messages"
+    : domain === "tickets" ? "tickets"
+    : "notifications";
 
   toast.rich({
-    title:   `${count} new ${label}`,
-    variant: 'info',
+    title: `${count} new ${label}`,
+    variant: "info",
     actions: [{
-      label:   'View all',
-      tone:    'primary',
-      onClick: () => {
-        navigateToDomain(domain);
-        return true;
-      },
-    }],
-    onClick:  () => navigateToDomain(domain),
-    duration: 0,
+      label: "View all",
+      onClick: () => { navigateToDomain(domain); },
+      dismissOnClick: true
+    }]
   });
 }
 

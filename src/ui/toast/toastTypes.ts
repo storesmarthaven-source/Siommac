@@ -1,87 +1,83 @@
-/**
- * src/ui/toast/toastTypes.ts
- *
- * Type definitions for the Siomac toast system.
- * This module is the single source of truth for all toast-related types.
- */
+export type ToastId = string;
 
-export type ToastVariant =
-  | 'neutral'
-  | 'success'
-  | 'error'
-  | 'warning'
-  | 'info'
-  | 'critical';
+export type ToastVariant = "success" | "error" | "warning" | "info" | "loading";
 
-export type ToastTier = 'normal' | 'action' | 'rich' | 'loading';
+export type ToastTier = "normal" | "action" | "rich";
 
-export type ToastPosition =
-  | 'bottom-right'
-  | 'bottom-left'
-  | 'top-right'
-  | 'top-left'
-  | 'top-center'
-  | 'bottom-center';
+export type ToastActionTone = "primary" | "secondary" | "danger";
 
-export interface ToastAction {
-  label:    string;
-  onClick?: () => void | boolean | Promise<void | boolean>;
-  tone?:    'primary' | 'secondary' | 'danger';
+export interface ToastActionButton {
+  label: string;
+  onClick?: () => void | Promise<void>;
+  href?: string;
+  dismissOnClick?: boolean;
+  tone?: ToastActionTone;
 }
 
-export interface ToastOptions {
-  id?:          string;
-  title?:       string;
-  duration?:    number;
-  position?:    ToastPosition;
-  dismissible?: boolean;
-  onDismiss?:   () => void;
-}
-
-export interface ToastSummaryRow {
+export interface ToastDetailItem {
   label: string;
   value: string;
 }
 
-export interface RichToastInput extends ToastOptions {
-  title:       string;
-  body?:       string;
-  icon?:       string;
-  avatarUrl?:  string;
-  variant?:    ToastVariant;
-  meta?:       string[];
-  actions?:    ToastAction[];
-  onClick?:    () => void;
-  /** Optional key/value rows rendered as the action-summary block. */
-  summary?:    ToastSummaryRow[];
-  /** Optional note line rendered below the summary. */
-  note?:       string;
+export interface ToastFilePreview {
+  name: string;
+  type?: "pdf" | "csv" | "xlsx" | "doc" | "image" | "file";
+  sizeLabel?: string;
+  subtitle?: string;
+  meta?: ToastDetailItem[];
+}
+
+export interface ToastOptions {
+  id?: ToastId;
+  title?: string;
+  description?: string;
+  variant?: ToastVariant;
+  duration?: number;
+  dismissible?: boolean;
+  ariaLive?: "polite" | "assertive";
+}
+
+export interface ToastActionOptions extends ToastOptions {
+  title: string;
+  description?: string;
+  variant?: Exclude<ToastVariant, "loading">;
+  moduleLabel?: string;
+  statusLabel?: string;
+  details?: ToastDetailItem[];
+  note?: string;
+  actions: ToastActionButton[];
+}
+
+export interface ToastRichOptions extends ToastOptions {
+  title: string;
+  description?: string;
+  variant?: Exclude<ToastVariant, "loading">;
+  moduleLabel?: string;
+  statusLabel?: string;
+  details?: ToastDetailItem[];
+  note?: string;
+  file?: ToastFilePreview;
+  actions?: ToastActionButton[];
 }
 
 export interface ToastRecord {
-  id:          string;
-  tier:        ToastTier;
-  variant:     ToastVariant;
-  title?:      string;
-  message?:    string;
-  body?:       string;
-  icon?:       string;
-  avatarUrl?:  string;
-  meta?:       string[];
-  actions?:    ToastAction[];
-  /** Optional key/value rows rendered as the action-summary block. */
-  summary?:    ToastSummaryRow[];
-  /** Optional note line rendered below the summary. */
-  note?:       string;
-  duration:    number;
-  position:    ToastPosition;
+  id: ToastId;
+  tier: ToastTier;
+  variant: ToastVariant;
+  title: string;
+  description?: string;
+  duration: number;
   dismissible: boolean;
-  createdAt:   number;
-  paused:      boolean;
-  remainingMs: number;
-  /** True once the toast is animating out; the card plays its exit + height
-   *  collapse, then the store removes it after the animation window. */
-  exiting?:    boolean;
-  onClick?:    () => void;
-  onDismiss?:  () => void;
+  ariaLive: "polite" | "assertive";
+  createdAt: number;
+  moduleLabel?: string;
+  statusLabel?: string;
+  details?: ToastDetailItem[];
+  note?: string;
+  file?: ToastFilePreview;
+  actions?: ToastActionButton[];
+  /** True while the card is animating out (exit slide). Removed from store
+   *  after TOAST_EXIT_MS so the CSS animation completes before the DOM node
+   *  disappears. */
+  exiting?: boolean;
 }

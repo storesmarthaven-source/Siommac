@@ -1,413 +1,310 @@
 /**
  * src/ui/toast/ToastCard.tsx
  *
- * Single toast card — SIOMAC card design preserved verbatim.
+ * Single toast card — three-tier SIOMAC design (normal / action / rich)
+ * running on the archieamas stacking model.
  *
- * Stacking effect integration (archieamas):
- *   - On mount: card gets class `entering` → @keyframes toast-enter fires,
- *     then class is removed so the stacking inline-style can take over.
- *   - Exit: store `exiting` flag → class `exiting` → @keyframes toast-exit,
+ * Archieamas integration:
+ *   - On mount: card gets class `entering` → @keyframes siomac-toast-enter fires,
+ *     then class is removed so inline stacking styles can take over.
+ *   - Exit: store `exiting` flag → class `exiting` → @keyframes siomac-toast-exit,
  *     pointer-events:none. Store removes the record after TOAST_EXIT_MS (450ms).
  *   - Inline bottom/transform/opacity/zIndex are set by Toaster's
  *     updateToastPositions(); cards must NOT set those themselves.
  *
- * Card layout (unchanged):
- *   tier-normal:  grid-template-rows: auto 2px          (main · bar)
- *   action/rich:  grid-template-rows: auto auto 2px     (main · actions · bar)
- *
- * Timer pause: hover/focus on the individual card still pauses auto-dismiss
- * (archieamas has no timer pause, but we keep ours; the container hover
- * also pauses via setGlobalPaused in Toaster).
+ * Three-tier layout:
+ *   normal:  icon + title-row + description + close X + timer footer + progress bar
+ *   action:  + chips + summary rows + note + tinted action strip
+ *   rich:    + chips + summary rows + file preview + tinted action strip
  */
 
-import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
-import type { ToastRecord, ToastAction }             from './toastTypes';
-import { dismissToast, updateToast, getGlobalPaused } from './toastStore';
+import { useEffect, useRef, useState, useCallback } from "preact/hooks";
+import type { ToastActionButton, ToastRecord }       from "./toastTypes";
+import { ToastIcon }                                from "./ToastIcon";
+import { ToastProgress }                            from "./ToastProgress";
+import { dismissToast, getGlobalPaused, updateToast } from "./toastStore";
 
-// ── Icon SVGs (spec viewBox 0 0 52 52, stroke-width 3.6) ─────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
 
-function VariantIcon({ variant }: { variant: ToastRecord['variant'] }) {
-  switch (variant) {
-    case 'success':
-      return (
-        <svg viewBox="0 0 52 52" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.6">
-          <circle cx="26" cy="26" r="22" />
-          <path d="M16 27.5l6.5 6.5L37 18" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      );
-    case 'error':
-    case 'critical':
-      return (
-        <svg viewBox="0 0 52 52" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.6">
-          <circle cx="26" cy="26" r="22" />
-          <path d="M18 18l16 16M34 18L18 34" stroke-linecap="round" />
-        </svg>
-      );
-    case 'warning':
-      return (
-        <svg viewBox="0 0 52 52" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.6">
-          <path d="M26 7L48 45H4L26 7Z" stroke-linejoin="round" />
-          <line x1="26" y1="20" x2="26" y2="31" stroke-linecap="round" />
-          <circle cx="26" cy="38" r="1.5" fill="currentColor" stroke="none" />
-        </svg>
-      );
-    case 'info':
-    case 'neutral':
-    default:
-      return (
-        <svg viewBox="0 0 52 52" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.6">
-          <circle cx="26" cy="26" r="22" />
-          <circle cx="26" cy="16" r="1.5" fill="currentColor" stroke="none" />
-          <line x1="26" y1="22" x2="26" y2="38" stroke-linecap="round" />
-        </svg>
-      );
-  }
-}
-
-// ── Loading spinner ───────────────────────────────────────────────────────────
-
-function LoadingSpinner() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" class="toast-icon-spinner">
-      <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" />
-    </svg>
-  );
-}
-
-// ── Action button ─────────────────────────────────────────────────────────────
-
-interface ActionButtonProps {
-  action:  ToastAction;
-  toastId: string;
-}
-
-function ActionButton({ action, toastId }: ActionButtonProps) {
-  const handleClick = useCallback(async (e: MouseEvent) => {
-    e.stopPropagation();
-    if (!action.onClick) {
-      dismissToast(toastId);
-      return;
-    }
-    const result = await action.onClick();
-    if (result !== false) {
-      dismissToast(toastId);
-    }
-  }, [action, toastId]);
-
-  return (
-    <button type="button" class="cpop-toast-action" onClick={handleClick}>
-      {action.label}
-    </button>
-  );
-}
-
-// ── Countdown footer ──────────────────────────────────────────────────────────
-// "This message will close in N seconds. Click to stop." — live countdown with a
-// click-to-stop / click-to-resume toggle. Sits above the progress bar.
-
-interface CountdownFooterProps {
-  duration:     number;
-  remainingMs:  number;
-  paused:       boolean;
-  stopped:      boolean;
-  onToggleStop: () => void;
-}
-
-function CountdownFooter({ duration, remainingMs, paused, stopped, onToggleStop }: CountdownFooterProps) {
-  if (duration <= 0) return null;
-
-  const [secs, setSecs] = useState(() => Math.ceil(remainingMs / 1000));
-  const rafRef          = useRef<number | null>(null);
-  const startWallRef    = useRef<number>(Date.now());
-  const startRemRef     = useRef<number>(remainingMs);
-
-  useEffect(() => {
-    if (paused) {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      setSecs(Math.ceil(remainingMs / 1000));
-      return;
-    }
-    startWallRef.current = Date.now();
-    startRemRef.current  = remainingMs;
-
-    function tick() {
-      const elapsed   = Date.now() - startWallRef.current;
-      const remaining = Math.max(0, startRemRef.current - elapsed);
-      setSecs(Math.ceil(remaining / 1000));
-      if (remaining > 0) rafRef.current = requestAnimationFrame(tick);
-    }
-    rafRef.current = requestAnimationFrame(tick);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused, remainingMs]);
-
-  const handleClick = useCallback((e: MouseEvent) => { e.stopPropagation(); onToggleStop(); }, [onToggleStop]);
-
-  return (
-    <div class="cpop-toast-footer">
-      {stopped
-        ? <span>Timer paused. <button type="button" class="cpop-toast-stop" onClick={handleClick}>Click to resume.</button></span>
-        : <span>This message will close in <b>{secs}</b> second{secs === 1 ? '' : 's'}. <button type="button" class="cpop-toast-stop" onClick={handleClick}>Click to stop.</button></span>
-      }
-    </div>
-  );
+interface Props {
+  toast: ToastRecord;
+  onDismiss?: () => void;
+  onPositionUpdate: () => void;
 }
 
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
-interface ToastCardProps {
-  record:           ToastRecord;
-  onPositionUpdate: () => void;
-}
+export function ToastCard({ toast, onPositionUpdate }: Props) {
+  const [paused, setPaused]           = useState(false);
+  const [remainingMs, setRemainingMs] = useState(toast.duration);
+  const [stopped, setStopped]         = useState(false);
 
-export function ToastCard({ record, onPositionUpdate }: ToastCardProps) {
-  const {
-    id, tier, variant, title, message, body, icon, avatarUrl,
-    meta, actions, summary, note, duration, dismissible,
-    paused, remainingMs, exiting, onClick, onDismiss,
-  } = record;
-
-  const timerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startRef       = useRef<number>(0);
-  const remaining      = useRef<number>(remainingMs);
-  const localPausedRef = useRef<boolean>(false);
   const cardRef        = useRef<HTMLElement | null>(null);
-  const stoppedRef     = useRef<boolean>(false);   // persistent "Click to stop"
-  const [stopped, setStopped] = useState(false);
+  const startedAt      = useRef(Date.now());
+  const pausedAt       = useRef<number | null>(null);
+  const totalPaused    = useRef(0);
+  const stoppedRef     = useRef(false);
+  const rafRef         = useRef<number>(0);
+
+  const hasTimer = toast.duration > 0;
 
   // ── Enter animation: add class on mount, remove after animation ──────────────
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    el.classList.add('entering');
-    // The toast-enter animation is 0.4s; remove the class after it so the
-    // stacking inline-styles (transform/opacity) from updateToastPositions
-    // can take effect without fighting the animation forwards fill.
+    el.classList.add("entering");
     const t = setTimeout(() => {
-      el.classList.remove('entering');
+      el.classList.remove("entering");
       onPositionUpdate();
     }, 420); // slightly past the 0.4s animation
     return () => clearTimeout(t);
-  // Run once on mount only
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const role = (variant === 'error' || variant === 'critical') ? 'alert' : 'status';
-
-  // ── Timer management ──────────────────────────────────────────────────────
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-  }, []);
-
-  const startTimer = useCallback(() => {
-    if (duration <= 0 || remaining.current <= 0) return;
-    if (localPausedRef.current || getGlobalPaused()) return;
-    startRef.current = Date.now();
-    timerRef.current = setTimeout(() => {
-      onDismiss?.();
-      dismissToast(id);
-    }, remaining.current);
-  }, [id, duration, onDismiss]);
-
+  // ── Timer: rAF-based countdown (mirrors spec's ToastCard) ────────────────────
   useEffect(() => {
-    remaining.current = remainingMs;
-    startTimer();
-    return clearTimer;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!hasTimer) return;
 
-  // ── React to globalPaused changes ─────────────────────────────────────────
+    const tick = () => {
+      const now = Date.now();
+      const pausedDuration = pausedAt.current ? now - pausedAt.current : 0;
+      const elapsed = now - startedAt.current - totalPaused.current - pausedDuration;
+      const nextRemaining = Math.max(0, toast.duration - elapsed);
 
+      setRemainingMs(nextRemaining);
+
+      if (nextRemaining <= 0) {
+        handleDismiss();
+        return;
+      }
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTimer, toast.duration]);
+
+  // ── React to globalPaused changes ─────────────────────────────────────────────
   useEffect(() => {
-    if (paused || localPausedRef.current) return;
-    if (getGlobalPaused()) {
-      clearTimer();
-      const elapsed = Date.now() - startRef.current;
-      remaining.current = Math.max(0, remaining.current - elapsed);
-    } else {
-      startTimer();
+    if (!hasTimer || stoppedRef.current) return;
+    const globalPaused = getGlobalPaused();
+    if (globalPaused) {
+      setTimerPaused(true);
+    } else if (!stoppedRef.current) {
+      setTimerPaused(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Hover: pause/resume timer ─────────────────────────────────────────────
+  // ── Timer pause/resume ────────────────────────────────────────────────────────
+  function setTimerPaused(nextPaused: boolean) {
+    if (!hasTimer) return;
+    setPaused(nextPaused);
 
+    if (nextPaused && !pausedAt.current) {
+      pausedAt.current = Date.now();
+    } else if (!nextPaused && pausedAt.current) {
+      totalPaused.current += Date.now() - pausedAt.current;
+      pausedAt.current = null;
+    }
+  }
+
+  // ── Dismiss (animated exit via store) ────────────────────────────────────────
+  const handleDismiss = useCallback(() => {
+    dismissToast(toast.id);
+  }, [toast.id]);
+
+  // ── Action button click ───────────────────────────────────────────────────────
+  function handleActionClick(action: ToastActionButton) {
+    try {
+      if (action.onClick) void action.onClick();
+      if (action.href) window.location.assign(action.href);
+    } finally {
+      if (action.dismissOnClick !== false) handleDismiss();
+    }
+  }
+
+  // ── Hover / focus pause ───────────────────────────────────────────────────────
   const handleMouseEnter = useCallback(() => {
-    if (duration <= 0 || stoppedRef.current) return;   // manual stop overrides hover
-    localPausedRef.current = true;
-    clearTimer();
-    const elapsed = Date.now() - startRef.current;
-    remaining.current = Math.max(0, remaining.current - elapsed);
-    updateToast(id, { paused: true, remainingMs: remaining.current });
-  }, [id, duration, clearTimer]);
+    if (stoppedRef.current) return;
+    setTimerPaused(true);
+    updateToast(toast.id, { exiting: toast.exiting });
+  }, [toast.id, toast.exiting]);
 
   const handleMouseLeave = useCallback(() => {
-    if (duration <= 0 || stoppedRef.current) return;   // stay paused if manually stopped
-    localPausedRef.current = false;
-    updateToast(id, { paused: false, remainingMs: remaining.current });
-    startTimer();
-  }, [id, duration, startTimer]);
+    if (stoppedRef.current) return;
+    setTimerPaused(false);
+  }, []);
 
-  // ── "Click to stop" — persistent pause toggle (survives mouseleave) ──────────
-  const handleToggleStop = useCallback(() => {
+  // ── "Click to stop" — persistent pause ───────────────────────────────────────
+  function handleToggleStop() {
     const next = !stoppedRef.current;
     stoppedRef.current = next;
     setStopped(next);
-    if (next) {
-      localPausedRef.current = true;
-      clearTimer();
-      const elapsed = Date.now() - startRef.current;
-      remaining.current = Math.max(0, remaining.current - elapsed);
-      updateToast(id, { paused: true, remainingMs: remaining.current });
-    } else {
-      localPausedRef.current = false;
-      updateToast(id, { paused: false, remainingMs: remaining.current });
-      startTimer();
-    }
-  }, [id, clearTimer, startTimer]);
+    setTimerPaused(next);
+  }
 
-  const handleFocus = handleMouseEnter;
-  const handleBlur  = handleMouseLeave;
+  // ── Keyboard dismiss ──────────────────────────────────────────────────────────
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === "Escape" && toast.dismissible) handleDismiss();
+  }, [toast.dismissible, handleDismiss]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && dismissible) {
-      onDismiss?.();
-      dismissToast(id);
-    }
-  }, [id, dismissible, onDismiss]);
-
-  const handleCardClick = useCallback(() => {
-    onClick?.();
-  }, [onClick]);
-
-  const handleDismiss = useCallback((e: MouseEvent) => {
-    e.stopPropagation();
-    onDismiss?.();
-    dismissToast(id);
-  }, [id, onDismiss]);
-
-  // ── Derived ───────────────────────────────────────────────────────────────
-
-  const isNormal = tier === 'normal' || tier === 'loading';
-  const variantClass = `cpop-toast-${variant === 'critical' ? 'error' : variant === 'neutral' ? 'info' : variant}`;
-  const isClickable  = !!onClick;
-
-  // Title: prefer title; fall back to message
-  const displayTitle = title ?? message ?? '';
-  // Body text: body (rich) or message when title is also set
-  const displayText  = body ?? (title && message ? message : undefined);
-  const hasActions   = actions && actions.length > 0;
-
-  // Progress bar animation duration matches the toast duration
-  const barDuration = duration > 0 ? duration : 4000;
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
 
   return (
     <article
       ref={cardRef as any}
-      role={role}
-      tabIndex={0}
-      class={[
-        'cpop-toast',
-        variantClass,
-        isNormal    ? 'tier-normal'           : '',
-        !!exiting   ? 'exiting'               : '',
-        isClickable ? 'toast-card--clickable' : '',
-      ].filter(Boolean).join(' ')}
+      className={[
+        "siomac-toast",
+        `siomac-toast--${toast.variant}`,
+        `siomac-toast--${toast.tier}`,
+        toast.exiting ? "exiting" : "",
+        paused ? "is-paused" : ""
+      ].filter(Boolean).join(" ")}
+      role={toast.variant === "error" ? "alert" : "status"}
+      aria-live={toast.ariaLive}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
+      onFocusIn={() => { if (!stoppedRef.current) setTimerPaused(true); }}
+      onFocusOut={() => { if (!stoppedRef.current) setTimerPaused(false); }}
       onKeyDown={handleKeyDown}
-      onClick={isClickable ? handleCardClick : undefined}
-      aria-label={displayTitle || undefined}
+      tabIndex={-1}
     >
-      {/* ── Row 1: main (icon · body · tools) ── */}
-      <div class="cpop-toast-main">
+      <div className="siomac-toast__main">
+        <ToastIcon variant={toast.variant} />
 
-        {/* Icon */}
-        <div class="cpop-toast-icon" aria-hidden="true">
-          {tier === 'loading' ? <LoadingSpinner />
-            : icon      ? <i class={icon} aria-hidden="true" />
-            : avatarUrl ? <img src={avatarUrl} alt="" class="toast-avatar" />
-            : <VariantIcon variant={variant} />
-          }
-        </div>
-
-        {/* Body */}
-        <div class="cpop-toast-body">
-          <div class="cpop-toast-title-row">
-            <div class="cpop-toast-title">{displayTitle}</div>
+        <div className="siomac-toast__body">
+          <div className="siomac-toast__title-row">
+            <span className="siomac-toast__dot" />
+            <div className="siomac-toast__title">{toast.title}</div>
           </div>
 
-          {displayText && (
-            <div class="cpop-toast-text">{displayText}</div>
-          )}
+          {toast.description ? (
+            <div className="siomac-toast__description">{toast.description}</div>
+          ) : null}
 
-          {meta && meta.length > 0 && (
-            <div class="cpop-toast-kicker">
-              {meta.map((m) => (
-                <span key={m} class="cpop-toast-chip">{m}</span>
-              ))}
-            </div>
-          )}
-
-          {summary && summary.length > 0 && (
-            <div class="cpop-action-summary">
-              {summary.map((row) => (
-                <div key={row.label} class="cpop-action-line">
-                  <span class="cpop-action-label">{row.label}</span>
-                  <span class="cpop-action-value">{row.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {note && (
-            <div class="cpop-action-note">{note}</div>
-          )}
+          {toast.tier !== "normal" ? (
+            <>
+              <ToastChips toast={toast} />
+              <ToastSummary toast={toast} />
+              <ToastFile toast={toast} />
+              <ToastNote toast={toast} />
+            </>
+          ) : null}
         </div>
 
-        {/* Tools: close */}
-        <div class="cpop-toast-tools">
-          {dismissible && (
+        {toast.dismissible ? (
+          <button
+            className="siomac-toast__close"
+            type="button"
+            aria-label="Dismiss notification"
+            onClick={handleDismiss}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
+
+      {toast.tier === "normal" && hasTimer ? (
+        <footer className="siomac-toast__timer">
+          This message will close in <span>{seconds}</span> seconds.{" "}
+          <button type="button" onClick={handleToggleStop}>
+            {stopped ? "Resume." : "Click to stop."}
+          </button>
+          <ToastProgress duration={toast.duration} paused={paused} />
+        </footer>
+      ) : null}
+
+      {toast.tier !== "normal" && toast.actions?.length ? (
+        <div className="siomac-toast__actions">
+          {toast.actions.map((action) => (
             <button
+              key={action.label}
               type="button"
-              class="cpop-toast-close"
-              aria-label="Dismiss notification"
-              onClick={handleDismiss}
+              className={[
+                "siomac-toast__action",
+                action.tone ? `siomac-toast__action--${action.tone}` : ""
+              ].filter(Boolean).join(" ")}
+              onClick={() => handleActionClick(action)}
             >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
-              </svg>
+              {action.label}
             </button>
-          )}
+          ))}
         </div>
-      </div>
+      ) : null}
 
-      {/* ── Row 2: action strip (hidden for tier-normal via CSS) ── */}
-      <div class="cpop-toast-actions">
-        {hasActions && actions!.slice(0, 2).map((action) => (
-          <ActionButton key={action.label} action={action} toastId={id} />
-        ))}
-      </div>
-
-      {/* ── Row 3: countdown footer ("This message will close in N seconds…") ── */}
-      <CountdownFooter
-        duration={duration}
-        remainingMs={remainingMs}
-        paused={paused}
-        stopped={stopped}
-        onToggleStop={handleToggleStop}
-      />
-
-      {/* ── Row 4: progress bar (2px, CSS animation) ── */}
-      {duration > 0 && (
-        <div
-          class="cpop-toast-bar"
-          style={{ animationDuration: `${barDuration}ms`, animationPlayState: paused ? 'paused' : 'running' }}
-        />
-      )}
+      {toast.tier !== "normal" && hasTimer ? (
+        <ToastProgress duration={toast.duration} paused={paused} />
+      ) : null}
     </article>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function ToastChips({ toast }: { toast: ToastRecord }) {
+  if (!toast.moduleLabel && !toast.statusLabel) return null;
+  return (
+    <div className="siomac-toast__chips">
+      {toast.moduleLabel ? <span className="siomac-toast__chip">{toast.moduleLabel}</span> : null}
+      {toast.statusLabel ? <span className="siomac-toast__chip">{toast.statusLabel}</span> : null}
+    </div>
+  );
+}
+
+function ToastSummary({ toast }: { toast: ToastRecord }) {
+  if (!toast.details?.length) return null;
+  return (
+    <div className="siomac-toast__summary">
+      {toast.details.map((item) => (
+        <div className="siomac-toast__summary-row" key={item.label}>
+          <span className="siomac-toast__summary-label">{item.label}</span>
+          <span className="siomac-toast__summary-value">{item.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ToastNote({ toast }: { toast: ToastRecord }) {
+  if (!toast.note) return null;
+  return <div className="siomac-toast__note">{toast.note}</div>;
+}
+
+function ToastFile({ toast }: { toast: ToastRecord }) {
+  if (!toast.file) return null;
+  return (
+    <div className="siomac-toast__file">
+      <div className="siomac-toast__file-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 3h7l5 5v13H7z" />
+          <path d="M14 3v6h5" />
+          <path d="M9.5 13h5M9.5 16h7" />
+        </svg>
+      </div>
+      <div>
+        <h3 className="siomac-toast__file-name">{toast.file.name}</h3>
+        {toast.file.subtitle || toast.file.sizeLabel ? (
+          <p className="siomac-toast__file-subtitle">
+            {[toast.file.subtitle, toast.file.sizeLabel].filter(Boolean).join(" · ")}
+          </p>
+        ) : null}
+        {toast.file.meta?.length ? (
+          <div className="siomac-toast__file-meta">
+            {toast.file.meta.slice(0, 3).map((item) => (
+              <div className="siomac-toast__file-stat" key={item.label}>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
