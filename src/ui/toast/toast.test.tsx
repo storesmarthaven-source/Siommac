@@ -2,7 +2,7 @@
  * src/ui/toast/toast.test.tsx
  *
  * Tests for the Siomac toast system (toastStore + toast API + Toaster component).
- * Updated for the new SIOMAC card design (cpop-toast markup).
+ * Updated for the verbatim reference port (cpop-toast grid, no deck stacking).
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -171,7 +171,7 @@ describe('toast API', () => {
 describe('Toaster component', () => {
   it('renders nothing when there are no toasts', () => {
     renderToaster();
-    expect(document.querySelector('.siomac-toaster')).toBeNull();
+    expect(document.querySelector('.cpop-toasts')).toBeNull();
   });
 
   it('renders a toast added via toast.success()', () => {
@@ -196,8 +196,6 @@ describe('Toaster component', () => {
 
   it('renders critical with role="alert"', () => {
     renderToaster();
-    act(() => { toast('Critical!', { id: 'crit-1' }); });
-    // Force variant to critical via rich
     act(() => { toast.rich({ title: 'System alert', variant: 'critical' }); });
     const alerts = screen.getAllByRole('alert');
     expect(alerts.length).toBeGreaterThan(0);
@@ -227,15 +225,10 @@ describe('Toaster component', () => {
   it('action toast does NOT have tier-normal class', () => {
     renderToaster();
     act(() => { toast.action('Done', { label: 'Undo', onClick: vi.fn() }); });
-    // The action card should not have tier-normal
-    const actionCard = document.querySelector('.toast-card--action, .cpop-toast:not(.tier-normal)');
-    // Absence of tier-normal on any card that has an action strip
     const tieredNormal = document.querySelector('.tier-normal');
-    // If there is one toast and it's an action toast, tier-normal should be absent
     const cards = document.querySelectorAll('.cpop-toast');
     expect(cards.length).toBe(1);
     expect(tieredNormal).toBeNull();
-    // The action button should be visible
     expect(screen.getByText('Undo')).toBeTruthy();
   });
 
@@ -306,7 +299,6 @@ describe('Toaster component', () => {
     act(() => { toast.success('With countdown', { duration: 5000 }); });
     const badge = document.querySelector('.cpop-toast-countdown');
     expect(badge).toBeTruthy();
-    // Should show a number followed by 's'
     expect(badge?.textContent).toMatch(/^\d+s$/);
   });
 
@@ -344,20 +336,17 @@ describe('Toaster component', () => {
     expect(screen.queryByText('Auto gone')).toBeNull();
   });
 
-  it('renders all toast cards in the DOM (deck stacking — no overflow pill)', () => {
+  it('renders all toast cards in the DOM (simple grid, no hidden cards)', () => {
     renderToaster();
     act(() => {
       for (let i = 0; i < 6; i++) toast.info(`Toast ${i}`, { duration: 0 });
     });
-    // All 6 cards must be in the DOM (stacked via absolute transforms, not hidden)
-    const cards = document.querySelectorAll('.toast-card');
+    // All 6 cards must be in the DOM — simple grid, no stacking/hiding
+    const cards = document.querySelectorAll('.cpop-toast');
     expect(cards.length).toBe(6);
-    // No "+N more" pill in the new architecture
+    // No deck-hidden or overflow-pill elements
     const pill = document.querySelector('.toast-overflow-pill');
     expect(pill).toBeNull();
-    // Older toasts (beyond MAX_PEEK=3) carry the hidden class
-    const hiddenCards = document.querySelectorAll('.toast-card--hidden');
-    expect(hiddenCards.length).toBeGreaterThan(0);
   });
 
   it('renders rich toast with title, body, and meta', () => {
@@ -393,14 +382,13 @@ describe('Toaster component', () => {
     const cancelBtn = screen.getByText('Cancel');
     await act(async () => { fireEvent.click(cancelBtn); });
     expect(keepOpen).toHaveBeenCalledOnce();
-    // Toast message is in the title for action toasts (message → displayTitle)
     expect(screen.getByText('Pending')).toBeTruthy();
   });
 
   it('Esc key dismisses the focused toast', () => {
     renderToaster();
     act(() => { toast.info('Press Esc', { duration: 0 }); });
-    const card = document.querySelector<HTMLElement>('.toast-card');
+    const card = document.querySelector<HTMLElement>('.cpop-toast');
     expect(card).toBeTruthy();
     if (card) {
       fireEvent.keyDown(card, { key: 'Escape' });
@@ -410,20 +398,9 @@ describe('Toaster component', () => {
   });
 
   it('renders without crashing under prefers-reduced-motion', () => {
-    // Actual animation suppression is CSS-only; this confirms rendering doesn't break
     renderToaster();
     act(() => { toast.success('Motion safe'); });
     expect(screen.getByText('Motion safe')).toBeTruthy();
-  });
-
-  it('front toast has toast-card--front class', () => {
-    renderToaster();
-    act(() => {
-      toast.info('First', { duration: 0 });
-      toast.info('Second', { duration: 0 });
-    });
-    const frontCards = document.querySelectorAll('.toast-card--front');
-    expect(frontCards.length).toBe(1);
   });
 
   it('action strip buttons are in .cpop-toast-actions container', () => {
@@ -435,5 +412,36 @@ describe('Toaster component', () => {
     expect(actionsRow).toBeTruthy();
     const btn = actionsRow?.querySelector('.cpop-toast-action');
     expect(btn?.textContent).toBe('Verify');
+  });
+
+  it('container uses .cpop-toasts class', () => {
+    renderToaster();
+    act(() => { toast.info('Hello'); });
+    expect(document.querySelector('.cpop-toasts')).toBeTruthy();
+  });
+
+  it('newest toast is rendered first in the DOM (top of grid)', () => {
+    renderToaster();
+    act(() => {
+      toast.info('First', { duration: 0 });
+      toast.info('Second', { duration: 0 });
+    });
+    const cards = document.querySelectorAll('.cpop-toast');
+    // Second (newest) should be first in DOM
+    expect(cards[0]?.textContent).toContain('Second');
+    expect(cards[1]?.textContent).toContain('First');
+  });
+
+  it('exiting toast gets toast-card--exiting class', () => {
+    renderToaster();
+    act(() => { toast.info('Exiting toast', { duration: 0 }); });
+    const toastList = getToasts();
+    const id = toastList[0]?.id;
+    expect(id).toBeTruthy();
+    if (id) {
+      act(() => { toast.dismiss(id); });
+    }
+    const exiting = document.querySelector('.toast-card--exiting');
+    expect(exiting).toBeTruthy();
   });
 });

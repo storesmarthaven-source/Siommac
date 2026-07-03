@@ -1,45 +1,21 @@
 /**
  * src/ui/toast/ToastCard.tsx
  *
- * Single toast card — SIOMAC new design (chosen normal + action spec).
+ * Single toast card — SIOMAC chosen normal + action design (verbatim port).
  *
- * Grid layout (matches the spec):
- *   tier-normal:  grid-template-rows: auto 2px
- *   tier-action/rich: grid-template-rows: auto auto 2px
- *     row 1 = .cpop-toast-main  (icon · body · tools)
- *     row 2 = .cpop-toast-actions (action strip, hidden for normal)
- *     row 3 = .cpop-toast-bar  (progress, 2px)
+ * Grid layout:
+ *   tier-normal:  grid-template-rows: auto 2px          (main · bar)
+ *   action/rich:  grid-template-rows: auto auto 2px     (main · actions · bar)
  *
- * Body interior:
- *   - title-row: dot + title
- *   - text (message / body)
- *   - kicker chips (meta[])
- *   - action-summary (summary[] key/value rows)
- *   - action-note (note)
+ * Enter: CSS keyframe toast-in (translateX(22px) translateY(6px) → identity, .28s).
+ * Exit:  .toast-card--exiting → translateY(-100%) opacity:0 (deviation 2, slides UP).
  *
- * Tools (top-right column):
- *   - countdown badge (live seconds remaining, hidden when duration <= 0, pauses on hover)
- *   - close button
- *
- * Deck stacking (PRESERVED — Sonner architecture unchanged):
- *   position:absolute, CSS vars --toasts-before / --lift-amount / --front-toast-height /
- *   --offset / --swipe-amount, globalPaused, tab-hidden pause, swipe-to-dismiss.
- *
- * Enter: translateX(22px) translateY(6px) opacity:0 → identity (CSS transition, not keyframe).
- * Exit:  translateY(-100%) scale(0.95) opacity:0  (slides UP).
+ * No deck stacking, no swipe-to-dismiss, no height-normalisation.
  */
 
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'preact/hooks';
-import type { ToastRecord, ToastAction } from './toastTypes';
+import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
+import type { ToastRecord, ToastAction }             from './toastTypes';
 import { dismissToast, updateToast, getGlobalPaused } from './toastStore';
-import { ToastProgress } from './ToastProgress';
-
-/** Horizontal swipe threshold (px) — release past here = dismiss. */
-const SWIPE_CLOSE_PX   = 45;
-/** Swipe velocity threshold (px/ms) — fast flick also dismisses. */
-const SWIPE_VELOCITY   = 0.11;
-/** Opacity fully reaches 0 at this swipe distance. */
-const SWIPE_FADE_PX    = 160;
 
 // ── Icon SVGs (spec viewBox 0 0 52 52, stroke-width 3.6) ─────────────────────
 
@@ -91,11 +67,11 @@ function LoadingSpinner() {
   );
 }
 
-// ── Action button (action-strip style) ────────────────────────────────────────
+// ── Action button ─────────────────────────────────────────────────────────────
 
 interface ActionButtonProps {
-  action:   ToastAction;
-  toastId:  string;
+  action:  ToastAction;
+  toastId: string;
 }
 
 function ActionButton({ action, toastId }: ActionButtonProps) {
@@ -112,11 +88,7 @@ function ActionButton({ action, toastId }: ActionButtonProps) {
   }, [action, toastId]);
 
   return (
-    <button
-      type="button"
-      class="cpop-toast-action"
-      onClick={handleClick}
-    >
+    <button type="button" class="cpop-toast-action" onClick={handleClick}>
       {action.label}
     </button>
   );
@@ -133,11 +105,10 @@ interface CountdownProps {
 function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
   if (duration <= 0) return null;
 
-  // Live countdown: tick every second using rAF while not paused
-  const [secs, setSecs] = useState(() => Math.ceil(remainingMs / 1000));
-  const rafRef          = useRef<number | null>(null);
-  const startWallRef    = useRef<number>(Date.now());
-  const startRemRef     = useRef<number>(remainingMs);
+  const [secs, setSecs]    = useState(() => Math.ceil(remainingMs / 1000));
+  const rafRef             = useRef<number | null>(null);
+  const startWallRef       = useRef<number>(Date.now());
+  const startRemRef        = useRef<number>(remainingMs);
 
   useEffect(() => {
     if (paused) {
@@ -145,7 +116,6 @@ function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
       setSecs(Math.ceil(remainingMs / 1000));
       return;
     }
-    // (Re)start the ticker
     startWallRef.current = Date.now();
     startRemRef.current  = remainingMs;
 
@@ -172,76 +142,22 @@ function CountdownBadge({ duration, remainingMs, paused }: CountdownProps) {
 // ── ToastCard ─────────────────────────────────────────────────────────────────
 
 interface ToastCardProps {
-  record:         ToastRecord;
-  /** Cards newer than this one (front = 0). */
-  toastsBefore:   number;
-  /** px each stacked card translates DOWN behind the front. */
-  liftAmount:     number;
-  /** Height of the front (newest) toast in px — used for height-normalisation. */
-  frontHeight:    number;
-  /** Whether the deck is expanded (hovered). */
-  expanded:       boolean;
-  /** translateY offset in expanded state (px from top of container). */
-  expandedOffset: number;
-  /** Whether this card is within the peek window (toastsBefore < MAX_PEEK). */
-  visible:        boolean;
-  /** Report measured height back to Toaster for offset calculation. */
-  onMeasure:      (id: string, height: number) => void;
+  record: ToastRecord;
 }
 
-export function ToastCard({
-  record,
-  toastsBefore,
-  liftAmount,
-  frontHeight,
-  expanded,
-  expandedOffset,
-  visible,
-  onMeasure,
-}: ToastCardProps) {
+export function ToastCard({ record }: ToastCardProps) {
   const {
     id, tier, variant, title, message, body, icon, avatarUrl,
     meta, actions, summary, note, duration, dismissible,
     paused, remainingMs, exiting, onClick, onDismiss,
   } = record;
 
-  const cardRef         = useRef<HTMLElement>(null);
-  const timerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startRef        = useRef<number>(0);
-  const remaining       = useRef<number>(remainingMs);
-  const localPausedRef  = useRef<boolean>(false);
-
-  // Entry animation: mount in off-screen state, transition to identity after first RAF
-  const [mounted, setMounted] = useState(false);
-
-  // Swipe state
-  const [swipeX, setSwipeX]  = useState(0);
-  const swipeXRef            = useRef(0);
-  const dragging             = useRef(false);
-  const dragStartX           = useRef(0);
-  const dragStartTime        = useRef(0);
-  const movedRef             = useRef(false);
+  const timerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startRef       = useRef<number>(0);
+  const remaining      = useRef<number>(remainingMs);
+  const localPausedRef = useRef<boolean>(false);
 
   const role = (variant === 'error' || variant === 'critical') ? 'alert' : 'status';
-
-  // ── Measure height for Toaster layout ────────────────────────────────────
-
-  useLayoutEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const h = el.offsetHeight;
-    if (h > 0) onMeasure(id, h);
-  });
-
-  // ── Entry: set mounted=true after first paint ─────────────────────────────
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      setMounted(true);
-    });
-    return () => cancelAnimationFrame(raf);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Timer management ──────────────────────────────────────────────────────
 
@@ -309,7 +225,6 @@ export function ToastCard({
   }, [id, dismissible, onDismiss]);
 
   const handleCardClick = useCallback(() => {
-    if (movedRef.current) { movedRef.current = false; return; }
     onClick?.();
   }, [onClick]);
 
@@ -319,107 +234,38 @@ export function ToastCard({
     dismissToast(id);
   }, [id, onDismiss]);
 
-  // ── Swipe-to-dismiss ──────────────────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
 
-  const applySwipe = useCallback((px: number) => {
-    swipeXRef.current = px;
-    setSwipeX(px);
-    if (cardRef.current) {
-      cardRef.current.style.setProperty('--swipe-amount', `${px}px`);
-    }
-  }, []);
-
-  const handlePointerDown = useCallback((e: PointerEvent) => {
-    if (!dismissible || exiting || e.button !== 0) return;
-    if ((e.target as HTMLElement).closest?.('.cpop-toast-action, .cpop-toast-close')) return;
-    dragging.current      = true;
-    movedRef.current      = false;
-    dragStartX.current    = e.clientX;
-    dragStartTime.current = Date.now();
-    clearTimer();
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-  }, [dismissible, exiting, clearTimer]);
-
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (!dragging.current) return;
-    const dx = Math.max(0, e.clientX - dragStartX.current);
-    if (dx > 4) movedRef.current = true;
-    applySwipe(dx);
-  }, [applySwipe]);
-
-  const endDrag = useCallback(() => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    const dx       = swipeXRef.current;
-    const elapsed  = Math.max(1, Date.now() - dragStartTime.current);
-    const velocity = dx / elapsed;
-    if (dx >= SWIPE_CLOSE_PX || velocity > SWIPE_VELOCITY) {
-      onDismiss?.();
-      dismissToast(id);
-    } else {
-      applySwipe(0);
-      startTimer();
-    }
-  }, [id, onDismiss, applySwipe, startTimer]);
-
-  // ── Derived classes and styles ────────────────────────────────────────────
-
-  const isFront     = toastsBefore === 0;
-  const isExiting   = !!exiting;
-  const isDragging  = swipeX > 0;
-  const isClickable = !!onClick;
-
-  // Determine tier class: normal = no action strip; action/rich = with action strip
   const isNormal = tier === 'normal' || tier === 'loading';
   const variantClass = `cpop-toast-${variant === 'critical' ? 'error' : variant === 'neutral' ? 'info' : variant}`;
+  const isClickable  = !!onClick;
 
-  const style: Record<string, string | number> = {
-    '--toasts-before':      toastsBefore,
-    '--lift-amount':        `${liftAmount}px`,
-    '--front-toast-height': `${frontHeight}px`,
-    '--offset':             `${expandedOffset}px`,
-  };
-
-  if (isDragging && !isExiting) {
-    style['opacity'] = Math.max(0, 1 - swipeX / SWIPE_FADE_PX);
-  }
-
-  // Text to show in the title row. Prefer title; fall back to message for simple toasts.
+  // Title: prefer title; fall back to message
   const displayTitle = title ?? message ?? '';
-  // Body text = body (rich) or message when title is also present, else nothing extra
-  const displayText = body ?? (title && message ? message : undefined);
+  // Body text: body (rich) or message when title is also set
+  const displayText  = body ?? (title && message ? message : undefined);
+  const hasActions   = actions && actions.length > 0;
 
-  const hasActions = actions && actions.length > 0;
+  // Progress bar animation duration matches the toast duration
+  const barDuration = duration > 0 ? duration : 4000;
 
   return (
     <article
-      ref={cardRef}
       role={role}
       tabIndex={0}
       class={[
-        'toast-card',
         'cpop-toast',
         variantClass,
-        isNormal   ? 'tier-normal'          : '',
-        mounted    ? 'toast-card--mounted'   : '',
-        expanded   ? 'toast-card--expanded'  : '',
-        isFront    ? 'toast-card--front'     : '',
-        !visible   ? 'toast-card--hidden'    : '',
-        isDragging ? 'toast-card--dragging'  : '',
-        isExiting  ? 'toast-card--exiting'   : '',
+        isNormal    ? 'tier-normal'           : '',
+        !!exiting   ? 'toast-card--exiting'   : '',
         isClickable ? 'toast-card--clickable' : '',
       ].filter(Boolean).join(' ')}
-      style={style as Record<string, string>}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onClick={isClickable ? handleCardClick : undefined}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
       aria-label={displayTitle || undefined}
     >
       {/* ── Row 1: main (icon · body · tools) ── */}
@@ -428,26 +274,23 @@ export function ToastCard({
         {/* Icon */}
         <div class="cpop-toast-icon" aria-hidden="true">
           {tier === 'loading' ? <LoadingSpinner />
-            : icon       ? <i class={icon} aria-hidden="true" />
-            : avatarUrl  ? <img src={avatarUrl} alt="" class="toast-avatar" />
+            : icon      ? <i class={icon} aria-hidden="true" />
+            : avatarUrl ? <img src={avatarUrl} alt="" class="toast-avatar" />
             : <VariantIcon variant={variant} />
           }
         </div>
 
         {/* Body */}
         <div class="cpop-toast-body">
-          {/* Title row: colored dot + title text */}
           <div class="cpop-toast-title-row">
             <span class="cpop-toast-dot" aria-hidden="true" />
             <div class="cpop-toast-title">{displayTitle}</div>
           </div>
 
-          {/* Message / body text */}
           {displayText && (
             <div class="cpop-toast-text">{displayText}</div>
           )}
 
-          {/* Kicker chips (meta[]) */}
           {meta && meta.length > 0 && (
             <div class="cpop-toast-kicker">
               {meta.map((m) => (
@@ -456,7 +299,6 @@ export function ToastCard({
             </div>
           )}
 
-          {/* Action-summary block */}
           {summary && summary.length > 0 && (
             <div class="cpop-action-summary">
               {summary.map((row) => (
@@ -468,7 +310,6 @@ export function ToastCard({
             </div>
           )}
 
-          {/* Action-note */}
           {note && (
             <div class="cpop-action-note">{note}</div>
           )}
@@ -490,7 +331,7 @@ export function ToastCard({
               onClick={handleDismiss}
             >
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-linecap="round" stroke-width="2.4" />
+                <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
               </svg>
             </button>
           )}
@@ -504,13 +345,13 @@ export function ToastCard({
         ))}
       </div>
 
-      {/* ── Row 3: progress bar (2px) ── */}
-      <ToastProgress
-        duration={duration}
-        remainingMs={paused ? remaining.current : remainingMs}
-        paused={paused}
-        variant={variant}
-      />
+      {/* ── Row 3: progress bar (2px, CSS animation) ── */}
+      {duration > 0 && (
+        <div
+          class="cpop-toast-bar"
+          style={{ animationDuration: `${barDuration}ms`, animationPlayState: paused ? 'paused' : 'running' }}
+        />
+      )}
     </article>
   );
 }
