@@ -1,0 +1,180 @@
+// routes/financeDisbursements.ts -- Finance: Payroll Bank Disbursements (F2)
+// Mounted at /api/finance in api.ts. POST-only, JWT-gated. Envelope: body.args ?? {}.
+
+import { Hono } from 'hono';
+import { requirePermission } from '../lib/auth';
+import { z, zv } from '../lib/validate';
+import {
+  listDisbursements, getDisbursement, computeFromRun,
+  createDisbursement, submitDisbursement, approveDisbursement,
+  generateBankFile, markDisbursementPaid, cancelDisbursement,
+  listDisbursementLines, listDisbursementsReport,
+  type DisbursementStatus,
+} from '../lib/finance/disbursements';
+import type { HonoVariables } from '../../../types/api';
+
+const router = new Hono<{ Variables: HonoVariables }>();
+const b = (c: { get: (k: string) => unknown }) =>
+  (c.get('body') as Record<string, unknown>).args ?? {};
+const STATUS_VALUES = ['draft','submitted','approved','file_generated','paid','cancelled'] as const;
+
+router.post('/disbursements/list', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({
+    payrollRunId: z.string().uuid().optional(),
+    status: z.enum(STATUS_VALUES).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursements(v.data as { payrollRunId?: string; status?: DisbursementStatus });
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/get', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getDisbursement(v.data.id);
+    if (!data) return c.json({ success: false, message: 'Disbursement not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/lines/list', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursementLines(v.data.disbursementId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/compute', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ payrollRunId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await computeFromRun(v.data.payrollRunId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/create', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.manage');
+  const v = zv(c, z.object({
+    payrollRunId: z.string().uuid(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await createDisbursement({
+      payrollRunId: v.data.payrollRunId,
+      actorId: actor.id,
+      metadata: v.data.metadata,
+    });
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/submit', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await submitDisbursement(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/approve', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.approve');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await approveDisbursement(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/generate-file', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.approve');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const { filePath, disbursement } = await generateBankFile(v.data.id, actor.id);
+    return c.json({ success: true, data: { ...disbursement, filePath } });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/mark-paid', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.approve');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await markDisbursementPaid(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/cancel', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.manage');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    reason: z.string().trim().min(1).max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await cancelDisbursement(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/reports/list', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({
+    status: z.enum(STATUS_VALUES).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursementsReport(v.data as { status?: DisbursementStatus });
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+export default router;

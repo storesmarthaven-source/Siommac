@@ -1,0 +1,266 @@
+/**
+ * scripts/e2e/suites/financeDisbursements.mjs
+ * E2E for Finance Bank Accounts & Payroll Bank Disbursements (module F2).
+ */
+
+export const title = 'Finance -- Bank Accounts & Payroll Bank Disbursements (F2)';
+
+export default async function run(h) {
+  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { admin } = h.users;
+  const A = mint(admin);
+
+  const fmgr1Id   = `DSB-MGR1-${TAG}`;
+  const fmgr2Id   = `DSB-MGR2-${TAG}`;
+  const fstaff1Id = `DSB-STF1-${TAG}`;
+  const empId     = `DSB-EMP-${TAG}`;
+  const emp2Id    = `DSB-EMP2-${TAG}`;
+
+  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, disbId: null, cancelDisbId: null };
+
+  const waitFor = async (check, ms = 6000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 300)); }
+    return false;
+  };
+
+  h.onCleanup(async () => {
+    const ids  = [ctx.disbId, ctx.cancelDisbId].filter(Boolean);
+    const rids = [ctx.runId, ctx.draftRunId].filter(Boolean);
+    try { if (ids.length)  await sb.from('finance_disbursement_lines').delete().in('disbursement_id', ids); } catch {}
+    try { if (ids.length)  await sb.from('finance_disbursements').delete().in('id', ids); } catch {}
+    try { if (rids.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', rids); } catch {}
+    try { if (rids.length) await sb.from('finance_payroll_runs').delete().in('id', rids); } catch {}
+    try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
+    try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', [empId, fmgr1Id, fmgr2Id]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_disbursements').like('actor_user_id', 'DSB-%'); } catch {}
+    try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, empId, emp2Id]); } catch {}
+  });
+
+  h.section('Finance Disbursements > Setup');
+
+  let fmgr1Token, fmgr2Token, fstaff1Token, empToken;
+
+  await test('provision finance_manager x2 + finance_staff + employee x2', async () => {
+    const users = [
+      { id: fmgr1Id,   username: `${TAG}_dmgr1`, full_name: 'Disb Mgr One (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: fmgr2Id,   username: `${TAG}_dmgr2`, full_name: 'Disb Mgr Two (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: fstaff1Id, username: `${TAG}_dstf`,  full_name: 'Disb Staff (E2E)',   role: 'finance_staff',   status: 'active', employment_type: 'employee' },
+      { id: empId,     username: `${TAG}_demp`,  full_name: 'Disb Emp One (E2E)', role: 'employee',        status: 'active', employment_type: 'employee' },
+      { id: emp2Id,    username: `${TAG}_demp2`, full_name: 'Disb Emp Two (E2E)', role: 'employee',        status: 'active', employment_type: 'employee' },
+    ];
+    const { error } = await sb.from('app_users').insert(users);
+    expect(!error, `seed users failed: ${error?.message}`);
+    fmgr1Token  = mint({ id: fmgr1Id,   username: `${TAG}_dmgr1`, role: 'finance_manager', department_id: null });
+    fmgr2Token  = mint({ id: fmgr2Id,   username: `${TAG}_dmgr2`, role: 'finance_manager', department_id: null });
+    fstaff1Token = mint({ id: fstaff1Id, username: `${TAG}_dstf`,  role: 'finance_staff',   department_id: null });
+    empToken    = mint({ id: empId,     username: `${TAG}_demp`,  role: 'employee',        department_id: null });
+  });
+
+  await test('seed statutory version + approved payroll run + run-lines', async () => {
+    const { data: ver, error: verErr } = await sb.from('finance_statutory_versions').insert({
+      effective_from: '2026-01-01',
+      label: `E2E Disb Version ${TAG}`,
+      paye_personal_allowance: 90000, hs_monthly_threshold: 469.99, hs_weekly_high: 8.25, hs_weekly_low: 4.80,
+    }).select('id').single();
+    expect(!verErr, `seed version failed: ${verErr?.message}`);
+    ctx.versionId = ver.id;
+    const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-DSB-${TAG.slice(-6)}`, period_month: '2026-06-01',
+      statutory_version_id: ctx.versionId, status: 'approved', employee_count: 2,
+    }).select('id').single();
+    expect(!rnErr, `seed run failed: ${rnErr?.message}`);
+    ctx.runId = rn.id;
+    const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, period_month: '2026-07-01',
+      statutory_version_id: ctx.versionId, status: 'draft', employee_count: 1,
+    }).select('id').single();
+    expect(!drErr, `seed draft run failed: ${drErr?.message}`);
+    ctx.draftRunId = dr.id;
+    const { error: lErr } = await sb.from('finance_payroll_run_lines').insert([
+      { run_id: ctx.runId, employee_id: empId,  net_pay: 4500.00 },
+      { run_id: ctx.runId, employee_id: emp2Id, net_pay: 3200.00 },
+    ]);
+    expect(!lErr, `seed run-lines failed: ${lErr?.message}`);
+  });
+
+  h.section('Finance Disbursements > Bank Accounts');
+
+  await test('employee adds own bank account (masked number storage)', async () => {
+    const r = await api('finance/bank-accounts/upsert', empToken, {
+      bankName: 'Republic Bank', branch: 'Port of Spain',
+      accountType: 'savings', accountNumber: '1234567890', isPrimary: true,
+    });
+    ok(r, `upsert failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.id, 'missing id');
+    expect(d.accountNumberMasked === '****7890', `masked mismatch: ${d.accountNumberMasked}`);
+    expect(!('accountNumber' in d), 'full account number must NOT be in response');
+    expect(d.isPrimary === true, 'expected isPrimary true');
+    ctx.bankAccountId = d.id;
+  });
+
+  await test('employee can list own bank accounts', async () => {
+    const r = await api('finance/bank-accounts/list', empToken, {});
+    ok(r, `list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'expected array');
+    expect(r.body.data.some(a => a.id === ctx.bankAccountId), 'own account not in list');
+  });
+
+  await test('finance_staff can view bank accounts', async () => {
+    ok(await api('finance/bank-accounts/list', fstaff1Token, {}), 'finance_staff should be able to list');
+  });
+
+  await test('get returns the masked account', async () => {
+    const r = await api('finance/bank-accounts/get', fmgr1Token, { id: ctx.bankAccountId });
+    ok(r, `get failed: ${r.body.message}`);
+    expect(r.body.data.accountNumberMasked === '****7890', 'masked mismatch on get');
+  });
+
+  h.section('Finance Disbursements > Access control');
+
+  await test('employee is DENIED disbursements/list', async () => {
+    fails(await api('finance/disbursements/list', empToken, {}), 'employee should be denied list');
+  });
+
+  await test('employee is DENIED disbursements/create', async () => {
+    fails(await api('finance/disbursements/create', empToken, { payrollRunId: ctx.runId }), 'employee should be denied create');
+  });
+
+  await test('finance_staff can VIEW list but is DENIED create + approve', async () => {
+    ok(await api('finance/disbursements/list', fstaff1Token, {}), 'finance_staff should be able to list');
+    fails(await api('finance/disbursements/create', fstaff1Token, { payrollRunId: ctx.runId }), 'finance_staff should be denied create');
+    fails(await api('finance/disbursements/approve', fstaff1Token, { id: '00000000-0000-0000-0000-000000000000' }), 'finance_staff should be denied approve');
+  });
+
+  h.section('Finance Disbursements > Compute');
+
+  await test('compute from approved run returns net pay totals + missing bank accounts', async () => {
+    const r = await api('finance/disbursements/compute', fmgr1Token, { payrollRunId: ctx.runId });
+    ok(r, `compute failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.totalAmount === 'number', 'totalAmount missing');
+    expect(Math.abs(d.totalAmount - 7700.00) < 0.01, `total mismatch: ${d.totalAmount}`);
+    expect(d.employeeCount === 2, `employeeCount mismatch: ${d.employeeCount}`);
+    expect(Array.isArray(d.missingBankAccounts), 'missingBankAccounts must be array');
+    expect(d.missingBankAccounts.includes(emp2Id), 'emp2Id should be in missingBankAccounts');
+  });
+
+  await test('compute on a NON-approved (draft) run -> refused (422)', async () => {
+    fails(await api('finance/disbursements/compute', fmgr1Token, { payrollRunId: ctx.draftRunId }), 'compute on draft run should fail');
+  });
+
+  h.section('Finance Disbursements > Lifecycle + SoD');
+
+  await test('finance_manager creates a disbursement (draft) from the approved run', async () => {
+    const r = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
+    ok(r, `create failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.id, 'missing id');
+    expect(d.status === 'draft', `expected draft, got ${d.status}`);
+    expect(Math.abs(d.totalAmount - 7700.00) < 0.01, `total mismatch: ${d.totalAmount}`);
+    expect(d.disbursementNo, 'disbursementNo missing');
+    ctx.disbId = d.id;
+  });
+
+  await test('side-effect: finance.disbursement.created app_event written', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements').eq('event_type', 'finance.disbursement.created')
+        .eq('source_entity_id', ctx.disbId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'created app_event not found');
+  });
+
+  await test('submit (draft -> submitted)', async () => {
+    const r = await api('finance/disbursements/submit', fmgr1Token, { id: ctx.disbId });
+    ok(r, `submit failed: ${r.body.message}`);
+    expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
+  });
+
+  await test('SoD: creator cannot approve their own disbursement -> refused', async () => {
+    fails(await api('finance/disbursements/approve', fmgr1Token, { id: ctx.disbId }), 'creator should not approve own disbursement');
+  });
+
+  await test('a DIFFERENT finance_manager (fmgr2) can approve', async () => {
+    const r = await api('finance/disbursements/approve', fmgr2Token, { id: ctx.disbId });
+    ok(r, `approve failed: ${r.body.message}`);
+    expect(r.body.data.status === 'approved', `expected approved, got ${r.body.data.status}`);
+  });
+
+  await test('generate bank file (approved -> file_generated)', async () => {
+    const r = await api('finance/disbursements/generate-file', fmgr2Token, { id: ctx.disbId });
+    ok(r, `generate-file failed: ${r.body.message}`);
+    expect(r.body.data.status === 'file_generated', `expected file_generated, got ${r.body.data.status}`);
+    expect(r.body.data.bankFilePath, 'bankFilePath must be present after file generation');
+  });
+
+  await test('mark-paid (file_generated -> paid)', async () => {
+    const r = await api('finance/disbursements/mark-paid', fmgr2Token, { id: ctx.disbId });
+    ok(r, `mark-paid failed: ${r.body.message}`);
+    expect(r.body.data.status === 'paid', `expected paid, got ${r.body.data.status}`);
+  });
+
+  await test('side-effects: approved + file_generated + paid events all written', async () => {
+    const gotAll = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('event_type')
+        .eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId);
+      const types = new Set((data ?? []).map(e => e.event_type));
+      return ['finance.disbursement.approved', 'finance.disbursement.file_generated', 'finance.disbursement.paid'].every(t => types.has(t));
+    });
+    expect(gotAll, 'approved/file_generated/paid events not all present');
+  });
+
+  h.section('Finance Disbursements > Cancel path');
+
+  await test('create a second disbursement then cancel it at draft state', async () => {
+    const cr = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
+    ok(cr, `create for cancel failed: ${cr.body.message}`);
+    ctx.cancelDisbId = cr.body.data.id;
+    const r = await api('finance/disbursements/cancel', fmgr1Token, { id: ctx.cancelDisbId, reason: 'E2E cancel test' });
+    ok(r, `cancel failed: ${r.body.message}`);
+    expect(r.body.data.status === 'cancelled', `expected cancelled, got ${r.body.data.status}`);
+  });
+
+  h.section('Finance Disbursements > Response shape + reports');
+
+  await test('get returns disbursement with all frontend-consumed fields', async () => {
+    const r = await api('finance/disbursements/get', fmgr2Token, { id: ctx.disbId });
+    ok(r, `get failed: ${r.body.message}`);
+    const d = r.body.data;
+    for (const k of ['id', 'disbursementNo', 'status', 'totalAmount', 'currency', 'employeeCount', 'createdAt', 'bankFilePath']) {
+      expect(k in d, `get response missing field: ${k}`);
+    }
+  });
+
+  await test('lines/list returns per-employee net pay lines (masked account number)', async () => {
+    const r = await api('finance/disbursements/lines/list', fmgr2Token, { disbursementId: ctx.disbId });
+    ok(r, `lines/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'lines should be array');
+    const line = r.body.data[0];
+    if (line) {
+      for (const k of ['id', 'employeeId', 'netPay']) { expect(k in line, `line missing field: ${k}`); }
+      expect(!('accountNumber' in line), 'full account number must NOT be in line response');
+    }
+  });
+
+  await test('finance_manager and finance_staff can list disbursements reports', async () => {
+    ok(await api('finance/disbursements/reports/list', fmgr1Token, {}), 'reports/list failed for finance_manager');
+    ok(await api('finance/disbursements/reports/list', fstaff1Token, {}), 'reports/list failed for finance_staff');
+  });
+
+  await test('employee is DENIED disbursements reports/list', async () => {
+    fails(await api('finance/disbursements/reports/list', empToken, {}), 'employee should be denied reports');
+  });
+
+  await test('deactivate removes bank account from the active list', async () => {
+    const r = await api('finance/bank-accounts/deactivate', fmgr1Token, { id: ctx.bankAccountId });
+    ok(r, `deactivate failed: ${r.body.message}`);
+    expect(r.body.data.isActive === false, 'isActive should be false after deactivate');
+    const list = await api('finance/bank-accounts/list', empToken, {});
+    ok(list, 'list failed after deactivate');
+    expect(!list.body.data.some(a => a.id === ctx.bankAccountId), 'deactivated account must not appear in default list');
+  });
+
+}

@@ -1282,4 +1282,36 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export remittance filing reports as CSV/PDF. Finance Manager or Admin only.',
     risk: 'medium',
   },
+
+  // -- Finance Bank Accounts & Disbursements (F2) --------------------------------
+  'finance.bank_accounts.view': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'View Bank Accounts',
+    description: 'View employee bank accounts (masked account number only).',
+    risk: 'low',
+  },
+  'finance.bank_accounts.manage': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'Manage Bank Accounts',
+    description: 'Add, edit, or deactivate own (employee) or any (finance+) bank account.',
+    risk: 'medium',
+  },
+  'finance.disbursement.view': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'View Disbursements',
+    description: 'View the payroll bank disbursement register and line details.',
+    risk: 'low',
+  },
+  'finance.disbursement.manage': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'Manage Disbursements',
+    description: 'Create disbursements from approved payroll runs and submit for approval.',
+    risk: 'medium',
+  },
+  'finance.disbursement.approve': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'Approve Disbursements',
+    description: 'Approve submitted disbursements, generate EFT bank file, and mark as paid. SoD: creator cannot approve.',
+    risk: 'high',
+  },
 };

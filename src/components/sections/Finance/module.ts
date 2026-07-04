@@ -54,10 +54,17 @@ const BUDGETS_ITEM: ModuleNavItem = {
   sub: 'Budget lines per cost centre / fiscal year, Budget-vs-Actual variance tracking',
 };
 
+const DISBURSEMENTS_ITEM: ModuleNavItem = {
+  id: 's-finance-disbursements',
+  label: 'Bank Disbursements',
+  icon: 'fa-building-columns',
+  sub: 'EFT bank file generation and net-pay disbursements from approved payroll runs',
+};
+
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',
