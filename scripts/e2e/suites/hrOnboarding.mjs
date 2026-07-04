@@ -178,6 +178,9 @@ export default async function run(h) {
     const start = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'office_admin' });
     ok(start, 'start case to cancel');
     ctx.cancelCaseId = start.body.data.caseId;
+    // Reason is now mandatory — cancel with no reason is refused (validation fails before any state change)
+    const noReason = await api('hr/onboarding/cancel', A, { caseId: ctx.cancelCaseId });
+    expect(!noReason.ok || !noReason.body?.success, 'cancel with no reason should be refused');
     const r = await api('hr/onboarding/cancel', A, { caseId: ctx.cancelCaseId, reason: 'e2e cancel' });
     ok(r, 'cancel');
     expect(r.body.data.status === 'cancelled', 'cancelled');

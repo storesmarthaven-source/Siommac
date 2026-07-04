@@ -34,7 +34,8 @@ export type RefPrefix =
   | 'HRC'   // HR Case
   | 'HRI'   // HR Employee Import batch
   | 'ONB'   // HR Onboarding case
-  | 'ROS';  // HR Roster
+  | 'ROS'  // HR Roster
+  | 'REM'; // Finance Remittance
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.

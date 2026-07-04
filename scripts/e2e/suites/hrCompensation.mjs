@@ -316,6 +316,11 @@ export default async function run(h) {
     expect(r.body.data.status === 'pending_approval', 'item2 should be pending_approval');
   });
 
+  await test('reject WITHOUT a reason → refused (reason now mandatory)', async () => {
+    const r = await api('hr/compensation/pay-items/reject', hrMgr2Token, { id: ctx.item2Id });
+    expect(!r.ok || !r.body?.success, 'reject with no reason should be refused');
+  });
+
   await test('hr_manager can reject item2 (SoD: mgr2 rejects mgr1 submission)', async () => {
     const r = await api('hr/compensation/pay-items/reject', hrMgr2Token, {
       id: ctx.item2Id,

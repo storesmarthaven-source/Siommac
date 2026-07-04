@@ -18,7 +18,15 @@ import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';
 import type { HrRequestRow, HrRequestTypeDef } from '../../../../types/hrRequests';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 function humanize(s: string): string { return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function requestRecord(req: HrRequestRow) {
+  return toActionRecord({
+    title: req.title, subtitle: `${req.requestNo ?? ''} · ${humanize(req.requestType)}`.replace(/^ · /, ''), icon: 'fa-inbox',
+    badges: [statusBadge(req.status)], fields: [],
+  });
+}
 
 function statusTone(s: string): 'green' | 'gray' | 'red' | 'blue' | 'orange' {
   if (s === 'fulfilled' || s === 'approved') return 'green';
@@ -67,40 +75,47 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
     }
   }
 
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Requests', title: 'Request Preview', description: 'Preview how this request will be routed.',
+    preview: {
+      icon: 'REQ', title: selectedType?.label ?? 'Request', subtitle: title.trim() || 'Untitled request',
+      badges: [{ label: humanize(priority), tone: priority === 'high' ? 'warning' : priority === 'low' ? 'muted' : 'info' }],
+    },
+    derived: selectedType ? { title: 'Request type', fields: [{ label: 'What this is', value: selectedType.description }] } : undefined,
+    validation: [...(!title.trim() ? [{ message: 'Enter a title / subject.', tone: 'danger' as const }] : [])],
+    approval: { required: true, risk: priority === 'high' ? 'medium' : 'low', message: 'Submitted to HR for triage and decision.' },
+    whatNext: [
+      { label: 'Routes to HR triage', description: 'HR reviews and approves, rejects, or fulfils the request.' },
+      { label: 'Track status', description: 'It appears under My Requests with live status updates.' },
+    ],
+  };
   return (
-    <Modal open title="New HR Request" onClose={onClose}>
+    <EnterpriseFormModal open
+      title="New HR Request"
+      subtitle="Raise a self-service request — the panel previews its routing."
+      icon={<i class="fas fa-inbox" />}
+      context={context}
+      primaryLabel="Submit Request"
+      loading={busy}
+      disabled={!title.trim()}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
-        <Field label="Request Type">
-          <SelectInput
-            value={requestType}
-            onInput={setRequestType}
-            options={types.map(t => ({ value: t.key, label: t.label }))}
-          />
+        <Field label="Request Type" wide>
+          <SelectInput value={requestType} onInput={setRequestType} options={types.map(t => ({ value: t.key, label: t.label }))} />
         </Field>
-        {selectedType && <p class="obx-meta" style={{ marginTop: 0, gridColumn: '1 / -1' }}>{selectedType.description}</p>}
-        <Field label="Title / Subject">
+        <Field label="Title / Subject" wide>
           <TextInput value={title} onInput={setTitle} placeholder="Brief description of your request" />
         </Field>
-        <Field label="Details">
+        <Field label="Details" wide>
           <textarea class="ui-input" rows={4} value={details} onInput={e => setDetails((e.target as HTMLTextAreaElement).value)} placeholder="Provide any relevant details…" />
         </Field>
         <Field label="Priority">
-          <SelectInput
-            value={priority}
-            onInput={setPriority}
-            options={[
-              { value: 'low', label: 'Low' },
-              { value: 'normal', label: 'Normal' },
-              { value: 'high', label: 'High' },
-            ]}
-          />
+          <SelectInput value={priority} onInput={setPriority}
+            options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} />
         </Field>
       </FormGrid>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-        <button class="obx-btn" onClick={onClose} disabled={busy}>Cancel</button>
-        <button class="obx-btn primary" onClick={submit} disabled={busy}>{busy ? 'Submitting…' : 'Submit Request'}</button>
-      </div>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -108,16 +123,16 @@ function MyRequestsTab(): VNode {
   const [newOpen, setNewOpen] = useState(false);
   const typesQ    = useRequestTypes();
   const requestsQ = useMyRequests();
-  const cancelMut = useRequestsMutation((a: { requestId: string }) => hrRequestsApi.cancel(a));
+  const cancelMut = useRequestsMutation((a: { requestId: string; reason?: string }) => hrRequestsApi.cancel(a));
 
   const rows: HrRequestRow[] = requestsQ.data ?? [];
   const types = typesQ.data ?? [];
 
   async function handleCancel(req: HrRequestRow): Promise<void> {
-    const confirmed = await dialog.confirm({ title: 'Cancel Request', text: `Cancel "${req.title}"?` });
-    if (!confirmed) return;
+    const res = await openActionModal({ title: 'Cancel request', icon: 'fa-xmark', tone: 'danger', record: requestRecord(req), warning: 'This withdraws your request.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why are you cancelling?' }, whatNext: ['Status → cancelled.'], confirmLabel: 'Cancel request' });
+    if (!res.confirmed) return;
     try {
-      await cancelMut.mutateAsync({ requestId: req.id });
+      await cancelMut.mutateAsync({ requestId: req.id, reason: res.reason || undefined });
       toast('Request cancelled.');
     } catch (e) {
       toast((e as Error).message ?? 'Cancel failed.');
@@ -199,30 +214,39 @@ function DecideModal({ req, onClose, onDone }: DecideModalProps): VNode {
     }
   }
 
+  const needsComment = decision === 'rejected' || decision === 'returned';
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Requests', title: 'Decision', description: 'Review the request before deciding.',
+    preview: { icon: 'REQ', title: `${req.requestNo} · ${req.title}`, subtitle: humanize(req.requestType), badges: [statusBadge(req.status)] },
+    validation: [...(needsComment && !comment.trim() ? [{ message: 'A comment is required to reject or return.', tone: 'danger' as const }] : [])],
+    approval: { required: false, message: 'You act as the approver — the decision is audited.' },
+    whatNext: [
+      decision === 'approved' ? { label: 'Approved', description: 'The request proceeds to fulfilment.' }
+        : decision === 'returned' ? { label: 'Returned', description: 'Sent back to the requester for changes.' }
+        : { label: 'Rejected', description: 'The request is declined.' },
+    ],
+  };
   return (
-    <Modal open title={`Decide: ${req.requestNo}`} onClose={onClose}>
-      <p class="obx-meta">{req.title} — {humanize(req.requestType)}</p>
+    <EnterpriseFormModal open
+      title={`Decide: ${req.requestNo}`}
+      subtitle="Approve, return, or reject this request."
+      icon={<i class="fas fa-gavel" />}
+      context={context}
+      primaryLabel="Submit Decision"
+      loading={busy}
+      disabled={needsComment && !comment.trim()}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
-        <Field label="Decision">
-          <SelectInput
-            value={decision}
-            onInput={setDecision}
-            options={[
-              { value: 'approved', label: 'Approve' },
-              { value: 'returned', label: 'Return to requester' },
-              { value: 'rejected', label: 'Reject' },
-            ]}
-          />
+        <Field label="Decision" wide>
+          <SelectInput value={decision} onInput={setDecision}
+            options={[{ value: 'approved', label: 'Approve' }, { value: 'returned', label: 'Return to requester' }, { value: 'rejected', label: 'Reject' }]} />
         </Field>
-        <Field label={`Comment${decision !== 'approved' ? ' (required)' : ''}`}>
+        <Field label={`Comment${needsComment ? ' (required)' : ''}`} wide>
           <textarea class="ui-input" rows={3} value={comment} onInput={e => setComment((e.target as HTMLTextAreaElement).value)} placeholder="Add a note…" />
         </Field>
       </FormGrid>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-        <button class="obx-btn" onClick={onClose} disabled={busy}>Cancel</button>
-        <button class="obx-btn primary" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Submit Decision'}</button>
-      </div>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -251,22 +275,30 @@ function FulfillModal({ req, onClose, onDone }: FulfillModalProps): VNode {
     }
   }
 
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Requests', title: 'Fulfilment', description: 'Record how this request was delivered.',
+    preview: { icon: 'REQ', title: `${req.requestNo} · ${req.title}`, subtitle: humanize(req.requestType), badges: [statusBadge(req.status)] },
+    whatNext: [{ label: 'Marks fulfilled', description: 'Status → fulfilled; the requester is notified.' }],
+  };
   return (
-    <Modal open title={`Fulfill: ${req.requestNo}`} onClose={onClose}>
-      <p class="obx-meta">{req.title}</p>
+    <EnterpriseFormModal open
+      title={`Fulfill: ${req.requestNo}`}
+      subtitle="Record delivery and close out the request."
+      icon={<i class="fas fa-clipboard-check" />}
+      context={context}
+      primaryLabel="Mark Fulfilled"
+      loading={busy}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
-        <Field label="Fulfillment note">
+        <Field label="Fulfillment note" wide>
           <textarea class="ui-input" rows={3} value={note} onInput={e => setNote((e.target as HTMLTextAreaElement).value)} placeholder="Describe what was delivered…" />
         </Field>
-        <Field label="Artifact / document reference">
+        <Field label="Artifact / document reference" wide>
           <TextInput value={artifactRef} onInput={setArtRef} placeholder="e.g. doc ID, file name, SharePoint link" />
         </Field>
       </FormGrid>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
-        <button class="obx-btn" onClick={onClose} disabled={busy}>Cancel</button>
-        <button class="obx-btn primary" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Mark Fulfilled'}</button>
-      </div>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -283,10 +315,10 @@ function TriageTab(): VNode {
   const types = typesQ.data ?? [];
 
   async function handleCancel(req: HrRequestRow): Promise<void> {
-    const reason = await dialog.prompt({ title: `Reason for cancelling "${req.title}"?` });
-    if (reason === null) return;
+    const res = await openActionModal({ title: 'Cancel request', icon: 'fa-xmark', tone: 'danger', record: requestRecord(req), warning: 'Cancelling this request cannot be undone.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' }, whatNext: ['Status → cancelled.'], confirmLabel: 'Cancel request' });
+    if (!res.confirmed) return;
     try {
-      await hrRequestsApi.cancel({ requestId: req.id, reason: reason || undefined });
+      await hrRequestsApi.cancel({ requestId: req.id, reason: res.reason || undefined });
       toast('Request cancelled.');
       void requestsQ.refetch();
     } catch (e) {

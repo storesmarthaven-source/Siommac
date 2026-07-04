@@ -14,6 +14,11 @@
 // Never public — all access goes through getSignedUrl / createAttachmentUploadUrl.
 export const HR_DOC_BUCKET = 'hr-employee-documents';
 
+// Max HR document size. AUTHORITATIVE enforcement is the bucket `file_size_limit`
+// (migration 20260804000000) which Storage enforces on the object PUT. This constant
+// mirrors it for a fast, friendly early rejection on commit and in the client warning.
+export const HR_DOC_MAX_BYTES = 15_728_640; // 15 MB
+
 // Confidentiality tiers that require hr.employee_documents.sensitive_view.
 export const RESTRICTED_TIERS = new Set(['restricted_hr', 'legal', 'medical']);
 

@@ -1,24 +1,17 @@
 /**
- * useEmployeeOptions — active users as { value, label } for assignee / reviewer /
- * owner pickers in the Inspections dialogs.
+ * useEmployeeOptions — active employees as { value, label } for assignee / reviewer /
+ * owner pickers in the Inspections dialogs. Sourced from the active HR employee master
+ * (`@api/hr/employees`), NOT the legacy Employees module.
  */
 
-import { useQuery } from '@tanstack/preact-query';
-import { listActiveEmployees } from '@api/employees';
+import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 
 export interface UserOption { value: string; label: string }
 
-interface EmployeeLite { id: string; full_name?: string | null; username?: string | null }
+const empLabel = (e: HrEmployeeRow): string =>
+  e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
 
 export function useEmployeeOptions(): UserOption[] {
-  const { data } = useQuery({
-    queryKey: ['hse-inspections', 'employee-options'],
-    queryFn:  () => listActiveEmployees(),
-    staleTime: 5 * 60_000,
-  });
-  const rows = (data ?? []) as unknown as EmployeeLite[];
-  return rows.map(u => ({
-    value: u.id,
-    label: u.full_name || u.username || u.id,
-  }));
+  const { data } = useHrEmployees({ limit: 500 });
+  return (data ?? []).map(e => ({ value: e.id, label: empLabel(e) }));
 }

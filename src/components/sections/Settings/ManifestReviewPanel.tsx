@@ -13,6 +13,7 @@ import { type VNode }           from 'preact';
 import { useState, useCallback } from 'preact/hooks';
 import { toast }                from '@store';
 import { dialog }               from '@lib/dialog';
+import { openActionModal, toActionRecord } from '@/components/common/actions';
 import { useCan }               from '@lib/permissions';
 import {
   useManifestsList, useManifest, useManifestAction,
@@ -73,14 +74,35 @@ function ManifestDetail({ moduleKey }: { moduleKey: string }): VNode {
 
   const submit    = () => void run({ action: 'submit', moduleKey }, 'Submitted for review.');
   const approve   = () => void run({ action: 'approve', moduleKey }, 'Manifest approved.');
+  const manifestRecord = () => toActionRecord({
+    title: m.module_label, subtitle: `${m.module_key}${m.manifest_version ? ` · v${m.manifest_version}` : ''}`, icon: 'fa-file-shield',
+    fields: [
+      { label: 'Settings', value: String(m.settings_count ?? 0) },
+      { label: 'Critical', value: String(m.critical_settings_count ?? 0) },
+    ],
+  });
   const deprecate = async () => {
-    if (!(await dialog.confirm({ title: 'Deprecate manifest?', text: `Mark "${m.module_label}" as deprecated?`, danger: true, confirmText: 'Deprecate' }))) return;
+    const res = await openActionModal({
+      title: 'Deprecate manifest', subtitle: m.module_label, icon: 'fa-file-circle-xmark', tone: 'danger',
+      record: manifestRecord(),
+      warning: 'Deprecating retires this manifest version from active governance.',
+      whatNext: ['The manifest is marked deprecated and no longer offered for new configuration.'],
+      confirmLabel: 'Deprecate',
+    });
+    if (!res.confirmed) return;
     void run({ action: 'deprecate', moduleKey }, 'Manifest deprecated.');
   };
   const ret = async () => {
-    const reason = await dialog.prompt({ title: 'Return manifest', text: 'Reason for returning (required).', placeholder: 'What needs to change?' });
-    if (reason === null || reason.trim() === '') return;
-    void run({ action: 'return', moduleKey, reason: reason.trim() }, 'Manifest returned.');
+    const res = await openActionModal({
+      title: 'Return manifest', subtitle: m.module_label, icon: 'fa-rotate-left', tone: 'warning',
+      record: manifestRecord(),
+      warning: 'Returning sends the manifest back to its author for changes.',
+      reason: { required: true, label: 'Reason for returning', type: 'textarea', placeholder: 'What needs to change?' },
+      whatNext: ['The author sees the reason and can resubmit after addressing it.'],
+      confirmLabel: 'Return manifest',
+    });
+    if (!res.confirmed || !(res.reason ?? '').trim()) return;
+    void run({ action: 'return', moduleKey, reason: (res.reason ?? '').trim() }, 'Manifest returned.');
   };
   const review = async (decision: 'approved' | 'returned') => {
     const comment = await dialog.prompt({ title: `${decision === 'approved' ? 'Sign off' : 'Request changes'} — ${reviewerRole}`, placeholder: 'Optional comment', text: 'Recorded against this manifest.' });

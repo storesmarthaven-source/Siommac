@@ -13,7 +13,8 @@ import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, SelectInput, Tabs, EmptyState } from '@ui';
+import { PageHeader, Modal, Field, FormGrid, TextInput, TextareaInput, SelectInput, Tabs, EmptyState, Callout, FieldList, FieldRow } from '@ui';
+import { EnterpriseFormModal, orgPositionContext, orgCostCenterContext, moveOrgUnitContext } from '@/components/common/dialogs';
 import {
   useOrgUnits, useOrgStats, useOrgHealth, usePositions, useCostCenters,
   useCreateOrgUnit, useUpdateOrgUnit, useMoveOrgUnit, useArchiveOrgUnit, useDeleteOrgUnit,
@@ -75,10 +76,55 @@ function ImpactModal({ open, title, impact, confirmLabel, confirmDisabled, busy,
   );
 }
 
-// ── Org-unit create/edit modal ───────────────────────────────────────────────────
-function UnitModal({ open, editing, defaultParentId, unitOpts, siteOpts, ccOpts, peopleOpts, onClose }: {
+// ── Org-unit type guidance (shown live in the New/Edit Unit context panel) ───────
+const UNIT_TYPE_INFO: Record<OrgUnitType, { icon: string; blurb: string }> = {
+  company:         { icon: 'fa-building',         blurb: 'The legal entity at the top of the tree. Normally only one, with no parent.' },
+  division:        { icon: 'fa-diagram-project',  blurb: 'A major grouping under the company (e.g. Operations, Corporate Services).' },
+  department:      { icon: 'fa-sitemap',          blurb: 'A functional unit within a division (e.g. Field Operations, Finance, HSE).' },
+  team:            { icon: 'fa-people-group',     blurb: 'A working group inside a department, usually with a team lead.' },
+  crew:            { icon: 'fa-helmet-safety',    blurb: 'A field crew — the smallest operational unit, typically site-based.' },
+  site_department: { icon: 'fa-location-dot',     blurb: 'A department scoped to one project site, for site-specific reporting.' },
+};
+
+/** Walk parentId up to the root, returning the ancestor chain (root → …→ parent). */
+function ancestorChain(units: OrgUnit[], startId: string | null): OrgUnit[] {
+  const byId = new Map(units.map(u => [u.id, u]));
+  const chain: OrgUnit[] = [];
+  const guard = new Set<string>();
+  let cur: OrgUnit | undefined = startId ? byId.get(startId) : undefined;
+  while (cur && !guard.has(cur.id)) { guard.add(cur.id); chain.unshift(cur); cur = cur.parentId ? byId.get(cur.parentId) : undefined; }
+  return chain;
+}
+
+/** A "root › … › unit" placement path string; "Top level" when the id is null. */
+function placementPath(units: OrgUnit[], id: string | null): string {
+  if (!id) return 'Top level (no parent)';
+  const chain = ancestorChain(units, id);
+  return chain.length ? chain.map(c => c.name).join(' › ') : 'Top level (no parent)';
+}
+
+/** The set of a unit's own id + all descendant ids (moving under any of these is a cycle). */
+function selfAndDescendants(units: OrgUnit[], rootId: string): Set<string> {
+  const childrenOf = new Map<string, string[]>();
+  for (const u of units) {
+    const p = u.parentId ?? '';
+    (childrenOf.get(p) ?? childrenOf.set(p, []).get(p)!).push(u.id);
+  }
+  const out = new Set<string>([rootId]);
+  const stack = [rootId];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    for (const child of childrenOf.get(cur) ?? []) {
+      if (!out.has(child)) { out.add(child); stack.push(child); }
+    }
+  }
+  return out;
+}
+
+// ── Org-unit create/edit modal (information-rich: form + live context panel) ──────
+function UnitModal({ open, editing, defaultParentId, units, siteOpts, ccOpts, peopleOpts, onClose }: {
   open: boolean; editing: OrgUnit | null; defaultParentId: string | null;
-  unitOpts: Opt[]; siteOpts: Opt[]; ccOpts: Opt[]; peopleOpts: Opt[]; onClose: () => void;
+  units: OrgUnit[]; siteOpts: Opt[]; ccOpts: Opt[]; peopleOpts: Opt[]; onClose: () => void;
 }): VNode {
   const create = useCreateOrgUnit();
   const update = useUpdateOrgUnit();
@@ -87,6 +133,22 @@ function UnitModal({ open, editing, defaultParentId, unitOpts, siteOpts, ccOpts,
     siteId: editing?.siteId ?? '', managerId: editing?.managerId ?? '', costCenterId: editing?.costCenterId ?? '',
     description: editing?.description ?? '',
   }));
+
+  // ── Live context derived from the current form + the org tree ─────────────────
+  const effectiveParentId = editing ? editing.parentId : defaultParentId;
+  const chain      = useMemo(() => ancestorChain(units, effectiveParentId), [units, effectiveParentId]);
+  const parentUnit = chain.length ? chain[chain.length - 1]! : null;
+  const siblings   = useMemo(
+    () => units.filter(u => (u.parentId ?? null) === (effectiveParentId ?? null) && u.id !== editing?.id),
+    [units, effectiveParentId, editing],
+  );
+  const codeTrim   = f.code.trim();
+  const codeClash  = codeTrim ? units.some(u => u.id !== editing?.id && (u.code ?? '').toLowerCase() === codeTrim.toLowerCase()) : false;
+  const typeInfo   = UNIT_TYPE_INFO[f.orgUnitType as OrgUnitType];
+  const inheritSite = !f.siteId && parentUnit?.siteName ? parentUnit.siteName : null;
+  const inheritCc   = !f.costCenterId && parentUnit?.costCenterName ? parentUnit.costCenterName : null;
+  const previewName = f.name.trim() || 'New unit';
+
   async function submit(): Promise<void> {
     if (!f.name.trim()) { toast('Name is required'); return; }
     try {
@@ -108,25 +170,77 @@ function UnitModal({ open, editing, defaultParentId, unitOpts, siteOpts, ccOpts,
       onClose();
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to save org unit'); }
   }
+
   return (
-    <Modal open={open} title={editing ? 'Edit Org Unit' : 'New Org Unit'} icon="fa-sitemap" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel={editing ? 'Save' : 'Create'} submitDisabled={create.isPending || update.isPending}>
-      <FormGrid>
-        <Field label="Name" wide><TextInput value={f.name} onInput={v => setF(s => ({ ...s, name: v }))} placeholder="e.g. Field Operations" /></Field>
-        <Field label="Code"><TextInput value={f.code} onInput={v => setF(s => ({ ...s, code: v }))} placeholder="e.g. OPS" /></Field>
-        <Field label="Type"><SelectInput value={f.orgUnitType} onInput={v => setF(s => ({ ...s, orgUnitType: v as OrgUnitType }))} options={ORG_UNIT_TYPES.map(t => ({ value: t, label: titleCase(t) }))} /></Field>
-        <Field label="Manager"><SelectInput value={f.managerId} onInput={v => setF(s => ({ ...s, managerId: v }))} options={peopleOpts} placeholder="— None —" /></Field>
-        <Field label="Site"><SelectInput value={f.siteId} onInput={v => setF(s => ({ ...s, siteId: v }))} options={siteOpts} placeholder="— None —" /></Field>
-        <Field label="Cost centre"><SelectInput value={f.costCenterId} onInput={v => setF(s => ({ ...s, costCenterId: v }))} options={ccOpts} placeholder="— None —" /></Field>
-        <Field label="Description" wide><TextareaInput value={f.description} onInput={v => setF(s => ({ ...s, description: v }))} rows={2} /></Field>
-        {!editing && defaultParentId && <Field label="Parent" wide><span class="obx-meta">{unitOpts.find(u => u.value === defaultParentId)?.label ?? defaultParentId}</span></Field>}
-      </FormGrid>
+    <Modal open={open} size="lg"
+      title={editing ? `Edit "${editing.name}"` : 'New Org Unit'} icon="fa-sitemap"
+      sub={editing ? 'Update this unit — changes above the risk threshold route for approval.' : 'Add a unit to the organisation tree. The panel on the right previews where it lands.'}
+      onClose={onClose}
+      onSubmit={() => void submit()} submitLabel={editing ? 'Save changes' : 'Create unit'}
+      submitDisabled={create.isPending || update.isPending}>
+      <div class="org-unit-modal">
+        {/* ── Left: the form ── */}
+        <div class="org-unit-form">
+          <FormGrid>
+            <Field label="Name" wide><TextInput value={f.name} onInput={v => setF(s => ({ ...s, name: v }))} placeholder="e.g. Field Operations" /></Field>
+            <Field label="Code"><TextInput value={f.code} onInput={v => setF(s => ({ ...s, code: v }))} placeholder="e.g. OPS" /></Field>
+            <Field label="Type"><SelectInput value={f.orgUnitType} onInput={v => setF(s => ({ ...s, orgUnitType: v as OrgUnitType }))} options={ORG_UNIT_TYPES.map(t => ({ value: t, label: titleCase(t) }))} /></Field>
+            <Field label="Manager"><SelectInput value={f.managerId} onInput={v => setF(s => ({ ...s, managerId: v }))} options={peopleOpts} placeholder="— None —" /></Field>
+            <Field label="Site"><SelectInput value={f.siteId} onInput={v => setF(s => ({ ...s, siteId: v }))} options={siteOpts} placeholder={inheritSite ? `Inherit: ${inheritSite}` : '— None —'} /></Field>
+            <Field label="Cost centre"><SelectInput value={f.costCenterId} onInput={v => setF(s => ({ ...s, costCenterId: v }))} options={ccOpts} placeholder={inheritCc ? `Inherit: ${inheritCc}` : '— None —'} /></Field>
+            <Field label="Description" wide><TextareaInput value={f.description} onInput={v => setF(s => ({ ...s, description: v }))} rows={2} /></Field>
+          </FormGrid>
+        </div>
+
+        {/* ── Right: live context / preview panel ── */}
+        <aside class="org-unit-aside">
+          <div class="org-unit-block">
+            <div class="org-unit-block-head">Placement</div>
+            <div class="org-unit-crumbs">
+              {chain.length === 0
+                ? <span class="cur"><i class="fas fa-crown" aria-hidden="true" /> Top level of the org tree</span>
+                : <>
+                    {chain.map(c => <span key={c.id} class="crumb">{c.name}<i class="fas fa-angle-right" aria-hidden="true" /></span>)}
+                    <span class="cur">{previewName}</span>
+                  </>}
+            </div>
+          </div>
+
+          <div class="org-unit-preview">
+            <div class="org-unit-preview-row">
+              <span class={`org-type-pill org-type-${f.orgUnitType}`}><i class={`fas ${typeInfo.icon}`} aria-hidden="true" /> {titleCase(f.orgUnitType)}</span>
+              {codeTrim && <span class="org-code-chip">{codeTrim.toUpperCase()}</span>}
+            </div>
+            <div class="org-unit-preview-name">{previewName}</div>
+            <p class="org-unit-preview-blurb">{typeInfo.blurb}</p>
+          </div>
+
+          <FieldList>
+            <FieldRow icon="fa-diagram-project" label="Parent" value={parentUnit ? parentUnit.name : 'None (top level)'} />
+            <FieldRow icon="fa-code-branch" label="Sibling units" value={`${siblings.length} under this parent`} />
+            {inheritSite && <FieldRow icon="fa-location-dot" label="Site" value={<span>Inherits <b>{inheritSite}</b> from parent</span>} />}
+            {inheritCc && <FieldRow icon="fa-coins" label="Cost centre" value={<span>Inherits <b>{inheritCc}</b> from parent</span>} />}
+          </FieldList>
+
+          {codeClash && (
+            <Callout mark={<i class="fas fa-triangle-exclamation" />} title="Code already in use" status="Duplicate" alert>
+              Another unit already uses the code <b>{codeTrim.toUpperCase()}</b>. Codes should be unique.
+            </Callout>
+          )}
+
+          {!editing && (
+            <Callout mark={<i class="fas fa-wand-magic-sparkles" />} title="After you create this unit" status="Next">
+              You can attach positions, assign a manager and employees, and nest child units beneath it. Large structural changes route through approval automatically.
+            </Callout>
+          )}
+        </aside>
+      </div>
     </Modal>
   );
 }
 
 // ── Move modal ───────────────────────────────────────────────────────────────────
-function MoveModal({ open, unit, unitOpts, onClose }: { open: boolean; unit: OrgUnit; unitOpts: Opt[]; onClose: () => void }): VNode {
+function MoveModal({ open, unit, units, unitOpts, onClose }: { open: boolean; unit: OrgUnit; units: OrgUnit[]; unitOpts: Opt[]; onClose: () => void }): VNode {
   const move = useMoveOrgUnit();
   const [parentId, setParentId] = useState<string>(unit.parentId ?? '');
   async function submit(): Promise<void> {
@@ -135,20 +249,39 @@ function MoveModal({ open, unit, unitOpts, onClose }: { open: boolean; unit: Org
       toastResult(res, 'Org unit moved'); onClose();
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to move'); }
   }
-  const opts = unitOpts.filter(o => o.value !== unit.id);
+  // Can't move a unit under itself or any of its own descendants.
+  const blocked = selfAndDescendants(units, unit.id);
+  const opts = unitOpts.filter(o => !blocked.has(o.value));
+  const cycleWarning = parentId ? blocked.has(parentId) : false;
+  const requiresApproval = unit.employeeCount > 0 || unit.positionCount > 0;
+  const context = moveOrgUnitContext({
+    unitName: unit.name,
+    fromPath: placementPath(units, unit.parentId),
+    toPath: placementPath(units, parentId || null),
+    childCount: unit.childCount, employeeCount: unit.employeeCount, positionCount: unit.positionCount,
+    cycleWarning, requiresApproval,
+  });
   return (
-    <Modal open={open} title={`Move "${unit.name}"`} icon="fa-arrows-up-down-left-right" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel="Move" submitDisabled={move.isPending}>
+    <EnterpriseFormModal open
+      title={`Move "${unit.name}"`}
+      subtitle="Preview the hierarchy impact before moving this unit."
+      icon={<i class="fas fa-arrows-up-down-left-right" />}
+      context={context}
+      primaryLabel={requiresApproval ? 'Submit Move Request' : 'Move Unit'}
+      loading={move.isPending}
+      disabled={cycleWarning}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="New parent unit" wide><SelectInput value={parentId} onInput={setParentId} options={opts} placeholder="— Top level (no parent) —" /></Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
 // ── Position create/edit modal ───────────────────────────────────────────────────
-function PositionModal({ open, editing, unitOpts, siteOpts, peopleOpts, positionOpts, onClose }: {
-  open: boolean; editing: Position | null; unitOpts: Opt[]; siteOpts: Opt[]; peopleOpts: Opt[]; positionOpts: Opt[]; onClose: () => void;
+function PositionModal({ open, editing, positions, unitOpts, siteOpts, peopleOpts, positionOpts, onClose }: {
+  open: boolean; editing: Position | null; positions: Position[]; unitOpts: Opt[]; siteOpts: Opt[]; peopleOpts: Opt[]; positionOpts: Opt[]; onClose: () => void;
 }): VNode {
   const create = useCreatePosition();
   const update = useUpdatePosition();
@@ -182,9 +315,32 @@ function PositionModal({ open, editing, unitOpts, siteOpts, peopleOpts, position
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to save position'); }
   }
   const reportsToOpts = positionOpts.filter(o => !editing || o.value !== editing.id);
+  const nameFrom = (opts: Opt[], id: string): string | undefined => (id ? opts.find(o => o.value === id)?.label : undefined);
+  const keyTrim = f.positionKey.trim();
+  const duplicateKey = !editing && keyTrim ? positions.some(p => p.positionKey.toLowerCase() === keyTrim.toLowerCase()) : false;
+  const context = orgPositionContext({
+    title: f.title,
+    positionKey: f.positionKey,
+    departmentName: nameFrom(unitOpts, f.departmentId),
+    siteName: nameFrom(siteOpts, f.siteId),
+    reportsToTitle: nameFrom(positionOpts, f.reportsToPositionId),
+    defaultSupervisorName: nameFrom(peopleOpts, f.defaultSupervisorId),
+    headcountBudget: f.headcountBudget.trim() === '' ? null : Number(f.headcountBudget),
+    incumbentCount: editing?.incumbentCount ?? 0,
+    isSafetyCritical: f.isSafetyCritical,
+    duplicateKey,
+  });
   return (
-    <Modal open={open} title={editing ? 'Edit Position' : 'New Position'} icon="fa-id-badge" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel={editing ? 'Save' : 'Create'} submitDisabled={create.isPending || update.isPending}>
+    <EnterpriseFormModal open
+      title={editing ? 'Edit Position' : 'New Position'}
+      subtitle="Define a position, its headcount budget, and reporting structure."
+      icon={<i class="fas fa-id-badge" />}
+      context={context}
+      primaryLabel={editing ? 'Save Position' : 'Create Position'}
+      loading={create.isPending || update.isPending}
+      disabled={!f.title.trim() || (!editing && !keyTrim) || duplicateKey}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         {!editing && <Field label="Position key"><TextInput value={f.positionKey} onInput={v => setF(s => ({ ...s, positionKey: v }))} placeholder="e.g. field_supervisor" /></Field>}
         <Field label="Title" wide={!!editing}><TextInput value={f.title} onInput={v => setF(s => ({ ...s, title: v }))} placeholder="e.g. Field Supervisor" /></Field>
@@ -201,13 +357,14 @@ function PositionModal({ open, editing, unitOpts, siteOpts, peopleOpts, position
           </label>
         </Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
 // ── Cost-centre create/edit modal ────────────────────────────────────────────────
-function CostCenterModal({ open, editing, unitOpts, peopleOpts, onClose }: {
-  open: boolean; editing: CostCenter | null; unitOpts: Opt[]; peopleOpts: Opt[]; onClose: () => void;
+function CostCenterModal({ open, editing, costCenters, units, positions, unitOpts, peopleOpts, onClose }: {
+  open: boolean; editing: CostCenter | null; costCenters: CostCenter[]; units: OrgUnit[]; positions: Position[];
+  unitOpts: Opt[]; peopleOpts: Opt[]; onClose: () => void;
 }): VNode {
   const create = useCreateCostCenter();
   const update = useUpdateCostCenter();
@@ -236,9 +393,30 @@ function CostCenterModal({ open, editing, unitOpts, peopleOpts, onClose }: {
       onClose();
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to save cost centre'); }
   }
+  const codeTrim = f.code.trim();
+  const duplicateCode = codeTrim ? costCenters.some(c => c.id !== editing?.id && (c.code ?? '').toLowerCase() === codeTrim.toLowerCase()) : false;
+  // Positions inherit their cost centre from the org unit they sit in.
+  const unitIdsWithCc = editing ? new Set(units.filter(u => u.costCenterId === editing.id).map(u => u.id)) : new Set<string>();
+  const positionCount = editing ? positions.filter(p => p.departmentId && unitIdsWithCc.has(p.departmentId)).length : 0;
+  const context = orgCostCenterContext({
+    name: f.name, code: f.code,
+    owningUnitName: unitOpts.find(o => o.value === f.departmentId)?.label,
+    ownerName: peopleOpts.find(o => o.value === f.managerId)?.label,
+    assignedUnitCount: editing?.assignedUnitCount ?? 0,
+    positionCount,
+    duplicateCode,
+  });
   return (
-    <Modal open={open} title={editing ? 'Edit Cost Centre' : 'New Cost Centre'} icon="fa-coins" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel={editing ? 'Save' : 'Create'} submitDisabled={create.isPending || update.isPending}>
+    <EnterpriseFormModal open
+      title={editing ? 'Edit Cost Centre' : 'New Cost Centre'}
+      subtitle="Create a shared organisational and financial cost centre."
+      icon={<i class="fas fa-coins" />}
+      context={context}
+      primaryLabel={editing ? 'Save Cost Centre' : 'Create Cost Centre'}
+      loading={create.isPending || update.isPending}
+      disabled={!f.name.trim() || duplicateCode}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Code"><TextInput value={f.code} onInput={v => setF(s => ({ ...s, code: v }))} placeholder="e.g. CC-1000" /></Field>
         <Field label="Name"><TextInput value={f.name} onInput={v => setF(s => ({ ...s, name: v }))} placeholder="e.g. Operations Payroll" /></Field>
@@ -247,7 +425,7 @@ function CostCenterModal({ open, editing, unitOpts, peopleOpts, onClose }: {
         <Field label="Owning unit"><SelectInput value={f.departmentId} onInput={v => setF(s => ({ ...s, departmentId: v }))} options={unitOpts} placeholder="— None —" /></Field>
         <Field label="Manager"><SelectInput value={f.managerId} onInput={v => setF(s => ({ ...s, managerId: v }))} options={peopleOpts} placeholder="— None —" /></Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -369,10 +547,10 @@ export function OrgStructureOverview(): VNode {
       {tab === 'changerequests' && <ChangeRequestsTab />}
 
       {/* Modals */}
-      {modal.kind === 'unit' && <UnitModal open editing={modal.editing} defaultParentId={modal.parentId} unitOpts={unitOpts} siteOpts={siteOpts} ccOpts={ccOpts} peopleOpts={peopleOpts} onClose={() => setModal({ kind: 'none' })} />}
-      {modal.kind === 'move' && <MoveModal open unit={modal.unit} unitOpts={unitOpts} onClose={() => setModal({ kind: 'none' })} />}
-      {modal.kind === 'position' && <PositionModal open editing={modal.editing} unitOpts={unitOpts} siteOpts={siteOpts} peopleOpts={peopleOpts} positionOpts={positionOpts} onClose={() => setModal({ kind: 'none' })} />}
-      {modal.kind === 'costcenter' && <CostCenterModal open editing={modal.editing} unitOpts={unitOpts} peopleOpts={peopleOpts} onClose={() => setModal({ kind: 'none' })} />}
+      {modal.kind === 'unit' && <UnitModal open editing={modal.editing} defaultParentId={modal.parentId} units={units} siteOpts={siteOpts} ccOpts={ccOpts} peopleOpts={peopleOpts} onClose={() => setModal({ kind: 'none' })} />}
+      {modal.kind === 'move' && <MoveModal open unit={modal.unit} units={units} unitOpts={unitOpts} onClose={() => setModal({ kind: 'none' })} />}
+      {modal.kind === 'position' && <PositionModal open editing={modal.editing} positions={positionsQ.data ?? []} unitOpts={unitOpts} siteOpts={siteOpts} peopleOpts={peopleOpts} positionOpts={positionOpts} onClose={() => setModal({ kind: 'none' })} />}
+      {modal.kind === 'costcenter' && <CostCenterModal open editing={modal.editing} costCenters={ccQ.data ?? []} units={units} positions={positionsQ.data ?? []} unitOpts={unitOpts} peopleOpts={peopleOpts} onClose={() => setModal({ kind: 'none' })} />}
       <ImpactModal open={!!impact} title={impact?.title ?? ''} impact={impact?.data ?? null} confirmLabel={impact?.confirmLabel ?? 'Confirm'}
         confirmDisabled={(impact?.data?.blockers.length ?? 0) > 0} busy={impactBusy} onConfirm={() => void confirmImpact()} onClose={() => setImpact(null)} />
     </div>

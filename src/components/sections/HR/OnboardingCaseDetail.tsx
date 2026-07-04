@@ -14,7 +14,7 @@
  */
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
@@ -145,14 +145,38 @@ export function OnboardingCaseDetail({
     try { await fn(); onToast(ok); } catch (e) { onToast(e instanceof Error ? e.message : 'Action failed'); }
   }
 
-  // ── lifecycle handlers ──────────────────────────────────────────────────────────
-  async function handlePause(): Promise<void> { const r = await dialog.prompt({ title: 'Reason for pausing this case?' }); if (r === null) return; await run(() => pauseMut.mutateAsync({ caseId, reason: r || null }), 'Case paused'); }
-  async function handleResume(): Promise<void> { if (!await dialog.confirm({ title: 'Resume this onboarding case?' })) return; await run(() => resumeMut.mutateAsync({ caseId }), 'Case resumed'); }
-  async function handleMarkReady(): Promise<void> { if (!await dialog.confirm({ title: 'Mark this case as ready for activation?' })) return; await run(() => markReadyMut.mutateAsync({ caseId }), 'Marked ready'); }
-  async function handleComplete(): Promise<void> { if (!await dialog.confirm({ title: 'Complete this onboarding case?' })) return; await run(() => completeCaseMut.mutateAsync({ caseId }), 'Case completed'); }
-  async function handleCancel(): Promise<void> { const r = await dialog.prompt({ title: 'Reason for cancelling this case?' }); if (r === null) return; await run(() => cancelMut.mutateAsync({ caseId, reason: r || undefined }), 'Case cancelled'); }
+  // ── lifecycle handlers (ActionModal: record + status transition + consequence) ────
+  const caseRecord = () => toActionRecord({
+    title: `${caseRow.caseNo} · ${caseRow.employeeName ?? '—'}`, subtitle: caseRow.packageLabel ?? undefined, icon: 'fa-rocket',
+    badges: [statusBadge(caseRow.status)],
+    fields: [{ label: 'Progress', value: `${caseRow.progressPercent}%` }, caseRow.dueAt ? { label: 'Due', value: caseRow.dueAt } : null],
+  });
+  async function handlePause(): Promise<void> {
+    const res = await openActionModal({ title: 'Pause case', icon: 'fa-circle-pause', tone: 'warning', record: caseRecord(), reason: { required: false, label: 'Reason for pausing', type: 'text', placeholder: 'Optional' }, whatNext: ['The case is paused; it leaves the active queue until resumed.'], confirmLabel: 'Pause' });
+    if (res.confirmed) await run(() => pauseMut.mutateAsync({ caseId, reason: res.reason || null }), 'Case paused');
+  }
+  async function handleResume(): Promise<void> {
+    const res = await openActionModal({ title: 'Resume case', icon: 'fa-circle-play', tone: 'info', record: caseRecord(), whatNext: ['The case resumes and re-enters the active queue.'], confirmLabel: 'Resume' });
+    if (res.confirmed) await run(() => resumeMut.mutateAsync({ caseId }), 'Case resumed');
+  }
+  async function handleMarkReady(): Promise<void> {
+    const res = await openActionModal({ title: 'Mark ready for activation', icon: 'fa-flag-checkered', tone: 'info', record: caseRecord(), warning: 'Confirm all onboarding tasks are complete.', whatNext: ['Status → ready_for_activation.'], confirmLabel: 'Mark ready' });
+    if (res.confirmed) await run(() => markReadyMut.mutateAsync({ caseId }), 'Marked ready');
+  }
+  async function handleComplete(): Promise<void> {
+    const res = await openActionModal({ title: 'Complete case', icon: 'fa-circle-check', tone: 'warning', record: caseRecord(), warning: 'Completing closes the onboarding case.', whatNext: ['Status → completed; no further changes.'], confirmLabel: 'Complete' });
+    if (res.confirmed) await run(() => completeCaseMut.mutateAsync({ caseId }), 'Case completed');
+  }
+  async function handleCancel(): Promise<void> {
+    const res = await openActionModal({ title: 'Cancel case', icon: 'fa-xmark', tone: 'danger', record: caseRecord(), warning: 'Cancelling this onboarding case cannot be undone.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' }, whatNext: ['Open tasks and handoffs are voided.', 'Status → cancelled.'], confirmLabel: 'Cancel case' });
+    if (res.confirmed) await run(() => cancelMut.mutateAsync({ caseId, reason: res.reason || undefined }), 'Case cancelled');
+  }
   async function handleReassignOwner(ownerId: string): Promise<void> { await run(() => reassignMut.mutateAsync({ caseId, ownerId: ownerId || null }), 'Owner reassigned'); }
-  async function handleProvision(): Promise<void> { if (!caseRow.employeeId) { onToast('No employee linked'); return; } if (!await dialog.confirm({ title: 'Provision a work email & login for this employee?' })) return; await run(() => provisionMut.mutateAsync({ employeeId: caseRow.employeeId!, sendInvite: true }), 'Account provisioning started'); }
+  async function handleProvision(): Promise<void> {
+    if (!caseRow.employeeId) { onToast('No employee linked'); return; }
+    const res = await openActionModal({ title: 'Provision account', icon: 'fa-user-gear', tone: 'info', record: caseRecord(), whatNext: ['Creates a work email + login for the employee.', 'An account-activation invite is sent.'], confirmLabel: 'Provision' });
+    if (res.confirmed) await run(() => provisionMut.mutateAsync({ employeeId: caseRow.employeeId!, sendInvite: true }), 'Account provisioning started');
+  }
 
   // ── task handlers ────────────────────────────────────────────────────────────────
   function openAddTask(): void { setTaskForm({ taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false, requiresEvidence: false }); setTaskModalOpen(true); }
@@ -165,14 +189,30 @@ export function OnboardingCaseDetail({
     setTaskModalOpen(false);
   }
   async function handleCompleteTask(t: OnboardingTaskRow): Promise<void> { await run(() => completeTaskMut.mutateAsync({ taskId: t.taskId }), 'Task completed'); }
-  async function handleBlockTask(t: OnboardingTaskRow): Promise<void> { const r = await dialog.prompt({ title: `Why is "${t.taskTitle}" blocked?` }); if (r === null) return; await run(() => blockTaskMut.mutateAsync({ taskId: t.taskId, reason: r || null }), 'Task blocked'); }
+  async function handleBlockTask(t: OnboardingTaskRow): Promise<void> {
+    const res = await openActionModal({ title: 'Block task', icon: 'fa-ban', tone: 'warning', record: toActionRecord({ title: t.taskTitle, icon: 'fa-list-check' }), reason: { required: true, label: 'Why is it blocked?', type: 'textarea', placeholder: 'Blocking reason' }, whatNext: ['The task is marked blocked; it may block case activation.'], confirmLabel: 'Block' });
+    if (!res.confirmed) return;
+    await run(() => blockTaskMut.mutateAsync({ taskId: t.taskId, reason: res.reason || null }), 'Task blocked');
+  }
   async function handleUnblockTask(t: OnboardingTaskRow): Promise<void> { await run(() => unblockTaskMut.mutateAsync({ taskId: t.taskId }), 'Task unblocked'); }
   async function handleReassignTask(t: OnboardingTaskRow, assignedTo: string): Promise<void> { await run(() => reassignTaskMut.mutateAsync({ taskId: t.taskId, assignedTo: assignedTo || null }), 'Task reassigned'); }
 
   // ── blocker handlers ──────────────────────────────────────────────────────────────
-  async function handleResolve(b: OnboardingBlockerRow): Promise<void> { const n = await dialog.prompt({ title: `Resolution for: ${b.blockerTitle}` }); if (n === null) return; await run(() => resolveMut.mutateAsync({ blockerId: b.blockerId, note: n || null }), 'Blocker resolved'); }
-  async function handleEscalate(b: OnboardingBlockerRow): Promise<void> { const n = await dialog.prompt({ title: `Escalation reason for: ${b.blockerTitle}` }); if (n === null) return; await run(() => escalateMut.mutateAsync({ blockerId: b.blockerId, note: n || null }), 'Blocker escalated'); }
-  async function handleWaive(b: OnboardingBlockerRow): Promise<void> { const r = await dialog.prompt({ title: `Waiver reason for: ${b.blockerTitle} (required)` }); if (!r) return; await run(() => waiveMut.mutateAsync({ blockerId: b.blockerId, reason: r }), 'Blocker waived'); }
+  async function handleResolve(b: OnboardingBlockerRow): Promise<void> {
+    const res = await openActionModal({ title: 'Resolve blocker', icon: 'fa-circle-check', tone: 'success', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), reason: { required: true, label: 'Resolution note', type: 'textarea', placeholder: 'How was it resolved?' }, whatNext: ['The blocker is marked resolved.'], confirmLabel: 'Resolve' });
+    if (!res.confirmed) return;
+    await run(() => resolveMut.mutateAsync({ blockerId: b.blockerId, note: res.reason || null }), 'Blocker resolved');
+  }
+  async function handleEscalate(b: OnboardingBlockerRow): Promise<void> {
+    const res = await openActionModal({ title: 'Escalate blocker', icon: 'fa-arrow-up-right-dots', tone: 'warning', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), reason: { required: true, label: 'Escalation reason', type: 'textarea', placeholder: 'Why escalate?' }, whatNext: ['The blocker is escalated and its owner notified.'], confirmLabel: 'Escalate' });
+    if (!res.confirmed) return;
+    await run(() => escalateMut.mutateAsync({ blockerId: b.blockerId, note: res.reason || null }), 'Blocker escalated');
+  }
+  async function handleWaive(b: OnboardingBlockerRow): Promise<void> {
+    const res = await openActionModal({ title: 'Waive blocker', icon: 'fa-circle-minus', tone: 'danger', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), warning: 'Waiving accepts the blocker without resolving it.', reason: { required: true, label: 'Waiver reason', type: 'textarea', placeholder: 'Why is this acceptable?' }, whatNext: ['The blocker is waived; the case can proceed.'], confirmLabel: 'Waive' });
+    if (!res.confirmed) return;
+    await run(() => waiveMut.mutateAsync({ blockerId: b.blockerId, reason: res.reason || '' }), 'Blocker waived');
+  }
 
   // ── custom action handlers ──────────────────────────────────────────────────────
   function openAddAction(): void {
@@ -190,7 +230,11 @@ export function OnboardingCaseDetail({
     setActionModalOpen(false);
   }
   async function handleCompleteAction(a: OnboardingCaseAction): Promise<void> { await run(() => completeActionMut.mutateAsync({ id: a.id }), 'Action completed'); }
-  async function handleCancelAction(a: OnboardingCaseAction): Promise<void> { const r = await dialog.prompt({ title: `Reason for cancelling "${a.actionName}"?` }); if (r === null) return; await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: r || null }), 'Action cancelled'); }
+  async function handleCancelAction(a: OnboardingCaseAction): Promise<void> {
+    const res = await openActionModal({ title: 'Cancel action', icon: 'fa-xmark', tone: 'danger', record: toActionRecord({ title: a.actionName, icon: 'fa-bolt' }), reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why cancel?' }, whatNext: ['The custom action is cancelled.'], confirmLabel: 'Cancel action' });
+    if (!res.confirmed) return;
+    await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: res.reason || null }), 'Action cancelled');
+  }
   async function handleUpdateActionStatus(a: OnboardingCaseAction, status: OnboardingCaseActionStatus): Promise<void> { await run(() => updateActionMut.mutateAsync({ id: a.id, status }), 'Action updated'); }
 
   const blockerOpen = (s: string): boolean => ['active', 'acknowledged', 'waiting_on_owner', 'escalated'].includes(s);

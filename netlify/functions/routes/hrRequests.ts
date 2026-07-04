@@ -122,6 +122,11 @@ router.post('/requests/decide', async c => {
     decision:  z.enum(DECISIONS),
     comment:   z.string().max(1000).optional(),
     taskId:    z.string().uuid().optional(),
+  }).superRefine((val, ctx) => {
+    // A comment is mandatory when rejecting or returning (matches the UI DecideModal).
+    if ((val.decision === 'rejected' || val.decision === 'returned') && !val.comment?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['comment'], message: 'A comment is required to reject or return a request.' });
+    }
   }), body(c));
   if (!v.ok) return v.response;
   try {
@@ -150,7 +155,7 @@ router.post('/requests/cancel', async c => {
   const actor = await requirePermission(c, 'hr.requests.submit_own');
   const v = zv(c, z.object({
     requestId: z.string().uuid(),
-    reason:    z.string().max(500).optional(),
+    reason:    z.string().trim().min(1, 'A reason is required to cancel a request.').max(500),
   }), body(c));
   if (!v.ok) return v.response;
   try {

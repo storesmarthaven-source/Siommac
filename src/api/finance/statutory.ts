@@ -1,0 +1,181 @@
+/**
+ * src/api/finance/statutory.ts
+ *
+ * Typed client + TanStack hooks for the Finance Statutory Configuration backend
+ * (routes/financeStatutory.ts — POST `finance/statutory/*` + `finance/payroll/components/*`,
+ * camelCase `body.args`). Finance owns the statutory treatment (NIS / PAYE / Health Surcharge
+ * rate versions + the pay-component catalogue). `actorId` is derived server-side from auth —
+ * clients never send it.
+ *
+ * `call<T>` throws on `success:false`; callers surface errors via @lib/dialog or toast.
+ */
+import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
+import { apiPost } from '@lib/api';
+
+// ── DTOs (mirror the backend lib return shapes exactly) ─────────────────────────
+
+export type StatutoryVersionStatus = 'draft' | 'pending_approval' | 'approved' | 'active' | 'retired';
+
+export interface StatutoryVersion {
+  id: string;
+  effectiveFrom: string;
+  label: string;
+  jurisdiction: string;
+  currency: string;
+  payePersonalAllowance: number;
+  payeBand1Ceiling: number;
+  payeBand1Rate: number;
+  payeBand2Rate: number;
+  hsMonthlyThreshold: number;
+  hsWeeklyHigh: number;
+  hsWeeklyLow: number;
+  nisMonthyCeiling: number | null;
+  status: StatutoryVersionStatus;
+  workflowId: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  approvedBy: string | null;
+  activatedBy: string | null;
+  activatedAt: string | null;
+  retiredBy: string | null;
+  retiredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NisClass {
+  id: string;
+  statutoryVersionId: string;
+  classNo: number;
+  weeklyMin: number;
+  weeklyMax: number | null;
+  employeeWeekly: number;
+  employerWeekly: number;
+  createdAt: string;
+}
+
+export interface PayComponent {
+  id: string;
+  code: string;
+  name: string;
+  kind: 'earning' | 'deduction';
+  isStatutory: boolean;
+  isTaxable: boolean;
+  reducesChargeable: boolean;
+  glAccountCode: string | null;
+  costAllocationRequired: boolean;
+  isActive: boolean;
+  createdBy: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StatutoryReportRow { [k: string]: unknown }
+
+export interface CreateStatutoryVersionArgs {
+  effectiveFrom: string;
+  label: string;
+  jurisdiction?: 'TT';
+  currency?: 'TTD';
+  payePersonalAllowance: number;
+  payeBand1Ceiling: number;
+  payeBand1Rate: number;
+  payeBand2Rate: number;
+  hsMonthlyThreshold: number;
+  hsWeeklyHigh: number;
+  hsWeeklyLow: number;
+  nisMonthyCeiling?: number | null;
+}
+
+export interface UpsertNisClassArgs {
+  statutoryVersionId: string;
+  classNo: number;
+  weeklyMin: number;
+  weeklyMax?: number | null;
+  employeeWeekly: number;
+  employerWeekly: number;
+}
+
+export interface CreatePayComponentArgs {
+  code: string;
+  name: string;
+  kind: 'earning' | 'deduction';
+  isStatutory?: boolean;
+  isTaxable?: boolean;
+  reducesChargeable?: boolean;
+  glAccountCode?: string | null;
+  costAllocationRequired?: boolean;
+}
+
+// ── Core call helper ────────────────────────────────────────────────────────────
+
+async function call<T>(path: string, args: object = {}): Promise<T> {
+  const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args as Record<string, unknown>);
+  if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
+  return res.data;
+}
+
+// ── API object ──────────────────────────────────────────────────────────────────
+
+export const financeStatutoryApi = {
+  // Statutory rate versions
+  listVersions:  (a: { jurisdiction?: string; status?: string; activeOnly?: boolean } = {}) => call<StatutoryVersion[]>('finance/statutory/versions/list', a),
+  getVersion:    (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/get', a),
+  createVersion: (a: CreateStatutoryVersionArgs)            => call<StatutoryVersion>('finance/statutory/versions/create', a),
+  updateVersion: (a: { id: string } & Partial<CreateStatutoryVersionArgs>) => call<StatutoryVersion>('finance/statutory/versions/update', a),
+  submitVersion: (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/submit', a),
+  approveVersion:(a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/approve', a),
+  rejectVersion: (a: { id: string; reason?: string })       => call<StatutoryVersion>('finance/statutory/versions/reject', a),
+  activateVersion:(a: { id: string })                       => call<StatutoryVersion>('finance/statutory/versions/activate', a),
+  retireVersion: (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/retire', a),
+
+  // NIS classes
+  listNisClasses: (a: { statutoryVersionId: string })       => call<NisClass[]>('finance/statutory/nis-classes/list', a),
+  upsertNisClass: (a: UpsertNisClassArgs)                   => call<NisClass>('finance/statutory/nis-classes/upsert', a),
+
+  // Reports
+  listReports:   (a: object = {})                           => call<StatutoryReportRow[]>('finance/statutory/reports/list', a),
+
+  // Pay-component catalogue (Finance-owned)
+  listComponents:  (a: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) => call<PayComponent[]>('finance/payroll/components/list', a),
+  createComponent: (a: CreatePayComponentArgs)              => call<PayComponent>('finance/payroll/components/create', a),
+  updateComponent: (a: { id: string } & Partial<CreatePayComponentArgs>) => call<PayComponent>('finance/payroll/components/update', a),
+  retireComponent: (a: { id: string })                      => call<PayComponent>('finance/payroll/components/retire', a),
+};
+
+// ── Query keys ────────────────────────────────────────────────────────────────
+
+export const financeStatutoryKeys = {
+  versions:  (o: object = {}) => ['finance', 'statutory', 'versions', o] as const,
+  version:   (id: string)     => ['finance', 'statutory', 'version', id] as const,
+  nisClasses:(vid: string)    => ['finance', 'statutory', 'nis-classes', vid] as const,
+  reports:   ()               => ['finance', 'statutory', 'reports'] as const,
+  components:(o: object = {}) => ['finance', 'payroll', 'components', o] as const,
+};
+
+// ── Query hooks ─────────────────────────────────────────────────────────────────
+
+export function useStatutoryVersions(opts: { jurisdiction?: string; status?: string; activeOnly?: boolean } = {}) {
+  return useQuery({ queryKey: financeStatutoryKeys.versions(opts), queryFn: () => financeStatutoryApi.listVersions(opts) });
+}
+export function useNisClasses(statutoryVersionId: string | null) {
+  return useQuery({
+    queryKey: financeStatutoryKeys.nisClasses(statutoryVersionId ?? ''),
+    queryFn: () => financeStatutoryApi.listNisClasses({ statutoryVersionId: statutoryVersionId! }),
+    enabled: !!statutoryVersionId,
+  });
+}
+export function usePayComponents(opts: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) {
+  return useQuery({ queryKey: financeStatutoryKeys.components(opts), queryFn: () => financeStatutoryApi.listComponents(opts) });
+}
+
+// ── Mutation hook (invalidates the whole finance-statutory subtree) ─────────────
+
+export function useStatutoryMutation<A, R>(fn: (a: A) => Promise<R>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['finance', 'statutory'] }); void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'components'] }); },
+  });
+}

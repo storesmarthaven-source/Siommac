@@ -214,6 +214,7 @@ export default async function run(h) {
   await test('request/cancel → cancelled + release ledger', async () => {
     const r = await api('hr/leave/request/cancel', A, {
       requestId: ctx.cancelRequestId,
+      reason: 'Plans changed — E2E cancel',
     });
     ok(r, 'cancel ok');
     const { data: rel } = await sb.from('hr_leave_accruals')
@@ -223,7 +224,7 @@ export default async function run(h) {
   });
 
   await test('request/cancel already-cancelled → fails', async () => {
-    const r = await api('hr/leave/request/cancel', A, { requestId: ctx.cancelRequestId });
+    const r = await api('hr/leave/request/cancel', A, { requestId: ctx.cancelRequestId, reason: 'retry cancel' });
     expect(!r.ok || !r.body.success, 'double cancel rejected');
   });
 

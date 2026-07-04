@@ -1186,4 +1186,36 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export a locked payroll run as a CSV/JSON artifact. Re-export creates a new versioned artifact; prior artifacts are marked not-current. Does not disburse funds. Finance Manager or Admin only.',
     risk: 'high',
   },
+
+  // Statutory Remittances & Filing
+  'finance.remittances.view': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'View Remittances',
+    description: 'View statutory remittances (PAYE/BIR, NIS/NIBTT, Health Surcharge) and derived line details.',
+    risk: 'low',
+  },
+  'finance.remittances.manage': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'Manage Remittances',
+    description: 'Compute remittances from payroll runs, create drafts, submit for approval, and cancel.',
+    risk: 'medium',
+  },
+  'finance.remittances.approve': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'Approve Remittances',
+    description: 'Approve submitted remittances (SoD: approver must differ from creator), mark as paid, and mark as filed.',
+    risk: 'high',
+  },
+  'finance.remittances.reports.view': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'View Remittance Reports',
+    description: 'View historical remittance filing reports across authorities and periods.',
+    risk: 'low',
+  },
+  'finance.remittances.reports.export': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'Export Remittance Reports',
+    description: 'Export remittance filing reports as CSV/PDF. Finance Manager or Admin only.',
+    risk: 'medium',
+  },
 };

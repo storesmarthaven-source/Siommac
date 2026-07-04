@@ -38,6 +38,7 @@ import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
 import { StepUpProvider }                from '@/hooks/useStepUp';
 import { Toaster }                       from '@ui/toast';
+import { ActionModalHost }               from '@/components/common/actions';
 
 // ── Communications bridge ─────────────────────────────────────────────────────
 // Headless component: subscribes to realtime signals and keeps summary fresh.
@@ -155,6 +156,9 @@ export default function AppShell() {
 
       {/* App-wide toast engine — ONE mount, portalled to document.body */}
       <Toaster />
+
+      {/* App-wide enterprise lifecycle-action modal — ONE mount, imperative via openActionModal() */}
+      <ActionModalHost />
     </>
     </StepUpProvider>
   );

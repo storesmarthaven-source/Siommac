@@ -178,7 +178,7 @@ export default async function run(h) {
   });
 
   await test('/requests/cancel: employee A cannot cancel employee B request (403)', async () => {
-    const r = await api('hr/requests/cancel', ctx.empAToken, { requestId: ctx.reqBId });
+    const r = await api('hr/requests/cancel', ctx.empAToken, { requestId: ctx.reqBId, reason: 'attempt to cancel B' });
     fails(r, `employee A should be denied cancel on employee B's request`);
   });
 
@@ -323,7 +323,7 @@ export default async function run(h) {
     // re-use the fulfilled reqB from the triage tests
     const { data: fulfilled } = await sb.from('hr_requests').select('id').eq('employee_id', empBId).eq('status', 'fulfilled').limit(1);
     if (!(fulfilled ?? []).length) return; // skip if none
-    const r = await api('hr/requests/cancel', A, { requestId: fulfilled[0].id });
+    const r = await api('hr/requests/cancel', A, { requestId: fulfilled[0].id, reason: 'attempt to cancel fulfilled' });
     fails(r, 'should not cancel a fulfilled request');
   });
 }

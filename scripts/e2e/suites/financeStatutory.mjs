@@ -421,9 +421,11 @@ export default async function run(h) {
     }
   });
 
-  await test('finance_staff can view statutory reports', async () => {
+  await test('finance_staff is DENIED statutory reports (manager/admin surface)', async () => {
+    // Statutory/finance reports are a manager/admin reporting surface. finance_staff
+    // holds finance.statutory.view (data entry/review) but NOT reports.view — by design.
     const r = await api('finance/statutory/reports/list', fstaff1Token, {});
-    ok(r, `finance_staff reports/list failed: ${r.body.message}`);
+    fails(r, 'finance_staff should be denied statutory reports/list (reports.view is manager/admin only)');
   });
 
   await test('employee is DENIED statutory reports', async () => {
@@ -452,6 +454,10 @@ export default async function run(h) {
     // Creator cannot reject their own (SoD)
     const selfReject = await api('finance/statutory/versions/reject', fmgr1Token, { id: rejectId, reason: 'Self reject attempt' });
     fails(selfReject, 'creator should not be able to reject their own submission');
+
+    // Reason is now mandatory — a reject with no reason is refused (fails at validation, no state change)
+    const noReason = await api('finance/statutory/versions/reject', fmgr2Token, { id: rejectId });
+    fails(noReason, 'reject with no reason should be refused');
 
     // Different manager can reject
     const r = await api('finance/statutory/versions/reject', fmgr2Token, { id: rejectId, reason: 'Rates need recalibration' });

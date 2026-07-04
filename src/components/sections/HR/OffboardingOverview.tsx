@@ -9,8 +9,9 @@
  */
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
 import { toast } from '@store';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { can } from '@lib/permissions';
 import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
 import {
@@ -103,16 +104,38 @@ function NewCaseModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
       onCreated(r.caseId);
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to start offboarding'); }
   }
+  const empName = peopleOpts.find(o => o.value === f.employeeId)?.label;
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Offboarding', title: 'Exit Preview', description: 'Preview what starting this offboarding case creates.',
+    preview: {
+      icon: 'OFB', title: empName ?? 'Select employee', subtitle: humanize(f.reason),
+      badges: f.lastWorkingDay ? [{ label: `Last day ${f.lastWorkingDay}`, tone: 'info' }] : [],
+    },
+    validation: [...(!f.employeeId ? [{ message: 'Select an employee.', tone: 'danger' as const }] : [])],
+    whatNext: [
+      { label: 'Exit tasks created', description: 'Clearance, access removal, asset return, exit interview, final pay.' },
+      { label: 'Cross-module handoffs raised', description: 'IT access-removal, finance final-pay, HSE PPE-return.' },
+      { label: 'On finalize', description: 'The employee is terminated and their login is disabled.' },
+    ],
+  };
   return (
-    <Modal open title="New Offboarding Case" icon="fa-door-open" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel="Start" submitDisabled={startMut.isPending}>
+    <EnterpriseFormModal open
+      title="New Offboarding Case"
+      subtitle="Start an employee exit — the panel previews the tasks and handoffs it creates."
+      icon={<i class="fas fa-door-open" />}
+      context={context}
+      primaryLabel="Start Offboarding"
+      loading={startMut.isPending}
+      disabled={!f.employeeId}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Employee" wide><SelectInput value={f.employeeId} onInput={v => setF(s => ({ ...s, employeeId: v }))} options={peopleOpts} placeholder="Select employee…" /></Field>
         <Field label="Reason"><SelectInput value={f.reason} onInput={v => setF(s => ({ ...s, reason: v as OffboardingReason }))} options={REASONS.map(r => ({ value: r, label: humanize(r) }))} /></Field>
         <Field label="Case owner"><SelectInput value={f.ownerId} onInput={v => setF(s => ({ ...s, ownerId: v }))} options={peopleOpts} placeholder="— You —" /></Field>
         <Field label="Last working day"><TextInput type="date" value={f.lastWorkingDay} onInput={v => setF(s => ({ ...s, lastWorkingDay: v }))} /></Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -133,20 +156,53 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
   async function run(p: Promise<unknown>, msg: string): Promise<void> {
     try { await p; toast(msg); } catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
   }
-  async function onFinalize(caseNo: string): Promise<void> {
-    if (!await dialog.confirm({ title: `Finalize ${caseNo}?`, text: 'This terminates the employee (disables login) and raises the IT access-removal handoff.' })) return;
-    await run(finalizeMut.mutateAsync({ caseId }), 'Exit finalized — employee terminated');
-  }
-  async function onCancel(): Promise<void> {
-    const r = await dialog.prompt({ title: 'Reason for cancelling this case?' });
-    if (r === null) return;
-    await run(cancelMut.mutateAsync({ caseId, reason: r || undefined }), 'Case cancelled');
-  }
 
   if (q.isLoading && !q.data) return <div class="hr-offboarding"><button class="obx-back" onClick={onBack}>← Offboarding</button><div class="obx-empty">Loading…</div></div>;
   if (!q.data) return <div class="hr-offboarding"><button class="obx-back" onClick={onBack}>← Offboarding</button><div class="obx-empty">Case not found.</div></div>;
   const { case: c, tasks, handoffs, blockers } = q.data;
   const terminal = c.status === 'completed' || c.status === 'cancelled';
+
+  // ── Lifecycle actions via ActionModal (record + status transition + consequence) ──
+  const caseRecord = toActionRecord({
+    title: `${c.caseNo} · ${c.employeeName ?? '—'}`, subtitle: humanize(c.reason), icon: 'fa-door-open',
+    badges: [statusBadge(c.status)],
+    fields: [c.lastWorkingDay ? { label: 'Last working day', value: c.lastWorkingDay } : null],
+  });
+  const onPause = async (): Promise<void> => {
+    const r = await openActionModal({ title: 'Pause case', icon: 'fa-circle-pause', tone: 'warning', record: caseRecord, whatNext: ['The case is paused; it leaves the active queue until resumed.'], confirmLabel: 'Pause' });
+    if (r.confirmed) await run(pauseMut.mutateAsync({ caseId }), 'Paused');
+  };
+  const onResume = async (): Promise<void> => {
+    const r = await openActionModal({ title: 'Resume case', icon: 'fa-circle-play', tone: 'info', record: caseRecord, whatNext: ['The case resumes and re-enters the active queue.'], confirmLabel: 'Resume' });
+    if (r.confirmed) await run(resumeMut.mutateAsync({ caseId }), 'Resumed');
+  };
+  const onReady = async (): Promise<void> => {
+    const r = await openActionModal({ title: 'Mark ready for exit', icon: 'fa-flag-checkered', tone: 'info', record: caseRecord, warning: 'Confirm all exit tasks are complete.', whatNext: ['Status → ready_for_exit; the case is ready for final exit / finalize.'], confirmLabel: 'Mark ready' });
+    if (r.confirmed) await run(readyMut.mutateAsync({ caseId }), 'Marked ready for exit');
+  };
+  const onComplete = async (): Promise<void> => {
+    const r = await openActionModal({ title: 'Complete case', icon: 'fa-circle-check', tone: 'warning', record: caseRecord, warning: 'Completing closes the offboarding case.', whatNext: ['Status → completed; no further changes.'], confirmLabel: 'Complete' });
+    if (r.confirmed) await run(completeMut.mutateAsync({ caseId }), 'Case completed');
+  };
+  const onFinalize = async (): Promise<void> => {
+    const r = await openActionModal({
+      title: 'Finalize exit', icon: 'fa-user-slash', tone: 'danger', record: caseRecord,
+      warning: 'This terminates the employee and disables their login.',
+      whatNext: ['Employee status → terminated (login disabled).', 'IT access-removal, final-pay and PPE-return handoffs are raised.', 'Status → completed.'],
+      confirmLabel: 'Finalize exit',
+    });
+    if (r.confirmed) await run(finalizeMut.mutateAsync({ caseId }), 'Exit finalized — employee terminated');
+  };
+  const onCancel = async (): Promise<void> => {
+    const r = await openActionModal({
+      title: 'Cancel case', icon: 'fa-xmark', tone: 'danger', record: caseRecord,
+      warning: 'Cancelling this offboarding case cannot be undone.',
+      reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' },
+      whatNext: ['Open tasks and handoffs are voided.', 'Status → cancelled.'],
+      confirmLabel: 'Cancel case',
+    });
+    if (r.confirmed) await run(cancelMut.mutateAsync({ caseId, reason: r.reason || undefined }), 'Case cancelled');
+  };
 
   return (
     <div class="hr-offboarding">
@@ -157,11 +213,11 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
         actions={canManage && !terminal ? (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {c.status === 'paused'
-              ? <button class="obx-mini" onClick={() => void run(resumeMut.mutateAsync({ caseId }), 'Resumed')}>Resume</button>
-              : <button class="obx-mini" onClick={() => void run(pauseMut.mutateAsync({ caseId }), 'Paused')}>Pause</button>}
-            <button class="obx-mini" onClick={() => void run(readyMut.mutateAsync({ caseId }), 'Marked ready for exit')}>Mark Ready for Exit</button>
-            <button class="obx-mini" onClick={() => void run(completeMut.mutateAsync({ caseId }), 'Case completed')}>Complete</button>
-            {canFinalize && <button class="obx-mini danger" onClick={() => void onFinalize(c.caseNo)}>Finalize Exit</button>}
+              ? <button class="obx-mini" onClick={() => void onResume()}>Resume</button>
+              : <button class="obx-mini" onClick={() => void onPause()}>Pause</button>}
+            <button class="obx-mini" onClick={() => void onReady()}>Mark Ready for Exit</button>
+            <button class="obx-mini" onClick={() => void onComplete()}>Complete</button>
+            {canFinalize && <button class="obx-mini danger" onClick={() => void onFinalize()}>Finalize Exit</button>}
             <button class="obx-mini" onClick={() => void onCancel()}>Cancel</button>
           </div>
         ) : undefined}

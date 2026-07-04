@@ -195,6 +195,11 @@ export default async function run(h) {
   h.section('HR Overtime › Reject');
   // ═══════════════════════════════════════════════════════════════════════════
 
+  await test('reject WITHOUT a reason → refused (reason now mandatory)', async () => {
+    const r = await api('hr/overtime/reject', mgrToken, { id: ctx.ot2Id });
+    expect(!r.ok || !r.body?.success, 'reject with no reason should be refused');
+  });
+
   await test('manager can reject ot2', async () => {
     const r = await api('hr/overtime/reject', mgrToken, {
       id: ctx.ot2Id,

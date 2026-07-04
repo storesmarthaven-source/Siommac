@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://siomac.local/schemas/widget-package.json",
+  "title": "SIOMAC Widget Package Manifest",
+  "description": "Schema for widget-package.json. Validated at install time (Section 15). Fail-atomic on any error. Modules are restricted to the ACTIVE set (hr|finance|hse|platform); legacy modules are not permitted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packageId",
+    "name",
+    "description",
+    "version",
+    "publisher",
+    "module",
+    "widgets",
+    "requiredPermissions",
+    "requiredRoutes",
+    "compatibleSiomacVersion"
+  ],
+  "properties": {
+    "packageId": {
+      "type": "string",
+      "description": "Stable unique id (reverse-dotted). e.g. 'siomac.hr.attendance-pack'.",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+$"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "version": {
+      "type": "string",
+      "description": "Semantic version.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "publisher": { "type": "string", "minLength": 1, "description": "'SIOMAC' | org name | vendor." },
+    "module": {
+      "type": "string",
+      "description": "Owning active module. 'platform' = enterprise surfaces. NO legacy modules.",
+      "enum": ["hr", "finance", "hse", "platform"]
+    },
+    "widgets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/packageWidget" }
+    },
+    "requiredPermissions": {
+      "type": "array",
+      "description": "Union of all widget view keys. Every entry must exist in the RBAC catalogue.",
+      "items": { "$ref": "#/definitions/permissionKey" },
+      "uniqueItems": true
+    },
+    "requiredRoutes": {
+      "type": "array",
+      "description": "API routes the widgets need. Every entry must be a registered backend route.",
+      "items": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9/_-]+$" },
+      "uniqueItems": true
+    },
+    "requiredFeatureFlags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "compatibleSiomacVersion": {
+      "type": "string",
+      "description": "Semver range the package supports (e.g. '>=1.4.0 <2.0.0').",
+      "minLength": 1
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["packageId", "versionRange"],
+        "properties": {
+          "packageId": { "type": "string" },
+          "versionRange": { "type": "string" }
+        }
+      }
+    },
+    "migrationNotes": { "type": "string", "maxLength": 2000 },
+    "installDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "allowedRoles": {
+          "type": ["array", "null"],
+          "description": "null = all roles.",
+          "items": { "type": "string" }
+        },
+        "allowedModules": {
+          "type": ["array", "null"],
+          "items": { "type": "string", "enum": ["hr", "finance", "hse", "platform"] }
+        },
+        "defaultLayoutHints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pageKey", "widgetId", "sizeKey"],
+            "properties": {
+              "pageKey": { "type": "string" },
+              "widgetId": { "type": "string" },
+              "sizeKey": { "$ref": "#/definitions/sizeKey" }
+            }
+          }
+        }
+      }
+    },
+    "uninstallBehavior": {
+      "type": "string",
+      "enum": ["preserve-instances-disabled", "remove-instances"],
+      "default": "preserve-instances-disabled"
+    },
+    "signature": { "type": "string", "description": "Optional integrity signature (future)." }
+  },
+  "definitions": {
+    "permissionKey": {
+      "type": "string",
+      "description": "Exact RBAC catalogue key, e.g. 'hse.ptw.view', 'finance.payroll.lock'.",
+      "pattern": "^[a-z_]+(?:\\.[a-z_]+)+$"
+    },
+    "sizeKey": {
+      "type": "string",
+      "enum": ["mini", "small", "medium", "large", "wide", "tall", "full"]
+    },
+    "packageWidget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "widgetId"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["declarative", "code-ref"] },
+        "widgetId": {
+          "type": "string",
+          "description": "Globally-unique widget id, e.g. 'hr.attendance.exceptions'.",
+          "pattern": "^[a-z0-9]+(?:\\.[a-z0-9_]+)+$"
+        },
+        "spec": {
+          "description": "DeclarativeWidgetSpec when kind==='declarative'.",
+          "$ref": "#/definitions/declarativeWidgetSpec"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "declarative" } } },
+          "then": { "required": ["spec"] }
+        }
+      ]
+    },
+    "declarativeWidgetSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "description", "icon", "category", "view", "requiredPermissions", "defaultSize", "allowedSizes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:\\.[a-z0-9_]+)+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "icon": { "type": "string", "description": "Font Awesome class." },
+        "category": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "defaultSize": { "$ref": "#/definitions/sizeKey" },
+        "allowedSizes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/sizeKey" }
+        },
+        "requiredPermissions": {
+          "type": "array",
+          "minItems": 1,
+          "description": "MANDATORY, non-empty. Empty view gate is invalid.",
+          "items": { "$ref": "#/definitions/permissionKey" }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "label", "permission"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "permission": { "$ref": "#/definitions/permissionKey" },
+              "minSize": { "$ref": "#/definitions/sizeKey" }
+            }
+          }
+        },
+        "animation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default": { "$ref": "#/definitions/animationPreset" },
+            "byState": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/animationPreset" }
+            }
+          }
+        },
+        "config": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "label", "type"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "type": {
+                "type": "string",
+                "enum": ["text", "select", "multiSelect", "dateRange", "number", "boolean", "threshold", "statusFilter", "chartType", "refreshInterval", "animationPreset"]
+              },
+              "defaultValue": {},
+              "required": { "type": "boolean" },
+              "editableBy": { "type": "string", "enum": ["user", "admin"] },
+              "permission": { "$ref": "#/definitions/permissionKey" },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["label", "value"],
+                  "properties": { "label": { "type": "string" }, "value": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "dataSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dataSourceType", "sourceKey", "label", "requiredPermissions"],
+          "properties": {
+            "dataSourceType": { "type": "string", "enum": ["static", "api", "query", "realtime", "derived"] },
+            "sourceKey": { "type": "string" },
+            "label": { "type": "string" },
+            "apiRoute": { "type": "string" },
+            "refreshIntervalMs": { "type": "number", "minimum": 0 },
+            "realtimeChannel": { "type": "string" },
+            "requiredPermissions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/definitions/permissionKey" }
+            }
+          }
+        },
+        "states": {
+          "type": "object",
+          "description": "loading/empty/error are MANDATORY.",
+          "required": ["loading", "empty", "error"],
+          "properties": {
+            "loading": { "type": ["object", "boolean"] },
+            "empty": { "type": "object" },
+            "error": { "type": ["object", "boolean"] },
+            "stale": { "type": ["object", "boolean"] }
+          }
+        },
+        "view": { "$ref": "#/definitions/declarativeView" }
+      }
+    },
+    "animationPreset": {
+      "type": "string",
+      "enum": ["none", "fade-in", "slide-up", "pulse-soft", "count-up", "sparkline-draw", "chart-grow", "alert-pulse", "progress-fill", "skeleton-shimmer", "status-change-flash", "drag-lift", "resize-settle"]
+    },
+    "declarativeView": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["metric", "donut", "trend", "bars", "list", "html"] }
+      },
+      "description": "One of DeclMetric|DeclDonut|DeclTrend|DeclBars|DeclList|DeclHtml (see src/ui/widgets/declarative/types.ts). HTML runs in a CSP-locked sandbox iframe and must be authored fluid."
+    }
+  }
+}

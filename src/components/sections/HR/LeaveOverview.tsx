@@ -7,13 +7,14 @@
  */
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { useSessionStore } from '@store/session';
-import { PageHeader, Modal, Field, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
 import {
-  useMyLeaveRequests, useAllLeaveRequests, useLeaveTypes, useLeaveStats,
+  useMyLeaveRequests, useAllLeaveRequests, useLeaveTypes, useLeaveStats, useLeaveBalances,
   useSubmitLeave, useApproveLeave, useRejectLeave, useCancelLeave,
 } from '@api/hr/leave';
 import type { LeaveRequest, LeaveStatus, LeaveListArgs } from '../../../../types/hrLeave';
@@ -42,16 +43,37 @@ function humanize(str: string): string {
 // -- Submit Leave Dialog
 interface SubmitDialogProps { onClose: () => void; }
 
+/** Working days (Mon–Fri) inclusive between two ISO dates; 0 if invalid/reversed. */
+function workingDays(from: string, to: string): number {
+  if (!from || !to) return 0;
+  const a = new Date(from), b = new Date(to);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime()) || b < a) return 0;
+  let n = 0; const d = new Date(a);
+  while (d <= b) { const wd = d.getDay(); if (wd !== 0 && wd !== 6) n++; d.setDate(d.getDate() + 1); }
+  return n;
+}
+
 function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
-  const myId   = useSessionStore(s => s.userId ?? '');
-  const typesQ = useLeaveTypes();
-  const submit = useSubmitLeave();
+  const myId    = useSessionStore(s => s.userId ?? '');
+  const typesQ  = useLeaveTypes();
+  const balQ    = useLeaveBalances(myId || undefined);
+  const myReqQ  = useMyLeaveRequests();
+  const submit  = useSubmitLeave();
   const [leaveTypeId, setLeaveTypeId] = useState('');
   const [fromDate,    setFromDate]    = useState('');
   const [toDate,      setToDate]      = useState('');
   const [reason,      setReason]      = useState('');
   const types = typesQ.data ?? [];
-  const canSubmitForm = leaveTypeId && fromDate && toDate;
+
+  const days      = workingDays(fromDate, toDate);
+  const typeLabel = types.find(t => t.id === leaveTypeId)?.label ?? 'Leave';
+  const bal       = (balQ.data ?? []).find(b => b.leaveTypeId === leaveTypeId);
+  const dateError = !!(fromDate && toDate && toDate < fromDate);
+  const exceeds   = !!(bal && days > bal.available);
+  const overlaps  = (myReqQ.data?.rows ?? []).filter(r =>
+    (r.status === 'pending_approval' || r.status === 'approved') && !!fromDate && !!toDate && r.fromDate <= toDate && r.toDate >= fromDate);
+  const canSubmitForm = !!(leaveTypeId && fromDate && toDate) && !dateError;
+
   async function handleSubmit() {
     if (!canSubmitForm) return;
     try {
@@ -61,87 +83,84 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
     } catch (e) { toast((e as Error).message); }
   }
 
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Leave', title: 'Leave Preview', description: 'Preview balance impact and conflicts before submitting.',
+    preview: {
+      icon: 'LV', title: typeLabel, subtitle: fromDate && toDate ? `${fromDate} → ${toDate}` : 'Select dates',
+      meta: [{ label: 'Working days', value: days || '—' }],
+    },
+    metrics: bal ? [
+      { label: 'Requested', value: days, tone: 'info' },
+      { label: 'Available', value: bal.available, tone: bal.available > 0 ? 'success' : 'warning' },
+      { label: 'After', value: bal.available - days, tone: bal.available - days < 0 ? 'danger' : 'muted' },
+    ] : [{ label: 'Requested', value: days, tone: 'info' }],
+    validation: [
+      ...(dateError ? [{ message: 'End date is before the start date.', tone: 'danger' as const }] : []),
+      ...(exceeds ? [{ message: `Requested ${days} day(s) exceeds your available ${bal!.available}.`, tone: 'warning' as const }] : []),
+      ...(overlaps.length ? [{ message: `Overlaps ${overlaps.length} existing request(s) in this range.`, tone: 'warning' as const }] : []),
+    ],
+    approval: { required: true, risk: 'low', message: 'Submitting sends this to your manager / HR for approval.' },
+    whatNext: [
+      { label: 'Reserved from balance', description: 'The requested days are held as pending while awaiting approval.' },
+      { label: 'Approval routing', description: 'Your manager or HR reviews and approves or rejects.' },
+    ],
+  };
+
   return (
-    <Modal open title='Submit Leave Request' onClose={onClose}
-      footer={(
-        <>
-          <button class='obx-btn' onClick={onClose}>Cancel</button>
-          <button class='obx-btn primary' disabled={!canSubmitForm || submit.isPending} onClick={handleSubmit}>
-            {submit.isPending ? 'Submitting…' : 'Submit Request'}
-          </button>
-        </>
-      )}
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <Field label='Leave Type'>
-            <SelectInput value={leaveTypeId} onInput={setLeaveTypeId}
-              options={[{ value: '', label: 'Select type…' }, ...types.map(t => ({ value: t.id, label: t.label }))]}
-            />
-          </Field>
-        </div>
-        <Field label='From Date'>
-          <TextInput type='date' value={fromDate} onInput={setFromDate} />
+    <EnterpriseFormModal open
+      title='Submit Leave Request'
+      subtitle='Request leave — the panel previews your balance and any conflicts.'
+      icon={<i class='fas fa-calendar-plus' />}
+      context={context}
+      primaryLabel='Submit Request'
+      loading={submit.isPending}
+      disabled={!canSubmitForm}
+      onCancel={onClose}
+      onSubmit={() => void handleSubmit()}>
+      <FormGrid>
+        <Field label='Leave Type' wide>
+          <SelectInput value={leaveTypeId} onInput={setLeaveTypeId}
+            options={[{ value: '', label: 'Select type…' }, ...types.map(t => ({ value: t.id, label: t.label }))]} />
         </Field>
-        <Field label='To Date'>
-          <TextInput type='date' value={toDate} onInput={setToDate} />
-        </Field>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <Field label='Reason (optional)'>
-            <TextInput value={reason} onInput={setReason} placeholder='Optional reason…' />
-          </Field>
-        </div>
-      </div>
-    </Modal>
+        <Field label='From Date'><TextInput type='date' value={fromDate} onInput={setFromDate} /></Field>
+        <Field label='To Date'><TextInput type='date' value={toDate} onInput={setToDate} /></Field>
+        <Field label='Reason (optional)' wide><TextInput value={reason} onInput={setReason} placeholder='Optional reason…' /></Field>
+      </FormGrid>
+    </EnterpriseFormModal>
   );
 }
 
 // -- Review Dialog
-interface ReviewDialogProps { requestId: string; action: 'approve' | 'reject'; onClose: () => void; }
-
-function ReviewDialog({ requestId, action, onClose }: ReviewDialogProps): VNode {
-  const [notes, setNotes] = useState('');
-  const approve = useApproveLeave();
-  const reject  = useRejectLeave();
-  const busy    = approve.isPending || reject.isPending;
-
-  async function handleConfirm() {
-    try {
-      if (action === 'approve') {
-        await approve.mutateAsync({ requestId, reviewNotes: notes || null });
-        toast('Leave request approved.');
-      } else {
-        if (!notes.trim()) { toast('Review notes are required for rejection.'); return; }
-        await reject.mutateAsync({ requestId, reviewNotes: notes });
-        toast('Leave request rejected.');
-      }
-      onClose();
-    } catch (e) { toast((e as Error).message); }
-  }
-  return (
-    <Modal open title={action === 'approve' ? 'Approve Leave' : 'Reject Leave'} onClose={onClose}
-      footer={(
-        <>
-          <button class='obx-btn' onClick={onClose}>Cancel</button>
-          <button class={'obx-btn ' + (action === 'reject' ? 'danger' : 'primary')} disabled={busy} onClick={handleConfirm}>
-            {busy ? 'Saving…' : action === 'approve' ? 'Approve' : 'Reject'}
-          </button>
-        </>
-      )}
-    >
-      <Field label={action === 'approve' ? 'Notes (optional)' : 'Reason for rejection (required)'}>
-        <TextInput value={notes} onInput={setNotes} placeholder='Add review notes…' />
-      </Field>
-    </Modal>
-  );
-}
-
 // -- Main Component
 export function LeaveOverview(): VNode {
   const [statusFilter, setStatusFilter] = useState<LeaveStatus | 'all'>('all');
   const [submitOpen,   setSubmitOpen]   = useState(false);
-  const [reviewTarget, setReviewTarget] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null);
-  const cancelMut = useCancelLeave();
+  const cancelMut  = useCancelLeave();
+  const approveMut = useApproveLeave();
+  const rejectMut  = useRejectLeave();
+
+  const leaveRecord = (row: LeaveRequest) => toActionRecord({
+    title: `${row.caseNo} · ${row.leaveType?.label ?? row.leaveTypeId}`,
+    subtitle: isAdmin ? (row.employeeName ?? row.employeeId) : undefined, icon: 'fa-calendar-minus',
+    badges: [statusBadge(row.status)],
+    fields: [{ label: 'Dates', value: `${row.fromDate} → ${row.toDate}` }, { label: 'Days', value: row.days ?? '—' }],
+  });
+  async function onReview(row: LeaveRequest, action: 'approve' | 'reject'): Promise<void> {
+    const res = await openActionModal({
+      title: action === 'approve' ? 'Approve leave' : 'Reject leave',
+      icon: action === 'approve' ? 'fa-calendar-check' : 'fa-ban',
+      tone: action === 'approve' ? 'success' : 'danger',
+      record: leaveRecord(row),
+      reason: { required: action === 'reject', label: action === 'approve' ? 'Notes (optional)' : 'Reason for rejection', type: 'textarea', placeholder: 'Add review notes…' },
+      whatNext: action === 'approve' ? ['The leave is approved; the reserved balance is confirmed.'] : ['The leave is rejected; the reserved balance is released.'],
+      confirmLabel: action === 'approve' ? 'Approve' : 'Reject',
+    });
+    if (!res.confirmed) return;
+    try {
+      if (action === 'approve') { await approveMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason || null }); toast('Leave request approved.'); }
+      else { await rejectMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason || '' }); toast('Leave request rejected.'); }
+    } catch (e) { toast((e as Error).message); }
+  }
 
   const isAdmin    = can('hr.leave.view_all');
   const canApprove = can('hr.leave.approve');
@@ -171,14 +190,17 @@ export function LeaveOverview(): VNode {
     ['Days taken (yr)', stats?.totalDaysThisYear ?? 0],
   ];
 
-  async function handleCancel(requestId: string) {
-    const confirmed = await dialog.confirm({
-      title: 'Cancel leave request?',
-      text:  'This will release the reserved balance.',
+  async function handleCancel(row: LeaveRequest) {
+    const res = await openActionModal({
+      title: 'Cancel leave request', icon: 'fa-calendar-xmark', tone: 'danger', record: leaveRecord(row),
+      warning: 'This will release the reserved balance.',
+      reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' },
+      whatNext: ['Status → cancelled; the reserved balance is released.'],
+      confirmLabel: 'Cancel request',
     });
-    if (!confirmed) return;
+    if (!res.confirmed) return;
     try {
-      await cancelMut.mutateAsync({ requestId });
+      await cancelMut.mutateAsync({ requestId: row.id, reason: res.reason || null });
       toast('Leave request cancelled.');
     } catch (e) { toast((e as Error).message); }
   }
@@ -241,12 +263,12 @@ export function LeaveOverview(): VNode {
                   <td>
                     {canApprove && row.status === 'pending_approval' && (
                       <span style={{ display: 'inline-flex', gap: 4 }}>
-                        <button class='obx-btn small' onClick={() => setReviewTarget({ id: row.id, action: 'approve' })}>Approve</button>
-                        <button class='obx-btn small danger' onClick={() => setReviewTarget({ id: row.id, action: 'reject' })}>Reject</button>
+                        <button class='obx-btn small' onClick={() => { void onReview(row, 'approve'); }}>Approve</button>
+                        <button class='obx-btn small danger' onClick={() => { void onReview(row, 'reject'); }}>Reject</button>
                       </span>
                     )}
                     {(['pending_approval', 'approved'] as LeaveStatus[]).includes(row.status) && (
-                      <button class='obx-btn small' onClick={() => { void handleCancel(row.id); }}>Cancel</button>
+                      <button class='obx-btn small' onClick={() => { void handleCancel(row); }}>Cancel</button>
                     )}
                   </td>
                 </tr>
@@ -257,10 +279,6 @@ export function LeaveOverview(): VNode {
       </div></div>
 
       {submitOpen && <SubmitLeaveDialog onClose={() => setSubmitOpen(false)} />}
-      {reviewTarget && (
-        <ReviewDialog requestId={reviewTarget.id} action={reviewTarget.action}
-          onClose={() => setReviewTarget(null)} />
-      )}
     </div>
   );
 }

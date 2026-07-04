@@ -101,7 +101,7 @@ router.post('/compensation/pay-items/approve', async c => {
 // POST /api/hr/compensation/pay-items/reject
 router.post('/compensation/pay-items/reject', async c => {
   const actor = await requirePermission(c, 'hr.compensation.approve');
-  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).optional() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to reject a pay item.').max(500) }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await rejectPayItem(v.data.id, actor.id, v.data.reason);

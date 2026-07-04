@@ -355,6 +355,12 @@ export const PERMISSION_KEYS = [
   'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
   'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen
   'finance.payroll.export',         // finance manager: export a locked run to CSV/JSON artifact
+  // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
+  'finance.remittances.view',         // view remittances and per-employee lines
+  'finance.remittances.manage',       // create, submit and cancel remittances
+  'finance.remittances.approve',      // approve submitted remittances + mark paid/filed (SoD: creator cannot approve)
+  'finance.remittances.reports.view', // view remittance history and filing reports
+  'finance.remittances.reports.export', // export remittance reports (audited data egress)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -469,6 +475,9 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
     'finance.payroll.reports.view',
+    // Remittances (F1) — staff can view and manage (create/submit/cancel)
+    'finance.remittances.view',
+    'finance.remittances.manage',
   ]),
   finance_manager: new Set<PermissionKey>([
     // employee baseline (same keys as employee role)
@@ -511,6 +520,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.approve',
     'finance.payroll.lock',
     'finance.payroll.export',
+    // Remittances (F1) — manager has full lifecycle incl approve
+    'finance.remittances.view',
+    'finance.remittances.manage',
+    'finance.remittances.approve',
+    'finance.remittances.reports.view',
+    'finance.remittances.reports.export',
   ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',

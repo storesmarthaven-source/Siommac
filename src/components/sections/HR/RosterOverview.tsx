@@ -12,7 +12,9 @@ import { useState, useMemo } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import {
   useRosters, useRoster, useShiftTemplates, useRotationPatterns,
   useCoverageRequirements, useCoverageGaps, useMyShifts, useRosterStats,
@@ -174,22 +176,45 @@ function RosterDetail({ rosterId, canManage, canPublish, onBack }: {
   const detail = rosterQ.data;
   const roster = detail?.roster;
 
+  const rosterRecord = () => roster ? toActionRecord({
+    title: roster.rosterNo, subtitle: humanize(roster.status), icon: 'fa-calendar-days',
+    badges: [statusBadge(roster.status)],
+    fields: [{ label: 'Period from', value: roster.periodStart }],
+  }) : undefined;
+
   async function onPublish(): Promise<void> {
     if (!roster) return;
     const gaps = gapsQ.data ?? [];
-    const msg = gaps.length
-      ? `There are ${gaps.length} coverage gaps. Publish anyway?`
-      : 'Publish this roster and notify all assigned employees?';
-    if (!await dialog.confirm({ title: `Publish ${roster.rosterNo}?`, text: msg })) return;
+    const res = await openActionModal({
+      title: 'Publish roster', subtitle: roster.rosterNo, icon: 'fa-calendar-check',
+      tone: gaps.length ? 'warning' : 'info', record: rosterRecord(),
+      warning: gaps.length ? `There are ${gaps.length} unfilled coverage gap(s). Publishing anyway will lock the roster with those gaps.` : undefined,
+      whatNext: [
+        'The roster is locked and all assigned employees are notified.',
+        'Further changes require reopening the roster.',
+      ],
+      confirmLabel: 'Publish roster',
+    });
+    if (!res.confirmed) return;
     try { await publishMut.mutateAsync({ rosterId }); toast('Roster published — employees notified'); }
     catch (e) { toast(e instanceof Error ? e.message : 'Failed to publish'); }
   }
 
   async function onReopen(): Promise<void> {
     if (!roster) return;
-    const reason = await dialog.prompt({ title: 'Reason for reopening this roster?' });
-    if (reason === null) return;
-    try { await reopenMut.mutateAsync({ rosterId, reason: reason || undefined }); toast('Roster reopened for editing'); }
+    const res = await openActionModal({
+      title: 'Reopen roster', subtitle: roster.rosterNo, icon: 'fa-lock-open', tone: 'warning',
+      record: rosterRecord(),
+      warning: 'Reopening returns a published roster to editing. Assigned employees may already have planned around it.',
+      reason: { required: false, label: 'Reason for reopening', type: 'text', placeholder: 'e.g. coverage gap discovered' },
+      whatNext: [
+        'Shifts and assignments become editable again.',
+        'The roster must be published again to take effect.',
+      ],
+      confirmLabel: 'Reopen roster',
+    });
+    if (!res.confirmed) return;
+    try { await reopenMut.mutateAsync({ rosterId, reason: res.reason || undefined }); toast('Roster reopened for editing'); }
     catch (e) { toast(e instanceof Error ? e.message : 'Failed to reopen'); }
   }
 
@@ -405,7 +430,17 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                         {canManage && (
                           <td>
                             <button class="obx-btn-sm danger" onClick={async () => {
-                              if (!await dialog.confirm({ title: `Deactivate ${t.name}?` })) return;
+                              const res = await openActionModal({
+                                title: 'Deactivate shift template', subtitle: t.name, icon: 'fa-power-off', tone: 'danger',
+                                record: toActionRecord({
+                                  title: `${t.code} · ${t.name}`, subtitle: `${t.startsAt.slice(0,5)}–${t.endsAt.slice(0,5)}${t.crossesMidnight ? ' +1d' : ''}`, icon: 'fa-clock',
+                                  fields: [{ label: 'Paid hours', value: `${t.paidHours}h` }, { label: 'Scope', value: t.siteId ? 'Site' : 'All sites' }],
+                                }),
+                                warning: 'The template can no longer be assigned on new rosters. Existing assignments are unaffected.',
+                                whatNext: ['Planners will no longer see this template when building rosters.'],
+                                confirmLabel: 'Deactivate',
+                              });
+                              if (!res.confirmed) return;
                               try { await removeShift.mutateAsync({ id: t.id }); toast('Template deactivated'); }
                               catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
                             }}>Remove</button>
@@ -527,7 +562,6 @@ function MyShiftsTab(): VNode {
 
 function NewRosterModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }): VNode {
   const createMut = useRosterMutation(hrRosterApi.createRoster);
-  const templatesQ = useShiftTemplates();
   const rotationsQ = useRotationPatterns();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -554,9 +588,37 @@ function NewRosterModal({ onClose, onCreated }: { onClose: () => void; onCreated
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to create roster'); }
   }
 
+  const dayCount = (f.periodStart && f.periodEnd && f.periodEnd >= f.periodStart)
+    ? Math.round((Date.parse(f.periodEnd) - Date.parse(f.periodStart)) / 86400000) + 1 : 0;
+  const rotationName = (rotationsQ.data ?? []).find(r => r.id === f.rotationPatternId)?.name ?? '—';
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Rostering', title: 'Roster Preview', description: 'Preview the roster period and coverage source before creating the draft.',
+    preview: { icon: 'RO', title: f.title || 'Untitled roster', subtitle: `${f.periodStart} → ${f.periodEnd}` },
+    metrics: [
+      { label: 'Days', value: dayCount ? String(dayCount) : '—', tone: 'info' },
+      { label: 'Rotation', value: rotationName, tone: f.rotationPatternId ? 'default' : 'muted' },
+    ],
+    validation: [
+      ...(!f.title.trim() ? [{ message: 'Title is required.', tone: 'danger' as const }] : []),
+      ...(!f.siteId.trim() ? [{ message: 'Site is required.', tone: 'danger' as const }] : []),
+      ...(f.periodEnd < f.periodStart ? [{ message: 'End date must be after start date.', tone: 'danger' as const }] : []),
+    ],
+    whatNext: [
+      { label: 'Draft roster created', description: 'Assign shifts per day, then publish to notify employees.' },
+      ...(f.rotationPatternId ? [{ label: 'Rotation applied', description: 'Shifts are pre-filled from the selected rotation pattern.' }] : []),
+    ],
+  };
   return (
-    <Modal open title="New Roster" icon="fa-calendar-days" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel="Create" submitDisabled={createMut.isPending}>
+    <EnterpriseFormModal open
+      title="New Roster"
+      subtitle="Create a draft roster — the panel previews its period and coverage."
+      icon={<i class="fas fa-calendar-days" />}
+      context={context}
+      primaryLabel="Create roster"
+      loading={createMut.isPending}
+      disabled={!f.title.trim() || !f.siteId.trim() || f.periodEnd < f.periodStart}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Title" wide><TextInput value={f.title} onInput={v => setF(s => ({ ...s, title: v }))} placeholder="e.g. Week 28 — Night Shift" /></Field>
         <Field label="Site ID"><TextInput value={f.siteId} onInput={v => setF(s => ({ ...s, siteId: v }))} placeholder="site_id from project_sites" /></Field>
@@ -568,7 +630,7 @@ function NewRosterModal({ onClose, onCreated }: { onClose: () => void; onCreated
             options={[{ value: '', label: '— None (manual scheduling) —' }, ...(rotationsQ.data ?? []).map(r => ({ value: r.id, label: r.name }))]} />
         </Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -585,9 +647,30 @@ function NewShiftTemplateModal({ onClose, onCreated }: { onClose: () => void; on
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
   }
 
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Rostering', title: 'Shift Template Preview', description: 'Preview the shift window and paid hours before saving the template.',
+    preview: { icon: f.code || 'SH', title: f.name || 'Untitled shift', subtitle: `${f.startsAt}–${f.endsAt}${f.crossesMidnight ? ' +1d' : ''}` },
+    metrics: [
+      { label: 'Paid hours', value: `${f.paidHours}h`, tone: 'success' },
+      { label: 'Break', value: `${f.breakMinutes}m`, tone: 'default' },
+    ],
+    validation: [
+      ...(!f.code.trim() ? [{ message: 'Code is required.', tone: 'danger' as const }] : []),
+      ...(!f.name.trim() ? [{ message: 'Name is required.', tone: 'danger' as const }] : []),
+    ],
+    whatNext: [{ label: 'Available on rosters', description: 'Planners can assign this shift when building rosters.' }],
+  };
   return (
-    <Modal open title="New Shift Template" icon="fa-clock" onClose={onClose}
-      onSubmit={() => void submit()} submitLabel="Save" submitDisabled={upsertMut.isPending}>
+    <EnterpriseFormModal open
+      title="New Shift Template"
+      subtitle="Define a reusable shift — the panel previews its hours."
+      icon={<i class="fas fa-clock" />}
+      context={context}
+      primaryLabel="Save template"
+      loading={upsertMut.isPending}
+      disabled={!f.code.trim() || !f.name.trim()}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Code"><TextInput value={f.code} onInput={v => setF(s => ({ ...s, code: v }))} placeholder="e.g. DAY, NIGHT, SPLIT" /></Field>
         <Field label="Name"><TextInput value={f.name} onInput={v => setF(s => ({ ...s, name: v }))} placeholder="e.g. Day Shift" /></Field>
@@ -597,6 +680,6 @@ function NewShiftTemplateModal({ onClose, onCreated }: { onClose: () => void; on
         <Field label="Break (min)"><TextInput type="number" value={String(f.breakMinutes)} onInput={v => setF(s => ({ ...s, breakMinutes: parseInt(v) || 0 }))} /></Field>
         <Field label="Colour"><TextInput type="color" value={f.colour} onInput={v => setF(s => ({ ...s, colour: v }))} /></Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }

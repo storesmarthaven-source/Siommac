@@ -10,6 +10,7 @@ import { type VNode } from 'preact';
 import { useState, useEffect, useCallback } from 'preact/hooks';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
+import { openActionModal, toActionRecord } from '@/components/common/actions';
 import { useSetSetting, useResetSetting, type EffectiveSetting, type SettingScopeType } from '@api/settingsCatalog';
 import { SwzIcon, swzCardIconName } from './swzIcons';
 
@@ -78,7 +79,18 @@ export function SwzCard({ s, index, scopeType, scopeId, canEdit, canAudit = true
 
   const reset = useCallback(async () => {
     if (!canEdit || !overridden) return;
-    if (!(await dialog.confirm({ title: 'Reset to inherited value', text: `"${s.label}" will fall back to the next inherited / default value.`, confirmText: 'Reset' }))) return;
+    const res = await openActionModal({
+      title: 'Reset to inherited value', subtitle: s.label, icon: 'fa-rotate-left',
+      tone: s.isCritical ? 'warning' : 'info',
+      record: toActionRecord({
+        title: s.label, subtitle: s.settingKey, icon: 'fa-sliders',
+        fields: [{ label: 'Current source', value: s.effectiveSource }],
+      }),
+      warning: `"${s.label}" will drop its override and fall back to the next inherited / default value.`,
+      whatNext: ['The setting resolves from the parent scope or its shipped default.'],
+      confirmLabel: 'Reset',
+    });
+    if (!res.confirmed) return;
     try {
       const res = await resetMut.mutateAsync({ settingKey: s.settingKey, scopeType, scopeId });
       if (!res.success) { toast.error(res.message ?? 'Reset was blocked.'); return; }

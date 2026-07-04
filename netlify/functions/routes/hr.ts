@@ -33,7 +33,7 @@ import {
   createCostCenter, updateCostCenter, retireCostCenter,
 } from '../lib/hr/organizationMutations';
 import { listOrgChangeRequests, getOrgChangeRequest, cancelOrgChangeRequest, applyDueOrgChanges } from '../lib/hr/organizationChangeRequests';
-import { HR_DOC_BUCKET, RESTRICTED_TIERS, filterVisibleDocs } from '../lib/hr/documentsCore';
+import { HR_DOC_BUCKET, HR_DOC_MAX_BYTES, RESTRICTED_TIERS, filterVisibleDocs } from '../lib/hr/documentsCore';
 import { listAllDocuments, getDocumentsStats, listExpiring } from '../lib/hr/documentsQueries';
 import { listRequirements, createRequirement, updateRequirement, retireRequirement } from '../lib/hr/documentsRequirements';
 import { getComplianceForEmployee, getComplianceOverview, countMissingRequired } from '../lib/hr/documentsCompliance';
@@ -1368,7 +1368,8 @@ router.post('/employees/documents/commit', async c => {
   const v = zv(c, z.object({
     employeeId: z.string().min(1), documentType: z.string().min(1).max(80), title: z.string().min(1).max(200),
     filePath: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().nullable().optional(),
-    fileSize: z.number().int().nullable().optional(),
+    // Bucket file_size_limit (migration 20260804000000) is authoritative; this is a friendly early reject.
+    fileSize: z.number().int().max(HR_DOC_MAX_BYTES, `File exceeds the ${Math.round(HR_DOC_MAX_BYTES / 1048576)} MB limit.`).nullable().optional(),
     confidentiality: z.enum(['internal', 'confidential', 'restricted_hr', 'legal', 'medical']).default('internal'),
     expiryDate: z.string().nullable().optional(),
   }), (c.get('body') as Record<string, unknown>).args ?? {});

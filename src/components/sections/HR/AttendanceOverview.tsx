@@ -14,10 +14,32 @@ import { can } from '@lib/permissions';
 import { PageHeader, EmptyState } from '@ui';
 import {
   useAttendanceRecords, useTimesheets, useAttendanceExceptions, useAttendanceStats,
-  useWaiveException, useResolveException, useSubmitTimesheet, useReopenTimesheet, fmtMinutes,
+  useWaiveException, useResolveException, useSubmitTimesheet, useReopenTimesheet, useCorrectRecord, fmtMinutes,
 } from '@api/hr/attendance';
+import type { AttendanceRecord } from '../../../../types/hrAttendance';
 import { humanize } from './shared';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import './onboardingCase.css';
+import '../Finance/finance.css';
+
+type ExcRow = { id: string; workDate: string; employeeId: string; exceptionType: string; minutes: number | null; status: string };
+
+const STATUS_OPTIONS: AttendanceRecord['status'][] = ['present', 'absent', 'late', 'half_day', 'on_leave', 'holiday', 'missing_punch', 'short_hours', 'over_hours'];
+const SOURCE_OPTIONS: AttendanceRecord['source'][] = ['manual', 'kiosk', 'mobile', 'import'];
+const CORRECTABLE: { field: string; label: string; kind: 'datetime' | 'status' | 'source' | 'text' }[] = [
+  { field: 'punch_in_at',  label: 'Punch in time',  kind: 'datetime' },
+  { field: 'punch_out_at', label: 'Punch out time', kind: 'datetime' },
+  { field: 'status',       label: 'Status',          kind: 'status' },
+  { field: 'notes',        label: 'Notes',           kind: 'text' },
+  { field: 'source',       label: 'Source',          kind: 'source' },
+];
+const toLocalInput = (iso: string | null): string => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 type Surface = 'log' | 'timesheets' | 'exceptions';
 
@@ -54,21 +76,39 @@ export function AttendanceOverview(): VNode {
   const canManageExc = can('hr.attendance.exceptions.manage');
   const canSubmitTs  = can('hr.attendance.timesheets.submit');
   const canApproveTs = can('hr.attendance.timesheets.approve');
+  const canCorrect   = can('hr.attendance.correct');
+  const [correcting, setCorrecting] = useState<AttendanceRecord | null>(null);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
     try { await p; dialog.success(ok); }
     catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
-  const onWaive = async (exceptionId: string): Promise<void> => {
-    const reason = await dialog.prompt({ title: 'Waive exception', text: 'Reason for waiving this exception.', placeholder: 'Why is this exception acceptable?' });
-    if (reason == null || !reason.trim()) return;
-    await run(waiveMut.mutateAsync({ exceptionId, waiveReason: reason.trim() }), 'Exception waived.');
+  const excRecord = (x: ExcRow) => toActionRecord({
+    title: humanize(x.exceptionType), subtitle: `${x.employeeId} · ${x.workDate}`, icon: 'fa-triangle-exclamation',
+    badges: [statusBadge(x.status)],
+    fields: [{ label: 'Minutes', value: x.minutes != null ? fmtMinutes(x.minutes) : '—' }],
+  });
+  const onWaive = async (x: ExcRow): Promise<void> => {
+    const res = await openActionModal({
+      title: 'Waive exception', icon: 'fa-circle-minus', tone: 'warning', record: excRecord(x),
+      warning: 'Waiving accepts this exception without a timekeeping correction.',
+      reason: { required: true, label: 'Reason for waiving', type: 'textarea', placeholder: 'Why is this exception acceptable?' },
+      whatNext: ['The exception is marked waived and excluded from follow-up.'],
+      confirmLabel: 'Waive',
+    });
+    if (!res.confirmed) return;
+    await run(waiveMut.mutateAsync({ exceptionId: x.id, waiveReason: (res.reason ?? '').trim() }), 'Exception waived.');
   };
-  const onResolve = async (exceptionId: string): Promise<void> => {
-    const note = await dialog.prompt({ title: 'Resolve exception', text: 'How was this exception resolved?', placeholder: 'Resolution note' });
-    if (note == null || !note.trim()) return;
-    await run(resolveMut.mutateAsync({ exceptionId, resolveNote: note.trim() }), 'Exception resolved.');
+  const onResolve = async (x: ExcRow): Promise<void> => {
+    const res = await openActionModal({
+      title: 'Resolve exception', icon: 'fa-circle-check', tone: 'success', record: excRecord(x),
+      reason: { required: true, label: 'Resolution note', type: 'textarea', placeholder: 'How was this exception resolved?' },
+      whatNext: ['The exception is marked resolved.'],
+      confirmLabel: 'Resolve',
+    });
+    if (!res.confirmed) return;
+    await run(resolveMut.mutateAsync({ exceptionId: x.id, resolveNote: (res.reason ?? '').trim() }), 'Exception resolved.');
   };
 
   const stats = statsQ.data;
@@ -82,7 +122,7 @@ export function AttendanceOverview(): VNode {
   ];
 
   return (
-    <div class="hr-offboarding">
+    <div class="hr-offboarding fin-page">
       <PageHeader
         icon="fa-clock" module="HR · Attendance" title="Attendance & Timekeeping"
         sub="Punch records, timesheets, and exceptions — verified work-time inputs for payroll."
@@ -110,7 +150,7 @@ export function AttendanceOverview(): VNode {
             : !(recQ.data?.records.length) ? <EmptyState icon="fa-clock" title="No attendance records" text="Punch records will appear here once employees clock in." />
             : (
               <table class="obx-table">
-                <thead><tr><th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Worked</th><th>Late</th><th>OT</th><th>Status</th></tr></thead>
+                <thead><tr><th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Worked</th><th>Late</th><th>OT</th><th>Status</th>{canCorrect && <th style={{ textAlign: 'right' }}>Actions</th>}</tr></thead>
                 <tbody>{recQ.data.records.map(r => (
                   <tr key={r.id}>
                     <td><b>{r.workDate}</b></td>
@@ -121,6 +161,7 @@ export function AttendanceOverview(): VNode {
                     <td class="obx-meta">{r.lateMinutes ? fmtMinutes(r.lateMinutes) : '—'}</td>
                     <td class="obx-meta">{r.overtimeMinutes ? fmtMinutes(r.overtimeMinutes) : '—'}</td>
                     <td><span class={`obx-pill ${statTone(r.status)}`}>{humanize(r.status)}</span></td>
+                    {canCorrect && <td style={{ textAlign: 'right' }}><button class="obx-btn obx-btn-sm" onClick={() => setCorrecting(r)}><i class="fas fa-pen" /> Correct</button></td>}
                   </tr>
                 ))}</tbody>
               </table>
@@ -178,8 +219,8 @@ export function AttendanceOverview(): VNode {
                     <td>
                       {canManageExc && x.status === 'open' ? (
                         <>
-                          <button class="obx-mini" onClick={() => void onResolve(x.id)}>Resolve</button>
-                          <button class="obx-mini" onClick={() => void onWaive(x.id)}>Waive</button>
+                          <button class="obx-mini" onClick={() => void onResolve(x)}>Resolve</button>
+                          <button class="obx-mini" onClick={() => void onWaive(x)}>Waive</button>
                         </>
                       ) : <span class="obx-meta">—</span>}
                     </td>
@@ -189,6 +230,103 @@ export function AttendanceOverview(): VNode {
             )}
         </div></div>
       )}
+
+      {correcting && <CorrectRecordModal record={correcting} onClose={() => setCorrecting(null)} />}
     </div>
+  );
+}
+
+function CorrectRecordModal({ record, onClose }: { record: AttendanceRecord; onClose: () => void }): VNode {
+  const correctMut = useCorrectRecord();
+  const initialValue = (field: string): string => {
+    if (field === 'punch_in_at')  return toLocalInput(record.punchInAt);
+    if (field === 'punch_out_at') return toLocalInput(record.punchOutAt);
+    if (field === 'status')       return record.status;
+    if (field === 'source')       return record.source;
+    if (field === 'notes')        return record.notes ?? '';
+    return '';
+  };
+  const [field, setField] = useState<string>('punch_in_at');
+  const [newValue, setNewValue] = useState<string>(initialValue('punch_in_at'));
+  const [reason, setReason] = useState('');
+
+  const spec = CORRECTABLE.find(c => c.field === field)!;
+  const pickField = (f: string): void => { setField(f); setNewValue(initialValue(f)); };
+
+  const currentDisplay = (): string => {
+    if (field === 'punch_in_at')  return fmtTime(record.punchInAt);
+    if (field === 'punch_out_at') return fmtTime(record.punchOutAt);
+    if (field === 'status')       return humanize(record.status);
+    if (field === 'source')       return humanize(record.source);
+    return record.notes ?? '—';
+  };
+  const newDisplay = (): string => {
+    if (!newValue) return spec.kind === 'datetime' ? 'Cleared' : '—';
+    if (spec.kind === 'datetime') return new Date(newValue).toLocaleString();
+    if (spec.kind === 'status' || spec.kind === 'source') return humanize(newValue);
+    return newValue;
+  };
+  const changed = newValue !== initialValue(field);
+
+  const submit = async (): Promise<void> => {
+    if (!reason.trim()) return;
+    try {
+      await correctMut.mutateAsync({ recordId: record.id, fieldName: field, newValue, reason: reason.trim() });
+      dialog.success('Correction applied and logged.');
+      onClose();
+    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to apply correction.'); }
+  };
+
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Attendance', title: 'Correction Preview', description: 'A correction is audit-logged with the old and new value; punch changes recompute worked/late/OT minutes.',
+    preview: { icon: 'FIX', title: `${record.recordNo}`, subtitle: `${record.employeeId} · ${record.workDate}` },
+    derived: { title: 'Field change', fields: [
+      { label: 'Field', value: spec.label },
+      { label: 'Current', value: currentDisplay() },
+      { label: 'New', value: newDisplay() },
+    ] },
+    validation: [
+      ...(!changed ? [{ message: 'New value matches the current value — nothing to correct.', tone: 'warning' as const }] : []),
+      ...(!reason.trim() ? [{ message: 'A reason is required for every correction.', tone: 'danger' as const }] : []),
+    ],
+    approval: { required: false, risk: 'medium', message: 'Corrections are recorded against the employee’s timekeeping audit trail.' },
+    whatNext: [
+      { label: 'Audit-logged', description: 'The old and new value are written to the corrections log and HR audit trail.' },
+      ...(field === 'punch_in_at' || field === 'punch_out_at'
+        ? [{ label: 'Recomputed', description: 'Worked, late, and overtime minutes are recalculated for the day.' }] : []),
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="Correct attendance record"
+      subtitle={`${record.recordNo} · ${record.workDate}`}
+      icon={<i class="fas fa-pen" />}
+      context={context}
+      primaryLabel="Apply correction"
+      loading={correctMut.isPending}
+      disabled={!reason.trim() || !changed}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
+      <div class="fin-form-grid fin-form-grid--tight">
+        <label class="fin-field"><span>Field to correct</span>
+          <select value={field} onChange={e => pickField((e.currentTarget as HTMLSelectElement).value)}>
+            {CORRECTABLE.map(c => <option value={c.field} key={c.field}>{c.label}</option>)}
+          </select>
+        </label>
+        <label class="fin-field"><span>New value</span>
+          {spec.kind === 'datetime'
+            ? <input type="datetime-local" value={newValue} onInput={e => setNewValue((e.currentTarget as HTMLInputElement).value)} />
+            : spec.kind === 'status'
+            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget as HTMLSelectElement).value)}>{STATUS_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
+            : spec.kind === 'source'
+            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget as HTMLSelectElement).value)}>{SOURCE_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
+            : <input type="text" value={newValue} onInput={e => setNewValue((e.currentTarget as HTMLInputElement).value)} placeholder="New note" />}
+        </label>
+        <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Reason (required)</span>
+          <textarea value={reason} onInput={e => setReason((e.currentTarget as HTMLTextAreaElement).value)} rows={3} placeholder="Why is this correction being made? (audit-logged)" />
+        </label>
+      </div>
+    </EnterpriseFormModal>
   );
 }

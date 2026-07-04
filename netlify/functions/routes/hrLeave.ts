@@ -105,6 +105,8 @@ router.post('/leave/request/cancel', async c => {
   const actor = await requirePermission(c, 'hr.leave.cancel_own');
   const b = body(c);
   if (!b.requestId) return c.json({ success: false, message: 'requestId is required.' }, 400);
+  // A cancellation reason is mandatory (matches the UI) and is persisted to the audit trail.
+  if (typeof b.reason !== 'string' || !b.reason.trim()) return c.json({ success: false, message: 'A reason is required to cancel a leave request.' }, 400);
   return mutate(c, () => cancelLeave(actor.id, b as unknown as Parameters<typeof cancelLeave>[1]));
 });
 

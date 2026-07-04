@@ -20,6 +20,8 @@ import {
 } from '@api/hr/transfers';
 import { useHrEmployees } from '@api/hr/employees';
 import type { TransferRequestRow } from '../../../../types/hrTransfers';
+import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import './onboardingCase.css';
 
 const STATUS_FILTERS = ['all', 'submitted', 'in_review', 'returned', 'applied', 'rejected', 'cancelled'] as const;
@@ -186,12 +188,47 @@ function NewRequestModal({
     }
   }
 
+  const empName = peopleOpts.find(o => o.value === f.employeeId)?.label;
+  const changes: Array<{ label: string; value: string }> = [];
+  if (f.departmentId)  changes.push({ label: 'Department', value: f.departmentId });
+  if (f.siteId)        changes.push({ label: 'Site', value: f.siteId });
+  if (f.positionId)    changes.push({ label: 'Position', value: f.positionId });
+  if (f.supervisorId)  changes.push({ label: 'Supervisor', value: peopleOpts.find(o => o.value === f.supervisorId)?.label ?? f.supervisorId });
+  if (f.role)          changes.push({ label: 'Role', value: f.role });
+  if (f.monthlySalary) changes.push({ label: 'Monthly salary', value: f.monthlySalary });
+  if (f.hourlyRate)    changes.push({ label: 'Hourly rate', value: f.hourlyRate });
+  const noChange = changes.length === 0;
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Transfers', title: 'Change Preview', description: 'Review the requested change before submitting for approval.',
+    preview: {
+      icon: 'TR', title: empName ?? 'Select employee', subtitle: f.effectiveDate ? `Effective ${f.effectiveDate}` : 'Set effective date',
+      badges: [{ label: 'Maker-checker', tone: 'warning' }],
+    },
+    metrics: [{ label: 'Fields changing', value: changes.length, tone: changes.length ? 'info' : 'muted' }],
+    derived: changes.length ? { title: 'Requested changes', fields: changes } : undefined,
+    validation: [
+      ...(!f.employeeId ? [{ message: 'Select an employee.', tone: 'danger' as const }] : []),
+      ...(!f.effectiveDate ? [{ message: 'Effective date is required.', tone: 'danger' as const }] : []),
+      ...(noChange && f.employeeId ? [{ message: 'Select at least one field to change.', tone: 'warning' as const }] : []),
+    ],
+    approval: { required: true, risk: 'medium', message: 'Submitted as a maker-checker request — you cannot approve your own request.' },
+    whatNext: [
+      { label: 'Routes for approval', description: 'An approver (not the creator) reviews the change.' },
+      { label: 'Applied on approval', description: 'The change is written to the employee record + status history.' },
+    ],
+  };
+
   return (
-    <Modal
-      open title="New Transfer / Promotion Request" icon="fa-right-left"
-      onClose={onClose} onSubmit={() => void submit()}
-      submitLabel="Submit" submitDisabled={submitMut.isPending}
-    >
+    <EnterpriseFormModal open
+      title="New Transfer / Promotion Request"
+      subtitle="Request a dept / site / role / pay change — routed through maker-checker approval."
+      icon={<i class="fas fa-right-left" />}
+      context={context}
+      primaryLabel="Submit Request"
+      loading={submitMut.isPending}
+      disabled={!f.employeeId || !f.effectiveDate || noChange}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
       <FormGrid>
         <Field label="Employee" wide>
           <SelectInput value={f.employeeId} onInput={v => setF(s => ({ ...s, employeeId: v }))} options={peopleOpts} placeholder="Select employee…" />
@@ -221,7 +258,7 @@ function NewRequestModal({
           <TextInput value={f.reason} onInput={v => setF(s => ({ ...s, reason: v }))} placeholder="Optional context for approvers" />
         </Field>
       </FormGrid>
-    </Modal>
+    </EnterpriseFormModal>
   );
 }
 
@@ -237,24 +274,44 @@ function RequestDetail({
   const decideMut = useTransfersMutation(hrTransfersApi.decide);
   const cancelMut = useTransfersMutation(hrTransfersApi.cancel);
 
+  const transferRecord = (r: TransferRequestRow) => toActionRecord({
+    title: `${r.changeNo} · ${r.employeeName ?? '—'}`, subtitle: r.effectiveDate ? `Effective ${r.effectiveDate}` : undefined, icon: 'fa-right-left',
+    badges: [statusBadge(r.status)],
+    fields: [
+      { label: 'Change', value: `${r.previousValue ?? '—'} → ${r.requestedValue ?? '—'}` },
+      r.requestedByName ? { label: 'Requested by', value: r.requestedByName } : null,
+    ],
+  });
   async function decide(decision: 'approve' | 'reject' | 'return'): Promise<void> {
     if (!req) return;
-    let comment: string | null = null;
-    if (decision !== 'approve') {
-      const r = await dialog.prompt({ title: `Reason for ${decision}ing this request?` });
-      if (r === null) return;
-      comment = r || undefined as unknown as string;
-    }
+    const isApprove = decision === 'approve';
+    const res = await openActionModal({
+      title: isApprove ? 'Approve request' : decision === 'reject' ? 'Reject request' : 'Return request',
+      icon: isApprove ? 'fa-check' : decision === 'reject' ? 'fa-ban' : 'fa-rotate-left',
+      tone: isApprove ? 'success' : decision === 'reject' ? 'danger' : 'warning',
+      record: transferRecord(req),
+      warning: isApprove ? 'You cannot approve a request you created (separation of duties).' : undefined,
+      reason: isApprove ? undefined : { required: true, label: decision === 'reject' ? 'Reason for rejection' : 'Reason for returning', type: 'textarea', placeholder: 'Explain…' },
+      whatNext: isApprove ? ['The change is approved and applied to the employee record.'] : decision === 'reject' ? ['The request is rejected; no change is applied.'] : ['The request is returned to the requester for edits.'],
+      confirmLabel: isApprove ? 'Approve' : decision === 'reject' ? 'Reject' : 'Return',
+    });
+    if (!res.confirmed) return;
     try {
-      const r = await decideMut.mutateAsync({ requestId: req.id, decision, comment: comment ?? undefined });
-      toast(`Request ${humanize(r.status)}`);
+      const out = await decideMut.mutateAsync({ requestId: req.id, decision, comment: res.reason || undefined });
+      toast(`Request ${humanize(out.status)}`);
       onBack();
     } catch (e) { toast(e instanceof Error ? e.message : 'Action failed'); }
   }
 
   async function onCancel(): Promise<void> {
     if (!req) return;
-    if (!await dialog.confirm({ title: 'Cancel this request?', text: 'The transfer/promotion request will be cancelled.' })) return;
+    const res = await openActionModal({
+      title: 'Cancel request', icon: 'fa-xmark', tone: 'danger', record: transferRecord(req),
+      warning: 'The transfer/promotion request will be cancelled. This cannot be undone.',
+      whatNext: ['Status → cancelled; no change is applied.'],
+      confirmLabel: 'Cancel request',
+    });
+    if (!res.confirmed) return;
     try {
       await cancelMut.mutateAsync({ requestId: req.id });
       toast('Request cancelled');

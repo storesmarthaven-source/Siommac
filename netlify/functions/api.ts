@@ -61,6 +61,7 @@ import financePayrollRouter      from './routes/financePayroll';
 import hrCompensationRouter      from './routes/hrCompensation';
 import hrOvertimeRouter          from './routes/hrOvertime';
 import hrStatutoryProfileRouter  from './routes/hrStatutoryProfile';
+import financeRemittancesRouter   from './routes/financeRemittances';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -184,6 +185,7 @@ app.route('/api/hr/roster', hrRosterRouter);
 app.route('/api/finance', financeStatutoryRouter);
 app.route('/api/finance', financeNisRouter);
 app.route('/api/finance', financePayrollRouter);
+app.route('/api/finance', financeRemittancesRouter);
 app.route('/api/hr', hrCompensationRouter);
 app.route('/api/hr', hrOvertimeRouter);
 app.route('/api/hr', hrStatutoryProfileRouter);

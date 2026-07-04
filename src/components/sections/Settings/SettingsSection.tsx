@@ -23,6 +23,7 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { useSessionStore } from '@store/session';
 import { toast }           from '@store';
 import { dialog }          from '@lib/dialog';
+import { openActionModal, toActionRecord } from '@/components/common/actions';
 import {
   fetchSettings,
   updateSetting,
@@ -218,7 +219,20 @@ function TrustedDevicesCard(): VNode {
 
   const handleRevoke = useCallback(async (device: TrustedDevice) => {
     const name = device.label || `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
-    if (!(await dialog.confirm({ title: 'Remove trusted device?', text: `Remove "${name}"? You will need to re-verify 2FA from that device.`, danger: true, confirmText: 'Remove' }))) return;
+    const res = await openActionModal({
+      title: 'Remove trusted device', subtitle: name, icon: 'fa-laptop-mobile', tone: 'danger',
+      record: toActionRecord({
+        title: name, subtitle: 'Trusted device', icon: 'fa-laptop-mobile',
+        fields: [
+          device.browserName ? { label: 'Browser', value: device.browserName } : null,
+          device.osName ? { label: 'OS', value: device.osName } : null,
+        ],
+      }),
+      warning: 'This device will lose its trusted status.',
+      whatNext: ['Two-factor verification will be required again the next time you sign in from that device.'],
+      confirmLabel: 'Remove device',
+    });
+    if (!res.confirmed) return;
     try {
       await revokeMut.mutateAsync(device.id);
       toast.success('Trusted device removed.');
@@ -229,11 +243,13 @@ function TrustedDevicesCard(): VNode {
   }, [revokeMut, refetch]);
 
   const handleRevokeAll = useCallback(async () => {
-    if (!(await dialog.confirm({
-      title: 'Revoke all trusted devices?',
-      text: 'You (and everyone else on all devices) will need to re-verify 2FA on the next login.',
-      danger: true, confirmText: 'Revoke all',
-    }))) return;
+    const res = await openActionModal({
+      title: 'Revoke all trusted devices', icon: 'fa-laptop-mobile', tone: 'danger',
+      warning: 'Every trusted device — including this one — will lose its trusted status.',
+      whatNext: ['Two-factor verification will be required on the next sign-in from all devices.'],
+      confirmLabel: 'Revoke all',
+    });
+    if (!res.confirmed) return;
     try {
       const doRevoke = withStepUp(ensureStepUp, () => revokeAllMut.mutateAsync());
       const res = await doRevoke();
@@ -872,7 +888,15 @@ function PasskeysCard(): VNode {
 
   // ── Delete passkey ─────────────────────────────────────────────────────────
   const handleDelete = useCallback(async (cred: PasskeyCredential) => {
-    if (!(await dialog.confirm({ title: 'Remove passkey?', text: `Remove "${cred.label || cred.id.slice(0, 8) + '…'}"?`, danger: true, confirmText: 'Remove' }))) return;
+    const label = cred.label || cred.id.slice(0, 8) + '…';
+    const res = await openActionModal({
+      title: 'Remove passkey', subtitle: label, icon: 'fa-key', tone: 'danger',
+      record: toActionRecord({ title: label, subtitle: 'Passkey', icon: 'fa-key' }),
+      warning: 'Removing a passkey means it can no longer be used to sign in.',
+      whatNext: ['If this is your last strong factor, removal is blocked to keep your account recoverable.'],
+      confirmLabel: 'Remove passkey',
+    });
+    if (!res.confirmed) return;
     try {
       const doDelete = withStepUp(ensureStepUp, () =>
         deleteMut.mutateAsync(cred.id)

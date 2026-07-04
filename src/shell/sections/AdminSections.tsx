@@ -621,6 +621,12 @@ export default function AdminSections() {
         <div id="preact-hr-root" />
       </AppSection>
 
+      {/* Finance — Statutory Configuration + Payroll. The Finance module renders
+          its own page header. Serves the s-finance-* nav ids from one panel. */}
+      <AppSection id="s-finance" role="admin">
+        <div id="preact-finance-root" />
+      </AppSection>
+
       {/* Admin — Attendance Records */}
       <AppSection id="s-adm-attendance" role="admin">
         <AdminProfilePill ids={{ profileBtn: 'admAttProfileBtn', avatar: 'admAttProfileAvatar', profileName: 'admAttProfileName', profileRole: 'admAttProfileRole', notifBtn: 'admAttNotifBtn', notifBadge: 'admAttNotifBadge', msgBtn: 'admAttMsgBtn', msgBadge: 'admAttMsgBadge', ticketBtn: 'admAttTicketBtn', ticketBadge: 'admAttTicketBadge' }} />

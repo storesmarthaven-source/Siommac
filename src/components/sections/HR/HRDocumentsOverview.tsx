@@ -35,7 +35,10 @@ import {
   type UploadDocArgs,
 } from '@api/hr/documents';
 
-import type { DocumentFilters, DocumentRequirement, CreateRequirementArgs } from '../../../../types/hrDocuments';
+import type { DocumentFilters, DocumentRequirement, CreateRequirementArgs, HrDocumentRow } from '../../../../types/hrDocuments';
+import { openActionModal, verifyAction, archiveAction, toActionRecord, statusBadge } from '@/components/common/actions';
+import { EnterpriseFormModal, uploadDocumentContext, documentRequirementContext } from '@/components/common/dialogs';
+import { useHrEmployees } from '@api/hr/employees';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -108,22 +111,43 @@ function RegisterTab(): VNode {
     }
   }
 
-  async function handleVerify(docId: string): Promise<void> {
-    const ok = await dialog.confirm({ title: 'Verify document?', text: 'Approve this document as verified?', confirmText: 'Approve' });
-    if (!ok) return;
+  function docRecord(doc: HrDocumentRow) {
+    return toActionRecord({
+      title: doc.title, subtitle: doc.documentType, icon: 'fa-file-lines',
+      badges: [statusBadge(doc.status)],
+      fields: [
+        { label: 'Employee', value: doc.employeeName ?? doc.employeeId },
+        doc.departmentName ? { label: 'Department', value: doc.departmentName } : null,
+        { label: 'Confidentiality', value: doc.confidentiality.replace(/_/g, ' ') },
+        doc.expiryDate ? { label: 'Expiry', value: fmtDate(doc.expiryDate) } : null,
+      ],
+    });
+  }
+
+  async function handleVerify(doc: HrDocumentRow): Promise<void> {
+    const res = await openActionModal(verifyAction({
+      noun: 'document', title: 'Verify document', subtitle: 'Approve this document as verified.', note: false,
+      record: docRecord(doc),
+      whatNext: ['Marks the document verified in the employee file.', 'May satisfy an open document requirement for this employee.'],
+    }));
+    if (!res.confirmed) return;
     try {
-      await verify.mutateAsync({ documentId: docId, decision: 'approve' });
+      await verify.mutateAsync({ documentId: doc.id, decision: 'approve' });
       void toast.success('Document verified.');
     } catch (err) {
       void toast.error(err instanceof Error ? err.message : 'Verification failed');
     }
   }
 
-  async function handleArchive(docId: string): Promise<void> {
-    const ok = await dialog.confirm({ title: 'Archive document?', text: 'This will archive the document. Continue?', confirmText: 'Archive' });
-    if (!ok) return;
+  async function handleArchive(doc: HrDocumentRow): Promise<void> {
+    const res = await openActionModal(archiveAction({
+      noun: 'document',
+      record: docRecord(doc),
+      whatNext: ['Removes the document from the active register.', 'It no longer counts toward requirement compliance until restored.'],
+    }));
+    if (!res.confirmed) return;
     try {
-      await archive.mutateAsync(docId);
+      await archive.mutateAsync(doc.id);
       void toast.success('Document archived.');
     } catch (err) {
       void toast.error(err instanceof Error ? err.message : 'Archive failed');
@@ -210,13 +234,13 @@ function RegisterTab(): VNode {
                 <td>
                   <div class="obx-action-row">
                     {canVerify && r.status === 'uploaded' && (
-                      <button class="obx-btn obx-btn--xs obx-btn--success" onClick={() => void handleVerify(r.id)}>Verify</button>
+                      <button class="obx-btn obx-btn--xs obx-btn--success" onClick={() => void handleVerify(r)}>Verify</button>
                     )}
                     {canDownload && r.status !== 'archived' && (
                       <button class="obx-btn obx-btn--xs" onClick={() => void handleDownload(r.id)}>Download</button>
                     )}
                     {canArchive && r.status !== 'archived' && (
-                      <button class="obx-btn obx-btn--xs obx-btn--muted" onClick={() => void handleArchive(r.id)}>Archive</button>
+                      <button class="obx-btn obx-btn--xs obx-btn--muted" onClick={() => void handleArchive(r)}>Archive</button>
                     )}
                   </div>
                 </td>
@@ -252,9 +276,10 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
   const [expiryDate, setExpiryDate]           = useState('');
   const [file, setFile]                       = useState<File | null>(null);
   const upload = useUploadHrDocument();
+  const employeesQ = useHrEmployees({ limit: 500 });
+  const requirementsQ = useDocumentRequirements();
 
-  async function handleSubmit(e: Event): Promise<void> {
-    e.preventDefault();
+  async function handleSubmit(): Promise<void> {
     if (!file || !employeeId || !documentType || !title) {
       void toast.error('All fields marked * are required.');
       return;
@@ -272,39 +297,61 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
     }
   }
 
+  const emps = employeesQ.data ?? [];
+  const empName = (e: (typeof emps)[number]): string => e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+  const selectedEmp = emps.find(e => e.id === employeeId);
+  const typeTrim = documentType.trim().toLowerCase();
+  const matchedReq = typeTrim ? (requirementsQ.data ?? []).find(r => r.documentType.toLowerCase() === typeTrim) : undefined;
+  const MAX_MB = 15;
+  const fileWarning = file && file.size > MAX_MB * 1024 * 1024 ? `File exceeds ${MAX_MB} MB and may be rejected.` : null;
+
+  const context = uploadDocumentContext({
+    employeeName: selectedEmp ? empName(selectedEmp) : undefined,
+    documentType: documentType.trim() || undefined,
+    fileName: file?.name,
+    fileSize: file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : undefined,
+    fileType: file?.type || undefined,
+    expiryDate: expiryDate || undefined,
+    expiryPreview: expiryDate ? 'Expiry will be tracked and reminders sent' : 'No expiry date provided',
+    satisfiesRequirement: matchedReq ? (matchedReq.label ?? matchedReq.documentType) : null,
+    fileWarning,
+  });
+
   return (
-    <Modal open title="Upload Document" onClose={onClose} size="md">
-      <form onSubmit={e => void handleSubmit(e)}>
-        <FormGrid>
-          <Field label="Employee ID *">
-            <TextInput value={employeeId} onInput={setEmployeeId} placeholder="Employee ID (app_users.id)" />
-          </Field>
-          <Field label="Document Type *">
-            <TextInput value={documentType} onInput={setDocumentType} placeholder="e.g. passport, contract" />
-          </Field>
-          <Field label="Title *">
-            <TextInput value={title} onInput={setTitle} placeholder="Document title" />
-          </Field>
-          <Field label="Confidentiality">
-            <SelectInput value={confidentiality} onInput={setConfidentiality}
-              options={Object.entries(CONFIDENTIALITY_LABELS).map(([v, l]) => ({ value: v, label: l }))} />
-          </Field>
-          <Field label="Expiry Date">
-            <TextInput type="date" value={expiryDate} onInput={setExpiryDate} />
-          </Field>
-          <Field label="File *">
-            <input type="file" class="obx-file-input"
-              onChange={e => setFile((e.target as HTMLInputElement).files?.[0] ?? null)} />
-          </Field>
-        </FormGrid>
-        <div class="obx-modal-footer">
-          <button type="button" class="obx-btn" onClick={onClose}>Cancel</button>
-          <button type="submit" class="obx-btn obx-btn--primary" disabled={upload.isPending}>
-            {upload.isPending ? 'Uploading…' : 'Upload'}
-          </button>
-        </div>
-      </form>
-    </Modal>
+    <EnterpriseFormModal open
+      title="Upload Employee Document"
+      subtitle="Upload a private HR document and preview its compliance effect."
+      icon={<i class="fas fa-file-arrow-up" />}
+      context={context}
+      primaryLabel="Upload Document"
+      loading={upload.isPending}
+      disabled={!file || !employeeId || !documentType.trim() || !title.trim() || Boolean(fileWarning)}
+      onCancel={onClose}
+      onSubmit={() => void handleSubmit()}>
+      <FormGrid>
+        <Field label="Employee *">
+          <SelectInput value={employeeId} onInput={setEmployeeId}
+            options={emps.map(e => ({ value: e.id, label: empName(e) }))} placeholder="— Select employee —" />
+        </Field>
+        <Field label="Document Type *">
+          <TextInput value={documentType} onInput={setDocumentType} placeholder="e.g. passport, contract" />
+        </Field>
+        <Field label="Title *">
+          <TextInput value={title} onInput={setTitle} placeholder="Document title" />
+        </Field>
+        <Field label="Confidentiality">
+          <SelectInput value={confidentiality} onInput={setConfidentiality}
+            options={Object.entries(CONFIDENTIALITY_LABELS).map(([v, l]) => ({ value: v, label: l }))} />
+        </Field>
+        <Field label="Expiry Date">
+          <TextInput type="date" value={expiryDate} onInput={setExpiryDate} />
+        </Field>
+        <Field label="File *">
+          <input type="file" class="obx-file-input"
+            onChange={e => setFile((e.target as HTMLInputElement).files?.[0] ?? null)} />
+        </Field>
+      </FormGrid>
+    </EnterpriseFormModal>
   );
 }
 
@@ -519,9 +566,9 @@ function RequirementModal({ existing, onClose }: {
   const create    = useCreateRequirement();
   const update    = useUpdateRequirement();
   const isPending = create.isPending || update.isPending;
+  const requirementsQ = useDocumentRequirements();
 
-  async function handleSubmit(e: Event): Promise<void> {
-    e.preventDefault();
+  async function handleSubmit(): Promise<void> {
     if (!documentType || !label) {
       void toast.error('Document type and label are required.');
       return;
@@ -549,62 +596,79 @@ function RequirementModal({ existing, onClose }: {
     }
   }
 
+  const scopeLabel = scope === 'all'
+    ? 'All employees'
+    : `${scope.replace(/_/g, ' ')}: ${scopeValue.trim() || 'Not selected'}`;
+  const duplicateRequirement = !existing && documentType.trim()
+    ? (requirementsQ.data ?? []).some(r =>
+        r.documentType === documentType.trim() && r.appliesToScope === scope && (r.appliesToValue ?? '') === (scopeValue.trim() || ''))
+    : false;
+  const context = documentRequirementContext({
+    documentType: documentType.trim() || undefined,
+    label: label.trim() || undefined,
+    scopeLabel,
+    requiresExpiry,
+    exampleSatisfiedBy: requiresExpiry ? 'A verified matching document with a valid expiry date.' : 'A verified matching document.',
+    duplicateRequirement,
+  });
+
   return (
-    <Modal open title={existing ? 'Edit Requirement' : 'New Document Requirement'} onClose={onClose} size="md">
-      <form onSubmit={e => void handleSubmit(e)}>
-        <FormGrid>
-          <Field label="Document Type *">
-            {existing
-              ? <input class="ui-input" type="text" value={documentType} disabled />
-              : <TextInput value={documentType} onInput={setDocumentType} placeholder="e.g. passport, nda, safety_cert" />
-            }
-          </Field>
-          <Field label="Label *">
-            <TextInput value={label} onInput={setLabel} placeholder="Human-readable label" />
-          </Field>
-          {!existing && (
-            <>
-              <Field label="Applies To">
-                <SelectInput
-                  value={scope}
-                  onInput={v => setScope(v as CreateRequirementArgs['appliesToScope'])}
-                  options={[
-                    { value: 'all',             label: 'All employees' },
-                    { value: 'role',            label: 'Specific role' },
-                    { value: 'employment_type', label: 'Employment type' },
-                    { value: 'department',      label: 'Department' },
-                  ]}
+    <EnterpriseFormModal open
+      title={existing ? 'Edit Document Requirement' : 'New Document Requirement'}
+      subtitle="Define which documents are required and who they apply to."
+      icon={<i class="fas fa-clipboard-check" />}
+      context={context}
+      primaryLabel={existing ? 'Save Requirement' : 'Create Requirement'}
+      loading={isPending}
+      disabled={!documentType.trim() || !label.trim() || duplicateRequirement}
+      onCancel={onClose}
+      onSubmit={() => void handleSubmit()}>
+      <FormGrid>
+        <Field label="Document Type *">
+          {existing
+            ? <input class="ui-input" type="text" value={documentType} disabled />
+            : <TextInput value={documentType} onInput={setDocumentType} placeholder="e.g. passport, nda, safety_cert" />
+          }
+        </Field>
+        <Field label="Label *">
+          <TextInput value={label} onInput={setLabel} placeholder="Human-readable label" />
+        </Field>
+        {!existing && (
+          <>
+            <Field label="Applies To">
+              <SelectInput
+                value={scope}
+                onInput={v => setScope(v as CreateRequirementArgs['appliesToScope'])}
+                options={[
+                  { value: 'all',             label: 'All employees' },
+                  { value: 'role',            label: 'Specific role' },
+                  { value: 'employment_type', label: 'Employment type' },
+                  { value: 'department',      label: 'Department' },
+                ]}
+              />
+            </Field>
+            {scope !== 'all' && (
+              <Field label="Scope Value">
+                <TextInput
+                  value={scopeValue} onInput={setScopeValue}
+                  placeholder={scope === 'department' ? 'Dept UUID' : 'e.g. employee, manager'}
                 />
               </Field>
-              {scope !== 'all' && (
-                <Field label="Scope Value">
-                  <TextInput
-                    value={scopeValue} onInput={setScopeValue}
-                    placeholder={scope === 'department' ? 'Dept UUID' : 'e.g. employee, manager'}
-                  />
-                </Field>
-              )}
-            </>
-          )}
-          <Field label="Requires Expiry Date">
-            <label class="obx-checkbox-label">
-              <input type="checkbox" checked={requiresExpiry}
-                onChange={e => setRequiresExpiry((e.target as HTMLInputElement).checked)} />
-              <span>Doc without an expiry date counts as non-compliant</span>
-            </label>
-          </Field>
-          <Field label="Reminder Windows (days before expiry)">
-            <TextInput value={reminderDays} onInput={setReminderDays} placeholder="30,7,0" />
-          </Field>
-        </FormGrid>
-        <div class="obx-modal-footer">
-          <button type="button" class="obx-btn" onClick={onClose}>Cancel</button>
-          <button type="submit" class="obx-btn obx-btn--primary" disabled={isPending}>
-            {isPending ? 'Saving…' : existing ? 'Save Changes' : 'Create'}
-          </button>
-        </div>
-      </form>
-    </Modal>
+            )}
+          </>
+        )}
+        <Field label="Requires Expiry Date">
+          <label class="obx-checkbox-label">
+            <input type="checkbox" checked={requiresExpiry}
+              onChange={e => setRequiresExpiry((e.target as HTMLInputElement).checked)} />
+            <span>Doc without an expiry date counts as non-compliant</span>
+          </label>
+        </Field>
+        <Field label="Reminder Windows (days before expiry)">
+          <TextInput value={reminderDays} onInput={setReminderDays} placeholder="30,7,0" />
+        </Field>
+      </FormGrid>
+    </EnterpriseFormModal>
   );
 }
 

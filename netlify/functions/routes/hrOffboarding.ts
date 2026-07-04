@@ -111,7 +111,7 @@ router.post('/offboarding/complete', async c => {
 
 router.post('/offboarding/cancel', async c => {
   const actor = await requirePermission(c, 'hr.offboarding.cancel');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().max(500).nullable().optional() }), body(c));
+  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an offboarding case.').max(500) }), body(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await cancelOffboardingCase(actor.id, v.data) }); }
   catch (e) { return fail(c, e); }

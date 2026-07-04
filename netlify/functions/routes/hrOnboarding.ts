@@ -135,7 +135,7 @@ router.post('/onboarding/task/reassign', async c => {
 // ── 5. cancel ─────────────────────────────────────────────────────────────────
 router.post('/onboarding/cancel', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.cancel');
-  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().max(500).optional() }), body(c));
+  const v = zv(c, z.object({ caseId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel an onboarding case.').max(500) }), body(c));
   if (!v.ok) return v.response;
   const { data: kase } = await sb.from('hr_onboarding_cases').select('id, status, employee_id').eq('id', v.data.caseId).maybeSingle<{ id: string; status: string; employee_id: string | null }>();
   if (!kase) return c.json({ success: false, message: 'Onboarding case not found.' }, 404 as 200);
@@ -319,7 +319,7 @@ router.post('/onboarding/task/add', async c => {
 // ── 13. task/block ───────────────────────────────────────────────────────────────
 router.post('/onboarding/task/block', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.task.manage');
-  const v = zv(c, z.object({ taskId: z.string().uuid(), reason: z.string().max(500).nullable().optional(), severity: Sev.optional() }), body(c));
+  const v = zv(c, z.object({ taskId: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to block a task.').max(500), severity: Sev.optional() }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => blockOnboardingTask(actor.id, v.data));
 });
@@ -375,7 +375,7 @@ router.post('/onboarding/ready', async c => {
 // ── 20. blocker/resolve ──────────────────────────────────────────────────────────
 router.post('/onboarding/blocker/resolve', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.case.manage');
-  const v = zv(c, z.object({ blockerId: z.string().uuid(), note: z.string().max(500).nullable().optional() }), body(c));
+  const v = zv(c, z.object({ blockerId: z.string().uuid(), note: z.string().trim().min(1, 'A resolution note is required.').max(500) }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => resolveOnboardingBlocker(actor.id, v.data));
 });
@@ -383,7 +383,7 @@ router.post('/onboarding/blocker/resolve', async c => {
 // ── 21. blocker/escalate ─────────────────────────────────────────────────────────
 router.post('/onboarding/blocker/escalate', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.case.manage');
-  const v = zv(c, z.object({ blockerId: z.string().uuid(), note: z.string().max(500).nullable().optional(), newOwnerId: z.string().nullable().optional() }), body(c));
+  const v = zv(c, z.object({ blockerId: z.string().uuid(), note: z.string().trim().min(1, 'An escalation reason is required.').max(500), newOwnerId: z.string().nullable().optional() }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => escalateOnboardingBlocker(actor.id, v.data));
 });
@@ -589,7 +589,7 @@ router.post('/onboarding/actions/case/complete', async c => {
 // ── 32. actions/case/cancel ──────────────────────────────────────────────────────
 router.post('/onboarding/actions/case/cancel', async c => {
   const actor = await requirePermission(c, 'hr.onboarding.custom_actions.case_cancel');
-  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).nullable().optional() }), body(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to cancel a custom action.').max(500) }), body(c));
   if (!v.ok) return v.response;
   return mutate(c, () => cancelCaseAction(actor.id, v.data));
 });

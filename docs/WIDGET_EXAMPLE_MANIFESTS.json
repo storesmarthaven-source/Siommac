@@ -1,0 +1,316 @@
+{
+  "_note": "Four example widget-package manifests — one per active module (HR, Finance, HSE, Platform). Each validates against WIDGET_PACKAGE_MANIFEST_SCHEMA.json. Permission keys and routes are grounded in the live SIOMAC backend. NO legacy modules/APIs. States loading/empty/error are shown abbreviated; see the acceptance checklist for the full state contract.",
+
+  "hrAttendancePack": {
+    "packageId": "siomac.hr.attendance-pack",
+    "name": "HR Attendance & Leave Widgets",
+    "description": "Attendance exceptions, leave balance, and onboarding progress widgets for HR dashboards.",
+    "version": "1.0.0",
+    "publisher": "SIOMAC",
+    "module": "hr",
+    "compatibleSiomacVersion": ">=1.0.0 <2.0.0",
+    "requiredPermissions": ["hr.attendance.exceptions.view", "hr.leave.balances.view", "hr.onboarding.view"],
+    "requiredRoutes": ["hr/attendance/exceptions/list", "hr/leave/balances/get", "hr/onboarding/dashboard-stats"],
+    "uninstallBehavior": "preserve-instances-disabled",
+    "installDefaults": { "enabled": true, "allowedRoles": null },
+    "widgets": [
+      {
+        "kind": "declarative",
+        "widgetId": "hr.attendance.exceptions",
+        "spec": {
+          "id": "hr.attendance.exceptions",
+          "title": "Attendance Exceptions",
+          "description": "Open timekeeping exceptions (late, missing punch, geofence) needing review.",
+          "icon": "fa-triangle-exclamation",
+          "category": "Operational",
+          "tags": ["hr", "attendance", "exceptions"],
+          "defaultSize": "medium",
+          "allowedSizes": ["small", "medium", "large", "tall"],
+          "requiredPermissions": ["hr.attendance.exceptions.view"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "hr.attendance.exceptions.open",
+            "label": "Open attendance exceptions",
+            "apiRoute": "hr/attendance/exceptions/list",
+            "refreshIntervalMs": 60000,
+            "requiredPermissions": ["hr.attendance.exceptions.view"]
+          },
+          "config": [
+            { "key": "siteId", "label": "Site", "type": "select", "editableBy": "user" },
+            { "key": "dateRange", "label": "Range", "type": "dateRange", "editableBy": "user" },
+            { "key": "thresholds", "label": "Overdue threshold", "type": "threshold", "editableBy": "admin" },
+            { "key": "showActions", "label": "Show actions", "type": "boolean", "defaultValue": true }
+          ],
+          "actions": [
+            { "key": "resolve", "label": "Resolve", "permission": "hr.attendance.exceptions.manage", "minSize": "large" },
+            { "key": "waive", "label": "Waive", "permission": "hr.attendance.exceptions.manage", "minSize": "large" }
+          ],
+          "animation": { "default": "count-up", "byState": { "error": "status-change-flash" } },
+          "states": { "loading": true, "empty": { "message": "No open exceptions" }, "error": true, "stale": true },
+          "view": { "kind": "list", "rows": [] }
+        }
+      },
+      {
+        "kind": "declarative",
+        "widgetId": "hr.leave.balance",
+        "spec": {
+          "id": "hr.leave.balance",
+          "title": "Leave Balance",
+          "description": "Remaining leave by type with accrual context.",
+          "icon": "fa-plane-departure",
+          "category": "KPI",
+          "tags": ["hr", "leave"],
+          "defaultSize": "small",
+          "allowedSizes": ["mini", "small", "medium"],
+          "requiredPermissions": ["hr.leave.balances.view"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "hr.leave.balances",
+            "label": "Leave balances",
+            "apiRoute": "hr/leave/balances/get",
+            "requiredPermissions": ["hr.leave.balances.view"]
+          },
+          "config": [
+            { "key": "leaveTypeId", "label": "Leave type", "type": "select", "editableBy": "user" },
+            { "key": "compactMode", "label": "Compact", "type": "boolean", "defaultValue": false }
+          ],
+          "actions": [
+            { "key": "request", "label": "Request leave", "permission": "hr.leave.request_own", "minSize": "small" }
+          ],
+          "animation": { "default": "count-up" },
+          "states": { "loading": true, "empty": { "message": "No balances" }, "error": true },
+          "view": { "kind": "metric", "metric": 0, "supporting": "days remaining" }
+        }
+      },
+      {
+        "kind": "code-ref",
+        "widgetId": "hr.onboarding.progress"
+      }
+    ]
+  },
+
+  "financePayrollPack": {
+    "packageId": "siomac.finance.payroll-pack",
+    "name": "Finance Payroll Widgets",
+    "description": "Payroll run status and NIS verification widgets for Finance dashboards.",
+    "version": "1.0.0",
+    "publisher": "SIOMAC",
+    "module": "finance",
+    "compatibleSiomacVersion": ">=1.0.0 <2.0.0",
+    "requiredPermissions": ["finance.payroll.view_all", "finance.payroll.nis.view"],
+    "requiredRoutes": ["finance/payroll/runs/list", "finance/nis/profiles/list"],
+    "uninstallBehavior": "preserve-instances-disabled",
+    "installDefaults": { "enabled": true, "allowedRoles": ["finance_manager", "finance_staff", "admin", "superadmin"] },
+    "widgets": [
+      {
+        "kind": "declarative",
+        "widgetId": "finance.payroll.run_status",
+        "spec": {
+          "id": "finance.payroll.run_status",
+          "title": "Payroll Run Status",
+          "description": "Latest payroll run lifecycle (calculate → approve → lock → payslips) with gross/net.",
+          "icon": "fa-money-check-dollar",
+          "category": "Operational",
+          "tags": ["finance", "payroll"],
+          "defaultSize": "medium",
+          "allowedSizes": ["small", "medium", "large", "wide"],
+          "requiredPermissions": ["finance.payroll.view_all"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "finance.payroll.runs.latest",
+            "label": "Latest payroll run",
+            "apiRoute": "finance/payroll/runs/list",
+            "refreshIntervalMs": 30000,
+            "requiredPermissions": ["finance.payroll.view_all"]
+          },
+          "config": [
+            { "key": "siteId", "label": "Site", "type": "select", "editableBy": "user" },
+            { "key": "showActions", "label": "Show actions", "type": "boolean", "defaultValue": true }
+          ],
+          "actions": [
+            { "key": "approve", "label": "Approve", "permission": "finance.payroll.approve", "minSize": "large" },
+            { "key": "lock", "label": "Lock run", "permission": "finance.payroll.lock", "minSize": "large" },
+            { "key": "export", "label": "Export", "permission": "finance.payroll.export", "minSize": "large" }
+          ],
+          "animation": { "default": "status-change-flash", "byState": { "ready": "progress-fill" } },
+          "states": { "loading": true, "empty": { "message": "No payroll runs" }, "error": true, "stale": true },
+          "view": { "kind": "metric", "metric": "—", "supporting": "current run status" }
+        }
+      },
+      {
+        "kind": "declarative",
+        "widgetId": "finance.nis.verification",
+        "spec": {
+          "id": "finance.nis.verification",
+          "title": "NIS Verification",
+          "description": "Employee NIS profiles pending Finance verification.",
+          "icon": "fa-id-card-clip",
+          "category": "Compliance",
+          "tags": ["finance", "nis", "statutory"],
+          "defaultSize": "small",
+          "allowedSizes": ["mini", "small", "medium"],
+          "requiredPermissions": ["finance.payroll.nis.view"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "finance.nis.pending",
+            "label": "Pending NIS verifications",
+            "apiRoute": "finance/nis/profiles/list",
+            "requiredPermissions": ["finance.payroll.nis.view"]
+          },
+          "config": [
+            { "key": "thresholds", "label": "SLA hours", "type": "threshold", "editableBy": "admin" },
+            { "key": "siteId", "label": "Site", "type": "select", "editableBy": "user" }
+          ],
+          "actions": [
+            { "key": "verify", "label": "Verify", "permission": "finance.payroll.nis.verify", "minSize": "medium" },
+            { "key": "return", "label": "Return", "permission": "finance.payroll.nis.verify", "minSize": "medium" }
+          ],
+          "animation": { "default": "count-up", "byState": { "error": "status-change-flash" } },
+          "states": { "loading": true, "empty": { "message": "All verified" }, "error": true },
+          "view": { "kind": "metric", "metric": 0, "supporting": "pending verification" }
+        }
+      }
+    ]
+  },
+
+  "hseSafetyPack": {
+    "packageId": "siomac.hse.safety-pack",
+    "name": "HSE Safety Widgets",
+    "description": "Incident trend and active permit-to-work widgets for HSE dashboards.",
+    "version": "1.0.0",
+    "publisher": "SIOMAC",
+    "module": "hse",
+    "compatibleSiomacVersion": ">=1.0.0 <2.0.0",
+    "requiredPermissions": ["hse.incidents.view", "hse.ptw.view"],
+    "requiredRoutes": ["hse/incidents/stats", "hse/ptw/list"],
+    "uninstallBehavior": "preserve-instances-disabled",
+    "installDefaults": { "enabled": true, "allowedRoles": null },
+    "widgets": [
+      {
+        "kind": "declarative",
+        "widgetId": "hse.incidents.trend",
+        "spec": {
+          "id": "hse.incidents.trend",
+          "title": "Incident Trend",
+          "description": "Incident volume and severity trend over a rolling window.",
+          "icon": "fa-chart-line",
+          "category": "Trend",
+          "tags": ["hse", "incidents"],
+          "defaultSize": "large",
+          "allowedSizes": ["medium", "large", "wide"],
+          "requiredPermissions": ["hse.incidents.view"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "hse.incidents.stats",
+            "label": "Incident statistics",
+            "apiRoute": "hse/incidents/stats",
+            "refreshIntervalMs": 120000,
+            "requiredPermissions": ["hse.incidents.view"]
+          },
+          "config": [
+            { "key": "dateRange", "label": "Window", "type": "dateRange", "editableBy": "user" },
+            { "key": "siteId", "label": "Site", "type": "select", "editableBy": "user" },
+            { "key": "severity", "label": "Severity", "type": "statusFilter", "editableBy": "user" },
+            { "key": "chartType", "label": "Chart", "type": "chartType", "editableBy": "user" }
+          ],
+          "actions": [
+            { "key": "open", "label": "Open incidents", "permission": "hse.incidents.view", "minSize": "medium" }
+          ],
+          "animation": { "default": "sparkline-draw" },
+          "states": { "loading": true, "empty": { "message": "No incidents in window" }, "error": true },
+          "view": { "kind": "trend", "points": [] }
+        }
+      },
+      {
+        "kind": "declarative",
+        "widgetId": "hse.ptw.active",
+        "spec": {
+          "id": "hse.ptw.active",
+          "title": "Active Permits (PTW)",
+          "description": "Currently active permits to work with expiry countdown.",
+          "icon": "fa-clipboard-check",
+          "category": "Operational",
+          "tags": ["hse", "ptw", "permits"],
+          "defaultSize": "medium",
+          "allowedSizes": ["small", "medium", "large", "tall"],
+          "requiredPermissions": ["hse.ptw.view"],
+          "dataSource": {
+            "dataSourceType": "query",
+            "sourceKey": "hse.ptw.active",
+            "label": "Active permits",
+            "apiRoute": "hse/ptw/list",
+            "refreshIntervalMs": 60000,
+            "requiredPermissions": ["hse.ptw.view"]
+          },
+          "config": [
+            { "key": "siteId", "label": "Site", "type": "select", "editableBy": "user" },
+            { "key": "thresholds", "label": "Expiring within (h)", "type": "threshold", "editableBy": "admin" },
+            { "key": "statusFilter", "label": "Status", "type": "statusFilter", "editableBy": "user" }
+          ],
+          "actions": [
+            { "key": "open", "label": "Open permit", "permission": "hse.ptw.view", "minSize": "medium" }
+          ],
+          "animation": { "default": "count-up", "byState": { "stale": "pulse-soft" } },
+          "states": { "loading": true, "empty": { "message": "No active permits" }, "error": true, "stale": true },
+          "view": { "kind": "metric", "metric": 0, "supporting": "active permits" }
+        }
+      }
+    ]
+  },
+
+  "platformInboxPack": {
+    "packageId": "siomac.platform.inbox-pack",
+    "name": "Platform Inbox Widgets",
+    "description": "Pending approvals and enterprise inbox widgets for Platform surfaces.",
+    "version": "1.0.0",
+    "publisher": "SIOMAC",
+    "module": "platform",
+    "compatibleSiomacVersion": ">=1.0.0 <2.0.0",
+    "requiredPermissions": ["workflow.my_tasks.view"],
+    "requiredRoutes": ["workflow/my_tasks/list"],
+    "uninstallBehavior": "preserve-instances-disabled",
+    "installDefaults": { "enabled": true, "allowedRoles": null },
+    "widgets": [
+      {
+        "kind": "declarative",
+        "widgetId": "platform.approvals.pending",
+        "spec": {
+          "id": "platform.approvals.pending",
+          "title": "Pending Approvals",
+          "description": "Your pending workflow tasks across modules.",
+          "icon": "fa-list-check",
+          "category": "Operational",
+          "tags": ["platform", "workflow", "approvals"],
+          "defaultSize": "small",
+          "allowedSizes": ["mini", "small", "medium", "tall"],
+          "requiredPermissions": ["workflow.my_tasks.view"],
+          "dataSource": {
+            "dataSourceType": "realtime",
+            "sourceKey": "workflow.my_tasks.pending",
+            "label": "My pending tasks",
+            "apiRoute": "workflow/my_tasks/list",
+            "realtimeChannel": "workflow_tasks",
+            "refreshIntervalMs": 45000,
+            "requiredPermissions": ["workflow.my_tasks.view"]
+          },
+          "config": [
+            { "key": "moduleScope", "label": "Modules", "type": "multiSelect", "editableBy": "user",
+              "options": [
+                { "label": "All", "value": "all" },
+                { "label": "HR", "value": "hr" },
+                { "label": "Finance", "value": "finance" },
+                { "label": "HSE", "value": "hse" }
+              ] },
+            { "key": "thresholds", "label": "Overdue (h)", "type": "threshold", "editableBy": "admin" }
+          ],
+          "actions": [
+            { "key": "open", "label": "Open task", "permission": "workflow.my_tasks.view", "minSize": "medium" }
+          ],
+          "animation": { "default": "count-up", "byState": { "error": "status-change-flash" } },
+          "states": { "loading": true, "empty": { "message": "Nothing pending" }, "error": true, "stale": true },
+          "view": { "kind": "metric", "metric": 0, "supporting": "pending approvals" }
+        }
+      }
+    ]
+  }
+}

@@ -145,7 +145,7 @@ router.post('/statutory/versions/approve', async c => {
 // POST /api/finance/statutory/versions/reject
 router.post('/statutory/versions/reject', async c => {
   const actor = await requirePermission(c, 'finance.statutory.approve');
-  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).optional() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().trim().min(1, 'A reason is required to reject a rate version.').max(500) }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await rejectStatutoryVersion(v.data.id, actor.id, v.data.reason);

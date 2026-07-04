@@ -9,7 +9,7 @@
 --       hr.attendance.reports.{view,export}
 -- ============================================================================
 
-insert into public.role_permissions (role_name, permission_key)
+insert into public.role_permissions (role_name, permission)
 values
   -- employee: punch own time; view own records; submit own timesheet; view own exceptions
   ('employee',   'hr.attendance.view'),
@@ -88,6 +88,6 @@ values
   ('superadmin', 'hr.attendance.policy.manage'),
   ('superadmin', 'hr.attendance.reports.view'),
   ('superadmin', 'hr.attendance.reports.export')
-on conflict (role_name, permission_key) do nothing;
+on conflict (role_name, permission) do nothing;
 
 -- After applying, run: NOTIFY pgrst, 'reload schema';

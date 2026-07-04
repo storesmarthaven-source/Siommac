@@ -82,10 +82,24 @@ const ROSTER_ITEM: ModuleNavItem = {
   sub: 'Shift schedules, rotation patterns & coverage management',
 };
 
+const COMPENSATION_ITEM: ModuleNavItem = {
+  id: 's-hr-compensation',
+  label: 'Compensation',
+  icon: 'fa-scale-balanced',
+  sub: 'Recurring pay items & employee statutory (NIS) profiles',
+};
+
+const OVERTIME_ITEM: ModuleNavItem = {
+  id: 's-hr-overtime',
+  label: 'Overtime',
+  icon: 'fa-clock',
+  sub: 'Overtime submission, approval & payroll feed',
+};
+
 export const hrModule: ModuleDefinition = {
   id: 'hr',
   navGroup: { id: 'hr', label: 'Human Resources' },
-  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM, ROSTER_ITEM],
+  navItems: [EMPLOYEE_MASTER_ITEM, ONBOARDING_ITEM, ORGANIZATION_ITEM, DOCUMENTS_ITEM, OFFBOARDING_ITEM, LEAVE_ITEM, TRANSFERS_ITEM, ATTENDANCE_ITEM, REQUESTS_ITEM, ROSTER_ITEM, COMPENSATION_ITEM, OVERTIME_ITEM],
   roles: ['admin', 'manager', 'superadmin'],
   mount: {
     sectionId: 's-hr',
