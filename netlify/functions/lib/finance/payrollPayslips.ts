@@ -1,26 +1,28 @@
 // ============================================================================
-// Finance — Payroll Payslips (Phase 3 Stage 3)
+// Finance Payroll Payslips (Phase 3 Stage 3 + F3 notification hook)
 // ============================================================================
 // Manages finance_payslips.
 //
-// Privacy rules (§8.4):
-//   • Employee sees ONLY their own payslip.
-//   • Manager CANNOT see a subordinate's payslip by default.
-//   • HR CANNOT see payslips unless explicitly granted finance.payroll.view_all.
-//   • Bulk generate / list-all → finance.payroll.view_all only.
-//   • Signed URL download is audited.
+// Privacy rules:
+//   Employee sees ONLY their own payslip.
+//   Manager CANNOT see subordinate payslips without finance.payroll.view_all.
+//   Bulk generate / list-all requires finance.payroll.view_all.
+//   Signed URL download is audited.
 //
 // Payslips may only be generated for LOCKED runs.
-// Generating when a payslip already exists for (run_id, employee_id) is idempotent
-// (returns the existing record rather than erroring).
+// Generating when a payslip already exists for (run_id, employee_id) is idempotent.
+//
+// F3 addition: after generating new payslips, emit a payslip-ready notification
+// to each employee via notifyMany (fire-and-forget, dedupe-keyed per run).
 // ============================================================================
 
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
+import { notifyMany } from '../notify';
 
-// ── DTO ───────────────────────────────────────────────────────────────────────
+// -- DTO -----------------------------------------------------------------------
 
 export interface PayslipDto {
   id: string;
@@ -60,16 +62,22 @@ function toPayslipDto(r: DbPayslipRow): PayslipDto {
   };
 }
 
-// ── Generate payslips for a locked run ───────────────────────────────────────
+// -- Generate payslips for a locked run ----------------------------------------
 
 /**
  * Generate payslips for all employees in a locked run.
- * Only 'locked' (or later) runs may have payslips generated.
+ * Only locked (or later) runs may have payslips generated.
  * Idempotent: existing payslips are left intact; only missing ones are created.
  * Returns the full list of payslips for the run after generation.
+ *
+ * Side-effects (S2):
+ *   1. Inserts payslip rows.
+ *   2. Writes hr_audit_log row (throws on failure).
+ *   3. Emits finance.payroll.payslips.generated app_event (fire-and-forget).
+ *   4. Notifies each newly-created payslip employee (fire-and-forget via notifyMany).
+ *      dedupeKey payslip.ready.<runId> prevents re-notification on idempotent re-generate.
  */
 export async function generatePayslips(runId: string, actorId: string): Promise<PayslipDto[]> {
-  // Guard: run must be locked (or exported)
   const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
     .select('id, run_no, status')
     .eq('id', runId)
@@ -83,7 +91,6 @@ export async function generatePayslips(runId: string, actorId: string): Promise<
     );
   }
 
-  // Load all run lines
   const { data: lines, error: lineErr } = await sb.from('finance_payroll_run_lines')
     .select('id, employee_id')
     .eq('run_id', runId);
@@ -94,7 +101,6 @@ export async function generatePayslips(runId: string, actorId: string): Promise<
     throw Object.assign(new Error('No run lines found for this run.'), { status: 422 });
   }
 
-  // Find which employees already have a payslip for this run
   const { data: existing, error: exErr } = await sb.from('finance_payslips')
     .select('employee_id')
     .eq('run_id', runId);
@@ -112,7 +118,7 @@ export async function generatePayslips(runId: string, actorId: string): Promise<
         run_id:       runId,
         run_line_id:  line.id,
         employee_id:  line.employee_id,
-        file_path:    null,        // file generation is an async / external step
+        file_path:    null,
         generated_by: actorId,
         metadata:     {},
       });
@@ -137,12 +143,26 @@ export async function generatePayslips(runId: string, actorId: string): Promise<
       severity:         'info',
       payload:          { runNo: run.run_no, generatedCount: missing.length },
     });
+    const newEmployeeIds = missing.map(l => l.employee_id);
+    void notifyMany(newEmployeeIds, {
+      type:        'finance.payroll.payslip.ready',
+      title:       'Your payslip is ready',
+      body:        'Your payslip for payroll run ' + run.run_no + ' has been generated. Log in to view and download it.',
+      link:        's-finance-my-payslips',
+      module:      'finance_payroll',
+      severity:    'info',
+      sourceType:  'payroll_run',
+      sourceId:    runId,
+      actionRoute: 's-finance-my-payslips',
+      metadata:    { runNo: run.run_no, runId },
+      dedupeKey:   'payslip.ready.' + runId,
+    });
   }
 
   return listPayslipsForRun(runId);
 }
 
-// ── List payslips for a run (Finance only) ───────────────────────────────────
+// -- List payslips for a run (Finance only) ------------------------------------
 
 export async function listPayslipsForRun(runId: string): Promise<PayslipDto[]> {
   const { data, error } = await sb.from('finance_payslips')
@@ -153,12 +173,8 @@ export async function listPayslipsForRun(runId: string): Promise<PayslipDto[]> {
   return ((data ?? []) as DbPayslipRow[]).map(toPayslipDto);
 }
 
-// ── Get own payslips (employee self-service) ─────────────────────────────────
+// -- Get own payslips (employee self-service) ----------------------------------
 
-/**
- * Return all payslips for the calling employee (self-scope enforced).
- * Does NOT allow viewing another employee's payslips — use listPayslipsForRun for Finance.
- */
 export async function getMyPayslips(employeeId: string): Promise<PayslipDto[]> {
   const { data, error } = await sb.from('finance_payslips')
     .select('*')
@@ -168,13 +184,8 @@ export async function getMyPayslips(employeeId: string): Promise<PayslipDto[]> {
   return ((data ?? []) as DbPayslipRow[]).map(toPayslipDto);
 }
 
-// ── Get single payslip (with ownership check) ────────────────────────────────
+// -- Get single payslip (with ownership check) ---------------------------------
 
-/**
- * Return a single payslip.
- * ownerFilter: if provided, throws 403 if the payslip does not belong to that employee.
- * Finance staff/managers call this without ownerFilter.
- */
 export async function getPayslip(
   payslipId: string,
   ownerFilter?: string,
@@ -193,14 +204,8 @@ export async function getPayslip(
   return toPayslipDto(data);
 }
 
-// ── Signed payslip URL (download audited) ────────────────────────────────────
+// -- Signed payslip URL (download audited) -------------------------------------
 
-/**
- * Return a short-lived (expiring) signed URL for a payslip file download.
- * Ownership is enforced: pass callerEmployeeId for employee self-service,
- * or null for Finance roles (which have already been permission-gated).
- * Download is audited via app_events.
- */
 export async function signedPayslipUrl(
   payslipId: string,
   callerEmployeeId: string | null,
@@ -213,7 +218,6 @@ export async function signedPayslipUrl(
     throw Object.assign(new Error('Payslip file has not been generated yet.'), { status: 422 });
   }
 
-  // Generate a signed URL from Supabase Storage (60-minute expiry)
   const { data: signed, error: signErr } = await sb.storage
     .from('payslips')
     .createSignedUrl(payslip.filePath, 3600);
@@ -227,7 +231,6 @@ export async function signedPayslipUrl(
 
   const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
-  // Audit the download
   void emitAppEvent({
     eventType:        'finance.payroll.payslip.downloaded',
     sourceModule:     'finance_payroll',
