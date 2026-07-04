@@ -361,6 +361,18 @@ export const PERMISSION_KEYS = [
   'finance.remittances.approve',      // approve submitted remittances + mark paid/filed (SoD: creator cannot approve)
   'finance.remittances.reports.view', // view remittance history and filing reports
   'finance.remittances.reports.export', // export remittance reports (audited data egress)
+  // -- Finance Expenses (F4) --------------------------------------------------
+  'finance.expenses.view',         // view expense claims
+  'finance.expenses.submit',       // submit own expense claims
+  'finance.expenses.manage',       // manage claims (finance_staff+)
+  'finance.expenses.approve',      // approve submitted claims (SoD)
+  'finance.expenses.reports.view', // view expense reports
+  'finance.expenses.reports.export', // export expense reports
+  // -- Finance Budgeting & Budget-vs-Actual (F5) ----------------------------------
+  'finance.budgets.view',             // view budget lines and computed actuals/variance
+  'finance.budgets.manage',           // create, update, delete budget lines
+  'finance.budgets.reports.view',     // view budget variance and summary reports
+  'finance.budgets.reports.export',   // export budget reports (audited data egress)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -478,6 +490,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     // Remittances (F1) — staff can view and manage (create/submit/cancel)
     'finance.remittances.view',
     'finance.remittances.manage',
+    // Expenses (F4) -- staff: view, submit, manage
+    'finance.expenses.view',
+    'finance.expenses.submit',
+    'finance.expenses.manage',
+    // Budgets (F5) -- staff: view only
+    'finance.budgets.view',
   ]),
   finance_manager: new Set<PermissionKey>([
     // employee baseline (same keys as employee role)
@@ -526,6 +544,18 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.remittances.approve',
     'finance.remittances.reports.view',
     'finance.remittances.reports.export',
+    // Expenses (F4) -- manager: all
+    'finance.expenses.view',
+    'finance.expenses.submit',
+    'finance.expenses.manage',
+    'finance.expenses.approve',
+    'finance.expenses.reports.view',
+    'finance.expenses.reports.export',
+    // Budgets (F5) -- manager: full
+    'finance.budgets.view',
+    'finance.budgets.manage',
+    'finance.budgets.reports.view',
+    'finance.budgets.reports.export',
   ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -671,6 +701,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.approve',
     'finance.payroll.lock',
     'finance.payroll.export',
+    // Remittances (F1) -- admin has all
+    'finance.remittances.view', 'finance.remittances.manage',
+    'finance.remittances.approve', 'finance.remittances.reports.view', 'finance.remittances.reports.export',
+    // Budgets (F5) -- admin has all
+    'finance.budgets.view', 'finance.budgets.manage',
+    'finance.budgets.reports.view', 'finance.budgets.reports.export',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };

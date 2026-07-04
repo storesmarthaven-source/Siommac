@@ -1187,6 +1187,70 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'high',
   },
 
+  // ── Finance Expenses (F4) ────────────────────────────────────────────────────
+  'finance.expenses.view': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'View Expense Claims',
+    description: 'View the expense claim register and claim details.',
+    risk: 'low',
+  },
+  'finance.expenses.submit': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Submit Expense Claim',
+    description: 'Create and submit own expense claims (employees and finance staff).',
+    risk: 'low',
+  },
+  'finance.expenses.manage': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Manage Expense Claims',
+    description: 'Cancel claims, upload receipts, and manage expense records (finance staff+).',
+    risk: 'medium',
+  },
+  'finance.expenses.approve': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Approve Expense Claims',
+    description: 'Approve, reject, or mark reimbursed. Segregation of duties: claimant cannot approve their own claim.',
+    risk: 'high',
+  },
+  'finance.expenses.reports.view': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'View Expense Reports',
+    description: 'View expense claim reports and analytics.',
+    risk: 'low',
+  },
+  'finance.expenses.reports.export': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Export Expense Reports',
+    description: 'Export expense claim reports (audited data egress). Finance Manager or Admin only.',
+    risk: 'medium',
+  },
+
+  // ── Finance Budgets (F5) ─────────────────────────────────────────────────────
+  'finance.budgets.view': {
+    module: 'Finance', group: 'Budgets',
+    label: 'View Budgets',
+    description: 'View budget lines, actuals, and variance for accessible cost centres.',
+    risk: 'low',
+  },
+  'finance.budgets.manage': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Manage Budgets',
+    description: 'Create, update, and delete budget lines. Finance staff and manager.',
+    risk: 'medium',
+  },
+  'finance.budgets.reports.view': {
+    module: 'Finance', group: 'Budgets',
+    label: 'View Budget Reports',
+    description: 'View budget variance and summary reports.',
+    risk: 'low',
+  },
+  'finance.budgets.reports.export': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Export Budget Reports',
+    description: 'Export budget reports as CSV/PDF (audited data egress). Finance Manager or Admin only.',
+    risk: 'medium',
+  },
+
   // Statutory Remittances & Filing
   'finance.remittances.view': {
     module: 'Finance', group: 'Statutory Remittances',

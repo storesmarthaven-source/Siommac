@@ -2,11 +2,10 @@
  * src/components/sections/Finance/module.ts
  *
  * Finance feature module (ModuleDefinition). Declares the "Finance" sidebar group
- * and its two sub-modules — Statutory Configuration and Payroll — then self-registers
- * at import. Surfaces the finance backend (routes/financeStatutory + financeNis +
- * financePayroll) that previously had no UI. Finance owns the statutory treatment
- * (NIS / PAYE / Health Surcharge versions), the pay-component catalogue, and payroll
- * runs / payslips / exports.
+ * and its sub-modules — Statutory Configuration, Payroll, Statutory Remittances,
+ * and My Payslips (employee self-service, F3) — then self-registers at import.
+ * Finance owns the statutory treatment (NIS / PAYE / Health Surcharge versions),
+ * the pay-component catalogue, payroll runs / payslips / exports, and remittances.
  */
 
 import { registerModule, type ModuleDefinition, type ModuleNavItem } from '@lib/moduleRegistry';
@@ -35,10 +34,30 @@ const REMITTANCES_ITEM: ModuleNavItem = {
   sub: 'PAYE/BIR, NIS/NIBTT and Health Surcharge remittances & filing',
 };
 
+const MY_PAYSLIPS_ITEM: ModuleNavItem = {
+  id: 's-finance-my-payslips',
+  label: 'My Payslips',
+  icon: 'fa-file-invoice',
+  sub: 'View and download your own payslips (employee self-service)',
+};
+const EXPENSES_ITEM: ModuleNavItem = {
+  id: 's-finance-expenses',
+  label: 'Expense Claims',
+  icon: 'fa-receipt',
+  sub: 'Employee expense claims with cost-centre allocation and reimbursement tracking',
+};
+
+const BUDGETS_ITEM: ModuleNavItem = {
+  id: 's-finance-budgets',
+  label: 'Budgeting',
+  icon: 'fa-chart-pie',
+  sub: 'Budget lines per cost centre / fiscal year, Budget-vs-Actual variance tracking',
+};
+
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM],
+  navItems: [STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',
