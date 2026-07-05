@@ -67,7 +67,7 @@ router.post('/workflows/create', async c => {
 
 const ListWorkflowsSchema = z.object({
   status:       z.string().optional(),
-  module:       z.string().optional(),
+  module:       z.union([z.string(), z.array(z.string())]).optional(),
   assignedToMe: z.boolean().optional(),
   limit:        z.number().int().min(1).max(100).default(50),
   cursor:       z.string().nullable().optional(),
@@ -87,7 +87,7 @@ router.post('/workflows/list', async c => {
     .limit(v.data.limit);
 
   if (v.data.status) q = q.eq('status', v.data.status);
-  if (v.data.module) q = q.eq('module_key', v.data.module);
+  if (v.data.module) q = Array.isArray(v.data.module) ? q.in('module_key', v.data.module) : q.eq('module_key', v.data.module);
 
   // For non-admin/manager, scope to owned or involved workflows
   if (!['admin','superadmin','manager'].includes(user.role)) {

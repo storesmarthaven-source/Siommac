@@ -93,7 +93,7 @@ export interface HandoffRow {
 
 export interface WorkflowListFilters extends Record<string, unknown> {
   status?:       string;
-  module?:       string;
+  module?:       string | string[];
   assignedToMe?: boolean;
   limit?:        number;
 }

@@ -26,7 +26,9 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: ZONE_ID, x, y, w, h, sizeKey, config: {} };
 }
 
-// Default board: 4 KPI tiles across the top (12 cols) + a recent-remittances list.
+// Default board: 4 KPI tiles across the top (12 cols) + a recent-remittances list,
+// then the F13 analytics row (payroll trend, remittance status, budget variance,
+// pending approvals) once the modules above have data to chart.
 function defaultFinanceLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
@@ -37,6 +39,10 @@ function defaultFinanceLayout(): BoardLayout {
         defInst('finance.disbursements.latest', 6, 0, 3, 2, 'compact'),
         defInst('finance.budgets.variance',     9, 0, 3, 2, 'compact'),
         defInst('finance.remittances.recent',   0, 2, 4, 3, 'standard'),
+        defInst('finance.analytics.payrollTrend',              4, 2, 4, 3, 'standard'),
+        defInst('finance.analytics.pendingApprovals',          8, 2, 4, 3, 'compact'),
+        defInst('finance.analytics.remittanceStatus',          0, 5, 4, 3, 'standard'),
+        defInst('finance.analytics.budgetVarianceByCostCenter', 4, 5, 4, 3, 'standard'),
       ],
     },
   };
