@@ -3,7 +3,7 @@
 // All routes POST-only, JWT-gated via requirePermission. Envelope: body.args ?? {}.
 
 import { Hono } from 'hono';
-import { requirePermission } from '../lib/auth';
+import { requirePermission, userCan } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import {
   listExpenseClaims,
@@ -105,6 +105,13 @@ router.post('/expenses/create', async c => {
     metadata:        z.record(z.string(), z.unknown()).optional(),
   }), b(c));
   if (!v.ok) return v.response;
+
+  // Self-scope: without manage, you may only submit an expense claim for yourself.
+  if (v.data.claimantId !== actor.id) {
+    const canManage = await userCan(actor, 'finance.expenses.manage');
+    if (!canManage) return c.json({ success: false, message: 'You may only submit expense claims for yourself.' }, 403 as 200);
+  }
+
   try {
     const data = await createExpenseClaim({
       claimantId:      v.data.claimantId,

@@ -8,7 +8,10 @@
  *                           mark-reimbursed,cancel,reports/list,reports/run}
  *
  * Covers:
- *   - Access control: employee DENIED; finance_staff can VIEW but not create/approve.
+ *   - Access control: employee DENIED list/get (lacks view); employee CAN self-submit
+ *     (claimantId === self) but is DENIED submitting on another employee's behalf
+ *     (self-scope, server-enforced); finance_staff can VIEW + CREATE (has manage) but
+ *     is DENIED approve.
  *   - Allocation sum validation: lines not summing to total -> 422.
  *   - Full lifecycle: create (with lines) -> submit -> approve -> mark-reimbursed.
  *   - SoD: claimant (fmgr1) cannot approve their own claim -> 422.
@@ -38,6 +41,8 @@ export default async function run(h) {
     cancelClaimId: null,   // claim for the cancel path
     rejectClaimId: null,   // claim for the reject path
     ccUuid:        null,   // seeded cost-centre UUID
+    selfClaimId:   null,   // employee's own self-submitted claim (self-scope test)
+    staffClaimId:  null,   // finance_staff-submitted claim (has manage)
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -47,8 +52,8 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('finance_cost_entries').delete().in('expense_claim_id', [ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId].filter(Boolean)); } catch {}
-    try { await sb.from('finance_expense_claims').delete().or([ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId].filter(Boolean).map(id => `id.eq.${id}`).join(',')); } catch {}
+    try { await sb.from('finance_cost_entries').delete().in('expense_claim_id', [ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId, ctx.selfClaimId, ctx.staffClaimId].filter(Boolean)); } catch {}
+    try { await sb.from('finance_expense_claims').delete().or([ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId, ctx.selfClaimId, ctx.staffClaimId].filter(Boolean).map(id => `id.eq.${id}`).join(',')); } catch {}
     try { await sb.from('finance_cost_centers').delete().eq('id', ctx.ccUuid); } catch {}
     try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_expenses').in('actor_id', [fmgr1Id, fmgr2Id, fstaffId]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_expenses').like('actor_user_id', 'EX-%'); } catch {}
@@ -79,9 +84,8 @@ export default async function run(h) {
 
   await test('seed a cost centre for allocation lines', async () => {
     const { data: cc, error } = await sb.from('finance_cost_centers').insert({
-      code:   `CC-E2E-${TAG.slice(-6)}`,
-      name:   `E2E Cost Centre ${TAG}`,
-      status: 'active',
+      name:     `E2E Cost Centre ${TAG}`,
+      currency: 'TTD',
     }).select('id').single();
     expect(!error, `seed cost centre failed: ${error?.message}`);
     ctx.ccUuid = cc.id;
@@ -95,21 +99,33 @@ export default async function run(h) {
     fails(await api('finance/expenses/list', empToken, {}), 'employee should be denied list');
   });
 
-  await test('employee is DENIED expenses/create', async () => {
-    fails(await api('finance/expenses/create', empToken, {
-      claimantId: empId, title: 'test', expenseDate: '2026-07-01',
+  await test('employee CAN self-submit their own expense claim (self-scope: claimantId === self)', async () => {
+    const r = await api('finance/expenses/create', empToken, {
+      claimantId: empId, title: 'Self-submitted claim', expenseDate: '2026-07-01',
       category: 'travel', totalAmount: 100,
       allocationLines: [{ costCenterId: ctx.ccUuid, amount: 100 }],
-    }), 'employee should be denied create');
+    });
+    ok(r, `employee self-submit should succeed: ${r.body.message}`);
+    ctx.selfClaimId = r.body.data.id;
   });
 
-  await test('finance_staff can VIEW (list) but is DENIED create + approve', async () => {
-    ok(await api('finance/expenses/list', fstaffToken, {}), 'finance_staff should list');
-    fails(await api('finance/expenses/create', fstaffToken, {
-      claimantId: fstaffId, title: 'test', expenseDate: '2026-07-01',
+  await test('employee is DENIED submitting a claim on behalf of ANOTHER employee (self-scope enforced)', async () => {
+    fails(await api('finance/expenses/create', empToken, {
+      claimantId: fmgr1Id, title: 'Impersonation attempt', expenseDate: '2026-07-01',
       category: 'travel', totalAmount: 100,
       allocationLines: [{ costCenterId: ctx.ccUuid, amount: 100 }],
-    }), 'finance_staff should be denied create');
+    }), 'employee should be denied submitting a claim for someone else');
+  });
+
+  await test('finance_staff can VIEW (list) and CREATE (has manage) but is DENIED approve', async () => {
+    ok(await api('finance/expenses/list', fstaffToken, {}), 'finance_staff should list');
+    const r = await api('finance/expenses/create', fstaffToken, {
+      claimantId: fstaffId, title: 'Staff-submitted claim', expenseDate: '2026-07-01',
+      category: 'travel', totalAmount: 100,
+      allocationLines: [{ costCenterId: ctx.ccUuid, amount: 100 }],
+    });
+    ok(r, `finance_staff create should succeed (has manage): ${r.body.message}`);
+    ctx.staffClaimId = r.body.data.id;
     fails(await api('finance/expenses/approve', fstaffToken, { id: '00000000-0000-0000-0000-000000000000' }), 'finance_staff should be denied approve');
   });
 
@@ -270,10 +286,15 @@ export default async function run(h) {
     }
   });
 
-  await test('finance_manager can run the expenses report; finance_staff can view it', async () => {
+  await test('finance_manager can run the expenses report', async () => {
     ok(await api('finance/expenses/reports/list', fmgr1Token, {}), 'reports/list failed for finance_manager');
-    ok(await api('finance/expenses/reports/list', fstaffToken, {}), 'reports/list failed for finance_staff');
     ok(await api('finance/expenses/reports/run',  fmgr1Token, {}), 'reports/run failed for finance_manager');
+  });
+
+  await test('finance_staff is DENIED expenses reports (manager/admin surface)', async () => {
+    // Reports are a manager/admin reporting surface (same policy as statutory/budget
+    // reports): finance_staff holds finance.expenses.view/manage but not reports.view.
+    fails(await api('finance/expenses/reports/list', fstaffToken, {}), 'finance_staff should be denied reports/list');
   });
 
   await test('employee is DENIED expense reports', async () => {

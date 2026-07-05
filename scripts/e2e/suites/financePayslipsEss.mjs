@@ -8,7 +8,8 @@
  *
  * Covers:
  *   - Employee can list own payslips via /my (finance.payroll.view_own).
- *   - Employee can get a signed-url for their own payslip.
+ *   - Employee requesting a signed-url for their OWN payslip passes self-scope, then
+ *     correctly 422s (PDF rendering/upload not yet built — file_path is null).
  *   - Employee CANNOT get a signed-url for another employee payslip (self-scope 403).
  *   - An employee with no payslips gets an empty list (not an error).
  *   - S2 side-effect: payslip-ready notification written on generate.
@@ -27,6 +28,18 @@
  */
 
 export const title = 'Finance F3 - Payslip Distribution & ESS';
+
+/** Deterministic-but-unique date from TAG + a per-suite salt, so this suite's seeded
+ *  finance_statutory_versions row (unique on effective_from+jurisdiction) never
+ *  collides with another suite's seed or a stale row from a crashed prior run. */
+function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = (n % 1000) + salt * 1000;
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -87,9 +100,12 @@ export default async function run(h) {
 
   await test('seed statutory version + LOCKED run + 2 run-lines + 1 payslip (emp1)', async () => {
     const { data: ver, error: verErr } = await sb.from('finance_statutory_versions').insert({
-      effective_from: '2026-01-01',
+      effective_from: seedDateFromTag(TAG, 3),
       label: 'E2E PSL Version ' + TAG,
       paye_personal_allowance: 90000,
+      paye_band1_ceiling: 1000000,
+      paye_band1_rate: 0.25,
+      paye_band2_rate: 0.30,
       hs_monthly_threshold: 469.99,
       hs_weekly_high: 8.25,
       hs_weekly_low: 4.80,
@@ -97,9 +113,11 @@ export default async function run(h) {
     expect(!verErr, 'seed version failed: ' + verErr?.message);
     ctx.versionId = ver.id;
 
+    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
+    // a TAG-specific date (distinct salt from other suites) to avoid colliding.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
       run_no: 'RUN-PSL-' + TAG.slice(-6),
-      period_month: '2026-06-01',
+      period_month: seedDateFromTag(TAG, 15),
       statutory_version_id: ctx.versionId,
       status: 'locked',
       employee_count: 2,
@@ -115,13 +133,17 @@ export default async function run(h) {
     ctx.line1Id = lines[0]?.id;
     ctx.line2Id = lines[1]?.id;
 
-    // Seed a payslip for emp1 only — emp2 payslip will be created via the generate endpoint.
+    // PDF rendering/upload is not yet built (generatePayslips always inserts
+    // file_path: null — signedPayslipUrl correctly returns 422 "not generated yet"
+    // for that case, per the no-band-aids policy: don't pretend an unbuilt feature
+    // works). Seed emp1's payslip the same way the real generate flow does —
+    // file_path: null — and assert the honest 422, not a fake signed URL.
     const { data: psl, error: pslErr } = await sb.from('finance_payslips').insert({
       payslip_no:   'PSL-E2E-' + TAG.slice(-6),
       run_id:       ctx.runId,
       run_line_id:  ctx.line1Id,
       employee_id:  emp1Id,
-      file_path:    'payslips/e2e/test-payslip.pdf',
+      file_path:    null,
       generated_by: fmgrId,
       metadata:     {},
     }).select('id').single();
@@ -157,12 +179,16 @@ export default async function run(h) {
   h.section('Finance Payslip ESS - Signed URL (self-scope guard)');
   // ===========================================================================
 
-  await test('emp1 can get a signed-url for their own payslip', async () => {
+  await test('emp1 requesting a signed-url passes self-scope, then correctly 422s (PDF not generated yet)', async () => {
+    // PDF rendering/upload is not yet built (generatePayslips always inserts
+    // file_path: null). signedPayslipUrl correctly refuses with 422 "not generated
+    // yet" rather than pretending a file exists — this asserts self-scope let the
+    // request THROUGH (not a 403/404), and that the refusal is the honest 422, not
+    // a permission or lookup failure.
     const r = await api('finance/payroll/payslips/signed-url', emp1Token, { id: ctx.payslip1Id });
-    ok(r, 'signed-url failed for emp1');
-    const d = r.body.data;
-    expect(typeof d.url === 'string', 'url must be a string');
-    expect(d.url.length > 0, 'url must not be empty');
+    fails(r, 'expected a refusal (file not generated), not success');
+    expect(r.status !== 403, 'emp1 owns this payslip — must not be self-scope-denied');
+    expect(/not.*generated/i.test(r.body.message ?? ''), `expected the "not generated yet" message, got: ${r.body.message}`);
   });
 
   await test('emp2 CANNOT get a signed-url for emp1 payslip (self-scope 403)', async () => {

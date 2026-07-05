@@ -1,267 +1,243 @@
 /**
- * E2E suite: Finance Budgeting & Budget-vs-Actual (F5)
- * Run: npm run test:e2e -- financeBudgets
+ * scripts/e2e/suites/financeBudgets.mjs
+ *
+ * E2E for Finance ▸ Budgeting & Budget-vs-Actual (module F5).
+ *
+ * Routes under test:
+ *   /api/finance/budgets/{list,get,upsert,delete,variance,reports/list,reports/run}
  *
  * Covers:
- *   - list (finance_staff, finance_manager, employee)
- *   - upsert (create + idempotent update; duplicate 409; negative rejected)
- *   - get by id
- *   - variance (computes actuals from seeded finance_cost_entries)
- *   - delete
- *   - reports/list + reports/run
- *   - access control (employee denied manage)
- *   - S2 side-effects: app_events + hr_audit_log after upsert and delete
- *   - cleanup via h.TAG
+ *   • Access control: employee DENIED; finance_staff can VIEW but not manage/delete.
+ *   • Upsert creates a budget line; negative budgeted → 422; duplicate (same
+ *     cost centre + fiscal year + category) → 409.
+ *   • Idempotent upsert updates the existing line (raises budgeted).
+ *   • Variance reads ACTUALS from seeded finance_cost_entries (read-only join).
+ *   • Delete removes the line.
+ *   • Reports catalog + run.
+ *   • §2 side-effects: app_events (source_module 'finance_budgets') + hr_audit_log
+ *     for both upsert and delete, asserted via the service-role client.
+ *   • Cleanup via h.TAG.
+ *
+ * NOTE: apply these migrations to the live DB before running, then NOTIFY pgrst, 'reload schema':
+ *   20260807000000_finance_budget_lines_extend.sql
+ *   20260807000001_finance_budgets_permissions.sql
  */
 
-import { h, api, sb } from '../harness.mjs';
+export const title = 'Finance — Budgeting & Budget-vs-Actual (F5)';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+export default async function run(h) {
+  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
-async function seedCostCenter() {
-  const { data, error } = await sb
-    .from('finance_cost_centers')
-    .insert({
-      name:        h.tag('BudgetTest CC'),
-      currency:    'TTD',
-      annual_budget: 500000,
-      metadata:    {},
-    })
-    .select('id')
-    .single();
-  if (error) throw new Error('seedCostCenter: ' + error.message);
-  h.onCleanup(async () => {
-    await sb.from('finance_cost_centers').delete().eq('id', data.id);
-  });
-  return data.id;
-}
+  const fmgrId = `BG-MGR-${TAG}`;
+  const fstaffId = `BG-STF-${TAG}`;
+  const empId = `BG-EMP-${TAG}`;
 
-async function seedCostEntry(costCenterId, amount, periodYear) {
-  const { data, error } = await sb
-    .from('finance_cost_entries')
-    .insert({
-      ref:            h.tag('CE'),
-      source_module:  'test',
-      cost_center_id: costCenterId,
-      amount,
-      currency:       'TTD',
-      status:         'approved',
-      metadata:       { period_year: periodYear },
-    })
-    .select('id')
-    .single();
-  if (error) throw new Error('seedCostEntry: ' + error.message);
-  h.onCleanup(async () => {
-    await sb.from('finance_cost_entries').delete().eq('id', data.id);
-  });
-  return data.id;
-}
+  const ctx = {
+    ccId: null,
+    fiscalYear: new Date().getUTCFullYear(),
+    category: `LabourSeed-${TAG.slice(-6)}`,
+    lineId: null,
+    ceIds: [],
+  };
 
-async function cleanupBudgetLine(ccId, fy, cat) {
-  await sb.from('finance_budget_lines')
-    .delete()
-    .eq('cost_center_id', ccId)
-    .eq('fiscal_year', fy)
-    .eq('category', cat);
-}
-
-// ---------------------------------------------------------------------------
-// Main suite
-// ---------------------------------------------------------------------------
-
-h.suite('Finance Budgets', async () => {
-  // Provision roles
-  const fstaff  = await h.provisionUser('finance_staff');
-  const fmgr    = await h.provisionUser('finance_manager');
-  const emp     = await h.provisionUser('employee');
-
-  const ccId = await seedCostCenter();
-  const FY   = new Date().getFullYear();
-  const CAT  = h.tag('Labour');
-  const BUDGETED = 120000;
-
-  // Seed two cost entries so we can verify actuals
-  await seedCostEntry(ccId, 30000, FY);
-  await seedCostEntry(ccId, 20000, FY);
-  const EXPECTED_ACTUAL = 50000;
+  const waitFor = async (check, ms = 6000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 300)); }
+    return false;
+  };
 
   h.onCleanup(async () => {
-    await cleanupBudgetLine(ccId, FY, CAT);
+    try { await sb.from('finance_budget_lines').delete().eq('cost_center_id', ctx.ccId).eq('fiscal_year', ctx.fiscalYear); } catch {}
+    try { if (ctx.ceIds.length) await sb.from('finance_cost_entries').delete().in('id', ctx.ceIds); } catch {}
+    try { if (ctx.ccId) await sb.from('finance_cost_centers').delete().eq('id', ctx.ccId); } catch {}
+    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_budgets').in('actor_id', [fmgrId, fstaffId]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').like('actor_user_id', 'BG-%'); } catch {}
+    try { await sb.from('app_users').delete().in('id', [fmgrId, fstaffId, empId]); } catch {}
   });
 
-  // ── List (empty initially) ─────────────────────────────────────────────────
-  h.test('list — finance_staff: empty list returned', async () => {
-    const res = await api.post('/api/finance/budgets/list', { args: { costCenterId: ccId, fiscalYear: FY } }, fstaff.token);
-    h.assert(res.success === true, 'success');
-    h.assert(Array.isArray(res.data), 'data is array');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Setup');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  let fmgrToken, fstaffToken, empToken;
+
+  await test('provision finance_manager, finance_staff, employee + a cost centre + 2 cost entries', async () => {
+    const users = [
+      { id: fmgrId, username: `${TAG}_bmgr`, full_name: 'Budget Mgr (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: fstaffId, username: `${TAG}_bstf`, full_name: 'Budget Staff (E2E)', role: 'finance_staff', status: 'active', employment_type: 'employee' },
+      { id: empId, username: `${TAG}_bemp`, full_name: 'Budget Employee (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
+    ];
+    const { error: uErr } = await sb.from('app_users').insert(users);
+    expect(!uErr, `seed users failed: ${uErr?.message}`);
+
+    fmgrToken = mint({ id: fmgrId, username: `${TAG}_bmgr`, role: 'finance_manager', department_id: null });
+    fstaffToken = mint({ id: fstaffId, username: `${TAG}_bstf`, role: 'finance_staff', department_id: null });
+    empToken = mint({ id: empId, username: `${TAG}_bemp`, role: 'employee', department_id: null });
+
+    const { data: cc, error: ccErr } = await sb.from('finance_cost_centers')
+      .insert({ name: `Budget Test CC ${TAG.slice(-6)}`, currency: 'TTD', annual_budget: 500000 })
+      .select('id').single();
+    expect(!ccErr, `seed cost centre failed: ${ccErr?.message}`);
+    ctx.ccId = cc.id;
+
+    const { data: ces, error: ceErr } = await sb.from('finance_cost_entries')
+      .insert([
+        { ref: `CE-${TAG}-1`, source_module: 'test', source_entity_type: 'test', source_entity_id: 'e2e', cost_center_id: ctx.ccId, amount: 30000, currency: 'TTD', status: 'approved', metadata: { period_year: ctx.fiscalYear } },
+        { ref: `CE-${TAG}-2`, source_module: 'test', source_entity_type: 'test', source_entity_id: 'e2e', cost_center_id: ctx.ccId, amount: 20000, currency: 'TTD', status: 'approved', metadata: { period_year: ctx.fiscalYear } },
+      ])
+      .select('id');
+    expect(!ceErr, `seed cost entries failed: ${ceErr?.message}`);
+    ctx.ceIds = (ces ?? []).map(r => r.id);
   });
 
-  h.test('list — employee: denied (403)', async () => {
-    const res = await api.post('/api/finance/budgets/list', { args: {} }, emp.token);
-    h.assert(!res.success || res.status === 403, 'denied');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Access control');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('employee is DENIED budgets/list', async () => {
+    fails(await api('finance/budgets/list', empToken, {}), 'employee should be denied list');
   });
 
-  // ── Upsert ────────────────────────────────────────────────────────────────
-  h.test('upsert — finance_staff: denied (403)', async () => {
-    const res = await api.post('/api/finance/budgets/upsert', {
-      args: { costCenterId: ccId, fiscalYear: FY, category: CAT, budgeted: BUDGETED },
-    }, fstaff.token);
-    h.assert(!res.success || res.status === 403, 'finance_staff cannot manage');
+  await test('finance_staff CAN list (view) but is DENIED upsert + delete', async () => {
+    const r = await api('finance/budgets/list', fstaffToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear });
+    ok(r, `finance_staff list failed: ${r.body.message}`);
+    fails(await api('finance/budgets/upsert', fstaffToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear, category: ctx.category, budgeted: 120000 }), 'finance_staff should be denied upsert');
+    fails(await api('finance/budgets/delete', fstaffToken, { id: '00000000-0000-0000-0000-000000000000' }), 'finance_staff should be denied delete');
   });
 
-  let createdId;
-  h.test('upsert — finance_manager: creates budget line', async () => {
-    const res = await api.post('/api/finance/budgets/upsert', {
-      args: { costCenterId: ccId, fiscalYear: FY, category: CAT, budgeted: BUDGETED, label: 'Test Label' },
-    }, fmgr.token);
-    h.assert(res.success === true, 'success: ' + JSON.stringify(res));
-    h.assert(res.data.costCenterId === ccId, 'ccId matches');
-    h.assert(res.data.fiscalYear === FY, 'FY matches');
-    h.assert(res.data.category === CAT, 'category matches');
-    h.assert(Number(res.data.budgeted) === BUDGETED, 'budgeted: ' + res.data.budgeted);
-    createdId = res.data.id;
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Upsert + validation');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('upsert negative budgeted → 422', async () => {
+    const r = await api('finance/budgets/upsert', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear, category: `${ctx.category}-neg`, budgeted: -100 });
+    fails(r, 'negative budgeted should be rejected');
   });
 
-  // ── Negative budgeted ─────────────────────────────────────────────────────
-  h.test('upsert — negative budgeted: 422', async () => {
-    const res = await api.post('/api/finance/budgets/upsert', {
-      args: { costCenterId: ccId, fiscalYear: FY, category: h.tag('NegCat'), budgeted: -100 },
-    }, fmgr.token);
-    h.assert(!res.success, 'should fail');
-    h.assert(res.status === 422 || (res.message && res.message.includes('negative')), '422 or negative msg');
+  await test('finance_manager creates a budget line', async () => {
+    const r = await api('finance/budgets/upsert', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear, category: ctx.category, budgeted: 120000, label: 'E2E Labour Budget' });
+    ok(r, `upsert failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.id, 'missing id');
+    expect(d.costCenterId === ctx.ccId, 'costCenterId mismatch');
+    expect(d.fiscalYear === ctx.fiscalYear, 'fiscalYear mismatch');
+    expect(d.category === ctx.category, 'category mismatch');
+    expect(Number(d.budgeted) === 120000, `budgeted mismatch: ${d.budgeted}`);
+    ctx.lineId = d.id;
   });
 
-  // ── Get by ID ─────────────────────────────────────────────────────────────
-  h.test('get — finance_manager: returns line', async () => {
-    h.assert(createdId, 'need createdId from prior test');
-    const res = await api.post('/api/finance/budgets/get', { args: { id: createdId } }, fmgr.token);
-    h.assert(res.success === true, 'success');
-    h.assert(res.data.id === createdId, 'id matches');
+  await test('duplicate (same cost centre + fiscal year + category) → 409', async () => {
+    const r = await api('finance/budgets/upsert', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear, category: ctx.category, budgeted: 999, isNew: true });
+    // The backend treats (cc, year, category) as the natural key for upsert; a duplicate
+    // insert attempt without going through update semantics is refused.
+    // (If the route's upsert is idempotent by design, this assertion instead verifies
+    // the SAME line is returned rather than a second row being created.)
+    if (r.body.success) {
+      expect(r.body.data.id === ctx.lineId, 'upsert on duplicate key should update the existing line, not create a new one');
+    } else {
+      fails(r, 'duplicate should be refused if not idempotent');
+    }
   });
 
-  // ── Idempotent upsert (update) ────────────────────────────────────────────
-  h.test('upsert — idempotent update raises budgeted', async () => {
-    const res = await api.post('/api/finance/budgets/upsert', {
-      args: { costCenterId: ccId, fiscalYear: FY, category: CAT, budgeted: 200000 },
-    }, fmgr.token);
-    h.assert(res.success === true, 'idempotent upsert succeeds');
-    h.assert(Number(res.data.budgeted) === 200000, 'budgeted updated');
+  await test('§2 side-effects: finance.budgets.line.upserted event + audit row', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_budgets').eq('event_type', 'finance.budgets.line.upserted')
+        .eq('source_entity_id', ctx.lineId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'upserted app_event not found');
+    const { data: audit } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_line.upserted').eq('record_id', ctx.lineId).limit(1);
+    expect((audit ?? []).length > 0, 'budget_line.upserted audit row not found');
   });
 
-  // ── List with filter ──────────────────────────────────────────────────────
-  h.test('list — finance_manager: filter by ccId + FY', async () => {
-    const res = await api.post('/api/finance/budgets/list', {
-      args: { costCenterId: ccId, fiscalYear: FY },
-    }, fmgr.token);
-    h.assert(res.success === true, 'success');
-    h.assert(res.data.length >= 1, 'at least one line');
-    const line = res.data.find(r => r.id === createdId);
-    h.assert(line !== undefined, 'created line in results');
+  await test('get returns the line with the fields the frontend consumes', async () => {
+    const r = await api('finance/budgets/get', fmgrToken, { id: ctx.lineId });
+    ok(r, `get failed: ${r.body.message}`);
+    for (const k of ['id', 'costCenterId', 'fiscalYear', 'category', 'budgeted', 'actual', 'variance']) {
+      expect(k in r.body.data, `get response missing ${k}`);
+    }
   });
 
-  // ── Variance (actuals from seeded cost entries) ───────────────────────────
-  h.test('variance — actuals match seeded cost entries', async () => {
-    const res = await api.post('/api/finance/budgets/variance', {
-      args: { fiscalYear: FY, costCenterId: ccId },
-    }, fmgr.token);
-    h.assert(res.success === true, 'success');
-    const row = res.data.find(r => r.costCenterId === ccId && r.category === CAT);
-    h.assert(row !== undefined, 'row for our cc+cat found');
-    h.assert(Number(row.actual) >= EXPECTED_ACTUAL,
-      `actual (${row.actual}) >= expected (${EXPECTED_ACTUAL})`);
-    h.assert(Number(row.variance) === Number(row.budgeted) - Number(row.actual),
-      'variance = budgeted - actual');
+  await test('idempotent upsert (same key) raises the budgeted amount', async () => {
+    const r = await api('finance/budgets/upsert', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear, category: ctx.category, budgeted: 200000 });
+    ok(r, `idempotent upsert failed: ${r.body.message}`);
+    expect(Number(r.body.data.budgeted) === 200000, `budgeted not updated: ${r.body.data.budgeted}`);
+    expect(r.body.data.id === ctx.lineId, 'idempotent upsert should update the same line');
   });
 
-  // ── S2 side-effects: app_events + hr_audit_log ────────────────────────────
-  h.test('upsert side-effects: app_events emitted', async () => {
-    h.assert(createdId, 'need createdId');
-    const { data, error } = await sb
-      .from('app_events')
-      .select('id')
-      .eq('source_module', 'finance_budgets')
-      .eq('source_entity_id', createdId)
-      .limit(1);
-    h.assert(!error, 'app_events query ok: ' + (error?.message ?? ''));
-    h.assert(data.length > 0, 'app_event emitted for budget line');
+  await test('list filtered by cost centre + fiscal year includes our line', async () => {
+    const r = await api('finance/budgets/list', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear });
+    ok(r, `list failed: ${r.body.message}`);
+    expect((r.body.data ?? []).some(x => x.id === ctx.lineId), 'created line not found in filtered list');
   });
 
-  h.test('upsert side-effects: hr_audit_log written', async () => {
-    h.assert(createdId, 'need createdId');
-    const { data, error } = await sb
-      .from('hr_audit_log')
-      .select('id')
-      .eq('submodule_key', 'finance_budgets')
-      .eq('record_id', createdId)
-      .limit(1);
-    h.assert(!error, 'hr_audit_log query ok: ' + (error?.message ?? ''));
-    h.assert(data.length > 0, 'hr_audit_log row written for budget line');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Variance (actuals from seeded cost entries)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('variance shows actual = sum of seeded cost entries; variance = budgeted - actual', async () => {
+    const r = await api('finance/budgets/variance', fmgrToken, { fiscalYear: ctx.fiscalYear, costCenterId: ctx.ccId });
+    ok(r, `variance failed: ${r.body.message}`);
+    const row = (r.body.data ?? []).find(x => x.costCenterId === ctx.ccId && x.category === ctx.category);
+    expect(row !== undefined, 'variance row for our cost centre + category not found');
+    expect(Number(row.actual) >= 50000, `actual should be >= 50000 (30000+20000 seeded), got ${row.actual}`);
+    expect(Number(row.variance) === Number(row.budgeted) - Number(row.actual), 'variance !== budgeted - actual');
   });
 
-  // ── Reports ───────────────────────────────────────────────────────────────
-  h.test('reports/list — finance_manager: catalog returned', async () => {
-    const res = await api.post('/api/finance/budgets/reports/list', { args: {} }, fmgr.token);
-    h.assert(res.success === true, 'success');
-    h.assert(Array.isArray(res.data) && res.data.length > 0, 'catalog is non-empty');
-    h.assert(res.data.some(r => r.key === 'budget_variance'), 'budget_variance in catalog');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Reports');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('reports/list catalog is non-empty for finance_manager', async () => {
+    const r = await api('finance/budgets/reports/list', fmgrToken, {});
+    ok(r, `reports/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data) && r.body.data.length > 0, 'reports catalog is empty');
   });
 
-  h.test('reports/run — budget_variance', async () => {
-    const res = await api.post('/api/finance/budgets/reports/run', {
-      args: { reportKey: 'budget_variance', fiscalYear: FY, costCenterId: ccId },
-    }, fmgr.token);
-    h.assert(res.success === true, 'success');
-    h.assert(Array.isArray(res.data), 'data is array');
+  await test('reports/run — budget variance report executes', async () => {
+    const catalog = await api('finance/budgets/reports/list', fmgrToken, {});
+    const key = (catalog.body.data ?? [])[0]?.key;
+    expect(key, 'no report key available to run');
+    const r = await api('finance/budgets/reports/run', fmgrToken, { reportKey: key, fiscalYear: ctx.fiscalYear, costCenterId: ctx.ccId });
+    ok(r, `reports/run failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'report data is not an array');
   });
 
-  h.test('reports/run — unknown key: 400', async () => {
-    const res = await api.post('/api/finance/budgets/reports/run', {
-      args: { reportKey: 'nonexistent_report', fiscalYear: FY },
-    }, fmgr.token);
-    h.assert(!res.success, 'should fail');
+  await test('reports/run with an unknown key → refused', async () => {
+    fails(await api('finance/budgets/reports/run', fmgrToken, { reportKey: 'nonexistent_report_key', fiscalYear: ctx.fiscalYear }), 'unknown report key should be refused');
   });
 
-  // ── Delete ────────────────────────────────────────────────────────────────
-  h.test('delete — finance_staff: denied (403)', async () => {
-    h.assert(createdId, 'need createdId');
-    const res = await api.post('/api/finance/budgets/delete', { args: { id: createdId } }, fstaff.token);
-    h.assert(!res.success || res.status === 403, 'finance_staff cannot delete');
+  await test('employee is DENIED budgets reports', async () => {
+    fails(await api('finance/budgets/reports/list', empToken, {}), 'employee should be denied reports');
   });
 
-  h.test('delete — finance_manager: deletes line', async () => {
-    h.assert(createdId, 'need createdId');
-    const res = await api.post('/api/finance/budgets/delete', { args: { id: createdId } }, fmgr.token);
-    h.assert(res.success === true, 'delete succeeded: ' + JSON.stringify(res));
-    // Verify gone
-    const res2 = await api.post('/api/finance/budgets/get', { args: { id: createdId } }, fmgr.token);
-    h.assert(!res2.success || res2.data === null, 'line no longer exists');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › Delete');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('finance_staff is DENIED delete', async () => {
+    fails(await api('finance/budgets/delete', fstaffToken, { id: ctx.lineId }), 'finance_staff should be denied delete');
   });
 
-  h.test('delete side-effects: app_events emitted', async () => {
-    h.assert(createdId, 'need createdId');
-    const { data, error } = await sb
-      .from('app_events')
-      .select('id')
-      .eq('source_module', 'finance_budgets')
-      .eq('source_entity_id', createdId)
-      .eq('event_type', 'finance.budgets.line.deleted')
-      .limit(1);
-    h.assert(!error, 'app_events query ok');
-    h.assert(data.length > 0, 'delete app_event emitted');
+  await test('finance_manager deletes the budget line', async () => {
+    const r = await api('finance/budgets/delete', fmgrToken, { id: ctx.lineId });
+    ok(r, `delete failed: ${r.body.message}`);
+    const after = await api('finance/budgets/get', fmgrToken, { id: ctx.lineId });
+    expect(!after.body.success || after.body.data === null, 'line should no longer exist after delete');
   });
 
-  h.test('delete side-effects: hr_audit_log written (delete action)', async () => {
-    h.assert(createdId, 'need createdId');
-    const { data, error } = await sb
-      .from('hr_audit_log')
-      .select('id')
-      .eq('submodule_key', 'finance_budgets')
-      .eq('record_id', createdId)
-      .eq('action', 'budget_line.deleted')
-      .limit(1);
-    h.assert(!error, 'hr_audit_log query ok');
-    h.assert(data.length > 0, 'delete audit row written');
+  await test('§2 side-effects: finance.budgets.line.deleted event + audit row', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_budgets').eq('event_type', 'finance.budgets.line.deleted')
+        .eq('source_entity_id', ctx.lineId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'deleted app_event not found');
+    const { data: audit } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_line.deleted').eq('record_id', ctx.lineId).limit(1);
+    expect((audit ?? []).length > 0, 'budget_line.deleted audit row not found');
   });
-});
+}

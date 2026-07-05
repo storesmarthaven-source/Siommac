@@ -8,7 +8,8 @@
  *                             mark-paid,mark-filed,cancel,reports/list,reports/run}
  *
  * Covers:
- *   • Access control: employee DENIED; finance_staff can VIEW but not create/approve.
+ *   • Access control: employee DENIED; finance_staff can VIEW + CREATE (has manage) but
+ *     is DENIED approve.
  *   • compute from an approved payroll run → returns PAYE/NIS/HS portions.
  *   • compute on a non-approved run → 422.
  *   • Full lifecycle: create → submit → approve → mark-paid → mark-filed.
@@ -30,6 +31,18 @@
 
 export const title = 'Finance — Statutory Remittances & Filing (F1)';
 
+/** Deterministic-but-unique date from TAG + a per-suite salt, so this suite's seeded
+ *  finance_statutory_versions row (unique on effective_from+jurisdiction) never
+ *  collides with another suite's seed or a stale row from a crashed prior run. */
+function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = (n % 1000) + salt * 1000; // exclusive ~1000-day band per salt
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
   const { admin } = h.users;
@@ -48,6 +61,7 @@ export default async function run(h) {
     draftRunId: null,     // non-approved run (compute must 422)
     nisRemId: null,       // NIS remittance taken through the full lifecycle
     cancelRemId: null,    // remittance for the cancel path
+    staffRemId: null,     // PAYE remittance created by finance_staff (has manage)
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -57,8 +71,8 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('finance_remittance_lines').delete().in('remittance_id', [ctx.nisRemId, ctx.cancelRemId].filter(Boolean)); } catch {}
-    try { await sb.from('finance_remittances').delete().or(`id.eq.${ctx.nisRemId},id.eq.${ctx.cancelRemId}`); } catch {}
+    try { await sb.from('finance_remittance_lines').delete().in('remittance_id', [ctx.nisRemId, ctx.cancelRemId, ctx.staffRemId].filter(Boolean)); } catch {}
+    try { await sb.from('finance_remittances').delete().or(`id.eq.${ctx.nisRemId},id.eq.${ctx.cancelRemId},id.eq.${ctx.staffRemId}`); } catch {}
     try { await sb.from('finance_payroll_run_lines').delete().in('run_id', [ctx.runId, ctx.draftRunId].filter(Boolean)); } catch {}
     try { await sb.from('finance_payroll_runs').delete().or(`id.eq.${ctx.runId},id.eq.${ctx.draftRunId}`); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
@@ -93,10 +107,17 @@ export default async function run(h) {
 
   await test('seed a statutory version + approved payroll run + 2 run-lines (fixture for compute)', async () => {
     // statutory version (required NOT-NULL cols; others default)
+    // finance_statutory_versions has unique(effective_from, jurisdiction) — derive a
+    // TAG-specific date so concurrent/parallel suites (and stale rows from a prior
+    // crashed run) never collide with this suite's own seed date.
+    const seedDate = seedDateFromTag(TAG, 1);
     const { data: ver, error: verErr } = await sb.from('finance_statutory_versions').insert({
-      effective_from: '2026-01-01',
+      effective_from: seedDate,
       label: `E2E Rem Version ${TAG}`,
       paye_personal_allowance: 90000,
+      paye_band1_ceiling: 1000000,
+      paye_band1_rate: 0.25,
+      paye_band2_rate: 0.30,
       hs_monthly_threshold: 469.99,
       hs_weekly_high: 8.25,
       hs_weekly_low: 4.80,
@@ -105,9 +126,12 @@ export default async function run(h) {
     ctx.versionId = ver.id;
 
     // approved run (compute requires status in approved/locked/exported)
+    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
+    // TAG-specific dates (distinct salts from other suites) to avoid colliding when
+    // multiple finance suites seed a run in the same test pass.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
       run_no: `RUN-E2E-${TAG.slice(-6)}`,
-      period_month: '2026-06-01',
+      period_month: seedDateFromTag(TAG, 11),
       statutory_version_id: ctx.versionId,
       status: 'approved',
       employee_count: 2,
@@ -118,7 +142,7 @@ export default async function run(h) {
     // a second, draft run — compute must reject it
     const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert({
       run_no: `RUN-E2E-DRAFT-${TAG.slice(-6)}`,
-      period_month: '2026-07-01',
+      period_month: seedDateFromTag(TAG, 12),
       statutory_version_id: ctx.versionId,
       status: 'draft',
       employee_count: 1,
@@ -146,9 +170,15 @@ export default async function run(h) {
     fails(await api('finance/remittances/create', empToken, { payrollRunId: ctx.runId, authority: 'nis_nibtt' }), 'employee should be denied create');
   });
 
-  await test('finance_staff can VIEW (list) but is DENIED create + approve', async () => {
+  await test('finance_staff can VIEW (list) and CREATE (has manage) but is DENIED approve', async () => {
     ok(await api('finance/remittances/list', fstaff1Token, {}), 'finance_staff should be able to list');
-    fails(await api('finance/remittances/create', fstaff1Token, { payrollRunId: ctx.runId, authority: 'nis_nibtt' }), 'finance_staff should be denied create');
+    // finance_staff holds finance.remittances.manage by design ("can view and
+    // create/manage remittances, not approve") — use a distinct authority (paye_bir)
+    // so this doesn't collide with the nis_nibtt/health_surcharge remittances created
+    // later in this suite for the same run.
+    const r = await api('finance/remittances/create', fstaff1Token, { payrollRunId: ctx.runId, authority: 'paye_bir' });
+    ok(r, `finance_staff create should succeed (has manage): ${r.body.message}`);
+    ctx.staffRemId = r.body.data.id;
     fails(await api('finance/remittances/approve', fstaff1Token, { id: '00000000-0000-0000-0000-000000000000' }), 'finance_staff should be denied approve');
   });
 
@@ -265,9 +295,14 @@ export default async function run(h) {
     }
   });
 
-  await test('finance_manager can run the remittances report; finance_staff can view it', async () => {
+  await test('finance_manager can run the remittances report', async () => {
     ok(await api('finance/remittances/reports/list', fmgr1Token, {}), 'reports/list failed for finance_manager');
-    ok(await api('finance/remittances/reports/list', fstaff1Token, {}), 'reports/list failed for finance_staff');
+  });
+
+  await test('finance_staff is DENIED remittances reports (manager/admin surface)', async () => {
+    // Same restrictive policy as statutory/budget/expenses reports: finance_staff
+    // holds finance.remittances.view but not finance.remittances.reports.view.
+    fails(await api('finance/remittances/reports/list', fstaff1Token, {}), 'finance_staff should be denied reports/list');
   });
 
   await test('employee is DENIED remittances reports', async () => {

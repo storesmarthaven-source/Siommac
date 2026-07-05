@@ -5,6 +5,18 @@
 
 export const title = 'Finance -- Bank Accounts & Payroll Bank Disbursements (F2)';
 
+/** Deterministic-but-unique date from TAG + a per-suite salt, so this suite's seeded
+ *  finance_statutory_versions row (unique on effective_from+jurisdiction) never
+ *  collides with another suite's seed or a stale row from a crashed prior run. */
+function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = (n % 1000) + salt * 1000;
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
   const { admin } = h.users;
@@ -16,7 +28,7 @@ export default async function run(h) {
   const empId     = `DSB-EMP-${TAG}`;
   const emp2Id    = `DSB-EMP2-${TAG}`;
 
-  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, disbId: null, cancelDisbId: null };
+  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, staffRunId: null, cancelRunId: null, disbId: null, cancelDisbId: null, staffDisbId: null };
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -25,14 +37,15 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    const ids  = [ctx.disbId, ctx.cancelDisbId].filter(Boolean);
-    const rids = [ctx.runId, ctx.draftRunId].filter(Boolean);
+    const ids  = [ctx.disbId, ctx.cancelDisbId, ctx.staffDisbId].filter(Boolean);
+    const rids = [ctx.runId, ctx.draftRunId, ctx.staffRunId, ctx.cancelRunId].filter(Boolean);
     try { if (ids.length)  await sb.from('finance_disbursement_lines').delete().in('disbursement_id', ids); } catch {}
     try { if (ids.length)  await sb.from('finance_disbursements').delete().in('id', ids); } catch {}
+    try { if (rids.length) await sb.from('finance_payslips').delete().in('run_id', rids); } catch {}
     try { if (rids.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', rids); } catch {}
     try { if (rids.length) await sb.from('finance_payroll_runs').delete().in('id', rids); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
-    try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', [empId, fmgr1Id, fmgr2Id]); } catch {}
+    try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', [empId, emp2Id, fmgr1Id, fmgr2Id]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_disbursements').like('actor_user_id', 'DSB-%'); } catch {}
     try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, empId, emp2Id]); } catch {}
   });
@@ -59,29 +72,97 @@ export default async function run(h) {
 
   await test('seed statutory version + approved payroll run + run-lines', async () => {
     const { data: ver, error: verErr } = await sb.from('finance_statutory_versions').insert({
-      effective_from: '2026-01-01',
+      effective_from: seedDateFromTag(TAG, 2),
       label: `E2E Disb Version ${TAG}`,
-      paye_personal_allowance: 90000, hs_monthly_threshold: 469.99, hs_weekly_high: 8.25, hs_weekly_low: 4.80,
+      paye_personal_allowance: 90000, paye_band1_ceiling: 1000000, paye_band1_rate: 0.25, paye_band2_rate: 0.30,
+      hs_monthly_threshold: 469.99, hs_weekly_high: 8.25, hs_weekly_low: 4.80,
     }).select('id').single();
     expect(!verErr, `seed version failed: ${verErr?.message}`);
     ctx.versionId = ver.id;
+    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
+    // TAG-specific dates (distinct salts from other suites) to avoid colliding.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-${TAG.slice(-6)}`, period_month: '2026-06-01',
+      run_no: `RUN-DSB-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 13),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 2,
     }).select('id').single();
     expect(!rnErr, `seed run failed: ${rnErr?.message}`);
     ctx.runId = rn.id;
     const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, period_month: '2026-07-01',
+      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 14),
       statutory_version_id: ctx.versionId, status: 'draft', employee_count: 1,
     }).select('id').single();
     expect(!drErr, `seed draft run failed: ${drErr?.message}`);
     ctx.draftRunId = dr.id;
-    const { error: lErr } = await sb.from('finance_payroll_run_lines').insert([
-      { run_id: ctx.runId, employee_id: empId,  net_pay: 4500.00 },
-      { run_id: ctx.runId, employee_id: emp2Id, net_pay: 3200.00 },
-    ]);
+    // Real column is `net` (not net_pay). computeFromRun reads finance_payslips first,
+    // then joins run_lines by run_line_id — so a payslip must exist per employee too
+    // (mirrors the real flow: lock run -> generate payslips -> compute disbursement).
+    const { data: lines, error: lErr } = await sb.from('finance_payroll_run_lines').insert([
+      { run_id: ctx.runId, employee_id: empId,  net: 4500.00 },
+      { run_id: ctx.runId, employee_id: emp2Id, net: 3200.00 },
+    ]).select('id, employee_id');
     expect(!lErr, `seed run-lines failed: ${lErr?.message}`);
+    const { error: pslErr } = await sb.from('finance_payslips').insert(
+      (lines ?? []).map((l, i) => ({
+        payslip_no:  `PSL-DSB-${TAG.slice(-6)}-${i + 1}`,
+        run_id:      ctx.runId,
+        run_line_id: l.id,
+        employee_id: l.employee_id,
+        generated_by: fmgr1Id,
+      })),
+    );
+    expect(!pslErr, `seed payslips failed: ${pslErr?.message}`);
+    // emp2 deliberately has NO bank account yet — the Compute test below asserts
+    // it shows up in missingBankAccounts. It's seeded later, right before the
+    // real disbursement lifecycle needs every employee on ctx.runId to have one.
+
+    // A second approved run with a SINGLE employee (empId, who gets a bank
+    // account in the Bank Accounts section below) — used only for the
+    // finance_staff "can create" access-control check, so it doesn't collide
+    // with the (run_id) uniqueness of the main lifecycle disbursement below.
+    const { data: sr, error: srErr } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-DSB-STF-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 16),
+      statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
+    }).select('id').single();
+    expect(!srErr, `seed staff run failed: ${srErr?.message}`);
+    ctx.staffRunId = sr.id;
+    const { data: sLines, error: slErr } = await sb.from('finance_payroll_run_lines').insert([
+      { run_id: ctx.staffRunId, employee_id: empId, net: 4500.00 },
+    ]).select('id, employee_id');
+    expect(!slErr, `seed staff run-lines failed: ${slErr?.message}`);
+    const { error: sPslErr } = await sb.from('finance_payslips').insert(
+      (sLines ?? []).map((l, i) => ({
+        payslip_no:  `PSL-DSB-STF-${TAG.slice(-6)}-${i + 1}`,
+        run_id:      ctx.staffRunId,
+        run_line_id: l.id,
+        employee_id: l.employee_id,
+        generated_by: fmgr1Id,
+      })),
+    );
+    expect(!sPslErr, `seed staff run payslips failed: ${sPslErr?.message}`);
+
+    // A third approved run, single employee (empId), reserved for the Cancel-path
+    // test — finance_disbursements has unique(payroll_run_id), so cancelling a
+    // disbursement does not free up its run for a new one to reuse.
+    const { data: cr, error: crErr } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-DSB-CANCEL-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 17),
+      statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
+    }).select('id').single();
+    expect(!crErr, `seed cancel run failed: ${crErr?.message}`);
+    ctx.cancelRunId = cr.id;
+    const { data: cLines, error: clErr } = await sb.from('finance_payroll_run_lines').insert([
+      { run_id: ctx.cancelRunId, employee_id: empId, net: 4500.00 },
+    ]).select('id, employee_id');
+    expect(!clErr, `seed cancel run-lines failed: ${clErr?.message}`);
+    const { error: cPslErr } = await sb.from('finance_payslips').insert(
+      (cLines ?? []).map((l, i) => ({
+        payslip_no:  `PSL-DSB-CXL-${TAG.slice(-6)}-${i + 1}`,
+        run_id:      ctx.cancelRunId,
+        run_line_id: l.id,
+        employee_id: l.employee_id,
+        generated_by: fmgr1Id,
+      })),
+    );
+    expect(!cPslErr, `seed cancel run payslips failed: ${cPslErr?.message}`);
   });
 
   h.section('Finance Disbursements > Bank Accounts');
@@ -127,10 +208,15 @@ export default async function run(h) {
     fails(await api('finance/disbursements/create', empToken, { payrollRunId: ctx.runId }), 'employee should be denied create');
   });
 
-  await test('finance_staff can VIEW list but is DENIED create + approve', async () => {
+  await test('finance_staff can VIEW list and CREATE (has manage) but is DENIED approve', async () => {
     ok(await api('finance/disbursements/list', fstaff1Token, {}), 'finance_staff should be able to list');
-    fails(await api('finance/disbursements/create', fstaff1Token, { payrollRunId: ctx.runId }), 'finance_staff should be denied create');
-    fails(await api('finance/disbursements/approve', fstaff1Token, { id: '00000000-0000-0000-0000-000000000000' }), 'finance_staff should be denied approve');
+    // finance.disbursement.manage is granted to finance_staff by design — uses a
+    // dedicated run (ctx.staffRunId) so it doesn't collide with the (run_id)
+    // uniqueness of the main lifecycle disbursement created further down.
+    const r = await api('finance/disbursements/create', fstaff1Token, { payrollRunId: ctx.staffRunId });
+    ok(r, `finance_staff should be denied create — got ${JSON.stringify(r.body)}`);
+    ctx.staffDisbId = r.body.data.id;
+    fails(await api('finance/disbursements/approve', fstaff1Token, { id: ctx.staffDisbId }), 'finance_staff should be denied approve');
   });
 
   h.section('Finance Disbursements > Compute');
@@ -151,6 +237,15 @@ export default async function run(h) {
   });
 
   h.section('Finance Disbursements > Lifecycle + SoD');
+
+  await test('seed emp2 bank account (now that the missing-account case is proven)', async () => {
+    const { error: baErr } = await sb.from('finance_employee_bank_accounts').insert({
+      employee_id: emp2Id, bank_name: 'Scotiabank', branch: 'San Fernando',
+      account_type: 'savings', account_number: '9988776655', account_number_masked: '****6655',
+      is_primary: true, is_active: true, created_by: fmgr1Id,
+    });
+    expect(!baErr, `seed emp2 bank account failed: ${baErr?.message}`);
+  });
 
   await test('finance_manager creates a disbursement (draft) from the approved run', async () => {
     const r = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
@@ -215,7 +310,7 @@ export default async function run(h) {
   h.section('Finance Disbursements > Cancel path');
 
   await test('create a second disbursement then cancel it at draft state', async () => {
-    const cr = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
+    const cr = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.cancelRunId });
     ok(cr, `create for cancel failed: ${cr.body.message}`);
     ctx.cancelDisbId = cr.body.data.id;
     const r = await api('finance/disbursements/cancel', fmgr1Token, { id: ctx.cancelDisbId, reason: 'E2E cancel test' });
@@ -240,7 +335,7 @@ export default async function run(h) {
     expect(Array.isArray(r.body.data), 'lines should be array');
     const line = r.body.data[0];
     if (line) {
-      for (const k of ['id', 'employeeId', 'netPay']) { expect(k in line, `line missing field: ${k}`); }
+      for (const k of ['id', 'employeeId', 'netAmount']) { expect(k in line, `line missing field: ${k}`); }
       expect(!('accountNumber' in line), 'full account number must NOT be in line response');
     }
   });
