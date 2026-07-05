@@ -28,15 +28,12 @@
 export const title = 'Finance — Statutory Configuration (Phase 1)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  // ── Provision finance users for this suite ─────────────────────────────────
-  const fmgr1Id = `FS-MGR1-${TAG}`;
-  const fmgr2Id = `FS-MGR2-${TAG}`;
-  const fstaff1Id = `FS-STF1-${TAG}`;
-  const empId = `FS-EMP-${TAG}`;
+  // ── Provision finance users for this suite (real roster preferred) ─────────
+  let fmgr1Id, fmgr2Id, fstaff1Id, empId;
 
   const ctx = {
     compId: null,
@@ -44,6 +41,7 @@ export default async function run(h) {
     sv1Id: null,  // first statutory version (to be activated, then superseded)
     sv2Id: null,  // second statutory version (to replace sv1 on activation)
     nisVersionId: null,
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -59,9 +57,9 @@ export default async function run(h) {
     try { if (ctx.compId) await sb.from('finance_pay_components').delete().eq('id', ctx.compId); } catch {}
     try { if (ctx.comp2Id) await sb.from('finance_pay_components').delete().eq('id', ctx.comp2Id); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_statutory').like('actor_user_id', `FS-%`); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll_components').like('actor_user_id', `FS-%`); } catch {}
-    try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_statutory').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll_components').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -78,20 +76,18 @@ export default async function run(h) {
     expect(names.includes('finance_manager'), 'finance_manager role missing from DB');
   });
 
-  await test('provision two finance_manager users + one finance_staff + one employee', async () => {
-    const users = [
-      { id: fmgr1Id, username: `${TAG}_fmgr1`, full_name: 'Finance Mgr One (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fmgr2Id, username: `${TAG}_fmgr2`, full_name: 'Finance Mgr Two (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fstaff1Id, username: `${TAG}_fstf`, full_name: 'Finance Staff One (E2E)', role: 'finance_staff', status: 'active', employment_type: 'employee' },
-      { id: empId, username: `${TAG}_emp`, full_name: 'Employee (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
+  await test('acquire two finance_manager users + one finance_staff + one employee (real roster preferred)', async () => {
+    const mgrR = await acquireActors('finance_manager', 2);
+    const stfR = await acquireActors('finance_staff', 1);
+    const empR = await acquireActors('employee', 1);
+    const [fmgr1, fmgr2] = mgrR.actors, [fstaff1] = stfR.actors, [emp] = empR.actors;
+    fmgr1Id = fmgr1.id; fmgr2Id = fmgr2.id; fstaff1Id = fstaff1.id; empId = emp.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    fmgr1Token  = mint({ id: fmgr1Id,  username: `${TAG}_fmgr1`, role: 'finance_manager', department_id: null });
-    fmgr2Token  = mint({ id: fmgr2Id,  username: `${TAG}_fmgr2`, role: 'finance_manager', department_id: null });
-    fstaff1Token = mint({ id: fstaff1Id, username: `${TAG}_fstf`, role: 'finance_staff', department_id: null });
-    empToken    = mint({ id: empId,    username: `${TAG}_emp`,  role: 'employee',        department_id: null });
+    fmgr1Token  = mint({ id: fmgr1Id,  username: fmgr1.username, role: 'finance_manager', department_id: fmgr1.department_id ?? null });
+    fmgr2Token  = mint({ id: fmgr2Id,  username: fmgr2.username, role: 'finance_manager', department_id: fmgr2.department_id ?? null });
+    fstaff1Token = mint({ id: fstaff1Id, username: fstaff1.username, role: 'finance_staff', department_id: fstaff1.department_id ?? null });
+    empToken    = mint({ id: empId,    username: emp.username,  role: 'employee',        department_id: emp.department_id ?? null });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

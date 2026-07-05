@@ -134,8 +134,59 @@ export class Harness {
       process.exit(2);
     }
     this.users = { admin, b, c };
+    this._borrowed = new Set([admin.id, b.id, c.id]);
     return this.users;
   }
+
+  /**
+   * Acquire `count` actors with `role`. Prefers REAL active app_users already in the
+   * roster (never mutated, never deleted) — only creates synthetic app_users for the
+   * shortfall when the roster doesn't have enough of that role (e.g. this DB currently
+   * has zero real `finance_manager`/`hr_staff` accounts, so role-specific suites still
+   * have to create them; a plain `employee`/`manager` suite should never need to).
+   * Synthetic rows are tagged `${TAG}_<role>N` and returned in `createdIds` so the
+   * caller's `onCleanup()` can remove exactly those (and only those).
+   *
+   * `extra` is merged into synthetic-only inserts (e.g. `{ pay_basis: 'salary',
+   * monthly_salary: 6000 }`) — real users are used as-is, never patched.
+   *
+   * `filter` narrows which REAL users are eligible (e.g. `{ pay_basis: 'salary' }`
+   * so a payroll suite doesn't pick a real hourly employee with a zero salary). It
+   * has no effect on synthetic creation — use `extra` for that.
+   */
+  acquireActors = async (role, count, extra = {}, filter = {}) => {
+    this._borrowed ??= new Set();
+    this._acquireSeq ??= 0;
+    let q = this.sb.from('app_users')
+      .select('id, username, role, department_id, full_name')
+      .eq('status', 'active').eq('role', role);
+    for (const [k, v] of Object.entries(filter)) q = q.eq(k, v);
+    const { data: pool, error } = await q;
+    if (error) throw new Error(`acquireActors(${role}): ${error.message}`);
+    const real = (pool ?? []).filter(u => !this._borrowed.has(u.id)).slice(0, count);
+    real.forEach(u => this._borrowed.add(u.id));
+
+    const createdIds = [];
+    const created = [];
+    for (let i = real.length; i < count; i++) {
+      const id = randomUUID();
+      // A per-harness call counter (not just role+index) keeps usernames unique even
+      // when two suites in the same run both ask for e.g. 'finance_manager' — TAG
+      // alone collides since it's shared across every suite in one run.mjs invocation.
+      const seq = this._acquireSeq++;
+      const username = `${this.TAG}_${role.replace(/[^a-z]/gi, '').slice(0, 6)}${i}_${seq}`;
+      const row = {
+        id, username, role, status: 'active', employment_type: 'employee',
+        full_name: `${role.replace(/_/g, ' ')} (E2E ${i + 1})`, ...extra,
+      };
+      const { error: insErr } = await this.sb.from('app_users').insert(row);
+      if (insErr) throw new Error(`acquireActors(${role}) create: ${insErr.message}`);
+      createdIds.push(id);
+      created.push({ id, username, role, department_id: row.department_id ?? null });
+    }
+    const actors = [...real, ...created];
+    return { actors, createdIds, realCount: real.length };
+  };
 
   async runCleanup() {
     if (process.env.KEEP_DATA) { console.log('\nKEEP_DATA set — skipping cleanup.'); return; }

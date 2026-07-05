@@ -28,13 +28,10 @@
 export const title = 'Finance -- Expense Claims (F4)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
 
-  const fmgr1Id  = `EX-MGR1-${TAG}`;
-  const fmgr2Id  = `EX-MGR2-${TAG}`;
-  const fstaffId = `EX-STF-${TAG}`;
-  const empId    = `EX-EMP-${TAG}`;
+  let fmgr1Id, fmgr2Id, fstaffId, empId;
   const ccId1    = null; // cost-centre UUIDs are seeded separately; use null for tests that accept it or seed below
   const ctx = {
     claimId:       null,   // main claim taken through the lifecycle
@@ -43,6 +40,7 @@ export default async function run(h) {
     ccUuid:        null,   // seeded cost-centre UUID
     selfClaimId:   null,   // employee's own self-submitted claim (self-scope test)
     staffClaimId:  null,   // finance_staff-submitted claim (has manage)
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -55,9 +53,13 @@ export default async function run(h) {
     try { await sb.from('finance_cost_entries').delete().in('expense_claim_id', [ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId, ctx.selfClaimId, ctx.staffClaimId].filter(Boolean)); } catch {}
     try { await sb.from('finance_expense_claims').delete().or([ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId, ctx.selfClaimId, ctx.staffClaimId].filter(Boolean).map(id => `id.eq.${id}`).join(',')); } catch {}
     try { await sb.from('finance_cost_centers').delete().eq('id', ctx.ccUuid); } catch {}
-    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_expenses').in('actor_id', [fmgr1Id, fmgr2Id, fstaffId]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_expenses').like('actor_user_id', 'EX-%'); } catch {}
-    try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaffId, empId]); } catch {}
+    // Scoped by the SPECIFIC claims this run created — empId self-submits a real
+    // claim, so a broad actor_id/actor_user_id delete could remove that real
+    // employee's OTHER genuine finance_expenses audit trail.
+    const claimIds = [ctx.claimId, ctx.cancelClaimId, ctx.rejectClaimId, ctx.selfClaimId, ctx.staffClaimId].filter(Boolean);
+    try { if (claimIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_expenses').in('record_id', claimIds); } catch {}
+    try { if (claimIds.length) await sb.from('app_events').delete().eq('source_module', 'finance_expenses').in('source_entity_id', claimIds); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // =========================================================================
@@ -66,20 +68,18 @@ export default async function run(h) {
 
   let fmgr1Token, fmgr2Token, fstaffToken, empToken;
 
-  await test('provision finance_manager x2, finance_staff, employee', async () => {
-    const users = [
-      { id: fmgr1Id,  username: `${TAG}_emgr1`, full_name: 'Exp Mgr One (E2E)',   role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fmgr2Id,  username: `${TAG}_emgr2`, full_name: 'Exp Mgr Two (E2E)',   role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fstaffId, username: `${TAG}_estf`,  full_name: 'Exp Staff (E2E)',      role: 'finance_staff',   status: 'active', employment_type: 'employee' },
-      { id: empId,    username: `${TAG}_eemp`,  full_name: 'Exp Employee (E2E)',   role: 'employee',        status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
+  await test('acquire finance_manager x2, finance_staff, employee (real roster preferred)', async () => {
+    const mgrR = await acquireActors('finance_manager', 2);
+    const stfR = await acquireActors('finance_staff', 1);
+    const empR = await acquireActors('employee', 1);
+    const [fmgr1, fmgr2] = mgrR.actors, [fstaff] = stfR.actors, [emp] = empR.actors;
+    fmgr1Id = fmgr1.id; fmgr2Id = fmgr2.id; fstaffId = fstaff.id; empId = emp.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    fmgr1Token  = mint({ id: fmgr1Id,  username: `${TAG}_emgr1`, role: 'finance_manager', department_id: null });
-    fmgr2Token  = mint({ id: fmgr2Id,  username: `${TAG}_emgr2`, role: 'finance_manager', department_id: null });
-    fstaffToken = mint({ id: fstaffId, username: `${TAG}_estf`,  role: 'finance_staff',   department_id: null });
-    empToken    = mint({ id: empId,    username: `${TAG}_eemp`,  role: 'employee',        department_id: null });
+    fmgr1Token  = mint({ id: fmgr1Id,  username: fmgr1.username, role: 'finance_manager', department_id: fmgr1.department_id ?? null });
+    fmgr2Token  = mint({ id: fmgr2Id,  username: fmgr2.username, role: 'finance_manager', department_id: fmgr2.department_id ?? null });
+    fstaffToken = mint({ id: fstaffId, username: fstaff.username, role: 'finance_staff',   department_id: fstaff.department_id ?? null });
+    empToken    = mint({ id: empId,    username: emp.username,  role: 'employee',        department_id: emp.department_id ?? null });
   });
 
   await test('seed a cost centre for allocation lines', async () => {

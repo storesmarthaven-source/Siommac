@@ -46,7 +46,10 @@ export default async function run(h) {
   const { admin } = h.users;
   const A = mint(admin);
 
-  // Unique IDs for this test run
+  // These 4 actors must be synthetic, not real employees: several assertions below
+  // check EXACT payslip counts per employee (0 for noSlip, 1 for emp2) which only
+  // holds for a clean slate — a real employee could already have real payslip
+  // history from actual payroll runs and silently break those checks.
   const emp1Id    = 'PSL-EMP1-' + TAG;
   const emp2Id    = 'PSL-EMP2-' + TAG;
   const fmgrId    = 'PSL-FMGR-' + TAG;

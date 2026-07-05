@@ -25,19 +25,18 @@
 export const title = 'HR — Overtime (Phase 2)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
 
-  // ── Provision users ───────────────────────────────────────────────────────────
-  const mgrId  = `HO-MGR1-${TAG}`;
-  const emp1Id = `HO-EMP1-${TAG}`;
-  const emp2Id = `HO-EMP2-${TAG}`;
+  // ── Provision users (real roster preferred) ─────────────────────────────────
+  let mgrId, emp1Id, emp2Id;
 
   const ctx = {
     ot1Id: null, // emp1 submits → manager approves
     ot2Id: null, // emp1 submits → manager rejects
     ot3Id: null, // emp1 submits → cancelled by employee
     ot4Id: null, // fake paid OT (seeded directly) for immutability test
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 7000) => {
@@ -47,10 +46,14 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('hr_overtime_entries').delete().in('employee_id', [emp1Id, emp2Id]); } catch {}
-    try { await sb.from('hr_audit_log').delete().in('actor_id', [mgrId, emp1Id, emp2Id]); } catch {}
-    try { await sb.from('app_events').eq('source_module', 'hr_overtime').in('actor_user_id', [emp1Id, emp2Id]).delete(); } catch {}
-    try { await sb.from('app_users').delete().in('id', [mgrId, emp1Id, emp2Id]); } catch {}
+    // Scoped by the SPECIFIC entries this run created — emp1/emp2 may now be real
+    // employees with real overtime history, so a broad employee_id delete would
+    // destroy their genuine entries.
+    const otIds = [ctx.ot1Id, ctx.ot2Id, ctx.ot3Id, ctx.ot4Id].filter(Boolean);
+    try { if (otIds.length) await sb.from('hr_overtime_entries').delete().in('id', otIds); } catch {}
+    try { if (otIds.length) await sb.from('hr_audit_log').delete().in('record_id', otIds); } catch {}
+    try { if (otIds.length) await sb.from('app_events').delete().eq('source_module', 'hr_overtime').in('source_entity_id', otIds); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -59,18 +62,16 @@ export default async function run(h) {
 
   let mgrToken, emp1Token, emp2Token;
 
-  await test('provision manager, employee1, employee2', async () => {
-    const users = [
-      { id: mgrId,  username: `${TAG}_homgr`, full_name: 'Manager (HO E2E)', role: 'manager', status: 'active', employment_type: 'employee' },
-      { id: emp1Id, username: `${TAG}_hoemp1`, full_name: 'Employee 1 (HO E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-      { id: emp2Id, username: `${TAG}_hoemp2`, full_name: 'Employee 2 (HO E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed failed: ${error?.message}`);
+  await test('acquire manager, employee1, employee2 (real roster preferred)', async () => {
+    const mgrR = await acquireActors('manager', 1);
+    const empR = await acquireActors('employee', 2);
+    const [mgr] = mgrR.actors, [emp1, emp2] = empR.actors;
+    mgrId = mgr.id; emp1Id = emp1.id; emp2Id = emp2.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
 
-    mgrToken  = mint({ id: mgrId,  username: `${TAG}_homgr`,  role: 'manager',  department_id: null });
-    emp1Token = mint({ id: emp1Id, username: `${TAG}_hoemp1`, role: 'employee', department_id: null });
-    emp2Token = mint({ id: emp2Id, username: `${TAG}_hoemp2`, role: 'employee', department_id: null });
+    mgrToken  = mint({ id: mgrId,  username: mgr.username,  role: 'manager',  department_id: mgr.department_id ?? null });
+    emp1Token = mint({ id: emp1Id, username: emp1.username, role: 'employee', department_id: emp1.department_id ?? null });
+    emp2Token = mint({ id: emp2Id, username: emp2.username, role: 'employee', department_id: emp2.department_id ?? null });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

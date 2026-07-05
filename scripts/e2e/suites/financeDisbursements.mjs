@@ -18,17 +18,13 @@ function seedDateFromTag(tag, salt) {
 }
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  const fmgr1Id   = `DSB-MGR1-${TAG}`;
-  const fmgr2Id   = `DSB-MGR2-${TAG}`;
-  const fstaff1Id = `DSB-STF1-${TAG}`;
-  const empId     = `DSB-EMP-${TAG}`;
-  const emp2Id    = `DSB-EMP2-${TAG}`;
+  let fmgr1Id, fmgr2Id, fstaff1Id, empId, emp2Id;
 
-  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, staffRunId: null, cancelRunId: null, disbId: null, cancelDisbId: null, staffDisbId: null };
+  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, staffRunId: null, cancelRunId: null, disbId: null, cancelDisbId: null, staffDisbId: null, createdUserIds: [] };
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -45,29 +41,34 @@ export default async function run(h) {
     try { if (rids.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', rids); } catch {}
     try { if (rids.length) await sb.from('finance_payroll_runs').delete().in('id', rids); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
-    try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', [empId, emp2Id, fmgr1Id, fmgr2Id]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_disbursements').like('actor_user_id', 'DSB-%'); } catch {}
-    try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, empId, emp2Id]); } catch {}
+    // Scoped by the SPECIFIC accounts this run created — empId/emp2Id may now be real
+    // employees with unrelated real bank accounts, so a broad employee_id delete
+    // would destroy their genuine data.
+    const bankAcctIds = [ctx.bankAccountId, ctx.emp2BankAccountId].filter(Boolean);
+    try { if (bankAcctIds.length) await sb.from('finance_employee_bank_accounts').delete().in('id', bankAcctIds); } catch {}
+    try {
+      const evIds = [ctx.disbId, ctx.cancelDisbId, ctx.staffDisbId].filter(Boolean);
+      if (evIds.length) await sb.from('app_events').delete().eq('source_module', 'finance_disbursements').in('source_entity_id', evIds);
+    } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   h.section('Finance Disbursements > Setup');
 
   let fmgr1Token, fmgr2Token, fstaff1Token, empToken;
 
-  await test('provision finance_manager x2 + finance_staff + employee x2', async () => {
-    const users = [
-      { id: fmgr1Id,   username: `${TAG}_dmgr1`, full_name: 'Disb Mgr One (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fmgr2Id,   username: `${TAG}_dmgr2`, full_name: 'Disb Mgr Two (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fstaff1Id, username: `${TAG}_dstf`,  full_name: 'Disb Staff (E2E)',   role: 'finance_staff',   status: 'active', employment_type: 'employee' },
-      { id: empId,     username: `${TAG}_demp`,  full_name: 'Disb Emp One (E2E)', role: 'employee',        status: 'active', employment_type: 'employee' },
-      { id: emp2Id,    username: `${TAG}_demp2`, full_name: 'Disb Emp Two (E2E)', role: 'employee',        status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
-    fmgr1Token  = mint({ id: fmgr1Id,   username: `${TAG}_dmgr1`, role: 'finance_manager', department_id: null });
-    fmgr2Token  = mint({ id: fmgr2Id,   username: `${TAG}_dmgr2`, role: 'finance_manager', department_id: null });
-    fstaff1Token = mint({ id: fstaff1Id, username: `${TAG}_dstf`,  role: 'finance_staff',   department_id: null });
-    empToken    = mint({ id: empId,     username: `${TAG}_demp`,  role: 'employee',        department_id: null });
+  await test('acquire finance_manager x2 + finance_staff + employee x2 (real roster preferred)', async () => {
+    const mgrR = await acquireActors('finance_manager', 2);
+    const stfR = await acquireActors('finance_staff', 1);
+    const empR = await acquireActors('employee', 2);
+    const [fmgr1, fmgr2] = mgrR.actors, [fstaff1] = stfR.actors, [emp, emp2] = empR.actors;
+    fmgr1Id = fmgr1.id; fmgr2Id = fmgr2.id; fstaff1Id = fstaff1.id; empId = emp.id; emp2Id = emp2.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
+
+    fmgr1Token  = mint({ id: fmgr1Id,   username: fmgr1.username, role: 'finance_manager', department_id: fmgr1.department_id ?? null });
+    fmgr2Token  = mint({ id: fmgr2Id,   username: fmgr2.username, role: 'finance_manager', department_id: fmgr2.department_id ?? null });
+    fstaff1Token = mint({ id: fstaff1Id, username: fstaff1.username, role: 'finance_staff', department_id: fstaff1.department_id ?? null });
+    empToken    = mint({ id: empId,     username: emp.username,  role: 'employee',        department_id: emp.department_id ?? null });
   });
 
   await test('seed statutory version + approved payroll run + run-lines', async () => {
@@ -239,12 +240,13 @@ export default async function run(h) {
   h.section('Finance Disbursements > Lifecycle + SoD');
 
   await test('seed emp2 bank account (now that the missing-account case is proven)', async () => {
-    const { error: baErr } = await sb.from('finance_employee_bank_accounts').insert({
+    const { data: ba, error: baErr } = await sb.from('finance_employee_bank_accounts').insert({
       employee_id: emp2Id, bank_name: 'Scotiabank', branch: 'San Fernando',
       account_type: 'savings', account_number: '9988776655', account_number_masked: '****6655',
       is_primary: true, is_active: true, created_by: fmgr1Id,
-    });
+    }).select('id').single();
     expect(!baErr, `seed emp2 bank account failed: ${baErr?.message}`);
+    ctx.emp2BankAccountId = ba.id;
   });
 
   await test('finance_manager creates a disbursement (draft) from the approved run', async () => {

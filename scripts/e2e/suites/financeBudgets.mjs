@@ -26,11 +26,7 @@
 export const title = 'Finance — Budgeting & Budget-vs-Actual (F5)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
-
-  const fmgrId = `BG-MGR-${TAG}`;
-  const fstaffId = `BG-STF-${TAG}`;
-  const empId = `BG-EMP-${TAG}`;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
 
   const ctx = {
     ccId: null,
@@ -38,7 +34,9 @@ export default async function run(h) {
     category: `LabourSeed-${TAG.slice(-6)}`,
     lineId: null,
     ceIds: [],
+    createdUserIds: [],
   };
+  let fmgrId, fstaffId, empId;
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -51,8 +49,8 @@ export default async function run(h) {
     try { if (ctx.ceIds.length) await sb.from('finance_cost_entries').delete().in('id', ctx.ceIds); } catch {}
     try { if (ctx.ccId) await sb.from('finance_cost_centers').delete().eq('id', ctx.ccId); } catch {}
     try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_budgets').in('actor_id', [fmgrId, fstaffId]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').like('actor_user_id', 'BG-%'); } catch {}
-    try { await sb.from('app_users').delete().in('id', [fmgrId, fstaffId, empId]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').in('actor_user_id', [fmgrId, fstaffId, empId]); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -61,18 +59,17 @@ export default async function run(h) {
 
   let fmgrToken, fstaffToken, empToken;
 
-  await test('provision finance_manager, finance_staff, employee + a cost centre + 2 cost entries', async () => {
-    const users = [
-      { id: fmgrId, username: `${TAG}_bmgr`, full_name: 'Budget Mgr (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fstaffId, username: `${TAG}_bstf`, full_name: 'Budget Staff (E2E)', role: 'finance_staff', status: 'active', employment_type: 'employee' },
-      { id: empId, username: `${TAG}_bemp`, full_name: 'Budget Employee (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-    ];
-    const { error: uErr } = await sb.from('app_users').insert(users);
-    expect(!uErr, `seed users failed: ${uErr?.message}`);
+  await test('acquire finance_manager, finance_staff, employee (real roster preferred) + a cost centre + 2 cost entries', async () => {
+    const mgrR = await acquireActors('finance_manager', 1);
+    const stfR = await acquireActors('finance_staff', 1);
+    const empR = await acquireActors('employee', 1);
+    const [fmgr] = mgrR.actors, [fstaff] = stfR.actors, [emp] = empR.actors;
+    fmgrId = fmgr.id; fstaffId = fstaff.id; empId = emp.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    fmgrToken = mint({ id: fmgrId, username: `${TAG}_bmgr`, role: 'finance_manager', department_id: null });
-    fstaffToken = mint({ id: fstaffId, username: `${TAG}_bstf`, role: 'finance_staff', department_id: null });
-    empToken = mint({ id: empId, username: `${TAG}_bemp`, role: 'employee', department_id: null });
+    fmgrToken = mint({ id: fmgrId, username: fmgr.username, role: 'finance_manager', department_id: fmgr.department_id ?? null });
+    fstaffToken = mint({ id: fstaffId, username: fstaff.username, role: 'finance_staff', department_id: fstaff.department_id ?? null });
+    empToken = mint({ id: empId, username: emp.username, role: 'employee', department_id: emp.department_id ?? null });
 
     const { data: cc, error: ccErr } = await sb.from('finance_cost_centers')
       .insert({ name: `Budget Test CC ${TAG.slice(-6)}`, currency: 'TTD', annual_budget: 500000 })

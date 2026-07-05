@@ -44,16 +44,11 @@ function seedDateFromTag(tag, salt) {
 }
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  const fmgr1Id = `RM-MGR1-${TAG}`;
-  const fmgr2Id = `RM-MGR2-${TAG}`;
-  const fstaff1Id = `RM-STF1-${TAG}`;
-  const empId = `RM-EMP-${TAG}`;
-  const line1EmpId = `RM-LEMP1-${TAG}`;
-  const line2EmpId = `RM-LEMP2-${TAG}`;
+  let fmgr1Id, fmgr2Id, fstaff1Id, empId, line1EmpId, line2EmpId;
 
   const ctx = {
     versionId: null,
@@ -62,6 +57,7 @@ export default async function run(h) {
     nisRemId: null,       // NIS remittance taken through the full lifecycle
     cancelRemId: null,    // remittance for the cancel path
     staffRemId: null,     // PAYE remittance created by finance_staff (has manage)
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -77,8 +73,8 @@ export default async function run(h) {
     try { await sb.from('finance_payroll_runs').delete().or(`id.eq.${ctx.runId},id.eq.${ctx.draftRunId}`); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
     try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_remittances').in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_remittances').like('actor_user_id', 'RM-%'); } catch {}
-    try { await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, empId, line1EmpId, line2EmpId]); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_remittances').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -87,22 +83,18 @@ export default async function run(h) {
 
   let fmgr1Token, fmgr2Token, fstaff1Token, empToken;
 
-  await test('provision finance_manager ×2, finance_staff, employee + 2 line employees', async () => {
-    const users = [
-      { id: fmgr1Id, username: `${TAG}_rmgr1`, full_name: 'Rem Mgr One (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fmgr2Id, username: `${TAG}_rmgr2`, full_name: 'Rem Mgr Two (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: fstaff1Id, username: `${TAG}_rstf`, full_name: 'Rem Staff (E2E)', role: 'finance_staff', status: 'active', employment_type: 'employee' },
-      { id: empId, username: `${TAG}_remp`, full_name: 'Rem Employee (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-      { id: line1EmpId, username: `${TAG}_rl1`, full_name: 'Line Emp 1 (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-      { id: line2EmpId, username: `${TAG}_rl2`, full_name: 'Line Emp 2 (E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
+  await test('acquire finance_manager ×2, finance_staff, employee + 2 line employees (real roster preferred)', async () => {
+    const mgrR = await acquireActors('finance_manager', 2);
+    const stfR = await acquireActors('finance_staff', 1);
+    const empR = await acquireActors('employee', 3);
+    const [fmgr1, fmgr2] = mgrR.actors, [fstaff1] = stfR.actors, [emp, line1Emp, line2Emp] = empR.actors;
+    fmgr1Id = fmgr1.id; fmgr2Id = fmgr2.id; fstaff1Id = fstaff1.id; empId = emp.id; line1EmpId = line1Emp.id; line2EmpId = line2Emp.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    fmgr1Token  = mint({ id: fmgr1Id,  username: `${TAG}_rmgr1`, role: 'finance_manager', department_id: null });
-    fmgr2Token  = mint({ id: fmgr2Id,  username: `${TAG}_rmgr2`, role: 'finance_manager', department_id: null });
-    fstaff1Token = mint({ id: fstaff1Id, username: `${TAG}_rstf`, role: 'finance_staff', department_id: null });
-    empToken    = mint({ id: empId,    username: `${TAG}_remp`, role: 'employee', department_id: null });
+    fmgr1Token  = mint({ id: fmgr1Id,  username: fmgr1.username, role: 'finance_manager', department_id: fmgr1.department_id ?? null });
+    fmgr2Token  = mint({ id: fmgr2Id,  username: fmgr2.username, role: 'finance_manager', department_id: fmgr2.department_id ?? null });
+    fstaff1Token = mint({ id: fstaff1Id, username: fstaff1.username, role: 'finance_staff', department_id: fstaff1.department_id ?? null });
+    empToken    = mint({ id: empId,    username: emp.username, role: 'employee', department_id: emp.department_id ?? null });
   });
 
   await test('seed a statutory version + approved payroll run + 2 run-lines (fixture for compute)', async () => {

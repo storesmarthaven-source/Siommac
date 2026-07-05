@@ -27,15 +27,12 @@
 export const title = 'HR — Compensation Inputs (Phase 2)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  // ── Provision users ───────────────────────────────────────────────────────────
-  const hrMgr1Id  = `HC-MGR1-${TAG}`;
-  const hrMgr2Id  = `HC-MGR2-${TAG}`;
-  const hrStaff1Id = `HC-STF1-${TAG}`;
-  const empId     = `HC-EMP-${TAG}`;
+  // ── Provision users (real roster preferred) ─────────────────────────────────
+  let hrMgr1Id, hrMgr2Id, hrStaff1Id, empId;
 
   // Context for cross-test values
   const ctx = {
@@ -44,6 +41,7 @@ export default async function run(h) {
     item1Id: null,        // pay item created by hrStaff1 (used for submit→approve)
     item2Id: null,        // pay item for reject test
     item3Id: null,        // pay item for retire test
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 7000) => {
@@ -53,11 +51,16 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('hr_employee_pay_items').delete().like('employee_id', `HC-%`); } catch {}
+    // Scoped by the SPECIFIC pay items this run created — empId may now be a real
+    // employee with real pay items, so a broad employee_id delete (the old `HC-%`
+    // prefix filter never matched real UUID-style ids anyway, silently leaking) would
+    // be both wrong AND dangerous once it did match.
+    const itemIds = [ctx.item1Id, ctx.item2Id, ctx.item3Id].filter(Boolean);
+    try { if (itemIds.length) await sb.from('hr_employee_pay_items').delete().in('id', itemIds); } catch {}
     try { await sb.from('finance_pay_components').delete().like('code', `HC_%${TAG.slice(-6)}%`); } catch {}
-    try { await sb.from('hr_audit_log').delete().in('actor_id', [hrMgr1Id, hrMgr2Id, hrStaff1Id, empId]); } catch {}
-    try { await sb.from('app_events').eq('source_module', 'hr_compensation').like('actor_user_id', 'HC-%').delete(); } catch {}
-    try { await sb.from('app_users').delete().in('id', [hrMgr1Id, hrMgr2Id, hrStaff1Id, empId]); } catch {}
+    try { if (itemIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'hr_compensation').in('record_id', itemIds); } catch {}
+    try { if (itemIds.length) await sb.from('app_events').delete().eq('source_module', 'hr_compensation').in('source_entity_id', itemIds); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -66,20 +69,18 @@ export default async function run(h) {
 
   let hrMgr1Token, hrMgr2Token, hrStaff1Token, empToken;
 
-  await test('provision hr_manager x2, hr_staff x1, employee x1', async () => {
-    const users = [
-      { id: hrMgr1Id,  username: `${TAG}_hcmgr1`, full_name: 'HR Mgr One (HC E2E)', role: 'hr_manager', status: 'active', employment_type: 'employee' },
-      { id: hrMgr2Id,  username: `${TAG}_hcmgr2`, full_name: 'HR Mgr Two (HC E2E)', role: 'hr_manager', status: 'active', employment_type: 'employee' },
-      { id: hrStaff1Id, username: `${TAG}_hcstf`, full_name: 'HR Staff One (HC E2E)', role: 'hr_staff', status: 'active', employment_type: 'employee' },
-      { id: empId,      username: `${TAG}_hcemp`, full_name: 'Employee (HC E2E)', role: 'employee', status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed failed: ${error?.message}`);
+  await test('acquire hr_manager x2, hr_staff x1, employee x1 (real roster preferred)', async () => {
+    const mgrR = await acquireActors('hr_manager', 2);
+    const stfR = await acquireActors('hr_staff', 1);
+    const empR = await acquireActors('employee', 1);
+    const [hrMgr1, hrMgr2] = mgrR.actors, [hrStaff1] = stfR.actors, [emp] = empR.actors;
+    hrMgr1Id = hrMgr1.id; hrMgr2Id = hrMgr2.id; hrStaff1Id = hrStaff1.id; empId = emp.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    hrMgr1Token  = mint({ id: hrMgr1Id,  username: `${TAG}_hcmgr1`, role: 'hr_manager', department_id: null });
-    hrMgr2Token  = mint({ id: hrMgr2Id,  username: `${TAG}_hcmgr2`, role: 'hr_manager', department_id: null });
-    hrStaff1Token = mint({ id: hrStaff1Id, username: `${TAG}_hcstf`, role: 'hr_staff',   department_id: null });
-    empToken     = mint({ id: empId,      username: `${TAG}_hcemp`,  role: 'employee',   department_id: null });
+    hrMgr1Token  = mint({ id: hrMgr1Id,  username: hrMgr1.username, role: 'hr_manager', department_id: hrMgr1.department_id ?? null });
+    hrMgr2Token  = mint({ id: hrMgr2Id,  username: hrMgr2.username, role: 'hr_manager', department_id: hrMgr2.department_id ?? null });
+    hrStaff1Token = mint({ id: hrStaff1Id, username: hrStaff1.username, role: 'hr_staff',   department_id: hrStaff1.department_id ?? null });
+    empToken     = mint({ id: empId,      username: emp.username,  role: 'employee',   department_id: emp.department_id ?? null });
   });
 
   await test('seed an active Finance pay component for use in pay items', async () => {

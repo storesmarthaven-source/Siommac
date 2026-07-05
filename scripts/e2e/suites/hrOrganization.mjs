@@ -20,17 +20,15 @@
 export const title = 'HR — Organization Structure (Phase A)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  const empUserId   = `ORG-EMP-${TAG}`;
-  const staffUserId = `ORG-STAFF-${TAG}`;
-  const mgrUserId   = `ORG-MGR-${TAG}`;
+  let empUserId, staffUserId, mgrUserId;
   const ccCode      = `${TAG}-CC`;
   const posKey1     = `${TAG}-POS1`;
   const posKey2     = `${TAG}-POS2`;
-  const ctx = { ccId: null, rootId: null, childId: null, posId1: null, posId2: null, empT: null, staffT: null, mgrT: null, pbRoot: null, pbChild: null };
+  const ctx = { ccId: null, rootId: null, childId: null, posId1: null, posId2: null, empT: null, staffT: null, mgrT: null, pbRoot: null, pbChild: null, createdUserIds: [] };
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -39,25 +37,29 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('hr_org_change_requests').delete().or(`requested_by.eq.${mgrUserId},change_no.ilike.%${TAG}%`); } catch {}
-    try { await sb.from('workflow_instances').delete().eq('module_key', 'hr_org_structure').eq('requested_by', mgrUserId); } catch {}
+    // Scoped by the SPECIFIC change request this run created (ctx.pbCrId) + the
+    // TAG-stamped manual seed — NOT by requested_by=mgrUserId, which may now be a
+    // real hr_manager with unrelated real change requests that must not be deleted.
+    try { await sb.from('hr_org_change_requests').delete().or(`id.eq.${ctx.pbCrId ?? '00000000-0000-0000-0000-000000000000'},change_no.ilike.%${TAG}%`); } catch {}
+    try { if (ctx.pbCrId) await sb.from('workflow_instances').delete().eq('module_key', 'hr_org_structure').eq('source_record_id', ctx.pbCrId); } catch {}
     try { await sb.from('hr_positions').delete().ilike('position_key', `%${TAG}%`); } catch {}
     try { await sb.from('departments').delete().ilike('name', `%${TAG}%`); } catch {}
     try { await sb.from('finance_cost_centers').delete().ilike('code', `%${TAG}%`); } catch {}
-    try { await sb.from('app_users').delete().in('id', [empUserId, staffUserId, mgrUserId]); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'hr').ilike('source_entity_id', `%${TAG}%`); } catch {}
   });
 
-  // ── Setup: provision real employee + hr_staff users ───────────────────────────
+  // ── Setup: acquire employee + hr_staff users (real roster preferred) ─────────
   h.section('Org › Setup');
 
-  await test('provision employee + hr_staff users', async () => {
-    const { error: e1 } = await sb.from('app_users').insert({ id: empUserId, username: `${TAG}_emp`, full_name: 'Org E2E Employee', role: 'employee', status: 'active', employment_type: 'employee' });
-    expect(!e1, `seed employee failed: ${e1?.message}`);
-    const { error: e2 } = await sb.from('app_users').insert({ id: staffUserId, username: `${TAG}_staff`, full_name: 'Org E2E Staff', role: 'hr_staff', status: 'active', employment_type: 'employee' });
-    expect(!e2, `seed hr_staff failed: ${e2?.message}`);
-    ctx.empT = mint({ id: empUserId, username: `${TAG}_emp`, role: 'employee', department_id: null });
-    ctx.staffT = mint({ id: staffUserId, username: `${TAG}_staff`, role: 'hr_staff', department_id: null });
+  await test('acquire employee + hr_staff users', async () => {
+    const empR = await acquireActors('employee', 1);
+    const stfR = await acquireActors('hr_staff', 1);
+    const [emp] = empR.actors, [staff] = stfR.actors;
+    empUserId = emp.id; staffUserId = staff.id;
+    ctx.createdUserIds.push(...empR.createdIds, ...stfR.createdIds);
+    ctx.empT = mint({ id: empUserId, username: emp.username, role: 'employee', department_id: emp.department_id ?? null });
+    ctx.staffT = mint({ id: staffUserId, username: staff.username, role: 'hr_staff', department_id: staff.department_id ?? null });
   });
 
   // ── Cost centres (shared finance_cost_centers registry) ───────────────────────
@@ -244,10 +246,12 @@ export default async function run(h) {
   // ── Phase B — approval envelope (requires migrations …000002-…000004 applied) ─
   h.section('Org › Phase B — approval');
 
-  await test('provision hr_manager (approval-tier, no override)', async () => {
-    const { error } = await sb.from('app_users').insert({ id: mgrUserId, username: `${TAG}_mgr`, full_name: 'Org E2E Manager', role: 'hr_manager', status: 'active', employment_type: 'employee' });
-    expect(!error, `seed hr_manager failed: ${error?.message}`);
-    ctx.mgrT = mint({ id: mgrUserId, username: `${TAG}_mgr`, role: 'hr_manager', department_id: null });
+  await test('acquire hr_manager (approval-tier, no override; real roster preferred)', async () => {
+    const mgrR = await acquireActors('hr_manager', 1);
+    const [mgr] = mgrR.actors;
+    mgrUserId = mgr.id;
+    ctx.createdUserIds.push(...mgrR.createdIds);
+    ctx.mgrT = mint({ id: mgrUserId, username: mgr.username, role: 'hr_manager', department_id: mgr.department_id ?? null });
   });
 
   // Approval routing only activates once the org workflow binding (…000004) is applied.

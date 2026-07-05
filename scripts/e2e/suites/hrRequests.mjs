@@ -24,14 +24,12 @@
 export const title = 'HR — Request Center';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);   // superadmin → has all permissions
 
-  // ── User IDs (prefixed with TAG for cleanup isolation) ─────────────────────
-  const empAId   = `REQ-EMPA-${TAG}`;
-  const empBId   = `REQ-EMPB-${TAG}`;
-  const staffId  = `REQ-STAFF-${TAG}`;
+  // ── User IDs (acquired below; real roster preferred) ────────────────────────
+  let empAId, empBId, staffId;
 
   const ctx = {
     empAToken:   null,   // mint token for employee A
@@ -40,6 +38,7 @@ export default async function run(h) {
     reqAId:      null,   // submitted by A (approvable type)
     reqBId:      null,   // submitted by admin on behalf of B (used for scope tests)
     reqSimpleId: null,   // non-approvable type (profile_correction)
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -49,38 +48,29 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    try { await sb.from('hr_requests').delete().like('request_no', `REQ-%`).in('employee_id', [empAId, empBId]); } catch {}
-    try { await sb.from('hr_requests').delete().in('employee_id', [empAId, empBId]); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'hr').in('actor_user_id', [empAId, staffId, admin.id]); } catch {}
-    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'requests').in('employee_id', [empAId, empBId]); } catch {}
-    try { await sb.from('app_users').delete().in('id', [empAId, empBId, staffId]); } catch {}
+    // Delete by the SPECIFIC request ids this run created — empA/empB may now be
+    // real employees with unrelated real requests, so a broad employee_id delete
+    // would destroy their genuine data.
+    const reqIds = [ctx.reqAId, ctx.reqBId, ctx.reqSimpleId].filter(Boolean);
+    try { if (reqIds.length) await sb.from('hr_requests').delete().in('id', reqIds); } catch {}
+    try { if (reqIds.length) await sb.from('app_events').delete().eq('source_module', 'hr').in('source_entity_id', reqIds); } catch {}
+    try { if (reqIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'requests').in('record_id', reqIds); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ── Setup ──────────────────────────────────────────────────────────────────
   h.section('HR Requests › Setup');
 
-  await test('provision employee A, employee B, and hr_staff user', async () => {
-    const { error: e1 } = await sb.from('app_users').insert({
-      id: empAId, username: `${TAG}_empa`, full_name: 'Request E2E Employee A',
-      role: 'employee', status: 'active', employment_type: 'employee',
-    });
-    expect(!e1, `seed empA failed: ${e1?.message}`);
+  await test('acquire employee A, employee B, and hr_staff user (real roster preferred)', async () => {
+    const empR = await acquireActors('employee', 2);
+    const stfR = await acquireActors('hr_staff', 1);
+    const [empA, empB] = empR.actors, [staff] = stfR.actors;
+    empAId = empA.id; empBId = empB.id; staffId = staff.id;
+    ctx.createdUserIds = [...empR.createdIds, ...stfR.createdIds];
 
-    const { error: e2 } = await sb.from('app_users').insert({
-      id: empBId, username: `${TAG}_empb`, full_name: 'Request E2E Employee B',
-      role: 'employee', status: 'active', employment_type: 'employee',
-    });
-    expect(!e2, `seed empB failed: ${e2?.message}`);
-
-    const { error: e3 } = await sb.from('app_users').insert({
-      id: staffId, username: `${TAG}_staff`, full_name: 'Request E2E HR Staff',
-      role: 'hr_staff', status: 'active', employment_type: 'employee',
-    });
-    expect(!e3, `seed hr_staff failed: ${e3?.message}`);
-
-    ctx.empAToken  = mint({ id: empAId,  username: `${TAG}_empa`,  role: 'employee', department_id: null });
-    ctx.empBToken  = mint({ id: empBId,  username: `${TAG}_empb`,  role: 'employee', department_id: null });
-    ctx.staffToken = mint({ id: staffId, username: `${TAG}_staff`, role: 'hr_staff', department_id: null });
+    ctx.empAToken  = mint({ id: empAId,  username: empA.username,  role: 'employee', department_id: empA.department_id ?? null });
+    ctx.empBToken  = mint({ id: empBId,  username: empB.username,  role: 'employee', department_id: empB.department_id ?? null });
+    ctx.staffToken = mint({ id: staffId, username: staff.username, role: 'hr_staff', department_id: staff.department_id ?? null });
   });
 
   // ── Catalogue ──────────────────────────────────────────────────────────────

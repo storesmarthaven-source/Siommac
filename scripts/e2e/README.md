@@ -23,6 +23,29 @@ Env:
 
 Exit code is `0` only when every test passes (CI-friendly).
 
+## Recovering from an interrupted run — `sweep-orphans.mjs`
+
+Each suite's `h.onCleanup()` only knows the row IDs it created **in memory during that
+process**. If a run is interrupted (Ctrl+C, a shell timeout, a crash) before it reaches
+`h.runCleanup()`, those rows are never deleted — and no later run's cleanup will ever
+touch them either, since `h.TAG` is a fresh `TEST-E2E-<timestamp>` every run and only
+matches that run's own rows. Over enough interrupted runs this leaves permanent orphan
+data (fake employees, audit rows, events, etc.) sitting in the app.
+
+Every synthetic user any suite creates has `test-e2e` somewhere in its `username`
+(either as the `TEST-E2E-<ts>_suffix` prefix, or embedded lowercase). Use that as the
+recovery anchor:
+
+```bash
+node scripts/e2e/sweep-orphans.mjs            # dry run — reports what it would delete
+node scripts/e2e/sweep-orphans.mjs --apply    # actually deletes it
+```
+
+Run the dry run periodically (or whenever the app looks like it has leftover test
+data) and `--apply` once you've reviewed the count. This is a recovery tool for
+orphans, not a substitute for a suite's own `h.onCleanup()` — keep writing real
+cleanup in every new suite per the standard below.
+
 ## How it works
 - **`harness.mjs`** loads `.env`, mints HS256 JWTs at runtime (no passwords), exposes
   a service-role Supabase client (`sb`) for setup/teardown, and provides the runner
@@ -54,6 +77,42 @@ export default async function run(h) {
   // … every endpoint, every flow …
 }
 ```
+
+### Actors: prefer real employees, create only when you must
+
+Suites used to create a synthetic `app_users` row for every actor (manager, employee,
+hr_staff, etc.), even when the DB already has real people with that role. That leaked
+fake accounts into the app (visible as odd names like `TEST-E2E-…`) whenever a run got
+interrupted before cleanup ran. The standard now is:
+
+```js
+const { acquireActors } = h;
+const { actors: [emp1, emp2] } = await acquireActors('employee', 2);
+const { actors: [fmgr] } = await acquireActors('finance_manager', 1); // no real ones exist → created
+```
+
+`acquireActors(role, count, extra?, filter?)` looks for real active `app_users` with
+that role FIRST and only creates synthetic ones for the shortfall (tagged `${TAG}_role#`,
+covered by cleanup/`sweep-orphans.mjs`). `filter` narrows which real users are eligible
+(e.g. `{ pay_basis: 'salary' }` so a payroll suite doesn't pick a real hourly employee
+with a zero salary); `extra` only applies to synthetic creation.
+
+**When you must still create a synthetic actor** (this is a real exception, not a
+default):
+- **The actor's own identity gets mutated** by the flow under test — status-change,
+  transfer/department change, supervisor-change, offboarding finalize (→ terminated).
+  Running these against a real employee would corrupt their real HR record.
+- **The test asserts an exact, clean-slate count** for that actor globally (e.g. "this
+  employee has zero payslips ever") — a real employee's genuine history would make the
+  assertion non-deterministic.
+- **The role has zero real accounts** (e.g. `finance_manager`/`hr_staff` in a fresh DB)
+  — `acquireActors` already creates for you in this case, no special-casing needed.
+
+**Cleanup must scope by the records YOU created, never by a broad `employee_id`/
+`actor_id` filter**, once an actor might be real: `sb.from('t').delete().in('employee_id',
+[emp1Id])` would delete that real employee's OTHER genuine rows in `t`, not just the
+ones this run made. Track every created id in `ctx` and delete `.in('id', theseIds)` /
+`.in('record_id', theseIds)` / `.in('source_entity_id', theseIds)` instead.
 
 **A suite is only complete when it covers ALL of these** (see CLAUDE.md §Testing Standard):
 

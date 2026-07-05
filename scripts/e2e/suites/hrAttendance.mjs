@@ -23,20 +23,18 @@
 export const title = 'HR Attendance & Timekeeping';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  const emp1Id  = `ATT-EMP1-${TAG}`;
-  const emp2Id  = `ATT-EMP2-${TAG}`;
-  const staffId = `ATT-STF-${TAG}`;
-  const mgrId   = `ATT-MGR-${TAG}`;
+  let emp1Id, emp2Id, staffId, mgrId;
 
   const today = new Date().toISOString().slice(0, 10);
 
   const ctx = {
     recordId: null, correctionAuditIds: [], exceptionId1: null, exceptionId2: null,
     timesheetId: null, otherTimesheetId: null, workflowId: null, photoPath: null,
+    createdUserIds: [],
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -46,37 +44,46 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    const empIds = [emp1Id, emp2Id, staffId, mgrId];
+    // Scoped by the SPECIFIC records/exceptions this run created — emp1/emp2 may now
+    // be real employees with real attendance history, so a broad employee_id delete
+    // would destroy their genuine punches/exceptions/corrections.
     const tsIds = [ctx.timesheetId, ctx.otherTimesheetId].filter(Boolean);
+    const exceptionIds = [ctx.exceptionId1, ctx.exceptionId2].filter(Boolean);
+    const recordIds = [ctx.recordId].filter(Boolean);
     try { if (ctx.photoPath) await sb.storage.from('hr-attendance-photos').remove([ctx.photoPath]); } catch {}
     try { if (ctx.workflowId) await sb.from('workflow_tasks').delete().eq('workflow_id', ctx.workflowId); } catch {}
     try { if (ctx.workflowId) await sb.from('workflow_instances').delete().eq('id', ctx.workflowId); } catch {}
     try { if (tsIds.length) await sb.from('hr_timesheets').delete().in('id', tsIds); } catch {}
-    try { await sb.from('hr_attendance_exceptions').delete().in('employee_id', empIds); } catch {}
-    try { await sb.from('hr_attendance_corrections').delete().in('employee_id', empIds); } catch {}
-    try { await sb.from('hr_attendance_records').delete().in('employee_id', empIds); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'hr_attendance').in('actor_user_id', empIds); } catch {}
-    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'hr_attendance').in('actor_id', [...empIds, admin.id]); } catch {}
-    try { await sb.from('app_users').delete().in('id', empIds); } catch {}
+    try { if (exceptionIds.length) await sb.from('hr_attendance_exceptions').delete().in('id', exceptionIds); } catch {}
+    try { if (recordIds.length) await sb.from('hr_attendance_corrections').delete().in('record_id', recordIds); } catch {}
+    try { if (recordIds.length) await sb.from('hr_attendance_records').delete().in('id', recordIds); } catch {}
+    try {
+      const evIds = [...recordIds, ...exceptionIds, ...tsIds];
+      if (evIds.length) await sb.from('app_events').delete().eq('source_module', 'hr_attendance').in('source_entity_id', evIds);
+    } catch {}
+    try {
+      const auditIds = [...recordIds];
+      if (auditIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'hr_attendance').in('record_id', auditIds);
+    } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   h.section('HR Attendance > Setup');
 
   let emp1Token, emp2Token, staffToken, mgrToken;
 
-  await test('provision employee x2, hr_staff, manager', async () => {
-    const users = [
-      { id: emp1Id,  username: `${TAG}_att1`, full_name: 'Attendance Emp One (E2E)', role: 'employee',  status: 'active', employment_type: 'employee' },
-      { id: emp2Id,  username: `${TAG}_att2`, full_name: 'Attendance Emp Two (E2E)', role: 'employee',  status: 'active', employment_type: 'employee' },
-      { id: staffId, username: `${TAG}_atts`, full_name: 'Attendance Staff (E2E)',   role: 'hr_staff',  status: 'active', employment_type: 'employee' },
-      { id: mgrId,   username: `${TAG}_attm`, full_name: 'Attendance Mgr (E2E)',     role: 'hr_manager', status: 'active', employment_type: 'employee' },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
-    emp1Token  = mint({ id: emp1Id,  username: `${TAG}_att1`, role: 'employee',   department_id: null });
-    emp2Token  = mint({ id: emp2Id,  username: `${TAG}_att2`, role: 'employee',   department_id: null });
-    staffToken = mint({ id: staffId, username: `${TAG}_atts`, role: 'hr_staff',   department_id: null });
-    mgrToken   = mint({ id: mgrId,   username: `${TAG}_attm`, role: 'hr_manager', department_id: null });
+  await test('acquire employee x2, hr_staff, hr_manager (real roster preferred)', async () => {
+    const empR = await acquireActors('employee', 2);
+    const stfR = await acquireActors('hr_staff', 1);
+    const mgrR = await acquireActors('hr_manager', 1);
+    const [emp1, emp2] = empR.actors, [staff] = stfR.actors, [mgr] = mgrR.actors;
+    emp1Id = emp1.id; emp2Id = emp2.id; staffId = staff.id; mgrId = mgr.id;
+    ctx.createdUserIds = [...empR.createdIds, ...stfR.createdIds, ...mgrR.createdIds];
+
+    emp1Token  = mint({ id: emp1Id,  username: emp1.username, role: 'employee',   department_id: emp1.department_id ?? null });
+    emp2Token  = mint({ id: emp2Id,  username: emp2.username, role: 'employee',   department_id: emp2.department_id ?? null });
+    staffToken = mint({ id: staffId, username: staff.username, role: 'hr_staff',   department_id: staff.department_id ?? null });
+    mgrToken   = mint({ id: mgrId,   username: mgr.username, role: 'hr_manager', department_id: mgr.department_id ?? null });
   });
 
   h.section('HR Attendance > Policy & Stats');

@@ -21,30 +21,31 @@
 export const title = 'HR Onboarding — Package Manager';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const T = { admin: mint(admin) };
 
-  const staffId = `HR-STAFF-E2E-${TAG}`;
+  let staffId;
   const label = `E2E Package ${TAG}`;
-  const ctx = { packageId: null, packageKey: null, taskTemplateId: null, handoffTemplateId: null };
+  const ctx = { packageId: null, packageKey: null, taskTemplateId: null, handoffTemplateId: null, createdUserIds: [] };
 
   h.onCleanup(async () => {
     try { await sb.from('hr_audit_log').delete().eq('record_id', ctx.packageId); } catch {}
     try { await sb.from('app_events').delete().eq('source_entity_id', ctx.packageId); } catch {}
     try { if (ctx.packageId) await sb.from('hr_onboarding_packages').delete().eq('id', ctx.packageId); } catch {} // cascades templates
-    try { await sb.from('app_users').delete().eq('id', staffId); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
   // ── Setup: an hr_staff user for the negative access-control path ────────────────
   h.section('Package Manager › Setup');
-  await test('provision a real hr_staff user', async () => {
-    const { error } = await sb.from('app_users').insert({
-      id: staffId, username: `${TAG}_hrstaff`, full_name: 'HR Staff E2E Tester', role: 'hr_staff', status: 'active', employment_type: 'employee',
-    });
-    expect(!error, `seed hr_staff failed: ${error?.message}`);
+  let staffToken;
+  await test('acquire an hr_staff user (real roster preferred)', async () => {
+    const stfR = await acquireActors('hr_staff', 1);
+    const [staff] = stfR.actors;
+    staffId = staff.id;
+    ctx.createdUserIds = [...stfR.createdIds];
+    staffToken = mint({ id: staffId, username: staff.username, role: 'hr_staff', department_id: staff.department_id ?? null });
   });
-  const staffToken = mint({ id: staffId, username: `${TAG}_hrstaff`, role: 'hr_staff' });
 
   // ── Access control (negative path FIRST — nothing to create yet) ────────────────
   h.section('Package Manager › Access control');

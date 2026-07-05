@@ -35,16 +35,13 @@
 export const title = 'Finance — Payroll Runs (Phase 3 — full lifecycle)';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
-  // ── Test user IDs ──────────────────────────────────────────────────────────
-  const fmgr1Id   = `FP-MGR1-${TAG}`;  // creator of the run
-  const fmgr2Id   = `FP-MGR2-${TAG}`;  // approver (different from creator — SoD)
-  const fstaff1Id = `FP-STF1-${TAG}`;  // finance_staff (can prepare, cannot approve/lock/export)
-  const emp1Id    = `FP-EMP1-${TAG}`;  // employee with base pay (sees own payslip)
-  const emp2Id    = `FP-EMP2-${TAG}`;  // second employee (emp1 should NOT see emp2's payslip)
+  // ── Test user IDs — acquired below (real roster preferred; created only when
+  // the role/precondition (e.g. a real salaried employee) doesn't already exist) ──
+  let fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id;
 
   const ctx = {
     runId:      null,
@@ -52,6 +49,7 @@ export default async function run(h) {
     lineId1:    null,   // run_line for emp1
     payslipId1: null,   // payslip for emp1
     exportId:   null,
+    createdUserIds: [],
     statutoryVersionId: null,
   };
 
@@ -74,7 +72,7 @@ export default async function run(h) {
     try { await sb.from('finance_payroll_run_inputs').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
-    try { await sb.from('app_events').like('actor_user_id', `FP-%`); } catch {}
+    try { await sb.from('app_events').delete().in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id]); } catch {}
     try {
       // Cancel any open workflow instances for this run
       if (ctx.runId) {
@@ -83,7 +81,7 @@ export default async function run(h) {
       }
     } catch {}
     try {
-      await sb.from('app_users').delete().in('id', [fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id]);
+      if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds);
     } catch {}
   });
 
@@ -99,22 +97,21 @@ export default async function run(h) {
     expect(names.includes('finance_manager'), 'finance_manager role missing from DB');
   });
 
-  await test('provision two finance_managers + one finance_staff + two employees', async () => {
-    const users = [
-      { id: fmgr1Id,   username: `${TAG}_fp_mgr1`, full_name: 'FP Mgr One (E2E)',   role: 'finance_manager', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 10000.00 },
-      { id: fmgr2Id,   username: `${TAG}_fp_mgr2`, full_name: 'FP Mgr Two (E2E)',   role: 'finance_manager', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 11000.00 },
-      { id: fstaff1Id, username: `${TAG}_fp_stf`,  full_name: 'FP Staff One (E2E)', role: 'finance_staff',   status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 8000.00  },
-      { id: emp1Id,    username: `${TAG}_fp_emp1`, full_name: 'FP Emp One (E2E)',   role: 'employee',        status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 6000.00  },
-      { id: emp2Id,    username: `${TAG}_fp_emp2`, full_name: 'FP Emp Two (E2E)',   role: 'employee',        status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 5000.00  },
-    ];
-    const { error } = await sb.from('app_users').insert(users);
-    expect(!error, `seed users failed: ${error?.message}`);
+  await test('acquire two finance_managers + one finance_staff + two salaried employees (real roster preferred)', async () => {
+    const mgrR = await acquireActors('finance_manager', 2, { pay_basis: 'salary', monthly_salary: 10000.00 });
+    const stfR = await acquireActors('finance_staff', 1, { pay_basis: 'salary', monthly_salary: 8000.00 });
+    // Real employees must be salaried (pay_basis='salary') so the run produces a > 0 net —
+    // an hourly real employee with no salary would fail the "net > 0" assertions below.
+    const empR = await acquireActors('employee', 2, { pay_basis: 'salary', monthly_salary: 6000.00 }, { pay_basis: 'salary' });
+    const [fmgr1, fmgr2] = mgrR.actors, [fstaff1] = stfR.actors, [emp1, emp2] = empR.actors;
+    fmgr1Id = fmgr1.id; fmgr2Id = fmgr2.id; fstaff1Id = fstaff1.id; emp1Id = emp1.id; emp2Id = emp2.id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds, ...empR.createdIds];
 
-    fmgr1Token   = mint({ id: fmgr1Id,   username: `${TAG}_fp_mgr1`, role: 'finance_manager', department_id: null });
-    fmgr2Token   = mint({ id: fmgr2Id,   username: `${TAG}_fp_mgr2`, role: 'finance_manager', department_id: null });
-    fstaff1Token = mint({ id: fstaff1Id, username: `${TAG}_fp_stf`,  role: 'finance_staff',   department_id: null });
-    emp1Token    = mint({ id: emp1Id,    username: `${TAG}_fp_emp1`, role: 'employee',         department_id: null });
-    emp2Token    = mint({ id: emp2Id,    username: `${TAG}_fp_emp2`, role: 'employee',         department_id: null });
+    fmgr1Token   = mint({ id: fmgr1Id,   username: fmgr1.username, role: 'finance_manager', department_id: fmgr1.department_id ?? null });
+    fmgr2Token   = mint({ id: fmgr2Id,   username: fmgr2.username, role: 'finance_manager', department_id: fmgr2.department_id ?? null });
+    fstaff1Token = mint({ id: fstaff1Id, username: fstaff1.username, role: 'finance_staff', department_id: fstaff1.department_id ?? null });
+    emp1Token    = mint({ id: emp1Id,    username: emp1.username, role: 'employee',         department_id: emp1.department_id ?? null });
+    emp2Token    = mint({ id: emp2Id,    username: emp2.username, role: 'employee',         department_id: emp2.department_id ?? null });
   });
 
   await test('an active statutory version must exist before creating a run', async () => {
