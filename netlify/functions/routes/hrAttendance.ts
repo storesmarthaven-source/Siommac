@@ -241,6 +241,10 @@ router.post('/attendance/timesheets/submit', async c => {
     notes:       z.string().max(500).nullable().optional(),
   }), body(c));
   if (!v.ok) return v.response;
+  const ts0 = await getTimesheet(v.data.timesheetId);
+  if (!ts0) return c.json({ success: false, message: 'Timesheet not found.' }, 404 as 200);
+  const canViewAll = await userCan(actor, 'hr.attendance.view_all');
+  if (!canViewAll && ts0.employeeId !== actor.id) return c.json({ success: false, message: 'Access denied.' }, 403 as 200);
   try {
     const ts = await submitTimesheet(actor.id, v.data);
     return c.json({ success: true, data: ts });

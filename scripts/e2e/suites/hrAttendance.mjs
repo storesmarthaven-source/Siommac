@@ -36,7 +36,7 @@ export default async function run(h) {
 
   const ctx = {
     recordId: null, correctionAuditIds: [], exceptionId1: null, exceptionId2: null,
-    timesheetId: null, otherTimesheetId: null, workflowId: null,
+    timesheetId: null, otherTimesheetId: null, workflowId: null, photoPath: null,
   };
 
   const waitFor = async (check, ms = 6000) => {
@@ -48,6 +48,7 @@ export default async function run(h) {
   h.onCleanup(async () => {
     const empIds = [emp1Id, emp2Id, staffId, mgrId];
     const tsIds = [ctx.timesheetId, ctx.otherTimesheetId].filter(Boolean);
+    try { if (ctx.photoPath) await sb.storage.from('hr-attendance-photos').remove([ctx.photoPath]); } catch {}
     try { if (ctx.workflowId) await sb.from('workflow_tasks').delete().eq('workflow_id', ctx.workflowId); } catch {}
     try { if (ctx.workflowId) await sb.from('workflow_instances').delete().eq('id', ctx.workflowId); } catch {}
     try { if (tsIds.length) await sb.from('hr_timesheets').delete().in('id', tsIds); } catch {}
@@ -101,11 +102,18 @@ export default async function run(h) {
 
   h.section('HR Attendance > Punch');
 
-  await test('punch/upload-url → presigned URL shape', async () => {
+  await test('punch/upload-url → presigned URL shape, then actually upload a photo', async () => {
     const r = await api('hr/attendance/punch/upload-url', emp1Token, { mimeType: 'image/jpeg' });
     ok(r, `upload-url failed: ${r.body.message}`);
     expect(typeof r.body.data.uploadUrl === 'string', 'uploadUrl string');
     expect(typeof r.body.data.path === 'string', 'path string');
+    // Real upload (tiny JPEG bytes) — photo-url below reads THIS object, not a fake path.
+    const put = await fetch(r.body.data.uploadUrl, {
+      method: 'PUT', headers: { 'Content-Type': 'image/jpeg' },
+      body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]),
+    });
+    expect(put.ok, `photo upload PUT failed: ${put.status}`);
+    ctx.photoPath = r.body.data.path;
   });
 
   await test('punch/in → creates record + app_event', async () => {
@@ -149,7 +157,7 @@ export default async function run(h) {
   });
 
   await test('punch/photo-url → presigned read URL (view permission)', async () => {
-    const r = await api('hr/attendance/punch/photo-url', emp1Token, { path: 'punch_test.jpg' });
+    const r = await api('hr/attendance/punch/photo-url', emp1Token, { path: ctx.photoPath });
     ok(r, `photo-url failed: ${r.body.message}`);
     expect(typeof r.body.data.url === 'string', 'url string');
   });
@@ -326,6 +334,10 @@ export default async function run(h) {
     const r = await api('hr/attendance/timesheets/list', staffToken, { employeeId: emp1Id });
     ok(r, `list failed: ${r.body.message}`);
     expect(r.body.data.timesheets.some(t => t.id === ctx.timesheetId), 'built timesheet present');
+  });
+
+  await test('timesheets/submit (emp2, not the owner) → 403 self-scope denied', async () => {
+    fails(await api('hr/attendance/timesheets/submit', emp2Token, { timesheetId: ctx.timesheetId }), 'expected self-scope denial submitting another employee\'s timesheet');
   });
 
   await test('timesheets/submit (emp1, own) → in_review or approved + audit + app_event', async () => {
