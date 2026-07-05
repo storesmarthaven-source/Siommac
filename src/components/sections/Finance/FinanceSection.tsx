@@ -9,6 +9,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
 import { PayrollOverview }          from './PayrollOverview';
 import { RemittancesOverview }      from './RemittancesOverview';
@@ -17,6 +18,7 @@ import { ExpensesOverview }         from './ExpensesOverview';
 import { BudgetsOverview }          from './BudgetsOverview';
 import { DisbursementsOverview }   from './DisbursementsOverview';
 
+const OVERVIEW_ID      = 's-finance-overview';
 const STATUTORY_ID    = 's-finance-statutory';
 const PAYROLL_ID       = 's-finance-payroll';
 const REMITTANCES_ID   = 's-finance-remittances';
@@ -26,7 +28,8 @@ const BUDGETS_ID       = 's-finance-budgets';
 const DISBURSEMENTS_ID  = 's-finance-disbursements';
 
 function isFinanceSection(id: string): boolean {
-  return id === STATUTORY_ID
+  return id === OVERVIEW_ID
+    || id === STATUTORY_ID
     || id === PAYROLL_ID
     || id === REMITTANCES_ID
     || id === EXPENSES_ID
@@ -38,7 +41,7 @@ function isFinanceSection(id: string): boolean {
 
 export function FinanceSection(): VNode {
   const [sectionId, setSectionId] = useState<string>(() => {
-    try { return localStorage.getItem('siomac_finance_section') ?? STATUTORY_ID; } catch { return STATUTORY_ID; }
+    try { return localStorage.getItem('siomac_finance_section') ?? OVERVIEW_ID; } catch { return OVERVIEW_ID; }
   });
 
   useEffect(() => {
@@ -53,11 +56,12 @@ export function FinanceSection(): VNode {
     return () => window.removeEventListener('siomac:section', onSection);
   }, []);
 
+  if (sectionId === STATUTORY_ID)    return <StatutoryConfigOverview />;
   if (sectionId === EXPENSES_ID)     return <ExpensesOverview />;
   if (sectionId === PAYROLL_ID)      return <PayrollOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === MY_PAYSLIPS_ID)  return <MyPayslipsOverview />;
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;
   if (sectionId === DISBURSEMENTS_ID) return <DisbursementsOverview />;
-  return <StatutoryConfigOverview />;
+  return <FinanceOverview />;
 }

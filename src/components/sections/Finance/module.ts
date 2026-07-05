@@ -13,6 +13,13 @@ import { mountFinanceSection, unmountFinanceSection } from './mount';
 
 const FINANCE_ROOT_ID = 'preact-finance-root';
 
+const OVERVIEW_ITEM: ModuleNavItem = {
+  id: 's-finance-overview',
+  label: 'Overview',
+  icon: 'fa-sack-dollar',
+  sub: 'Finance dashboard — remittances, expenses, budgets & disbursements (customizable board)',
+};
+
 const STATUTORY_ITEM: ModuleNavItem = {
   id: 's-finance-statutory',
   label: 'Statutory Configuration',
@@ -64,7 +71,7 @@ const DISBURSEMENTS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',
