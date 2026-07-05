@@ -124,6 +124,40 @@ export function useHrEmployees(filter: HrEmployeeListFilter = {}) {
   });
 }
 
+export type EmployeeSortCol = 'full_name' | 'employee_number' | 'status' | 'employment_type' | 'start_date' | 'department_id';
+
+export interface HrEmployeePageFilter {
+  statuses?: string[]; departmentIds?: string[]; employmentTypes?: string[]; trainingStatuses?: TrainingStatus[];
+  workerType?: WorkerType; search?: string;
+  sortBy?: EmployeeSortCol; sortDir?: 'asc' | 'desc';
+  page: number; pageSize: number;
+}
+
+export interface HrEmployeePageMeta {
+  total: number; page: number; pageSize: number;
+  departments: Array<{ id: string; name: string }>;
+  statuses: string[]; employmentTypes: string[]; trainingStatuses: TrainingStatus[];
+}
+
+export interface HrEmployeePage { rows: HrEmployeeRow[]; meta: HrEmployeePageMeta; }
+
+const EMPTY_PAGE_META: HrEmployeePageMeta = { total: 0, page: 1, pageSize: 0, departments: [], statuses: [], employmentTypes: [], trainingStatuses: [] };
+
+/** Server-backed register query — filters, sort, and pagination are all applied
+ *  in Postgres (not client-side over a fetched-everything payload). Returns the
+ *  page's rows plus `meta` (true total + filter option lists) for pagination UI. */
+export function useHrEmployeesPage(filter: HrEmployeePageFilter) {
+  const f = filter as unknown as Record<string, unknown>;
+  return useQuery({
+    queryKey: hrEmployeeKeys.list({ page: true, ...f }),
+    placeholderData: prev => prev,
+    queryFn: async ({ signal }: QueryFunctionContext): Promise<HrEmployeePage> => {
+      const res = await apiPost<{ success: boolean; data: HrEmployeeRow[]; meta: HrEmployeePageMeta }>('hr/employees/list', f, { signal });
+      return { rows: res.data ?? [], meta: res.meta ?? EMPTY_PAGE_META };
+    },
+  });
+}
+
 // Shared fetch — used by the hook AND the hover-prefetch helper (no duplication).
 async function fetchHrEmployeeDetail(employeeId: string, signal?: AbortSignal): Promise<HrEmployeeDetail> {
   const res = await apiPost<{ success: boolean; data: HrEmployeeDetail }>('hr/employees/get', { employeeId }, { signal });

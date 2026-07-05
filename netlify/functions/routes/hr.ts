@@ -71,22 +71,91 @@ function rollupTrainingStatus(certs: { status: string; expires_at: string | null
 
 // ── Employee Master ────────────────────────────────────────────────────────────
 
+const EMPLOYEE_SORT_COLS = ['full_name', 'employee_number', 'status', 'employment_type', 'start_date', 'department_id'] as const;
+const TRAINING_STATUSES = ['current', 'due_soon', 'expired', 'none'] as const;
+
+/** Escape Postgres ILIKE wildcards in user-supplied search text before interpolating into `.or(...)`. */
+function escapeLike(s: string): string {
+  return s.replace(/[%_,]/g, ch => '\\' + ch);
+}
+
 // POST /api/hr/employees/list
 router.post('/employees/list', async c => {
   await requirePermission(c, 'hr.view');
   const v = zv(c, z.object({
+    // Legacy single-value filters (kept for existing picker/dropdown callers).
     status: z.string().optional(), departmentId: z.string().optional(),
     employmentType: z.string().optional(), workerType: z.enum(['employee', 'contractor']).optional(),
     search: z.string().optional(), limit: z.number().int().positive().max(500).optional(),
+    // Server-backed register filters (multi-select) + sort + pagination.
+    statuses: z.array(z.string()).optional(),
+    departmentIds: z.array(z.string()).optional(),
+    employmentTypes: z.array(z.string()).optional(),
+    trainingStatuses: z.array(z.enum(TRAINING_STATUSES)).optional(),
+    sortBy: z.enum(EMPLOYEE_SORT_COLS).optional(),
+    sortDir: z.enum(['asc', 'desc']).optional(),
+    page: z.number().int().positive().optional(),
+    pageSize: z.number().int().positive().max(200).optional(),
   }), (c.get('body') as Record<string, unknown>).args ?? {});
   if (!v.ok) return v.response;
 
-  let q = sb.from('app_users').select(HR_COLS).neq('role', 'superadmin').order('full_name').limit(v.data.limit ?? 300);
-  if (v.data.status)         q = q.eq('status', v.data.status);
-  if (v.data.departmentId)   q = q.eq('department_id', v.data.departmentId);
-  if (v.data.employmentType) q = q.eq('employment_type', v.data.employmentType);
-  if (v.data.workerType)     q = q.eq('contractor_flag', v.data.workerType === 'contractor');
-  const [{ data: rows, error }, { data: depts }, { data: sites }] = await Promise.all([
+  const paginated = v.data.page != null && v.data.pageSize != null;
+  const sortCol = v.data.sortBy ?? 'full_name';
+  const sortAsc = (v.data.sortDir ?? 'asc') !== 'desc';
+  const searchLike = v.data.search ? escapeLike(v.data.search) : null;
+  const today = todayISO();
+
+  // Training status is a computed rollup (joins hse_worker_certificates), so it
+  // can't be pushed into the app_users WHERE clause. When it's filtered on, resolve
+  // the full matching id set (real filters only) first, roll up training per id,
+  // narrow to the requested statuses, THEN page/sort/select over that exact id list —
+  // this keeps pagination + totals honest instead of filtering only the current page.
+  let restrictToIds: string[] | null = null;
+  if (v.data.trainingStatuses?.length) {
+    let idQ = sb.from('app_users').select('id').neq('role', 'superadmin');
+    if (v.data.status)                 idQ = idQ.eq('status', v.data.status);
+    if (v.data.statuses?.length)       idQ = idQ.in('status', v.data.statuses);
+    if (v.data.departmentId)           idQ = idQ.eq('department_id', v.data.departmentId);
+    if (v.data.departmentIds?.length)  idQ = idQ.in('department_id', v.data.departmentIds);
+    if (v.data.employmentType)         idQ = idQ.eq('employment_type', v.data.employmentType);
+    if (v.data.employmentTypes?.length) idQ = idQ.in('employment_type', v.data.employmentTypes);
+    if (v.data.workerType)             idQ = idQ.eq('contractor_flag', v.data.workerType === 'contractor');
+    if (searchLike)                    idQ = idQ.or(`full_name.ilike.%${searchLike}%,employee_number.ilike.%${searchLike}%,email.ilike.%${searchLike}%,position.ilike.%${searchLike}%`);
+    const { data: idRows, error: idErr } = await idQ;
+    if (idErr) return c.json({ success: false, message: idErr.message }, 500 as 200);
+    const allIds = ((idRows ?? []) as { id: string }[]).map(r => r.id);
+    const { data: certRows } = allIds.length
+      ? await sb.from('hse_worker_certificates').select('worker_id, status, expires_at').in('worker_id', allIds)
+      : { data: [] as { worker_id: string; status: string; expires_at: string | null }[] };
+    const certByWorker = new Map<string, { status: string; expires_at: string | null }[]>();
+    for (const cr of (certRows ?? []) as { worker_id: string; status: string; expires_at: string | null }[]) {
+      const list = certByWorker.get(cr.worker_id) ?? [];
+      list.push({ status: cr.status, expires_at: cr.expires_at });
+      certByWorker.set(cr.worker_id, list);
+    }
+    const wanted = new Set(v.data.trainingStatuses);
+    restrictToIds = allIds.filter(id => wanted.has(rollupTrainingStatus(certByWorker.get(id) ?? [], today)));
+    if (!restrictToIds.length) {
+      return c.json({ success: true, data: [], meta: { total: 0, page: v.data.page ?? 1, pageSize: v.data.pageSize ?? 0, departments: [], statuses: HR_STATUSES, employmentTypes: EMPLOYMENT_TYPES, trainingStatuses: TRAINING_STATUSES } });
+    }
+  }
+
+  let q = sb.from('app_users').select(HR_COLS, paginated ? { count: 'exact' } : {}).neq('role', 'superadmin');
+  if (v.data.status)                 q = q.eq('status', v.data.status);
+  if (v.data.statuses?.length)       q = q.in('status', v.data.statuses);
+  if (v.data.departmentId)           q = q.eq('department_id', v.data.departmentId);
+  if (v.data.departmentIds?.length)  q = q.in('department_id', v.data.departmentIds);
+  if (v.data.employmentType)         q = q.eq('employment_type', v.data.employmentType);
+  if (v.data.employmentTypes?.length) q = q.in('employment_type', v.data.employmentTypes);
+  if (v.data.workerType)             q = q.eq('contractor_flag', v.data.workerType === 'contractor');
+  if (searchLike)                    q = q.or(`full_name.ilike.%${searchLike}%,employee_number.ilike.%${searchLike}%,email.ilike.%${searchLike}%,position.ilike.%${searchLike}%`);
+  if (restrictToIds)                 q = q.in('id', restrictToIds);
+  q = q.order(sortCol, { ascending: sortAsc });
+  q = paginated
+    ? q.range((v.data.page! - 1) * v.data.pageSize!, v.data.page! * v.data.pageSize! - 1)
+    : q.limit(v.data.limit ?? 300);
+
+  const [{ data: rows, error, count }, { data: depts }, { data: sites }] = await Promise.all([
     q,
     sb.from('departments').select('id, name'),
     sb.from('project_sites').select('id, name'),
@@ -94,16 +163,11 @@ router.post('/employees/list', async c => {
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   const deptMap = Object.fromEntries(((depts ?? []) as { id: string; name: string }[]).map(d => [d.id, d.name]));
   const siteMap = Object.fromEntries(((sites ?? []) as { id: string; name: string }[]).map(s => [s.id, s.name]));
-  let data = (rows ?? []) as unknown as EmpRow[];
-  if (v.data.search) {
-    const s = v.data.search.toLowerCase();
-    data = data.filter(r => (r.full_name ?? '').toLowerCase().includes(s) || String(r['employee_number'] ?? '').toLowerCase().includes(s));
-  }
+  const data = (rows ?? []) as unknown as EmpRow[];
 
   // Bulk side-reads over the page: training certificates (rolled up per worker) and
   // supervisor names. Supervisors are resolved over their actual ids — a supervisor
   // can sit outside this page — so the contract carries the resolved name, not a raw id.
-  const today = todayISO();
   const ids = data.map(r => r.id);
   const supIds = Array.from(new Set(data.map(r => r.supervisor_id).filter((x): x is string => !!x)));
   const [certsRes, supsRes] = await Promise.all([
@@ -122,7 +186,7 @@ router.post('/employees/list', async c => {
   }
   const supMap = Object.fromEntries(((supsRes.data ?? []) as { id: string; full_name: string | null }[]).map(s => [s.id, s.full_name]));
 
-  return c.json({ success: true, data: data.map(r => ({
+  const mapped = data.map(r => ({
     ...r,
     profile_image_url: resolveProfileImageUrl(r as Parameters<typeof resolveProfileImageUrl>[0]),
     departmentName: deptMap[r.department_id ?? ''] ?? null,
@@ -130,7 +194,21 @@ router.post('/employees/list', async c => {
     supervisorName: r.supervisor_id ? supMap[r.supervisor_id] ?? null : null,
     workerType: r['contractor_flag'] ? 'contractor' : 'employee',
     trainingStatus: rollupTrainingStatus(certByWorker.get(r.id) ?? [], today),
-  })) });
+  }));
+
+  return c.json({
+    success: true,
+    data: mapped,
+    meta: {
+      total: restrictToIds ? restrictToIds.length : (paginated ? (count ?? mapped.length) : mapped.length),
+      page: v.data.page ?? 1,
+      pageSize: v.data.pageSize ?? mapped.length,
+      departments: (depts ?? []) as { id: string; name: string }[],
+      statuses: HR_STATUSES,
+      employmentTypes: EMPLOYMENT_TYPES,
+      trainingStatuses: TRAINING_STATUSES,
+    },
+  });
 });
 
 // POST /api/hr/employees/get
