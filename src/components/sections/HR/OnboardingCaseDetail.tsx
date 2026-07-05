@@ -24,7 +24,7 @@ import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import {
   useOnboardingTasksList, useOnboardingHandoffsList, useOnboardingBlockersList, useOnboardingCaseActions,
-  useOnboardingCompleteTask, useOnboardingAddTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
+  useOnboardingCompleteTask, useOnboardingReassignTask, useOnboardingBlockTask, useOnboardingUnblockTask,
   useOnboardingResolveBlocker, useOnboardingEscalateBlocker, useOnboardingWaiveBlocker,
   useOnboardingPauseCase, useOnboardingResumeCase, useOnboardingMarkReady, useOnboardingCompleteCase,
   useOnboardingCancelCase, useOnboardingReassignOwner, useOnboardingProvisionAccount,
@@ -38,6 +38,7 @@ import type {
 import { useOnboardingCaseStore } from '@store/onboardingCase';
 import { humanize, fmtDate, fmtDateTime } from './onboardingStatus';
 import { isOpen } from './onboardingCase.helpers';
+import { OnboardingAddTaskModal } from './OnboardingAddTaskModal';
 import './onboardingCase.css';
 
 // ── helpers ──────────────────────────────────────────────────────────────────────
@@ -94,10 +95,10 @@ export function OnboardingCaseDetail({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  // Add Task / Add Custom Action modals (replace single-field prompts so the full
-  // set of fields the backend already accepts is actually reachable from the UI).
+  // Add Task modal is the shared OnboardingAddTaskModal (also used by the Command Center).
+  // Add Custom Action modal (replaces a single-field prompt so the full set of fields the
+  // backend already accepts is actually reachable from the UI).
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState({ taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false, requiresEvidence: false });
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [actionForm, setActionForm] = useState({
     actionName: '', actionType: 'custom_task' as OnboardingActionType, ownerType: 'role' as OnboardingOwnerType,
@@ -137,7 +138,7 @@ export function OnboardingCaseDetail({
   const pauseMut = useOnboardingPauseCase(), resumeMut = useOnboardingResumeCase(), markReadyMut = useOnboardingMarkReady();
   const completeCaseMut = useOnboardingCompleteCase(), cancelMut = useOnboardingCancelCase(), reassignMut = useOnboardingReassignOwner();
   const provisionMut = useOnboardingProvisionAccount();
-  const completeTaskMut = useOnboardingCompleteTask(), addTaskMut = useOnboardingAddTask(), reassignTaskMut = useOnboardingReassignTask(), blockTaskMut = useOnboardingBlockTask(), unblockTaskMut = useOnboardingUnblockTask();
+  const completeTaskMut = useOnboardingCompleteTask(), reassignTaskMut = useOnboardingReassignTask(), blockTaskMut = useOnboardingBlockTask(), unblockTaskMut = useOnboardingUnblockTask();
   const resolveMut = useOnboardingResolveBlocker(), escalateMut = useOnboardingEscalateBlocker(), waiveMut = useOnboardingWaiveBlocker();
   const addActionMut = useOnboardingAddCaseAction(), updateActionMut = useOnboardingUpdateCaseAction(), completeActionMut = useOnboardingCompleteCaseAction(), cancelActionMut = useOnboardingCancelCaseAction();
 
@@ -179,15 +180,7 @@ export function OnboardingCaseDetail({
   }
 
   // ── task handlers ────────────────────────────────────────────────────────────────
-  function openAddTask(): void { setTaskForm({ taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false, requiresEvidence: false }); setTaskModalOpen(true); }
-  async function submitAddTask(): Promise<void> {
-    if (!taskForm.taskTitle.trim()) { onToast('Task title is required'); return; }
-    await run(() => addTaskMut.mutateAsync({
-      caseId, taskTitle: taskForm.taskTitle.trim(), assignedTo: taskForm.assignedTo || null,
-      dueAt: taskForm.dueAt || null, priority: taskForm.priority, isBlocking: taskForm.isBlocking, requiresEvidence: taskForm.requiresEvidence,
-    }), 'Task added');
-    setTaskModalOpen(false);
-  }
+  function openAddTask(): void { setTaskModalOpen(true); }
   async function handleCompleteTask(t: OnboardingTaskRow): Promise<void> { await run(() => completeTaskMut.mutateAsync({ taskId: t.taskId }), 'Task completed'); }
   async function handleBlockTask(t: OnboardingTaskRow): Promise<void> {
     const res = await openActionModal({ title: 'Block task', icon: 'fa-ban', tone: 'warning', record: toActionRecord({ title: t.taskTitle, icon: 'fa-list-check' }), reason: { required: true, label: 'Why is it blocked?', type: 'textarea', placeholder: 'Blocking reason' }, whatNext: ['The task is marked blocked; it may block case activation.'], confirmLabel: 'Block' });
@@ -404,26 +397,7 @@ export function OnboardingCaseDetail({
         onPreviewOnBoard={p => setPreview(placeBottom(p))}
       />
 
-      <Modal
-        open={taskModalOpen} title="Add Task" icon="fa-list-check" onClose={() => setTaskModalOpen(false)}
-        onSubmit={() => void submitAddTask()} submitLabel="Add Task" submitDisabled={addTaskMut.isPending}
-      >
-        <FormGrid>
-          <Field label="Task title" wide><TextInput value={taskForm.taskTitle} onInput={v => setTaskForm(f => ({ ...f, taskTitle: v }))} placeholder="e.g. Collect signed contract" /></Field>
-          <Field label="Assignee">
-            <select class="ui-select" value={taskForm.assignedTo} onChange={e => setTaskForm(f => ({ ...f, assignedTo: (e.target as HTMLSelectElement).value }))}>
-              <option value="">Unassigned</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
-            </select>
-          </Field>
-          <Field label="Due date"><TextInput type="date" value={taskForm.dueAt} onInput={v => setTaskForm(f => ({ ...f, dueAt: v }))} /></Field>
-          <Field label="Priority">
-            <SelectInput value={taskForm.priority} onInput={v => setTaskForm(f => ({ ...f, priority: v }))} options={['low', 'normal', 'high', 'critical']} />
-          </Field>
-        </FormGrid>
-        <label class="obx-checkline"><input type="checkbox" checked={taskForm.isBlocking} onChange={e => setTaskForm(f => ({ ...f, isBlocking: (e.target as HTMLInputElement).checked }))} /> Blocks activation until complete</label>
-        <label class="obx-checkline"><input type="checkbox" checked={taskForm.requiresEvidence} onChange={e => setTaskForm(f => ({ ...f, requiresEvidence: (e.target as HTMLInputElement).checked }))} /> Requires evidence to complete</label>
-      </Modal>
+      <OnboardingAddTaskModal open={taskModalOpen} caseId={caseId} onClose={() => setTaskModalOpen(false)} onToast={onToast} />
 
       <Modal
         open={actionModalOpen} title="Add Custom Action" icon="fa-bolt" onClose={() => setActionModalOpen(false)}

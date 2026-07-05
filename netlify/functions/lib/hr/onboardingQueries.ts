@@ -24,7 +24,7 @@ interface CaseDB { id: string; case_no: string; employee_id: string | null; work
 interface TaskDB { id: string; case_id: string; task_key: string; task_title: string; owner_role: string | null; module_key: string | null; assigned_to: string | null; status: string; due_at: string | null; completed_at: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; priority: string | null }
 interface HandoffDB { id: string; case_id: string; target_module: string; handoff_type: string | null; handoff_key: string | null; status: string; owner_id: string | null; failure_reason: string | null; payload: unknown; created_at: string; last_event_at: string | null }
 interface BlockerDB { id: string; case_id: string; blocker_key: string; blocker_title: string; blocking_module: string; severity: string; status: string; owner_id: string | null; due_at: string | null; created_at: string; task_id: string | null; handoff_id: string | null }
-interface EmpDB { id: string; full_name: string | null; employee_number: string | null; department_id: string | null; site_id: string | null; contractor_flag: boolean | null }
+interface EmpDB { id: string; full_name: string | null; employee_number: string | null; department_id: string | null; site_id: string | null; contractor_flag: boolean | null; profile_image_url: string | null }
 interface CaseLite { id: string; case_no: string; employee_id: string | null; package_key?: string }
 
 const ACTIVE_BLOCKER = new Set(['active', 'acknowledged', 'waiting_on_owner', 'escalated']);
@@ -81,11 +81,21 @@ async function nameMap(ids: string[]): Promise<Record<string, string | null>> {
   return Object.fromEntries(((data ?? []) as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name]));
 }
 
+/** Profile photos (app_users.profile_image_url — the same field ProfileDrawer/Messages/
+ *  EntityHead already display) alongside the name-only nameMap(), so every avatar in the
+ *  onboarding module can show a real photo instead of always falling back to initials. */
+async function photoMap(ids: string[]): Promise<Record<string, string | null>> {
+  const uniq = [...new Set(ids.filter(Boolean))];
+  if (!uniq.length) return {};
+  const { data } = await sb.from('app_users').select('id, profile_image_url').in('id', uniq);
+  return Object.fromEntries(((data ?? []) as { id: string; profile_image_url: string | null }[]).map(u => [u.id, u.profile_image_url]));
+}
+
 async function employeeMaps(ids: string[]): Promise<{ emp: Record<string, EmpDB>; deptMap: Record<string, string>; siteMap: Record<string, string> }> {
   const uniq = [...new Set(ids.filter(Boolean))];
   if (!uniq.length) return { emp: {}, deptMap: {}, siteMap: {} };
   const [{ data: emps }, { data: depts }, { data: sites }] = await Promise.all([
-    sb.from('app_users').select('id, full_name, employee_number, department_id, site_id, contractor_flag').in('id', uniq),
+    sb.from('app_users').select('id, full_name, employee_number, department_id, site_id, contractor_flag, profile_image_url').in('id', uniq),
     sb.from('departments').select('id, name'),
     sb.from('project_sites').select('id, name'),
   ]);
@@ -168,6 +178,7 @@ export async function listOnboardingCases(args: OnboardingCaseListArgs): Promise
       employeeId: c.employee_id ?? null,
       employeeName: e?.full_name ?? null,
       employeeNo: e?.employee_number ?? null,
+      employeePhotoUrl: e?.profile_image_url ?? null,
       workerType: c.worker_type ?? null,
       departmentName: e?.department_id ? maps.deptMap[e.department_id] ?? null : null,
       siteName: e?.site_id ? maps.siteMap[e.site_id] ?? null : null,
@@ -376,7 +387,10 @@ export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise
 
   const caseMap = await caseLiteMap([...new Set(tasks.map(t => t.case_id))], true);
   const empIds = Object.values(caseMap).map(c => c.employee_id).filter((x): x is string => !!x);
-  const names = await nameMap([...empIds, ...tasks.map(t => t.assigned_to).filter((x): x is string => !!x)]);
+  const [names, photos] = await Promise.all([
+    nameMap([...empIds, ...tasks.map(t => t.assigned_to).filter((x): x is string => !!x)]),
+    photoMap(empIds),
+  ]);
 
   let rows: OnboardingTaskRow[] = tasks.map(t => {
     const c = caseMap[t.case_id];
@@ -386,6 +400,7 @@ export async function listOnboardingTasks(args: OnboardingTaskListArgs): Promise
       caseNo: c?.case_no ?? '',
       employeeId: c?.employee_id ?? null,
       employeeName: c?.employee_id ? names[c.employee_id] ?? null : null,
+      employeePhotoUrl: c?.employee_id ? photos[c.employee_id] ?? null : null,
       packageKey: c?.package_key ?? '',
       taskKey: t.task_key,
       taskTitle: t.task_title,
@@ -438,6 +453,7 @@ export async function getOnboardingTaskDetail(taskId: string): Promise<Onboardin
     caseNo: c?.case_no ?? '',
     employeeId: c?.employee_id ?? null,
     employeeName: c?.employee_id ? names[c.employee_id] ?? null : null,
+    employeePhotoUrl: null,
     packageKey: c?.package_key ?? '',
     taskKey: t.task_key,
     taskTitle: t.task_title,
@@ -518,7 +534,10 @@ export async function listOnboardingBlockers(args: OnboardingBlockerListArgs): P
 
   const caseMap = await caseLiteMap([...new Set(bs.map(b => b.case_id))]);
   const empIds = Object.values(caseMap).map(c => c.employee_id).filter((x): x is string => !!x);
-  const names = await nameMap([...empIds, ...bs.map(b => b.owner_id).filter((x): x is string => !!x)]);
+  const [names, photos] = await Promise.all([
+    nameMap([...empIds, ...bs.map(b => b.owner_id).filter((x): x is string => !!x)]),
+    photoMap(empIds),
+  ]);
   const now = new Date();
 
   return bs.map(b => {
@@ -528,6 +547,7 @@ export async function listOnboardingBlockers(args: OnboardingBlockerListArgs): P
       caseId: b.case_id,
       caseNo: c?.case_no ?? '',
       employeeName: c?.employee_id ? names[c.employee_id] ?? null : null,
+      employeePhotoUrl: c?.employee_id ? photos[c.employee_id] ?? null : null,
       blockerKey: b.blocker_key,
       blockerTitle: b.blocker_title,
       blockingModule: b.blocking_module,

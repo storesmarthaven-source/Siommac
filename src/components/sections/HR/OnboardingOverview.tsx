@@ -13,17 +13,14 @@
 
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { PageHeader, TableSkeleton } from '@ui';
-import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
-  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
-} from '@ui/widgets';
+import { TableSkeleton } from '@ui';
 import { can } from '@lib/permissions';
-import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { useOnboardingCases, useOnboardingPackages } from '@api/hr/onboarding';
 import type {
   OnboardingCaseStatus, OnboardingCaseRow, DueState, BlockingState, ReadinessState,
 } from '../../../../types/hrOnboarding';
+import { OnboardingCommandCenter } from './OnboardingCommandCenter';
+import type { OnboardingSurface as CommandCenterSurface, OnboardingSurfaceFilters } from './OnboardingCommandCenter.helpers';
 import { OnboardingWizard } from './OnboardingWizard';
 import { OnboardingCaseDetail } from './OnboardingCaseDetail';
 import { OnboardingPackageManager } from './OnboardingPackageManager';
@@ -35,29 +32,6 @@ import { OnboardingReportsWorkspace } from './OnboardingReportsWorkspace';
 import { caseStatusPill, pillClass, humanize, CASE_STATUS_OPTIONS, fmtDate } from './onboardingStatus';
 import { Avatar } from './shared';
 import './HR.css';
-
-const PAGE_KEY = 'hr.onboarding.overview';
-const ZONE_ID = 'main';
-// default board: 4 KPI tiles across the top + the cases table (full width).
-function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
-  return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: ZONE_ID, x, y, w, h, sizeKey, config: {} };
-}
-function defaultOnboardingLayout(): BoardLayout {
-  return {
-    pageKey: PAGE_KEY,
-    zones: {
-      main: [
-        defInst('hr.onboarding.activeCases',         0, 0, 3, 2, 'compact'),
-        defInst('hr.onboarding.dueThisWeek',         3, 0, 3, 2, 'compact'),
-        defInst('hr.onboarding.blockedCases',        6, 0, 3, 2, 'compact'),
-        defInst('hr.onboarding.activationReadiness', 9, 0, 3, 2, 'compact'),
-        defInst('hr.onboarding.cases',               0, 2, 12, 9, 'hero'),
-        defInst('hr.onboarding.packageReadiness',    0, 11, 6, 3, 'wide'),
-        defInst('hr.onboarding.recentActivity',      6, 11, 6, 3, 'wide'),
-      ],
-    },
-  };
-}
 
 const CASE_COLS = ['Employee', 'Package', 'Owner', 'Due Date', 'Progress', 'Blockers', 'Status'];
 
@@ -202,10 +176,6 @@ function ObAdvancedFilters(p: ObAdvProps): VNode {
 type OnboardingSurface = 'overview' | 'packages' | 'tasks' | 'handoffs' | 'blocked' | 'reports';
 
 export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: string | null } = {}): VNode {
-  const [editing, setEditing] = useState(false);
-  const [libOpen, setLibOpen] = useState(false);
-  const [demo, setDemo] = useState(false);
-  const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
   const [toast, setToast] = useState('');
   const [wizardOpen, setWizardOpen] = useState(false);
   const [surface, setSurface] = useState<OnboardingSurface>('overview');
@@ -263,14 +233,6 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
     [pkgsQ.data],
   );
 
-  const canEdit = useSessionStore(selectIsManager);
-  const isAdmin = useSessionStore(selectIsAdmin);
-  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultOnboardingLayout());
-  const boardItems = layout.zones[ZONE_ID] ?? [];
-  const placedWidgetIds = boardItems.map(w => w.widgetId);
-  const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
-  const userPermissions = useMemo(() => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can), []);
-
   const casesQ = useOnboardingCases({
     query: query.trim() || undefined,
     statuses: status ? [status] : undefined,
@@ -289,8 +251,6 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
   const curPage = Math.min(page, totalPages);
 
   function notify(message: string): void { setToast(message); window.setTimeout(() => setToast(''), 2600); }
-  function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
-  function discardPreview(): void { setPreview(null); setLibOpen(true); }
 
   // Case-detail workspace — full-page drill-in. Re-resolve the row from the (live) cases query so
   // the header reflects state-machine changes after a mutation; fall back to the clicked snapshot.
@@ -432,7 +392,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
                     <tr key={r.caseId} class="employee-row" title="Open case detail" onClick={() => setSelectedCase(r)}>
                       <td>
                         <div class="employee-cell">
-                          <Avatar name={r.employeeName ?? ''} img={null} />
+                          <Avatar name={r.employeeName ?? ''} img={r.employeePhotoUrl} />
                           <div style={{ minWidth: 0 }}>
                             <div class="emp-name">{r.employeeName ?? '—'}</div>
                             <div class="emp-email">{r.caseNo}{r.employeeNo ? ` · ${r.employeeNo}` : ''}</div>
@@ -485,53 +445,35 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
     </div>
     );
   };
-  const localWidgets: LocalWidgetMap = {
-    'hr.onboarding.cases': { render: renderCases, chrome: 'none', title: 'Onboarding Cases' },
-  };
+  // Command Center's generic surface names map onto this page's surface enum; 'cases' and
+  // 'activity' have no dedicated workspace — the cases table below the Command Center already
+  // shows cases, so those just stay on the overview.
+  function handleOpenSurface(commandSurface: CommandCenterSurface, filters?: OnboardingSurfaceFilters): void {
+    if (filters?.dueState && (filters.dueState === 'due_this_week' || filters.dueState === 'overdue' || filters.dueState === 'due_today')) {
+      setDue(filters.dueState as DueState);
+    }
+    switch (commandSurface) {
+      case 'tasks': setSurface('tasks'); break;
+      case 'handoffs': setSurface('handoffs'); break;
+      case 'blocked': setSurface('blocked'); break;
+      case 'packages': setSurface('packages'); break;
+      case 'reports': setSurface('reports'); break;
+      case 'cases':
+      case 'activity':
+      default: break;
+    }
+  }
 
   return (
     <div class="hr-onboarding-overview">
-      <PageHeader
-        icon="fa-rocket"
-        module="HR"
-        title="Onboarding"
-        sub="Activation readiness, active cases & onboarding health — a customizable board."
-        meta={[{ icon: 'fa-list-check', label: `${total} cases` }]}
+      <OnboardingCommandCenter
+        onOpenSurface={handleOpenSurface}
+        onOpenCase={openCaseById}
+        onNewCase={() => setWizardOpen(true)}
+        onToast={notify}
       />
 
-      {canEdit && (
-        <WidgetBoardToolbar
-          editing={editing} canSetDefault={isAdmin}
-          onToggleEdit={() => setEditing(e => !e)}
-          onOpenLibrary={() => setLibOpen(true)}
-          onReset={() => void resetLayout()}
-          onSetDefault={() => void setAsDefault()}
-        />
-      )}
-
-      {preview && (
-        <div class="wmock-preview-banner">
-          <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then add or discard.</span>
-          <button class="obx-btn" onClick={discardPreview}>Discard preview</button>
-        </div>
-      )}
-
-      <WidgetBoard
-        pageKey={PAGE_KEY} zones={[ZONE_ID]} editing={editing && canEdit}
-        localWidgets={localWidgets} defaultLayout={defaultOnboardingLayout()} demo={demo}
-        preview={preview} onPreviewChange={setPreview}
-        onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
-      />
-
-      <WidgetLibraryModal
-        open={libOpen} pageKey={PAGE_KEY} zoneId={ZONE_ID}
-        placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
-        demo={demo} onToggleDemo={() => setDemo(d => !d)}
-        canManagePackages={isAdmin}
-        onClose={() => setLibOpen(false)}
-        onAddWidget={inst => addWidget(ZONE_ID, placeBottom(inst as WidgetInstance))}
-        onPreviewOnBoard={p => setPreview(placeBottom(p))}
-      />
+      {renderCases()}
 
       {wizardOpen && <OnboardingWizard employeeId={null} onClose={() => setWizardOpen(false)} onToast={notify} />}
 

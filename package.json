@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@motionone/dom": "^10.18.0",
     "@netlify/functions": "^2.0.0",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.1",

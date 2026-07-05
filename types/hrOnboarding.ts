@@ -149,6 +149,7 @@ export interface OnboardingCaseRow {
   employeeId: string | null;
   employeeName: string | null;
   employeeNo: string | null;
+  employeePhotoUrl: string | null;
   workerType: string | null;
   departmentName: string | null;
   siteName: string | null;
@@ -232,6 +233,7 @@ export interface OnboardingTaskRow {
   caseNo: string;
   employeeId: string | null;
   employeeName: string | null;
+  employeePhotoUrl: string | null;
   packageKey: string;
   taskKey: string;
   taskTitle: string;
@@ -340,6 +342,7 @@ export interface OnboardingBlockerRow {
   caseId: string;
   caseNo: string;
   employeeName: string | null;
+  employeePhotoUrl: string | null;
   blockerKey: string;
   blockerTitle: string;
   blockingModule: string;
