@@ -1,0 +1,211 @@
+/**
+ * src/ui/hrfin/tokens.css
+ *
+ * The Aurora HR/Finance design language — a 1:1 port of the approved Codex
+ * mockups (siomac-finance-pages/*.css) rescoped from `.mock-* .ap-*` to
+ * `.hrfin .hrfin-*`, so the real pages render pixel-identical to the design.
+ * Every page wraps its root in <div class="hrfin">. The interactive additions
+ * the static mockups don't have (wizard modal, drawer overrides, form fields)
+ * are appended at the end. Overlays that portal to <body> carry `.hrfin` on the
+ * portaled node so these custom properties still cascade.
+ */
+
+.hrfin {
+  --page-bg: #f6f8fc;
+  --surface: #ffffff;
+  --surface-soft: #f8faff;
+  --border: #dfe6f2;
+  --row: #edf1f7;
+  --text: #0b1734;
+  --muted: #64708a;
+  --subtle: #8b96aa;
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-soft: #eef0ff;
+  --success: #079455;
+  --success-soft: #e6f8ee;
+  --danger: #d92d20;
+  --danger-soft: #fee4e2;
+  --warning: #dc6803;
+  --warning-soft: #fff4e5;
+  --info: #2563eb;
+  --info-soft: #eaf1ff;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --gap: 16px;
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 32px rgba(16,24,40,.04);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.hrfin *, .hrfin *::before, .hrfin *::after { box-sizing: border-box; }
+.hrfin .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+
+.hrfin .hrfin-title-row { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:18px; }
+.hrfin .hrfin-title-main { display:flex; align-items:center; gap:14px; }
+.hrfin .hrfin-title-icon { width:44px; height:44px; border-radius:14px; display:grid; place-items:center; color:var(--accent); background:var(--accent-soft); }
+.hrfin h1 { margin:0; font-size:30px; line-height:1.1; font-weight:650; letter-spacing:-.035em; }
+.hrfin h2 { margin:0; font-size:16px; font-weight:650; letter-spacing:-.01em; }
+.hrfin p { margin:0; color:var(--muted); }
+.hrfin .hrfin-header-chips { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.hrfin .hrfin-chip { min-height:30px; display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border:1px solid var(--border); border-radius:999px; color:var(--muted); background:var(--surface); font-size:13px; font-weight:500; }
+.hrfin .hrfin-chip.is-danger { color:var(--danger); background:#fff8f7; border-color:#ffd4cf; }
+.hrfin .hrfin-chip.is-success { color:var(--success); background:var(--success-soft); border-color:#bbefcf; }
+.hrfin .hrfin-chip.is-warning { color:var(--warning); background:var(--warning-soft); border-color:#ffd8a8; }
+.hrfin .hrfin-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.hrfin .hrfin-action { min-height:40px; display:inline-flex; align-items:center; gap:9px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); padding:0 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+.hrfin .hrfin-action:disabled { opacity:.55; cursor:not-allowed; }
+.hrfin .hrfin-action.is-primary { background:linear-gradient(180deg, #6157ff, var(--accent)); border-color:var(--accent); color:#fff; }
+.hrfin .hrfin-action.is-danger { color:var(--danger); border-color:#ffd4cf; }
+.hrfin .hrfin-action b { min-width:20px; height:20px; display:grid; place-items:center; border-radius:999px; background:var(--danger-soft); color:var(--danger); font-size:11px; }
+.hrfin .hrfin-action.is-primary b { background:rgba(255,255,255,.24); color:#fff; }
+.hrfin .hrfin-alert { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:15px 18px; border-radius:var(--radius); border:1px solid #fed7aa; background:#fff8ed; margin-bottom:16px; }
+.hrfin .hrfin-alert strong { display:block; font-weight:650; }
+.hrfin .hrfin-alert .hrfin-alert-copy { display:flex; align-items:center; gap:12px; }
+.hrfin .hrfin-alert .icon { color:var(--danger); width:24px; height:24px; }
+.hrfin .hrfin-alert-actions { display:flex; gap:10px; }
+.hrfin .hrfin-kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--gap); margin-bottom:16px; }
+.hrfin .hrfin-kpi-card { min-height:132px; padding:18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); position:relative; overflow:hidden; }
+.hrfin .hrfin-kpi-head { display:flex; justify-content:space-between; color:var(--muted); font-size:13px; margin-bottom:8px; }
+.hrfin .hrfin-kpi-card strong { display:block; color:var(--text); font-size:28px; line-height:1; font-weight:650; letter-spacing:-.035em; margin-bottom:8px; }
+.hrfin .hrfin-kpi-card p, .hrfin .hrfin-kpi-card small { color:var(--muted); font-size:13px; }
+.hrfin .hrfin-mini-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; font-size:12px; background:var(--success-soft); color:var(--success); }
+.hrfin .hrfin-mini-badge.is-danger { background:var(--danger-soft); color:var(--danger); }
+.hrfin .hrfin-mini-badge.is-warning { background:var(--warning-soft); color:var(--warning); }
+.hrfin .hrfin-mini-badge.is-muted { background:var(--row); color:var(--muted); }
+.hrfin .hrfin-sparkline { position:absolute; right:18px; bottom:20px; width:150px; height:46px; }
+.hrfin .hrfin-sparkline polyline { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.hrfin .hrfin-sparkline.is-danger polyline { stroke:var(--danger); }
+.hrfin .hrfin-sparkline.is-success polyline { stroke:var(--success); }
+.hrfin .hrfin-mini-bars { position:absolute; right:18px; bottom:20px; height:54px; display:flex; align-items:end; gap:5px; }
+.hrfin .hrfin-mini-bars i { width:4px; display:block; border-radius:4px 4px 0 0; background:var(--accent); }
+.hrfin .hrfin-mini-bars.is-success i { background:var(--success); }
+.hrfin .hrfin-meter { width:210px; max-width:100%; height:7px; margin-top:16px; background:#ebedf3; border-radius:999px; overflow:hidden; }
+.hrfin .hrfin-meter i { display:block; height:100%; border-radius:999px; background:var(--accent); }
+.hrfin .hrfin-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:var(--gap); align-items:start; }
+.hrfin .hrfin-main-stack, .hrfin .hrfin-rail { display:grid; gap:var(--gap); align-content:start; }
+.hrfin .hrfin-analytics-grid { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr); gap:var(--gap); }
+.hrfin .hrfin-insight-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--gap); }
+.hrfin .hrfin-card { border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); padding:18px; }
+.hrfin .hrfin-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.hrfin .hrfin-card-head > span { color:var(--muted); font-size:13px; }
+.hrfin .hrfin-card-link { display:inline-flex; align-items:center; gap:6px; color:var(--accent); font-size:13px; font-weight:650; text-decoration:none; background:none; border:0; cursor:pointer; padding:0; font-family:inherit; margin-top:4px; }
+.hrfin .hrfin-chart-frame { width:100%; overflow:hidden; }
+.hrfin .hrfin-line-chart, .hrfin .hrfin-combo-chart { display:block; width:100%; height:auto; }
+.hrfin .hrfin-chart-grid { fill:none; stroke:#e6eaf2; stroke-width:1; }
+.hrfin .hrfin-area { fill:rgba(79,70,229,.10); stroke:none; }
+.hrfin .hrfin-line-a { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.hrfin .hrfin-line-b { fill:none; stroke:var(--success); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:6 6; }
+.hrfin .hrfin-line-chart text, .hrfin .hrfin-combo-chart text { fill:var(--muted); font-size:12px; text-anchor:middle; }
+.hrfin .hrfin-bar-a { fill:var(--accent); }
+.hrfin .hrfin-bar-b { fill:#c7c3ff; }
+.hrfin .hrfin-net-line { fill:none; stroke:#0b1734; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; }
+.hrfin .hrfin-net-dot { fill:#0b1734; stroke:#fff; stroke-width:2; }
+.hrfin .hrfin-chart-footer { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:8px; color:var(--muted); font-size:13px; }
+.hrfin .hrfin-bar-list { display:grid; gap:14px; }
+.hrfin .hrfin-bar-row { display:grid; grid-template-columns:130px 1fr 76px 54px; align-items:center; gap:12px; font-size:13px; }
+.hrfin .hrfin-bar-row > div { height:8px; border-radius:999px; background:#eef1f6; overflow:hidden; }
+.hrfin .hrfin-bar-row i { display:block; height:100%; border-radius:999px; background:var(--accent); }
+.hrfin .hrfin-bar-row i.is-danger { background:var(--danger); }
+.hrfin .hrfin-bar-row i.is-warning { background:var(--warning); }
+.hrfin .hrfin-bar-row i.is-success { background:var(--success); }
+.hrfin .hrfin-bar-row b { font-weight:650; text-align:right; }
+.hrfin .hrfin-bar-row em { color:var(--muted); font-style:normal; text-align:right; }
+.hrfin .hrfin-table-card { border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); overflow:hidden; }
+.hrfin .hrfin-tabs { display:flex; gap:28px; padding:0 18px; border-bottom:1px solid var(--row); }
+.hrfin .hrfin-tabs button { height:46px; border:0; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; position:relative; font-family:inherit; font-size:14px; }
+.hrfin .hrfin-tabs button.is-active { color:var(--accent); }
+.hrfin .hrfin-tabs button.is-active::after { content:""; position:absolute; left:0; right:0; bottom:0; height:3px; background:var(--accent); border-radius:999px 999px 0 0; }
+.hrfin .hrfin-table-tools { display:flex; gap:10px; align-items:center; padding:14px 18px; }
+.hrfin .hrfin-table-tools label { flex:1; display:flex; align-items:center; gap:8px; background:#f8faff; border:1px solid var(--border); border-radius:10px; height:38px; padding:0 12px; color:var(--muted); }
+.hrfin .hrfin-table-tools input { width:100%; border:0; background:transparent; outline:0; color:var(--text); font-family:inherit; }
+.hrfin .hrfin-table-tools button { min-height:38px; border:1px solid var(--border); border-radius:10px; background:var(--surface); padding:0 12px; display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-weight:600; cursor:pointer; font-family:inherit; }
+.hrfin .hrfin-table-wrap { overflow:auto; }
+.hrfin table { width:100%; border-collapse:collapse; font-size:13px; }
+.hrfin th { text-align:left; padding:0 18px 10px; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:650; white-space:nowrap; }
+.hrfin td { height:44px; border-top:1px solid var(--row); padding:0 18px; white-space:nowrap; }
+.hrfin tbody tr.is-clickable { cursor:pointer; }
+.hrfin tbody tr.is-clickable:hover { background:var(--surface-soft); }
+.hrfin td button { border:0; background:transparent; color:var(--muted); cursor:pointer; }
+.hrfin .hrfin-status { display:inline-flex; align-items:center; min-height:22px; border-radius:999px; padding:3px 9px; font-size:12px; font-weight:650; }
+.hrfin .hrfin-status.is-success { background:var(--success-soft); color:var(--success); }
+.hrfin .hrfin-status.is-danger { background:var(--danger-soft); color:var(--danger); }
+.hrfin .hrfin-status.is-warning { background:var(--warning-soft); color:var(--warning); }
+.hrfin .hrfin-status.is-info { background:var(--info-soft); color:var(--info); }
+.hrfin .hrfin-status.is-muted { background:var(--row); color:var(--muted); }
+.hrfin .hrfin-pager { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-top:1px solid var(--row); color:var(--muted); }
+.hrfin .hrfin-pager div { display:flex; gap:6px; align-items:center; }
+.hrfin .hrfin-pager button { min-width:30px; height:30px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--muted); cursor:pointer; font-family:inherit; }
+.hrfin .hrfin-pager button:disabled { opacity:.45; cursor:not-allowed; }
+.hrfin .hrfin-pager button.is-active { background:var(--accent-soft); color:var(--accent); border-color:#d7d8ff; }
+.hrfin .hrfin-donut { --value:72; width:124px; height:124px; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--accent) calc(var(--value)*1%), #e5e7eb 0); position:relative; flex:0 0 auto; }
+.hrfin .hrfin-donut::after { content:""; width:82px; height:82px; border-radius:50%; background:#fff; position:absolute; }
+.hrfin .hrfin-donut span, .hrfin .hrfin-donut small { position:relative; z-index:1; display:block; text-align:center; }
+.hrfin .hrfin-donut span { font-size:26px; font-weight:650; line-height:1; }
+.hrfin .hrfin-donut small { color:var(--muted); font-size:12px; }
+.hrfin .hrfin-metric-list { display:grid; gap:12px; }
+.hrfin .hrfin-metric-row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; }
+.hrfin .hrfin-metric-row b { font-weight:650; }
+.hrfin .hrfin-date-row { display:grid; grid-template-columns:48px 1fr auto; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--row); }
+.hrfin .hrfin-date-row:last-child { border-bottom:0; }
+.hrfin .hrfin-date-badge { width:40px; height:44px; border-radius:10px; background:var(--accent-soft); display:grid; place-items:center; color:var(--accent); font-size:11px; font-weight:650; line-height:1.05; text-align:center; }
+.hrfin .hrfin-date-row b { display:block; font-size:13px; }
+.hrfin .hrfin-date-row small { color:var(--muted); }
+.hrfin .hrfin-activity-list { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.hrfin .hrfin-activity-list li { display:flex; align-items:flex-start; gap:10px; }
+.hrfin .hrfin-activity-list > li > span { width:30px; height:30px; border-radius:999px; color:var(--accent); background:var(--accent-soft); display:grid; place-items:center; flex:0 0 auto; }
+.hrfin .hrfin-activity-list b { display:block; font-size:13px; font-weight:650; }
+.hrfin .hrfin-activity-list small { display:block; color:var(--muted); }
+.hrfin .hrfin-focus-list { display:grid; gap:10px; }
+.hrfin .hrfin-focus-item { display:flex; align-items:center; gap:10px; justify-content:space-between; background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px; cursor:pointer; }
+.hrfin .hrfin-focus-item b { display:block; font-size:13px; }
+.hrfin .hrfin-focus-item small { color:var(--muted); }
+.hrfin .hrfin-empty { color:var(--muted); font-size:13px; padding:10px 0; }
+
+@media (max-width: 1180px) {
+  .hrfin .hrfin-layout, .hrfin .hrfin-analytics-grid { grid-template-columns:1fr; }
+  .hrfin .hrfin-kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .hrfin .hrfin-insight-grid { grid-template-columns:1fr; }
+}
+@media (max-width: 720px) {
+  .hrfin .hrfin-title-row { flex-direction:column; }
+  .hrfin .hrfin-kpi-grid { grid-template-columns:1fr; }
+  .hrfin .hrfin-bar-row { grid-template-columns:1fr; gap:6px; }
+}
+
+/* ── Interactive additions (not in the static mockups) ─────────────────────── */
+/* Loading skeletons reuse the app's shimmer; sized to the KPI/card shapes. */
+.hrfin .hrfin-skel { display:block; background:linear-gradient(90deg,#eef1f6 25%,#e3e8f0 37%,#eef1f6 63%); background-size:400% 100%; animation:hrfin-shimmer 1.4s ease infinite; border-radius:8px; }
+@keyframes hrfin-shimmer { 0%{background-position:100% 0} 100%{background-position:0 0} }
+
+/* Form controls used by the wizard / drawer. */
+.hrfin .hrfin-field { margin-bottom:14px; }
+.hrfin .hrfin-field label { display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px; }
+.hrfin .hrfin-input { width:100%; height:38px; border:1px solid var(--border); border-radius:10px; background:var(--surface); padding:0 12px; font-size:13px; color:var(--text); font-family:inherit; }
+.hrfin .hrfin-input:focus { outline:0; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.hrfin textarea.hrfin-input { height:auto; padding:9px 12px; resize:vertical; }
+.hrfin .hrfin-sod-note { display:flex; gap:8px; align-items:flex-start; font-size:12px; color:var(--warning); background:var(--warning-soft); border:1px solid #ffd8a8; border-radius:10px; padding:10px 12px; margin-bottom:14px; }
+
+/* Bespoke wizard / record-payment modal (centred, stepped). */
+.hrfin-wiz-backdrop { position:fixed; inset:0; background:rgba(11,23,52,.42); z-index:80; display:flex; align-items:center; justify-content:center; padding:16px; }
+.hrfin-wiz-backdrop, .hrfin-wiz-backdrop * { box-sizing:border-box; font-family:Inter, ui-sans-serif, system-ui, sans-serif; }
+.hrfin-wiz-modal { width:560px; max-width:100%; max-height:88vh; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(11,23,52,.22); }
+.hrfin-wiz-head { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.hrfin-wiz-head strong { font-size:16px; font-weight:650; color:var(--text); }
+.hrfin-wiz-close { width:32px; height:32px; border-radius:9px; border:1px solid var(--border); background:var(--surface); color:var(--muted); cursor:pointer; display:grid; place-items:center; }
+.hrfin-wiz-steps { display:flex; gap:6px; padding:16px 18px 0; }
+.hrfin-wiz-step-bar { flex:1; height:4px; border-radius:999px; background:var(--row); }
+.hrfin-wiz-step-bar.on { background:var(--accent); }
+.hrfin-wiz-body { padding:18px; overflow-y:auto; }
+.hrfin-wiz-foot { padding:14px 18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; }
+
+/* Drawer overrides — the @ui Drawer carries `panelClass="hrfin"` so these apply
+   only to hrfin-scoped instances, never a plain .hse-drawer elsewhere. */
+.hrfin.hse-drawer { background:var(--surface); }
+.hrfin.hse-drawer .hse-drawer-head { background:var(--surface); border-color:var(--border); }
+.hrfin.hse-drawer .hse-drawer-head h3 { color:var(--text); font-weight:650; letter-spacing:-.01em; }
+.hrfin.hse-drawer .hse-drawer-head p { color:var(--muted); }
+.hrfin.hse-drawer .hse-drawer-body { color:var(--text); }
+.hrfin.hse-drawer .hse-drawer-foot { background:var(--surface); border-color:var(--border); }

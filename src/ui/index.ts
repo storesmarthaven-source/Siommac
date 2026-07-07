@@ -82,3 +82,6 @@ export { RegisterLayout } from './layouts/RegisterLayout';
 
 // ── Utilities ──
 export { exportCsv, toCsv, type CsvColumn } from './lib/exportCsv';
+
+// ── HR & Finance "Aurora" language (docs/HR_FINANCE_DESIGN_SPEC.md) ──
+export * from './hrfin';

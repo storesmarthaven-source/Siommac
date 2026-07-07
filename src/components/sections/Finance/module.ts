@@ -20,6 +20,13 @@ const OVERVIEW_ITEM: ModuleNavItem = {
   sub: 'Finance dashboard — remittances, expenses, budgets & disbursements (customizable board)',
 };
 
+const PAYABLES_ITEM: ModuleNavItem = {
+  id: 's-finance-payables',
+  label: 'Accounts Payable',
+  icon: 'fa-file-invoice-dollar',
+  sub: 'Vendor bills, approvals and payments',
+};
+
 const STATUTORY_ITEM: ModuleNavItem = {
   id: 's-finance-statutory',
   label: 'Statutory Configuration',
@@ -71,7 +78,7 @@ const DISBURSEMENTS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

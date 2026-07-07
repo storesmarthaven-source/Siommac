@@ -35,7 +35,9 @@ export type RefPrefix =
   | 'HRI'   // HR Employee Import batch
   | 'ONB'   // HR Onboarding case
   | 'ROS'  // HR Roster
-  | 'REM'; // Finance Remittance
+  | 'REM'   // Finance Remittance
+  | 'BILL'  // Finance AP Bill
+  | 'APV';  // Finance AP Vendor
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.

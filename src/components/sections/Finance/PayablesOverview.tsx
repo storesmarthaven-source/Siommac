@@ -1,0 +1,307 @@
+/**
+ * src/components/sections/Finance/PayablesOverview.tsx
+ *
+ * Finance ▸ Accounts payable — a 1:1 render of the approved Aurora mockup
+ * (siomac-finance-pages/AccountsPayable.html) wired to the real AP backend:
+ * KPIs, payables-vs-payments + aging, a tabbed bills register with a detail
+ * drawer, a new-bill wizard, lifecycle actions (submit/approve/reject/pay/void),
+ * and the domain rail (payment run · vendor exceptions · deadlines · activity).
+ */
+
+import { type VNode } from 'preact';
+import { useState, useMemo } from 'preact/hooks';
+import { toast } from '@store';
+import { can } from '@lib/permissions';
+import { openActionModal } from '@/components/common/actions';
+import {
+  HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, DeadlineList, ActivityFeed,
+  HrfinTable, HrfinPill, HrfinWizardModal, TrendArea, HorizontalBars, HrfinIcon,
+  Drawer, exportCsv,
+  type QuickAction, type HrfinColumn, type HrfinTone,
+} from '@ui';
+import {
+  useApBills, useApBillDetail, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
+  useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useRecordPayment, useVoidBill,
+  type ApBill,
+} from '@api/finance/accountsPayable';
+import { money, moneyCompact } from './hrfinFormat';
+
+const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
+const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
+
+function billTone(b: ApBill, today: string): { tone: HrfinTone; label: string } {
+  if ((b.status === 'approved' || b.status === 'partially_paid') && b.dueDate && b.dueDate < today) return { tone: 'bad', label: 'Overdue' };
+  switch (b.status) {
+    case 'approved': return { tone: 'ok', label: 'Approved' };
+    case 'submitted': return { tone: 'wn', label: 'Pending' };
+    case 'partially_paid': return { tone: 'nu', label: 'Partial' };
+    case 'paid': return { tone: 'nu', label: 'Paid' };
+    case 'rejected': return { tone: 'bad', label: 'Rejected' };
+    case 'void': return { tone: 'dr', label: 'Void' };
+    default: return { tone: 'dr', label: 'Draft' };
+  }
+}
+function nextFriday(): string {
+  const d = new Date(); const add = ((5 - d.getDay() + 7) % 7) || 7; d.setDate(d.getDate() + add);
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+
+export function PayablesOverview(): VNode {
+  const today = new Date().toISOString().slice(0, 10);
+  const canManage = can('finance.ap.manage');
+  const canApprove = can('finance.ap.approve');
+
+  const [tab, setTab] = useState('bills');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [wizOpen, setWizOpen] = useState(false);
+  const [wizStep, setWizStep] = useState(0);
+  const [form, setForm] = useState({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' });
+  const [payFor, setPayFor] = useState<ApBill | null>(null);
+  const [payAmount, setPayAmount] = useState('');
+
+  const kpis = useApKpis();
+  const aging = useApAging();
+  const trend = useApTrend();
+  const billsQ = useApBills({ search: search || undefined, page, pageSize: 10 });
+  const railQ = useApBills({ pageSize: 100 });
+  const vendorsQ = useApVendors();
+  const paymentsQ = useApPayments();
+  const detail = useApBillDetail(drawerId);
+
+  const createBill = useCreateBill();
+  const submitBill = useSubmitBill();
+  const approveBill = useApproveBill();
+  const rejectBill = useRejectBill();
+  const recordPayment = useRecordPayment();
+  const voidBill = useVoidBill();
+
+  const railBills = railQ.data?.rows ?? [];
+  const open = railBills.filter(b => b.status === 'approved' || b.status === 'partially_paid');
+  const paymentRunTotal = open.reduce((s, b) => s + b.balance, 0);
+  const vendorExceptions = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of open) if (b.dueDate && b.dueDate < today) m.set(b.vendorName, (m.get(b.vendorName) ?? 0) + b.balance);
+    return Array.from(m.entries()).map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount).slice(0, 3);
+  }, [railBills]);
+  const upcoming = open.filter(b => b.dueDate && b.dueDate >= today).sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1)).slice(0, 3);
+  const recent = [...railBills].sort((a, b) => (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt)).slice(0, 3);
+
+  const d = kpis.data;
+  const kloading = kpis.isLoading && !d;
+
+  function resetWizard(): void { setForm({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' }); setWizStep(0); }
+  async function submitWizard(): Promise<void> {
+    const amount = Number(form.lineAmount);
+    if (!form.vendorId || !form.lineDesc || !(amount > 0)) { toast('Fill in vendor, a line description and amount.'); return; }
+    try { await createBill.mutateAsync({ vendorId: form.vendorId, billDate: form.billDate, dueDate: form.dueDate || undefined, description: form.desc || undefined, glAccountCode: form.gl, lines: [{ description: form.lineDesc, amount, glAccountCode: form.gl }] }); toast('Bill created'); setWizOpen(false); resetWizard(); }
+    catch (e) { toast((e as Error).message); }
+  }
+  async function doApprove(b: ApBill): Promise<void> {
+    const r = await openActionModal({ title: 'Approve bill', subtitle: b.billNo, tone: 'success', icon: 'fa-check', record: { title: b.vendorName, subtitle: `${b.billNo} · ${money(b.totalAmount)}` }, warning: 'You can’t approve a bill you created (separation of duties).', whatNext: ['The bill becomes payable.', 'An app event + audit record are written.'], confirmLabel: 'Approve' });
+    if (r.confirmed) try { await approveBill.mutateAsync({ id: b.id }); toast('Bill approved'); } catch (e) { toast((e as Error).message); }
+  }
+  async function doReject(b: ApBill): Promise<void> {
+    const r = await openActionModal({ title: 'Reject bill', subtitle: b.billNo, tone: 'danger', icon: 'fa-xmark', record: { title: b.vendorName, subtitle: `${b.billNo} · ${money(b.totalAmount)}` }, reason: { required: true, label: 'Reason', type: 'textarea' }, confirmLabel: 'Reject' });
+    if (r.confirmed) try { await rejectBill.mutateAsync({ id: b.id, reason: r.reason ?? '' }); toast('Bill rejected'); } catch (e) { toast((e as Error).message); }
+  }
+  async function doVoid(b: ApBill): Promise<void> {
+    const r = await openActionModal({ title: 'Void bill', subtitle: b.billNo, tone: 'danger', icon: 'fa-ban', record: { title: b.vendorName, subtitle: `${b.billNo} · ${money(b.totalAmount)}` }, warning: 'Voiding is permanent.', reason: { required: true, label: 'Reason', type: 'textarea' }, confirmLabel: 'Void bill' });
+    if (r.confirmed) try { await voidBill.mutateAsync({ id: b.id, reason: r.reason ?? '' }); toast('Bill voided'); } catch (e) { toast((e as Error).message); }
+  }
+  async function doSubmit(b: ApBill): Promise<void> { try { await submitBill.mutateAsync({ id: b.id }); toast('Submitted for approval'); } catch (e) { toast((e as Error).message); } }
+  async function doPay(): Promise<void> {
+    if (!payFor) return; const amt = Number(payAmount);
+    if (!(amt > 0)) { toast('Enter a payment amount.'); return; }
+    try { await recordPayment.mutateAsync({ id: payFor.id, amount: amt }); toast('Payment recorded'); setPayFor(null); setPayAmount(''); } catch (e) { toast((e as Error).message); }
+  }
+  function openPay(b: ApBill): void { setPayFor(b); setPayAmount(String(b.balance)); }
+
+  const exportBills = (): void => exportCsv(billsQ.data?.rows ?? [], [{ header: 'Bill', value: b => b.billNo }, { header: 'Vendor', value: b => b.vendorName }, { header: 'Due', value: b => b.dueDate ?? '' }, { header: 'Amount', value: b => b.totalAmount }, { header: 'Balance', value: b => b.balance }, { header: 'Status', value: b => b.status }], 'accounts-payable');
+  const actions: QuickAction[] = [
+    ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => { resetWizard(); setWizOpen(true); } } as QuickAction] : []),
+    { key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setTab('bills') } as QuickAction,
+    ...(canManage && open[0] ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => openPay(open[0]!) } as QuickAction] : []),
+    ...(canManage ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => setTab('vendors') } as QuickAction] : []),
+    { key: 'export', label: 'Export', icon: 'download', onClick: exportBills } as QuickAction,
+  ];
+
+  const billCols: HrfinColumn<ApBill>[] = [
+    { key: 'billNo', label: 'Bill', render: b => b.billNo },
+    { key: 'vendor', label: 'Vendor', render: b => b.vendorName },
+    { key: 'due', label: 'Due', render: b => fmtDue(b.dueDate) },
+    { key: 'amount', label: 'Amount', render: b => money(b.totalAmount) },
+    { key: 'approver', label: 'Approver', render: b => b.approvedBy ?? '—' },
+    { key: 'status', label: 'Status', render: b => { const t = billTone(b, today); return <HrfinPill tone={t.tone}>{t.label}</HrfinPill>; } },
+  ];
+  const vendorCols: HrfinColumn<Record<string, unknown>>[] = [
+    { key: 'name', label: 'Vendor', render: r => String(r.name) },
+    { key: 'vendorNo', label: 'Vendor no.', render: r => String(r.vendorNo) },
+    { key: 'terms', label: 'Terms', render: r => `Net ${r.paymentTermsDays}` },
+    { key: 'status', label: 'Status', render: r => <HrfinPill tone={r.status === 'active' ? 'ok' : 'dr'}>{r.status === 'active' ? 'Active' : 'Inactive'}</HrfinPill> },
+  ];
+  const paymentCols: HrfinColumn<Record<string, unknown>>[] = [
+    { key: 'billNo', label: 'Bill', render: r => String(r.billNo) },
+    { key: 'method', label: 'Method', render: r => String(r.method).toUpperCase() },
+    { key: 'paidAt', label: 'Date', render: r => new Date(String(r.paidAt)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) },
+    { key: 'amount', label: 'Amount', render: r => money(Number(r.amount)) },
+    { key: 'reference', label: 'Reference', render: r => (r.reference ? String(r.reference) : '—') },
+  ];
+  const agingTotal = (aging.data ?? []).reduce((s, x) => s + x.amount, 0);
+
+  return (
+    <div class="hrfin">
+      <HrfinPageHeader
+        icon="grid" title="Accounts payable" sub="Track bills, approvals, and payments to keep cash flow and suppliers on track."
+        chips={[
+          { icon: 'clock', label: `${d?.pendingApprovalCount ?? 0} approval${(d?.pendingApprovalCount ?? 0) === 1 ? '' : 's'} waiting` },
+          ...((d?.overdueCount ?? 0) > 0 ? [{ icon: 'alert' as const, label: `${d!.overdueCount} overdue`, tone: 'danger' as const }] : []),
+          { icon: 'users', label: `${d?.vendorCount ?? 0} vendors` },
+        ]}
+      />
+
+      <QuickActionStrip actions={actions} />
+
+      <section class="hrfin-kpi-grid">
+        <KpiCard loading={kloading} label="Total payable" value={money(d?.totalPayable)} support={`${d?.openBills ?? 0} open bills`} visual="line" values={trend.data?.billed ?? []} />
+        <KpiCard loading={kloading} label="Overdue" value={money(d?.overdue)} badge={d ? `${d.overdueCount} bill${d.overdueCount === 1 ? '' : 's'}` : undefined} badgeTone="danger" support="past due date" />
+        <KpiCard loading={kloading} label="Due this week" value={money(d?.dueThisWeek)} badge={d ? `${d.dueThisWeekCount} bills` : undefined} badgeTone="muted" support="due within 7 days" />
+        <KpiCard loading={kloading} label="On-time rate" value={d ? `${d.onTimeRatePct}%` : undefined} support="paid on/before due (90d)" visual="progress" percent={d?.onTimeRatePct ?? 0} />
+      </section>
+
+      <section class="hrfin-layout">
+        <div class="hrfin-main-stack">
+          <div class="hrfin-analytics-grid">
+            <article class="hrfin-card">
+              <div class="hrfin-card-head"><h2>Payables vs payments</h2><span class="hrfin-chip">MTD · By week</span></div>
+              {trend.data && <TrendArea title="Payables vs payments" labels={trend.data.labels} seriesA={trend.data.billed} seriesB={trend.data.paid} />}
+              <div class="hrfin-chart-footer">
+                <span>{trend.data ? `Latest month: billed ${moneyCompact(trend.data.billed.at(-1))} vs paid ${moneyCompact(trend.data.paid.at(-1))}` : 'Payables vs payments.'}</span>
+                <button type="button" class="hrfin-card-link" onClick={() => setTab('payments')}>View report →</button>
+              </div>
+            </article>
+            <article class="hrfin-card">
+              <div class="hrfin-card-head"><h2>Aging by bucket</h2></div>
+              <HorizontalBars items={(aging.data ?? []).map((b, i) => ({ label: b.label, value: moneyCompact(b.amount), percent: agingTotal > 0 ? Math.round((b.amount / agingTotal) * 100) : 0, tone: AGING_TONE[i] }))} />
+              <button type="button" class="hrfin-card-link" onClick={() => setTab('bills')}>View aging detail →</button>
+            </article>
+          </div>
+
+          <HrfinTable<ApBill | Record<string, unknown>>
+            tabs={[{ key: 'bills', label: 'Bills' }, { key: 'vendors', label: 'Vendors' }, { key: 'payments', label: 'Payments' }]}
+            activeTab={tab} onTab={t => { setTab(t); setPage(0); }}
+            searchValue={search} onSearch={v => { setSearch(v); setPage(0); }} searchPlaceholder="Search bills..."
+            filters={[{ label: 'Status' }, { label: 'Filters' }, { label: 'Export', icon: 'download', onClick: exportBills }]}
+            columns={(tab === 'bills' ? billCols : tab === 'vendors' ? vendorCols : paymentCols) as HrfinColumn<ApBill | Record<string, unknown>>[]}
+            rows={(tab === 'bills' ? (billsQ.data?.rows ?? []) : tab === 'vendors' ? (vendorsQ.data ?? []) : (paymentsQ.data ?? [])) as Array<ApBill | Record<string, unknown>>}
+            rowKey={r => (r as { id: string }).id}
+            onRowClick={tab === 'bills' ? (r => setDrawerId((r as ApBill).id)) : undefined}
+            page={tab === 'bills' ? page : 0} pageCount={tab === 'bills' ? (billsQ.data?.pageCount ?? 1) : 1}
+            total={tab === 'bills' ? (billsQ.data?.total ?? 0) : tab === 'vendors' ? (vendorsQ.data?.length ?? 0) : (paymentsQ.data?.length ?? 0)}
+            pageSize={10} onPage={setPage} noun={tab}
+            loading={tab === 'bills' ? billsQ.isLoading && !billsQ.data : false}
+          />
+        </div>
+
+        <aside class="hrfin-rail">
+          <article class="hrfin-card">
+            <div class="hrfin-card-head"><h2>Payment run this week</h2><HrfinIcon name="calendar" /></div>
+            <p>{open.length} bill{open.length === 1 ? '' : 's'} ready to pay</p>
+            <h1>{money(paymentRunTotal)}</h1>
+            <div class="hrfin-metric-row" style={{ marginTop: 12 }}><span>Run date</span><b>{nextFriday()}</b></div>
+            <div class="hrfin-metric-row"><span>Payment method</span><b>ACH</b></div>
+            {canManage && open[0] && <button type="button" class="hrfin-action is-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={() => openPay(open[0]!)}>Review &amp; run payment</button>}
+          </article>
+
+          <RailCard title="Vendors needing attention" right={vendorExceptions.length ? <span class="hrfin-mini-badge is-danger">{vendorExceptions.length} exceptions</span> : undefined} linkLabel="View all exceptions" onLink={() => setTab('vendors')}>
+            {vendorExceptions.length === 0 ? <div class="hrfin-empty">No overdue vendors.</div> : (
+              <div class="hrfin-metric-list">
+                {vendorExceptions.map(v => <div class="hrfin-metric-row" key={v.name}><span>{v.name}</span><b style={{ color: 'var(--danger)' }}>{money(v.amount)} overdue</b></div>)}
+              </div>
+            )}
+          </RailCard>
+
+          <RailCard title="Upcoming deadlines" right={<span>{new Date().toLocaleDateString('en-US', { month: 'short' })}</span>} linkLabel="View all deadlines" onLink={() => setTab('bills')}>
+            <DeadlineList items={upcoming.map(b => { const dt = new Date(b.dueDate!); return { top: String(dt.getUTCDate()), bottom: dt.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase(), title: `${b.vendorName} due`, meta: money(b.balance) }; })} />
+          </RailCard>
+
+          <RailCard title="Recent activity">
+            <ActivityFeed items={recent.map(b => ({ icon: b.status === 'approved' ? 'check' : b.status === 'paid' || b.status === 'partially_paid' ? 'receipt' : 'file', title: `${b.billNo} · ${billTone(b, today).label}`, meta: new Date(b.updatedAt ?? b.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) }))} />
+          </RailCard>
+        </aside>
+      </section>
+
+      {/* Bill detail drawer */}
+      <Drawer
+        open={!!drawerId} onClose={() => setDrawerId(null)} panelClass="hrfin"
+        title={detail.data?.bill.vendorName ?? 'Bill'} sub={detail.data ? `${detail.data.bill.billNo} · due ${fmtDue(detail.data.bill.dueDate)}` : ''}
+        foot={detail.data ? (
+          <div style={{ display: 'flex', gap: 9, width: '100%' }}>
+            {detail.data.bill.status === 'draft' && canManage && <button class="hrfin-action is-primary" onClick={() => doSubmit(detail.data!.bill)}>Submit</button>}
+            {detail.data.bill.status === 'submitted' && canApprove && <button class="hrfin-action is-primary" onClick={() => doApprove(detail.data!.bill)}>Approve</button>}
+            {detail.data.bill.status === 'submitted' && canApprove && <button class="hrfin-action is-danger" onClick={() => doReject(detail.data!.bill)}>Reject</button>}
+            {(detail.data.bill.status === 'approved' || detail.data.bill.status === 'partially_paid') && canManage && <button class="hrfin-action is-primary" onClick={() => openPay(detail.data!.bill)}>Record payment</button>}
+            {!['paid', 'void'].includes(detail.data.bill.status) && canApprove && <button class="hrfin-action" style={{ marginLeft: 'auto' }} onClick={() => doVoid(detail.data!.bill)}>Void</button>}
+          </div>
+        ) : undefined}
+      >
+        {detail.data && (
+          <div class="hrfin">
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
+              <strong style={{ fontSize: 28, fontWeight: 650, letterSpacing: '-.035em' }}>{money(detail.data.bill.totalAmount)}</strong>
+              <HrfinPill tone={billTone(detail.data.bill, today).tone}>{billTone(detail.data.bill, today).label}</HrfinPill>
+            </div>
+            <div class="hrfin-metric-list" style={{ marginBottom: 16 }}>
+              <div class="hrfin-metric-row"><span>Bill number</span><b>{detail.data.bill.billNo}</b></div>
+              <div class="hrfin-metric-row"><span>Due date</span><b>{fmtDue(detail.data.bill.dueDate)}</b></div>
+              <div class="hrfin-metric-row"><span>GL account</span><b>{detail.data.bill.glAccountCode ?? '—'}</b></div>
+              <div class="hrfin-metric-row"><span>Balance</span><b>{money(detail.data.bill.balance)}</b></div>
+            </div>
+            <h2 style={{ marginBottom: 10 }}>Line items</h2>
+            <div class="hrfin-metric-list">{detail.data.lines.map(l => <div class="hrfin-metric-row" key={l.id}><span>{l.description}</span><b>{money(l.amount)}</b></div>)}</div>
+            <h2 style={{ margin: '18px 0 10px' }}>Payments</h2>
+            {detail.data.payments.length === 0 ? <div class="hrfin-empty">No payments recorded.</div> : <div class="hrfin-metric-list">{detail.data.payments.map(p => <div class="hrfin-metric-row" key={p.id}><span>{p.method.toUpperCase()}{p.reference ? ` · ${p.reference}` : ''}</span><b>{money(p.amount)}</b></div>)}</div>}
+          </div>
+        )}
+      </Drawer>
+
+      {/* New-bill wizard */}
+      <HrfinWizardModal open={wizOpen} title="New bill" stepCount={3} activeStep={wizStep} onClose={() => setWizOpen(false)}
+        onBack={wizStep > 0 ? () => setWizStep(s => s - 1) : undefined}
+        primaryLabel={wizStep === 2 ? 'Create bill' : 'Next'} primaryLoading={createBill.isPending}
+        onPrimary={() => (wizStep === 2 ? void submitWizard() : setWizStep(s => s + 1))}>
+        {wizStep === 0 && (
+          <>
+            <div class="hrfin-field"><label>Vendor</label><select class="hrfin-input" value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: (e.target as HTMLSelectElement).value }))}><option value="">Select a vendor…</option>{(vendorsQ.data ?? []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
+            <div class="hrfin-field"><label>Bill date</label><input class="hrfin-input" type="date" value={form.billDate} onInput={e => setForm(f => ({ ...f, billDate: (e.target as HTMLInputElement).value }))} /></div>
+            <div class="hrfin-field"><label>Due date</label><input class="hrfin-input" type="date" value={form.dueDate} onInput={e => setForm(f => ({ ...f, dueDate: (e.target as HTMLInputElement).value }))} /></div>
+          </>
+        )}
+        {wizStep === 1 && (
+          <>
+            <div class="hrfin-field"><label>Line description</label><input class="hrfin-input" value={form.lineDesc} placeholder="e.g. Bulk cement" onInput={e => setForm(f => ({ ...f, lineDesc: (e.target as HTMLInputElement).value }))} /></div>
+            <div class="hrfin-field"><label>GL account code</label><input class="hrfin-input" value={form.gl} onInput={e => setForm(f => ({ ...f, gl: (e.target as HTMLInputElement).value }))} /></div>
+            <div class="hrfin-field"><label>Amount</label><input class="hrfin-input" type="number" value={form.lineAmount} placeholder="0.00" onInput={e => setForm(f => ({ ...f, lineAmount: (e.target as HTMLInputElement).value }))} /></div>
+          </>
+        )}
+        {wizStep === 2 && (
+          <>
+            <div class="hrfin-sod-note"><HrfinIcon name="alert" /> On create this writes an audit record and emits an app event; submit it for approval from the bill drawer.</div>
+            <div class="hrfin-metric-list"><div class="hrfin-metric-row"><span>Vendor</span><b>{(vendorsQ.data ?? []).find(v => v.id === form.vendorId)?.name ?? '—'}</b></div><div class="hrfin-metric-row"><span>Total</span><b>{money(Number(form.lineAmount) || 0)}</b></div></div>
+          </>
+        )}
+      </HrfinWizardModal>
+
+      {/* Record-payment modal */}
+      <HrfinWizardModal open={!!payFor} title="Record payment" stepCount={1} activeStep={0} onClose={() => { setPayFor(null); setPayAmount(''); }} primaryLabel="Record payment" primaryLoading={recordPayment.isPending} onPrimary={() => void doPay()}>
+        {payFor && (
+          <>
+            <div class="hrfin-metric-row"><span>{payFor.billNo} · {payFor.vendorName}</span><b>Balance {money(payFor.balance)}</b></div>
+            <div class="hrfin-field" style={{ marginTop: 12 }}><label>Amount</label><input class="hrfin-input" type="number" value={payAmount} onInput={e => setPayAmount((e.target as HTMLInputElement).value)} /></div>
+          </>
+        )}
+      </HrfinWizardModal>
+    </div>
+  );
+}

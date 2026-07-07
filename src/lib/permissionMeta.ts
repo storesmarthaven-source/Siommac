@@ -987,6 +987,32 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'ui.widgets.packages.view':   { module: 'System', group: 'Widgets', label: 'View Widget Packages', description: 'Read installed widget packages (needed to render boards).', risk: 'low' },
   'ui.widgets.packages.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Packages', description: 'Install or uninstall org-wide widget packages.', risk: 'medium' },
 
+  // ── Finance Overview + Accounts Payable ──────────────────────────────────────
+  'finance.overview.view': {
+    module: 'Finance', group: 'Overview',
+    label: 'View Finance Overview',
+    description: 'View the finance command dashboard (spend, approvals, budgets, deadlines).',
+    risk: 'low',
+  },
+  'finance.ap.view': {
+    module: 'Finance', group: 'Accounts Payable',
+    label: 'View Accounts Payable',
+    description: 'View vendor bills, vendors, payments and the AP aging register.',
+    risk: 'low',
+  },
+  'finance.ap.manage': {
+    module: 'Finance', group: 'Accounts Payable',
+    label: 'Manage Accounts Payable',
+    description: 'Create and edit bills and vendors, submit bills for approval, and record payments.',
+    risk: 'medium',
+  },
+  'finance.ap.approve': {
+    module: 'Finance', group: 'Accounts Payable',
+    label: 'Approve Bills',
+    description: 'Approve, reject or void submitted bills. Segregation of duties: creator cannot approve their own bill.',
+    risk: 'medium',
+  },
+
   // ── Finance statutory configuration ──────────────────────────────────────────
   'finance.statutory.view': {
     module: 'Finance', group: 'Statutory Configuration',

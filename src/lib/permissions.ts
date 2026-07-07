@@ -459,6 +459,12 @@ export const PERMISSION_KEYS = [
   'finance.disbursement.view',        // view disbursement register and lines
   'finance.disbursement.manage',      // create disbursements from payroll runs + submit for approval
   'finance.disbursement.approve',     // approve / generate bank file / mark paid (SoD: creator cannot approve)
+  // -- Finance Overview dashboard ------------------------------------------------
+  'finance.overview.view',            // view the finance overview command dashboard
+  // -- Finance Accounts Payable (vendor bills → approval → payment) --------------
+  'finance.ap.view',                  // view AP bills, vendors, payments, aging
+  'finance.ap.manage',                // create/edit bills + vendors, record payments
+  'finance.ap.approve',               // approve/reject/void bills (SoD: creator cannot approve)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -560,6 +566,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.bank_accounts.view',
     'finance.disbursement.view',
     'finance.disbursement.manage',
+    // Overview + Accounts Payable — staff: view + manage
+    'finance.overview.view',
+    'finance.ap.view',
+    'finance.ap.manage',
   ]),
   finance_manager: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
@@ -606,6 +616,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.disbursement.view',
     'finance.disbursement.manage',
     'finance.disbursement.approve',
+    // Overview + Accounts Payable — manager: full (incl. approve)
+    'finance.overview.view',
+    'finance.ap.view',
+    'finance.ap.manage',
+    'finance.ap.approve',
   ]),
 
   employee: new Set<PermissionKey>([
@@ -861,6 +876,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Bank Accounts & Disbursements (F2) -- admin: all
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
+    // Overview + Accounts Payable -- admin: all
+    'finance.overview.view', 'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -1038,6 +1055,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Bank Accounts & Disbursements (F2) -- superadmin: all
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
+    // Overview + Accounts Payable -- superadmin: all
+    'finance.overview.view', 'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',
   ]),
 };
 
