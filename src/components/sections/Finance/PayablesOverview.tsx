@@ -16,11 +16,11 @@ import { openActionModal } from '@/components/common/actions';
 import {
   HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, DeadlineList, ActivityFeed,
   HrfinTable, HrfinPill, HrfinWizardModal, TrendArea, HorizontalBars, HrfinIcon,
-  Drawer, exportCsv,
+  exportCsv,
   type QuickAction, type HrfinColumn, type HrfinTone, type RowActionItem,
 } from '@ui';
 import {
-  useApBills, useApBillDetail, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
+  useApBills, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
   useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useVoidBill,
   type ApBill, type ApVendor,
 } from '@api/finance/accountsPayable';
@@ -30,6 +30,7 @@ import { ApVendorDrawer } from './ApVendorDrawer';
 import { ApRecordPaymentDialog } from './ApRecordPaymentDialog';
 import { ApStatusFilterMenu, BILL_STATUS_LABEL, type BillStatusFacet } from './ApStatusFilterMenu';
 import { ApAdvancedFilterPanel, countAdvFilters, type ApAdvFilters } from './ApAdvancedFilterPanel';
+import { ApBillDrawer } from './ApBillDrawer';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -81,7 +82,6 @@ export function PayablesOverview(): VNode {
   const railQ = useApBills({ pageSize: 100 });
   const vendorsQ = useApVendors();
   const paymentsQ = useApPayments();
-  const detail = useApBillDetail(drawerId);
 
   const createBill = useCreateBill();
   const submitBill = useSubmitBill();
@@ -263,39 +263,12 @@ export function PayablesOverview(): VNode {
         </aside>
       </section>
 
-      {/* Bill detail drawer */}
-      <Drawer
-        open={!!drawerId} onClose={() => setDrawerId(null)} panelClass="hrfin"
-        title={detail.data?.bill.vendorName ?? 'Bill'} sub={detail.data ? `${detail.data.bill.billNo} · due ${fmtDue(detail.data.bill.dueDate)}` : ''}
-        foot={detail.data ? (
-          <div style={{ display: 'flex', gap: 9, width: '100%' }}>
-            {detail.data.bill.status === 'draft' && canManage && <button class="hrfin-action is-primary" onClick={() => doSubmit(detail.data!.bill)}>Submit</button>}
-            {detail.data.bill.status === 'submitted' && canApprove && <button class="hrfin-action is-primary" onClick={() => doApprove(detail.data!.bill)}>Approve</button>}
-            {detail.data.bill.status === 'submitted' && canApprove && <button class="hrfin-action is-danger" onClick={() => doReject(detail.data!.bill)}>Reject</button>}
-            {(detail.data.bill.status === 'approved' || detail.data.bill.status === 'partially_paid') && canManage && <button class="hrfin-action is-primary" onClick={() => openPay(detail.data!.bill)}>Record payment</button>}
-            {!['paid', 'void'].includes(detail.data.bill.status) && canApprove && <button class="hrfin-action" style={{ marginLeft: 'auto' }} onClick={() => doVoid(detail.data!.bill)}>Void</button>}
-          </div>
-        ) : undefined}
-      >
-        {detail.data && (
-          <div class="hrfin">
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
-              <strong style={{ fontSize: 28, fontWeight: 650, letterSpacing: '-.035em' }}>{money(detail.data.bill.totalAmount)}</strong>
-              <HrfinPill tone={billTone(detail.data.bill, today).tone}>{billTone(detail.data.bill, today).label}</HrfinPill>
-            </div>
-            <div class="hrfin-metric-list" style={{ marginBottom: 16 }}>
-              <div class="hrfin-metric-row"><span>Bill number</span><b>{detail.data.bill.billNo}</b></div>
-              <div class="hrfin-metric-row"><span>Due date</span><b>{fmtDue(detail.data.bill.dueDate)}</b></div>
-              <div class="hrfin-metric-row"><span>GL account</span><b>{detail.data.bill.glAccountCode ?? '—'}</b></div>
-              <div class="hrfin-metric-row"><span>Balance</span><b>{money(detail.data.bill.balance)}</b></div>
-            </div>
-            <h2 style={{ marginBottom: 10 }}>Line items</h2>
-            <div class="hrfin-metric-list">{detail.data.lines.map(l => <div class="hrfin-metric-row" key={l.id}><span>{l.description}</span><b>{money(l.amount)}</b></div>)}</div>
-            <h2 style={{ margin: '18px 0 10px' }}>Payments</h2>
-            {detail.data.payments.length === 0 ? <div class="hrfin-empty">No payments recorded.</div> : <div class="hrfin-metric-list">{detail.data.payments.map(p => <div class="hrfin-metric-row" key={p.id}><span>{p.method.toUpperCase()}{p.reference ? ` · ${p.reference}` : ''}</span><b>{money(p.amount)}</b></div>)}</div>}
-          </div>
-        )}
-      </Drawer>
+      {/* Bill detail drawer (tabbed) */}
+      <ApBillDrawer
+        billId={drawerId} open={!!drawerId} onClose={() => setDrawerId(null)}
+        canManage={canManage} canApprove={canApprove}
+        actions={{ onSubmit: doSubmit, onApprove: doApprove, onReject: doReject, onVoid: doVoid, onPay: openPay }}
+      />
 
       {/* New-bill wizard */}
       <HrfinWizardModal open={wizOpen} title="New bill" stepCount={3} activeStep={wizStep} onClose={() => setWizOpen(false)}
