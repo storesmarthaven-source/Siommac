@@ -1,15 +1,16 @@
-// src/ui/widgets/registry.test.ts — guards the self-registration: every registry.<name>.tsx
-// package must be auto-collected via import.meta.glob (a broken glob would silently empty the
-// library). Also asserts the format invariants (unique ids, page filtering).
+// src/ui/widgets/registry.test.ts — guards the registry mechanics (self-registration via
+// import.meta.glob, uniqueness, page filtering) and the declarative adapter, independent
+// of any specific widget content. The catalogue was cleared for a rebuild (no
+// registry.<name>.tsx content packages exist yet) — these tests hold trivially for an
+// empty registry and will keep holding once real widgets are authored again.
 import { describe, it, expect } from 'vitest';
-import { WIDGET_REGISTRY, findWidgetDef, getWidgetsForPage } from './registry';
+import { WIDGET_REGISTRY, getWidgetsForPage } from './registry';
+import { declarativeToWidgetDef } from './declarative/declarativeToWidgetDef';
+import type { DeclarativeWidgetSpec } from './declarative/types';
 
-describe('widget registry self-registration', () => {
-  it('auto-collects every registry.<name>.tsx package', () => {
-    expect(WIDGET_REGISTRY.length).toBeGreaterThan(0);
-    // a widget from registry.hr.tsx AND one from registry.hrEmployees.tsx → both packages loaded
-    expect(findWidgetDef('hr.onboarding.activeCases')).toBeTruthy();
-    expect(findWidgetDef('hr.employees.activeWorkforce')).toBeTruthy();
+describe('widget registry mechanics', () => {
+  it('collects widgets via import.meta.glob into an array', () => {
+    expect(Array.isArray(WIDGET_REGISTRY)).toBe(true);
   });
 
   it('has unique widget ids', () => {
@@ -18,19 +19,31 @@ describe('widget registry self-registration', () => {
   });
 
   it('filters widgets by supported page', () => {
-    const onb = getWidgetsForPage('hr.onboarding.overview').map(w => w.id);
-    expect(onb).toContain('hr.onboarding.activeCases');
-    expect(onb).not.toContain('hr.employees.activeWorkforce');
+    // No widgets declare this page (catalogue is empty), so the filter must return [].
+    expect(getWidgetsForPage('hr.employees.overview')).toEqual([]);
   });
 });
 
-describe('declarative widgets', () => {
-  it('registers declarative sample widgets via the adapter', () => {
-    // proves declarativeToWidgetDef produces valid WidgetDefs that self-register
-    expect(findWidgetDef('custom.sample.metric')).toBeTruthy();
-    const list = findWidgetDef('custom.sample.list');
-    expect(list).toBeTruthy();
-    expect(list?.chrome).toBe('standard'); // list = framed
-    expect(findWidgetDef('custom.sample.metric')?.chrome).toBe('none'); // metric brings its own card
+describe('declarative adapter', () => {
+  const spec: DeclarativeWidgetSpec = {
+    id: 'test.declarative.metric',
+    title: 'Test Metric', description: 'Adapter unit test fixture.', icon: 'fa-gauge',
+    category: 'Test', tags: ['test'],
+    defaultSize: 'compact', allowedSizes: ['compact', 'standard'],
+    view: { kind: 'metric', metric: 42, supporting: 'test value' },
+  };
+
+  it('produces a valid WidgetDef from a declarative spec', () => {
+    const def = declarativeToWidgetDef(spec);
+    expect(def.id).toBe(spec.id);
+    expect(def.defaultSize).toBe('compact');
+    expect(def.allowedSizes.map(s => s.key)).toEqual(['compact', 'standard']);
+    expect(typeof def.render).toBe('function');
+  });
+
+  it('picks chrome by view kind (metric brings its own card, list is framed)', () => {
+    expect(declarativeToWidgetDef(spec).chrome).toBe('none');
+    const listSpec: DeclarativeWidgetSpec = { ...spec, id: 'test.declarative.list', view: { kind: 'list', rows: [] } };
+    expect(declarativeToWidgetDef(listSpec).chrome).toBe('standard');
   });
 });

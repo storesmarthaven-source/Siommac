@@ -19,6 +19,10 @@ export interface DocumentRequirement {
   reminderDays: number[];
   minConfidentiality: string | null;
   isActive: boolean;
+  /** When true, a missing/expired doc blocks onboarding case launch. Added in 20260707100000. */
+  blocksOnboarding: boolean;
+  /** When true, HR may waive this requirement with a written reason. Added in 20260707100000. */
+  canWaive: boolean;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -35,6 +39,8 @@ interface RawRequirement {
   reminder_days: number[];
   min_confidentiality: string | null;
   is_active: boolean;
+  blocks_onboarding: boolean | null;
+  can_waive: boolean | null;
   created_by: string | null;
   created_at: string;
   updated_at: string | null;
@@ -52,6 +58,8 @@ function toDto(r: RawRequirement): DocumentRequirement {
     reminderDays: r.reminder_days ?? [30, 7, 0],
     minConfidentiality: r.min_confidentiality,
     isActive: r.is_active,
+    blocksOnboarding: r.blocks_onboarding ?? false,
+    canWaive: r.can_waive ?? false,
     createdBy: r.created_by,
     createdAt: r.created_at,
     updatedAt: r.updated_at,

@@ -35,7 +35,7 @@ import { ProfileDrawer } from './ProfileDrawer';
 import { CreateEmployeeWizard } from './CreateEmployeeWizard';
 import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, DocumentDialog, StatutoryDialog } from './ActionDialogs';
 import { ImportWizard } from './ImportWizard';
-import { OnboardingWizard } from './OnboardingWizard';
+import { StartOnboardingWizard } from './StartOnboardingWizard';
 import { TableSkeleton, Button } from '@ui';
 import { AppTopBar } from '@shared/AppTopBar';
 import {
@@ -304,16 +304,15 @@ function pageWindow(cur: number, total: number): (number | '…')[] {
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
+// The widget catalogue was cleared for a rebuild (no KPI/insight widgets left) — the
+// default board is just the page-local register until new widgets are authored and
+// added via the Widget Library.
 function defaultEmployeeLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst('hr.employees.activeWorkforce', 0, 0, 3, 3, 'compact'),
-        defInst('hr.employees.workQueue',       3, 0, 3, 3, 'compact'),
-        defInst('hr.employees.readiness',       6, 0, 3, 3, 'compact'),
-        defInst('hr.employees.exceptions',      9, 0, 3, 3, 'compact'),
-        defInst('hr.employees.register',        0, 3, 12, 9, 'hero'),
+        defInst('hr.employees.register', 0, 0, 12, 9, 'hero'),
       ],
     },
   };
@@ -548,6 +547,11 @@ export function EmployeeMaster(): VNode {
     'hr.employees.register': { render: renderRegister, chrome: 'none', title: 'Employee Register' },
   };
 
+  // Start Onboarding is a full-PAGE wizard now (not a modal) — take over the view when launched.
+  if (modal?.type === 'onboarding') {
+    return <StartOnboardingWizard employeeId={modal.employeeId} onBack={() => setModal(null)} />;
+  }
+
   return (
     <>
       {/* Navy top bar (search + profile), full width; the page title + subtext sit in a
@@ -602,7 +606,6 @@ export function EmployeeMaster(): VNode {
       {/* Modals */}
       {modal?.type === 'create'   && <CreateEmployeeWizard onClose={() => setModal(null)} onToast={notify} />}
       {modal?.type === 'import'   && <ImportWizard onClose={() => setModal(null)} onToast={notify} />}
-      {modal?.type === 'onboarding' && <OnboardingWizard onClose={() => setModal(null)} onToast={notify} employeeId={modal.employeeId} />}
       {modal?.type === 'contact'  && modal.employeeId && <ContactDialog      employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
       {modal?.type === 'status'   && modal.employeeId && <StatusDialog       employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}
       {modal?.type === 'offboard' && modal.employeeId && <OffboardingDialog  employeeId={modal.employeeId} onClose={() => setModal(null)} onToast={notify} />}

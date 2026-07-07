@@ -39,9 +39,12 @@ export interface AppTopBarProps {
   crumbs?: string[];
   /** Meta shown as chips in the footer strip, alongside the breadcrumb. */
   meta?: PageMetaChip[];
+  /** A module sub-nav rendered in the footer strip (left side). Style its buttons with
+   *  `.app-topbar-nav` / `.app-topbar-nav-btn` so they sit on the dark footer band. */
+  nav?: VNode;
 }
 
-export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [] }: AppTopBarProps): VNode {
+export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [], nav }: AppTopBarProps): VNode {
   // Breadcrumb trail ends at the current page (title) — the footer strip is now
   // the dedicated "where am I" row, so it repeats the title as the final, current segment.
   const trail = [module, ...crumbs, title].filter(Boolean) as string[];
@@ -73,8 +76,8 @@ export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [] }: 
         <div class="app-topbar-pill"><ProfilePill iconsFirst /></div>
       </div>
 
-      {(trail.length > 0 || meta.length > 0) && (
-        <div class="app-topbar-footer">
+      {(nav || trail.length > 0 || meta.length > 0) && (
+        <div class={`app-topbar-footer${nav ? ' has-nav' : ''}`}>
           {trail.length > 0 && (
             <div class="app-topbar-crumb">
               {trail.map((c, i) => (
@@ -85,7 +88,8 @@ export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [] }: 
               ))}
             </div>
           )}
-          <div class="app-topbar-footer-spacer" />
+          {nav}
+          {!nav && <div class="app-topbar-footer-spacer" />}
           {meta.length > 0 && (
             <div class="app-topbar-meta">
               {meta.map((m, i) => (

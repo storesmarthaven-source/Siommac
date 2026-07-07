@@ -12,6 +12,7 @@
  */
 import type { WidgetDef } from './types';
 import { getRuntimeWidgets } from './runtimeRegistry';
+import { validateWidgetDef } from './validation';
 
 // Eager glob → { './registry.hr.tsx': { widgets }, './registry.hrEmployees.tsx': { widgets }, … }.
 // Each package file exports `widgets: WidgetDef[]` (multiple widgets in one file).
@@ -32,6 +33,14 @@ function collectWidgets(): WidgetDef[] {
         if (import.meta.env.DEV) console.warn(`[widgets] duplicate widget id "${w.id}" (${path}) — ignored.`);
         continue;
       }
+      const validation = validateWidgetDef(w);
+      if (import.meta.env.DEV) {
+        for (const issue of validation.issues) {
+          const log = issue.level === 'error' ? console.error : console.warn;
+          log(`[widgets] ${path} "${w.id}": ${issue.code} — ${issue.message}`);
+        }
+      }
+      if (!validation.ok) continue; // hard errors (no render/id/sizes) — excluded, same as a duplicate id
       seen.add(w.id);
       out.push(w);
     }

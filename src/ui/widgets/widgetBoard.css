@@ -39,15 +39,35 @@
 .wbi-tb-slide.open { max-width: 680px; opacity: 1; transform: translateX(0); pointer-events: auto; }
 
 .wbi-zone-wrap { position: relative; }
-.wbi-zone.grid-stack { background: transparent; }
+.wbi-zone.react-grid-layout { background: transparent; }
 
-/* gridstack content cell — let the frame own the visuals */
-.wbi-zone .grid-stack-item-content {
-  inset: 0;
-  overflow: visible;
-  background: transparent;
-  border: none;
-}
+/* Each RGL cell (`.react-grid-item`, absolutely positioned + sized inline by RGL) hosts one
+   `.wbi-item` wrapper → one WidgetFrame. The frame owns the visuals; the wrapper just fills the
+   cell so a framed widget can scroll internally (`.wbi-body { overflow:auto }`, below). */
+.wbi-item { height: 100%; }
+.wbi-item > * { height: 100%; }
+
+/* ── fluid widget base (the code-first authoring contract) ───────────────────────
+   A widget's ROOT gets `.wbi-widget`: it fills its tile and becomes a CONTAINER, so the
+   widget adapts to ITS OWN width via `@container` queries (never the viewport / fixed px /
+   page-ancestry selectors). See docs/WIDGET_AUTHORING_GUIDE.md. */
+.wbi-widget { block-size: 100%; inline-size: 100%; container-type: inline-size; }
+
+/* Lift a tile above its neighbours while it's being dragged/resized. */
+.wbi-zone .react-grid-item.react-draggable-dragging,
+.wbi-zone .react-grid-item.resizing { z-index: 5; }
+
+/* ── size-to-content tiles (WidgetDef/LocalWidget.sizeToContent) ─────────────────
+   WidgetBoardZone tags these `.wbi-fit`, measures the card's NATURAL height (ResizeObserver on
+   the card) and sets the tile's RGL row-span to hug it. For the measurement to work BOTH ways
+   (grow AND shrink) the wrapper chain must be natural-height — height:100% would lock the
+   measured height to the current tile height, so a tile could never shrink — and the tile clips
+   (no transient scrollbar during the one-frame refit). */
+.wbi-item.wbi-fit { overflow: hidden; }
+.wbi-item.wbi-fit > *,
+.wbi-item.wbi-fit .wbi-bare,
+.wbi-item.wbi-fit .wbi-bare-body,
+.wbi-item.wbi-fit .wbi-bare-body > * { height: auto; }
 
 /* ── widget frame ─────────────────────────────────────────────────────────── */
 .wbi-frame {
@@ -145,10 +165,23 @@
 .wbi-frame--preview.wbi-drag, .wbi-bare--preview.wbi-drag { cursor: grab; }
 .wbi-frame--preview.wbi-drag:active, .wbi-bare--preview.wbi-drag:active { cursor: grabbing; }
 
-/* Hide gridstack's default resize-handle glyphs (the diagonal double-arrows it draws on each
-   corner). Resize still works on every edge/corner — the cursor changes over each handle zone;
-   we just don't show the arrow icons. */
-.wbi-zone .grid-stack-item > .ui-resizable-handle { background-image: none !important; }
+/* Resize handle: react-resizable's stock SE-corner handle is the affordance users look for.
+   Keep it, just ensure it sits above the card content and only shows on hover/interaction so
+   it doesn't clutter a static board. On size-to-content tiles a drag still applies its WIDTH
+   change — height simply re-fits. */
+.wbi-zone .react-resizable-handle { z-index: 3; opacity: 0; transition: opacity .12s ease; }
+.wbi-zone .react-grid-item:hover > .react-resizable-handle,
+.wbi-zone .react-grid-item.resizing > .react-resizable-handle { opacity: .85; }
+
+/* Drag/resize TARGET placeholder — RGL's default is a translucent red box (reads as an error);
+   restyle it as a soft dashed drop-zone in the accent colour, rounded like the cards it stands
+   in for. */
+.wbi-zone .react-grid-placeholder {
+  background: rgba(249, 115, 22, .06) !important;
+  border: 1.5px dashed var(--cds-accent, #f97316) !important;
+  border-radius: 14px !important;
+  opacity: 1 !important;
+}
 
 /* ── host-page preview banner (preview-on-board mode) ─────────────────────── */
 .wmock-preview-banner {

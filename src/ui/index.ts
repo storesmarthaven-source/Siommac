@@ -42,6 +42,7 @@ export { ProgressBar, type ProgressBarProps } from './charts/ProgressBar';
 export { Button, type ButtonVariant } from './components/Button';
 export { Toolbar, SearchInput, FilterSelect } from './components/Toolbar';
 export { Field, TextInput, SelectInput, TextareaInput, FormGrid } from './components/Field';
+export { PersonSearchSelect, type PersonSearchOption, type PersonSearchSelectProps } from './components/PersonSearchSelect';
 
 // ── Loading placeholders (cold-path only) ──
 export {

@@ -1,0 +1,864 @@
+@layer sections {
+  /* v64: align the active employee identity with the left/right priority buttons without clipping the text. */
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-profile {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-profile-nav {
+    position: static !important;
+    grid-column: 3 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    margin-left: 0 !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+    align-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person strong, .siomac-onboarding-overview-mockup-v2 .obv-critical-person em {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person strong {
+    line-height: 1.12 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person em {
+    line-height: 1.22 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-nav {
+    flex: 0 0 32px !important;
+  }
+
+  @media (max-width: 520px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-profile {
+      grid-template-columns: auto minmax(0, 1fr) auto !important;
+      gap: 10px !important;
+      padding: 11px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-profile-nav {
+      grid-column: 3 !important;
+      width: auto !important;
+      justify-content: flex-end !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v67: keep the right rail smaller than the original, but restore enough width for the activation side card. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout {
+    grid-template-columns: minmax(300px, .82fr) minmax(620px, 1.7fr) 320px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack {
+    width: 320px !important;
+    max-width: 320px !important;
+    justify-self: end !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-health-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-habits-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-deadlines-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-onboarding-mini-widget {
+    width: 320px !important;
+    max-width: 320px !important;
+    justify-self: end !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-health-card.obv-activation-side-card {
+    min-width: 320px !important;
+  }
+
+  @media (max-width: 1280px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout {
+      grid-template-columns: minmax(280px, .86fr) minmax(560px, 1.42fr) 320px !important;
+    }
+  }
+
+  @media (max-width: 1120px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-health-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-habits-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-deadlines-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-onboarding-mini-widget, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-health-card.obv-activation-side-card {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      justify-self: stretch !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v68: Recent Activity rebuilt as the rounded vertical day timeline from the uploaded reference. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-activity-day-card {
+    width: 320px !important;
+    max-width: 320px !important;
+    min-width: 0 !important;
+    padding: 14px !important;
+    border: 1px solid #e5eaf1 !important;
+    border-radius: 26px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 20px rgb(13 27 61 / 3.5%) !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head {
+    margin-bottom: 12px !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head h2 {
+    margin: 0 !important;
+    color: #151a24 !important;
+    font-size: 18px !important;
+    line-height: 1.1 !important;
+    font-weight: 618 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head p {
+    margin: 4px 0 0 !important;
+    color: #7b8491 !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    font-weight: 545 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head .obv-health-viewall {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    border: 1px solid #e3e7ef !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: #212529 !important;
+    font-size: 12px !important;
+    font-weight: 564 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-green { --activity-color: #5ac66b; --activity-soft: #eef8f0; }
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-blue { --activity-color: #46b9e8; --activity-soft: #eef8fe; }
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-amber { --activity-color: #f09626; --activity-soft: #fff6e9; }
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-purple { --activity-color: #8d48dd; --activity-soft: #f5edff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-red { --activity-color: #e74d3d; --activity-soft: #fff0ee; }
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card .activity-slate { --activity-color: #64748b; --activity-soft: #f1f5f9; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline {
+    position: relative !important;
+    margin: 0 !important;
+    padding: 6px 8px 8px 4px !important;
+    border: 0 !important;
+    border-radius: 24px !important;
+    background: #fafafa !important;
+    overflow-x: hidden !important;
+    /* Phase 2: show the first 3 full rows, scroll for the rest instead of growing forever.
+       Sized generously (row min-height 73px + item gap 17px + container padding, with
+       headroom for a wrapped title line) so a 4th row never peeks in half-cut. */
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 27px !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    width: 1.5px !important;
+    border-radius: 999px !important;
+    background: #e4e4e4 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    align-items: start !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1 !important;
+    box-shadow: none !important;
+    appearance: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item + .obv-activity-day-item {
+    margin-top: 17px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon-wrap {
+    width: 52px !important;
+    min-width: 52px !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding-top: 3px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: var(--activity-color) !important;
+    display: grid !important;
+    place-items: center !important;
+    box-shadow: 0 6px 14px rgba(17, 24, 39, .055) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+    stroke-width: 2.55 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-content {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-time {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: 23px !important;
+    color: #7f7f7f !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: 445 !important;
+    letter-spacing: -.01em !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-time time {
+    color: #7d7d7d !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: 445 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status {
+    width: 17px !important;
+    height: 17px !important;
+    border-radius: 999px !important;
+    color: #fff !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    flex: 0 0 17px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status svg {
+    width: 10px !important;
+    height: 10px !important;
+    stroke-width: 3 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status.status-complete {
+    background: #5ec66d !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status.status-pending {
+    background: #f09626 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row {
+    width: 100% !important;
+    min-height: 73px !important;
+    padding: 16px 18px !important;
+    border: 0 !important;
+    border-radius: 25px !important;
+    background: #eeeeee !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 7px !important;
+    box-shadow: none !important;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item.is-current .obv-activity-day-card-row {
+    background: #fff !important;
+    box-shadow: 0 14px 26px rgba(17, 24, 39, .09) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item:hover .obv-activity-day-card-row {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 13px 25px rgba(17, 24, 39, .08) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row strong {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #0a0a0a !important;
+    font-size: 16px !important;
+    line-height: 1.05 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row span {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #858585 !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    font-weight: 455 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  @media (max-width: 1120px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-activity-day-card {
+      width: 100% !important;
+      max-width: none !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline {
+      padding-right: 5px !important;
+      padding-left: 0 !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item {
+      grid-template-columns: 45px minmax(0, 1fr) !important;
+      gap: 7px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon-wrap {
+      width: 45px !important;
+      min-width: 45px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon {
+      width: 38px !important;
+      height: 38px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline::before {
+      left: 22px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row {
+      border-radius: 22px !important;
+      padding: 15px !important;
+    }
+  }
+}
+
+
+@layer sections {
+  /* v69: compact Recent Activity timeline with onboarding-specific icons. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-activity-day-card {
+    padding: 12px !important;
+    border-radius: 22px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head {
+    margin-bottom: 9px !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head h2 {
+    font-size: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head p {
+    margin-top: 3px !important;
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-head .obv-health-viewall {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0 10px !important;
+    border-radius: 13px !important;
+    font-size: 11.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline {
+    padding: 4px 7px 7px 2px !important;
+    border-radius: 20px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline::before {
+    left: 22px !important;
+    top: 39px !important;
+    bottom: 42px !important;
+    width: 1px !important;
+    background: #e5e7eb !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    gap: 7px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item + .obv-activity-day-item {
+    margin-top: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon-wrap {
+    width: 42px !important;
+    min-width: 42px !important;
+    padding-top: 2px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon {
+    width: 32px !important;
+    height: 32px !important;
+    box-shadow: 0 4px 10px rgba(17, 24, 39, .045) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon svg {
+    width: 14.5px !important;
+    height: 14.5px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-content {
+    gap: 5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-time {
+    min-height: 18px !important;
+    gap: 6px !important;
+    font-size: 12.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-time time {
+    font-size: 12.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status {
+    width: 14px !important;
+    height: 14px !important;
+    flex-basis: 14px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-status svg {
+    width: 8.5px !important;
+    height: 8.5px !important;
+    stroke-width: 3.2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row {
+    min-height: 54px !important;
+    padding: 11px 13px !important;
+    border-radius: 19px !important;
+    gap: 5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item.is-current .obv-activity-day-card-row {
+    box-shadow: 0 10px 18px rgba(17, 24, 39, .07) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item:hover .obv-activity-day-card-row {
+    box-shadow: 0 10px 18px rgba(17, 24, 39, .065) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row strong {
+    font-size: 13px !important;
+    line-height: 1.08 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row span {
+    font-size: 10.8px !important;
+    line-height: 1.12 !important;
+  }
+
+  @media (max-width: 420px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item {
+      grid-template-columns: 39px minmax(0, 1fr) !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon-wrap {
+      width: 39px !important;
+      min-width: 39px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon {
+      width: 30px !important;
+      height: 30px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activity-day-timeline::before {
+      left: 20px !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v70: move Blocked Cases into the right rail, restore center order, and tighten activity timeline behavior. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-blocked-card {
+    width: 320px !important;
+    max-width: 320px !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    padding: 14px !important;
+    border: 1px solid #e3e9f1 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 20px rgb(13 27 61 / 3.5%) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-blocked-condensed-card {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-head {
+    align-items: center !important;
+    margin-bottom: 10px !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-title-group {
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-title-group h2 {
+    font-size: 16px !important;
+    line-height: 1.1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions {
+    gap: 6px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions .obv-health-circle-btn {
+    width: 29px !important;
+    height: 29px !important;
+    border-radius: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions .obv-health-viewall {
+    height: 29px !important;
+    min-height: 29px !important;
+    padding: 0 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-list {
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-item {
+    min-height: 0 !important;
+    padding: 11px !important;
+    border-radius: 15px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-copy strong {
+    font-size: 11.5px !important;
+    line-height: 1.12 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-copy p, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-owner, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-due {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-activity-day-card {
+    width: 320px !important;
+    max-width: 320px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item {
+    align-items: start !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-icon-wrap {
+    padding-top: 0 !important;
+    align-self: start !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-content {
+    align-self: start !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-time {
+    min-height: 32px !important;
+    align-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-card-row {
+    margin-top: 0 !important;
+    transition: background .18s ease !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item:hover .obv-activity-day-card-row {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item.is-current .obv-activity-day-card-row {
+    box-shadow: 0 10px 18px rgba(17, 24, 39, .07) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-day-item.is-current:hover .obv-activity-day-card-row {
+    box-shadow: 0 10px 18px rgba(17, 24, 39, .07) !important;
+  }
+
+  @media (max-width: 1120px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-blocked-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-activity-day-card {
+      width: 100% !important;
+      max-width: none !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v71: keep the requested layout moves without redesigning Blocked Cases. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    justify-self: stretch !important;
+    padding: 14px 15px !important;
+    border-radius: 22px !important;
+    box-sizing: border-box !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-top {
+    margin-bottom: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-top h2 {
+    font-size: 19px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-add-task-btn {
+    height: 36px !important;
+    padding: 0 12px !important;
+    border-radius: 11px !important;
+    font-size: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-days {
+    grid-template-columns: 32px repeat(4, minmax(0, 1fr)) 32px !important;
+    gap: 4px !important;
+    padding: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-day:nth-of-type(n+6) {
+    display: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-day {
+    padding: 5px 0 !important;
+    border-radius: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-day span {
+    font-size: 10px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-day strong {
+    font-size: 13px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-col {
+    gap: 6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-row {
+    padding: 4px 0 !important;
+    gap: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-icon-glyph svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-copy strong {
+    font-size: 12px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-copy span {
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card .obv-habit-done {
+    display: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    padding: 18px !important;
+    border-radius: 24px !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card .obv-deadline-calendar {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card .obv-deadline-calendar .obv-appointments-day {
+    display: grid !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card .obv-deadline-appointment-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack > .obv-blocked-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 190px !important;
+    height: auto !important;
+    justify-self: stretch !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+    background: #f7f7f7 !important;
+    border: 1px solid #e3e9f1 !important;
+    box-shadow: 0 8px 20px rgb(13 27 61 / 3.5%) !important;
+    box-sizing: border-box !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-head {
+    align-items: center !important;
+    margin-bottom: 14px !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-title-group h2 {
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions {
+    gap: 7px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions .obv-health-circle-btn {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 13px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-nav-actions .obv-health-viewall {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0 12px !important;
+    border-radius: 13px !important;
+    font-size: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-list {
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-item {
+    min-height: 84px !important;
+    padding: 10px 11px 9px !important;
+    gap: 7px 10px !important;
+    border-radius: 15px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-copy strong {
+    font-size: 12.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-condensed-copy p {
+    margin-top: 3px !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-owner {
+    font-size: 10.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-due {
+    font-size: 10px !important;
+  }
+
+  @media (max-width: 1120px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-habits-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card {
+      grid-column: 1 !important;
+      grid-row: auto !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card .obv-deadline-calendar {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-deadlines-card .obv-deadline-appointment-list {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}
+

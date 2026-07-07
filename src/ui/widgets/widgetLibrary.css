@@ -46,7 +46,15 @@
 .wlib-head-copy p { margin: 5px 0 0; color: var(--wlib-muted); font-size: 13px; }
 .wlib-close { width: 40px; height: 40px; border: 1px solid var(--wlib-border); border-radius: 10px; background: var(--wlib-surface); color: var(--wlib-muted); cursor: pointer; }
 
-.wlib-filters { flex: 0 0 auto; padding: 14px 24px; border-bottom: 1px solid var(--wlib-border); background: var(--wlib-surface-soft); display: grid; grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(130px, .6fr)) auto; gap: 12px; align-items: center; }
+.wlib-filters { flex: 0 0 auto; padding: 14px 24px; border-bottom: 1px solid var(--wlib-border); background: var(--wlib-surface-soft); }
+.wlib-filters-top { display: flex; align-items: center; gap: 12px; }
+.wlib-search { flex: 1 1 auto; }
+/* module + category quick-filter chips (replaces the old select dropdowns) */
+.wlib-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.wlib-chip { height: 30px; padding: 0 12px; border: 1px solid var(--wlib-border); background: var(--wlib-surface); color: var(--wlib-muted); border-radius: 999px; font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: border-color .12s ease, color .12s ease, background .12s ease; }
+.wlib-chip:hover { border-color: #c6d7f4; color: var(--wlib-text); }
+.wlib-chip.on { border-color: #cfe0ff; background: var(--wlib-primary-soft); color: var(--wlib-primary); }
+.wlib-chip-sep { width: 1px; align-self: stretch; min-height: 20px; background: var(--wlib-border); margin: 0 4px; }
 .wlib-control { height: 40px; border: 1px solid var(--wlib-border); background: var(--wlib-surface); border-radius: 10px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--wlib-muted); min-width: 0; }
 .wlib-control input, .wlib-control select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--wlib-text); font: inherit; }
 
@@ -66,8 +74,56 @@
 .wlib-detail .hse-idrawer-cell strong { overflow-wrap: anywhere; }
 
 .wlib-body { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 420px; overflow: hidden; }
-.wlib-catalog { min-width: 0; overflow: auto; padding: 22px; background: var(--wlib-surface); }
+/* Left pane column: wraps the BundlesSection + WidgetCatalog in a single scrollable container. */
+.wlib-catalog-col { min-width: 0; overflow: auto; display: flex; flex-direction: column; background: var(--wlib-surface); }
+.wlib-catalog { min-width: 0; padding: 22px; background: var(--wlib-surface); }
 .wlib-detail { min-width: 0; overflow: auto; border-left: 1px solid var(--wlib-border); background: var(--wlib-surface); }
+
+/* ── Bundle cards ──────────────────────────────────────────────────────────── */
+/* A "bundle" is a curated FIRST-PARTY set of widgets (defined in bundles.ts).
+   Distinct from "packages" (third-party installable declarative sets uploaded
+   by admins via the Install package flow — see runtimeRegistry + widgetPackages). */
+
+.wlib-bundles { padding: 22px 22px 0; border-bottom: 1px solid var(--wlib-border-soft); margin-bottom: 0; }
+.wlib-bundles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  padding-bottom: 22px;
+}
+
+.wlib-bundle-card {
+  border: 1px solid var(--wlib-border);
+  border-radius: 14px;
+  background: var(--wlib-surface);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(16, 32, 61, .04), 0 6px 18px rgba(16, 32, 61, .05);
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.wlib-bundle-card:not(.disabled):hover {
+  border-color: #c6d7f4;
+  box-shadow: 0 1px 2px rgba(16, 32, 61, .05), 0 10px 24px rgba(16, 32, 61, .09);
+}
+.wlib-bundle-card.disabled { opacity: .7; }
+
+.wlib-bundle-top { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: start; gap: 12px; }
+.wlib-bundle-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--wlib-primary-soft); color: var(--wlib-primary);
+  flex: 0 0 auto; font-size: 16px;
+}
+.wlib-bundle-copy { min-width: 0; }
+.wlib-bundle-copy h4 { margin: 0; font-size: 13.5px; font-weight: 600; line-height: 1.3; color: var(--wlib-text); }
+.wlib-bundle-copy p  { margin: 4px 0 0; font-size: 11.5px; color: var(--wlib-muted); line-height: 1.4; overflow-wrap: anywhere; }
+
+.wlib-bundle-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.wlib-bundle-meta { font-size: 11.5px; color: var(--wlib-subtle); white-space: nowrap; }
+.wlib-bundle-all-added { color: var(--wlib-success); font-weight: 500; }
+.wlib-bundle-btn { height: 34px; padding: 0 12px; font-size: 12px; flex-shrink: 0; }
 
 .wlib-section { margin-bottom: 28px; }
 .wlib-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
@@ -87,6 +143,13 @@
 .wlib-tile.locked { opacity: .7; cursor: not-allowed; background: linear-gradient(180deg, var(--wlib-surface), var(--wlib-surface-muted)); }
 .wlib-tile.added { filter: grayscale(1); opacity: .6; cursor: default; }
 .wlib-tile.added:hover { border-color: var(--wlib-border); box-shadow: 0 1px 2px rgba(16,32,61,.04), 0 8px 24px rgba(16,32,61,.05); }
+/* subtle hover lift for selectable tiles */
+.wlib-tile:not(.locked):not(.added):hover { border-color: #c6d7f4; box-shadow: 0 1px 2px rgba(16,32,61,.05), 0 12px 28px rgba(16,32,61,.09); }
+/* multi-select checkbox (top-right of an addable tile) + checked highlight */
+.wlib-tile-check { position: absolute; top: 10px; right: 10px; z-index: 2; display: inline-flex; }
+.wlib-tile-check input { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--wlib-primary); }
+.wlib-tile.checked { border-color: var(--wlib-primary); box-shadow: 0 0 0 2px var(--wlib-primary-soft), 0 10px 26px rgba(16,32,61,.08); }
+.wlib-tile:not(.locked):not(.added) .wlib-tile-title { padding-right: 20px; }  /* keep the title clear of the checkbox */
 
 .wlib-tile-top { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: start; gap: 12px; }
 .wlib-tile-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--wlib-primary); background: var(--wlib-primary-soft); flex: 0 0 auto; }
@@ -192,6 +255,7 @@
 @media (max-width: 1180px) {
   .wlib-filters { grid-template-columns: 1fr 1fr; }
   .wlib-body { grid-template-columns: 1fr; overflow: auto; }
+  .wlib-catalog-col { overflow: unset; }
   .wlib-detail { border-left: 0; border-top: 1px solid var(--wlib-border); }
   .wlib-tile, .wlib-tile.size-compact, .wlib-tile.size-standard, .wlib-tile.size-wide, .wlib-tile.size-large, .wlib-tile.size-tall, .wlib-tile.size-hero { grid-column: span 6; }
 }
@@ -202,4 +266,5 @@
   .wlib-grid { grid-template-columns: 1fr; }
   .wlib-tile, .wlib-tile.size-compact, .wlib-tile.size-standard, .wlib-tile.size-wide, .wlib-tile.size-large, .wlib-tile.size-tall, .wlib-tile.size-hero { grid-column: 1; }
   .wlib-size-grid, .wlib-actions { grid-template-columns: 1fr; }
+  .wlib-bundles-grid { grid-template-columns: 1fr; }
 }

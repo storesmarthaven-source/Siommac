@@ -29,9 +29,10 @@ const slugify = (s: string): string => s.toLowerCase().trim().replace(/[^a-z0-9]
 
 export interface PackageTaskTemplate { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null; isBlocking: boolean; requiresEvidence: boolean; dependencyKeys: string[]; sortOrder: number }
 export interface PackageHandoffTemplate { handoffKey: string; targetModule: string; handoffType: string; payloadTemplate: Record<string, unknown> }
-export interface PackagePlan { id: string; key: string; label: string; status: string; tasks: PackageTaskTemplate[]; handoffs: PackageHandoffTemplate[] }
+export interface PackagePlan { id: string; key: string; label: string; status: string; probationDays: number | null; workerTypes: string[]; tasks: PackageTaskTemplate[]; handoffs: PackageHandoffTemplate[] }
 
-interface PkgDB { id: string; package_key: string; package_name: string; status: string }
+interface PkgDB { id: string; package_key: string; package_name: string; status: string; probation_days: number | null }
+interface PkgDBBase { id: string; package_key: string; package_name: string; status: string }
 interface TaskTplDB { task_key: string; task_title: string; owner_role: string; module_key: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; dependency_keys: unknown; sort_order: number }
 interface HandoffTplDB { handoff_key: string; target_module: string; handoff_type: string; payload_template: unknown }
 
@@ -40,14 +41,20 @@ const asStrArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x i
 
 /** The instantiation plan for a package, or null if it doesn't exist / is retired. */
 export async function loadPackagePlan(packageKey: string): Promise<PackagePlan | null> {
-  const { data: pkg } = await sb.from('hr_onboarding_packages').select('id, package_key, package_name, status').eq('package_key', packageKey).maybeSingle<PkgDB>();
+  const { data: pkg } = await sb.from('hr_onboarding_packages').select('id, package_key, package_name, status, worker_types').eq('package_key', packageKey).maybeSingle<Omit<PkgDB, 'probation_days'> & { worker_types: unknown }>();
   if (!pkg || pkg.status === 'retired') return null;
   const [{ data: tasks }, { data: handoffs }] = await Promise.all([
     sb.from('hr_onboarding_task_templates').select('task_key, task_title, owner_role, module_key, is_blocking, requires_evidence, dependency_keys, sort_order').eq('package_id', pkg.id).order('sort_order'),
     sb.from('hr_onboarding_handoff_templates').select('handoff_key, target_module, handoff_type, payload_template').eq('package_id', pkg.id).order('sort_order'),
   ]);
+  // probation_days is added by a later migration — fetch it separately so loadPackagePlan
+  // doesn't break if the column doesn't exist yet in the schema cache.
+  // supabase-js returns { data, error } (not a throw) on unknown columns; check error.
+  let probationDays: number | null = null;
+  { const { data: probRow, error: probErr } = await sb.from('hr_onboarding_packages').select('probation_days').eq('id', pkg.id).maybeSingle<{ probation_days: number | null }>();
+    if (!probErr) probationDays = probRow?.probation_days ?? null; }
   return {
-    id: pkg.id, key: pkg.package_key, label: pkg.package_name, status: pkg.status,
+    id: pkg.id, key: pkg.package_key, label: pkg.package_name, status: pkg.status, probationDays, workerTypes: asStrArr(pkg.worker_types),
     tasks: ((tasks ?? []) as TaskTplDB[]).map(t => ({
       taskKey: t.task_key, taskTitle: t.task_title, ownerRole: t.owner_role, moduleKey: t.module_key ?? null,
       isBlocking: !!t.is_blocking, requiresEvidence: !!t.requires_evidence, dependencyKeys: asStrArr(t.dependency_keys), sortOrder: t.sort_order,
@@ -66,6 +73,15 @@ export async function listPackageSummaries(includeRetired = false): Promise<Onbo
   const { data: pkgs } = await q;
   const list = (pkgs ?? []) as { id: string; package_key: string; package_name: string; description: string | null; status: string; worker_types: unknown; default_sla_days: number; default_owner_role: string | null; version_no: number }[];
   if (!list.length) return [];
+  // Fetch probation_days via a separate query so a missing column (pre-migration) returns
+  // gracefully (probationDays = null) rather than erroring the whole packages/list endpoint.
+  const probationMap = new Map<string, number | null>();
+  // probation_days is operator-applied: supabase-js returns an error tuple (not a throw)
+  // when the column is missing — check error explicitly and treat as all-null.
+  const { data: probRows, error: probErr } = await sb.from('hr_onboarding_packages').select('id, probation_days').in('id', list.map(p => p.id));
+  if (!probErr) {
+    for (const r of (probRows ?? []) as { id: string; probation_days: number | null }[]) probationMap.set(r.id, r.probation_days ?? null);
+  }
   const ids = list.map(p => p.id);
   const [{ data: tasks }, { data: handoffs }] = await Promise.all([
     sb.from('hr_onboarding_task_templates').select('package_id, owner_role, sort_order').in('package_id', ids).order('sort_order'),
@@ -83,7 +99,7 @@ export async function listPackageSummaries(includeRetired = false): Promise<Onbo
       id: p.id, key: p.package_key, label: p.package_name, description: p.description ?? null,
       status: (p.status as OnboardingPackageSummary['status']),
       owners: owners.join(', '), taskCount: roles.length, handoffCount: handoffCount.get(p.id) ?? 0,
-      workerTypes: asStrArr(p.worker_types), defaultSlaDays: p.default_sla_days, defaultOwnerRole: p.default_owner_role ?? null, versionNo: p.version_no,
+      workerTypes: asStrArr(p.worker_types), defaultSlaDays: p.default_sla_days, defaultOwnerRole: p.default_owner_role ?? null, versionNo: p.version_no, probationDays: probationMap.get(p.id) ?? null,
     };
   });
 }
@@ -123,6 +139,10 @@ export async function getPackageDetail(packageKey: string): Promise<OnboardingPa
     workerTypes: asStrArr(pkg.worker_types), defaultSlaDays: pkg.default_sla_days, defaultOwnerRole: pkg.default_owner_role ?? null,
     appliesToDepartments: asStrArr(pkg.applies_to_departments), appliesToSites: asStrArr(pkg.applies_to_sites),
     status: pkg.status as OnboardingPackageDetail['status'], versionNo: pkg.version_no,
+    probationDays: await (async () => {
+      const { data: r, error: probErr } = await sb.from('hr_onboarding_packages').select('probation_days').eq('id', pkg.id).maybeSingle<{ probation_days: number | null }>();
+      return (!probErr && r?.probation_days != null) ? r.probation_days : null;
+    })(),
     taskTemplates: ((tasks ?? []) as { id: string; task_key: string; task_title: string; owner_role: string; module_key: string | null; is_blocking: boolean | null; requires_evidence: boolean | null; dependency_keys: unknown; sort_order: number }[]).map(t => ({
       id: t.id, taskKey: t.task_key, taskTitle: t.task_title, ownerRole: t.owner_role, moduleKey: t.module_key ?? null,
       isBlocking: !!t.is_blocking, requiresEvidence: !!t.requires_evidence, dependencyKeys: asStrArr(t.dependency_keys), sortOrder: t.sort_order,
@@ -141,6 +161,7 @@ export async function createPackage(actorId: string, a: CreatePackageArgs): Prom
     package_key: key, package_name: a.label, description: a.description ?? null,
     worker_types: a.workerTypes ?? [], default_sla_days: a.defaultSlaDays ?? 10, default_owner_role: a.defaultOwnerRole ?? null,
     applies_to_departments: a.appliesToDepartments ?? [], applies_to_sites: a.appliesToSites ?? [],
+    ...(a.probationDays !== undefined ? { probation_days: a.probationDays } : {}),
     status: 'draft', created_by: actorId,
   }).select('id, package_key').single<{ id: string; package_key: string }>();
   if (error) {
@@ -158,6 +179,7 @@ export async function updatePackage(actorId: string, a: UpdatePackageArgs): Prom
   set('package_name', a.label); set('description', a.description);
   set('worker_types', a.workerTypes); set('default_sla_days', a.defaultSlaDays); set('default_owner_role', a.defaultOwnerRole);
   set('applies_to_departments', a.appliesToDepartments); set('applies_to_sites', a.appliesToSites);
+  set('probation_days', a.probationDays);
   const { error } = await sb.from('hr_onboarding_packages').update(patch).eq('id', a.id);
   if (error) throw err(500, error.message);
   void emitAppEvent({ eventType: 'onboarding.package.updated', sourceModule: 'hr', sourceEntityType: 'onboarding_package', sourceEntityId: a.id, actorUserId: actorId, severity: 'info', payload: { packageId: a.id } });

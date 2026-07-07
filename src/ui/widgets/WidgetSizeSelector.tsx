@@ -1,4 +1,4 @@
-// src/ui/widgets/WidgetSizeSelector.tsx — pick the GridStack size a widget is placed at.
+// src/ui/widgets/WidgetSizeSelector.tsx — pick the grid size a widget is placed at.
 import type { VNode } from 'preact';
 import type { WidgetDef, WidgetSizeKey } from './types';
 

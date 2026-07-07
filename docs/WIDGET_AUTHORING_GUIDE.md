@@ -1,9 +1,12 @@
 # Widget Authoring Guide — how to build a SIOMAC widget
 
-> The canonical recipe for adding a widget to the v2 library. A widget is one entry in a
+> The canonical recipe for adding a widget to the library. A widget is one entry in a
 > module's registry array (`src/ui/widgets/registry.<module>.tsx`). Working reference:
-> [`registry.hr.tsx`](../src/ui/widgets/registry.hr.tsx). Contract:
-> [`types.ts`](../src/ui/widgets/types.ts). System overview: [`WIDGET_LIBRARY_PLAN.md`](WIDGET_LIBRARY_PLAN.md).
+> [`registry.hrOnboarding.tsx`](../src/ui/widgets/registry.hrOnboarding.tsx). Contract:
+> [`types.ts`](../src/ui/widgets/types.ts).
+>
+> **Engine:** the board runs on **react-grid-layout** (Preact-native — layout is data, tiles are
+> normal children). A widget just returns its VNode; never touch the grid cell.
 
 ---
 
@@ -21,6 +24,57 @@ There is no generic data endpoint and `WidgetRenderProps` carries no `data`. Thi
 - `renderPreview` is a **separate, static thumbnail** for the catalogue/detail panel.
   It uses representative SAMPLE numbers and calls **no hooks**. It is clearly a preview,
   never presented as live data.
+
+---
+
+## The presentation model you must follow: FLUID + ANIMATED (code-first contract)
+
+Every first-party widget is a Preact **code widget** built to ONE contract. (Declarative /
+sandboxed-JS widgets exist only as the installable *third-party* path — see the end of this doc.)
+
+**Fluid — the widget adapts to its TILE, not the page.** A ported fixed-layout card that hard-codes
+widths or hangs its styling off page-ancestry selectors (`.some-page-grid > .card`) *squeezes* when
+resized and is the #1 source of board bugs. Instead:
+
+1. Put `class="wbi-widget"` on your widget's ROOT — it fills the tile and becomes a **container**
+   (`container-type: inline-size`).
+2. Adapt with **`@container` queries** (respond to the tile's own width, never the viewport or a fixed
+   px breakpoint), and lay out with fluid primitives — `%`, `minmax()`, `clamp()`, `auto-fit`.
+
+```tsx
+// widget root
+<div class="wbi-widget my-kpis">{/* … */}</div>
+```
+```css
+.my-kpis { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@container (min-width: 340px) { .my-kpis { grid-template-columns: repeat(2, 1fr); } }
+@container (min-width: 560px) { .my-kpis { grid-template-columns: repeat(3, 1fr); } }
+```
+
+**Animated — use the toolkit, never ad-hoc.** Import motion hooks from `@ui/widgets`
+([`motion.ts`](../src/ui/widgets/motion.ts)) — they wrap the `motion` library's vanilla API and all
+NO-OP under `prefers-reduced-motion`. Attach the returned **callback ref** to the element:
+
+| Hook | Attach to | Effect |
+|---|---|---|
+| `useMountReveal()` | (automatic — the board fades every tile in; only add manually for inner elements) | fade + rise on mount |
+| `useValuePulse(value)` | the metric's number element | pop when `value` changes (KPI tick) |
+| `useStaggerReveal(dep)` | a list/grid container | cascade its direct children in when `dep` (data) resolves |
+
+```tsx
+import { useValuePulse, useStaggerReveal } from '@ui/widgets';
+function ActiveCases() {
+  const q = useMyModuleData();
+  const numRef = useValuePulse(q.data?.total);
+  const listRef = useStaggerReveal(q.data?.rows?.length);
+  return (
+    <div class="wbi-widget">
+      <strong ref={numRef}>{q.data?.total ?? 0}</strong>
+      <ul ref={listRef}>{(q.data?.rows ?? []).map(r => <li key={r.id}>{r.label}</li>)}</ul>
+    </div>
+  );
+}
+```
 
 ---
 
@@ -75,6 +129,13 @@ config }`.
 | `hero` | `{w:12,h:4+}` | full-width table/board |
 
 Only list the sizes that actually look right — the size selector shows exactly `allowedSizes`.
+
+> **Grid units are PER-BOARD.** The table above is the Employee Master board (12 columns, 88px
+> rows). A board can run a finer grid — the HR Onboarding board is **24 columns / 12px rows** for
+> near-fluid resize — and then every `grid.w`/`min.w` you declare is in THAT board's units (double
+> the numbers). Each `allowedSizes` entry may add `min: { w, h }` — the **resize floor** below which
+> a fixed-layout card would clip. A fully fluid `.wbi-widget` (the contract above) reflows at any
+> size and needs only a modest floor.
 
 ---
 
@@ -143,6 +204,59 @@ export const widgets: WidgetDef[] = [
 
 ---
 
+## Bundles — curated first-party sets
+
+A **bundle** is a named, curated list of widget ids that ship with the SIOMAC platform
+(defined in [`src/ui/widgets/bundles.ts`](../src/ui/widgets/bundles.ts)). Bundles appear
+as compact cards at the top of the Widget Library catalog pane with an **"Add N widgets"**
+button that adds every member widget in one action.
+
+**Bundles vs packages — the distinction is intentional and must not be blurred:**
+
+| Concept | Source | Who authors it | Where stored |
+|---|---|---|---|
+| **Bundle** | Code — `bundles.ts` | SIOMAC platform team | Compiled JS (this repo) |
+| **Package** | Data — `manifest.json` / `.zip` | Third-party / admin upload | `ui_widget_packages` DB table |
+
+A bundle references widget ids by string. Any id that is not currently registered (e.g. a
+forward-reference to a widget not yet shipped in a `registry.*.tsx` file) is silently skipped
+by `resolveBundleWidgets()` — so bundles are safe to author before all their member widgets
+exist. The "Add N" count in the UI reflects only the widgets that are actually addable given the
+current registry, board state (not already placed), and locks (permissions).
+
+### Adding a bundle
+
+1. Open `src/ui/widgets/bundles.ts` and add an entry to `WIDGET_BUNDLES`.
+2. Give it a stable `id` (never rename — used as a React key), a `title`, `description`, `icon`
+   (Font Awesome class), `module` (the owning `ModuleKey`), and `widgetIds`.
+3. You may include forward-reference ids for widgets not yet built — they are skipped until
+   the matching `registry.*.tsx` ships.
+4. A bundle with zero currently-registered members is hidden entirely (not rendered).
+5. A bundle whose every registered widget is already placed shows a disabled "Added" button.
+
+```ts
+// bundles.ts excerpt
+export const WIDGET_BUNDLES: WidgetBundle[] = [
+  {
+    id: 'bundle.hr.onboarding.manager',
+    title: 'Onboarding Manager Pack',
+    description: 'Key onboarding metrics and readiness gates.',
+    icon: 'fa-user-plus',
+    module: 'hr',
+    widgetIds: [
+      'hr.onboarding.readinessGates',   // registered now
+      'hr.onboarding.activeCases',      // forward-ref — ships in Phase 5
+    ],
+  },
+];
+```
+
+The helper `resolveBundleWidgets(bundle, allWidgetIds)` (also exported from `@ui/widgets`)
+returns only the member ids that are currently registered — use it if you need to check
+bundle addability outside the library modal.
+
+---
+
 ## Declarative (no-code) widgets + installable packages (.zip / .json)
 
 Besides code widgets (above), a widget can be defined purely as **data** — no `render` function —
@@ -180,5 +294,11 @@ re-validates every spec on install. Manage/uninstall via **Widget Library → Ma
 - **Stable `id`s.** Changing an `id` orphans every saved instance. Treat it as a key.
 - **Loading gate.** `loading={q.isLoading && !q.data}` so cached data shows instantly and
   only a cold load shows a skeleton (matches the loading-state standard).
-- **gridstack bridge owns the DOM.** Don't manipulate the grid cell; just return your VNode.
+- **Fluid, not fixed.** Root `.wbi-widget` + `@container` breakpoints + fluid units. NO fixed px
+  widths, NO page-ancestry selectors — those squeeze instead of reflow.
+- **Animate via the toolkit only.** `useMountReveal`/`useValuePulse`/`useStaggerReveal` from
+  `@ui/widgets` (they honor `prefers-reduced-motion`). Don't hand-roll transitions or import
+  `motion` directly in a widget.
+- **The board (react-grid-layout) owns layout.** Just return your VNode into the tile; never touch
+  the grid cell, and never assume a pixel size — the user resizes it.
 ```

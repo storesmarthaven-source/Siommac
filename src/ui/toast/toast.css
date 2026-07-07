@@ -20,7 +20,7 @@
 
 .siomac-toaster {
   position:       fixed;
-  top:            20px;
+  top:            80px;
   right:          20px;
   width:          344px;
   max-width:      calc(100% - 28px);

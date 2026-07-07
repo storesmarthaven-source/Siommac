@@ -96,7 +96,7 @@ export function OnboardingPackageManager({
         <div class="obx-section-body">
           {pkgsQ.isLoading && !pkgsQ.data ? <div class="obx-empty">Loading…</div> : !rows.length ? <div class="obx-empty">No packages match these filters.</div> : (
             <table class="obx-table">
-              <thead><tr><th>Package</th><th>Status</th><th>Worker types</th><th>Templates</th><th>SLA</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Package</th><th>Status</th><th>Worker types</th><th>Templates</th><th>SLA</th><th>Probation</th><th>Actions</th></tr></thead>
               <tbody>{rows.map(p => (
                 <tr key={p.key} style={{ cursor: 'pointer' }} onClick={() => onOpenPackage(p.key)}>
                   <td>
@@ -107,6 +107,7 @@ export function OnboardingPackageManager({
                   <td class="obx-meta">{p.workerTypes.length ? p.workerTypes.join(', ') : '—'}</td>
                   <td class="obx-meta">{p.taskCount} tasks · {p.handoffCount} handoffs</td>
                   <td class="obx-meta">{p.defaultSlaDays} days</td>
+                  <td class="obx-meta">{p.probationDays != null ? `${p.probationDays}d` : '—'}</td>
                   <td onClick={e => e.stopPropagation()}>
                     <button class="obx-mini" onClick={() => void toggleStatus(p)}>{p.status === 'active' ? 'Retire' : 'Activate'}</button>
                   </td>

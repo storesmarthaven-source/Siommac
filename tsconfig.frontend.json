@@ -24,6 +24,11 @@
     /* Path aliases — must mirror vite.config.ts */
     "baseUrl": ".",
     "paths": {
+      /* React-typed libraries (react-grid-layout, react-draggable/-resizable) resolve their
+         `import 'react'` types to preact/compat, mirroring the runtime alias in vite.config.ts —
+         so their JSX/context/ReactNode types unify with Preact's instead of clashing. */
+      "react":       ["./node_modules/preact/compat/src/index.d.ts"],
+      "react-dom":   ["./node_modules/preact/compat/src/index.d.ts"],
       "@/*":         ["src/*"],
       "@store":      ["src/store/index.ts"],
       "@store/*":    ["src/store/*"],

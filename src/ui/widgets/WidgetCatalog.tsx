@@ -15,9 +15,11 @@ function sizeLabel(w: WidgetDef): string {
   return s ? `${s.label} · ${s.grid.w}×${s.grid.h}` : w.defaultSize;
 }
 
-export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, lockedIds, onSelect }: {
+export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, lockedIds, onSelect, checkedIds, onToggleCheck }: {
   widgets: WidgetDef[]; pageKey: string; selectedWidgetId: string | null;
   placedIds: Set<string>; lockedIds: Set<string>; onSelect: (widget: WidgetDef) => void;
+  /** Multi-select: checked widget ids + toggle. When provided, addable tiles show a checkbox. */
+  checkedIds?: Set<string>; onToggleCheck?: (id: string) => void;
 }): VNode {
   const recommended = widgets.filter(w => w.recommendedFor?.includes(pageKey));
   const byCat = new Map<string, WidgetDef[]>();
@@ -40,12 +42,18 @@ export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, l
               const locked = lockedIds.has(w.id);
               const added = placedIds.has(w.id);
               const tone = VARIANT_TONE[w.previewVariant] ?? '';
+              const checkable = !!onToggleCheck && !locked && !added;
               return (
                 <article
                   key={w.id}
-                  class={`wlib-tile size-${w.defaultSize}${selectedWidgetId === w.id ? ' selected' : ''}${locked ? ' locked' : ''}${added ? ' added' : ''}`}
+                  class={`wlib-tile${selectedWidgetId === w.id ? ' selected' : ''}${locked ? ' locked' : ''}${added ? ' added' : ''}${checkedIds?.has(w.id) ? ' checked' : ''}`}
                   onClick={() => { if (!locked && !added) onSelect(w); }}
                 >
+                  {checkable ? (
+                    <label class="wlib-tile-check" onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" checked={checkedIds?.has(w.id) ?? false} onChange={() => onToggleCheck?.(w.id)} aria-label={`Select ${w.title}`} />
+                    </label>
+                  ) : null}
                   <div class="wlib-tile-top">
                     <span class={`wlib-tile-icon${tone ? ' ' + tone : ''}`}><i class={`fas ${w.icon}`} /></span>
                     <div class="wlib-tile-title"><h3>{w.title}</h3><p>{w.description}</p></div>

@@ -18,6 +18,7 @@ import {
   Sparkline, BarRow, ProgressBar,
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
+  PersonSearchSelect, type PersonSearchOption,
   RegisterTable, Tabs,
   Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
   Spinner, EmptyState,
@@ -40,6 +41,12 @@ function Section({ id, title, sub, children }: { id: string; title: string; sub:
     </section>
   );
 }
+
+const DEMO_PEOPLE: PersonSearchOption[] = [
+  { id: 'p1', name: 'Amara Diallo', subtitle: 'EMP-0010 · Field Engineer', photoUrl: null },
+  { id: 'p2', name: 'Jordan Alexander', subtitle: 'EMP-0021 · Supervisor', photoUrl: null },
+  { id: 'p3', name: 'Priya Ramkissoon', subtitle: 'EMP-0034 · HR Officer', photoUrl: null },
+];
 
 /** A labelled example tile with a soft surface so components read clearly. */
 function Demo({ label, children, wide }: { label: string; children: ComponentChildren; wide?: boolean }): VNode {
@@ -91,6 +98,7 @@ export function UIKitPage(): VNode {
   const [area, setArea]       = useState('');
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState('');
+  const [personId, setPersonId] = useState('');
 
   const [modalOpen, setModalOpen]   = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -364,6 +372,14 @@ export function UIKitPage(): VNode {
             <SearchInput value={search} onInput={setSearch} placeholder="Search records…" />
             <FilterSelect value={filter} onChange={setFilter} options={['Open', 'Closed', 'Overdue']} allLabel="All statuses" />
           </Toolbar>
+        </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="PersonSearchSelect — search a person by name/ID, see their photo" wide>
+          <div style={{ maxWidth: '360px' }}>
+            <Field label="Worker">
+              <PersonSearchSelect options={DEMO_PEOPLE} value={personId} onChange={setPersonId} placeholder="Search by name or ID…" />
+            </Field>
+          </div>
         </Demo>
       </Section>
 

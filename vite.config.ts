@@ -2,7 +2,14 @@ import { defineConfig } from 'vite';
 import preact           from '@preact/preset-vite';
 import { VitePWA }      from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // react-grid-layout (+ react-draggable/-resizable) read `process.env.NODE_ENV` at runtime
+  // for dev warnings; the browser has no `process`, so define it (mode-aware) or the board
+  // crashes with "process is not defined". Only NODE_ENV is defined (the only key those deps
+  // read) to avoid clobbering the whole process.env object.
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
+  },
   plugins: [
     preact({
       // Disable the hook-names debug transform in dev mode — it depends on
@@ -112,4 +119,4 @@ export default defineConfig({
       '/api': { target: 'http://localhost:8888', changeOrigin: true },
     },
   },
-});
+}));

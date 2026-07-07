@@ -21,6 +21,7 @@ import type {
   OnboardingActionTemplate, OnboardingCaseAction, OnboardingActionType, OnboardingOwnerType, OnboardingActionPriority,
   CreatePackageArgs, UpdatePackageArgs, SetPackageStatusArgs,
   CreateTaskTemplateArgs, UpdateTaskTemplateArgs, CreateHandoffTemplateArgs, UpdateHandoffTemplateArgs,
+  OnboardingIntakePreview, OnboardingIntakePreviewArgs,
 } from '../../../types/hrOnboarding';
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
@@ -54,11 +55,15 @@ export interface OnboardingTimelineItem {
 
 export const hrOnboardingApi = {
   preview: (a: { packageKey: string }) => call<OnboardingPreview>('hr/onboarding/preview-package', a),
+  intakePreview: (a: OnboardingIntakePreviewArgs) => call<OnboardingIntakePreview>('hr/onboarding/intake-preview', a),
   start:   (a: {
     employeeId: string; packageKey: string; ownerId?: string | null; dueAt?: string | null;
     reason?: string | null; priority?: string | null; targetStartDate?: string | null;
     launchMode?: string | null; caseOwner?: string | null; workerType?: string | null;
     includeActionTemplateIds?: string[] | null;
+    documentSelections?: import('../../../types/hrOnboarding').OnboardingDocumentLaunchSelection[] | null;
+    scheduledLaunchAt?: string | null;
+    workerTypeDetails?: Record<string, string | number | boolean | null> | null;
   }) => call<OnboardingStartResult>('hr/onboarding/start', a),
   get:     (a: { caseId?: string; employeeId?: string }) =>
     call<{ case: Record<string, unknown>; tasks: Record<string, unknown>[]; handoffs: Record<string, unknown>[] }>('hr/onboarding/get', a),
@@ -224,6 +229,16 @@ export function useOnboardingPackages(includeRetired = false) {
     queryKey:  ['hr', 'onboarding', 'packages', includeRetired],
     queryFn:   () => hrOnboardingApi.listPackages({ includeRetired }),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Start Onboarding wizard live panels — verification + documents + duplicate + task/handoff preview
+ *  for the chosen worker + package. Enabled only once both are selected. */
+export function useOnboardingIntakePreview(employeeId: string | null, packageKey: string | null) {
+  return useQuery({
+    queryKey: ['hr', 'onboarding', 'intake-preview', employeeId, packageKey],
+    queryFn:  () => hrOnboardingApi.intakePreview({ employeeId: employeeId as string, packageKey: packageKey as string }),
+    enabled:  !!employeeId && !!packageKey,
   });
 }
 

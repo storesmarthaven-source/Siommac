@@ -17,6 +17,7 @@ import {
   createTaskTemplate, updateTaskTemplate, deleteTaskTemplate, createHandoffTemplate, updateHandoffTemplate, deleteHandoffTemplate,
 } from '../lib/hr/onboardingPackageService';
 import { getOnboardingDashboardStats, listOnboardingCases, listOnboardingTasks, listOnboardingHandoffs, listOnboardingBlockers, listRecentOnboardingActivity, getOnboardingTaskDetail } from '../lib/hr/onboardingQueries';
+import { getOnboardingIntakePreview } from '../lib/hr/onboardingIntake';
 import { addOnboardingTask, blockOnboardingTask, unblockOnboardingTask, completeOnboardingCase, pauseOnboardingCase, resumeOnboardingCase, reassignOnboardingOwner, markOnboardingReady, resolveOnboardingBlocker, escalateOnboardingBlocker, waiveOnboardingBlocker, notifyOnboardingBlockerOwner, listOnboardingAudit, addOnboardingTaskNote, attachOnboardingTaskEvidence, taskEvidenceMissing, retryOnboardingHandoff, acceptOnboardingHandoff, completeOnboardingHandoff, cancelOnboardingHandoff } from '../lib/hr/onboardingMutations';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { listActionTemplates, createActionTemplate, updateActionTemplate, retireActionTemplate, listCaseActions, addCaseAction, updateCaseAction, completeCaseAction, cancelCaseAction, type ActionTemplateInput, type AddCaseActionInput } from '../lib/hr/onboardingCustomActions';
@@ -45,6 +46,15 @@ router.post('/onboarding/preview-package', async c => {
   } });
 });
 
+// ── 1a. intake-preview (Start Onboarding wizard: verification + documents + duplicate + task/handoff preview) ──
+router.post('/onboarding/intake-preview', async c => {
+  await requirePermission(c, 'hr.onboarding.view');
+  const v = zv(c, z.object({ employeeId: z.string().min(1), packageKey: z.string().min(1) }), body(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await getOnboardingIntakePreview(v.data) }); }
+  catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed to load intake preview.' }, (er.status ?? 500) as 200); }
+});
+
 // ── 1b. packages/list (wizard picker + package manager) ──────────────────────────
 router.post('/onboarding/packages/list', async c => {
   await requirePermission(c, 'hr.onboarding.view');
@@ -69,6 +79,17 @@ router.post('/onboarding/start', async c => {
     caseOwner:       z.string().max(80).nullable().optional(),
     workerType:      z.string().max(30).nullable().optional(),
     includeActionTemplateIds: z.array(z.string().uuid()).nullable().optional(),
+    documentSelections: z.array(z.object({
+      requirementId: z.string().min(1),
+      action: z.enum(['use_existing', 'uploaded', 'request_from_worker', 'waive', 'none']),
+      existingDocumentId: z.string().uuid().nullable().optional(),
+      uploadedFilePath: z.string().nullable().optional(),
+      waiverReason: z.string().max(500).nullable().optional(),
+    })).nullable().optional(),
+    scheduledLaunchAt: z.string().nullable().optional(),
+    // Case-type-specific intake fields (contractor/temporary) — persisted on case metadata.
+    // Bounded record of primitive values to keep the payload honest (no nested blobs).
+    workerTypeDetails: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean(), z.null()])).nullable().optional(),
   }), body(c));
   if (!v.ok) return v.response;
 

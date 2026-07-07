@@ -2,9 +2,10 @@
  * src/components/sections/HR/OnboardingCaseDetail.tsx
  *
  * HR ▸ Onboarding ▸ Case detail — STANDARD page shape: PageHeader (title + ProfilePill +
- * lifecycle actions) → Customize widget grid (same stack-grid as Employee Master).
- * The grid mixes glanceable KPI tiles (registry.hrOnboardingCase, fed the active case via the
- * @store/onboardingCase store) with the FUNCTIONAL tables as page-local widgets:
+ * lifecycle actions) → Customize widget grid (same board as Employee Master).
+ * The grid holds the FUNCTIONAL tables as page-local widgets (the KPI / timeline / provisioning /
+ * communications tiles were removed when the widget catalogue was cleared for the v2 rebuild and
+ * will be re-authored on the new contract):
  *   • Active Tasks  — Complete · Block · Unblock · Add
  *   • Blockers      — Resolve · Escalate · Waive
  *   • Handoffs      — read-only
@@ -63,22 +64,14 @@ function defaultCaseLayout(): BoardLayout {
   return {
     pageKey: CASE_PAGE_KEY,
     zones: {
+      // Functional page-local table widgets (the KPI / timeline / provisioning / communications
+      // widgets were removed when the widget catalogue was cleared for the v2 rebuild; they'll be
+      // re-authored on the new contract and added back via the Widget Library).
       main: [
-        // glanceable KPI tiles
-        defInst('hr.onboarding.case.progress',  0, 0, 3, 3, 'tall'),
-        defInst('hr.onboarding.case.readiness', 3, 0, 3, 3, 'tall'),
-        defInst('hr.onboarding.case.sla',       6, 0, 3, 3, 'tall'),
-        defInst('hr.onboarding.case.team',      9, 0, 3, 3, 'tall'),
-        // functional tables (page-local widgets)
-        defInst('hr.onboarding.case.activeTasks',  0, 3, 8, 5, 'wide'),
-        defInst('hr.onboarding.case.blockersTable', 8, 3, 4, 5, 'tall'),
-        defInst('hr.onboarding.case.customActions', 0, 8, 6, 4, 'wide'),
-        defInst('hr.onboarding.case.handoffsTable', 6, 8, 6, 4, 'wide'),
-        // full timeline (supersedes the old activity feed) + provisioning tile
-        defInst('hr.onboarding.case.timeline',     0, 12, 8, 4, 'wide'),
-        defInst('hr.onboarding.case.provisioning', 8, 12, 4, 3, 'tall'),
-        // communications (Audit trail is library-addable — permission-gated)
-        defInst('hr.onboarding.case.communications', 0, 16, 6, 4, 'wide'),
+        defInst('hr.onboarding.case.activeTasks',   0, 0, 8, 5, 'wide'),
+        defInst('hr.onboarding.case.blockersTable', 8, 0, 4, 5, 'tall'),
+        defInst('hr.onboarding.case.customActions', 0, 5, 6, 4, 'wide'),
+        defInst('hr.onboarding.case.handoffsTable', 6, 5, 6, 4, 'wide'),
       ],
     },
   };

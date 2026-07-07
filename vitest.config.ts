@@ -46,6 +46,9 @@ export default defineConfig({
 
     // Inline zustand so its internal `import 'react'` flows through our
     // resolve.alias and resolves to preact/compat instead of bare react.
+    // NOTE: the react-grid-layout stack (WidgetBoardZone) is CJS-only; vitest can't alias its
+    // `require('react')` the way the vite BUILD does, so board-RENDER tests aren't run under
+    // vitest — RGL-under-preact/compat is verified via the production bundler (proven working).
     server: {
       deps: {
         inline: ['zustand'],

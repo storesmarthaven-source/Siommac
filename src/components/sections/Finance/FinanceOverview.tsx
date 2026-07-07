@@ -2,9 +2,9 @@
  * src/components/sections/Finance/FinanceOverview.tsx
  *
  * Finance ▸ Overview — a customizable widget board surfacing the Finance Tier A/B modules
- * (Remittances, Expenses, Budgeting, Bank Disbursement). KPI + list widgets come from
- * registry.finance.tsx (real data via the finance TanStack hooks, reuse-hooks model);
- * browse/add more via the Widget Library. Per-user layout persists in ui_layout.layout.
+ * (Remittances, Expenses, Budgeting, Bank Disbursement). The widget catalogue was cleared
+ * for a rebuild — the board starts empty until new registry.finance.tsx widgets are
+ * authored and added via the Widget Library. Per-user layout persists in ui_layout.layout.
  * Mirrors the HR Onboarding/Employee-Master board wiring.
  */
 
@@ -26,26 +26,11 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: ZONE_ID, x, y, w, h, sizeKey, config: {} };
 }
 
-// Default board: 4 KPI tiles across the top (12 cols) + a recent-remittances list,
-// then the F13 analytics row (payroll trend, remittance status, budget variance,
-// pending approvals) once the modules above have data to chart.
+// The widget catalogue was cleared for a rebuild (no Finance widgets left) — the
+// default board starts empty until new widgets are authored and added via the
+// Widget Library.
 function defaultFinanceLayout(): BoardLayout {
-  return {
-    pageKey: PAGE_KEY,
-    zones: {
-      main: [
-        defInst('finance.remittances.due',      0, 0, 3, 2, 'compact'),
-        defInst('finance.expenses.pending',     3, 0, 3, 2, 'compact'),
-        defInst('finance.disbursements.latest', 6, 0, 3, 2, 'compact'),
-        defInst('finance.budgets.variance',     9, 0, 3, 2, 'compact'),
-        defInst('finance.remittances.recent',   0, 2, 4, 3, 'standard'),
-        defInst('finance.analytics.payrollTrend',              4, 2, 4, 3, 'standard'),
-        defInst('finance.analytics.pendingApprovals',          8, 2, 4, 3, 'compact'),
-        defInst('finance.analytics.remittanceStatus',          0, 5, 4, 3, 'standard'),
-        defInst('finance.analytics.budgetVarianceByCostCenter', 4, 5, 4, 3, 'standard'),
-      ],
-    },
-  };
+  return { pageKey: PAGE_KEY, zones: { main: [] } };
 }
 
 export function FinanceOverview(): VNode {

@@ -7,9 +7,10 @@
 import type { JSX, VNode } from 'preact';
 import { resolveBoardWidget } from './resolveBoardWidget';
 import { WidgetRenderer } from './WidgetRenderer';
+import { useMountReveal } from './motion';
 import type { BoardWidgetInstance, LocalWidgetMap } from './types';
 
-// Pressing an action button must not start a gridstack drag.
+// Pressing an action button must not start a drag.
 const noDrag = (e: JSX.TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
 
 export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPreview, onDiscardPreview, onRemove }: {
@@ -25,6 +26,11 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPre
   const resolved = resolveBoardWidget(item.widgetId, local);
   const title = item.titleOverride ?? resolved?.title ?? '';
   const bare = resolved?.chrome === 'none';
+  // Gentle fade+rise when a committed tile mounts (board load / add-from-library). The preview
+  // tile is intentionally left un-animated (it's already a distinct dashed affordance). No-ops
+  // under prefers-reduced-motion. Attached to whichever root renders (bare vs framed).
+  const revealRef = useMountReveal();
+  const rootRef = isPreview ? undefined : revealRef;
 
   const previewActions = (
     <span class="wbi-preview-actions">
@@ -37,7 +43,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPre
     const showTools = isPreview || editing;
     // Preview: the whole bare frame is the drag handle (grab anywhere).
     return (
-      <div class={`wbi-bare${isPreview ? ' wbi-bare--preview wbi-drag' : ''}`}>
+      <div ref={rootRef} class={`wbi-bare${isPreview ? ' wbi-bare--preview wbi-drag' : ''}`}>
         {showTools && (
           <div class={`wbi-bare-tools${isPreview ? '' : ' wbi-drag'}`}>
             {isPreview
@@ -55,7 +61,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPre
 
   // Preview: whole frame draggable; otherwise only the header is the handle.
   return (
-    <section class={`wbi-frame${isPreview ? ' wbi-frame--preview wbi-drag' : ''}`}>
+    <section ref={rootRef} class={`wbi-frame${isPreview ? ' wbi-frame--preview wbi-drag' : ''}`}>
       <header class={`wbi-head${isPreview ? '' : ' wbi-drag'}`}>
         {isPreview
           ? <span class="wbi-preview-chip">Preview — not added</span>

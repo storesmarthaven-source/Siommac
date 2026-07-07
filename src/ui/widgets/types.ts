@@ -30,6 +30,43 @@ export type WidgetPreviewVariant =
   | 'metric' | 'trend' | 'donut' | 'task-board' | 'timeline' | 'people'
   | 'table' | 'checklist' | 'risk' | 'flow-map' | 'matrix' | 'status-stack';
 
+/** Lifecycle states a widget can be in on the board (beyond its own render). */
+export type WidgetLifecycleState = 'loading' | 'ready' | 'empty' | 'error' | 'locked' | 'unavailable';
+
+/** A named content slot inside a widget's body, gated by minimum size. */
+export interface WidgetContentPriorityRule {
+  slot: string;
+  minSize: WidgetSizeKey;
+  collapseTo?: string;
+}
+
+/** Optional per-size behavior hints for chart/label/action density. Consumed by
+ *  `createResponsiveContext` (responsive.ts) — a widget MAY read `responsive` off
+ *  its render props to adapt; omitting this is fine (the widget just doesn't adapt). */
+export interface WidgetDensityRules {
+  chart?: { simplifyBelow?: WidgetSizeKey; hideBelow?: WidgetSizeKey };
+  labels?: { truncateBelow?: WidgetSizeKey; hideBelow?: WidgetSizeKey };
+  actions?: { menuBelow?: WidgetSizeKey; hideBelow?: WidgetSizeKey };
+  numbers?: { abbreviateBelow?: WidgetSizeKey };
+}
+
+export interface WidgetResponsiveContext {
+  sizeKey: WidgetSizeKey;
+  visibleSlots: Set<string>;
+  chartMode: 'none' | 'sparkline' | 'compact' | 'full';
+  labelMode: 'hidden' | 'truncated' | 'full';
+  actionMode: 'hidden' | 'menu' | 'inline';
+  numberMode: 'abbreviated' | 'full';
+}
+
+/** Explicit view/action permission spec. Falls back to `dataSource.permissions`
+ *  when omitted — most widgets don't need this, it exists for widgets whose
+ *  actions require MORE than plain view access. */
+export interface WidgetPermissionSpec {
+  requiredPermissions?: string[];
+  actions?: Record<string, string>;
+}
+
 export interface WidgetGridSize { w: number; h: number }
 
 export interface WidgetSizeDef {
@@ -108,6 +145,12 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
   /** Board chrome (default 'standard'). Use 'none' when the widget renders its own card. */
   chrome?: WidgetChrome;
 
+  /** Tile HEIGHT auto-fits the rendered content (gridstack sizeToContent): no internal
+   *  scrollbar, no background gap below a short card, no hand-tuned `h`. Width stays
+   *  user-resizable. Use for bare cards with a natural design height; leave off for
+   *  widgets that intentionally scroll inside a fixed tile (e.g. the employee register). */
+  sizeToContent?: boolean;
+
   supportedPages: string[];
   supportedZones: string[];
 
@@ -124,6 +167,15 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
   configSchema: WidgetConfigField[];
 
   dataSource: WidgetDataSourceDef;
+
+  /** Optional adaptive-content contract — see WidgetContentPriorityRule/WidgetDensityRules.
+   *  Omitting these is fine; the widget just renders the same content at every size. */
+  contentPriorityRules?: WidgetContentPriorityRule[];
+  densityRules?: WidgetDensityRules;
+
+  /** Explicit permission override. Most widgets should leave this unset — the board
+   *  gates on `dataSource.permissions` by default (see WidgetRenderer). */
+  permissions?: WidgetPermissionSpec;
 
   recommendedFor?: string[];
   /** When set, the widget is shown LOCKED in the catalogue (no data/module/permission yet). */
@@ -177,6 +229,13 @@ export interface LocalWidget {
   render: (props: WidgetRenderProps) => VNode;
   chrome?: WidgetChrome;
   title?: string;
+  /** Same shape/purpose as `WidgetDef.allowedSizes` — set this when the tile has fixed,
+   *  non-reflowing content (e.g. a ported mockup card) so the board's resize floor holds
+   *  (see WidgetBoardZone.gridNode). Omit for content that reflows safely at any size
+   *  (tables, lists) — those keep the generic 2-cell floor. */
+  allowedSizes?: WidgetSizeDef[];
+  /** Same as `WidgetDef.sizeToContent` — tile height auto-fits the rendered card. */
+  sizeToContent?: boolean;
 }
 export type LocalWidgetMap = Record<string, LocalWidget>;
 

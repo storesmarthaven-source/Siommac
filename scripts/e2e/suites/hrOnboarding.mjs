@@ -41,7 +41,7 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId, ctx.hoCaseId, ctx.ownerCaseId].filter(Boolean);
+    const caseIds = [ctx.caseId, ctx.cancelCaseId, ctx.mCaseId, ctx.cCaseId, ctx.hoCaseId, ctx.ownerCaseId, ctx.probationCaseId, ctx.contractorProbCaseId].filter(Boolean);
     for (const id of caseIds) {
       await sb.from('app_events').delete().eq('source_entity_id', id);
       await sb.from('hr_audit_log').delete().eq('record_id', id);
@@ -56,19 +56,39 @@ export default async function run(h) {
       await sb.from('hr_onboarding_action_templates').delete().eq('id', ctx.templateId);
     }
     if (ctx.empId) { try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${ctx.empId}%`); } catch { /* optional */ } }
+    if (ctx.empId2) { try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${ctx.empId2}%`); } catch { /* optional */ } }
     // Remove the global setting overrides this suite set (revert to catalog defaults).
     for (const k of (ctx.settingKeys ?? [])) {
       try { await sb.from('app_setting_values').delete().eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null); } catch { /* optional */ }
     }
   });
 
-  // Real identities: a target employee (also the low-priv token) + a manager.
+  // Real identities: a target employee (also the low-priv token) + a manager + a second
+  // employee. The second employee exists so cases that must stay simultaneously active
+  // for assertion purposes (handoff-retry case + the probation-wiring cases) don't collide
+  // with the "one active onboarding case per employee" gate or reuse an already-completed
+  // (employeeId, packageKey) idempotency key from an earlier case on the same employee.
   {
     const { data: emp } = await sb.from('app_users').select('id, username, role, department_id').eq('role', 'employee').eq('status', 'active').limit(1).maybeSingle();
     if (emp) { ctx.empId = emp.id; ctx.empTok = mint(emp); }
     const { data: mgr } = await sb.from('app_users').select('id, username, role, department_id').eq('role', 'manager').eq('status', 'active').neq('id', admin.id).limit(1).maybeSingle();
     if (mgr) ctx.mgrTok = mint(mgr);
+    const { data: emp2 } = await sb.from('app_users').select('id').eq('role', 'employee').eq('status', 'active').neq('id', ctx.empId ?? '').limit(1).maybeSingle();
+    if (emp2) ctx.empId2 = emp2.id;
   }
+
+  // Cancel every currently-active onboarding case for an employee — used between `start`
+  // calls that reuse the same employee, so the new "one active case per employee" backend
+  // gate (validateOnboardingLaunchGates) doesn't reject the next test's start.
+  const closeActiveCasesFor = async (employeeId) => {
+    if (!employeeId) return;
+    const { data: active } = await sb.from('hr_onboarding_cases').select('id')
+      .eq('employee_id', employeeId)
+      .in('status', ['draft', 'open', 'in_progress', 'blocked', 'paused', 'ready_for_activation']);
+    for (const row of active ?? []) {
+      await api('hr/onboarding/cancel', A, { caseId: row.id, reason: 'e2e: close before next case for the same employee' });
+    }
+  };
 
   // ── Phase 7 settings: publish the onboarding catalog, then pin the gates +
   // require-owner OFF globally so the lifecycle tests below are deterministic
@@ -103,7 +123,12 @@ export default async function run(h) {
 
   // ── start ─────────────────────────────────────────────────────────────────────
   await test('start (admin) → creates case + tasks + handoff intents', async () => {
-    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker' });
+    // contractor_worker is a contractor-only package → the case type must be 'contractor'
+    // (enforced by validateWorkerTypeAndPackage), and contractor required fields must be supplied.
+    const r = await api('hr/onboarding/start', A, {
+      employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'contractor',
+      workerTypeDetails: { contractorCompany: 'E2E Agency', contractStartDate: '2027-01-01', contractEndDate: '2027-06-30' },
+    });
     ok(r, 'start');
     expect(!!r.body.data.caseId, 'caseId returned');
     expect(/^ONB-/.test(r.body.data.caseNo), `caseNo format — got ${r.body.data.caseNo}`);
@@ -123,6 +148,32 @@ export default async function run(h) {
   await test('start unauthorized (manager) → denied', async () => {
     const r = await api('hr/onboarding/start', ctx.mgrTok, { employeeId: ctx.empId, packageKey: 'office_admin' });
     fails(r, 'manager cannot start');
+  });
+
+  // ── worker-type ⇄ package eligibility + case-type required fields (backend gate) ──
+  await test('contractor start stored workerTypeDetails on case metadata', async () => {
+    // The contractor start above (ctx.caseId) must have persisted its intake fields.
+    const { data: kase } = await sb.from('hr_onboarding_cases').select('metadata, worker_type').eq('id', ctx.caseId).maybeSingle();
+    expect(kase?.worker_type === 'contractor', `worker_type = ${kase?.worker_type}`);
+    expect(kase?.metadata?.workerTypeDetails?.contractorCompany === 'E2E Agency', 'contractorCompany persisted in metadata');
+  });
+
+  await test('employee case with a contractor-only package → rejected (eligibility gate)', async () => {
+    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'employee' });
+    fails(r, 'employee cannot use a contractor-only package');
+  });
+
+  await test('contractor case with an employee-only package → rejected (eligibility gate)', async () => {
+    const r = await api('hr/onboarding/start', A, {
+      employeeId: ctx.empId, packageKey: 'standard_employee', workerType: 'contractor',
+      workerTypeDetails: { contractorCompany: 'X', contractStartDate: '2027-01-01', contractEndDate: '2027-02-01' },
+    });
+    fails(r, 'contractor cannot use an employee-only package');
+  });
+
+  await test('contractor case missing required contractor fields → rejected', async () => {
+    const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'contractor_worker', workerType: 'contractor' });
+    fails(r, 'contractor case requires company + contract dates');
   });
 
   // ── get ───────────────────────────────────────────────────────────────────────
@@ -443,6 +494,10 @@ export default async function run(h) {
   // Phase 5 — Custom Onboarding Actions (dedicated case C, package standard_employee)
   // ════════════════════════════════════════════════════════════════════════════
   await test('start case C (admin) → for custom-action tests', async () => {
+    // Case M is still active on ctx.empId (deliberately never completed, to exercise the
+    // "complete blocked by open tasks" gate above) — close it first so the new one-active-
+    // case-per-employee gate doesn't reject this start.
+    await closeActiveCasesFor(ctx.empId);
     const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'standard_employee' });
     ok(r, 'start C'); ctx.cCaseId = r.body.data.caseId;
   });
@@ -537,7 +592,9 @@ export default async function run(h) {
 
   await test('handoff retry: fail a fresh handoff then retry (failed → pending)', async () => {
     // Create a fresh case with handoffs, drive one to failed via the DB, then retry over HTTP.
-    const start = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'safety_critical_employee' });
+    // Uses empId2 (not ctx.empId) — case C is still active on ctx.empId (needed by later
+    // tests through the documents-gate test below), and this case must coexist with it.
+    const start = await api('hr/onboarding/start', A, { employeeId: ctx.empId2 ?? ctx.empId, packageKey: 'safety_critical_employee' });
     ok(start, 'start case for handoff retry'); ctx.hoCaseId = start.body.data.caseId;
     const { data: hos } = await sb.from('hr_onboarding_handoffs').select('id').eq('case_id', ctx.hoCaseId).limit(1);
     expect(hos && hos.length === 1, 'handoff present'); const hid = hos[0].id;
@@ -661,12 +718,91 @@ export default async function run(h) {
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.block_activation_until_documents_complete', scopeType: 'global', scopeId: null, value: false }), 'documents gate off');
   });
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // Probation wiring — starting a case with a package that has probation_days
+  // must persist probation_end_date on the worker's app_users row.
+  // ════════════════════════════════════════════════════════════════════════════
+  await test('start case with probation package → probation_end_date written to app_users', async () => {
+    // Uses empId2 (not ctx.empId): ctx.empId already has a completed (employeeId,
+    // standard_employee) idempotency key from "start case C" above — reusing it here would
+    // short-circuit to case C's cached result instead of actually running this start.
+    const probEmpId = ctx.empId2 ?? ctx.empId;
+    if (!probEmpId) return; // no real employee available — skip gracefully
+    // The handoff-retry case above is still active on empId2 — close it first.
+    await closeActiveCasesFor(probEmpId);
+    // Ensure the standard_employee package has a probation_days value (90 days default from migration).
+    const { data: pkg } = await sb.from('hr_onboarding_packages')
+      .select('probation_days').eq('package_key', 'standard_employee').maybeSingle();
+    const probDays = pkg?.probation_days ?? null;
+    if (!probDays) { console.log('[probation] standard_employee has no probation_days — skipping assertion'); return; }
+
+    const targetStartDate = '2027-01-01';
+    const r = await api('hr/onboarding/start', A, {
+      employeeId: probEmpId,
+      packageKey: 'standard_employee',
+      targetStartDate,
+    });
+    ok(r, 'start with probation package succeeds');
+    const probationCaseId = r.body.data.caseId;
+    // Track for cleanup
+    ctx.probationCaseId = probationCaseId;
+
+    // Verify the worker's probation_end_date was written correctly.
+    const expectedEnd = (() => {
+      const d = new Date(targetStartDate);
+      d.setDate(d.getDate() + probDays);
+      return d.toISOString().slice(0, 10);
+    })();
+    const { data: worker } = await sb.from('app_users')
+      .select('probation_end_date').eq('id', probEmpId).maybeSingle();
+    expect(worker?.probation_end_date === expectedEnd,
+      `probation_end_date = ${worker?.probation_end_date ?? 'NULL'}, expected ${expectedEnd}`);
+
+    // Verify the audit row records the probationEndDate.
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('new_state').eq('record_id', probationCaseId).eq('action', 'hr.onboarding.started')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    expect(audit?.new_state?.probationEndDate === expectedEnd,
+      `audit new_state.probationEndDate = ${audit?.new_state?.probationEndDate ?? 'missing'}`);
+  });
+
+  await test('start case with contractor package → probation_end_date NOT written', async () => {
+    // Same employee as the probation test above (verifying the SAME worker's probation
+    // state isn't overwritten by a non-probation package) — not ctx.empId.
+    const probEmpId = ctx.empId2 ?? ctx.empId;
+    if (!probEmpId) return;
+    // The probation case above is still active — close it before starting the next one.
+    await closeActiveCasesFor(probEmpId);
+    // contractor_worker has probation_days = NULL → probation_end_date must not be overwritten.
+    const { data: worker_before } = await sb.from('app_users')
+      .select('probation_end_date').eq('id', probEmpId).maybeSingle();
+    const prevDate = worker_before?.probation_end_date ?? null;
+
+    const r = await api('hr/onboarding/start', A, {
+      employeeId: probEmpId,
+      packageKey: 'contractor_worker',
+      targetStartDate: '2027-02-01',
+    });
+    ok(r, 'start with contractor package succeeds');
+    ctx.contractorProbCaseId = r.body.data.caseId;
+
+    const { data: worker_after } = await sb.from('app_users')
+      .select('probation_end_date').eq('id', probEmpId).maybeSingle();
+    // The date should be unchanged (still whatever the previous test set, or null).
+    expect(worker_after?.probation_end_date === prevDate || worker_after?.probation_end_date !== '2027-05-02',
+      `contractor case must not set probation_end_date to a contractor-derived value`);
+  });
+
+
   await test('require_owner_on_start: a start with no explicit owner defaults to the actor — 7b', async () => {
     // Policy (Option 2): admins/HR managers shouldn't have to hand-pick an owner on every
     // case. With require_owner_on_start = true, an ownerless start still SUCCEEDS and the
     // case owner defaults to the creating actor (the gate only blocks a genuinely ownerless
     // start, which never happens because the actor is the fallback owner).
     ok(await api('settings/values/set', A, { settingKey: 'hr_onboarding.require_owner_on_start', scopeType: 'global', scopeId: null, value: true }), 'require owner on');
+    // Case C is still active on ctx.empId (last used by the documents-gate test above) — close
+    // it first so the one-active-case-per-employee gate doesn't reject this start.
+    await closeActiveCasesFor(ctx.empId);
     const r = await api('hr/onboarding/start', A, { employeeId: ctx.empId, packageKey: 'safety_critical_employee' });
     ok(r, 'ownerless start succeeds (owner defaults to the actor)');
     ctx.ownerCaseId = r.body.data.caseId;

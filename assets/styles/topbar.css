@@ -123,6 +123,66 @@
 }
 .app-topbar-footer-spacer { flex: 1; }
 
+/* When the footer hosts a module sub-nav it needs a little more room than the
+   32px breadcrumb strip. */
+.app-topbar-footer.has-nav { height: 44px; }
+
+/* Module sub-nav integrated into the footer — surface tabs + role switch on the left,
+   inner spacer pushes date/separator to the far right. Tabs and role switch mirror
+   the Command Center `.obv-role-switch` (compact pill, ~12px labels) but inverted for
+   the navy bar: muted light labels, translucent-white active tab. */
+.app-topbar-nav { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+.app-topbar-nav-inner-spacer { flex: 1; }
+/* Fixed-width breathing room after the tabs — keeps the role switch + empty-states
+   toggle a deliberate distance away instead of hugging the tabs. */
+.app-topbar-nav-gap { width: 56px; flex-shrink: 0; }
+
+.app-topbar-nav-roles { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.06); }
+.app-topbar-nav-role-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 11px;
+  border: 0; border-radius: 6px; background: transparent;
+  color: rgba(255, 255, 255, 0.66); font-family: inherit; font-size: 0.76rem; font-weight: 600; line-height: 1;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.app-topbar-nav-role-btn i { font-size: 0.7rem; }
+.app-topbar-nav-role-btn:hover { background: rgba(255, 255, 255, 0.10); color: #fff; }
+.app-topbar-nav-role-btn.active { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+/* Empty-states preview toggle — a standalone bordered pill, same family as the role
+   switch but not grouped with it (a QA/design aid, not a role selector). */
+.app-topbar-nav-toggle-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 13px; margin-left: 8px;
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.06);
+  color: rgba(255, 255, 255, 0.66); font-family: inherit; font-size: 0.76rem; font-weight: 600; line-height: 1;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s; white-space: nowrap;
+}
+.app-topbar-nav-toggle-btn i { font-size: 0.7rem; }
+.app-topbar-nav-toggle-btn:hover { background: rgba(255, 255, 255, 0.10); color: #fff; }
+.app-topbar-nav-toggle-btn.active { background: rgba(255, 255, 255, 0.16); border-color: rgba(255,255,255,0.24); color: #fff; }
+
+/* Plain (no chip/pill background) — just an icon + the formatted date. */
+.app-topbar-nav-date {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.78rem; font-weight: 500; color: rgba(255,255,255,0.60); white-space: nowrap;
+}
+.app-topbar-nav-date i { font-size: 0.72rem; color: #fff; }
+
+.app-topbar-nav-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.16); flex-shrink: 0; }
+
+.app-topbar-nav-tabs { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.app-topbar-nav-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 13px;
+  border: 0; border-radius: 9px; background: transparent;
+  color: rgba(255, 255, 255, 0.66); font-family: inherit; font-size: 0.78rem; font-weight: 600; line-height: 1;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.app-topbar-nav-btn i { font-size: 0.72rem; }
+.app-topbar-nav-btn:hover { background: rgba(255, 255, 255, 0.10); color: #fff; }
+.app-topbar-nav-btn.active { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
 .app-topbar-crumb {
   display: flex; align-items: center; gap: 8px; min-width: 0; flex-shrink: 1;
   font-size: 0.78rem; font-weight: 500; color: rgba(255,255,255,0.60);

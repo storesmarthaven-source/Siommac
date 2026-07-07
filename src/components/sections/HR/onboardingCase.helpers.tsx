@@ -2,10 +2,10 @@
  * src/components/sections/HR/onboardingCase.helpers.tsx
  *
  * Shared logic + tiny self-contained chart primitives for the onboarding case-detail
- * page AND its widget board (registry.hrOnboardingCase). Extracted so both surfaces use
- * ONE implementation — task matchers, status buckets, date math, and the SVG viz
- * (sparkline / progress ring / gauge arc / bars). No fabricated data: callers pass real
- * values; the widgets' library PREVIEWS pass demo values.
+ * page — task matchers, status buckets, date math, and the SVG viz (sparkline / progress
+ * ring / gauge arc / bars). No fabricated data: callers pass real values. (The case KPI/chart
+ * widgets that also used these were removed when the widget catalogue was cleared for the v2
+ * rebuild; the primitives stay for when they're re-authored.)
  */
 import { type VNode } from 'preact';
 import type { OnboardingCaseStatus, OnboardingTaskRow } from '../../../../types/hrOnboarding';

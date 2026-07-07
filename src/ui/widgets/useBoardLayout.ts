@@ -29,7 +29,12 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout): Us
     queryFn: async () => (await getInstanceLayout(pageKey)) ?? defaultLayout ?? emptyLayout(pageKey),
     placeholderData: prev => prev,
   });
-  const layout = query.data ?? defaultLayout ?? emptyLayout(pageKey);
+  // During the INITIAL load (no data yet), render an EMPTY board — NOT the default layout.
+  // Otherwise a user with a saved layout sees the full default board flash in, then collapse
+  // to their saved arrangement once the query resolves. Gating on isLoading gives one clean
+  // transition (empty → saved/default) instead of that flash. Refetches keep prior data via
+  // placeholderData, so this only affects the very first paint.
+  const layout = query.data ?? (query.isLoading ? emptyLayout(pageKey) : (defaultLayout ?? emptyLayout(pageKey)));
 
   const mutation = useMutation({ mutationFn: (next: BoardLayout) => saveInstanceLayout(pageKey, next) });
 

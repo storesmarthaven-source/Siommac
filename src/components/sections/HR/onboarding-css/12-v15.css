@@ -1,0 +1,971 @@
+@layer sections {
+  /* v15: stack task controls at the bottom of Priority Case Work */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack > .obv-priority-case-work-card {
+    /* No forced min-height — the Task Planner used to live in here too, which needed
+       the extra room; now that it's its own sibling card, forcing 408px just left a
+       block of empty space under the button. Let the card size to its own content. */
+    padding: 18px !important;
+    border-radius: 24px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-work-head {
+    align-items: flex-start !important;
+    margin-bottom: 14px !important;
+    gap: 14px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-head h2 {
+    margin: 0 !important;
+    color: #151a24 !important;
+    font-size: 20px !important;
+    line-height: 1.1 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-head p {
+    margin: 4px 0 0 !important;
+    color: #7b8491 !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    font-weight: 555 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions .obv-health-circle-btn {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 13px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions .obv-health-viewall {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0 12px !important;
+    border-radius: 13px !important;
+    font-size: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions .obv-priority-add-task {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: #243a35 !important;
+    color: #fff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    font-size: 12px !important;
+    font-weight: 618 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions .obv-priority-add-task svg {
+    width: 13px !important;
+    height: 13px !important;
+    stroke-width: 2.4 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-panel {
+    min-width: 0 !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 19px !important;
+    background: #fff !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-panel-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-panel-head span {
+    color: #172033 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-panel-head em {
+    color: #7b8491 !important;
+    font-size: 10.5px !important;
+    line-height: 1 !important;
+    font-style: normal !important;
+    font-weight: 573 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item {
+    min-height: 190px !important;
+    padding: 12px !important;
+    border-radius: 17px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-head {
+    gap: 9px !important;
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-avatar {
+    width: 39px !important;
+    height: 39px !important;
+    border-radius: 13px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-copy {
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-copy strong {
+    font-size: 12.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-copy span {
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-divider {
+    margin: 10px 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats {
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats div {
+    gap: 5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats dt, .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats dd {
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    background: #fafbfc !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-cases-panel {
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    padding: 8px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 15px !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 9px !important;
+    text-align: left !important;
+    color: inherit !important;
+    font: inherit !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-row:hover {
+    border-color: #dce5f1 !important;
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-row .obv-habit-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-row .obv-habit-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-copy {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-copy strong {
+    display: block !important;
+    color: #172033 !important;
+    font-size: 12px !important;
+    line-height: 1.12 !important;
+    font-weight: 609 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-copy em {
+    display: block !important;
+    color: #7b8491 !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    font-style: normal !important;
+    font-weight: 545 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status {
+    min-height: 24px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    background: #f3f5f8 !important;
+    color: #687082 !important;
+    font-size: 10px !important;
+    font-weight: 627 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-blocked, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-blocking {
+    background: #fff0ee !important;
+    color: #be3d32 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-evidence, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-review {
+    background: #fff5e8 !important;
+    color: #be6b15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-ready, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status.status-in-progress {
+    background: #e8f7ef !important;
+    color: #197a56 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer {
+    margin: 0 !important;
+    padding: 10px !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-composer-head {
+    margin-bottom: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-composer-head strong {
+    font-size: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-field span, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-evidence-toggle span {
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer input, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer select {
+    min-height: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-composer-actions {
+    margin-top: 8px !important;
+    gap: 6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-cancel-btn, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-composer .obv-task-save-btn {
+    min-height: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-insight {
+    margin-top: 13px !important;
+    padding: 13px 14px !important;
+    border-radius: 17px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-insight .obv-case-insight-purple-copy strong {
+    font-size: 13px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-work-insight .obv-case-insight-purple-copy em {
+    font-size: 11px !important;
+  }
+
+  @media (max-width: 1180px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-work-head {
+      align-items: stretch !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-work-actions {
+      justify-content: flex-start !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-list, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-list {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-row {
+      grid-template-columns: 34px minmax(0, 1fr) !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-status {
+      grid-column: 2 !important;
+      justify-self: start !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v16: keep task planner inside the same Priority Case Work container with all original task features */
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-work-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-task-planner-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 13px !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 19px !important;
+    background: #fafbfc !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-top {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-top h2 {
+    margin: 0 !important;
+    color: #151a24 !important;
+    font-size: 16px !important;
+    line-height: 1.1 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-top h2 span {
+    color: #5c6472 !important;
+    font-weight: 514 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-top p {
+    margin: 3px 0 0 !important;
+    color: #7b8491 !important;
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+    font-weight: 545 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-add-task-btn {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0 11px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: #ef7c6a !important;
+    color: #fff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 618 !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-add-task-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+    stroke-width: 2.4 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-days {
+    display: grid !important;
+    grid-template-columns: 34px repeat(7, minmax(0, 1fr)) 34px !important;
+    gap: 7px !important;
+    align-items: center !important;
+    margin: 0 0 10px !important;
+    padding: 8px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-health-ghost-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 12px !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day {
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: inherit !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day span {
+    display: block !important;
+    margin: 0 0 3px !important;
+    color: #7b8491 !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+    font-weight: 564 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day strong {
+    display: block !important;
+    color: #172033 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day.active {
+    background: #ef7c6a !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day.active span, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day.active strong {
+    color: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer {
+    margin: 0 0 10px !important;
+    padding: 10px !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer-head {
+    margin-bottom: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer-head strong {
+    font-size: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-field span, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-evidence-toggle span {
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer input, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer select {
+    min-height: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-composer-actions {
+    margin-top: 8px !important;
+    gap: 6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-cancel-btn, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-task-save-btn {
+    min-height: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    padding: 0 10px !important;
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-grid, .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-grid-single {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    margin: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-col {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-row {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    padding: 8px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 15px !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 9px !important;
+    text-align: left !important;
+    color: inherit !important;
+    font: inherit !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-row:hover {
+    border-color: #dce5f1 !important;
+    background: #fff !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-copy {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-copy strong {
+    display: block !important;
+    margin: 0 !important;
+    color: #172033 !important;
+    font-size: 12px !important;
+    line-height: 1.12 !important;
+    font-weight: 609 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-copy span {
+    display: block !important;
+    color: #7b8491 !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    font-weight: 545 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-done {
+    margin-left: 0 !important;
+    min-width: 64px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+    gap: 4px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-done svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-empty {
+    grid-column: 1 / -1 !important;
+    padding: 14px !important;
+    border: 1px dashed #dce5f1 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: #7b8491 !important;
+    font-size: 12px !important;
+    font-weight: 555 !important;
+    text-align: center !important;
+  }
+
+  @media (max-width: 1180px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-col {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-top {
+      align-items: stretch !important;
+      flex-direction: column !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-days {
+      grid-template-columns: 34px repeat(4, minmax(0, 1fr)) 34px !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-day:nth-of-type(n+6) {
+      display: none !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-row {
+      grid-template-columns: 34px minmax(0, 1fr) !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-priority-task-planner-panel .obv-habit-done {
+      grid-column: 2 !important;
+      justify-self: start !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v18: place Upcoming Deadlines in the left column without wrapping/restyling the purple critical path card. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-deadlines-card {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    justify-self: stretch !important;
+    align-self: start !important;
+    box-sizing: border-box !important;
+    min-height: 252px !important;
+    padding: 18px !important;
+  }
+
+  @media (max-width: 1120px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-deadlines-card {
+      grid-column: 1 !important;
+      grid-row: auto !important;
+    }
+  }
+}
+
+/* v19: remove empty bottom space from Priority Case Work case cards. */
+@layer sections {
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-list {
+    align-items: start !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-case-performance-item.obv-priority-case-item {
+    min-height: 0 !important;
+    height: auto !important;
+    align-self: start !important;
+    display: block !important;
+    padding-bottom: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-case-performance-item.obv-priority-case-item .obv-doctor-divider {
+    margin: 9px 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-case-performance-item.obv-priority-case-item .obv-doctor-stats {
+    gap: 7px !important;
+  }
+
+  /* Priority Cases panel head now only has the count badge (the "Priority Cases" label
+     was redundant with the card's own title) — keep it aligned to the right, not the
+     empty flex-start it'd fall back to as a lone flex child. */
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-panel-head {
+    justify-content: flex-end !important;
+  }
+
+  /* The Priority Cases panel no longer shares its row with the Task Planner, so give
+     each case tile more room to breathe instead of the cramped shared-width sizing. */
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item {
+    min-height: 230px !important;
+    padding: 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-person-avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-copy strong {
+    font-size: 14.5px !important;
+    line-height: 1.2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-copy span {
+    font-size: 12.5px !important;
+    line-height: 1.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-divider {
+    margin: 14px 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats {
+    gap: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats dt,
+  .siomac-onboarding-overview-mockup-v2 .obv-priority-case-work-card .obv-priority-case-item .obv-doctor-stats dd {
+    font-size: 13px !important;
+  }
+}
+
+
+@layer sections {
+  /* Real-avatar sizing (Phase 2): the shared initials Avatar (./shared.tsx) replaces every
+     stock-photo <img> the mockup used. Sizes mirror the original placement-specific image
+     dimensions (obv-doctor-avatar 54px, obv-project-avatar 38px, obv-blocked-single-avatar
+     30px, obv-critical-profile avatar 52px) collapsed into three reusable buckets. */
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar .avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    font-weight: 600;
+    color: #0b55d8;
+    background: #e8f1ff;
+    border: 1px solid #cfe0ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-sm {
+    width: 30px;
+    height: 30px;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-sm .avatar {
+    font-size: 11px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-md {
+    width: 44px;
+    height: 44px;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-md .avatar {
+    font-size: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-lg {
+    width: 56px;
+    height: 56px;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-person-avatar-lg .avatar {
+    font-size: 17px;
+  }
+}
+
+@layer sections {
+  /* Phase 2: the shared @ui EmptyState (icon disc + title + text + note) is used across
+     every card on this page instead of a bare line of text — Blocked Cases, Priority Case
+     Work, Today's Onboarding Work, Recent Activity, Upcoming Deadlines, Task Planner, and
+     the Morning Goal / critical-path card's "no active blockers" state. It needs to span
+     full width when it lands inside this page's CSS-grid card layouts. */
+  /* One consistent neutral card for every empty state on this page (not a different
+     accent per card) — matches the page's own neutral card background, with the icon
+     disc using that same gray family so the box and icon read as one coherent unit. */
+  .siomac-onboarding-overview-mockup-v2 .ui-empty {
+    grid-column: 1 / -1;
+    width: 100%;
+    border-radius: 20px;
+    border: 1px solid #e9edf3;
+    background: #f8fafc;
+    padding: 34px 22px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .ui-empty-inner {
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .ui-empty-icon.tone-gray {
+    background: #fee6e4 !important;
+    color: #ee7469 !important;
+  }
+
+  /* Proper text hierarchy: bold title, then a clearly secondary subtext, then a
+     smaller supporting note — with real spacing between each tier. */
+  .siomac-onboarding-overview-mockup-v2 .ui-empty-title {
+    font-weight: 700 !important;
+    font-size: 15.5px !important;
+    color: #101828 !important;
+    margin-top: 2px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .ui-empty-text {
+    font-weight: 500 !important;
+    font-size: 13.5px !important;
+    color: #475467 !important;
+    max-width: 340px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .ui-empty-note {
+    margin-top: 2px !important;
+    font-size: 12px !important;
+    color: #98a2b3 !important;
+    max-width: 320px !important;
+  }
+
+  /* The Morning Goal / critical-path card already has its own purple identity
+     (background #e8e4fb, border #d9d0f8) — its empty state should pick up THAT
+     accent instead of the page's generic neutral gray, so it reads as part of the
+     same card rather than an unrelated gray box dropped inside a purple one. */
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-path-card-empty .ui-empty {
+    background: #f3f0fd;
+    border-color: #d9d0f8;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-path-card-empty .ui-empty-icon {
+    background: #ded7f9 !important;
+    color: #5b3fae !important;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-path-card-empty .ui-empty-title {
+    color: #211a38 !important;
+  }
+
+  /* Blocked Cases already has its own light-gray identity (#f7f7f7 / #eeeeee border) —
+     match its empty state to that exact background instead of the page's generic tone. */
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-condensed-card .ui-empty {
+    background: #efefef;
+    border-color: #eeeeee;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-condensed-card .ui-empty-icon {
+    background: #e4e4e4 !important;
+    color: #5f6368 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-path-card-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+  }
+
+  /* Today's Onboarding Work nav buttons must match Priority Case Work's button size
+     (31px circles / 13px radius), not the card's own larger 40px default. */
+  .siomac-onboarding-overview-mockup-v2 .obv-task-work-card .obv-project-card-head .obv-recent-work-actions .obv-health-circle-btn {
+    width: 31px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    border-radius: 13px !important;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-task-work-card .obv-project-card-head .obv-recent-work-actions .obv-health-viewall {
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 0 12px !important;
+    border-radius: 13px !important;
+    font-size: 12px !important;
+  }
+
+  /* Blocked Cases / Upcoming Deadlines titles: Blocked Cases a touch smaller, and
+     Upcoming Deadlines matches it exactly — both stay on one line. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-blocked-title-group h2 {
+    font-size: 16px !important;
+    white-space: nowrap !important;
+  }
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-deadlines-card .obv-health-head h2 {
+    font-size: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Matches (and slightly exceeds) the specificity of the .obv-v20-layout-scoped
+     h2 font-size rule elsewhere in the file, so this one reliably wins the
+     white-space property too instead of the title wrapping to two lines. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-deadlines-card h2,
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack .obv-deadlines-card .obv-appointments-title h2 {
+    font-size: 16px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-title {
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-title h2 {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  /* Blocked Cases: the count badge was getting visually covered by the prev/next
+     button — the title-group shrinks (min-width:0) but its content (dot + title +
+     count) could still exceed that shrunk width with nothing to absorb the
+     overflow. Let the TITLE TEXT truncate with ellipsis if needed; keep the dot
+     and the count badge fixed-size so they're never the thing that gets clipped
+     or overlapped. */
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-title-group h2 {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-title-group em,
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-alert-dot {
+    flex: 0 0 auto !important;
+  }
+
+}
+

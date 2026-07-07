@@ -50,7 +50,7 @@ export function OnboardingPackageDetail({
 }: { packageKey: string; onBack: () => void; onToast: (m: string) => void }): VNode {
   const [tab, setTab] = useState<PkgTab>('tasks');
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ label: '', description: '', defaultSlaDays: '10', defaultOwnerRole: '', workerTypes: '' });
+  const [editForm, setEditForm] = useState({ label: '', description: '', defaultSlaDays: '10', defaultOwnerRole: '', workerTypes: '', probationDays: '' });
   const [taskModal, setTaskModal] = useState<typeof emptyTaskForm | null>(null);
   const [handoffModal, setHandoffModal] = useState<typeof emptyHandoffForm | null>(null);
   const [actionModal, setActionModal] = useState<typeof emptyActionForm | null>(null);
@@ -75,7 +75,7 @@ export function OnboardingPackageDetail({
 
   // ── package header actions ──────────────────────────────────────────────────────
   function openEdit(): void {
-    setEditForm({ label: pkg!.label, description: pkg!.description ?? '', defaultSlaDays: String(pkg!.defaultSlaDays), defaultOwnerRole: pkg!.defaultOwnerRole ?? '', workerTypes: pkg!.workerTypes.join(', ') });
+    setEditForm({ label: pkg!.label, description: pkg!.description ?? '', defaultSlaDays: String(pkg!.defaultSlaDays), defaultOwnerRole: pkg!.defaultOwnerRole ?? '', workerTypes: pkg!.workerTypes.join(', '), probationDays: pkg!.probationDays != null ? String(pkg!.probationDays) : '' });
     setEditOpen(true);
   }
   async function submitEdit(): Promise<void> {
@@ -83,6 +83,7 @@ export function OnboardingPackageDetail({
       id: pkg!.id, label: editForm.label.trim() || undefined, description: editForm.description.trim() || null,
       defaultSlaDays: Number(editForm.defaultSlaDays) || undefined, defaultOwnerRole: editForm.defaultOwnerRole.trim() || null,
       workerTypes: editForm.workerTypes.split(',').map(s => s.trim()).filter(Boolean),
+      probationDays: editForm.probationDays.trim() ? Number(editForm.probationDays) : null,
     }), 'Package updated');
     setEditOpen(false);
   }
@@ -271,6 +272,7 @@ export function OnboardingPackageDetail({
         <FormGrid>
           <Field label="Label" wide><TextInput value={editForm.label} onInput={v => setEditForm(f => ({ ...f, label: v }))} /></Field>
           <Field label="Default SLA (days)"><TextInput type="number" value={editForm.defaultSlaDays} onInput={v => setEditForm(f => ({ ...f, defaultSlaDays: v }))} /></Field>
+          <Field label="Probation (days)"><TextInput type="number" value={editForm.probationDays} onInput={v => setEditForm(f => ({ ...f, probationDays: v }))} placeholder="e.g. 90, blank = none" /></Field>
           <Field label="Default owner role"><TextInput value={editForm.defaultOwnerRole} onInput={v => setEditForm(f => ({ ...f, defaultOwnerRole: v }))} /></Field>
           <Field label="Worker types" wide><TextInput value={editForm.workerTypes} onInput={v => setEditForm(f => ({ ...f, workerTypes: v }))} placeholder="e.g. full_time, contractor" /></Field>
         </FormGrid>

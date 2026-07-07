@@ -2,7 +2,7 @@
  *
  * Styling for the onboarding case-detail page's FUNCTIONAL local table widgets (.obx*) —
  * Active Tasks / Blockers / Handoffs / Custom Actions — and the lifecycle action buttons that
- * sit in the standard PageHeader. KPI tiles are styled separately (onboardingCaseWidgets.css).
+ * sit in the standard PageHeader.
  */
 .obx-back { background: none; border: none; color: #2563eb; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; font-family: inherit; margin-bottom: 10px; }
 .obx-back:hover { color: #1c68d4; }

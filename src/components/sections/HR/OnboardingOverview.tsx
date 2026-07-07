@@ -21,7 +21,7 @@ import type {
 } from '../../../../types/hrOnboarding';
 import { OnboardingCommandCenter } from './OnboardingCommandCenter';
 import type { OnboardingSurface as CommandCenterSurface, OnboardingSurfaceFilters } from './OnboardingCommandCenter.helpers';
-import { OnboardingWizard } from './OnboardingWizard';
+import { StartOnboardingWizard } from './StartOnboardingWizard';
 import { OnboardingCaseDetail } from './OnboardingCaseDetail';
 import { OnboardingPackageManager } from './OnboardingPackageManager';
 import { OnboardingPackageDetail } from './OnboardingPackageDetail';
@@ -173,11 +173,10 @@ function ObAdvancedFilters(p: ObAdvProps): VNode {
 
 // Full-page drill-in surfaces under HR ▸ Onboarding. Case Detail and Package Detail
 // carry their own data state (selectedCase / openPackageKey) on top of this.
-type OnboardingSurface = 'overview' | 'packages' | 'tasks' | 'handoffs' | 'blocked' | 'reports';
+type OnboardingSurface = 'overview' | 'packages' | 'tasks' | 'handoffs' | 'blocked' | 'reports' | 'start';
 
 export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: string | null } = {}): VNode {
   const [toast, setToast] = useState('');
-  const [wizardOpen, setWizardOpen] = useState(false);
   const [surface, setSurface] = useState<OnboardingSurface>('overview');
   const [selectedCase, setSelectedCase] = useState<OnboardingCaseRow | null>(null);
   const [openPackageKey, setOpenPackageKey] = useState<string | null>(null);
@@ -314,6 +313,9 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
       </div>
     );
   }
+  if (surface === 'start') {
+    return <StartOnboardingWizard onBack={() => setSurface('overview')} />;
+  }
 
   // Cases table — a PAGE-LOCAL widget. Wrapped in the `.hr-emp-master` scope so it reuses the
   // Employee Master register styling verbatim (toolbar, table, pagination, advanced-filter dropdown).
@@ -366,7 +368,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
             <i class="fas fa-boxes-stacked" /> Packages
           </button>
         )}
-        <button type="button" class="hse-btn accent" onClick={() => setWizardOpen(true)}>
+        <button type="button" class="hse-btn accent" onClick={() => setSurface('start')}>
           <i class="fas fa-circle-plus" /> New Case
         </button>
       </div>
@@ -469,13 +471,12 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
       <OnboardingCommandCenter
         onOpenSurface={handleOpenSurface}
         onOpenCase={openCaseById}
-        onNewCase={() => setWizardOpen(true)}
+        onNewCase={() => setSurface('start')}
         onToast={notify}
       />
 
       {renderCases()}
 
-      {wizardOpen && <OnboardingWizard employeeId={null} onClose={() => setWizardOpen(false)} onToast={notify} />}
 
       <div class={`toast ${toast ? 'show' : ''}`}>{toast}</div>
     </div>

@@ -44,6 +44,69 @@ export interface OnboardingPackageSummary {
   defaultSlaDays: number;
   defaultOwnerRole: string | null;
   versionNo: number;
+  /** Days of probation for this package. null = no probation period (e.g. contractors). */
+  probationDays: number | null;
+}
+
+// ── Start Onboarding wizard: intake-preview (verification + documents + duplicate + task/handoff preview) ──
+export interface OnboardingIntakeVerification { id: string; label: string; status: 'verified' | 'pending'; critical: boolean }
+
+export type OnboardingDocumentState = 'present_verified' | 'present_unverified' | 'expired' | 'missing';
+
+/** Selection the wizard makes for a document requirement (how it will be satisfied at launch). */
+export type OnboardingDocumentLaunchAction = 'use_existing' | 'uploaded' | 'request_from_worker' | 'waive' | 'none';
+
+export interface OnboardingDocumentLaunchSelection {
+  requirementId: string;
+  action: OnboardingDocumentLaunchAction;
+  /** doc ID when action === 'use_existing' */
+  existingDocumentId?: string | null;
+  /** path when action === 'uploaded' */
+  uploadedFilePath?: string | null;
+  waiverReason?: string | null;
+}
+
+export interface OnboardingIntakeDocument {
+  requirementId: string;
+  type: string;
+  label: string;
+  state: OnboardingDocumentState;
+  collected: boolean;
+  /** Whether the requirement is marked required (vs advisory). Default: true */
+  isRequired: boolean;
+  /** Whether a missing/expired doc blocks case launch. Default: false */
+  isBlocking: boolean;
+  /** Whether HR may waive this requirement. Default: false */
+  canWaive: boolean;
+  /** Whether the document must carry an expiry date to be compliant. */
+  requiresExpiry: boolean;
+  /** Document ID of the best existing doc for this requirement, if any. */
+  existingDocumentId: string | null;
+  /** Expiry date of the best existing doc, if any. */
+  expiresAt: string | null;
+}
+
+export interface OnboardingIntakeDuplicateCase { caseId: string; caseNo: string; status: OnboardingCaseStatus }
+export interface OnboardingIntakePreviewArgs { employeeId: string; packageKey: string }
+export interface OnboardingIntakePreview {
+  preview: {
+    package: string;
+    label: string;
+    tasks: { taskKey: string; taskTitle: string; ownerRole: string; moduleKey: string | null }[];
+    handoffs: { targetModule: string; handoffType: string }[];
+    taskCount: number;
+    handoffCount: number;
+  } | null;
+  verification: OnboardingIntakeVerification[];
+  documents: {
+    items: OnboardingIntakeDocument[];
+    requiredCount: number;
+    missingCount: number;
+    blockingMissingCount: number;
+    pendingVerificationCount: number;
+    expiredCount: number;
+  };
+  duplicate: { hasDuplicate: boolean; checkedAt: string; cases: OnboardingIntakeDuplicateCase[] };
 }
 
 // ── Package Manager (task templates, handoff templates, package CRUD) ───────────
@@ -81,6 +144,8 @@ export interface OnboardingPackageDetail {
   appliesToSites: string[];
   status: 'draft' | 'active' | 'retired';
   versionNo: number;
+  /** Days of probation for this package. null = no probation period. */
+  probationDays: number | null;
   taskTemplates: OnboardingTaskTemplateRow[];
   handoffTemplates: OnboardingHandoffTemplateRow[];
 }
@@ -93,6 +158,7 @@ export interface CreatePackageArgs {
   defaultOwnerRole?: string | null;
   appliesToDepartments?: string[];
   appliesToSites?: string[];
+  probationDays?: number | null;
 }
 export interface UpdatePackageArgs {
   id: string;
@@ -103,6 +169,7 @@ export interface UpdatePackageArgs {
   defaultOwnerRole?: string | null;
   appliesToDepartments?: string[];
   appliesToSites?: string[];
+  probationDays?: number | null;
 }
 export interface SetPackageStatusArgs { id: string; status: 'draft' | 'active' | 'retired' }
 
@@ -509,6 +576,27 @@ export interface OnboardingReportResult {
   columns: OnboardingReportColumn[];
   rows: Record<string, unknown>[];
   totalRows: number;
+}
+
+// ── Start Onboarding: launch args extension ──────────────────────────────────────
+/** Extended start args: document selections + scheduled launch. Consumed by the route
+ *  zod schema + onboardingCore.ts. */
+export interface OnboardingStartArgs {
+  employeeId: string;
+  packageKey: string;
+  ownerId?: string | null;
+  dueAt?: string | null;
+  reason?: string | null;
+  priority?: string | null;
+  targetStartDate?: string | null;
+  launchMode?: string | null;
+  caseOwner?: string | null;
+  workerType?: string | null;
+  includeActionTemplateIds?: string[] | null;
+  /** Per-requirement document disposition selections from the Documents wizard step. */
+  documentSelections?: OnboardingDocumentLaunchSelection[] | null;
+  /** ISO datetime when the case should transition to active (Scheduled mode). */
+  scheduledLaunchAt?: string | null;
 }
 
 // ── Audit (case Audit tab — Phase 3) ─────────────────────────────────────────────

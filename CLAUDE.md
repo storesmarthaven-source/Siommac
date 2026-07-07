@@ -3,6 +3,11 @@
 ## Authoritative Specification
 The canonical build spec is the **SIOMAC ERP Build-Ready Technical Implementation Specification** (pasted into session on 2026-06-22). All decisions defer to it.
 
+## Orient first — Repository Map
+`docs/REPO_MAP.md` is the fast codebase-orientation map (where things live: aliases, sections,
+api hooks, widget system, backend routes/lib, data, testing, hotspots). Read it before searching
+the tree; it saves a re-scan every session.
+
 ## No Band-Aids — NON-NEGOTIABLE (read first)
 Every change fixes the ROOT cause, the enterprise way. No shortcuts, no transitional
 crutches, no "make-it-pass" hacks, no leaving/patching legacy. The following are band-aids
@@ -124,30 +129,18 @@ complete or committed as "done".
 - Path aliases: `@api` → `src/api`, `@lib` → `src/lib`, `@ui` → `src/ui`
 
 ## Build Order — Do NOT skip ahead
-The spec defines this completion sequence. **Do not start a phase until the previous is complete and the user explicitly approves the next one.**
+**Do not start a phase until the previous is complete and the user explicitly approves the next
+one.** The platform backbone, Communications, HSE-core migrations, and the HR/Finance module
+build-out are complete and green; active work is HR (onboarding/offboarding/attendance/etc.) and
+its dashboards/widgets. Per-module status lives in memory + `docs/PHASE_PLAN.md`, not here.
 
-```
-1. ✅ Backbone migrations (app_events, workflow_*, handoff_outbox, reference_counters)
-2. ✅ Communications migrations (notifications extended, message_threads, tickets, attachments, realtime signals)
-3. ✅ HSE core migrations (hse_incidents, hse_investigations, hse_capa_actions + skeleton tables)
-4. ✅ HR/Payroll/Finance/Ops skeleton tables + workflow_templates seed
-5. ✅ Backend lib (appEvents, refGenerator, workflowEngine, handoffBus, communications, recipientResolver)
-6. ✅ Backend routes (workflows, handoffs, communications, hseIncidents, hseInvestigations, hseCapa)
-7. ✅ Frontend API hooks (workflows.ts, communications.ts, hse/incidents.ts)
-8. ✅ Workflow frontend wiring (Workflows.tsx — all 5 tabs on real API)
-9. ✅ Communications wired (badgeSync → /api/communications/summary, useRealtimeSignals in AppShell)
-10. ✅ Incidents.tsx — OSH/injury fields wired to backend
-11. 🔲 HSE Incidents page — complete all drawer tabs (Overview, People, Evidence, Investigation, CAPA, Workflow, Timeline)
-12. 🔲 HSE Reports page — Incidents / Investigations / CAPA aging, overdue, audit export (Spec §16)
-13. 🔲 Legacy removal — localStorage workflow store deprecated, synthetic notification route deleted
-14. 🔲 HR, Finance, Operations handoff receivers wired
-15. 🔲 HSE Dashboard full wiring — LAST, only after §11-14 complete and user explicitly approves
-```
-
-## Explicit Deferrals — Do NOT touch without user go-ahead
-- **HSE Dashboard wiring** (`HSEDashboard.tsx` Layers 3-5, full KPI suite) — deferred until step 15
-- **UI kit promotion** (moving shared components to `src/ui`) — deferred
-- **HR / Finance / Operations full UI** — deferred until handoff receivers are proven
+Still-standing sequencing rules:
+- **HSE Dashboard full wiring is LAST** (`HSEDashboard.tsx` Layers 3-5 / full KPI suite) — only
+  after HSE Incidents/Reports pages, legacy removal, and handoff receivers are done AND the user
+  explicitly approves.
+- **UI-kit promotion** (moving shared components into `src/ui`) is deferred until asked.
+- **Legacy removal** (localStorage workflow store, synthetic notification route, legacy HR
+  sections) proceeds build-new → delete-legacy, no dual system.
 
 ## Database Naming Rules (Spec §3)
 - New tables: `snake_case`, module-prefixed: `hse_*`, `hr_*`, `finance_*`, `ops_*`, `payroll_*`

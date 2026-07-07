@@ -18,13 +18,30 @@ export interface WidgetBoardProps {
   defaultLayout?: BoardLayout;
   /** Demo mode — registry widgets render their static sample instead of live data. */
   demo?: boolean;
+  /** Gridstack row height in px (default 88). Boards dominated by sizeToContent tiles
+   *  should use a SMALL value (e.g. 12): tile heights quantize to this, so a fine grid
+   *  lets each tile hug its card instead of leaving up to a row's worth of background
+   *  gap below it. Coarse boards (fixed-height tiles the user drags to size) keep 88. */
+  cellHeight?: number;
+  /** Gridstack column count (default 12). A finer grid (e.g. 24) makes width-resize
+   *  feel near-fluid — snap steps halve — at the cost of looser column alignment.
+   *  NOTE: every x/w/minW in the board's default layout and its widgets' allowedSizes
+   *  is expressed in THESE units — they must match the column count. */
+  column?: number;
+  /** RGL compactType — 'vertical' (default, Employee Master), 'horizontal', or null.
+   *  Set to null on the Onboarding board so tiles honour their saved x/y positions
+   *  without being re-compacted into the top-left, preserving the multi-column layout. */
+  compact?: 'vertical' | 'horizontal' | null;
+  /** When false, tiles can be DRAG-REORDERED in edit mode but NOT resized (uniform-size
+   *  zones like the onboarding KPI row: pick which widgets + reorder, never resize). Default true. */
+  resizable?: boolean;
   preview?: PreviewWidgetInstance | null;
   onPreviewChange?: (preview: PreviewWidgetInstance) => void;
   onCommitPreview?: (preview: PreviewWidgetInstance) => void;
   onDiscardPreview?: () => void;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
+export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, compact, resizable, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
   // `isSuccess` = the installed-package list is authoritative — only THEN may a zone prune board
   // instances whose widget no longer resolves (a transient/stale-dist error must NOT drop widgets).
@@ -35,6 +52,7 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
         <WidgetBoardZone
           key={zoneId} pageKey={pageKey} zoneId={zoneId} editing={editing}
           localWidgets={localWidgets} defaultLayout={defaultLayout} demo={demo}
+          cellHeight={cellHeight} column={column} compact={compact} resizable={resizable}
           registryReady={pkgQuery.isSuccess}
           preview={preview} onPreviewChange={onPreviewChange}
           onCommitPreview={onCommitPreview} onDiscardPreview={onDiscardPreview}

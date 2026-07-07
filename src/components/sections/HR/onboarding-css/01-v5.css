@@ -1,0 +1,2333 @@
+/* Scoped under .siomac-onboarding-overview-mockup-v2. Visual-only review stylesheet copied from v19. */
+@layer sections {
+  .siomac-onboarding-overview-mockup-v2 {
+    --obv-page-bg: #ffffff;
+    --obv-card: #ffffff;
+    --obv-text: #08173d;
+    --obv-heading: #06143b;
+    --obv-muted: #6d7794;
+    --obv-muted-2: #9aa6bd;
+    --obv-border: #dfe7f2;
+    --obv-border-strong: #d6dfec;
+    --obv-primary: #0b63f4;
+    --obv-primary-dark: #084fd0;
+    --obv-blue: #1269ef;
+    --obv-green: #18ad68;
+    --obv-purple: #674ce8;
+    --obv-amber: #f39b0b;
+    --obv-cyan: #06b5bf;
+    --obv-red: #ef3d3d;
+    --obv-slate: #aeb8c8;
+    --obv-soft-shadow: 0 8px 20px rgb(13 27 61 / 3.5%);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--obv-text);
+    background: var(--obv-page-bg);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup, .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup * {
+    box-sizing: border-box;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 {
+    background: #ffffff;
+    color: var(--obv-text);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup button, .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup input {
+    font: inherit;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup button {
+    cursor: pointer;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup a {
+    color: var(--obv-primary);
+    text-decoration: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-shell {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgb(14 100 244 / 3.5%), transparent 38%),
+      #fff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-global-search {
+    width: 302px;
+    height: 31px;
+    border: 1px solid var(--obv-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 9px;
+    color: #7d8aa4;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 35 75 / 2.5%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-global-search svg {
+    font-size: 14px;
+    color: #6d7b99;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-global-search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    font-size: 12px;
+    color: #1b2a52;
+    background: transparent;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-global-search input::placeholder {
+    color: #7b86a1;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-global-search span {
+    font-size: 10px;
+    line-height: 18px;
+    border: 1px solid #dce3ef;
+    padding: 0 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    color: #52617f;
+    background: #fbfcfe;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-icon-button {
+    width: 31px;
+    height: 31px;
+    border: 0;
+    background: transparent;
+    color: #1c2c55;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-icon-button svg {
+    font-size: 18px;
+    stroke-width: 1.8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-icon-button:hover {
+    background: #f4f7fb;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-notification-badge {
+    position: absolute;
+    right: 1px;
+    top: 0;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #f43131;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 582;
+    display: grid;
+    place-items: center;
+    border: 2px solid #fff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-user-menu {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 142px;
+    padding-left: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-user-menu strong {
+    display: block;
+    color: var(--obv-heading);
+    font-size: 12px;
+    line-height: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-user-menu span {
+    display: block;
+    color: #75809a;
+    font-size: 11px;
+    line-height: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-user-chevron {
+    color: #6d7894 !important;
+    margin-left: 3px;
+    font-size: 14px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 1px #edf2f8;
+    background: #eef3fb;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-avatar-small {
+    width: 31px;
+    height: 31px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-overview-page {
+    width: 100%;
+    max-width: 1328px;
+    margin: 0 auto;
+    padding: 18px 0 42px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 19px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-title-row h1 {
+    margin: 0 0 3px;
+    font-size: 27px;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    color: var(--obv-heading);
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-title-row p {
+    margin: 0;
+    color: #61718f;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-page-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-hidden-filter-input {
+    width: 180px;
+    height: 34px;
+    border: 1px solid var(--obv-border);
+    border-radius: 7px;
+    padding: 0 12px;
+    color: #1a2b53;
+    background: #fff;
+    outline: 0;
+    display: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-button, .siomac-onboarding-overview-mockup-v2 .obv-primary-button {
+    height: 34px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--obv-border);
+    background: #fff;
+    color: #1a2b53;
+    font-size: 12px;
+    font-weight: 536;
+    padding: 0 17px;
+    box-shadow: 0 1px 2px rgb(12 29 68 / 3%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-button svg, .siomac-onboarding-overview-mockup-v2 .obv-primary-button svg {
+    font-size: 14px;
+    stroke-width: 2;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.primary.obv-primary-button {
+    min-width: 105px;
+    background: linear-gradient(180deg, #106bf7 0%, #075ce5 100%);
+    color: #fff;
+    border-color: #075ce5;
+    box-shadow: 0 8px 16px rgb(8 94 230 / 18%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-select-caret {
+    color: #7e8aa2;
+    margin-left: 2px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-preview-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    border: 1px solid #d9e8ff;
+    border-radius: 999px;
+    background: #f3f8ff;
+    color: #125fd2;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-preview-action svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-card {
+    background: var(--obv-card);
+    border: 1px solid var(--obv-border-strong);
+    border-radius: 8px;
+    box-shadow: var(--obv-soft-shadow);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-card {
+    height: 109px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 19px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    color: white;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%), 0 8px 18px rgb(0 0 0 / 6%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-icon svg {
+    font-size: 24px;
+    stroke-width: 1.8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-card p {
+    margin: 0 0 3px;
+    font-size: 12px;
+    color: #65738e;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-card strong {
+    display: block;
+    font-size: 28px;
+    line-height: 32px;
+    letter-spacing: -0.04em;
+    color: var(--obv-heading);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-card span {
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-card em {
+    font-style: normal;
+    font-weight: 445;
+    color: #6d7896;
+    padding-left: 2px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-trend-up, .siomac-onboarding-overview-mockup-v2 .obv-trend-down {
+    color: var(--obv-green);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .icon-blue { background: linear-gradient(180deg, #2b83ff 0%, #0e61e8 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-green { background: linear-gradient(180deg, #24c77b 0%, #0aa160 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-purple { background: linear-gradient(180deg, #7b5df3 0%, #5a3de0 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-amber { background: linear-gradient(180deg, #ffae22 0%, #ed9306 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-cyan { background: linear-gradient(180deg, #15c4d0 0%, #07aab6 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-red { background: linear-gradient(180deg, #ff5959 0%, #e33636 100%); }
+  .siomac-onboarding-overview-mockup-v2 .icon-slate { background: linear-gradient(180deg, #bbc4d1 0%, #96a2b6 100%); }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-card-header h2 {
+    margin: 0;
+    color: var(--obv-heading);
+    font-size: 15px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-link-button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--obv-blue);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-decoration: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-link-button:hover {
+    text-decoration: underline;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-card-header .obv-link-button {
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-status-card, .siomac-onboarding-overview-mockup-v2 .obv-recent-cases-card, .siomac-onboarding-overview-mockup-v2 .obv-deadlines-card {
+    grid-column: span 4;
+    min-height: 329px;
+    padding: 17px 17px 16px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-status-card .obv-card-header, .siomac-onboarding-overview-mockup-v2 .obv-recent-cases-card .obv-card-header, .siomac-onboarding-overview-mockup-v2 .obv-deadlines-card .obv-card-header {
+    margin-bottom: 20px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-mini-select {
+    height: 26px;
+    font-size: 11px;
+    padding: 0 11px;
+    font-weight: 491;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-status-content {
+    height: 244px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 58px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-donut {
+    width: 172px;
+    height: 172px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at center, #fff 0 43%, transparent 44%),
+      conic-gradient(#1b7cf3 0 14%, #1ab36b 14% 64%, #654be6 64% 91%, #f6a30d 91% 100%);
+    box-shadow: inset 0 0 0 1px rgb(23 42 82 / 3%), 0 10px 22px rgb(27 124 243 / 8%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-status-legend {
+    width: 174px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-legend-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #13244e;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-legend-row strong {
+    font-size: 12px;
+    color: #06143b;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .dot-blue { background: var(--obv-blue); }
+  .siomac-onboarding-overview-mockup-v2 .dot-green { background: var(--obv-green); }
+  .siomac-onboarding-overview-mockup-v2 .dot-purple { background: var(--obv-purple); }
+  .siomac-onboarding-overview-mockup-v2 .dot-amber { background: var(--obv-amber); }
+  .siomac-onboarding-overview-mockup-v2 .dot-slate { background: #b5bfce; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-list {
+    display: grid;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-row {
+    appearance: none;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    height: 58px;
+    display: grid;
+    grid-template-columns: 38px 1fr auto 93px;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #edf1f7;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-row:last-child {
+    border-bottom: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-row:hover {
+    background: #f8fbff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-person strong, .siomac-onboarding-overview-mockup-v2 .obv-deadline-main strong, .siomac-onboarding-overview-mockup-v2 .obv-task-mini-card strong, .siomac-onboarding-overview-mockup-v2 .obv-blocked-row strong, .siomac-onboarding-overview-mockup-v2 .obv-activity-row strong {
+    display: block;
+    color: #0a183e;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-person span, .siomac-onboarding-overview-mockup-v2 .obv-deadline-main span, .siomac-onboarding-overview-mockup-v2 .obv-task-mini-card span, .siomac-onboarding-overview-mockup-v2 .obv-blocked-row span, .siomac-onboarding-overview-mockup-v2 .obv-activity-row span {
+    display: block;
+    color: #70809c;
+    font-size: 11px;
+    line-height: 16px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-no {
+    color: #34425f;
+    font-size: 11px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-date {
+    color: #53627d;
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge {
+    min-height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 9px;
+    font-size: 10px;
+    font-weight: 582;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge-success {
+    color: #079050;
+    background: #eaf8f1;
+    border: 1px solid #caecdb;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge-danger {
+    color: #ef3d3d;
+    background: #fff0f0;
+    border: 1px solid #ffd4d4;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge-warning {
+    color: #cf7500;
+    background: #fff6e6;
+    border: 1px solid #ffe0a8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge-info {
+    color: #1063e8;
+    background: #edf5ff;
+    border: 1px solid #d7e8ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-badge-neutral {
+    color: #52617e;
+    background: #f3f6fa;
+    border: 1px solid #e0e7f1;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-list {
+    display: grid;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-row {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #edf1f7;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-row:last-child {
+    border-bottom: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-calendar-tile {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: #f4f7fb;
+    line-height: 1;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-calendar-tile span {
+    color: #eb4141;
+    font-size: 9px;
+    font-weight: 627;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-calendar-tile strong {
+    color: #16264d;
+    font-size: 16px;
+    font-weight: 627;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-due {
+    color: #50607b;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .due-danger, .siomac-onboarding-overview-mockup-v2 .due-warning {
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .due-danger {
+    color: #ef3d3d;
+    background: #fff0f0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .due-warning {
+    color: #d47b00;
+    background: #fff5df;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 15px;
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-footer-link svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-tasks-card {
+    grid-column: span 7;
+    min-height: 366px;
+    padding: 15px 12px 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-tasks-card .obv-card-header {
+    padding: 0 5px 10px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-toolbar {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #edf2f8;
+    padding: 0 5px;
+    margin-bottom: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-viewswitch {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 100%;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-view-btn {
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: #687894;
+    font-size: 12px;
+    font-weight: 536;
+    position: relative;
+    padding: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-view-btn.active {
+    color: var(--obv-primary);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-view-btn.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--obv-primary);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-filters {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-task-select, .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-task-filter-button {
+    height: 27px;
+    min-width: 100px;
+    font-size: 11px;
+    font-weight: 491;
+    padding: 0 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obx-btn.obv-task-filter-button {
+    min-width: 84px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-column {
+    border-radius: 8px;
+    border: 1px solid #e1e8f2;
+    padding: 13px 10px 14px;
+    min-height: 270px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-column h3 {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 627;
+    color: #0d1f4a;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-column h3 span {
+    color: inherit;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .task-column-todo { background: #f7faff; }
+  .siomac-onboarding-overview-mockup-v2 .task-column-progress { background: #f8fbff; }
+  .siomac-onboarding-overview-mockup-v2 .task-column-blocked { background: #fff5f5; border-color: #ffd6d6; }
+  .siomac-onboarding-overview-mockup-v2 .task-column-completed { background: #f2fbf6; border-color: #d9f0e4; }
+  .siomac-onboarding-overview-mockup-v2 .task-column-progress h3 { color: var(--obv-primary); }
+  .siomac-onboarding-overview-mockup-v2 .task-column-blocked h3 { color: var(--obv-red); }
+  .siomac-onboarding-overview-mockup-v2 .task-column-completed h3 { color: var(--obv-green); }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-mini-card {
+    min-height: 73px;
+    border-radius: 7px;
+    border: 1px solid #e6edf6;
+    background: #fff;
+    padding: 10px 10px 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 10px rgb(17 34 70 / 3%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-mini-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-mini-head svg {
+    font-size: 14px;
+    color: #90a0b9;
+    stroke-width: 2.6;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-task-mini-card small {
+    display: block;
+    margin-top: 4px;
+    color: #53657f;
+    font-size: 11px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-priority {
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .priority-high {
+    color: #e93b3b !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .priority-medium {
+    color: #eb7f0e !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-more-link {
+    display: inline-block;
+    margin-top: 6px;
+    color: #58708f;
+    font-size: 12px;
+    font-weight: 536;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-side-stack {
+    grid-column: span 5;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mini-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-card, .siomac-onboarding-overview-mockup-v2 .obv-blocked-card {
+    min-height: 190px;
+    padding: 16px 15px 14px;
+    overflow: hidden;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-list, .siomac-onboarding-overview-mockup-v2 .obv-blocked-list, .siomac-onboarding-overview-mockup-v2 .obv-activity-list {
+    margin-top: 13px;
+    display: grid;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    min-height: 38px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row span:not(.obv-small-icon) {
+    font-size: 12px;
+    color: #243657;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row strong {
+    font-size: 18px;
+    color: var(--obv-heading);
+    font-weight: 627;
+  }
+
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-amber {
+    background: #f59e0b;
+    box-shadow: 0 5px 12px rgb(245 158 11 / 18%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-blue {
+    background: #1d72f2;
+    box-shadow: 0 5px 12px rgb(29 114 242 / 18%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-green {
+    background: #22b36e;
+    box-shadow: 0 5px 12px rgb(34 179 110 / 18%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-red {
+    background: #ef4444;
+    box-shadow: 0 5px 12px rgb(239 68 68 / 18%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon svg {
+    stroke-width: 2.15;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-small-icon, .siomac-onboarding-overview-mockup-v2 .obv-status-dotbox, .siomac-onboarding-overview-mockup-v2 .obv-activity-icon {
+    display: grid;
+    place-items: center;
+    color: #fff;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-small-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-small-icon svg {
+    font-size: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-row {
+    min-height: 39px;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-main {
+    min-width: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-main strong, .siomac-onboarding-overview-mockup-v2 .obv-blocked-main span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-icon svg {
+    font-size: 13px;
+    stroke-width: 2.15;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-cyan {
+    color: #0aa9b8;
+    background: #e9fbfd;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-blue {
+    color: #1269ef;
+    background: #eef5ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-amber {
+    color: #e88a05;
+    background: #fff6e8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-row em {
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 627;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-severity-high {
+    color: #ef3d3d;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-severity-medium {
+    color: #e77d10;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-card {
+    min-height: 174px;
+    padding: 16px 15px 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row {
+    min-height: 37px;
+    display: grid;
+    grid-template-columns: 25px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row + .obv-activity-row {
+    border-top: 1px solid #edf1f7;
+    padding-top: 8px;
+    margin-top: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row:last-child {
+    padding-bottom: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row > div {
+    min-width: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row strong, .siomac-onboarding-overview-mockup-v2 .obv-activity-row span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    box-shadow: 0 5px 12px rgb(15 35 75 / 10%);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-icon svg {
+    font-size: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activity-row time {
+    color: #52617e;
+    font-size: 11px;
+  }
+
+
+  /* v5: reference image uses flat cards/tiles; remove all drop shadows. */
+  .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup, .siomac-onboarding-overview-mockup-v2 .siomac-onboarding-overview-mockup * {
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-amber {
+    background: #f59e0b;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-blue {
+    background: #1d72f2;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-green {
+    background: #22b36e;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-row .obv-small-icon.icon-red {
+    background: #ef4444;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-cyan {
+    color: #0aa9b8;
+    background: #eaf5ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-blue {
+    color: #1269ef;
+    background: #eaf3ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .blocked-icon-amber {
+    color: #fb8c13;
+    background: #fff2df;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-blocked-icon svg {
+    font-size: 15px;
+    stroke-width: 2.25;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-small-icon svg {
+    font-size: 14px;
+    stroke-width: 2.1;
+  }
+
+  @media (max-width: 1260px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-preview-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    border: 1px solid #d9e8ff;
+    border-radius: 999px;
+    background: #f3f8ff;
+    color: #125fd2;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-preview-action svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-kpi-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-status-card, .siomac-onboarding-overview-mockup-v2 .obv-recent-cases-card, .siomac-onboarding-overview-mockup-v2 .obv-deadlines-card, .siomac-onboarding-overview-mockup-v2 .obv-cross-tasks-card, .siomac-onboarding-overview-mockup-v2 .obv-side-stack {
+      grid-column: auto;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-overview-page {
+      padding: 18px 0 32px;
+    }
+
+
+    .siomac-onboarding-overview-mockup-v2 .obv-global-search {
+      width: min(100%, 330px);
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-title-row, .siomac-onboarding-overview-mockup-v2 .obv-page-actions, .siomac-onboarding-overview-mockup-v2 .obv-task-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-kpi-grid, .siomac-onboarding-overview-mockup-v2 .obv-mini-grid, .siomac-onboarding-overview-mockup-v2 .obv-task-board {
+      grid-template-columns: 1fr;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-status-content {
+      flex-direction: column;
+      height: auto;
+    }
+  }
+
+  /* Team Members inspired Recent Cases table */
+  .siomac-onboarding-overview-mockup-v2 .obv-team-recent-card {
+    padding: 0;
+    overflow: hidden;
+    min-height: 329px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-recent-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 17px 18px 10px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-recent-head h2 {
+    margin: 0;
+    color: #111;
+    font-size: 20px;
+    line-height: 1.12;
+    font-weight: 555;
+    letter-spacing: -0.035em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-recent-head p {
+    margin: 7px 0 0;
+    color: #626d81;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 400;
+    letter-spacing: -0.018em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-recent-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-pill-filter, .siomac-onboarding-overview-mockup-v2 .obv-team-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    background: #fff;
+    color: #121212;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-pill-filter {
+    height: 32px;
+    padding: 0 13px;
+    border: 1px solid #dce4ef;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 491;
+    letter-spacing: -0.02em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-view-button {
+    height: 32px;
+    gap: 8px;
+    padding: 0 13px 0 14px;
+    border: 1.5px solid #151515;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 514;
+    letter-spacing: -0.02em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-view-button svg {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.2;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-table {
+    padding: 6px 14px 14px 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-grid {
+    display: grid;
+    grid-template-columns: minmax(190px, 1.55fr) minmax(108px, .78fr) minmax(126px, .82fr) minmax(105px, .68fr) 70px;
+    align-items: center;
+    box-sizing: border-box;
+    column-gap: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-head {
+    height: 24px;
+    padding: 0 10px 0 11px;
+    color: #647086;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 605;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-body {
+    padding-top: 7px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-row {
+    appearance: none;
+    width: 100%;
+    height: 48px;
+    margin-bottom: 7px;
+    padding: 0 10px 0 10px;
+    border: 0;
+    border-radius: 15px;
+    background: #f6f9fd;
+    color: #151515;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-row:hover {
+    background: #f0f6ff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-member {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-avatar-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-avatar {
+    display: block;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-online-dot {
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6bdd55;
+    border: 1.5px solid #f6f9fd;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-member-copy {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-member-copy strong {
+    overflow: hidden;
+    color: #191919;
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 514;
+    letter-spacing: -0.035em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-member-copy span {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    color: #777;
+    font-size: 10.5px;
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-member-copy svg {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 auto;
+    stroke: #838383;
+    stroke-width: 1.75;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-role, .siomac-onboarding-overview-mockup-v2 .obv-team-date, .siomac-onboarding-overview-mockup-v2 .obv-team-status {
+    color: #202020;
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 445;
+    letter-spacing: -0.035em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-case-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    max-width: 100%;
+    padding: 0 8px;
+    border-radius: 7px;
+    background: #fff;
+    color: #232323;
+    font-size: 11.5px;
+    line-height: 1;
+    font-weight: 445;
+    letter-spacing: -0.035em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-status.status-in_progress, .siomac-onboarding-overview-mockup-v2 .obv-team-status.status-completed {
+    color: #29972e;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-status.status-blocked, .siomac-onboarding-overview-mockup-v2 .obv-team-status.status-cancelled {
+    color: #e33820;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-team-status.status-not_started {
+    color: #e5ae00;
+  }
+
+}
+
+@layer sections {
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-daily-goal-card.obv-critical-path-card {
+    min-height: 0 !important;
+    padding: 18px !important;
+    border-radius: 20px !important;
+    background: #e8e4fb !important;
+    border: 1px solid #d9d0f8 !important;
+    box-shadow: 0 3px 10px rgba(82, 57, 172, .12) !important;
+    color: #211a38 !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card > .obv-goal-kicker {
+    display: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card .obv-critical-tags {
+    margin: 0 !important;
+    gap: 7px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card .obv-critical-tags span, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card .obv-critical-tags time {
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 0 10px !important;
+    border-radius: 10px !important;
+    background: rgba(255,255,255,.64) !important;
+    border: 1px solid rgba(255,255,255,.72) !important;
+    color: #51456f !important;
+    font-size: 11px !important;
+    font-weight: 582 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card .obv-critical-tags .severity-high {
+    background: #fff4ed !important;
+    border-color: #ffd8bf !important;
+    color: #b64716 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-status-line {
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid rgba(255,255,255,.72);
+    border-radius: 11px;
+    background: rgba(255,255,255,.56);
+    color: #51456f;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 605;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-status-line strong {
+    color: #b64716;
+    font-size: inherit;
+    font-weight: 627;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-status-line time {
+    color: #51456f;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-status-line span::after, .siomac-onboarding-overview-mockup-v2 .obv-critical-status-line strong::after {
+    content: "·";
+    margin-left: 7px;
+    color: #9a8fb7;
+    font-weight: 627;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-open, .siomac-onboarding-overview-mockup-v2 .obv-critical-nav, .siomac-onboarding-overview-mockup-v2 .obv-critical-actions button, .siomac-onboarding-overview-mockup-v2 .obv-critical-facts button, .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel button {
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-top-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-nav {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(46,36,96,.22);
+    border-radius: 10px;
+    background: rgba(255,255,255,.62);
+    color: #2e2460;
+    display: grid;
+    place-items: center;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-nav svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.4;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-open {
+    min-width: 62px;
+    flex: 0 0 auto;
+    height: 32px;
+    border: 1px solid #2e2460;
+    border-radius: 10px;
+    background: #2e2460;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 605;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-profile {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 42px 12px 12px;
+    border: 1px solid rgba(255,255,255,.76);
+    border-radius: 16px;
+    background: rgba(255,255,255,.56);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-profile-nav {
+    position: absolute;
+    top: 9px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-profile .obv-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.78);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person span {
+    color: #725f99;
+    font-size: 10px;
+    font-weight: 627;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person strong {
+    color: #211a38;
+    font-size: 18px;
+    line-height: 1.1;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-person em {
+    color: #625477;
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 559;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-score {
+    min-width: 74px;
+    min-height: 54px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    background: #2e2460;
+    color: #fff;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 4px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-score span {
+    color: rgba(255,255,255,.76) !important;
+    font-size: 9px;
+    font-weight: 605;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-score strong {
+    color: #fff !important;
+    font-size: 19px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-identity {
+    display: grid;
+    gap: 5px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-identity span {
+    color: #665b82;
+    font-size: 11px;
+    font-weight: 605;
+    letter-spacing: .01em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-identity strong {
+    color: #211a38;
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card h2 {
+    font-size: 22px !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+    color: #211a38 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-critical-path-card p {
+    margin: 0 !important;
+    color: #4f4568 !important;
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-facts button {
+    min-width: 0;
+    min-height: 58px;
+    padding: 10px;
+    text-align: left;
+    border: 1px solid rgba(255,255,255,.74);
+    border-radius: 12px;
+    background: rgba(255,255,255,.58);
+    display: block;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-facts span {
+    display: block;
+    margin-bottom: 5px;
+    color: #7a6f96;
+    font-size: 10px;
+    font-weight: 605;
+    text-transform: uppercase;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-facts strong {
+    display: block;
+    color: #211a38;
+    font-size: 13px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,.72);
+    border-radius: 14px;
+    background: rgba(255,255,255,.58);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness div {
+    gap: 10px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness .obv-critical-score {
+    min-width: 74px !important;
+    min-height: 54px !important;
+    padding: 8px 10px !important;
+    border-radius: 14px !important;
+    background: #2e2460 !important;
+    color: #fff !important;
+    display: grid !important;
+    align-content: center !important;
+    justify-items: center !important;
+    gap: 4px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness .obv-critical-score span {
+    color: rgba(255,255,255,.76) !important;
+    font-size: 9px !important;
+    font-weight: 605 !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness .obv-critical-score strong {
+    color: #fff !important;
+    font-size: 19px !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness-head > div:not(.obv-critical-score) {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness-head > div:not(.obv-critical-score) span, .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness-head > div:not(.obv-critical-score) small {
+    color: #6a5f83;
+    font-size: 12px;
+    font-weight: 559;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness strong {
+    color: #211a38;
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness em {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: #d7cff6;
+    overflow: hidden;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-readiness i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #684be8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid rgba(255,255,255,.72);
+    border-radius: 16px;
+    background: rgba(255,255,255,.38);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-actions button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    color: #51456f;
+    font-size: 10px;
+    font-weight: 627;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-actions button span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-actions button svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-actions button.is-active {
+    border-color: #684be8;
+    background: #684be8;
+    color: #fff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 9px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,.76);
+    border-radius: 16px;
+    background: rgba(255,255,255,.68);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-main {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    padding: 2px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-eyebrow {
+    width: fit-content;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(104,75,232,.11);
+    color: #684be8 !important;
+    font-size: 9px !important;
+    font-weight: 650 !important;
+    line-height: 1 !important;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-main strong {
+    color: #211a38;
+    font-size: 14px;
+    line-height: 1.12;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-main p {
+    margin: 0;
+    color: #5a506f;
+    font-size: 12px;
+    line-height: 1.38;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-main textarea {
+    width: 100%;
+    min-height: 54px;
+    resize: none;
+    padding: 8px 9px;
+    border: 1px solid rgba(104,75,232,.24);
+    border-radius: 11px;
+    outline: 0;
+    background: rgba(255,255,255,.76);
+    color: #211a38;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-main textarea:focus {
+    border-color: #684be8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-side {
+    display: grid;
+    align-content: stretch;
+    gap: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-side button {
+    min-height: 38px;
+    padding: 0 10px;
+    border: 1px solid #2e2460;
+    border-radius: 11px;
+    background: #2e2460;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 627;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel.is-complete {
+    border-color: rgba(45, 126, 91, .28);
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel.is-complete .obv-critical-action-eyebrow {
+    background: rgba(31,154,95,.12);
+    color: #1f8f5a !important;
+  }
+
+  @media (max-width: 520px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-top, .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel {
+      grid-template-columns: 1fr;
+      display: grid !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-open, .siomac-onboarding-overview-mockup-v2 .obv-critical-action-panel button {
+      width: 100%;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-profile {
+      grid-template-columns: auto minmax(0, 1fr);
+      padding: 42px 12px 12px;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-profile .obv-critical-open {
+      position: static;
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-score {
+      min-height: 44px;
+      min-width: 72px;
+      align-items: center;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-critical-facts, .siomac-onboarding-overview-mockup-v2 .obv-critical-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@layer sections {
+  /* v42: prevent the main dashboard mosaic from overflowing in the in-app browser width. */
+  @media (max-width: 1100px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout {
+      grid-template-columns: 1fr !important;
+      width: 100% !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > *, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-activity-rail, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid {
+      grid-column: 1 / -1 !important;
+      min-width: 0 !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v43: final responsive guard for the in-app browser viewport. */
+  @media (max-width: 1100px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout {
+      grid-template-columns: minmax(0, 1fr) !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout > .obv-daily-goal-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-center-work-stack, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-right-calendar-stack, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-activity-rail {
+      grid-column: 1 / -1 !important;
+      grid-row: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      justify-self: stretch !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+  }
+}
+
+@layer sections {
+  .siomac-onboarding-overview-mockup-v2 .obv-insights-section { margin-top: 34px; display: grid; gap: 22px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-card { position: relative; min-height: 132px; border: 1px solid #dfe5dd; border-radius: 24px; background: #fff; padding: 26px 28px; overflow: hidden; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-card.insight-activity { border-color: #8db39c; background: linear-gradient(135deg, #7fa28e 0%, #6f967f 40%, #5f8a72 100%); color: #fff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-copy { display: flex; align-items: flex-start; gap: 18px; position: relative; z-index: 2; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-copy p { margin: 0 0 6px; font-size: 14px; color: #5f645f; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-copy strong { display: block; font-size: 29px; line-height: 1; letter-spacing: -0.03em; color: #0b1015; }
+  .siomac-onboarding-overview-mockup-v2 .insight-activity .obv-insight-copy p, .siomac-onboarding-overview-mockup-v2 .insight-activity .obv-insight-copy strong { color: #fff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid #e7ece7; color: #516b59; background: #edf4ee; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-icon.icon-sage { background: #eef4ef; color: #526d5b; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-icon.icon-sand { background: #f5eedf; color: #a2803d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-icon.activity-icon { position: absolute; top: 24px; left: 24px; background: rgba(255,255,255,.92); color: #1e2f28; border-color: rgba(255,255,255,.9); }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-icon svg { width: 24px; height: 24px; stroke-width: 1.8; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-spark { position: absolute; right: 22px; top: 25px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-bars rect { fill: #4f7a62; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-wave path, .siomac-onboarding-overview-mockup-v2 .obv-insight-wave circle { stroke: #afc6b7; fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-wave.gold path, .siomac-onboarding-overview-mockup-v2 .obv-insight-wave.gold circle { stroke: #e5c37f; }
+  .siomac-onboarding-overview-mockup-v2 .obv-insight-wave.white path, .siomac-onboarding-overview-mockup-v2 .obv-insight-wave.white circle { stroke: rgba(255,255,255,.96); }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-grid { display: grid; grid-template-columns: 1.28fr .98fr; gap: 22px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-card { border: 1px solid #dfe5ee; border-radius: 28px; background: #fff; padding: 22px 22px 26px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-head h2 { margin: 0; font-size: 18px; font-weight: 582; color: #161a1d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-actions { display: flex; align-items: center; gap: 10px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-actions.compact { gap: 6px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-circle-btn, .siomac-onboarding-overview-mockup-v2 .obv-health-viewall, .siomac-onboarding-overview-mockup-v2 .obv-health-ghost-btn, .siomac-onboarding-overview-mockup-v2 .obv-add-task-btn, .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner-link, .siomac-onboarding-overview-mockup-v2 .obv-appointment-chat, .siomac-onboarding-overview-mockup-v2 .obv-habit-done { border: 1px solid #e3e7ef; background: #fff; border-radius: 16px; font: inherit; color: #212529; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-circle-btn, .siomac-onboarding-overview-mockup-v2 .obv-health-ghost-btn { width: 40px; height: 40px; display: grid; place-items: center; color: #7b7d87; }
+  .siomac-onboarding-overview-mockup-v2 .obv-health-viewall { height: 40px; padding: 0 16px; font-weight: 536; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-item { border: 1px solid #e1e5ea; border-radius: 22px; padding: 16px 16px 18px; background: #fff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-head { display: flex; align-items: center; gap: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-avatar { width: 54px; height: 54px; border-radius: 16px; object-fit: cover; background: #eef2f5; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-copy strong { display: block; margin-bottom: 5px; font-size: 15px; line-height: 1.2; color: #1e2125; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-copy span { display: block; color: #666b72; font-size: 15px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-divider { height: 1px; background: #eceff4; margin: 18px 0 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-stats { margin: 0; display: grid; gap: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-stats div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-stats dt { color: #6a6f77; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctor-stats dd { margin: 0; font-weight: 536; color: #1f2428; font-size: 15px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-star-wrap { display: inline-flex; align-items: center; gap: 4px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-star-wrap svg { width: 14px; height: 14px; color: #f4c011; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner { margin-top: 18px; border: 1px solid #cec7f4; background: #f7f5fe; border-radius: 20px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner-icon { width: 44px; height: 44px; border-radius: 14px; background: #ece6fb; color: #7552e8; display: grid; place-items: center; flex: 0 0 auto; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner-icon svg { width: 20px; height: 20px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner strong { display: block; margin-bottom: 2px; font-size: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner span { color: #6e7481; }
+  .siomac-onboarding-overview-mockup-v2 .obv-doctors-banner-link { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; height: auto; border: 0; background: transparent; color: #6650df; font-weight: 536; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-title { display: flex; align-items: center; gap: 10px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-title-icon { width: 28px; height: 28px; display: grid; place-items: center; color: #a4a5b3; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-title-icon svg { width: 22px; height: 22px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-day { text-align: center; padding: 8px 0; color: #777d8c; border-radius: 20px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-day span { display: block; font-size: 13px; margin-bottom: 8px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-day strong { font-size: 16px; color: #30343b; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-day.active { border: 2px solid #aaa0ff; color: #5551cb; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-list { display: grid; gap: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-item { border-radius: 20px; background: #f7f8fd; padding: 18px 18px 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-item > p { margin: 0 0 14px; color: #878b97; font-size: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-main { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-copy { display: flex; align-items: center; gap: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #eef2f8; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-copy strong { display: block; font-size: 18px; margin-bottom: 6px; color: #23272d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-copy span { color: #8b909b; font-size: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-chat { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: #8d8f98; background: #fff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-appointment-chat svg { width: 22px; height: 22px; stroke-width: 1.8; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habits-card { padding-top: 24px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-top { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-top h2 { margin: 0; font-size: 26px; letter-spacing: -0.03em; color: #14181d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-top h2 span { font-weight: 400; color: #585d65; }
+  .siomac-onboarding-overview-mockup-v2 .obv-add-task-btn { height: 54px; padding: 0 24px; background: #243a35; color: #fff; border-color: #243a35; border-radius: 14px; font-size: 18px; font-weight: 536; display: inline-flex; align-items: center; gap: 10px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-days { display: grid; grid-template-columns: 44px repeat(7, minmax(0, 1fr)) 44px; gap: 10px; align-items: center; margin-bottom: 18px; padding: 10px 14px; border-radius: 18px; background: #fcfcfd; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-day { padding: 10px 0; text-align: center; border-radius: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-day span { display: block; color: #7c818a; font-size: 13px; margin-bottom: 6px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-day strong { font-size: 16px; color: #22272d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-day.active { background: #ef7c6a; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-day.active span, .siomac-onboarding-overview-mockup-v2 .obv-habit-day.active strong { color: #fff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-col { display: grid; gap: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-row { display: flex; align-items: center; gap: 16px; padding: 10px 8px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; flex: 0 0 auto; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon-glyph svg { width: 24px; height: 24px; stroke-width: 1.8; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon.accent-mint { background: #eef5f1; color: #3f8b72; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon.accent-rose { background: #fcf0f3; color: #e15f7f; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon.accent-coral { background: #fdf0eb; color: #ea7159; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-icon.accent-stone { background: #f1f1f1; color: #777; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-copy { min-width: 0; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-copy strong { display: block; margin-bottom: 6px; font-size: 18px; color: #171c22; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-copy strong.struck { text-decoration: line-through; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-copy span { color: #6e747d; font-size: 14px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-done { margin-left: auto; min-width: 96px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; }
+  .siomac-onboarding-overview-mockup-v2 .obv-habit-done svg { width: 18px; height: 18px; }
+  @media (max-width: 1200px) { .siomac-onboarding-overview-mockup-v2 .obv-insight-row, .siomac-onboarding-overview-mockup-v2 .obv-health-grid, .siomac-onboarding-overview-mockup-v2 .obv-habit-grid { grid-template-columns: 1fr; } .siomac-onboarding-overview-mockup-v2 .obv-doctor-grid { grid-template-columns: 1fr; } .siomac-onboarding-overview-mockup-v2 .obv-habit-days { grid-template-columns: 44px repeat(4, minmax(0, 1fr)) 44px; } }
+}
+
+@layer sections {
+  /* v8 stack-grid rearrangement */
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-card {
+    position: relative;
+    min-height: 116px;
+    border: 1px solid #dfe7ef;
+    border-radius: 24px;
+    background: #fff;
+    padding: 20px 22px;
+    overflow: hidden;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-copy {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-copy p {
+    margin: 0 0 6px;
+    color: #697386;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-copy strong {
+    color: #07101f;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid transparent;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon svg {
+    width: 23px;
+    height: 23px;
+    stroke-width: 1.8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-blue { color: #2367d7; background: #eef5ff; border-color: #dceaff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-green { color: #25745b; background: #eef6f1; border-color: #dcebe2; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-purple { color: #6546cf; background: #f2efff; border-color: #e4ddff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-amber { color: #9a6d24; background: #f8f0df; border-color: #eee2c8; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-cyan { color: #077989; background: #eaf8fa; border-color: #d4eef2; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark {
+    position: absolute;
+    right: 14px;
+    top: 25px;
+    width: 96px;
+    height: 62px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark circle {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars rect { opacity: .96; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-blue path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-blue circle { stroke: #9abcf4; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-green path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-green circle { stroke: #9db9a6; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-purple path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-purple circle { stroke: #b0a3ef; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-amber path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-amber circle { stroke: #ddbd79; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-cyan path, .siomac-onboarding-overview-mockup-v2 .obv-metric-spark.metric-cyan circle { stroke: #8bcbd3; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars.metric-blue rect { fill: #7da6ed; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars.metric-green rect { fill: #5b876c; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars.metric-purple rect { fill: #927ee4; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars.metric-amber rect { fill: #ca9a44; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bars.metric-cyan rect { fill: #58aeb8; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-stack-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-status-card {
+    grid-column: span 4;
+    min-height: 402px;
+    border-radius: 24px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card {
+    grid-column: span 5;
+    min-height: 402px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack {
+    grid-column: span 3;
+    display: grid;
+    gap: 22px;
+    min-width: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-cross-tasks-card {
+    grid-column: span 7;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-side-stack {
+    grid-column: span 5;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-item {
+    text-align: left;
+    border: 1px solid #e1e7ef;
+    border-radius: 22px;
+    background: #fff;
+    padding: 16px 15px 18px;
+    font: inherit;
+    color: inherit;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-item:hover {
+    border-color: #cbd8e8;
+    background: #fcfdff;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-status-text {
+    font-weight: 582;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-status-text.status_completed { color: #168956; }
+  .siomac-onboarding-overview-mockup-v2 .obv-case-status-text.status_in_progress { color: #1269ef; }
+  .siomac-onboarding-overview-mockup-v2 .obv-case-status-text.status_blocked { color: #e33b3b; }
+  .siomac-onboarding-overview-mockup-v2 .obv-case-status-text.status_not_started { color: #c18412; }
+  .siomac-onboarding-overview-mockup-v2 .obv-case-banner .obv-doctors-banner-icon {
+    background: #e9f4ef;
+    color: #277553;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habits-card, .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-deadlines-card {
+    min-height: auto;
+    border-radius: 24px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habits-card {
+    padding: 18px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-top {
+    margin-bottom: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-top h2 {
+    font-size: 20px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-add-task-btn {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-days {
+    grid-template-columns: 34px repeat(3, minmax(0, 1fr)) 34px;
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-day:nth-of-type(n+5) {
+    display: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-health-ghost-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-col {
+    gap: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-row {
+    padding: 7px 0;
+    gap: 11px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-copy strong {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-copy span {
+    font-size: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack .obv-habit-done {
+    display: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-style-card {
+    padding: 18px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-calendar {
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-calendar .obv-appointments-day {
+    padding: 7px 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-calendar .obv-appointments-day span {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-calendar .obv-appointments-day strong {
+    font-size: 13px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-appointment-list {
+    gap: 10px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-appointment {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-appointment > p {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-soft-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #eef5ff;
+    color: #2569d8;
+    flex: 0 0 auto;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-soft-icon.tone-danger { background: #fff0f0; color: #e64949; }
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-soft-icon.tone-warning { background: #fff7e7; color: #d88b16; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-deadline-soft-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-style-card .obv-appointment-chat {
+    width: 42px;
+    height: 42px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-appointments-style-card .obv-appointment-chat svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  @media (max-width: 1200px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-status-card, .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card, .siomac-onboarding-overview-mockup-v2 .obv-right-calendar-stack, .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-cross-tasks-card, .siomac-onboarding-overview-mockup-v2 .obv-stack-grid .obv-side-stack { grid-column: 1 / -1; }
+    .siomac-onboarding-overview-mockup-v2 .obv-case-performance-grid { grid-template-columns: 1fr; }
+  }
+}
+

@@ -1,0 +1,1066 @@
+@layer sections {
+  /* v55: cleaner Handoffs treatment after layered redesign. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card {
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-overview {
+    grid-template-columns: 72px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total, .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health {
+    border-color: #e7edf4 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total {
+    min-height: 58px !important;
+    padding: 9px !important;
+    border-radius: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total strong {
+    font-size: 24px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total span {
+    font-size: 9.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health {
+    min-height: 58px !important;
+    padding: 6px !important;
+    border-radius: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health span {
+    padding: 6px 5px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health strong {
+    font-size: 14px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health em {
+    font-size: 8.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card .obv-handoff-redesign-list {
+    padding: 7px !important;
+    border-color: #e7edf4 !important;
+    border-radius: 18px !important;
+    gap: 6px !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row {
+    min-height: 48px !important;
+    padding: 7px !important;
+    border-color: #edf1f6 !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+    grid-template-columns: 31px minmax(0, 1fr) auto !important;
+    gap: 5px 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 11px !important;
+    background: var(--handoff-soft) !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy strong {
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy em {
+    font-size: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-count {
+    min-width: 23px !important;
+    padding: 4px 7px !important;
+    border: 1px solid var(--handoff-border) !important;
+    background: var(--handoff-soft) !important;
+    font-size: 11.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-progress {
+    height: 5px !important;
+    background: #edf1f6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-progress i {
+    min-width: 6px !important;
+  }
+}
+
+@layer sections {
+  /* v54: Handoffs layered redesign. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card {
+    padding: 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 24px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-head {
+    margin-bottom: 11px !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-head h2 {
+    margin: 0 !important;
+    color: #151a24 !important;
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+    font-weight: 618 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-head p {
+    margin: 4px 0 0 !important;
+    color: #7b8491 !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    font-weight: 545 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-head .obv-health-viewall {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    border: 1px solid #e3e7ef !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: #212529 !important;
+    font-size: 12px !important;
+    font-weight: 564 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-overview {
+    display: grid !important;
+    grid-template-columns: minmax(82px, .72fr) minmax(0, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-total, .siomac-onboarding-overview-mockup-v2 .obv-handoff-health {
+    border: 1px solid #e4ebf3 !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .035) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-total {
+    min-height: 70px !important;
+    padding: 10px !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-total strong {
+    color: #111827 !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    font-weight: 636 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-total span {
+    color: #747f90 !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    font-weight: 564 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-health {
+    min-height: 70px !important;
+    padding: 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-health span {
+    min-width: 0 !important;
+    border-radius: 13px !important;
+    background: #f8fafc !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 3px !important;
+    padding: 7px 6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-health strong {
+    color: #172033 !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-health em {
+    color: #7a8493 !important;
+    font-size: 8.8px !important;
+    line-height: 1 !important;
+    font-style: normal !important;
+    font-weight: 564 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card .obv-handoff-redesign-list {
+    flex: 1 1 auto !important;
+    margin-top: 0 !important;
+    padding: 8px !important;
+    border: 1px solid #e4ebf3 !important;
+    border-radius: 19px !important;
+    background: #fff !important;
+    display: grid !important;
+    gap: 7px !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .handoff-amber { --handoff-color: #d97706; --handoff-soft: #fff5e6; --handoff-border: #f2dfbf; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .handoff-blue { --handoff-color: #1f6fd8; --handoff-soft: #edf4ff; --handoff-border: #dce9ff; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .handoff-green { --handoff-color: #1f9a5f; --handoff-soft: #eaf8f0; --handoff-border: #d7efe2; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .handoff-red { --handoff-color: #dc2626; --handoff-soft: #fff1f1; --handoff-border: #f4cccc; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row {
+    width: 100% !important;
+    min-height: 58px !important;
+    padding: 8px !important;
+    border: 1px solid var(--handoff-border) !important;
+    border-radius: 15px !important;
+    background: var(--handoff-soft) !important;
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "icon copy count"
+      "icon meter meter" !important;
+    align-items: center !important;
+    gap: 6px 9px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    animation: obv-handoff-row-enter 430ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row:nth-child(2) { animation-delay: 55ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row:nth-child(3) { animation-delay: 110ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row:nth-child(4) { animation-delay: 165ms !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon {
+    grid-area: icon !important;
+    width: 34px !important;
+    height: 34px !important;
+    border: 1px solid color-mix(in srgb, var(--handoff-color) 24%, white) !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+    color: var(--handoff-color) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72), 0 1px 3px rgba(15, 23, 42, .04) !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-copy {
+    grid-area: copy !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy strong {
+    color: #172033 !important;
+    font-size: 11.5px !important;
+    line-height: 1.12 !important;
+    font-weight: 605 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy em {
+    color: #717d8e !important;
+    font-size: 9.5px !important;
+    line-height: 1 !important;
+    font-style: normal !important;
+    font-weight: 545 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-count {
+    grid-area: count !important;
+    min-width: 25px !important;
+    justify-self: end !important;
+    padding: 5px 7px !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: var(--handoff-color) !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+    text-align: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-progress {
+    grid-area: meter !important;
+    height: 6px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, .78) !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-progress i {
+    display: block !important;
+    height: 100% !important;
+    min-width: 8px !important;
+    max-width: 100% !important;
+    border-radius: inherit !important;
+    background: var(--handoff-color) !important;
+    animation: obv-handoff-progress-fill 620ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  @keyframes obv-handoff-row-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes obv-handoff-progress-fill {
+    from {
+      width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row, .siomac-onboarding-overview-mockup-v2 .obv-handoff-progress i {
+      animation: none !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v56: final Handoffs cleanup - white surface and calmer rows. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card {
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-overview {
+    grid-template-columns: 72px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total, .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health {
+    border-color: #e7edf4 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total {
+    min-height: 58px !important;
+    padding: 9px !important;
+    border-radius: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total strong {
+    font-size: 24px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-total span {
+    font-size: 9.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health {
+    min-height: 58px !important;
+    padding: 6px !important;
+    border-radius: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health span {
+    padding: 6px 5px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health strong {
+    font-size: 14px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-health em {
+    font-size: 8.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-redesign-card .obv-handoff-redesign-list {
+    padding: 7px !important;
+    border-color: #e7edf4 !important;
+    border-radius: 18px !important;
+    gap: 6px !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row {
+    min-height: 48px !important;
+    padding: 7px !important;
+    border-color: #edf1f6 !important;
+    border-radius: 13px !important;
+    background: #fff !important;
+    grid-template-columns: 31px minmax(0, 1fr) auto !important;
+    gap: 5px 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 11px !important;
+    background: var(--handoff-soft) !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-row .obv-small-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy strong {
+    font-size: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-copy em {
+    font-size: 9px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-count {
+    min-width: 23px !important;
+    padding: 4px 7px !important;
+    border: 1px solid var(--handoff-border) !important;
+    background: var(--handoff-soft) !important;
+    font-size: 11.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-progress {
+    height: 5px !important;
+    background: #edf1f6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-redesign-card .obv-handoff-progress i {
+    min-width: 6px !important;
+  }
+}
+
+@layer sections {
+  /* v57: horizontal Handoffs pipeline directly under Recent Cases. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-flow-card {
+    grid-column: 1 / -1 !important;
+    order: 1 !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 24px !important;
+    background: #fff !important;
+    display: block !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-blocked-card {
+    order: 2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-redesign-head {
+    margin-bottom: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-body {
+    display: grid !important;
+    grid-template-columns: 168px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary {
+    width: 100% !important;
+    min-height: 104px !important;
+    padding: 12px !important;
+    border: 1px solid #e6ecf3 !important;
+    border-radius: 18px !important;
+    background: #f8fafc !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 5px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary strong {
+    color: #111827 !important;
+    font-size: 30px !important;
+    line-height: 1 !important;
+    font-weight: 636 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary span {
+    color: #263142 !important;
+    font-size: 12px !important;
+    line-height: 1.05 !important;
+    font-weight: 609 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary em {
+    color: #758093 !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    font-style: normal !important;
+    font-weight: 545 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-flow-card .obv-handoff-flow-track {
+    margin: 0 !important;
+    padding: 8px !important;
+    border: 1px solid #e6ecf3 !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step {
+    width: 100% !important;
+    min-height: 104px !important;
+    padding: 10px !important;
+    border: 1px solid #edf1f6 !important;
+    border-radius: 15px !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "icon count"
+      "copy copy"
+      "meter meter" !important;
+    align-content: start !important;
+    align-items: start !important;
+    gap: 8px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    animation: obv-handoff-flow-step-enter 460ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step:nth-child(2) { animation-delay: 55ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step:nth-child(3) { animation-delay: 110ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step:nth-child(4) { animation-delay: 165ms !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step .obv-small-icon {
+    grid-area: icon !important;
+    width: 34px !important;
+    height: 34px !important;
+    border: 1px solid color-mix(in srgb, var(--handoff-color) 24%, white) !important;
+    border-radius: 13px !important;
+    background: var(--handoff-soft) !important;
+    color: var(--handoff-color) !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step .obv-small-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy {
+    grid-area: copy !important;
+    display: grid !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy strong {
+    color: #172033 !important;
+    font-size: 11px !important;
+    line-height: 1.12 !important;
+    font-weight: 605 !important;
+    white-space: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy em {
+    color: #758093 !important;
+    font-size: 9.3px !important;
+    line-height: 1.15 !important;
+    font-style: normal !important;
+    font-weight: 545 !important;
+    white-space: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-count {
+    grid-area: count !important;
+    min-width: 25px !important;
+    justify-self: end !important;
+    padding: 5px 8px !important;
+    border: 1px solid var(--handoff-border) !important;
+    border-radius: 999px !important;
+    background: var(--handoff-soft) !important;
+    color: var(--handoff-color) !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-progress {
+    grid-area: meter !important;
+    height: 5px !important;
+    border-radius: 999px !important;
+    background: #edf1f6 !important;
+    overflow: hidden !important;
+    align-self: end !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-progress i {
+    display: block !important;
+    height: 100% !important;
+    min-width: 6px !important;
+    max-width: 100% !important;
+    border-radius: inherit !important;
+    background: var(--handoff-color) !important;
+    animation: obv-handoff-progress-fill 620ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  @keyframes obv-handoff-flow-step-enter {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-body {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-flow-card .obv-handoff-flow-track {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step {
+      animation: none !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v58: replace Handoffs pipeline with a cleaner horizontal status strip. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-flow-card {
+    grid-column: 1 / -1 !important;
+    order: 1 !important;
+    padding: 14px !important;
+    border: 1px solid #e4eaf2 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    min-height: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-redesign-head {
+    margin-bottom: 12px !important;
+    align-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-redesign-head h2 {
+    font-size: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-redesign-head p {
+    margin-top: 3px !important;
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-body {
+    display: grid !important;
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary {
+    min-height: 76px !important;
+    padding: 11px !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 4px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary strong {
+    font-size: 27px !important;
+    color: #111827 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary span {
+    font-size: 11px !important;
+    color: #202b3d !important;
+    font-weight: 605 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-summary em {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    color: #7a8493 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-flow-card .obv-handoff-flow-track {
+    min-height: 76px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #e7edf4 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step {
+    min-height: 76px !important;
+    padding: 10px 11px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    display: grid !important;
+    grid-template-columns: 31px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "icon copy count"
+      "meter meter meter" !important;
+    align-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step + .obv-handoff-flow-step {
+    border-left: 1px solid #edf1f6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-flow-step .obv-small-icon {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 11px !important;
+    background: var(--handoff-soft) !important;
+    color: var(--handoff-color) !important;
+    border: 1px solid var(--handoff-border) !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy {
+    gap: 2px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy strong {
+    font-size: 10.5px !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-copy em {
+    display: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-count {
+    min-width: 24px !important;
+    padding: 4px 7px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--handoff-soft) !important;
+    color: var(--handoff-color) !important;
+    font-size: 11.5px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-progress {
+    height: 4px !important;
+    margin-top: 2px !important;
+    background: #edf1f6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-flow-card .obv-handoff-progress i {
+    min-width: 6px !important;
+  }
+}
+
+@layer sections {
+  /* v59: Handoffs relay design - connected horizontal status nodes. */
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-relay-card {
+    grid-column: 1 / -1 !important;
+    order: 1 !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+    border: 1px solid #e3e9f1 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-redesign-head {
+    margin-bottom: 10px !important;
+    align-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-redesign-head h2 {
+    font-size: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-redesign-head p {
+    margin-top: 3px !important;
+    font-size: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-body {
+    display: grid !important;
+    grid-template-columns: 118px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-total {
+    width: 100% !important;
+    min-height: 94px !important;
+    padding: 12px !important;
+    border: 1px solid #e8edf4 !important;
+    border-radius: 17px !important;
+    background: #fafbfc !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 4px !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-total span {
+    color: #6f7a8a !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 591 !important;
+    text-transform: uppercase !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-total strong {
+    color: #111827 !important;
+    font-size: 31px !important;
+    line-height: 1 !important;
+    font-weight: 636 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-total em {
+    color: #5f6b7d !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    font-style: normal !important;
+    font-weight: 555 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-under-cases-grid > .obv-handoff-relay-card .obv-handoff-relay-track {
+    position: relative !important;
+    margin: 0 !important;
+    padding: 10px 4px 8px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    overflow: visible !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-track::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 12.5% !important;
+    right: 12.5% !important;
+    top: 28px !important;
+    height: 2px !important;
+    border-radius: 999px !important;
+    background: #edf1f6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step {
+    min-height: 88px !important;
+    padding: 0 8px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "node"
+      "copy"
+      "meter" !important;
+    justify-items: center !important;
+    align-content: start !important;
+    gap: 7px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    animation: obv-handoff-relay-enter 460ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step + .obv-handoff-relay-step {
+    border-left: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step:nth-child(2) { animation-delay: 55ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step:nth-child(3) { animation-delay: 110ms !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step:nth-child(4) { animation-delay: 165ms !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-node {
+    grid-area: node !important;
+    width: 48px !important;
+    height: 38px !important;
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    z-index: 1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-node .obv-small-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border: 1px solid var(--handoff-border) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    color: var(--handoff-color) !important;
+    box-shadow: 0 0 0 5px #fff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-node .obv-small-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-count {
+    position: absolute !important;
+    top: -6px !important;
+    right: -1px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    padding: 0 6px !important;
+    border: 2px solid #fff !important;
+    border-radius: 999px !important;
+    background: var(--handoff-color) !important;
+    color: #fff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-copy {
+    grid-area: copy !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+    justify-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-copy strong {
+    color: #172033 !important;
+    font-size: 10.5px !important;
+    line-height: 1.1 !important;
+    font-weight: 605 !important;
+    max-width: 104px !important;
+    white-space: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-copy em {
+    display: block !important;
+    color: #7b8491 !important;
+    font-size: 8.8px !important;
+    line-height: 1.05 !important;
+    font-style: normal !important;
+    font-weight: 545 !important;
+    max-width: 104px !important;
+    white-space: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-progress {
+    grid-area: meter !important;
+    width: 52px !important;
+    height: 4px !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+    background: #edf1f6 !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-progress i {
+    display: block !important;
+    height: 100% !important;
+    min-width: 6px !important;
+    max-width: 100% !important;
+    border-radius: inherit !important;
+    background: var(--handoff-color) !important;
+    animation: obv-handoff-progress-fill 620ms cubic-bezier(.16, 1, .3, 1) both !important;
+  }
+
+  @keyframes obv-handoff-relay-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-body {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-total {
+      min-height: 68px !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .siomac-onboarding-overview-mockup-v2 .obv-handoff-relay-card .obv-handoff-relay-step {
+      animation: none !important;
+    }
+  }
+}
+

@@ -1,0 +1,1522 @@
+@layer sections {
+  /* v35: remove gradients/shadows, restore visible icons, stronger tags, fixed Recent Onboarding Work progress */
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-mini {
+    min-height: 72px !important;
+    margin-top: 13px !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto auto !important;
+    gap: 12px !important;
+    padding: 13px 14px !important;
+    border: 1px solid #dbe5f0 !important;
+    border-left: 4px solid #2269d8 !important;
+    border-radius: 18px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-mini:hover {
+    border-color: #bfd0e5 !important;
+    border-left-color: #1d5fc7 !important;
+    background: #f8fbff !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    color: #1e5fc7 !important;
+    background: #eef5ff !important;
+    border: 1px solid #d6e6fb !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke: currentColor !important;
+    stroke-width: 2.2 !important;
+    fill: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-copy strong {
+    font-size: 13.5px !important;
+    line-height: 1.15 !important;
+    color: #111827 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-copy em {
+    margin-top: 3px !important;
+    color: #607086 !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-stat {
+    min-width: 66px;
+    min-height: 42px;
+    padding: 7px 10px;
+    border-radius: 14px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f3f7fc;
+    border: 1px solid #dfe8f4;
+    color: #1e5fc7;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-stat strong {
+    font-size: 17px;
+    line-height: 1;
+    font-weight: 650;
+    letter-spacing: -.03em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-stat em {
+    margin-top: 3px;
+    color: #607086;
+    font-size: 9px;
+    line-height: 1;
+    font-style: normal;
+    font-weight: 627;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-insight-action {
+    color: #1f5fb8 !important;
+    background: #eef5ff !important;
+    border: 1px solid #d6e6fb !important;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-solid-icon, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-owner .obv-project-avatar {
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e7ef !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-grid {
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card {
+    min-height: 154px !important;
+    padding: 13px !important;
+    border-width: 1.5px !important;
+    border-style: solid !important;
+    background: #ffffff !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card.is-blocked {
+    background: #fff6f5 !important;
+    border-color: #f1b7ad !important;
+    color: #281411 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card.is-open, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card.is-green {
+    background: #f4fbf7 !important;
+    border-color: #adddc2 !important;
+    color: #10261c !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-solid-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    flex-basis: 36px !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-solid-icon.red, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-solid-icon.dark {
+    color: #ffffff !important;
+    background: #dc2626 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-solid-icon.green {
+    color: #ffffff !important;
+    background: #16a36a !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-svg {
+    width: 18px !important;
+    height: 18px !important;
+    display: block !important;
+    fill: currentColor !important;
+    stroke: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-icon.green .obv-work-solid-svg path:last-child {
+    fill: none !important;
+    stroke: #ffffff !important;
+    stroke-width: 2.6 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-status-tag {
+    min-height: 24px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+    border: 1px solid currentColor !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-status-tag.status-blocked {
+    color: #b42318 !important;
+    background: #fff0ee !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-status-tag.status-open, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-status-tag.status-in_progress, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-status-tag.status-pending {
+    color: #08784d !important;
+    background: #e8f8f0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card > strong {
+    color: #151923 !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    font-weight: 650 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-task-work-card .obv-work-task-card > small {
+    color: #697386 !important;
+    font-size: 10.5px !important;
+    font-weight: 605 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 1px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-tags span {
+    min-height: 21px;
+    padding: 0 7px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #cfd8e5;
+    background: #ffffff;
+    color: #384558;
+    font-size: 9.5px;
+    line-height: 1;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-tags .tag-module {
+    color: #1e5fc7;
+    background: #eef5ff;
+    border-color: #cfe0f8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-tags .tag-evidence {
+    color: #8a5400;
+    background: #fff6df;
+    border-color: #f3d99b;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-tags .tag-blocking {
+    color: #b42318;
+    background: #fff0ee;
+    border-color: #f0b8b0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress-track {
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e7edf4;
+    border: 1px solid #dbe3ed;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress-track span {
+    display: block;
+    height: 100%;
+    min-width: 6px;
+    max-width: 100%;
+    border-radius: inherit;
+    transition: width .25s ease;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress.red .obv-work-progress-track span {
+    background: #dc2626;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress.green .obv-work-progress-track span {
+    background: #16a36a;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress strong {
+    justify-self: end;
+    color: #111827;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 650;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress.red strong {
+    color: #b42318;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-work-progress.green strong {
+    color: #08784d;
+  }
+
+  @media (max-width: 1180px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-mini {
+      grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    }
+    .siomac-onboarding-overview-mockup-v2 .obv-case-insight-action {
+      display: none !important;
+    }
+  }
+}
+
+@layer sections {
+  /* v35 icon visibility correction */
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-svg { fill: none !important; stroke: none !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-svg .obv-work-icon-main { fill: #ffffff !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-icon.red .obv-work-icon-mark, .siomac-onboarding-overview-mockup-v2 .obv-work-solid-icon.dark .obv-work-icon-mark { fill: #dc2626 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-work-solid-icon.green .obv-work-icon-check { fill: none !important; stroke: #ffffff !important; stroke-width: 3.2 !important; stroke-linecap: round !important; stroke-linejoin: round !important; }
+}
+
+
+@layer sections {
+  /* v36 stat cards redesign */
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-card {
+    min-height: 190px !important;
+    border-radius: 28px !important;
+    border: 1px solid #e6e9ee !important;
+    padding: 22px 24px !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-toprow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-toprow h3 {
+    margin: 0;
+    color: #181c23;
+    font-size: 20px;
+    font-weight: 582;
+    letter-spacing: -0.03em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-bottomrow {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-stat {
+    display: grid;
+    gap: 8px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-stat p {
+    margin: 0;
+    color: #777f8c;
+    font-size: 16px;
+    font-weight: 445;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-stat strong {
+    color: #111827;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 18px !important;
+    display: grid;
+    place-items: center;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 1.9;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-icon.metric-slate { color: #1f2937; background: #f4f6f8; border-color: #e5e7eb; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge {
+    position: relative;
+    width: 176px;
+    height: 98px;
+    flex: 0 0 176px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge-track, .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge-fill {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 16;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge-track {
+    stroke: #eef0f3;
+    stroke-dasharray: 2.4 2.4;
+    opacity: 0.95;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-green .obv-metric-gauge-fill { stroke: #82c95f; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-slate .obv-metric-gauge-fill { stroke: #1f2328; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-amber .obv-metric-gauge-fill { stroke: #f5a24c; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-blue .obv-metric-gauge-fill { stroke: #3b82f6; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge-change {
+    position: absolute;
+    inset: auto 18px 12px auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-green .obv-metric-gauge-change span { color: #82c95f; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-slate .obv-metric-gauge-change span { color: #1f2328; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-amber .obv-metric-gauge-change span { color: #f2993a; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge.metric-blue .obv-metric-gauge-change span { color: #3b82f6; }
+
+  /* v36 cross-case bottlenecks */
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-card {
+    padding: 22px 22px 18px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-head {
+    align-items: flex-start !important;
+    margin-bottom: 18px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-head h2 {
+    margin: 0 0 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-head p {
+    margin: 0;
+    color: #758093;
+    font-size: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-item {
+    display: grid;
+    gap: 14px;
+    text-align: left;
+    border: 1px solid #e7ebf0;
+    border-radius: 22px;
+    background: #fff;
+    padding: 18px;
+    box-shadow: none;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-icon.tone-red { background: #fef1f1; color: #cf2e2e; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-icon.tone-blue { background: #eef4ff; color: #2d6cdf; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-icon.tone-green { background: #eef7f1; color: #17824c; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-count {
+    height: 32px;
+    border-radius: 999px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 582;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-count.tone-red { background: #fdebec; color: #c53131; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-count.tone-blue { background: #ebf3ff; color: #2363d1; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-count.tone-green { background: #ebf7f0; color: #177e4b; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-copy strong {
+    display: block;
+    color: #111827;
+    font-size: 18px;
+    line-height: 1.18;
+    margin-bottom: 6px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-copy p {
+    margin: 0;
+    color: #77808f;
+    font-size: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #536072;
+    font-size: 13px;
+    font-weight: 491;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-meta span {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f5f7fa;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-progress {
+    height: 10px;
+    border-radius: 999px;
+    background: #eef2f6;
+    overflow: hidden;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #94a3b8;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-item.tone-red .obv-bottleneck-progress span { background: #e35d5d; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-item.tone-blue .obv-bottleneck-progress span { background: #4b85e6; }
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-item.tone-green .obv-bottleneck-progress span { background: #2aa164; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-summary-strip {
+    margin-top: 16px;
+    border: 1px solid #e7ebf0;
+    border-radius: 18px;
+    background: #f8fafc;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: #475467;
+    font-size: 14px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-summary-strip strong {
+    color: #111827;
+    font-size: 16px;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-summary-link {
+    border: 0;
+    background: transparent;
+    color: #215ecb;
+    font-weight: 536;
+    padding: 0;
+  }
+
+  @media (max-width: 1180px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-metric-strip, .siomac-onboarding-overview-mockup-v2 .obv-cross-bottlenecks-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-metric-gauge {
+      width: 148px;
+      flex-basis: 148px;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-bottleneck-summary-strip {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+@layer sections {
+  /* v37 mixed metric strip and simplified recent work */
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-card {
+    min-height: 132px !important;
+    border-radius: 24px !important;
+    border: 1px solid #e8ebf0 !important;
+    background: #fff !important;
+    padding: 16px 17px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-card-gauge {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-toprow {
+    gap: 11px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-toprow h3 {
+    color: #20242b !important;
+    font-size: 15px !important;
+    line-height: 1.12 !important;
+    font-weight: 605 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: #f5f6f8 !important;
+    color: #20242b !important;
+    border: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-icon svg {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-bottomrow {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-stat p, .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-copy p {
+    margin: 0 0 6px !important;
+    color: #717985 !important;
+    font-size: 13px !important;
+    font-weight: 445 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-stat strong, .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-copy strong {
+    color: #12161d !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge {
+    position: relative !important;
+    width: 108px !important;
+    height: 72px !important;
+    flex: 0 0 108px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge svg {
+    width: 108px !important;
+    height: 72px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge-track, .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge-fill {
+    fill: none !important;
+    stroke-linecap: round !important;
+    stroke-width: 14 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge-track {
+    stroke: #edf0f4 !important;
+    stroke-dasharray: 2 3 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-green .obv-metric-gauge-fill { stroke: #7ec65d !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-slate .obv-metric-gauge-fill { stroke: #2d3136 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-amber .obv-metric-gauge-fill { stroke: #ffa957 !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge-change {
+    position: absolute !important;
+    right: 10px !important;
+    bottom: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    color: #111827 !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    font-weight: 605 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-green .obv-metric-gauge-change span { color: #7ec65d !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-slate .obv-metric-gauge-change span { color: #2d3136 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-gauge.metric-amber .obv-metric-gauge-change span { color: #ff9f3f !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-card-compact {
+    position: relative !important;
+    display: grid !important;
+    align-content: start !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-card-compact .obv-metric-copy {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip .obv-metric-card-compact .obv-metric-copy em {
+    display: block !important;
+    margin-top: 6px !important;
+    color: #8a94a5 !important;
+    font-size: 11px !important;
+    font-style: normal !important;
+    font-weight: 536 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark {
+    position: absolute !important;
+    right: 11px !important;
+    bottom: 14px !important;
+    width: 72px !important;
+    height: 38px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark path, .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark circle {
+    fill: none !important;
+    stroke-width: 3.6 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-blue path, .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-blue circle { stroke: #8db4f0 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-cyan path, .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-cyan circle { stroke: #75c5d0 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-red path, .siomac-onboarding-overview-mockup-v2 .obv-metric-compact-spark.metric-red circle { stroke: #f29d9d !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-trend {
+    position: absolute !important;
+    right: 14px !important;
+    top: 16px !important;
+    border-radius: 999px !important;
+    padding: 5px 8px !important;
+    background: #f5f7fb !important;
+    color: #526071 !important;
+    font-size: 11px !important;
+    font-weight: 605 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-trend.up { color: #177e4b !important; background: #edf8f2 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-metric-trend.down { color: #b42318 !important; background: #fff1f1 !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-simple {
+    margin-top: 14px !important;
+    min-height: 42px !important;
+    height: auto !important;
+    border-radius: 16px !important;
+    border: 1px solid #e6ebf2 !important;
+    background: #f8fafc !important;
+    color: #374151 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 11px 14px !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-simple strong {
+    color: #111827 !important;
+    font-size: 13px !important;
+    font-weight: 605 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-simple span {
+    color: #64748b !important;
+    font-size: 12px !important;
+    font-weight: 559 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-task-card {
+    border: 1px solid #e8edf3 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border-radius: 22px !important;
+    padding: 16px !important;
+    min-height: 238px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-task-card::before, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-task-card::after {
+    display: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    flex: 0 0 42px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon.green {
+    background: #1e9b63 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon.dark {
+    background: #2a3037 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.2 !important;
+    stroke: currentColor !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill {
+    border: 1px solid #e4e9f0 !important;
+    background: #f8fafc !important;
+    color: #374151 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-blocked {
+    border-color: #ffd4d4 !important;
+    background: #fff1f1 !important;
+    color: #b42318 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-in_progress, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-open {
+    border-color: #cdebdc !important;
+    background: #edf8f2 !important;
+    color: #117749 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-facts {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-facts span {
+    border: 1px solid #e3e9f1 !important;
+    background: #f7f9fc !important;
+    color: #4f5b6b !important;
+    border-radius: 999px !important;
+    padding: 5px 9px !important;
+    font-size: 11px !important;
+    font-weight: 582 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    height: 28px !important;
+    display: grid !important;
+    grid-template-columns: 42px 1fr !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter > span {
+    order: 2 !important;
+    justify-self: end !important;
+    font-size: 12px !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter > em {
+    order: 1 !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 9px !important;
+    border-radius: 999px !important;
+    background: #eef2f6 !important;
+    overflow: visible !important;
+    position: relative !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter > em > i {
+    display: block !important;
+    height: 9px !important;
+    min-width: 9px !important;
+    border-radius: 999px !important;
+    background: #1e9b63 !important;
+    position: relative !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.dark > em > i {
+    background: #2a3037 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter > em > i > b {
+    position: absolute !important;
+    right: -6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    border: 4px solid currentColor !important;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.18) !important;
+  }
+
+  @media (max-width: 1320px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-mixed-metric-strip {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}
+
+
+@layer sections {
+  /* v38: exact-style gauge cards, combined case-load stat, original recent-work colors */
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-exact-stat-card {
+    min-height: 156px !important;
+    border-radius: 24px !important;
+    border: 1px solid #edf0f4 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 20px 22px 18px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-toprow {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-toprow h3 {
+    margin: 0 !important;
+    color: #24282f !important;
+    font-size: 18px !important;
+    line-height: 1.1 !important;
+    font-weight: 605 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-icon {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 50% !important;
+    background: #f5f5f5 !important;
+    color: #20242a !important;
+    border: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 52px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-bottomrow {
+    display: grid !important;
+    grid-template-columns: minmax(120px, 1fr) 156px !important;
+    align-items: end !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-stat {
+    display: grid !important;
+    gap: 8px !important;
+    padding-bottom: 2px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-stat p {
+    margin: 0 !important;
+    color: #7a8088 !important;
+    font-size: 15px !important;
+    font-weight: 445 !important;
+    letter-spacing: -0.015em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-stat strong {
+    color: #111419 !important;
+    font-size: 27px !important;
+    line-height: 1 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge {
+    position: relative !important;
+    width: 156px !important;
+    height: 76px !important;
+    flex: 0 0 156px !important;
+    margin-right: -6px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge svg {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-track, .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-fill {
+    fill: none !important;
+    stroke-linecap: round !important;
+    stroke-width: 15 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-track {
+    stroke: #edf1ee !important;
+    stroke-dasharray: 2.2 4 !important;
+    opacity: 1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-fill {
+    stroke-dashoffset: 0;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-green .obv-metric-gauge-fill { stroke: #79bf54 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-slate .obv-metric-gauge-fill { stroke: #303235 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-amber .obv-metric-gauge-fill { stroke: #ff9f45 !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-green .obv-metric-gauge-track { stroke: #e4f1dd !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-slate .obv-metric-gauge-track { stroke: #e9ebee !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-amber .obv-metric-gauge-track { stroke: #fff0df !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-change {
+    position: absolute !important;
+    right: 14px !important;
+    bottom: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #171a20 !important;
+    font-size: 15px !important;
+    font-weight: 605 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge-change strong {
+    font-size: inherit !important;
+    font-weight: inherit !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-green .obv-metric-gauge-change span { color: #79bf54 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-slate .obv-metric-gauge-change span { color: #303235 !important; }
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-gauge.metric-amber .obv-metric-gauge-change span { color: #ff8e2b !important; }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-combined-card {
+    grid-column: 1 / -1 !important;
+    border: 1px solid #e8edf3 !important;
+    background: #ffffff !important;
+    border-radius: 22px !important;
+    box-shadow: none !important;
+    padding: 14px 16px !important;
+    min-height: 86px !important;
+    display: grid !important;
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+    gap: 16px !important;
+    align-items: center !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-head h3 {
+    margin: 0 0 4px !important;
+    color: #111827 !important;
+    font-size: 16px !important;
+    font-weight: 605 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-head span {
+    color: #7b8492 !important;
+    font-size: 12px !important;
+    font-weight: 536 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item {
+    min-height: 58px !important;
+    border: 1px solid #edf1f5 !important;
+    border-radius: 16px !important;
+    background: #f9fafb !important;
+    padding: 10px 12px !important;
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #eef4ff !important;
+    color: #2f68d6 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-icon.metric-green {
+    background: #edf8f1 !important;
+    color: #178651 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke-width: 2 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item p, .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item em {
+    margin: 0 !important;
+    color: #697386 !important;
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+    font-weight: 559 !important;
+    font-style: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item strong {
+    display: block !important;
+    color: #111827 !important;
+    font-size: 20px !important;
+    line-height: 1.05 !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.04em !important;
+    margin: 2px 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item small {
+    border-radius: 999px !important;
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+    font-weight: 605 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item small.up {
+    background: #edf8f2 !important;
+    color: #177e4b !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-item small.down {
+    background: #fff1f1 !important;
+    color: #b42318 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-simple {
+    margin-top: 10px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 6px 0 0 !important;
+    justify-content: flex-start !important;
+    color: #64748b !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-case-performance-card .obv-case-insight-simple span {
+    color: #64748b !important;
+    font-size: 12px !important;
+    font-weight: 559 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-work-task-card {
+    background: #f7f7f7 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon.green {
+    background: #78c861 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-icon.dark {
+    background: #282828 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill {
+    background: #ffffff !important;
+    border: 1px solid #ececec !important;
+    color: #333333 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-blocked {
+    background: #ececec !important;
+    border-color: #e0e0e0 !important;
+    color: #323232 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-open, .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-status-pill.status-in_progress {
+    background: #e9f7e3 !important;
+    border-color: #d8edce !important;
+    color: #75bf5c !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.green {
+    background: #e9f7e3 !important;
+    color: #75bf5c !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.dark {
+    background: #ececec !important;
+    color: #323232 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.green > em {
+    background: #d9edcf !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.dark > em {
+    background: #dedede !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.green > em > i {
+    background: #75bf5c !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-v20-layout .obv-work-restored-card .obv-project-meter.dark > em > i {
+    background: #323232 !important;
+  }
+
+  @media (max-width: 900px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-v38-metric-strip .obv-metric-combined-card {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-combined-stat-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}
+
+
+@layer sections {
+  /* v39: activation completion moved into the right rail */
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card {
+    border: 1px solid #e8edf3 !important;
+    background: #ffffff !important;
+    border-radius: 24px !important;
+    box-shadow: none !important;
+    padding: 18px !important;
+    display: grid !important;
+    gap: 15px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-main-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    background: #f4f6f5 !important;
+    color: #1f2429 !important;
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 auto !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-main-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.1 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-head h2 {
+    margin: 0 0 4px !important;
+    color: #171b21 !important;
+    font-size: 18px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+    font-weight: 627 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-head p {
+    margin: 0 !important;
+    color: #7a8390 !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    font-weight: 514 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-trend {
+    height: 30px !important;
+    border-radius: 999px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #edf8e9 !important;
+    color: #69ac4f !important;
+    font-size: 12px !important;
+    font-weight: 627 !important;
+    white-space: nowrap !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-score-row {
+    min-height: 96px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 132px !important;
+    align-items: end !important;
+    gap: 10px !important;
+    padding: 2px 0 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-score-copy {
+    display: grid !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-score-copy span {
+    color: #767f8c !important;
+    font-size: 13px !important;
+    font-weight: 536 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-score-copy strong {
+    color: #111419 !important;
+    font-size: 34px !important;
+    line-height: .9 !important;
+    letter-spacing: -0.06em !important;
+    font-weight: 650 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-score-copy em {
+    color: #7b8490 !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    font-style: normal !important;
+    font-weight: 514 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge {
+    width: 132px !important;
+    height: 76px !important;
+    margin: 0 -4px 0 0 !important;
+    position: relative !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge svg {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-track, .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-fill {
+    fill: none !important;
+    stroke-linecap: round !important;
+    stroke-width: 14 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-track {
+    stroke: #e5f1de !important;
+    stroke-dasharray: 2 4 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-fill {
+    stroke: #79bf54 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-change {
+    position: absolute !important;
+    right: 13px !important;
+    bottom: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    color: #15181d !important;
+    font-size: 13px !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge-change span {
+    color: #79bf54 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-info-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-info-grid button {
+    border: 1px solid #edf1f5 !important;
+    background: #f9fafb !important;
+    border-radius: 16px !important;
+    padding: 11px 12px !important;
+    text-align: left !important;
+    display: grid !important;
+    gap: 4px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-info-grid span, .siomac-onboarding-overview-mockup-v2 .obv-activation-readiness-list span {
+    color: #707986 !important;
+    font-size: 11px !important;
+    font-weight: 582 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-info-grid strong {
+    color: #111827 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-info-grid em {
+    color: #63a64b !important;
+    font-size: 11px !important;
+    font-weight: 627 !important;
+    font-style: normal !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-readiness-list {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-readiness-list div {
+    min-height: 38px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    border: 1px solid #edf1f5 !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-readiness-list strong {
+    color: #111827 !important;
+    font-size: 15px !important;
+    font-weight: 650 !important;
+  }
+
+  .siomac-onboarding-overview-mockup-v2 .obv-activation-open {
+    height: 40px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: #1f2d2a !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 627 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  @media (max-width: 1320px) {
+    .siomac-onboarding-overview-mockup-v2 .obv-activation-score-row {
+      grid-template-columns: 1fr !important;
+    }
+
+    .siomac-onboarding-overview-mockup-v2 .obv-activation-side-card .obv-metric-gauge {
+      width: 100% !important;
+      max-width: 160px !important;
+    }
+  }
+}
+
+

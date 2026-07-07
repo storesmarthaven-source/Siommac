@@ -25,6 +25,9 @@ export { createPreviewWidgetInstance } from './createPreviewWidgetInstance';
 export { commitPreviewWidget } from './commitPreviewWidget';
 export { splitCommittedAndPreview } from './splitCommittedAndPreview';
 
+// animation toolkit (the sanctioned way to animate a widget — see WIDGET_AUTHORING_GUIDE.md)
+export { reducedMotion, useMountReveal, useValuePulse, useStaggerReveal, type MountRevealOpts } from './motion';
+
 // board + persistence
 export { useBoardLayout, type UseBoardLayoutResult } from './useBoardLayout';
 export { WidgetBoard, type WidgetBoardProps } from './WidgetBoard';
@@ -32,6 +35,9 @@ export { WidgetBoardZone, type WidgetBoardZoneProps } from './WidgetBoardZone';
 export { WidgetBoardToolbar, type WidgetBoardToolbarProps } from './WidgetBoardToolbar';
 export { WidgetRenderer } from './WidgetRenderer';
 export { WidgetFrame } from './WidgetFrame';
+
+// first-party bundles (curated code sets — distinct from third-party installable packages)
+export { WIDGET_BUNDLES, resolveBundleWidgets, type WidgetBundle } from './bundles';
 
 // library modal
 export { WidgetLibraryModal, type WidgetLibraryModalProps } from './WidgetLibraryModal';
