@@ -69,6 +69,7 @@ import financeDisbursementsRouter   from './routes/financeDisbursements';
 import financeOverviewRouter         from './routes/financeOverview';
 import financeAccountsPayableRouter  from './routes/financeAccountsPayable';
 import financePickersRouter          from './routes/financePickers';
+import financeLookupsRouter          from './routes/financeLookups';
 
 // Register module handoff receivers once at cold-start
 import { registerModulesOnce } from './lib/registerModules';
@@ -200,6 +201,7 @@ app.route('/api/finance', financeDisbursementsRouter);
 app.route('/api/finance', financeOverviewRouter);
 app.route('/api/finance', financeAccountsPayableRouter);
 app.route('/api/finance', financePickersRouter);
+app.route('/api/finance', financeLookupsRouter);
 app.route('/api/hr', hrCompensationRouter);
 app.route('/api/hr', hrOvertimeRouter);
 app.route('/api/hr', hrStatutoryProfileRouter);
