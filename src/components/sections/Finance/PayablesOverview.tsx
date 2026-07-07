@@ -22,9 +22,11 @@ import {
 import {
   useApBills, useApBillDetail, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
   useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useRecordPayment, useVoidBill,
-  type ApBill,
+  type ApBill, type ApVendor,
 } from '@api/finance/accountsPayable';
 import { money, moneyCompact } from './hrfinFormat';
+import { ApVendorDialog } from './ApVendorDialog';
+import { ApVendorDrawer } from './ApVendorDrawer';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -50,6 +52,7 @@ export function PayablesOverview(): VNode {
   const today = new Date().toISOString().slice(0, 10);
   const canManage = can('finance.ap.manage');
   const canApprove = can('finance.ap.approve');
+  const canCreateVendor = can('finance.ap.vendors.create');
 
   const [tab, setTab] = useState('bills');
   const [search, setSearch] = useState('');
@@ -60,6 +63,10 @@ export function PayablesOverview(): VNode {
   const [form, setForm] = useState({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' });
   const [payFor, setPayFor] = useState<ApBill | null>(null);
   const [payAmount, setPayAmount] = useState('');
+  // Vendor dialog + drawer state
+  const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<ApVendor | null>(null);
+  const [vendorDrawerId, setVendorDrawerId] = useState<string | null>(null);
 
   const kpis = useApKpis();
   const aging = useApAging();
@@ -123,7 +130,7 @@ export function PayablesOverview(): VNode {
     ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => { resetWizard(); setWizOpen(true); } } as QuickAction] : []),
     { key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setTab('bills') } as QuickAction,
     ...(canManage && open[0] ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => openPay(open[0]!) } as QuickAction] : []),
-    ...(canManage ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => setTab('vendors') } as QuickAction] : []),
+    ...(canCreateVendor ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => { setEditingVendor(null); setVendorDialogOpen(true); } } as QuickAction] : []),
     { key: 'export', label: 'Export', icon: 'download', onClick: exportBills } as QuickAction,
   ];
 
@@ -196,7 +203,11 @@ export function PayablesOverview(): VNode {
             columns={(tab === 'bills' ? billCols : tab === 'vendors' ? vendorCols : paymentCols) as HrfinColumn<ApBill | Record<string, unknown>>[]}
             rows={(tab === 'bills' ? (billsQ.data?.rows ?? []) : tab === 'vendors' ? (vendorsQ.data ?? []) : (paymentsQ.data ?? [])) as Array<ApBill | Record<string, unknown>>}
             rowKey={r => (r as { id: string }).id}
-            onRowClick={tab === 'bills' ? (r => setDrawerId((r as ApBill).id)) : undefined}
+            onRowClick={tab === 'bills'
+              ? (r => setDrawerId((r as ApBill).id))
+              : tab === 'vendors'
+              ? (r => setVendorDrawerId((r as { id: string }).id))
+              : undefined}
             page={tab === 'bills' ? page : 0} pageCount={tab === 'bills' ? (billsQ.data?.pageCount ?? 1) : 1}
             total={tab === 'bills' ? (billsQ.data?.total ?? 0) : tab === 'vendors' ? (vendorsQ.data?.length ?? 0) : (paymentsQ.data?.length ?? 0)}
             pageSize={10} onPage={setPage} noun={tab}
@@ -302,6 +313,22 @@ export function PayablesOverview(): VNode {
           </>
         )}
       </HrfinWizardModal>
+
+      {/* Vendor create / edit dialog */}
+      <ApVendorDialog
+        open={vendorDialogOpen}
+        vendor={editingVendor}
+        onClose={() => setVendorDialogOpen(false)}
+        onSaved={() => { setVendorDialogOpen(false); setTab('vendors'); }}
+      />
+
+      {/* Vendor detail drawer */}
+      <ApVendorDrawer
+        open={!!vendorDrawerId}
+        vendorId={vendorDrawerId}
+        onClose={() => setVendorDrawerId(null)}
+        onEdit={v => { setVendorDrawerId(null); setEditingVendor(v); setVendorDialogOpen(true); }}
+      />
     </div>
   );
 }

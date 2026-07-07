@@ -16,7 +16,8 @@ import { assertDifferentApprover } from './statutoryConfig';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export type ApBillStatus = 'draft' | 'submitted' | 'approved' | 'partially_paid' | 'paid' | 'rejected' | 'void';
-export type ApPaymentMethod = 'eft' | 'cheque' | 'cash' | 'card';
+export type ApPaymentMethod = 'eft' | 'ach' | 'wire' | 'cheque' | 'cash' | 'card';
+export type ApVendorStatus = 'active' | 'inactive' | 'on_hold';
 
 const SUBMODULE = 'finance_ap';
 
@@ -25,8 +26,18 @@ const SUBMODULE = 'finance_ap';
 export interface ApVendorDto {
   id: string; vendorNo: string; name: string; registrationNo: string | null;
   contactName: string | null; contactEmail: string | null; contactPhone: string | null;
-  paymentTermsDays: number; defaultGlAccountCode: string | null; status: 'active' | 'inactive';
+  paymentTermsDays: number; defaultGlAccountCode: string | null;
+  defaultCostCenterId: string | null; defaultCurrency: string;
+  preferredPaymentMethod: ApPaymentMethod | null;
+  status: ApVendorStatus;
   createdAt: string; updatedAt: string | null;
+}
+
+export interface ApVendorBankAccountDto {
+  id: string; vendorId: string; bankName: string; accountName: string;
+  accountNumber: string; routingCode: string | null; iban: string | null;
+  swift: string | null; currency: string; isDefault: boolean;
+  status: 'active' | 'inactive'; createdAt: string;
 }
 
 export interface ApBillDto {
@@ -42,7 +53,20 @@ export interface ApBillDto {
 export interface ApBillLineDto { id: string; billId: string; lineNo: number; description: string; amount: number; glAccountCode: string | null; costCenterId: string | null; }
 export interface ApPaymentDto { id: string; billId: string; amount: number; method: ApPaymentMethod; paidAt: string; reference: string | null; createdBy: string | null; }
 
-interface DbVendorRow { id: string; vendor_no: string; name: string; registration_no: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; payment_terms_days: number; default_gl_account_code: string | null; status: 'active' | 'inactive'; created_at: string; updated_at: string | null; }
+interface DbVendorRow {
+  id: string; vendor_no: string; name: string; registration_no: string | null;
+  contact_name: string | null; contact_email: string | null; contact_phone: string | null;
+  payment_terms_days: number; default_gl_account_code: string | null;
+  default_cost_center_id: string | null; default_currency: string;
+  preferred_payment_method: string | null;
+  status: ApVendorStatus; created_at: string; updated_at: string | null;
+}
+interface DbVendorBankAccountRow {
+  id: string; vendor_id: string; bank_name: string; account_name: string;
+  account_number: string; routing_code: string | null; iban: string | null;
+  swift: string | null; currency: string; is_default: boolean;
+  status: 'active' | 'inactive'; created_at: string;
+}
 interface DbBillRow { id: string; bill_no: string; vendor_id: string; bill_date: string; due_date: string | null; description: string | null; total_amount: string; paid_amount: string; currency: string; status: ApBillStatus; gl_account_code: string | null; approved_by: string | null; created_by: string | null; reject_reason: string | null; void_reason: string | null; workflow_id: string | null; created_at: string; updated_at: string | null; finance_ap_vendors?: { name: string } | { name: string }[] | null; }
 interface DbLineRow { id: string; bill_id: string; line_no: number; description: string; amount: string; gl_account_code: string | null; cost_center_id: string | null; }
 interface DbPaymentRow { id: string; bill_id: string; amount: string; method: ApPaymentMethod; paid_at: string; reference: string | null; created_by: string | null; }
@@ -50,7 +74,23 @@ interface DbPaymentRow { id: string; bill_id: string; amount: string; method: Ap
 const vendorName = (r: DbBillRow): string => Array.isArray(r.finance_ap_vendors) ? (r.finance_ap_vendors[0]?.name ?? '—') : (r.finance_ap_vendors?.name ?? '—');
 
 function toVendorDto(r: DbVendorRow): ApVendorDto {
-  return { id: r.id, vendorNo: r.vendor_no, name: r.name, registrationNo: r.registration_no, contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone, paymentTermsDays: r.payment_terms_days, defaultGlAccountCode: r.default_gl_account_code, status: r.status, createdAt: r.created_at, updatedAt: r.updated_at };
+  return {
+    id: r.id, vendorNo: r.vendor_no, name: r.name, registrationNo: r.registration_no,
+    contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone,
+    paymentTermsDays: r.payment_terms_days, defaultGlAccountCode: r.default_gl_account_code,
+    defaultCostCenterId: r.default_cost_center_id ?? null,
+    defaultCurrency: r.default_currency ?? 'TTD',
+    preferredPaymentMethod: (r.preferred_payment_method as ApPaymentMethod | null) ?? null,
+    status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+function toVendorBankAccountDto(r: DbVendorBankAccountRow): ApVendorBankAccountDto {
+  return {
+    id: r.id, vendorId: r.vendor_id, bankName: r.bank_name, accountName: r.account_name,
+    accountNumber: r.account_number, routingCode: r.routing_code, iban: r.iban,
+    swift: r.swift, currency: r.currency, isDefault: r.is_default,
+    status: r.status, createdAt: r.created_at,
+  };
 }
 function toBillDto(r: DbBillRow): ApBillDto {
   const total = Number(r.total_amount), paid = Number(r.paid_amount);
@@ -90,7 +130,7 @@ export async function getBillDetail(id: string): Promise<{ bill: ApBillDto; line
   return { bill: toBillDto(data), lines: ((lines.data ?? []) as DbLineRow[]).map(toLineDto), payments: ((payments.data ?? []) as DbPaymentRow[]).map(toPaymentDto) };
 }
 
-export async function listVendors(opts: { status?: 'active' | 'inactive' } = {}): Promise<ApVendorDto[]> {
+export async function listVendors(opts: { status?: ApVendorStatus } = {}): Promise<ApVendorDto[]> {
   let q = sb.from('finance_ap_vendors').select('*').order('name');
   if (opts.status) q = q.eq('status', opts.status);
   const { data, error } = await q;
@@ -183,19 +223,142 @@ export async function getAging(): Promise<AgingBucket[]> {
 
 // ── Vendors ─────────────────────────────────────────────────────────────────
 
-export interface CreateVendorInput { name: string; registrationNo?: string; contactName?: string; contactEmail?: string; contactPhone?: string; paymentTermsDays?: number; defaultGlAccountCode?: string; actorId: string; }
+export interface CreateVendorInput {
+  name: string; registrationNo?: string; contactName?: string;
+  contactEmail?: string; contactPhone?: string; paymentTermsDays?: number;
+  defaultGlAccountCode?: string; defaultCostCenterId?: string;
+  defaultCurrency?: string; preferredPaymentMethod?: ApPaymentMethod;
+  status?: ApVendorStatus;
+  bankAccount?: {
+    bankName: string; accountName: string; accountNumber: string;
+    routingCode?: string; iban?: string; swift?: string; currency?: string;
+  };
+  actorId: string;
+}
+
 export async function createVendor(input: CreateVendorInput): Promise<ApVendorDto> {
+  // Check name uniqueness
+  const { count } = await sb.from('finance_ap_vendors').select('id', { count: 'exact', head: true }).ilike('name', input.name);
+  if ((count ?? 0) > 0) throw err(`A vendor named "${input.name}" already exists.`, 409);
+
   const vendorNo = await nextRef('APV');
   const { data, error } = await sb.from('finance_ap_vendors').insert({
-    vendor_no: vendorNo, name: input.name, registration_no: input.registrationNo ?? null, contact_name: input.contactName ?? null,
-    contact_email: input.contactEmail ?? null, contact_phone: input.contactPhone ?? null, payment_terms_days: input.paymentTermsDays ?? 30,
-    default_gl_account_code: input.defaultGlAccountCode ?? null, created_by: input.actorId,
+    vendor_no: vendorNo, name: input.name,
+    registration_no:        input.registrationNo ?? null,
+    contact_name:           input.contactName ?? null,
+    contact_email:          input.contactEmail ?? null,
+    contact_phone:          input.contactPhone ?? null,
+    payment_terms_days:     input.paymentTermsDays ?? 30,
+    default_gl_account_code: input.defaultGlAccountCode ?? null,
+    default_cost_center_id: input.defaultCostCenterId ?? null,
+    default_currency:       input.defaultCurrency ?? 'TTD',
+    preferred_payment_method: input.preferredPaymentMethod ?? null,
+    status:                 input.status ?? 'active',
+    created_by:             input.actorId,
   }).select().single<DbVendorRow>();
   if (error) throw err('createVendor: ' + error.message);
   const row = toVendorDto(data);
-  void emitAppEvent({ eventType: 'finance.ap.vendor.created', sourceModule: SUBMODULE, sourceEntityType: 'vendor', sourceEntityId: row.id, actorUserId: input.actorId, severity: 'info', payload: { vendorNo: row.vendorNo, name: row.name } });
-  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: row.id, actorId: input.actorId, action: 'vendor.created', previousState: null, newState: { vendorNo: row.vendorNo, name: row.name } });
+
+  // Optionally create a bank account in the same operation
+  if (input.bankAccount) {
+    const { error: baErr } = await sb.from('finance_ap_vendor_bank_accounts').insert({
+      vendor_id:      row.id,
+      bank_name:      input.bankAccount.bankName,
+      account_name:   input.bankAccount.accountName,
+      account_number: input.bankAccount.accountNumber,
+      routing_code:   input.bankAccount.routingCode ?? null,
+      iban:           input.bankAccount.iban ?? null,
+      swift:          input.bankAccount.swift ?? null,
+      currency:       input.bankAccount.currency ?? row.defaultCurrency,
+      is_default:     true,
+      created_by:     input.actorId,
+    });
+    if (baErr) {
+      // Compensating rollback: delete the vendor we just created
+      await sb.from('finance_ap_vendors').delete().eq('id', row.id);
+      throw err('createVendor bank account: ' + baErr.message + ' — vendor rolled back.');
+    }
+  }
+
+  void emitAppEvent({ eventType: 'finance.vendor.created', sourceModule: SUBMODULE, sourceEntityType: 'vendor', sourceEntityId: row.id, actorUserId: input.actorId, severity: 'info', payload: { vendorNo: row.vendorNo, name: row.name } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: row.id, actorId: input.actorId, action: 'vendor.created', previousState: null, newState: { vendorNo: row.vendorNo, name: row.name, status: row.status } });
   return row;
+}
+
+export interface UpdateVendorInput {
+  id: string; name?: string; registrationNo?: string | null; contactName?: string | null;
+  contactEmail?: string | null; contactPhone?: string | null; paymentTermsDays?: number;
+  defaultGlAccountCode?: string | null; defaultCostCenterId?: string | null;
+  defaultCurrency?: string; preferredPaymentMethod?: ApPaymentMethod | null;
+  status?: ApVendorStatus; actorId: string;
+}
+
+export async function updateVendor(input: UpdateVendorInput): Promise<ApVendorDto> {
+  const { id, actorId, ...fields } = input;
+  const existing = await sb.from('finance_ap_vendors').select('*').eq('id', id).maybeSingle<DbVendorRow>();
+  if (!existing.data) throw err('Vendor not found.', 404);
+  const prev = toVendorDto(existing.data);
+
+  // Name uniqueness check (if name is changing)
+  if (fields.name && fields.name !== prev.name) {
+    const { count } = await sb.from('finance_ap_vendors').select('id', { count: 'exact', head: true }).ilike('name', fields.name).neq('id', id);
+    if ((count ?? 0) > 0) throw err(`A vendor named "${fields.name}" already exists.`, 409);
+  }
+
+  const updates: Record<string, unknown> = {};
+  if (fields.name           !== undefined) updates['name']                    = fields.name;
+  if (fields.registrationNo !== undefined) updates['registration_no']         = fields.registrationNo;
+  if (fields.contactName    !== undefined) updates['contact_name']            = fields.contactName;
+  if (fields.contactEmail   !== undefined) updates['contact_email']           = fields.contactEmail;
+  if (fields.contactPhone   !== undefined) updates['contact_phone']           = fields.contactPhone;
+  if (fields.paymentTermsDays !== undefined) updates['payment_terms_days']    = fields.paymentTermsDays;
+  if (fields.defaultGlAccountCode !== undefined) updates['default_gl_account_code'] = fields.defaultGlAccountCode;
+  if (fields.defaultCostCenterId !== undefined) updates['default_cost_center_id'] = fields.defaultCostCenterId;
+  if (fields.defaultCurrency !== undefined) updates['default_currency']       = fields.defaultCurrency;
+  if (fields.preferredPaymentMethod !== undefined) updates['preferred_payment_method'] = fields.preferredPaymentMethod;
+  if (fields.status         !== undefined) updates['status']                  = fields.status;
+
+  const { data, error } = await sb.from('finance_ap_vendors').update(updates).eq('id', id).select().single<DbVendorRow>();
+  if (error) throw err('updateVendor: ' + error.message);
+  const row = toVendorDto(data);
+
+  void emitAppEvent({ eventType: 'finance.vendor.updated', sourceModule: SUBMODULE, sourceEntityType: 'vendor', sourceEntityId: id, actorUserId: actorId, severity: 'info', payload: { vendorNo: row.vendorNo, changes: Object.keys(updates) } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: id, actorId, action: 'vendor.updated', previousState: prev, newState: row });
+  return row;
+}
+
+export async function getVendorDetail(id: string): Promise<{ vendor: ApVendorDto; bankAccounts: ApVendorBankAccountDto[] } | null> {
+  const [vendorRes, bankRes] = await Promise.all([
+    sb.from('finance_ap_vendors').select('*').eq('id', id).maybeSingle<DbVendorRow>(),
+    sb.from('finance_ap_vendor_bank_accounts').select('*').eq('vendor_id', id).order('is_default', { ascending: false }),
+  ]);
+  if (vendorRes.error) throw err('getVendorDetail: ' + vendorRes.error.message);
+  if (!vendorRes.data) return null;
+  return {
+    vendor: toVendorDto(vendorRes.data),
+    bankAccounts: ((bankRes.data ?? []) as DbVendorBankAccountRow[]).map(toVendorBankAccountDto),
+  };
+}
+
+export async function listVendorBills(vendorId: string): Promise<ApBillDto[]> {
+  const { data, error } = await sb.from('finance_ap_bills').select('*, finance_ap_vendors(name)').eq('vendor_id', vendorId).order('bill_date', { ascending: false }).limit(50);
+  if (error) throw err('listVendorBills: ' + error.message);
+  return ((data ?? []) as DbBillRow[]).map(toBillDto);
+}
+
+export async function listVendorPayments(vendorId: string): Promise<Array<ApPaymentDto & { billNo: string }>> {
+  // Payments joined via their bill to the vendor
+  const { data, error } = await sb
+    .from('finance_ap_payments')
+    .select('*, finance_ap_bills!inner(bill_no, vendor_id)')
+    .eq('finance_ap_bills.vendor_id', vendorId)
+    .order('paid_at', { ascending: false })
+    .limit(50);
+  if (error) throw err('listVendorPayments: ' + error.message);
+  return ((data ?? []) as Array<DbPaymentRow & { finance_ap_bills?: { bill_no: string } | { bill_no: string }[] | null }>).map(r => ({
+    ...toPaymentDto(r),
+    billNo: Array.isArray(r.finance_ap_bills) ? (r.finance_ap_bills[0]?.bill_no ?? '—') : (r.finance_ap_bills?.bill_no ?? '—'),
+  }));
 }
 
 // ── Bills ───────────────────────────────────────────────────────────────────

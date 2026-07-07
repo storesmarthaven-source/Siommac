@@ -164,6 +164,110 @@ export default async function run(h) {
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
+  await test('duplicate vendor name is rejected (409)', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await fails(api('finance/ap/vendors/create', Tstaff, {
+      name: `${TAG} Test Vendor`,   // same name as the first vendor
+      paymentTermsDays: 30, status: 'active',
+    }));
+    expect(r.status === 409, `expected 409 for duplicate, got ${r.status}`);
+  });
+
+  await test('vendor create fires app_event finance.vendor.created', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const { data: evts } = await sb
+      .from('app_events')
+      .select('event_type')
+      .eq('source_entity_id', vendorId)
+      .eq('event_type', 'finance.vendor.created')
+      .limit(1);
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.vendor.created event missing');
+  });
+
+  await test('vendor create writes audit_log vendor.created', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const { data: aud } = await sb
+      .from('audit_logs')
+      .select('id, action')
+      .eq('record_id', vendorId)
+      .ilike('action', '%vendor.created%')
+      .limit(1);
+    expect(Array.isArray(aud) && aud.length > 0, 'audit log vendor.created missing');
+  });
+
+  await test('vendors/get returns vendor + bankAccounts shape', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/vendors/get', Tstaff, { id: vendorId });
+    ok(r);
+    const data = r.body.data;
+    expect(data?.vendor?.id === vendorId, 'vendor id mismatch');
+    expect(Array.isArray(data?.bankAccounts), 'bankAccounts not array');
+    const v = data.vendor;
+    expect(typeof v.vendorNo === 'string', 'missing vendorNo');
+    expect(typeof v.defaultCurrency === 'string', 'missing defaultCurrency');
+    expect(typeof v.paymentTermsDays === 'number', 'missing paymentTermsDays');
+  });
+
+  await test('finance_staff cannot update vendor (403 — managers only)', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await fails(api('finance/ap/vendors/update', Tstaff, {
+      id: vendorId, status: 'on_hold',
+    }));
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('finance_manager can update vendor status to on_hold', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/vendors/update', Tmgr, {
+      id: vendorId, status: 'on_hold',
+    });
+    ok(r);
+    expect(r.body.data?.status === 'on_hold', `expected on_hold, got ${r.body.data?.status}`);
+  });
+
+  await test('vendor update fires app_event finance.vendor.updated', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const { data: evts } = await sb
+      .from('app_events')
+      .select('event_type')
+      .eq('source_entity_id', vendorId)
+      .eq('event_type', 'finance.vendor.updated')
+      .limit(1);
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.vendor.updated event missing');
+  });
+
+  await test('vendors list includes on_hold status filter', async () => {
+    const r = await api('finance/ap/vendors/list', Tstaff, { status: 'on_hold' });
+    ok(r);
+    expect(Array.isArray(r.body.data), 'vendors list not array');
+    const onHold = r.body.data.filter(v => v.status !== 'on_hold');
+    expect(onHold.length === 0, `filter leaked non-on_hold vendors: ${onHold.map(v => v.status).join()}`);
+  });
+
+  await test('finance_manager restores vendor to active', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/vendors/update', Tmgr, { id: vendorId, status: 'active' });
+    ok(r);
+    expect(r.body.data?.status === 'active', `expected active, got ${r.body.data?.status}`);
+  });
+
+  await test('vendors/bills returns vendor-scoped bill list', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/vendors/bills', Tstaff, { vendorId });
+    ok(r);
+    expect(Array.isArray(r.body.data), 'vendor bills not array');
+    // All returned bills belong to this vendor
+    const wrong = r.body.data.filter(b => b.vendorId !== vendorId);
+    expect(wrong.length === 0, 'vendor bills contains bills from other vendors');
+  });
+
+  await test('vendors/payments returns vendor-scoped payment list', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/vendors/payments', Tstaff, { vendorId });
+    ok(r);
+    expect(Array.isArray(r.body.data), 'vendor payments not array');
+  });
+
   // ─────────────────────────── CHUNK 6 — BILL CREATE + SUBMIT + APPROVE ────────
   // NOTE: requires migration 20260917000030 for new bill columns.
 
@@ -228,21 +332,21 @@ export default async function run(h) {
     const r = await api('finance/ap/bills/approve', Tmgr, { id: billId });
     ok(r);
 
-    // Side-effect: app_event with type=finance.bill.approved
+    // Side-effect: app_event with type=finance.ap.bill.approved
     const { data: evts } = await sb
       .from('app_events')
       .select('event_type')
-      .eq('entity_id', billId)
-      .eq('event_type', 'finance.bill.approved')
+      .eq('source_entity_id', billId)
+      .eq('event_type', 'finance.ap.bill.approved')
       .limit(1);
-    expect(Array.isArray(evts) && evts.length > 0, 'finance.bill.approved event missing');
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.ap.bill.approved event missing');
 
     // Side-effect: audit_log row
     const { data: aud } = await sb
       .from('audit_logs')
       .select('id')
-      .eq('entity_id', billId)
-      .ilike('action', '%approve%')
+      .eq('record_id', billId)
+      .ilike('action', '%bill.approved%')
       .limit(1);
     expect(Array.isArray(aud) && aud.length > 0, 'audit log for approve missing');
   });
@@ -261,18 +365,18 @@ export default async function run(h) {
 
   await test('finance_staff records partial payment', async () => {
     if (!billId) { h.skip('no billId'); return; }
-    const r = await api('finance/ap/payments/record', Tstaff, {
-      billId,
+    // Route: POST finance/ap/bills/record-payment — body.args: { id, amount, method?, reference? }
+    const r = await api('finance/ap/bills/record-payment', Tstaff, {
+      id:        billId,
       amount:    500.00,
       method:    'eft',
-      paidAt:    new Date().toISOString().slice(0, 10),
       reference: `${TAG}-PAY-001`,
-      memo:      'Partial payment test',
     });
     ok(r);
-    const pmt = r.body.data;
-    expect(pmt?.id || typeof pmt === 'string', 'expected payment id');
-    if (pmt?.id) ctx.paymentIds.push(pmt.id);
+    // Route returns the updated ApBillDto (not a payment row)
+    const updated = r.body.data;
+    expect(updated?.id === billId || typeof updated?.id === 'string', 'expected updated bill');
+    expect(updated?.status === 'partially_paid', `expected partially_paid, got ${updated?.status}`);
   });
 
   await test('payments appear in payments list', async () => {
@@ -286,21 +390,20 @@ export default async function run(h) {
     const { data: evts } = await sb
       .from('app_events')
       .select('event_type')
-      .eq('entity_id', billId)
-      .eq('event_type', 'finance.payment.recorded')
+      .eq('source_entity_id', billId)
+      .eq('event_type', 'finance.ap.bill.payment_recorded')
       .limit(1);
-    expect(Array.isArray(evts) && evts.length > 0, 'finance.payment.recorded event missing');
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.ap.bill.payment_recorded event missing');
   });
 
   await test('overpayment is blocked', async () => {
     if (!billId) { h.skip('no billId'); return; }
     // Bill total = 1500, partial of 500 already paid, remaining = 1000
     // Try to pay 2000 — should fail
-    const r = await fails(api('finance/ap/payments/record', Tstaff, {
-      billId,
-      amount:  2000.00,
-      method:  'cash',
-      paidAt:  new Date().toISOString().slice(0, 10),
+    const r = await fails(api('finance/ap/bills/record-payment', Tstaff, {
+      id:        billId,
+      amount:    2000.00,
+      method:    'cash',
       reference: `${TAG}-OVERPAY`,
     }));
     expect(r.status === 422 || r.status === 400, `expected 4xx, got ${r.status}`);

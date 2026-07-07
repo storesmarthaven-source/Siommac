@@ -21,6 +21,14 @@
 import type { ApBillFilters } from './accountsPayable';
 
 export const financeQueryKeys = {
+  // ── Broad base keys for bulk invalidation ────────────────────────────────────
+  /** Invalidates ALL Finance data (overview + AP). */
+  base:                   () => ['finance'] as const,
+  /** Invalidates all AP sub-keys (vendors / bills / payments / kpis / etc.). */
+  apBase:                 () => ['finance', 'ap'] as const,
+  /** Invalidates all Overview sub-keys. */
+  overviewBase:           () => ['finance', 'overview'] as const,
+
   // ── Finance Overview ──────────────────────────────────────────────────────────
   overview:               () => ['finance', 'overview'] as const,
   overviewData:           () => ['finance', 'overview', 'data'] as const,
