@@ -15,13 +15,13 @@ import { can } from '@lib/permissions';
 import { openActionModal } from '@/components/common/actions';
 import {
   HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, DeadlineList, ActivityFeed,
-  HrfinTable, HrfinPill, HrfinWizardModal, TrendArea, HorizontalBars, HrfinIcon,
+  HrfinTable, HrfinPill, TrendArea, HorizontalBars, HrfinIcon,
   exportCsv,
   type QuickAction, type HrfinColumn, type HrfinTone, type RowActionItem,
 } from '@ui';
 import {
   useApBills, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
-  useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useVoidBill,
+  useSubmitBill, useApproveBill, useRejectBill, useVoidBill,
   type ApBill, type ApVendor,
 } from '@api/finance/accountsPayable';
 import { money, moneyCompact } from './hrfinFormat';
@@ -31,6 +31,7 @@ import { ApRecordPaymentDialog } from './ApRecordPaymentDialog';
 import { ApStatusFilterMenu, BILL_STATUS_LABEL, type BillStatusFacet } from './ApStatusFilterMenu';
 import { ApAdvancedFilterPanel, countAdvFilters, type ApAdvFilters } from './ApAdvancedFilterPanel';
 import { ApBillDrawer } from './ApBillDrawer';
+import { ApNewBillWizard } from './ApNewBillWizard';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -67,8 +68,6 @@ export function PayablesOverview(): VNode {
   const [advOpen, setAdvOpen] = useState(false);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [wizOpen, setWizOpen] = useState(false);
-  const [wizStep, setWizStep] = useState(0);
-  const [form, setForm] = useState({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' });
   const [payFor, setPayFor] = useState<ApBill | null>(null);
   // Vendor dialog + drawer state
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
@@ -83,7 +82,6 @@ export function PayablesOverview(): VNode {
   const vendorsQ = useApVendors();
   const paymentsQ = useApPayments();
 
-  const createBill = useCreateBill();
   const submitBill = useSubmitBill();
   const approveBill = useApproveBill();
   const rejectBill = useRejectBill();
@@ -104,13 +102,6 @@ export function PayablesOverview(): VNode {
   const kloading = kpis.isLoading && !d;
   const advCount = countAdvFilters(adv);
 
-  function resetWizard(): void { setForm({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' }); setWizStep(0); }
-  async function submitWizard(): Promise<void> {
-    const amount = Number(form.lineAmount);
-    if (!form.vendorId || !form.lineDesc || !(amount > 0)) { toast('Fill in vendor, a line description and amount.'); return; }
-    try { await createBill.mutateAsync({ vendorId: form.vendorId, billDate: form.billDate, dueDate: form.dueDate || undefined, description: form.desc || undefined, glAccountCode: form.gl, lines: [{ description: form.lineDesc, amount, glAccountCode: form.gl }] }); toast('Bill created'); setWizOpen(false); resetWizard(); }
-    catch (e) { toast((e as Error).message); }
-  }
   async function doApprove(b: ApBill): Promise<void> {
     const r = await openActionModal({ title: 'Approve bill', subtitle: b.billNo, tone: 'success', icon: 'fa-check', record: { title: b.vendorName, subtitle: `${b.billNo} · ${money(b.totalAmount)}` }, warning: 'You can’t approve a bill you created (separation of duties).', whatNext: ['The bill becomes payable.', 'An app event + audit record are written.'], confirmLabel: 'Approve' });
     if (r.confirmed) try { await approveBill.mutateAsync({ id: b.id }); toast('Bill approved'); } catch (e) { toast((e as Error).message); }
@@ -128,7 +119,7 @@ export function PayablesOverview(): VNode {
 
   const exportBills = (): void => exportCsv(billsQ.data?.rows ?? [], [{ header: 'Bill', value: b => b.billNo }, { header: 'Vendor', value: b => b.vendorName }, { header: 'Due', value: b => b.dueDate ?? '' }, { header: 'Amount', value: b => b.totalAmount }, { header: 'Balance', value: b => b.balance }, { header: 'Status', value: b => b.status }], 'accounts-payable');
   const actions: QuickAction[] = [
-    ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => { resetWizard(); setWizOpen(true); } } as QuickAction] : []),
+    ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => setWizOpen(true) } as QuickAction] : []),
     { key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setTab('bills') } as QuickAction,
     ...(canManage && open[0] ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => openPay(open[0]!) } as QuickAction] : []),
     ...(canCreateVendor ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => { setEditingVendor(null); setVendorDialogOpen(true); } } as QuickAction] : []),
@@ -270,32 +261,8 @@ export function PayablesOverview(): VNode {
         actions={{ onSubmit: doSubmit, onApprove: doApprove, onReject: doReject, onVoid: doVoid, onPay: openPay }}
       />
 
-      {/* New-bill wizard */}
-      <HrfinWizardModal open={wizOpen} title="New bill" stepCount={3} activeStep={wizStep} onClose={() => setWizOpen(false)}
-        onBack={wizStep > 0 ? () => setWizStep(s => s - 1) : undefined}
-        primaryLabel={wizStep === 2 ? 'Create bill' : 'Next'} primaryLoading={createBill.isPending}
-        onPrimary={() => (wizStep === 2 ? void submitWizard() : setWizStep(s => s + 1))}>
-        {wizStep === 0 && (
-          <>
-            <div class="hrfin-field"><label>Vendor</label><select class="hrfin-input" value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: (e.target as HTMLSelectElement).value }))}><option value="">Select a vendor…</option>{(vendorsQ.data ?? []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
-            <div class="hrfin-field"><label>Bill date</label><input class="hrfin-input" type="date" value={form.billDate} onInput={e => setForm(f => ({ ...f, billDate: (e.target as HTMLInputElement).value }))} /></div>
-            <div class="hrfin-field"><label>Due date</label><input class="hrfin-input" type="date" value={form.dueDate} onInput={e => setForm(f => ({ ...f, dueDate: (e.target as HTMLInputElement).value }))} /></div>
-          </>
-        )}
-        {wizStep === 1 && (
-          <>
-            <div class="hrfin-field"><label>Line description</label><input class="hrfin-input" value={form.lineDesc} placeholder="e.g. Bulk cement" onInput={e => setForm(f => ({ ...f, lineDesc: (e.target as HTMLInputElement).value }))} /></div>
-            <div class="hrfin-field"><label>GL account code</label><input class="hrfin-input" value={form.gl} onInput={e => setForm(f => ({ ...f, gl: (e.target as HTMLInputElement).value }))} /></div>
-            <div class="hrfin-field"><label>Amount</label><input class="hrfin-input" type="number" value={form.lineAmount} placeholder="0.00" onInput={e => setForm(f => ({ ...f, lineAmount: (e.target as HTMLInputElement).value }))} /></div>
-          </>
-        )}
-        {wizStep === 2 && (
-          <>
-            <div class="hrfin-sod-note"><HrfinIcon name="alert" /> On create this writes an audit record and emits an app event; submit it for approval from the bill drawer.</div>
-            <div class="hrfin-metric-list"><div class="hrfin-metric-row"><span>Vendor</span><b>{(vendorsQ.data ?? []).find(v => v.id === form.vendorId)?.name ?? '—'}</b></div><div class="hrfin-metric-row"><span>Total</span><b>{money(Number(form.lineAmount) || 0)}</b></div></div>
-          </>
-        )}
-      </HrfinWizardModal>
+      {/* New-bill wizard (enterprise, multi-line) */}
+      <ApNewBillWizard open={wizOpen} onClose={() => setWizOpen(false)} onCreated={() => setTab('bills')} />
 
       {/* Record-payment dialog (full form) */}
       <ApRecordPaymentDialog
