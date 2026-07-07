@@ -32,6 +32,11 @@ import { ApStatusFilterMenu, BILL_STATUS_LABEL, type BillStatusFacet } from './A
 import { ApAdvancedFilterPanel, countAdvFilters, type ApAdvFilters } from './ApAdvancedFilterPanel';
 import { ApBillDrawer } from './ApBillDrawer';
 import { ApNewBillWizard } from './ApNewBillWizard';
+import { ApDuplicateRiskBanner } from './ApDuplicateRiskBanner';
+import { ApDuplicateReviewDrawer } from './ApDuplicateReviewDrawer';
+import { ApBulkApprovalQueue } from './ApBulkApprovalQueue';
+import { ApPaymentRunBuilder } from './ApPaymentRunBuilder';
+import { ApImportWizard } from './ApImportWizard';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -58,6 +63,8 @@ export function PayablesOverview(): VNode {
   const canManage = can('finance.ap.manage');
   const canApprove = can('finance.ap.approve');
   const canCreateVendor = can('finance.ap.vendors.create');
+  const canImport = can('finance.ap.bills.import');
+  const canRunPayment = can('finance.ap.payment.run.manage');
 
   const [tab, setTab] = useState('bills');
   const [search, setSearch] = useState('');
@@ -73,6 +80,14 @@ export function PayablesOverview(): VNode {
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<ApVendor | null>(null);
   const [vendorDrawerId, setVendorDrawerId] = useState<string | null>(null);
+  // Chunk 7 — duplicate review
+  const [dupReviewOpen, setDupReviewOpen] = useState(false);
+  // Chunk 8 — bulk approval
+  const [bulkApprovalOpen, setBulkApprovalOpen] = useState(false);
+  // Chunk 12 — payment run builder
+  const [payRunOpen, setPayRunOpen] = useState(false);
+  // Chunk 13 — import wizard
+  const [importOpen, setImportOpen] = useState(false);
 
   const kpis = useApKpis();
   const aging = useApAging();
@@ -120,9 +135,10 @@ export function PayablesOverview(): VNode {
   const exportBills = (): void => exportCsv(billsQ.data?.rows ?? [], [{ header: 'Bill', value: b => b.billNo }, { header: 'Vendor', value: b => b.vendorName }, { header: 'Due', value: b => b.dueDate ?? '' }, { header: 'Amount', value: b => b.totalAmount }, { header: 'Balance', value: b => b.balance }, { header: 'Status', value: b => b.status }], 'accounts-payable');
   const actions: QuickAction[] = [
     ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => setWizOpen(true) } as QuickAction] : []),
-    { key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setTab('bills') } as QuickAction,
-    ...(canManage && open[0] ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => openPay(open[0]!) } as QuickAction] : []),
+    ...(canApprove ? [{ key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setBulkApprovalOpen(true) } as QuickAction] : []),
+    ...(canManage ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => { if (open[0]) openPay(open[0]); } } as QuickAction] : []),
     ...(canCreateVendor ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => { setEditingVendor(null); setVendorDialogOpen(true); } } as QuickAction] : []),
+    ...(canImport ? [{ key: 'import', label: 'Import', icon: 'file', onClick: () => setImportOpen(true) } as QuickAction] : []),
     { key: 'export', label: 'Export', icon: 'download', onClick: exportBills } as QuickAction,
   ];
 
@@ -161,6 +177,9 @@ export function PayablesOverview(): VNode {
       />
 
       <QuickActionStrip actions={actions} />
+
+      {/* Chunk 7 — duplicate risk banner (conditional) */}
+      <ApDuplicateRiskBanner onReview={() => setDupReviewOpen(true)} />
 
       <section class="hrfin-kpi-grid">
         <KpiCard loading={kloading} label="Total payable" value={money(d?.totalPayable)} support={`${d?.openBills ?? 0} open bills`} visual="line" values={trend.data?.billed ?? []} />
@@ -233,7 +252,7 @@ export function PayablesOverview(): VNode {
             <h1>{money(paymentRunTotal)}</h1>
             <div class="hrfin-metric-row" style={{ marginTop: 12 }}><span>Run date</span><b>{nextFriday()}</b></div>
             <div class="hrfin-metric-row"><span>Payment method</span><b>ACH</b></div>
-            {canManage && open[0] && <button type="button" class="hrfin-action is-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={() => openPay(open[0]!)}>Review &amp; run payment</button>}
+            {canRunPayment && open.length > 0 && <button type="button" class="hrfin-action is-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 14 }} onClick={() => setPayRunOpen(true)}>Review &amp; run payment</button>}
           </article>
 
           <RailCard title="Vendors needing attention" right={vendorExceptions.length ? <span class="hrfin-mini-badge is-danger">{vendorExceptions.length} exceptions</span> : undefined} linkLabel="View all exceptions" onLink={() => setTab('vendors')}>
@@ -297,6 +316,30 @@ export function PayablesOverview(): VNode {
         open={advOpen} value={adv} onClose={() => setAdvOpen(false)}
         onApply={f => { setAdv(f); setPage(0); setAdvOpen(false); }}
         onClear={() => { setAdv({}); setPage(0); }}
+      />
+
+      {/* Chunk 7 — duplicate review drawer */}
+      <ApDuplicateReviewDrawer
+        open={dupReviewOpen} onClose={() => setDupReviewOpen(false)}
+        onOpenBill={id => { setDupReviewOpen(false); setDrawerId(id); }}
+      />
+
+      {/* Chunk 8 — bulk approval queue */}
+      <ApBulkApprovalQueue
+        open={bulkApprovalOpen} onClose={() => setBulkApprovalOpen(false)}
+        onOpenBill={id => { setBulkApprovalOpen(false); setDrawerId(id); }}
+      />
+
+      {/* Chunk 12 — payment run builder */}
+      <ApPaymentRunBuilder
+        open={payRunOpen} onClose={() => setPayRunOpen(false)}
+        onComplete={() => { setPayRunOpen(false); setTab('bills'); }}
+      />
+
+      {/* Chunk 13 — import wizard */}
+      <ApImportWizard
+        open={importOpen} onClose={() => setImportOpen(false)}
+        onImported={() => { setImportOpen(false); setTab('bills'); }}
       />
     </div>
   );

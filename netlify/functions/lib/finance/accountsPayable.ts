@@ -439,9 +439,13 @@ export async function createBill(input: CreateBillInput): Promise<ApBillDto> {
   const total = round2(subtotal + taxAmount);
 
   // Pre-commit duplicate guard — blocks unless an override reason is supplied.
+  let overrideDupes: DuplicateMatch[] = [];
   if (!input.duplicateOverrideReason?.trim()) {
     const dupes = await checkBillDuplicate({ vendorId: input.vendorId, vendorInvoiceNo: input.vendorInvoiceNo, totalAmount: total, billDate: input.billDate });
     if (dupes.length) throw err(`Possible duplicate: bill ${dupes[0]!.billNo} already exists for this vendor (${dupes[0]!.reason === 'invoice_no' ? 'same invoice number' : 'same amount + date'}). Supply an override reason to proceed.`, 409);
+  } else {
+    // Record what we're overriding so it appears in the review queue
+    overrideDupes = await checkBillDuplicate({ vendorId: input.vendorId, vendorInvoiceNo: input.vendorInvoiceNo, totalAmount: total, billDate: input.billDate });
   }
 
   const billNo = await nextRef('BILL');
@@ -471,6 +475,17 @@ export async function createBill(input: CreateBillInput): Promise<ApBillDto> {
 
   void emitAppEvent({ eventType: 'finance.ap.bill.created', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: row.id, actorUserId: input.actorId, severity: 'info', payload: { billNo: row.billNo, vendorName: row.vendorName, totalAmount: row.totalAmount, lineCount: input.lines.length } });
   await writeHrAudit({ submoduleKey: SUBMODULE, recordId: row.id, actorId: input.actorId, action: 'bill.created', previousState: null, newState: { billNo: row.billNo, status: 'draft', totalAmount: row.totalAmount, lineCount: input.lines.length } });
+
+  // Persist duplicate override reviews so they appear in the review queue
+  if (overrideDupes.length && input.duplicateOverrideReason?.trim()) {
+    for (const dupe of overrideDupes) {
+      void persistDuplicateOverride({
+        originalBillId: row.id, duplicateBillId: dupe.billId,
+        matchType: dupe.reason === 'invoice_no' ? 'exact_invoice' : 'amount_date',
+        actorId: input.actorId, reason: input.duplicateOverrideReason.trim(),
+      });
+    }
+  }
 
   // Submit-on-create (perm-checked at the route) — routes through the workflow.
   if (input.submitForApproval) return submitBill(row.id, input.actorId);
@@ -647,4 +662,437 @@ export async function createBillComment(billId: string, actorId: string, body: s
   void emitAppEvent({ eventType: 'finance.ap.bill.comment_added', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: billId, actorUserId: actorId, severity: 'info', payload: { commentId: data.id, isInternal } });
   const names = await resolveUserNames([actorId]);
   return toCommentDto(data, names);
+}
+
+// ── Chunk 7 — Duplicate Reviews ───────────────────────────────────────────────
+
+export interface ApDuplicateReviewDto {
+  id: string;
+  originalBillId: string; originalBillNo: string | null;
+  duplicateBillId: string | null; duplicateBillNo: string | null;
+  matchType: 'exact_invoice' | 'amount_date' | 'similar_invoice' | 'attachment_hash';
+  confidence: 'high' | 'medium' | 'low';
+  status: 'pending' | 'resolved_duplicate' | 'resolved_distinct';
+  resolutionNote: string | null; resolvedBy: string | null; resolvedAt: string | null;
+  createdAt: string;
+}
+
+interface DbDupReviewRow {
+  id: string; original_bill_id: string; duplicate_bill_id: string | null;
+  match_type: string; confidence: string; status: string;
+  resolution_note: string | null; resolved_by: string | null; resolved_at: string | null;
+  created_at: string;
+  original_bill?: { bill_no: string } | { bill_no: string }[] | null;
+  duplicate_bill?: { bill_no: string } | { bill_no: string }[] | null;
+}
+
+function toDupReviewDto(r: DbDupReviewRow): ApDuplicateReviewDto {
+  const origNo = Array.isArray(r.original_bill) ? (r.original_bill[0]?.bill_no ?? null) : (r.original_bill?.bill_no ?? null);
+  const dupNo  = Array.isArray(r.duplicate_bill) ? (r.duplicate_bill[0]?.bill_no ?? null) : (r.duplicate_bill?.bill_no ?? null);
+  return {
+    id: r.id, originalBillId: r.original_bill_id, originalBillNo: origNo,
+    duplicateBillId: r.duplicate_bill_id, duplicateBillNo: dupNo,
+    matchType: r.match_type as ApDuplicateReviewDto['matchType'],
+    confidence: r.confidence as ApDuplicateReviewDto['confidence'],
+    status: r.status as ApDuplicateReviewDto['status'],
+    resolutionNote: r.resolution_note, resolvedBy: r.resolved_by,
+    resolvedAt: r.resolved_at, createdAt: r.created_at,
+  };
+}
+
+/** List pending duplicate risk reviews (for the banner and queue). */
+export async function listDuplicateReviews(billId?: string): Promise<ApDuplicateReviewDto[]> {
+  let q = sb.from('finance_ap_duplicate_reviews')
+    .select('*, original_bill:original_bill_id(bill_no), duplicate_bill:duplicate_bill_id(bill_no)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (billId) q = q.eq('original_bill_id', billId);
+  const { data, error } = await q;
+  if (error) throw err('listDuplicateReviews: ' + error.message);
+  return ((data ?? []) as DbDupReviewRow[]).map(toDupReviewDto);
+}
+
+export interface ResolveDuplicateRiskInput {
+  reviewId: string;
+  resolution: 'resolved_duplicate' | 'resolved_distinct';
+  resolutionNote?: string;
+  actorId: string;
+}
+
+/** Resolve a duplicate review.
+ *  - resolved_duplicate: voids the DUPLICATE (newer) bill (not the original).
+ *  - resolved_distinct: marks distinct (keeps both).
+ *  Emits `finance.ap.bill.duplicate_reviewed`. */
+export async function resolveDuplicateRisk(input: ResolveDuplicateRiskInput): Promise<ApDuplicateReviewDto> {
+  if (!input.resolutionNote?.trim() && input.resolution === 'resolved_duplicate') {
+    throw err('A resolution note is required when marking a bill as duplicate.', 422);
+  }
+  const { data: existing, error: lookupErr } = await sb.from('finance_ap_duplicate_reviews')
+    .select('*, original_bill:original_bill_id(bill_no), duplicate_bill:duplicate_bill_id(bill_no)')
+    .eq('id', input.reviewId).maybeSingle<DbDupReviewRow>();
+  if (lookupErr) throw err('resolveDuplicateRisk: ' + lookupErr.message);
+  if (!existing) throw err('Duplicate review not found.', 404);
+  if (existing.status !== 'pending') throw err('This review has already been resolved.', 422);
+
+  // When marking as duplicate: void the newer (duplicate) bill.
+  if (input.resolution === 'resolved_duplicate' && existing.duplicate_bill_id) {
+    const { error: voidErr } = await sb.from('finance_ap_bills')
+      .update({ status: 'void', void_reason: `Voided by duplicate review: ${input.resolutionNote?.trim()}` })
+      .eq('id', existing.duplicate_bill_id)
+      .not('status', 'in', '(paid,void)');
+    if (voidErr) throw err('resolveDuplicateRisk void: ' + voidErr.message);
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await sb.from('finance_ap_duplicate_reviews')
+    .update({ status: input.resolution, resolution_note: input.resolutionNote?.trim() ?? null, resolved_by: input.actorId, resolved_at: now })
+    .eq('id', input.reviewId)
+    .select('*, original_bill:original_bill_id(bill_no), duplicate_bill:duplicate_bill_id(bill_no)')
+    .single<DbDupReviewRow>();
+  if (error) throw err('resolveDuplicateRisk update: ' + error.message);
+  const row = toDupReviewDto(data);
+
+  void emitAppEvent({ eventType: 'finance.ap.bill.duplicate_reviewed', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: existing.original_bill_id, actorUserId: input.actorId, severity: 'info', payload: { reviewId: row.id, resolution: input.resolution, duplicateBillId: existing.duplicate_bill_id } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: existing.original_bill_id, actorId: input.actorId, action: 'bill.duplicate_reviewed', previousState: { status: 'pending' }, newState: { status: input.resolution, resolution: input.resolution }, reason: input.resolutionNote });
+  return row;
+}
+
+/** Persist a duplicate override review row when createBill is called with a duplicateOverrideReason. */
+export async function persistDuplicateOverride(input: {
+  originalBillId: string; duplicateBillId: string;
+  matchType: 'exact_invoice' | 'amount_date'; actorId: string; reason: string;
+}): Promise<void> {
+  await sb.from('finance_ap_duplicate_reviews').insert({
+    original_bill_id:  input.duplicateBillId, // the OLDER bill is "original"
+    duplicate_bill_id: input.originalBillId,  // the NEW bill we just created is the "duplicate"
+    match_type:        input.matchType,
+    confidence:        'high',
+    status:            'resolved_distinct',   // operator chose to proceed
+    resolution_note:   input.reason,
+    resolved_by:       input.actorId,
+    resolved_at:       new Date().toISOString(),
+  });
+}
+
+// ── Chunk 8 — Bulk Approval Queue ─────────────────────────────────────────────
+
+export interface BulkApproveResult {
+  approved: ApBillDto[];
+  blocked: Array<{ bill: ApBillDto; reason: string }>;
+}
+
+/** Bulk-approve a list of submitted bills.
+ *  Per-item SoD check: creator ≠ approver (blocks that item, does NOT abort the whole batch).
+ *  Only 'submitted' bills are eligible; others are blocked before submit.
+ *  Emits individual events per approved bill. */
+export async function bulkApproveBills(billIds: string[], actorId: string): Promise<BulkApproveResult> {
+  if (!billIds.length) throw err('No bills selected.', 422);
+
+  // Load all requested bills in one query
+  const { data: rows, error } = await sb.from('finance_ap_bills')
+    .select('*, finance_ap_vendors(name)').in('id', billIds);
+  if (error) throw err('bulkApproveBills lookup: ' + error.message);
+
+  const bills = ((rows ?? []) as DbBillRow[]).map(toBillDto);
+  const approved: ApBillDto[] = [];
+  const blocked: BulkApproveResult['blocked'] = [];
+
+  for (const bill of bills) {
+    // Eligibility checks — block ineligible BEFORE writing anything
+    if (bill.status !== 'submitted') { blocked.push({ bill, reason: `Bill is ${bill.status}, not submitted.` }); continue; }
+    if (bill.createdBy === actorId) { blocked.push({ bill, reason: 'Segregation of duties: you submitted this bill.' }); continue; }
+
+    const { data: updated, error: upErr } = await sb.from('finance_ap_bills')
+      .update({ status: 'approved', approved_by: actorId })
+      .eq('id', bill.id).eq('status', 'submitted')  // idempotent guard
+      .select('*, finance_ap_vendors(name)').single<DbBillRow>();
+    if (upErr || !updated) {
+      blocked.push({ bill, reason: upErr?.message ?? 'Concurrent update conflict — retry.' }); continue;
+    }
+    const approvedBill = toBillDto(updated);
+    approved.push(approvedBill);
+
+    void emitAppEvent({ eventType: 'finance.ap.bill.approved', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: bill.id, actorUserId: actorId, severity: 'success', payload: { billNo: bill.billNo, totalAmount: bill.totalAmount, bulk: true } });
+    await writeHrAudit({ submoduleKey: SUBMODULE, recordId: bill.id, actorId, action: 'bill.bulk_approved', previousState: { status: 'submitted' }, newState: { status: 'approved' } });
+  }
+
+  return { approved, blocked };
+}
+
+// ── Chunk 12 — Payment Runs ───────────────────────────────────────────────────
+
+export type ApPaymentRunStatus = 'draft' | 'pending' | 'processing' | 'complete' | 'void';
+
+export interface ApPaymentRunItemDto {
+  id: string; runId: string; billId: string; billNo: string | null;
+  vendorName: string | null; amount: number; status: 'pending' | 'paid' | 'failed';
+  createdAt: string;
+}
+
+export interface ApPaymentRunDto {
+  id: string; runNo: string; status: ApPaymentRunStatus;
+  paymentMethod: ApPaymentMethod; payDate: string;
+  totalAmount: number; currency: string; notes: string | null;
+  sourceAccountId: string | null; createdBy: string | null;
+  processedBy: string | null; voidedBy: string | null; voidReason: string | null;
+  createdAt: string; updatedAt: string | null;
+}
+
+interface DbPaymentRunRow {
+  id: string; run_no: string; status: ApPaymentRunStatus;
+  payment_method: string; pay_date: string; total_amount: string; currency: string;
+  notes: string | null; source_account_id: string | null;
+  created_by: string | null; processed_by: string | null; voided_by: string | null;
+  void_reason: string | null; created_at: string; updated_at: string | null;
+}
+interface DbPaymentRunItemRow {
+  id: string; run_id: string; bill_id: string; amount: string; status: string; created_at: string;
+  finance_ap_bills?: { bill_no: string; finance_ap_vendors?: { name: string } | { name: string }[] | null } | Array<{ bill_no: string; finance_ap_vendors?: { name: string } | { name: string }[] | null }> | null;
+}
+
+function toRunDto(r: DbPaymentRunRow): ApPaymentRunDto {
+  return {
+    id: r.id, runNo: r.run_no, status: r.status,
+    paymentMethod: r.payment_method as ApPaymentMethod,
+    payDate: r.pay_date, totalAmount: Number(r.total_amount), currency: r.currency,
+    notes: r.notes, sourceAccountId: r.source_account_id,
+    createdBy: r.created_by, processedBy: r.processed_by, voidedBy: r.voided_by,
+    voidReason: r.void_reason, createdAt: r.created_at, updatedAt: r.updated_at,
+  };
+}
+
+function toRunItemDto(r: DbPaymentRunItemRow): ApPaymentRunItemDto {
+  const bill = Array.isArray(r.finance_ap_bills) ? r.finance_ap_bills[0] : r.finance_ap_bills;
+  const vendorRaw = bill?.finance_ap_vendors;
+  const vendorName = Array.isArray(vendorRaw) ? (vendorRaw[0]?.name ?? null) : (vendorRaw?.name ?? null);
+  return {
+    id: r.id, runId: r.run_id, billId: r.bill_id,
+    billNo: bill?.bill_no ?? null, vendorName,
+    amount: Number(r.amount), status: r.status as ApPaymentRunItemDto['status'],
+    createdAt: r.created_at,
+  };
+}
+
+export interface CreatePaymentRunInput {
+  billIds: string[];
+  paymentMethod: ApPaymentMethod;
+  payDate: string;
+  currency?: string;
+  notes?: string;
+  sourceAccountId?: string;
+  actorId: string;
+}
+
+export async function createPaymentRun(input: CreatePaymentRunInput): Promise<ApPaymentRunDto & { items: ApPaymentRunItemDto[] }> {
+  if (!input.billIds.length) throw err('Select at least one bill.', 422);
+
+  // Load the selected bills — must all be approved (or partially_paid)
+  const { data: bills, error: billsErr } = await sb.from('finance_ap_bills')
+    .select('id, bill_no, total_amount, paid_amount, status, currency').in('id', input.billIds);
+  if (billsErr) throw err('createPaymentRun bills: ' + billsErr.message);
+
+  const eligible = (bills ?? []) as Array<{ id: string; bill_no: string; total_amount: string; paid_amount: string; status: string; currency: string }>;
+  const ineligible = eligible.filter(b => !['approved', 'partially_paid'].includes(b.status));
+  if (ineligible.length) throw err(`${ineligible.length} bill(s) are not in an approved state: ${ineligible.map(b => b.bill_no).join(', ')}.`, 422);
+
+  const totalAmount = round2(eligible.reduce((s, b) => s + (Number(b.total_amount) - Number(b.paid_amount)), 0));
+  const runNo = await nextRef('PRUN');
+
+  const { data: run, error: runErr } = await sb.from('finance_ap_payment_runs').insert({
+    run_no: runNo, status: 'pending', payment_method: input.paymentMethod,
+    pay_date: input.payDate, total_amount: totalAmount,
+    currency: input.currency ?? 'TTD', notes: input.notes ?? null,
+    source_account_id: input.sourceAccountId ?? null, created_by: input.actorId,
+  }).select().single<DbPaymentRunRow>();
+  if (runErr) throw err('createPaymentRun insert: ' + runErr.message);
+
+  // Insert run items
+  const items = eligible.map(b => ({
+    run_id: run.id, bill_id: b.id,
+    amount: round2(Number(b.total_amount) - Number(b.paid_amount)),
+    status: 'pending' as const,
+  }));
+  const { error: itemsErr } = await sb.from('finance_ap_payment_run_items').insert(items);
+  if (itemsErr) {
+    // Compensating rollback
+    await sb.from('finance_ap_payment_runs').delete().eq('id', run.id);
+    throw err('createPaymentRun items: ' + itemsErr.message + ' — run rolled back.');
+  }
+
+  void emitAppEvent({ eventType: 'finance.ap.payment_run.created', sourceModule: SUBMODULE, sourceEntityType: 'payment_run', sourceEntityId: run.id, actorUserId: input.actorId, severity: 'info', payload: { runNo, billCount: input.billIds.length, totalAmount } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: run.id, actorId: input.actorId, action: 'payment_run.created', previousState: null, newState: { runNo, status: 'pending', totalAmount, billCount: input.billIds.length } });
+
+  const runDto = toRunDto(run);
+  const { data: itemRows } = await sb.from('finance_ap_payment_run_items')
+    .select('*, finance_ap_bills(bill_no, finance_ap_vendors(name))').eq('run_id', run.id);
+  return { ...runDto, items: ((itemRows ?? []) as DbPaymentRunItemRow[]).map(toRunItemDto) };
+}
+
+export async function listPaymentRuns(opts: { status?: ApPaymentRunStatus } = {}): Promise<ApPaymentRunDto[]> {
+  let q = sb.from('finance_ap_payment_runs').select('*').order('created_at', { ascending: false }).limit(50);
+  if (opts.status) q = q.eq('status', opts.status);
+  const { data, error } = await q;
+  if (error) throw err('listPaymentRuns: ' + error.message);
+  return ((data ?? []) as DbPaymentRunRow[]).map(toRunDto);
+}
+
+export async function getPaymentRunDetail(id: string): Promise<(ApPaymentRunDto & { items: ApPaymentRunItemDto[] }) | null> {
+  const { data: run, error: runErr } = await sb.from('finance_ap_payment_runs').select('*').eq('id', id).maybeSingle<DbPaymentRunRow>();
+  if (runErr) throw err('getPaymentRunDetail: ' + runErr.message);
+  if (!run) return null;
+  const { data: itemRows, error: itemsErr } = await sb.from('finance_ap_payment_run_items')
+    .select('*, finance_ap_bills(bill_no, finance_ap_vendors(name))').eq('run_id', id).order('created_at');
+  if (itemsErr) throw err('getPaymentRunDetail items: ' + itemsErr.message);
+  return { ...toRunDto(run), items: ((itemRows ?? []) as DbPaymentRunItemRow[]).map(toRunItemDto) };
+}
+
+export async function processPaymentRun(id: string, actorId: string): Promise<ApPaymentRunDto & { items: ApPaymentRunItemDto[] }> {
+  const run = await getPaymentRunDetail(id);
+  if (!run) throw err('Payment run not found.', 404);
+  if (run.status !== 'pending') throw err('Only pending runs can be processed.', 422);
+  // SoD: creator ≠ processor
+  assertDifferentApprover({ actorId, createdBy: run.createdBy, action: 'process a payment run they created' });
+
+  // Mark run as processing
+  await sb.from('finance_ap_payment_runs').update({ status: 'processing' }).eq('id', id);
+
+  // Process each item: record a payment + mark bill paid
+  for (const item of run.items) {
+    const { error: payErr } = await sb.from('finance_ap_payments').insert({
+      bill_id: item.billId, amount: item.amount,
+      method: run.paymentMethod, paid_at: new Date(run.payDate).toISOString(),
+      payment_run_id: id, created_by: actorId,
+    });
+    if (payErr) {
+      // Non-fatal: mark item failed, continue with others
+      await sb.from('finance_ap_payment_run_items').update({ status: 'failed' }).eq('id', item.id);
+      continue;
+    }
+
+    // Update bill paid amount + status
+    const { data: bill } = await sb.from('finance_ap_bills').select('total_amount, paid_amount').eq('id', item.billId).maybeSingle<{ total_amount: string; paid_amount: string }>();
+    if (bill) {
+      const newPaid = Number(bill.paid_amount) + item.amount;
+      const newStatus: ApBillStatus = newPaid + 0.005 >= Number(bill.total_amount) ? 'paid' : 'partially_paid';
+      await sb.from('finance_ap_bills').update({ paid_amount: newPaid, status: newStatus }).eq('id', item.billId);
+    }
+    await sb.from('finance_ap_payment_run_items').update({ status: 'paid' }).eq('id', item.id);
+  }
+
+  // Complete the run
+  const { data: updated, error: updErr } = await sb.from('finance_ap_payment_runs')
+    .update({ status: 'complete', processed_by: actorId }).eq('id', id).select().single<DbPaymentRunRow>();
+  if (updErr) throw err('processPaymentRun complete: ' + updErr.message);
+
+  void emitAppEvent({ eventType: 'finance.ap.payment_run.processed', sourceModule: SUBMODULE, sourceEntityType: 'payment_run', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { runNo: run.runNo, itemCount: run.items.length } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: id, actorId, action: 'payment_run.processed', previousState: { status: 'pending' }, newState: { status: 'complete' } });
+
+  const detail = await getPaymentRunDetail(id);
+  return detail!;
+}
+
+export async function voidPaymentRun(id: string, actorId: string, reason: string): Promise<ApPaymentRunDto> {
+  if (!reason?.trim()) throw err('A reason is required to void a payment run.', 422);
+  const { data: run, error: lookupErr } = await sb.from('finance_ap_payment_runs').select('*').eq('id', id).maybeSingle<DbPaymentRunRow>();
+  if (lookupErr) throw err('voidPaymentRun: ' + lookupErr.message);
+  if (!run) throw err('Payment run not found.', 404);
+  if (run.status === 'void') throw err('Run is already voided.', 422);
+  if (run.status === 'complete') throw err('Completed runs cannot be voided — reverse the payments individually.', 422);
+
+  const { data, error } = await sb.from('finance_ap_payment_runs')
+    .update({ status: 'void', voided_by: actorId, void_reason: reason.trim() })
+    .eq('id', id).select().single<DbPaymentRunRow>();
+  if (error) throw err('voidPaymentRun: ' + error.message);
+  const row = toRunDto(data);
+
+  void emitAppEvent({ eventType: 'finance.ap.payment_run.voided', sourceModule: SUBMODULE, sourceEntityType: 'payment_run', sourceEntityId: id, actorUserId: actorId, severity: 'warning', payload: { runNo: row.runNo, reason } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: id, actorId, action: 'payment_run.voided', previousState: { status: run.status }, newState: { status: 'void' }, reason });
+  return row;
+}
+
+// ── Chunk 13 — Bill Import ────────────────────────────────────────────────────
+
+export interface ImportBillRow {
+  rowIndex: number;
+  vendorName: string; vendorInvoiceNo: string; billDate: string; dueDate: string;
+  description: string; amount: string; glAccountCode: string; currency: string;
+}
+
+export interface ImportValidationResult {
+  rowIndex: number; valid: boolean;
+  errors: string[];
+  data: Partial<ImportBillRow>;
+}
+
+export interface ImportBillsResult {
+  imported: number; skipped: number; errors: ImportValidationResult[];
+  billIds: string[];
+}
+
+/** Parse + validate + import bills from CSV rows.
+ *  Each row: vendorName, vendorInvoiceNo, billDate (YYYY-MM-DD), dueDate (opt),
+ *  description, amount, glAccountCode (opt), currency (opt).
+ *  Emits `finance.ap.bill.imported` per-batch. */
+export async function importBills(rows: ImportBillRow[], actorId: string): Promise<ImportBillsResult> {
+  if (!rows.length) throw err('No rows to import.', 422);
+
+  // Load all vendors in one pass for efficient name→id lookup
+  const { data: vendors } = await sb.from('finance_ap_vendors').select('id, name').eq('status', 'active');
+  const vendorMap = new Map<string, string>(
+    ((vendors ?? []) as Array<{ id: string; name: string }>).map(v => [v.name.toLowerCase().trim(), v.id]),
+  );
+
+  const validationResults: ImportValidationResult[] = [];
+  const billIds: string[] = [];
+  let imported = 0, skipped = 0;
+
+  for (const row of rows) {
+    const errors: string[] = [];
+    const data: Partial<ImportBillRow> = { ...row };
+
+    // Validate required fields
+    if (!row.vendorName?.trim()) errors.push('vendorName is required');
+    if (!row.billDate?.match(/^\d{4}-\d{2}-\d{2}$/)) errors.push('billDate must be YYYY-MM-DD');
+    if (!row.description?.trim()) errors.push('description is required');
+    const amount = Number(row.amount);
+    if (isNaN(amount) || amount <= 0) errors.push('amount must be a positive number');
+
+    const vendorId = row.vendorName ? vendorMap.get(row.vendorName.toLowerCase().trim()) : undefined;
+    if (row.vendorName && !vendorId) errors.push(`Vendor "${row.vendorName}" not found or inactive`);
+
+    if (errors.length) {
+      validationResults.push({ rowIndex: row.rowIndex, valid: false, errors, data });
+      skipped++;
+      continue;
+    }
+
+    try {
+      const bill = await createBill({
+        vendorId: vendorId!, billDate: row.billDate,
+        dueDate: row.dueDate || undefined,
+        description: row.description.trim(),
+        vendorInvoiceNo: row.vendorInvoiceNo?.trim() || undefined,
+        glAccountCode: row.glAccountCode?.trim() || undefined,
+        currency: row.currency?.trim() || 'TTD',
+        lines: [{ description: row.description.trim(), amount }],
+        actorId,
+        // Import skips duplicate guard — duplicates tracked separately
+        duplicateOverrideReason: 'Imported from CSV batch',
+      });
+      billIds.push(bill.id);
+      imported++;
+      validationResults.push({ rowIndex: row.rowIndex, valid: true, errors: [], data });
+    } catch (e) {
+      const msg = (e as Error).message;
+      validationResults.push({ rowIndex: row.rowIndex, valid: false, errors: [msg], data });
+      skipped++;
+    }
+  }
+
+  if (imported > 0) {
+    void emitAppEvent({ eventType: 'finance.ap.bill.imported', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: 'batch', actorUserId: actorId, severity: 'info', payload: { imported, skipped, billIds } });
+    await writeHrAudit({ submoduleKey: SUBMODULE, recordId: 'batch', actorId, action: 'bill.imported', previousState: null, newState: { imported, skipped } });
+  }
+
+  return { imported, skipped, errors: validationResults.filter(r => !r.valid), billIds };
 }

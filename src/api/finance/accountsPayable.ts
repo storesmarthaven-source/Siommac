@@ -269,3 +269,155 @@ export function useCreateBillComment() {
     onSuccess: (_d, args) => { void qc.invalidateQueries({ queryKey: financeQueryKeys.apBillComments(args.id) }); },
   });
 }
+
+// ── Chunk 7 — Duplicate Reviews ────────────────────────────────────────────────
+
+export interface ApDuplicateReview {
+  id: string;
+  originalBillId: string; originalBillNo: string | null;
+  duplicateBillId: string | null; duplicateBillNo: string | null;
+  matchType: 'exact_invoice' | 'amount_date' | 'similar_invoice' | 'attachment_hash';
+  confidence: 'high' | 'medium' | 'low';
+  status: 'pending' | 'resolved_duplicate' | 'resolved_distinct';
+  resolutionNote: string | null; resolvedBy: string | null; resolvedAt: string | null;
+  createdAt: string;
+}
+
+export function useApDuplicateRisks(billId?: string) {
+  return useQuery({
+    queryKey: financeQueryKeys.apDuplicateRisks(),
+    queryFn: ({ signal }: QueryFunctionContext) =>
+      post<ApDuplicateReview[]>('finance/ap/duplicate-risks/list', billId ? { billId } : {}, signal),
+  });
+}
+
+export function useResolveDuplicateRisk() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { reviewId: string; resolution: 'resolved_duplicate' | 'resolved_distinct'; resolutionNote?: string }) =>
+      post<ApDuplicateReview>('finance/ap/duplicate-risks/resolve', args),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apDuplicateRisks() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apBase() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.overviewBase() });
+    },
+  });
+}
+
+// ── Chunk 8 — Bulk Approval ────────────────────────────────────────────────────
+
+export interface BulkApproveResult {
+  approved: ApBill[];
+  blocked: Array<{ bill: ApBill; reason: string }>;
+}
+
+export function useBulkApproveBills() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { billIds: string[] }) => post<BulkApproveResult>('finance/ap/bills/bulk-approve', args),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apBase() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.overviewBase() });
+    },
+  });
+}
+
+// ── Chunk 12 — Payment Runs ────────────────────────────────────────────────────
+
+export type ApPaymentRunStatus = 'draft' | 'pending' | 'processing' | 'complete' | 'void';
+
+export interface ApPaymentRunItem {
+  id: string; runId: string; billId: string; billNo: string | null;
+  vendorName: string | null; amount: number; status: 'pending' | 'paid' | 'failed';
+  createdAt: string;
+}
+
+export interface ApPaymentRun {
+  id: string; runNo: string; status: ApPaymentRunStatus;
+  paymentMethod: ApPaymentMethod; payDate: string;
+  totalAmount: number; currency: string; notes: string | null;
+  sourceAccountId: string | null; createdBy: string | null;
+  processedBy: string | null; voidedBy: string | null; voidReason: string | null;
+  createdAt: string; updatedAt: string | null;
+}
+
+export function useApPaymentRuns(status?: ApPaymentRunStatus) {
+  return useQuery({
+    queryKey: financeQueryKeys.apPaymentRuns(status ? { status } : undefined),
+    queryFn: ({ signal }: QueryFunctionContext) =>
+      post<ApPaymentRun[]>('finance/ap/payment-runs/list', status ? { status } : {}, signal),
+  });
+}
+
+export function useApPaymentRunDetail(id: string | null) {
+  return useQuery({
+    queryKey: financeQueryKeys.apPaymentRun(id ?? ''),
+    enabled: !!id,
+    queryFn: ({ signal }: QueryFunctionContext) =>
+      post<ApPaymentRun & { items: ApPaymentRunItem[] }>('finance/ap/payment-runs/get', { id }, signal),
+  });
+}
+
+export function useCreatePaymentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { billIds: string[]; paymentMethod: ApPaymentMethod; payDate: string; currency?: string; notes?: string; sourceAccountId?: string }) =>
+      post<ApPaymentRun & { items: ApPaymentRunItem[] }>('finance/ap/payment-runs/create', args),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apPaymentRuns() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apBase() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.overviewBase() });
+    },
+  });
+}
+
+export function useProcessPaymentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string }) => post<ApPaymentRun & { items: ApPaymentRunItem[] }>('finance/ap/payment-runs/process', args),
+    onSuccess: (_d, args) => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apPaymentRun(args.id) });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apPaymentRuns() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apBase() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.overviewBase() });
+    },
+  });
+}
+
+export function useVoidPaymentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string; reason: string }) => post<ApPaymentRun>('finance/ap/payment-runs/void', args),
+    onSuccess: (_d, args) => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apPaymentRun(args.id) });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apPaymentRuns() });
+    },
+  });
+}
+
+// ── Chunk 13 — Bill Import ──────────────────────────────────────────────────────
+
+export interface ImportBillRow {
+  rowIndex: number;
+  vendorName: string; vendorInvoiceNo: string; billDate: string; dueDate: string;
+  description: string; amount: string; glAccountCode: string; currency: string;
+}
+
+export interface ImportValidationResult {
+  rowIndex: number; valid: boolean; errors: string[]; data: Partial<ImportBillRow>;
+}
+
+export interface ImportBillsResult {
+  imported: number; skipped: number; errors: ImportValidationResult[]; billIds: string[];
+}
+
+export function useImportBills() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { rows: ImportBillRow[] }) => post<ImportBillsResult>('finance/ap/bills/import', args),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.apBase() });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.overviewBase() });
+    },
+  });
+}

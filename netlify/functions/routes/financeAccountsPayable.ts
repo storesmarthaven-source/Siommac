@@ -9,7 +9,11 @@ import {
   createVendor, updateVendor, getVendorDetail, listVendorBills, listVendorPayments,
   createBill, checkBillDuplicate, submitBill, approveBill, rejectBill, recordPayment, voidBill,
   listBillAudit, listBillComments, createBillComment,
-  type RecordPaymentInput, type BillListOpts,
+  listDuplicateReviews, resolveDuplicateRisk,
+  bulkApproveBills,
+  createPaymentRun, listPaymentRuns, getPaymentRunDetail, processPaymentRun, voidPaymentRun,
+  importBills,
+  type RecordPaymentInput, type BillListOpts, type ApPaymentRunStatus, type ImportBillRow,
 } from '../lib/finance/accountsPayable';
 import type { HonoVariables } from '../../../types/api';
 
@@ -250,6 +254,108 @@ router.post('/ap/bills/comments/create', async c => {
   const v = zv(c, z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(2000), isInternal: z.boolean().optional() }), b(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await createBillComment(v.data.id, actor.id, v.data.body, v.data.isInternal ?? false) }); } catch (e) { return fail(c, e); }
+});
+
+// ── Chunk 7 — Duplicate risks ─────────────────────────────────────────────────
+
+router.post('/ap/duplicate-risks/list', async c => {
+  await requirePermission(c, 'finance.ap.view');
+  const v = zv(c, z.object({ billId: z.string().uuid().optional() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listDuplicateReviews(v.data.billId) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/duplicate-risks/resolve', async c => {
+  const actor = await requirePermission(c, 'finance.ap.duplicate.resolve');
+  const v = zv(c, z.object({
+    reviewId:       z.string().uuid(),
+    resolution:     z.enum(['resolved_duplicate', 'resolved_distinct']),
+    resolutionNote: z.string().max(500).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await resolveDuplicateRisk({ ...v.data, actorId: actor.id }) }); } catch (e) { return fail(c, e); }
+});
+
+// ── Chunk 8 — Bulk approval ───────────────────────────────────────────────────
+
+router.post('/ap/bills/bulk-approve', async c => {
+  const actor = await requirePermission(c, 'finance.ap.bills.approve');
+  const v = zv(c, z.object({
+    billIds: z.array(z.string().uuid()).min(1).max(50),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await bulkApproveBills(v.data.billIds, actor.id) }); } catch (e) { return fail(c, e); }
+});
+
+// ── Chunk 12 — Payment runs ───────────────────────────────────────────────────
+
+const PAYMENT_RUN_STATUS = ['draft', 'pending', 'processing', 'complete', 'void'] as const;
+
+router.post('/ap/payment-runs/list', async c => {
+  await requirePermission(c, 'finance.ap.payment.run.manage');
+  const v = zv(c, z.object({ status: z.enum(PAYMENT_RUN_STATUS).optional() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listPaymentRuns(v.data as { status?: ApPaymentRunStatus }) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/payment-runs/get', async c => {
+  await requirePermission(c, 'finance.ap.payment.run.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPaymentRunDetail(v.data.id);
+    if (!data) return c.json({ success: false, message: 'Payment run not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/payment-runs/create', async c => {
+  const actor = await requirePermission(c, 'finance.ap.payment.run.manage');
+  const v = zv(c, z.object({
+    billIds:         z.array(z.string().uuid()).min(1).max(200),
+    paymentMethod:   z.enum(PAYMENT_METHOD),
+    payDate:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    currency:        z.string().length(3).optional(),
+    notes:           z.string().max(500).optional(),
+    sourceAccountId: z.string().uuid().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await createPaymentRun({ ...v.data, actorId: actor.id }) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/payment-runs/process', async c => {
+  const actor = await requirePermission(c, 'finance.ap.payment.run.process');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await processPaymentRun(v.data.id, actor.id) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/payment-runs/void', async c => {
+  const actor = await requirePermission(c, 'finance.ap.payment.run.manage');
+  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(500) }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await voidPaymentRun(v.data.id, actor.id, v.data.reason) }); } catch (e) { return fail(c, e); }
+});
+
+// ── Chunk 13 — Bill import ────────────────────────────────────────────────────
+
+router.post('/ap/bills/import', async c => {
+  const actor = await requirePermission(c, 'finance.ap.bills.import');
+  const v = zv(c, z.object({
+    rows: z.array(z.object({
+      rowIndex:       z.number().int().min(0),
+      vendorName:     z.string().max(200),
+      vendorInvoiceNo: z.string().max(80).optional().default(''),
+      billDate:       z.string(),
+      dueDate:        z.string().optional().default(''),
+      description:    z.string().max(500),
+      amount:         z.string(),
+      glAccountCode:  z.string().max(30).optional().default(''),
+      currency:       z.string().length(3).optional().default('TTD'),
+    })).min(1).max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await importBills(v.data.rows as ImportBillRow[], actor.id) }); } catch (e) { return fail(c, e); }
 });
 
 export default router;
