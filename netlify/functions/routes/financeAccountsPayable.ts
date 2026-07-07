@@ -8,7 +8,7 @@ import {
   listBills, getBillDetail, listVendors, listPayments, getApKpis, getAging, getApTrend,
   createVendor, updateVendor, getVendorDetail, listVendorBills, listVendorPayments,
   createBill, submitBill, approveBill, rejectBill, recordPayment, voidBill,
-  type ApBillStatus, type RecordPaymentInput,
+  type RecordPaymentInput, type BillListOpts,
 } from '../lib/finance/accountsPayable';
 import type { HonoVariables } from '../../../types/api';
 
@@ -16,6 +16,7 @@ const router = new Hono<{ Variables: HonoVariables }>();
 const b = (c: { get: (k: string) => unknown }) => (c.get('body') as Record<string, unknown>).args ?? {};
 
 const BILL_STATUS = ['draft', 'submitted', 'approved', 'partially_paid', 'paid', 'rejected', 'void'] as const;
+const BILL_FILTER_STATUS = [...BILL_STATUS, 'overdue'] as const;
 const VENDOR_STATUS = ['active', 'inactive', 'on_hold'] as const;
 const PAYMENT_METHOD = ['eft', 'ach', 'wire', 'cheque', 'cash', 'card'] as const;
 
@@ -27,9 +28,15 @@ const fail = (c: { json: (o: unknown, s?: number) => Response }, e: unknown) => 
 // ── Reads ─────────────────────────────────────────────────────────────────────
 router.post('/ap/bills/list', async c => {
   await requirePermission(c, 'finance.ap.view');
-  const v = zv(c, z.object({ status: z.enum(BILL_STATUS).optional(), vendorId: z.string().uuid().optional(), search: z.string().optional(), page: z.number().int().min(0).optional(), pageSize: z.number().int().min(1).max(100).optional() }), b(c));
+  const v = zv(c, z.object({
+    status: z.enum(BILL_FILTER_STATUS).optional(), vendorId: z.string().uuid().optional(), search: z.string().optional(),
+    dueFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), dueTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    amountMin: z.number().nonnegative().optional(), amountMax: z.number().nonnegative().optional(),
+    glAccountCode: z.string().max(30).optional(), approverId: z.string().optional(),
+    page: z.number().int().min(0).optional(), pageSize: z.number().int().min(1).max(100).optional(),
+  }), b(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await listBills(v.data as { status?: ApBillStatus }) }); } catch (e) { return fail(c, e); }
+  try { return c.json({ success: true, data: await listBills(v.data as BillListOpts) }); } catch (e) { return fail(c, e); }
 });
 
 router.post('/ap/bills/get', async c => {

@@ -51,7 +51,12 @@ export interface ApAgingBucket { label: string; amount: number; count: number; }
 export interface ApTrend { labels: string[]; billed: number[]; paid: number[]; }
 export interface ApBillListResult { rows: ApBill[]; total: number; page: number; pageCount: number; pageSize: number; }
 
-export interface ApBillFilters extends Record<string, unknown> { status?: ApBillStatus; vendorId?: string; search?: string; page?: number; pageSize?: number; }
+export type ApBillFilterStatus = ApBillStatus | 'overdue';
+export interface ApBillFilters extends Record<string, unknown> {
+  status?: ApBillFilterStatus; vendorId?: string; search?: string;
+  dueFrom?: string; dueTo?: string; amountMin?: number; amountMax?: number;
+  glAccountCode?: string; approverId?: string; page?: number; pageSize?: number;
+}
 
 async function post<T>(path: string, args: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
   const res = await apiPost<{ success: boolean; data: T }>(path, args, signal ? { signal } : undefined);

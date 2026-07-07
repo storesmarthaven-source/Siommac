@@ -28,6 +28,8 @@ import { money, moneyCompact } from './hrfinFormat';
 import { ApVendorDialog } from './ApVendorDialog';
 import { ApVendorDrawer } from './ApVendorDrawer';
 import { ApRecordPaymentDialog } from './ApRecordPaymentDialog';
+import { ApStatusFilterMenu, BILL_STATUS_LABEL, type BillStatusFacet } from './ApStatusFilterMenu';
+import { ApAdvancedFilterPanel, countAdvFilters, type ApAdvFilters } from './ApAdvancedFilterPanel';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -58,6 +60,10 @@ export function PayablesOverview(): VNode {
   const [tab, setTab] = useState('bills');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [statusFacet, setStatusFacet] = useState<BillStatusFacet>('all');
+  const [adv, setAdv] = useState<ApAdvFilters>({});
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [advOpen, setAdvOpen] = useState(false);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [wizOpen, setWizOpen] = useState(false);
   const [wizStep, setWizStep] = useState(0);
@@ -71,7 +77,7 @@ export function PayablesOverview(): VNode {
   const kpis = useApKpis();
   const aging = useApAging();
   const trend = useApTrend();
-  const billsQ = useApBills({ search: search || undefined, page, pageSize: 10 });
+  const billsQ = useApBills({ search: search || undefined, status: statusFacet === 'all' ? undefined : statusFacet, ...adv, page, pageSize: 10 });
   const railQ = useApBills({ pageSize: 100 });
   const vendorsQ = useApVendors();
   const paymentsQ = useApPayments();
@@ -96,6 +102,7 @@ export function PayablesOverview(): VNode {
 
   const d = kpis.data;
   const kloading = kpis.isLoading && !d;
+  const advCount = countAdvFilters(adv);
 
   function resetWizard(): void { setForm({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' }); setWizStep(0); }
   async function submitWizard(): Promise<void> {
@@ -193,7 +200,11 @@ export function PayablesOverview(): VNode {
             tabs={[{ key: 'bills', label: 'Bills' }, { key: 'vendors', label: 'Vendors' }, { key: 'payments', label: 'Payments' }]}
             activeTab={tab} onTab={t => { setTab(t); setPage(0); }}
             searchValue={search} onSearch={v => { setSearch(v); setPage(0); }} searchPlaceholder="Search bills..."
-            filters={[{ label: 'Status' }, { label: 'Filters' }, { label: 'Export', icon: 'download', onClick: exportBills }]}
+            filters={tab === 'bills' ? [
+              { label: statusFacet === 'all' ? 'Status' : `Status: ${BILL_STATUS_LABEL[statusFacet]}`, onClick: () => setStatusMenuOpen(true) },
+              { label: advCount ? `Filters · ${advCount}` : 'Filters', onClick: () => setAdvOpen(true) },
+              { label: 'Export', icon: 'download', onClick: exportBills },
+            ] : [{ label: 'Export', icon: 'download', onClick: exportBills }]}
             columns={(tab === 'bills' ? billCols : tab === 'vendors' ? vendorCols : paymentCols) as HrfinColumn<ApBill | Record<string, unknown>>[]}
             rows={(tab === 'bills' ? (billsQ.data?.rows ?? []) : tab === 'vendors' ? (vendorsQ.data ?? []) : (paymentsQ.data ?? [])) as Array<ApBill | Record<string, unknown>>}
             rowKey={r => (r as { id: string }).id}
@@ -320,6 +331,17 @@ export function PayablesOverview(): VNode {
         vendorId={vendorDrawerId}
         onClose={() => setVendorDrawerId(null)}
         onEdit={v => { setVendorDrawerId(null); setEditingVendor(v); setVendorDialogOpen(true); }}
+      />
+
+      {/* Status facet menu + advanced filter panel */}
+      <ApStatusFilterMenu
+        open={statusMenuOpen} value={statusFacet} onClose={() => setStatusMenuOpen(false)}
+        onChange={v => { setStatusFacet(v); setPage(0); }}
+      />
+      <ApAdvancedFilterPanel
+        open={advOpen} value={adv} onClose={() => setAdvOpen(false)}
+        onApply={f => { setAdv(f); setPage(0); setAdvOpen(false); }}
+        onClear={() => { setAdv({}); setPage(0); }}
       />
     </div>
   );

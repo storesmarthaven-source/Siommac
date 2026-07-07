@@ -116,15 +116,27 @@ const err = (msg: string, status = 500): Error & { status: number } => Object.as
 
 // ── Queries ─────────────────────────────────────────────────────────────────
 
-export interface BillListOpts { status?: ApBillStatus; vendorId?: string; search?: string; page?: number; pageSize?: number; }
+export interface BillListOpts {
+  status?: ApBillStatus | 'overdue'; vendorId?: string; search?: string;
+  dueFrom?: string; dueTo?: string; amountMin?: number; amountMax?: number;
+  glAccountCode?: string; approverId?: string; page?: number; pageSize?: number;
+}
 export interface BillListResult { rows: ApBillDto[]; total: number; page: number; pageCount: number; pageSize: number; }
 
 export async function listBills(opts: BillListOpts = {}): Promise<BillListResult> {
   const page = Math.max(0, opts.page ?? 0);
   const pageSize = Math.min(100, Math.max(1, opts.pageSize ?? 10));
+  const today = new Date().toISOString().slice(0, 10);
   let q = sb.from('finance_ap_bills').select('*, finance_ap_vendors(name)', { count: 'exact' }).order('bill_date', { ascending: false });
-  if (opts.status) q = q.eq('status', opts.status);
+  if (opts.status === 'overdue') q = q.in('status', ['approved', 'partially_paid']).lt('due_date', today);
+  else if (opts.status) q = q.eq('status', opts.status);
   if (opts.vendorId) q = q.eq('vendor_id', opts.vendorId);
+  if (opts.glAccountCode) q = q.eq('gl_account_code', opts.glAccountCode);
+  if (opts.approverId) q = q.eq('approved_by', opts.approverId);
+  if (opts.dueFrom) q = q.gte('due_date', opts.dueFrom);
+  if (opts.dueTo) q = q.lte('due_date', opts.dueTo);
+  if (opts.amountMin != null) q = q.gte('total_amount', opts.amountMin);
+  if (opts.amountMax != null) q = q.lte('total_amount', opts.amountMax);
   if (opts.search) q = q.or(`bill_no.ilike.%${opts.search}%,description.ilike.%${opts.search}%`);
   const { data, error, count } = await q.range(page * pageSize, page * pageSize + pageSize - 1);
   if (error) throw err('listBills: ' + error.message);
