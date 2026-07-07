@@ -388,31 +388,92 @@ export async function listVendorPayments(vendorId: string): Promise<Array<ApPaym
 
 // ── Bills ───────────────────────────────────────────────────────────────────
 
-export interface BillLineInput { description: string; amount: number; glAccountCode?: string; costCenterId?: string | null; }
-export interface CreateBillInput { vendorId: string; billDate: string; dueDate?: string; description?: string; glAccountCode?: string; lines: BillLineInput[]; actorId: string; }
+export interface BillLineInput {
+  description: string; quantity?: number; unitPrice?: number; amount?: number;
+  glAccountCode?: string; costCenterId?: string | null; taxCode?: string; projectId?: string | null;
+}
+export interface CreateBillInput {
+  vendorId: string; billDate: string; dueDate?: string; description?: string;
+  vendorInvoiceNo?: string; reference?: string; currency?: string; paymentTermsDays?: number;
+  glAccountCode?: string; lines: BillLineInput[];
+  taxIncluded?: boolean; taxAmount?: number; withholdingTaxCode?: string;
+  submitForApproval?: boolean; duplicateOverrideReason?: string; actorId: string;
+}
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+/** A line's amount = explicit amount, else quantity × unit price. */
+const lineAmount = (l: BillLineInput): number => (l.amount != null ? l.amount : round2((l.quantity ?? 1) * (l.unitPrice ?? 0)));
+
+export interface DuplicateMatch {
+  billId: string; billNo: string; vendorInvoiceNo: string | null; totalAmount: number;
+  billDate: string; status: ApBillStatus; reason: 'invoice_no' | 'amount_date';
+}
+
+/** Possible duplicate bills for a vendor: same invoice number, or same amount + date.
+ *  Read-only — powers the wizard's duplicate-check step and createBill's pre-commit guard. */
+export async function checkBillDuplicate(input: { vendorId: string; vendorInvoiceNo?: string; totalAmount?: number; billDate?: string }): Promise<DuplicateMatch[]> {
+  type R = { id: string; bill_no: string; vendor_invoice_no: string | null; total_amount: string; bill_date: string; status: ApBillStatus };
+  const matches = new Map<string, DuplicateMatch>();
+  const add = (r: R, reason: DuplicateMatch['reason']): void => {
+    if (!matches.has(r.id)) matches.set(r.id, { billId: r.id, billNo: r.bill_no, vendorInvoiceNo: r.vendor_invoice_no, totalAmount: Number(r.total_amount), billDate: r.bill_date, status: r.status, reason });
+  };
+  if (input.vendorInvoiceNo?.trim()) {
+    const { data } = await sb.from('finance_ap_bills').select('id, bill_no, vendor_invoice_no, total_amount, bill_date, status')
+      .eq('vendor_id', input.vendorId).eq('vendor_invoice_no', input.vendorInvoiceNo.trim()).not('status', 'in', '(void,rejected)');
+    for (const r of (data ?? []) as R[]) add(r, 'invoice_no');
+  }
+  if (input.totalAmount != null && input.billDate) {
+    const { data } = await sb.from('finance_ap_bills').select('id, bill_no, vendor_invoice_no, total_amount, bill_date, status')
+      .eq('vendor_id', input.vendorId).eq('bill_date', input.billDate).eq('total_amount', input.totalAmount).not('status', 'in', '(void,rejected)');
+    for (const r of (data ?? []) as R[]) add(r, 'amount_date');
+  }
+  return [...matches.values()];
+}
 
 export async function createBill(input: CreateBillInput): Promise<ApBillDto> {
   if (!input.lines.length) throw err('At least one bill line is required.', 422);
-  const total = input.lines.reduce((s, l) => s + l.amount, 0);
-  if (total <= 0) throw err('Bill total must be greater than zero.', 422);
+  if (input.lines.some(l => !l.description?.trim())) throw err('Every line needs a description.', 422);
+  const subtotal = round2(input.lines.reduce((s, l) => s + lineAmount(l), 0));
+  if (subtotal <= 0) throw err('Bill total must be greater than zero.', 422);
+  const taxAmount = round2(input.taxAmount ?? 0);
+  const total = round2(subtotal + taxAmount);
+
+  // Pre-commit duplicate guard — blocks unless an override reason is supplied.
+  if (!input.duplicateOverrideReason?.trim()) {
+    const dupes = await checkBillDuplicate({ vendorId: input.vendorId, vendorInvoiceNo: input.vendorInvoiceNo, totalAmount: total, billDate: input.billDate });
+    if (dupes.length) throw err(`Possible duplicate: bill ${dupes[0]!.billNo} already exists for this vendor (${dupes[0]!.reason === 'invoice_no' ? 'same invoice number' : 'same amount + date'}). Supply an override reason to proceed.`, 409);
+  }
+
   const billNo = await nextRef('BILL');
   const { data, error } = await sb.from('finance_ap_bills').insert({
     bill_no: billNo, vendor_id: input.vendorId, bill_date: input.billDate, due_date: input.dueDate ?? null,
-    description: input.description ?? null, total_amount: total, status: 'draft', gl_account_code: input.glAccountCode ?? null, created_by: input.actorId,
+    description: input.description ?? null, total_amount: total, subtotal_amount: subtotal, tax_amount: taxAmount,
+    tax_included: input.taxIncluded ?? false, withholding_tax_code: input.withholdingTaxCode ?? null,
+    vendor_invoice_no: input.vendorInvoiceNo?.trim() || null, reference: input.reference?.trim() || null,
+    currency: input.currency ?? 'TTD', payment_terms_days: input.paymentTermsDays ?? null,
+    status: 'draft', gl_account_code: input.glAccountCode ?? null, created_by: input.actorId,
   }).select('*, finance_ap_vendors(name)').single<DbBillRow>();
   if (error) throw err('createBill: ' + error.message);
   const row = toBillDto(data);
 
   const { error: lineErr } = await sb.from('finance_ap_bill_lines').insert(
-    input.lines.map((l, i) => ({ bill_id: row.id, line_no: i + 1, description: l.description, amount: l.amount, gl_account_code: l.glAccountCode ?? input.glAccountCode ?? null, cost_center_id: l.costCenterId ?? null })),
+    input.lines.map((l, i) => ({
+      bill_id: row.id, line_no: i + 1, description: l.description.trim(), amount: lineAmount(l),
+      quantity: l.quantity ?? 1, unit_price: l.unitPrice ?? lineAmount(l),
+      gl_account_code: l.glAccountCode ?? input.glAccountCode ?? null, cost_center_id: l.costCenterId ?? null,
+      tax_code: l.taxCode ?? null, project_id: l.projectId ?? null,
+    })),
   );
   if (lineErr) {
     await sb.from('finance_ap_bills').delete().eq('id', row.id);   // compensating rollback
     throw err('createBill lines: ' + lineErr.message + ' — bill rolled back.');
   }
 
-  void emitAppEvent({ eventType: 'finance.ap.bill.created', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: row.id, actorUserId: input.actorId, severity: 'info', payload: { billNo: row.billNo, vendorName: row.vendorName, totalAmount: row.totalAmount } });
-  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: row.id, actorId: input.actorId, action: 'bill.created', previousState: null, newState: { billNo: row.billNo, status: 'draft', totalAmount: row.totalAmount } });
+  void emitAppEvent({ eventType: 'finance.ap.bill.created', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: row.id, actorUserId: input.actorId, severity: 'info', payload: { billNo: row.billNo, vendorName: row.vendorName, totalAmount: row.totalAmount, lineCount: input.lines.length } });
+  await writeHrAudit({ submoduleKey: SUBMODULE, recordId: row.id, actorId: input.actorId, action: 'bill.created', previousState: null, newState: { billNo: row.billNo, status: 'draft', totalAmount: row.totalAmount, lineCount: input.lines.length } });
+
+  // Submit-on-create (perm-checked at the route) — routes through the workflow.
+  if (input.submitForApproval) return submitBill(row.id, input.actorId);
   return row;
 }
 

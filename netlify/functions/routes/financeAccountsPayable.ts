@@ -7,7 +7,7 @@ import { z, zv } from '../lib/validate';
 import {
   listBills, getBillDetail, listVendors, listPayments, getApKpis, getAging, getApTrend,
   createVendor, updateVendor, getVendorDetail, listVendorBills, listVendorPayments,
-  createBill, submitBill, approveBill, rejectBill, recordPayment, voidBill,
+  createBill, checkBillDuplicate, submitBill, approveBill, rejectBill, recordPayment, voidBill,
   listBillAudit, listBillComments, createBillComment,
   type RecordPaymentInput, type BillListOpts,
 } from '../lib/finance/accountsPayable';
@@ -150,16 +150,40 @@ router.post('/ap/bills/create', async c => {
     billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     dueDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     description: z.string().max(500).optional(),
+    vendorInvoiceNo: z.string().max(80).optional(),
+    reference: z.string().max(120).optional(),
+    currency: z.string().length(3).optional(),
+    paymentTermsDays: z.number().int().min(0).max(365).optional(),
     glAccountCode: z.string().optional(),
     lines: z.array(z.object({
       description: z.string().min(1).max(300),
-      amount: z.number().positive(),
+      quantity: z.number().positive().optional(),
+      unitPrice: z.number().nonnegative().optional(),
+      amount: z.number().nonnegative().optional(),
       glAccountCode: z.string().optional(),
       costCenterId: z.string().uuid().nullable().optional(),
+      taxCode: z.string().max(30).optional(),
+      projectId: z.string().uuid().nullable().optional(),
     })).min(1, 'At least one line is required.'),
+    taxIncluded: z.boolean().optional(),
+    taxAmount: z.number().nonnegative().optional(),
+    withholdingTaxCode: z.string().max(30).optional(),
+    submitForApproval: z.boolean().optional(),
+    duplicateOverrideReason: z.string().max(500).optional(),
   }), b(c));
   if (!v.ok) return v.response;
+  if (v.data.submitForApproval) await requirePermission(c, 'finance.ap.bills.submit');   // submit-on-create needs submit rights too
   try { return c.json({ success: true, data: await createBill({ ...v.data, actorId: actor.id }) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/bills/check-duplicate', async c => {
+  await requirePermission(c, 'finance.ap.view');
+  const v = zv(c, z.object({
+    vendorId: z.string().uuid(), vendorInvoiceNo: z.string().optional(),
+    totalAmount: z.number().nonnegative().optional(), billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await checkBillDuplicate(v.data) }); } catch (e) { return fail(c, e); }
 });
 
 router.post('/ap/bills/submit', async c => {

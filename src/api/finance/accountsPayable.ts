@@ -163,11 +163,30 @@ function useApMutation<V>(path: string) {
   });
 }
 
-export const useCreateBill = () => useApMutation<{
+export interface CreateBillLineInput {
+  description: string; quantity?: number; unitPrice?: number; amount?: number;
+  glAccountCode?: string; costCenterId?: string | null; taxCode?: string; projectId?: string | null;
+}
+export interface CreateBillArgs {
   vendorId: string; billDate: string; dueDate?: string; description?: string;
-  glAccountCode?: string;
-  lines: Array<{ description: string; amount: number; glAccountCode?: string; costCenterId?: string | null }>;
-}>('finance/ap/bills/create');
+  vendorInvoiceNo?: string; reference?: string; currency?: string; paymentTermsDays?: number;
+  glAccountCode?: string; lines: CreateBillLineInput[];
+  taxIncluded?: boolean; taxAmount?: number; withholdingTaxCode?: string;
+  submitForApproval?: boolean; duplicateOverrideReason?: string;
+}
+export const useCreateBill = () => useApMutation<CreateBillArgs>('finance/ap/bills/create');
+
+export interface DuplicateMatch {
+  billId: string; billNo: string; vendorInvoiceNo: string | null; totalAmount: number;
+  billDate: string; status: ApBillStatus; reason: 'invoice_no' | 'amount_date';
+}
+/** Non-mutating duplicate lookup for the new-bill wizard's duplicate-check step. */
+export function useCheckBillDuplicate() {
+  return useMutation({
+    mutationFn: (args: { vendorId: string; vendorInvoiceNo?: string; totalAmount?: number; billDate?: string }) =>
+      post<DuplicateMatch[]>('finance/ap/bills/check-duplicate', args),
+  });
+}
 
 export const useSubmitBill = () => useApMutation<{ id: string }>('finance/ap/bills/submit');
 export const useApproveBill = () => useApMutation<{ id: string }>('finance/ap/bills/approve');
