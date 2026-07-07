@@ -17,7 +17,7 @@ import {
   HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, DeadlineList, ActivityFeed,
   HrfinTable, HrfinPill, HrfinWizardModal, TrendArea, HorizontalBars, HrfinIcon,
   Drawer, exportCsv,
-  type QuickAction, type HrfinColumn, type HrfinTone,
+  type QuickAction, type HrfinColumn, type HrfinTone, type RowActionItem,
 } from '@ui';
 import {
   useApBills, useApBillDetail, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
@@ -213,6 +213,21 @@ export function PayablesOverview(): VNode {
               : tab === 'vendors'
               ? (r => setVendorDrawerId((r as { id: string }).id))
               : undefined}
+            rowActions={tab === 'bills' ? (r => {
+              const bill = r as ApBill;
+              const items: RowActionItem[] = [{ key: 'view', label: 'View details', icon: 'file', onClick: () => setDrawerId(bill.id) }];
+              if (bill.status === 'draft' && canManage) items.push({ key: 'submit', label: 'Submit for approval', icon: 'send', onClick: () => void doSubmit(bill) });
+              if (bill.status === 'submitted' && canApprove) {
+                items.push({ key: 'approve', label: 'Approve', icon: 'check', onClick: () => void doApprove(bill) });
+                items.push({ key: 'reject', label: 'Reject', icon: 'close', tone: 'danger', onClick: () => void doReject(bill) });
+              }
+              if ((bill.status === 'approved' || bill.status === 'partially_paid') && canManage) items.push({ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => openPay(bill) });
+              if (!['paid', 'void'].includes(bill.status) && canApprove) items.push({ key: 'void', label: 'Void bill', icon: 'alert', tone: 'danger', onClick: () => void doVoid(bill) });
+              return items;
+            }) : tab === 'vendors' ? (r => [
+              { key: 'view', label: 'View vendor', icon: 'file', onClick: () => setVendorDrawerId((r as { id: string }).id) },
+              ...(canManage ? [{ key: 'edit', label: 'Edit vendor', icon: 'user', onClick: () => { setEditingVendor(r as unknown as ApVendor); setVendorDialogOpen(true); } } as RowActionItem] : []),
+            ]) : undefined}
             page={tab === 'bills' ? page : 0} pageCount={tab === 'bills' ? (billsQ.data?.pageCount ?? 1) : 1}
             total={tab === 'bills' ? (billsQ.data?.total ?? 0) : tab === 'vendors' ? (vendorsQ.data?.length ?? 0) : (paymentsQ.data?.length ?? 0)}
             pageSize={10} onPage={setPage} noun={tab}

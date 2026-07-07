@@ -5,7 +5,9 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { useState } from 'preact/hooks';
 import { HrfinIcon, type HrfinIconName } from './icon';
+import { RowActionMenu, type RowActionItem } from './RowActionMenu';
 
 export interface HrfinColumn<T> {
   key: string;
@@ -27,6 +29,8 @@ export interface HrfinTableProps<T> {
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;
+  /** When provided, the trailing ⋮ cell opens a state-aware action menu. */
+  rowActions?: (row: T) => RowActionItem[];
   page: number;
   pageCount: number;
   total: number;
@@ -49,13 +53,15 @@ function pageWindow(page: number, count: number): (number | '…')[] {
 
 export function HrfinTable<T>({
   tabs, activeTab, onTab, searchValue, onSearch, searchPlaceholder = 'Search…',
-  filters = [], columns, rows, rowKey, onRowClick,
+  filters = [], columns, rows, rowKey, onRowClick, rowActions,
   page, pageCount, total, pageSize, onPage, noun = 'records', loading, emptyMessage,
 }: HrfinTableProps<T>): VNode {
+  const [menu, setMenu] = useState<{ row: T; x: number; y: number } | null>(null);
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
 
   return (
+    <>
     <article class="hrfin-table-card">
       {tabs && tabs.length > 0 && (
         <div class="hrfin-tabs">
@@ -89,7 +95,9 @@ export function HrfinTable<T>({
               rows.map(row => (
                 <tr key={rowKey(row)} class={onRowClick ? 'is-clickable' : undefined} onClick={onRowClick ? () => onRowClick(row) : undefined}>
                   {columns.map(c => <td key={c.key}>{c.render(row)}</td>)}
-                  <td><button type="button" aria-label="More row actions" onClick={e => e.stopPropagation()}><HrfinIcon name="more" /></button></td>
+                  <td>{rowActions ? (
+                    <button type="button" aria-label="Row actions" onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setMenu({ row, x: r.right, y: r.bottom }); }}><HrfinIcon name="more" /></button>
+                  ) : null}</td>
                 </tr>
               ))
             )}
@@ -110,5 +118,7 @@ export function HrfinTable<T>({
         </div>
       )}
     </article>
+    {menu && rowActions && <RowActionMenu items={rowActions(menu.row)} x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
+    </>
   );
 }

@@ -19,6 +19,7 @@ export { ActivityFeed, type ActivityItem } from './ActivityFeed';
 export { InsightBanner, type InsightBannerProps, type InsightAction } from './InsightBanner';
 export { HrfinPill, type HrfinTone } from './HrfinPill';
 export { HrfinTable, type HrfinColumn, type HrfinTab, type HrfinFilter, type HrfinTableProps } from './HrfinTable';
+export { RowActionMenu, type RowActionItem } from './RowActionMenu';
 export { HrfinWizardModal, type HrfinWizardModalProps } from './HrfinWizardModal';
 export { EntityPicker, type EntityPickerProps, type EntityOption } from './EntityPicker';
 export { TrendArea, type TrendAreaProps } from './charts/TrendArea';
