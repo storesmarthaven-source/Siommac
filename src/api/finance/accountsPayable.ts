@@ -23,7 +23,11 @@ export interface ApBill {
   voidReason: string | null; workflowId: string | null; createdAt: string; updatedAt: string | null;
 }
 export interface ApBillLine { id: string; billId: string; lineNo: number; description: string; amount: number; glAccountCode: string | null; costCenterId: string | null; }
-export interface ApPayment { id: string; billId: string; amount: number; method: ApPaymentMethod; paidAt: string; reference: string | null; createdBy: string | null; }
+export interface ApPayment {
+  id: string; billId: string; amount: number; method: ApPaymentMethod;
+  paidAt: string; reference: string | null; memo: string | null;
+  sourceAccountId: string | null; createdBy: string | null;
+}
 
 export interface ApVendor {
   id: string; vendorNo: string; name: string; registrationNo: string | null;
@@ -166,7 +170,8 @@ export const useRejectBill = () => useApMutation<{ id: string; reason: string }>
 export const useVoidBill = () => useApMutation<{ id: string; reason: string }>('finance/ap/bills/void');
 
 export const useRecordPayment = () => useApMutation<{
-  id: string; amount: number; method?: ApPaymentMethod; reference?: string;
+  id: string; amount: number; method?: ApPaymentMethod;
+  paymentDate?: string; reference?: string; memo?: string; sourceAccountId?: string;
 }>('finance/ap/bills/record-payment');
 
 export interface VendorBankAccountInput {

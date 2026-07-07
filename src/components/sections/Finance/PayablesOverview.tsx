@@ -21,12 +21,13 @@ import {
 } from '@ui';
 import {
   useApBills, useApBillDetail, useApVendors, useApPayments, useApKpis, useApAging, useApTrend,
-  useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useRecordPayment, useVoidBill,
+  useCreateBill, useSubmitBill, useApproveBill, useRejectBill, useVoidBill,
   type ApBill, type ApVendor,
 } from '@api/finance/accountsPayable';
 import { money, moneyCompact } from './hrfinFormat';
 import { ApVendorDialog } from './ApVendorDialog';
 import { ApVendorDrawer } from './ApVendorDrawer';
+import { ApRecordPaymentDialog } from './ApRecordPaymentDialog';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
 const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
@@ -62,7 +63,6 @@ export function PayablesOverview(): VNode {
   const [wizStep, setWizStep] = useState(0);
   const [form, setForm] = useState({ vendorId: '', billDate: today, dueDate: '', desc: '', lineDesc: '', lineAmount: '', gl: '5100' });
   const [payFor, setPayFor] = useState<ApBill | null>(null);
-  const [payAmount, setPayAmount] = useState('');
   // Vendor dialog + drawer state
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<ApVendor | null>(null);
@@ -81,7 +81,6 @@ export function PayablesOverview(): VNode {
   const submitBill = useSubmitBill();
   const approveBill = useApproveBill();
   const rejectBill = useRejectBill();
-  const recordPayment = useRecordPayment();
   const voidBill = useVoidBill();
 
   const railBills = railQ.data?.rows ?? [];
@@ -118,12 +117,7 @@ export function PayablesOverview(): VNode {
     if (r.confirmed) try { await voidBill.mutateAsync({ id: b.id, reason: r.reason ?? '' }); toast('Bill voided'); } catch (e) { toast((e as Error).message); }
   }
   async function doSubmit(b: ApBill): Promise<void> { try { await submitBill.mutateAsync({ id: b.id }); toast('Submitted for approval'); } catch (e) { toast((e as Error).message); } }
-  async function doPay(): Promise<void> {
-    if (!payFor) return; const amt = Number(payAmount);
-    if (!(amt > 0)) { toast('Enter a payment amount.'); return; }
-    try { await recordPayment.mutateAsync({ id: payFor.id, amount: amt }); toast('Payment recorded'); setPayFor(null); setPayAmount(''); } catch (e) { toast((e as Error).message); }
-  }
-  function openPay(b: ApBill): void { setPayFor(b); setPayAmount(String(b.balance)); }
+  function openPay(b: ApBill): void { setPayFor(b); }
 
   const exportBills = (): void => exportCsv(billsQ.data?.rows ?? [], [{ header: 'Bill', value: b => b.billNo }, { header: 'Vendor', value: b => b.vendorName }, { header: 'Due', value: b => b.dueDate ?? '' }, { header: 'Amount', value: b => b.totalAmount }, { header: 'Balance', value: b => b.balance }, { header: 'Status', value: b => b.status }], 'accounts-payable');
   const actions: QuickAction[] = [
@@ -304,15 +298,13 @@ export function PayablesOverview(): VNode {
         )}
       </HrfinWizardModal>
 
-      {/* Record-payment modal */}
-      <HrfinWizardModal open={!!payFor} title="Record payment" stepCount={1} activeStep={0} onClose={() => { setPayFor(null); setPayAmount(''); }} primaryLabel="Record payment" primaryLoading={recordPayment.isPending} onPrimary={() => void doPay()}>
-        {payFor && (
-          <>
-            <div class="hrfin-metric-row"><span>{payFor.billNo} · {payFor.vendorName}</span><b>Balance {money(payFor.balance)}</b></div>
-            <div class="hrfin-field" style={{ marginTop: 12 }}><label>Amount</label><input class="hrfin-input" type="number" value={payAmount} onInput={e => setPayAmount((e.target as HTMLInputElement).value)} /></div>
-          </>
-        )}
-      </HrfinWizardModal>
+      {/* Record-payment dialog (full form) */}
+      <ApRecordPaymentDialog
+        open={!!payFor}
+        bill={payFor}
+        onClose={() => setPayFor(null)}
+        onPaid={() => setPayFor(null)}
+      />
 
       {/* Vendor create / edit dialog */}
       <ApVendorDialog

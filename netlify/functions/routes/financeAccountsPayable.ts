@@ -8,7 +8,7 @@ import {
   listBills, getBillDetail, listVendors, listPayments, getApKpis, getAging, getApTrend,
   createVendor, updateVendor, getVendorDetail, listVendorBills, listVendorPayments,
   createBill, submitBill, approveBill, rejectBill, recordPayment, voidBill,
-  type ApBillStatus,
+  type ApBillStatus, type RecordPaymentInput,
 } from '../lib/finance/accountsPayable';
 import type { HonoVariables } from '../../../types/api';
 
@@ -178,13 +178,17 @@ router.post('/ap/bills/reject', async c => {
 router.post('/ap/bills/record-payment', async c => {
   const actor = await requirePermission(c, 'finance.ap.payment.record');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
-    amount: z.number().positive(),
-    method: z.enum(PAYMENT_METHOD).optional(),
-    reference: z.string().max(120).optional(),
+    id:              z.string().uuid(),
+    amount:          z.number().positive(),
+    method:          z.enum(PAYMENT_METHOD).optional(),
+    paymentDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    reference:       z.string().max(120).optional(),
+    memo:            z.string().max(500).optional(),
+    sourceAccountId: z.string().uuid().optional(),
   }), b(c));
   if (!v.ok) return v.response;
-  try { return c.json({ success: true, data: await recordPayment(v.data.id, actor.id, v.data) }); } catch (e) { return fail(c, e); }
+  const { id, ...paymentInput } = v.data;
+  try { return c.json({ success: true, data: await recordPayment(id, actor.id, paymentInput as RecordPaymentInput) }); } catch (e) { return fail(c, e); }
 });
 
 router.post('/ap/bills/void', async c => {

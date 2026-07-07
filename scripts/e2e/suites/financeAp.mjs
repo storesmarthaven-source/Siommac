@@ -409,6 +409,32 @@ export default async function run(h) {
     expect(r.status === 422 || r.status === 400, `expected 4xx, got ${r.status}`);
   });
 
+  await test('EFT payment without reference is blocked (422)', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await fails(api('finance/ap/bills/record-payment', Tstaff, {
+      id:     billId,
+      amount: 100.00,
+      method: 'eft',
+      // deliberately no reference
+    }));
+    expect(r.status === 422, `expected 422 for missing EFT reference, got ${r.status}`);
+  });
+
+  await test('full payment with paymentDate + reference + memo marks bill as paid', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    // Bill has 1500 total, 500 partially paid → 1000 remaining
+    const r = await api('finance/ap/bills/record-payment', Tstaff, {
+      id:          billId,
+      amount:      1000.00,
+      method:      'eft',
+      paymentDate: new Date().toISOString().slice(0, 10),
+      reference:   `${TAG}-PAY-002`,
+      memo:        'Full payment test',
+    });
+    ok(r);
+    expect(r.body.data?.status === 'paid', `expected paid, got ${r.body.data?.status}`);
+  });
+
   // ─────────────────────────── CHUNK 3 — FILTERS ───────────────────────────────
 
   h.section('AP › Filters & Pagination');

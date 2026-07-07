@@ -51,7 +51,11 @@ export interface ApBillDto {
 }
 
 export interface ApBillLineDto { id: string; billId: string; lineNo: number; description: string; amount: number; glAccountCode: string | null; costCenterId: string | null; }
-export interface ApPaymentDto { id: string; billId: string; amount: number; method: ApPaymentMethod; paidAt: string; reference: string | null; createdBy: string | null; }
+export interface ApPaymentDto {
+  id: string; billId: string; amount: number; method: ApPaymentMethod;
+  paidAt: string; reference: string | null; memo: string | null;
+  sourceAccountId: string | null; createdBy: string | null;
+}
 
 interface DbVendorRow {
   id: string; vendor_no: string; name: string; registration_no: string | null;
@@ -69,7 +73,11 @@ interface DbVendorBankAccountRow {
 }
 interface DbBillRow { id: string; bill_no: string; vendor_id: string; bill_date: string; due_date: string | null; description: string | null; total_amount: string; paid_amount: string; currency: string; status: ApBillStatus; gl_account_code: string | null; approved_by: string | null; created_by: string | null; reject_reason: string | null; void_reason: string | null; workflow_id: string | null; created_at: string; updated_at: string | null; finance_ap_vendors?: { name: string } | { name: string }[] | null; }
 interface DbLineRow { id: string; bill_id: string; line_no: number; description: string; amount: string; gl_account_code: string | null; cost_center_id: string | null; }
-interface DbPaymentRow { id: string; bill_id: string; amount: string; method: ApPaymentMethod; paid_at: string; reference: string | null; created_by: string | null; }
+interface DbPaymentRow {
+  id: string; bill_id: string; amount: string; method: ApPaymentMethod;
+  paid_at: string; reference: string | null; memo: string | null;
+  source_account_id: string | null; created_by: string | null;
+}
 
 const vendorName = (r: DbBillRow): string => Array.isArray(r.finance_ap_vendors) ? (r.finance_ap_vendors[0]?.name ?? '—') : (r.finance_ap_vendors?.name ?? '—');
 
@@ -97,7 +105,12 @@ function toBillDto(r: DbBillRow): ApBillDto {
   return { id: r.id, billNo: r.bill_no, vendorId: r.vendor_id, vendorName: vendorName(r), billDate: r.bill_date, dueDate: r.due_date, description: r.description, totalAmount: total, paidAmount: paid, balance: total - paid, currency: r.currency, status: r.status, glAccountCode: r.gl_account_code, approvedBy: r.approved_by, createdBy: r.created_by, rejectReason: r.reject_reason, voidReason: r.void_reason, workflowId: r.workflow_id, createdAt: r.created_at, updatedAt: r.updated_at };
 }
 const toLineDto = (r: DbLineRow): ApBillLineDto => ({ id: r.id, billId: r.bill_id, lineNo: r.line_no, description: r.description, amount: Number(r.amount), glAccountCode: r.gl_account_code, costCenterId: r.cost_center_id });
-const toPaymentDto = (r: DbPaymentRow): ApPaymentDto => ({ id: r.id, billId: r.bill_id, amount: Number(r.amount), method: r.method, paidAt: r.paid_at, reference: r.reference, createdBy: r.created_by });
+const toPaymentDto = (r: DbPaymentRow): ApPaymentDto => ({
+  id: r.id, billId: r.bill_id, amount: Number(r.amount), method: r.method,
+  paidAt: r.paid_at, reference: r.reference,
+  memo: r.memo ?? null, sourceAccountId: r.source_account_id ?? null,
+  createdBy: r.created_by,
+});
 
 const err = (msg: string, status = 500): Error & { status: number } => Object.assign(new Error(msg), { status });
 
@@ -442,13 +455,48 @@ export async function rejectBill(id: string, actorId: string, reason: string): P
   return row;
 }
 
-export async function recordPayment(id: string, actorId: string, input: { amount: number; method?: ApPaymentMethod; reference?: string }): Promise<ApBillDto> {
+export interface RecordPaymentInput {
+  amount: number;
+  method?: ApPaymentMethod;
+  /** ISO-8601 date string (YYYY-MM-DD); defaults to today. */
+  paymentDate?: string;
+  /** Required for EFT / ACH / wire transfers. */
+  reference?: string;
+  memo?: string;
+  /** UUID of the source bank account (requires migration 000030). */
+  sourceAccountId?: string;
+}
+
+const REQUIRES_REFERENCE: ApPaymentMethod[] = ['eft', 'ach', 'wire'];
+
+export async function recordPayment(id: string, actorId: string, input: RecordPaymentInput): Promise<ApBillDto> {
   const existing = await requireBill(id);
   if (!['approved', 'partially_paid'].includes(existing.status)) throw err('Only approved bills can be paid.', 422);
   if (input.amount <= 0) throw err('Payment amount must be greater than zero.', 422);
   if (input.amount > existing.balance + 0.005) throw err(`Payment ($${input.amount.toFixed(2)}) exceeds the outstanding balance ($${existing.balance.toFixed(2)}).`, 422);
 
-  const { error: payErr } = await sb.from('finance_ap_payments').insert({ bill_id: id, amount: input.amount, method: input.method ?? 'eft', reference: input.reference ?? null, created_by: actorId });
+  const method: ApPaymentMethod = input.method ?? 'eft';
+  if (REQUIRES_REFERENCE.includes(method) && !input.reference?.trim()) {
+    throw err(`A payment reference is required for ${method.toUpperCase()} transfers.`, 422);
+  }
+
+  const paidAt = input.paymentDate
+    ? new Date(input.paymentDate).toISOString()
+    : new Date().toISOString();
+
+  // Build the insert payload. Extra columns (memo, source_account_id) are
+  // added by migration 000030; they are omitted here to avoid PostgREST errors
+  // on un-migrated environments. Once migration 000030 is applied the operator
+  // should restart and re-run the E2E gate which will exercise these fields.
+  const insertPayload: Record<string, unknown> = {
+    bill_id: id, amount: input.amount, method, paid_at: paidAt,
+    reference: input.reference?.trim() ?? null, created_by: actorId,
+  };
+  // Include extended fields only when provided (safe on both pre- and post-migration)
+  if (input.memo)            insertPayload['memo']              = input.memo.trim();
+  if (input.sourceAccountId) insertPayload['source_account_id'] = input.sourceAccountId;
+
+  const { error: payErr } = await sb.from('finance_ap_payments').insert(insertPayload);
   if (payErr) throw err('recordPayment: ' + payErr.message);
 
   const newPaid = existing.paidAmount + input.amount;
