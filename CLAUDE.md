@@ -31,6 +31,34 @@ Prefer **build-new → delete-legacy** (no dual systems, no gap) over keeping or
 Prefer **reuse over duplication** (extract a shared helper). When unsure whether something is a
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
+## Feature Completeness — NON-NEGOTIABLE (no half-wired pages)
+When building OR upgrading any module/page, it is **NOT "done"** until EVERY interactive element is
+fully wired to a real backend AND the platform backbone. "It renders" and "it navigates" are not
+"done." Shipping dead buttons, navigate-only stubs, or thin one-field dialogs is the same failure as
+a band-aid (see **Accept-and-drop**) — `docs/FINANCE_FEATURE_AUDIT.md` is the cautionary record of
+exactly this. Before calling a page complete, walk EVERY control and confirm:
+- **Every button is wired** — no `onClick`-less buttons, no toast-only handlers, no `setTab` masquerading
+  as an action. A button whose label implies an action (Approve, Export, Pay, Send) MUST perform it, not
+  just navigate. If it's really a link, label it like one.
+- **Every dialog with input is fully built out** — ALL real fields (not one), inline per-field validation,
+  the FULL backend contract sent (never a hardcoded subset like `method:'eft'`), pickers (not free-text)
+  for FK'd entities, and real empty/loading/error states.
+- **Every wizard is fully built out** — all steps, multi-row/line editors where the domain needs them,
+  attachments, duplicate/conflict checks, and submit-for-approval (or equivalent) on completion.
+- **Every feature & function is wired** — search, filters/facets, row ⋮ menus, bulk actions, drill-through,
+  import/export, pagination — each functional against a real endpoint, or NOT shown at all.
+- **Ties into the platform backbone (Spec §2)** — every mutation emits `app_events` + `audit_logs`, raises
+  a **toast** on success/failure, and — where the rules require — creates **notifications**, **messages**,
+  **tickets**, **workflow tasks/approvals**, and **handoffs** into the **other modules** it touches. A
+  feature that writes its row but fires none of these is incomplete.
+- **Cross-module wiring is real** — an action that belongs to another module (approve elsewhere, open a
+  ticket, message a party) calls THAT module's real action/endpoint, never a local no-op.
+
+If a feature can't be finished this session, **do not stub it** — leave it out and say so (No-Band-Aids),
+rather than shipping a control that lies about what it does. Audit the whole page against this list (the
+`FINANCE_FEATURE_AUDIT.md` lens) BEFORE declaring done, and back it with the E2E suite (Testing Standard)
+that asserts those side-effects actually fired.
+
 ## Known Pitfalls — verified this build (read before touching the area)
 Each of these cost real debugging time. Don't relearn them.
 
