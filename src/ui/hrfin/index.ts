@@ -20,6 +20,7 @@ export { InsightBanner, type InsightBannerProps, type InsightAction } from './In
 export { HrfinPill, type HrfinTone } from './HrfinPill';
 export { HrfinTable, type HrfinColumn, type HrfinTab, type HrfinFilter, type HrfinTableProps } from './HrfinTable';
 export { HrfinWizardModal, type HrfinWizardModalProps } from './HrfinWizardModal';
+export { EntityPicker, type EntityPickerProps, type EntityOption } from './EntityPicker';
 export { TrendArea, type TrendAreaProps } from './charts/TrendArea';
 export { HorizontalBars, type HBarItem } from './charts/HorizontalBars';
 export { DonutRing, type DonutRingProps } from './charts/DonutRing';

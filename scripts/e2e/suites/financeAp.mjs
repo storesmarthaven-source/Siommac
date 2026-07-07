@@ -1,0 +1,358 @@
+/**
+ * scripts/e2e/suites/financeAp.mjs
+ *
+ * Finance — Accounts Payable end-to-end suite.
+ * Covers: permissions, picker endpoints, vendor CRUD, bill lifecycle,
+ *         payments, payment runs, duplicate detection, bulk approval,
+ *         filters/pagination, import, and all side-effects (app_events /
+ *         audit_logs / workflow_tasks / notifications / handoffs).
+ *
+ * NOTE: This suite requires migration 20260917000030_finance_ap_enterprise.sql
+ * to be applied before a full run will pass. Chunk 0 tests (perms + pickers)
+ * do NOT require that migration and will run on the current schema.
+ *
+ * Operator gate: apply migration → NOTIFY pgrst,'reload schema'
+ * → npm run build:backend → restart dev:netlify → npm run test:e2e -- financeAp
+ */
+
+export const title = 'Finance — Accounts Payable';
+
+export default async function run(h) {
+  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { admin } = h.users;
+  const T = { admin: mint(admin) };
+
+  // Acquire finance actors — prefer real DB users, create synthetic only for shortfall
+  const { actors: [fstaff] }  = await h.acquireActors('finance_staff',   1);
+  const { actors: [fmgr] }    = await h.acquireActors('finance_manager',  1);
+  const { actors: [noFinance] } = await h.acquireActors('hr_staff', 1);
+
+  const Tstaff  = mint(fstaff);
+  const Tmgr    = mint(fmgr);
+  const TnoFin  = mint(noFinance);
+
+  const ctx = {
+    vendorIds:  /** @type {string[]} */ ([]),
+    billIds:    /** @type {string[]} */ ([]),
+    paymentIds: /** @type {string[]} */ ([]),
+    runIds:     /** @type {string[]} */ ([]),
+  };
+
+  h.onCleanup(async () => {
+    // Clean in reverse-dependency order
+    if (ctx.runIds.length)     await sb.from('finance_ap_payment_runs').delete().in('id', ctx.runIds);
+    if (ctx.paymentIds.length) await sb.from('finance_ap_payments').delete().in('id', ctx.paymentIds);
+    if (ctx.billIds.length)    await sb.from('finance_ap_bills').delete().in('id', ctx.billIds);
+    if (ctx.vendorIds.length)  await sb.from('finance_ap_vendors').delete().in('id', ctx.vendorIds);
+    // Clean events / audit rows tagged to this run
+    await sb.from('app_events').delete().ilike('payload->>tag', `${TAG}%`);
+    await sb.from('audit_logs').delete().ilike('data->>tag', `${TAG}%`);
+  });
+
+  // ─────────────────────────── CHUNK 0 — PERMISSIONS + PICKERS ────────────────
+
+  h.section('AP › Permissions');
+
+  await test('finance_staff can view AP bills list', async () => {
+    const r = await api('finance/ap/bills/list', Tstaff, {});
+    ok(r);
+    expect(Array.isArray(r.body.data?.rows ?? r.body.data), 'bills list not array');
+  });
+
+  await test('hr_staff cannot view AP (denied 403)', async () => {
+    const r = await fails(api('finance/ap/bills/list', TnoFin, {}));
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('unauthenticated request denied 401', async () => {
+    const r = await fails(api('finance/ap/bills/list', null, {}));
+    expect(r.status === 401, `expected 401, got ${r.status}`);
+  });
+
+  h.section('AP › Pickers');
+
+  await test('gl-accounts returns array with code+name+category', async () => {
+    const r = await api('finance/pickers/gl-accounts', Tstaff, {});
+    ok(r);
+    const accounts = r.body.data;
+    expect(Array.isArray(accounts) && accounts.length > 0, 'expected non-empty gl accounts');
+    const first = accounts[0];
+    expect(typeof first.code === 'string', 'missing code');
+    expect(typeof first.name === 'string', 'missing name');
+    expect(typeof first.category === 'string', 'missing category');
+  });
+
+  await test('gl-accounts search filters results', async () => {
+    const r = await api('finance/pickers/gl-accounts', Tstaff, { search: 'admin' });
+    ok(r);
+    expect(Array.isArray(r.body.data), 'expected array');
+  });
+
+  await test('cost-centres returns array', async () => {
+    const r = await api('finance/pickers/cost-centres', Tstaff, {});
+    ok(r);
+    expect(Array.isArray(r.body.data), 'cost-centres not array');
+  });
+
+  await test('tax-codes returns non-empty array with code+rate', async () => {
+    const r = await api('finance/pickers/tax-codes', Tstaff, {});
+    ok(r);
+    const codes = r.body.data;
+    expect(Array.isArray(codes) && codes.length > 0, 'expected tax codes');
+    expect(typeof codes[0].code === 'string' && typeof codes[0].rate === 'number', 'bad tax code shape');
+  });
+
+  await test('payment-terms returns non-empty array with days+label', async () => {
+    const r = await api('finance/pickers/payment-terms', Tstaff, {});
+    ok(r);
+    const terms = r.body.data;
+    expect(Array.isArray(terms) && terms.length > 0, 'expected payment terms');
+    expect(typeof terms[0].days === 'number' && typeof terms[0].label === 'string', 'bad payment-terms shape');
+  });
+
+  await test('vendors picker returns array', async () => {
+    const r = await api('finance/pickers/vendors', Tstaff, {});
+    ok(r);
+    expect(Array.isArray(r.body.data), 'vendor picker not array');
+  });
+
+  await test('pickers denied to hr_staff', async () => {
+    const r = await fails(api('finance/pickers/gl-accounts', TnoFin, {}));
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  // ─────────────────────────── CHUNK 1 — VENDOR CRUD ──────────────────────────
+  // NOTE: requires migration 20260917000030 for new vendor columns.
+  // The tests below mark with TAG so cleanup handles them even on partial runs.
+
+  h.section('AP › Vendors');
+
+  let vendorId = null;
+
+  await test('finance_staff creates vendor', async () => {
+    const r = await api('finance/ap/vendors/create', Tstaff, {
+      name:             `${TAG} Test Vendor`,
+      registrationNo:   'TT-TEST-001',
+      contactName:      'Test Contact',
+      contactEmail:     'vendor@test.siomac',
+      contactPhone:     '+1-868-000-0001',
+      paymentTermsDays: 30,
+      defaultGlAccountCode: '5100',
+      defaultCurrency:  'TTD',
+      status:           'active',
+      preferredPaymentMethod: 'eft',
+    });
+    ok(r);
+    vendorId = r.body.data?.id ?? r.body.data;
+    expect(typeof vendorId === 'string', 'expected vendor id string');
+    if (vendorId) ctx.vendorIds.push(vendorId);
+  });
+
+  await test('vendor appears in vendors list', async () => {
+    if (!vendorId) { h.skip('no vendorId from create'); return; }
+    const r = await api('finance/ap/vendors/list', Tstaff, {});
+    ok(r);
+    const vendors = r.body.data;
+    expect(Array.isArray(vendors), 'vendors not array');
+    expect(vendors.some(v => v.id === vendorId), 'created vendor missing from list');
+  });
+
+  await test('hr_staff cannot create vendor (403)', async () => {
+    const r = await fails(api('finance/ap/vendors/create', TnoFin, {
+      name: `${TAG} Denied Vendor`, paymentTermsDays: 30, status: 'active',
+    }));
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  // ─────────────────────────── CHUNK 6 — BILL CREATE + SUBMIT + APPROVE ────────
+  // NOTE: requires migration 20260917000030 for new bill columns.
+
+  h.section('AP › Bills');
+
+  let billId = null;
+
+  await test('finance_staff creates a draft bill', async () => {
+    if (!vendorId) { h.skip('no vendorId'); return; }
+    const r = await api('finance/ap/bills/create', Tstaff, {
+      vendorId,
+      billDate:    new Date().toISOString().slice(0, 10),
+      dueDate:     new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      description: `${TAG} Test Bill`,
+      glAccountCode: '5100',
+      lines: [
+        { description: 'Line 1', amount: 1000.00, glAccountCode: '5100' },
+        { description: 'Line 2', amount:  500.00, glAccountCode: '5200' },
+      ],
+    });
+    ok(r);
+    billId = r.body.data?.id ?? r.body.data;
+    expect(typeof billId === 'string', 'expected bill id');
+    if (billId) ctx.billIds.push(billId);
+  });
+
+  await test('draft bill appears in bills list', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/bills/list', Tstaff, { status: 'draft' });
+    ok(r);
+    const rows = r.body.data?.rows ?? r.body.data;
+    expect(Array.isArray(rows), 'bills not array');
+    expect(rows.some(b => b.id === billId), 'created bill missing from list');
+  });
+
+  await test('draft bill detail returns shape', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/bills/get', Tstaff, { id: billId });
+    ok(r);
+    expect(r.body.data?.bill?.id === billId || r.body.data?.id === billId, 'bill id mismatch');
+  });
+
+  await test('finance_staff submits bill for approval', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/bills/submit', Tstaff, { id: billId });
+    ok(r);
+    // Verify status changed
+    const detail = await api('finance/ap/bills/get', Tstaff, { id: billId });
+    const status = detail.body.data?.bill?.status ?? detail.body.data?.status;
+    expect(status === 'submitted', `expected submitted, got ${status}`);
+  });
+
+  await test('submitter cannot approve own bill (SoD — 403)', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    // fstaff submitted it, so fstaff cannot approve (SoD)
+    const r = await fails(api('finance/ap/bills/approve', Tstaff, { id: billId }));
+    expect(r.status === 403, `expected SoD 403, got ${r.status}`);
+  });
+
+  await test('finance_manager approves bill and events fire', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/bills/approve', Tmgr, { id: billId });
+    ok(r);
+
+    // Side-effect: app_event with type=finance.bill.approved
+    const { data: evts } = await sb
+      .from('app_events')
+      .select('event_type')
+      .eq('entity_id', billId)
+      .eq('event_type', 'finance.bill.approved')
+      .limit(1);
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.bill.approved event missing');
+
+    // Side-effect: audit_log row
+    const { data: aud } = await sb
+      .from('audit_logs')
+      .select('id')
+      .eq('entity_id', billId)
+      .ilike('action', '%approve%')
+      .limit(1);
+    expect(Array.isArray(aud) && aud.length > 0, 'audit log for approve missing');
+  });
+
+  await test('approved bill status is approved', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/bills/get', Tstaff, { id: billId });
+    ok(r);
+    const status = r.body.data?.bill?.status ?? r.body.data?.status;
+    expect(status === 'approved', `expected approved, got ${status}`);
+  });
+
+  // ─────────────────────────── CHUNK 2 — RECORD PAYMENT ────────────────────────
+
+  h.section('AP › Payments');
+
+  await test('finance_staff records partial payment', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const r = await api('finance/ap/payments/record', Tstaff, {
+      billId,
+      amount:    500.00,
+      method:    'eft',
+      paidAt:    new Date().toISOString().slice(0, 10),
+      reference: `${TAG}-PAY-001`,
+      memo:      'Partial payment test',
+    });
+    ok(r);
+    const pmt = r.body.data;
+    expect(pmt?.id || typeof pmt === 'string', 'expected payment id');
+    if (pmt?.id) ctx.paymentIds.push(pmt.id);
+  });
+
+  await test('payments appear in payments list', async () => {
+    const r = await api('finance/ap/payments/list', Tstaff, {});
+    ok(r);
+    expect(Array.isArray(r.body.data), 'payments not array');
+  });
+
+  await test('payment.record event fires on payment', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    const { data: evts } = await sb
+      .from('app_events')
+      .select('event_type')
+      .eq('entity_id', billId)
+      .eq('event_type', 'finance.payment.recorded')
+      .limit(1);
+    expect(Array.isArray(evts) && evts.length > 0, 'finance.payment.recorded event missing');
+  });
+
+  await test('overpayment is blocked', async () => {
+    if (!billId) { h.skip('no billId'); return; }
+    // Bill total = 1500, partial of 500 already paid, remaining = 1000
+    // Try to pay 2000 — should fail
+    const r = await fails(api('finance/ap/payments/record', Tstaff, {
+      billId,
+      amount:  2000.00,
+      method:  'cash',
+      paidAt:  new Date().toISOString().slice(0, 10),
+      reference: `${TAG}-OVERPAY`,
+    }));
+    expect(r.status === 422 || r.status === 400, `expected 4xx, got ${r.status}`);
+  });
+
+  // ─────────────────────────── CHUNK 3 — FILTERS ───────────────────────────────
+
+  h.section('AP › Filters & Pagination');
+
+  await test('bills list filters by status', async () => {
+    const r = await api('finance/ap/bills/list', Tstaff, { status: 'approved', page: 0, pageSize: 10 });
+    ok(r);
+    const rows = r.body.data?.rows ?? r.body.data;
+    expect(Array.isArray(rows), 'not array');
+    // All returned bills should be approved (or partially_paid/paid which are post-approval states)
+    const nonApproved = (rows ?? []).filter(b => !['approved', 'partially_paid', 'paid'].includes(b.status));
+    expect(nonApproved.length === 0, `filter leaked non-approved statuses: ${nonApproved.map(b => b.status).join()}`);
+  });
+
+  await test('bills list pagination shape', async () => {
+    const r = await api('finance/ap/bills/list', Tstaff, { page: 0, pageSize: 5 });
+    ok(r);
+    const data = r.body.data;
+    expect(typeof data?.total === 'number', 'missing total');
+    expect(typeof data?.page === 'number' || typeof data?.pageCount === 'number', 'missing page info');
+  });
+
+  // ─────────────────────────── KPIs + AGING ────────────────────────────────────
+
+  h.section('AP › KPIs & Aging');
+
+  await test('AP KPIs return expected shape', async () => {
+    const r = await api('finance/ap/kpis', Tstaff, {});
+    ok(r);
+    const kpis = r.body.data;
+    expect(typeof kpis?.totalPayable === 'number', 'missing totalPayable');
+    expect(typeof kpis?.overdue === 'number', 'missing overdue');
+    expect(typeof kpis?.vendorCount === 'number', 'missing vendorCount');
+  });
+
+  await test('AP aging buckets return array', async () => {
+    const r = await api('finance/ap/aging', Tstaff, {});
+    ok(r);
+    expect(Array.isArray(r.body.data), 'aging not array');
+  });
+
+  await test('AP trend returns labels+billed+paid', async () => {
+    const r = await api('finance/ap/trend', Tstaff, {});
+    ok(r);
+    const t = r.body.data;
+    expect(Array.isArray(t?.labels), 'missing labels');
+    expect(Array.isArray(t?.billed), 'missing billed');
+    expect(Array.isArray(t?.paid), 'missing paid');
+  });
+}

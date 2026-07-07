@@ -37,7 +37,8 @@ export type RefPrefix =
   | 'ROS'  // HR Roster
   | 'REM'   // Finance Remittance
   | 'BILL'  // Finance AP Bill
-  | 'APV';  // Finance AP Vendor
+  | 'APV'   // Finance AP Vendor
+  | 'PRUN'; // Finance AP Payment Run
 
 /**
  * Generate the next sequential reference for `prefix` in the current year.

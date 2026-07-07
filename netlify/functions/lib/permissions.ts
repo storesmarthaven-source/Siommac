@@ -381,10 +381,27 @@ export const PERMISSION_KEYS = [
   'finance.disbursement.approve',     // approve / generate bank file / mark paid (SoD: creator cannot approve)
   // -- Finance Overview dashboard ------------------------------------------------
   'finance.overview.view',            // view the finance overview command dashboard
+  'finance.overview.export',          // export dashboard data (CSV) — audited data egress
+  'finance.overview.kpi.drill',       // drill into KPI cards → filtered register
+  'finance.overview.approvals.inline',// inline approve/reject items in the overview approvals queue
   // -- Finance Accounts Payable (vendor bills → approval → payment) --------------
   'finance.ap.view',                  // view AP bills, vendors, payments, aging
-  'finance.ap.manage',                // create/edit bills + vendors, record payments
-  'finance.ap.approve',               // approve/reject/void bills (SoD: creator cannot approve)
+  'finance.ap.manage',                // legacy coarse alias — kept for role-bundle mapping; new routes use granular keys
+  'finance.ap.approve',               // legacy coarse alias — kept for role-bundle mapping; new routes use granular keys
+  // Granular AP keys (Wave 2A)
+  'finance.ap.vendors.create',        // create new vendors
+  'finance.ap.vendors.update',        // edit existing vendors
+  'finance.ap.bills.create',          // create bill drafts
+  'finance.ap.bills.edit',            // edit draft bills
+  'finance.ap.bills.submit',          // submit bills for approval
+  'finance.ap.bills.approve',         // approve/reject submitted bills (SoD: creator cannot approve)
+  'finance.ap.bills.void',            // void bills in any non-paid state (SoD)
+  'finance.ap.payment.record',        // record a payment against an approved bill
+  'finance.ap.payment.run.manage',    // create and manage payment runs (batch)
+  'finance.ap.payment.run.process',   // process/execute a payment run (SoD: creator cannot process)
+  'finance.ap.duplicate.resolve',     // resolve duplicate bill risk reviews
+  'finance.ap.reports.export',        // export AP registers / reports (audited data egress)
+  'finance.ap.bills.import',          // import bills from CSV/XLSX
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -514,8 +531,14 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.disbursement.manage',
     // Overview + Accounts Payable — staff: view + manage (create/submit bills, record payments)
     'finance.overview.view',
+    'finance.overview.export',
     'finance.ap.view',
     'finance.ap.manage',
+    'finance.ap.vendors.create',
+    'finance.ap.bills.create',
+    'finance.ap.bills.edit',
+    'finance.ap.bills.submit',
+    'finance.ap.payment.record',
   ]),
   finance_manager: new Set<PermissionKey>([
     // employee baseline (same keys as employee role)
@@ -582,11 +605,27 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.disbursement.view',
     'finance.disbursement.manage',
     'finance.disbursement.approve',
-    // Overview + Accounts Payable — manager: full (incl. approve/reject/void, SoD)
+    // Overview + Accounts Payable — manager: full (incl. approve/reject/void/payment-run/SoD)
     'finance.overview.view',
+    'finance.overview.export',
+    'finance.overview.kpi.drill',
+    'finance.overview.approvals.inline',
     'finance.ap.view',
     'finance.ap.manage',
     'finance.ap.approve',
+    'finance.ap.vendors.create',
+    'finance.ap.vendors.update',
+    'finance.ap.bills.create',
+    'finance.ap.bills.edit',
+    'finance.ap.bills.submit',
+    'finance.ap.bills.approve',
+    'finance.ap.bills.void',
+    'finance.ap.payment.record',
+    'finance.ap.payment.run.manage',
+    'finance.ap.payment.run.process',
+    'finance.ap.duplicate.resolve',
+    'finance.ap.reports.export',
+    'finance.ap.bills.import',
   ]),
   employee: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -744,8 +783,12 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
     // Overview + Accounts Payable -- admin: all
-    'finance.overview.view',
+    'finance.overview.view', 'finance.overview.export', 'finance.overview.kpi.drill', 'finance.overview.approvals.inline',
     'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',
+    'finance.ap.vendors.create', 'finance.ap.vendors.update',
+    'finance.ap.bills.create', 'finance.ap.bills.edit', 'finance.ap.bills.submit', 'finance.ap.bills.approve', 'finance.ap.bills.void',
+    'finance.ap.payment.record', 'finance.ap.payment.run.manage', 'finance.ap.payment.run.process',
+    'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
   ]),
   superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
 };
