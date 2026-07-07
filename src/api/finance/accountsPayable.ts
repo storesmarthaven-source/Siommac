@@ -220,3 +220,33 @@ export function useUpdateVendor() {
     },
   });
 }
+
+// ── Bill drawer: audit trail + comments ─────────────────────────────────────────
+
+export interface ApAuditEntry {
+  id: string; action: string; actorId: string | null; actorName: string | null;
+  previousState: unknown; newState: unknown; reason: string | null; createdAt: string;
+}
+export interface ApComment { id: string; billId: string; body: string; authorId: string; authorName: string | null; isInternal: boolean; createdAt: string; }
+
+export function useBillAudit(id: string | null) {
+  return useQuery({
+    queryKey: [...financeQueryKeys.apBill(id ?? ''), 'audit'],
+    enabled: !!id,
+    queryFn: ({ signal }: QueryFunctionContext) => post<ApAuditEntry[]>('finance/ap/bills/audit', { id }, signal),
+  });
+}
+export function useBillComments(id: string | null) {
+  return useQuery({
+    queryKey: financeQueryKeys.apBillComments(id ?? ''),
+    enabled: !!id,
+    queryFn: ({ signal }: QueryFunctionContext) => post<ApComment[]>('finance/ap/bills/comments/list', { id }, signal),
+  });
+}
+export function useCreateBillComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { id: string; body: string; isInternal?: boolean }) => post<ApComment>('finance/ap/bills/comments/create', args),
+    onSuccess: (_d, args) => { void qc.invalidateQueries({ queryKey: financeQueryKeys.apBillComments(args.id) }); },
+  });
+}

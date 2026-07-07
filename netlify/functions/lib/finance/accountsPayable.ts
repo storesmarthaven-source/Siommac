@@ -532,3 +532,58 @@ export async function voidBill(id: string, actorId: string, reason: string): Pro
   await writeHrAudit({ submoduleKey: SUBMODULE, recordId: id, actorId, action: 'bill.voided', previousState: { status: existing.status }, newState: { status: 'void' }, reason });
   return row;
 }
+
+// ── Drawer detail: audit trail + comments ─────────────────────────────────────
+
+/** Resolve app_users.id → full_name for actor/author display (never raw ids). */
+async function resolveUserNames(ids: Array<string | null>): Promise<Map<string, string | null>> {
+  const uniq = [...new Set(ids)].filter((x): x is string => !!x);
+  if (!uniq.length) return new Map();
+  const { data } = await sb.from('app_users').select('id, full_name').in('id', uniq);
+  return new Map(((data ?? []) as { id: string; full_name: string | null }[]).map(u => [u.id, u.full_name]));
+}
+
+export interface ApAuditEntry {
+  id: string; action: string; actorId: string | null; actorName: string | null;
+  previousState: unknown; newState: unknown; reason: string | null; createdAt: string;
+}
+
+/** Immutable audit trail for a bill (from hr_audit_log, submodule finance_ap). */
+export async function listBillAudit(billId: string): Promise<ApAuditEntry[]> {
+  const { data, error } = await sb.from('hr_audit_log')
+    .select('id, action, actor_id, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', SUBMODULE).eq('record_id', billId)
+    .order('created_at', { ascending: false });
+  if (error) throw err('listBillAudit: ' + error.message);
+  const rows = (data ?? []) as Array<{ id: string; action: string; actor_id: string | null; previous_state: unknown; new_state: unknown; reason: string | null; created_at: string }>;
+  const names = await resolveUserNames(rows.map(r => r.actor_id));
+  return rows.map(r => ({ id: r.id, action: r.action, actorId: r.actor_id, actorName: r.actor_id ? (names.get(r.actor_id) ?? null) : null, previousState: r.previous_state, newState: r.new_state, reason: r.reason, createdAt: r.created_at }));
+}
+
+export interface ApCommentDto { id: string; billId: string; body: string; authorId: string; authorName: string | null; isInternal: boolean; createdAt: string; }
+
+interface DbCommentRow { id: string; bill_id: string; body: string; author_id: string; is_internal: boolean; created_at: string; }
+const toCommentDto = (r: DbCommentRow, names: Map<string, string | null>): ApCommentDto =>
+  ({ id: r.id, billId: r.bill_id, body: r.body, authorId: r.author_id, authorName: names.get(r.author_id) ?? null, isInternal: r.is_internal, createdAt: r.created_at });
+
+export async function listBillComments(billId: string): Promise<ApCommentDto[]> {
+  const { data, error } = await sb.from('finance_ap_comments')
+    .select('id, bill_id, body, author_id, is_internal, created_at')
+    .eq('bill_id', billId).order('created_at', { ascending: true });
+  if (error) throw err('listBillComments: ' + error.message);
+  const rows = (data ?? []) as DbCommentRow[];
+  const names = await resolveUserNames(rows.map(r => r.author_id));
+  return rows.map(r => toCommentDto(r, names));
+}
+
+export async function createBillComment(billId: string, actorId: string, body: string, isInternal = false): Promise<ApCommentDto> {
+  if (!body?.trim()) throw err('A comment cannot be empty.', 422);
+  await requireBill(billId);   // 404 if the bill is missing
+  const { data, error } = await sb.from('finance_ap_comments')
+    .insert({ bill_id: billId, body: body.trim(), author_id: actorId, is_internal: isInternal })
+    .select('id, bill_id, body, author_id, is_internal, created_at').single<DbCommentRow>();
+  if (error) throw err('createBillComment: ' + error.message);
+  void emitAppEvent({ eventType: 'finance.ap.bill.comment_added', sourceModule: SUBMODULE, sourceEntityType: 'bill', sourceEntityId: billId, actorUserId: actorId, severity: 'info', payload: { commentId: data.id, isInternal } });
+  const names = await resolveUserNames([actorId]);
+  return toCommentDto(data, names);
+}

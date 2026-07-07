@@ -8,6 +8,7 @@ import {
   listBills, getBillDetail, listVendors, listPayments, getApKpis, getAging, getApTrend,
   createVendor, updateVendor, getVendorDetail, listVendorBills, listVendorPayments,
   createBill, submitBill, approveBill, rejectBill, recordPayment, voidBill,
+  listBillAudit, listBillComments, createBillComment,
   type RecordPaymentInput, type BillListOpts,
 } from '../lib/finance/accountsPayable';
 import type { HonoVariables } from '../../../types/api';
@@ -203,6 +204,28 @@ router.post('/ap/bills/void', async c => {
   const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(500) }), b(c));
   if (!v.ok) return v.response;
   try { return c.json({ success: true, data: await voidBill(v.data.id, actor.id, v.data.reason) }); } catch (e) { return fail(c, e); }
+});
+
+// ── Bill drawer: audit trail + comments ─────────────────────────────────────────
+router.post('/ap/bills/audit', async c => {
+  await requirePermission(c, 'finance.ap.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listBillAudit(v.data.id) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/bills/comments/list', async c => {
+  await requirePermission(c, 'finance.ap.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await listBillComments(v.data.id) }); } catch (e) { return fail(c, e); }
+});
+
+router.post('/ap/bills/comments/create', async c => {
+  const actor = await requirePermission(c, 'finance.ap.manage');
+  const v = zv(c, z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(2000), isInternal: z.boolean().optional() }), b(c));
+  if (!v.ok) return v.response;
+  try { return c.json({ success: true, data: await createBillComment(v.data.id, actor.id, v.data.body, v.data.isInternal ?? false) }); } catch (e) { return fail(c, e); }
 });
 
 export default router;
