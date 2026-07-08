@@ -54,6 +54,22 @@ export interface ComputedDisbursement {
   missingBankAccounts: string[];
 }
 
+export interface DisbursementLineDetail extends DisbursementLine {
+  accountNumberMasked: string | null;
+  bankName: string | null;
+}
+
+export interface DisbursementKpis {
+  pending: number;
+  approved: number;
+  fileGenerated: number;
+  paidMtd: number;
+  totalMtdAmount: number;
+  missingBankAccountCount: number;
+  failedLineCount: number;
+  trend: Array<{ month: string; total: number; count: number }>;
+}
+
 export interface DisbursementReportRow {
   id: string;
   disbursementNo: string;
@@ -72,31 +88,38 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 }
 
 export const financeDisbursementsApi = {
-  list:         (a: { payrollRunId?: string; status?: DisbursementStatus } = {}) =>
-                  call<Disbursement[]>('finance/disbursements/list', a),
-  get:          (a: { id: string }) => call<Disbursement>('finance/disbursements/get', a),
-  lines:        (a: { disbursementId: string }) =>
-                  call<DisbursementLine[]>('finance/disbursements/lines/list', a),
-  compute:      (a: { payrollRunId: string }) =>
-                  call<ComputedDisbursement>('finance/disbursements/compute', a),
-  create:       (a: { payrollRunId: string; metadata?: Record<string, unknown> }) =>
-                  call<Disbursement>('finance/disbursements/create', a),
-  submit:       (a: { id: string }) => call<Disbursement>('finance/disbursements/submit', a),
-  approve:      (a: { id: string }) => call<Disbursement>('finance/disbursements/approve', a),
-  generateFile: (a: { id: string }) => call<Disbursement & { filePath: string }>('finance/disbursements/generate-file', a),
-  markPaid:     (a: { id: string }) => call<Disbursement>('finance/disbursements/mark-paid', a),
-  cancel:       (a: { id: string; reason: string }) =>
-                  call<Disbursement>('finance/disbursements/cancel', a),
-  listReport:   (a: { status?: DisbursementStatus } = {}) =>
-                  call<DisbursementReportRow[]>('finance/disbursements/reports/list', a),
+  list:           (a: { payrollRunId?: string; status?: DisbursementStatus } = {}) =>
+                    call<Disbursement[]>('finance/disbursements/list', a),
+  get:            (a: { id: string }) => call<Disbursement>('finance/disbursements/get', a),
+  lines:          (a: { disbursementId: string }) =>
+                    call<DisbursementLine[]>('finance/disbursements/lines/list', a),
+  linesDetail:    (a: { disbursementId: string }) =>
+                    call<DisbursementLineDetail[]>('finance/disbursements/lines/list-detail', a),
+  compute:        (a: { payrollRunId: string }) =>
+                    call<ComputedDisbursement>('finance/disbursements/compute', a),
+  create:         (a: { payrollRunId: string; metadata?: Record<string, unknown> }) =>
+                    call<Disbursement>('finance/disbursements/create', a),
+  submit:         (a: { id: string }) => call<Disbursement>('finance/disbursements/submit', a),
+  approve:        (a: { id: string }) => call<Disbursement>('finance/disbursements/approve', a),
+  generateFile:   (a: { id: string }) => call<Disbursement & { filePath: string }>('finance/disbursements/generate-file', a),
+  markPaid:       (a: { id: string }) => call<Disbursement>('finance/disbursements/mark-paid', a),
+  cancel:         (a: { id: string; reason: string }) =>
+                    call<Disbursement>('finance/disbursements/cancel', a),
+  bankFileUrl:    (a: { disbursementId: string }) =>
+                    call<{ signedUrl: string; disbursement: Disbursement }>('finance/disbursements/bank-file/signed-url', a),
+  kpis:           () => call<DisbursementKpis>('finance/disbursements/kpis'),
+  listReport:     (a: { status?: DisbursementStatus } = {}) =>
+                    call<DisbursementReportRow[]>('finance/disbursements/reports/list', a),
 };
 
 export const financeDisbursementsKeys = {
-  list:    (opts: object = {}) => ['finance', 'disbursements', 'list', opts] as const,
-  single:  (id: string)        => ['finance', 'disbursements', 'single', id] as const,
-  lines:   (id: string)        => ['finance', 'disbursements', 'lines', id] as const,
-  compute: (runId: string)     => ['finance', 'disbursements', 'compute', runId] as const,
-  report:  (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
+  list:        (opts: object = {}) => ['finance', 'disbursements', 'list', opts] as const,
+  single:      (id: string)        => ['finance', 'disbursements', 'single', id] as const,
+  lines:       (id: string)        => ['finance', 'disbursements', 'lines', id] as const,
+  linesDetail: (id: string)        => ['finance', 'disbursements', 'lines-detail', id] as const,
+  compute:     (runId: string)     => ['finance', 'disbursements', 'compute', runId] as const,
+  kpis:        ()                  => ['finance', 'disbursements', 'kpis'] as const,
+  report:      (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
 };
 
 export function useDisbursements(opts: { payrollRunId?: string; status?: DisbursementStatus } = {}) {
@@ -127,6 +150,29 @@ export function useComputedDisbursement(payrollRunId: string | null) {
     queryKey: financeDisbursementsKeys.compute(payrollRunId ?? ''),
     queryFn:  () => financeDisbursementsApi.compute({ payrollRunId: payrollRunId! }),
     enabled:  !!payrollRunId,
+  });
+}
+
+export function useDisbursementLinesDetail(disbursementId: string | null) {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.linesDetail(disbursementId ?? ''),
+    queryFn:  () => financeDisbursementsApi.linesDetail({ disbursementId: disbursementId! }),
+    enabled:  !!disbursementId,
+  });
+}
+
+export function useDisbursementKpis() {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.kpis(),
+    queryFn:  financeDisbursementsApi.kpis,
+    staleTime: 60_000,
+  });
+}
+
+export function useDisbursementReport(opts: { status?: DisbursementStatus } = {}) {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.report(opts),
+    queryFn:  () => financeDisbursementsApi.listReport(opts),
   });
 }
 

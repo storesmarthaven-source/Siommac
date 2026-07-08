@@ -250,6 +250,150 @@ export async function cancelDisbursement(id: string, actorId: string, reason: st
   return row;
 }
 
+// ── Bank-file signed URL ──────────────────────────────────────────────────────
+
+/**
+ * Generate a short-lived signed URL for downloading a disbursement bank file.
+ * Emits `finance.disbursement.bank_file.downloaded` + hr_audit_log on every call.
+ */
+export async function getBankFileSignedUrl(
+  disbursementId: string,
+  actorId: string,
+): Promise<{ signedUrl: string; disbursement: DisbursementDto }> {
+  const disbursement = await getDisbursement(disbursementId);
+  if (!disbursement) {
+    throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
+  }
+  if (!disbursement.bankFilePath) {
+    throw Object.assign(new Error('No bank file has been generated for this disbursement.'), { status: 422 });
+  }
+
+  // Create a 5-minute signed URL for the storage object
+  const { data: signedData, error: signedErr } = await sb.storage
+    .from('disbursements')
+    .createSignedUrl(disbursement.bankFilePath.replace(/^disbursements\//, ''), 300);
+
+  if (signedErr || !signedData?.signedUrl) {
+    throw Object.assign(
+      new Error('getBankFileSignedUrl/signed-url: ' + (signedErr?.message ?? 'Unknown error')),
+      { status: 500 },
+    );
+  }
+
+  void emitAppEvent({
+    eventType: 'finance.disbursement.bank_file.downloaded',
+    sourceModule: 'finance_disbursements',
+    sourceEntityType: 'disbursement',
+    sourceEntityId: disbursementId,
+    actorUserId: actorId,
+    severity: 'info',
+    payload: { disbursementNo: disbursement.disbursementNo, bankFilePath: disbursement.bankFilePath },
+  });
+  await writeHrAudit({
+    submoduleKey: 'finance_disbursements',
+    recordId: disbursementId,
+    actorId,
+    action: 'disbursement.bank_file.downloaded',
+    previousState: null,
+    newState: { bankFilePath: disbursement.bankFilePath },
+  });
+
+  return { signedUrl: signedData.signedUrl, disbursement };
+}
+
+// ── KPI aggregates for the Aurora page header ────────────────────────────────
+
+export interface DisbursementKpis {
+  pending: number;
+  approved: number;
+  fileGenerated: number;
+  paidMtd: number;
+  totalMtdAmount: number;
+  missingBankAccountCount: number;
+  failedLineCount: number;
+  trend: Array<{ month: string; total: number; count: number }>;
+}
+
+export async function getDisbursementKpis(): Promise<DisbursementKpis> {
+  const now = new Date();
+  const mtdStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const { data: rows, error } = await sb
+    .from('finance_disbursements')
+    .select('id,status,total_amount,created_at');
+  if (error) throw Object.assign(new Error('getDisbursementKpis: ' + error.message), { status: 500 });
+
+  const all = (rows ?? []) as Array<{ id: string; status: string; total_amount: number; created_at: string }>;
+
+  const pending = all.filter(r => r.status === 'submitted').length;
+  const approved = all.filter(r => r.status === 'approved').length;
+  const fileGenerated = all.filter(r => r.status === 'file_generated').length;
+  const paidMtd = all.filter(r => r.status === 'paid' && r.created_at >= mtdStart).length;
+  const totalMtdAmount = all
+    .filter(r => r.status === 'paid' && r.created_at >= mtdStart)
+    .reduce((s, r) => s + Number(r.total_amount), 0);
+
+  // Missing bank-account lines (employees with null bank_account_id)
+  const { count: missingBankAccountCount } = await sb
+    .from('finance_disbursement_lines')
+    .select('id', { count: 'exact', head: true })
+    .is('bank_account_id', null);
+
+  // Build 6-month trend
+  const trend: Array<{ month: string; total: number; count: number }> = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    const monthStart = d.toISOString().slice(0, 7);
+    const inMonth = all.filter(r => r.created_at.slice(0, 7) === monthStart && !['cancelled'].includes(r.status));
+    trend.push({ month: label, total: inMonth.reduce((s, r) => s + Number(r.total_amount), 0), count: inMonth.length });
+  }
+
+  return {
+    pending,
+    approved,
+    fileGenerated,
+    paidMtd,
+    totalMtdAmount,
+    missingBankAccountCount: missingBankAccountCount ?? 0,
+    failedLineCount: 0, // future: track line-level failures
+    trend,
+  };
+}
+
+// ── Disbursement lines with bank-account detail ──────────────────────────────
+
+export interface DisbursementLineDetailDto extends DisbursementLineDto {
+  accountNumberMasked: string | null;
+  bankName: string | null;
+}
+
+export async function listDisbursementLinesDetail(
+  disbursementId: string,
+): Promise<DisbursementLineDetailDto[]> {
+  const lines = await listDisbursementLines(disbursementId);
+  if (lines.length === 0) return [];
+
+  const bankIds = lines.map(l => l.bankAccountId).filter((v): v is string => v !== null);
+  const bankMap = new Map<string, { account_number_masked: string; bank_name: string }>();
+  if (bankIds.length > 0) {
+    const { data: baRows, error: baErr } = await sb
+      .from('finance_employee_bank_accounts')
+      .select('id,account_number_masked,bank_name')
+      .in('id', bankIds);
+    if (baErr) throw Object.assign(new Error('listDisbursementLinesDetail/bank-accounts: ' + baErr.message), { status: 500 });
+    for (const ba of (baRows ?? []) as Array<{ id: string; account_number_masked: string; bank_name: string }>) {
+      bankMap.set(ba.id, ba);
+    }
+  }
+
+  return lines.map(l => ({
+    ...l,
+    accountNumberMasked: l.bankAccountId ? (bankMap.get(l.bankAccountId)?.account_number_masked ?? null) : null,
+    bankName: l.bankAccountId ? (bankMap.get(l.bankAccountId)?.bank_name ?? null) : null,
+  }));
+}
+
 export interface DisbursementReportRow { id: string; disbursementNo: string; payrollRunId: string; status: string; totalAmount: number; employeeCount: number; currency: string; createdAt: string; }
 
 export async function listDisbursementsReport(opts: { status?: DisbursementStatus; } = {}): Promise<DisbursementReportRow[]> {

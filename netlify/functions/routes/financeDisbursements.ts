@@ -8,7 +8,8 @@ import {
   listDisbursements, getDisbursement, computeFromRun,
   createDisbursement, submitDisbursement, approveDisbursement,
   generateBankFile, markDisbursementPaid, cancelDisbursement,
-  listDisbursementLines, listDisbursementsReport,
+  listDisbursementLines, listDisbursementLinesDetail, listDisbursementsReport,
+  getBankFileSignedUrl, getDisbursementKpis,
   type DisbursementStatus,
 } from '../lib/finance/disbursements';
 import type { HonoVariables } from '../../../types/api';
@@ -155,6 +156,43 @@ router.post('/disbursements/cancel', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await cancelDisbursement(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/lines/list-detail', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursementLinesDetail(v.data.disbursementId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/bank-file/signed-url', async c => {
+  const actor = await requirePermission(c, 'finance.disbursements.bankFile.download');
+  const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getBankFileSignedUrl(v.data.disbursementId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/kpis', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  try {
+    const data = await getDisbursementKpis();
     return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };
