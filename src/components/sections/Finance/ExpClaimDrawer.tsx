@@ -14,6 +14,7 @@
 import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
+import { dialog } from '@lib/dialog';
 import { Drawer, HrfinPill, type HrfinTone } from '@ui';
 import {
   useExpenseClaimDetail,
@@ -23,7 +24,7 @@ import {
   financeExpensesApi,
   type ExpenseClaim,
 } from '@api/finance/expenses';
-import { useFinanceAttachments } from '@api/finance/attachments';
+import { useFinanceAttachments, useFinanceAttachmentSignedUrl } from '@api/finance/attachments';
 import { useCostCentres } from '@api/finance/pickers';
 import { fmtMoney, fmtDate, humanize } from './financeShared';
 import { EmployeeCell } from './_shared/EmployeeCell';
@@ -105,10 +106,11 @@ export function ExpClaimDrawer({
   const ccQ   = useCostCentres();
   const ccMap = useMemo(() => new Map((ccQ.data ?? []).map(c => [c.id, c.name])), [ccQ.data]);
 
-  const submitMutation  = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
-  const approveMutation = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
-  const rejectMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.reject({ id, reason }));
-  const cancelMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.cancel({ id, reason }));
+  const submitMutation   = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const approveMutation  = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
+  const rejectMutation   = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.reject({ id, reason }));
+  const cancelMutation   = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.cancel({ id, reason }));
+  const signedUrlMutation = useFinanceAttachmentSignedUrl();
 
   const claim = detailQ.data;
   const sv    = claim ? statusPill(claim.status) : null;
@@ -129,7 +131,7 @@ export function ExpClaimDrawer({
 
   async function handleReject(): Promise<void> {
     if (!claimId) return;
-    const reason = prompt('Rejection reason:');
+    const reason = await dialog.prompt({ title: 'Rejection reason', placeholder: 'Enter reason…', confirmText: 'Reject', type: 'textarea' });
     if (!reason?.trim()) return;
     try { await rejectMutation.mutateAsync({ id: claimId, reason: reason.trim() }); toast.success('Claim rejected.'); }
     catch (e) { toast.error((e as Error).message); }
@@ -137,7 +139,7 @@ export function ExpClaimDrawer({
 
   async function handleCancel(): Promise<void> {
     if (!claimId || !claim) return;
-    const reason = prompt('Cancellation reason:');
+    const reason = await dialog.prompt({ title: 'Cancellation reason', placeholder: 'Enter reason…', confirmText: 'Cancel claim', type: 'textarea' });
     if (!reason?.trim()) return;
     try { await cancelMutation.mutateAsync({ id: claimId, reason: reason.trim() }); toast.success('Claim cancelled.'); }
     catch (e) { toast.error((e as Error).message); }
@@ -283,10 +285,30 @@ export function ExpClaimDrawer({
                           <span>
                             <span>{a.fileName}</span>
                             <span class="hse-muted" style={{ fontSize: 11, marginLeft: 6 }}>
-                              {a.fileSize != null ? `${Math.round(a.fileSize / 1024)} KB` : ''} — {fmtDateTime(a.createdAt)}
+                              {a.fileSize != null ? `${Math.round(a.fileSize / 1024)} KB` : ''}{a.contentType ? ` · ${a.contentType}` : ''} — {fmtDateTime(a.createdAt)}
                             </span>
                           </span>
-                          <span class="hse-muted">{a.contentType ?? 'file'}</span>
+                          <button
+                            type="button"
+                            class="hrfin-action"
+                            style={{ fontSize: 12, padding: '2px 10px', flexShrink: 0 }}
+                            disabled={signedUrlMutation.isPending}
+                            onClick={async () => {
+                              if (!claimId) return;
+                              try {
+                                const url = await signedUrlMutation.mutateAsync({
+                                  entityType:  'expense_claim',
+                                  entityId:    claimId,
+                                  storagePath: a.storagePath,
+                                });
+                                window.open(url, '_blank', 'noopener,noreferrer');
+                              } catch (e) {
+                                toast.error((e as Error).message);
+                              }
+                            }}
+                          >
+                            View
+                          </button>
                         </div>
                       ))}
                     </div>

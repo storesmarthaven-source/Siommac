@@ -1099,10 +1099,16 @@ function isTerminalStatus(s: string): boolean {
 export interface ExpenseKpis {
   policyExceptions: number;
   missingReceipts: number;
+  /** Server-side count of submitted claims awaiting approval. */
+  pendingCount: number;
+  /** Server-side sum of total_amount for approved reimbursable claims. */
+  reimbursableAmt: number;
+  /** Server-side sum of total_amount for claims reimbursed since the start of the current month. */
+  reimbursedMTD: number;
 }
 
 export async function getExpenseKpis(): Promise<ExpenseKpis> {
-  // Policy exceptions: claims (not cancelled) where total > category limit
+  // Policy exceptions: claims (not cancelled/rejected) where total > category limit
   const { data: allActive } = await sb
     .from('finance_expense_claims')
     .select('category, total_amount')
@@ -1120,7 +1126,41 @@ export async function getExpenseKpis(): Promise<ExpenseKpis> {
     .is('receipt_path', null)
     .not('status', 'in', '("cancelled","rejected","reimbursed")');
 
-  return { policyExceptions, missingReceipts: missingReceipts ?? 0 };
+  // Pending approval: server-side count of submitted claims
+  const { count: pendingCount } = await sb
+    .from('finance_expense_claims')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'submitted');
+
+  // Reimbursable amount: server-side sum of total_amount for approved reimbursable claims
+  const { data: reimbursableRows } = await sb
+    .from('finance_expense_claims')
+    .select('total_amount')
+    .eq('status', 'approved')
+    .eq('reimbursable', true);
+  const reimbursableAmt = (reimbursableRows ?? []).reduce(
+    (s: number, r: Record<string, unknown>) => s + Number(r['total_amount']), 0,
+  );
+
+  // Reimbursed MTD: server-side sum of total_amount for claims reimbursed since the first day of the current month
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const { data: reimbursedRows } = await sb
+    .from('finance_expense_claims')
+    .select('total_amount')
+    .eq('status', 'reimbursed')
+    .gte('reimbursed_at', monthStart);
+  const reimbursedMTD = (reimbursedRows ?? []).reduce(
+    (s: number, r: Record<string, unknown>) => s + Number(r['total_amount']), 0,
+  );
+
+  return {
+    policyExceptions,
+    missingReceipts: missingReceipts ?? 0,
+    pendingCount:    pendingCount ?? 0,
+    reimbursableAmt,
+    reimbursedMTD,
+  };
 }
 
 // ── Helper: query user IDs by role (for role-based notifications) ─────────────

@@ -139,6 +139,12 @@ export interface ExpenseAuditEntry {
 export interface ExpenseKpis {
   policyExceptions: number;
   missingReceipts: number;
+  /** Server-side count of submitted claims awaiting approval. */
+  pendingCount: number;
+  /** Server-side sum of total_amount for approved reimbursable claims. */
+  reimbursableAmt: number;
+  /** Server-side sum of total_amount for claims reimbursed since start of current month. */
+  reimbursedMTD: number;
 }
 
 // ── Input types ───────────────────────────────────────────────────────────────

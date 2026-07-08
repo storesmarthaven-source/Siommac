@@ -23,6 +23,7 @@ import { type VNode } from 'preact';
 import { useState, useMemo, useCallback } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
 import {
   HrfinPageHeader,
   QuickActionStrip,
@@ -199,15 +200,13 @@ export function ExpensesOverview(): VNode {
   const allClaimantIds = useMemo(() => [...new Set(claims.map(c => c.claimantId).filter(Boolean))], [claims]);
   const { data: nameMap } = useEmployeeNames(allClaimantIds);
 
-  // KPI derivations (from current page data — a real KPI endpoint would be better but reuse list for now)
-  const openCount       = useMemo(() => claims.filter(c => c.status === 'draft').length, [claims]);
-  const pendingCount    = useMemo(() => claims.filter(c => c.status === 'submitted').length, [claims]);
-  const reimbursableAmt = useMemo(() => claims.filter(c => c.status === 'approved' && c.reimbursable).reduce((s, c) => s + c.totalAmount, 0), [claims]);
-  const reimbursedMTD   = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    return claims.filter(c => c.status === 'reimbursed' && (c.reimbursedAt ?? '') >= monthStart).reduce((s, c) => s + c.totalAmount, 0);
-  }, [claims]);
+  // Page-scoped open count (draft claims on the current page — for header chips only)
+  const openCount = useMemo(() => claims.filter(c => c.status === 'draft').length, [claims]);
+
+  // Server-side KPI aggregates — derived from kpisQ, not the current page slice
+  const pendingCount    = kpisQ.data?.pendingCount    ?? 0;
+  const reimbursableAmt = kpisQ.data?.reimbursableAmt ?? 0;
+  const reimbursedMTD   = kpisQ.data?.reimbursedMTD   ?? 0;
 
   // Trend chart data
   const trendLabels  = useMemo(() => (trendQ.data ?? []).map(p => p.month.slice(0, 7)), [trendQ.data]);
@@ -249,7 +248,7 @@ export function ExpensesOverview(): VNode {
       items.push({
         key: 'reject', label: 'Reject', icon: 'close', tone: 'danger' as const,
         onClick: async () => {
-          const reason = prompt('Rejection reason:');
+          const reason = await dialog.prompt({ title: 'Rejection reason', placeholder: 'Enter reason…', confirmText: 'Reject', type: 'textarea' });
           if (!reason?.trim()) return;
           try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
           catch (e) { toast.error((e as Error).message); }
@@ -260,7 +259,7 @@ export function ExpensesOverview(): VNode {
       items.push({
         key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger' as const,
         onClick: async () => {
-          const reason = prompt('Cancellation reason:');
+          const reason = await dialog.prompt({ title: 'Cancellation reason', placeholder: 'Enter reason…', confirmText: 'Cancel claim', type: 'textarea' });
           if (!reason?.trim()) return;
           try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
           catch (e) { toast.error((e as Error).message); }
@@ -282,13 +281,13 @@ export function ExpensesOverview(): VNode {
       catch (e) { toast.error((e as Error).message); }
     },
     onReject:  async (c) => {
-      const reason = prompt('Rejection reason:');
+      const reason = await dialog.prompt({ title: 'Rejection reason', placeholder: 'Enter reason…', confirmText: 'Reject', type: 'textarea' });
       if (!reason?.trim()) return;
       try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
       catch (e) { toast.error((e as Error).message); }
     },
     onCancel:  async (c) => {
-      const reason = prompt('Cancellation reason:');
+      const reason = await dialog.prompt({ title: 'Cancellation reason', placeholder: 'Enter reason…', confirmText: 'Cancel claim', type: 'textarea' });
       if (!reason?.trim()) return;
       try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
       catch (e) { toast.error((e as Error).message); }
@@ -434,23 +433,23 @@ export function ExpensesOverview(): VNode {
         />
         <KpiCard
           label="Pending approval"
-          value={String(pendingCount)}
+          value={kpisQ.data ? String(pendingCount) : '—'}
           tone={pendingCount > 0 ? 'danger' : 'accent'}
           visual="none"
-          loading={claimsQ.isLoading}
+          loading={kpisQ.isLoading && !kpisQ.data}
         />
         <KpiCard
           label="Reimbursable"
-          value={moneyCompact(reimbursableAmt)}
+          value={kpisQ.data ? moneyCompact(reimbursableAmt) : '—'}
           visual="none"
-          loading={claimsQ.isLoading}
+          loading={kpisQ.isLoading && !kpisQ.data}
         />
         <KpiCard
           label="Reimbursed MTD"
-          value={moneyCompact(reimbursedMTD)}
+          value={kpisQ.data ? moneyCompact(reimbursedMTD) : '—'}
           tone="success"
           visual="none"
-          loading={claimsQ.isLoading}
+          loading={kpisQ.isLoading && !kpisQ.data}
         />
         <KpiCard
           label="Policy exceptions"

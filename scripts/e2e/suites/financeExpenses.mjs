@@ -537,14 +537,15 @@ export default async function run(h) {
     const ar = await api('finance/expenses/approve', fmgr2Token, { id: ctx.handoffClaimId });
     ok(ar, `approve for handoff failed: ${ar.body.message}`);
 
-    // First handoff call
+    // First explicit handoff call — approve() already called createReimbursementHandoff()
+    // internally, so the bridge row already exists. The explicit call returns reusedExisting=true.
     const h1 = await api('finance/expenses/handoff/reimbursement', fmgr2Token, { claimId: ctx.handoffClaimId });
     ok(h1, `handoff first call failed: ${h1.body.message}`);
     expect('bridgeId' in h1.body.data, 'handoff missing bridgeId');
     expect('handoffId' in h1.body.data, 'handoff missing handoffId');
-    expect(h1.body.data.reusedExisting === false, 'first call should not reuse existing');
+    expect(h1.body.data.reusedExisting === true, 'first explicit call should reuse the handoff already created by approve');
 
-    // Second call — idempotent
+    // Second call — also idempotent, same bridge row
     const h2 = await api('finance/expenses/handoff/reimbursement', fmgr2Token, { claimId: ctx.handoffClaimId });
     ok(h2, `handoff second call failed: ${h2.body.message}`);
     expect(h2.body.data.reusedExisting === true, 'second call should reuse existing');
