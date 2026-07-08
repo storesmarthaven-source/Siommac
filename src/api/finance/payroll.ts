@@ -193,8 +193,10 @@ export const financePayrollApi = {
   getPayslip:       (a: { id: string })                => call<Payslip>('finance/payroll/payslips/get', a),
   payslipSignedUrl: (a: { id: string })                => call<{ url: string }>('finance/payroll/payslips/signed-url', a),
 
-  // Reports
-  runReport:   (a: { report: string; runId?: string; from?: string; to?: string }) => call<PayrollReportResult>('finance/payroll/reports/run', a),
+  // Reports — 'report' is the key; additional filters go inside 'params' (the route's
+  // Zod schema is z.object({ report, params?: z.record(...) }), so top-level unknown
+  // keys are stripped).  Pass { report, params: { runId, from, to, ... } }.
+  runReport:   (a: { report: string; params?: Record<string, unknown> }) => call<PayrollReportResult>('finance/payroll/reports/run', a),
   listReports: (a: object = {})                        => call<Array<{ key: string; label: string }>>('finance/payroll/reports/list', a),
 
   // Warning resolve

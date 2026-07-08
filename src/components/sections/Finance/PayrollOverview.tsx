@@ -25,6 +25,8 @@ import {
   KpiCard,
   HrfinTable,
   HrfinPill,
+  TrendArea,
+  HorizontalBars,
   type HrfinColumn,
   type HrfinTone,
   type RowActionItem,
@@ -120,7 +122,7 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
   async function runReport(): Promise<void> {
     setLoading(true); setRows(null);
     try {
-      const res = await financePayrollApi.runReport({ report, runId: runId || undefined });
+      const res = await financePayrollApi.runReport({ report, params: runId ? { runId } : {} });
       setRows(res.rows);
     } catch (e) {
       toast((e as Error).message ?? 'Failed to run report.');
@@ -522,6 +524,64 @@ export function PayrollOverview(): VNode {
           loading={runsQ.isLoading && !runsQ.data}
         />
       </section>
+
+      {/* Chart strip — TrendArea (net payroll over time) + HorizontalBars (status mix) */}
+      {!runsQ.isLoading && runs.length > 0 && (
+        <section style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
+          {/* Net payroll trend — last 12 locked/approved runs sorted by period */}
+          {(() => {
+            const trendRuns = [...runs]
+              .filter(r => ['locked', 'approved', 'exported'].includes(r.status))
+              .sort((a, b) => a.periodMonth.localeCompare(b.periodMonth))
+              .slice(-12);
+            if (trendRuns.length < 2) return null;
+            return (
+              <div style={{ flex: '2 1 320px', background: 'var(--hrfin-surface-2)',
+                            border: '1px solid var(--hrfin-border)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
+                              letterSpacing: '.06em', color: 'var(--hrfin-text-secondary)', marginBottom: 8 }}>
+                  Net Payroll Trend
+                </div>
+                <TrendArea
+                  labels={trendRuns.map(r => r.periodMonth.slice(0, 7))}
+                  seriesA={trendRuns.map(r => r.netTotal)}
+                  title="Net payroll"
+                />
+              </div>
+            );
+          })()}
+
+          {/* Status mix — HorizontalBars */}
+          {(() => {
+            const total = runs.length;
+            if (total === 0) return null;
+            const barItems = [
+              { label: 'Draft',           n: runs.filter(r => r.status === 'draft').length,                                         tone: 'accent'  as const },
+              { label: 'Calculating',      n: runs.filter(r => ['input_locked','calculated'].includes(r.status)).length,              tone: 'warning' as const },
+              { label: 'Pending',          n: runs.filter(r => r.status === 'pending_approval').length,                               tone: 'danger'  as const },
+              { label: 'Locked/Approved',  n: runs.filter(r => ['approved','locked','exported'].includes(r.status)).length,           tone: 'success' as const },
+            ]
+              .filter(g => g.n > 0)
+              .map(g => ({
+                label:   g.label,
+                value:   String(g.n),
+                percent: Math.round((g.n / total) * 100),
+                tone:    g.tone,
+              }));
+            if (barItems.length < 2) return null;
+            return (
+              <div style={{ flex: '1 1 200px', background: 'var(--hrfin-surface-2)',
+                            border: '1px solid var(--hrfin-border)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
+                              letterSpacing: '.06em', color: 'var(--hrfin-text-secondary)', marginBottom: 8 }}>
+                  Run Status Mix
+                </div>
+                <HorizontalBars items={barItems} />
+              </div>
+            );
+          })()}
+        </section>
+      )}
 
       {/* Error state (Gap 5) */}
       {runsQ.isError && (
