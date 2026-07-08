@@ -48,11 +48,11 @@ import { fmtMoney, fmtDate, humanize } from './financeShared';
 
 function runStatusTone(status: string): HrfinTone {
   switch (status) {
-    case 'locked':   return 'ok';
-    case 'approved': return 'ok';
-    case 'submitted':
+    case 'locked':           return 'ok';
+    case 'approved':         return 'ok';
+    case 'pending_approval':
     case 'calculated':
-    case 'inputs_locked':
+    case 'input_locked':
       return 'wn';
     case 'cancelled': return 'bad';
     default:         return 'nu';  // draft
@@ -432,7 +432,7 @@ function ApprovalsTab({ run }: { run: PayrollRun }): VNode {
       </div>
       <div class="hrfin-metric-row">
         <span>Submitted</span>
-        <b>{run.status === 'submitted' || run.approvedBy ? 'Yes' : 'No'}</b>
+        <b>{run.status === 'pending_approval' || run.approvedBy ? 'Yes' : 'No'}</b>
       </div>
       <div class="hrfin-metric-row">
         <span>Approved by</span>
@@ -442,7 +442,7 @@ function ApprovalsTab({ run }: { run: PayrollRun }): VNode {
         <span>Current status</span>
         <HrfinPill tone={runStatusTone(run.status)}>{humanize(run.status)}</HrfinPill>
       </div>
-      {run.status === 'submitted' && (
+      {run.status === 'pending_approval' && (
         <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
                       borderRadius: 8, padding: '12px 14px', fontSize: 12, marginTop: 8 }}>
           <strong>SoD note:</strong> The approver must be a different Finance Manager than the preparer.
@@ -561,11 +561,11 @@ function DrawerFooter({
   const s = run.status;
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: '100%' }}>
-      {s === 'draft'         && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>}
-      {s === 'inputs_locked' && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onCalculate(run)}>Calculate</button>}
-      {s === 'calculated'    && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onSubmit(run)}>Submit for Approval</button>}
-      {s === 'submitted'     && canApprove && <button class="hrfin-action is-primary" onClick={() => actions.onApprove(run)}>Approve</button>}
-      {s === 'submitted'     && canApprove && <button class="hrfin-action is-danger"  onClick={() => actions.onReject(run)}>Reject</button>}
+      {s === 'draft'           && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>}
+      {s === 'input_locked'   && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onCalculate(run)}>Calculate</button>}
+      {s === 'calculated'     && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onSubmit(run)}>Submit for Approval</button>}
+      {s === 'pending_approval' && canApprove && <button class="hrfin-action is-primary" onClick={() => actions.onApprove(run)}>Approve</button>}
+      {s === 'pending_approval' && canApprove && <button class="hrfin-action is-danger"  onClick={() => actions.onReject(run)}>Reject</button>}
       {s === 'approved'      && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockRun(run)}>Lock Run</button>}
       {s === 'locked'        && canManage  && <button class="hrfin-action"            onClick={() => actions.onExport(run)}>Export</button>}
       {s === 'locked'        && canManage  && <button class="hrfin-action"            onClick={() => actions.onGenPayslips(run)}>Generate Payslips</button>}

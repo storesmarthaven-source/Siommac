@@ -52,13 +52,13 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
 
 function runStatusTone(status: string): HrfinTone {
   switch (status) {
-    case 'locked':        return 'ok';
-    case 'approved':      return 'ok';
-    case 'submitted':
+    case 'locked':           return 'ok';
+    case 'approved':         return 'ok';
+    case 'pending_approval':
     case 'calculated':
-    case 'inputs_locked': return 'wn';
-    case 'cancelled':     return 'bad';
-    default:              return 'nu';   // draft, unknown
+    case 'input_locked':     return 'wn';
+    case 'cancelled':        return 'bad';
+    default:                 return 'nu';   // draft, unknown
   }
 }
 
@@ -84,8 +84,8 @@ const PAGE_TABS: { key: PageTab; label: string }[] = [
 function tabFilter(runs: PayrollRun[], tab: PageTab): PayrollRun[] {
   switch (tab) {
     case 'draft':       return runs.filter(r => r.status === 'draft');
-    case 'calculating': return runs.filter(r => ['inputs_locked', 'calculated'].includes(r.status));
-    case 'pending':     return runs.filter(r => r.status === 'submitted');
+    case 'calculating': return runs.filter(r => ['input_locked', 'calculated'].includes(r.status));
+    case 'pending':     return runs.filter(r => r.status === 'pending_approval');
     case 'approved':    return runs.filter(r => r.status === 'approved');
     case 'locked':      return runs.filter(r => r.status === 'locked');
     default:            return runs;
@@ -253,8 +253,8 @@ export function PayrollOverview(): VNode {
   const totalGross      = runs.reduce((s, r) => s + (r.grossTotal || 0), 0);
   const totalNisEmp     = runs.reduce((s, r) => s + (r.nisEmployerTotal || 0), 0);
   const countLocked     = runs.filter(r => r.status === 'locked').length;
-  const countInProgress = runs.filter(r => ['draft', 'inputs_locked', 'calculated', 'submitted'].includes(r.status)).length;
-  const countPending    = runs.filter(r => r.status === 'submitted').length;
+  const countInProgress = runs.filter(r => ['draft', 'input_locked', 'calculated', 'pending_approval'].includes(r.status)).length;
+  const countPending    = runs.filter(r => r.status === 'pending_approval').length;
 
   // Tab filtering + search + pagination
   const tabFiltered = useMemo(() => tabFilter(runs, tab), [runs, tab]);
