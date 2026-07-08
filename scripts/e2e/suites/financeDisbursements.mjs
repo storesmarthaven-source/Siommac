@@ -50,6 +50,15 @@ export default async function run(h) {
       const evIds = [ctx.disbId, ctx.cancelDisbId, ctx.staffDisbId].filter(Boolean);
       if (evIds.length) await sb.from('app_events').delete().eq('source_module', 'finance_disbursements').in('source_entity_id', evIds);
     } catch {}
+    // Clean up side-effect rows from Gap 13 assertions
+    // Ticket raised when missing bank accounts block create (source_entity_id = ctx.runId)
+    try { if (ctx.runId) await sb.from('tickets').delete().eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.runId); } catch {}
+    // Notifications sent to finance_managers on bank-file-ready (source_id = ctx.disbId)
+    try { if (ctx.disbId) await sb.from('notifications').delete().eq('source_type', 'disbursement').eq('source_id', ctx.disbId); } catch {}
+    // Handoff row created on bank-file-ready
+    try { if (ctx.disbId) await sb.from('handoff_outbox').delete().eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId); } catch {}
+    // Message thread created on bank-file-ready
+    try { if (ctx.disbId) await sb.from('message_threads').delete().eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -237,6 +246,24 @@ export default async function run(h) {
     fails(await api('finance/disbursements/compute', fmgr1Token, { payrollRunId: ctx.draftRunId }), 'compute on draft run should fail');
   });
 
+  await test('Gap 4: createDisbursement with missing bank accounts -> 422 + finance ticket created', async () => {
+    // emp2 still has NO bank account at this point in the flow.
+    // createDisbursement must reject with 422 AND fire-and-forget a ticket.
+    const r = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
+    fails(r, 'create with missing bank accounts should return 422');
+    // Allow a brief window for the async fire-and-forget ticket write to land
+    const gotTicket = await waitFor(async () => {
+      const { data } = await sb.from('tickets').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('source_entity_id', ctx.runId)
+        .eq('source_entity_type', 'payroll_run')
+        .eq('status', 'open')
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotTicket, 'ticket for blocked disbursement not found in tickets table');
+  });
+
   h.section('Finance Disbursements > Lifecycle + SoD');
 
   await test('seed emp2 bank account (now that the missing-account case is proven)', async () => {
@@ -291,6 +318,45 @@ export default async function run(h) {
     ok(r, `generate-file failed: ${r.body.message}`);
     expect(r.body.data.status === 'file_generated', `expected file_generated, got ${r.body.data.status}`);
     expect(r.body.data.bankFilePath, 'bankFilePath must be present after file generation');
+  });
+
+  await test('Gap 1: notification sent to finance_manager role when bank file ready', async () => {
+    // notifyUsersByRole('finance_manager', …) is fire-and-forget in generateBankFile.
+    // Wait up to 8 s for at least one notification row to land for any finance_manager.
+    const gotNotification = await waitFor(async () => {
+      const { data } = await sb.from('notifications').select('id')
+        .eq('type', 'finance.disbursement.bank_file.ready')
+        .eq('source_type', 'disbursement')
+        .eq('source_id', ctx.disbId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotNotification, 'finance.disbursement.bank_file.ready notification not found');
+  });
+
+  await test('Gap 2: message_thread created for bank file ready', async () => {
+    // createFinanceRecordThread is fire-and-forget in generateBankFile.
+    const gotThread = await waitFor(async () => {
+      const { data } = await sb.from('message_threads').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('source_entity_id', ctx.disbId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotThread, 'message_thread for bank_file_ready not found in message_threads');
+  });
+
+  await test('Gap 3: handoff_outbox row written when bank file ready', async () => {
+    // createHandoff is fire-and-forget in generateBankFile.
+    const gotHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('source_entity_id', ctx.disbId)
+        .eq('target_entity_type', 'bank_file_action')
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotHandoff, 'handoff_outbox row for bank_file_action not found');
   });
 
   await test('mark-paid (file_generated -> paid)', async () => {
