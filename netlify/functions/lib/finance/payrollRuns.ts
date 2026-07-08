@@ -25,6 +25,9 @@ import { computeRunLine } from './payrollStatutory';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { startWorkflowForRecord } from '../workflow/service';
+import { notifyUsersByRole } from './financeEvents';
+import { notify } from '../notify';
+import { createHandoff } from '../handoffBus';
 import type { NisClassRow } from './statutoryConfig';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
@@ -1222,6 +1225,35 @@ export async function submitRun(runId: string, actorId: string): Promise<Payroll
     payload:          { runNo: updatedRun.runNo, workflowId: workflowInstance?.id ?? null },
   });
 
+  // §8.1 — notify Finance Managers that a run is awaiting approval
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.payroll.run.pending_approval',
+    title:          `Payroll run ${updatedRun.runNo} submitted for approval`,
+    body:           `Period ${updatedRun.periodMonth.slice(0, 7)} payroll run is awaiting your approval.`,
+    module:         'finance_payroll',
+    severity:       'warning',
+    sourceType:     'payroll_run',
+    sourceId:       runId,
+    actionRequired: true,
+    dedupeKey:      `payroll_run.pending_approval.${runId}`,
+  });
+
+  // §8.1 — handoff to approval workflow
+  void createHandoff({
+    sourceModule:     'finance_payroll',
+    targetModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    targetEntityType: 'payroll_approval',
+    payload: {
+      runNo:       updatedRun.runNo,
+      periodMonth: updatedRun.periodMonth,
+      workflowId:  workflowInstance?.id ?? null,
+      submittedBy: actorId,
+    },
+    createdBy: actorId,
+  });
+
   return { ...updatedRun, status: 'pending_approval', workflowId: workflowInstance?.id ?? null };
 }
 
@@ -1265,6 +1297,44 @@ export async function approveRun(runId: string, actorId: string): Promise<void> 
     actorUserId:      actorId,
     severity:         'success',
     payload:          { approvedBy: actorId },
+  });
+
+  // §8.1 — notify the submitter (run.createdBy) that the run was approved
+  if (run.createdBy && run.createdBy !== actorId) {
+    void notify({
+      userId:     run.createdBy,
+      type:       'finance.payroll.run.approved',
+      title:      `Payroll run ${run.runNo} approved`,
+      body:       `Period ${run.periodMonth.slice(0, 7)} payroll run has been approved. It is ready to lock.`,
+      module:     'finance_payroll',
+      severity:   'success',
+      sourceType: 'payroll_run',
+      sourceId:   runId,
+      dedupeKey:  `payroll_run.approved.${runId}`,
+    });
+  }
+
+  // §8.1 — notify Finance Managers that the run is approved and ready to lock
+  void notifyUsersByRole('finance_manager', {
+    type:       'finance.payroll.run.approved',
+    title:      `Payroll run ${run.runNo} approved — ready to lock`,
+    body:       `Period ${run.periodMonth.slice(0, 7)} payroll run is approved. Lock the run to generate payslips.`,
+    module:     'finance_payroll',
+    severity:   'success',
+    sourceType: 'payroll_run',
+    sourceId:   runId,
+    dedupeKey:  `payroll_run.approved.mgr.${runId}`,
+  });
+
+  // §8.1 — handoff to payroll locking
+  void createHandoff({
+    sourceModule:     'finance_payroll',
+    targetModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    targetEntityType: 'payroll_locking',
+    payload: { runNo: run.runNo, periodMonth: run.periodMonth, approvedBy: actorId },
+    createdBy: actorId,
   });
 }
 
@@ -1310,6 +1380,35 @@ export async function lockRun(runId: string, actorId: string): Promise<PayrollRu
     actorUserId:      actorId,
     severity:         'success',
     payload:          { runNo: updatedRun.runNo, lockedAt: now },
+  });
+
+  // §8.1 — notify Finance Managers that the run is locked and payslips can be generated
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.payroll.run.locked',
+    title:          `Payroll run ${updatedRun.runNo} locked`,
+    body:           `Period ${updatedRun.periodMonth.slice(0, 7)} payroll run is now locked. Generate payslips from the run drawer.`,
+    module:         'finance_payroll',
+    severity:       'success',
+    sourceType:     'payroll_run',
+    sourceId:       runId,
+    actionRequired: true,
+    dedupeKey:      `payroll_run.locked.${runId}`,
+  });
+
+  // §8.1 — handoff to payslip generation
+  void createHandoff({
+    sourceModule:     'finance_payroll',
+    targetModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    targetEntityType: 'payslip_generation',
+    payload: {
+      runNo:          updatedRun.runNo,
+      periodMonth:    updatedRun.periodMonth,
+      employeeCount:  updatedRun.employeeCount,
+      lockedAt:       now,
+    },
+    createdBy: actorId,
   });
 
   return updatedRun;
