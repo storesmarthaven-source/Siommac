@@ -19,6 +19,9 @@ export interface PayrollRun {
   status: string;
   statutoryVersionId: string;
   weeksInPeriod: number;
+  payGroup: string | null;
+  payDate: string | null;
+  cutOffDate: string | null;
   employeeCount: number;
   grossTotal: number;
   deductionTotal: number;
@@ -140,13 +143,19 @@ export interface CreateRunArgs {
   periodMonth: string;      // YYYY-MM-DD (first of month)
   payFrequency?: string;
   weeksInPeriod?: number;
+  payGroup?: string;
+  payDate?: string;         // YYYY-MM-DD actual payment date
+  cutOffDate?: string;      // YYYY-MM-DD cut-off date for changes
 }
 
 export interface PopulationPreview {
-  total:           number;
-  salaried:        number;
-  hourly:          number;
-  missingPayBasis: number;
+  total:                   number;
+  salaried:                number;
+  hourly:                  number;
+  missingPayBasis:         number;
+  newHires:                number;
+  terminations:            number;
+  missingStatutoryProfile: number;
 }
 
 export interface ExportDownload {
@@ -218,7 +227,7 @@ export const financePayrollApi = {
     call<RunAuditLogEntry[]>('finance/payroll/runs/audit/list', a),
 
   // Population preview (wizard step 2)
-  populationPreview: (a: object = {}) =>
+  populationPreview: (a: { periodMonth?: string } = {}) =>
     call<PopulationPreview>('finance/payroll/runs/population-preview', a),
 
   // Export download (returns content + metadata for browser download)
@@ -278,10 +287,10 @@ export function useRunAuditLog(runId: string | null) {
     enabled:  !!runId,
   });
 }
-export function usePopulationPreview() {
+export function usePopulationPreview(periodMonth?: string) {
   return useQuery({
-    queryKey: ['finance', 'payroll', 'population-preview'],
-    queryFn:  () => financePayrollApi.populationPreview(),
+    queryKey: ['finance', 'payroll', 'population-preview', periodMonth],
+    queryFn:  () => financePayrollApi.populationPreview(periodMonth ? { periodMonth } : {}),
   });
 }
 

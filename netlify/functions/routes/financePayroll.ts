@@ -96,6 +96,9 @@ router.post('/payroll/runs/create', async c => {
     periodMonth:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     payFrequency:   z.enum(['monthly', 'bi_weekly', 'weekly']).optional(),
     weeksInPeriod:  z.number().positive().optional(),
+    payGroup:       z.string().min(1).max(100).optional(),
+    payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -384,8 +387,12 @@ router.post('/payroll/warnings/resolve', async c => {
 // Read-only estimate of how many active employees would be included in a run.
 router.post('/payroll/runs/population-preview', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    periodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
   try {
-    const data = await getEmployeePopulationPreview();
+    const data = await getEmployeePopulationPreview(v.data.periodMonth);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

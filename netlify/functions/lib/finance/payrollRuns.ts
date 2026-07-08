@@ -37,6 +37,9 @@ export interface PayrollRunDto {
   status: string;
   statutoryVersionId: string;
   weeksInPeriod: number;
+  payGroup: string | null;
+  payDate: string | null;
+  cutOffDate: string | null;
   employeeCount: number;
   grossTotal: number;
   deductionTotal: number;
@@ -117,6 +120,7 @@ export interface PayrollRunWarningDto {
 interface DbRunRow {
   id: string; run_no: string; period_month: string; pay_frequency: string;
   status: string; statutory_version_id: string; weeks_in_period: number;
+  pay_group: string | null; pay_date: string | null; cut_off_date: string | null;
   employee_count: number; gross_total: number; deduction_total: number;
   net_total: number; nis_employer_total: number;
   workflow_id: string | null;
@@ -161,6 +165,7 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     payFrequency: r.pay_frequency, status: r.status,
     statutoryVersionId: r.statutory_version_id,
     weeksInPeriod: Number(r.weeks_in_period),
+    payGroup: r.pay_group, payDate: r.pay_date, cutOffDate: r.cut_off_date,
     employeeCount: r.employee_count,
     grossTotal: Number(r.gross_total), deductionTotal: Number(r.deduction_total),
     netTotal: Number(r.net_total), nisEmployerTotal: Number(r.nis_employer_total),
@@ -341,6 +346,9 @@ export interface CreateRunInput {
   periodMonth: string;
   payFrequency?: string;
   weeksInPeriod?: number;
+  payGroup?: string;
+  payDate?: string;
+  cutOffDate?: string;
   actorId: string;
 }
 
@@ -368,6 +376,9 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
     status:               'draft',
     statutory_version_id: version.id,
     weeks_in_period:      input.weeksInPeriod ?? 4.333,
+    pay_group:            input.payGroup ?? null,
+    pay_date:             input.payDate ?? null,
+    cut_off_date:         input.cutOffDate ?? null,
     created_by:           input.actorId,
   }).select().single<DbRunRow>();
 
@@ -967,29 +978,75 @@ export async function resolveRunWarning(
 // ── Employee Population Preview (wizard step) ─────────────────────────────────
 
 export interface PopulationPreviewResult {
-  total:          number;
-  salaried:       number;
-  hourly:         number;
-  missingPayBasis: number;
+  total:                    number;
+  salaried:                 number;
+  hourly:                   number;
+  missingPayBasis:          number;
+  newHires:                 number;
+  terminations:             number;
+  missingStatutoryProfile:  number;
 }
 
 /**
  * Returns a count of active employees for the payroll wizard preview (step 2).
+ * Accepts an optional periodMonth (YYYY-MM-DD) to scope new-hire / termination counts.
  * Does NOT lock inputs — this is a read-only estimate.
  */
-export async function getEmployeePopulationPreview(): Promise<PopulationPreviewResult> {
+export async function getEmployeePopulationPreview(
+  periodMonth?: string,
+): Promise<PopulationPreviewResult> {
+  // Derive the period start/end from the supplied periodMonth (or default to current month)
+  const baseDate = periodMonth ? new Date(periodMonth) : new Date();
+  const periodStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+    .toISOString().slice(0, 10);
+  const periodEnd = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0)
+    .toISOString().slice(0, 10);
+
+  // Fetch all non-system users with scheduling and pay fields
   const { data, error } = await sb
     .from('app_users')
-    .select('id, pay_basis')
-    .eq('status', 'active');
+    .select('id, pay_basis, status, start_date, end_date')
+    .in('status', ['active', 'inactive'])
+    .not('role', 'eq', 'system');
   if (error) throw Object.assign(new Error('populationPreview: ' + error.message), { status: 500 });
 
-  const rows = (data ?? []) as { id: string; pay_basis: string | null }[];
-  const salaried = rows.filter(r => r.pay_basis === 'salary').length;
-  const hourly   = rows.filter(r => r.pay_basis === 'hourly').length;
-  const missing  = rows.filter(r => !r.pay_basis).length;
+  const rows = (data ?? []) as {
+    id: string; pay_basis: string | null;
+    status: string; start_date: string | null; end_date: string | null;
+  }[];
 
-  return { total: rows.length, salaried, hourly, missingPayBasis: missing };
+  const active    = rows.filter(r => r.status === 'active');
+  const salaried  = active.filter(r => r.pay_basis === 'salary').length;
+  const hourly    = active.filter(r => r.pay_basis === 'hourly').length;
+  const missing   = active.filter(r => !r.pay_basis).length;
+
+  // New hires: active with start_date inside the period
+  const newHires = rows.filter(r =>
+    r.start_date && r.start_date >= periodStart && r.start_date <= periodEnd,
+  ).length;
+
+  // Terminations: inactive with end_date inside the period
+  const terminations = rows.filter(r =>
+    r.status === 'inactive' && r.end_date && r.end_date >= periodStart && r.end_date <= periodEnd,
+  ).length;
+
+  // Missing statutory profile: active employees with no hr_employee_statutory_profiles row
+  const activeIds = active.map(r => r.id);
+  let missingStatutoryProfile = 0;
+  if (activeIds.length > 0) {
+    const { data: spData, error: spErr } = await sb
+      .from('hr_employee_statutory_profiles')
+      .select('employee_id')
+      .in('employee_id', activeIds);
+    if (spErr) throw Object.assign(new Error('populationPreview/sp: ' + spErr.message), { status: 500 });
+    const profiledIds = new Set((spData ?? []).map((r: { employee_id: string }) => r.employee_id));
+    missingStatutoryProfile = activeIds.filter(id => !profiledIds.has(id)).length;
+  }
+
+  return {
+    total: active.length, salaried, hourly, missingPayBasis: missing,
+    newHires, terminations, missingStatutoryProfile,
+  };
 }
 
 // ── Export content download ───────────────────────────────────────────────────
