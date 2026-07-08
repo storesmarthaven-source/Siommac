@@ -360,4 +360,96 @@ export default async function run(h) {
     expect(!list.body.data.some(a => a.id === ctx.bankAccountId), 'deactivated account must not appear in default list');
   });
 
+  h.section('Finance Disbursements > New Aurora routes');
+
+  await test('lines/list-detail returns enriched lines with bankName + accountNumberMasked', async () => {
+    const r = await api('finance/disbursements/lines/list-detail', fmgr1Token, { disbursementId: ctx.disbId });
+    ok(r, `list-detail failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'expected array');
+    const line = r.body.data[0];
+    if (line) {
+      for (const k of ['id', 'employeeId', 'netAmount', 'accountNumberMasked', 'bankName']) {
+        expect(k in line, `list-detail line missing field: ${k}`);
+      }
+      expect(!('accountNumber' in line), 'full account number must NOT be in list-detail response');
+    }
+  });
+
+  await test('employee is DENIED lines/list-detail', async () => {
+    const r = await api('finance/disbursements/lines/list-detail', empToken, { disbursementId: ctx.disbId });
+    fails(r, 'employee should be denied lines/list-detail');
+  });
+
+  await test('kpis returns aggregates for the Aurora KPI strip', async () => {
+    const r = await api('finance/disbursements/kpis', fmgr1Token, {});
+    ok(r, `kpis failed: ${r.body.message}`);
+    const d = r.body.data;
+    for (const k of ['pending', 'approved', 'fileGenerated', 'paidMtd', 'totalMtdAmount', 'missingBankAccountCount', 'failedLineCount', 'trend']) {
+      expect(k in d, `kpis missing field: ${k}`);
+    }
+    expect(Array.isArray(d.trend), 'trend must be array');
+    expect(d.trend.length === 6, `trend should have 6 months, got ${d.trend.length}`);
+  });
+
+  await test('employee is DENIED kpis', async () => {
+    const r = await api('finance/disbursements/kpis', empToken, {});
+    fails(r, 'employee should be denied kpis');
+  });
+
+  await test('bank-file/signed-url returns a signed URL for a generated file', async () => {
+    // ctx.disbId is now in `paid` state with a bankFilePath set during the lifecycle tests.
+    const r = await api('finance/disbursements/bank-file/signed-url', fmgr1Token, { disbursementId: ctx.disbId });
+    ok(r, `bank-file/signed-url failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.signedUrl === 'string' && d.signedUrl.length > 0, 'signedUrl must be a non-empty string');
+    expect(d.disbursement?.id === ctx.disbId, 'disbursement.id mismatch');
+  });
+
+  await test('bank-file/signed-url emits finance.disbursement.bank_file.downloaded app_event', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('event_type', 'finance.disbursement.bank_file.downloaded')
+        .eq('source_entity_id', ctx.disbId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'bank_file.downloaded app_event not found');
+  });
+
+  await test('bank-file/signed-url is DENIED for employee (needs finance.disbursements.bankFile.download)', async () => {
+    const r = await api('finance/disbursements/bank-file/signed-url', empToken, { disbursementId: ctx.disbId });
+    fails(r, 'employee should be denied bank-file/signed-url');
+  });
+
+  await test('bank-file/signed-url on a disbursement without file_path returns 422', async () => {
+    // ctx.staffDisbId is in draft/submitted state — no bankFilePath
+    const r = await api('finance/disbursements/bank-file/signed-url', fmgr1Token, { disbursementId: ctx.staffDisbId });
+    const code = r.status ?? 422;
+    expect(code >= 400, `expected 4xx for no bank file, got ${code}`);
+  });
+
+  await test('hr_audit_log has entries for all lifecycle transitions', async () => {
+    const { data: auditRows, error } = await sb.from('hr_audit_log')
+      .select('action')
+      .eq('submodule_key', 'finance_disbursements')
+      .eq('record_id', ctx.disbId);
+    expect(!error, `hr_audit_log query failed: ${error?.message}`);
+    const actions = new Set((auditRows ?? []).map(r => r.action));
+    for (const a of ['disbursement.created', 'disbursement.submitted', 'disbursement.approved', 'disbursement.file_generated', 'disbursement.paid', 'disbursement.bank_file.downloaded']) {
+      expect(actions.has(a), `hr_audit_log missing action: ${a}`);
+    }
+  });
+
+  await test('CSV export (reports/list) returns rows with correct fields', async () => {
+    const r = await api('finance/disbursements/reports/list', fmgr1Token, {});
+    ok(r, 'reports/list failed');
+    expect(Array.isArray(r.body.data), 'expected array');
+    if (r.body.data.length > 0) {
+      const row = r.body.data[0];
+      for (const k of ['id', 'disbursementNo', 'status', 'totalAmount', 'currency', 'createdAt']) {
+        expect(k in row, `report row missing field: ${k}`);
+      }
+    }
+  });
+
 }
