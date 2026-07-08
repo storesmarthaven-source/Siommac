@@ -14,7 +14,6 @@
 // ============================================================================
 
 import { sb } from '../db';
-import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { startWorkflowForRecord } from '../workflow/service';
 import { emitFinanceMutationBackbone } from './backbone';
@@ -239,17 +238,25 @@ export async function createStatutoryVersion(
   }
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: row.id, actorId: input.actorId,
-    action: 'statutory_version.created',
-    previousState: null, newState: { status: 'draft', effectiveFrom: row.effectiveFrom },
-  });
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.created',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: row.id,
-    actorUserId: input.actorId, severity: 'info',
-    payload: { effectiveFrom: row.effectiveFrom, jurisdiction: row.jurisdiction },
-  });
+  // Backbone: audit (mandatory). createStatutoryVersion is a draft create — no notification/thread needed yet.
+  // Compensating rollback: delete the version row if backbone throws.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: input.actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: row.id,
+      eventType: 'finance.statutory.version.created',
+      auditAction: 'statutory_version.created',
+      previousState: null,
+      newState: { status: 'draft', effectiveFrom: row.effectiveFrom },
+      severity: 'info',
+      metadata: { effectiveFrom: row.effectiveFrom, jurisdiction: row.jurisdiction },
+    });
+  } catch (backboneErr) {
+    try { await sb.from('finance_statutory_versions').delete().eq('id', row.id); } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -322,12 +329,6 @@ export async function submitStatutoryVersion(
   if (error) throw Object.assign(new Error('submitStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: id, actorId,
-    action: 'statutory_version.submitted',
-    previousState: { status: 'draft' }, newState: { status: 'pending_approval' },
-  });
-
   // Start workflow via central engine
   const ctx: ModuleWorkflowContext = {
     moduleKey: 'finance_statutory',
@@ -354,12 +355,32 @@ export async function submitStatutoryVersion(
     );
   }
 
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.submitted',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: id,
-    actorUserId: actorId, severity: 'info',
-    payload: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction },
-  });
+  // Backbone: audit (mandatory) + notification to approvers that a version needs review.
+  // Compensating rollback: revert status to draft if backbone throws.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: id,
+      eventType: 'finance.statutory.version.submitted',
+      auditAction: 'statutory_version.submitted',
+      previousState: { status: 'draft' },
+      newState: { status: 'pending_approval' },
+      severity: 'info',
+      metadata: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction },
+      notification: {
+        title: `Statutory version "${existing.label}" submitted for approval`,
+        body: `Effective from ${existing.effectiveFrom}. A finance manager must review and approve.`,
+        actionRoute: '/finance/statutory',
+        type: 'finance.statutory.version.submitted',
+        severity: 'info',
+      },
+    });
+  } catch (backboneErr) {
+    try { await sb.from('finance_statutory_versions').update({ status: 'draft' }).eq('id', id); } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -415,6 +436,20 @@ export async function approveStatutoryVersion(
         ],
         body: `Statutory version "${row.label}" (effective ${row.effectiveFrom}, jurisdiction ${row.jurisdiction}) has been approved. Payroll administrators should review the new rate structure before the next pay run.`,
       },
+      // §8.1 matrix: 'Statutory version approved' → payroll config update handoff.
+      // CRITICAL — throws on failure; compensating rollback above reverts the approval.
+      handoff: {
+        targetModule: 'finance_payroll',
+        targetEntityType: 'statutory_version',
+        payload: {
+          action: 'statutory_version_approved',
+          statutoryVersionId: id,
+          label: row.label,
+          effectiveFrom: row.effectiveFrom,
+          jurisdiction: row.jurisdiction,
+          approvedBy: actorId,
+        },
+      },
     });
   } catch (backboneErr) {
     // Compensating rollback: revert to pending_approval.
@@ -450,18 +485,41 @@ export async function rejectStatutoryVersion(
   if (error) throw Object.assign(new Error('rejectStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: id, actorId,
-    action: 'statutory_version.rejected',
-    previousState: { status: 'pending_approval' }, newState: { status: 'draft' },
-    reason: reason ?? null,
-  });
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.rejected',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: id,
-    actorUserId: actorId, severity: 'warning',
-    payload: { reason: reason ?? null },
-  });
+  // Backbone: audit (mandatory) + notification to the creator that their submission was rejected.
+  // Compensating rollback: revert status to pending_approval if backbone throws.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: id,
+      eventType: 'finance.statutory.version.rejected',
+      auditAction: 'statutory_version.rejected',
+      previousState: { status: 'pending_approval' },
+      newState: { status: 'draft' },
+      reason: reason ?? null,
+      severity: 'warning',
+      notification: {
+        title: `Statutory version "${row.label}" returned to draft`,
+        body: reason ? `Reason: ${reason}` : 'The approving manager has returned this version to draft for revision.',
+        actionRoute: '/finance/statutory',
+        type: 'finance.statutory.version.rejected',
+        severity: 'warning',
+        ...(existing.createdBy ? { recipientUserIds: [existing.createdBy] } : {}),
+      },
+      messageThread: {
+        subject: `Statutory version "${row.label}" rejected`,
+        participantUserIds: [
+          actorId,
+          ...(existing.createdBy && existing.createdBy !== actorId ? [existing.createdBy] : []),
+        ],
+        body: `Statutory version "${row.label}" (effective ${row.effectiveFrom}) was returned to draft by the approver.${reason ? `\n\nReason: ${reason}` : ''}`,
+      },
+    });
+  } catch (backboneErr) {
+    try { await sb.from('finance_statutory_versions').update({ status: 'pending_approval' }).eq('id', id); } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -508,17 +566,38 @@ export async function activateStatutoryVersion(
   if (error) throw Object.assign(new Error('activateStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: id, actorId,
-    action: 'statutory_version.activated',
-    previousState: { status: 'approved', isActive: false }, newState: { status: 'active', isActive: true },
-  });
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.activated',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: id,
-    actorUserId: actorId, severity: 'success',
-    payload: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction },
-  });
+  // Backbone: audit (mandatory) + notification (payroll should know the active version changed).
+  // Compensating rollback: revert this version to approved if backbone throws.
+  // NOTE: prior active versions already retired above cannot be automatically restored here
+  // without a transactional RPC. That is acceptable per the compensating-rollback rule.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: id,
+      eventType: 'finance.statutory.version.activated',
+      auditAction: 'statutory_version.activated',
+      previousState: { status: 'approved', isActive: false },
+      newState: { status: 'active', isActive: true },
+      severity: 'success',
+      metadata: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction },
+      notification: {
+        title: `Statutory version "${row.label}" is now active`,
+        body: `Effective from ${row.effectiveFrom}. All new payroll runs for ${row.jurisdiction} will use these rates.`,
+        actionRoute: '/finance/statutory',
+        type: 'finance.statutory.version.activated',
+        severity: 'success',
+      },
+    });
+  } catch (backboneErr) {
+    try {
+      await sb.from('finance_statutory_versions')
+        .update({ status: 'approved', is_active: false, activated_by: null, activated_at: null })
+        .eq('id', id);
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -542,17 +621,35 @@ export async function retireStatutoryVersion(
   if (error) throw Object.assign(new Error('retireStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: id, actorId,
-    action: 'statutory_version.retired',
-    previousState: { status: 'active', isActive: true }, newState: { status: 'retired', isActive: false },
-  });
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.retired',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: id,
-    actorUserId: actorId, severity: 'info',
-    payload: {},
-  });
+  // Backbone: audit (mandatory) + notification that the active version has been retired.
+  // Compensating rollback: revert to active if backbone throws.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: id,
+      eventType: 'finance.statutory.version.retired',
+      auditAction: 'statutory_version.retired',
+      previousState: { status: 'active', isActive: true },
+      newState: { status: 'retired', isActive: false },
+      severity: 'info',
+      notification: {
+        title: `Statutory version "${row.label}" has been retired`,
+        body: 'No version is now active for this jurisdiction. A new version must be activated before payroll runs.',
+        actionRoute: '/finance/statutory',
+        type: 'finance.statutory.version.retired',
+        severity: 'warning',
+      },
+    });
+  } catch (backboneErr) {
+    try {
+      await sb.from('finance_statutory_versions')
+        .update({ status: 'active', is_active: true, retired_by: null, retired_at: null })
+        .eq('id', id);
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }

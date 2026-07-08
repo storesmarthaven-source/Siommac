@@ -347,6 +347,35 @@ export default async function run(h) {
     expect((audit ?? []).length > 0, 'hr_audit_log statutory_version.approved not found');
   });
 
+  await test('§18 side-effects: approve creates a notification, message thread, and payroll handoff', async () => {
+    // Notification (best-effort via event_rules — may be async; wait for it)
+    const gotNotification = await waitFor(async () => {
+      const { data } = await sb.from('notifications')
+        .select('id').eq('source_id', ctx.sv1Id)
+        .ilike('title', '%approved%').limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotNotification, 'notification for statutory_version.approved not found');
+
+    // Message thread anchored to sv1
+    const gotThread = await waitFor(async () => {
+      const { data } = await sb.from('message_threads')
+        .select('id').eq('source_entity_id', ctx.sv1Id)
+        .ilike('subject', '%Statutory config update%').limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotThread, 'message thread for statutory_version.approved not found');
+
+    // §8.1 payroll config update handoff
+    const gotHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox')
+        .select('id').eq('source_entity_id', ctx.sv1Id)
+        .eq('target_module', 'finance_payroll').limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotHandoff, 'handoff_outbox payroll config update handoff not found for approved version');
+  });
+
   // --- Activate (approved → active, creator SoD still applies) ---
   await test('CREATOR cannot activate (SoD: creator cannot activate)', async () => {
     const r = await api('finance/statutory/versions/activate', fmgr1Token, { id: ctx.sv1Id });
@@ -460,6 +489,30 @@ export default async function run(h) {
     ok(r, `reject failed: ${r.body.message}`);
     expect(r.body.data.status === 'draft', `expected draft after reject, got ${r.body.data.status}`);
 
+    // §18 side-effects: reject backbone asserts
+    const gotRejectEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events')
+        .select('id').eq('source_module', 'finance_statutory')
+        .eq('event_type', 'finance.statutory.version.rejected')
+        .eq('source_entity_id', rejectId).limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotRejectEvent, 'app_event for version.rejected not found');
+
+    const { data: rejectAudit } = await sb.from('hr_audit_log')
+      .select('id').eq('submodule_key', 'finance_statutory')
+      .eq('action', 'statutory_version.rejected')
+      .eq('record_id', rejectId).limit(1);
+    expect((rejectAudit ?? []).length > 0, 'hr_audit_log statutory_version.rejected not found');
+
+    const gotRejectThread = await waitFor(async () => {
+      const { data } = await sb.from('message_threads')
+        .select('id').eq('source_entity_id', rejectId)
+        .ilike('subject', '%rejected%').limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotRejectThread, 'message thread for version.rejected not found');
+
     // Cleanup this extra version
     h.onCleanup(async () => {
       try { await sb.from('finance_statutory_versions').delete().eq('id', rejectId); } catch {}
@@ -503,6 +556,16 @@ export default async function run(h) {
     const types = (events ?? []).map(e => e.event_type);
     expect(types.includes('finance.statutory.version.created'),  'missing created event for sv1');
     expect(types.includes('finance.statutory.version.submitted'), 'missing submitted event for sv1');
+  });
+
+  await test('§18 side-effects: submitted event created a notification for sv1', async () => {
+    const gotNotification = await waitFor(async () => {
+      const { data } = await sb.from('notifications')
+        .select('id').eq('source_id', ctx.sv1Id)
+        .ilike('title', '%submitted%').limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotNotification, 'notification for statutory_version.submitted not found');
   });
 
   await test('hr_audit_log has created/submitted/approved/activated rows for sv1', async () => {

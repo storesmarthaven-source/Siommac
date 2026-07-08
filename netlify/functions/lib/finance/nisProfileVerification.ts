@@ -15,6 +15,7 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
+import { emitFinanceMutationBackbone } from './backbone';
 import {
   getStatutoryProfileById,
   toStatutoryProfileDto,
@@ -147,29 +148,64 @@ export async function rejectNisProfile(
   if (error) throw Object.assign(new Error('rejectNisProfile: ' + error.message), { status: 500 });
   const row = toStatutoryProfileDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll_nis',
-    recordId:     input.id,
-    actorId:      input.actorId,
-    action:       'nis_profile.rejected',
-    previousState: { nisStatus: existing.nisStatus },
-    newState: { nisStatus: 'not_available' },
-    reason: input.reason,
-  });
-
-  void emitAppEvent({
-    eventType:       'finance.nis.profile.rejected',
-    sourceModule:    'finance_payroll',
-    sourceEntityType: 'statutory_profile',
-    sourceEntityId:  input.id,
-    actorUserId:     input.actorId,
-    severity:        'warning',
-    payload: {
-      employeeId:   existing.employeeId,
-      jurisdiction: existing.jurisdiction,
+  // §8.1 matrix: NIS verification rejected → notification to HR+Payroll Admin,
+  // compliance message thread, ticket creation, and employee data correction handoff.
+  // writeHrAudit is delegated to the backbone; compensate by reverting on backbone failure.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:  input.actorId,
+      module:       'finance_payroll',
+      entityType:   'statutory_profile',
+      entityId:     input.id,
+      eventType:    'finance.nis.profile.rejected',
+      auditAction:  'nis_profile.rejected',
+      auditSubmodule: 'finance_payroll_nis',
+      previousState: { nisStatus: existing.nisStatus },
+      newState:     { nisStatus: 'not_available' },
       reason:       input.reason,
-    },
-  });
+      severity:     'warning',
+      metadata:     { employeeId: existing.employeeId, jurisdiction: existing.jurisdiction, reason: input.reason },
+      notification: {
+        title:       'NIS continuity profile rejected — correction required',
+        body:        `Finance cannot verify the NIS profile for employee ${existing.employeeId}. Reason: ${input.reason}. HR must correct and re-submit.`,
+        actionRoute: '/finance/statutory',
+        type:        'finance.nis.profile.rejected',
+        severity:    'warning',
+      },
+      messageThread: {
+        subject:            `NIS profile verification rejected — employee ${existing.employeeId}`,
+        participantUserIds: [input.actorId],
+        body:               `Finance has returned the NIS continuity profile for employee ${existing.employeeId} (jurisdiction: ${existing.jurisdiction}) to HR for correction.\n\nReason: ${input.reason}\n\nHR must update the profile and re-submit for verification.`,
+      },
+      ticket: {
+        category:        'compliance',
+        priority:        'high',
+        subject:         `NIS continuity profile correction required — employee ${existing.employeeId}`,
+        description:     `Finance rejected the NIS continuity profile for employee ${existing.employeeId} (jurisdiction: ${existing.jurisdiction}).\n\nReason: ${input.reason}\n\nAction required: HR to correct the statutory profile and re-submit for Finance verification.`,
+        requesterUserId: input.actorId,
+      },
+      handoff: {
+        targetModule:     'hr',
+        targetEntityType: 'statutory_profile',
+        payload: {
+          action:       'nis_profile_correction_required',
+          profileId:    input.id,
+          employeeId:   existing.employeeId,
+          jurisdiction: existing.jurisdiction,
+          reason:       input.reason,
+          rejectedBy:   input.actorId,
+        },
+      },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: revert the profile back to pending_verification.
+    try {
+      await sb.from('hr_employee_statutory_profiles')
+        .update({ nis_status: existing.nisStatus, verification_note: null, updated_by: input.actorId })
+        .eq('id', input.id);
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
