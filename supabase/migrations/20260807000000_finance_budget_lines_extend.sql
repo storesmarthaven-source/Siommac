@@ -20,11 +20,18 @@
 -- ============================================================================
 
 -- ── 1. Add new columns ────────────────────────────────────────────────────────
+-- label, notes, created_by, period, owner_id
+--
+-- period:   fiscal period within the year — e.g. 'Q1', 'Q2', 'H1', 'Jan', '01'
+--           (free text, max 20 chars). Optional; null means full-year allocation.
+-- owner_id: the budget owner / responsible manager for this line (FK → app_users).
 
 alter table public.finance_budget_lines
   add column if not exists label      text,
   add column if not exists notes      text,
-  add column if not exists created_by text references public.app_users(id) on delete set null;
+  add column if not exists created_by text references public.app_users(id) on delete set null,
+  add column if not exists period     text check (char_length(period) <= 20),
+  add column if not exists owner_id   text references public.app_users(id) on delete set null;
 
 -- ── 2. updated_at trigger (idempotent) ────────────────────────────────────────
 

@@ -239,16 +239,16 @@ export default async function run(h) {
     const gotEvent = await waitFor(async () => {
       const { data } = await sb.from('app_events').select('id')
         .eq('source_module', 'finance_budgets')
-        .eq('event_type', 'finance.budgets.bulk_upserted')
+        .eq('event_type', 'finance.budgets.lines.bulk_upserted')
         .eq('actor_user_id', fmgrId)
         .limit(1);
       return (data ?? []).length > 0;
     });
     expect(gotEvent, 'bulk_upserted app_event not found');
     const { data: audit } = await sb.from('hr_audit_log').select('id')
-      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_line.bulk_upserted')
+      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_lines.bulk_upserted')
       .eq('actor_id', fmgrId).limit(1);
-    expect((audit ?? []).length > 0, 'budget_line.bulk_upserted audit row not found');
+    expect((audit ?? []).length > 0, 'budget_lines.bulk_upserted audit row not found');
   });
 
   await test('over-budget: bulk-upsert sets budgeted < actuals → overBudgetCount increments', async () => {
@@ -321,16 +321,16 @@ export default async function run(h) {
     const gotEvent = await waitFor(async () => {
       const { data } = await sb.from('app_events').select('id')
         .eq('source_module', 'finance_budgets')
-        .eq('event_type', 'finance.budgets.copy_last_year')
+        .eq('event_type', 'finance.budgets.lines.copied')
         .eq('actor_user_id', fmgrId)
         .limit(1);
       return (data ?? []).length > 0;
     });
     expect(gotEvent, 'copy_last_year app_event not found');
     const { data: audit } = await sb.from('hr_audit_log').select('id')
-      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_line.copy_last_year')
+      .eq('submodule_key', 'finance_budgets').eq('action', 'budget_lines.copied')
       .eq('actor_id', fmgrId).limit(1);
-    expect((audit ?? []).length > 0, 'budget_line.copy_last_year audit row not found');
+    expect((audit ?? []).length > 0, 'budget_lines.copied audit row not found');
   });
 
   await test('copy-last-year: lines already in target FY are skipped (skipped >= existing count)', async () => {
