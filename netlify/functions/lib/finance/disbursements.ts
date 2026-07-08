@@ -10,6 +10,9 @@ import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { startWorkflowForRecord } from '../workflow/service';
 import { assertDifferentApprover } from './statutoryConfig';
+import { notifyUsersByRole, createFinanceRecordThread } from './financeEvents';
+import { createHandoff } from '../handoffBus';
+import { createTicket } from '../communications';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export type DisbursementStatus =
@@ -131,13 +134,40 @@ export async function listDisbursementLines(disbursementId: string): Promise<Dis
   return ((data ?? []) as DbLineRow[]).map(toLineDto);
 }
 
-export async function createDisbursement(opts: { payrollRunId: string; actorId: string; metadata?: Record<string, unknown>; }): Promise<DisbursementDto> {
+export async function createDisbursement(opts: { payrollRunId: string; actorId: string; currency?: string; metadata?: Record<string, unknown>; }): Promise<DisbursementDto> {
   const computed = await computeFromRun(opts.payrollRunId);
   if (computed.missingBankAccounts.length > 0) {
+    // §8.1 — raise a ticket + thread so Finance is alerted to add missing bank accounts
+    void createTicket({
+      category:          'finance_admin',
+      priority:          'high',
+      subject:           'Missing bank accounts blocking disbursement',
+      description:       `Disbursement compute for payroll run ${opts.payrollRunId} blocked: ` +
+                         `${computed.missingBankAccounts.length} employee(s) have no active primary bank account. ` +
+                         `Employee IDs: ${computed.missingBankAccounts.join(', ')}. ` +
+                         `Please add primary bank accounts for these employees before retrying.`,
+      requesterUserId:   opts.actorId,
+      sourceModule:      'finance_disbursements',
+      sourceEntityType:  'payroll_run',
+      sourceEntityId:    opts.payrollRunId,
+    });
+    void createFinanceRecordThread({
+      threadType:        'record',
+      subject:           'Bank accounts missing — disbursement blocked',
+      sourceModule:      'finance_disbursements',
+      sourceEntityType:  'payroll_run',
+      sourceEntityId:    opts.payrollRunId,
+      createdBy:         opts.actorId,
+      body:              `Disbursement compute blocked for payroll run ${opts.payrollRunId}. ` +
+                         `${computed.missingBankAccounts.length} employee(s) have no primary bank account: ` +
+                         `${computed.missingBankAccounts.join(', ')}. ` +
+                         `Please add bank accounts and retry.`,
+      notifyRole:        'finance_manager',
+    });
     throw Object.assign(new Error(computed.missingBankAccounts.length + ' employee(s) have no primary bank account. All employees must have a primary bank account before creating a disbursement.'), { status: 422 });
   }
   const disbursementNo = await nextRef('DSB');
-  const { data, error } = await sb.from('finance_disbursements').insert({ disbursement_no: disbursementNo, payroll_run_id: opts.payrollRunId, status: 'draft', total_amount: computed.totalAmount, employee_count: computed.employeeCount, currency: 'TTD', created_by: opts.actorId, metadata: opts.metadata ?? {} }).select().single<DbDisbursementRow>();
+  const { data, error } = await sb.from('finance_disbursements').insert({ disbursement_no: disbursementNo, payroll_run_id: opts.payrollRunId, status: 'draft', total_amount: computed.totalAmount, employee_count: computed.employeeCount, currency: opts.currency ?? 'TTD', created_by: opts.actorId, metadata: opts.metadata ?? {} }).select().single<DbDisbursementRow>();
   if (error) {
     if (error.code === '23505') throw Object.assign(new Error('A disbursement for this payroll run already exists.'), { status: 409 });
     throw Object.assign(new Error('createDisbursement: ' + error.message), { status: 500 });
@@ -160,7 +190,8 @@ export async function submitDisbursement(id: string, actorId: string): Promise<D
   const existing = await getDisbursement(id);
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
   if (existing.status !== 'draft') throw Object.assign(new Error('Only draft disbursements can be submitted for approval.'), { status: 422 });
-  const { data, error } = await sb.from('finance_disbursements').update({ status: 'submitted' }).eq('id', id).select().single<DbDisbursementRow>();
+  const submittedMeta = { ...existing.metadata, submittedAt: new Date().toISOString() };
+  const { data, error } = await sb.from('finance_disbursements').update({ status: 'submitted', metadata: submittedMeta }).eq('id', id).select().single<DbDisbursementRow>();
   if (error) throw Object.assign(new Error('submitDisbursement: ' + error.message), { status: 500 });
   const row = toDto(data);
   void emitAppEvent({ eventType: 'finance.disbursement.submitted', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'info', payload: { totalAmount: existing.totalAmount, employeeCount: existing.employeeCount } });
@@ -181,7 +212,8 @@ export async function approveDisbursement(id: string, actorId: string): Promise<
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
   if (existing.status !== 'submitted') throw Object.assign(new Error('Only submitted disbursements can be approved.'), { status: 422 });
   assertDifferentApprover({ actorId, createdBy: existing.createdBy, action: 'approve a disbursement they created' });
-  const { data, error } = await sb.from('finance_disbursements').update({ status: 'approved', approved_by: actorId }).eq('id', id).select().single<DbDisbursementRow>();
+  const approvedMeta = { ...existing.metadata, approvedAt: new Date().toISOString() };
+  const { data, error } = await sb.from('finance_disbursements').update({ status: 'approved', approved_by: actorId, metadata: approvedMeta }).eq('id', id).select().single<DbDisbursementRow>();
   if (error) throw Object.assign(new Error('approveDisbursement: ' + error.message), { status: 500 });
   const row = toDto(data);
   void emitAppEvent({ eventType: 'finance.disbursement.approved', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { totalAmount: existing.totalAmount } });
@@ -217,11 +249,65 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
   const fileBytes = new TextEncoder().encode(csvContent);
   const { error: uploadErr } = await sb.storage.from('disbursements').upload(filePath, fileBytes, { contentType: 'text/csv', upsert: false });
   if (uploadErr) throw Object.assign(new Error('generateBankFile/upload: ' + uploadErr.message), { status: 500 });
-  const { data, error: updErr } = await sb.from('finance_disbursements').update({ status: 'file_generated', bank_file_path: filePath }).eq('id', id).select().single<DbDisbursementRow>();
+  const generatedAt = new Date().toISOString();
+  const fileMeta = { ...existing.metadata, fileGeneratedAt: generatedAt, fileGeneratedBy: actorId };
+  const { data, error: updErr } = await sb.from('finance_disbursements').update({ status: 'file_generated', bank_file_path: filePath, metadata: fileMeta }).eq('id', id).select().single<DbDisbursementRow>();
   if (updErr) throw Object.assign(new Error('generateBankFile/update: ' + updErr.message), { status: 500 });
   const row = toDto(data);
   void emitAppEvent({ eventType: 'finance.disbursement.file_generated', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { filePath, disbursementNo: existing.disbursementNo } });
   await writeHrAudit({ submoduleKey: 'finance_disbursements', recordId: id, actorId, action: 'disbursement.file_generated', previousState: { status: 'approved' }, newState: { status: 'file_generated', filePath } });
+
+  // §8.1 — notify Payment Operators (finance_manager) that the bank file is ready
+  void notifyUsersByRole('finance_manager', {
+    type:          'finance.disbursement.bank_file.ready',
+    title:         `Bank file ready: ${existing.disbursementNo}`,
+    body:          `Bank file generated for disbursement ${existing.disbursementNo}. ` +
+                   `Total: ${existing.currency} ${Number(existing.totalAmount).toFixed(2)} · ` +
+                   `${existing.employeeCount} employee(s). Download and submit to bank.`,
+    module:        'finance_disbursements',
+    severity:      'info',
+    sourceType:    'disbursement',
+    sourceId:      id,
+    actionRoute:   '/finance/disbursements',
+    actionRequired: true,
+    dedupeKey:     `finance.disbursement.bank_file.ready:${id}`,
+  });
+
+  // §8.1 — execution thread so Payment Operators can discuss and track the file
+  void createFinanceRecordThread({
+    threadType:       'record',
+    subject:          `Bank file ready: ${existing.disbursementNo}`,
+    sourceModule:     'finance_disbursements',
+    sourceEntityType: 'disbursement',
+    sourceEntityId:   id,
+    createdBy:        actorId,
+    body:             `Bank file has been generated for disbursement ${existing.disbursementNo}. ` +
+                      `Total: ${existing.currency} ${Number(existing.totalAmount).toFixed(2)} for ` +
+                      `${existing.employeeCount} employee(s). File: ${filePath}. ` +
+                      `Please download and submit to the bank for processing.`,
+    notifyRole:       'finance_manager',
+  });
+
+  // §8.1 — handoff row signalling that bank file action is required
+  void createHandoff({
+    sourceModule:     'finance_disbursements',
+    targetModule:     'finance_disbursements',
+    sourceEntityType: 'disbursement',
+    sourceEntityId:   id,
+    targetEntityType: 'bank_file_action',
+    payload:          {
+      disbursementId:  id,
+      disbursementNo:  existing.disbursementNo,
+      bankFilePath:    filePath,
+      totalAmount:     existing.totalAmount,
+      employeeCount:   existing.employeeCount,
+      currency:        existing.currency,
+      generatedAt,
+      generatedBy:     actorId,
+    },
+    createdBy:        actorId,
+  });
+
   return { filePath, disbursement: row };
 }
 
@@ -229,7 +315,8 @@ export async function markDisbursementPaid(id: string, actorId: string): Promise
   const existing = await getDisbursement(id);
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
   if (existing.status !== 'file_generated') throw Object.assign(new Error('Only disbursements with a generated bank file can be marked paid.'), { status: 422 });
-  const { data, error } = await sb.from('finance_disbursements').update({ status: 'paid' }).eq('id', id).select().single<DbDisbursementRow>();
+  const paidMeta = { ...existing.metadata, paidAt: new Date().toISOString() };
+  const { data, error } = await sb.from('finance_disbursements').update({ status: 'paid', metadata: paidMeta }).eq('id', id).select().single<DbDisbursementRow>();
   if (error) throw Object.assign(new Error('markDisbursementPaid: ' + error.message), { status: 500 });
   const row = toDto(data);
   void emitAppEvent({ eventType: 'finance.disbursement.paid', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { totalAmount: existing.totalAmount, employeeCount: existing.employeeCount } });
@@ -402,4 +489,124 @@ export async function listDisbursementsReport(opts: { status?: DisbursementStatu
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('listDisbursementsReport: ' + error.message), { status: 500 });
   return ((data ?? []) as Array<{ id: string; disbursement_no: string; payroll_run_id: string; status: string; total_amount: number; employee_count: number; currency: string; created_at: string; }>).map(r => ({ id: r.id, disbursementNo: r.disbursement_no, payrollRunId: r.payroll_run_id, status: r.status, totalAmount: Number(r.total_amount), employeeCount: r.employee_count, currency: r.currency, createdAt: r.created_at }));
+}
+
+// ── Audit log query ──────────────────────────────────────────────────────────
+
+export interface DisbursementAuditEntry {
+  id: string;
+  actorId: string | null;
+  action: string;
+  previousState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export async function listDisbursementAuditLog(
+  disbursementId: string,
+): Promise<DisbursementAuditEntry[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id,actor_id,action,previous_state,new_state,reason,created_at')
+    .eq('submodule_key', 'finance_disbursements')
+    .eq('record_id', disbursementId)
+    .order('created_at', { ascending: true });
+  if (error) throw Object.assign(new Error('listDisbursementAuditLog: ' + error.message), { status: 500 });
+  return ((data ?? []) as Array<{
+    id: string; actor_id: string | null; action: string;
+    previous_state: Record<string, unknown> | null;
+    new_state: Record<string, unknown> | null;
+    reason: string | null; created_at: string;
+  }>).map(r => ({
+    id:            r.id,
+    actorId:       r.actor_id,
+    action:        r.action,
+    previousState: r.previous_state,
+    newState:      r.new_state,
+    reason:        r.reason,
+    createdAt:     r.created_at,
+  }));
+}
+
+// ── Bank-file status report ──────────────────────────────────────────────────
+
+export interface BankFileStatusRow {
+  id: string;
+  disbursementNo: string;
+  status: string;
+  totalAmount: number;
+  employeeCount: number;
+  currency: string;
+  bankFilePath: string;
+  fileGeneratedAt: string | null;
+  fileGeneratedBy: string | null;
+  createdAt: string;
+}
+
+/**
+ * Disbursements that have a bank file (status = file_generated | paid).
+ * Includes generated-by and generated-at from the metadata JSONB.
+ */
+export async function listBankFileStatusReport(): Promise<BankFileStatusRow[]> {
+  const { data, error } = await sb
+    .from('finance_disbursements')
+    .select('id,disbursement_no,status,total_amount,employee_count,currency,bank_file_path,metadata,created_at')
+    .not('bank_file_path', 'is', null)
+    .order('created_at', { ascending: false });
+  if (error) throw Object.assign(new Error('listBankFileStatusReport: ' + error.message), { status: 500 });
+  return ((data ?? []) as Array<{
+    id: string; disbursement_no: string; status: string; total_amount: number;
+    employee_count: number; currency: string; bank_file_path: string;
+    metadata: Record<string, unknown>; created_at: string;
+  }>).map(r => ({
+    id:              r.id,
+    disbursementNo:  r.disbursement_no,
+    status:          r.status,
+    totalAmount:     Number(r.total_amount),
+    employeeCount:   r.employee_count,
+    currency:        r.currency,
+    bankFilePath:    r.bank_file_path,
+    fileGeneratedAt: (r.metadata?.fileGeneratedAt as string) ?? null,
+    fileGeneratedBy: (r.metadata?.fileGeneratedBy as string) ?? null,
+    createdAt:       r.created_at,
+  }));
+}
+
+// ── Bank-account readiness report ────────────────────────────────────────────
+
+export interface BankAccountReadinessRow {
+  employeeId: string;
+  fullName: string | null;
+  email: string;
+  hasPrimaryBankAccount: boolean;
+}
+
+/**
+ * All active employees with a flag indicating whether they have an active
+ * primary bank account. Rows where hasPrimaryBankAccount = false block disbursement.
+ */
+export async function listBankAccountReadinessReport(): Promise<BankAccountReadinessRow[]> {
+  const [empRes, baRes] = await Promise.all([
+    sb.from('app_users')
+      .select('id,full_name,email')
+      .eq('role', 'employee')
+      .eq('status', 'active'),
+    sb.from('finance_employee_bank_accounts')
+      .select('employee_id')
+      .eq('is_primary', true)
+      .eq('is_active', true),
+  ]);
+  if (empRes.error) throw Object.assign(new Error('listBankAccountReadinessReport/emp: ' + empRes.error.message), { status: 500 });
+  if (baRes.error)  throw Object.assign(new Error('listBankAccountReadinessReport/ba: '  + baRes.error.message),  { status: 500 });
+
+  const empList = (empRes.data ?? []) as Array<{ id: string; full_name: string | null; email: string }>;
+  const baSet   = new Set((baRes.data  ?? []).map((r: { employee_id: string }) => r.employee_id));
+
+  return empList.map(e => ({
+    employeeId:           e.id,
+    fullName:             e.full_name,
+    email:                e.email,
+    hasPrimaryBankAccount: baSet.has(e.id),
+  }));
 }

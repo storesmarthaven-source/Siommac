@@ -10,6 +10,7 @@ import {
   generateBankFile, markDisbursementPaid, cancelDisbursement,
   listDisbursementLines, listDisbursementLinesDetail, listDisbursementsReport,
   getBankFileSignedUrl, getDisbursementKpis,
+  listDisbursementAuditLog, listBankFileStatusReport, listBankAccountReadinessReport,
   type DisbursementStatus,
 } from '../lib/finance/disbursements';
 import type { HonoVariables } from '../../../types/api';
@@ -79,14 +80,16 @@ router.post('/disbursements/create', async c => {
   const actor = await requirePermission(c, 'finance.disbursement.manage');
   const v = zv(c, z.object({
     payrollRunId: z.string().uuid(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
+    currency:     z.string().length(3).optional(),
+    metadata:     z.record(z.string(), z.unknown()).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await createDisbursement({
       payrollRunId: v.data.payrollRunId,
-      actorId: actor.id,
-      metadata: v.data.metadata,
+      actorId:      actor.id,
+      currency:     v.data.currency,
+      metadata:     v.data.metadata,
     });
     return c.json({ success: true, data });
   } catch (e) {
@@ -208,6 +211,41 @@ router.post('/disbursements/reports/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listDisbursementsReport(v.data as { status?: DisbursementStatus });
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/audit-log', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursementAuditLog(v.data.disbursementId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/reports/bank-file-status', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  try {
+    const data = await listBankFileStatusReport();
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+router.post('/disbursements/reports/bank-account-readiness', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  try {
+    const data = await listBankAccountReadinessReport();
     return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };

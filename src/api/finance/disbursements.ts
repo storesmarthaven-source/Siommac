@@ -81,6 +81,36 @@ export interface DisbursementReportRow {
   createdAt: string;
 }
 
+export interface DisbursementAuditEntry {
+  id: string;
+  actorId: string | null;
+  action: string;
+  previousState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface BankFileStatusRow {
+  id: string;
+  disbursementNo: string;
+  status: string;
+  totalAmount: number;
+  employeeCount: number;
+  currency: string;
+  bankFilePath: string;
+  fileGeneratedAt: string | null;
+  fileGeneratedBy: string | null;
+  createdAt: string;
+}
+
+export interface BankAccountReadinessRow {
+  employeeId: string;
+  fullName: string | null;
+  email: string;
+  hasPrimaryBankAccount: boolean;
+}
+
 async function call<T>(path: string, args: object = {}): Promise<T> {
   const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args as Record<string, unknown>);
   if (!res.success) throw new Error(res.message ?? `Request to ${path} failed.`);
@@ -97,7 +127,7 @@ export const financeDisbursementsApi = {
                     call<DisbursementLineDetail[]>('finance/disbursements/lines/list-detail', a),
   compute:        (a: { payrollRunId: string }) =>
                     call<ComputedDisbursement>('finance/disbursements/compute', a),
-  create:         (a: { payrollRunId: string; metadata?: Record<string, unknown> }) =>
+  create:         (a: { payrollRunId: string; currency?: string; metadata?: Record<string, unknown> }) =>
                     call<Disbursement>('finance/disbursements/create', a),
   submit:         (a: { id: string }) => call<Disbursement>('finance/disbursements/submit', a),
   approve:        (a: { id: string }) => call<Disbursement>('finance/disbursements/approve', a),
@@ -110,16 +140,25 @@ export const financeDisbursementsApi = {
   kpis:           () => call<DisbursementKpis>('finance/disbursements/kpis'),
   listReport:     (a: { status?: DisbursementStatus } = {}) =>
                     call<DisbursementReportRow[]>('finance/disbursements/reports/list', a),
+  auditLog:       (a: { disbursementId: string }) =>
+                    call<DisbursementAuditEntry[]>('finance/disbursements/audit-log', a),
+  bankFileStatusReport: () =>
+                    call<BankFileStatusRow[]>('finance/disbursements/reports/bank-file-status'),
+  bankAccountReadinessReport: () =>
+                    call<BankAccountReadinessRow[]>('finance/disbursements/reports/bank-account-readiness'),
 };
 
 export const financeDisbursementsKeys = {
-  list:        (opts: object = {}) => ['finance', 'disbursements', 'list', opts] as const,
-  single:      (id: string)        => ['finance', 'disbursements', 'single', id] as const,
-  lines:       (id: string)        => ['finance', 'disbursements', 'lines', id] as const,
-  linesDetail: (id: string)        => ['finance', 'disbursements', 'lines-detail', id] as const,
-  compute:     (runId: string)     => ['finance', 'disbursements', 'compute', runId] as const,
-  kpis:        ()                  => ['finance', 'disbursements', 'kpis'] as const,
-  report:      (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
+  list:                      (opts: object = {}) => ['finance', 'disbursements', 'list', opts] as const,
+  single:                    (id: string)        => ['finance', 'disbursements', 'single', id] as const,
+  lines:                     (id: string)        => ['finance', 'disbursements', 'lines', id] as const,
+  linesDetail:               (id: string)        => ['finance', 'disbursements', 'lines-detail', id] as const,
+  compute:                   (runId: string)     => ['finance', 'disbursements', 'compute', runId] as const,
+  kpis:                      ()                  => ['finance', 'disbursements', 'kpis'] as const,
+  report:                    (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
+  auditLog:                  (id: string)        => ['finance', 'disbursements', 'audit-log', id] as const,
+  bankFileStatusReport:      ()                  => ['finance', 'disbursements', 'report', 'bank-file-status'] as const,
+  bankAccountReadinessReport:()                  => ['finance', 'disbursements', 'report', 'bank-account-readiness'] as const,
 };
 
 export function useDisbursements(opts: { payrollRunId?: string; status?: DisbursementStatus } = {}) {
@@ -183,5 +222,27 @@ export function useDisbursementMutation<A, R>(fn: (a: A) => Promise<R>) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['finance', 'disbursements'] });
     },
+  });
+}
+
+export function useDisbursementAuditLog(disbursementId: string | null) {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.auditLog(disbursementId ?? ''),
+    queryFn:  () => financeDisbursementsApi.auditLog({ disbursementId: disbursementId! }),
+    enabled:  !!disbursementId,
+  });
+}
+
+export function useBankFileStatusReport() {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.bankFileStatusReport(),
+    queryFn:  financeDisbursementsApi.bankFileStatusReport,
+  });
+}
+
+export function useBankAccountReadinessReport() {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.bankAccountReadinessReport(),
+    queryFn:  financeDisbursementsApi.bankAccountReadinessReport,
   });
 }
