@@ -16,6 +16,7 @@ import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
 import {
   HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, InsightBanner, ActivityFeed,
   HrfinPill, HrfinTable, HrfinWizardModal, Drawer, exportCsv,
@@ -32,6 +33,8 @@ import {
 import {
   useNisProfiles, usePayrollMutation, financePayrollApi, type NisProfileRow,
 } from '@api/finance/payroll';
+import { useEmployeeNames } from '@api/finance/lookups';
+import { EmployeeCell, EmployeeCellResolved } from './_shared/EmployeeCell';
 import { fmtMoney, fmtPercent, fmtDate, humanize } from './financeShared';
 import { ReportPanel, type ReportColumn } from './_shared/reports';
 import './finance.css';
@@ -221,9 +224,9 @@ export function StatutoryConfigOverview(): VNode {
       {/* Main grid: register + rail */}
       <div class="hrfin-page-grid">
         <div class="hrfin-register">
-          {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} canManage={canManage} canApprove={canApprove} onOpenDrawer={setDrawerId} onNew={() => setShowWizard(true)} />}
-          {tab === 'nis'        && <NisClassesTab versions={versions} canManage={canManage} onAdd={v => setShowNisForm({ versionId: v })} onImport={setShowNisImport} />}
-          {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} canManage={canManage} onNew={() => setShowCompForm({})} onEdit={c => setShowCompForm({ edit: c })} />}
+          {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={setDrawerId} onNew={() => setShowWizard(true)} />}
+          {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setShowNisForm({ versionId: v })} onImport={setShowNisImport} />}
+          {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManage} onNew={() => setShowCompForm({})} onEdit={c => setShowCompForm({ edit: c })} />}
           {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
           {tab === 'reports'    && canView && <StatReportsTab />}
         </div>
@@ -311,9 +314,10 @@ export function StatutoryConfigOverview(): VNode {
 
 // ── Rate Versions tab ─────────────────────────────────────────────────────────
 
-function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, onNew }: {
+function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDrawer, onNew }: {
   versions: StatutoryVersion[];
   loading: boolean;
+  error?: string;
   canManage: boolean;
   canApprove: boolean;
   onOpenDrawer: (id: string) => void;
@@ -322,6 +326,8 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(0);
+  const [sortField, setSortField] = useState<string>('effectiveFrom');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
@@ -340,8 +346,14 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
       rows = rows.filter(v => v.label.toLowerCase().includes(q) || v.effectiveFrom.includes(q) || v.jurisdiction.toLowerCase().includes(q));
     }
     if (statusFilter !== 'all') rows = rows.filter(v => v.status === statusFilter);
+    // Apply sort
+    rows = [...rows].sort((a, b) => {
+      const aVal = String(a[sortField as keyof StatutoryVersion] ?? '');
+      const bVal = String(b[sortField as keyof StatutoryVersion] ?? '');
+      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
     return rows;
-  }, [versions, search, statusFilter]);
+  }, [versions, search, statusFilter, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -354,7 +366,7 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
 
   const columns: ReadonlyArray<HrfinColumn<StatutoryVersion>> = [
     {
-      key: 'label', label: 'Version',
+      key: 'label', label: 'Version', sortable: true,
       render: v => (
         <div>
           <div style={{ fontWeight: 600 }}>{v.label}</div>
@@ -363,7 +375,7 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
       ),
     },
     {
-      key: 'effectiveFrom', label: 'Effective',
+      key: 'effectiveFrom', label: 'Effective', sortable: true,
       render: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v.effectiveFrom)}</span>,
     },
     {
@@ -380,7 +392,7 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
       render: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(v.hsMonthlyThreshold)}/mo</span>,
     },
     {
-      key: 'status', label: 'Status',
+      key: 'status', label: 'Status', sortable: true,
       render: v => (
         <HrfinPill tone={statusTone(v.status)}>
           {v.isActive ? 'Active' : humanize(v.status)}
@@ -398,7 +410,7 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
     ...(canApprove && v.status === 'pending_approval' ? [
       { key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') },
       { key: 'reject',  label: 'Reject',  icon: 'close' as const, tone: 'danger' as const, onClick: async () => {
-        const reason = prompt('Rejection reason (required):');
+        const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
         if (!reason?.trim()) return;
         await run(rejectMut.mutateAsync({ id: v.id, reason }), 'Version returned to draft.');
       } },
@@ -447,6 +459,10 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
         onPage={setPage}
         noun="versions"
         loading={loading}
+        error={error}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
         emptyMessage="No statutory versions match the current filter."
       />
 
@@ -456,8 +472,9 @@ function VersionsTab({ versions, loading, canManage, canApprove, onOpenDrawer, o
 
 // ── NIS Classes tab ───────────────────────────────────────────────────────────
 
-function NisClassesTab({ versions, canManage, onAdd, onImport }: {
+function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: {
   versions: StatutoryVersion[];
+  versionsError?: string;
   canManage: boolean;
   onAdd: (versionId: string) => void;
   onImport: (versionId: string) => void;
@@ -472,7 +489,8 @@ function NisClassesTab({ versions, canManage, onAdd, onImport }: {
 
   const deleteMut = useStatutoryMutation(financeStatutoryApi.deleteNisClass);
   const handleDelete = async (id: string, classNo: number): Promise<void> => {
-    if (!confirm(`Delete NIS Class ${classNo}? This cannot be undone.`)) return;
+    const confirmed = await dialog.confirm({ title: `Delete NIS Class ${classNo}?`, text: 'This cannot be undone.', danger: true, confirmText: 'Delete' });
+    if (!confirmed) return;
     try { await deleteMut.mutateAsync({ id }); toast(`NIS Class ${classNo} deleted.`); }
     catch (e) { toast.error((e as Error).message); }
   };
@@ -528,6 +546,7 @@ function NisClassesTab({ versions, canManage, onAdd, onImport }: {
         onPage={setPage}
         noun="classes"
         loading={classesQ.isLoading}
+        error={versionsError ?? (classesQ.error ? String(classesQ.error) : undefined)}
         emptyMessage="No NIS classes for this version."
       />
     </div>
@@ -536,9 +555,10 @@ function NisClassesTab({ versions, canManage, onAdd, onImport }: {
 
 // ── Pay Components tab ────────────────────────────────────────────────────────
 
-function PayComponentsTab({ components, loading, canManage, onNew, onEdit }: {
+function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit }: {
   components: PayComponent[];
   loading: boolean;
+  error?: string;
   canManage: boolean;
   onNew: () => void;
   onEdit: (c: PayComponent) => void;
@@ -550,7 +570,8 @@ function PayComponentsTab({ components, loading, canManage, onNew, onEdit }: {
 
   const retireMut = useStatutoryMutation(financeStatutoryApi.retireComponent);
   const handleRetire = async (c: PayComponent): Promise<void> => {
-    if (!confirm(`Retire pay component "${c.name}" (${c.code})? It will no longer appear for new pay items.`)) return;
+    const confirmed = await dialog.confirm({ title: `Retire "${c.name}" (${c.code})?`, text: 'It will no longer appear for new pay items.', danger: true, confirmText: 'Retire' });
+    if (!confirmed) return;
     try { await retireMut.mutateAsync({ id: c.id }); toast('Component retired.'); }
     catch (e) { toast.error((e as Error).message); }
   };
@@ -622,6 +643,7 @@ function PayComponentsTab({ components, loading, canManage, onNew, onEdit }: {
         onPage={setPage}
         noun="components"
         loading={loading}
+        error={error}
         emptyMessage="No pay components match the current filter."
       />
     </div>
@@ -638,6 +660,13 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
 
   const profiles = profilesQ.data ?? [];
 
+  // Bulk-resolve employee IDs so table rows use EmployeeCellResolved (one API call).
+  const employeeIds = useMemo(
+    () => profiles.map(r => String(r['employeeId'] ?? r['employee_id'] ?? '')).filter(Boolean),
+    [profiles],
+  );
+  const { data: nameMap } = useEmployeeNames(employeeIds);
+
   const verify = async (r: NisProfileRow): Promise<void> => {
     const id = String(r['id'] ?? '');
     if (!id || !canVerify) return;
@@ -650,7 +679,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const reject = async (r: NisProfileRow): Promise<void> => {
     const id = String(r['id'] ?? '');
     if (!id || !canVerify) return;
-    const reason = prompt('Rejection reason (required):');
+    const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Finance cannot verify this profile. HR must correct and re-submit.', placeholder: 'Rejection reason (required)', confirmText: 'Return to HR' });
     if (!reason?.trim()) return;
     try {
       await rejectMut.mutateAsync({ id, reason });
@@ -664,10 +693,18 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   };
 
   const columns: ReadonlyArray<HrfinColumn<NisProfileRow>> = [
-    { key: 'employeeId',    label: 'Employee',        render: r => <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{val(r, 'employeeId') !== '—' ? val(r, 'employeeId') : val(r, 'employee_id')}</span> },
-    { key: 'nisNumber',     label: 'NIS #',           render: r => val(r, 'nisNumber') !== '—' ? val(r, 'nisNumber') : val(r, 'nis_number') },
-    { key: 'prevEmployer',  label: 'Previous Employer',render: r => val(r, 'previousEmployerName') !== '—' ? val(r, 'previousEmployerName') : val(r, 'previous_employer_name') },
-    { key: 'openingYtd',   label: 'Opening YTD (EE)', render: r => val(r, 'openingYtdNisEmployee') !== '—' ? val(r, 'openingYtdNisEmployee') : val(r, 'opening_ytd_nis_employee') },
+    {
+      key: 'employeeId', label: 'Employee',
+      render: r => {
+        const empId = val(r, 'employeeId') !== '—' ? val(r, 'employeeId') : val(r, 'employee_id');
+        return empId === '—'
+          ? <span style={{ opacity: 0.5 }}>—</span>
+          : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
+      },
+    },
+    { key: 'nisNumber',     label: 'NIS #',            render: r => val(r, 'nisNumber') !== '—' ? val(r, 'nisNumber') : val(r, 'nis_number') },
+    { key: 'prevEmployer',  label: 'Previous Employer', render: r => val(r, 'previousEmployerName') !== '—' ? val(r, 'previousEmployerName') : val(r, 'previous_employer_name') },
+    { key: 'openingYtd',   label: 'Opening YTD (EE)',  render: r => val(r, 'openingYtdNisEmployee') !== '—' ? val(r, 'openingYtdNisEmployee') : val(r, 'opening_ytd_nis_employee') },
     {
       key: 'status', label: 'Status',
       render: r => <HrfinPill tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</HrfinPill>,
@@ -697,6 +734,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       onPage={setPage}
       noun="profiles"
       loading={profilesQ.isLoading}
+      error={profilesQ.error ? String(profilesQ.error) : undefined}
       emptyMessage="No NIS continuity profiles are awaiting verification."
     />
   );
@@ -794,6 +832,18 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
   const componentsQ = usePayComponents({ isStatutory: true });
   const d = detailQ.data;
 
+  // Bulk-resolve actor IDs from the timeline for history/timeline/audit tabs.
+  const actorIds = useMemo(
+    () => [...new Set((d?.approvalTimeline ?? []).map(e => e.actorId).filter(Boolean))],
+    [d],
+  );
+  const approvedByIds = useMemo(
+    () => [...new Set([d?.approvedBy, d?.activatedBy, d?.retiredBy, d?.createdBy].filter((x): x is string => !!x))],
+    [d],
+  );
+  const allActorIds = useMemo(() => [...new Set([...actorIds, ...approvedByIds])], [actorIds, approvedByIds]);
+  const { data: nameMap } = useEmployeeNames(allActorIds);
+
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
   const retireMut   = useStatutoryMutation(financeStatutoryApi.retireVersion);
@@ -850,7 +900,7 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
               <div class="hrfin-metric-row"><span>Status</span><b>{humanize(d.status)}</b></div>
               <div class="hrfin-metric-row"><span>Active</span><b>{d.isActive ? 'Yes' : 'No'}</b></div>
               <div class="hrfin-metric-row"><span>Created</span><b>{fmtDate(d.createdAt)}</b></div>
-              {d.approvedBy && <div class="hrfin-metric-row"><span>Approved by</span><b style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.approvedBy}</b></div>}
+              {d.approvedBy && <div class="hrfin-metric-row"><span>Approved by</span><b><EmployeeCellResolved resolved={nameMap?.get(d.approvedBy)} fallbackId={d.approvedBy} /></b></div>}
               {d.activatedAt && <div class="hrfin-metric-row"><span>Activated</span><b>{fmtDate(d.activatedAt)}</b></div>}
               {d.retiredAt && <div class="hrfin-metric-row"><span>Retired</span><b>{fmtDate(d.retiredAt)}</b></div>}
             </div>
@@ -931,9 +981,21 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
                 <div class="hrfin-empty" style={{ marginTop: 16 }}>No payroll runs are linked to this version.</div>
               )}
               {d.linkedPayrollRunCount > 0 && (
-                <p style={{ fontSize: 13, opacity: 0.7, marginTop: 12 }}>
-                  {d.linkedPayrollRunCount} payroll run{d.linkedPayrollRunCount !== 1 ? 's' : ''} used this statutory version. View them in the Payroll module.
-                </p>
+                <div style={{ marginTop: 16 }}>
+                  <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 12px' }}>
+                    {d.linkedPayrollRunCount} payroll run{d.linkedPayrollRunCount !== 1 ? 's' : ''} used this statutory version. Open the Payroll module to drill into individual runs.
+                  </p>
+                  <button
+                    type="button"
+                    class="hrfin-action is-primary"
+                    onClick={() => {
+                      onClose();
+                      window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }));
+                    }}
+                  >
+                    Open Payroll module ▸
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -950,7 +1012,7 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
                       <div key={e.id} class="hrfin-metric-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
                         <b>{humanize(e.action)}</b>
                         <span style={{ fontSize: 12, opacity: 0.7 }}>
-                          {fmtDate(e.createdAt)} · by <code style={{ fontSize: 11 }}>{e.actorId}</code>
+                          {fmtDate(e.createdAt)} · by <EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} />
                           {e.reason && <> · {e.reason}</>}
                         </span>
                       </div>
@@ -972,7 +1034,7 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
                       <span><svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.5}><circle cx="12" cy="12" r="4" /></svg></span>
                       <div>
                         <b>{humanize(e.action)}</b>
-                        <small>{fmtDate(e.createdAt)} · {e.actorId}{e.reason ? ` · ${e.reason}` : ''}</small>
+                        <small>{fmtDate(e.createdAt)} · <EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} />{e.reason ? ` · ${e.reason}` : ''}</small>
                       </div>
                     </li>
                   ))}
@@ -996,7 +1058,7 @@ function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNis
                     <tbody>{d.approvalTimeline.map(e => (
                       <tr key={e.id}>
                         <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>{e.action}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)', fontFamily: 'monospace' }}>{e.actorId}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}><EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} /></td>
                         <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>{fmtDate(e.createdAt)}</td>
                         <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)', opacity: 0.7 }}>{e.reason ?? '—'}</td>
                       </tr>
