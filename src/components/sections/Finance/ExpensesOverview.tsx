@@ -1,437 +1,538 @@
 /**
  * src/components/sections/Finance/ExpensesOverview.tsx
  *
- * Finance -- Expense Claims (nav id `s-finance-expenses`).
- * Surfaces: Claims register - Create new claim - Reports.
+ * Finance — Expense Claims (nav id `s-finance-expenses`). Aurora rebuild (Wave 2B).
  *
- * Lifecycle: draft -> submitted -> approved -> reimbursed (also rejectable/cancellable).
- * SoD: claimant != approver (enforced server-side).
- * Allocation lines must sum to the claim total (enforced server-side).
+ * Layout:
+ *   HrfinPageHeader (Expenses · Open / Pending chips)
+ *   QuickActionStrip (New Claim, Export CSV)
+ *   6 KpiCards (Open, Pending approval, Reimbursable, Reimbursed MTD, Exceptions, Missing receipts)
+ *   TrendArea (monthly spend — last 12 months)
+ *   HrfinTable — tabs: Claims · Reports
+ *     Claims: search + status/category filters, row actions (View, Submit, Approve, Reject, Cancel)
+ *     Reports: ReportPanel for 4 report types
+ *
+ * Drawer: ExpClaimDrawer (8-tab detail + lifecycle actions)
+ * Wizard: ExpNewClaimWizard (5-step)
+ *
+ * No legacy classes (fin-page, hr-offboarding, obx-*). Pure .hrfin shell.
+ * SoD enforcement is server-side; this page surfaces success/error toasts.
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
+import { useState, useMemo, useCallback } from 'preact/hooks';
+import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, EmptyState } from '@ui';
+import {
+  HrfinPageHeader,
+  QuickActionStrip,
+  KpiCard,
+  HrfinTable,
+  TrendArea,
+  HrfinPill,
+  type HrfinTone,
+  type HrfinColumn,
+  type HrfinTab,
+  type RowActionItem,
+} from '@ui';
 import {
   useExpenseClaims,
+  useExpenseTrend,
   useExpenseMutation,
   financeExpensesApi,
   type ExpenseClaim,
-  type ExpenseCategory,
-  type AllocationLine,
+  type ExpenseStatus,
+  type ExpenseReportType,
 } from '@api/finance/expenses';
-import { fmtMoney, fmtDate, humanize, statusTone } from './financeShared';
-import { openActionModal, cancelAction, toActionRecord, statusBadge } from '@/components/common/actions';
-import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
-import './finance.css';
+import { useEmployeeNames } from '@api/finance/lookups';
+import { EmployeeCellResolved } from './_shared/EmployeeCell';
+import { ReportPanel, type ReportDescriptor, type ReportColumn } from './_shared/reports';
+import { ExpClaimDrawer, type ExpClaimDrawerActions } from './ExpClaimDrawer';
+import { ExpNewClaimWizard } from './ExpNewClaimWizard';
+import { fmtMoney, fmtDate, humanize } from './financeShared';
+import { moneyCompact } from './hrfinFormat';
+import { exportCsv } from '@ui/lib/exportCsv';
 
-type Surface = 'register' | 'create' | 'reports';
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const SURFACES: { id: Surface; label: string }[] = [
-  { id: 'register', label: 'Claims' },
-  { id: 'create',   label: 'New Claim' },
-  { id: 'reports',  label: 'Reports' },
+type MainTab = 'claims' | 'reports';
+
+// ── Status pill helper ────────────────────────────────────────────────────────
+
+function statusTone(s: string): HrfinTone {
+  switch (s) {
+    case 'approved':   return 'ok';
+    case 'submitted':  return 'wn';
+    case 'reimbursed': return 'nu';
+    case 'rejected':   return 'bad';
+    case 'cancelled':  return 'bad';
+    default:           return 'dr';
+  }
+}
+
+// ── Report definitions ────────────────────────────────────────────────────────
+
+const REPORTS: ReportDescriptor[] = [
+  { key: 'expense_claim_summary',    label: 'Claim Summary',          description: 'All expense claims with status and amounts.' },
+  { key: 'expense_policy_exceptions', label: 'Policy Exceptions',     description: 'Claims with policy violations.' },
+  { key: 'reimbursement_summary',    label: 'Reimbursement Summary',  description: 'Approved reimbursements by period.' },
+  { key: 'missing_receipts',         label: 'Missing Receipts',       description: 'Claims submitted without receipts.' },
 ];
 
-const CATEGORIES: { value: ExpenseCategory; label: string }[] = [
-  { value: 'travel',            label: 'Travel' },
-  { value: 'accommodation',     label: 'Accommodation' },
-  { value: 'meals',             label: 'Meals' },
-  { value: 'equipment',         label: 'Equipment' },
-  { value: 'supplies',          label: 'Supplies' },
+const REPORT_COLUMNS: ReportColumn[] = [
+  { header: 'Claim No',       key: 'claimNo' },
+  { header: 'Title',          key: 'title' },
+  { header: 'Category',       key: 'category' },
+  { header: 'Date',           key: 'expenseDate',  format: 'date' },
+  { header: 'Total',          key: 'totalAmount',  format: 'currency' },
+  { header: 'Status',         key: 'status' },
+  { header: 'Reimbursable',   key: 'reimbursable' },
+  { header: 'Reimbursed At',  key: 'reimbursedAt', format: 'date' },
+];
+
+// ── CSV export helper ─────────────────────────────────────────────────────────
+
+function exportClaimsCsv(rows: ExpenseClaim[]): void {
+  exportCsv(rows, [
+    { header: 'Claim No',      value: r => r.claimNo },
+    { header: 'Title',         value: r => r.title },
+    { header: 'Category',      value: r => humanize(r.category) },
+    { header: 'Expense Date',  value: r => r.expenseDate },
+    { header: 'Total',         value: r => r.totalAmount },
+    { header: 'Currency',      value: r => r.currency },
+    { header: 'Status',        value: r => r.status },
+    { header: 'Reimbursable',  value: r => r.reimbursable ? 'Yes' : 'No' },
+    { header: 'Reimbursed At', value: r => r.reimbursedAt ?? '' },
+  ], 'expense-claims');
+}
+
+// ── Page constants ────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 20;
+
+const MAIN_TABS: HrfinTab[] = [
+  { key: 'claims',  label: 'Claims'  },
+  { key: 'reports', label: 'Reports' },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: '',                 label: 'All categories' },
+  { value: 'travel',           label: 'Travel' },
+  { value: 'accommodation',    label: 'Accommodation' },
+  { value: 'meals',            label: 'Meals' },
+  { value: 'equipment',        label: 'Equipment' },
+  { value: 'supplies',         label: 'Supplies' },
   { value: 'professional_fees', label: 'Professional Fees' },
-  { value: 'utilities',         label: 'Utilities' },
-  { value: 'other',             label: 'Other' },
+  { value: 'utilities',        label: 'Utilities' },
+  { value: 'other',            label: 'Other' },
 ];
 
-function categoryLabel(c: string): string {
-  return CATEGORIES.find(x => x.value === c)?.label ?? humanize(c);
-}
+const STATUS_OPTIONS: { value: ExpenseStatus | ''; label: string }[] = [
+  { value: '',           label: 'All statuses' },
+  { value: 'draft',      label: 'Draft' },
+  { value: 'submitted',  label: 'Submitted' },
+  { value: 'approved',   label: 'Approved' },
+  { value: 'rejected',   label: 'Rejected' },
+  { value: 'reimbursed', label: 'Reimbursed' },
+  { value: 'cancelled',  label: 'Cancelled' },
+];
 
-function claimRecord(r: ExpenseClaim) {
-  return toActionRecord({
-    title:    r.claimNo,
-    subtitle: `${categoryLabel(r.category)} -- ${r.title}`,
-    icon:     'fa-receipt',
-    badges:   [statusBadge(r.status)],
-    fields: [
-      { label: 'Total', value: fmtMoney(r.totalAmount) },
-      { label: 'Date',  value: fmtDate(r.expenseDate) },
-    ],
-  });
-}
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ExpensesOverview(): VNode {
-  const [surface, setSurface] = useState<Surface>('register');
-
-  const claimsQ = useExpenseClaims();
-  const claims = claimsQ.data ?? [];
-
-  const total          = claims.length;
-  const pendingApproval = claims.filter(r => r.status === 'submitted').length;
-  const approved       = claims.filter(r => r.status === 'approved').length;
-  const pendingAmount  = claims
-    .filter(r => ['submitted', 'approved'].includes(r.status))
-    .reduce((s, r) => s + r.totalAmount, 0);
-
+  // Permissions
+  const canView    = can('finance.expenses.view');
+  const canSubmit  = can('finance.expenses.submit');
   const canManage  = can('finance.expenses.manage');
   const canApprove = can('finance.expenses.approve');
 
-  const STAT_ROW = [
-    { label: 'Total claims',      val: total },
-    { label: 'Pending approval',  val: pendingApproval },
-    { label: 'Approved',          val: approved },
-    { label: 'Pending amount',    val: fmtMoney(pendingAmount) },
+  // Tab state
+  const [mainTab, setMainTab] = useState<MainTab>('claims');
+
+  // Filter state
+  const [search,   setSearch]   = useState('');
+  const [statusF,  setStatusF]  = useState<ExpenseStatus | ''>('');
+  const [categoryF, setCategoryF] = useState('');
+  const [page,     setPage]     = useState(0);
+
+  // Filter panel
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Drawer
+  const [drawerClaimId, setDrawerClaimId] = useState<string | null>(null);
+  const [drawerOpen,    setDrawerOpen]    = useState(false);
+
+  // Wizard
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  // Report state
+  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [reportResult,   setReportResult]   = useState<{ report: string; generatedAt: string; rows: Record<string, unknown>[] } | null>(null);
+  const [reportLoading,  setReportLoading]  = useState(false);
+  const [reportError,    setReportError]    = useState<string | null>(null);
+
+  // ── Data queries ────────────────────────────────────────────────────────────
+
+  const claimsQ = useExpenseClaims({
+    search:   search || undefined,
+    status:   statusF   || undefined,
+    category: categoryF || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  const trendQ = useExpenseTrend();
+
+  const claims    = claimsQ.data?.data ?? [];
+  const total     = claimsQ.data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Batch-resolve employee IDs for the table
+  const allClaimantIds = useMemo(() => [...new Set(claims.map(c => c.claimantId).filter(Boolean))], [claims]);
+  const { data: nameMap } = useEmployeeNames(allClaimantIds);
+
+  // KPI derivations (from current page data — a real KPI endpoint would be better but reuse list for now)
+  const openCount       = useMemo(() => claims.filter(c => c.status === 'draft').length, [claims]);
+  const pendingCount    = useMemo(() => claims.filter(c => c.status === 'submitted').length, [claims]);
+  const reimbursableAmt = useMemo(() => claims.filter(c => c.status === 'approved' && c.reimbursable).reduce((s, c) => s + c.totalAmount, 0), [claims]);
+  const reimbursedMTD   = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    return claims.filter(c => c.status === 'reimbursed' && (c.reimbursedAt ?? '') >= monthStart).reduce((s, c) => s + c.totalAmount, 0);
+  }, [claims]);
+
+  // Trend chart data
+  const trendLabels  = useMemo(() => (trendQ.data ?? []).map(p => p.month.slice(0, 7)), [trendQ.data]);
+  const trendSeriesA = useMemo(() => (trendQ.data ?? []).map(p => p.amount),            [trendQ.data]);
+
+  // ── Mutations ───────────────────────────────────────────────────────────────
+
+  const submitMutation  = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const approveMutation = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
+  const rejectMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.reject({ id, reason }));
+  const cancelMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.cancel({ id, reason }));
+
+  // ── Row actions ─────────────────────────────────────────────────────────────
+
+  const rowActions = useCallback((c: ExpenseClaim): RowActionItem[] => {
+    const items: RowActionItem[] = [
+      {
+        key: 'view', label: 'View details', icon: 'file',
+        onClick: () => { setDrawerClaimId(c.id); setDrawerOpen(true); },
+      },
+    ];
+    if (c.status === 'draft' && (canManage || canSubmit)) {
+      items.push({
+        key: 'submit', label: 'Submit for approval', icon: 'send',
+        onClick: async () => {
+          try { await submitMutation.mutateAsync(c.id); toast.success('Claim submitted.'); }
+          catch (e) { toast.error((e as Error).message); }
+        },
+      });
+    }
+    if (c.status === 'submitted' && canApprove) {
+      items.push({
+        key: 'approve', label: 'Approve', icon: 'check',
+        onClick: async () => {
+          try { await approveMutation.mutateAsync(c.id); toast.success('Claim approved.'); }
+          catch (e) { toast.error((e as Error).message); }
+        },
+      });
+      items.push({
+        key: 'reject', label: 'Reject', icon: 'close', tone: 'danger' as const,
+        onClick: async () => {
+          const reason = prompt('Rejection reason:');
+          if (!reason?.trim()) return;
+          try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
+          catch (e) { toast.error((e as Error).message); }
+        },
+      });
+    }
+    if (!['reimbursed', 'rejected', 'cancelled'].includes(c.status) && (canManage || canSubmit)) {
+      items.push({
+        key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger' as const,
+        onClick: async () => {
+          const reason = prompt('Cancellation reason:');
+          if (!reason?.trim()) return;
+          try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
+          catch (e) { toast.error((e as Error).message); }
+        },
+      });
+    }
+    return items;
+  }, [canManage, canSubmit, canApprove, submitMutation, approveMutation, rejectMutation, cancelMutation]);
+
+  // ── Drawer actions ──────────────────────────────────────────────────────────
+
+  const drawerActions: ExpClaimDrawerActions = {
+    onSubmit:  async (c) => {
+      try { await submitMutation.mutateAsync(c.id); toast.success('Claim submitted.'); }
+      catch (e) { toast.error((e as Error).message); }
+    },
+    onApprove: async (c) => {
+      try { await approveMutation.mutateAsync(c.id); toast.success('Claim approved.'); }
+      catch (e) { toast.error((e as Error).message); }
+    },
+    onReject:  async (c) => {
+      const reason = prompt('Rejection reason:');
+      if (!reason?.trim()) return;
+      try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
+      catch (e) { toast.error((e as Error).message); }
+    },
+    onCancel:  async (c) => {
+      const reason = prompt('Cancellation reason:');
+      if (!reason?.trim()) return;
+      try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
+      catch (e) { toast.error((e as Error).message); }
+    },
+  };
+
+  // ── Table columns ───────────────────────────────────────────────────────────
+
+  const columns: ReadonlyArray<HrfinColumn<ExpenseClaim>> = [
+    {
+      key: 'claimNo', label: 'Claim No',
+      render: c => <b style={{ fontFamily: 'monospace', fontSize: 13 }}>{c.claimNo}</b>,
+    },
+    {
+      key: 'title', label: 'Title',
+      render: c => <span>{c.title}</span>,
+    },
+    {
+      key: 'claimant', label: 'Claimant',
+      render: c => <EmployeeCellResolved resolved={nameMap?.get(c.claimantId)} fallbackId={c.claimantId} />,
+    },
+    {
+      key: 'category', label: 'Category',
+      render: c => <span>{humanize(c.category)}</span>,
+    },
+    {
+      key: 'expenseDate', label: 'Date',
+      render: c => <span class="hse-muted">{fmtDate(c.expenseDate)}</span>,
+    },
+    {
+      key: 'totalAmount', label: 'Amount',
+      render: c => <b style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.totalAmount)}</b>,
+    },
+    {
+      key: 'status', label: 'Status',
+      render: c => <HrfinPill tone={statusTone(c.status)}>{humanize(c.status)}</HrfinPill>,
+    },
+    {
+      key: 'reimbursable', label: 'Reimbursable',
+      render: c => <span class="hse-muted">{c.reimbursable ? 'Yes' : 'No'}</span>,
+    },
   ];
 
+  // ── Report fetch ────────────────────────────────────────────────────────────
+
+  async function runReport(key: string): Promise<void> {
+    setReportLoading(true);
+    setReportError(null);
+    setReportResult(null);
+    try {
+      const result = await financeExpensesApi.runReport({
+        report: key as ExpenseReportType,
+      });
+      setReportResult(result);
+    } catch (e) {
+      setReportError((e as Error).message ?? 'Report failed.');
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  function handleSelectReport(key: string): void {
+    setSelectedReport(key);
+    void runReport(key);
+  }
+
+  // ── Chips for page header ───────────────────────────────────────────────────
+
+  const chips = [
+    ...(pendingCount > 0 ? [{ label: `${pendingCount} pending`, tone: 'warning' as const }] : []),
+    ...(openCount    > 0 ? [{ label: `${openCount} open` }] : []),
+  ];
+
+  // ── Guard ────────────────────────────────────────────────────────────────────
+
+  if (!canView) {
+    return (
+      <div class="hrfin" style={{ padding: 32 }}>
+        <p class="hse-muted">You do not have permission to view expense claims.</p>
+      </div>
+    );
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   return (
-    <div class="hr-offboarding fin-page">
-      <PageHeader
-        icon="fa-receipt"
-        module="Finance -- Expenses"
+    <div class="hrfin">
+      {/* Page header */}
+      <HrfinPageHeader
+        icon="file"
         title="Expense Claims"
-        sub="Employee expense claims with cost-centre allocation, approval workflow, and reimbursement tracking."
+        sub="Submit, review and reimburse employee expense claims"
+        chips={chips}
       />
 
-      <div class="obx-repstats" style={{ margin: '4px 0 12px' }}>
-        {STAT_ROW.map(s => (
-          <div class="obx-repstat" key={s.label}>
-            <div class="obx-repstat-val">{s.val}</div>
-            <div class="obx-repstat-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
+      {/* Quick actions */}
+      <QuickActionStrip
+        actions={[
+          ...(canSubmit || canManage ? [{
+            key: 'new',
+            label: 'New Claim',
+            icon: 'plus' as const,
+            variant: 'primary' as const,
+            onClick: () => setWizardOpen(true),
+          }] : []),
+          {
+            key: 'export',
+            label: 'Export CSV',
+            icon: 'download' as const,
+            onClick: () => exportClaimsCsv(claims),
+          },
+        ]}
+      />
 
-      <div class="obx-viewswitch" style={{ display: 'flex', gap: 8, margin: '10px 0', flexWrap: 'wrap' }}>
-        {SURFACES.map(s => (
-          <button key={s.id} class={`obx-view-btn${surface === s.id ? ' active' : ''}`} onClick={() => setSurface(s.id)}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      {surface === 'register' && (
-        <RegisterSurface
-          claims={claims}
+      {/* KPI strip */}
+      <section class="hrfin-kpi-row">
+        <KpiCard
+          label="Open claims"
+          value={String(total)}
+          visual="none"
           loading={claimsQ.isLoading}
-          canManage={canManage}
-          canApprove={canApprove}
+        />
+        <KpiCard
+          label="Pending approval"
+          value={String(pendingCount)}
+          tone={pendingCount > 0 ? 'danger' : 'accent'}
+          visual="none"
+          loading={claimsQ.isLoading}
+        />
+        <KpiCard
+          label="Reimbursable"
+          value={moneyCompact(reimbursableAmt)}
+          visual="none"
+          loading={claimsQ.isLoading}
+        />
+        <KpiCard
+          label="Reimbursed MTD"
+          value={moneyCompact(reimbursedMTD)}
+          tone="success"
+          visual="none"
+          loading={claimsQ.isLoading}
+        />
+        <KpiCard
+          label="Policy exceptions"
+          value="—"
+          visual="none"
+          loading={claimsQ.isLoading}
+        />
+        <KpiCard
+          label="Missing receipts"
+          value="—"
+          visual="none"
+          loading={claimsQ.isLoading}
+        />
+      </section>
+
+      {/* Trend chart */}
+      {!trendQ.isLoading && trendSeriesA.length > 0 && (
+        <section class="hrfin-trend-row">
+          <TrendArea
+            title="Monthly Spend"
+            labels={trendLabels}
+            seriesA={trendSeriesA}
+            seriesALabel="Spend"
+          />
+        </section>
+      )}
+
+      {/* Filter panel (category + status) */}
+      {filterOpen && (
+        <div class="hrfin-filter-panel" style={{ display: 'flex', gap: 12, padding: '12px 0', flexWrap: 'wrap', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            Status:
+            <select class="hrfin-input" value={statusF} onChange={e => { setStatusF((e.target as HTMLSelectElement).value as ExpenseStatus | ''); setPage(0); }} style={{ minWidth: 140 }}>
+              {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            Category:
+            <select class="hrfin-input" value={categoryF} onChange={e => { setCategoryF((e.target as HTMLSelectElement).value); setPage(0); }} style={{ minWidth: 160 }}>
+              {CATEGORY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+          <button type="button" class="hrfin-action" onClick={() => { setStatusF(''); setCategoryF(''); setSearch(''); setPage(0); }}>Clear</button>
+        </div>
+      )}
+
+      {/* Main table */}
+      <HrfinTable
+        tabs={MAIN_TABS}
+        activeTab={mainTab}
+        onTab={k => setMainTab(k as MainTab)}
+        searchValue={search}
+        onSearch={v => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Search claims…"
+        filters={[
+          { label: 'Filters', icon: 'filter', onClick: () => setFilterOpen(f => !f) },
+        ]}
+        columns={mainTab === 'claims' ? columns : [
+          { key: 'report', label: 'Reports', render: () => null },
+        ]}
+        rows={mainTab === 'claims' ? claims : []}
+        rowKey={c => c.id}
+        onRowClick={mainTab === 'claims' ? (c) => { setDrawerClaimId(c.id); setDrawerOpen(true); } : undefined}
+        rowActions={mainTab === 'claims' ? rowActions : undefined}
+        page={page}
+        pageCount={pageCount}
+        total={mainTab === 'claims' ? total : 0}
+        pageSize={PAGE_SIZE}
+        onPage={setPage}
+        noun="claims"
+        loading={claimsQ.isLoading && !claimsQ.data}
+        emptyMessage="No expense claims found."
+      />
+
+      {/* Reports tab (rendered below the table when active) */}
+      {mainTab === 'reports' && (
+        <ReportPanel
+          reports={REPORTS}
+          selectedReport={selectedReport}
+          onSelectReport={handleSelectReport}
+          result={reportResult}
+          columns={REPORT_COLUMNS}
+          exportFilename="expense-report"
+          loading={reportLoading}
+          error={reportError}
         />
       )}
-      {surface === 'create'  && <CreateSurface canManage={canManage} />}
-      {surface === 'reports' && <ReportsSurface />}
+
+      {/* Drawer */}
+      <ExpClaimDrawer
+        claimId={drawerClaimId}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        canManage={canManage}
+        canApprove={canApprove}
+        actions={drawerActions}
+        onReimbursed={() => {
+          void claimsQ.refetch();
+        }}
+      />
+
+      {/* New claim wizard */}
+      <ExpNewClaimWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={(id) => {
+          setWizardOpen(false);
+          setDrawerClaimId(id);
+          setDrawerOpen(true);
+        }}
+      />
     </div>
-  );
-}
-
-// -- Register -----------------------------------------------------------------
-
-function RegisterSurface({ claims, loading, canManage, canApprove }: {
-  claims: ExpenseClaim[];
-  loading: boolean;
-  canManage: boolean;
-  canApprove: boolean;
-}): VNode {
-  const submitMut        = useExpenseMutation(financeExpensesApi.submit);
-  const approveMut       = useExpenseMutation(financeExpensesApi.approve);
-  const rejectMut        = useExpenseMutation(financeExpensesApi.reject);
-  const markReimbMut     = useExpenseMutation(financeExpensesApi.markReimbursed);
-  const cancelMut        = useExpenseMutation(financeExpensesApi.cancel);
-
-  const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
-    try { await p; dialog.success(ok); }
-    catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
-  };
-
-  return (
-    <div class="obx-section"><div class="obx-section-body">
-      {loading ? <div class="obx-empty">Loading...</div>
-        : !claims.length ? (
-          <EmptyState
-            icon="fa-receipt"
-            title="No expense claims yet"
-            text="Use New Claim to submit an expense claim for approval."
-          />
-        ) : (
-          <table class="obx-table">
-            <thead><tr>
-              <th>Ref</th><th>Title</th><th>Category</th><th>Date</th>
-              <th>Total</th><th>Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr></thead>
-            <tbody>{claims.map(r => (
-              <tr key={r.id}>
-                <td><b>{r.claimNo}</b></td>
-                <td>{r.title}</td>
-                <td class="obx-meta">{categoryLabel(r.category)}</td>
-                <td class="obx-meta">{fmtDate(r.expenseDate)}</td>
-                <td><b>{fmtMoney(r.totalAmount)}</b></td>
-                <td><span class={`obx-pill ${statusTone(r.status)}`}>{humanize(r.status)}</span></td>
-                <td style={{ textAlign: 'right' }}>
-                  <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
-                    {canManage && r.status === 'draft' && (
-                      <>
-                        <button class="obx-btn obx-btn-sm" onClick={() => run(submitMut.mutateAsync({ id: r.id }), 'Submitted for approval.')}>Submit</button>
-                        <button class="obx-btn obx-btn-sm" onClick={async () => {
-                          const res = await openActionModal(cancelAction({
-                            noun: 'expense claim',
-                            record: claimRecord(r),
-                            whatNext: ['The claim is cancelled and no longer tracked.'],
-                          }));
-                          if (!res.confirmed) return;
-                          await run(cancelMut.mutateAsync({ id: r.id, reason: res.reason || 'Cancelled.' }), 'Cancelled.');
-                        }}>Cancel</button>
-                      </>
-                    )}
-                    {canApprove && r.status === 'submitted' && (
-                      <>
-                        <button class="obx-btn obx-btn-sm" onClick={() => run(approveMut.mutateAsync({ id: r.id }), 'Approved.')}>Approve</button>
-                        <button class="obx-btn obx-btn-sm" onClick={async () => {
-                          const res = await openActionModal({
-                            title:        'Reject Expense Claim',
-                            icon:         'fa-xmark-circle',
-                            tone:         'danger',
-                            record:       claimRecord(r),
-                            confirmLabel: 'Reject',
-                            reason: { required: true },
-                            whatNext:     ['The claimant is notified. They may revise and resubmit.'],
-                          });
-                          if (!res.confirmed) return;
-                          await run(rejectMut.mutateAsync({ id: r.id, reason: res.reason || 'Rejected.' }), 'Rejected.');
-                        }}>Reject</button>
-                      </>
-                    )}
-                    {canApprove && r.status === 'approved' && (
-                      <button class="obx-btn obx-btn-sm" onClick={async () => {
-                        const res = await openActionModal({
-                          title:        'Mark Reimbursed',
-                          icon:         'fa-money-bill-transfer',
-                          tone:         'success',
-                          record:       claimRecord(r),
-                          confirmLabel: 'Mark Reimbursed',
-                          whatNext:     ['Records the reimbursement. Cost entries are closed.'],
-                        });
-                        if (!res.confirmed) return;
-                        await run(markReimbMut.mutateAsync({ id: r.id }), 'Marked as reimbursed.');
-                      }}>Mark Reimbursed</button>
-                    )}
-                    {r.reimbursedAt && <span class="obx-meta" style={{ marginLeft: 4 }}>Reimbursed {fmtDate(r.reimbursedAt)}</span>}
-                  </div>
-                </td>
-              </tr>
-            ))}</tbody>
-          </table>
-        )}
-    </div></div>
-  );
-}
-
-// -- Create -------------------------------------------------------------------
-
-function CreateSurface({ canManage }: { canManage: boolean }): VNode {
-  const [showForm, setShowForm]   = useState(false);
-  const [title, setTitle]         = useState('');
-  const [expenseDate, setDate]    = useState(new Date().toISOString().slice(0, 10));
-  const [category, setCategory]   = useState<ExpenseCategory>('travel');
-  const [totalAmount, setTotal]   = useState('');
-  const [reimbursable, setReimb]  = useState(true);
-  const [lines, setLines]         = useState<Array<{ costCenterId: string; amount: string; description: string }>>([
-    { costCenterId: '', amount: '', description: '' },
-  ]);
-
-  const createMut = useExpenseMutation(financeExpensesApi.create);
-
-  const lineSum  = lines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
-  const total    = parseFloat(totalAmount) || 0;
-  const sumOk    = Math.abs(lineSum - total) <= 0.01;
-  const formOk   = title.trim() && total > 0 && lines.every(l => l.costCenterId && parseFloat(l.amount) > 0) && sumOk;
-
-  const addLine    = (): void => setLines(ls => [...ls, { costCenterId: '', amount: '', description: '' }]);
-  const removeLine = (i: number): void => setLines(ls => ls.filter((_, j) => j !== i));
-  const updateLine = (i: number, k: keyof typeof lines[0], v: string): void =>
-    setLines(ls => ls.map((l, j) => j === i ? { ...l, [k]: v } : l));
-
-  const reset = (): void => {
-    setTitle(''); setDate(new Date().toISOString().slice(0, 10));
-    setCategory('travel'); setTotal(''); setReimb(true);
-    setLines([{ costCenterId: '', amount: '', description: '' }]);
-    setShowForm(false);
-  };
-
-  const create = async (): Promise<void> => {
-    if (!formOk) { dialog.error('Please fill all required fields. Allocation lines must sum to the total.'); return; }
-    try {
-      await createMut.mutateAsync({
-        claimantId:      'self',   // server resolves actorId; UI uses actor.id server-side
-        title:           title.trim(),
-        expenseDate,
-        category,
-        totalAmount:     total,
-        reimbursable,
-        allocationLines: lines.map(l => ({
-          costCenterId: l.costCenterId,
-          amount:       parseFloat(l.amount),
-          description:  l.description || undefined,
-        })),
-      });
-      dialog.success('Expense claim created as draft.');
-      reset();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create expense claim.'); }
-  };
-
-  const context: DialogContextPanelConfig = {
-    eyebrow: 'Finance -- Expenses', title: 'Claim Summary', description: 'Review before submitting.',
-    preview: {
-      icon: 'EXP', title: title || 'New Expense Claim',
-      subtitle: categoryLabel(category),
-      badges: [{ label: 'Draft', tone: 'muted' }],
-    },
-    metrics: [
-      { label: 'Total amount', value: total ? fmtMoney(total) : '--', tone: 'info' },
-      { label: 'Line sum',     value: lineSum ? fmtMoney(lineSum) : '--', tone: sumOk ? 'success' : 'danger' },
-      { label: 'Lines',        value: String(lines.length), tone: 'default' },
-    ],
-    validation: [
-      ...(!title.trim()    ? [{ message: 'Title is required.', tone: 'danger' as const }] : []),
-      ...(!(total > 0)     ? [{ message: 'Total amount must be positive.', tone: 'danger' as const }] : []),
-      ...(!sumOk && total > 0 ? [{ message: `Lines sum ${fmtMoney(lineSum)} does not equal total ${fmtMoney(total)}.`, tone: 'danger' as const }] : []),
-    ],
-    approval: { required: true, risk: 'low', message: 'Created as draft -- submit for approval; a different finance_manager approves (SoD).' },
-    whatNext: [
-      { label: 'Submit', description: 'Submit the draft for manager approval.' },
-      { label: 'Approve', description: 'A different approver reviews and approves.' },
-      { label: 'Reimburse', description: 'Finance marks as reimbursed once payment is made.' },
-    ],
-  };
-
-  return (
-    <div class="obx-section"><div class="obx-section-body">
-      {!canManage ? (
-        <EmptyState icon="fa-lock" title="Permission required" text="You need finance.expenses.manage to create expense claims." />
-      ) : (
-        <>
-          <div class="obx-toolbar" style={{ marginBottom: 10 }}>
-            <button class="obx-btn" onClick={() => setShowForm(v => !v)}>
-              <i class={`fas ${showForm ? 'fa-xmark' : 'fa-plus'}`} />
-              {showForm ? ' Cancel' : ' New Expense Claim'}
-            </button>
-          </div>
-
-          {showForm && (
-            <EnterpriseFormModal open
-              title="New Expense Claim"
-              subtitle="Submit an expense for cost-centre allocation and manager approval."
-              icon={<i class="fas fa-receipt" />}
-              context={context}
-              primaryLabel="Create draft"
-              loading={createMut.isPending}
-              disabled={!formOk}
-              onCancel={reset}
-              onSubmit={() => void create()}>
-              <div class="fin-form-grid">
-                <label class="fin-field fin-field--span2"><span>Title</span>
-                  <input type="text" placeholder="e.g. Travel to Port of Spain office" value={title}
-                    onInput={e => setTitle((e.currentTarget as HTMLInputElement).value)} />
-                </label>
-                <label class="fin-field"><span>Expense date</span>
-                  <input type="date" value={expenseDate} onInput={e => setDate((e.currentTarget as HTMLInputElement).value)} />
-                </label>
-                <label class="fin-field"><span>Category</span>
-                  <select value={category} onChange={e => setCategory((e.currentTarget as HTMLSelectElement).value as ExpenseCategory)}>
-                    {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                </label>
-                <label class="fin-field"><span>Total amount (TTD)</span>
-                  <input type="number" min="0.01" step="0.01" placeholder="0.00" value={totalAmount}
-                    onInput={e => setTotal((e.currentTarget as HTMLInputElement).value)} />
-                </label>
-                <label class="fin-field fin-field--inline"><span>Reimbursable</span>
-                  <input type="checkbox" checked={reimbursable} onChange={e => setReimb((e.currentTarget as HTMLInputElement).checked)} />
-                </label>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <b style={{ fontSize: 13 }}>Cost-centre allocation lines</b>
-                  <button type="button" class="obx-btn obx-btn-sm" onClick={addLine}>+ Add line</button>
-                </div>
-                {lines.map((l, i) => (
-                  <div key={i} class="fin-form-grid fin-form-grid--tight" style={{ marginBottom: 6 }}>
-                    <label class="fin-field"><span>Cost centre (UUID)</span>
-                      <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={l.costCenterId}
-                        onInput={e => updateLine(i, 'costCenterId', (e.currentTarget as HTMLInputElement).value.trim())} />
-                    </label>
-                    <label class="fin-field"><span>Amount (TTD)</span>
-                      <input type="number" min="0.01" step="0.01" placeholder="0.00" value={l.amount}
-                        onInput={e => updateLine(i, 'amount', (e.currentTarget as HTMLInputElement).value)} />
-                    </label>
-                    <label class="fin-field fin-field--span2"><span>Description (optional)</span>
-                      <input type="text" placeholder="e.g. Flight ticket" value={l.description}
-                        onInput={e => updateLine(i, 'description', (e.currentTarget as HTMLInputElement).value)} />
-                    </label>
-                    {lines.length > 1 && (
-                      <div class="fin-field">
-                        <button type="button" class="obx-btn obx-btn-sm" style={{ marginTop: 18 }} onClick={() => removeLine(i)}>Remove</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {total > 0 && (
-                  <div class="obx-meta" style={{ marginTop: 4 }}>
-                    Lines sum: <b>{fmtMoney(lineSum)}</b> / Total: <b>{fmtMoney(total)}</b>
-                    {!sumOk && <span style={{ color: 'var(--color-danger)', marginLeft: 6 }}>-- must match</span>}
-                  </div>
-                )}
-              </div>
-            </EnterpriseFormModal>
-          )}
-        </>
-      )}
-    </div></div>
-  );
-}
-
-// -- Reports ------------------------------------------------------------------
-
-function ReportsSurface(): VNode {
-  const reportQ  = useExpenseMutation(financeExpensesApi.listReport);
-  const [rows, setRows] = useState<Awaited<ReturnType<typeof financeExpensesApi.listReport>> | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  const load = async (): Promise<void> => {
-    try { const r = await financeExpensesApi.listReport({}); setRows(r); }
-    catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to load report.'); }
-    finally { setLoaded(true); }
-  };
-  if (!loaded) void load();
-
-  const cols: Array<[string, string]> = [
-    ['claimNo', 'Ref'], ['title', 'Title'], ['category', 'Category'],
-    ['expenseDate', 'Date'], ['totalAmount', 'Total'], ['status', 'Status'],
-    ['reimbursable', 'Reimbursable'], ['reimbursedAt', 'Reimbursed'],
-  ];
-
-  return (
-    <div class="obx-section"><div class="obx-section-body">
-      {!rows ? <div class="obx-empty">Loading...</div>
-        : !rows.length ? <EmptyState icon="fa-chart-bar" title="No expense history" text="Expense claim records will appear here once created." />
-        : (
-          <table class="obx-table">
-            <thead><tr>{cols.map(([, label]) => <th key={label}>{label}</th>)}</tr></thead>
-            <tbody>{rows.map(r => (
-              <tr key={r.id}>{cols.map(([key, label]) => {
-                const v = r[key as keyof typeof r];
-                if (key === 'status')       return <td key={label}><span class={`obx-pill ${statusTone(String(v))}`}>{humanize(String(v))}</span></td>;
-                if (key === 'category')     return <td key={label} class="obx-meta">{categoryLabel(String(v))}</td>;
-                if (key === 'totalAmount')  return <td key={label}><b>{fmtMoney(Number(v))}</b></td>;
-                if (key === 'reimbursable') return <td key={label} class="obx-meta">{v ? 'Yes' : 'No'}</td>;
-                return <td key={label} class="obx-meta">{v == null || v === '' ? '--' : String(v)}</td>;
-              })}</tr>
-            ))}</tbody>
-          </table>
-        )}
-    </div></div>
   );
 }

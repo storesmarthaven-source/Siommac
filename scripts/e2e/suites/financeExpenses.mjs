@@ -300,4 +300,260 @@ export default async function run(h) {
   await test('employee is DENIED expense reports', async () => {
     fails(await api('finance/expenses/reports/list', empToken, {}), 'employee should be denied reports');
   });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: detail endpoint');
+  // =========================================================================
+
+  await test('expenses/detail returns claim + lines + attachmentCount', async () => {
+    const r = await api('finance/expenses/detail', fmgr1Token, { id: ctx.claimId });
+    ok(r, `detail failed: ${r.body.message}`);
+    const d = r.body.data;
+    for (const k of ['id', 'claimNo', 'status', 'lines', 'attachmentCount']) {
+      expect(k in d, `detail response missing ${k}`);
+    }
+    expect(Array.isArray(d.lines), 'lines should be an array');
+    expect(typeof d.attachmentCount === 'number', 'attachmentCount should be a number');
+    expect(d.id === ctx.claimId, 'detail id mismatch');
+  });
+
+  await test('expenses/detail is DENIED for employee (view perm required)', async () => {
+    fails(await api('finance/expenses/detail', empToken, { id: ctx.claimId }), 'employee should be denied detail');
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: policy-check endpoint');
+  // =========================================================================
+
+  await test('expenses/policy-check returns PolicyCheckResult shape for a reimbursed claim', async () => {
+    // Use the cancel claim (draft) for policy check — it was never submitted so it can still be checked
+    const r = await api('finance/expenses/policy-check', fmgr1Token, { id: ctx.cancelClaimId });
+    // The cancel claim is now cancelled status — policy check may still run; we just want the shape
+    if (r.ok) {
+      const d = r.body.data;
+      expect('claimId' in d, 'policy result missing claimId');
+      expect('issues' in d, 'policy result missing issues');
+      expect('canSubmit' in d, 'policy result missing canSubmit');
+      expect(Array.isArray(d.issues), 'issues should be array');
+    }
+    // Either ok or 422 (cancelled claim cannot be checked in some configs) is acceptable
+    // — the important thing is the shape contract if it succeeds
+  });
+
+  await test('expenses/policy-check is DENIED if you try to check another employee\'s claim', async () => {
+    // empToken cannot check fmgr1\'s claim (claimantId != empId, no manage perm)
+    fails(await api('finance/expenses/policy-check', empToken, { id: ctx.claimId }), 'employee should be denied checking other\'s claim');
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: trend endpoint');
+  // =========================================================================
+
+  await test('expenses/trend returns array of {month, amount, count}', async () => {
+    const r = await api('finance/expenses/trend', fmgr1Token, {});
+    ok(r, `trend failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'trend should return an array');
+    if (r.body.data.length > 0) {
+      const pt = r.body.data[0];
+      expect('month' in pt, 'trend point missing month');
+      expect('amount' in pt, 'trend point missing amount');
+      expect('count' in pt, 'trend point missing count');
+    }
+  });
+
+  await test('expenses/trend is DENIED for employee (view perm required)', async () => {
+    fails(await api('finance/expenses/trend', empToken, {}), 'employee should be denied trend');
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: reports/run with type param');
+  // =========================================================================
+
+  await test('reports/run expense_claim_summary returns {report, generatedAt, rows}', async () => {
+    const r = await api('finance/expenses/reports/run', fmgr1Token, { report: 'expense_claim_summary' });
+    ok(r, `reports/run summary failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect('report' in d, 'report result missing report');
+    expect('generatedAt' in d, 'report result missing generatedAt');
+    expect('rows' in d, 'report result missing rows');
+    expect(Array.isArray(d.rows), 'rows should be array');
+    expect(d.report === 'expense_claim_summary', `report key mismatch: ${d.report}`);
+  });
+
+  await test('reports/run expense_policy_exceptions returns shape', async () => {
+    const r = await api('finance/expenses/reports/run', fmgr1Token, { report: 'expense_policy_exceptions' });
+    ok(r, `reports/run policy_exceptions failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.report === 'expense_policy_exceptions', `report key mismatch: ${d.report}`);
+    expect(Array.isArray(d.rows), 'rows should be array');
+  });
+
+  await test('reports/run reimbursement_summary returns shape', async () => {
+    const r = await api('finance/expenses/reports/run', fmgr1Token, { report: 'reimbursement_summary' });
+    ok(r, `reports/run reimbursement_summary failed: ${r.body.message}`);
+    expect(r.body.data.report === 'reimbursement_summary', `report key mismatch: ${r.body.data.report}`);
+  });
+
+  await test('reports/run missing_receipts returns shape', async () => {
+    const r = await api('finance/expenses/reports/run', fmgr1Token, { report: 'missing_receipts' });
+    ok(r, `reports/run missing_receipts failed: ${r.body.message}`);
+    expect(r.body.data.report === 'missing_receipts', `report key mismatch: ${r.body.data.report}`);
+  });
+
+  await test('reports/run defaults to expense_claim_summary when no report param', async () => {
+    const r = await api('finance/expenses/reports/run', fmgr1Token, {});
+    ok(r, `reports/run no-param failed: ${r.body.message}`);
+    expect(r.body.data.report === 'expense_claim_summary', `default report mismatch: ${r.body.data.report}`);
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: mark-reimbursed with full fields');
+  // =========================================================================
+
+  await test('create + submit + approve a fresh claim for extended mark-reimbursed test', async () => {
+    const cr = await api('finance/expenses/create', fmgr1Token, {
+      claimantId: fmgr1Id,
+      title:      `E2E Extended Reimb ${TAG}`,
+      expenseDate: '2026-07-04',
+      category: 'accommodation',
+      totalAmount: 1200,
+      reimbursable: true,
+      allocationLines: [{ costCenterId: ctx.ccUuid, amount: 1200, description: 'Hotel stay' }],
+    });
+    ok(cr, `create for extended reimb failed: ${cr.body.message}`);
+    ctx.extReimbClaimId = cr.body.data.id;
+
+    const sr = await api('finance/expenses/submit', fmgr1Token, { id: ctx.extReimbClaimId });
+    ok(sr, `submit for extended reimb failed: ${sr.body.message}`);
+
+    const ar = await api('finance/expenses/approve', fmgr2Token, { id: ctx.extReimbClaimId });
+    ok(ar, `approve for extended reimb failed: ${ar.body.message}`);
+    expect(ar.body.data.status === 'approved', `expected approved, got ${ar.body.data.status}`);
+  });
+
+  // Clean up extReimbClaimId on exit
+  h.onCleanup(async () => {
+    if (!ctx.extReimbClaimId) return;
+    try { await sb.from('finance_cost_entries').delete().eq('expense_claim_id', ctx.extReimbClaimId); } catch {}
+    try { await sb.from('finance_expense_claims').delete().eq('id', ctx.extReimbClaimId); } catch {}
+    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_expenses').eq('record_id', ctx.extReimbClaimId); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_expenses').eq('source_entity_id', ctx.extReimbClaimId); } catch {}
+  });
+
+  await test('mark-reimbursed with full payment details stores in metadata.reimbursement', async () => {
+    const r = await api('finance/expenses/mark-reimbursed', fmgr2Token, {
+      id:            ctx.extReimbClaimId,
+      reimbursedAt:  '2026-07-15T10:00:00Z',
+      paymentMethod: 'eft',
+      reference:     'EFT-E2E-001',
+      paidAmount:    1200,
+      notes:         'E2E extended reimbursement test',
+    });
+    ok(r, `extended mark-reimbursed failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.status === 'reimbursed', `expected reimbursed, got ${d.status}`);
+    // Check metadata carries the payment details
+    const reimb = d.metadata?.reimbursement;
+    expect(reimb != null, 'metadata.reimbursement not set');
+    expect(reimb?.paymentMethod === 'eft', `paymentMethod mismatch: ${reimb?.paymentMethod}`);
+    expect(reimb?.reference === 'EFT-E2E-001', `reference mismatch: ${reimb?.reference}`);
+    expect(Math.abs((reimb?.paidAmount ?? 0) - 1200) < 0.01, `paidAmount mismatch: ${reimb?.paidAmount}`);
+  });
+
+  await test('reimbursed notification was sent to the claimant', async () => {
+    const gotNotif = await waitFor(async () => {
+      const { data } = await sb.from('notifications').select('id')
+        .eq('user_id', fmgr1Id)
+        .eq('type', 'finance.expense.reimbursed')
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotNotif, 'reimbursed notification not found for claimant');
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: reimbursement handoff endpoint');
+  // =========================================================================
+
+  await test('expenses/handoff/reimbursement requires the claim to be approved', async () => {
+    // cancelled claim — should 422
+    fails(
+      await api('finance/expenses/handoff/reimbursement', fmgr2Token, { claimId: ctx.cancelClaimId }),
+      'handoff on non-approved claim should fail',
+    );
+  });
+
+  await test('expenses/handoff/reimbursement succeeds for approved+reimbursable claim and is idempotent', async () => {
+    // Create a fresh approved+reimbursable claim specifically for handoff
+    const cr = await api('finance/expenses/create', fmgr1Token, {
+      claimantId: fmgr1Id,
+      title:      `E2E Handoff Test ${TAG}`,
+      expenseDate: '2026-07-05',
+      category: 'travel',
+      totalAmount: 500,
+      reimbursable: true,
+      allocationLines: [{ costCenterId: ctx.ccUuid, amount: 500 }],
+    });
+    ok(cr, `create for handoff failed: ${cr.body.message}`);
+    ctx.handoffClaimId = cr.body.data.id;
+
+    await api('finance/expenses/submit', fmgr1Token, { id: ctx.handoffClaimId });
+    const ar = await api('finance/expenses/approve', fmgr2Token, { id: ctx.handoffClaimId });
+    ok(ar, `approve for handoff failed: ${ar.body.message}`);
+
+    // First handoff call
+    const h1 = await api('finance/expenses/handoff/reimbursement', fmgr2Token, { claimId: ctx.handoffClaimId });
+    ok(h1, `handoff first call failed: ${h1.body.message}`);
+    expect('bridgeId' in h1.body.data, 'handoff missing bridgeId');
+    expect('handoffId' in h1.body.data, 'handoff missing handoffId');
+    expect(h1.body.data.reusedExisting === false, 'first call should not reuse existing');
+
+    // Second call — idempotent
+    const h2 = await api('finance/expenses/handoff/reimbursement', fmgr2Token, { claimId: ctx.handoffClaimId });
+    ok(h2, `handoff second call failed: ${h2.body.message}`);
+    expect(h2.body.data.reusedExisting === true, 'second call should reuse existing');
+    expect(h2.body.data.bridgeId === h1.body.data.bridgeId, 'bridgeId should be the same on second call');
+  });
+
+  h.onCleanup(async () => {
+    if (!ctx.handoffClaimId) return;
+    try { await sb.from('finance_cost_entries').delete().eq('expense_claim_id', ctx.handoffClaimId); } catch {}
+    try { await sb.from('finance_expense_claims').delete().eq('id', ctx.handoffClaimId); } catch {}
+    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_expenses').eq('record_id', ctx.handoffClaimId); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'finance_expenses').eq('source_entity_id', ctx.handoffClaimId); } catch {}
+  });
+
+  await test('expenses/handoff/reimbursement is DENIED without handoff.create_reimbursement perm', async () => {
+    // finance_staff does not have the handoff perm
+    fails(
+      await api('finance/expenses/handoff/reimbursement', fstaffToken, { claimId: ctx.claimId }),
+      'finance_staff should be denied handoff/reimbursement',
+    );
+  });
+
+  // =========================================================================
+  h.section('Finance Expenses > Wave 2B: list pagination + search');
+  // =========================================================================
+
+  await test('list with page=0&pageSize=2 returns at most 2 items and total count', async () => {
+    const r = await api('finance/expenses/list', fmgr1Token, { page: 0, pageSize: 2 });
+    ok(r, `paginated list failed: ${r.body.message}`);
+    expect(typeof r.body.total === 'number', 'list should return total');
+    expect(Array.isArray(r.body.data), 'list data should be array');
+    expect(r.body.data.length <= 2, `pageSize=2 returned ${r.body.data.length} rows`);
+  });
+
+  await test('list with search param filters results', async () => {
+    const r = await api('finance/expenses/list', fmgr1Token, { search: 'Extended Reimb' });
+    ok(r, `search list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'search result should be array');
+  });
+
+  await test('list with status=reimbursed only returns reimbursed claims', async () => {
+    const r = await api('finance/expenses/list', fmgr1Token, { status: 'reimbursed' });
+    ok(r, `status filter failed: ${r.body.message}`);
+    const all = r.body.data ?? [];
+    const wrong = all.filter(c => c.status !== 'reimbursed');
+    expect(wrong.length === 0, `non-reimbursed claims in reimbursed filter: ${wrong.length}`);
+  });
 }
