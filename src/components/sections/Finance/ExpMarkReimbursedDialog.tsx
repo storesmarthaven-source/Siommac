@@ -20,6 +20,7 @@ import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { toast } from '@store';
 import { financeExpensesApi, useExpenseMutation, type ExpenseClaim } from '@api/finance/expenses';
+import { useDisbursements } from '@api/finance/disbursements';
 import { fmtMoney } from './financeShared';
 
 const PAYMENT_METHODS = [
@@ -82,6 +83,9 @@ export function ExpMarkReimbursedDialog({
   const markReimbursed = useExpenseMutation((args: Parameters<typeof financeExpensesApi.markReimbursed>[0]) =>
     financeExpensesApi.markReimbursed(args),
   );
+
+  // Load approved/paid disbursements for the source disbursement picker
+  const disbQ = useDisbursements();
 
   // Reset form when dialog opens / claim changes
   useEffect(() => {
@@ -217,18 +221,26 @@ export function ExpMarkReimbursedDialog({
             {errors.paidAmount && <span class="hrfin-error">{errors.paidAmount}</span>}
           </div>
 
-          {/* Source disbursement */}
+          {/* Source disbursement — picker backed by real disbursement records */}
           <div class="hrfin-field">
-            <label htmlFor="exp-pay-disb">Source disbursement ID</label>
-            <input
+            <label htmlFor="exp-pay-disb">Source disbursement</label>
+            <select
               id="exp-pay-disb"
-              type="text"
               class="hrfin-input"
-              placeholder="Linked payroll disbursement ID (optional)"
               value={sourceDisbursement}
-              onInput={e => setSourceDisbursement((e.target as HTMLInputElement).value)}
-              disabled={busy}
-            />
+              onChange={e => setSourceDisbursement((e.target as HTMLSelectElement).value)}
+              disabled={busy || disbQ.isLoading}
+            >
+              <option value="">None (manual / direct payment)</option>
+              {(disbQ.data ?? [])
+                .filter(d => ['approved', 'file_generated', 'paid'].includes(d.status))
+                .map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.disbursementNo} — {fmtMoney(d.totalAmount)} {d.currency} ({d.status})
+                  </option>
+                ))}
+            </select>
+            {disbQ.isLoading && <span class="hse-muted" style={{ fontSize: 11 }}>Loading disbursements…</span>}
           </div>
 
           {/* Notes */}

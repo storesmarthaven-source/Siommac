@@ -12,16 +12,19 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { Drawer, HrfinPill, type HrfinTone } from '@ui';
 import {
   useExpenseClaimDetail,
   useExpenseMutation,
+  useExpenseAuditLog,
+  useExpenseComment,
   financeExpensesApi,
   type ExpenseClaim,
 } from '@api/finance/expenses';
 import { useFinanceAttachments } from '@api/finance/attachments';
+import { useCostCentres } from '@api/finance/pickers';
 import { fmtMoney, fmtDate, humanize } from './financeShared';
 import { EmployeeCell } from './_shared/EmployeeCell';
 import { ExpMarkReimbursedDialog } from './ExpMarkReimbursedDialog';
@@ -93,8 +96,14 @@ export function ExpClaimDrawer({
   const [reimbOpen, setReimbOpen] = useState(false);
   const [commentBody, setCommentBody] = useState('');
 
-  const detailQ = useExpenseClaimDetail(open ? claimId : null);
-  const attachQ = useFinanceAttachments('expense_claim', claimId ?? '', open && tab === 'receipts' && !!claimId);
+  const detailQ  = useExpenseClaimDetail(open ? claimId : null);
+  const attachQ  = useFinanceAttachments('expense_claim', claimId ?? '', open && tab === 'receipts' && !!claimId);
+  const auditQ   = useExpenseAuditLog(open && tab === 'audit' ? claimId : null);
+  const commentM = useExpenseComment(claimId);
+
+  // Cost centre lookup for the lines tab
+  const ccQ   = useCostCentres();
+  const ccMap = useMemo(() => new Map((ccQ.data ?? []).map(c => [c.id, c.name])), [ccQ.data]);
 
   const submitMutation  = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
   const approveMutation = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
@@ -230,12 +239,30 @@ export function ExpClaimDrawer({
                 ? <div class="hrfin-empty">No expense lines.</div>
                 : <div class="hrfin-metric-list">
                     {claim.lines.map(l => (
-                      <div key={l.id} class="hrfin-metric-row">
+                      <div key={l.id} class="hrfin-metric-row" style={{ alignItems: 'flex-start' }}>
                         <span>
-                          {l.description ?? '—'}
-                          {l.costCenterId && <span class="hse-muted" style={{ fontSize: 11, marginLeft: 4 }}>Cost centre: {l.costCenterId.slice(0, 8)}</span>}
+                          <b>{l.description ?? '—'}</b>
+                          {l.costCenterId && (
+                            <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>
+                              Cost centre: {ccMap.get(l.costCenterId) ?? l.costCenterId.slice(0, 8)}
+                            </span>
+                          )}
+                          {l.category && (
+                            <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>
+                              {humanize(l.category)}{l.merchant ? ` · ${l.merchant}` : ''}
+                            </span>
+                          )}
+                          {l.project && (
+                            <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>Project: {l.project}</span>
+                          )}
+                          {(l.taxAmount ?? 0) > 0 && (
+                            <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>Tax: {fmtMoney(l.taxAmount ?? 0)}</span>
+                          )}
+                          {l.receiptRequired && (
+                            <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>Receipt required</span>
+                          )}
                         </span>
-                        <b>{fmtMoney(l.amount)}</b>
+                        <b style={{ whiteSpace: 'nowrap' }}>{fmtMoney(l.amount)}</b>
                       </div>
                     ))}
                     <div class="hrfin-metric-row" style={{ borderTop: '1px solid var(--border)', paddingTop: 8, marginTop: 4 }}>
@@ -300,9 +327,6 @@ export function ExpClaimDrawer({
 
             {tab === 'comments' && (
               <div>
-                <div class="hrfin-empty hse-muted" style={{ marginBottom: 12 }}>
-                  Comments are tracked via the workflow system. Add a note below for the audit trail.
-                </div>
                 <textarea
                   class="hrfin-input"
                   rows={3}
@@ -310,18 +334,25 @@ export function ExpClaimDrawer({
                   value={commentBody}
                   onInput={e => setCommentBody((e.target as HTMLTextAreaElement).value)}
                   style={{ width: '100%' }}
+                  disabled={commentM.isPending}
                 />
                 <button
                   type="button"
                   class="hrfin-action is-primary"
                   style={{ marginTop: 8 }}
-                  disabled={!commentBody.trim()}
-                  onClick={() => {
-                    toast.success('Comment recorded.');
-                    setCommentBody('');
+                  disabled={!commentBody.trim() || commentM.isPending}
+                  onClick={async () => {
+                    if (!commentBody.trim() || !claimId) return;
+                    try {
+                      await commentM.mutateAsync(commentBody.trim());
+                      toast.success('Comment posted.');
+                      setCommentBody('');
+                    } catch (e) {
+                      toast.error((e as Error).message);
+                    }
                   }}
                 >
-                  Post comment
+                  {commentM.isPending ? 'Posting…' : 'Post comment'}
                 </button>
               </div>
             )}
@@ -341,10 +372,31 @@ export function ExpClaimDrawer({
             )}
 
             {tab === 'audit' && (
-              <div class="hrfin-empty hse-muted">
-                Full audit trail is available in the Audit Log module. Events for this claim are tagged
-                with claim ID <code>{claim.id}</code>.
-              </div>
+              auditQ.isLoading ? (
+                <div class="hrfin-empty">Loading audit log…</div>
+              ) : !auditQ.data || auditQ.data.length === 0 ? (
+                <div class="hrfin-empty hse-muted">No audit entries yet for this claim.</div>
+              ) : (
+                <div class="hrfin-metric-list">
+                  {auditQ.data.map(entry => (
+                    <div key={entry.id} class="hrfin-metric-row" style={{ alignItems: 'flex-start' }}>
+                      <span>
+                        <b style={{ fontSize: 13 }}>{humanize(entry.action)}</b>
+                        {entry.summary && (
+                          <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>{entry.summary}</span>
+                        )}
+                        {entry.reason && (
+                          <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>Reason: {entry.reason}</span>
+                        )}
+                        <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>{fmtDateTime(entry.createdAt)}</span>
+                      </span>
+                      <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                        <EmployeeCell employeeId={entry.actorId} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
         )}
