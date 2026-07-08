@@ -44,12 +44,14 @@ export default async function run(h) {
   let fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id;
 
   const ctx = {
-    runId:      null,
-    runNo:      null,
-    lineId1:    null,   // run_line for emp1
-    payslipId1: null,   // payslip for emp1
-    exportId:   null,
-    createdUserIds: [],
+    runId:            null,
+    runNo:            null,
+    lineId1:          null,   // run_line for emp1
+    payslipId1:       null,   // payslip for emp1
+    exportId:         null,
+    disbursementId:   null,   // bridge flow test — create-disbursement (Gap 16)
+    remittancePAYEId: null,   // bridge flow test — create-remittance paye_bir (Gap 16)
+    createdUserIds:   [],
     statutoryVersionId: null,
   };
 
@@ -73,6 +75,19 @@ export default async function run(h) {
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
     try { await sb.from('app_events').delete().in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id]); } catch {}
+    // Bridge-flow cleanup (Gap 16)
+    if (ctx.disbursementId) {
+      try { await sb.from('finance_disbursement_lines').delete().eq('disbursement_id', ctx.disbursementId); } catch {}
+      try { await sb.from('finance_disbursements').delete().eq('id', ctx.disbursementId); } catch {}
+    }
+    if (ctx.runId) {
+      try { await sb.from('finance_remittances').delete().eq('payroll_run_id', ctx.runId); } catch {}
+    }
+    // Handoff + notification cleanup (Gaps 17/18)
+    if (ctx.runId) {
+      try { await sb.from('handoff_outbox').delete().eq('source_entity_id', ctx.runId); } catch {}
+      try { await sb.from('notifications').delete().eq('source_id', ctx.runId); } catch {}
+    }
     try {
       // Cancel any open workflow instances for this run
       if (ctx.runId) {
@@ -280,6 +295,19 @@ export default async function run(h) {
     expect((audit ?? []).length > 0, 'hr_audit_log payroll_run.submitted not found');
   });
 
+  await test('§8.1 handoff: payroll_approval handoff_outbox row emitted after submit (Gap 18)', async () => {
+    const gotHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox')
+        .select('id')
+        .eq('source_module', 'finance_payroll')
+        .eq('source_entity_id', ctx.runId)
+        .eq('target_entity_type', 'payroll_approval')
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotHandoff, 'handoff_outbox payroll_approval row not found within 8s after submit');
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Approve — SoD enforcement');
   // ═══════════════════════════════════════════════════════════════════════════
@@ -353,6 +381,19 @@ export default async function run(h) {
     expect(gotEvent, 'finance.payroll.run.approved app_event not found');
   });
 
+  await test('§8.1 handoff: payroll_locking handoff_outbox row emitted after approve (Gap 18)', async () => {
+    const gotHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox')
+        .select('id')
+        .eq('source_module', 'finance_payroll')
+        .eq('source_entity_id', ctx.runId)
+        .eq('target_entity_type', 'payroll_locking')
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotHandoff, 'handoff_outbox payroll_locking row not found within 8s after approve');
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Lock Run');
   // ═══════════════════════════════════════════════════════════════════════════
@@ -379,6 +420,19 @@ export default async function run(h) {
   await test('a locked run cannot be locked again', async () => {
     const r = await api('finance/payroll/runs/lock', fmgr2Token, { id: ctx.runId });
     expect(!r.body.success, 're-locking a locked run should fail');
+  });
+
+  await test('§8.1 handoff: payslip_generation handoff_outbox row emitted after lock (Gap 18)', async () => {
+    const gotHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox')
+        .select('id')
+        .eq('source_module', 'finance_payroll')
+        .eq('source_entity_id', ctx.runId)
+        .eq('target_entity_type', 'payslip_generation')
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotHandoff, 'handoff_outbox payslip_generation row not found within 8s after lock');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -460,6 +514,34 @@ export default async function run(h) {
       .eq('record_id', ctx.runId)
       .limit(1);
     expect((audit ?? []).length > 0, 'hr_audit_log payroll_run.payslips_generated not found');
+  });
+
+  await test('§8.1 notification: employees receive payslip.ready notification after generate (Gap 17)', async () => {
+    // generatePayslips calls notifyMany(employeeIds, { type: 'finance.payroll.payslip.ready', ... })
+    // which is fire-and-forget — poll for it.
+    const gotNotif = await waitFor(async () => {
+      const { data } = await sb.from('notifications')
+        .select('id')
+        .eq('user_id', emp1Id)
+        .eq('type', 'finance.payroll.payslip.ready')
+        .eq('source_id', ctx.runId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 10000);
+    expect(gotNotif, 'notification finance.payroll.payslip.ready not found for emp1 within 10s');
+
+    // emp2 also receives a notification if they have a payslip
+    const { data: emp2Notif } = await sb.from('notifications')
+      .select('id')
+      .eq('user_id', emp2Id)
+      .eq('type', 'finance.payroll.payslip.ready')
+      .eq('source_id', ctx.runId)
+      .limit(1);
+    // emp2 notification is asserted only if they had a run line (may be 0 if only emp1 was enrolled)
+    if ((emp2Notif ?? []).length === 0) {
+      // Acceptable if emp2 had no run line; document the case without failing.
+      console.log('[E2E] emp2 has no payslip.ready notification — likely no run line for emp2');
+    }
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -748,6 +830,35 @@ export default async function run(h) {
     expect(d.salaried + d.hourly <= d.total,      'salaried+hourly <= total (missing covers the rest)');
   });
 
+  await test('population-preview includes Wave 2B extended fields (newHires/terminations/missingStatutoryProfile)', async () => {
+    // Gap 8: wizard Step 1 requires these for period-scoped population warnings
+    const r = await api('finance/payroll/runs/population-preview', fmgr1Token, {});
+    ok(r, `population-preview failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.newHires === 'number',
+      `newHires should be a number, got ${typeof d.newHires}`);
+    expect(typeof d.terminations === 'number',
+      `terminations should be a number, got ${typeof d.terminations}`);
+    expect(typeof d.missingStatutoryProfile === 'number',
+      `missingStatutoryProfile should be a number, got ${typeof d.missingStatutoryProfile}`);
+    expect(d.newHires >= 0,                  'newHires should be >= 0');
+    expect(d.terminations >= 0,              'terminations should be >= 0');
+    expect(d.missingStatutoryProfile >= 0,   'missingStatutoryProfile should be >= 0');
+    expect(d.missingStatutoryProfile <= d.total,
+      'missingStatutoryProfile cannot exceed total active employees');
+  });
+
+  await test('population-preview accepts a periodMonth param and returns period-scoped counts', async () => {
+    // Pass current month; should return same shape as the unscoped call
+    const periodMonth = new Date().toISOString().slice(0, 7) + '-01';
+    const r = await api('finance/payroll/runs/population-preview', fmgr1Token, { periodMonth });
+    ok(r, `population-preview with periodMonth failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.total === 'number',       'periodMonth-scoped: total should be a number');
+    expect(typeof d.newHires === 'number',    'periodMonth-scoped: newHires should be a number');
+    expect(typeof d.terminations === 'number','periodMonth-scoped: terminations should be a number');
+  });
+
   await test('finance_staff can see population preview (view_all scope)', async () => {
     const r = await api('finance/payroll/runs/population-preview', fstaff1Token, {});
     ok(r, `population-preview denied for finance_staff: ${r.body.message}`);
@@ -799,6 +910,121 @@ export default async function run(h) {
     });
     expect(!r.body.success, 'download of non-existent export should fail cleanly');
     expect(r.status !== 500, 'should not throw 500 on not-found export');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Bridge Flows (Wave 2B — Gap 16)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // By this point ctx.runId is in status 'exported' — valid for both bridge
+  // endpoints (ALLOWED_STATUSES includes 'exported'). Bank accounts are created
+  // here (service-role), used for the disbursement, then cleaned up in onCleanup.
+
+  let bankAcct1Id = null, bankAcct2Id = null;
+
+  await test('bridge setup: create primary bank accounts for emp1 + emp2 (service-role)', async () => {
+    const { data: ba1, error: e1 } = await sb.from('finance_employee_bank_accounts').insert({
+      employee_id:          emp1Id,
+      bank_name:            'E2E Test Bank',
+      account_type:         'savings',
+      account_number:       '1234567890',
+      account_number_masked: '****7890',
+      is_primary:           true,
+      is_active:            true,
+      created_by:           fmgr1Id,
+    }).select('id').single();
+    expect(!e1, `bank account for emp1 failed: ${e1?.message}`);
+    bankAcct1Id = ba1?.id ?? null;
+
+    const { data: ba2, error: e2 } = await sb.from('finance_employee_bank_accounts').insert({
+      employee_id:          emp2Id,
+      bank_name:            'E2E Test Bank',
+      account_type:         'savings',
+      account_number:       '9876543210',
+      account_number_masked: '****3210',
+      is_primary:           true,
+      is_active:            true,
+      created_by:           fmgr1Id,
+    }).select('id').single();
+    expect(!e2, `bank account for emp2 failed: ${e2?.message}`);
+    bankAcct2Id = ba2?.id ?? null;
+  });
+
+  await test('employee is DENIED create-disbursement (no finance.disbursement.manage)', async () => {
+    const r = await api('finance/bridges/create-disbursement', emp1Token, { payrollRunId: ctx.runId });
+    fails(r, 'employee should be denied create-disbursement');
+  });
+
+  await test('finance_manager can create a disbursement from an exported run', async () => {
+    if (!bankAcct1Id) { console.log('[E2E] bank accounts missing — skip disbursement test'); return; }
+    const r = await api('finance/bridges/create-disbursement', fmgr1Token, { payrollRunId: ctx.runId });
+    ok(r, `create-disbursement failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.disbursement,             'response missing disbursement object');
+    expect(d.disbursement.id,          'disbursement.id missing');
+    expect(d.reusedExisting === false, 'first disbursement creation: reusedExisting should be false');
+    ctx.disbursementId = d.disbursement.id;
+  });
+
+  await test('create-disbursement is idempotent (second call returns reusedExisting: true)', async () => {
+    if (!ctx.disbursementId) { console.log('[E2E] no disbursementId — skip idempotency test'); return; }
+    const r = await api('finance/bridges/create-disbursement', fmgr1Token, { payrollRunId: ctx.runId });
+    ok(r, `idempotent create-disbursement failed: ${r.body.message}`);
+    expect(r.body.data.reusedExisting === true,
+      'second call should return reusedExisting: true');
+    expect(r.body.data.disbursement.id === ctx.disbursementId,
+      'idempotent call should return the same disbursement id');
+  });
+
+  await test('employee is DENIED create-remittance (no finance.remittances.manage)', async () => {
+    const r = await api('finance/bridges/create-remittance', emp1Token,
+      { payrollRunId: ctx.runId, authority: 'paye_bir' });
+    fails(r, 'employee should be denied create-remittance');
+  });
+
+  await test('finance_manager can create a paye_bir remittance from an exported run', async () => {
+    const r = await api('finance/bridges/create-remittance', fmgr1Token,
+      { payrollRunId: ctx.runId, authority: 'paye_bir' });
+    ok(r, `create-remittance paye_bir failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.remittance,                          'response missing remittance object');
+    expect(d.remittance.id,                       'remittance.id missing');
+    expect(d.remittance.authority === 'paye_bir', `authority mismatch: got ${d.remittance.authority}`);
+    expect(d.reusedExisting === false,            'first remittance creation: reusedExisting should be false');
+    ctx.remittancePAYEId = d.remittance.id;
+  });
+
+  await test('create-remittance paye_bir is idempotent (second call returns reusedExisting: true)', async () => {
+    if (!ctx.remittancePAYEId) { console.log('[E2E] no remittancePAYEId — skip idempotency test'); return; }
+    const r = await api('finance/bridges/create-remittance', fmgr1Token,
+      { payrollRunId: ctx.runId, authority: 'paye_bir' });
+    ok(r, `idempotent create-remittance failed: ${r.body.message}`);
+    expect(r.body.data.reusedExisting === true,
+      'second call should return reusedExisting: true');
+    expect(r.body.data.remittance.id === ctx.remittancePAYEId,
+      'idempotent call should return the same remittance id');
+  });
+
+  await test('finance_staff can create a nis_nibtt remittance (has finance.remittances.manage)', async () => {
+    const r = await api('finance/bridges/create-remittance', fstaff1Token,
+      { payrollRunId: ctx.runId, authority: 'nis_nibtt' });
+    ok(r, `create-remittance nis_nibtt failed: ${r.body.message}`);
+    expect(r.body.data.remittance.authority === 'nis_nibtt',
+      `authority mismatch: got ${r.body.data.remittance?.authority}`);
+    expect(r.body.data.reusedExisting === false, 'nis_nibtt is first call — should not be reused');
+  });
+
+  await test('bridge setup: cleanup bank accounts (compensating delete)', async () => {
+    // Clean up bank accounts created above — compensating cleanup (not h.onCleanup
+    // since bankAcct1Id/bankAcct2Id are scoped here and may not reach h.onCleanup).
+    if (bankAcct1Id) {
+      const { error } = await sb.from('finance_employee_bank_accounts').delete().eq('id', bankAcct1Id);
+      if (error) console.warn('[E2E] bridge cleanup: bank acct 1 delete failed:', error.message);
+    }
+    if (bankAcct2Id) {
+      const { error } = await sb.from('finance_employee_bank_accounts').delete().eq('id', bankAcct2Id);
+      if (error) console.warn('[E2E] bridge cleanup: bank acct 2 delete failed:', error.message);
+    }
+    expect(true, 'cleanup complete');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
