@@ -446,6 +446,7 @@ export const PERMISSION_KEYS = [
   'finance.remittances.approve',      // approve submitted remittances + mark paid/filed (SoD: creator cannot approve)
   'finance.remittances.reports.view', // view remittance history and filing reports
   'finance.remittances.reports.export', // export remittance reports (audited data egress)
+  'finance.remittances.receipt.upload', // upload filing receipts / support docs to a remittance (Wave 2B)
   // -- Finance Expenses (F4) --------------------------------------------------
   'finance.expenses.view',         // view expense claims
   'finance.expenses.submit',       // submit own expense claims
@@ -453,6 +454,8 @@ export const PERMISSION_KEYS = [
   'finance.expenses.approve',      // approve submitted claims (SoD)
   'finance.expenses.reports.view', // view expense reports
   'finance.expenses.reports.export', // export expense reports
+  'finance.expenses.receipt.upload', // upload receipt files to expense claim lines (Wave 2B)
+  'finance.expenses.handoff.create_reimbursement', // trigger the cross-module payroll reimbursement handoff for an approved claim (Wave 2B)
   // -- Finance Budgeting & Budget-vs-Actual (F5) ----------------------------------
   'finance.budgets.view',             // view budget lines and computed actuals/variance
   'finance.budgets.manage',           // create, update, delete budget lines
@@ -582,10 +585,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Remittances (F1)
     'finance.remittances.view',
     'finance.remittances.manage',
+    'finance.remittances.receipt.upload',
     // Expenses (F4)
     'finance.expenses.view',
     'finance.expenses.submit',
     'finance.expenses.manage',
+    'finance.expenses.receipt.upload',
     // Budgets (F5) -- staff: view only
     'finance.budgets.view',
     // Bank Accounts & Disbursements (F2)
@@ -630,6 +635,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.remittances.approve',
     'finance.remittances.reports.view',
     'finance.remittances.reports.export',
+    'finance.remittances.receipt.upload',
     // Expenses (F4)
     'finance.expenses.view',
     'finance.expenses.submit',
@@ -637,6 +643,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.expenses.approve',
     'finance.expenses.reports.view',
     'finance.expenses.reports.export',
+    'finance.expenses.receipt.upload',
+    'finance.expenses.handoff.create_reimbursement',
     // Budgets (F5) -- manager: full
     'finance.budgets.view',
     'finance.budgets.manage',
@@ -920,6 +928,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Remittances (F1) -- admin has all
     'finance.remittances.view', 'finance.remittances.manage',
     'finance.remittances.approve', 'finance.remittances.reports.view', 'finance.remittances.reports.export',
+    'finance.remittances.receipt.upload',
     // Budgets (F5) -- admin has all
     'finance.budgets.view', 'finance.budgets.manage',
     'finance.budgets.reports.view', 'finance.budgets.reports.export',

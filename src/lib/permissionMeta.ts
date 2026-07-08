@@ -1372,6 +1372,18 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export expense claim reports (audited data egress). Finance Manager or Admin only.',
     risk: 'medium',
   },
+  'finance.expenses.receipt.upload': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Upload Expense Receipts',
+    description: 'Upload and attach receipt files to expense claim lines (Wave 2B).',
+    risk: 'low',
+  },
+  'finance.expenses.handoff.create_reimbursement': {
+    module: 'Finance', group: 'Expense Claims',
+    label: 'Create Reimbursement Handoff',
+    description: 'Trigger the cross-module payroll reimbursement handoff for an approved expense claim. Finance Manager only (SoD-adjacent, medium risk).',
+    risk: 'medium',
+  },
 
   // ── Finance Budgets (F5) ─────────────────────────────────────────────────────
   'finance.budgets.view': {
@@ -1429,6 +1441,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     label: 'Export Remittance Reports',
     description: 'Export remittance filing reports as CSV/PDF. Finance Manager or Admin only.',
     risk: 'medium',
+  },
+  'finance.remittances.receipt.upload': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'Upload Remittance Receipts',
+    description: 'Upload filing receipts and supporting documents to a remittance (Wave 2B).',
+    risk: 'low',
   },
 
   // -- Finance Bank Accounts & Disbursements (F2) --------------------------------
