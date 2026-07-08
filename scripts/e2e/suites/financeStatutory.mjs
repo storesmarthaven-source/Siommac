@@ -523,4 +523,300 @@ export default async function run(h) {
       .eq('action', 'statutory_version.retired_by_activation').limit(1);
     expect((retireAudit ?? []).length > 0, 'retired_by_activation audit row missing for sv1');
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › Wave 2B — /versions/detail');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // NOTE: /versions/detail is gated by finance.statutory.view (same as /versions/get)
+
+  await test('/versions/detail — finance_staff can fetch version detail (view gate)', async () => {
+    const r = await api('finance/statutory/versions/detail', fstaff1Token, { id: ctx.sv2Id });
+    ok(r, `/versions/detail failed: ${r.body.message}`);
+    const d = r.body.data;
+    // Core version fields
+    expect(d.id === ctx.sv2Id,           'id mismatch');
+    expect('effectiveFrom' in d,         'missing effectiveFrom');
+    expect('jurisdiction' in d,          'missing jurisdiction');
+    expect('status' in d,                'missing status');
+    expect('isActive' in d,              'missing isActive');
+    // Extended fields (Wave 2B additions)
+    expect(Array.isArray(d.nisClasses),          'nisClasses must be array');
+    expect(Array.isArray(d.approvalTimeline),     'approvalTimeline must be array');
+    expect(typeof d.linkedPayrollRunCount === 'number', 'linkedPayrollRunCount must be number');
+  });
+
+  await test('/versions/detail — sv1 (retired) includes its NIS classes in the response', async () => {
+    const r = await api('finance/statutory/versions/detail', fmgr1Token, { id: ctx.sv1Id });
+    ok(r, `/versions/detail for sv1 failed: ${r.body.message}`);
+    // sv1 had 3 NIS classes added in the lifecycle section
+    expect(r.body.data.nisClasses.length >= 3, `expected ≥3 NIS classes, got ${r.body.data.nisClasses.length}`);
+    const c1 = r.body.data.nisClasses.find(c => c.classNo === 1);
+    expect(c1,               'class 1 not found');
+    expect('id' in c1,       'NIS class missing id');
+    expect('weeklyMin' in c1, 'NIS class missing weeklyMin');
+  });
+
+  await test('/versions/detail — employee is DENIED', async () => {
+    const r = await api('finance/statutory/versions/detail', empToken, { id: ctx.sv2Id });
+    fails(r, 'employee should be denied /versions/detail');
+  });
+
+  await test('/versions/detail — approval timeline has ≥1 entry for sv1', async () => {
+    const r = await api('finance/statutory/versions/detail', fmgr1Token, { id: ctx.sv1Id });
+    ok(r, `detail for sv1 failed: ${r.body.message}`);
+    const timeline = r.body.data.approvalTimeline ?? [];
+    expect(timeline.length >= 1, `expected ≥1 timeline entry, got ${timeline.length}`);
+    const entry = timeline[0];
+    expect('id' in entry,        'timeline entry missing id');
+    expect('action' in entry,    'timeline entry missing action');
+    expect('actorId' in entry,   'timeline entry missing actorId');
+    expect('createdAt' in entry, 'timeline entry missing createdAt');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › Wave 2B — /versions/approval-timeline');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('/versions/approval-timeline — returns lifecycle events for sv1', async () => {
+    const r = await api('finance/statutory/versions/approval-timeline', fmgr1Token, { id: ctx.sv1Id });
+    ok(r, `approval-timeline failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'data must be array');
+    const actions = r.body.data.map(e => e.action);
+    expect(actions.some(a => a.includes('created') || a.includes('submitted')),
+      `expected created/submitted in timeline, got: ${JSON.stringify(actions)}`);
+    // Shape assertion
+    const e0 = r.body.data[0];
+    expect(e0 && 'id' in e0,        'entry missing id');
+    expect(e0 && 'action' in e0,    'entry missing action');
+    expect(e0 && 'actorId' in e0,   'entry missing actorId');
+    expect(e0 && 'createdAt' in e0, 'entry missing createdAt');
+  });
+
+  await test('/versions/approval-timeline — employee is DENIED', async () => {
+    const r = await api('finance/statutory/versions/approval-timeline', empToken, { id: ctx.sv1Id });
+    fails(r, 'employee should be denied approval-timeline');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › Wave 2B — NIS class delete + import');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // We need a fresh DRAFT version for delete/import (sv1=retired, sv2=active).
+  // We'll create a new draft version (sv3) using the existing manage perm,
+  // add NIS classes via the existing upsert endpoint, then test delete/import.
+  //
+  // NOTE: finance.statutory.nisClass.delete and finance.statutory.nisClass.import
+  // are NEW perm keys. They are NOT yet in the permission catalogue (reported in
+  // StructuredOutput for the orchestrator to catalogue + grant).
+  // Positive-path tests use the admin token (superadmin bypass) so this suite
+  // stays green before the orchestrator applies the grants.
+
+  let sv3Id = null;
+  let nisClassToDelete = null;
+
+  await test('create a draft version (sv3) for delete/import tests', async () => {
+    const r = await api('finance/statutory/versions/create', fmgr1Token, {
+      effectiveFrom: '2030-01-01',
+      label: `E2E Delete/Import Test ${TAG}`,
+      jurisdiction: 'TT', currency: 'TTD',
+      payePersonalAllowance: 84000, payeBand1Ceiling: 1000000,
+      payeBand1Rate: 0.25, payeBand2Rate: 0.30,
+      hsMonthlyThreshold: 469.99, hsWeeklyHigh: 4.80, hsWeeklyLow: 2.40,
+    });
+    ok(r, `create sv3 failed: ${r.body.message}`);
+    sv3Id = r.body.data.id;
+    expect(r.body.data.status === 'draft', 'sv3 must be draft');
+    h.onCleanup(async () => {
+      try { await sb.from('finance_nis_classes').delete().eq('statutory_version_id', sv3Id); } catch {}
+      try { await sb.from('finance_statutory_versions').delete().eq('id', sv3Id); } catch {}
+    });
+  });
+
+  await test('seed NIS classes on sv3 for delete test', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: sv3Id,
+      classes: [
+        { classNo: 1, weeklyMin: 0,   weeklyMax: 299.99, employeeWeekly: 12.95, employerWeekly: 19.40 },
+        { classNo: 2, weeklyMin: 300, weeklyMax: null,   employeeWeekly: 17.15, employerWeekly: 25.70 },
+      ],
+    });
+    ok(r, `upsert NIS classes on sv3 failed: ${r.body.message}`);
+    expect(r.body.data.length >= 1, 'expected ≥1 NIS class seeded');
+    nisClassToDelete = r.body.data[0].id;
+    expect(nisClassToDelete, 'NIS class id is missing');
+  });
+
+  // /nis-classes/delete — access control (employee always denied regardless of perm)
+  await test('/nis-classes/delete — employee is DENIED (403)', async () => {
+    const r = await api('finance/statutory/nis-classes/delete', empToken, { id: nisClassToDelete });
+    fails(r, 'employee should be denied NIS class delete');
+  });
+
+  // /nis-classes/delete — positive path via superadmin (bypasses new uncatalogued key)
+  await test('/nis-classes/delete — superadmin (admin token) can delete an NIS class', async () => {
+    const adminToken = mint(admin);
+    const r = await api('finance/statutory/nis-classes/delete', adminToken, { id: nisClassToDelete });
+    ok(r, `/nis-classes/delete failed: ${r.body.message}`);
+    // Verify row gone from DB
+    const { data: gone } = await sb.from('finance_nis_classes').select('id').eq('id', nisClassToDelete).limit(1);
+    expect((gone ?? []).length === 0, 'NIS class should be deleted from DB');
+  });
+
+  await test('/nis-classes/delete — §2 side-effects: audit log entry', async () => {
+    const got = await waitFor(async () => {
+      const { data } = await sb.from('hr_audit_log')
+        .select('id').eq('submodule_key', 'finance_statutory')
+        .eq('action', 'nis_class.deleted').limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(got, 'hr_audit_log nis_class.deleted entry not found after delete');
+  });
+
+  await test('/nis-classes/delete — cannot delete from a non-draft version (retired sv1)', async () => {
+    // Get a NIS class from the retired sv1
+    const { data: sv1Classes } = await sb.from('finance_nis_classes')
+      .select('id').eq('statutory_version_id', ctx.sv1Id).limit(1);
+    if ((sv1Classes ?? []).length === 0) return; // no classes, skip guard assertion
+    const adminToken = mint(admin);
+    const r = await api('finance/statutory/nis-classes/delete', adminToken, { id: sv1Classes[0].id });
+    fails(r, 'delete from retired version should fail (422)');
+  });
+
+  // /nis-classes/import — positive path
+  await test('/nis-classes/import — superadmin can import NIS class rows for sv3', async () => {
+    const adminToken = mint(admin);
+    const importRows = [
+      { classNo: 3, weeklyMin: 400, weeklyMax: 499.99, employeeWeekly: 18.00, employerWeekly: 27.00 },
+      { classNo: 4, weeklyMin: 500, weeklyMax: null,   employeeWeekly: 22.00, employerWeekly: 33.00 },
+    ];
+    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+      statutoryVersionId: sv3Id,
+      rows: importRows,
+    });
+    ok(r, `/nis-classes/import failed: ${r.body.message}`);
+    const d = r.body.data;
+    // Response shape
+    expect(typeof d.imported === 'number', 'imported must be a number');
+    expect(Array.isArray(d.errors),        'errors must be an array');
+    expect(d.imported === 2,               `expected 2 imported, got ${d.imported}`);
+    expect(d.errors.length === 0,          `expected 0 errors, got ${JSON.stringify(d.errors)}`);
+  });
+
+  await test('/nis-classes/import — upsert conflict: re-importing same class numbers updates rows', async () => {
+    const adminToken = mint(admin);
+    // Re-import class 3 with different rates
+    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+      statutoryVersionId: sv3Id,
+      rows: [{ classNo: 3, weeklyMin: 400, weeklyMax: 499.99, employeeWeekly: 20.00, employerWeekly: 30.00 }],
+    });
+    ok(r, `/nis-classes/import upsert conflict failed: ${r.body.message}`);
+    expect(r.body.data.imported === 1, `expected 1 imported, got ${r.body.data.imported}`);
+    // Verify updated rate in DB
+    const { data: cls3 } = await sb.from('finance_nis_classes')
+      .select('employee_weekly').eq('statutory_version_id', sv3Id).eq('class_no', 3).single();
+    expect(Math.abs(Number(cls3?.employee_weekly) - 20.00) < 0.01, 'class 3 employee_weekly should be updated to 20.00');
+  });
+
+  await test('/nis-classes/import — employee is DENIED', async () => {
+    const r = await api('finance/statutory/nis-classes/import', empToken, {
+      statutoryVersionId: sv3Id,
+      rows: [{ classNo: 99, weeklyMin: 0, weeklyMax: null, employeeWeekly: 1, employerWeekly: 1 }],
+    });
+    fails(r, 'employee should be denied NIS class import');
+  });
+
+  await test('/nis-classes/import — empty rows array is refused', async () => {
+    const adminToken = mint(admin);
+    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+      statutoryVersionId: sv3Id,
+      rows: [],
+    });
+    fails(r, 'empty rows array should be refused');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › Wave 2B — /reports/run (typed)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // /reports/run requires finance.statutory.reports.view (same as /reports/list)
+
+  await test('/reports/run — statutory_version_summary report returns typed result', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'statutory_version_summary',
+    });
+    ok(r, `/reports/run statutory_version_summary failed: ${r.body.message}`);
+    const d = r.body.data;
+    // ReportResult shape
+    expect(typeof d.report === 'string',       'report field must be string');
+    expect(typeof d.generatedAt === 'string',  'generatedAt must be string');
+    expect(Array.isArray(d.rows),              'rows must be array');
+    // Row shape for version summary
+    if (d.rows.length > 0) {
+      const row = d.rows[0];
+      expect('label' in row,         'version_summary row missing label');
+      expect('effectiveFrom' in row, 'version_summary row missing effectiveFrom');
+      expect('status' in row,        'version_summary row missing status');
+      expect('isActive' in row,      'version_summary row missing isActive');
+    }
+  });
+
+  await test('/reports/run — nis_class_summary report returns NIS band rows', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'nis_class_summary',
+    });
+    ok(r, `/reports/run nis_class_summary failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data.rows), 'nis_class_summary rows must be array');
+    if (r.body.data.rows.length > 0) {
+      const row = r.body.data.rows[0];
+      expect('classNo' in row,         'NIS class row missing classNo');
+      expect('weeklyMin' in row,       'NIS class row missing weeklyMin');
+      expect('employeeWeekly' in row,  'NIS class row missing employeeWeekly');
+      expect('employerWeekly' in row,  'NIS class row missing employerWeekly');
+    }
+  });
+
+  await test('/reports/run — pay_component_map report returns component catalogue', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'pay_component_map',
+    });
+    ok(r, `/reports/run pay_component_map failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data.rows), 'pay_component_map rows must be array');
+    expect(r.body.data.rows.length >= 1, 'expected ≥1 pay component in catalogue');
+    if (r.body.data.rows.length > 0) {
+      const row = r.body.data.rows[0];
+      expect('code' in row, 'pay component row missing code');
+      expect('name' in row, 'pay component row missing name');
+      expect('kind' in row, 'pay component row missing kind');
+    }
+  });
+
+  await test('/reports/run — statutory_approval_history report returns audit rows', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'statutory_approval_history',
+    });
+    ok(r, `/reports/run statutory_approval_history failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data.rows), 'approval_history rows must be array');
+  });
+
+  await test('/reports/run — rejects unknown report key', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'nonexistent_report_key_xyz',
+    });
+    fails(r, 'unknown report key should be refused by validation');
+  });
+
+  await test('/reports/run — employee is DENIED', async () => {
+    const r = await api('finance/statutory/reports/run', empToken, {
+      report: 'statutory_version_summary',
+    });
+    fails(r, 'employee should be denied /reports/run');
+  });
+
+  await test('/reports/run — finance_staff is DENIED (reports.view is manager/admin only)', async () => {
+    const r = await api('finance/statutory/reports/run', fstaff1Token, {
+      report: 'statutory_version_summary',
+    });
+    fails(r, 'finance_staff should be denied /reports/run (reports.view is manager/admin only)');
+  });
 }
