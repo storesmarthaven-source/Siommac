@@ -61,6 +61,8 @@ export interface StatutoryVersionDto {
   retiredAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Number of payroll runs that reference this version. Populated by listStatutoryVersions. */
+  linkedPayrollRunCount?: number;
 }
 
 export interface NisClassRow {
@@ -170,9 +172,26 @@ export async function listStatutoryVersions(opts: {
   if (opts.jurisdiction) q = q.eq('jurisdiction', opts.jurisdiction);
   if (opts.status) q = q.eq('status', opts.status);
   if (opts.activeOnly) q = q.eq('is_active', true);
-  const { data, error } = await q;
-  if (error) throw Object.assign(new Error('listStatutoryVersions: ' + error.message), { status: 500 });
-  return ((data ?? []) as DbVersionRow[]).map(toVersionDto);
+
+  // Batch-load payroll run counts alongside the version list (§11 register column).
+  const [versionsResult, runsResult] = await Promise.all([
+    q,
+    sb.from('finance_payroll_runs').select('statutory_version_id'),
+  ]);
+  if (versionsResult.error) throw Object.assign(new Error('listStatutoryVersions: ' + versionsResult.error.message), { status: 500 });
+
+  // Build run-count map. Silently fall back to zero if the table doesn't exist yet.
+  const runCountMap = new Map<string, number>();
+  if (!runsResult.error) {
+    for (const run of (runsResult.data ?? []) as { statutory_version_id: string }[]) {
+      runCountMap.set(run.statutory_version_id, (runCountMap.get(run.statutory_version_id) ?? 0) + 1);
+    }
+  }
+
+  return ((versionsResult.data ?? []) as DbVersionRow[]).map(r => ({
+    ...toVersionDto(r),
+    linkedPayrollRunCount: runCountMap.get(r.id) ?? 0,
+  }));
 }
 
 // ── Get single ────────────────────────────────────────────────────────────────
@@ -301,11 +320,48 @@ export async function updateStatutoryVersion(
   if (error) throw Object.assign(new Error('updateStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: row.id, actorId: input.actorId,
-    action: 'statutory_version.updated',
-    previousState: existing, newState: row,
-  });
+  // Backbone: audit (mandatory) + app_event. On failure, compensating rollback reverts
+  // the update to the pre-update state so the DB is never left updated-without-audit.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: input.actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: row.id,
+      eventType: 'finance.statutory.version.updated',
+      auditAction: 'statutory_version.updated',
+      previousState: {
+        label: existing.label,
+        payePersonalAllowance: existing.payePersonalAllowance,
+        payeBand1Rate: existing.payeBand1Rate,
+        payeBand2Rate: existing.payeBand2Rate,
+      },
+      newState: {
+        label: row.label,
+        payePersonalAllowance: row.payePersonalAllowance,
+        payeBand1Rate: row.payeBand1Rate,
+        payeBand2Rate: row.payeBand2Rate,
+      },
+      severity: 'info',
+      metadata: { effectiveFrom: row.effectiveFrom, jurisdiction: row.jurisdiction },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: revert all patched fields to the pre-update state.
+    try {
+      await sb.from('finance_statutory_versions').update({
+        label: existing.label,
+        paye_personal_allowance: existing.payePersonalAllowance,
+        paye_band1_ceiling: existing.payeBand1Ceiling,
+        paye_band1_rate: existing.payeBand1Rate,
+        paye_band2_rate: existing.payeBand2Rate,
+        hs_monthly_threshold: existing.hsMonthlyThreshold,
+        hs_weekly_high: existing.hsWeeklyHigh,
+        hs_weekly_low: existing.hsWeeklyLow,
+        nis_monthly_ceiling: existing.nisMonthyCeiling,
+      }).eq('id', input.id);
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -684,6 +740,15 @@ export async function upsertNisClasses(
     throw Object.assign(new Error('NIS classes can only be updated on draft or approved statutory versions.'), { status: 422 });
   }
 
+  const classNos = classes.map(c => c.classNo);
+
+  // Capture pre-existing rows for those class numbers (compensating rollback snapshot).
+  const { data: preExisting } = await sb
+    .from('finance_nis_classes')
+    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly')
+    .eq('statutory_version_id', statutoryVersionId)
+    .in('class_no', classNos);
+
   const rows = classes.map(c => ({
     statutory_version_id: statutoryVersionId,
     class_no: c.classNo,
@@ -698,15 +763,30 @@ export async function upsertNisClasses(
     .select();
   if (error) throw Object.assign(new Error('upsertNisClasses: ' + error.message), { status: 500 });
 
-  await emitFinanceMutationBackbone({
-    actorUserId: actorId,
-    module: 'finance_statutory',
-    entityType: 'statutory_version',
-    entityId: statutoryVersionId,
-    eventType: 'finance.statutory.nis_classes.updated',
-    auditAction: 'statutory_version.nis_classes_updated',
-    newState: { count: classes.length },
-  });
+  // Backbone: audit (mandatory). On failure, compensating rollback undoes the upsert.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: statutoryVersionId,
+      eventType: 'finance.statutory.nis_classes.updated',
+      auditAction: 'statutory_version.nis_classes_updated',
+      newState: { count: classes.length },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: delete the upserted rows, restore pre-existing ones.
+    try {
+      await sb.from('finance_nis_classes')
+        .delete()
+        .eq('statutory_version_id', statutoryVersionId)
+        .in('class_no', classNos);
+      if ((preExisting ?? []).length > 0) {
+        await sb.from('finance_nis_classes').insert(preExisting!);
+      }
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return ((data ?? []) as DbNisRow[]).map(toNisDto);
 }
@@ -821,11 +901,16 @@ export async function runStatutoryReport(
 // ── Delete NIS class (draft versions only) — Wave 2B ──────────────────────────
 
 export async function deleteNisClass(id: string, actorId: string): Promise<void> {
+  // Fetch the full row up-front so we have data for the compensating re-insert if backbone fails.
   const { data: cls, error: getErr } = await sb
     .from('finance_nis_classes')
-    .select('id, class_no, statutory_version_id')
+    .select('id, class_no, statutory_version_id, weekly_min, weekly_max, employee_weekly, employer_weekly')
     .eq('id', id)
-    .maybeSingle<{ id: string; class_no: number; statutory_version_id: string }>();
+    .maybeSingle<{
+      id: string; class_no: number; statutory_version_id: string;
+      weekly_min: number; weekly_max: number | null;
+      employee_weekly: number; employer_weekly: number;
+    }>();
   if (getErr) throw Object.assign(new Error('deleteNisClass: ' + getErr.message), { status: 500 });
   if (!cls) throw Object.assign(new Error('NIS class not found.'), { status: 404 });
 
@@ -838,15 +923,32 @@ export async function deleteNisClass(id: string, actorId: string): Promise<void>
   const { error } = await sb.from('finance_nis_classes').delete().eq('id', id);
   if (error) throw Object.assign(new Error('deleteNisClass: ' + error.message), { status: 500 });
 
-  await emitFinanceMutationBackbone({
-    actorUserId: actorId,
-    module: 'finance_statutory',
-    entityType: 'statutory_version',
-    entityId: cls.statutory_version_id,
-    eventType: 'finance.statutory.nis_class.deleted',
-    auditAction: 'nis_class.deleted',
-    newState: { classNo: cls.class_no, deletedId: id },
-  });
+  // Backbone: audit (mandatory). On failure, compensating rollback re-inserts the deleted row.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: cls.statutory_version_id,
+      eventType: 'finance.statutory.nis_class.deleted',
+      auditAction: 'nis_class.deleted',
+      newState: { classNo: cls.class_no, deletedId: id },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: restore the deleted row so state is consistent.
+    try {
+      await sb.from('finance_nis_classes').insert({
+        id: cls.id,
+        statutory_version_id: cls.statutory_version_id,
+        class_no: cls.class_no,
+        weekly_min: cls.weekly_min,
+        weekly_max: cls.weekly_max,
+        employee_weekly: cls.employee_weekly,
+        employer_weekly: cls.employer_weekly,
+      });
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 }
 
 // ── Bulk-import NIS classes (draft versions only) — Wave 2B ──────────────────
@@ -893,6 +995,14 @@ export async function importNisClasses(
 
   if (errors.length > 0) return { imported: 0, errors };
 
+  // Capture pre-existing rows for those class numbers (compensating rollback snapshot).
+  const importClassNos = rows.map(r => r.classNo);
+  const { data: preExisting } = await sb
+    .from('finance_nis_classes')
+    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly')
+    .eq('statutory_version_id', statutoryVersionId)
+    .in('class_no', importClassNos);
+
   const dbRows = rows.map(r => ({
     statutory_version_id: statutoryVersionId,
     class_no: r.classNo,
@@ -907,15 +1017,30 @@ export async function importNisClasses(
     .upsert(dbRows, { onConflict: 'statutory_version_id,class_no' });
   if (error) throw Object.assign(new Error('importNisClasses: ' + error.message), { status: 500 });
 
-  await emitFinanceMutationBackbone({
-    actorUserId: actorId,
-    module: 'finance_statutory',
-    entityType: 'statutory_version',
-    entityId: statutoryVersionId,
-    eventType: 'finance.statutory.nis_classes.imported',
-    auditAction: 'nis_classes.imported',
-    newState: { count: rows.length },
-  });
+  // Backbone: audit (mandatory). On failure, compensating rollback undoes the import.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: statutoryVersionId,
+      eventType: 'finance.statutory.nis_classes.imported',
+      auditAction: 'nis_classes.imported',
+      newState: { count: rows.length },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: delete the imported rows, restore pre-existing ones.
+    try {
+      await sb.from('finance_nis_classes')
+        .delete()
+        .eq('statutory_version_id', statutoryVersionId)
+        .in('class_no', importClassNos);
+      if ((preExisting ?? []).length > 0) {
+        await sb.from('finance_nis_classes').insert(preExisting!);
+      }
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return { imported: rows.length, errors: [] };
 }

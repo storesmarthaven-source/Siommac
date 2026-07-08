@@ -13,7 +13,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useEffect } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
@@ -76,10 +76,15 @@ const MAIN_TABS: HrfinTab[] = [
 export function StatutoryConfigOverview(): VNode {
   const [tab, setTab] = useState<MainTab>('versions');
   const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] = useState<string>('summary');
   const [showWizard, setShowWizard] = useState(false);
+  const [editVersion, setEditVersion] = useState<StatutoryVersion | null>(null);
   const [showNisForm, setShowNisForm] = useState<{ versionId: string; edit?: NisClass } | null>(null);
   const [showNisImport, setShowNisImport] = useState<string | null>(null); // versionId
   const [showCompForm, setShowCompForm] = useState<{ edit?: PayComponent } | null>(null);
+
+  const openDrawer = (id: string) => { setDrawerInitialTab('summary'); setDrawerId(id); };
+  const openDrawerAtRuns = (id: string) => { setDrawerInitialTab('runs'); setDrawerId(id); };
 
   const versionsQ   = useStatutoryVersions();
   const componentsQ = usePayComponents({ activeOnly: false });
@@ -224,7 +229,7 @@ export function StatutoryConfigOverview(): VNode {
       {/* Main grid: register + rail */}
       <div class="hrfin-page-grid">
         <div class="hrfin-register">
-          {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={setDrawerId} onNew={() => setShowWizard(true)} />}
+          {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onNew={() => setShowWizard(true)} onEdit={setEditVersion} />}
           {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setShowNisForm({ versionId: v })} onImport={setShowNisImport} />}
           {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManage} onNew={() => setShowCompForm({})} onEdit={c => setShowCompForm({ edit: c })} />}
           {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
@@ -275,6 +280,7 @@ export function StatutoryConfigOverview(): VNode {
       <StatVersionDrawer
         id={drawerId}
         open={!!drawerId}
+        initialTab={drawerInitialTab}
         onClose={() => setDrawerId(null)}
         canManage={canManage}
         canApprove={canApprove}
@@ -283,6 +289,11 @@ export function StatutoryConfigOverview(): VNode {
 
       {/* New Rate Version wizard */}
       {showWizard && <StatNewVersionWizard onClose={() => setShowWizard(false)} />}
+
+      {/* Edit draft version dialog */}
+      {editVersion && (
+        <StatEditVersionDialog version={editVersion} onClose={() => setEditVersion(null)} />
+      )}
 
       {/* NIS Class add/edit dialog */}
       {showNisForm && (
@@ -314,14 +325,16 @@ export function StatutoryConfigOverview(): VNode {
 
 // ── Rate Versions tab ─────────────────────────────────────────────────────────
 
-function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDrawer, onNew }: {
+function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDrawer, onOpenDrawerAtRuns, onNew, onEdit }: {
   versions: StatutoryVersion[];
   loading: boolean;
   error?: string;
   canManage: boolean;
   canApprove: boolean;
   onOpenDrawer: (id: string) => void;
+  onOpenDrawerAtRuns: (id: string) => void;
   onNew: () => void;
+  onEdit: (v: StatutoryVersion) => void;
 }): VNode {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -334,6 +347,13 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   const rejectMut   = useStatutoryMutation(financeStatutoryApi.rejectVersion);
   const activateMut = useStatutoryMutation(financeStatutoryApi.activateVersion);
   const retireMut   = useStatutoryMutation(financeStatutoryApi.retireVersion);
+
+  // Batch-resolve createdBy + approvedBy IDs for Owner and Approval State columns (§20).
+  const actorIds = useMemo(
+    () => [...new Set(versions.flatMap(v => [v.createdBy, v.approvedBy].filter((x): x is string => !!x)))],
+    [versions],
+  );
+  const { data: nameMap } = useEmployeeNames(actorIds);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
     try { await p; toast(ok); } catch (e) { toast.error((e as Error).message); }
@@ -399,14 +419,59 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
         </HrfinPill>
       ),
     },
+    // §11 / §20 mandated columns ──────────────────────────────────────────────
+    {
+      key: 'owner', label: 'Owner',
+      render: v => v.createdBy
+        ? <EmployeeCellResolved resolved={nameMap?.get(v.createdBy)} fallbackId={v.createdBy} />
+        : <span style={{ opacity: 0.5 }}>—</span>,
+    },
+    {
+      key: 'linkedRuns', label: 'Linked Runs',
+      render: v => {
+        const count = v.linkedPayrollRunCount ?? 0;
+        return count > 0 ? (
+          <button
+            type="button"
+            class="hrfin-link"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--hrfin-accent)', fontSize: 13, padding: 0 }}
+            onClick={e => { e.stopPropagation(); onOpenDrawerAtRuns(v.id); }}
+          >
+            {count} run{count !== 1 ? 's' : ''}
+          </button>
+        ) : <span style={{ opacity: 0.5 }}>—</span>;
+      },
+    },
+    {
+      key: 'approvalState', label: 'Approval',
+      render: v => {
+        if (v.status === 'draft') return <span style={{ opacity: 0.5, fontSize: 12 }}>Not submitted</span>;
+        if (v.status === 'pending_approval') return <HrfinPill tone="wn">Awaiting</HrfinPill>;
+        if (v.approvedBy) return (
+          <div>
+            <HrfinPill tone="ok">Approved</HrfinPill>
+            <div style={{ marginTop: 3 }}>
+              <EmployeeCellResolved resolved={nameMap?.get(v.approvedBy)} fallbackId={v.approvedBy} />
+            </div>
+          </div>
+        );
+        return <span style={{ opacity: 0.5 }}>—</span>;
+      },
+    },
   ];
 
   const rowActions = (v: StatutoryVersion): RowActionItem[] => [
     { key: 'view', label: 'View details', icon: 'file', onClick: () => onOpenDrawer(v.id) },
-    ...(canManage && v.status === 'draft' ? [{
-      key: 'submit', label: 'Submit for approval', icon: 'send' as const,
-      onClick: () => run(submitMut.mutateAsync({ id: v.id }), 'Submitted for approval.'),
-    }] : []),
+    ...(canManage && v.status === 'draft' ? [
+      {
+        key: 'edit', label: 'Edit rates', icon: 'refresh' as const,
+        onClick: () => onEdit(v),
+      },
+      {
+        key: 'submit', label: 'Submit for approval', icon: 'send' as const,
+        onClick: () => run(submitMut.mutateAsync({ id: v.id }), 'Submitted for approval.'),
+      },
+    ] : []),
     ...(canApprove && v.status === 'pending_approval' ? [
       { key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') },
       { key: 'reject',  label: 'Reject',  icon: 'close' as const, tone: 'danger' as const, onClick: async () => {
@@ -481,11 +546,25 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
 }): VNode {
   const [versionId, setVersionId] = useState<string>(() => versions.find(v => v.isActive)?.id ?? versions[0]?.id ?? '');
   const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
   const effectiveId = versionId || (versions[0]?.id ?? '');
   const classesQ   = useNisClasses(effectiveId || null);
-  const classes    = classesQ.data ?? [];
+  const allClasses = classesQ.data ?? [];
   const selectedVer = versions.find(v => v.id === effectiveId);
   const canEdit    = canManage && selectedVer?.status === 'draft';
+
+  // §20: register has search — filter within the version's classes.
+  const classes = useMemo(() => {
+    if (!search.trim()) return allClasses;
+    const q = search.toLowerCase();
+    return allClasses.filter(c =>
+      String(c.classNo).includes(q) ||
+      String(c.weeklyMin).includes(q) ||
+      (c.weeklyMax != null && String(c.weeklyMax).includes(q)) ||
+      String(c.employeeWeekly).includes(q) ||
+      String(c.employerWeekly).includes(q),
+    );
+  }, [allClasses, search]);
 
   const deleteMut = useStatutoryMutation(financeStatutoryApi.deleteNisClass);
   const handleDelete = async (id: string, classNo: number): Promise<void> => {
@@ -535,6 +614,9 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
       </div>
 
       <HrfinTable
+        searchValue={search}
+        onSearch={v => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Search by class # or amount…"
         columns={columns}
         rows={classes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
@@ -567,6 +649,8 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
   const [filter, setFilter] = useState<'all' | 'earning' | 'deduction'>('all');
   const [showActive, setShowActive] = useState(true);
   const [page, setPage] = useState(0);
+  const [sortField, setSortField] = useState<string>('code');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const retireMut = useStatutoryMutation(financeStatutoryApi.retireComponent);
   const handleRetire = async (c: PayComponent): Promise<void> => {
@@ -584,19 +668,25 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
       const q = search.toLowerCase();
       rows = rows.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
     }
+    // §20: register has sort
+    rows = [...rows].sort((a, b) => {
+      const aVal = String(a[sortField as keyof typeof a] ?? '');
+      const bVal = String(b[sortField as keyof typeof b] ?? '');
+      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
     return rows;
-  }, [components, showActive, filter, search]);
+  }, [components, showActive, filter, search, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
   const columns: ReadonlyArray<HrfinColumn<PayComponent>> = [
-    { key: 'code',      label: 'Code',     render: c => <b style={{ fontFamily: 'monospace' }}>{c.code}</b> },
-    { key: 'name',      label: 'Name',     render: c => c.name },
-    { key: 'kind',      label: 'Kind',     render: c => <HrfinPill tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</HrfinPill> },
+    { key: 'code',      label: 'Code',     sortable: true, render: c => <b style={{ fontFamily: 'monospace' }}>{c.code}</b> },
+    { key: 'name',      label: 'Name',     sortable: true, render: c => c.name },
+    { key: 'kind',      label: 'Kind',     sortable: true, render: c => <HrfinPill tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</HrfinPill> },
     { key: 'taxable',   label: 'Taxable',  render: c => c.isTaxable ? '✓' : '—' },
     { key: 'statutory', label: 'Statutory',render: c => c.isStatutory ? '✓' : '—' },
     {
-      key: 'status', label: 'Status',
+      key: 'isActive', label: 'Status', sortable: true,
       render: c => <HrfinPill tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</HrfinPill>,
     },
   ];
@@ -632,6 +722,9 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
         searchValue={search}
         onSearch={v => { setSearch(v); setPage(0); }}
         searchPlaceholder="Search by code or name…"
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
         columns={columns}
         rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
@@ -657,6 +750,9 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const verifyMut = usePayrollMutation(financePayrollApi.verifyNisProfile);
   const rejectMut = usePayrollMutation(financePayrollApi.rejectNisProfile);
   const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState<string>('nisNumber');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const profiles = profilesQ.data ?? [];
 
@@ -692,21 +788,44 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     return v == null || v === '' ? '—' : String(v);
   };
 
+  // Dual-key accessor (backend may return camelCase or snake_case).
+  const dv = (r: NisProfileRow, camel: string, snake: string): string => {
+    const c = val(r, camel); return c !== '—' ? c : val(r, snake);
+  };
+
+  // §20: register has search/filter/sort.
+  const filteredProfiles = useMemo(() => {
+    let rows = profiles;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      rows = rows.filter(r =>
+        dv(r, 'nisNumber', 'nis_number').toLowerCase().includes(q) ||
+        dv(r, 'employeeId', 'employee_id').toLowerCase().includes(q) ||
+        dv(r, 'previousEmployerName', 'previous_employer_name').toLowerCase().includes(q),
+      );
+    }
+    return [...rows].sort((a, b) => {
+      const aVal = dv(a, sortField, sortField.replace(/([A-Z])/g, '_$1').toLowerCase());
+      const bVal = dv(b, sortField, sortField.replace(/([A-Z])/g, '_$1').toLowerCase());
+      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
+  }, [profiles, search, sortField, sortDir]);
+
   const columns: ReadonlyArray<HrfinColumn<NisProfileRow>> = [
     {
-      key: 'employeeId', label: 'Employee',
+      key: 'employeeId', label: 'Employee', sortable: true,
       render: r => {
-        const empId = val(r, 'employeeId') !== '—' ? val(r, 'employeeId') : val(r, 'employee_id');
+        const empId = dv(r, 'employeeId', 'employee_id');
         return empId === '—'
           ? <span style={{ opacity: 0.5 }}>—</span>
           : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
       },
     },
-    { key: 'nisNumber',     label: 'NIS #',            render: r => val(r, 'nisNumber') !== '—' ? val(r, 'nisNumber') : val(r, 'nis_number') },
-    { key: 'prevEmployer',  label: 'Previous Employer', render: r => val(r, 'previousEmployerName') !== '—' ? val(r, 'previousEmployerName') : val(r, 'previous_employer_name') },
-    { key: 'openingYtd',   label: 'Opening YTD (EE)',  render: r => val(r, 'openingYtdNisEmployee') !== '—' ? val(r, 'openingYtdNisEmployee') : val(r, 'opening_ytd_nis_employee') },
+    { key: 'nisNumber',    label: 'NIS #',             sortable: true, render: r => dv(r, 'nisNumber', 'nis_number') },
+    { key: 'prevEmployer', label: 'Previous Employer',  sortable: true, render: r => dv(r, 'previousEmployerName', 'previous_employer_name') },
+    { key: 'openingYtd',  label: 'Opening YTD (EE)',   render: r => dv(r, 'openingYtdNisEmployee', 'opening_ytd_nis_employee') },
     {
-      key: 'status', label: 'Status',
+      key: 'nisStatus', label: 'Status', sortable: true,
       render: r => <HrfinPill tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</HrfinPill>,
     },
   ];
@@ -719,17 +838,23 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     ] : [];
   };
 
-  const pageCount = Math.max(1, Math.ceil(profiles.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
 
   return (
     <HrfinTable
+      searchValue={search}
+      onSearch={v => { setSearch(v); setPage(0); }}
+      searchPlaceholder="Search by NIS #, employee or employer…"
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
       columns={columns}
-      rows={profiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) as NisProfileRow[]}
+      rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) as NisProfileRow[]}
       rowKey={(r: NisProfileRow) => String(r['id'] ?? Math.random())}
       rowActions={canVerify ? rowActions : undefined}
       page={page}
       pageCount={pageCount}
-      total={profiles.length}
+      total={filteredProfiles.length}
       pageSize={PAGE_SIZE}
       onPage={setPage}
       noun="profiles"
@@ -819,15 +944,21 @@ const DRAWER_TABS: { key: DrawerTab; label: string }[] = [
   { key: 'audit',      label: 'Audit' },
 ];
 
-function StatVersionDrawer({ id, open, onClose, canManage, canApprove, onShowNisForm }: {
+function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManage, canApprove, onShowNisForm }: {
   id: string | null;
   open: boolean;
+  initialTab?: string;
   onClose: () => void;
   canManage: boolean;
   canApprove: boolean;
   onShowNisForm: (versionId: string) => void;
 }): VNode {
   const [dtab, setDtab] = useState<DrawerTab>('summary');
+
+  // Reset to the requested tab whenever the drawer opens for a new version or initial tab changes.
+  useEffect(() => {
+    if (open && id) setDtab(initialTab as DrawerTab);
+  }, [open, id, initialTab]);
   const detailQ = useVersionDetail(open ? id : null);
   const componentsQ = usePayComponents({ isStatutory: true });
   const d = detailQ.data;
@@ -1259,6 +1390,146 @@ function StatNewVersionWizard({ onClose }: { onClose: () => void }): VNode {
           </p>
         </div>
       )}
+    </HrfinWizardModal>
+  );
+}
+
+// ── Edit draft Rate Version dialog ────────────────────────────────────────────
+//
+// Surfaces the /versions/update backend route — corrects Gap 2 (accept-and-drop:
+// the route existed but was never wired in the FE). Only shown for draft versions.
+// All updatable rate fields are included (label, PAYE, HS, NIS ceiling).
+
+function StatEditVersionDialog({ version, onClose }: {
+  version: StatutoryVersion;
+  onClose: () => void;
+}): VNode {
+  const [f, setF] = useState({
+    label:                 version.label,
+    payePersonalAllowance: String(version.payePersonalAllowance),
+    payeBand1Ceiling:      String(version.payeBand1Ceiling),
+    payeBand1Rate:         String(version.payeBand1Rate),
+    payeBand2Rate:         String(version.payeBand2Rate),
+    hsMonthlyThreshold:    String(version.hsMonthlyThreshold),
+    hsWeeklyHigh:          String(version.hsWeeklyHigh),
+    hsWeeklyLow:           String(version.hsWeeklyLow),
+    nisMonthyCeiling:      version.nisMonthyCeiling != null ? String(version.nisMonthyCeiling) : '',
+  });
+
+  const updateMut = useStatutoryMutation(financeStatutoryApi.updateVersion);
+
+  const fieldErrors: string[] = [];
+  if (!f.label.trim()) fieldErrors.push('Label is required.');
+  if (isNaN(Number(f.payePersonalAllowance)) || Number(f.payePersonalAllowance) < 0) fieldErrors.push('PAYE personal allowance must be ≥ 0.');
+  if (isNaN(Number(f.payeBand1Rate)) || Number(f.payeBand1Rate) > 1 || Number(f.payeBand1Rate) < 0) fieldErrors.push('Band 1 rate must be between 0 and 1.');
+  if (isNaN(Number(f.payeBand2Rate)) || Number(f.payeBand2Rate) > 1 || Number(f.payeBand2Rate) < 0) fieldErrors.push('Band 2 rate must be between 0 and 1.');
+
+  const submit = async (): Promise<void> => {
+    if (fieldErrors.length) return;
+    try {
+      await updateMut.mutateAsync({
+        id: version.id,
+        label: f.label.trim(),
+        payePersonalAllowance: Number(f.payePersonalAllowance),
+        payeBand1Ceiling:      Number(f.payeBand1Ceiling),
+        payeBand1Rate:         Number(f.payeBand1Rate),
+        payeBand2Rate:         Number(f.payeBand2Rate),
+        hsMonthlyThreshold:    Number(f.hsMonthlyThreshold),
+        hsWeeklyHigh:          Number(f.hsWeeklyHigh),
+        hsWeeklyLow:           Number(f.hsWeeklyLow),
+        nisMonthyCeiling:      f.nisMonthyCeiling === '' ? null : Number(f.nisMonthyCeiling),
+      });
+      toast('Draft version updated.');
+      onClose();
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
+  const inputStyle = { padding: '7px 10px', border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, background: 'var(--hrfin-surface-2, #1e2535)', color: 'var(--hrfin-text-primary, #e8eaf2)', fontSize: 14, width: '100%' };
+  const labelStyle = { fontSize: 12, fontWeight: 600 as const, color: 'var(--muted)' };
+  const fieldStyle = { display: 'flex', flexDirection: 'column' as const, gap: 4 };
+
+  return (
+    <HrfinWizardModal
+      open
+      title={`Edit: ${version.label}`}
+      stepCount={1}
+      activeStep={0}
+      onClose={onClose}
+      primaryLabel="Save changes"
+      onPrimary={() => void submit()}
+      primaryDisabled={fieldErrors.length > 0 || updateMut.isPending}
+      primaryLoading={updateMut.isPending}
+    >
+      <div style={{ display: 'grid', gap: 18 }}>
+        <p style={{ fontSize: 12, opacity: 0.65, margin: 0 }}>
+          Editing draft <b>{version.label}</b> · effective {fmtDate(version.effectiveFrom)} · {version.jurisdiction}.
+          Effective date and jurisdiction cannot be changed after creation.
+        </p>
+
+        <div style={fieldStyle}>
+          <label style={labelStyle}>Version label *</label>
+          <input type="text" style={inputStyle} value={f.label}
+            onInput={e => setF(p => ({ ...p, label: (e.currentTarget as HTMLInputElement).value }))} />
+        </div>
+
+        <fieldset style={{ border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, padding: '12px 14px', margin: 0 }}>
+          <legend style={{ fontSize: 12, fontWeight: 700, padding: '0 6px', color: 'var(--muted)' }}>PAYE Bands</legend>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Personal Allowance (annual, TTD)</label>
+              <input type="number" style={inputStyle} step="0.01" value={f.payePersonalAllowance}
+                onInput={e => setF(p => ({ ...p, payePersonalAllowance: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Band 1 Ceiling (annual, TTD)</label>
+              <input type="number" style={inputStyle} step="0.01" value={f.payeBand1Ceiling}
+                onInput={e => setF(p => ({ ...p, payeBand1Ceiling: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Band 1 Rate (0–1, e.g. 0.25 = 25%)</label>
+              <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand1Rate}
+                onInput={e => setF(p => ({ ...p, payeBand1Rate: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Band 2 Rate (0–1)</label>
+              <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand2Rate}
+                onInput={e => setF(p => ({ ...p, payeBand2Rate: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset style={{ border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, padding: '12px 14px', margin: 0 }}>
+          <legend style={{ fontSize: 12, fontWeight: 700, padding: '0 6px', color: 'var(--muted)' }}>Health Surcharge</legend>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Monthly Threshold (TTD)</label>
+              <input type="number" style={inputStyle} step="0.01" value={f.hsMonthlyThreshold}
+                onInput={e => setF(p => ({ ...p, hsMonthlyThreshold: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Weekly Rate — High (TTD)</label>
+              <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyHigh}
+                onInput={e => setF(p => ({ ...p, hsWeeklyHigh: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Weekly Rate — Low (TTD)</label>
+              <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyLow}
+                onInput={e => setF(p => ({ ...p, hsWeeklyLow: (e.currentTarget as HTMLInputElement).value }))} />
+            </div>
+          </div>
+        </fieldset>
+
+        <div style={fieldStyle}>
+          <label style={labelStyle}>NIS Monthly Ceiling (TTD, blank = no ceiling)</label>
+          <input type="number" style={inputStyle} step="0.01" placeholder="Optional"
+            value={f.nisMonthyCeiling}
+            onInput={e => setF(p => ({ ...p, nisMonthyCeiling: (e.currentTarget as HTMLInputElement).value }))} />
+        </div>
+
+        {fieldErrors.map((e, i) => (
+          <p key={i} style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>{e}</p>
+        ))}
+      </div>
     </HrfinWizardModal>
   );
 }

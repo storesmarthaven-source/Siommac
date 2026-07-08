@@ -41,6 +41,8 @@ export interface StatutoryVersion {
   retiredAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Payroll runs referencing this version. Populated by listVersions endpoint. */
+  linkedPayrollRunCount?: number;
 }
 
 export interface NisClass {

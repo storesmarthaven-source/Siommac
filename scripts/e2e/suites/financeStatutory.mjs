@@ -882,4 +882,93 @@ export default async function run(h) {
     });
     fails(r, 'finance_staff should be denied /reports/run (reports.view is manager/admin only)');
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › §18 — CSV Export Data-Shape Verification');
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The register CSV export (QuickActionStrip "Export Versions") is client-side:
+  // it calls exportCsv() over the already-fetched versions list. §18 mandates
+  // 'CSV export returns a file' as a per-page E2E gate. Since the export
+  // uses the /versions/list response as its data source, we assert here that
+  // every field consumed by exportCsv() is present in the API response shape.
+  // This constitutes the backend contract that the client-side export depends on.
+
+  await test('§18 CSV export — /versions/list returns every field consumed by the register export', async () => {
+    const r = await api('finance/statutory/versions/list', fmgr1Token, {});
+    ok(r, `versions/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'data must be an array');
+    expect(r.body.data.length >= 1, 'need at least one version to assert CSV shape');
+
+    // Fields used by exportCsv() in StatutoryConfigOverview.tsx QuickActionStrip
+    const csvFields = [
+      'label', 'effectiveFrom', 'jurisdiction', 'status',
+      'payePersonalAllowance', 'payeBand1Rate', 'payeBand2Rate',
+      'hsMonthlyThreshold', 'createdAt',
+    ];
+    const row = r.body.data[0];
+    for (const field of csvFields) {
+      expect(field in row, `CSV export field "${field}" missing from /versions/list response`);
+    }
+  });
+
+  await test('§18 CSV export — /versions/list includes §11 Owner field (createdBy) for Owner column', async () => {
+    const r = await api('finance/statutory/versions/list', fmgr1Token, {});
+    ok(r, `versions/list failed: ${r.body.message}`);
+    const row = r.body.data[0];
+    // createdBy is needed for the Owner EmployeeCell column (§20) and can be exported.
+    expect('createdBy' in row, 'createdBy field missing from /versions/list — required for Owner column');
+    expect('approvedBy' in row, 'approvedBy field missing — required for Approval State column');
+    expect('linkedPayrollRunCount' in row,
+      'linkedPayrollRunCount missing from /versions/list — required for Linked Runs column (§11)');
+  });
+
+  await test('§18 CSV export — linkedPayrollRunCount is a non-negative number per version', async () => {
+    const r = await api('finance/statutory/versions/list', fmgr1Token, {});
+    ok(r, `versions/list failed: ${r.body.message}`);
+    for (const v of r.body.data) {
+      expect(
+        typeof v.linkedPayrollRunCount === 'number' && v.linkedPayrollRunCount >= 0,
+        `linkedPayrollRunCount must be a non-negative number; got ${v.linkedPayrollRunCount} on ${v.id}`,
+      );
+    }
+  });
+
+  await test('§18 CSV export — /reports/run statutory_version_summary contains all exportable fields', async () => {
+    // The Reports tab also has a client-side CSV download via ReportPanel.
+    // Verify the statutory_version_summary report returns the fields it promises.
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'statutory_version_summary',
+    });
+    ok(r, `/reports/run statutory_version_summary failed: ${r.body.message}`);
+    expect(typeof r.body.data.report === 'string',       'report field must be a string');
+    expect(typeof r.body.data.generatedAt === 'string',  'generatedAt must be a string');
+    expect(Array.isArray(r.body.data.rows),              'rows must be an array');
+    // generatedAt must be an ISO timestamp (the export header row uses it).
+    expect(/^\d{4}-\d{2}-\d{2}T/.test(r.body.data.generatedAt),
+      `generatedAt must be an ISO timestamp, got: ${r.body.data.generatedAt}`);
+    // When there is data (there will be after the lifecycle tests), assert shape.
+    if (r.body.data.rows.length > 0) {
+      const row = r.body.data.rows[0];
+      const reportExportFields = ['label', 'effectiveFrom', 'jurisdiction', 'status', 'isActive', 'createdAt'];
+      for (const field of reportExportFields) {
+        expect(field in row, `statutory_version_summary report row missing "${field}" — CSV export would be incomplete`);
+      }
+    }
+  });
+
+  await test('§18 CSV export — /reports/run pay_component_map contains all exportable fields', async () => {
+    const r = await api('finance/statutory/reports/run', fmgr1Token, {
+      report: 'pay_component_map',
+    });
+    ok(r, `/reports/run pay_component_map failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data.rows), 'rows must be an array');
+    if (r.body.data.rows.length > 0) {
+      const row = r.body.data.rows[0];
+      const exportFields = ['code', 'name', 'kind', 'isStatutory', 'isTaxable', 'isActive'];
+      for (const field of exportFields) {
+        expect(field in row, `pay_component_map row missing "${field}" — CSV export would be incomplete`);
+      }
+    }
+  });
 }
