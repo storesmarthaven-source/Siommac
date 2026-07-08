@@ -30,10 +30,16 @@ import {
   useDisbursementKpis,
   useDisbursementLinesDetail,
   useDisbursementReport,
+  useDisbursementAuditLog,
+  useFinanceAuditLog,
+  useBankFileStatusReport,
+  useBankAccountReadinessReport,
   useDisbursementMutation,
   financeDisbursementsApi,
   type Disbursement,
   type DisbursementStatus,
+  type BankFileStatusRow,
+  type BankAccountReadinessRow,
 } from '@api/finance/disbursements';
 import {
   useBankAccounts,
@@ -92,7 +98,26 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
   };
 }
 
+// ── CSV export helper ─────────────────────────────────────────────────────────
+
+function downloadCsv(headers: string[], rows: string[][], filename: string): void {
+  const esc = (v: string) => (v.includes(',') || v.includes('"') || v.includes('\n'))
+    ? `"${v.replace(/"/g, '""')}"`
+    : v;
+  const csv = [headers, ...rows].map(r => r.map(esc).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ── Disbursements tab ─────────────────────────────────────────────────────────
+
+type SortKey = 'disbursementNo' | 'totalAmount' | 'employeeCount' | 'status' | 'createdAt';
+type SortDir = 'asc' | 'desc';
 
 function DisbursementsTab({
   canManage,
@@ -105,13 +130,21 @@ function DisbursementsTab({
   onOpenDrawer: (id: string) => void;
   onCreated: () => void;
 }): VNode {
-  const [search, setSearch]   = useState('');
+  const [search, setSearch]       = useState('');
   const [statusFilter, setStatus] = useState<DisbursementStatus | ''>('');
-  const [page, setPage]       = useState(0);
-  const [wizOpen, setWizOpen] = useState(false);
+  const [page, setPage]           = useState(0);
+  const [wizOpen, setWizOpen]     = useState(false);
+  const [sortKey, setSortKey]     = useState<SortKey>('createdAt');
+  const [sortDir, setSortDir]     = useState<SortDir>('desc');
 
   const allQ = useDisbursements();
   const disbursements = allQ.data ?? [];
+
+  function toggleSort(key: SortKey): void {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+    setPage(0);
+  }
 
   const filtered = useMemo(() => {
     let rows = disbursements;
@@ -123,8 +156,18 @@ function DisbursementsTab({
         d.currency.toLowerCase().includes(q),
       );
     }
+    // Client-side sort
+    rows = [...rows].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'disbursementNo') cmp = a.disbursementNo.localeCompare(b.disbursementNo);
+      else if (sortKey === 'totalAmount') cmp = a.totalAmount - b.totalAmount;
+      else if (sortKey === 'employeeCount') cmp = a.employeeCount - b.employeeCount;
+      else if (sortKey === 'status') cmp = a.status.localeCompare(b.status);
+      else cmp = a.createdAt.localeCompare(b.createdAt);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
     return rows;
-  }, [disbursements, search, statusFilter]);
+  }, [disbursements, search, statusFilter, sortKey, sortDir]);
 
   const paged = paginate(filtered, page);
 
@@ -139,20 +182,35 @@ function DisbursementsTab({
     catch (e) { toast((e as Error).message ?? 'Action failed.'); }
   }
 
+  const sortArrow = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+
+  function handleExport(): void {
+    const headers = ['Reference', 'Employees', 'Net Pay', 'Currency', 'Status', 'Created'];
+    const rows = filtered.map(d => [
+      d.disbursementNo,
+      String(d.employeeCount),
+      String(d.totalAmount),
+      d.currency,
+      d.status,
+      fmtDate(d.createdAt),
+    ]);
+    downloadCsv(headers, rows, 'disbursements-export.csv');
+  }
+
   const COLS: HrfinColumn<Disbursement>[] = [
     {
       key: 'ref',
-      label: 'Reference',
+      label: 'Reference' + sortArrow('disbursementNo'),
       render: d => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.disbursementNo}</strong>,
     },
     {
       key: 'employees',
-      label: 'Employees',
+      label: 'Employees' + sortArrow('employeeCount'),
       render: d => <span style={{ color: 'var(--muted)', fontSize: 13 }}>{d.employeeCount}</span>,
     },
     {
       key: 'amount',
-      label: 'Net Pay',
+      label: 'Net Pay' + sortArrow('totalAmount'),
       render: d => <b>{money(d.totalAmount)}</b>,
     },
     {
@@ -162,12 +220,12 @@ function DisbursementsTab({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: 'Status' + sortArrow('status'),
       render: d => <HrfinPill tone={disbStatusTone(d.status)}>{humanize(d.status)}</HrfinPill>,
     },
     {
       key: 'created',
-      label: 'Created',
+      label: 'Created' + sortArrow('createdAt'),
       render: d => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{fmtDate(d.createdAt)}</span>,
     },
   ];
@@ -181,6 +239,38 @@ function DisbursementsTab({
           onCreated={() => { setWizOpen(false); onCreated(); }}
         />
       )}
+
+      {/* Sort + Export controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>Sort by:</span>
+        {([
+          ['disbursementNo', 'Reference'],
+          ['totalAmount',    'Net Pay'],
+          ['employeeCount',  'Employees'],
+          ['status',         'Status'],
+          ['createdAt',      'Created'],
+        ] as [SortKey, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            class={`hrfin-action${sortKey === key ? ' is-primary' : ''}`}
+            style={{ fontSize: 11, padding: '3px 8px' }}
+            onClick={() => toggleSort(key)}
+          >
+            {label}{sortArrow(key)}
+          </button>
+        ))}
+        <div style={{ marginLeft: 'auto' }}>
+          <button
+            type="button"
+            class="hrfin-action"
+            style={{ fontSize: 12 }}
+            onClick={handleExport}
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
 
       <HrfinTable
         tabs={PAGE_TABS}
@@ -342,26 +432,76 @@ function LinesTab(): VNode {
 
 // ── Bank Accounts tab ─────────────────────────────────────────────────────────
 
+// ── Bank Account Audit Panel ──────────────────────────────────────────────────
+
+function BankAccountAuditPanel({ accountId, onClose }: { accountId: string; onClose: () => void }): VNode {
+  const auditQ = useFinanceAuditLog('finance_bank_accounts', accountId);
+  const entries = auditQ.data ?? [];
+  const fmtDateTime = (iso: string) =>
+    new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const humanizeAction = (a: string) =>
+    a.replace(/^bank_account\./, '').replace(/\./g, ' → ').replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
+
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16, background: 'var(--surface)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Bank Account Audit Log</h3>
+        <button type="button" class="hrfin-action" onClick={onClose} style={{ fontSize: 12 }}>Close</button>
+      </div>
+      {auditQ.isLoading && <div class="hrfin-empty" style={{ fontSize: 12 }}>Loading…</div>}
+      {!auditQ.isLoading && entries.length === 0 && (
+        <div class="hrfin-empty" style={{ fontSize: 12 }}>No audit entries for this account.</div>
+      )}
+      {entries.length > 0 && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <th style={{ padding: '4px 8px', textAlign: 'left' }}>Date / Time</th>
+              <th style={{ padding: '4px 8px', textAlign: 'left' }}>Action</th>
+              <th style={{ padding: '4px 8px', textAlign: 'left' }}>By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map(e => (
+              <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '6px 8px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{fmtDateTime(e.createdAt)}</td>
+                <td style={{ padding: '6px 8px' }}>{humanizeAction(e.action)}</td>
+                <td style={{ padding: '6px 8px' }}><EmployeeCell employeeId={e.actorId} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+// ── Bank Accounts form ────────────────────────────────────────────────────────
+
 interface BankAccountFormState {
-  employeeId:    string | null;
-  bankName:      string;
-  branch:        string;
-  accountType:   'savings' | 'chequing';
-  accountNumber: string;
-  isPrimary:     boolean;
+  employeeId:         string | null;
+  bankName:           string;
+  branch:             string;
+  accountType:        'savings' | 'chequing';
+  accountNumber:      string;
+  isPrimary:          boolean;
+  routingNumber:      string;
+  verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
 }
 
 const emptyBankForm = (): BankAccountFormState => ({
-  employeeId: null, bankName: '', branch: '', accountType: 'savings', accountNumber: '', isPrimary: true,
+  employeeId: null, bankName: '', branch: '', accountType: 'savings', accountNumber: '',
+  isPrimary: true, routingNumber: '', verificationStatus: 'unverified',
 });
 
 function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
-  const [search, setSearch]   = useState('');
-  const [page, setPage]       = useState(0);
-  const [showAdd, setShowAdd] = useState(false);
-  const [editId, setEditId]   = useState<string | null>(null);
-  const [form, setForm]       = useState<BankAccountFormState>(emptyBankForm());
-  const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [search, setSearch]     = useState('');
+  const [page, setPage]         = useState(0);
+  const [showAdd, setShowAdd]   = useState(false);
+  const [editId, setEditId]     = useState<string | null>(null);
+  const [form, setForm]         = useState<BankAccountFormState>(emptyBankForm());
+  const [errors, setErrors]     = useState<Record<string, string>>({});
+  const [auditAcctId, setAuditAcctId] = useState<string | null>(null);
 
   const listQ       = useBankAccounts({ includeInactive: false });
   const upsertMut   = useBankAccountMutation(financeBankAccountsApi.upsert);
@@ -402,6 +542,10 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
         accountType:   form.accountType,
         accountNumber: form.accountNumber,
         isPrimary:     form.isPrimary,
+        metadata:      {
+          routingNumber:      form.routingNumber || null,
+          verificationStatus: form.verificationStatus,
+        },
       });
       toast(editId ? 'Bank account updated.' : 'Bank account added.');
       setShowAdd(false);
@@ -430,6 +574,13 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
       render: a => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{a.accountNumberMasked}</span>,
     },
     {
+      key: 'routing',
+      label: 'Routing / IFSC',
+      render: a => <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--muted)' }}>
+        {(a.metadata?.routingNumber as string) || '—'}
+      </span>,
+    },
+    {
       key: 'type',
       label: 'Type',
       render: a => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{humanize(a.accountType)}</span>,
@@ -438,6 +589,15 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
       key: 'primary',
       label: 'Default',
       render: a => a.isPrimary ? <HrfinPill tone="ok">Primary</HrfinPill> : <HrfinPill tone="dr">Secondary</HrfinPill>,
+    },
+    {
+      key: 'verification',
+      label: 'Verification',
+      render: a => {
+        const vs = (a.metadata?.verificationStatus as string) ?? 'unverified';
+        const tone: HrfinTone = vs === 'verified' ? 'ok' : vs === 'failed' ? 'bad' : vs === 'pending' ? 'wn' : 'dr';
+        return <HrfinPill tone={tone}>{humanize(vs)}</HrfinPill>;
+      },
     },
     {
       key: 'updated',
@@ -503,6 +663,28 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
               {errors['accountNumber'] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors['accountNumber']}</span>}
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>Stored masked — only last 4 digits visible.</span>
             </label>
+            <label>
+              <span class="hrfin-wiz-label">Routing / IFSC number (optional)</span>
+              <input
+                class="hrfin-input"
+                placeholder="e.g. 026009593"
+                value={form.routingNumber}
+                onInput={e => setForm(f => ({ ...f, routingNumber: (e.currentTarget as HTMLInputElement).value }))}
+              />
+            </label>
+            <label>
+              <span class="hrfin-wiz-label">Verification status</span>
+              <select
+                class="hrfin-input"
+                value={form.verificationStatus}
+                onChange={e => setForm(f => ({ ...f, verificationStatus: (e.currentTarget as HTMLSelectElement).value as BankAccountFormState['verificationStatus'] }))}
+              >
+                <option value="unverified">Unverified</option>
+                <option value="pending">Pending verification</option>
+                <option value="verified">Verified</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, gridColumn: '1 / -1' }}>
               <input
                 type="checkbox"
@@ -533,6 +715,14 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
         </div>
       )}
 
+      {/* Inline audit trail panel — shown when "View audit" row action is clicked */}
+      {auditAcctId && (
+        <BankAccountAuditPanel
+          accountId={auditAcctId}
+          onClose={() => setAuditAcctId(null)}
+        />
+      )}
+
       <HrfinTable
         searchValue={search}
         onSearch={v => { setSearch(v); setPage(0); }}
@@ -547,9 +737,23 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
             disabledReason: 'Requires finance.bank_accounts.manage',
             onClick: () => {
               setEditId(a.id);
-              setForm({ employeeId: a.employeeId, bankName: a.bankName, branch: a.branch ?? '', accountType: a.accountType, accountNumber: '', isPrimary: a.isPrimary });
+              setForm({
+                employeeId:         a.employeeId,
+                bankName:           a.bankName,
+                branch:             a.branch ?? '',
+                accountType:        a.accountType,
+                accountNumber:      '',
+                isPrimary:          a.isPrimary,
+                routingNumber:      (a.metadata?.routingNumber as string) ?? '',
+                verificationStatus: ((a.metadata?.verificationStatus as string) ?? 'unverified') as BankAccountFormState['verificationStatus'],
+              });
               setShowAdd(false);
+              setAuditAcctId(null);
             },
+          },
+          {
+            key: 'view-audit', label: 'View audit', icon: 'book' as const,
+            onClick: () => { setAuditAcctId(a.id); setShowAdd(false); setEditId(null); },
           },
           {
             key: 'deactivate', label: 'Deactivate', icon: 'close' as const, tone: 'danger' as const,
@@ -631,6 +835,11 @@ function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
       render: () => <span style={{ color: 'var(--muted)', fontSize: 12 }}>CSV / EFT</span>,
     },
     {
+      key: 'generated-by',
+      label: 'Generated By',
+      render: d => <EmployeeCell employeeId={(d.metadata?.fileGeneratedBy as string) ?? null} />,
+    },
+    {
       key: 'employees',
       label: 'Lines',
       render: d => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{d.employeeCount}</span>,
@@ -642,8 +851,10 @@ function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
     },
     {
       key: 'created',
-      label: 'Generated',
-      render: d => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{fmtDate(d.updatedAt)}</span>,
+      label: 'Generated At',
+      render: d => <span style={{ color: 'var(--muted)', fontSize: 12 }}>
+        {(d.metadata?.fileGeneratedAt as string) ? fmtDate(d.metadata.fileGeneratedAt as string) : fmtDate(d.updatedAt)}
+      </span>,
     },
   ];
 
@@ -749,36 +960,64 @@ function PaymentsTab(): VNode {
 // ── Reports tab ───────────────────────────────────────────────────────────────
 
 const DISB_REPORTS = [
-  { key: 'disbursement_summary', label: 'Disbursement Summary',   description: 'All disbursements with status and totals' },
-  { key: 'bank_file_status',     label: 'Bank File Status',       description: 'Disbursements with generated bank files' },
+  { key: 'disbursement_summary',   label: 'Disbursement Summary',   description: 'All disbursements with status and totals' },
+  { key: 'bank_file_status',       label: 'Bank File Status',       description: 'Disbursements with generated bank files' },
   { key: 'bank_account_readiness', label: 'Bank Account Readiness', description: 'Employees without primary bank accounts' },
 ];
 
 const SUMMARY_COLS: ReportColumn[] = [
   { key: 'disbursementNo', header: 'Reference' },
   { key: 'status',         header: 'Status' },
-  { key: 'totalAmount',    header: 'Total',    format: 'currency' },
-  { key: 'employeeCount',  header: 'Employees', format: 'number' },
+  { key: 'totalAmount',    header: 'Total',      format: 'currency' },
+  { key: 'employeeCount',  header: 'Employees',  format: 'number' },
   { key: 'currency',       header: 'Currency' },
-  { key: 'createdAt',      header: 'Created',   format: 'date' },
+  { key: 'createdAt',      header: 'Created',    format: 'date' },
+];
+
+const BANK_FILE_COLS: ReportColumn[] = [
+  { key: 'disbursementNo',  header: 'Reference' },
+  { key: 'status',          header: 'Status' },
+  { key: 'totalAmount',     header: 'Total',      format: 'currency' },
+  { key: 'employeeCount',   header: 'Lines',      format: 'number' },
+  { key: 'currency',        header: 'Currency' },
+  { key: 'bankFilePath',    header: 'File Path' },
+  { key: 'fileGeneratedAt', header: 'Generated',  format: 'date' },
+];
+
+const READINESS_COLS: ReportColumn[] = [
+  { key: 'fullName',             header: 'Employee' },
+  { key: 'email',                header: 'Email' },
+  { key: 'hasPrimaryBankAccount', header: 'Has Bank Account' },
 ];
 
 function ReportsTab(): VNode {
   const [selectedReport, setSelectedReport] = useState<string | null>('disbursement_summary');
   const [statusFilter, setStatusFilter]     = useState<DisbursementStatus | ''>('');
 
-  const reportQ = useDisbursementReport(statusFilter ? { status: statusFilter } : {});
+  // Each report type pulls from its own dedicated endpoint
+  const summaryQ    = useDisbursementReport(statusFilter ? { status: statusFilter } : {});
+  const bankFileQ   = useBankFileStatusReport();
+  const readinessQ  = useBankAccountReadinessReport();
 
-  // Convert the list to ReportResult shape
-  const result = reportQ.data
+  const activeQ =
+    selectedReport === 'bank_file_status'       ? bankFileQ  :
+    selectedReport === 'bank_account_readiness' ? readinessQ :
+    summaryQ;
+
+  const activeCols =
+    selectedReport === 'bank_file_status'       ? BANK_FILE_COLS  :
+    selectedReport === 'bank_account_readiness' ? READINESS_COLS  :
+    SUMMARY_COLS;
+
+  const result = activeQ.data
     ? {
         report:      selectedReport ?? 'disbursement_summary',
         generatedAt: new Date().toISOString(),
-        rows:        (reportQ.data as unknown as Record<string, unknown>[]),
+        rows:        (activeQ.data as unknown as Record<string, unknown>[]),
       }
     : null;
 
-  const params = (
+  const params = selectedReport === 'disbursement_summary' ? (
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
       <label style={{ fontSize: 12 }}>
         <span style={{ color: 'var(--muted)', display: 'block', marginBottom: 2 }}>Status filter</span>
@@ -798,19 +1037,24 @@ function ReportsTab(): VNode {
         </select>
       </label>
     </div>
-  );
+  ) : undefined;
+
+  const exportFilename =
+    selectedReport === 'bank_file_status'       ? 'bank-file-status-report'       :
+    selectedReport === 'bank_account_readiness' ? 'bank-account-readiness-report' :
+    'disbursements-report';
 
   return (
     <ReportPanel
       reports={DISB_REPORTS}
       selectedReport={selectedReport}
-      onSelectReport={setSelectedReport}
+      onSelectReport={key => { setSelectedReport(key); setStatusFilter(''); }}
       params={params}
       result={result}
-      columns={SUMMARY_COLS}
-      exportFilename="disbursements-report"
-      loading={reportQ.isLoading}
-      error={reportQ.error ? (reportQ.error as Error).message : null}
+      columns={activeCols}
+      exportFilename={exportFilename}
+      loading={activeQ.isLoading}
+      error={activeQ.error ? (activeQ.error as Error).message : null}
     />
   );
 }

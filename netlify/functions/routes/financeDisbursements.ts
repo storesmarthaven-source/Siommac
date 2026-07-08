@@ -10,7 +10,8 @@ import {
   generateBankFile, markDisbursementPaid, cancelDisbursement,
   listDisbursementLines, listDisbursementLinesDetail, listDisbursementsReport,
   getBankFileSignedUrl, getDisbursementKpis,
-  listDisbursementAuditLog, listBankFileStatusReport, listBankAccountReadinessReport,
+  listDisbursementAuditLog, listFinanceAuditLog,
+  listBankFileStatusReport, listBankAccountReadinessReport,
   type DisbursementStatus,
 } from '../lib/finance/disbursements';
 import type { HonoVariables } from '../../../types/api';
@@ -224,6 +225,23 @@ router.post('/disbursements/audit-log', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listDisbursementAuditLog(v.data.disbursementId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+// General finance audit log — used by BankAccountsTab and any other finance sub-tab needing audit trail.
+router.post('/disbursements/finance-audit-log', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({
+    submoduleKey: z.string().min(1).max(64),
+    recordId:     z.string().uuid(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listFinanceAuditLog(v.data.submoduleKey, v.data.recordId);
     return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };

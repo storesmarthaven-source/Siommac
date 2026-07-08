@@ -506,13 +506,24 @@ export interface DisbursementAuditEntry {
 export async function listDisbursementAuditLog(
   disbursementId: string,
 ): Promise<DisbursementAuditEntry[]> {
+  return listFinanceAuditLog('finance_disbursements', disbursementId);
+}
+
+/**
+ * General finance audit log query by submodule + record.
+ * Used by all finance sub-tabs that show inline audit trails (disbursements, bank accounts, etc.).
+ */
+export async function listFinanceAuditLog(
+  submoduleKey: string,
+  recordId: string,
+): Promise<DisbursementAuditEntry[]> {
   const { data, error } = await sb
     .from('hr_audit_log')
     .select('id,actor_id,action,previous_state,new_state,reason,created_at')
-    .eq('submodule_key', 'finance_disbursements')
-    .eq('record_id', disbursementId)
+    .eq('submodule_key', submoduleKey)
+    .eq('record_id', recordId)
     .order('created_at', { ascending: true });
-  if (error) throw Object.assign(new Error('listDisbursementAuditLog: ' + error.message), { status: 500 });
+  if (error) throw Object.assign(new Error(`listFinanceAuditLog(${submoduleKey}/${recordId}): ` + error.message), { status: 500 });
   return ((data ?? []) as Array<{
     id: string; actor_id: string | null; action: string;
     previous_state: Record<string, unknown> | null;

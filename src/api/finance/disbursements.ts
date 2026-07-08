@@ -140,8 +140,10 @@ export const financeDisbursementsApi = {
   kpis:           () => call<DisbursementKpis>('finance/disbursements/kpis'),
   listReport:     (a: { status?: DisbursementStatus } = {}) =>
                     call<DisbursementReportRow[]>('finance/disbursements/reports/list', a),
-  auditLog:       (a: { disbursementId: string }) =>
-                    call<DisbursementAuditEntry[]>('finance/disbursements/audit-log', a),
+  auditLog:         (a: { disbursementId: string }) =>
+                      call<DisbursementAuditEntry[]>('finance/disbursements/audit-log', a),
+  financeAuditLog:  (a: { submoduleKey: string; recordId: string }) =>
+                      call<DisbursementAuditEntry[]>('finance/disbursements/finance-audit-log', a),
   bankFileStatusReport: () =>
                     call<BankFileStatusRow[]>('finance/disbursements/reports/bank-file-status'),
   bankAccountReadinessReport: () =>
@@ -157,6 +159,7 @@ export const financeDisbursementsKeys = {
   kpis:                      ()                  => ['finance', 'disbursements', 'kpis'] as const,
   report:                    (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
   auditLog:                  (id: string)        => ['finance', 'disbursements', 'audit-log', id] as const,
+  financeAuditLog:           (sub: string, id: string) => ['finance', 'audit-log', sub, id] as const,
   bankFileStatusReport:      ()                  => ['finance', 'disbursements', 'report', 'bank-file-status'] as const,
   bankAccountReadinessReport:()                  => ['finance', 'disbursements', 'report', 'bank-account-readiness'] as const,
 };
@@ -230,6 +233,14 @@ export function useDisbursementAuditLog(disbursementId: string | null) {
     queryKey: financeDisbursementsKeys.auditLog(disbursementId ?? ''),
     queryFn:  () => financeDisbursementsApi.auditLog({ disbursementId: disbursementId! }),
     enabled:  !!disbursementId,
+  });
+}
+
+export function useFinanceAuditLog(submoduleKey: string | null, recordId: string | null) {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.financeAuditLog(submoduleKey ?? '', recordId ?? ''),
+    queryFn:  () => financeDisbursementsApi.financeAuditLog({ submoduleKey: submoduleKey!, recordId: recordId! }),
+    enabled:  !!(submoduleKey && recordId),
   });
 }
 
