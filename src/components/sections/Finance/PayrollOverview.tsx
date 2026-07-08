@@ -27,6 +27,7 @@ import {
   HrfinPill,
   type HrfinColumn,
   type HrfinTone,
+  type RowActionItem,
 } from '@ui';
 import {
   usePayrollRuns,
@@ -214,10 +215,51 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+type SortKey = 'period' | 'net' | 'gross' | 'employees' | 'created';
+type SortDir = 'asc' | 'desc';
+
+function sortRuns(rows: PayrollRun[], key: SortKey, dir: SortDir): PayrollRun[] {
+  const sign = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    switch (key) {
+      case 'period':    return sign * a.periodMonth.localeCompare(b.periodMonth);
+      case 'net':       return sign * ((a.netTotal ?? 0) - (b.netTotal ?? 0));
+      case 'gross':     return sign * ((a.grossTotal ?? 0) - (b.grossTotal ?? 0));
+      case 'employees': return sign * ((a.employeeCount ?? 0) - (b.employeeCount ?? 0));
+      case 'created':   return sign * a.createdAt.localeCompare(b.createdAt);
+      default:          return 0;
+    }
+  });
+}
+
+function downloadCsv(rows: PayrollRun[]): void {
+  const headers = ['Run #', 'Period', 'Frequency', 'Employees', 'Gross', 'Net', 'Status', 'Created'];
+  const lines   = rows.map(r => [
+    r.runNo,
+    r.periodMonth.slice(0, 7),
+    r.payFrequency,
+    String(r.employeeCount),
+    r.grossTotal.toFixed(2),
+    r.netTotal.toFixed(2),
+    r.status,
+    r.createdAt.slice(0, 10),
+  ].map(v => `"${v.replace(/"/g, '""')}"`).join(','));
+  const csv  = [headers.join(','), ...lines].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `payroll-runs-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function PayrollOverview(): VNode {
   const [tab,      setTab]      = useState<PageTab>('all');
   const [search,   setSearch]   = useState('');
   const [page,     setPage]     = useState(0);
+  const [sortKey,  setSortKey]  = useState<SortKey>('period');
+  const [sortDir,  setSortDir]  = useState<SortDir>('desc');
   const [drawerRunId, setDrawerRunId] = useState<string | null>(null);
   const [drawerOpen,  setDrawerOpen]  = useState(false);
   const [wizOpen,     setWizOpen]     = useState(false);
@@ -269,9 +311,14 @@ export function PayrollOverview(): VNode {
     );
   }, [tabFiltered, search, tab]);
 
+  const sorted = useMemo(
+    () => tab === 'reports' ? searched : sortRuns(searched, sortKey, sortDir),
+    [searched, sortKey, sortDir, tab],
+  );
+
   const { rows: pageRows, pageCount, total } = useMemo(
-    () => tab === 'reports' ? { rows: [], pageCount: 1, total: 0 } : paginate(searched, page),
-    [searched, page, tab],
+    () => tab === 'reports' ? { rows: [], pageCount: 1, total: 0 } : paginate(sorted, page),
+    [sorted, page, tab],
   );
 
   // Table columns
@@ -323,6 +370,24 @@ export function PayrollOverview(): VNode {
     },
   ];
 
+  function toggleSort(key: SortKey): void {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+    setPage(0);
+  }
+
+  const SORT_LABELS: Record<SortKey, string> = {
+    period:    'Period',
+    net:       'Net',
+    gross:     'Gross',
+    employees: 'Employees',
+    created:   'Created',
+  };
+
   // Quick actions (top strip)
   const quickActions = [
     ...(canManage ? [{
@@ -338,6 +403,12 @@ export function PayrollOverview(): VNode {
       icon:   'refresh' as const,
       onClick: () => { void runsQ.refetch(); },
     },
+    ...(tab !== 'reports' ? [{
+      key:    'export-csv',
+      label:  'Export CSV',
+      icon:   'download' as const,
+      onClick: () => downloadCsv(sorted),
+    }] : []),
     ...(countPending > 0 && canApprove ? [{
       key:   'pending',
       label: 'Pending Approval',
@@ -366,6 +437,32 @@ export function PayrollOverview(): VNode {
   function openDrawer(run: PayrollRun): void {
     setDrawerRunId(run.id);
     setDrawerOpen(true);
+  }
+
+  function runRowActions(run: PayrollRun): RowActionItem[] {
+    const items: RowActionItem[] = [
+      { key: 'view', label: 'View details', icon: 'file', onClick: () => openDrawer(run) },
+    ];
+    if (canManage && run.status === 'draft') {
+      items.push({ key: 'lock-inputs', label: 'Lock Inputs', icon: 'gavel', onClick: () => drawerActions.onLockInputs(run) });
+    }
+    if (canManage && run.status === 'input_locked') {
+      items.push({ key: 'calculate', label: 'Calculate', icon: 'refresh', onClick: () => drawerActions.onCalculate(run) });
+    }
+    if (canManage && run.status === 'calculated') {
+      items.push({ key: 'submit', label: 'Submit for Approval', icon: 'check', onClick: () => drawerActions.onSubmit(run) });
+    }
+    if (canApprove && run.status === 'pending_approval') {
+      items.push({ key: 'approve', label: 'Approve', icon: 'check', onClick: () => drawerActions.onApprove(run) });
+      items.push({ key: 'reject',  label: 'Reject',  icon: 'close', onClick: () => drawerActions.onReject(run), tone: 'danger' });
+    }
+    if (canManage && run.status === 'approved') {
+      items.push({ key: 'lock-run', label: 'Lock Run', icon: 'gavel', onClick: () => drawerActions.onLockRun(run) });
+    }
+    if (canExport && run.status === 'locked') {
+      items.push({ key: 'export', label: 'Export', icon: 'download', onClick: () => drawerActions.onExport(run) });
+    }
+    return items;
   }
 
   return (
@@ -426,6 +523,24 @@ export function PayrollOverview(): VNode {
         />
       </section>
 
+      {/* Error state (Gap 5) */}
+      {runsQ.isError && (
+        <div class="hrfin" style={{
+          padding: '16px 20px',
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.25)',
+          borderRadius: 10,
+          color: 'var(--danger)',
+          fontSize: 13,
+        }}>
+          <strong>Failed to load payroll runs.</strong>{' '}
+          {(runsQ.error as Error)?.message ?? 'Unknown error.'}{' '}
+          <button type="button" class="hrfin-action" style={{ marginLeft: 12 }} onClick={() => void runsQ.refetch()}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Table (or reports surface when tab === 'reports') */}
       {tab === 'reports' ? (
         <div class="hrfin-table-card">
@@ -448,10 +563,15 @@ export function PayrollOverview(): VNode {
           searchValue={search}
           onSearch={v => { setSearch(v); setPage(0); }}
           searchPlaceholder="Search by run number, period or status…"
+          filters={(['period', 'net', 'gross'] as SortKey[]).map(k => ({
+            label: `${SORT_LABELS[k]} ${sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}`,
+            onClick: () => toggleSort(k),
+          }))}
           columns={COLS}
           rows={pageRows}
           rowKey={r => r.id}
           onRowClick={openDrawer}
+          rowActions={runRowActions}
           page={page}
           pageCount={pageCount}
           total={total}
