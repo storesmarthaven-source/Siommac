@@ -280,4 +280,11 @@ values (
 )
 on conflict (run_no) do nothing;
 
+-- The seeded run_no above is hand-written — sync the reference counter so a
+-- runtime nextRef('PRUN') can never collide with the seed.
+insert into public.reference_counters (prefix, year, next_number)
+values ('PRUN', 2026, 2)
+on conflict (prefix, year) do update
+  set next_number = greatest(public.reference_counters.next_number, excluded.next_number);
+
 -- After applying run: NOTIFY pgrst, 'reload schema';
