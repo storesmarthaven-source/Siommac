@@ -15,10 +15,12 @@ import {
   useDisbursement,
   useDisbursementLinesDetail,
   useDisbursementMutation,
+  useDisbursementAuditLog,
   financeDisbursementsApi,
   type Disbursement,
   type DisbursementStatus,
 } from '@api/finance/disbursements';
+import { usePayrollRun } from '@api/finance/payroll';
 import {
   useFinanceAttachments,
   useFinanceAttachmentUploadUrl,
@@ -418,12 +420,14 @@ function PaymentsTab({ d }: { d: Disbursement }): VNode {
 // ── Timeline tab ──────────────────────────────────────────────────────────────
 
 function TimelineTab({ d }: { d: Disbursement }): VNode {
+  // Real timestamps are stored in metadata at each state transition (server-side).
+  const meta = d.metadata as Record<string, string | null | undefined>;
   const events: Array<{ label: string; date: string | null; active: boolean }> = [
-    { label: 'Created (Draft)',   date: d.createdAt,  active: true },
-    { label: 'Submitted',         date: null, active: ['submitted', 'approved', 'file_generated', 'paid'].includes(d.status) },
-    { label: 'Approved',          date: null, active: ['approved', 'file_generated', 'paid'].includes(d.status) },
-    { label: 'Bank File Generated', date: null, active: ['file_generated', 'paid'].includes(d.status) },
-    { label: 'Paid',              date: null, active: d.status === 'paid' },
+    { label: 'Created (Draft)',     date: d.createdAt,                active: true },
+    { label: 'Submitted',           date: meta.submittedAt ?? null,   active: ['submitted', 'approved', 'file_generated', 'paid'].includes(d.status) },
+    { label: 'Approved',            date: meta.approvedAt ?? null,    active: ['approved', 'file_generated', 'paid'].includes(d.status) },
+    { label: 'Bank File Generated', date: meta.fileGeneratedAt ?? null, active: ['file_generated', 'paid'].includes(d.status) },
+    { label: 'Paid',                date: meta.paidAt ?? null,        active: d.status === 'paid' },
   ];
 
   return (
@@ -447,14 +451,52 @@ function TimelineTab({ d }: { d: Disbursement }): VNode {
 // ── Audit tab ─────────────────────────────────────────────────────────────────
 
 function AuditTab({ d }: { d: Disbursement }): VNode {
+  const auditQ = useDisbursementAuditLog(d.id);
+  const entries = auditQ.data ?? [];
+
+  if (auditQ.isLoading) return <div class="hrfin-empty">Loading audit log…</div>;
+  if (auditQ.error) return (
+    <div class="hrfin-callout is-danger">
+      <HrfinIcon name="alert" />
+      <span>{(auditQ.error as Error).message}</span>
+    </div>
+  );
+  if (entries.length === 0) return <div class="hrfin-empty">No audit entries yet.</div>;
+
+  const humanizeAction = (a: string) =>
+    a.replace(/^disbursement\./, '').replace(/\./g, ' → ').replace(/_/g, ' ')
+     .replace(/\b\w/g, m => m.toUpperCase());
+
   return (
-    <div class="hrfin-empty" style={{ textAlign: 'center', padding: 24 }}>
-      <HrfinIcon name="book" />
-      <p style={{ marginTop: 8, color: 'var(--muted)', fontSize: 13 }}>
-        Detailed audit entries are stored in the centralised audit log (hr_audit_log
-        submodule: finance_disbursements). Available via the Admin Console → Audit Log
-        with filter: entity id = {d.id}.
-      </p>
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-alt, rgba(255,255,255,.04))' }}>
+            <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Date / Time</th>
+            <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Action</th>
+            <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Changed By</th>
+            <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600 }}>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map(e => (
+            <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <td style={{ padding: '7px 10px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                {fmtDateTime(e.createdAt)}
+              </td>
+              <td style={{ padding: '7px 10px', fontWeight: 500 }}>
+                {humanizeAction(e.action)}
+              </td>
+              <td style={{ padding: '7px 10px' }}>
+                <EmployeeCell employeeId={e.actorId} />
+              </td>
+              <td style={{ padding: '7px 10px', color: 'var(--muted)', fontSize: 11 }}>
+                {e.reason ?? '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -462,15 +504,44 @@ function AuditTab({ d }: { d: Disbursement }): VNode {
 // ── Related Payroll Run tab ───────────────────────────────────────────────────
 
 function RelatedRunTab({ d }: { d: Disbursement }): VNode {
+  const runQ = usePayrollRun(d.payrollRunId);
+  const run  = runQ.data;
+
+  if (runQ.isLoading) return <div class="hrfin-empty">Loading payroll run…</div>;
+  if (runQ.error) return (
+    <div class="hrfin-callout is-danger">
+      <HrfinIcon name="alert" />
+      <span>{(runQ.error as Error).message}</span>
+    </div>
+  );
+  if (!run) return <div class="hrfin-empty">Payroll run not found.</div>;
+
+  const fmtMonth = (m: string) =>
+    m ? new Date(m + 'T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : '—';
+
   return (
     <div class="hrfin-metric-list">
+      <div class="hrfin-metric-row"><span>Run reference</span><b style={{ fontFamily: 'monospace' }}>{run.runNo}</b></div>
+      <div class="hrfin-metric-row"><span>Period</span><b>{fmtMonth(run.periodMonth)}</b></div>
       <div class="hrfin-metric-row">
-        <span>Payroll run ID</span>
-        <b style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{d.payrollRunId}</b>
+        <span>Status</span>
+        <HrfinPill tone={run.status === 'approved' || run.status === 'locked' ? 'ok' : 'dr'}>
+          {humanize(run.status)}
+        </HrfinPill>
       </div>
-      <p class="hse-muted" style={{ fontSize: 12, marginTop: 8 }}>
-        Open the Payroll module → Runs tab → search by this run ID to view full payroll details.
-      </p>
+      <div class="hrfin-metric-row"><span>Employees</span><b>{run.employeeCount}</b></div>
+      {run.lockedAt && (
+        <div class="hrfin-metric-row"><span>Locked at</span><b>{fmtDateTime(run.lockedAt)}</b></div>
+      )}
+      {run.exportedAt && (
+        <div class="hrfin-metric-row"><span>Exported at</span><b>{fmtDateTime(run.exportedAt)}</b></div>
+      )}
+      <div class="hrfin-metric-row">
+        <span>Run ID</span>
+        <b style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all', color: 'var(--muted)' }}>
+          {d.payrollRunId}
+        </b>
+      </div>
     </div>
   );
 }
