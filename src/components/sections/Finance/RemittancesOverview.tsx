@@ -22,6 +22,7 @@ import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
 import { Drawer, exportCsv, type CsvColumn } from '@ui';
 import {
   HrfinPageHeader, QuickActionStrip, KpiCard, HrfinTable, HrfinPill, HrfinWizardModal,
@@ -83,11 +84,12 @@ function periodLabel(year: number, month: number): string {
   return `${m[(month - 1) % 12] ?? month} ${year}`;
 }
 
-type PageTab = 'remittances' | 'lines' | 'filings' | 'authorities' | 'reports';
+type PageTab = 'remittances' | 'lines' | 'payments' | 'filings' | 'authorities' | 'reports';
 
 const PAGE_TABS: HrfinTab[] = [
   { key: 'remittances', label: 'Remittances' },
   { key: 'lines',       label: 'Lines' },
+  { key: 'payments',    label: 'Payments' },
   { key: 'filings',     label: 'Filings' },
   { key: 'authorities', label: 'Authorities' },
   { key: 'reports',     label: 'Reports' },
@@ -245,7 +247,20 @@ export function RemittancesOverview(): VNode {
     {
       key: 'payrollRun',
       label: 'Source Run',
-      render: r => <span class="hrfin-muted" title={r.payrollRunId}>{r.payrollRunId.slice(0,8)}…</span>,
+      render: r => (
+        <button
+          type="button"
+          class="hrfin-muted"
+          title={`Payroll run ID: ${r.payrollRunId}`}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline', textUnderlineOffset: '2px', color: 'inherit' }}
+          onClick={e => {
+            e.stopPropagation();
+            window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }));
+          }}
+        >
+          {r.payrollRunNo ?? `${r.payrollRunId.slice(0, 8)}…`}
+        </button>
+      ),
     },
   ];
 
@@ -290,7 +305,13 @@ export function RemittancesOverview(): VNode {
   }
 
   async function doCancel(id: string) {
-    const reason = prompt('Reason for cancellation (required):');
+    const reason = await dialog.prompt({
+      title:       'Cancel Remittance',
+      text:        'Provide a reason for cancellation.',
+      placeholder: 'Reason for cancellation',
+      confirmText: 'Cancel Remittance',
+      cancelText:  'Keep',
+    });
     if (!reason?.trim()) return;
     try { await cancelMut.mutateAsync({ id, reason: reason.trim() }); toast('Cancelled.'); }
     catch (e) { toast.error((e as Error).message); }
@@ -435,6 +456,15 @@ export function RemittancesOverview(): VNode {
           )}
           {tab === 'lines' && (
             <RemLinesTab
+              tabs={PAGE_TABS}
+              activeTab={tab}
+              onTab={k => { setTab(k as PageTab); setPage(0); }}
+            />
+          )}
+          {tab === 'payments' && (
+            <RemPaymentsTab
+              remittances={remittances}
+              loading={listQ.isLoading && !listQ.data}
               tabs={PAGE_TABS}
               activeTab={tab}
               onTab={k => { setTab(k as PageTab); setPage(0); }}
@@ -612,6 +642,82 @@ function RemLinesTab({ tabs, activeTab, onTab }: {
       noun="lines"
       loading={linesQ.isLoading && !linesQ.data}
       emptyMessage="No remittance lines found."
+    />
+  );
+}
+
+// ── Payments tab (§12: top-level register of payments across all remittances) ──
+
+function RemPaymentsTab({ remittances, loading, tabs, activeTab, onTab }: {
+  remittances: Remittance[];
+  loading: boolean;
+  tabs: HrfinTab[];
+  activeTab: string;
+  onTab: (k: string) => void;
+}): VNode {
+  const [page, setPage]   = useState(0);
+  const [search, setSearch] = useState('');
+
+  const paid = useMemo(() =>
+    remittances.filter(r => ['paid', 'filed'].includes(r.status)),
+    [remittances],
+  );
+
+  const filtered = useMemo(() => {
+    if (!search) return paid;
+    const q = search.toLowerCase();
+    return paid.filter(r =>
+      r.remittanceNo.toLowerCase().includes(q) ||
+      AUTHORITY_LABEL[r.authority].toLowerCase().includes(q) ||
+      (r.authorityReference ?? '').toLowerCase().includes(q),
+    );
+  }, [paid, search]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const COLS: HrfinColumn<Remittance>[] = [
+    { key: 'ref',      label: 'Ref',           render: r => <span style={{ fontWeight: 600, fontSize: 13 }}>{r.remittanceNo}</span> },
+    { key: 'auth',     label: 'Authority',      render: r => <span>{AUTHORITY_LABEL[r.authority]}</span> },
+    { key: 'period',   label: 'Period',         render: r => <span class="hrfin-muted">{periodLabel(r.periodYear, r.periodMonth)}</span> },
+    { key: 'paidDate', label: 'Paid Date',      render: r => <span>{fmtDate(r.paidDate)}</span> },
+    { key: 'total',    label: 'Amount Paid',    render: r => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{money(r.totalDue)}</strong> },
+    { key: 'authRef',  label: 'Authority Ref',  render: r => <span class="hrfin-muted">{r.authorityReference ?? '—'}</span> },
+    { key: 'status',   label: 'Status',         render: r => <HrfinPill tone={statusTone(r.status)}>{humanize(r.status)}</HrfinPill> },
+  ];
+
+  const csvCols: CsvColumn<Remittance>[] = [
+    { header: 'Ref',            value: r => r.remittanceNo },
+    { header: 'Authority',      value: r => AUTHORITY_LABEL[r.authority] },
+    { header: 'Period',         value: r => periodLabel(r.periodYear, r.periodMonth) },
+    { header: 'Paid Date',      value: r => r.paidDate ?? '' },
+    { header: 'Amount Paid',    value: r => r.totalDue },
+    { header: 'Authority Ref',  value: r => r.authorityReference ?? '' },
+    { header: 'Status',         value: r => r.status },
+  ];
+
+  return (
+    <HrfinTable
+      tabs={tabs}
+      activeTab={activeTab}
+      onTab={onTab}
+      searchValue={search}
+      onSearch={v => { setSearch(v); setPage(0); }}
+      searchPlaceholder="Search payments…"
+      filters={[
+        { label: 'Export CSV', icon: 'download', onClick: () => { exportCsv(filtered, csvCols, 'remittance-payments'); toast('CSV downloaded'); } },
+      ]}
+      columns={COLS}
+      rows={pageRows}
+      rowKey={r => r.id}
+      page={page}
+      pageCount={pageCount}
+      total={filtered.length}
+      pageSize={PAGE_SIZE}
+      onPage={setPage}
+      noun="payments"
+      loading={loading}
+      emptyMessage="No paid remittances found."
     />
   );
 }
@@ -1057,6 +1163,12 @@ function DrawerPaymentsTab({ r }: { r: Remittance }): VNode {
 }
 
 function DrawerApprovalsTab({ r }: { r: Remittance }): VNode {
+  const userIds = useMemo(() =>
+    [r.approvedBy, r.createdBy].filter((x): x is string => !!x),
+    [r.approvedBy, r.createdBy],
+  );
+  const { data: nameMap } = useEmployeeNames(userIds);
+
   return (
     <div class="hrfin-metric-list">
       <div class="hrfin-metric-row"><span>Workflow ID</span><b class="hrfin-muted" style={{ fontSize: 11 }}>{r.workflowId ?? 'None'}</b></div>
@@ -1067,8 +1179,16 @@ function DrawerApprovalsTab({ r }: { r: Remittance }): VNode {
           ? <HrfinPill tone="wn">Pending approval</HrfinPill>
           : <HrfinPill tone="dr">{humanize(r.status)}</HrfinPill>}
       </b></div>
-      <div class="hrfin-metric-row"><span>Approved by</span><b class="hrfin-muted">{r.approvedBy ?? '—'}</b></div>
-      <div class="hrfin-metric-row"><span>Creator</span><b class="hrfin-muted">{r.createdBy ?? '—'}</b></div>
+      <div class="hrfin-metric-row"><span>Approved by</span><b>
+        {r.approvedBy
+          ? <EmployeeCellResolved resolved={nameMap?.get(r.approvedBy)} fallbackId={r.approvedBy} />
+          : <span class="hrfin-muted">—</span>}
+      </b></div>
+      <div class="hrfin-metric-row"><span>Creator</span><b>
+        {r.createdBy
+          ? <EmployeeCellResolved resolved={nameMap?.get(r.createdBy)} fallbackId={r.createdBy} />
+          : <span class="hrfin-muted">—</span>}
+      </b></div>
       {r.status === 'submitted' && (
         <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--hrfin-surface-2)', borderRadius: 8, fontSize: 12 }}>
           <strong>Maker-checker:</strong> the creator cannot approve their own remittance.
@@ -1105,6 +1225,12 @@ function DrawerAuditTab({ remittanceId, open, activeTab }: { remittanceId: strin
   const auditQ = useRemittanceAudit(remittanceId, open && activeTab === 'audit');
   const entries = auditQ.data ?? [];
 
+  const actorIds = useMemo(() =>
+    [...new Set(entries.map(e => e.actorId).filter((x): x is string => !!x))],
+    [entries],
+  );
+  const { data: nameMap } = useEmployeeNames(actorIds);
+
   if (auditQ.isLoading && !auditQ.data) return <div class="hrfin-empty">Loading audit log…</div>;
   if (!entries.length) return <div class="hrfin-empty">No audit entries yet.</div>;
 
@@ -1117,7 +1243,12 @@ function DrawerAuditTab({ remittanceId, open, activeTab }: { remittanceId: strin
             <span class="hrfin-muted">{fmtDate(e.createdAt)}</span>
           </div>
           {e.reason && <div class="hrfin-muted">Reason: {e.reason}</div>}
-          {e.actorId && <div class="hrfin-muted">Actor: {e.actorId}</div>}
+          {e.actorId && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <span class="hrfin-muted" style={{ fontSize: 11 }}>Actor:</span>
+              <EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} />
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -1127,10 +1258,24 @@ function DrawerAuditTab({ remittanceId, open, activeTab }: { remittanceId: strin
 function DrawerPayrollRunTab({ r }: { r: Remittance }): VNode {
   return (
     <div class="hrfin-metric-list">
-      <div class="hrfin-metric-row"><span>Payroll run ID</span><b class="hrfin-muted" style={{ fontSize: 11 }}>{r.payrollRunId}</b></div>
+      <div class="hrfin-metric-row">
+        <span>Payroll run</span>
+        <b style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>{r.payrollRunNo ?? `${r.payrollRunId.slice(0, 8)}…`}</span>
+          <button
+            type="button"
+            class="hrfin-action"
+            style={{ padding: '3px 10px', fontSize: 11 }}
+            onClick={() => window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }))}
+          >
+            Open ↗
+          </button>
+        </b>
+      </div>
       <div class="hrfin-metric-row"><span>Period</span><b>{periodLabel(r.periodYear, r.periodMonth)}</b></div>
-      <div style={{ marginTop: 12, fontSize: 12, color: 'var(--hrfin-muted)' }}>
-        View the full payroll run in Finance ▸ Payroll for inputs, warnings, and payslips.
+      <div class="hrfin-metric-row">
+        <span class="hrfin-muted" style={{ fontSize: 11 }}>Run ID</span>
+        <b class="hrfin-muted" style={{ fontSize: 11, fontFamily: 'monospace' }}>{r.payrollRunId}</b>
       </div>
     </div>
   );
@@ -1172,7 +1317,7 @@ function DrawerAttachmentsTab({ remittanceId, open }: { remittanceId: string; op
   }
 
   async function handleDelete(id: string) {
-    const ok = confirm('Delete this attachment?');
+    const ok = await dialog.confirm({ title: 'Delete attachment?', text: 'This cannot be undone.', danger: true });
     if (!ok) return;
     try {
       await deleteAtt.mutateAsync({ id, entityType: 'remittance', entityId: remittanceId });
@@ -1463,10 +1608,14 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
   const [filingMethod,   setFilingMethod]  = useState('');
   const [receiptRef,     setReceiptRef]    = useState('');
   const [notes,          setNotes]         = useState('');
+  const [receiptFile,    setReceiptFile]   = useState<File | null>(null);
   const [fieldErrors,    setFieldErrors]   = useState<Record<string, string>>({});
+  const [uploadErr,      setUploadErr]     = useState('');
   const [submitting,     setSubmitting]    = useState(false);
 
-  const markFiled = useMarkFiledRemittance();
+  const markFiled      = useMarkFiledRemittance();
+  const getUploadUrl   = useFinanceAttachmentUploadUrl();
+  const completeUpload = useCompleteFinanceAttachment();
 
   function validate(): boolean {
     const e: Record<string, string> = {};
@@ -1479,6 +1628,7 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
   async function submit() {
     if (!validate()) return;
     setSubmitting(true);
+    setUploadErr('');
     try {
       const args: MarkFiledArgs = {
         id:                 remittance.id,
@@ -1489,6 +1639,40 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
         filedNotes:         notes || undefined,
       };
       await markFiled.mutateAsync(args);
+
+      // Upload receipt attachment if the user selected one.
+      if (receiptFile) {
+        try {
+          const { uploadUrl, path } = await getUploadUrl.mutateAsync({
+            entityType: 'remittance',
+            entityId:   remittance.id,
+            fileName:   receiptFile.name,
+            mimeType:   receiptFile.type || 'application/octet-stream',
+          });
+          await fetch(uploadUrl, {
+            method:  'PUT',
+            body:    receiptFile,
+            headers: { 'Content-Type': receiptFile.type || 'application/octet-stream' },
+          });
+          await completeUpload.mutateAsync({
+            entityType: 'remittance',
+            entityId:   remittance.id,
+            fileName:   receiptFile.name,
+            storagePath: path,
+            mimeType:   receiptFile.type,
+            fileSize:   receiptFile.size,
+          });
+        } catch (uploadE) {
+          // Filing is already recorded — surface the upload failure without hiding success.
+          setUploadErr(
+            `Filed successfully, but receipt upload failed: ${(uploadE as Error).message}. ` +
+            `Re-upload in the drawer's Attachments tab.`,
+          );
+          setSubmitting(false);
+          return; // Keep dialog open so user sees the error.
+        }
+      }
+
       toast(`${remittance.remittanceNo} filed with authority.`);
       onClose();
     } catch (e) {
@@ -1569,10 +1753,45 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           />
         </label>
 
-        {/* Receipt attachment hint */}
-        <div style={{ padding: '10px 12px', background: 'var(--hrfin-surface-2)', borderRadius: 8, fontSize: 12, color: 'var(--hrfin-muted)' }}>
-          After filing, open the drawer → Attachments tab to upload the authority-issued filing receipt document.
-        </div>
+        {/* Receipt attachment — inline upload (§12 field 6) */}
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+          <span>Receipt attachment <span class="hrfin-muted">(optional — authority-issued receipt document)</span></span>
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+            border: '1px dashed var(--hrfin-border, #2a3347)', borderRadius: 8,
+            cursor: 'pointer', fontSize: 13,
+          }}>
+            <input
+              type="file"
+              accept="image/*,application/pdf,.csv,.xls,.xlsx"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const f = (e.currentTarget as HTMLInputElement).files?.[0];
+                setReceiptFile(f ?? null);
+                setUploadErr('');
+              }}
+            />
+            <span style={{ fontSize: 15 }}>📎</span>
+            <span style={{ flex: 1 }}>
+              {getUploadUrl.isPending ? 'Uploading…' : (receiptFile ? receiptFile.name : 'Choose file…')}
+            </span>
+            {receiptFile && (
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--hrfin-muted)', fontSize: 12, padding: 0 }}
+                onClick={ev => { ev.preventDefault(); setReceiptFile(null); }}
+              >
+                Remove
+              </button>
+            )}
+          </label>
+        </label>
+
+        {uploadErr && (
+          <div style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 12, padding: '8px 10px', background: 'var(--hrfin-surface-2)', borderRadius: 6 }}>
+            {uploadErr}
+          </div>
+        )}
       </div>
     </HrfinWizardModal>
   );

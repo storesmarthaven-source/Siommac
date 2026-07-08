@@ -17,10 +17,19 @@ import {
   getBudgetVarianceReport,
   listBudgetReports,
   runBudgetReport,
+  getBudgetLineApprovals,
+  getBudgetLineAuditLog,
   type UpsertBudgetLineInput,
   type BulkBudgetLineInput,
   type CopyLastYearInput,
 } from '../lib/finance/budgets';
+import {
+  getBudgetAttachmentUploadUrl,
+  commitBudgetAttachment,
+  listBudgetAttachments,
+  deleteBudgetAttachment,
+  getFinanceAttachmentSignedUrl,
+} from '../lib/finance/attachments';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -105,6 +114,10 @@ router.post('/budgets/bulk-upsert', async c => {
     notes:        z.string().max(2000).nullable().optional(),
     budgeted:     z.number().nonnegative(),
     currency:     z.enum(['TTD']).optional(),
+    /** Fiscal period within the year — e.g. 'Q1', 'Jan', 'H1'. */
+    period:       z.string().max(20).nullable().optional(),
+    /** Budget owner user ID (app_users.id TEXT). */
+    ownerId:      z.string().max(100).nullable().optional(),
   });
   const v = zv(c, z.object({
     lines: z.array(BulkLineSchema).min(1).max(200),
@@ -209,6 +222,115 @@ router.post('/budgets/reports/run', async c => {
   try {
     const data = await runBudgetReport(v.data.reportKey, { fiscalYear: v.data.fiscalYear, costCenterId: v.data.costCenterId });
     return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// ============================================================================
+// Approvals (workflow tasks for a budget line)
+// ============================================================================
+
+// POST /api/finance/budgets/approvals
+router.post('/budgets/approvals', async c => {
+  await requirePermission(c, 'finance.budgets.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getBudgetLineApprovals(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// ============================================================================
+// Audit log for a budget line
+// ============================================================================
+
+// POST /api/finance/budgets/audit-log
+router.post('/budgets/audit-log', async c => {
+  await requirePermission(c, 'finance.budgets.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getBudgetLineAuditLog(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// ============================================================================
+// Budget-line attachments (budget_support docs — §6)
+// Requires: finance.budgets.view (list/signed-url), finance.budgets.attachments.upload,
+//           finance.budgets.attachments.delete
+// ============================================================================
+
+// POST /api/finance/budgets/attachments/upload-url
+router.post('/budgets/attachments/upload-url', async c => {
+  const actor = await requirePermission(c, 'finance.budgets.attachments.upload');
+  const v = zv(c, z.object({
+    budgetLineId: z.string().uuid(),
+    fileName:     z.string().min(1).max(255),
+    mimeType:     z.string().min(1).max(120),
+  }), b(c));
+  if (!v.ok) return v.response;
+  void actor;
+  try {
+    const data = await getBudgetAttachmentUploadUrl(v.data.fileName, v.data.mimeType);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/budgets/attachments/complete
+router.post('/budgets/attachments/complete', async c => {
+  const actor = await requirePermission(c, 'finance.budgets.attachments.upload');
+  const v = zv(c, z.object({
+    budgetLineId: z.string().uuid(),
+    fileName:     z.string().min(1).max(255),
+    storagePath:  z.string().min(1),
+    mimeType:     z.string().max(120).nullable().optional(),
+    fileSize:     z.number().int().positive().nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commitBudgetAttachment(
+      v.data.budgetLineId,
+      { fileName: v.data.fileName, storagePath: v.data.storagePath, mimeType: v.data.mimeType, fileSize: v.data.fileSize },
+      actor.id,
+    );
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/budgets/attachments/list
+router.post('/budgets/attachments/list', async c => {
+  await requirePermission(c, 'finance.budgets.view');
+  const v = zv(c, z.object({ budgetLineId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listBudgetAttachments(v.data.budgetLineId);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/budgets/attachments/signed-url
+router.post('/budgets/attachments/signed-url', async c => {
+  await requirePermission(c, 'finance.budgets.view');
+  const v = zv(c, z.object({ storagePath: z.string().min(1) }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const signedUrl = await getFinanceAttachmentSignedUrl(v.data.storagePath);
+    return c.json({ success: true, data: { signedUrl } });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/budgets/attachments/delete
+router.post('/budgets/attachments/delete', async c => {
+  const actor = await requirePermission(c, 'finance.budgets.attachments.delete');
+  const v = zv(c, z.object({
+    id:           z.string().uuid(),
+    budgetLineId: z.string().uuid(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    await deleteBudgetAttachment(v.data.id, v.data.budgetLineId, actor.id);
+    return c.json({ success: true, data: { id: v.data.id } });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 

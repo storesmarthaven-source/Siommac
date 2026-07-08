@@ -120,6 +120,8 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
 }): VNode {
   const [search, setSearch]   = useState('');
   const [page, setPage]       = useState(0);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir]     = useState<'asc' | 'desc'>('asc');
   const [drawerLineId, setDrawerLineId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen]     = useState(false);
   const [editModal, setEditModal]       = useState<EditModalState>({
@@ -131,16 +133,37 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
   const upsertMut  = useBudgetMutation(financeBudgetsApi.upsert);
   const deleteMut  = useBudgetMutation(financeBudgetsApi.delete);
 
-  // Client-side search filter
+  function handleSort(field: string, dir: 'asc' | 'desc'): void {
+    setSortField(field); setSortDir(dir); setPage(0);
+  }
+
+  // Client-side search + sort
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return budgets;
-    return budgets.filter(b =>
-      b.category.toLowerCase().includes(q) ||
-      (b.label ?? '').toLowerCase().includes(q) ||
-      (b.costCenterName ?? '').toLowerCase().includes(q),
-    );
-  }, [budgets, search]);
+    let rows = q
+      ? budgets.filter(b =>
+          b.category.toLowerCase().includes(q) ||
+          (b.label ?? '').toLowerCase().includes(q) ||
+          (b.costCenterName ?? '').toLowerCase().includes(q),
+        )
+      : budgets;
+    if (sortField) {
+      rows = [...rows].sort((a, b) => {
+        let av: string | number, bv: string | number;
+        if (sortField === 'category')   { av = a.category;  bv = b.category; }
+        else if (sortField === 'costCentre') { av = a.costCenterName ?? ''; bv = b.costCenterName ?? ''; }
+        else if (sortField === 'fiscalYear') { av = a.fiscalYear; bv = b.fiscalYear; }
+        else if (sortField === 'budgeted')   { av = a.budgeted;   bv = b.budgeted; }
+        else if (sortField === 'actual')     { av = a.actual;      bv = b.actual; }
+        else if (sortField === 'variance')   { av = a.variance;    bv = b.variance; }
+        else { return 0; }
+        if (av < bv) return sortDir === 'asc' ? -1 : 1;
+        if (av > bv) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return rows;
+  }, [budgets, search, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -227,6 +250,7 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
     {
       key: 'category',
       label: 'Category',
+      sortable: true,
       render: b => (
         <div>
           <div style={{ fontWeight: 600 }}>{b.category}</div>
@@ -237,26 +261,31 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
     {
       key: 'costCentre',
       label: 'Cost Centre',
+      sortable: true,
       render: b => b.costCenterName ?? b.costCenterId,
     },
     {
       key: 'fiscalYear',
       label: 'FY',
+      sortable: true,
       render: b => String(b.fiscalYear),
     },
     {
       key: 'budgeted',
       label: 'Budget',
+      sortable: true,
       render: b => <strong style={{ fontFamily: 'monospace' }}>{money(b.budgeted)}</strong>,
     },
     {
       key: 'actual',
       label: 'Actual',
+      sortable: true,
       render: b => <span style={{ fontFamily: 'monospace' }}>{money(b.actual)}</span>,
     },
     {
       key: 'variance',
       label: 'Variance',
+      sortable: true,
       render: b => (
         <HrfinPill tone={varianceTone(b)}>
           {money(b.variance)} ({fmtPct(b.variancePct)})
@@ -294,6 +323,9 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
         noun="lines"
         loading={budgetsQ.isLoading && !budgets.length}
         emptyMessage={`No budget lines for FY ${fiscalYear}.`}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={handleSort}
       />
 
       {/* Drawer */}
@@ -379,17 +411,40 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
   const rows   = varQ.data ?? [];
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(0);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir]     = useState<'asc' | 'desc'>('asc');
+
+  function handleSort(field: string, dir: 'asc' | 'desc'): void {
+    setSortField(field); setSortDir(dir); setPage(0);
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter(r => r.category.toLowerCase().includes(q) || (r.costCenterName ?? '').toLowerCase().includes(q));
-  }, [rows, search]);
+    let out = q
+      ? rows.filter(r => r.category.toLowerCase().includes(q) || (r.costCenterName ?? '').toLowerCase().includes(q))
+      : rows;
+    if (sortField) {
+      out = [...out].sort((a, b) => {
+        let av: string | number, bv: string | number;
+        if (sortField === 'cc')       { av = a.costCenterName ?? ''; bv = b.costCenterName ?? ''; }
+        else if (sortField === 'category') { av = a.category;   bv = b.category; }
+        else if (sortField === 'budgeted') { av = a.budgeted;   bv = b.budgeted; }
+        else if (sortField === 'actual')   { av = a.actual;     bv = b.actual; }
+        else if (sortField === 'variance') { av = a.variance;   bv = b.variance; }
+        else if (sortField === 'varPct')   { av = a.variancePct ?? 0; bv = b.variancePct ?? 0; }
+        else { return 0; }
+        if (av < bv) return sortDir === 'asc' ? -1 : 1;
+        if (av > bv) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return out;
+  }, [rows, search, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  // Chart data — top 12 by budget amount
+  // Chart data — top 12 by budget amount; each bar drills into the matching budget line
   const chartItems: HBarItem[] = useMemo(() => {
     const sorted = [...rows].sort((a, b) => b.budgeted - a.budgeted).slice(0, 12);
     const maxBudgeted = sorted[0]?.budgeted ?? 1;
@@ -401,9 +456,11 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
         percent: maxBudgeted > 0 ? Math.min(100, Math.round((r.actual / maxBudgeted) * 100)) : 0,
         tone:    isOver ? ('danger' as const) : (r.variancePct !== null && r.variancePct < 10 ? ('warning' as const) : ('success' as const)),
         note:    `${fmtPct(r.variancePct)} vs ${moneyCompact(r.budgeted)} budget`,
+        // §15: click bar → budget-line drawer
+        onClick: onDrill ? () => onDrill(r) : undefined,
       };
     });
-  }, [rows]);
+  }, [rows, onDrill]);
 
   function handleExport(): void {
     exportCsv(filtered, [
@@ -418,28 +475,29 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
   }
 
   const columns: Array<HrfinColumn<BudgetVarianceRow>> = [
-    { key: 'cc',       label: 'Cost Centre', render: r => r.costCenterName ?? r.costCenterId },
-    { key: 'category', label: 'Category',    render: r => <strong>{r.category}</strong> },
-    { key: 'budgeted', label: 'Budget',      render: r => <span style={{ fontFamily: 'monospace' }}>{money(r.budgeted)}</span> },
-    { key: 'actual',   label: 'Actual',      render: r => <span style={{ fontFamily: 'monospace' }}>{money(r.actual)}</span> },
+    { key: 'cc',       label: 'Cost Centre', sortable: true, render: r => r.costCenterName ?? r.costCenterId },
+    { key: 'category', label: 'Category',    sortable: true, render: r => <strong>{r.category}</strong> },
+    { key: 'budgeted', label: 'Budget',      sortable: true, render: r => <span style={{ fontFamily: 'monospace' }}>{money(r.budgeted)}</span> },
+    { key: 'actual',   label: 'Actual',      sortable: true, render: r => <span style={{ fontFamily: 'monospace' }}>{money(r.actual)}</span> },
     {
       key: 'variance',
       label: 'Variance',
+      sortable: true,
       render: r => {
         const tone: HrfinTone = r.variance >= 0 ? 'ok' : (r.variancePct !== null && r.variancePct >= -10 ? 'wn' : 'bad');
         return <HrfinPill tone={tone}>{money(r.variance)}</HrfinPill>;
       },
     },
-    { key: 'varPct', label: 'Var %', render: r => fmtPct(r.variancePct) },
+    { key: 'varPct', label: 'Var %', sortable: true, render: r => fmtPct(r.variancePct) },
   ];
 
   return (
     <div>
-      {/* Chart */}
+      {/* Chart — §15: click bar → budget-line drawer */}
       {chartItems.length > 0 && (
         <section class="hrfin-kpi-row" style={{ marginBottom: 16 }}>
           <article class="hrfin-kpi-card" style={{ flex: '1 1 100%', paddingBottom: 18 }}>
-            <div class="hrfin-kpi-head"><span>Budget vs Actual — FY {fiscalYear} (top lines by budget)</span></div>
+            <div class="hrfin-kpi-head"><span>Budget vs Actual — FY {fiscalYear} (top lines by budget; click a bar to drill in)</span></div>
             <HorizontalBars items={chartItems} />
           </article>
         </section>
@@ -450,7 +508,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
         rows={pageRows}
         rowKey={r => `${r.costCenterId}::${r.category}`}
         onRowClick={onDrill ? (r => onDrill(r)) : undefined}
-        rowActions={r => [
+        rowActions={_r => [
           { key: 'export', label: 'Export CSV', icon: 'download', onClick: handleExport },
         ]}
         searchValue={search}
@@ -467,6 +525,9 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
         noun="variance rows"
         loading={varQ.isLoading && !rows.length}
         emptyMessage={`No budget data for FY ${fiscalYear}.`}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={handleSort}
       />
     </div>
   );
@@ -482,16 +543,39 @@ function ActualsTab({ fiscalYear, costCentreFilter }: {
   const entries  = actualsQ.data ?? [];
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(0);
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir]     = useState<'asc' | 'desc'>('asc');
+
+  function handleSort(field: string, dir: 'asc' | 'desc'): void {
+    setSortField(field); setSortDir(dir); setPage(0);
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return entries;
-    return entries.filter(e =>
-      (e.ref ?? '').toLowerCase().includes(q) ||
-      e.sourceModule.toLowerCase().includes(q) ||
-      e.sourceEntityType.toLowerCase().includes(q),
-    );
-  }, [entries, search]);
+    let out = q
+      ? entries.filter(e =>
+          (e.ref ?? '').toLowerCase().includes(q) ||
+          e.sourceModule.toLowerCase().includes(q) ||
+          e.sourceEntityType.toLowerCase().includes(q),
+        )
+      : entries;
+    if (sortField) {
+      out = [...out].sort((a, b) => {
+        let av: string | number, bv: string | number;
+        if (sortField === 'ref')    { av = a.ref ?? ''; bv = b.ref ?? ''; }
+        else if (sortField === 'module') { av = a.sourceModule; bv = b.sourceModule; }
+        else if (sortField === 'type')   { av = a.sourceEntityType; bv = b.sourceEntityType; }
+        else if (sortField === 'amount') { av = a.amount; bv = b.amount; }
+        else if (sortField === 'status') { av = a.status; bv = b.status; }
+        else if (sortField === 'date')   { av = a.createdAt; bv = b.createdAt; }
+        else { return 0; }
+        if (av < bv) return sortDir === 'asc' ? -1 : 1;
+        if (av > bv) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return out;
+  }, [entries, search, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -509,12 +593,12 @@ function ActualsTab({ fiscalYear, costCentreFilter }: {
   }
 
   const columns: Array<HrfinColumn<CostEntryRow>> = [
-    { key: 'ref',    label: 'Ref',    render: r => <code style={{ fontSize: 11 }}>{r.ref ?? r.id.slice(0, 10)}</code> },
-    { key: 'module', label: 'Module', render: r => humanModule(r.sourceModule) },
-    { key: 'type',   label: 'Type',   render: r => r.sourceEntityType.replace(/_/g, ' ') },
-    { key: 'amount', label: 'Amount', render: r => <strong style={{ fontFamily: 'monospace' }}>{money(r.amount)}</strong> },
-    { key: 'status', label: 'Status', render: r => <HrfinPill tone="ok">{r.status}</HrfinPill> },
-    { key: 'date',   label: 'Date',   render: r => new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
+    { key: 'ref',    label: 'Ref',    sortable: true, render: r => <code style={{ fontSize: 11 }}>{r.ref ?? r.id.slice(0, 10)}</code> },
+    { key: 'module', label: 'Module', sortable: true, render: r => humanModule(r.sourceModule) },
+    { key: 'type',   label: 'Type',   sortable: true, render: r => r.sourceEntityType.replace(/_/g, ' ') },
+    { key: 'amount', label: 'Amount', sortable: true, render: r => <strong style={{ fontFamily: 'monospace' }}>{money(r.amount)}</strong> },
+    { key: 'status', label: 'Status', sortable: true, render: r => <HrfinPill tone="ok">{r.status}</HrfinPill> },
+    { key: 'date',   label: 'Date',   sortable: true, render: r => new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
   ];
 
   return (
@@ -539,6 +623,9 @@ function ActualsTab({ fiscalYear, costCentreFilter }: {
       noun="cost entries"
       loading={actualsQ.isLoading && !entries.length}
       emptyMessage={`No approved cost entries for FY ${fiscalYear}.`}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={handleSort}
     />
   );
 }
@@ -802,6 +889,21 @@ export function BudgetsOverview(): VNode {
   const canManage  = can('finance.budgets.manage');
   const canView    = can('finance.budgets.view') || canManage;
 
+  // Page-level export — exports all budget lines for the current FY/cost-centre filter
+  function handlePageExport(): void {
+    exportCsv(budgets, [
+      { header: 'Category',       value: r => r.category },
+      { header: 'Label',          value: r => r.label ?? '' },
+      { header: 'Cost Centre',    value: r => r.costCenterName ?? r.costCenterId },
+      { header: 'Fiscal Year',    value: r => String(r.fiscalYear) },
+      { header: 'Period',         value: r => r.period ?? '' },
+      { header: 'Budgeted (TTD)', value: r => String(r.budgeted) },
+      { header: 'Actual (TTD)',   value: r => String(r.actual) },
+      { header: 'Variance (TTD)', value: r => String(r.variance) },
+      { header: 'Variance %',     value: r => r.variancePct !== null ? r.variancePct.toFixed(2) : '' },
+    ], `budget-lines-fy${fiscalYear}`);
+  }
+
   // Variance drill — find the line by category+cc for the clicked row
   function handleVarianceDrill(_r: BudgetVarianceRow): void {
     // Try to find the budget line matching this variance row
@@ -831,10 +933,10 @@ export function BudgetsOverview(): VNode {
           ...(canManage ? [
             { key: 'bulk',  label: 'Bulk Budget Entry',  icon: 'plus'     as const, variant: 'primary'    as const, onClick: () => setBulkWizOpen(true) },
             { key: 'copy',  label: 'Copy Last Year',      icon: 'refresh'  as const,                                onClick: () => setCopyDlgOpen(true) },
-            { key: 'export',label: 'Export CSV',          icon: 'download' as const,                                onClick: () => {} },
+            { key: 'export',label: 'Export CSV',          icon: 'download' as const,                                onClick: handlePageExport },
           ] : []),
           ...(!canManage && canView ? [
-            { key: 'export', label: 'Export CSV', icon: 'download' as const, onClick: () => {} },
+            { key: 'export', label: 'Export CSV', icon: 'download' as const, onClick: handlePageExport },
           ] : []),
         ]}
       />

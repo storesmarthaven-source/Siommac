@@ -27,11 +27,15 @@ import { money } from './hrfinFormat';
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTS = Array.from({ length: 8 }, (_, i) => CURRENT_YEAR - 2 + i);
 
+const PERIOD_OPTIONS = ['Q1', 'Q2', 'Q3', 'Q4', 'H1', 'H2', 'Full-Year'] as const;
+
 interface LineEntry {
   category: string;
   label: string;
   notes: string;
   budgeted: string; // string for the input, converted on submit
+  period: string;   // e.g. 'Q1', 'H2', 'Full-Year'
+  ownerId: string;  // app_users.id TEXT (blank = no owner)
   error?: string;
 }
 
@@ -216,6 +220,31 @@ function Step3LineEntry({ state, patch }: {
               />
             </div>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
+            <div class="hrfin-field">
+              <label class="hrfin-label">Period</label>
+              <select
+                class="hrfin-select"
+                value={line.period}
+                onChange={e => patchLine(i, { period: (e.target as HTMLSelectElement).value })}
+              >
+                {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <div class="hrfin-field-hint">Fiscal sub-period this line covers.</div>
+            </div>
+            <div class="hrfin-field">
+              <label class="hrfin-label">Budget Owner ID</label>
+              <input
+                class="hrfin-input"
+                type="text"
+                placeholder="User ID (optional)"
+                maxLength={100}
+                value={line.ownerId}
+                onInput={e => patchLine(i, { ownerId: (e.target as HTMLInputElement).value })}
+              />
+              <div class="hrfin-field-hint">app_users.id of the responsible owner.</div>
+            </div>
+          </div>
           <div class="hrfin-field" style={{ marginTop: 8 }}>
             <label class="hrfin-label">Notes</label>
             <textarea
@@ -357,7 +386,7 @@ export function BudBulkUpsertWizard({ open, onClose, onSuccess }: BudBulkUpsertW
   function syncLines(categories: string[]): void {
     const existingMap = new Map(state.lines.map(l => [l.category, l]));
     const next = categories.map(cat => existingMap.get(cat) ?? {
-      category: cat, label: '', notes: '', budgeted: '',
+      category: cat, label: '', notes: '', budgeted: '', period: 'Full-Year', ownerId: '',
     });
     patch({ selectedCategories: categories, lines: next });
   }
@@ -413,6 +442,8 @@ export function BudBulkUpsertWizard({ open, onClose, onSuccess }: BudBulkUpsertW
       notes:        l.notes || null,
       budgeted:     parseFloat(l.budgeted) || 0,
       currency:     'TTD',
+      period:       l.period || null,
+      ownerId:      l.ownerId || null,
     }));
 
     try {

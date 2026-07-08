@@ -23,6 +23,10 @@ export interface BudgetLineDto {
   fiscalYear: number; category: string; label: string | null; notes: string | null;
   budgeted: number; actual: number; variance: number; variancePct: number | null;
   currency: string; createdBy: string | null; createdAt: string; updatedAt: string | null;
+  /** Fiscal period within year — e.g. 'Q1', 'Jan'. Null = full-year allocation. */
+  period: string | null;
+  /** Budget owner user ID (app_users.id TEXT). */
+  ownerId: string | null;
 }
 
 export interface BudgetVarianceRow {
@@ -60,6 +64,10 @@ export interface BulkBudgetLineInput {
   notes?: string | null;
   budgeted: number;
   currency?: string;
+  /** Fiscal period within the year — e.g. 'Q1', 'Q2', 'H1', 'Jan', '01'. Null = full-year. */
+  period?: string | null;
+  /** Budget owner / responsible manager (app_users.id TEXT). */
+  ownerId?: string | null;
 }
 
 export interface BulkUpsertResult {
@@ -91,6 +99,8 @@ interface DbBudgetRow {
   label: string | null; notes: string | null; budgeted: string | number; actual: string | number;
   currency: string; created_by: string | null; created_at: string; updated_at: string | null;
   cc_name?: string | null;
+  period: string | null;
+  owner_id: string | null;
 }
 
 // ── Actuals aggregation ───────────────────────────────────────────────────────
@@ -131,7 +141,8 @@ function toDto(row: DbBudgetRow, actualsMap: Map<string, number>): BudgetLineDto
   return { id: row.id, costCenterId: row.cost_center_id, costCenterName: row.cc_name ?? null,
     fiscalYear: row.fiscal_year, category: row.category, label: row.label, notes: row.notes,
     budgeted, actual, variance, variancePct, currency: row.currency,
-    createdBy: row.created_by, createdAt: row.created_at, updatedAt: row.updated_at };
+    createdBy: row.created_by, createdAt: row.created_at, updatedAt: row.updated_at,
+    period: row.period ?? null, ownerId: row.owner_id ?? null };
 }
 
 function applyRounding(amount: number, rule: 'none' | 'hundred' | 'thousand'): number {
@@ -225,6 +236,7 @@ export async function upsertBudgetLine(input: UpsertBudgetLineInput): Promise<Bu
   const isOverBudget = row.actual > row.budgeted && row.budgeted > 0;
 
   try {
+    // 1. Emit the primary upsert event + mandatory audit log
     await emitFinanceMutationBackbone({
       actorUserId:   input.actorId,
       module:        'finance_budgets',
@@ -233,17 +245,37 @@ export async function upsertBudgetLine(input: UpsertBudgetLineInput): Promise<Bu
       eventType:     'finance.budgets.line.upserted',
       auditAction:   'budget_line.upserted',
       previousState: null,
-      newState:      { costCenterId: row.costCenterId, fiscalYear: row.fiscalYear, category: row.category, budgeted: row.budgeted },
-      ...(isOverBudget ? {
-        severity: 'warning' as const,
-        notification: {
-          title:    `Budget variance alert: ${row.costCenterName ?? row.costCenterId} · ${row.category}`,
-          body:     `Actual spend ($${Math.round(row.actual).toLocaleString()}) exceeds budget ($${Math.round(row.budgeted).toLocaleString()}) for FY ${row.fiscalYear}.`,
-          severity: 'warning' as const,
-          actionRoute: '/finance/budgets',
-        },
-      } : {}),
+      newState:      { costCenterId: row.costCenterId, fiscalYear: row.fiscalYear, category: row.category, budgeted: row.budgeted, period: row.period, ownerId: row.ownerId },
     });
+
+    // 2. If over budget: emit a SEPARATE variance breach event per §8.1 with correct
+    //    event type and recipients (Cost-centre Owner + Finance Lead / finance_manager role).
+    if (isOverBudget) {
+      const { data: fmUsers } = await sb.from('app_users')
+        .select('id')
+        .in('role', ['finance_manager', 'finance_lead'])
+        .eq('status', 'active');
+      const recipientUserIds = (fmUsers ?? []).map((u: { id: string }) => u.id);
+
+      await emitFinanceMutationBackbone({
+        actorUserId:   input.actorId,
+        module:        'finance_budgets',
+        entityType:    'budget_line',
+        entityId:      row.id,
+        eventType:     'finance.budget.variance.threshold_breached',
+        auditAction:   'budget_line.variance.threshold_breached',
+        severity:      'warning',
+        previousState: null,
+        newState:      { actual: row.actual, budgeted: row.budgeted, variancePct: row.variancePct },
+        notification: {
+          title:           `Budget variance alert: ${row.costCenterName ?? row.costCenterId} · ${row.category}`,
+          body:            `Actual spend ($${Math.round(row.actual).toLocaleString()}) exceeds budget ($${Math.round(row.budgeted).toLocaleString()}) for FY ${row.fiscalYear}.`,
+          severity:        'warning',
+          actionRoute:     '/finance/budgets',
+          recipientUserIds,
+        },
+      });
+    }
   } catch (backboneErr) {
     // Backbone failed (audit write) — compensating rollback for the newly created record.
     // For an upsert we cannot know if it was a create or update without tracking the old state;
@@ -312,6 +344,8 @@ export async function bulkUpsertBudgetLines(
     budgeted:       l.budgeted,
     currency:       l.currency ?? 'TTD',
     created_by:     actorId,
+    period:         l.period ?? null,
+    owner_id:       l.ownerId ?? null,
   }));
 
   const { data: upserted, error } = await sb
@@ -339,6 +373,7 @@ export async function bulkUpsertBudgetLines(
   }
 
   try {
+    // 1. Primary bulk upsert event
     await emitFinanceMutationBackbone({
       actorUserId:  actorId,
       module:       'finance_budgets',
@@ -348,16 +383,35 @@ export async function bulkUpsertBudgetLines(
       auditAction:  'budget_lines.bulk_upserted',
       previousState: null,
       newState:     { count: rows.length, lineIds: ids },
-      ...(overBudgetCount > 0 ? {
-        severity: 'warning' as const,
-        notification: {
-          title:    `Budget variance alert: ${overBudgetCount} line${overBudgetCount > 1 ? 's' : ''} over budget`,
-          body:     `After bulk entry, ${overBudgetCount} budget line${overBudgetCount > 1 ? 's are' : ' is'} exceeded by actual spend.`,
-          severity: 'warning' as const,
-          actionRoute: '/finance/budgets',
-        },
-      } : {}),
     });
+
+    // 2. If any lines are over budget: emit a SEPARATE variance breach event per §8.1.
+    if (overBudgetCount > 0) {
+      const { data: fmUsers } = await sb.from('app_users')
+        .select('id')
+        .in('role', ['finance_manager', 'finance_lead'])
+        .eq('status', 'active');
+      const recipientUserIds = (fmUsers ?? []).map((u: { id: string }) => u.id);
+
+      await emitFinanceMutationBackbone({
+        actorUserId:  actorId,
+        module:       'finance_budgets',
+        entityType:   'budget_line_batch',
+        entityId:     ids[0] ?? 'batch',
+        eventType:    'finance.budget.variance.threshold_breached',
+        auditAction:  'budget_lines.variance.threshold_breached',
+        severity:     'warning',
+        previousState: null,
+        newState:     { overBudgetCount, lineIds: ids },
+        notification: {
+          title:           `Budget variance alert: ${overBudgetCount} line${overBudgetCount > 1 ? 's' : ''} over budget`,
+          body:            `After bulk entry, ${overBudgetCount} budget line${overBudgetCount > 1 ? 's are' : ' is'} exceeded by actual spend.`,
+          severity:        'warning',
+          actionRoute:     '/finance/budgets',
+          recipientUserIds,
+        },
+      });
+    }
   } catch (backboneErr) {
     // Backbone failed — rethrow; the business rows are in a valid state
     throw backboneErr;
@@ -449,8 +503,14 @@ export async function copyLastYearBudget(input: CopyLastYearInput): Promise<Copy
       },
     });
   } catch (backboneErr) {
-    // Compensating rollback — delete the copied lines if audit fails
-    await sb.from('finance_budget_lines').delete().in('id', ids).catch(() => {});
+    // Compensating rollback — delete the copied lines if backbone (audit) fails.
+    // Swallowing the delete error here is intentional: the primary failure is
+    // backboneErr and we want to surface it. A dangling row is the lesser evil
+    // vs masking the root cause; the operator can clean up via the manage UI.
+    const { error: rollbackErr } = await sb.from('finance_budget_lines').delete().in('id', ids);
+    if (rollbackErr) {
+      console.error('[copyLastYearBudget] compensating rollback failed:', rollbackErr.message, 'ids:', ids);
+    }
     throw backboneErr;
   }
 
@@ -555,6 +615,93 @@ export async function listCostEntriesForYear(
     });
   }
   return result;
+}
+
+// ── Budget Approvals (workflow tasks for a budget line) ───────────────────────
+
+export interface BudgetApprovalTask {
+  id: string;
+  stepKey: string;
+  stepName: string | null;
+  status: string;
+  assignedTo: string | null;
+  assignedRole: string | null;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export async function getBudgetLineApprovals(budgetLineId: string): Promise<BudgetApprovalTask[]> {
+  // Find workflow instances linked to this budget line, then return their tasks.
+  const { data: instances, error: wiErr } = await sb
+    .from('workflow_instances')
+    .select('id')
+    .eq('source_record_id', budgetLineId)
+    .eq('module_key', 'finance_budgets');
+  if (wiErr) throw Object.assign(new Error('getBudgetLineApprovals (instances): ' + wiErr.message), { status: 500 });
+
+  const instanceIds = (instances ?? []).map((r: { id: string }) => r.id);
+  if (!instanceIds.length) return [];
+
+  const { data: tasks, error: taskErr } = await sb
+    .from('workflow_tasks')
+    .select('id, step_key, step_name, status, assigned_to, assigned_role, due_at, created_at, updated_at')
+    .in('workflow_id', instanceIds)
+    .order('created_at', { ascending: true });
+  if (taskErr) throw Object.assign(new Error('getBudgetLineApprovals (tasks): ' + taskErr.message), { status: 500 });
+
+  return (tasks ?? []).map((t: {
+    id: string; step_key: string; step_name: string | null; status: string;
+    assigned_to: string | null; assigned_role: string | null; due_at: string | null;
+    created_at: string; updated_at: string | null;
+  }) => ({
+    id:           t.id,
+    stepKey:      t.step_key,
+    stepName:     t.step_name,
+    status:       t.status,
+    assignedTo:   t.assigned_to,
+    assignedRole: t.assigned_role,
+    dueAt:        t.due_at,
+    createdAt:    t.created_at,
+    updatedAt:    t.updated_at,
+  }));
+}
+
+// ── Budget Audit Log ──────────────────────────────────────────────────────────
+
+export interface BudgetAuditEntry {
+  id: string;
+  action: string;
+  actorId: string | null;
+  previousState: unknown;
+  newState: unknown;
+  reason: string | null;
+  createdAt: string;
+}
+
+export async function getBudgetLineAuditLog(budgetLineId: string): Promise<BudgetAuditEntry[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id, action, actor_id, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', 'finance_budgets')
+    .eq('record_id', budgetLineId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) throw Object.assign(new Error('getBudgetLineAuditLog: ' + error.message), { status: 500 });
+
+  return (data ?? []).map((r: {
+    id: string; action: string; actor_id: string | null;
+    previous_state: unknown; new_state: unknown;
+    reason: string | null; created_at: string;
+  }) => ({
+    id:            r.id,
+    action:        r.action,
+    actorId:       r.actor_id,
+    previousState: r.previous_state,
+    newState:      r.new_state,
+    reason:        r.reason,
+    createdAt:     r.created_at,
+  }));
 }
 
 // ── Variance Reports ──────────────────────────────────────────────────────────

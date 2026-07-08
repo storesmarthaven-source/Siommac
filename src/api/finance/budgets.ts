@@ -28,6 +28,30 @@ export interface BudgetLine {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string | null;
+  period: string | null;
+  ownerId: string | null;
+}
+
+export interface BudgetApprovalTask {
+  id: string;
+  stepKey: string;
+  stepName: string | null;
+  status: string;
+  assignedTo: string | null;
+  assignedRole: string | null;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface BudgetAuditEntry {
+  id: string;
+  action: string;
+  actorId: string | null;
+  previousState: unknown;
+  newState: unknown;
+  reason: string | null;
+  createdAt: string;
 }
 
 export interface BudgetVarianceRow {
@@ -99,6 +123,10 @@ export interface BulkBudgetLineArg {
   notes?: string | null;
   budgeted: number;
   currency?: 'TTD';
+  /** Fiscal period within the year — e.g. 'Q1', 'Jan', 'H1'. Null = full-year. */
+  period?: string | null;
+  /** Budget owner user ID (app_users.id TEXT). */
+  ownerId?: string | null;
 }
 
 export interface CopyLastYearArgs {
@@ -120,6 +148,16 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 
 // ── API surface ───────────────────────────────────────────────────────────────
 
+export interface BudgetAttachmentDto {
+  id: string;
+  fileName: string;
+  fileSize: number | null;
+  contentType: string | null;
+  storagePath: string;
+  uploadedBy: string | null;
+  createdAt: string;
+}
+
 export const financeBudgetsApi = {
   list:        (a: { costCenterId?: string; fiscalYear?: number; category?: string } = {}) =>
                  call<BudgetLine[]>('finance/budgets/list', a),
@@ -136,6 +174,23 @@ export const financeBudgetsApi = {
   listReports: () => call<BudgetReportCatalogRow[]>('finance/budgets/reports/list'),
   runReport:   (a: { reportKey: string; fiscalYear?: number; costCenterId?: string }) =>
                  call<BudgetLine[] | BudgetVarianceRow[] | CostEntryRow[]>('finance/budgets/reports/run', a),
+  // Approvals (workflow tasks for a budget line)
+  approvals:   (a: { id: string }) => call<BudgetApprovalTask[]>('finance/budgets/approvals', a),
+  // Audit log entries for a budget line
+  auditLog:    (a: { id: string }) => call<BudgetAuditEntry[]>('finance/budgets/audit-log', a),
+  // Budget-specific attachment routes
+  attachments: {
+    uploadUrl: (a: { budgetLineId: string; fileName: string; mimeType: string }) =>
+      call<{ uploadUrl: string; token: string; path: string; bucket: string }>('finance/budgets/attachments/upload-url', a),
+    complete: (a: { budgetLineId: string; fileName: string; storagePath: string; mimeType?: string; fileSize?: number }) =>
+      call<BudgetAttachmentDto>('finance/budgets/attachments/complete', a),
+    list: (a: { budgetLineId: string }) =>
+      call<BudgetAttachmentDto[]>('finance/budgets/attachments/list', a),
+    signedUrl: (a: { storagePath: string }) =>
+      call<{ signedUrl: string }>('finance/budgets/attachments/signed-url', a),
+    delete: (a: { id: string; budgetLineId: string }) =>
+      call<{ id: string }>('finance/budgets/attachments/delete', a),
+  },
 };
 
 // ── Local query-key factory ───────────────────────────────────────────────────
@@ -151,6 +206,9 @@ export const financeBudgetsKeys = {
   // New (report to orchestrator for keys.ts registration)
   lineActuals:   (id: string)     => ['finance', 'budgets', id, 'actuals'] as const,
   actuals:       (o: object)      => ['finance', 'budgets', 'actuals', o] as const,
+  approvals:     (id: string)     => ['finance', 'budgets', id, 'approvals'] as const,
+  auditLog:      (id: string)     => ['finance', 'budgets', id, 'audit-log'] as const,
+  attachments:   (id: string)     => ['finance', 'budgets', id, 'attachments'] as const,
 };
 
 // ── Queries ───────────────────────────────────────────────────────────────────
@@ -196,6 +254,31 @@ export function useBudgetReports() {
   return useQuery({
     queryKey: financeBudgetsKeys.reports(),
     queryFn:  () => financeBudgetsApi.listReports(),
+  });
+}
+
+export function useBudgetLineApprovals(id: string | null) {
+  return useQuery({
+    queryKey: financeBudgetsKeys.approvals(id ?? ''),
+    queryFn:  () => financeBudgetsApi.approvals({ id: id! }),
+    enabled:  !!id,
+  });
+}
+
+export function useBudgetLineAuditLog(id: string | null) {
+  return useQuery({
+    queryKey: financeBudgetsKeys.auditLog(id ?? ''),
+    queryFn:  () => financeBudgetsApi.auditLog({ id: id! }),
+    enabled:  !!id,
+  });
+}
+
+export function useBudgetLineAttachments(id: string | null, enabled = true) {
+  return useQuery({
+    queryKey: financeBudgetsKeys.attachments(id ?? ''),
+    queryFn:  () => financeBudgetsApi.attachments.list({ budgetLineId: id! }),
+    enabled:  enabled && !!id,
+    staleTime: 60_000,
   });
 }
 

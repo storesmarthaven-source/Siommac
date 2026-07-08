@@ -15,13 +15,27 @@ export interface HBarItem {
   tone?: 'accent' | 'warning' | 'danger' | 'success';
   /** Trailing note; defaults to "<percent>%". */
   note?: string;
+  /**
+   * Optional click handler for drill-through. When provided the row renders with
+   * pointer cursor and role="button" so it's keyboard-reachable.
+   */
+  onClick?: () => void;
 }
 
 export function HorizontalBars({ items }: { items: HBarItem[] }): VNode {
   return (
     <div class="hrfin-bar-list">
       {items.map((row, i) => (
-        <div class="hrfin-bar-row" key={i}>
+        <div
+          class={`hrfin-bar-row${row.onClick ? ' is-clickable' : ''}`}
+          key={i}
+          role={row.onClick ? 'button' : undefined}
+          tabIndex={row.onClick ? 0 : undefined}
+          aria-label={row.onClick ? `Drill into ${row.label}` : undefined}
+          onClick={row.onClick}
+          onKeyDown={row.onClick ? (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); row.onClick?.(); } } : undefined}
+          style={row.onClick ? { cursor: 'pointer' } : undefined}
+        >
           <span>{row.label}</span>
           <div><i class={`is-${row.tone ?? 'accent'}`} style={{ width: `${Math.max(0, Math.min(100, row.percent))}%` }} /></div>
           <b>{row.value}</b>

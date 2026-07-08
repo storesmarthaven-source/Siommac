@@ -42,6 +42,8 @@ export interface Remittance {
   periodMonth: number;
   authority: RemittanceAuthority;
   payrollRunId: string;
+  /** Resolved run code (e.g. "RUN-2026-004") from list/get; null for mutation responses. */
+  payrollRunNo: string | null;
   employeePortion: number;
   employerPortion: number;
   totalDue: number;

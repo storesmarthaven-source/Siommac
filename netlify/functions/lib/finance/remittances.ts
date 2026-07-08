@@ -57,6 +57,8 @@ export interface RemittanceDto {
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  /** Resolved from finance_payroll_runs join; null when not fetched via list/get. */
+  payrollRunNo: string | null;
 }
 
 export interface RemittanceLineDto {
@@ -113,6 +115,8 @@ interface DbRemittanceRow {
   cancelled_by: string | null; cancel_reason: string | null;
   metadata: Record<string, unknown>;
   created_at: string; updated_at: string;
+  /** Present only when selected with the payroll_runs join (list/get endpoints). */
+  finance_payroll_runs?: { run_no: string } | null;
 }
 
 interface DbLineRow {
@@ -154,6 +158,7 @@ function toDto(r: DbRemittanceRow): RemittanceDto {
     cancelledBy: r.cancelled_by, cancelReason: r.cancel_reason,
     metadata: r.metadata,
     createdAt: r.created_at, updatedAt: r.updated_at,
+    payrollRunNo: r.finance_payroll_runs?.run_no ?? null,
   };
 }
 
@@ -263,7 +268,8 @@ export async function listRemittances(opts: {
   periodMonth?: number;
   search?: string;
 } = {}): Promise<RemittanceDto[]> {
-  let q = sb.from('finance_remittances').select('*')
+  let q = sb.from('finance_remittances')
+    .select('*, finance_payroll_runs!payroll_run_id(run_no)')
     .order('created_at', { ascending: false });
   if (opts.payrollRunId) q = q.eq('payroll_run_id', opts.payrollRunId);
   if (opts.authority)    q = q.eq('authority', opts.authority);
@@ -280,7 +286,7 @@ export async function listRemittances(opts: {
 
 export async function getRemittance(id: string): Promise<RemittanceDto | null> {
   const { data, error } = await sb.from('finance_remittances')
-    .select('*').eq('id', id).maybeSingle<DbRemittanceRow>();
+    .select('*, finance_payroll_runs!payroll_run_id(run_no)').eq('id', id).maybeSingle<DbRemittanceRow>();
   if (error) throw Object.assign(new Error('getRemittance: ' + error.message), { status: 500 });
   return data ? toDto(data) : null;
 }
@@ -635,6 +641,11 @@ export async function markRemittanceFiled(
 
   const filedDate = opts.filedDate ?? new Date().toISOString().slice(0, 10);
 
+  // §12: raise a ticket when the filing is overdue OR has no receipt reference.
+  const isOverdue      = !!(existing.dueDate && filedDate > existing.dueDate);
+  const missingReceipt = !opts.receiptReference;
+  const needsTicket    = isOverdue || missingReceipt;
+
   const patch: Record<string, unknown> = {
     status:              'filed',
     filed_date:          filedDate,
@@ -681,6 +692,18 @@ export async function markRemittanceFiled(
         participantUserIds: [actorId],
         body:               `Remittance ${existing.remittanceNo} (${existing.authority}) filed on ${filedDate}.${opts.receiptReference ? ` Receipt ref: ${opts.receiptReference}.` : ''}${opts.filedNotes ? ` Notes: ${opts.filedNotes}` : ''}`,
       },
+      // §12: ticket only if filing is overdue or receipt reference is missing.
+      ticket: needsTicket ? {
+        category:        'finance_compliance',
+        priority:        isOverdue ? 'high' as const : 'medium' as const,
+        subject:         `${existing.remittanceNo} — ${isOverdue ? 'Overdue filing' : 'Missing receipt reference'}`,
+        description:     [
+          `Remittance ${existing.remittanceNo} (${existing.authority.replace(/_/g, '/')}) filed on ${filedDate}.`,
+          isOverdue ? `Filing was overdue — due date was ${existing.dueDate}.` : '',
+          missingReceipt ? 'No receipt reference was provided with this filing.' : '',
+        ].filter(Boolean).join(' '),
+        requesterUserId: actorId,
+      } : undefined,
     });
   } catch (bbErr) {
     // Compensating rollback (audit failure = mandatory)
