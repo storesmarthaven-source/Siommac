@@ -7,6 +7,7 @@ import { startWorkflowForRecord } from '../workflow/service';
 import { assertDifferentApprover } from './statutoryConfig';
 import { createAttachmentUploadUrl } from '../upload';
 import { emitFinanceMutationBackbone } from './backbone';
+import { createReimbursementHandoff } from './bridges';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export const EXPENSE_RECEIPT_BUCKET = 'finance-receipts';
@@ -44,6 +45,12 @@ export interface ExpenseCostEntryDto {
   currency: string;
   description: string | null;
   expenseClaimId: string | null;
+  expenseDate: string | null;
+  category: string | null;
+  project: string | null;
+  taxAmount: number;
+  merchant: string | null;
+  receiptRequired: boolean;
   createdAt: string;
 }
 
@@ -135,6 +142,9 @@ interface DbEntryRow {
   id: string; ref: string; cost_center_id: string | null;
   amount: string; currency: string; description: string | null;
   expense_claim_id: string | null; created_at: string;
+  expense_date: string | null; category: string | null;
+  project: string | null; tax_amount: string | null;
+  merchant: string | null; receipt_required: boolean;
 }
 
 // ── Category policy limits (TTD) ──────────────────────────────────────────────
@@ -182,6 +192,12 @@ function toEntryDto(r: DbEntryRow): ExpenseCostEntryDto {
     amount: Number(r.amount), currency: r.currency,
     description: r.description,
     expenseClaimId: r.expense_claim_id,
+    expenseDate: r.expense_date ?? null,
+    category: r.category ?? null,
+    project: r.project ?? null,
+    taxAmount: Number(r.tax_amount ?? 0),
+    merchant: r.merchant ?? null,
+    receiptRequired: r.receipt_required ?? false,
     createdAt: r.created_at,
   };
 }
@@ -197,12 +213,16 @@ export async function listExpenseClaims(opts: {
   search?: string;
   page?: number;
   pageSize?: number;
+  sortField?: string;
+  sortDir?: 'asc' | 'desc';
 } = {}): Promise<{ data: ExpenseClaimDto[]; total: number }> {
   const pageSize = opts.pageSize ?? 50;
   const page = opts.page ?? 0;
+  const sortField = opts.sortField ?? 'created_at';
+  const ascending = (opts.sortDir ?? 'desc') === 'asc';
 
   let q = sb.from('finance_expense_claims').select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .order(sortField, { ascending })
     .range(page * pageSize, (page + 1) * pageSize - 1);
   if (opts.claimantId) q = q.eq('claimant_id', opts.claimantId);
   if (opts.status)     q = q.eq('status', opts.status);
@@ -222,7 +242,7 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaimDto | nul
 
 export async function listExpenseCostEntries(claimId: string): Promise<ExpenseCostEntryDto[]> {
   const { data, error } = await sb.from('finance_cost_entries')
-    .select('id, ref, cost_center_id, amount, currency, description, expense_claim_id, created_at')
+    .select('id, ref, cost_center_id, amount, currency, description, expense_claim_id, created_at, expense_date, category, project, tax_amount, merchant, receipt_required')
     .eq('expense_claim_id', claimId)
     .order('created_at');
   if (error) throw Object.assign(new Error('listExpenseCostEntries: ' + error.message), { status: 500 });
@@ -351,6 +371,13 @@ export interface AllocationLine {
   costCenterId: string;
   amount: number;
   description?: string;
+  // §14 per-line fields
+  expenseDate?: string;
+  category?: string;
+  project?: string;
+  taxAmount?: number;
+  merchant?: string;
+  receiptRequired?: boolean;
 }
 
 export interface CreateExpenseClaimInput {
@@ -364,6 +391,10 @@ export interface CreateExpenseClaimInput {
   reimbursable?: boolean;
   allocationLines: AllocationLine[];
   notes?: string;
+  /** §14 header: business reason for the expense */
+  purpose?: string;
+  /** §14 header: department making the claim (TEXT FK — app_users.department_id or raw name) */
+  departmentId?: string;
   metadata?: Record<string, unknown>;
   actorId: string;
 }
@@ -387,18 +418,24 @@ export async function createExpenseClaim(
   const currency = input.currency ?? 'TTD';
 
   const patch = {
-    claim_no:     claimNo,
-    claimant_id:  input.claimantId,
-    title:        input.title,
-    expense_date: input.expenseDate,
-    category:     input.category,
-    total_amount: input.totalAmount,
+    claim_no:      claimNo,
+    claimant_id:   input.claimantId,
+    title:         input.title,
+    expense_date:  input.expenseDate,
+    category:      input.category,
+    total_amount:  input.totalAmount,
     currency,
-    status:       'draft' as const,
-    receipt_path: input.receiptPath ?? null,
-    reimbursable: input.reimbursable ?? true,
-    metadata:     { ...(input.metadata ?? {}), ...(input.notes ? { notes: input.notes } : {}) },
-    created_by:   input.actorId,
+    status:        'draft' as const,
+    receipt_path:  input.receiptPath ?? null,
+    reimbursable:  input.reimbursable ?? true,
+    purpose:       input.purpose ?? null,
+    department_id: input.departmentId ?? null,
+    metadata:      {
+      ...(input.metadata ?? {}),
+      ...(input.notes    ? { notes:    input.notes }    : {}),
+      ...(input.purpose  ? { purpose:  input.purpose }  : {}),
+    },
+    created_by:    input.actorId,
   };
 
   const { data, error } = await sb.from('finance_expense_claims')
@@ -411,7 +448,7 @@ export async function createExpenseClaim(
   if (input.allocationLines.length > 0) {
     const entryRefs = await Promise.all(input.allocationLines.map(() => nextRef('CE')));
     const entryRows = input.allocationLines.map((l, i) => ({
-      ref:                entryRefs[i],
+      ref:                entryRefs[i]!,
       source_module:      'finance_expenses',
       source_entity_type: 'expense_claim',
       source_entity_id:   row.id,
@@ -421,6 +458,12 @@ export async function createExpenseClaim(
       description:        l.description ?? null,
       status:             'pending',
       expense_claim_id:   row.id,
+      expense_date:       l.expenseDate ?? null,
+      category:           l.category ?? null,
+      project:            l.project ?? null,
+      tax_amount:         l.taxAmount ?? 0,
+      merchant:           l.merchant ?? null,
+      receipt_required:   l.receiptRequired ?? false,
     }));
     const { error: entryErr } = await sb.from('finance_cost_entries').insert(entryRows);
     if (entryErr) {
@@ -551,6 +594,11 @@ export async function submitExpenseClaim(
           description:     `Claim "${existing.title}" (${existing.claimNo}) submitted without a receipt. Please upload the receipt to enable reimbursement.`,
           requesterUserId: actorId,
         },
+        messageThread: {
+          subject:            `Missing receipt — ${existing.claimNo}`,
+          participantUserIds: [...new Set([existing.claimantId, actorId])].filter(Boolean) as string[],
+          body:               `Expense claim ${existing.claimNo} ("${existing.title}") has been submitted for reimbursement but is missing a receipt. Please upload a receipt at your earliest convenience to avoid delays.`,
+        },
       } : {}),
     });
   } catch (rollbackErr) {
@@ -601,6 +649,10 @@ export async function approveExpenseClaim(
     .update({ status: 'approved' })
     .eq('expense_claim_id', id);
 
+  // Resolve Finance Payments users so they can be notified alongside the claimant.
+  const financePaymentUserIds = await getUserIdsByRole('finance_payments');
+  const notifRecipients = [...new Set([existing.claimantId, ...financePaymentUserIds])].filter(Boolean) as string[];
+
   try {
     await emitFinanceMutationBackbone({
       actorUserId:   actorId,
@@ -613,13 +665,21 @@ export async function approveExpenseClaim(
       newState:      { status: 'approved', approvedBy: actorId },
       severity:      'success',
       metadata:      { claimNo: existing.claimNo, totalAmount: existing.totalAmount, reimbursable: existing.reimbursable },
+      notification: {
+        title:            existing.reimbursable
+          ? 'Expense claim approved — reimbursement queued'
+          : 'Expense claim approved',
+        body:             `Claim ${existing.claimNo} has been approved.${existing.reimbursable ? ' Reimbursement has been queued.' : ''}`,
+        actionRoute:      `/finance/expenses/${id}`,
+        type:             existing.reimbursable ? 'finance.expense.approved.reimbursable' : 'finance.expense.approved',
+        severity:         'info' as const,
+        recipientUserIds: notifRecipients,
+      },
       ...(existing.reimbursable ? {
-        notification: {
-          title:       'Expense claim approved — reimbursement queued',
-          body:        `Claim ${existing.claimNo} has been approved. A reimbursement handoff has been created.`,
-          actionRoute: `/finance/expenses/${id}`,
-          type:        'finance.expense.approved.reimbursable',
-          severity:    'info' as const,
+        messageThread: {
+          subject:            `Expense claim ${existing.claimNo} approved — reimbursement pending`,
+          participantUserIds: notifRecipients,
+          body:               `Expense claim "${existing.title}" (${existing.claimNo}) for ${existing.totalAmount.toFixed(2)} ${existing.currency} has been approved. Reimbursement is now queued for processing.`,
         },
       } : {}),
     });
@@ -628,6 +688,20 @@ export async function approveExpenseClaim(
     await sb.from('finance_expense_claims').update({ status: 'submitted', approved_by: null }).eq('id', id);
     await sb.from('finance_cost_entries').update({ status: 'pending' }).eq('expense_claim_id', id);
     throw rollbackErr;
+  }
+
+  // Atomic reimbursement handoff — if it fails, roll back the whole approval.
+  if (existing.reimbursable) {
+    try {
+      await createReimbursementHandoff(id, actorId);
+    } catch (handoffErr) {
+      await sb.from('finance_expense_claims').update({ status: 'submitted', approved_by: null }).eq('id', id);
+      await sb.from('finance_cost_entries').update({ status: 'pending' }).eq('expense_claim_id', id);
+      throw Object.assign(
+        new Error(`Reimbursement handoff failed — approval rolled back: ${String(handoffErr)}`),
+        { status: 500 },
+      );
+    }
   }
 
   return row;
@@ -945,6 +1019,115 @@ export async function getExpenseTrend(): Promise<ExpenseTrendPoint[]> {
   }
 
   return points;
+}
+
+// ============================================================================
+// Audit log — list hr_audit_log rows for a claim
+// ============================================================================
+
+export interface ExpenseAuditEntry {
+  id: string;
+  actorId: string | null;
+  action: string;
+  summary: string | null;
+  previousState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export async function listExpenseAuditLog(claimId: string): Promise<ExpenseAuditEntry[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id, actor_id, action, summary, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', 'finance_expenses')
+    .eq('record_id', claimId)
+    .order('created_at', { ascending: true });
+  if (error) throw Object.assign(new Error('listExpenseAuditLog: ' + error.message), { status: 500 });
+  return ((data ?? []) as Array<{
+    id: string; actor_id: string | null; action: string; summary: string | null;
+    previous_state: Record<string, unknown> | null; new_state: Record<string, unknown> | null;
+    reason: string | null; created_at: string;
+  }>).map(r => ({
+    id: r.id,
+    actorId: r.actor_id,
+    action: r.action,
+    summary: r.summary,
+    previousState: r.previous_state,
+    newState: r.new_state,
+    reason: r.reason,
+    createdAt: r.created_at,
+  }));
+}
+
+// ============================================================================
+// Comment — write a user comment as an audit log entry + app event
+// ============================================================================
+
+export async function addExpenseComment(
+  claimId: string,
+  actorId: string,
+  body: string,
+): Promise<void> {
+  const existing = await getExpenseClaim(claimId);
+  if (!existing) throw Object.assign(new Error('Expense claim not found.'), { status: 404 });
+  if (isTerminalStatus(existing.status)) {
+    throw Object.assign(new Error('Cannot add a comment to a terminal claim.'), { status: 422 });
+  }
+  await emitFinanceMutationBackbone({
+    actorUserId:   actorId,
+    module:        'finance_expenses',
+    entityType:    'expense_claim',
+    entityId:      claimId,
+    eventType:     'finance.expense.comment_added',
+    auditAction:   'expense.comment_added',
+    previousState: null,
+    newState:      { commentBody: body },
+    severity:      'info',
+    metadata:      { claimNo: existing.claimNo, commentBody: body },
+  });
+}
+
+function isTerminalStatus(s: string): boolean {
+  return ['reimbursed', 'rejected', 'cancelled'].includes(s);
+}
+
+// ============================================================================
+// KPIs — live counts for Policy Exceptions + Missing Receipts
+// ============================================================================
+
+export interface ExpenseKpis {
+  policyExceptions: number;
+  missingReceipts: number;
+}
+
+export async function getExpenseKpis(): Promise<ExpenseKpis> {
+  // Policy exceptions: claims (not cancelled) where total > category limit
+  const { data: allActive } = await sb
+    .from('finance_expense_claims')
+    .select('category, total_amount')
+    .not('status', 'in', '("cancelled","rejected")');
+  const policyExceptions = (allActive ?? []).filter((r: Record<string, unknown>) => {
+    const limit = (CATEGORY_LIMITS as Record<string, number>)[r['category'] as string];
+    return limit !== undefined && Number(r['total_amount']) > limit;
+  }).length;
+
+  // Missing receipts: reimbursable non-terminal claims with no receipt_path
+  const { count: missingReceipts } = await sb
+    .from('finance_expense_claims')
+    .select('id', { count: 'exact', head: true })
+    .eq('reimbursable', true)
+    .is('receipt_path', null)
+    .not('status', 'in', '("cancelled","rejected","reimbursed")');
+
+  return { policyExceptions, missingReceipts: missingReceipts ?? 0 };
+}
+
+// ── Helper: query user IDs by role (for role-based notifications) ─────────────
+
+async function getUserIdsByRole(role: string): Promise<string[]> {
+  const { data } = await sb.from('app_users').select('id').eq('role', role).eq('status', 'active');
+  return ((data ?? []) as Array<{ id: string }>).map(u => u.id);
 }
 
 // ============================================================================

@@ -50,6 +50,13 @@ export interface ExpenseCostEntry {
   currency: string;
   description: string | null;
   expenseClaimId: string | null;
+  /** §14 per-line fields */
+  expenseDate: string | null;
+  category: string | null;
+  project: string | null;
+  taxAmount: number;
+  merchant: string | null;
+  receiptRequired: boolean;
   createdAt: string;
 }
 
@@ -114,12 +121,39 @@ export interface ExpenseTrendPoint {
   count: number;
 }
 
+// ── Audit log DTO ─────────────────────────────────────────────────────────────
+
+export interface ExpenseAuditEntry {
+  id: string;
+  actorId: string | null;
+  action: string;
+  summary: string | null;
+  previousState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+// ── KPI DTO ───────────────────────────────────────────────────────────────────
+
+export interface ExpenseKpis {
+  policyExceptions: number;
+  missingReceipts: number;
+}
+
 // ── Input types ───────────────────────────────────────────────────────────────
 
 export interface AllocationLine {
   costCenterId: string;
   amount: number;
   description?: string;
+  /** §14 per-line fields */
+  expenseDate?: string;
+  category?: ExpenseCategory;
+  project?: string;
+  taxAmount?: number;
+  merchant?: string;
+  receiptRequired?: boolean;
 }
 
 export interface CreateExpenseClaimArgs {
@@ -132,6 +166,10 @@ export interface CreateExpenseClaimArgs {
   receiptPath?: string | null;
   reimbursable?: boolean;
   notes?: string;
+  /** §14 header: business reason for the expense */
+  purpose?: string;
+  /** §14 header: department making the claim */
+  departmentId?: string;
   allocationLines: AllocationLine[];
   metadata?: Record<string, unknown>;
 }
@@ -157,8 +195,12 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 // ── API object ────────────────────────────────────────────────────────────────
 
 export const financeExpensesApi = {
-  list:    (a: { claimantId?: string; status?: ExpenseStatus; category?: string; search?: string; page?: number; pageSize?: number } = {}) =>
-             call<{ data: ExpenseClaim[]; total: number }>('finance/expenses/list', a),
+  list:    (a: {
+    claimantId?: string; status?: ExpenseStatus; category?: string; search?: string;
+    page?: number; pageSize?: number;
+    sortField?: 'created_at' | 'expense_date' | 'total_amount' | 'status' | 'claim_no';
+    sortDir?: 'asc' | 'desc';
+  } = {}) => call<{ data: ExpenseClaim[]; total: number }>('finance/expenses/list', a),
   get:     (a: { id: string })                   => call<ExpenseClaim>('finance/expenses/get', a),
   detail:  (a: { id: string })                   => call<ExpenseClaimDetail>('finance/expenses/detail', a),
   lines:   (a: { claimId: string })              => call<ExpenseCostEntry[]>('finance/expenses/lines/list', a),
@@ -183,6 +225,17 @@ export const financeExpensesApi = {
   handoffReimbursement: (a: { claimId: string; payrollRunId?: string }) =>
              call<{ bridgeId: string; handoffId: string; reusedExisting: boolean }>('finance/expenses/handoff/reimbursement', a),
 
+  // Comment (writes audit + backbone event)
+  comment: (a: { claimId: string; body: string }) =>
+             call<null>('finance/expenses/comment', a),
+
+  // Audit log for a specific claim
+  auditLog: (a: { claimId: string }) =>
+             call<ExpenseAuditEntry[]>('finance/expenses/audit-log', a),
+
+  // KPIs (policy exceptions + missing receipts count)
+  kpis: () => call<ExpenseKpis>('finance/expenses/kpis'),
+
   // Trend
   trend: () => call<ExpenseTrendPoint[]>('finance/expenses/trend'),
 
@@ -203,6 +256,8 @@ export const financeExpensesKeys = {
   report:  (o: object = {}) => ['finance', 'expenses', 'report', o] as const,
   trend:   ()               => ['finance', 'expenses', 'trend'] as const,
   policy:  (id: string)     => ['finance', 'expenses', 'policy', id] as const,
+  auditLog:(id: string)     => ['finance', 'expenses', 'audit-log', id] as const,
+  kpis:    ()               => ['finance', 'expenses', 'kpis'] as const,
 };
 
 // ── Query hooks ───────────────────────────────────────────────────────────────
@@ -214,6 +269,8 @@ export function useExpenseClaims(opts: {
   search?: string;
   page?: number;
   pageSize?: number;
+  sortField?: 'created_at' | 'expense_date' | 'total_amount' | 'status' | 'claim_no';
+  sortDir?: 'asc' | 'desc';
 } = {}) {
   return useQuery({
     queryKey: financeExpensesKeys.list(opts),
@@ -272,6 +329,22 @@ export function useExpensePolicyCheck(id: string | null) {
   });
 }
 
+export function useExpenseAuditLog(claimId: string | null) {
+  return useQuery({
+    queryKey: financeExpensesKeys.auditLog(claimId ?? ''),
+    queryFn:  () => financeExpensesApi.auditLog({ claimId: claimId! }),
+    enabled:  !!claimId,
+  });
+}
+
+export function useExpenseKpis() {
+  return useQuery({
+    queryKey:  financeExpensesKeys.kpis(),
+    queryFn:   () => financeExpensesApi.kpis(),
+    staleTime: 60_000,
+  });
+}
+
 // ── Mutation hook (invalidates the whole finance-expenses subtree) ─────────────
 
 export function useExpenseMutation<A, R>(fn: (a: A) => Promise<R>) {
@@ -280,6 +353,20 @@ export function useExpenseMutation<A, R>(fn: (a: A) => Promise<R>) {
     mutationFn: fn,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['finance', 'expenses'] });
+    },
+  });
+}
+
+// ── Comment mutation ──────────────────────────────────────────────────────────
+
+export function useExpenseComment(claimId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => financeExpensesApi.comment({ claimId: claimId!, body }),
+    onSuccess: () => {
+      if (claimId) {
+        void qc.invalidateQueries({ queryKey: financeExpensesKeys.auditLog(claimId) });
+      }
     },
   });
 }

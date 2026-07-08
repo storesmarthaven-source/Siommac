@@ -22,6 +22,9 @@ import {
   runExpenseReport,
   getExpenseTrend,
   listExpensesReport,
+  listExpenseAuditLog,
+  addExpenseComment,
+  getExpenseKpis,
   type ExpenseStatus,
   type ExpenseReportType,
 } from '../lib/finance/expenses';
@@ -55,10 +58,21 @@ router.post('/expenses/list', async c => {
     search:     z.string().optional(),
     page:       z.number().int().min(0).optional(),
     pageSize:   z.number().int().min(1).max(100).optional(),
+    sortField:  z.enum(['created_at', 'expense_date', 'total_amount', 'status', 'claim_no']).optional(),
+    sortDir:    z.enum(['asc', 'desc']).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const result = await listExpenseClaims(v.data as { claimantId?: string; status?: ExpenseStatus; category?: string; search?: string; page?: number; pageSize?: number });
+    const result = await listExpenseClaims({
+      claimantId: v.data.claimantId,
+      status:     v.data.status as ExpenseStatus | undefined,
+      category:   v.data.category,
+      search:     v.data.search,
+      page:       v.data.page,
+      pageSize:   v.data.pageSize,
+      sortField:  v.data.sortField,
+      sortDir:    v.data.sortDir,
+    });
     return c.json({ success: true, data: result.data, total: result.total });
   } catch (e) { return handleErr(c, e); }
 });
@@ -115,10 +129,18 @@ router.post('/expenses/create', async c => {
     receiptPath:     z.string().nullable().optional(),
     reimbursable:    z.boolean().optional(),
     notes:           z.string().max(1000).optional(),
+    purpose:         z.string().max(500).optional(),
+    departmentId:    z.string().max(100).optional(),
     allocationLines: z.array(z.object({
-      costCenterId: z.string().uuid(),
-      amount:       z.number().positive(),
-      description:  z.string().max(300).optional(),
+      costCenterId:    z.string().uuid(),
+      amount:          z.number().positive(),
+      description:     z.string().max(300).optional(),
+      expenseDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      category:        z.enum(CATEGORY_VALUES).optional(),
+      project:         z.string().max(200).optional(),
+      taxAmount:       z.number().min(0).optional(),
+      merchant:        z.string().max(200).optional(),
+      receiptRequired: z.boolean().optional(),
     })).min(1, 'At least one allocation line is required.'),
     metadata:        z.record(z.string(), z.unknown()).optional(),
   }), b(c));
@@ -141,6 +163,8 @@ router.post('/expenses/create', async c => {
       receiptPath:     v.data.receiptPath ?? null,
       reimbursable:    v.data.reimbursable,
       notes:           v.data.notes,
+      purpose:         v.data.purpose,
+      departmentId:    v.data.departmentId,
       allocationLines: v.data.allocationLines,
       metadata:        v.data.metadata,
       actorId:         actor.id,
@@ -190,13 +214,9 @@ router.post('/expenses/approve', async c => {
   const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
+    // approveExpenseClaim now atomically creates the reimbursement handoff internally
+    // with a compensating rollback on failure — no best-effort .catch() needed here.
     const data = await approveExpenseClaim(v.data.id, actor.id);
-    // Trigger reimbursement handoff (best-effort — idempotent, retryable via /expenses/handoff/reimbursement)
-    if (data.reimbursable) {
-      await createReimbursementHandoff(data.id, actor.id).catch(err =>
-        console.warn('[financeExpenses/approve] reimbursement handoff failed (retryable):', err),
-      );
-    }
     return c.json({ success: true, data });
   } catch (e) { return handleErr(c, e); }
 });
@@ -312,6 +332,82 @@ router.post('/expenses/handoff/reimbursement', async c => {
     }
     const data = await createReimbursementHandoff(v.data.claimId, actor.id, v.data.payrollRunId);
     return c.json({ success: true, data: { bridgeId: data.bridgeId, handoffId: data.handoffId, reusedExisting: !data.created } });
+  } catch (e) { return handleErr(c, e); }
+});
+
+// ── Comment ───────────────────────────────────────────────────────────────────
+
+// POST /api/finance/expenses/comment
+router.post('/expenses/comment', async c => {
+  const actor = await requirePermission(c, 'finance.expenses.submit');
+  const v = zv(c, z.object({
+    claimId: z.string().uuid(),
+    body:    z.string().trim().min(1, 'Comment body is required.').max(2000),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    await addExpenseComment(v.data.claimId, actor.id, v.data.body);
+    return c.json({ success: true, data: null });
+  } catch (e) { return handleErr(c, e); }
+});
+
+// ── Audit log ─────────────────────────────────────────────────────────────────
+
+// POST /api/finance/expenses/audit-log
+router.post('/expenses/audit-log', async c => {
+  await requirePermission(c, 'finance.expenses.view');
+  const v = zv(c, z.object({ claimId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listExpenseAuditLog(v.data.claimId);
+    return c.json({ success: true, data });
+  } catch (e) { return handleErr(c, e); }
+});
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/expenses/kpis
+router.post('/expenses/kpis', async c => {
+  await requirePermission(c, 'finance.expenses.view');
+  try {
+    const data = await getExpenseKpis();
+    return c.json({ success: true, data });
+  } catch (e) { return handleErr(c, e); }
+});
+
+// ── CSV export ────────────────────────────────────────────────────────────────
+
+// POST /api/finance/expenses/export-csv
+// Returns a CSV of the current expense claims list (same filters as /list).
+router.post('/expenses/export-csv', async c => {
+  await requirePermission(c, 'finance.expenses.reports.view');
+  const v = zv(c, z.object({
+    claimantId: z.string().optional(),
+    status:     z.enum(STATUS_VALUES).optional(),
+    category:   z.enum(CATEGORY_VALUES).optional(),
+    search:     z.string().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const result = await listExpenseClaims({
+      claimantId: v.data.claimantId,
+      status:     v.data.status as ExpenseStatus | undefined,
+      category:   v.data.category,
+      search:     v.data.search,
+      pageSize:   10_000, // large export cap
+    });
+    const header = ['claim_no', 'title', 'claimant_id', 'category', 'expense_date', 'total_amount', 'currency', 'status', 'reimbursable', 'reimbursed_at', 'created_at'];
+    const rows = result.data.map(r => [
+      r.claimNo, r.title, r.claimantId, r.category, r.expenseDate,
+      r.totalAmount, r.currency, r.status,
+      r.reimbursable ? 'Yes' : 'No',
+      r.reimbursedAt ?? '', r.createdAt,
+    ].map(v => (typeof v === 'string' && v.includes(',')) ? `"${v.replace(/"/g, '""')}"` : String(v ?? '')));
+    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    return new Response(csv, {
+      status: 200,
+      headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="expense-claims.csv"' },
+    });
   } catch (e) { return handleErr(c, e); }
 });
 
