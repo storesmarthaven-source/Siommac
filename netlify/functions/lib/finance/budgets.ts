@@ -9,14 +9,14 @@
 // Statuses 'rejected' and 'cancelled' are excluded.
 // This module does NOT write to finance_cost_entries.
 //
-// Permissions: finance.budgets.{view,manage,reports.view,reports.export}
+// Permissions: finance.budgets.{view,manage,reports.view,reports.export,
+//              bulkUpsert,copyLastYear}
 // ============================================================================
 
 import { sb } from '../db';
-import { emitAppEvent } from '../appEvents';
-import { writeHrAudit } from '../hr/employeeCore';
+import { emitFinanceMutationBackbone } from './backbone';
 
-// -- DTOs
+// ── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface BudgetLineDto {
   id: string; costCenterId: string; costCenterName: string | null;
@@ -32,12 +32,68 @@ export interface BudgetVarianceRow {
 
 export interface BudgetReportCatalogRow { key: string; label: string; description: string; }
 
+export interface CostEntryRow {
+  id: string;
+  ref: string | null;
+  sourceModule: string;
+  sourceEntityType: string;
+  sourceEntityId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  periodYear: number | null;
+}
+
+export interface BudgetActualsResult {
+  budgetLine: BudgetLineDto;
+  entries: CostEntryRow[];
+  totalActual: number;
+  byMonth: { month: number; amount: number }[];
+}
+
+export interface BulkBudgetLineInput {
+  costCenterId: string;
+  fiscalYear: number;
+  category: string;
+  label?: string | null;
+  notes?: string | null;
+  budgeted: number;
+  currency?: string;
+}
+
+export interface BulkUpsertResult {
+  count: number;
+  ids: string[];
+  overBudgetCount: number;
+}
+
+export interface CopyLastYearInput {
+  sourceFiscalYear: number;
+  targetFiscalYear: number;
+  costCenterId?: string | null;
+  category?: string | null;
+  adjustmentPct?: number;
+  roundingRule?: 'none' | 'hundred' | 'thousand';
+  actorId: string;
+}
+
+export interface CopyLastYearResult {
+  copied: number;
+  skipped: number;
+  ids: string[];
+}
+
+// ── Internal DB row type ──────────────────────────────────────────────────────
+
 interface DbBudgetRow {
   id: string; cost_center_id: string; fiscal_year: number; category: string;
   label: string | null; notes: string | null; budgeted: string | number; actual: string | number;
   currency: string; created_by: string | null; created_at: string; updated_at: string | null;
   cc_name?: string | null;
 }
+
+// ── Actuals aggregation ───────────────────────────────────────────────────────
 
 // Aggregate finance_cost_entries.amount for a fiscal year per cost_center_id.
 // Period year = metadata.period_year (int/string) if present, else created_at year.
@@ -78,6 +134,14 @@ function toDto(row: DbBudgetRow, actualsMap: Map<string, number>): BudgetLineDto
     createdBy: row.created_by, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 
+function applyRounding(amount: number, rule: 'none' | 'hundred' | 'thousand'): number {
+  if (rule === 'hundred') return Math.round(amount / 100) * 100;
+  if (rule === 'thousand') return Math.round(amount / 1000) * 1000;
+  return Math.round(amount * 100) / 100;
+}
+
+// ── List / Get ────────────────────────────────────────────────────────────────
+
 export interface ListBudgetsOpts { costCenterId?: string; fiscalYear?: number; category?: string; }
 
 export async function listBudgets(opts: ListBudgetsOpts = {}): Promise<BudgetLineDto[]> {
@@ -117,6 +181,8 @@ export async function getBudgetLine(id: string): Promise<BudgetLineDto | null> {
   return toDto({ ...data, cc_name: data.finance_cost_centers?.name ?? null }, am);
 }
 
+// ── Upsert (single) ───────────────────────────────────────────────────────────
+
 export interface UpsertBudgetLineInput {
   costCenterId: string; fiscalYear: number; category: string;
   label?: string | null; notes?: string | null; budgeted: number;
@@ -155,36 +221,343 @@ export async function upsertBudgetLine(input: UpsertBudgetLineInput): Promise<Bu
   const am = await fetchActuals(input.fiscalYear, [input.costCenterId]);
   const row = toDto({ ...data, cc_name: data.finance_cost_centers?.name ?? null }, am);
 
-  // S2 side-effects: emitAppEvent THEN writeHrAudit (both awaited, throw on failure)
-  await emitAppEvent({
-    eventType: 'finance.budgets.line.upserted', sourceModule: 'finance_budgets',
-    sourceEntityType: 'budget_line', sourceEntityId: row.id, actorUserId: input.actorId,
-    severity: 'info',
-    payload: { costCenterId: row.costCenterId, fiscalYear: row.fiscalYear, category: row.category, budgeted: row.budgeted },
-  });
-  await writeHrAudit({
-    submoduleKey: 'finance_budgets', recordId: row.id, actorId: input.actorId,
-    action: 'budget_line.upserted', previousState: null,
-    newState: { costCenterId: row.costCenterId, fiscalYear: row.fiscalYear, category: row.category, budgeted: row.budgeted },
-  });
+  // Variance threshold check — notify if actual > budgeted (over budget)
+  const isOverBudget = row.actual > row.budgeted && row.budgeted > 0;
+
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   input.actorId,
+      module:        'finance_budgets',
+      entityType:    'budget_line',
+      entityId:      row.id,
+      eventType:     'finance.budgets.line.upserted',
+      auditAction:   'budget_line.upserted',
+      previousState: null,
+      newState:      { costCenterId: row.costCenterId, fiscalYear: row.fiscalYear, category: row.category, budgeted: row.budgeted },
+      ...(isOverBudget ? {
+        severity: 'warning' as const,
+        notification: {
+          title:    `Budget variance alert: ${row.costCenterName ?? row.costCenterId} · ${row.category}`,
+          body:     `Actual spend ($${Math.round(row.actual).toLocaleString()}) exceeds budget ($${Math.round(row.budgeted).toLocaleString()}) for FY ${row.fiscalYear}.`,
+          severity: 'warning' as const,
+          actionRoute: '/finance/budgets',
+        },
+      } : {}),
+    });
+  } catch (backboneErr) {
+    // Backbone failed (audit write) — compensating rollback for the newly created record.
+    // For an upsert we cannot know if it was a create or update without tracking the old state;
+    // we rethrow so the caller surfaces the error rather than silently swallowing it.
+    throw backboneErr;
+  }
+
   return row;
 }
+
+// ── Delete ────────────────────────────────────────────────────────────────────
 
 export async function deleteBudgetLine(id: string, actorId: string): Promise<void> {
   const existing = await getBudgetLine(id);
   if (!existing) throw Object.assign(new Error('Budget line not found.'), { status: 404 });
+
   const { error } = await sb.from('finance_budget_lines').delete().eq('id', id);
   if (error) throw Object.assign(new Error('deleteBudgetLine: ' + error.message), { status: 500 });
-  await emitAppEvent({
-    eventType: 'finance.budgets.line.deleted', sourceModule: 'finance_budgets',
-    sourceEntityType: 'budget_line', sourceEntityId: id, actorUserId: actorId, severity: 'info',
-    payload: { costCenterId: existing.costCenterId, fiscalYear: existing.fiscalYear, category: existing.category },
-  });
-  await writeHrAudit({
-    submoduleKey: 'finance_budgets', recordId: id, actorId,
-    action: 'budget_line.deleted', previousState: existing, newState: null,
+
+  // Backbone — on failure we've already deleted the business row; rethrow for visibility
+  await emitFinanceMutationBackbone({
+    actorUserId:   actorId,
+    module:        'finance_budgets',
+    entityType:    'budget_line',
+    entityId:      id,
+    eventType:     'finance.budgets.line.deleted',
+    auditAction:   'budget_line.deleted',
+    previousState: existing,
+    newState:      null,
   });
 }
+
+// ── Bulk Upsert ───────────────────────────────────────────────────────────────
+
+export async function bulkUpsertBudgetLines(
+  lines: BulkBudgetLineInput[],
+  actorId: string,
+): Promise<BulkUpsertResult> {
+  if (!lines.length) throw Object.assign(new Error('No lines provided.'), { status: 422 });
+
+  // Validate all inputs before any writes
+  for (const l of lines) {
+    if (l.budgeted < 0)
+      throw Object.assign(new Error(`Budgeted amount cannot be negative (category: ${l.category}).`), { status: 422 });
+    if (l.fiscalYear < 2000 || l.fiscalYear > 2100)
+      throw Object.assign(new Error(`Fiscal year must be between 2000 and 2100 (category: ${l.category}).`), { status: 422 });
+    if (!l.costCenterId)
+      throw Object.assign(new Error('costCenterId is required on every line.'), { status: 422 });
+  }
+
+  // Verify all cost centres exist (unique set)
+  const uniqueCcIds = [...new Set(lines.map(l => l.costCenterId))];
+  for (const ccId of uniqueCcIds) {
+    const { data: cc, error: ccErr } = await sb.from('finance_cost_centers')
+      .select('id').eq('id', ccId).maybeSingle<{ id: string }>();
+    if (ccErr) throw Object.assign(new Error('bulkUpsertBudgetLines (cc lookup): ' + ccErr.message), { status: 500 });
+    if (!cc) throw Object.assign(new Error(`Cost centre not found: ${ccId}`), { status: 404 });
+  }
+
+  const patches = lines.map(l => ({
+    cost_center_id: l.costCenterId,
+    fiscal_year:    l.fiscalYear,
+    category:       l.category,
+    label:          l.label ?? null,
+    notes:          l.notes ?? null,
+    budgeted:       l.budgeted,
+    currency:       l.currency ?? 'TTD',
+    created_by:     actorId,
+  }));
+
+  const { data: upserted, error } = await sb
+    .from('finance_budget_lines')
+    .upsert(patches, { onConflict: 'cost_center_id,fiscal_year,category' })
+    .select('id, cost_center_id, fiscal_year, category, budgeted');
+  if (error) throw Object.assign(new Error('bulkUpsertBudgetLines: ' + error.message), { status: 500 });
+
+  const rows = (upserted ?? []) as Array<{
+    id: string; cost_center_id: string; fiscal_year: number; category: string; budgeted: string | number;
+  }>;
+  const ids = rows.map(r => r.id);
+
+  // Check variance threshold across all affected lines
+  const fiscalYears = [...new Set(lines.map(l => l.fiscalYear))];
+  let overBudgetCount = 0;
+  for (const fy of fiscalYears) {
+    const fyRows = rows.filter(r => r.fiscal_year === fy);
+    const ccIds = [...new Set(fyRows.map(r => r.cost_center_id))];
+    const actualsMap = await fetchActuals(fy, ccIds);
+    for (const r of fyRows) {
+      const actual = actualsMap.get(r.cost_center_id) ?? 0;
+      if (actual > Number(r.budgeted) && Number(r.budgeted) > 0) overBudgetCount++;
+    }
+  }
+
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:  actorId,
+      module:       'finance_budgets',
+      entityType:   'budget_line_batch',
+      entityId:     ids[0] ?? 'batch',
+      eventType:    'finance.budgets.lines.bulk_upserted',
+      auditAction:  'budget_lines.bulk_upserted',
+      previousState: null,
+      newState:     { count: rows.length, lineIds: ids },
+      ...(overBudgetCount > 0 ? {
+        severity: 'warning' as const,
+        notification: {
+          title:    `Budget variance alert: ${overBudgetCount} line${overBudgetCount > 1 ? 's' : ''} over budget`,
+          body:     `After bulk entry, ${overBudgetCount} budget line${overBudgetCount > 1 ? 's are' : ' is'} exceeded by actual spend.`,
+          severity: 'warning' as const,
+          actionRoute: '/finance/budgets',
+        },
+      } : {}),
+    });
+  } catch (backboneErr) {
+    // Backbone failed — rethrow; the business rows are in a valid state
+    throw backboneErr;
+  }
+
+  return { count: rows.length, ids, overBudgetCount };
+}
+
+// ── Copy Last Year ────────────────────────────────────────────────────────────
+
+export async function copyLastYearBudget(input: CopyLastYearInput): Promise<CopyLastYearResult> {
+  if (input.sourceFiscalYear === input.targetFiscalYear)
+    throw Object.assign(new Error('Source and target fiscal years must be different.'), { status: 422 });
+  if (input.targetFiscalYear < 2000 || input.targetFiscalYear > 2100)
+    throw Object.assign(new Error('Target fiscal year must be between 2000 and 2100.'), { status: 422 });
+
+  // Fetch source lines
+  let srcQ = sb.from('finance_budget_lines')
+    .select('*, finance_cost_centers(name)')
+    .eq('fiscal_year', input.sourceFiscalYear);
+  if (input.costCenterId) srcQ = srcQ.eq('cost_center_id', input.costCenterId);
+  if (input.category)     srcQ = srcQ.eq('category', input.category);
+  const { data: srcRows, error: srcErr } = await srcQ;
+  if (srcErr) throw Object.assign(new Error('copyLastYearBudget (fetch source): ' + srcErr.message), { status: 500 });
+
+  const sources = (srcRows ?? []) as Array<DbBudgetRow & { finance_cost_centers: { name: string } | null }>;
+  if (!sources.length) throw Object.assign(new Error('No budget lines found in the source fiscal year.'), { status: 404 });
+
+  // Fetch existing target lines to detect conflicts
+  const { data: targetRows, error: tErr } = await sb.from('finance_budget_lines')
+    .select('cost_center_id, category')
+    .eq('fiscal_year', input.targetFiscalYear);
+  if (tErr) throw Object.assign(new Error('copyLastYearBudget (fetch target): ' + tErr.message), { status: 500 });
+  const existingKeys = new Set((targetRows ?? []).map(r => `${r.cost_center_id}::${r.category}`));
+
+  const adjFactor = 1 + (input.adjustmentPct ?? 0) / 100;
+  const roundRule = input.roundingRule ?? 'none';
+
+  const patches: Array<{
+    cost_center_id: string; fiscal_year: number; category: string;
+    label: string | null; notes: string | null; budgeted: number;
+    currency: string; created_by: string;
+  }> = [];
+  let skipped = 0;
+
+  for (const src of sources) {
+    const key = `${src.cost_center_id}::${src.category}`;
+    if (existingKeys.has(key)) { skipped++; continue; }
+    const rawBudgeted = Number(src.budgeted) * adjFactor;
+    patches.push({
+      cost_center_id: src.cost_center_id,
+      fiscal_year:    input.targetFiscalYear,
+      category:       src.category,
+      label:          src.label,
+      notes:          src.notes ? `[Copied from FY ${input.sourceFiscalYear}] ${src.notes}` : `Copied from FY ${input.sourceFiscalYear}`,
+      budgeted:       applyRounding(rawBudgeted, roundRule),
+      currency:       src.currency,
+      created_by:     input.actorId,
+    });
+  }
+
+  if (!patches.length) {
+    return { copied: 0, skipped, ids: [] };
+  }
+
+  const { data: inserted, error: insErr } = await sb
+    .from('finance_budget_lines')
+    .insert(patches)
+    .select('id');
+  if (insErr) throw Object.assign(new Error('copyLastYearBudget (insert): ' + insErr.message), { status: 500 });
+
+  const ids = (inserted ?? []).map((r: { id: string }) => r.id);
+
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:  input.actorId,
+      module:       'finance_budgets',
+      entityType:   'budget_line_batch',
+      entityId:     ids[0] ?? 'copy',
+      eventType:    'finance.budgets.lines.copied',
+      auditAction:  'budget_lines.copied',
+      previousState: null,
+      newState:     {
+        sourceFiscalYear: input.sourceFiscalYear,
+        targetFiscalYear: input.targetFiscalYear,
+        copied: ids.length, skipped,
+        adjustmentPct: input.adjustmentPct ?? 0,
+        lineIds: ids,
+      },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback — delete the copied lines if audit fails
+    await sb.from('finance_budget_lines').delete().in('id', ids).catch(() => {});
+    throw backboneErr;
+  }
+
+  return { copied: ids.length, skipped, ids };
+}
+
+// ── Actuals Composition (for drawer) ──────────────────────────────────────────
+
+export async function getBudgetLineActuals(id: string): Promise<BudgetActualsResult> {
+  const line = await getBudgetLine(id);
+  if (!line) throw Object.assign(new Error('Budget line not found.'), { status: 404 });
+
+  const { data, error } = await sb
+    .from('finance_cost_entries')
+    .select('id, ref, source_module, source_entity_type, source_entity_id, amount, currency, status, created_at, metadata')
+    .eq('cost_center_id', line.costCenterId)
+    .not('status', 'in', '("rejected","cancelled")')
+    .order('created_at', { ascending: false });
+
+  if (error) throw Object.assign(new Error('getBudgetLineActuals: ' + error.message), { status: 500 });
+
+  const entries: CostEntryRow[] = [];
+  const monthlyMap = new Map<number, number>();
+
+  for (const row of (data ?? []) as Array<{
+    id: string; ref: string | null; source_module: string; source_entity_type: string;
+    source_entity_id: string; amount: string | number; currency: string; status: string;
+    created_at: string; metadata: Record<string, unknown> | null;
+  }>) {
+    // Determine fiscal year for this entry
+    const metaYear = row.metadata?.['period_year'];
+    let rowYear: number;
+    if (typeof metaYear === 'number') { rowYear = metaYear; }
+    else if (typeof metaYear === 'string' && /^\d{4}$/.test(metaYear)) { rowYear = parseInt(metaYear, 10); }
+    else { rowYear = new Date(row.created_at).getFullYear(); }
+    if (rowYear !== line.fiscalYear) continue;
+
+    const amount = Number(row.amount);
+    const month  = new Date(row.created_at).getMonth() + 1; // 1–12
+    monthlyMap.set(month, (monthlyMap.get(month) ?? 0) + amount);
+
+    entries.push({
+      id:               row.id,
+      ref:              row.ref,
+      sourceModule:     row.source_module,
+      sourceEntityType: row.source_entity_type,
+      sourceEntityId:   row.source_entity_id,
+      amount,
+      currency:         row.currency,
+      status:           row.status,
+      createdAt:        row.created_at,
+      periodYear:       rowYear,
+    });
+  }
+
+  const totalActual = entries.reduce((s, e) => s + e.amount, 0);
+  const byMonth = Array.from(monthlyMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([month, amount]) => ({ month, amount }));
+
+  return { budgetLine: line, entries, totalActual, byMonth };
+}
+
+// ── Actuals list (for page Actuals tab) ───────────────────────────────────────
+
+export async function listCostEntriesForYear(
+  fiscalYear: number,
+  costCenterId?: string,
+): Promise<CostEntryRow[]> {
+  let q = sb
+    .from('finance_cost_entries')
+    .select('id, ref, source_module, source_entity_type, source_entity_id, amount, currency, status, created_at, metadata, cost_center_id')
+    .not('status', 'in', '("rejected","cancelled")')
+    .order('created_at', { ascending: false });
+  if (costCenterId) q = q.eq('cost_center_id', costCenterId);
+  const { data, error } = await q;
+  if (error) throw Object.assign(new Error('listCostEntriesForYear: ' + error.message), { status: 500 });
+
+  const result: CostEntryRow[] = [];
+  for (const row of (data ?? []) as Array<{
+    id: string; ref: string | null; source_module: string; source_entity_type: string;
+    source_entity_id: string; amount: string | number; currency: string; status: string;
+    created_at: string; metadata: Record<string, unknown> | null; cost_center_id: string | null;
+  }>) {
+    const metaYear = row.metadata?.['period_year'];
+    let rowYear: number;
+    if (typeof metaYear === 'number') { rowYear = metaYear; }
+    else if (typeof metaYear === 'string' && /^\d{4}$/.test(metaYear)) { rowYear = parseInt(metaYear, 10); }
+    else { rowYear = new Date(row.created_at).getFullYear(); }
+    if (rowYear !== fiscalYear) continue;
+    result.push({
+      id:               row.id,
+      ref:              row.ref,
+      sourceModule:     row.source_module,
+      sourceEntityType: row.source_entity_type,
+      sourceEntityId:   row.source_entity_id,
+      amount:           Number(row.amount),
+      currency:         row.currency,
+      status:           row.status,
+      createdAt:        row.created_at,
+      periodYear:       rowYear,
+    });
+  }
+  return result;
+}
+
+// ── Variance Reports ──────────────────────────────────────────────────────────
 
 export async function getBudgetVarianceReport(fiscalYear: number, costCenterId?: string): Promise<BudgetVarianceRow[]> {
   let q = sb.from('finance_budget_lines').select('*, finance_cost_centers(name)')
@@ -205,21 +578,26 @@ export async function getBudgetVarianceReport(fiscalYear: number, costCenterId?:
   });
 }
 
+// ── Report catalog ────────────────────────────────────────────────────────────
+
 export function listBudgetReports(): BudgetReportCatalogRow[] {
   return [
     { key: 'budget_variance', label: 'Budget vs Actual Variance',
       description: 'Budgeted vs actual spend per cost centre and category for a fiscal year.' },
     { key: 'budget_summary', label: 'Budget Summary',
       description: 'All budget lines with budgeted amounts by fiscal year.' },
+    { key: 'budget_actuals', label: 'Cost Entry Actuals',
+      description: 'All approved cost entries contributing to actuals for a fiscal year.' },
   ];
 }
 
 export async function runBudgetReport(
   reportKey: string,
   params: { fiscalYear?: number; costCenterId?: string },
-): Promise<BudgetLineDto[] | BudgetVarianceRow[]> {
+): Promise<BudgetLineDto[] | BudgetVarianceRow[] | CostEntryRow[]> {
   const fiscalYear = params.fiscalYear ?? new Date().getFullYear();
   if (reportKey === 'budget_variance') return getBudgetVarianceReport(fiscalYear, params.costCenterId);
   if (reportKey === 'budget_summary')  return listBudgets({ fiscalYear, costCenterId: params.costCenterId });
+  if (reportKey === 'budget_actuals')  return listCostEntriesForYear(fiscalYear, params.costCenterId);
   throw Object.assign(new Error(`Unknown report key: ${reportKey}`), { status: 400 });
 }
