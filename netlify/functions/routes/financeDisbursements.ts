@@ -181,7 +181,7 @@ router.post('/disbursements/lines/list-detail', async c => {
 });
 
 router.post('/disbursements/bank-file/signed-url', async c => {
-  const actor = await requirePermission(c, 'finance.disbursements.bankFile.download');
+  const actor = await requirePermission(c, 'finance.disbursement.bank_file.download');
   const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
   if (!v.ok) return v.response;
   try {

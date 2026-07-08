@@ -870,7 +870,7 @@ function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
         {
           key: 'download', label: 'Download', icon: 'download' as const,
           disabled: !canApprove || !d.bankFilePath,
-          disabledReason: !canApprove ? 'Requires finance.disbursements.bankFile.download' : 'No file generated',
+          disabledReason: !canApprove ? 'Requires finance.disbursement.bank_file.download' : 'No file generated',
           onClick: () => void download(d),
         },
       ]}
@@ -1097,7 +1097,7 @@ export function DisbursementsOverview(): VNode {
   const canManage   = can('finance.disbursement.manage');
   const canApprove  = can('finance.disbursement.approve');
   const canBankMgmt = can('finance.bank_accounts.manage');
-  const canDownload = can('finance.disbursements.bankFile.download');
+  const canDownload = can('finance.disbursement.bank_file.download');
 
   function openDrawer(id: string): void {
     setSelectedId(id);

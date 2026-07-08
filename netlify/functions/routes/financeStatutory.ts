@@ -221,9 +221,9 @@ router.post('/statutory/nis-classes/upsert', async c => {
 });
 
 // POST /api/finance/statutory/nis-classes/delete
-// Guarded by new key: finance.statutory.nisClass.delete
+// Guarded by new key: finance.statutory.nis_class.delete
 router.post('/statutory/nis-classes/delete', async c => {
-  const actor = await requirePermission(c, 'finance.statutory.nisClass.delete');
+  const actor = await requirePermission(c, 'finance.statutory.nis_class.delete');
   const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -233,9 +233,9 @@ router.post('/statutory/nis-classes/delete', async c => {
 });
 
 // POST /api/finance/statutory/nis-classes/import
-// Guarded by new key: finance.statutory.nisClass.import
+// Guarded by new key: finance.statutory.nis_class.import
 router.post('/statutory/nis-classes/import', async c => {
-  const actor = await requirePermission(c, 'finance.statutory.nisClass.import');
+  const actor = await requirePermission(c, 'finance.statutory.nis_class.import');
   const v = zv(c, z.object({
     statutoryVersionId: z.string().uuid(),
     rows: z.array(z.object({

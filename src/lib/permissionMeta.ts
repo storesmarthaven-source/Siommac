@@ -1140,6 +1140,18 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export statutory configuration reports and approval audit data (audited data egress).',
     risk: 'medium',
   },
+  'finance.statutory.nis_class.delete': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'Delete NIS Class',
+    description: 'Delete a single NIS earnings-class band from a draft statutory version. Finance Manager or Admin.',
+    risk: 'medium',
+  },
+  'finance.statutory.nis_class.import': {
+    module: 'Finance', group: 'Statutory Configuration',
+    label: 'Import NIS Classes',
+    description: 'CSV-import a table of NIS earnings-class bands into a draft statutory version. Finance Manager or Admin.',
+    risk: 'medium',
+  },
 
   // ── Finance pay-component catalogue ──────────────────────────────────────────
   'finance.payroll.components.view': {
@@ -1410,6 +1422,30 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export budget reports as CSV/PDF (audited data egress). Finance Manager or Admin only.',
     risk: 'medium',
   },
+  'finance.budgets.bulk_upsert': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Bulk Budget Entry',
+    description: 'Create or update many budget lines in one submit (bulk entry). Finance Manager or Admin.',
+    risk: 'medium',
+  },
+  'finance.budgets.copy_last_year': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Copy Last-Year Budget',
+    description: 'Copy prior-year budget lines into a new fiscal year with optional adjustment. Finance Manager or Admin.',
+    risk: 'medium',
+  },
+  'finance.budgets.attachments.upload': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Upload Budget Documents',
+    description: 'Upload supporting documents to a budget line (Wave 2B).',
+    risk: 'low',
+  },
+  'finance.budgets.attachments.delete': {
+    module: 'Finance', group: 'Budgets',
+    label: 'Delete Budget Documents',
+    description: 'Remove supporting documents from a budget line (Wave 2B).',
+    risk: 'low',
+  },
 
   // Statutory Remittances & Filing
   'finance.remittances.view': {
@@ -1448,6 +1484,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Upload filing receipts and supporting documents to a remittance (Wave 2B).',
     risk: 'low',
   },
+  'finance.remittances.mark_filed': {
+    module: 'Finance', group: 'Statutory Remittances',
+    label: 'Mark Remittance Filed',
+    description: 'Record a remittance as filed with the authority (filed date + receipt reference). Finance Manager or Admin.',
+    risk: 'medium',
+  },
 
   // -- Finance Bank Accounts & Disbursements (F2) --------------------------------
   'finance.bank_accounts.view': {
@@ -1478,6 +1520,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     module: 'Finance', group: 'Bank Disbursements',
     label: 'Approve Disbursements',
     description: 'Approve submitted disbursements, generate EFT bank file, and mark as paid. SoD: creator cannot approve.',
+    risk: 'high',
+  },
+  'finance.disbursement.bank_file.download': {
+    module: 'Finance', group: 'Bank Disbursements',
+    label: 'Download Bank File',
+    description: 'Download the generated EFT/CSV bank disbursement file (sensitive payment artifact). Finance Manager or Admin.',
     risk: 'high',
   },
 };

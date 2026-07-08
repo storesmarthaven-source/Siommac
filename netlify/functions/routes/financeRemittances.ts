@@ -3,7 +3,7 @@
 // All routes POST-only, JWT-gated via requirePermission. Envelope: body.args ?? {}.
 //
 // New permission keys enforced here (orchestrator catalogues + grants):
-//   finance.remittances.markFiled — required for mark-filed (was: approve)
+//   finance.remittances.mark_filed — required for mark-filed (was: approve)
 
 import { Hono } from 'hono';
 import { requirePermission } from '../lib/auth';
@@ -216,12 +216,12 @@ router.post('/remittances/mark-paid', async c => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Mark Filed (paid → filed) — NEW granular permission: finance.remittances.markFiled
+// Mark Filed (paid → filed) — NEW granular permission: finance.remittances.mark_filed
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // POST /api/finance/remittances/mark-filed
 router.post('/remittances/mark-filed', async c => {
-  const actor = await requirePermission(c, 'finance.remittances.markFiled');
+  const actor = await requirePermission(c, 'finance.remittances.mark_filed');
   const v = zv(c, z.object({
     id:                 z.string().uuid(),
     filedDate:          z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

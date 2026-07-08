@@ -407,6 +407,8 @@ export const PERMISSION_KEYS = [
   'finance.statutory.approve',      // approve submitted statutory versions (creator ≠ approver)
   'finance.statutory.reports.view', // view statutory history and approval-audit reports
   'finance.statutory.reports.export', // export statutory reports (audited data egress)
+  'finance.statutory.nis_class.delete', // delete a single NIS class from a draft version (Wave 2B)
+  'finance.statutory.nis_class.import', // CSV-import NIS class bands into a draft version (Wave 2B)
   // ── Finance pay-component catalogue ─────────────────────────────────────────
   'finance.payroll.components.view',   // view the pay-component catalogue
   'finance.payroll.components.manage', // create, update and retire pay components
@@ -447,6 +449,7 @@ export const PERMISSION_KEYS = [
   'finance.remittances.reports.view', // view remittance history and filing reports
   'finance.remittances.reports.export', // export remittance reports (audited data egress)
   'finance.remittances.receipt.upload', // upload filing receipts / support docs to a remittance (Wave 2B)
+  'finance.remittances.mark_filed',    // mark a remittance filed with the authority (filed date + receipt ref) (Wave 2B)
   // -- Finance Expenses (F4) --------------------------------------------------
   'finance.expenses.view',         // view expense claims
   'finance.expenses.submit',       // submit own expense claims
@@ -461,12 +464,17 @@ export const PERMISSION_KEYS = [
   'finance.budgets.manage',           // create, update, delete budget lines
   'finance.budgets.reports.view',     // view budget variance and summary reports
   'finance.budgets.reports.export',   // export budget reports (audited data egress)
+  'finance.budgets.bulk_upsert',       // bulk create/update budget lines in one submit (Wave 2B)
+  'finance.budgets.copy_last_year',     // copy prior-year budget lines into a new fiscal year (Wave 2B)
+  'finance.budgets.attachments.upload', // upload budget supporting documents (Wave 2B)
+  'finance.budgets.attachments.delete', // remove budget supporting documents (Wave 2B)
   // -- Finance Bank Accounts & Disbursements (F2) --------------------------------
   'finance.bank_accounts.view',       // view employee bank accounts (masked number)
   'finance.bank_accounts.manage',     // add/edit/deactivate own (employee) or any (finance+) bank account
   'finance.disbursement.view',        // view disbursement register and lines
   'finance.disbursement.manage',      // create disbursements from payroll runs + submit for approval
   'finance.disbursement.approve',     // approve / generate bank file / mark paid (SoD: creator cannot approve)
+  'finance.disbursement.bank_file.download', // download the generated EFT/CSV bank file (sensitive) (Wave 2B)
   // -- Finance Overview dashboard ------------------------------------------------
   'finance.overview.view',            // view the finance overview command dashboard
   'finance.overview.export',          // export dashboard data (CSV) — audited data egress
@@ -656,6 +664,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.disbursement.view',
     'finance.disbursement.manage',
     'finance.disbursement.approve',
+    // Wave 2B page-fleet keys (Statutory / Remittances / Disbursements / Budgets)
+    'finance.statutory.nis_class.delete', 'finance.statutory.nis_class.import',
+    'finance.remittances.mark_filed',
+    'finance.disbursement.bank_file.download',
+    'finance.budgets.bulk_upsert', 'finance.budgets.copy_last_year',
+    'finance.budgets.attachments.upload', 'finance.budgets.attachments.delete',
     // Overview + Accounts Payable — manager: full (incl. approve/reject/void/payment-run/SoD)
     'finance.overview.view',
     'finance.overview.export',
@@ -935,6 +949,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // Bank Accounts & Disbursements (F2) -- admin: all
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
+    // Wave 2B page-fleet keys (Statutory / Remittances / Disbursements / Budgets)
+    'finance.statutory.nis_class.delete', 'finance.statutory.nis_class.import',
+    'finance.remittances.mark_filed',
+    'finance.disbursement.bank_file.download',
+    'finance.budgets.bulk_upsert', 'finance.budgets.copy_last_year',
+    'finance.budgets.attachments.upload', 'finance.budgets.attachments.delete',
     // Overview + Accounts Payable -- admin: all
     'finance.overview.view', 'finance.overview.export', 'finance.overview.kpi.drill', 'finance.overview.approvals.inline',
     'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',

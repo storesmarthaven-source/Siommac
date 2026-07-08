@@ -111,7 +111,7 @@ export function RemittancesOverview(): VNode {
 
   const canManage  = can('finance.remittances.manage');
   const canApprove = can('finance.remittances.approve');
-  const canFiled   = can('finance.remittances.markFiled');
+  const canFiled   = can('finance.remittances.mark_filed');
 
   const listQ  = useRemittances({ status: statusFilter as RemittanceStatus | undefined, authority: authorityFilter as RemittanceAuthority | undefined });
   const remittances = listQ.data ?? [];

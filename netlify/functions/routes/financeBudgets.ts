@@ -103,9 +103,9 @@ router.post('/budgets/delete', async c => {
 });
 
 // POST /api/finance/budgets/bulk-upsert
-// Requires: finance.budgets.bulkUpsert (new granular key — orchestrator must catalogue + grant)
+// Requires: finance.budgets.bulk_upsert (new granular key — orchestrator must catalogue + grant)
 router.post('/budgets/bulk-upsert', async c => {
-  const actor = await requirePermission(c, 'finance.budgets.bulkUpsert');
+  const actor = await requirePermission(c, 'finance.budgets.bulk_upsert');
   const BulkLineSchema = z.object({
     costCenterId: z.string().uuid(),
     fiscalYear:   z.number().int().min(2000).max(2100),
@@ -130,9 +130,9 @@ router.post('/budgets/bulk-upsert', async c => {
 });
 
 // POST /api/finance/budgets/copy-last-year
-// Requires: finance.budgets.copyLastYear (new granular key — orchestrator must catalogue + grant)
+// Requires: finance.budgets.copy_last_year (new granular key — orchestrator must catalogue + grant)
 router.post('/budgets/copy-last-year', async c => {
-  const actor = await requirePermission(c, 'finance.budgets.copyLastYear');
+  const actor = await requirePermission(c, 'finance.budgets.copy_last_year');
   const v = zv(c, z.object({
     sourceFiscalYear: z.number().int().min(2000).max(2100),
     targetFiscalYear: z.number().int().min(2000).max(2100),
