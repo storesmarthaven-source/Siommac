@@ -13,7 +13,7 @@
 import { type VNode } from 'preact';
 import { useState, useCallback } from 'preact/hooks';
 import { HrfinWizardModal } from '@ui';
-import { CostCentrePicker, BudgetCategoryPicker } from './_shared/pickers';
+import { CostCentrePicker, BudgetCategoryPicker, EmployeePicker } from './_shared/pickers';
 import {
   financeBudgetsApi,
   useBudgetMutation,
@@ -233,16 +233,13 @@ function Step3LineEntry({ state, patch }: {
               <div class="hrfin-field-hint">Fiscal sub-period this line covers.</div>
             </div>
             <div class="hrfin-field">
-              <label class="hrfin-label">Budget Owner ID</label>
-              <input
-                class="hrfin-input"
-                type="text"
-                placeholder="User ID (optional)"
-                maxLength={100}
-                value={line.ownerId}
-                onInput={e => patchLine(i, { ownerId: (e.target as HTMLInputElement).value })}
+              <EmployeePicker
+                label="Budget Owner"
+                value={line.ownerId || null}
+                onChange={v => patchLine(i, { ownerId: v ?? '' })}
+                placeholder="Search employees…"
               />
-              <div class="hrfin-field-hint">app_users.id of the responsible owner.</div>
+              <div class="hrfin-field-hint">Optional responsible owner for this budget line.</div>
             </div>
           </div>
           <div class="hrfin-field" style={{ marginTop: 8 }}>

@@ -27,6 +27,7 @@ import {
   type BudgetAttachmentDto,
 } from '@api/finance/budgets';
 import { money, moneyCompact } from './hrfinFormat';
+import { EmployeeCell } from './_shared/EmployeeCell';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -107,7 +108,12 @@ function SummaryTab({ line }: { line: BudgetLine }): VNode {
         </div>
       )}
       <div class="hrfin-metric-row" style={{ marginTop: 12 }}><span>Created</span><b>{fmtDate(line.createdAt)}</b></div>
-      {line.createdBy && <div class="hrfin-metric-row"><span>Created by</span><b style={{ fontFamily: 'monospace', fontSize: 11 }}>{line.createdBy}</b></div>}
+      {line.createdBy && (
+        <div class="hrfin-metric-row">
+          <span>Created by</span>
+          <b><EmployeeCell employeeId={line.createdBy} /></b>
+        </div>
+      )}
       {line.updatedAt && <div class="hrfin-metric-row"><span>Last updated</span><b>{fmtDate(line.updatedAt)}</b></div>}
     </div>
   );
@@ -337,8 +343,8 @@ function ApprovalsTab({ lineId }: { lineId: string }): VNode {
             </div>
           )}
           {t.assignedTo && (
-            <div style={{ fontSize: 12, color: 'var(--hrfin-muted)', fontFamily: 'monospace', marginTop: 2 }}>
-              Assigned to: {t.assignedTo}
+            <div style={{ fontSize: 12, color: 'var(--hrfin-muted)', marginTop: 2 }}>
+              Assigned to: <EmployeeCell employeeId={t.assignedTo} />
             </div>
           )}
           <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, color: 'var(--hrfin-muted)' }}>
@@ -399,7 +405,7 @@ function AuditTab({ line }: { line: BudgetLine }): VNode {
             {line.createdBy && (
               <div class="hrfin-metric-row">
                 <span>Created by</span>
-                <b style={{ fontFamily: 'monospace', fontSize: 11 }}>{line.createdBy}</b>
+                <b><EmployeeCell employeeId={line.createdBy} /></b>
               </div>
             )}
             {line.updatedAt && (
@@ -419,8 +425,8 @@ function AuditTab({ line }: { line: BudgetLine }): VNode {
                 <span style={{ fontSize: 11, color: 'var(--hrfin-muted)' }}>{fmtDate(e.createdAt)}</span>
               </div>
               {e.actorId && (
-                <div style={{ fontSize: 12, color: 'var(--hrfin-muted)', fontFamily: 'monospace', marginTop: 2 }}>
-                  {e.actorId}
+                <div style={{ fontSize: 12, color: 'var(--hrfin-muted)', marginTop: 2 }}>
+                  <EmployeeCell employeeId={e.actorId} />
                 </div>
               )}
               {e.reason && (

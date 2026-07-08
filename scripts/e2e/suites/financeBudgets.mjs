@@ -264,6 +264,26 @@ export default async function run(h) {
     expect(r.body.data.overBudgetCount >= 1, `expected overBudgetCount >= 1, got ${r.body.data.overBudgetCount}`);
   });
 
+  await test('§9 side-effects: variance breach emits finance.budget.variance.threshold_breached app_event + notifications', async () => {
+    // Gap 9 fix: assert that the backbone fired a variance breach event and notifications
+    // after the over-budget bulk-upsert above.
+    const gotBreachEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_budgets')
+        .eq('event_type', 'finance.budget.variance.threshold_breached')
+        .eq('actor_user_id', fmgrId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotBreachEvent, 'finance.budget.variance.threshold_breached app_event not found after over-budget bulk-upsert');
+    // Notifications must have been written for finance_manager / finance_lead recipients
+    const { data: breachNotifs } = await sb.from('notifications').select('id, recipient_user_id')
+      .eq('source_type', 'budget_line_batch')
+      .eq('module', 'finance_budgets')
+      .limit(20);
+    expect((breachNotifs ?? []).length > 0, 'no notifications written for variance breach recipients');
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Budgets › Copy Last Year (finance.budgets.copyLastYear)');
   // ═══════════════════════════════════════════════════════════════════════════
@@ -507,5 +527,98 @@ export default async function run(h) {
       expect(!r.body.data || !r.body.data.budgetLine, 'line-actuals for deleted line should return empty data');
     }
     // If it fails (404), that is also acceptable
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › CSV export (Gap 7 — FE-only, data-shape asserted here)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // The CSV export is a frontend-only operation (exportCsv utility, no backend
+  // endpoint). The E2E layer asserts that the list endpoint returns all the fields
+  // that the frontend maps into the export file.
+
+  await test('list returns all fields required for CSV export', async () => {
+    // Recreate a line to assert against (the previous one was deleted)
+    const cr = await api('finance/budgets/upsert', fmgrToken, {
+      costCenterId: ctx.ccId,
+      fiscalYear:   ctx.fiscalYear,
+      category:     `CsvExportTest-${TAG.slice(-6)}`,
+      budgeted:     5000,
+      label:        'CSV export E2E test',
+    });
+    ok(cr, `create line for csv test failed: ${cr.body.message}`);
+    const csvLineId = cr.body.data.id;
+
+    const r = await api('finance/budgets/list', fmgrToken, { costCenterId: ctx.ccId, fiscalYear: ctx.fiscalYear });
+    ok(r, `list for csv test failed: ${r.body.message}`);
+    const row = (r.body.data ?? []).find(x => x.id === csvLineId);
+    expect(row !== undefined, 'csv test line not found in list');
+    // Assert all fields the frontend's exportCsv maps into columns
+    for (const k of ['category', 'label', 'costCenterName', 'fiscalYear', 'budgeted', 'actual', 'variance', 'variancePct']) {
+      expect(k in row, `list row missing CSV field: ${k}`);
+    }
+    // Cleanup
+    await api('finance/budgets/delete', fmgrToken, { id: csvLineId });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › /approvals endpoint (Gap 8)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('employee is DENIED /approvals', async () => {
+    const anyId = ctx.bulkLineIds[0] ?? '00000000-0000-0000-0000-000000000001';
+    fails(await api('finance/budgets/approvals', empToken, { id: anyId }), 'employee should be denied /approvals');
+  });
+
+  await test('/approvals returns an array of approval tasks for a budget line', async () => {
+    // Use a bulk-upserted line id (may have no workflow tasks yet — empty array is valid)
+    const lineId = ctx.bulkLineIds[0];
+    if (!lineId) { console.log('  skip: no bulk lines available'); return; }
+    const r = await api('finance/budgets/approvals', fmgrToken, { id: lineId });
+    ok(r, `/approvals failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), '/approvals must return an array');
+    // If tasks exist, verify the shape the frontend consumes
+    if (r.body.data.length > 0) {
+      const t = r.body.data[0];
+      for (const k of ['id', 'stepKey', 'status', 'createdAt']) {
+        expect(k in t, `/approvals task missing field: ${k}`);
+      }
+    }
+  });
+
+  await test('finance_staff can VIEW /approvals', async () => {
+    const lineId = ctx.bulkLineIds[0];
+    if (!lineId) { console.log('  skip: no bulk lines available'); return; }
+    const r = await api('finance/budgets/approvals', fstaffToken, { id: lineId });
+    ok(r, `finance_staff should be able to view /approvals: ${r.body.message}`);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Budgets › /audit-log endpoint (Gap 8)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('employee is DENIED /audit-log', async () => {
+    const anyId = ctx.bulkLineIds[0] ?? '00000000-0000-0000-0000-000000000001';
+    fails(await api('finance/budgets/audit-log', empToken, { id: anyId }), 'employee should be denied /audit-log');
+  });
+
+  await test('finance_staff is DENIED /audit-log (manage permission required)', async () => {
+    const lineId = ctx.bulkLineIds[0];
+    if (!lineId) { console.log('  skip: no bulk lines available'); return; }
+    fails(await api('finance/budgets/audit-log', fstaffToken, { id: lineId }), 'finance_staff should be denied /audit-log');
+  });
+
+  await test('/audit-log returns an array of audit entries for a budget line', async () => {
+    const lineId = ctx.bulkLineIds[0];
+    if (!lineId) { console.log('  skip: no bulk lines available'); return; }
+    const r = await api('finance/budgets/audit-log', fmgrToken, { id: lineId });
+    ok(r, `/audit-log failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), '/audit-log must return an array');
+    // If entries exist, verify the shape the frontend consumes
+    if (r.body.data.length > 0) {
+      const e = r.body.data[0];
+      for (const k of ['id', 'action', 'actorId', 'createdAt']) {
+        expect(k in e, `/audit-log entry missing field: ${k}`);
+      }
+    }
   });
 }

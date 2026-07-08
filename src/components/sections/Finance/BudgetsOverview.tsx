@@ -322,6 +322,7 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
         onPage={p => setPage(p)}
         noun="lines"
         loading={budgetsQ.isLoading && !budgets.length}
+        error={budgetsQ.error?.message}
         emptyMessage={`No budget lines for FY ${fiscalYear}.`}
         sortField={sortField}
         sortDir={sortDir}
@@ -524,6 +525,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
         onPage={p => setPage(p)}
         noun="variance rows"
         loading={varQ.isLoading && !rows.length}
+        error={varQ.error?.message}
         emptyMessage={`No budget data for FY ${fiscalYear}.`}
         sortField={sortField}
         sortDir={sortDir}
@@ -622,6 +624,7 @@ function ActualsTab({ fiscalYear, costCentreFilter }: {
       onPage={p => setPage(p)}
       noun="cost entries"
       loading={actualsQ.isLoading && !entries.length}
+      error={actualsQ.error?.message}
       emptyMessage={`No approved cost entries for FY ${fiscalYear}.`}
       sortField={sortField}
       sortDir={sortDir}

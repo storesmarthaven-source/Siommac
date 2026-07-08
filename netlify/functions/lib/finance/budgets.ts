@@ -256,6 +256,13 @@ export async function upsertBudgetLine(input: UpsertBudgetLineInput): Promise<Bu
         .in('role', ['finance_manager', 'finance_lead'])
         .eq('status', 'active');
       const recipientUserIds = (fmUsers ?? []).map((u: { id: string }) => u.id);
+      // §8.1: also notify the cost-centre owner (budget line's ownerId)
+      if (row.ownerId && !recipientUserIds.includes(row.ownerId)) {
+        recipientUserIds.push(row.ownerId);
+      }
+
+      const breachSubject = `Budget review: ${row.costCenterName ?? row.costCenterId} · ${row.category} FY ${row.fiscalYear}`;
+      const breachBody    = `Actual spend ($${Math.round(row.actual).toLocaleString()}) exceeds budget ($${Math.round(row.budgeted).toLocaleString()}) for FY ${row.fiscalYear}. Category: ${row.category}. Please review.`;
 
       await emitFinanceMutationBackbone({
         actorUserId:   input.actorId,
@@ -269,10 +276,16 @@ export async function upsertBudgetLine(input: UpsertBudgetLineInput): Promise<Bu
         newState:      { actual: row.actual, budgeted: row.budgeted, variancePct: row.variancePct },
         notification: {
           title:           `Budget variance alert: ${row.costCenterName ?? row.costCenterId} · ${row.category}`,
-          body:            `Actual spend ($${Math.round(row.actual).toLocaleString()}) exceeds budget ($${Math.round(row.budgeted).toLocaleString()}) for FY ${row.fiscalYear}.`,
+          body:            breachBody,
           severity:        'warning',
           actionRoute:     '/finance/budgets',
           recipientUserIds,
+        },
+        // §8.1: open a budget review thread so Finance Lead + Cost-centre Owner can discuss
+        messageThread: {
+          subject:            breachSubject,
+          participantUserIds: recipientUserIds,
+          body:               breachBody,
         },
       });
     }
@@ -392,6 +405,15 @@ export async function bulkUpsertBudgetLines(
         .in('role', ['finance_manager', 'finance_lead'])
         .eq('status', 'active');
       const recipientUserIds = (fmUsers ?? []).map((u: { id: string }) => u.id);
+      // §8.1: also notify the cost-centre owners of the over-budget lines
+      for (const l of lines) {
+        if (l.ownerId && !recipientUserIds.includes(l.ownerId)) {
+          recipientUserIds.push(l.ownerId);
+        }
+      }
+
+      const bulkBreachTitle = `Budget variance alert: ${overBudgetCount} line${overBudgetCount > 1 ? 's' : ''} over budget`;
+      const bulkBreachBody  = `After bulk entry, ${overBudgetCount} budget line${overBudgetCount > 1 ? 's are' : ' is'} exceeded by actual spend. Review required.`;
 
       await emitFinanceMutationBackbone({
         actorUserId:  actorId,
@@ -404,11 +426,17 @@ export async function bulkUpsertBudgetLines(
         previousState: null,
         newState:     { overBudgetCount, lineIds: ids },
         notification: {
-          title:           `Budget variance alert: ${overBudgetCount} line${overBudgetCount > 1 ? 's' : ''} over budget`,
-          body:            `After bulk entry, ${overBudgetCount} budget line${overBudgetCount > 1 ? 's are' : ' is'} exceeded by actual spend.`,
+          title:           bulkBreachTitle,
+          body:            bulkBreachBody,
           severity:        'warning',
           actionRoute:     '/finance/budgets',
           recipientUserIds,
+        },
+        // §8.1: open a budget review thread
+        messageThread: {
+          subject:            bulkBreachTitle,
+          participantUserIds: recipientUserIds,
+          body:               bulkBreachBody,
         },
       });
     }
