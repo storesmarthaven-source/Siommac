@@ -321,7 +321,7 @@ export default async function run(h) {
     ok(r, 'idempotent retire ok');
   });
   await test('unauthenticated → 401', async () => {
-    await fails(() => api('hr/leave/types/list', null, {}), 'no token rejected');
+    fails(await api('hr/leave/types/list', null, {}), 'no token rejected');
   });
 
   await test('types/create requires manage permission', async () => {

@@ -60,12 +60,14 @@ export default async function run(h) {
   });
 
   await test('hr_staff cannot view AP (denied 403)', async () => {
-    const r = await fails(api('finance/ap/bills/list', TnoFin, {}));
+    const r = await api('finance/ap/bills/list', TnoFin, {});
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('unauthenticated request denied 401', async () => {
-    const r = await fails(api('finance/ap/bills/list', null, {}));
+    const r = await api('finance/ap/bills/list', null, {});
+    fails(r);
     expect(r.status === 401, `expected 401, got ${r.status}`);
   });
 
@@ -117,7 +119,8 @@ export default async function run(h) {
   });
 
   await test('pickers denied to hr_staff', async () => {
-    const r = await fails(api('finance/pickers/gl-accounts', TnoFin, {}));
+    const r = await api('finance/pickers/gl-accounts', TnoFin, {});
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
@@ -158,18 +161,20 @@ export default async function run(h) {
   });
 
   await test('hr_staff cannot create vendor (403)', async () => {
-    const r = await fails(api('finance/ap/vendors/create', TnoFin, {
+    const r = await api('finance/ap/vendors/create', TnoFin, {
       name: `${TAG} Denied Vendor`, paymentTermsDays: 30, status: 'active',
-    }));
+    });
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('duplicate vendor name is rejected (409)', async () => {
     if (!vendorId) { h.skip('no vendorId'); return; }
-    const r = await fails(api('finance/ap/vendors/create', Tstaff, {
+    const r = await api('finance/ap/vendors/create', Tstaff, {
       name: `${TAG} Test Vendor`,   // same name as the first vendor
       paymentTermsDays: 30, status: 'active',
-    }));
+    });
+    fails(r);
     expect(r.status === 409, `expected 409 for duplicate, got ${r.status}`);
   });
 
@@ -210,9 +215,10 @@ export default async function run(h) {
 
   await test('finance_staff cannot update vendor (403 — managers only)', async () => {
     if (!vendorId) { h.skip('no vendorId'); return; }
-    const r = await fails(api('finance/ap/vendors/update', Tstaff, {
+    const r = await api('finance/ap/vendors/update', Tstaff, {
       id: vendorId, status: 'on_hold',
-    }));
+    });
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
@@ -323,7 +329,8 @@ export default async function run(h) {
   await test('submitter cannot approve own bill (SoD — 403)', async () => {
     if (!billId) { h.skip('no billId'); return; }
     // fstaff submitted it, so fstaff cannot approve (SoD)
-    const r = await fails(api('finance/ap/bills/approve', Tstaff, { id: billId }));
+    const r = await api('finance/ap/bills/approve', Tstaff, { id: billId });
+    fails(r);
     expect(r.status === 403, `expected SoD 403, got ${r.status}`);
   });
 
@@ -400,23 +407,25 @@ export default async function run(h) {
     if (!billId) { h.skip('no billId'); return; }
     // Bill total = 1500, partial of 500 already paid, remaining = 1000
     // Try to pay 2000 — should fail
-    const r = await fails(api('finance/ap/bills/record-payment', Tstaff, {
+    const r = await api('finance/ap/bills/record-payment', Tstaff, {
       id:        billId,
       amount:    2000.00,
       method:    'cash',
       reference: `${TAG}-OVERPAY`,
-    }));
+    });
+    fails(r);
     expect(r.status === 422 || r.status === 400, `expected 4xx, got ${r.status}`);
   });
 
   await test('EFT payment without reference is blocked (422)', async () => {
     if (!billId) { h.skip('no billId'); return; }
-    const r = await fails(api('finance/ap/bills/record-payment', Tstaff, {
+    const r = await api('finance/ap/bills/record-payment', Tstaff, {
       id:     billId,
       amount: 100.00,
       method: 'eft',
       // deliberately no reference
-    }));
+    });
+    fails(r);
     expect(r.status === 422, `expected 422 for missing EFT reference, got ${r.status}`);
   });
 
@@ -491,12 +500,14 @@ export default async function run(h) {
   h.section('AP › Duplicate Reviews');
 
   await test('duplicate-risks/list requires auth (401)', async () => {
-    const r = await fails(api('finance/ap/duplicate-risks/list', null, {}));
+    const r = await api('finance/ap/duplicate-risks/list', null, {});
+    fails(r);
     expect(r.status === 401, `expected 401, got ${r.status}`);
   });
 
   await test('hr_staff denied duplicate-risks/list (403)', async () => {
-    const r = await fails(api('finance/ap/duplicate-risks/list', TnoFin, {}));
+    const r = await api('finance/ap/duplicate-risks/list', TnoFin, {});
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
@@ -538,10 +549,11 @@ export default async function run(h) {
       if (b1Id) ctx.billIds.push(b1Id);
 
       // Create second bill with same vendor + invoice number — without override this should fail
-      const r2 = await fails(api('finance/ap/bills/create', Tstaff, {
+      const r2 = await api('finance/ap/bills/create', Tstaff, {
         vendorId, billDate: new Date().toISOString().slice(0, 10), description: `${TAG} Dup second`,
         vendorInvoiceNo: invNo, lines: [{ description: 'Test line', amount: 100 }],
-      }));
+      });
+      fails(r2);
       expect(r2.status === 409, `expected 409 duplicate block, got ${r2.status}`);
 
       // Now create with override — should succeed and persist a review row
@@ -565,19 +577,21 @@ export default async function run(h) {
 
   await test('duplicate-risks/resolve requires finance.ap.duplicate.resolve perm', async () => {
     // finance_staff doesn't have resolve perm
-    const r = await fails(api('finance/ap/duplicate-risks/resolve', Tstaff, {
+    const r = await api('finance/ap/duplicate-risks/resolve', Tstaff, {
       reviewId: '00000000-0000-0000-0000-000000000000',
       resolution: 'resolved_distinct',
       resolutionNote: 'test',
-    }));
+    });
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('resolve with invalid reviewId returns 404 or 422', async () => {
-    const r = await fails(api('finance/ap/duplicate-risks/resolve', Tmgr, {
+    const r = await api('finance/ap/duplicate-risks/resolve', Tmgr, {
       reviewId: '00000000-0000-0000-0000-000000000001',
       resolution: 'resolved_distinct', resolutionNote: 'test',
-    }));
+    });
+    fails(r);
     expect(r.status === 404 || r.status === 422 || r.status === 500, `expected 4xx, got ${r.status}`);
   });
 
@@ -604,14 +618,16 @@ export default async function run(h) {
   }
 
   await test('bulk-approve denied for hr_staff (403)', async () => {
-    const r = await fails(api('finance/ap/bills/bulk-approve', TnoFin, {
+    const r = await api('finance/ap/bills/bulk-approve', TnoFin, {
       billIds: ['00000000-0000-0000-0000-000000000001'],
-    }));
+    });
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('bulk-approve with empty billIds rejected (422/400)', async () => {
-    const r = await fails(api('finance/ap/bills/bulk-approve', Tmgr, { billIds: [] }));
+    const r = await api('finance/ap/bills/bulk-approve', Tmgr, { billIds: [] });
+    fails(r);
     expect(r.status === 422 || r.status === 400, `expected 422/400, got ${r.status}`);
   });
 
@@ -688,7 +704,8 @@ export default async function run(h) {
   }
 
   await test('payment-runs/list requires finance.ap.payment.run.manage (403 for staff)', async () => {
-    const r = await fails(api('finance/ap/payment-runs/list', Tstaff, {}));
+    const r = await api('finance/ap/payment-runs/list', Tstaff, {});
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
@@ -701,10 +718,11 @@ export default async function run(h) {
   await test('payment-runs/create with non-approved bill is rejected (422)', async () => {
     if (!billId) { h.skip('no billId'); return; }
     // billId is already paid — not eligible
-    const r = await fails(api('finance/ap/payment-runs/create', Tmgr, {
+    const r = await api('finance/ap/payment-runs/create', Tmgr, {
       billIds: [billId], paymentMethod: 'eft',
       payDate: new Date().toISOString().slice(0, 10),
-    }));
+    });
+    fails(r);
     expect(r.status === 422, `expected 422, got ${r.status}`);
   });
 
@@ -744,7 +762,8 @@ export default async function run(h) {
   await test('creator cannot process own payment run (SoD — assertDifferentApprover)', async () => {
     if (!payRunId) { h.skip('no payRunId'); return; }
     // Tmgr created the run; Tmgr processing it should be blocked
-    const r = await fails(api('finance/ap/payment-runs/process', Tmgr, { id: payRunId }));
+    const r = await api('finance/ap/payment-runs/process', Tmgr, { id: payRunId });
+    fails(r);
     expect(r.status === 422 || r.status === 403, `expected SoD error, got ${r.status}`);
   });
 
@@ -770,9 +789,10 @@ export default async function run(h) {
 
   await test('payment-runs/void on complete run is rejected', async () => {
     if (!payRunId) { h.skip('no payRunId'); return; }
-    const r = await fails(api('finance/ap/payment-runs/void', Tmgr, {
+    const r = await api('finance/ap/payment-runs/void', Tmgr, {
       id: payRunId, reason: 'Trying to void a complete run',
-    }));
+    });
+    fails(r);
     expect(r.status === 422, `expected 422, got ${r.status}`);
   });
 
@@ -819,12 +839,14 @@ export default async function run(h) {
   h.section('AP › Bill Import');
 
   await test('bills/import denied for hr_staff (403)', async () => {
-    const r = await fails(api('finance/ap/bills/import', TnoFin, { rows: [] }));
+    const r = await api('finance/ap/bills/import', TnoFin, { rows: [] });
+    fails(r);
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
   await test('bills/import with empty rows array rejected (400/422)', async () => {
-    const r = await fails(api('finance/ap/bills/import', Tstaff, { rows: [] }));
+    const r = await api('finance/ap/bills/import', Tstaff, { rows: [] });
+    fails(r);
     expect(r.status === 400 || r.status === 422, `expected 400/422, got ${r.status}`);
   });
 
