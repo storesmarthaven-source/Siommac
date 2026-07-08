@@ -75,6 +75,9 @@ export default async function run(h) {
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
     try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_remittances').in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_remittances').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
+    // Gap 8 cleanup: message_threads cascade-delete posts/participants; notifications by source_id.
+    try { if (ctx.nisRemId) await sb.from('message_threads').delete().eq('source_module', 'finance_remittances').eq('source_entity_id', ctx.nisRemId); } catch {}
+    try { if (ctx.nisRemId) await sb.from('notifications').delete().eq('source_id', ctx.nisRemId); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -277,6 +280,33 @@ export default async function run(h) {
     expect(gotAll, 'approved/paid/filed events not all present');
   });
 
+  // Gap 8: message thread + notification side-effects from mark-filed ─────────
+
+  await test('§2 side-effect (Gap 8): mark-filed creates a message thread anchored to the remittance', async () => {
+    const gotThread = await waitFor(async () => {
+      const { data } = await sb.from('message_threads')
+        .select('id')
+        .eq('source_module', 'finance_remittances')
+        .eq('source_entity_id', ctx.nisRemId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotThread, 'mark-filed should create a message_threads row with source_module=finance_remittances and source_entity_id=nisRemId');
+  });
+
+  await test('§2 side-effect (Gap 8): mark-filed notification written to notifications table', async () => {
+    // The backbone's notification spec always includes createdBy as recipientUserIds,
+    // ensuring a notifications row is written with source_id = remittance id.
+    const gotNotif = await waitFor(async () => {
+      const { data } = await sb.from('notifications')
+        .select('id')
+        .eq('source_id', ctx.nisRemId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotNotif, 'mark-filed notification not found in notifications table (source_id should equal the remittance id)');
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Remittances › Cancel + reports');
   // ═══════════════════════════════════════════════════════════════════════════
@@ -408,5 +438,36 @@ export default async function run(h) {
     const r = await api('finance/remittances/list', fmgr1Token, { search: 'REM' });
     ok(r, `list with search failed: ${r.body.message}`);
     expect(Array.isArray(r.body.data), 'search result should be an array');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › CSV export (Gap 9)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('CSV export (Gap 9) — list endpoint returns all fields the client-side CSV template uses', async () => {
+    // The RemPaymentsTab and main register both call exportCsv() against the
+    // list response.  Assert every field referenced in the CsvColumn definitions
+    // is present in the list response shape (including payrollRunNo added in Wave 2B).
+    const r = await api('finance/remittances/list', fmgr1Token, {});
+    ok(r, `list failed for CSV-field check: ${r.body.message}`);
+    const rows = r.body.data;
+    expect(Array.isArray(rows), 'list should return an array');
+    // At least the NIS remittance we created should be present.
+    expect(rows.length > 0, 'list should return at least one remittance (the E2E NIS rem)');
+    const first = rows[0];
+    const csvFields = [
+      'remittanceNo', 'authority', 'periodYear', 'periodMonth', 'dueDate',
+      'employeePortion', 'employerPortion', 'totalDue', 'status',
+      'paidDate', 'filedDate', 'authorityReference', 'filingMethod',
+      'receiptReference', 'payrollRunNo',
+    ];
+    for (const k of csvFields) {
+      expect(k in first, `CSV source field '${k}' missing from list response`);
+    }
+    // payrollRunNo must be a string (resolved run code) or null — never undefined.
+    expect(
+      first.payrollRunNo === null || typeof first.payrollRunNo === 'string',
+      `payrollRunNo must be string|null, got ${typeof first.payrollRunNo}`,
+    );
   });
 }

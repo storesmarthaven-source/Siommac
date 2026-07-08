@@ -686,6 +686,10 @@ export async function markRemittanceFiled(
         type:       'finance.remittance.filed',
         actionRoute: `/finance/remittances/${id}`,
         severity:   'info',
+        // Always notify the remittance creator (filing confirmation) so a
+        // notifications row is written even when no event_rule matches this
+        // event type. The creator gets confirmation their submission was filed.
+        recipientUserIds: existing.createdBy ? [existing.createdBy] : [],
       },
       messageThread: {
         subject:            `${existing.remittanceNo} — Authority Filing`,
