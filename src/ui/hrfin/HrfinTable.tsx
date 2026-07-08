@@ -13,6 +13,8 @@ export interface HrfinColumn<T> {
   key: string;
   label: string;
   render: (row: T) => ComponentChildren;
+  /** When true, the column header becomes a sort toggle. */
+  sortable?: boolean;
 }
 export interface HrfinTab { key: string; label: string; }
 export interface HrfinFilter { label: string; icon?: HrfinIconName; onClick?: () => void; }
@@ -39,6 +41,14 @@ export interface HrfinTableProps<T> {
   noun?: string;
   loading?: boolean;
   emptyMessage?: string;
+  /** When set, renders an error banner instead of the table body. */
+  error?: string;
+  /** Currently sorted column key (controlled from outside). */
+  sortField?: string;
+  /** Sort direction for the active sortField. */
+  sortDir?: 'asc' | 'desc';
+  /** Called when the user clicks a sortable column header. */
+  onSort?: (field: string, dir: 'asc' | 'desc') => void;
 }
 
 function pageWindow(page: number, count: number): (number | '…')[] {
@@ -55,6 +65,7 @@ export function HrfinTable<T>({
   tabs, activeTab, onTab, searchValue, onSearch, searchPlaceholder = 'Search…',
   filters = [], columns, rows, rowKey, onRowClick, rowActions,
   page, pageCount, total, pageSize, onPage, noun = 'records', loading, emptyMessage,
+  error, sortField, sortDir, onSort,
 }: HrfinTableProps<T>): VNode {
   const [menu, setMenu] = useState<{ row: T; x: number; y: number } | null>(null);
   const from = total === 0 ? 0 : page * pageSize + 1;
@@ -83,9 +94,43 @@ export function HrfinTable<T>({
 
       <div class="hrfin-table-wrap">
         <table>
-          <thead><tr>{columns.map(c => <th key={c.key}>{c.label}</th>)}<th /></tr></thead>
+          <thead>
+            <tr>
+              {columns.map(c => {
+                if (c.sortable && onSort) {
+                  const isActive = sortField === c.key;
+                  const nextDir: 'asc' | 'desc' = isActive && sortDir === 'asc' ? 'desc' : 'asc';
+                  return (
+                    <th key={c.key}>
+                      <button
+                        type="button"
+                        class={`hrfin-sort-btn${isActive ? ' is-active' : ''}`}
+                        onClick={() => onSort(c.key, nextDir)}
+                        aria-label={`Sort by ${c.label} ${nextDir === 'asc' ? 'ascending' : 'descending'}`}
+                      >
+                        {c.label}
+                        <span class="hrfin-sort-icon" aria-hidden="true">
+                          {isActive ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
+                        </span>
+                      </button>
+                    </th>
+                  );
+                }
+                return <th key={c.key}>{c.label}</th>;
+              })}
+              <th />
+            </tr>
+          </thead>
           <tbody>
-            {loading ? (
+            {error ? (
+              <tr>
+                <td colSpan={columns.length + 1}>
+                  <div class="hrfin-empty hrfin-error-state" style={{ textAlign: 'center', padding: '24px 0', color: 'var(--hrfin-danger, #e53)' }}>
+                    <strong>Failed to load {noun}.</strong> {error}
+                  </div>
+                </td>
+              </tr>
+            ) : loading ? (
               Array.from({ length: Math.min(pageSize, 6) }, (_, r) => (
                 <tr key={`s${r}`}>{columns.map(c => <td key={c.key}><span class="hrfin-skel" style={{ width: '70%', height: 12 }} /></td>)}<td /></tr>
               ))
@@ -105,7 +150,7 @@ export function HrfinTable<T>({
         </table>
       </div>
 
-      {!loading && total > 0 && (
+      {!loading && !error && total > 0 && (
         <div class="hrfin-pager">
           <span>{from}–{to} of {total} {noun}</span>
           <div>
