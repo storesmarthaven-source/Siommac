@@ -206,6 +206,11 @@ export const PERMISSION_KEYS = [
   'hr.roster.manage',            // create/edit/assign/generate roster entries
   'hr.roster.publish',           // lock + notify assignees (publish a roster)
   'hr.roster.templates.manage',  // manage shift templates, rotation patterns & coverage requirements
+  // ── HR Contract Management ───────────────────────────────────────────────────
+  'hr.contracts.view',            // view contracts, templates and the contract dashboard
+  'hr.contracts.manage',          // create/issue/sign/activate/renew/cancel contracts
+  'hr.contracts.terminate',       // terminate an active contract (sensitive employment action)
+  'hr.contracts.template.manage', // manage contract templates
   // ── Settings & Preferences (Spec §8) ─────────────────────────────────────────
   'settings.manage',
   'settings.own_preferences.view',
@@ -459,6 +464,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.compensation.view', 'hr.compensation.manage',
     'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    'hr.contracts.view', 'hr.contracts.manage',
   ]),
   hr_manager: new Set<PermissionKey>([
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -485,6 +491,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
   ]),
   // Finance roles (flat; each carries the employee baseline + finance keys).
   // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
@@ -748,6 +755,8 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.attendance.policy.manage', 'hr.attendance.reports.view', 'hr.attendance.reports.export',
     // Roster Phase keys
     'hr.roster.view', 'hr.roster.view_own', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
+    // HR Contract Management — ALL keys
+    'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
     // Finance Phase-1 keys
     'finance.statutory.view',
     'finance.statutory.manage',

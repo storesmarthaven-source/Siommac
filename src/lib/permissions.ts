@@ -162,6 +162,11 @@ export const PERMISSION_KEYS = [
   'hr.roster.manage',            // create/edit/assign/generate roster entries
   'hr.roster.publish',           // lock + notify assignees (publish a roster)
   'hr.roster.templates.manage',  // manage shift templates, rotation patterns & coverage requirements
+  // ── HR Contract Management ───────────────────────────────────────────────────
+  'hr.contracts.view',            // view contracts, templates and the contract dashboard
+  'hr.contracts.manage',          // create/issue/sign/activate/renew/cancel contracts
+  'hr.contracts.terminate',       // terminate an active contract (sensitive employment action)
+  'hr.contracts.template.manage', // manage contract templates
   // ── Employees ───────────────────────────────────────────────────────────────
   'employees.view',         // see the employee list
   'employees.view_detail',  // see an individual employee's full profile
@@ -545,6 +550,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.overtime.view', 'hr.overtime.manage', 'hr.overtime.reports.view',
     // HR statutory profile capture (NIS)
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    // HR Contract Management — day-to-day lifecycle
+    'hr.contracts.view', 'hr.contracts.manage',
   ]),
   hr_manager: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
@@ -556,6 +563,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
     // HR statutory profile capture (NIS)
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    // HR Contract Management — full (incl. terminate + templates)
+    'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
   ]),
   hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
 
@@ -894,6 +903,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
     'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
+    // HR Contract Management — ALL keys
+    'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',
@@ -1081,6 +1092,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
     'hr.overtime.view', 'hr.overtime.submit', 'hr.overtime.approve', 'hr.overtime.manage',
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
+    // HR Contract Management — ALL keys
+    'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
     // HR statutory capture + Finance NIS verification — ALL keys
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
     'finance.payroll.nis.view', 'finance.payroll.nis.verify', 'finance.payroll.nis.manage',

@@ -1187,6 +1187,32 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'medium',
   },
 
+  // ── HR Contract Management ────────────────────────────────────────────────────
+  'hr.contracts.view': {
+    module: 'HR', group: 'Contracts',
+    label: 'View Contracts',
+    description: 'View employment contracts, contract templates and the contract dashboard.',
+    risk: 'low',
+  },
+  'hr.contracts.manage': {
+    module: 'HR', group: 'Contracts',
+    label: 'Manage Contracts',
+    description: 'Create, issue, record signatures, activate, renew and cancel employment contracts.',
+    risk: 'medium',
+  },
+  'hr.contracts.terminate': {
+    module: 'HR', group: 'Contracts',
+    label: 'Terminate Contracts',
+    description: 'Terminate an active employment contract (sensitive employment action).',
+    risk: 'high',
+  },
+  'hr.contracts.template.manage': {
+    module: 'HR', group: 'Contracts',
+    label: 'Manage Contract Templates',
+    description: 'Create, update and retire the contract templates used to issue employment contracts.',
+    risk: 'medium',
+  },
+
   // ── HR Overtime ───────────────────────────────────────────────────────────────
   'hr.overtime.view': {
     module: 'HR', group: 'Overtime',
