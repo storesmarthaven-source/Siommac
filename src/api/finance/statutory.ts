@@ -97,6 +97,43 @@ export interface UpsertNisClassArgs {
   employerWeekly: number;
 }
 
+export interface NisClassImportRow {
+  classNo: number;
+  weeklyMin: number;
+  weeklyMax?: number | null;
+  employeeWeekly: number;
+  employerWeekly: number;
+}
+
+export interface NisClassImportResult {
+  imported: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
+export interface ApprovalTimelineEntry {
+  id: string;
+  action: string;
+  actorId: string;
+  reason: string | null;
+  previousState: unknown;
+  newState: unknown;
+  createdAt: string;
+}
+
+export interface StatutoryVersionDetail extends StatutoryVersion {
+  nisClasses: NisClass[];
+  approvalTimeline: ApprovalTimelineEntry[];
+  linkedPayrollRunCount: number;
+}
+
+export interface StatutoryReportResult {
+  report: string;
+  generatedAt: string;
+  rows: Record<string, unknown>[];
+}
+
+export type StatutoryReportKey = 'statutory_version_summary' | 'nis_class_summary' | 'pay_component_map' | 'statutory_approval_history';
+
 export interface CreatePayComponentArgs {
   code: string;
   name: string;
@@ -120,38 +157,47 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 
 export const financeStatutoryApi = {
   // Statutory rate versions
-  listVersions:  (a: { jurisdiction?: string; status?: string; activeOnly?: boolean } = {}) => call<StatutoryVersion[]>('finance/statutory/versions/list', a),
-  getVersion:    (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/get', a),
-  createVersion: (a: CreateStatutoryVersionArgs)            => call<StatutoryVersion>('finance/statutory/versions/create', a),
-  updateVersion: (a: { id: string } & Partial<CreateStatutoryVersionArgs>) => call<StatutoryVersion>('finance/statutory/versions/update', a),
-  submitVersion: (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/submit', a),
-  approveVersion:(a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/approve', a),
-  rejectVersion: (a: { id: string; reason?: string })       => call<StatutoryVersion>('finance/statutory/versions/reject', a),
-  activateVersion:(a: { id: string })                       => call<StatutoryVersion>('finance/statutory/versions/activate', a),
-  retireVersion: (a: { id: string })                        => call<StatutoryVersion>('finance/statutory/versions/retire', a),
+  listVersions:      (a: { jurisdiction?: string; status?: string; activeOnly?: boolean } = {}) => call<StatutoryVersion[]>('finance/statutory/versions/list', a),
+  getVersion:        (a: { id: string })                                     => call<StatutoryVersion>('finance/statutory/versions/get', a),
+  getVersionDetail:  (a: { id: string })                                     => call<StatutoryVersionDetail>('finance/statutory/versions/detail', a),
+  createVersion:     (a: CreateStatutoryVersionArgs)                         => call<StatutoryVersion>('finance/statutory/versions/create', a),
+  updateVersion:     (a: { id: string } & Partial<CreateStatutoryVersionArgs>) => call<StatutoryVersion>('finance/statutory/versions/update', a),
+  submitVersion:     (a: { id: string })                                     => call<StatutoryVersion>('finance/statutory/versions/submit', a),
+  approveVersion:    (a: { id: string })                                     => call<StatutoryVersion>('finance/statutory/versions/approve', a),
+  rejectVersion:     (a: { id: string; reason?: string })                    => call<StatutoryVersion>('finance/statutory/versions/reject', a),
+  activateVersion:   (a: { id: string })                                     => call<StatutoryVersion>('finance/statutory/versions/activate', a),
+  retireVersion:     (a: { id: string })                                     => call<StatutoryVersion>('finance/statutory/versions/retire', a),
+  getApprovalTimeline: (a: { id: string })                                   => call<ApprovalTimelineEntry[]>('finance/statutory/versions/approval-timeline', a),
 
   // NIS classes
-  listNisClasses: (a: { statutoryVersionId: string })       => call<NisClass[]>('finance/statutory/nis-classes/list', a),
-  upsertNisClass: (a: UpsertNisClassArgs)                   => call<NisClass>('finance/statutory/nis-classes/upsert', a),
+  listNisClasses:    (a: { statutoryVersionId: string })                     => call<NisClass[]>('finance/statutory/nis-classes/list', a),
+  upsertNisClass:    (a: UpsertNisClassArgs)                                 => call<NisClass>('finance/statutory/nis-classes/upsert', a),
+  deleteNisClass:    (a: { id: string })                                     => call<{ id: string }>('finance/statutory/nis-classes/delete', a),
+  importNisClasses:  (a: { statutoryVersionId: string; rows: NisClassImportRow[] }) => call<NisClassImportResult>('finance/statutory/nis-classes/import', a),
 
-  // Reports
-  listReports:   (a: object = {})                           => call<StatutoryReportRow[]>('finance/statutory/reports/list', a),
+  // Reports — legacy list (shape: raw array)
+  listReports:       (a: object = {})                                        => call<StatutoryReportRow[]>('finance/statutory/reports/list', a),
+  // Reports — typed run (shape: ReportResult)
+  runReport:         (a: { report: StatutoryReportKey; jurisdiction?: string; versionId?: string }) => call<StatutoryReportResult>('finance/statutory/reports/run', a),
 
   // Pay-component catalogue (Finance-owned)
-  listComponents:  (a: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) => call<PayComponent[]>('finance/payroll/components/list', a),
-  createComponent: (a: CreatePayComponentArgs)              => call<PayComponent>('finance/payroll/components/create', a),
-  updateComponent: (a: { id: string } & Partial<CreatePayComponentArgs>) => call<PayComponent>('finance/payroll/components/update', a),
-  retireComponent: (a: { id: string })                      => call<PayComponent>('finance/payroll/components/retire', a),
+  listComponents:    (a: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) => call<PayComponent[]>('finance/payroll/components/list', a),
+  createComponent:   (a: CreatePayComponentArgs)                             => call<PayComponent>('finance/payroll/components/create', a),
+  updateComponent:   (a: { id: string } & Partial<CreatePayComponentArgs>)  => call<PayComponent>('finance/payroll/components/update', a),
+  retireComponent:   (a: { id: string })                                     => call<PayComponent>('finance/payroll/components/retire', a),
 };
 
 // ── Query keys ────────────────────────────────────────────────────────────────
 
 export const financeStatutoryKeys = {
-  versions:  (o: object = {}) => ['finance', 'statutory', 'versions', o] as const,
-  version:   (id: string)     => ['finance', 'statutory', 'version', id] as const,
-  nisClasses:(vid: string)    => ['finance', 'statutory', 'nis-classes', vid] as const,
-  reports:   ()               => ['finance', 'statutory', 'reports'] as const,
-  components:(o: object = {}) => ['finance', 'payroll', 'components', o] as const,
+  versions:         (o: object = {}) => ['finance', 'statutory', 'versions', o] as const,
+  version:          (id: string)     => ['finance', 'statutory', 'version', id] as const,
+  versionDetail:    (id: string)     => ['finance', 'statutory', 'version', id, 'detail'] as const,
+  nisClasses:       (vid: string)    => ['finance', 'statutory', 'nis-classes', vid] as const,
+  approvalTimeline: (id: string)     => ['finance', 'statutory', 'version', id, 'timeline'] as const,
+  reports:          ()               => ['finance', 'statutory', 'reports'] as const,
+  report:           (key: string, o: object = {}) => ['finance', 'statutory', 'report', key, o] as const,
+  components:       (o: object = {}) => ['finance', 'payroll', 'components', o] as const,
 };
 
 // ── Query hooks ─────────────────────────────────────────────────────────────────
@@ -169,6 +215,27 @@ export function useNisClasses(statutoryVersionId: string | null) {
 export function usePayComponents(opts: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) {
   return useQuery({ queryKey: financeStatutoryKeys.components(opts), queryFn: () => financeStatutoryApi.listComponents(opts) });
 }
+export function useVersionDetail(id: string | null) {
+  return useQuery({
+    queryKey: financeStatutoryKeys.versionDetail(id ?? ''),
+    queryFn: () => financeStatutoryApi.getVersionDetail({ id: id! }),
+    enabled: !!id,
+  });
+}
+export function useApprovalTimeline(id: string | null) {
+  return useQuery({
+    queryKey: financeStatutoryKeys.approvalTimeline(id ?? ''),
+    queryFn: () => financeStatutoryApi.getApprovalTimeline({ id: id! }),
+    enabled: !!id,
+  });
+}
+export function useStatutoryReport(report: StatutoryReportKey | null, opts: { jurisdiction?: string; versionId?: string } = {}) {
+  return useQuery({
+    queryKey: financeStatutoryKeys.report(report ?? '', opts),
+    queryFn: () => financeStatutoryApi.runReport({ report: report!, ...opts }),
+    enabled: !!report,
+  });
+}
 
 // ── Mutation hook (invalidates the whole finance-statutory subtree) ─────────────
 
@@ -176,6 +243,9 @@ export function useStatutoryMutation<A, R>(fn: (a: A) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['finance', 'statutory'] }); void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'components'] }); },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['finance', 'statutory'] });
+      void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'components'] });
+    },
   });
 }

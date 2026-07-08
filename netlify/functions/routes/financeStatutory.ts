@@ -18,7 +18,13 @@ import {
   listNisClasses,
   upsertNisClasses,
   listStatutoryReport,
+  deleteNisClass,
+  importNisClasses,
+  getRateVersionDetail,
+  getApprovalTimeline,
+  runStatutoryReport,
   type UpsertNisClassInput,
+  type NisClassImportRow,
 } from '../lib/finance/statutoryConfig';
 import {
   listPayComponents,
@@ -210,6 +216,81 @@ router.post('/statutory/nis-classes/upsert', async c => {
       v.data.classes as UpsertNisClassInput[],
       actor.id,
     );
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/statutory/nis-classes/delete
+// Guarded by new key: finance.statutory.nisClass.delete
+router.post('/statutory/nis-classes/delete', async c => {
+  const actor = await requirePermission(c, 'finance.statutory.nisClass.delete');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    await deleteNisClass(v.data.id, actor.id);
+    return c.json({ success: true, data: { id: v.data.id } });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/statutory/nis-classes/import
+// Guarded by new key: finance.statutory.nisClass.import
+router.post('/statutory/nis-classes/import', async c => {
+  const actor = await requirePermission(c, 'finance.statutory.nisClass.import');
+  const v = zv(c, z.object({
+    statutoryVersionId: z.string().uuid(),
+    rows: z.array(z.object({
+      classNo: z.number().int().positive(),
+      weeklyMin: z.number().nonnegative(),
+      weeklyMax: z.number().nonnegative().nullable().optional(),
+      employeeWeekly: z.number().nonnegative(),
+      employerWeekly: z.number().nonnegative(),
+    })).min(1),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await importNisClasses(
+      v.data.statutoryVersionId,
+      v.data.rows as NisClassImportRow[],
+      actor.id,
+    );
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/statutory/versions/detail
+router.post('/statutory/versions/detail', async c => {
+  await requirePermission(c, 'finance.statutory.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getRateVersionDetail(v.data.id);
+    if (!data) return c.json({ success: false, message: 'Statutory version not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/statutory/versions/approval-timeline
+router.post('/statutory/versions/approval-timeline', async c => {
+  await requirePermission(c, 'finance.statutory.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getApprovalTimeline(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/statutory/reports/run
+router.post('/statutory/reports/run', async c => {
+  await requirePermission(c, 'finance.statutory.reports.view');
+  const v = zv(c, z.object({
+    report: z.enum(['statutory_version_summary', 'nis_class_summary', 'pay_component_map', 'statutory_approval_history']),
+    jurisdiction: z.string().optional(),
+    versionId: z.string().uuid().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await runStatutoryReport(v.data.report, { jurisdiction: v.data.jurisdiction, versionId: v.data.versionId });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });

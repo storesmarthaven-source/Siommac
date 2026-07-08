@@ -17,6 +17,7 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { startWorkflowForRecord } from '../workflow/service';
+import { emitFinanceMutationBackbone } from './backbone';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 // ── Segregation of duties helper ─────────────────────────────────────────────
@@ -72,6 +73,41 @@ export interface NisClassRow {
   employeeWeekly: number;
   employerWeekly: number;
   createdAt: string;
+}
+
+export interface ApprovalTimelineEntry {
+  id: string;
+  action: string;
+  actorId: string;
+  reason: string | null;
+  previousState: unknown;
+  newState: unknown;
+  createdAt: string;
+}
+
+export interface StatutoryVersionDetail extends StatutoryVersionDto {
+  nisClasses: NisClassRow[];
+  approvalTimeline: ApprovalTimelineEntry[];
+  linkedPayrollRunCount: number;
+}
+
+export interface NisClassImportRow {
+  classNo: number;
+  weeklyMin: number;
+  weeklyMax?: number | null;
+  employeeWeekly: number;
+  employerWeekly: number;
+}
+
+export interface NisClassImportResult {
+  imported: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
+export interface StatutoryReportResult {
+  report: string;
+  generatedAt: string;
+  rows: Record<string, unknown>[];
 }
 
 // ── DB row shapes ─────────────────────────────────────────────────────────────
@@ -351,17 +387,44 @@ export async function approveStatutoryVersion(
   if (error) throw Object.assign(new Error('approveStatutoryVersion: ' + error.message), { status: 500 });
   const row = toVersionDto(data);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: id, actorId,
-    action: 'statutory_version.approved',
-    previousState: { status: 'pending_approval' }, newState: { status: 'approved' },
-  });
-  void emitAppEvent({
-    eventType: 'finance.statutory.version.approved',
-    sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: id,
-    actorUserId: actorId, severity: 'success',
-    payload: { effectiveFrom: existing.effectiveFrom },
-  });
+  // Backbone: audit (mandatory) + notification + config thread per §8.1.
+  // On failure, compensating rollback resets to pending_approval.
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module: 'finance_statutory',
+      entityType: 'statutory_version',
+      entityId: id,
+      eventType: 'finance.statutory.version.approved',
+      auditAction: 'statutory_version.approved',
+      previousState: { status: 'pending_approval' },
+      newState: { status: 'approved' },
+      severity: 'success',
+      notification: {
+        title: `Statutory version "${row.label}" approved`,
+        body: `Effective from ${row.effectiveFrom}. Payroll administrators should review configuration before the next pay run.`,
+        actionRoute: '/finance/statutory',
+        type: 'finance.statutory.version.approved',
+        severity: 'success',
+      },
+      messageThread: {
+        subject: `Statutory config update: ${row.label}`,
+        participantUserIds: [
+          actorId,
+          ...(existing.createdBy && existing.createdBy !== actorId ? [existing.createdBy] : []),
+        ],
+        body: `Statutory version "${row.label}" (effective ${row.effectiveFrom}, jurisdiction ${row.jurisdiction}) has been approved. Payroll administrators should review the new rate structure before the next pay run.`,
+      },
+    });
+  } catch (backboneErr) {
+    // Compensating rollback: revert to pending_approval.
+    try {
+      await sb.from('finance_statutory_versions')
+        .update({ status: 'pending_approval', approved_by: null })
+        .eq('id', id);
+    } catch (_) { /* best-effort rollback */ }
+    throw backboneErr;
+  }
 
   return row;
 }
@@ -538,10 +601,14 @@ export async function upsertNisClasses(
     .select();
   if (error) throw Object.assign(new Error('upsertNisClasses: ' + error.message), { status: 500 });
 
-  await writeHrAudit({
-    submoduleKey: 'finance_statutory', recordId: statutoryVersionId, actorId,
-    action: 'statutory_version.nis_classes_updated',
-    previousState: null, newState: { count: classes.length },
+  await emitFinanceMutationBackbone({
+    actorUserId: actorId,
+    module: 'finance_statutory',
+    entityType: 'statutory_version',
+    entityId: statutoryVersionId,
+    eventType: 'finance.statutory.nis_classes.updated',
+    auditAction: 'statutory_version.nis_classes_updated',
+    newState: { count: classes.length },
   });
 
   return ((data ?? []) as DbNisRow[]).map(toNisDto);
@@ -570,4 +637,230 @@ export async function listStatutoryReport(opts: { jurisdiction?: string } = {}):
     id: r.id, label: r.label, effectiveFrom: r.effective_from,
     jurisdiction: r.jurisdiction, status: r.status, isActive: r.is_active, createdAt: r.created_at,
   }));
+}
+
+// ── Typed report runner (Wave 2B) ─────────────────────────────────────────────
+
+export async function runStatutoryReport(
+  report: 'statutory_version_summary' | 'nis_class_summary' | 'pay_component_map' | 'statutory_approval_history',
+  opts: { jurisdiction?: string; versionId?: string } = {},
+): Promise<StatutoryReportResult> {
+  const now = new Date().toISOString();
+
+  if (report === 'statutory_version_summary') {
+    let q = sb
+      .from('finance_statutory_versions')
+      .select('id, label, effective_from, jurisdiction, status, is_active, approved_by, activated_by, created_by, created_at')
+      .order('effective_from', { ascending: false });
+    if (opts.jurisdiction) q = q.eq('jurisdiction', opts.jurisdiction);
+    const { data, error } = await q;
+    if (error) throw Object.assign(new Error('runStatutoryReport: ' + error.message), { status: 500 });
+    return {
+      report, generatedAt: now,
+      rows: ((data ?? []) as Record<string, unknown>[]).map(r => ({
+        id: r['id'], label: r['label'], effectiveFrom: r['effective_from'],
+        jurisdiction: r['jurisdiction'], status: r['status'], isActive: r['is_active'],
+        approvedBy: r['approved_by'], activatedBy: r['activated_by'],
+        createdBy: r['created_by'], createdAt: r['created_at'],
+      })),
+    };
+  }
+
+  if (report === 'nis_class_summary') {
+    let q = sb
+      .from('finance_nis_classes')
+      .select('id, statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly, created_at')
+      .order('class_no');
+    if (opts.versionId) q = q.eq('statutory_version_id', opts.versionId);
+    const { data, error } = await q;
+    if (error) throw Object.assign(new Error('runStatutoryReport (nis_class_summary): ' + error.message), { status: 500 });
+    return {
+      report, generatedAt: now,
+      rows: ((data ?? []) as Record<string, unknown>[]).map(r => ({
+        id: r['id'], versionId: r['statutory_version_id'], classNo: r['class_no'],
+        weeklyMin: r['weekly_min'], weeklyMax: r['weekly_max'],
+        employeeWeekly: r['employee_weekly'], employerWeekly: r['employer_weekly'],
+        createdAt: r['created_at'],
+      })),
+    };
+  }
+
+  if (report === 'pay_component_map') {
+    const { data, error } = await sb
+      .from('finance_pay_components')
+      .select('id, code, name, kind, is_statutory, is_taxable, reduces_chargeable, is_active, created_at')
+      .order('kind').order('name');
+    if (error) throw Object.assign(new Error('runStatutoryReport (pay_component_map): ' + error.message), { status: 500 });
+    return {
+      report, generatedAt: now,
+      rows: ((data ?? []) as Record<string, unknown>[]).map(r => ({
+        id: r['id'], code: r['code'], name: r['name'], kind: r['kind'],
+        isStatutory: r['is_statutory'], isTaxable: r['is_taxable'],
+        reducesChargeable: r['reduces_chargeable'], isActive: r['is_active'],
+        createdAt: r['created_at'],
+      })),
+    };
+  }
+
+  // statutory_approval_history
+  let q2 = sb
+    .from('hr_audit_log')
+    .select('id, action, actor_id, record_id, reason, created_at')
+    .eq('submodule_key', 'finance_statutory')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (opts.versionId) q2 = q2.eq('record_id', opts.versionId);
+  const { data: auditData, error: auditErr } = await q2;
+  if (auditErr) throw Object.assign(new Error('runStatutoryReport (approval_history): ' + auditErr.message), { status: 500 });
+  return {
+    report, generatedAt: now,
+    rows: ((auditData ?? []) as Record<string, unknown>[]).map(r => ({
+      id: r['id'], action: r['action'], actorId: r['actor_id'],
+      versionId: r['record_id'], reason: r['reason'], createdAt: r['created_at'],
+    })),
+  };
+}
+
+// ── Delete NIS class (draft versions only) — Wave 2B ──────────────────────────
+
+export async function deleteNisClass(id: string, actorId: string): Promise<void> {
+  const { data: cls, error: getErr } = await sb
+    .from('finance_nis_classes')
+    .select('id, class_no, statutory_version_id')
+    .eq('id', id)
+    .maybeSingle<{ id: string; class_no: number; statutory_version_id: string }>();
+  if (getErr) throw Object.assign(new Error('deleteNisClass: ' + getErr.message), { status: 500 });
+  if (!cls) throw Object.assign(new Error('NIS class not found.'), { status: 404 });
+
+  const version = await getStatutoryVersion(cls.statutory_version_id);
+  if (!version) throw Object.assign(new Error('Statutory version not found.'), { status: 404 });
+  if (version.status !== 'draft') {
+    throw Object.assign(new Error('NIS classes can only be deleted from draft statutory versions.'), { status: 422 });
+  }
+
+  const { error } = await sb.from('finance_nis_classes').delete().eq('id', id);
+  if (error) throw Object.assign(new Error('deleteNisClass: ' + error.message), { status: 500 });
+
+  await emitFinanceMutationBackbone({
+    actorUserId: actorId,
+    module: 'finance_statutory',
+    entityType: 'statutory_version',
+    entityId: cls.statutory_version_id,
+    eventType: 'finance.statutory.nis_class.deleted',
+    auditAction: 'nis_class.deleted',
+    newState: { classNo: cls.class_no, deletedId: id },
+  });
+}
+
+// ── Bulk-import NIS classes (draft versions only) — Wave 2B ──────────────────
+
+export async function importNisClasses(
+  statutoryVersionId: string,
+  rows: NisClassImportRow[],
+  actorId: string,
+): Promise<NisClassImportResult> {
+  const version = await getStatutoryVersion(statutoryVersionId);
+  if (!version) throw Object.assign(new Error('Statutory version not found.'), { status: 404 });
+  if (version.status !== 'draft') {
+    throw Object.assign(new Error('NIS classes can only be imported into draft statutory versions.'), { status: 422 });
+  }
+
+  const errors: Array<{ row: number; message: string }> = [];
+  const seenClassNos = new Set<number>();
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]!;
+    const rowIdx = i + 1;
+    if (!Number.isFinite(r.classNo) || r.classNo < 1 || !Number.isInteger(r.classNo)) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: classNo must be a positive integer` });
+      continue;
+    }
+    if (seenClassNos.has(r.classNo)) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: duplicate classNo ${r.classNo}` });
+      continue;
+    }
+    seenClassNos.add(r.classNo);
+    if (!Number.isFinite(r.weeklyMin) || r.weeklyMin < 0) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: weeklyMin must be ≥ 0` });
+    }
+    if (r.weeklyMax != null && (!Number.isFinite(r.weeklyMax) || r.weeklyMax < r.weeklyMin)) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: weeklyMax must be ≥ weeklyMin` });
+    }
+    if (!Number.isFinite(r.employeeWeekly) || r.employeeWeekly < 0) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: employeeWeekly must be ≥ 0` });
+    }
+    if (!Number.isFinite(r.employerWeekly) || r.employerWeekly < 0) {
+      errors.push({ row: rowIdx, message: `Row ${rowIdx}: employerWeekly must be ≥ 0` });
+    }
+  }
+
+  if (errors.length > 0) return { imported: 0, errors };
+
+  const dbRows = rows.map(r => ({
+    statutory_version_id: statutoryVersionId,
+    class_no: r.classNo,
+    weekly_min: r.weeklyMin,
+    weekly_max: r.weeklyMax ?? null,
+    employee_weekly: r.employeeWeekly,
+    employer_weekly: r.employerWeekly,
+  }));
+
+  const { error } = await sb
+    .from('finance_nis_classes')
+    .upsert(dbRows, { onConflict: 'statutory_version_id,class_no' });
+  if (error) throw Object.assign(new Error('importNisClasses: ' + error.message), { status: 500 });
+
+  await emitFinanceMutationBackbone({
+    actorUserId: actorId,
+    module: 'finance_statutory',
+    entityType: 'statutory_version',
+    entityId: statutoryVersionId,
+    eventType: 'finance.statutory.nis_classes.imported',
+    auditAction: 'nis_classes.imported',
+    newState: { count: rows.length },
+  });
+
+  return { imported: rows.length, errors: [] };
+}
+
+// ── Approval / lifecycle timeline — Wave 2B ────────────────────────────────────
+
+export async function getApprovalTimeline(versionId: string): Promise<ApprovalTimelineEntry[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id, action, actor_id, reason, previous_state, new_state, created_at')
+    .eq('submodule_key', 'finance_statutory')
+    .eq('record_id', versionId)
+    .order('created_at', { ascending: true });
+  if (error) throw Object.assign(new Error('getApprovalTimeline: ' + error.message), { status: 500 });
+  return ((data ?? []) as {
+    id: string; action: string; actor_id: string; reason: string | null;
+    previous_state: unknown; new_state: unknown; created_at: string;
+  }[]).map(r => ({
+    id: r.id, action: r.action, actorId: r.actor_id, reason: r.reason,
+    previousState: r.previous_state, newState: r.new_state, createdAt: r.created_at,
+  }));
+}
+
+// ── Rate version detail — Wave 2B ──────────────────────────────────────────────
+
+export async function getRateVersionDetail(id: string): Promise<StatutoryVersionDetail | null> {
+  const version = await getStatutoryVersion(id);
+  if (!version) return null;
+
+  const [nisClasses, approvalTimeline, linkedRunsResult] = await Promise.all([
+    listNisClasses(id),
+    getApprovalTimeline(id),
+    sb
+      .from('finance_payroll_runs')
+      .select('id', { count: 'exact', head: true })
+      .eq('statutory_version_id', id),
+  ]);
+
+  return {
+    ...version,
+    nisClasses,
+    approvalTimeline,
+    linkedPayrollRunCount: linkedRunsResult.count ?? 0,
+  };
 }
