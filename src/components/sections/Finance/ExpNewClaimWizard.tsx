@@ -25,7 +25,9 @@ import {
   type ExpenseCategory,
   type AllocationLine,
 } from '@api/finance/expenses';
+import { useCompleteFinanceAttachment } from '@api/finance/attachments';
 import { CostCentrePicker, EmployeePicker } from './_shared/pickers';
+import { EmployeeCell } from './_shared/EmployeeCell';
 import { fmtMoney, humanize } from './financeShared';
 import { money } from './hrfinFormat';
 
@@ -49,12 +51,24 @@ const STEPS = ['Header', 'Lines', 'Receipt', 'Policy', 'Review'];
 // ── Line type ─────────────────────────────────────────────────────────────────
 
 interface LineDraft {
-  costCenterId: string;
-  amount:       string;
-  description:  string;
+  costCenterId:    string;
+  amount:          string;
+  description:     string;
+  /** §14 per-line fields */
+  expenseDate:     string;
+  category:        string;
+  project:         string;
+  taxAmount:       string;
+  merchant:        string;
+  receiptRequired: boolean;
 }
 
-const emptyLine = (): LineDraft => ({ costCenterId: '', amount: '', description: '' });
+const emptyLine = (defaults: Partial<LineDraft> = {}): LineDraft => ({
+  costCenterId: '', amount: '', description: '',
+  expenseDate: '', category: '', project: '',
+  taxAmount: '', merchant: '', receiptRequired: false,
+  ...defaults,
+});
 
 // ── Validation helpers ────────────────────────────────────────────────────────
 
@@ -120,7 +134,7 @@ function validateLines(lines: LineDraft[], totalAmount: number): LineErrors {
 type ReceiptState =
   | { phase: 'idle' }
   | { phase: 'uploading'; pct: number }
-  | { phase: 'done'; path: string; name: string }
+  | { phase: 'done'; path: string; name: string; mimeType: string }
   | { phase: 'error'; message: string };
 
 // ── Main wizard ───────────────────────────────────────────────────────────────
@@ -138,14 +152,17 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
   const [step, setStep] = useState(0);
 
   // Step 0 — header fields
-  const [claimantId,   setClaimantId]   = useState('');
-  const [title,        setTitle]        = useState('');
-  const [expenseDate,  setExpenseDate]  = useState(today);
-  const [category,     setCategory]     = useState<ExpenseCategory | ''>('');
-  const [totalAmount,  setTotalAmount]  = useState('');
-  const [currency,     setCurrency]     = useState('TTD');
-  const [reimbursable, setReimbursable] = useState(true);
-  const [headerErrors, setHeaderErrors] = useState<HeaderErrors>({});
+  const [claimantId,        setClaimantId]        = useState('');
+  const [title,             setTitle]             = useState('');
+  const [expenseDate,       setExpenseDate]        = useState(today);
+  const [category,          setCategory]          = useState<ExpenseCategory | ''>('');
+  const [totalAmount,       setTotalAmount]        = useState('');
+  const [currency,          setCurrency]          = useState('TTD');
+  const [reimbursable,      setReimbursable]      = useState(true);
+  const [purpose,           setPurpose]           = useState('');
+  const [departmentId,      setDepartmentId]      = useState('');
+  const [defaultCostCentreId, setDefaultCostCentreId] = useState('');
+  const [headerErrors,      setHeaderErrors]      = useState<HeaderErrors>({});
 
   // Step 1 — lines
   const [lines,      setLines]      = useState<LineDraft[]>([emptyLine()]);
@@ -162,10 +179,11 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
   const [submitOnCreate, setSubmitOnCreate] = useState(true);
 
   // Mutations
-  const createClaim = useExpenseMutation((args: Parameters<typeof financeExpensesApi.create>[0]) =>
+  const createClaim        = useExpenseMutation((args: Parameters<typeof financeExpensesApi.create>[0]) =>
     financeExpensesApi.create(args),
   );
-  const submitClaim = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const submitClaim        = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const completeAttachment = useCompleteFinanceAttachment();
 
   // Policy check only runs once the claim is created (step 3 with createdId)
   const policyQ = useExpensePolicyCheck(step === 3 && createdId ? createdId : null);
@@ -176,6 +194,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
     setStep(0);
     setClaimantId(''); setTitle(''); setExpenseDate(today);
     setCategory(''); setTotalAmount(''); setCurrency('TTD'); setReimbursable(true);
+    setPurpose(''); setDepartmentId(''); setDefaultCostCentreId('');
     setHeaderErrors({});
     setLines([emptyLine()]); setLineErrors({});
     setReceipt({ phase: 'idle' });
@@ -237,7 +256,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
         xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
         xhr.send(file);
       });
-      setReceipt({ phase: 'done', path, name: file.name });
+      setReceipt({ phase: 'done', path, name: file.name, mimeType: file.type || 'application/octet-stream' });
     } catch (e) {
       setReceipt({ phase: 'error', message: (e as Error).message });
     }
@@ -249,19 +268,27 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
     if (createdId) return createdId;
     try {
       const allocationLines: AllocationLine[] = lines.map(l => ({
-        costCenterId: l.costCenterId,
-        amount:       parseFloat(l.amount),
-        description:  l.description.trim() || undefined,
+        costCenterId:    l.costCenterId,
+        amount:          parseFloat(l.amount),
+        description:     l.description.trim() || undefined,
+        expenseDate:     l.expenseDate || undefined,
+        category:        (l.category as ExpenseCategory) || undefined,
+        project:         l.project.trim() || undefined,
+        taxAmount:       l.taxAmount ? parseFloat(l.taxAmount) : undefined,
+        merchant:        l.merchant.trim() || undefined,
+        receiptRequired: l.receiptRequired || undefined,
       }));
       const result = await createClaim.mutateAsync({
         claimantId,
-        title:       title.trim(),
+        title:        title.trim(),
         expenseDate,
-        category:    category as ExpenseCategory,
-        totalAmount: parseFloat(totalAmount),
+        category:     category as ExpenseCategory,
+        totalAmount:  parseFloat(totalAmount),
         currency,
         reimbursable,
-        receiptPath: receipt.phase === 'done' ? receipt.path : undefined,
+        receiptPath:  receipt.phase === 'done' ? receipt.path : undefined,
+        purpose:      purpose.trim() || undefined,
+        departmentId: departmentId.trim() || undefined,
         allocationLines,
       });
       setCreatedId(result.id);
@@ -276,9 +303,24 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
   async function advanceFromReceipt(): Promise<void> {
     const id = await ensureCreated();
     if (!id) return;
-    // If receipt is done and claim had no receiptPath initially, commit now
+    // If receipt is done and the claim didn't already get the path on creation, commit it now.
+    // Both calls are required: receipt-commit updates the claim's receipt_path column,
+    // and finance/attachments/complete writes to finance_expense_attachments so the
+    // Receipts drawer tab (useFinanceAttachments) can see the file.
     if (receipt.phase === 'done' && !createClaim.data?.receiptPath) {
-      try { await financeExpensesApi.receiptCommit({ claimId: id, path: receipt.path }); } catch { /* best effort */ }
+      try {
+        await financeExpensesApi.receiptCommit({ claimId: id, path: receipt.path });
+        await completeAttachment.mutateAsync({
+          entityType:  'expense_claim',
+          entityId:    id,
+          fileName:    receipt.name,
+          storagePath: receipt.path,
+          mimeType:    receipt.mimeType,
+        });
+      } catch (e) {
+        toast.error(`Receipt commit failed: ${(e as Error).message}. You can re-upload from the claim's Receipts tab.`);
+        // Continue — the claim itself was created successfully; receipt can be re-attached later.
+      }
     }
     setStep(3);
   }
@@ -399,6 +441,45 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
               Eligible for reimbursement
             </label>
           </div>
+
+          <div class="hrfin-field">
+            <label htmlFor="exp-purpose">Business purpose</label>
+            <textarea
+              id="exp-purpose"
+              class="hrfin-input"
+              rows={2}
+              placeholder="Brief business reason for this expense (optional)"
+              value={purpose}
+              onInput={e => setPurpose((e.target as HTMLTextAreaElement).value)}
+              maxLength={500}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div class="hrfin-field">
+              <label htmlFor="exp-dept">Department</label>
+              <input
+                id="exp-dept"
+                type="text"
+                class="hrfin-input"
+                placeholder="Department name or code (optional)"
+                value={departmentId}
+                onInput={e => setDepartmentId((e.target as HTMLInputElement).value)}
+                maxLength={100}
+              />
+            </div>
+            <div class="hrfin-field">
+              <CostCentrePicker
+                label="Default cost centre"
+                value={defaultCostCentreId || null}
+                onChange={v => {
+                  setDefaultCostCentreId(v ?? '');
+                  // Pre-fill open lines that have no cost centre yet
+                  setLines(ls => ls.map(l => l.costCenterId ? l : { ...l, costCenterId: v ?? '' }));
+                }}
+              />
+            </div>
+          </div>
         </div>
       );
 
@@ -456,10 +537,84 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
                   onInput={e => setLine(i, { description: (e.target as HTMLInputElement).value })}
                 />
               </div>
+
+              {/* §14 per-line fields */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                <div class="hrfin-field">
+                  <label htmlFor={`exp-line-date-${i}`}>Line date</label>
+                  <input
+                    id={`exp-line-date-${i}`}
+                    type="date"
+                    class="hrfin-input"
+                    value={l.expenseDate}
+                    max={today}
+                    onInput={e => setLine(i, { expenseDate: (e.target as HTMLInputElement).value })}
+                  />
+                </div>
+                <div class="hrfin-field">
+                  <label htmlFor={`exp-line-cat-${i}`}>Category</label>
+                  <select
+                    id={`exp-line-cat-${i}`}
+                    class="hrfin-input"
+                    value={l.category}
+                    onChange={e => setLine(i, { category: (e.target as HTMLSelectElement).value })}
+                  >
+                    <option value="">—</option>
+                    {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div class="hrfin-field">
+                  <label htmlFor={`exp-line-merchant-${i}`}>Merchant</label>
+                  <input
+                    id={`exp-line-merchant-${i}`}
+                    type="text"
+                    class="hrfin-input"
+                    placeholder="Merchant / supplier"
+                    value={l.merchant}
+                    onInput={e => setLine(i, { merchant: (e.target as HTMLInputElement).value })}
+                  />
+                </div>
+                <div class="hrfin-field">
+                  <label htmlFor={`exp-line-project-${i}`}>Project</label>
+                  <input
+                    id={`exp-line-project-${i}`}
+                    type="text"
+                    class="hrfin-input"
+                    placeholder="Project code (optional)"
+                    value={l.project}
+                    onInput={e => setLine(i, { project: (e.target as HTMLInputElement).value })}
+                  />
+                </div>
+                <div class="hrfin-field">
+                  <label htmlFor={`exp-line-tax-${i}`}>Tax amount</label>
+                  <input
+                    id={`exp-line-tax-${i}`}
+                    type="number"
+                    class="hrfin-input"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={l.taxAmount}
+                    onInput={e => setLine(i, { taxAmount: (e.target as HTMLInputElement).value })}
+                  />
+                </div>
+                <div class="hrfin-field" style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 20 }}>
+                  <input
+                    id={`exp-line-rcpt-${i}`}
+                    type="checkbox"
+                    checked={l.receiptRequired}
+                    onChange={e => setLine(i, { receiptRequired: (e.target as HTMLInputElement).checked })}
+                    style={{ width: 'auto' }}
+                  />
+                  <label htmlFor={`exp-line-rcpt-${i}`} style={{ marginBottom: 0, fontSize: 13 }}>
+                    Receipt required
+                  </label>
+                </div>
+              </div>
             </div>
           ))}
 
-          <button type="button" class="hrfin-action" onClick={() => setLines(ls => [...ls, emptyLine()])}>
+          <button type="button" class="hrfin-action" onClick={() => setLines(ls => [...ls, emptyLine({ costCenterId: defaultCostCentreId })])}>
             <HrfinIcon name="plus" /> Add line
           </button>
 
@@ -563,12 +718,14 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
       case 4: return (
         <div class="wizard-body">
           <div class="hrfin-metric-list">
-            <div class="hrfin-metric-row"><span>Claimant</span>      <b>{claimantId || '—'}</b></div>
+            <div class="hrfin-metric-row"><span>Claimant</span>      <b><EmployeeCell employeeId={claimantId || null} /></b></div>
             <div class="hrfin-metric-row"><span>Title</span>         <b>{title}</b></div>
             <div class="hrfin-metric-row"><span>Category</span>      <b>{humanize(category)}</b></div>
             <div class="hrfin-metric-row"><span>Date</span>          <b>{expenseDate}</b></div>
             <div class="hrfin-metric-row"><span>Total</span>         <b>{fmtMoney(parseFloat(totalAmount))} {currency}</b></div>
             <div class="hrfin-metric-row"><span>Reimbursable</span>  <b>{reimbursable ? 'Yes' : 'No'}</b></div>
+            {purpose && <div class="hrfin-metric-row"><span>Purpose</span>        <b>{purpose}</b></div>}
+            {departmentId && <div class="hrfin-metric-row"><span>Department</span>     <b>{departmentId}</b></div>}
             <div class="hrfin-metric-row"><span>Lines</span>         <b>{lines.length}</b></div>
             <div class="hrfin-metric-row"><span>Receipt</span>       <b>{receipt.phase === 'done' ? receipt.name : 'None'}</b></div>
           </div>
