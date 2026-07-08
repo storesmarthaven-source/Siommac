@@ -1,6 +1,9 @@
 // routes/financeRemittances.ts — Finance: Statutory Remittances & Filing (F1)
 // Mounted at /api/finance in api.ts.
 // All routes POST-only, JWT-gated via requirePermission. Envelope: body.args ?? {}.
+//
+// New permission keys enforced here (orchestrator catalogues + grants):
+//   finance.remittances.markFiled — required for mark-filed (was: approve)
 
 import { Hono } from 'hono';
 import { requirePermission } from '../lib/auth';
@@ -16,7 +19,12 @@ import {
   markRemittanceFiled,
   cancelRemittance,
   listRemittanceLines,
+  listAllRemittanceLines,
+  listRemittanceAudit,
   listRemittancesReport,
+  getRemittanceSummaryReport,
+  getRemittanceLinesReport,
+  getAuthorityFilingStatusReport,
   type RemittanceAuthority,
   type RemittanceStatus,
 } from '../lib/finance/remittances';
@@ -31,6 +39,8 @@ const b = (c: { get: (k: string) => unknown }) =>
 const AUTHORITY_VALUES = ['paye_bir', 'nis_nibtt', 'health_surcharge'] as const;
 const STATUS_VALUES    = ['draft', 'submitted', 'approved', 'paid', 'filed', 'cancelled'] as const;
 
+const FILING_METHOD_VALUES = ['online_portal', 'in_person', 'courier', 'eft', 'other'] as const;
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // List
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -44,6 +54,7 @@ router.post('/remittances/list', async c => {
     status:       z.enum(STATUS_VALUES).optional(),
     periodYear:   z.number().int().optional(),
     periodMonth:  z.number().int().min(1).max(12).optional(),
+    search:       z.string().max(100).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -53,6 +64,7 @@ router.post('/remittances/list', async c => {
       status?: RemittanceStatus;
       periodYear?: number;
       periodMonth?: number;
+      search?: string;
     });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
@@ -81,6 +93,28 @@ router.post('/remittances/lines/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listRemittanceLines(v.data.remittanceId);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/remittances/lines/list-all
+// Lists lines across all remittances (filtered); used by the Aurora Lines tab.
+router.post('/remittances/lines/list-all', async c => {
+  await requirePermission(c, 'finance.remittances.view');
+  const v = zv(c, z.object({
+    authority:   z.enum(AUTHORITY_VALUES).optional(),
+    periodYear:  z.number().int().optional(),
+    periodMonth: z.number().int().min(1).max(12).optional(),
+    limit:       z.number().int().min(1).max(2000).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listAllRemittanceLines(v.data as {
+      authority?: RemittanceAuthority;
+      periodYear?: number;
+      periodMonth?: number;
+      limit?: number;
+    });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
@@ -182,22 +216,28 @@ router.post('/remittances/mark-paid', async c => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Mark Filed (paid → filed)
+// Mark Filed (paid → filed) — NEW granular permission: finance.remittances.markFiled
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // POST /api/finance/remittances/mark-filed
 router.post('/remittances/mark-filed', async c => {
-  const actor = await requirePermission(c, 'finance.remittances.approve');
+  const actor = await requirePermission(c, 'finance.remittances.markFiled');
   const v = zv(c, z.object({
     id:                 z.string().uuid(),
     filedDate:          z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     authorityReference: z.string().max(200).optional(),
+    filingMethod:       z.enum(FILING_METHOD_VALUES).optional(),
+    receiptReference:   z.string().max(200).optional(),
+    filedNotes:         z.string().max(2000).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await markRemittanceFiled(v.data.id, actor.id, {
       filedDate:          v.data.filedDate,
       authorityReference: v.data.authorityReference,
+      filingMethod:       v.data.filingMethod,
+      receiptReference:   v.data.receiptReference,
+      filedNotes:         v.data.filedNotes,
     });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
@@ -222,10 +262,10 @@ router.post('/remittances/cancel', async c => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Reports
+// Reports — three types + legacy list (§5)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// POST /api/finance/remittances/reports/list
+// POST /api/finance/remittances/reports/list  (legacy; returns RemittanceReportRow[])
 router.post('/remittances/reports/list', async c => {
   await requirePermission(c, 'finance.remittances.reports.view');
   const v = zv(c, z.object({
@@ -244,22 +284,38 @@ router.post('/remittances/reports/list', async c => {
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 
-// POST /api/finance/remittances/reports/run
-// Alias for reports/list — reserved for future extended reports with filter/export.
+// POST /api/finance/remittances/audit/list  (drawer audit tab)
+router.post('/remittances/audit/list', async c => {
+  await requirePermission(c, 'finance.remittances.view');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listRemittanceAudit(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/remittances/reports/run  (Aurora; returns ReportResult)
 router.post('/remittances/reports/run', async c => {
   await requirePermission(c, 'finance.remittances.reports.view');
   const v = zv(c, z.object({
+    report:     z.enum(['remittance_summary', 'remittance_lines', 'authority_filing_status']),
     periodYear: z.number().int().optional(),
     authority:  z.enum(AUTHORITY_VALUES).optional(),
     status:     z.enum(STATUS_VALUES).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await listRemittancesReport(v.data as {
-      periodYear?: number;
-      authority?: RemittanceAuthority;
-      status?: RemittanceStatus;
-    });
+    const { report, periodYear, authority, status } = v.data;
+    const opts = {
+      periodYear,
+      authority: authority as RemittanceAuthority | undefined,
+      status:    status as RemittanceStatus | undefined,
+    };
+    let data;
+    if (report === 'remittance_summary')       data = await getRemittanceSummaryReport(opts);
+    else if (report === 'remittance_lines')    data = await getRemittanceLinesReport({ periodYear, authority: authority as RemittanceAuthority | undefined });
+    else                                        data = await getAuthorityFilingStatusReport({ periodYear });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });

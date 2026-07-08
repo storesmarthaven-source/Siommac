@@ -1,19 +1,36 @@
 /**
  * src/api/finance/remittances.ts
  *
- * Typed client + TanStack hooks for the Finance Statutory Remittances & Filing
- * backend (routes/financeRemittances.ts — POST `finance/remittances/*`).
+ * Typed client + TanStack hooks for Finance Statutory Remittances & Filing
+ * (routes/financeRemittances.ts — POST `finance/remittances/*`).
  *
  * Lifecycle: draft → submitted → approved → paid → filed
  * SoD: creator ≠ approver (enforced server-side).
  * `actorId` is derived server-side from auth — clients never send it.
  *
- * `call<T>` throws on `success:false`; callers surface errors via @lib/dialog or toast.
+ * Local query keys:
+ *   remittanceComputeKey — compute preview (not in keys.ts)
+ *   remittanceLinesAllKey — cross-remittance lines list (not in keys.ts)
+ *
+ * Keys from financeQueryKeys (keys.ts):
+ *   remittancesBase(), remittances(), remittance(), remittanceLines(), remittanceAttachments()
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { financeQueryKeys } from './keys';
 
-// ── DTOs (mirror the backend lib return shapes exactly) ─────────────────────────
+// ── Local query key factories (report to orchestrator for keys.ts) ─────────────
+
+const remittanceComputeKey = (a: object) =>
+  ['finance', 'remittances', 'compute', a] as const;
+
+const remittanceLinesAllKey = (f: object = {}) =>
+  ['finance', 'remittances', 'lines-all', f] as const;
+
+const remittanceReportKey = (report: string, f: object = {}) =>
+  ['finance', 'remittances', 'report', report, f] as const;
+
+// ── DTOs (mirror the backend lib return shapes exactly) ────────────────────────
 
 export type RemittanceAuthority = 'paye_bir' | 'nis_nibtt' | 'health_surcharge';
 export type RemittanceStatus    = 'draft' | 'submitted' | 'approved' | 'paid' | 'filed' | 'cancelled';
@@ -34,6 +51,9 @@ export interface Remittance {
   paidDate: string | null;
   filedDate: string | null;
   authorityReference: string | null;
+  filingMethod: string | null;
+  receiptReference: string | null;
+  filedNotes: string | null;
   workflowId: string | null;
   createdBy: string | null;
   approvedBy: string | null;
@@ -56,6 +76,13 @@ export interface RemittanceLine {
   createdAt: string;
 }
 
+export interface RemittanceLineWithContext extends RemittanceLine {
+  authority: RemittanceAuthority;
+  periodYear: number;
+  periodMonth: number;
+  remittanceNo: string;
+}
+
 export interface ComputedRemittance {
   payrollRunId: string;
   periodYear: number;
@@ -74,27 +101,35 @@ export interface ComputedRemittance {
   }>;
 }
 
-export interface RemittanceReportRow {
-  id: string;
-  remittanceNo: string;
-  periodYear: number;
-  periodMonth: number;
-  authority: string;
-  status: string;
-  totalDue: number;
-  paidDate: string | null;
-  filedDate: string | null;
-  authorityReference: string | null;
-  createdAt: string;
+/** ReportResult shape returned by /reports/run (for ReportPanel). */
+export interface ReportResult {
+  report: string;
+  generatedAt: string;
+  rows: Record<string, unknown>[];
 }
 
-// ── Create input types ──────────────────────────────────────────────────────────
+// ── Create / mutation input types ──────────────────────────────────────────────
 
 export interface CreateRemittanceArgs {
   payrollRunId: string;
   authority: RemittanceAuthority;
   dueDate?: string | null;
   metadata?: Record<string, unknown>;
+}
+
+export interface MarkPaidArgs {
+  id: string;
+  paidDate?: string;
+  authorityReference?: string;
+}
+
+export interface MarkFiledArgs {
+  id: string;
+  filedDate?: string;
+  authorityReference?: string;
+  filingMethod?: string;
+  receiptReference?: string;
+  filedNotes?: string;
 }
 
 // ── Core call helper ────────────────────────────────────────────────────────────
@@ -108,34 +143,26 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 // ── API object ──────────────────────────────────────────────────────────────────
 
 export const financeRemittancesApi = {
-  list:    (a: { payrollRunId?: string; authority?: RemittanceAuthority; status?: RemittanceStatus; periodYear?: number; periodMonth?: number } = {}) =>
-             call<Remittance[]>('finance/remittances/list', a),
-  get:     (a: { id: string })                              => call<Remittance>('finance/remittances/get', a),
-  lines:   (a: { remittanceId: string })                   => call<RemittanceLine[]>('finance/remittances/lines/list', a),
-  compute: (a: { payrollRunId: string; authority: RemittanceAuthority }) =>
-             call<ComputedRemittance>('finance/remittances/compute', a),
-  create:  (a: CreateRemittanceArgs)                       => call<Remittance>('finance/remittances/create', a),
-  submit:  (a: { id: string })                             => call<Remittance>('finance/remittances/submit', a),
-  approve: (a: { id: string })                             => call<Remittance>('finance/remittances/approve', a),
-  markPaid:(a: { id: string; paidDate?: string; authorityReference?: string }) =>
-             call<Remittance>('finance/remittances/mark-paid', a),
-  markFiled:(a: { id: string; filedDate?: string; authorityReference?: string }) =>
-             call<Remittance>('finance/remittances/mark-filed', a),
-  cancel:  (a: { id: string; reason: string })             => call<Remittance>('finance/remittances/cancel', a),
+  list:     (a: { payrollRunId?: string; authority?: RemittanceAuthority; status?: RemittanceStatus; periodYear?: number; periodMonth?: number; search?: string } = {}) =>
+              call<Remittance[]>('finance/remittances/list', a),
+  get:      (a: { id: string })                              => call<Remittance>('finance/remittances/get', a),
+  lines:    (a: { remittanceId: string })                   => call<RemittanceLine[]>('finance/remittances/lines/list', a),
+  linesAll: (a: { authority?: RemittanceAuthority; periodYear?: number; periodMonth?: number; limit?: number } = {}) =>
+              call<RemittanceLineWithContext[]>('finance/remittances/lines/list-all', a),
+  compute:  (a: { payrollRunId: string; authority: RemittanceAuthority }) =>
+              call<ComputedRemittance>('finance/remittances/compute', a),
+  create:   (a: CreateRemittanceArgs)                       => call<Remittance>('finance/remittances/create', a),
+  submit:   (a: { id: string })                             => call<Remittance>('finance/remittances/submit', a),
+  approve:  (a: { id: string })                             => call<Remittance>('finance/remittances/approve', a),
+  markPaid: (a: MarkPaidArgs)                               => call<Remittance>('finance/remittances/mark-paid', a),
+  markFiled:(a: MarkFiledArgs)                              => call<Remittance>('finance/remittances/mark-filed', a),
+  cancel:   (a: { id: string; reason: string })             => call<Remittance>('finance/remittances/cancel', a),
 
   // Reports
   listReport: (a: { periodYear?: number; authority?: RemittanceAuthority; status?: RemittanceStatus } = {}) =>
-                call<RemittanceReportRow[]>('finance/remittances/reports/list', a),
-};
-
-// ── Query keys ────────────────────────────────────────────────────────────────
-
-export const financeRemittancesKeys = {
-  list:   (o: object = {}) => ['finance', 'remittances', 'list', o] as const,
-  single: (id: string)     => ['finance', 'remittances', 'single', id] as const,
-  lines:  (id: string)     => ['finance', 'remittances', 'lines', id] as const,
-  compute:(a: object)      => ['finance', 'remittances', 'compute', a] as const,
-  report: (o: object = {}) => ['finance', 'remittances', 'report', o] as const,
+                call<Record<string, unknown>[]>('finance/remittances/reports/list', a),
+  runReport:  (a: { report: string; periodYear?: number; authority?: RemittanceAuthority; status?: RemittanceStatus }) =>
+                call<ReportResult>('finance/remittances/reports/run', a),
 };
 
 // ── Query hooks ─────────────────────────────────────────────────────────────────
@@ -146,56 +173,103 @@ export function useRemittances(opts: {
   status?: RemittanceStatus;
   periodYear?: number;
   periodMonth?: number;
+  search?: string;
 } = {}) {
   return useQuery({
-    queryKey: financeRemittancesKeys.list(opts),
+    queryKey: financeQueryKeys.remittances(opts),
     queryFn:  () => financeRemittancesApi.list(opts),
+    placeholderData: (prev) => prev,
   });
 }
 
 export function useRemittance(id: string | null) {
   return useQuery({
-    queryKey: financeRemittancesKeys.single(id ?? ''),
+    queryKey: financeQueryKeys.remittance(id ?? ''),
     queryFn:  () => financeRemittancesApi.get({ id: id! }),
     enabled:  !!id,
   });
 }
 
-export function useRemittanceLines(remittanceId: string | null) {
+export function useRemittanceLines(remittanceId: string | null, enabled = true) {
   return useQuery({
-    queryKey: financeRemittancesKeys.lines(remittanceId ?? ''),
+    queryKey: financeQueryKeys.remittanceLines(remittanceId ?? ''),
     queryFn:  () => financeRemittancesApi.lines({ remittanceId: remittanceId! }),
-    enabled:  !!remittanceId,
+    enabled:  enabled && !!remittanceId,
+  });
+}
+
+export function useRemittanceLinesAll(opts: {
+  authority?: RemittanceAuthority;
+  periodYear?: number;
+  periodMonth?: number;
+  limit?: number;
+} = {}) {
+  return useQuery({
+    queryKey: remittanceLinesAllKey(opts),
+    queryFn:  () => financeRemittancesApi.linesAll(opts),
+    placeholderData: (prev) => prev,
   });
 }
 
 export function useComputedRemittance(payrollRunId: string | null, authority: RemittanceAuthority | null) {
   return useQuery({
-    queryKey: financeRemittancesKeys.compute({ payrollRunId, authority }),
+    queryKey: remittanceComputeKey({ payrollRunId, authority }),
     queryFn:  () => financeRemittancesApi.compute({ payrollRunId: payrollRunId!, authority: authority! }),
     enabled:  !!payrollRunId && !!authority,
   });
 }
 
 export function useRemittancesReport(opts: {
+  report: string;
   periodYear?: number;
   authority?: RemittanceAuthority;
   status?: RemittanceStatus;
-} = {}) {
+  enabled?: boolean;
+}) {
   return useQuery({
-    queryKey: financeRemittancesKeys.report(opts),
-    queryFn:  () => financeRemittancesApi.listReport(opts),
+    queryKey: remittanceReportKey(opts.report, { periodYear: opts.periodYear, authority: opts.authority, status: opts.status }),
+    queryFn:  () => financeRemittancesApi.runReport({ report: opts.report, periodYear: opts.periodYear, authority: opts.authority, status: opts.status }),
+    enabled:  opts.enabled !== false && !!opts.report,
   });
 }
 
-// ── Mutation hook (invalidates the whole finance-remittances subtree) ───────────
+// ── Mutation hook (invalidates the remittances subtree) ────────────────────────
 
 export function useRemittanceMutation<A, R>(fn: (a: A) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['finance', 'remittances'] });
+      void qc.invalidateQueries({ queryKey: financeQueryKeys.remittancesBase() });
     },
+  });
+}
+
+/** Typed convenience mutation hooks */
+export const useSubmitRemittance   = () => useRemittanceMutation(financeRemittancesApi.submit);
+export const useApproveRemittance  = () => useRemittanceMutation(financeRemittancesApi.approve);
+export const useMarkPaidRemittance = () => useRemittanceMutation((a: MarkPaidArgs)  => financeRemittancesApi.markPaid(a));
+export const useMarkFiledRemittance= () => useRemittanceMutation((a: MarkFiledArgs) => financeRemittancesApi.markFiled(a));
+export const useCancelRemittance   = () => useRemittanceMutation((a: { id: string; reason: string }) => financeRemittancesApi.cancel(a));
+export const useCreateRemittance   = () => useRemittanceMutation((a: CreateRemittanceArgs) => financeRemittancesApi.create(a));
+
+// ── Audit log ──────────────────────────────────────────────────────────────────
+
+export interface RemittanceAuditEntry {
+  id: string;
+  actorId: string | null;
+  action: string;
+  previousState: unknown;
+  newState: unknown;
+  reason: string | null;
+  createdAt: string;
+}
+
+export function useRemittanceAudit(remittanceId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ['finance', 'remittances', remittanceId ?? '', 'audit'],
+    queryFn:  () => call<RemittanceAuditEntry[]>('finance/remittances/audit/list', { id: remittanceId! }),
+    enabled:  enabled && !!remittanceId,
+    staleTime: 30_000,
   });
 }

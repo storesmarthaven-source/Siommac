@@ -11,15 +11,18 @@
 //   - computeRemittanceFromRun: derives PAYE, NIS employee+employer, and
 //     Health Surcharge totals from finance_payroll_run_lines.
 //
-// Permissions: finance.remittances.{view,manage,approve,reports.view,reports.export}
+// Side-effects: ALL mutations call emitFinanceMutationBackbone (app_event +
+//   hr_audit_log + optional notifications/threads/tickets/handoffs per §8.1).
+//
+// Permissions: finance.remittances.{view,manage,approve,markFiled,
+//              receipt.upload,reports.view,reports.export}
 // ============================================================================
 
 import { sb } from '../db';
-import { emitAppEvent } from '../appEvents';
-import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { startWorkflowForRecord } from '../workflow/service';
 import { assertDifferentApprover } from './statutoryConfig';
+import { emitFinanceMutationBackbone } from './backbone';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
@@ -43,6 +46,9 @@ export interface RemittanceDto {
   paidDate: string | null;
   filedDate: string | null;
   authorityReference: string | null;
+  filingMethod: string | null;
+  receiptReference: string | null;
+  filedNotes: string | null;
   workflowId: string | null;
   createdBy: string | null;
   approvedBy: string | null;
@@ -84,6 +90,12 @@ export interface ComputedRemittance {
   }>;
 }
 
+export interface ReportResult {
+  report: string;
+  generatedAt: string;
+  rows: Record<string, unknown>[];
+}
+
 // ── DB row shapes ─────────────────────────────────────────────────────────────
 
 interface DbRemittanceRow {
@@ -92,7 +104,11 @@ interface DbRemittanceRow {
   employee_portion: number; employer_portion: number; total_due: number;
   currency: string; status: string;
   due_date: string | null; paid_date: string | null; filed_date: string | null;
-  authority_reference: string | null; workflow_id: string | null;
+  authority_reference: string | null;
+  filing_method: string | null;
+  receipt_reference: string | null;
+  filed_notes: string | null;
+  workflow_id: string | null;
   created_by: string | null; approved_by: string | null;
   cancelled_by: string | null; cancel_reason: string | null;
   metadata: Record<string, unknown>;
@@ -129,7 +145,11 @@ function toDto(r: DbRemittanceRow): RemittanceDto {
     totalDue: Number(r.total_due),
     currency: r.currency, status: r.status as RemittanceStatus,
     dueDate: r.due_date, paidDate: r.paid_date, filedDate: r.filed_date,
-    authorityReference: r.authority_reference, workflowId: r.workflow_id,
+    authorityReference: r.authority_reference,
+    filingMethod: r.filing_method ?? null,
+    receiptReference: r.receipt_reference ?? null,
+    filedNotes: r.filed_notes ?? null,
+    workflowId: r.workflow_id,
     createdBy: r.created_by, approvedBy: r.approved_by,
     cancelledBy: r.cancelled_by, cancelReason: r.cancel_reason,
     metadata: r.metadata,
@@ -165,7 +185,6 @@ export async function computeRemittanceFromRun(
   runId: string,
   authority: RemittanceAuthority,
 ): Promise<ComputedRemittance> {
-  // Load the run to get period and validate status
   const { data: run, error: runErr } = await sb
     .from('finance_payroll_runs')
     .select('id, period_month, status')
@@ -182,12 +201,10 @@ export async function computeRemittanceFromRun(
     );
   }
 
-  // period_month is a date stored as YYYY-MM-DD; extract year and month
   const periodDate = new Date(run.period_month);
   const periodYear = periodDate.getUTCFullYear();
   const periodMonth = periodDate.getUTCMonth() + 1;
 
-  // Load run lines
   const { data: lines, error: linesErr } = await sb
     .from('finance_payroll_run_lines')
     .select('id, employee_id, nis_employee, nis_employer, health_surcharge, paye')
@@ -196,7 +213,6 @@ export async function computeRemittanceFromRun(
 
   const runLines = (lines ?? []) as DbRunLineRow[];
 
-  // Map columns by authority
   let totalEmployee = 0;
   let totalEmployer = 0;
 
@@ -227,13 +243,11 @@ export async function computeRemittanceFromRun(
     };
   });
 
-  const totalDue = totalEmployee + totalEmployer;
-
   return {
     payrollRunId: runId, periodYear, periodMonth, authority,
     employeePortion: totalEmployee,
     employerPortion: totalEmployer,
-    totalDue,
+    totalDue: totalEmployee + totalEmployer,
     lineCount: computedLines.length,
     lines: computedLines,
   };
@@ -247,6 +261,7 @@ export async function listRemittances(opts: {
   status?: RemittanceStatus;
   periodYear?: number;
   periodMonth?: number;
+  search?: string;
 } = {}): Promise<RemittanceDto[]> {
   let q = sb.from('finance_remittances').select('*')
     .order('created_at', { ascending: false });
@@ -255,6 +270,7 @@ export async function listRemittances(opts: {
   if (opts.status)       q = q.eq('status', opts.status);
   if (opts.periodYear)   q = q.eq('period_year', opts.periodYear);
   if (opts.periodMonth)  q = q.eq('period_month', opts.periodMonth);
+  if (opts.search)       q = q.ilike('remittance_no', `%${opts.search}%`);
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('listRemittances: ' + error.message), { status: 500 });
   return ((data ?? []) as DbRemittanceRow[]).map(toDto);
@@ -269,13 +285,60 @@ export async function getRemittance(id: string): Promise<RemittanceDto | null> {
   return data ? toDto(data) : null;
 }
 
-// ── Get lines ─────────────────────────────────────────────────────────────────
+// ── Get lines (for single remittance) ────────────────────────────────────────
 
 export async function listRemittanceLines(remittanceId: string): Promise<RemittanceLineDto[]> {
   const { data, error } = await sb.from('finance_remittance_lines')
     .select('*').eq('remittance_id', remittanceId).order('created_at');
   if (error) throw Object.assign(new Error('listRemittanceLines: ' + error.message), { status: 500 });
   return ((data ?? []) as DbLineRow[]).map(toLineDto);
+}
+
+// ── List all lines (cross-remittance; for Lines tab in the Aurora page) ───────
+
+export async function listAllRemittanceLines(opts: {
+  authority?: RemittanceAuthority;
+  periodYear?: number;
+  periodMonth?: number;
+  limit?: number;
+} = {}): Promise<Array<RemittanceLineDto & { authority: RemittanceAuthority; periodYear: number; periodMonth: number; remittanceNo: string }>> {
+  // Join lines → remittances to get authority and period context
+  let q = sb.from('finance_remittance_lines')
+    .select(`
+      id, remittance_id, employee_id,
+      employee_portion, employer_portion, line_total,
+      source_line_id, metadata, created_at,
+      finance_remittances!inner(
+        remittance_no, authority, period_year, period_month
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(opts.limit ?? 500);
+
+  if (opts.authority)   q = q.eq('finance_remittances.authority', opts.authority);
+  if (opts.periodYear)  q = q.eq('finance_remittances.period_year', opts.periodYear);
+  if (opts.periodMonth) q = q.eq('finance_remittances.period_month', opts.periodMonth);
+
+  const { data, error } = await q;
+  if (error) throw Object.assign(new Error('listAllRemittanceLines: ' + error.message), { status: 500 });
+
+  type JoinedRemittance = {
+    remittance_no: string;
+    authority: string;
+    period_year: number;
+    period_month: number;
+  };
+  // Supabase JS returns joined rows as objects (many→one FK) but infers array type.
+  // Use double-cast to apply our known shape.
+  type JoinedRow = DbLineRow & { finance_remittances: JoinedRemittance };
+
+  return ((data ?? []) as unknown as JoinedRow[]).map(r => ({
+    ...toLineDto(r),
+    authority: r.finance_remittances.authority as RemittanceAuthority,
+    periodYear: r.finance_remittances.period_year,
+    periodMonth: r.finance_remittances.period_month,
+    remittanceNo: r.finance_remittances.remittance_no,
+  }));
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -291,9 +354,7 @@ export interface CreateRemittanceInput {
 export async function createRemittance(
   input: CreateRemittanceInput,
 ): Promise<RemittanceDto> {
-  // Compute totals from the run lines
   const computed = await computeRemittanceFromRun(input.payrollRunId, input.authority);
-
   const remittanceNo = await nextRef('REM');
 
   const patch = {
@@ -337,7 +398,6 @@ export async function createRemittance(
     }));
     const { error: lineErr } = await sb.from('finance_remittance_lines').insert(lineRows);
     if (lineErr) {
-      // Compensating rollback: remove the header so we don't leave partial state
       await sb.from('finance_remittances').delete().eq('id', row.id);
       throw Object.assign(
         new Error('createRemittance lines: ' + lineErr.message + ' — remittance rolled back.'),
@@ -346,29 +406,31 @@ export async function createRemittance(
     }
   }
 
-  // Emit event then audit (§2 order: event → audit)
-  void emitAppEvent({
-    eventType:        'finance.remittance.created',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   row.id,
-    actorUserId:      input.actorId,
-    severity:         'info',
-    payload: {
-      remittanceNo: row.remittanceNo,
-      authority:    row.authority,
-      totalDue:     row.totalDue,
-      periodYear:   row.periodYear,
-      periodMonth:  row.periodMonth,
-    },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: row.id, actorId: input.actorId,
-    action:       'remittance.created',
-    previousState: null,
-    newState: { status: 'draft', remittanceNo: row.remittanceNo, authority: row.authority },
-  });
+  // Backbone: app_event + hr_audit_log (compensate on failure)
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId: input.actorId,
+      module:      'finance_remittances',
+      entityType:  'remittance',
+      entityId:    row.id,
+      eventType:   'finance.remittance.created',
+      auditAction: 'remittance.created',
+      severity:    'info',
+      newState:    { status: 'draft', remittanceNo: row.remittanceNo, authority: row.authority },
+      metadata: {
+        remittanceNo: row.remittanceNo,
+        authority:    row.authority,
+        totalDue:     row.totalDue,
+        periodYear:   row.periodYear,
+        periodMonth:  row.periodMonth,
+      },
+    });
+  } catch (bbErr) {
+    // Compensating rollback: remove lines + header if backbone mandatory step failed
+    await sb.from('finance_remittance_lines').delete().eq('remittance_id', row.id);
+    await sb.from('finance_remittances').delete().eq('id', row.id);
+    throw bbErr;
+  }
 
   return row;
 }
@@ -391,22 +453,24 @@ export async function submitRemittance(
   if (error) throw Object.assign(new Error('submitRemittance: ' + error.message), { status: 500 });
   const row = toDto(data);
 
-  // Emit event then audit
-  void emitAppEvent({
-    eventType:        'finance.remittance.submitted',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'info',
-    payload: { authority: existing.authority, totalDue: existing.totalDue },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: id, actorId,
-    action:       'remittance.submitted',
-    previousState: { status: 'draft' }, newState: { status: 'submitted' },
-  });
+  // Backbone: app_event + hr_audit_log; if it throws, roll back to draft
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   actorId,
+      module:        'finance_remittances',
+      entityType:    'remittance',
+      entityId:      id,
+      eventType:     'finance.remittance.submitted',
+      auditAction:   'remittance.submitted',
+      severity:      'info',
+      previousState: { status: 'draft' },
+      newState:      { status: 'submitted' },
+      metadata: { authority: existing.authority, totalDue: existing.totalDue },
+    });
+  } catch (bbErr) {
+    await sb.from('finance_remittances').update({ status: 'draft' }).eq('id', id);
+    throw bbErr;
+  }
 
   // Start workflow via central engine
   const ctx: ModuleWorkflowContext = {
@@ -431,7 +495,7 @@ export async function submitRemittance(
       await sb.from('finance_remittances').update({ workflow_id: wf.id }).eq('id', id);
     }
   } catch (wfErr) {
-    // Workflow start failed — roll back to draft
+    // Workflow start failed — roll back to draft (backbone already written; that's OK)
     await sb.from('finance_remittances').update({ status: 'draft' }).eq('id', id);
     throw Object.assign(
       new Error('Workflow start failed — remittance rolled back to draft: ' + String(wfErr)),
@@ -442,7 +506,7 @@ export async function submitRemittance(
   return row;
 }
 
-// ── Approve (workflow adapter calls this; also accessible via direct route for maker-checker) ──
+// ── Approve (submitted → approved; SoD: creator ≠ approver) ──────────────────
 
 export async function approveRemittance(
   id: string,
@@ -454,7 +518,6 @@ export async function approveRemittance(
     throw Object.assign(new Error('Only submitted remittances can be approved.'), { status: 422 });
   }
 
-  // Segregation of duties: creator cannot approve
   assertDifferentApprover({
     actorId,
     createdBy: existing.createdBy,
@@ -467,26 +530,35 @@ export async function approveRemittance(
   if (error) throw Object.assign(new Error('approveRemittance: ' + error.message), { status: 500 });
   const row = toDto(data);
 
-  void emitAppEvent({
-    eventType:        'finance.remittance.approved',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'success',
-    payload: { authority: existing.authority, totalDue: existing.totalDue },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: id, actorId,
-    action:       'remittance.approved',
-    previousState: { status: 'submitted' }, newState: { status: 'approved' },
-  });
+  // Backbone; if it throws (audit failure), roll back
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   actorId,
+      module:        'finance_remittances',
+      entityType:    'remittance',
+      entityId:      id,
+      eventType:     'finance.remittance.approved',
+      auditAction:   'remittance.approved',
+      severity:      'success',
+      previousState: { status: 'submitted' },
+      newState:      { status: 'approved' },
+      metadata:      { authority: existing.authority, totalDue: existing.totalDue },
+      notification: {
+        title:  `Remittance ${existing.remittanceNo} approved`,
+        body:   `${existing.remittanceNo} (${existing.authority}) approved — ready for payment.`,
+        type:   'finance.remittance.approved',
+        actionRoute: `/finance/remittances/${id}`,
+      },
+    });
+  } catch (bbErr) {
+    await sb.from('finance_remittances').update({ status: 'submitted', approved_by: null }).eq('id', id);
+    throw bbErr;
+  }
 
   return row;
 }
 
-// ── Mark Paid ─────────────────────────────────────────────────────────────────
+// ── Mark Paid (approved → paid) ───────────────────────────────────────────────
 
 export async function markRemittancePaid(
   id: string,
@@ -511,31 +583,49 @@ export async function markRemittancePaid(
   if (error) throw Object.assign(new Error('markRemittancePaid: ' + error.message), { status: 500 });
   const row = toDto(data);
 
-  void emitAppEvent({
-    eventType:        'finance.remittance.paid',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'success',
-    payload: { authority: existing.authority, paidDate, totalDue: existing.totalDue },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: id, actorId,
-    action:       'remittance.paid',
-    previousState: { status: 'approved' }, newState: { status: 'paid', paidDate },
-  });
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   actorId,
+      module:        'finance_remittances',
+      entityType:    'remittance',
+      entityId:      id,
+      eventType:     'finance.remittance.paid',
+      auditAction:   'remittance.paid',
+      severity:      'success',
+      previousState: { status: 'approved' },
+      newState:      { status: 'paid', paidDate },
+      metadata:      { authority: existing.authority, paidDate, totalDue: existing.totalDue },
+      notification: {
+        title:  `Remittance ${existing.remittanceNo} paid`,
+        body:   `${existing.remittanceNo} paid on ${paidDate} — ready for filing with the authority.`,
+        type:   'finance.remittance.paid',
+        actionRoute: `/finance/remittances/${id}`,
+      },
+    });
+  } catch (bbErr) {
+    await sb.from('finance_remittances')
+      .update({ status: 'approved', paid_date: null, authority_reference: existing.authorityReference })
+      .eq('id', id);
+    throw bbErr;
+  }
 
   return row;
 }
 
-// ── Mark Filed ────────────────────────────────────────────────────────────────
+// ── Mark Filed (paid → filed; full dialog fields per §12) ────────────────────
+
+export interface MarkFiledInput {
+  filedDate?: string;
+  authorityReference?: string;
+  filingMethod?: string;
+  receiptReference?: string;
+  filedNotes?: string;
+}
 
 export async function markRemittanceFiled(
   id: string,
   actorId: string,
-  opts: { filedDate?: string; authorityReference?: string } = {},
+  opts: MarkFiledInput = {},
 ): Promise<RemittanceDto> {
   const existing = await getRemittance(id);
   if (!existing) throw Object.assign(new Error('Remittance not found.'), { status: 404 });
@@ -545,36 +635,65 @@ export async function markRemittanceFiled(
 
   const filedDate = opts.filedDate ?? new Date().toISOString().slice(0, 10);
 
+  const patch: Record<string, unknown> = {
+    status:              'filed',
+    filed_date:          filedDate,
+    authority_reference: opts.authorityReference ?? existing.authorityReference,
+  };
+  if (opts.filingMethod !== undefined)    patch['filing_method']     = opts.filingMethod;
+  if (opts.receiptReference !== undefined) patch['receipt_reference'] = opts.receiptReference;
+  if (opts.filedNotes !== undefined)      patch['filed_notes']        = opts.filedNotes;
+
   const { data, error } = await sb.from('finance_remittances')
-    .update({
-      status:              'filed',
-      filed_date:          filedDate,
-      authority_reference: opts.authorityReference ?? existing.authorityReference,
-    })
+    .update(patch)
     .eq('id', id).select().single<DbRemittanceRow>();
   if (error) throw Object.assign(new Error('markRemittanceFiled: ' + error.message), { status: 500 });
   const row = toDto(data);
 
-  void emitAppEvent({
-    eventType:        'finance.remittance.filed',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'success',
-    payload: { authority: existing.authority, filedDate },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: id, actorId,
-    action:       'remittance.filed',
-    previousState: { status: 'paid' }, newState: { status: 'filed', filedDate },
-  });
+  // Filed → notification to compliance + filing thread (§8.1)
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   actorId,
+      module:        'finance_remittances',
+      entityType:    'remittance',
+      entityId:      id,
+      eventType:     'finance.remittance.filed',
+      auditAction:   'remittance.filed',
+      severity:      'success',
+      previousState: { status: 'paid' },
+      newState:      { status: 'filed', filedDate, filingMethod: opts.filingMethod },
+      metadata: {
+        authority:        existing.authority,
+        filedDate,
+        filingMethod:     opts.filingMethod ?? null,
+        receiptReference: opts.receiptReference ?? null,
+        authorityReference: opts.authorityReference ?? existing.authorityReference,
+      },
+      notification: {
+        title:      `${existing.remittanceNo} filed with authority`,
+        body:       `${existing.authority.replace('_', '/')} remittance for ${existing.periodYear}-${String(existing.periodMonth).padStart(2,'0')} filed on ${filedDate}.`,
+        type:       'finance.remittance.filed',
+        actionRoute: `/finance/remittances/${id}`,
+        severity:   'info',
+      },
+      messageThread: {
+        subject:            `${existing.remittanceNo} — Authority Filing`,
+        participantUserIds: [actorId],
+        body:               `Remittance ${existing.remittanceNo} (${existing.authority}) filed on ${filedDate}.${opts.receiptReference ? ` Receipt ref: ${opts.receiptReference}.` : ''}${opts.filedNotes ? ` Notes: ${opts.filedNotes}` : ''}`,
+      },
+    });
+  } catch (bbErr) {
+    // Compensating rollback (audit failure = mandatory)
+    await sb.from('finance_remittances')
+      .update({ status: 'paid', filed_date: null, filing_method: null, receipt_reference: null, filed_notes: null })
+      .eq('id', id);
+    throw bbErr;
+  }
 
   return row;
 }
 
-// ── Cancel ────────────────────────────────────────────────────────────────────
+// ── Cancel (draft/submitted → cancelled) ─────────────────────────────────────
 
 export async function cancelRemittance(
   id: string,
@@ -596,22 +715,27 @@ export async function cancelRemittance(
   if (error) throw Object.assign(new Error('cancelRemittance: ' + error.message), { status: 500 });
   const row = toDto(data);
 
-  void emitAppEvent({
-    eventType:        'finance.remittance.cancelled',
-    sourceModule:     'finance_remittances',
-    sourceEntityType: 'remittance',
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'warning',
-    payload: { reason },
-  });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_remittances', recordId: id, actorId,
-    action:       'remittance.cancelled',
-    previousState: { status: existing.status }, newState: { status: 'cancelled' },
-    reason,
-  });
+  try {
+    await emitFinanceMutationBackbone({
+      actorUserId:   actorId,
+      module:        'finance_remittances',
+      entityType:    'remittance',
+      entityId:      id,
+      eventType:     'finance.remittance.cancelled',
+      auditAction:   'remittance.cancelled',
+      severity:      'warning',
+      previousState: { status: existing.status },
+      newState:      { status: 'cancelled' },
+      reason,
+      metadata:      { reason },
+    });
+  } catch (bbErr) {
+    // Compensating rollback
+    await sb.from('finance_remittances')
+      .update({ status: existing.status, cancelled_by: null, cancel_reason: null })
+      .eq('id', id);
+    throw bbErr;
+  }
 
   return row;
 }
@@ -626,37 +750,173 @@ export interface RemittanceReportRow {
   authority: string;
   status: string;
   totalDue: number;
+  employeePortion: number;
+  employerPortion: number;
+  dueDate: string | null;
   paidDate: string | null;
   filedDate: string | null;
+  filingMethod: string | null;
+  receiptReference: string | null;
   authorityReference: string | null;
   createdAt: string;
 }
 
-export async function listRemittancesReport(opts: {
+/** Internal list of all remittance rows in report format (used by all report types). */
+async function fetchReportRows(opts: {
   periodYear?: number;
   authority?: RemittanceAuthority;
   status?: RemittanceStatus;
-} = {}): Promise<RemittanceReportRow[]> {
+}): Promise<RemittanceReportRow[]> {
   let q = sb.from('finance_remittances')
-    .select('id, remittance_no, period_year, period_month, authority, status, total_due, paid_date, filed_date, authority_reference, created_at')
+    .select(`
+      id, remittance_no, period_year, period_month,
+      authority, status, total_due, employee_portion, employer_portion,
+      due_date, paid_date, filed_date,
+      filing_method, receipt_reference, authority_reference,
+      created_at
+    `)
     .order('period_year', { ascending: false })
     .order('period_month', { ascending: false });
   if (opts.periodYear) q = q.eq('period_year', opts.periodYear);
   if (opts.authority)  q = q.eq('authority', opts.authority);
   if (opts.status)     q = q.eq('status', opts.status);
   const { data, error } = await q;
-  if (error) throw Object.assign(new Error('listRemittancesReport: ' + error.message), { status: 500 });
-  return ((data ?? []) as Array<{
+  if (error) throw Object.assign(new Error('fetchReportRows: ' + error.message), { status: 500 });
+
+  type Row = {
     id: string; remittance_no: string; period_year: number; period_month: number;
-    authority: string; status: string; total_due: number; paid_date: string | null;
-    filed_date: string | null; authority_reference: string | null; created_at: string;
-  }>).map(r => ({
+    authority: string; status: string;
+    total_due: number; employee_portion: number; employer_portion: number;
+    due_date: string | null; paid_date: string | null; filed_date: string | null;
+    filing_method: string | null; receipt_reference: string | null; authority_reference: string | null;
+    created_at: string;
+  };
+
+  return ((data ?? []) as Row[]).map(r => ({
     id: r.id, remittanceNo: r.remittance_no,
     periodYear: r.period_year, periodMonth: r.period_month,
     authority: r.authority, status: r.status,
     totalDue: Number(r.total_due),
-    paidDate: r.paid_date, filedDate: r.filed_date,
+    employeePortion: Number(r.employee_portion),
+    employerPortion: Number(r.employer_portion),
+    dueDate: r.due_date, paidDate: r.paid_date, filedDate: r.filed_date,
+    filingMethod: r.filing_method ?? null,
+    receiptReference: r.receipt_reference ?? null,
     authorityReference: r.authority_reference,
     createdAt: r.created_at,
   }));
+}
+
+/** remittance_summary — overall summary per authority + period */
+export async function getRemittanceSummaryReport(opts: {
+  periodYear?: number;
+  authority?: RemittanceAuthority;
+  status?: RemittanceStatus;
+} = {}): Promise<ReportResult> {
+  const rows = await fetchReportRows(opts);
+  return {
+    report:      'remittance_summary',
+    generatedAt: new Date().toISOString(),
+    rows:        rows.map(r => ({
+      remittanceNo:       r.remittanceNo,
+      authority:          r.authority,
+      period:             `${r.periodYear}-${String(r.periodMonth).padStart(2,'0')}`,
+      status:             r.status,
+      employeePortion:    r.employeePortion,
+      employerPortion:    r.employerPortion,
+      totalDue:           r.totalDue,
+      dueDate:            r.dueDate ?? '—',
+      paidDate:           r.paidDate ?? '—',
+      filedDate:          r.filedDate ?? '—',
+      authorityReference: r.authorityReference ?? '—',
+    })),
+  };
+}
+
+/** remittance_lines — per-employee breakdown across selected remittances */
+export async function getRemittanceLinesReport(opts: {
+  periodYear?: number;
+  authority?: RemittanceAuthority;
+} = {}): Promise<ReportResult> {
+  const linesData = await listAllRemittanceLines({
+    authority:   opts.authority,
+    periodYear:  opts.periodYear,
+    limit:       2000,
+  });
+  return {
+    report:      'remittance_lines',
+    generatedAt: new Date().toISOString(),
+    rows:        linesData.map(l => ({
+      remittanceNo:    l.remittanceNo,
+      authority:       l.authority,
+      period:          `${l.periodYear}-${String(l.periodMonth).padStart(2,'0')}`,
+      employeeId:      l.employeeId,
+      employeePortion: l.employeePortion,
+      employerPortion: l.employerPortion,
+      lineTotal:       l.lineTotal,
+    })),
+  };
+}
+
+/** authority_filing_status — overview of each authority's filing status per period */
+export async function getAuthorityFilingStatusReport(opts: {
+  periodYear?: number;
+} = {}): Promise<ReportResult> {
+  const rows = await fetchReportRows({ periodYear: opts.periodYear });
+  return {
+    report:      'authority_filing_status',
+    generatedAt: new Date().toISOString(),
+    rows:        rows.map(r => ({
+      remittanceNo:     r.remittanceNo,
+      authority:        r.authority,
+      period:           `${r.periodYear}-${String(r.periodMonth).padStart(2,'0')}`,
+      status:           r.status,
+      dueDate:          r.dueDate ?? '—',
+      filedDate:        r.filedDate ?? '—',
+      filingMethod:     r.filingMethod ?? '—',
+      receiptReference: r.receiptReference ?? '—',
+      overdue:          r.dueDate && !r.filedDate && r.dueDate < new Date().toISOString().slice(0, 10) ? 'YES' : 'NO',
+    })),
+  };
+}
+
+// ── Audit log ─────────────────────────────────────────────────────────────────
+
+export interface RemittanceAuditRow {
+  id: string;
+  actorId: string | null;
+  action: string;
+  previousState: unknown;
+  newState: unknown;
+  reason: string | null;
+  createdAt: string;
+}
+
+export async function listRemittanceAudit(remittanceId: string): Promise<RemittanceAuditRow[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id, actor_id, action, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', 'finance_remittances')
+    .eq('record_id', remittanceId)
+    .order('created_at', { ascending: true });
+  if (error) throw Object.assign(new Error('listRemittanceAudit: ' + error.message), { status: 500 });
+  type Row = { id: string; actor_id: string | null; action: string; previous_state: unknown; new_state: unknown; reason: string | null; created_at: string };
+  return ((data ?? []) as Row[]).map(r => ({
+    id: r.id,
+    actorId: r.actor_id,
+    action: r.action,
+    previousState: r.previous_state,
+    newState: r.new_state,
+    reason: r.reason,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Legacy list format (kept for backwards-compat; Aurora FE uses the ReportResult variants above) */
+export async function listRemittancesReport(opts: {
+  periodYear?: number;
+  authority?: RemittanceAuthority;
+  status?: RemittanceStatus;
+} = {}): Promise<RemittanceReportRow[]> {
+  return fetchReportRows(opts);
 }

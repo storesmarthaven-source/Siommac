@@ -4,8 +4,9 @@
  * E2E for Finance ▸ Statutory Remittances & Filing (module F1).
  *
  * Routes under test:
- *   /api/finance/remittances/{list,get,lines/list,compute,create,submit,approve,
- *                             mark-paid,mark-filed,cancel,reports/list,reports/run}
+ *   /api/finance/remittances/{list,get,lines/list,lines/list-all,compute,create,
+ *                             submit,approve,mark-paid,mark-filed,cancel,
+ *                             audit/list,reports/run}
  *
  * Covers:
  *   • Access control: employee DENIED; finance_staff can VIEW + CREATE (has manage) but
@@ -249,10 +250,21 @@ export default async function run(h) {
     expect(r.body.data.status === 'paid', `expected paid, got ${r.body.data.status}`);
   });
 
-  await test('mark-filed (paid → filed)', async () => {
-    const r = await api('finance/remittances/mark-filed', fmgr2Token, { id: ctx.nisRemId, filedDate: '2026-07-12' });
+  await test('mark-filed (paid → filed) with all Wave 2B fields', async () => {
+    const r = await api('finance/remittances/mark-filed', fmgr2Token, {
+      id: ctx.nisRemId,
+      filedDate:          '2026-07-12',
+      authorityReference: `NIBTT-FILE-${TAG.slice(-6)}`,
+      filingMethod:       'online_portal',
+      receiptReference:   `RCPT-${TAG.slice(-6)}`,
+      filedNotes:         'E2E filing test',
+    });
     ok(r, `mark-filed failed: ${r.body.message}`);
-    expect(r.body.data.status === 'filed', `expected filed, got ${r.body.data.status}`);
+    const d = r.body.data;
+    expect(d.status === 'filed', `expected filed, got ${d.status}`);
+    expect(d.filingMethod === 'online_portal', `filingMethod mismatch: ${d.filingMethod}`);
+    expect(d.receiptReference != null, 'receiptReference should be set');
+    expect(d.filedNotes === 'E2E filing test', 'filedNotes mismatch');
   });
 
   await test('§2 side-effect: approved + paid + filed events all written', async () => {
@@ -278,26 +290,123 @@ export default async function run(h) {
     expect(r.body.data.status === 'cancelled', `expected cancelled, got ${r.body.data.status}`);
   });
 
-  await test('get returns the remittance with the fields the frontend consumes', async () => {
+  await test('get returns the remittance with all Wave 2B fields the frontend consumes', async () => {
     const r = await api('finance/remittances/get', fmgr1Token, { id: ctx.nisRemId });
     ok(r, `get failed: ${r.body.message}`);
     const d = r.body.data;
-    for (const k of ['id', 'remittanceNo', 'authority', 'status', 'totalDue', 'employeePortion', 'employerPortion', 'periodYear', 'periodMonth']) {
+    for (const k of ['id', 'remittanceNo', 'authority', 'status', 'totalDue', 'employeePortion', 'employerPortion', 'periodYear', 'periodMonth', 'filingMethod', 'receiptReference', 'filedNotes']) {
       expect(k in d, `get response missing ${k}`);
+    }
+    // Verify filed fields are present on the filed record
+    expect(d.filingMethod === 'online_portal', `filing method should be online_portal, got ${d.filingMethod}`);
+    expect(d.filedNotes === 'E2E filing test', `filedNotes should match, got ${d.filedNotes}`);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › Lines list-all (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('lines/list-all returns lines with remittance context (authority + period + remittanceNo)', async () => {
+    const r = await api('finance/remittances/lines/list-all', fmgr1Token, {});
+    ok(r, `lines/list-all failed: ${r.body.message}`);
+    const rows = r.body.data;
+    expect(Array.isArray(rows), 'lines/list-all should return an array');
+    if (rows.length > 0) {
+      const first = rows[0];
+      for (const k of ['id', 'remittanceId', 'employeeId', 'employeePortion', 'employerPortion', 'lineTotal', 'authority', 'periodYear', 'periodMonth', 'remittanceNo']) {
+        expect(k in first, `lines/list-all row missing ${k}`);
+      }
     }
   });
 
-  await test('finance_manager can run the remittances report', async () => {
-    ok(await api('finance/remittances/reports/list', fmgr1Token, {}), 'reports/list failed for finance_manager');
+  await test('lines/list-all filtered by authority returns only matching lines', async () => {
+    const r = await api('finance/remittances/lines/list-all', fmgr1Token, { authority: 'nis_nibtt' });
+    ok(r, `lines/list-all with authority filter failed: ${r.body.message}`);
+    const rows = r.body.data;
+    for (const row of rows) {
+      expect(row.authority === 'nis_nibtt', `Expected nis_nibtt, got ${row.authority}`);
+    }
   });
 
-  await test('finance_staff is DENIED remittances reports (manager/admin surface)', async () => {
-    // Same restrictive policy as statutory/budget/expenses reports: finance_staff
-    // holds finance.remittances.view but not finance.remittances.reports.view.
-    fails(await api('finance/remittances/reports/list', fstaff1Token, {}), 'finance_staff should be denied reports/list');
+  await test('employee is DENIED lines/list-all', async () => {
+    fails(await api('finance/remittances/lines/list-all', empToken, {}), 'employee should be denied lines/list-all');
   });
 
-  await test('employee is DENIED remittances reports', async () => {
-    fails(await api('finance/remittances/reports/list', empToken, {}), 'employee should be denied reports');
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › Audit log (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('audit/list returns hr_audit_log entries for the remittance', async () => {
+    const r = await api('finance/remittances/audit/list', fmgr1Token, { id: ctx.nisRemId });
+    ok(r, `audit/list failed: ${r.body.message}`);
+    const rows = r.body.data;
+    expect(Array.isArray(rows), 'audit/list should return an array');
+    // The filed remittance should have at least created + submitted + approved + paid + filed
+    expect(rows.length >= 1, `Expected at least 1 audit entry, got ${rows.length}`);
+    if (rows.length > 0) {
+      const first = rows[0];
+      for (const k of ['id', 'action', 'createdAt']) {
+        expect(k in first, `audit entry missing ${k}`);
+      }
+    }
+  });
+
+  await test('employee is DENIED audit/list', async () => {
+    fails(await api('finance/remittances/audit/list', empToken, { id: ctx.nisRemId }), 'employee should be denied audit/list');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › Reports (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('reports/run returns remittance_summary with correct ReportResult shape', async () => {
+    const r = await api('finance/remittances/reports/run', fmgr1Token, { report: 'remittance_summary' });
+    ok(r, `reports/run failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.report === 'remittance_summary', `report key mismatch: ${d.report}`);
+    expect(typeof d.generatedAt === 'string', 'generatedAt should be a string');
+    expect(Array.isArray(d.rows), 'rows should be an array');
+  });
+
+  await test('reports/run remittance_lines returns per-employee breakdown', async () => {
+    const r = await api('finance/remittances/reports/run', fmgr1Token, { report: 'remittance_lines' });
+    ok(r, `reports/run lines failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.report === 'remittance_lines', `report key mismatch: ${d.report}`);
+    expect(Array.isArray(d.rows), 'rows should be an array');
+  });
+
+  await test('reports/run authority_filing_status returns filing status per authority', async () => {
+    const r = await api('finance/remittances/reports/run', fmgr1Token, { report: 'authority_filing_status' });
+    ok(r, `reports/run filing status failed: ${r.body.message}`);
+    expect(r.body.data.report === 'authority_filing_status', 'report key mismatch');
+  });
+
+  await test('reports/run with unknown report key returns 422', async () => {
+    fails(await api('finance/remittances/reports/run', fmgr1Token, { report: 'unknown_report' }), 'unknown report key should fail');
+  });
+
+  await test('finance_staff is DENIED reports/run', async () => {
+    fails(await api('finance/remittances/reports/run', fstaff1Token, { report: 'remittance_summary' }), 'finance_staff should be denied reports/run');
+  });
+
+  await test('employee is DENIED reports/run', async () => {
+    fails(await api('finance/remittances/reports/run', empToken, { report: 'remittance_summary' }), 'employee should be denied reports/run');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › mark-filed permission (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('finance_staff (has manage, not markFiled) is DENIED mark-filed', async () => {
+    // finance_staff can manage remittances (create/submit/cancel) but cannot mark filed —
+    // that requires the separate finance.remittances.markFiled permission.
+    fails(await api('finance/remittances/mark-filed', fstaff1Token, { id: ctx.staffRemId, filedDate: '2026-07-12', filingMethod: 'online_portal' }), 'finance_staff should be denied mark-filed');
+  });
+
+  await test('list can be searched by remittanceNo', async () => {
+    const r = await api('finance/remittances/list', fmgr1Token, { search: 'REM' });
+    ok(r, `list with search failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'search result should be an array');
   });
 }
