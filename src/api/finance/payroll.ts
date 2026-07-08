@@ -132,6 +132,30 @@ export interface CreateRunArgs {
   weeksInPeriod?: number;
 }
 
+export interface PopulationPreview {
+  total:           number;
+  salaried:        number;
+  hourly:          number;
+  missingPayBasis: number;
+}
+
+export interface ExportDownload {
+  exportId:  string;
+  exportNo:  string;
+  runId:     string;
+  format:    string;
+  content:   string;
+  mimeType:  string;
+  filename:  string;
+}
+
+export interface ResolveWarningResult {
+  id:         string;
+  resolved:   boolean;
+  resolvedBy: string;
+  resolvedAt: string;
+}
+
 // ── Core call helper ────────────────────────────────────────────────────────────
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
@@ -173,6 +197,18 @@ export const financePayrollApi = {
   runReport:   (a: { report: string; runId?: string; from?: string; to?: string }) => call<PayrollReportResult>('finance/payroll/reports/run', a),
   listReports: (a: object = {})                        => call<Array<{ key: string; label: string }>>('finance/payroll/reports/list', a),
 
+  // Warning resolve
+  resolveWarning: (a: { warningId: string; note?: string }) =>
+    call<ResolveWarningResult>('finance/payroll/warnings/resolve', a),
+
+  // Population preview (wizard step 2)
+  populationPreview: (a: object = {}) =>
+    call<PopulationPreview>('finance/payroll/runs/population-preview', a),
+
+  // Export download (returns content + metadata for browser download)
+  exportDownload: (a: { exportId: string }) =>
+    call<ExportDownload>('finance/payroll/exports/download', a),
+
   // NIS-profile verification (Finance verifies HR-captured continuity)
   listNisProfiles:  (a: { status?: string; limit?: number } = {}) => call<NisProfileRow[]>('finance/payroll/nis/list', a),
   getNisProfile:    (a: { id: string })                => call<NisProfileRow>('finance/payroll/nis/get', a),
@@ -213,8 +249,17 @@ export function useRunPayslips(runId: string | null) {
 export function useRunExports(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.exports(runId ?? ''), queryFn: () => financePayrollApi.listExports({ runId: runId! }), enabled: !!runId });
 }
+export function useRunInputs(runId: string | null) {
+  return useQuery({ queryKey: financePayrollKeys.inputs(runId ?? ''), queryFn: () => financePayrollApi.listInputs({ runId: runId! }), enabled: !!runId });
+}
 export function useNisProfiles(opts: { status?: string; limit?: number } = {}) {
   return useQuery({ queryKey: financePayrollKeys.nisProfiles(opts), queryFn: () => financePayrollApi.listNisProfiles(opts) });
+}
+export function usePopulationPreview() {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'population-preview'],
+    queryFn:  () => financePayrollApi.populationPreview(),
+  });
 }
 
 // ── Mutation hook (invalidates the whole finance-payroll subtree) ───────────────
@@ -224,5 +269,23 @@ export function usePayrollMutation<A, R>(fn: (a: A) => Promise<R>) {
   return useMutation({
     mutationFn: fn,
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['finance', 'payroll'] }); },
+  });
+}
+
+// ── Targeted mutation hooks ─────────────────────────────────────────────────────
+
+/** Resolve a payroll run warning — invalidates the run's warnings cache. */
+export function useResolveWarning() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (a: { warningId: string; note?: string }) => financePayrollApi.resolveWarning(a),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['finance', 'payroll'] }); },
+  });
+}
+
+/** Download export — mutation so it's not cached (content is always fresh). */
+export function useExportDownload() {
+  return useMutation({
+    mutationFn: (a: { exportId: string }) => financePayrollApi.exportDownload(a),
   });
 }

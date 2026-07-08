@@ -24,6 +24,9 @@ import {
   listRunInputs,
   listRunLines,
   listRunWarnings,
+  resolveRunWarning,
+  getEmployeePopulationPreview,
+  downloadRunExport,
 } from '../lib/finance/payrollRuns';
 import {
   generatePayslips,
@@ -337,6 +340,63 @@ router.post('/payroll/reports/run', async c => {
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Warning: resolve
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/warnings/resolve
+// Resolve a single run warning. Requires finance.payroll.run.manage.
+// New action key (reported): finance.payroll.warning.resolve
+// Interim enforcement uses finance.payroll.run.manage until key is catalogued.
+router.post('/payroll/warnings/resolve', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.run.manage');
+  const v = zv(c, z.object({
+    warningId: z.string().uuid(),
+    note:      z.string().max(500).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await resolveRunWarning(v.data.warningId, actor.id, v.data.note);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Employee Population Preview (wizard step 2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/runs/population-preview
+// Read-only estimate of how many active employees would be included in a run.
+router.post('/payroll/runs/population-preview', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  try {
+    const data = await getEmployeePopulationPreview();
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Export download
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/exports/download
+// Regenerate and return export content for browser download.
+// New action key (reported): finance.payroll.export.download
+// Interim enforcement uses finance.payroll.export until key is catalogued.
+router.post('/payroll/exports/download', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.export');
+  const v = zv(c, z.object({ exportId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await downloadRunExport(v.data.exportId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reports
+// ─────────────────────────────────────────────────────────────────────────────
 
 // POST /api/finance/payroll/reports/list
 // List available report keys (for the UI to build the report picker).

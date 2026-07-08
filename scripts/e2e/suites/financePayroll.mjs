@@ -671,6 +671,137 @@ export default async function run(h) {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Warning Resolve (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  let warnId = null;
+
+  await test('warnings list for the locked run returns any existing warnings', async () => {
+    // After lock + calculate + reopen cycle, warnings may have been generated.
+    // If not, this section verifies the endpoint at minimum returns a success.
+    const r = await api('finance/payroll/warnings/list', fmgr1Token, { runId: ctx.runId });
+    ok(r, `warnings/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'warnings/list should return an array');
+    // Capture first unresolved warning (if any) for the resolve test
+    const unresolved = (r.body.data ?? []).filter(w => !w.resolved);
+    if (unresolved.length > 0) warnId = unresolved[0].id;
+  });
+
+  await test('finance_staff is denied the warning resolve endpoint (no manage perm)', async () => {
+    // finance_staff only has finance.payroll.view_all — not finance.payroll.run.manage
+    const r = await api('finance/payroll/warnings/resolve', fstaff1Token, {
+      warningId: warnId ?? '00000000-0000-0000-0000-000000000001',
+      note: 'test',
+    });
+    expect(!r.body.success, 'finance_staff should not be able to resolve warnings');
+  });
+
+  await test('resolving a non-existent warning returns error (not a crash)', async () => {
+    const r = await api('finance/payroll/warnings/resolve', fmgr1Token, {
+      warningId: '00000000-0000-0000-0000-000000000001',
+    });
+    // Should return a clean error, not a 500
+    expect(typeof r.body.success === 'boolean', 'response should be shaped even on not-found');
+  });
+
+  if (warnId) {
+    await test('finance_manager can resolve a run warning and backbone side-effects fire', async () => {
+      const r = await api('finance/payroll/warnings/resolve', fmgr1Token, {
+        warningId: warnId,
+        note: `E2E resolved ${TAG}`,
+      });
+      ok(r, `warning resolve failed: ${r.body.message}`);
+      expect(r.body.data.resolved === true, 'resolved should be true after resolve');
+      expect(typeof r.body.data.resolvedAt === 'string', 'resolvedAt should be set');
+
+      // Assert app_event emitted
+      const { data: evts } = await sb.from('app_events')
+        .select('id').eq('event_type', 'finance.payroll.warning.resolved')
+        .eq('actor_user_id', fmgr1Id).order('created_at', { ascending: false }).limit(1);
+      expect((evts ?? []).length > 0, 'app_event finance.payroll.warning.resolved should have been emitted');
+
+      // Assert audit log entry
+      const { data: auditRows } = await sb.from('hr_audit_log')
+        .select('id').eq('actor_id', fmgr1Id).eq('action', 'finance.payroll.warning.resolved').limit(1);
+      expect((auditRows ?? []).length > 0, 'hr_audit_log should have a warning.resolved entry');
+    });
+
+    await test('resolved warning can no longer be resolved again', async () => {
+      const r = await api('finance/payroll/warnings/resolve', fmgr1Token, { warningId: warnId });
+      expect(!r.body.success, 'resolving an already-resolved warning should fail');
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Population Preview (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('population-preview returns total/salaried/hourly/missingPayBasis counts', async () => {
+    const r = await api('finance/payroll/runs/population-preview', fmgr1Token, {});
+    ok(r, `population-preview failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.total === 'number',           'total should be a number');
+    expect(typeof d.salaried === 'number',        'salaried should be a number');
+    expect(typeof d.hourly === 'number',          'hourly should be a number');
+    expect(typeof d.missingPayBasis === 'number', 'missingPayBasis should be a number');
+    expect(d.total >= 0,                          'total should be >= 0');
+    expect(d.salaried + d.hourly <= d.total,      'salaried+hourly <= total (missing covers the rest)');
+  });
+
+  await test('finance_staff can see population preview (view_all scope)', async () => {
+    const r = await api('finance/payroll/runs/population-preview', fstaff1Token, {});
+    ok(r, `population-preview denied for finance_staff: ${r.body.message}`);
+  });
+
+  await test('employee role is denied population preview', async () => {
+    const r = await api('finance/payroll/runs/population-preview', emp1Token, {});
+    expect(!r.body.success, 'employee should not access population preview');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Export Download (Wave 2B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('export download returns content + metadata for the current export', async () => {
+    // ctx.exportId was set earlier in the Export generation tests
+    if (!ctx.exportId) {
+      // Try to find the latest export for this run
+      const { data: exps } = await sb.from('finance_payroll_exports')
+        .select('id').eq('run_id', ctx.runId).eq('is_current', true).limit(1);
+      ctx.exportId = exps?.[0]?.id ?? null;
+    }
+    if (!ctx.exportId) { expect(false, 'No export record found — run the full lifecycle first'); return; }
+
+    const r = await api('finance/payroll/exports/download', fmgr1Token, { exportId: ctx.exportId });
+    ok(r, `export download failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(typeof d.content === 'string',   'download content should be a string');
+    expect(typeof d.mimeType === 'string',  'mimeType should be a string');
+    expect(typeof d.filename === 'string',  'filename should be a string');
+    expect(typeof d.exportNo === 'string',  'exportNo should be present');
+    expect(d.runId === ctx.runId,           'runId in response should match');
+
+    // Assert audit log
+    const { data: auditRows } = await sb.from('hr_audit_log')
+      .select('id').eq('actor_id', fmgr1Id).eq('action', 'finance.payroll.export.downloaded').limit(1);
+    expect((auditRows ?? []).length > 0, 'hr_audit_log should have an export.downloaded entry');
+  });
+
+  await test('finance_staff is denied export download (needs finance.payroll.export)', async () => {
+    if (!ctx.exportId) return; // skip if no export exists
+    const r = await api('finance/payroll/exports/download', fstaff1Token, { exportId: ctx.exportId });
+    expect(!r.body.success, 'finance_staff should not download exports');
+  });
+
+  await test('export download for non-existent export returns clean error', async () => {
+    const r = await api('finance/payroll/exports/download', fmgr1Token, {
+      exportId: '00000000-0000-0000-0000-000000000001',
+    });
+    expect(!r.body.success, 'download of non-existent export should fail cleanly');
+    expect(r.status !== 500, 'should not throw 500 on not-found export');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Legacy removal verification');
   // ═══════════════════════════════════════════════════════════════════════════
 

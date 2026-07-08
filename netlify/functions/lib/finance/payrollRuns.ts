@@ -851,6 +851,198 @@ function lastDayOfMonth(dateStr: string): string {
   return lastDay.toISOString().slice(0, 10);
 }
 
+// ── Resolve Warning ───────────────────────────────────────────────────────────
+
+export interface ResolveWarningResult {
+  id: string;
+  resolved: boolean;
+  resolvedBy: string;
+  resolvedAt: string;
+}
+
+/**
+ * Resolve a payroll run warning.
+ * Guards: warning must not already be resolved.
+ * Side effects: emitFinanceMutationBackbone → app_event + hr_audit_log + notification to run owner.
+ */
+export async function resolveRunWarning(
+  warningId: string,
+  actorId:   string,
+  note?:     string,
+): Promise<ResolveWarningResult> {
+  const { data: warn, error: wErr } = await sb
+    .from('finance_payroll_run_warnings')
+    .select('id, run_id, employee_id, warning_type, severity, message, resolved')
+    .eq('id', warningId)
+    .maybeSingle<{
+      id: string; run_id: string; employee_id: string | null;
+      warning_type: string; severity: string; message: string; resolved: boolean;
+    }>();
+  if (wErr) throw Object.assign(new Error('resolveRunWarning/get: ' + wErr.message), { status: 500 });
+  if (!warn) throw Object.assign(new Error('Warning not found.'), { status: 404 });
+  if (warn.resolved) throw Object.assign(new Error('Warning is already resolved.'), { status: 409 });
+
+  const now = new Date().toISOString();
+  const meta: Record<string, unknown> = {};
+  if (note?.trim()) meta['resolution_note'] = note.trim();
+
+  const { error: updErr } = await sb
+    .from('finance_payroll_run_warnings')
+    .update({ resolved: true, resolved_by: actorId, resolved_at: now, metadata: meta })
+    .eq('id', warningId);
+  if (updErr) throw Object.assign(new Error('resolveRunWarning/update: ' + updErr.message), { status: 500 });
+
+  // Backbone — throws on hr_audit_log failure (compensating: re-unresolve warning)
+  try {
+    const { emitFinanceMutationBackbone } = await import('./backbone');
+    await emitFinanceMutationBackbone({
+      actorUserId: actorId,
+      module:      'finance_payroll',
+      entityType:  'payroll_run_warning',
+      entityId:    warningId,
+      eventType:   'finance.payroll.warning.resolved',
+      auditAction: 'payroll_run_warning.resolved',
+      previousState: { resolved: false, severity: warn.severity, warningType: warn.warning_type },
+      newState:    { resolved: true, resolvedBy: actorId, note: note?.trim() ?? null },
+      severity:    'info',
+      metadata:    { runId: warn.run_id, warningType: warn.warning_type, note: note?.trim() ?? null },
+      notification: {
+        title: `Warning resolved: ${warn.warning_type.replace(/_/g, ' ')}`,
+        body:  warn.message,
+        actionRoute: 's-finance-payroll',
+      },
+    });
+  } catch (bbErr) {
+    // Compensating rollback: undo the resolved flag
+    await sb.from('finance_payroll_run_warnings')
+      .update({ resolved: false, resolved_by: null, resolved_at: null, metadata: {} })
+      .eq('id', warningId);
+    throw bbErr;
+  }
+
+  return { id: warningId, resolved: true, resolvedBy: actorId, resolvedAt: now };
+}
+
+// ── Employee Population Preview (wizard step) ─────────────────────────────────
+
+export interface PopulationPreviewResult {
+  total:          number;
+  salaried:       number;
+  hourly:         number;
+  missingPayBasis: number;
+}
+
+/**
+ * Returns a count of active employees for the payroll wizard preview (step 2).
+ * Does NOT lock inputs — this is a read-only estimate.
+ */
+export async function getEmployeePopulationPreview(): Promise<PopulationPreviewResult> {
+  const { data, error } = await sb
+    .from('app_users')
+    .select('id, pay_basis')
+    .eq('status', 'active');
+  if (error) throw Object.assign(new Error('populationPreview: ' + error.message), { status: 500 });
+
+  const rows = (data ?? []) as { id: string; pay_basis: string | null }[];
+  const salaried = rows.filter(r => r.pay_basis === 'salary').length;
+  const hourly   = rows.filter(r => r.pay_basis === 'hourly').length;
+  const missing  = rows.filter(r => !r.pay_basis).length;
+
+  return { total: rows.length, salaried, hourly, missingPayBasis: missing };
+}
+
+// ── Export content download ───────────────────────────────────────────────────
+
+export interface ExportDownloadResult {
+  exportId:  string;
+  exportNo:  string;
+  runId:     string;
+  format:    string;
+  content:   string;
+  mimeType:  string;
+  filename:  string;
+}
+
+/**
+ * Regenerate and return the export content for download.
+ * The export file_path is a logical path (not a storage bucket URL), so we
+ * rebuild the CSV/JSON content from the current run lines.
+ * Side-effects: emits finance.payroll.export.downloaded + hr_audit_log.
+ */
+export async function downloadRunExport(
+  exportId: string,
+  actorId:  string,
+): Promise<ExportDownloadResult> {
+  interface DbExRow {
+    id: string; export_no: string; run_id: string;
+    format: string; file_path: string; generated_by: string | null;
+    generated_at: string; metadata: Record<string, unknown>;
+  }
+
+  const { data: exp, error: eErr } = await sb
+    .from('finance_payroll_exports')
+    .select('id, export_no, run_id, format, file_path, generated_by, generated_at, metadata')
+    .eq('id', exportId)
+    .maybeSingle<DbExRow>();
+  if (eErr) throw Object.assign(new Error('downloadExport/get: ' + eErr.message), { status: 500 });
+  if (!exp) throw Object.assign(new Error('Export not found.'), { status: 404 });
+
+  // Rebuild content from current run lines
+  const lines = await listRunLines(exp.run_id);
+
+  let content: string;
+  let mimeType: string;
+
+  if (exp.format === 'json') {
+    content  = JSON.stringify({
+      runId: exp.run_id, exportNo: exp.export_no,
+      exportedAt: exp.generated_at,
+      lines: lines.map(l => ({
+        employeeId: l.employeeId, gross: l.gross, nisEmployee: l.nisEmployee,
+        nisEmployer: l.nisEmployer, healthSurcharge: l.healthSurcharge,
+        paye: l.paye, voluntaryDeductions: l.voluntaryDeductions, net: l.net,
+        nisNumberMasked: l.nisNumberMasked, nisStatus: l.nisStatus, nisClassNo: l.nisClassNo,
+      })),
+    }, null, 2);
+    mimeType = 'application/json';
+  } else {
+    const headers = [
+      'employee_id','base','taxable_gross','gross','nis_employee','nis_employer',
+      'health_surcharge','chargeable_income','paye','voluntary_deductions','net',
+      'nis_number_masked','nis_status','nis_class_no',
+    ].join(',');
+    const rows = lines.map(l =>
+      [l.employeeId,l.base,l.taxableGross,l.gross,l.nisEmployee,l.nisEmployer,
+       l.healthSurcharge,l.chargeableIncome,l.paye,l.voluntaryDeductions,l.net,
+       l.nisNumberMasked??'',l.nisStatus??'',l.nisClassNo??''].join(','),
+    );
+    content  = [headers, ...rows].join('\n');
+    mimeType = 'text/csv';
+  }
+
+  const filename = exp.file_path.split('/').pop() ?? `${exp.export_no}.${exp.format}`;
+
+  // Audit download
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: exp.run_id, actorId,
+    action:       'payroll_export.downloaded',
+    previousState: null,
+    newState:     { exportId, exportNo: exp.export_no, format: exp.format },
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.export.downloaded',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_export',
+    sourceEntityId:   exportId,
+    actorUserId:      actorId,
+    severity:         'info',
+    payload:          { exportNo: exp.export_no, format: exp.format, runId: exp.run_id },
+  });
+
+  return { exportId, exportNo: exp.export_no, runId: exp.run_id, format: exp.format, content, mimeType, filename };
+}
+
 // ── Submit Run ────────────────────────────────────────────────────────────────
 
 /**
