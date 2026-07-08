@@ -105,6 +105,7 @@ export const financeQueryKeys = {
                              ['finance', 'disbursements', 'list', filters ?? {}] as const,
   disbursement:            (id: string) => ['finance', 'disbursements', id] as const,
   disbursementLines:       (id: string) => ['finance', 'disbursements', id, 'lines'] as const,
+  disbursementAttachments: (id: string) => ['finance', 'disbursements', id, 'attachments'] as const,
 
   // ── Finance 2B Module roots — Expenses ────────────────────────────────────
   expensesBase:            () => ['finance', 'expenses'] as const,
@@ -121,6 +122,7 @@ export const financeQueryKeys = {
   budget:                  (id: string) => ['finance', 'budgets', id] as const,
   budgetVariance:          (fiscalYear?: number) =>
                              ['finance', 'budgets', 'variance', fiscalYear ?? 'all'] as const,
+  budgetAttachments:       (id: string) => ['finance', 'budgets', id, 'attachments'] as const,
 
   // ── Finance 2B Module roots — Payroll (extends existing ap-adjacent keys) ─
   payrollRunsBase:         () => ['finance', 'payroll', 'runs'] as const,
@@ -134,6 +136,8 @@ export const financeQueryKeys = {
                              ['finance', 'payroll', 'runs', runId, 'payslips'] as const,
   payrollExports:          (runId: string) =>
                              ['finance', 'payroll', 'runs', runId, 'exports'] as const,
+  payrollAttachments:      (runId: string) =>
+                             ['finance', 'payroll', 'runs', runId, 'attachments'] as const,
 
   // ── Finance 2B Module roots — Statutory ───────────────────────────────────
   statutoryBase:           () => ['finance', 'statutory'] as const,
@@ -142,4 +146,14 @@ export const financeQueryKeys = {
   statutoryVersion:        (id: string) => ['finance', 'statutory', 'versions', id] as const,
   nisClasses:              (versionId: string) =>
                              ['finance', 'statutory', 'versions', versionId, 'nis-classes'] as const,
+
+  // ── Finance 2B Bridges (cross-module bridge mutations) ───────────────────
+  // Bridges are mutations so they don't have their own query cache.
+  // These keys are used for cache invalidation after bridge creation.
+  bridgeDisbursement:      (runId: string) =>
+                             ['finance', 'bridges', 'disbursement', runId] as const,
+  bridgeRemittance:        (runId: string, authority: string) =>
+                             ['finance', 'bridges', 'remittance', runId, authority] as const,
+  bridgeReimbursement:     (claimId: string) =>
+                             ['finance', 'bridges', 'reimbursement', claimId] as const,
 } as const;
