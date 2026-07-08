@@ -304,7 +304,7 @@ export default async function run(h) {
     // Use a dummy UUID — Zod validates after permission check, before DB, so reason
     // validation fires even for non-existent IDs. The validation is the thing under test.
     const r = await api('finance/overview/approvals/act', Tmgr, {
-      id: '00000000-0000-0000-0000-000000000001', type: 'Bill', action: 'reject',
+      id: '11111111-1111-4111-8111-111111111111', type: 'Bill', action: 'reject',
       // reason intentionally omitted
     });
     fails(r, 'missing reason must return failure');
@@ -313,7 +313,7 @@ export default async function run(h) {
 
   await test('approvals/act Remittance reject returns 422 (cross-module reject not supported)', async () => {
     const r = await api('finance/overview/approvals/act', Tmgr, {
-      id: '00000000-0000-0000-0000-000000000002', type: 'Remittance',
+      id: '22222222-2222-4222-8222-222222222222', type: 'Remittance',
       action: 'reject', reason: 'Testing inline reject restriction',
     });
     fails(r, 'Remittance reject must be rejected');
@@ -322,7 +322,7 @@ export default async function run(h) {
 
   await test('approvals/act Disbursement reject returns 422', async () => {
     const r = await api('finance/overview/approvals/act', Tmgr, {
-      id: '00000000-0000-0000-0000-000000000003', type: 'Disbursement',
+      id: '33333333-3333-4333-8333-333333333333', type: 'Disbursement',
       action: 'reject', reason: 'Testing inline reject restriction',
     });
     fails(r, 'Disbursement reject must be rejected');
@@ -352,14 +352,14 @@ export default async function run(h) {
     expect(typeof r.body.data.status === 'string', 'missing status in response');
     expect(r.body.data.status === 'approved', `expected status=approved, got ${r.body.data.status}`);
 
-    // Side-effect: finance.bill.approved event emitted by the AP module
+    // Side-effect: finance.ap.bill.approved event emitted by the AP module
     await new Promise(res => setTimeout(res, 600));
     const { data: events } = await sb.from('app_events')
       .select('id, event_type')
-      .eq('event_type', 'finance.bill.approved')
+      .eq('event_type', 'finance.ap.bill.approved')
       .order('created_at', { ascending: false })
       .limit(1);
-    expect(Array.isArray(events) && events.length > 0, 'finance.bill.approved event not emitted after inline approve');
+    expect(Array.isArray(events) && events.length > 0, 'finance.ap.bill.approved event not emitted after inline approve');
   });
 
   await test('approvals/act hr_staff denied 403', async () => {

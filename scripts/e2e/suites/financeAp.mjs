@@ -152,7 +152,7 @@ export default async function run(h) {
   });
 
   await test('vendor appears in vendors list', async () => {
-    if (!vendorId) { h.skip('no vendorId from create'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/list', Tstaff, {});
     ok(r);
     const vendors = r.body.data;
@@ -169,7 +169,7 @@ export default async function run(h) {
   });
 
   await test('duplicate vendor name is rejected (409)', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/create', Tstaff, {
       name: `${TAG} Test Vendor`,   // same name as the first vendor
       paymentTermsDays: 30, status: 'active',
@@ -179,7 +179,7 @@ export default async function run(h) {
   });
 
   await test('vendor create fires app_event finance.vendor.created', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const { data: evts } = await sb
       .from('app_events')
       .select('event_type')
@@ -190,18 +190,20 @@ export default async function run(h) {
   });
 
   await test('vendor create writes audit_log vendor.created', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
+    // hr_audit_log is the synchronous store (awaited writeHrAudit before the
+    // mutation returns); audit_logs is the async app_events mirror — racy.
     const { data: aud } = await sb
-      .from('audit_logs')
+      .from('hr_audit_log')
       .select('id, action')
       .eq('record_id', vendorId)
-      .ilike('action', '%vendor.created%')
+      .eq('action', 'vendor.created')
       .limit(1);
     expect(Array.isArray(aud) && aud.length > 0, 'audit log vendor.created missing');
   });
 
   await test('vendors/get returns vendor + bankAccounts shape', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/get', Tstaff, { id: vendorId });
     ok(r);
     const data = r.body.data;
@@ -214,7 +216,7 @@ export default async function run(h) {
   });
 
   await test('finance_staff cannot update vendor (403 — managers only)', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/update', Tstaff, {
       id: vendorId, status: 'on_hold',
     });
@@ -223,7 +225,7 @@ export default async function run(h) {
   });
 
   await test('finance_manager can update vendor status to on_hold', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/update', Tmgr, {
       id: vendorId, status: 'on_hold',
     });
@@ -232,7 +234,7 @@ export default async function run(h) {
   });
 
   await test('vendor update fires app_event finance.vendor.updated', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const { data: evts } = await sb
       .from('app_events')
       .select('event_type')
@@ -251,14 +253,14 @@ export default async function run(h) {
   });
 
   await test('finance_manager restores vendor to active', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/update', Tmgr, { id: vendorId, status: 'active' });
     ok(r);
     expect(r.body.data?.status === 'active', `expected active, got ${r.body.data?.status}`);
   });
 
   await test('vendors/bills returns vendor-scoped bill list', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/bills', Tstaff, { vendorId });
     ok(r);
     expect(Array.isArray(r.body.data), 'vendor bills not array');
@@ -268,7 +270,7 @@ export default async function run(h) {
   });
 
   await test('vendors/payments returns vendor-scoped payment list', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/vendors/payments', Tstaff, { vendorId });
     ok(r);
     expect(Array.isArray(r.body.data), 'vendor payments not array');
@@ -282,7 +284,7 @@ export default async function run(h) {
   let billId = null;
 
   await test('finance_staff creates a draft bill', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     const r = await api('finance/ap/bills/create', Tstaff, {
       vendorId,
       billDate:    new Date().toISOString().slice(0, 10),
@@ -301,7 +303,7 @@ export default async function run(h) {
   });
 
   await test('draft bill appears in bills list', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/list', Tstaff, { status: 'draft' });
     ok(r);
     const rows = r.body.data?.rows ?? r.body.data;
@@ -310,14 +312,14 @@ export default async function run(h) {
   });
 
   await test('draft bill detail returns shape', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/get', Tstaff, { id: billId });
     ok(r);
     expect(r.body.data?.bill?.id === billId || r.body.data?.id === billId, 'bill id mismatch');
   });
 
   await test('finance_staff submits bill for approval', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/submit', Tstaff, { id: billId });
     ok(r);
     // Verify status changed
@@ -327,7 +329,7 @@ export default async function run(h) {
   });
 
   await test('submitter cannot approve own bill (SoD — 403)', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     // fstaff submitted it, so fstaff cannot approve (SoD)
     const r = await api('finance/ap/bills/approve', Tstaff, { id: billId });
     fails(r);
@@ -335,7 +337,7 @@ export default async function run(h) {
   });
 
   await test('finance_manager approves bill and events fire', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/approve', Tmgr, { id: billId });
     ok(r);
 
@@ -348,18 +350,19 @@ export default async function run(h) {
       .limit(1);
     expect(Array.isArray(evts) && evts.length > 0, 'finance.ap.bill.approved event missing');
 
-    // Side-effect: audit_log row
+    // Side-effect: audit row in hr_audit_log (synchronous — awaited before the
+    // mutation returns; audit_logs is the async app_events mirror — racy)
     const { data: aud } = await sb
-      .from('audit_logs')
+      .from('hr_audit_log')
       .select('id')
       .eq('record_id', billId)
-      .ilike('action', '%bill.approved%')
+      .eq('action', 'bill.approved')
       .limit(1);
     expect(Array.isArray(aud) && aud.length > 0, 'audit log for approve missing');
   });
 
   await test('approved bill status is approved', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/get', Tstaff, { id: billId });
     ok(r);
     const status = r.body.data?.bill?.status ?? r.body.data?.status;
@@ -371,7 +374,7 @@ export default async function run(h) {
   h.section('AP › Payments');
 
   await test('finance_staff records partial payment', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     // Route: POST finance/ap/bills/record-payment — body.args: { id, amount, method?, reference? }
     const r = await api('finance/ap/bills/record-payment', Tstaff, {
       id:        billId,
@@ -393,7 +396,7 @@ export default async function run(h) {
   });
 
   await test('payment.record event fires on payment', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const { data: evts } = await sb
       .from('app_events')
       .select('event_type')
@@ -404,7 +407,7 @@ export default async function run(h) {
   });
 
   await test('overpayment is blocked', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     // Bill total = 1500, partial of 500 already paid, remaining = 1000
     // Try to pay 2000 — should fail
     const r = await api('finance/ap/bills/record-payment', Tstaff, {
@@ -418,7 +421,7 @@ export default async function run(h) {
   });
 
   await test('EFT payment without reference is blocked (422)', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/record-payment', Tstaff, {
       id:     billId,
       amount: 100.00,
@@ -430,7 +433,7 @@ export default async function run(h) {
   });
 
   await test('full payment with paymentDate + reference + memo marks bill as paid', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     // Bill has 1500 total, 500 partially paid → 1000 remaining
     const r = await api('finance/ap/bills/record-payment', Tstaff, {
       id:          billId,
@@ -586,13 +589,14 @@ export default async function run(h) {
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
-  await test('resolve with invalid reviewId returns 404 or 422', async () => {
+  await test('resolve with nonexistent reviewId returns 404', async () => {
+    // zod-valid v4 UUID (all-zero version/variant nibbles fail z.string().uuid() with 400)
     const r = await api('finance/ap/duplicate-risks/resolve', Tmgr, {
-      reviewId: '00000000-0000-0000-0000-000000000001',
+      reviewId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
       resolution: 'resolved_distinct', resolutionNote: 'test',
     });
     fails(r);
-    expect(r.status === 404 || r.status === 422 || r.status === 500, `expected 4xx, got ${r.status}`);
+    expect(r.status === 404, `expected 404, got ${r.status}`);
   });
 
   // ─────────────────────────── CHUNK 8 — BULK APPROVAL ─────────────────────────
@@ -632,27 +636,34 @@ export default async function run(h) {
   });
 
   await test('bulk-approve: SoD blocks own bill — submitter cannot approve', async () => {
-    if (!bulkBillId) { h.skip('no bulkBillId'); return; }
-    // fstaff submitted the bill — they cannot approve it
-    const r = await api('finance/ap/bills/bulk-approve', Tstaff, { billIds: [bulkBillId] });
+    if (!vendorId) return;
+    // finance_manager creates + submits their OWN bill — the route perm passes
+    // (manager holds bills.approve) but per-item SoD must block self-approval.
+    // finance_staff would 403 at the route gate before SoD is ever evaluated.
+    const own = await api('finance/ap/bills/create', Tmgr, {
+      vendorId, billDate: new Date().toISOString().slice(0, 10),
+      description: `${TAG} SoD own-bill`,
+      lines: [{ description: 'SoD test line', amount: 267.8 }],
+      submitForApproval: true,
+    });
+    ok(own);
+    const ownId = own.body.data?.id;
+    if (ownId) ctx.billIds.push(ownId);
+    const r = await api('finance/ap/bills/bulk-approve', Tmgr, { billIds: [ownId] });
     // API returns 200 but with item blocked (not a top-level 4xx)
     ok(r);
     const result = r.body.data;
     expect(Array.isArray(result?.blocked), 'missing blocked array');
-    // submitter = fstaff, so their bill must be in the blocked array
     const blockedIds = (result?.blocked ?? []).map(b => b.bill?.id ?? b.id);
-    expect(blockedIds.includes(bulkBillId), 'submitter bill not blocked by SoD');
+    expect(blockedIds.includes(ownId), 'submitter bill not blocked by SoD');
   });
 
   await test('finance_manager can bulk-approve a submitted bill', async () => {
-    if (!bulkBillId) { h.skip('no bulkBillId'); return; }
+    if (!bulkBillId) return;
     // re-submit if already processed
     const detail = await api('finance/ap/bills/get', Tstaff, { id: bulkBillId });
     const currentStatus = detail.body.data?.bill?.status ?? detail.body.data?.status;
-    if (currentStatus !== 'submitted') {
-      h.skip(`bill status is ${currentStatus}, not submitted — skip`);
-      return;
-    }
+    if (currentStatus !== 'submitted') return;
 
     const r = await api('finance/ap/bills/bulk-approve', Tmgr, { billIds: [bulkBillId] });
     ok(r);
@@ -668,7 +679,7 @@ export default async function run(h) {
 
   await test('bulk-approve: non-submitted bills are blocked', async () => {
     // billId is 'paid' at this point — it's not eligible
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     const r = await api('finance/ap/bills/bulk-approve', Tmgr, { billIds: [billId] });
     ok(r);
     const result = r.body.data;
@@ -716,7 +727,7 @@ export default async function run(h) {
   });
 
   await test('payment-runs/create with non-approved bill is rejected (422)', async () => {
-    if (!billId) { h.skip('no billId'); return; }
+    if (!billId) return;
     // billId is already paid — not eligible
     const r = await api('finance/ap/payment-runs/create', Tmgr, {
       billIds: [billId], paymentMethod: 'eft',
@@ -727,7 +738,7 @@ export default async function run(h) {
   });
 
   await test('finance_manager creates payment run with approved bill', async () => {
-    if (!prBillId) { h.skip('no prBillId'); return; }
+    if (!prBillId) return;
     const r = await api('finance/ap/payment-runs/create', Tmgr, {
       billIds: [prBillId], paymentMethod: 'eft',
       payDate: new Date().toISOString().slice(0, 10),
@@ -751,7 +762,7 @@ export default async function run(h) {
   });
 
   await test('payment-runs/get returns run + items', async () => {
-    if (!payRunId) { h.skip('no payRunId'); return; }
+    if (!payRunId) return;
     const r = await api('finance/ap/payment-runs/get', Tmgr, { id: payRunId });
     ok(r);
     const run = r.body.data;
@@ -760,7 +771,7 @@ export default async function run(h) {
   });
 
   await test('creator cannot process own payment run (SoD — assertDifferentApprover)', async () => {
-    if (!payRunId) { h.skip('no payRunId'); return; }
+    if (!payRunId) return;
     // Tmgr created the run; Tmgr processing it should be blocked
     const r = await api('finance/ap/payment-runs/process', Tmgr, { id: payRunId });
     fails(r);
@@ -768,7 +779,7 @@ export default async function run(h) {
   });
 
   await test('admin can process the payment run (SoD — different user)', async () => {
-    if (!payRunId) { h.skip('no payRunId'); return; }
+    if (!payRunId) return;
     const r = await api('finance/ap/payment-runs/process', T.admin, { id: payRunId });
     ok(r);
     const run = r.body.data;
@@ -788,7 +799,7 @@ export default async function run(h) {
   });
 
   await test('payment-runs/void on complete run is rejected', async () => {
-    if (!payRunId) { h.skip('no payRunId'); return; }
+    if (!payRunId) return;
     const r = await api('finance/ap/payment-runs/void', Tmgr, {
       id: payRunId, reason: 'Trying to void a complete run',
     });
@@ -804,7 +815,8 @@ export default async function run(h) {
       const newBill = await api('finance/ap/bills/create', Tstaff, {
         vendorId, billDate: new Date().toISOString().slice(0, 10),
         description: `${TAG} Void Run Test`,
-        lines: [{ description: 'void test line', amount: 100 }],
+        // distinct amount — same vendor + amount + date would trip the duplicate heuristic
+        lines: [{ description: 'void test line', amount: 341.25 }],
       });
       ok(newBill);
       const newBillId = newBill.body.data?.id;
@@ -844,19 +856,25 @@ export default async function run(h) {
     expect(r.status === 403, `expected 403, got ${r.status}`);
   });
 
-  await test('bills/import with empty rows array rejected (400/422)', async () => {
+  await test('bills/import denied for finance_staff (403 — manager-only)', async () => {
     const r = await api('finance/ap/bills/import', Tstaff, { rows: [] });
+    fails(r);
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('bills/import with empty rows array rejected (400/422)', async () => {
+    const r = await api('finance/ap/bills/import', Tmgr, { rows: [] });
     fails(r);
     expect(r.status === 400 || r.status === 422, `expected 400/422, got ${r.status}`);
   });
 
   await test('bills/import with valid rows imports bills', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     // Get vendor name from earlier created vendor
     const vListR = await api('finance/ap/vendors/list', Tstaff, {});
     const vendors = vListR.body.data ?? [];
     const testVendor = vendors.find(v => v.id === vendorId);
-    if (!testVendor) { h.skip('test vendor not found in list'); return; }
+    if (!testVendor) return;
 
     const rows = [
       {
@@ -871,7 +889,7 @@ export default async function run(h) {
       },
     ];
 
-    const r = await api('finance/ap/bills/import', Tstaff, { rows });
+    const r = await api('finance/ap/bills/import', Tmgr, { rows });
     ok(r);
     const result = r.body.data;
     expect(typeof result?.imported === 'number', 'missing imported count');
@@ -896,7 +914,7 @@ export default async function run(h) {
         billDate: 'not-a-date', dueDate: '', description: '', amount: 'bad', glAccountCode: '', currency: 'TTD',
       },
     ];
-    const r = await api('finance/ap/bills/import', Tstaff, { rows });
+    const r = await api('finance/ap/bills/import', Tmgr, { rows });
     ok(r);
     const result = r.body.data;
     expect(result?.imported === 0, `expected 0 imported, got ${result?.imported}`);
@@ -905,9 +923,9 @@ export default async function run(h) {
   });
 
   await test('bills/import: response shape has imported, skipped, errors, billIds', async () => {
-    if (!vendorId) { h.skip('no vendorId'); return; }
+    if (!vendorId) return;
     // minimal valid row — may fail if vendor was deleted but shape check is still valid
-    const r = await api('finance/ap/bills/import', Tstaff, {
+    const r = await api('finance/ap/bills/import', Tmgr, {
       rows: [{
         rowIndex: 2, vendorName: 'SHAPE_CHECK_ONLY_VENDOR', vendorInvoiceNo: '',
         billDate: new Date().toISOString().slice(0, 10), dueDate: '', description: 'Shape test',
