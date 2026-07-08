@@ -38,6 +38,7 @@ import {
 import {
   useExpenseClaims,
   useExpenseTrend,
+  useExpenseKpis,
   useExpenseMutation,
   financeExpensesApi,
   type ExpenseClaim,
@@ -150,10 +151,14 @@ export function ExpensesOverview(): VNode {
   const [mainTab, setMainTab] = useState<MainTab>('claims');
 
   // Filter state
-  const [search,   setSearch]   = useState('');
-  const [statusF,  setStatusF]  = useState<ExpenseStatus | ''>('');
+  const [search,    setSearch]    = useState('');
+  const [statusF,   setStatusF]   = useState<ExpenseStatus | ''>('');
   const [categoryF, setCategoryF] = useState('');
-  const [page,     setPage]     = useState(0);
+  const [page,      setPage]      = useState(0);
+
+  // Sort state
+  const [sortField, setSortField] = useState<'created_at' | 'expense_date' | 'total_amount' | 'status' | 'claim_no'>('created_at');
+  const [sortDir,   setSortDir]   = useState<'asc' | 'desc'>('desc');
 
   // Filter panel
   const [filterOpen, setFilterOpen] = useState(false);
@@ -174,14 +179,17 @@ export function ExpensesOverview(): VNode {
   // ── Data queries ────────────────────────────────────────────────────────────
 
   const claimsQ = useExpenseClaims({
-    search:   search || undefined,
-    status:   statusF   || undefined,
-    category: categoryF || undefined,
+    search:    search || undefined,
+    status:    statusF   || undefined,
+    category:  categoryF || undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize:  PAGE_SIZE,
+    sortField,
+    sortDir,
   });
 
   const trendQ = useExpenseTrend();
+  const kpisQ  = useExpenseKpis();
 
   const claims    = claimsQ.data?.data ?? [];
   const total     = claimsQ.data?.total ?? 0;
@@ -289,9 +297,30 @@ export function ExpensesOverview(): VNode {
 
   // ── Table columns ───────────────────────────────────────────────────────────
 
+  // Maps column key → backend sortField name
+  const SORT_FIELD_MAP: Partial<Record<string, 'created_at' | 'expense_date' | 'total_amount' | 'status' | 'claim_no'>> = {
+    claimNo:     'claim_no',
+    expenseDate: 'expense_date',
+    totalAmount: 'total_amount',
+    status:      'status',
+  } as const;
+
+  // Maps backend sortField name → column key (for HrfinTable highlight)
+  const SORT_COL_MAP: Partial<Record<string, string>> = {
+    claim_no:     'claimNo',
+    expense_date: 'expenseDate',
+    total_amount: 'totalAmount',
+    status:       'status',
+  } as const;
+
+  const handleSort = useCallback((field: string, dir: 'asc' | 'desc') => {
+    const mapped = SORT_FIELD_MAP[field];
+    if (mapped) { setSortField(mapped); setSortDir(dir); setPage(0); }
+  }, []);
+
   const columns: ReadonlyArray<HrfinColumn<ExpenseClaim>> = [
     {
-      key: 'claimNo', label: 'Claim No',
+      key: 'claimNo', label: 'Claim No', sortable: true,
       render: c => <b style={{ fontFamily: 'monospace', fontSize: 13 }}>{c.claimNo}</b>,
     },
     {
@@ -307,15 +336,15 @@ export function ExpensesOverview(): VNode {
       render: c => <span>{humanize(c.category)}</span>,
     },
     {
-      key: 'expenseDate', label: 'Date',
+      key: 'expenseDate', label: 'Date', sortable: true,
       render: c => <span class="hse-muted">{fmtDate(c.expenseDate)}</span>,
     },
     {
-      key: 'totalAmount', label: 'Amount',
+      key: 'totalAmount', label: 'Amount', sortable: true,
       render: c => <b style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.totalAmount)}</b>,
     },
     {
-      key: 'status', label: 'Status',
+      key: 'status', label: 'Status', sortable: true,
       render: c => <HrfinPill tone={statusTone(c.status)}>{humanize(c.status)}</HrfinPill>,
     },
     {
@@ -425,15 +454,17 @@ export function ExpensesOverview(): VNode {
         />
         <KpiCard
           label="Policy exceptions"
-          value="—"
+          value={kpisQ.data ? String(kpisQ.data.policyExceptions) : '—'}
+          tone={kpisQ.data?.policyExceptions ? 'danger' : undefined}
           visual="none"
-          loading={claimsQ.isLoading}
+          loading={kpisQ.isLoading && !kpisQ.data}
         />
         <KpiCard
           label="Missing receipts"
-          value="—"
+          value={kpisQ.data ? String(kpisQ.data.missingReceipts) : '—'}
+          tone={kpisQ.data?.missingReceipts ? 'danger' : undefined}
           visual="none"
-          loading={claimsQ.isLoading}
+          loading={kpisQ.isLoading && !kpisQ.data}
         />
       </section>
 
@@ -494,6 +525,9 @@ export function ExpensesOverview(): VNode {
         noun="claims"
         loading={claimsQ.isLoading && !claimsQ.data}
         emptyMessage="No expense claims found."
+        sortField={SORT_COL_MAP[sortField]}
+        sortDir={sortDir}
+        onSort={handleSort}
       />
 
       {/* Reports tab (rendered below the table when active) */}
