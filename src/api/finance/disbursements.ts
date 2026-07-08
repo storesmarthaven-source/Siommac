@@ -129,6 +129,10 @@ export const financeDisbursementsApi = {
                     call<ComputedDisbursement>('finance/disbursements/compute', a),
   create:         (a: { payrollRunId: string; currency?: string; metadata?: Record<string, unknown> }) =>
                     call<Disbursement>('finance/disbursements/create', a),
+  /** Idempotent bridge create — returns existing disbursement on duplicate run-id (no 409).
+   *  Also emits finance.payroll.bridge.disbursement.created + notifies Payment Ops + handoff. */
+  createFromRun:  (a: { payrollRunId: string; currency?: string; metadata?: Record<string, unknown> }) =>
+                    call<Disbursement & { created: boolean }>('finance/disbursements/create-from-run', a),
   submit:         (a: { id: string }) => call<Disbursement>('finance/disbursements/submit', a),
   approve:        (a: { id: string }) => call<Disbursement>('finance/disbursements/approve', a),
   generateFile:   (a: { id: string }) => call<Disbursement & { filePath: string }>('finance/disbursements/generate-file', a),

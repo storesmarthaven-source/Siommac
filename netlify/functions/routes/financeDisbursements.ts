@@ -13,7 +13,11 @@ import {
   listDisbursementAuditLog, listFinanceAuditLog,
   listBankFileStatusReport, listBankAccountReadinessReport,
   type DisbursementStatus,
+  type DisbursementDto,
 } from '../lib/finance/disbursements';
+import { emitAppEvent } from '../lib/appEvents';
+import { notifyUsersByRole } from '../lib/finance/financeEvents';
+import { createHandoff } from '../lib/handoffBus';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -97,6 +101,101 @@ router.post('/disbursements/create', async c => {
     const er = e as { status?: number; message?: string };
     return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
   }
+});
+
+// Idempotent bridge route — called by the Compute & Create wizard.
+// Unlike /disbursements/create, a duplicate run-id returns the EXISTING disbursement
+// instead of 409. Also emits finance.payroll.bridge.disbursement.created + Payment Ops
+// notification + handoff to Disbursement per §8.1 (payroll run → disbursement).
+// Perm key: reuses finance.disbursement.manage (same audience); granular key
+// finance.payroll.bridge.createDisbursement is reported for the orchestrator to catalogue.
+router.post('/disbursements/create-from-run', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.manage');
+  const v = zv(c, z.object({
+    payrollRunId: z.string().uuid(),
+    currency:     z.string().length(3).optional(),
+    metadata:     z.record(z.string(), z.unknown()).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+
+  let disbursement: DisbursementDto;
+  let created = true;
+
+  try {
+    disbursement = await createDisbursement({
+      payrollRunId: v.data.payrollRunId,
+      actorId:      actor.id,
+      currency:     v.data.currency,
+      metadata:     v.data.metadata,
+    });
+  } catch (err) {
+    const e = err as { status?: number; message?: string };
+    if (e.status === 409) {
+      // Idempotent reuse: a disbursement for this run already exists
+      const existing = await listDisbursements({ payrollRunId: v.data.payrollRunId });
+      if (existing.length === 0) {
+        return c.json({ success: false, message: 'Conflict on create but existing disbursement not found.' }, 500 as 200);
+      }
+      disbursement = existing[0]!;
+      created = false;
+    } else {
+      return c.json({ success: false, message: e.message ?? 'Failed' }, (e.status ?? 500) as 200);
+    }
+  }
+
+  if (created) {
+    // §8.1: emit bridge event
+    void emitAppEvent({
+      eventType:        'finance.payroll.bridge.disbursement.created',
+      sourceModule:     'finance_disbursements',
+      sourceEntityType: 'disbursement',
+      sourceEntityId:   disbursement.id,
+      actorUserId:      actor.id,
+      severity:         'info',
+      payload: {
+        disbursementNo: disbursement.disbursementNo,
+        payrollRunId:   disbursement.payrollRunId,
+        totalAmount:    disbursement.totalAmount,
+        employeeCount:  disbursement.employeeCount,
+        currency:       disbursement.currency,
+      },
+    });
+    // §8.1: notify Payment Ops (finance_manager) of the new handoff-ready disbursement
+    void notifyUsersByRole('finance_manager', {
+      type:           'finance.payroll.bridge.disbursement.created',
+      title:          `Disbursement ready for payment: ${disbursement.disbursementNo}`,
+      body:           `A disbursement has been computed from a payroll run. ` +
+                      `Total: ${disbursement.currency} ${Number(disbursement.totalAmount).toFixed(2)} · ` +
+                      `${disbursement.employeeCount} employee(s). Submit for approval.`,
+      module:         'finance_disbursements',
+      severity:       'info',
+      sourceType:     'disbursement',
+      sourceId:       disbursement.id,
+      actionRoute:    '/finance/disbursements',
+      actionRequired: true,
+      dedupeKey:      `finance.payroll.bridge.disbursement.created:${disbursement.id}`,
+    });
+    // §8.1: handoff from Payroll to Disbursement
+    void createHandoff({
+      sourceModule:     'finance_payroll',
+      targetModule:     'finance_disbursements',
+      sourceEntityType: 'payroll_run',
+      sourceEntityId:   disbursement.payrollRunId,
+      targetEntityType: 'disbursement',
+      payload: {
+        disbursementId:  disbursement.id,
+        disbursementNo:  disbursement.disbursementNo,
+        payrollRunId:    disbursement.payrollRunId,
+        totalAmount:     disbursement.totalAmount,
+        employeeCount:   disbursement.employeeCount,
+        currency:        disbursement.currency,
+        createdBy:       actor.id,
+      },
+      createdBy: actor.id,
+    });
+  }
+
+  return c.json({ success: true, data: { ...disbursement, created } });
 });
 
 router.post('/disbursements/submit', async c => {

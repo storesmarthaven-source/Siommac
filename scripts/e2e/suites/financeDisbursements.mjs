@@ -59,6 +59,8 @@ export default async function run(h) {
     try { if (ctx.disbId) await sb.from('handoff_outbox').delete().eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId); } catch {}
     // Message thread created on bank-file-ready
     try { if (ctx.disbId) await sb.from('message_threads').delete().eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId); } catch {}
+    // Handoff row created by create-from-run bridge (source = finance_payroll, target = finance_disbursements)
+    try { if (ctx.cancelRunId) await sb.from('handoff_outbox').delete().eq('source_module', 'finance_payroll').eq('source_entity_id', ctx.cancelRunId); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -246,9 +248,9 @@ export default async function run(h) {
     fails(await api('finance/disbursements/compute', fmgr1Token, { payrollRunId: ctx.draftRunId }), 'compute on draft run should fail');
   });
 
-  await test('Gap 4: createDisbursement with missing bank accounts -> 422 + finance ticket created', async () => {
+  await test('Gap 4: createDisbursement with missing bank accounts -> 422 + finance ticket + line.blocked app_event', async () => {
     // emp2 still has NO bank account at this point in the flow.
-    // createDisbursement must reject with 422 AND fire-and-forget a ticket.
+    // createDisbursement must reject with 422 AND fire-and-forget a ticket and app_event.
     const r = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.runId });
     fails(r, 'create with missing bank accounts should return 422');
     // Allow a brief window for the async fire-and-forget ticket write to land
@@ -262,6 +264,16 @@ export default async function run(h) {
       return (data ?? []).length > 0;
     }, 8000);
     expect(gotTicket, 'ticket for blocked disbursement not found in tickets table');
+    // §8.1: finance.disbursement.line.blocked app_event must also be emitted
+    const gotBlockedEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('event_type', 'finance.disbursement.line.blocked')
+        .eq('source_entity_id', ctx.runId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotBlockedEvent, 'finance.disbursement.line.blocked app_event not found after blocked create');
   });
 
   h.section('Finance Disbursements > Lifecycle + SoD');
@@ -274,6 +286,53 @@ export default async function run(h) {
     }).select('id').single();
     expect(!baErr, `seed emp2 bank account failed: ${baErr?.message}`);
     ctx.emp2BankAccountId = ba.id;
+  });
+
+  await test('Gap 5: create-from-run is idempotent — duplicate returns existing, not 409', async () => {
+    // Use ctx.cancelRunId (single employee with bank account from above) to test idempotency.
+    // First call creates the disbursement.
+    const r1 = await api('finance/disbursements/create-from-run', fmgr1Token, {
+      payrollRunId: ctx.cancelRunId, currency: 'TTD',
+    });
+    ok(r1, `first create-from-run failed: ${r1.body.message}`);
+    expect(r1.body.data.created === true, 'first call should report created=true');
+    const idFirst = r1.body.data.id;
+    // Second call with same run must reuse the existing disbursement (not 409).
+    const r2 = await api('finance/disbursements/create-from-run', fmgr1Token, {
+      payrollRunId: ctx.cancelRunId, currency: 'TTD',
+    });
+    ok(r2, `second create-from-run should not fail (idempotent reuse)`);
+    expect(r2.body.data.id === idFirst, 'second call must return same disbursement id');
+    expect(r2.body.data.created === false, 'second call should report created=false');
+    // Record the id so cleanup deletes it
+    ctx.cancelDisbId = idFirst;
+    // §8.1: finance.payroll.bridge.disbursement.created event emitted on first create
+    const gotBridgeEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('event_type', 'finance.payroll.bridge.disbursement.created')
+        .eq('source_entity_id', idFirst)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotBridgeEvent, 'finance.payroll.bridge.disbursement.created event not found after create-from-run');
+    // §8.1: handoff row to finance_disbursements created
+    const gotBridgeHandoff = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox').select('id')
+        .eq('source_module', 'finance_payroll')
+        .eq('target_module', 'finance_disbursements')
+        .eq('source_entity_id', ctx.cancelRunId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(gotBridgeHandoff, 'handoff_outbox row for payroll→disbursement not found after create-from-run');
+  });
+
+  await test('Gap 5: currency is honoured — create-from-run passes currency to record', async () => {
+    // Verify the disbursement created above has currency=TTD (not silently defaulted)
+    const r = await api('finance/disbursements/get', fmgr1Token, { id: ctx.cancelDisbId });
+    ok(r, `get failed: ${r.body.message}`);
+    expect(r.body.data.currency === 'TTD', `currency mismatch: expected TTD, got ${r.body.data.currency}`);
   });
 
   await test('finance_manager creates a disbursement (draft) from the approved run', async () => {
@@ -365,22 +424,28 @@ export default async function run(h) {
     expect(r.body.data.status === 'paid', `expected paid, got ${r.body.data.status}`);
   });
 
-  await test('side-effects: approved + file_generated + paid events all written', async () => {
+  await test('side-effects: submitted + approved + file_generated + paid events all written', async () => {
     const gotAll = await waitFor(async () => {
       const { data } = await sb.from('app_events').select('event_type')
         .eq('source_module', 'finance_disbursements').eq('source_entity_id', ctx.disbId);
       const types = new Set((data ?? []).map(e => e.event_type));
-      return ['finance.disbursement.approved', 'finance.disbursement.file_generated', 'finance.disbursement.paid'].every(t => types.has(t));
+      return [
+        'finance.disbursement.submitted',
+        'finance.disbursement.approved',
+        'finance.disbursement.file_generated',
+        'finance.disbursement.paid',
+      ].every(t => types.has(t));
     });
-    expect(gotAll, 'approved/file_generated/paid events not all present');
+    expect(gotAll, 'submitted/approved/file_generated/paid events not all present');
   });
 
   h.section('Finance Disbursements > Cancel path');
 
-  await test('create a second disbursement then cancel it at draft state', async () => {
-    const cr = await api('finance/disbursements/create', fmgr1Token, { payrollRunId: ctx.cancelRunId });
-    ok(cr, `create for cancel failed: ${cr.body.message}`);
-    ctx.cancelDisbId = cr.body.data.id;
+  await test('cancel a draft disbursement (reuses ctx.cancelDisbId from idempotency test)', async () => {
+    // ctx.cancelDisbId was created via create-from-run in the Gap 5 idempotency test above;
+    // it is in 'draft' state. Cancel it here to exercise the cancel path.
+    // (finance_disbursements has a unique constraint on payroll_run_id, so we cannot create
+    // a second disbursement for the same cancelRunId.)
     const r = await api('finance/disbursements/cancel', fmgr1Token, { id: ctx.cancelDisbId, reason: 'E2E cancel test' });
     ok(r, `cancel failed: ${r.body.message}`);
     expect(r.body.data.status === 'cancelled', `expected cancelled, got ${r.body.data.status}`);

@@ -21,6 +21,7 @@ import {
   useDisbursementMutation,
   financeDisbursementsApi,
   type ComputedDisbursement,
+  type Disbursement,
 } from '@api/finance/disbursements';
 import { ApprovedRunPicker } from './_shared/pickers';
 import { EmployeeCellResolved } from './_shared/EmployeeCell';
@@ -250,7 +251,13 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
 
   const computeQ = useComputedDisbursement(step >= 1 && runId ? runId : null);
   const computed = computeQ.data ?? null;
-  const createMut = useDisbursementMutation(financeDisbursementsApi.create);
+  // Use the idempotent bridge route: duplicate requests return the existing
+  // disbursement (not 409), and the route emits finance.payroll.bridge.disbursement.created
+  // + Payment Ops notification + handoff per §8.1.
+  const createMut = useDisbursementMutation(
+    (a: { payrollRunId: string; currency?: string; metadata?: Record<string, unknown> }) =>
+      financeDisbursementsApi.createFromRun(a) as Promise<Disbursement>,
+  );
 
   const canProceed = (): boolean => {
     if (step === 0) return !!runId;
@@ -288,14 +295,14 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
       setStep(4);
       return;
     }
-    // Step 4: create
+    // Step 4: create via idempotent bridge (duplicate → returns existing, not 409)
     if (!runId) return;
     try {
       await createMut.mutateAsync({
         payrollRunId: runId,
+        currency: settings.currency,
         metadata: {
           effectiveDate: settings.effectiveDate,
-          currency: settings.currency,
           notes: settings.notes,
         },
       });

@@ -715,6 +715,19 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
         </div>
       )}
 
+      {/* Toolbar — Add Bank Account button */}
+      {canManage && !showAdd && !editId && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <button
+            type="button"
+            class="hrfin-action is-primary"
+            onClick={() => { setShowAdd(true); setAuditAcctId(null); setForm(emptyBankForm()); setErrors({}); }}
+          >
+            + Add Bank Account
+          </button>
+        </div>
+      )}
+
       {/* Inline audit trail panel — shown when "View audit" row action is clicked */}
       {auditAcctId && (
         <BankAccountAuditPanel

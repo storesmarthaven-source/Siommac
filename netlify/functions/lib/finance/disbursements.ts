@@ -164,6 +164,48 @@ export async function createDisbursement(opts: { payrollRunId: string; actorId: 
                          `Please add bank accounts and retry.`,
       notifyRole:        'finance_manager',
     });
+    // §8.1 — emit finance.disbursement.line.blocked event and notify Payroll + HR Admin
+    void emitAppEvent({
+      eventType:        'finance.disbursement.line.blocked',
+      sourceModule:     'finance_disbursements',
+      sourceEntityType: 'payroll_run',
+      sourceEntityId:   opts.payrollRunId,
+      actorUserId:      opts.actorId,
+      severity:         'warning',
+      payload: {
+        payrollRunId:         opts.payrollRunId,
+        missingBankAccounts:  computed.missingBankAccounts,
+        missingCount:         computed.missingBankAccounts.length,
+      },
+    });
+    void notifyUsersByRole('payroll_manager', {
+      type:          'finance.disbursement.line.blocked',
+      title:         'Disbursement blocked: missing bank accounts',
+      body:          `Disbursement for payroll run ${opts.payrollRunId} is blocked. ` +
+                     `${computed.missingBankAccounts.length} employee(s) have no primary bank account. ` +
+                     `Add bank accounts and retry.`,
+      module:        'finance_disbursements',
+      severity:      'warning',
+      sourceType:    'payroll_run',
+      sourceId:      opts.payrollRunId,
+      actionRoute:   '/finance/disbursements',
+      actionRequired: true,
+      dedupeKey:     `finance.disbursement.line.blocked:${opts.payrollRunId}`,
+    });
+    void notifyUsersByRole('hr_admin', {
+      type:          'finance.disbursement.line.blocked',
+      title:         'Disbursement blocked: missing bank accounts',
+      body:          `Disbursement for payroll run ${opts.payrollRunId} is blocked. ` +
+                     `${computed.missingBankAccounts.length} employee(s) have no primary bank account. ` +
+                     `Update employee bank details.`,
+      module:        'finance_disbursements',
+      severity:      'warning',
+      sourceType:    'payroll_run',
+      sourceId:      opts.payrollRunId,
+      actionRoute:   '/hr/employees',
+      actionRequired: true,
+      dedupeKey:     `finance.disbursement.line.blocked:${opts.payrollRunId}:hr_admin`,
+    });
     throw Object.assign(new Error(computed.missingBankAccounts.length + ' employee(s) have no primary bank account. All employees must have a primary bank account before creating a disbursement.'), { status: 422 });
   }
   const disbursementNo = await nextRef('DSB');
@@ -420,11 +462,39 @@ export async function getDisbursementKpis(): Promise<DisbursementKpis> {
     .filter(r => r.status === 'paid' && r.created_at >= mtdStart)
     .reduce((s, r) => s + Number(r.total_amount), 0);
 
-  // Missing bank-account lines (employees with null bank_account_id)
+  // Missing bank-account lines (employees with null bank_account_id across all lines)
   const { count: missingBankAccountCount } = await sb
     .from('finance_disbursement_lines')
     .select('id', { count: 'exact', head: true })
     .is('bank_account_id', null);
+
+  // Failed lines: lines in non-paid/non-cancelled disbursements whose referenced
+  // bank account has since been deactivated (payment can no longer proceed).
+  let failedLineCount = 0;
+  {
+    const activeDisbIds = all
+      .filter(r => !['paid', 'cancelled'].includes(r.status))
+      .map(r => r.id);
+    if (activeDisbIds.length > 0) {
+      // Collect all bank account IDs referenced by active-disbursement lines
+      const { data: lineRows } = await sb
+        .from('finance_disbursement_lines')
+        .select('bank_account_id')
+        .in('disbursement_id', activeDisbIds)
+        .not('bank_account_id', 'is', null);
+      const bankAccountIds = ((lineRows ?? []) as Array<{ bank_account_id: string }>)
+        .map(l => l.bank_account_id);
+      if (bankAccountIds.length > 0) {
+        // Count how many of those accounts are now inactive
+        const { count: inactiveCount } = await sb
+          .from('finance_employee_bank_accounts')
+          .select('id', { count: 'exact', head: true })
+          .in('id', bankAccountIds)
+          .eq('is_active', false);
+        failedLineCount = inactiveCount ?? 0;
+      }
+    }
+  }
 
   // Build 6-month trend
   const trend: Array<{ month: string; total: number; count: number }> = [];
@@ -443,7 +513,7 @@ export async function getDisbursementKpis(): Promise<DisbursementKpis> {
     paidMtd,
     totalMtdAmount,
     missingBankAccountCount: missingBankAccountCount ?? 0,
-    failedLineCount: 0, // future: track line-level failures
+    failedLineCount,
     trend,
   };
 }
