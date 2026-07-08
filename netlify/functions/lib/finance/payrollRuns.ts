@@ -1492,3 +1492,135 @@ export async function reopenRun(
 
   return updatedRun;
 }
+
+// ── Reject Run (pending_approval → calculated) ───────────────────────────────
+
+/**
+ * Reject a run that is pending approval, returning it to 'calculated' status
+ * so the preparer can review the feedback and re-submit.
+ *
+ * Transitions: pending_approval → calculated.
+ * Clears the workflow_id (the approval cycle is over; a new one will be created on re-submit).
+ * Lines and inputs are preserved so the preparer can review them.
+ * A mandatory reason is required; the submitter (run.createdBy) is notified.
+ *
+ * Permission enforcement is on the route (finance.payroll.approve).
+ */
+export async function rejectRun(
+  runId:   string,
+  actorId: string,
+  reason:  string,
+): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'pending_approval') {
+    throw Object.assign(
+      new Error(`Cannot reject: run is in status '${run.status}'. Only 'pending_approval' runs can be rejected.`),
+      { status: 422 },
+    );
+  }
+  if (!reason || reason.trim() === '') {
+    throw Object.assign(new Error('A reason is required to reject a payroll run.'), { status: 422 });
+  }
+
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({
+      status:      'calculated',
+      workflow_id: null,
+    })
+    .eq('id', runId)
+    .select()
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('rejectRun/update: ' + updErr.message), { status: 500 });
+
+  const updatedRun = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.rejected',
+    previousState: { status: 'pending_approval' },
+    newState: { status: 'calculated', rejectedBy: actorId, reason: reason.trim() },
+    reason: reason.trim(),
+  });
+
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.rejected',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'warning',
+    payload:          { runNo: updatedRun.runNo, reason: reason.trim() },
+  });
+
+  // §8.1 — notify the submitter (run.createdBy) that the run was rejected
+  if (run.createdBy && run.createdBy !== actorId) {
+    void notify({
+      userId:     run.createdBy,
+      type:       'finance.payroll.run.rejected',
+      title:      `Payroll run ${run.runNo} rejected`,
+      body:       `Your ${run.periodMonth.slice(0, 7)} payroll run was rejected. Reason: ${reason.trim()}`,
+      module:     'finance_payroll',
+      severity:   'warning',
+      sourceType: 'payroll_run',
+      sourceId:   runId,
+      dedupeKey:  `payroll_run.rejected.${runId}`,
+    });
+  }
+
+  return updatedRun;
+}
+
+// ── Notify payslip employees ──────────────────────────────────────────────────
+
+/**
+ * Send in-app payslip-ready notifications to all employees with payslips
+ * in this locked run.
+ * Idempotent — the notify() call uses per-payslip dedupe keys.
+ */
+export async function notifyPayslipEmployees(
+  runId:   string,
+  actorId: string,
+): Promise<{ notified: number }> {
+  const run = await getPayrollRun(runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (run.status !== 'locked') {
+    throw Object.assign(
+      new Error('Employees can only be notified for locked runs.'),
+      { status: 422 },
+    );
+  }
+
+  const { data: payslips, error: psErr } = await sb
+    .from('finance_payslips')
+    .select('id, employee_id, payslip_no')
+    .eq('run_id', runId);
+  if (psErr) throw Object.assign(new Error('notifyPayslipEmployees: ' + psErr.message), { status: 500 });
+
+  const rows = (payslips ?? []) as Array<{ id: string; employee_id: string | null; payslip_no: string }>;
+  let notified = 0;
+
+  for (const ps of rows) {
+    if (!ps.employee_id) continue;
+    void notify({
+      userId:     ps.employee_id,
+      type:       'finance.payroll.payslip.available',
+      title:      `Your payslip for ${run.periodMonth.slice(0, 7)} is ready`,
+      body:       `Payslip ${ps.payslip_no} is now available.`,
+      module:     'finance_payroll',
+      severity:   'info',
+      sourceType: 'payslip',
+      sourceId:   ps.id,
+      dedupeKey:  `payslip.available.${ps.id}`,
+    });
+    notified++;
+  }
+
+  void writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.payslips_notified',
+    newState: { notified, periodMonth: run.periodMonth },
+  });
+
+  return { notified };
+}

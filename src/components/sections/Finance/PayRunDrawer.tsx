@@ -21,6 +21,7 @@
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { toast } from '@store';
+import { dialog } from '@lib/dialog';
 import { Drawer, HrfinPill, type HrfinTone } from '@ui';
 import {
   usePayrollRun,
@@ -201,10 +202,17 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
   if (!inputs || inputs.length === 0) return <div class="hrfin-empty">No inputs snapshotted — run Lock Inputs first.</div>;
 
   async function handleEditAmount(inp: PayrollRunInput): Promise<void> {
-    const raw = window.prompt(`Edit amount for ${inp.label ?? inp.componentCode ?? inp.sourceType} (current: ${inp.amount ?? 0}):`);
+    const raw = await dialog.prompt({
+      title: `Edit amount — ${inp.label ?? inp.componentCode ?? inp.sourceType}`,
+      text: `Current value: ${inp.amount ?? 0}`,
+      value: String(inp.amount ?? 0),
+      placeholder: 'Enter new amount',
+      type: 'number',
+      confirmText: 'Update',
+    });
     if (raw === null) return;
     const val = parseFloat(raw);
-    if (isNaN(val)) { toast('Invalid amount.'); return; }
+    if (isNaN(val)) { toast('Invalid amount — please enter a number.'); return; }
     try {
       const { apiPost } = await import('@lib/api');
       await apiPost('finance/payroll/inputs/edit', { inputId: inp.id, amount: val } as Record<string, unknown>);
@@ -215,7 +223,13 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
   }
 
   async function handleExclude(inp: PayrollRunInput): Promise<void> {
-    if (!window.confirm(`Exclude ${inp.label ?? inp.sourceType} for this employee from the run? This cannot be undone without reopening the run.`)) return;
+    const confirmed = await dialog.confirm({
+      title: 'Exclude input from run?',
+      text: `"${inp.label ?? inp.sourceType}" will be excluded from this pay run for this employee. This cannot be undone without reopening the run.`,
+      confirmText: 'Exclude',
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       const { apiPost } = await import('@lib/api');
       await apiPost('finance/payroll/inputs/exclude', { inputId: inp.id } as Record<string, unknown>);
@@ -476,11 +490,14 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
     setNotifying(true);
     try {
       const { apiPost } = await import('@lib/api');
-      await apiPost('finance/payroll/payslips/notify', { runId } as Record<string, unknown>);
-      toast('Employees notified.');
-    } catch {
-      // Route may not exist yet — fire-and-forget via existing generate which re-sends
-      toast('Notification sent via payslip regeneration.');
+      const res = await apiPost<{ success: boolean; data?: { notified: number }; message?: string }>(
+        'finance/payroll/payslips/notify',
+        { runId } as Record<string, unknown>,
+      );
+      if (!res.success) throw new Error(res.message ?? 'Notify failed.');
+      toast(`${res.data?.notified ?? 0} employee(s) notified.`);
+    } catch (e) {
+      toast((e as Error).message ?? 'Failed to send notifications.');
     } finally {
       setNotifying(false);
     }

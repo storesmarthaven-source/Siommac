@@ -19,6 +19,8 @@ import {
   lockInputs,
   calculateRun,
   submitRun,
+  approveRun,
+  rejectRun,
   lockRun,
   reopenRun,
   listRunInputs,
@@ -28,6 +30,7 @@ import {
   resolveRunWarning,
   getEmployeePopulationPreview,
   downloadRunExport,
+  notifyPayslipEmployees,
 } from '../lib/finance/payrollRuns';
 import {
   generatePayslips,
@@ -204,6 +207,37 @@ router.post('/payroll/runs/submit', async c => {
   } catch (e) { return routeErr(c, e); }
 });
 
+// POST /api/finance/payroll/runs/approve
+// Approves a pending_approval run.  SoD enforced: actor must differ from run.createdBy.
+// Permission: finance.payroll.approve (finance_manager / admin only).
+router.post('/payroll/runs/approve', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.approve');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    await approveRun(v.data.id, actor.id);
+    const data = await getPayrollRun(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/reject
+// Rejects a pending_approval run, returning it to 'calculated' so the preparer can revise.
+// A mandatory reason is required and the submitter is notified.
+// Permission: finance.payroll.approve (same authority as approve — SoD mirrors approve path).
+router.post('/payroll/runs/reject', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.approve');
+  const v = zv(c, z.object({
+    id:     z.string().uuid(),
+    reason: z.string().min(1, 'Reason is required').max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await rejectRun(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
 // POST /api/finance/payroll/runs/lock
 // Locks an approved run so that payslips can be generated.
 // Permission: finance.payroll.lock (finance_manager / admin only — SoD).
@@ -268,6 +302,20 @@ router.post('/payroll/exports/list', async c => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Payslips
 // ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/payslips/notify
+// Send in-app payslip-ready notifications to all employees with payslips in a locked run.
+// Idempotent (uses per-payslip dedupe keys).
+// Permission: finance.payroll.run.manage.
+router.post('/payroll/payslips/notify', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.run.manage');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await notifyPayslipEmployees(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
 
 // POST /api/finance/payroll/payslips/generate
 // Generate payslips for all employees in a locked run.

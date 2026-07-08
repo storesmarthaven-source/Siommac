@@ -802,10 +802,10 @@ export default async function run(h) {
         .eq('actor_user_id', fmgr1Id).order('created_at', { ascending: false }).limit(1);
       expect((evts ?? []).length > 0, 'app_event finance.payroll.warning.resolved should have been emitted');
 
-      // Assert audit log entry
+      // Assert audit log entry — backbone writes auditAction='payroll_run_warning.resolved'
       const { data: auditRows } = await sb.from('hr_audit_log')
-        .select('id').eq('actor_id', fmgr1Id).eq('action', 'finance.payroll.warning.resolved').limit(1);
-      expect((auditRows ?? []).length > 0, 'hr_audit_log should have a warning.resolved entry');
+        .select('id').eq('actor_id', fmgr1Id).eq('action', 'payroll_run_warning.resolved').limit(1);
+      expect((auditRows ?? []).length > 0, 'hr_audit_log should have a payroll_run_warning.resolved entry');
     });
 
     await test('resolved warning can no longer be resolved again', async () => {

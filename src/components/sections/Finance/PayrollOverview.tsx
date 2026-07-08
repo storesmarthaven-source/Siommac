@@ -19,6 +19,7 @@ import { type VNode } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
 import {
   HrfinPageHeader,
   QuickActionStrip,
@@ -40,6 +41,12 @@ import {
 import { fmtMoney, fmtDate, humanize } from './financeShared';
 import { PayNewRunWizard }  from './PayNewRunWizard';
 import { PayRunDrawer, type PayRunDrawerActions } from './PayRunDrawer';
+import {
+  ReportPanel,
+  type ReportResult,
+  type ReportColumn,
+  type ReportDescriptor,
+} from './_shared/reports';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -97,18 +104,37 @@ function tabFilter(runs: PayrollRun[], tab: PageTab): PayrollRun[] {
 
 // ── Reports surface ───────────────────────────────────────────────────────────
 
-const REPORTS: { key: string; label: string }[] = [
-  { key: 'register',             label: 'Payroll Register' },
-  { key: 'payslip_register',     label: 'Payslip Register' },
-  { key: 'net_pay_summary',      label: 'Net-Pay Summary' },
-  { key: 'employer_nis_summary', label: 'Employer-NIS Summary' },
+const REPORTS: ReportDescriptor[] = [
+  { key: 'register',             label: 'Payroll Register',      description: 'All runs with gross/net totals' },
+  { key: 'payslip_register',     label: 'Payslip Register',      description: 'All generated payslips' },
+  { key: 'net_pay_summary',      label: 'Net-Pay Summary',       description: 'Per-employee net pay for a run' },
+  { key: 'employer_nis_summary', label: 'Employer-NIS Summary',  description: 'Employer NIS contributions by run' },
+  { key: 'paye_summary',         label: 'PAYE Summary',          description: 'PAYE deductions for a run' },
+  { key: 'hs_summary',           label: 'Health Surcharge',      description: 'HS deductions for a run' },
+  { key: 'cost_by_department',   label: 'Cost by Department',    description: 'Payroll cost split by department' },
+  { key: 'nis_remittance',       label: 'NIS Remittance',        description: 'NIS figures for statutory remittance' },
+  { key: 'nis_exceptions',       label: 'NIS Exceptions',        description: 'NIS warning exceptions for a run' },
 ];
 
+/** Dynamic columns derived from the first result row (unknown schema at design time). */
+function dynamicColumns(rows: Array<Record<string, unknown>>): ReportColumn[] {
+  if (rows.length === 0) return [];
+  return Object.keys(rows[0]!).map(k => ({
+    key:    k,
+    header: humanize(k),
+    value:  (row: Record<string, unknown>) => {
+      const v = row[k];
+      return v == null ? '' : String(v);
+    },
+  }));
+}
+
 function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
-  const [report, setReport] = useState(REPORTS[0]!.key);
-  const [runId, setRunId]   = useState<string>(() => runs[0]?.id ?? '');
-  const [rows, setRows]     = useState<Array<Record<string, unknown>> | null>(null);
+  const [selectedReport, setSelectedReport] = useState<string>(REPORTS[0]!.key);
+  const [runId,  setRunId]   = useState<string>(() => runs[0]?.id ?? '');
+  const [result, setResult]  = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
   const canView = can('finance.payroll.reports.view');
 
   if (!canView) {
@@ -120,97 +146,64 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
   }
 
   async function runReport(): Promise<void> {
-    setLoading(true); setRows(null);
+    setLoading(true); setResult(null); setError(null);
     try {
-      const res = await financePayrollApi.runReport({ report, params: runId ? { runId } : {} });
-      setRows(res.rows);
+      const res = await financePayrollApi.runReport({
+        report: selectedReport,
+        params: runId ? { runId } : {},
+      });
+      setResult(res as ReportResult);
     } catch (e) {
+      setError((e as Error).message ?? 'Failed to run report.');
       toast((e as Error).message ?? 'Failed to run report.');
     } finally {
       setLoading(false);
     }
   }
 
-  const cols = rows && rows.length > 0 ? Object.keys(rows[0]!) : [];
+  const columns = result ? dynamicColumns(result.rows) : [];
+
+  // Pay-run picker rendered as the params slot of ReportPanel
+  const paramsSlot = (
+    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
+        <span style={{ fontSize: 12, fontWeight: 600 }}>Pay run</span>
+        <select
+          value={runId}
+          onChange={e => { setRunId((e.currentTarget as HTMLSelectElement).value); setResult(null); }}
+          style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
+                   border: '1px solid var(--hrfin-border)', borderRadius: 6,
+                   color: 'var(--hrfin-text-primary)' }}
+        >
+          <option value="">— all runs —</option>
+          {runs.map(r => <option key={r.id} value={r.id}>{r.runNo} · {monthLabel(r.periodMonth)}</option>)}
+        </select>
+      </label>
+      <button
+        type="button"
+        class="hrfin-action is-primary"
+        disabled={loading}
+        onClick={() => void runReport()}
+        style={{ alignSelf: 'flex-end', marginBottom: 0 }}
+      >
+        {loading ? 'Running…' : 'Run report'}
+      </button>
+    </div>
+  );
 
   return (
-    <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Controls */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
-          <span style={{ fontSize: 12, fontWeight: 600 }}>Report</span>
-          <select
-            value={report}
-            onChange={e => setReport((e.currentTarget as HTMLSelectElement).value)}
-            style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
-                     border: '1px solid var(--hrfin-border)', borderRadius: 6,
-                     color: 'var(--hrfin-text-primary)' }}
-          >
-            {REPORTS.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-          </select>
-        </label>
-
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
-          <span style={{ fontSize: 12, fontWeight: 600 }}>Pay run</span>
-          <select
-            value={runId}
-            onChange={e => setRunId((e.currentTarget as HTMLSelectElement).value)}
-            style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
-                     border: '1px solid var(--hrfin-border)', borderRadius: 6,
-                     color: 'var(--hrfin-text-primary)' }}
-          >
-            <option value="">— select —</option>
-            {runs.map(r => <option key={r.id} value={r.id}>{r.runNo} · {monthLabel(r.periodMonth)}</option>)}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          class="hrfin-action is-primary"
-          disabled={loading}
-          onClick={() => void runReport()}
-          style={{ marginBottom: 0, alignSelf: 'flex-end' }}
-        >
-          {loading ? 'Running…' : 'Run report'}
-        </button>
-      </div>
-
-      {/* Results */}
-      {loading ? (
-        <div class="hrfin-empty">Running report…</div>
-      ) : rows === null ? (
-        <div class="hrfin-empty">Select a report and pay run, then click Run report.</div>
-      ) : rows.length === 0 ? (
-        <div class="hrfin-empty">No rows returned for the selected parameters.</div>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--hrfin-border)', textAlign: 'left' }}>
-                {cols.map(c => (
-                  <th key={c} style={{ padding: '6px 8px', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    {humanize(c)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--hrfin-border)' }}>
-                  {cols.map(c => (
-                    <td key={c} style={{ padding: '6px 8px', color: 'var(--hrfin-text-secondary)' }}>
-                      {row[c] == null ? '—' : String(row[c])}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', margin: '8px 0 0' }}>
-            {rows.length} row(s)
-          </p>
-        </div>
-      )}
+    <div class="hrfin">
+      <ReportPanel
+        reports={REPORTS}
+        selectedReport={selectedReport}
+        onSelectReport={key => { setSelectedReport(key); setResult(null); setError(null); }}
+        params={paramsSlot}
+        result={result}
+        columns={columns}
+        exportFilename={`payroll-${selectedReport}`}
+        loading={loading}
+        error={error}
+      />
     </div>
   );
 }
@@ -278,14 +271,15 @@ export function PayrollOverview(): VNode {
   const runs  = runsQ.data ?? [];
 
   // Mutations (used by drawer actions)
-  const lockInputsMut = usePayrollMutation(financePayrollApi.lockInputs);
-  const calcMut       = usePayrollMutation(financePayrollApi.calculate);
-  const submitMut     = usePayrollMutation(financePayrollApi.submitRun);
-  const approveMut    = usePayrollMutation(financePayrollApi.lockRun);   // lock = post-approve
-  const lockRunMut    = usePayrollMutation(financePayrollApi.lockRun);
-  const reopenMut     = usePayrollMutation(financePayrollApi.reopenRun);
-  const exportMut     = usePayrollMutation(financePayrollApi.exportRun);
-  const genMut        = usePayrollMutation(financePayrollApi.generatePayslips);
+  const lockInputsMut  = usePayrollMutation(financePayrollApi.lockInputs);
+  const calcMut        = usePayrollMutation(financePayrollApi.calculate);
+  const submitMut      = usePayrollMutation(financePayrollApi.submitRun);
+  const approveRunMut  = usePayrollMutation(financePayrollApi.approveRun);
+  const rejectRunMut   = usePayrollMutation(financePayrollApi.rejectRun);
+  const lockRunMut     = usePayrollMutation(financePayrollApi.lockRun);
+  const reopenMut      = usePayrollMutation(financePayrollApi.reopenRun);
+  const exportMut      = usePayrollMutation(financePayrollApi.exportRun);
+  const genMut         = usePayrollMutation(financePayrollApi.generatePayslips);
 
   async function runAction(p: Promise<unknown>, ok: string): Promise<void> {
     try { await p; toast(ok); }
@@ -425,10 +419,28 @@ export function PayrollOverview(): VNode {
     onLockInputs:  run => void runAction(lockInputsMut.mutateAsync({ id: run.id }), 'Inputs locked.'),
     onCalculate:   run => void runAction(calcMut.mutateAsync({ id: run.id }),        'Run calculated.'),
     onSubmit:      run => void runAction(submitMut.mutateAsync({ id: run.id }),       'Submitted for approval.'),
-    onApprove:     run => void runAction(approveMut.mutateAsync({ id: run.id }),      'Run approved.'),
-    onReject:      run => {
-      // Reject = reopen with reason "rejected"
-      void runAction(reopenMut.mutateAsync({ id: run.id, reason: 'Rejected by approver.' }), 'Run rejected and returned to draft.');
+    onApprove:     async run => {
+      const confirmed = await dialog.confirm({
+        title: `Approve run ${run.runNo}?`,
+        text: `Approving will transition the ${run.periodMonth.slice(0, 7)} pay run to 'Approved' status. It will then be ready to lock. SoD check: you must not be the preparer.`,
+        confirmText: 'Approve',
+        icon: 'question',
+      });
+      if (!confirmed) return;
+      void runAction(approveRunMut.mutateAsync({ id: run.id }), 'Run approved.');
+    },
+    onReject:      async run => {
+      const reason = await dialog.prompt({
+        title: `Reject run ${run.runNo}`,
+        text: 'Provide a reason for rejection. The preparer will be notified and the run returned to Calculated status.',
+        placeholder: 'Reason for rejection…',
+        confirmText: 'Reject',
+      });
+      if (reason === null) return;
+      void runAction(
+        rejectRunMut.mutateAsync({ id: run.id, reason: reason.trim() || 'Rejected by approver.' }),
+        'Run rejected and returned for revision.',
+      );
     },
     onLockRun:     run => void runAction(lockRunMut.mutateAsync({ id: run.id }),      'Run locked.'),
     onExport:      run => void runAction(exportMut.mutateAsync({ id: run.id }),       'Export generated.'),
