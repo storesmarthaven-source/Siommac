@@ -105,14 +105,17 @@ export async function listGlAccounts(search?: string): Promise<GlAccountOption[]
 // ── Cost Centres ─────────────────────────────────────────────────────────────
 
 /**
- * Return cost-centre options from hr_cost_centers (built by HR module).
- * Falls back gracefully if the table is empty.
+ * Return cost-centre options from finance_cost_centers — the shared cost-centre
+ * registry (created in 20260621100003, extended with code/is_active by the HR Org
+ * Structure migration 20260715000000; HR manages it until Finance lands). Only
+ * active centres are offered as picker options.
  */
 export async function listCostCentres(search?: string): Promise<CostCentreOption[]> {
   let query = sb
-    .from('hr_cost_centers')
+    .from('finance_cost_centers')
     .select('id, code, name, department_id')
-    .order('code');
+    .eq('is_active', true)
+    .order('code', { nullsFirst: false });
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
