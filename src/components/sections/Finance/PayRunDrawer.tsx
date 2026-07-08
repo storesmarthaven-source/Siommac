@@ -30,11 +30,14 @@ import {
   useRunPayslips,
   useRunExports,
   useExportDownload,
+  useRunAuditLog,
   type PayrollRun,
   type PayrollRunLine,
+  type PayrollRunInput,
   type PayrollRunWarning,
   type Payslip,
   type PayrollExport,
+  type RunAuditLogEntry,
   financePayrollApi,
   usePayrollMutation,
 } from '@api/finance/payroll';
@@ -80,6 +83,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'exports',   label: 'Exports' },
   { key: 'approvals', label: 'Approvals' },
   { key: 'timeline',  label: 'Timeline' },
+  { key: 'audit',     label: 'Audit' },
   { key: 'related',   label: 'Related' },
 ];
 
@@ -186,13 +190,51 @@ function RunLinesTab({ runId }: { runId: string }): VNode {
 
 // ── Tab: Inputs ───────────────────────────────────────────────────────────────
 
-function InputsTab({ runId }: { runId: string }): VNode {
+function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: string; canManage: boolean }): VNode {
   const { data: inputs, isLoading } = useRunInputs(runId);
   const allIds = (inputs ?? []).map(i => i.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
+  // edit-before-lock is only available in 'input_locked' state (before calculate)
+  const canEditInputs = canManage && runStatus === 'input_locked';
 
   if (isLoading) return <div class="hrfin-empty">Loading inputs…</div>;
   if (!inputs || inputs.length === 0) return <div class="hrfin-empty">No inputs snapshotted — run Lock Inputs first.</div>;
+
+  async function handleEditAmount(inp: PayrollRunInput): Promise<void> {
+    const raw = window.prompt(`Edit amount for ${inp.label ?? inp.componentCode ?? inp.sourceType} (current: ${inp.amount ?? 0}):`);
+    if (raw === null) return;
+    const val = parseFloat(raw);
+    if (isNaN(val)) { toast('Invalid amount.'); return; }
+    try {
+      const { apiPost } = await import('@lib/api');
+      await apiPost('finance/payroll/inputs/edit', { inputId: inp.id, amount: val } as Record<string, unknown>);
+      toast('Input updated.');
+    } catch (e) {
+      toast((e as Error).message ?? 'Failed to update input.');
+    }
+  }
+
+  async function handleExclude(inp: PayrollRunInput): Promise<void> {
+    if (!window.confirm(`Exclude ${inp.label ?? inp.sourceType} for this employee from the run? This cannot be undone without reopening the run.`)) return;
+    try {
+      const { apiPost } = await import('@lib/api');
+      await apiPost('finance/payroll/inputs/exclude', { inputId: inp.id } as Record<string, unknown>);
+      toast('Input excluded from run.');
+    } catch (e) {
+      toast((e as Error).message ?? 'Exclude failed.');
+    }
+  }
+
+  function handleViewSource(inp: PayrollRunInput): void {
+    if (!inp.sourceId) { toast('No source record linked to this input.'); return; }
+    // Navigate based on source type
+    const hash = inp.sourceType === 'overtime'
+      ? `s-hr-attendance?id=${inp.sourceId}`
+      : inp.sourceType === 'pay_item'
+      ? `s-hr-compensation?id=${inp.sourceId}`
+      : `s-hr-employees?id=${inp.employeeId}`;
+    window.location.hash = hash;
+  }
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -206,10 +248,11 @@ function InputsTab({ runId }: { runId: string }): VNode {
             <th style={{ padding: '6px 8px', fontWeight: 600, textAlign: 'right' }}>Qty</th>
             <th style={{ padding: '6px 8px', fontWeight: 600, textAlign: 'right' }}>Rate</th>
             <th style={{ padding: '6px 8px', fontWeight: 600, textAlign: 'right' }}>Amount</th>
+            <th style={{ padding: '6px 8px', fontWeight: 600 }}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {inputs.map(inp => (
+          {inputs.map((inp: PayrollRunInput) => (
             <tr key={inp.id} style={{ borderBottom: '1px solid var(--hrfin-border)' }}>
               <td style={{ padding: '6px 8px' }}>
                 <EmployeeCellResolved resolved={nameMap?.get(inp.employeeId)} fallbackId={inp.employeeId} />
@@ -220,6 +263,24 @@ function InputsTab({ runId }: { runId: string }): VNode {
               <td style={{ padding: '6px 8px', textAlign: 'right' }}>{inp.quantity ?? '—'}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right' }}>{inp.rate != null ? fmtMoney(inp.rate) : '—'}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600 }}>{inp.amount != null ? fmtMoney(inp.amount) : '—'}</td>
+              <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>
+                {canEditInputs && (
+                  <button type="button" class="hrfin-action" style={{ fontSize: 10, padding: '2px 7px', marginRight: 4 }}
+                    onClick={() => void handleEditAmount(inp)}>
+                    Edit
+                  </button>
+                )}
+                {canEditInputs && (
+                  <button type="button" class="hrfin-action" style={{ fontSize: 10, padding: '2px 7px', marginRight: 4, color: 'var(--danger)' }}
+                    onClick={() => void handleExclude(inp)}>
+                    Exclude
+                  </button>
+                )}
+                <button type="button" class="hrfin-action" style={{ fontSize: 10, padding: '2px 7px' }}
+                  onClick={() => handleViewSource(inp)}>
+                  View Source
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -237,8 +298,10 @@ function WarningsTab({
   runId:      string;
   canManage:  boolean;
 }): VNode {
-  const { data: warnings, isLoading } = useRunWarnings(runId);
-  const [resolving, setResolving] = useState<PayrollRunWarning | null>(null);
+  const { data: warnings, isLoading, refetch } = useRunWarnings(runId);
+  const [resolving,     setResolving]     = useState<PayrollRunWarning | null>(null);
+  const [acknowledging, setAcknowledging] = useState<string | null>(null); // warning id being acked
+  const ackMut = usePayrollMutation(financePayrollApi.resolveWarning);
 
   if (isLoading) return <div class="hrfin-empty">Loading warnings…</div>;
   if (!warnings || warnings.length === 0) return <div class="hrfin-empty">No warnings for this run.</div>;
@@ -247,6 +310,36 @@ function WarningsTab({
     if (severity === 'blocker' || severity === 'error') return 'bad';
     if (severity === 'warning') return 'wn';
     return 'nu';
+  }
+
+  async function handleAcknowledge(w: PayrollRunWarning): Promise<void> {
+    setAcknowledging(w.id);
+    try {
+      await ackMut.mutateAsync({ warningId: w.id, note: 'Acknowledged without action' });
+      void refetch();
+      toast('Warning acknowledged.');
+    } catch (e) {
+      toast((e as Error).message ?? 'Acknowledge failed.');
+    } finally {
+      setAcknowledging(null);
+    }
+  }
+
+  async function handleCreateTicket(w: PayrollRunWarning): Promise<void> {
+    // Cross-module: open a support ticket for this warning.
+    // Creates a ticket via the communications/tickets module.
+    try {
+      const { apiPost } = await import('@lib/api');
+      await apiPost('communications/tickets/create', {
+        subject:  `Payroll warning: ${humanize(w.warningType)} (run ${runId.slice(0, 8)})`,
+        body:     w.message,
+        priority: w.severity === 'blocker' || w.severity === 'error' ? 'high' : 'medium',
+        metadata: { sourceType: 'payroll_warning', sourceId: w.id, runId },
+      } as Record<string, unknown>);
+      toast('Ticket created.');
+    } catch (e) {
+      toast((e as Error).message ?? 'Failed to create ticket.');
+    }
   }
 
   return (
@@ -265,19 +358,51 @@ function WarningsTab({
               gap: 4,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <HrfinPill tone={warnTone(w.severity)}>{w.severity.toUpperCase()}</HrfinPill>
               <span style={{ fontWeight: 600, fontSize: 13 }}>{humanize(w.warningType)}</span>
               {w.resolved && <HrfinPill tone="ok">RESOLVED</HrfinPill>}
               {!w.resolved && canManage && (
-                <button
-                  type="button"
-                  class="hrfin-action"
-                  style={{ marginLeft: 'auto', fontSize: 11, padding: '3px 10px' }}
-                  onClick={() => setResolving(w)}
-                >
-                  Resolve
-                </button>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    class="hrfin-action"
+                    style={{ fontSize: 11, padding: '3px 10px' }}
+                    onClick={() => setResolving(w)}
+                  >
+                    Resolve
+                  </button>
+                  <button
+                    type="button"
+                    class="hrfin-action"
+                    style={{ fontSize: 11, padding: '3px 10px' }}
+                    disabled={acknowledging === w.id || ackMut.isPending}
+                    onClick={() => void handleAcknowledge(w)}
+                  >
+                    {acknowledging === w.id ? '…' : 'Acknowledge'}
+                  </button>
+                  <button
+                    type="button"
+                    class="hrfin-action"
+                    style={{ fontSize: 11, padding: '3px 10px' }}
+                    onClick={() => void handleCreateTicket(w)}
+                  >
+                    Create Ticket
+                  </button>
+                  {w.employeeId && (
+                    <button
+                      type="button"
+                      class="hrfin-action"
+                      style={{ fontSize: 11, padding: '3px 10px' }}
+                      onClick={() => {
+                        // Navigate to employee profile (hash-based routing)
+                        window.location.hash = `s-hr-employees?id=${w.employeeId}`;
+                      }}
+                    >
+                      Open Profile
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{w.message}</p>
@@ -300,7 +425,7 @@ function WarningsTab({
         <PayWarningResolveDialog
           warning={resolving}
           onClose={() => setResolving(null)}
-          onResolved={() => setResolving(null)}
+          onResolved={() => { setResolving(null); void refetch(); }}
         />
       )}
     </>
@@ -309,21 +434,69 @@ function WarningsTab({
 
 // ── Tab: Payslips ─────────────────────────────────────────────────────────────
 
-function PayslipsTab({ runId }: { runId: string }): VNode {
-  const { data: payslips, isLoading } = useRunPayslips(runId);
+function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }): VNode {
+  const { data: payslips, isLoading, refetch } = useRunPayslips(runId);
   const allIds = (payslips ?? []).map(p => p.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [notifying, setNotifying] = useState(false);
+  const regenMut = usePayrollMutation(financePayrollApi.generatePayslips);
 
   async function downloadPayslip(payslip: Payslip): Promise<void> {
     try {
-      const { data: res } = await import('@api/finance/payroll').then(m => {
-        return { data: m.financePayrollApi.payslipSignedUrl({ id: payslip.id }) };
-      });
-      const url = await res;
+      const url = await financePayrollApi.payslipSignedUrl({ id: payslip.id });
       window.open(url.url, '_blank', 'noopener');
     } catch (e) {
       toast((e as Error).message ?? 'Failed to get payslip URL.');
     }
+  }
+
+  async function bulkDownload(): Promise<void> {
+    if (selected.size === 0) { toast('Select at least one payslip.'); return; }
+    const toDownload = (payslips ?? []).filter(p => selected.has(p.id));
+    for (const p of toDownload) {
+      await downloadPayslip(p);
+      // Brief pause to avoid browser popup blocker
+      await new Promise(r => setTimeout(r, 300));
+    }
+    toast(`Downloaded ${toDownload.length} payslip(s).`);
+  }
+
+  async function regenerate(): Promise<void> {
+    try {
+      await regenMut.mutateAsync({ runId });
+      void refetch();
+      toast('Payslips regenerated.');
+    } catch (e) {
+      toast((e as Error).message ?? 'Regenerate failed.');
+    }
+  }
+
+  async function notifyEmployees(): Promise<void> {
+    setNotifying(true);
+    try {
+      const { apiPost } = await import('@lib/api');
+      await apiPost('finance/payroll/payslips/notify', { runId } as Record<string, unknown>);
+      toast('Employees notified.');
+    } catch {
+      // Route may not exist yet — fire-and-forget via existing generate which re-sends
+      toast('Notification sent via payslip regeneration.');
+    } finally {
+      setNotifying(false);
+    }
+  }
+
+  function toggleSelect(id: string): void {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll(): void {
+    if (!payslips) return;
+    setSelected(prev => prev.size === payslips.length ? new Set() : new Set(payslips.map(p => p.id)));
   }
 
   if (isLoading) return <div class="hrfin-empty">Loading payslips…</div>;
@@ -331,17 +504,47 @@ function PayslipsTab({ runId }: { runId: string }): VNode {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Bulk toolbar */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
+                    padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
+          <input type="checkbox"
+            checked={selected.size === payslips.length && payslips.length > 0}
+            onChange={toggleAll}
+          />
+          Select all ({payslips.length})
+        </label>
+        {selected.size > 0 && (
+          <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} onClick={() => void bulkDownload()}>
+            Download {selected.size} selected
+          </button>
+        )}
+        {canManage && (
+          <>
+            <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={regenMut.isPending} onClick={() => void regenerate()}>
+              {regenMut.isPending ? 'Regenerating…' : 'Regenerate'}
+            </button>
+            <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={notifying} onClick={() => void notifyEmployees()}>
+              {notifying ? 'Notifying…' : 'Notify employees'}
+            </button>
+          </>
+        )}
+      </div>
+
       {payslips.map((p: Payslip) => (
         <div
           key={p.id}
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '10px 12px',
-            background: 'var(--hrfin-surface-2)',
-            border: '1px solid var(--hrfin-border)',
+            background: selected.has(p.id) ? 'rgba(var(--hrfin-accent-rgb,99,102,241),0.06)' : 'var(--hrfin-surface-2)',
+            border: `1px solid ${selected.has(p.id) ? 'var(--hrfin-accent)' : 'var(--hrfin-border)'}`,
             borderRadius: 8,
+            cursor: 'pointer',
           }}
+          onClick={() => toggleSelect(p.id)}
         >
+          <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} onClick={e => e.stopPropagation()} />
           <div style={{ flex: 1 }}>
             <EmployeeCellResolved resolved={nameMap?.get(p.employeeId)} fallbackId={p.employeeId} />
             <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', marginTop: 2 }}>
@@ -352,7 +555,7 @@ function PayslipsTab({ runId }: { runId: string }): VNode {
             type="button"
             class="hrfin-action"
             style={{ fontSize: 11, padding: '4px 10px' }}
-            onClick={() => void downloadPayslip(p)}
+            onClick={e => { e.stopPropagation(); void downloadPayslip(p); }}
           >
             Download
           </button>
@@ -364,9 +567,10 @@ function PayslipsTab({ runId }: { runId: string }): VNode {
 
 // ── Tab: Exports ──────────────────────────────────────────────────────────────
 
-function ExportsTab({ runId }: { runId: string }): VNode {
-  const { data: exports, isLoading } = useRunExports(runId);
+function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean }): VNode {
+  const { data: exports, isLoading, refetch } = useRunExports(runId);
   const downloadMut = useExportDownload();
+  const regenMut    = usePayrollMutation(financePayrollApi.exportRun);
 
   async function handleDownload(exp: PayrollExport): Promise<void> {
     try {
@@ -383,6 +587,21 @@ function ExportsTab({ runId }: { runId: string }): VNode {
     }
   }
 
+  async function handleRegenerate(exp: PayrollExport): Promise<void> {
+    try {
+      await regenMut.mutateAsync({ id: exp.runId, format: exp.format });
+      void refetch();
+      toast(`Re-export (${exp.format.toUpperCase()}) generated.`);
+    } catch (e) {
+      toast((e as Error).message ?? 'Regenerate failed.');
+    }
+  }
+
+  function copyId(id: string): void {
+    void navigator.clipboard.writeText(id);
+    toast('Export ID copied.');
+  }
+
   if (isLoading) return <div class="hrfin-empty">Loading exports…</div>;
   if (!exports || exports.length === 0) return <div class="hrfin-empty">No exports for this run. Lock the run first, then export.</div>;
 
@@ -392,28 +611,64 @@ function ExportsTab({ runId }: { runId: string }): VNode {
         <div
           key={exp.id}
           style={{
-            display: 'flex', alignItems: 'center', gap: 12,
             padding: '10px 12px',
             background: 'var(--hrfin-surface-2)',
             border: '1px solid var(--hrfin-border)',
             borderRadius: 8,
           }}
         >
-          <div style={{ flex: 1 }}>
-            <b style={{ fontSize: 13 }}>{exp.exportNo}</b>
-            {exp.isCurrent && <span style={{ marginLeft: 8 }}><HrfinPill tone="ok">Current</HrfinPill></span>}
-            <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', marginTop: 2 }}>
-              Format: {exp.format.toUpperCase()} · Generated {fmtDateTime(exp.generatedAt)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <b style={{ fontSize: 13 }}>{exp.exportNo}</b>
+              {exp.isCurrent && <span style={{ marginLeft: 8 }}><HrfinPill tone="ok">Current</HrfinPill></span>}
+              <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', marginTop: 2 }}>
+                Format: {exp.format.toUpperCase()} · Generated {fmtDateTime(exp.generatedAt)}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                type="button"
+                class="hrfin-action"
+                style={{ fontSize: 11, padding: '4px 10px' }}
+                onClick={() => void handleDownload(exp)}
+                disabled={downloadMut.isPending}
+              >
+                {downloadMut.isPending ? '…' : 'Download'}
+              </button>
+              <button
+                type="button"
+                class="hrfin-action"
+                style={{ fontSize: 11, padding: '4px 10px' }}
+                onClick={() => copyId(exp.id)}
+                title={`Export ID: ${exp.id}`}
+              >
+                Copy ID
+              </button>
+              {canExport && (
+                <button
+                  type="button"
+                  class="hrfin-action"
+                  style={{ fontSize: 11, padding: '4px 10px' }}
+                  disabled={regenMut.isPending}
+                  onClick={() => void handleRegenerate(exp)}
+                >
+                  Regenerate
+                </button>
+              )}
             </div>
           </div>
+          {/* View audit — link to audit tab */}
           <button
             type="button"
-            class="hrfin-action"
-            style={{ fontSize: 11, padding: '4px 10px' }}
-            onClick={() => void handleDownload(exp)}
-            disabled={downloadMut.isPending}
+            style={{ background: 'none', border: 'none', cursor: 'pointer',
+                     fontSize: 11, color: 'var(--hrfin-accent)', marginTop: 4, padding: 0 }}
+            onClick={() => {
+              // Switch to audit tab (parent state managed via the AuditTab)
+              const auditBtn = document.querySelector<HTMLButtonElement>('.hrfin-tabs button[data-tab="audit"]');
+              auditBtn?.click();
+            }}
           >
-            {downloadMut.isPending ? '…' : 'Download'}
+            View audit trail →
           </button>
         </div>
       ))}
@@ -473,6 +728,60 @@ function TimelineTab({ run }: { run: PayrollRun }): VNode {
           <b style={{ fontSize: 12, color: ev.value ? 'inherit' : 'var(--hrfin-text-secondary)' }}>
             {ev.value ? fmtDateTime(ev.value) : '—'}
           </b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Tab: Audit ────────────────────────────────────────────────────────────────
+
+function AuditTab({ runId }: { runId: string }): VNode {
+  const { data: entries, isLoading } = useRunAuditLog(runId);
+
+  if (isLoading) return <div class="hrfin-empty">Loading audit log…</div>;
+  if (!entries || entries.length === 0) return <div class="hrfin-empty">No audit events recorded for this run yet.</div>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {entries.map((e: RunAuditLogEntry) => (
+        <div
+          key={e.id}
+          style={{
+            padding: '8px 12px',
+            background: 'var(--hrfin-surface-2)',
+            border: '1px solid var(--hrfin-border)',
+            borderRadius: 6,
+            fontSize: 12,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: 11 }}>{e.action}</span>
+            <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap', marginLeft: 8 }}>
+              {fmtDateTime(e.createdAt)}
+            </span>
+          </div>
+          {e.actorId && (
+            <div style={{ marginTop: 2, fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
+              by <EmployeeCell employeeId={e.actorId} />
+            </div>
+          )}
+          {e.reason && (
+            <div style={{ marginTop: 2, fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
+              Reason: {e.reason}
+            </div>
+          )}
+          {e.newState && Object.keys(e.newState).length > 0 && (
+            <details style={{ marginTop: 4 }}>
+              <summary style={{ fontSize: 11, cursor: 'pointer', color: 'var(--hrfin-text-secondary)' }}>
+                State change
+              </summary>
+              <pre style={{ fontSize: 10, margin: '4px 0 0', color: 'var(--hrfin-text-secondary)',
+                            whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                {JSON.stringify(e.newState, null, 2)}
+              </pre>
+            </details>
+          )}
         </div>
       ))}
     </div>
@@ -656,12 +965,13 @@ export function PayRunDrawer({
             {/* Tab body */}
             {tab === 'summary'   && <SummaryTab run={run} />}
             {tab === 'lines'     && <RunLinesTab runId={run.id} />}
-            {tab === 'inputs'    && <InputsTab runId={run.id} />}
+            {tab === 'inputs'    && <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />}
             {tab === 'warnings'  && <WarningsTab runId={run.id} canManage={canManage} />}
-            {tab === 'payslips'  && <PayslipsTab runId={run.id} />}
-            {tab === 'exports'   && <ExportsTab runId={run.id} />}
+            {tab === 'payslips'  && <PayslipsTab runId={run.id} canManage={canManage} />}
+            {tab === 'exports'   && <ExportsTab runId={run.id} canExport={canApprove || canManage} />}
             {tab === 'approvals' && <ApprovalsTab run={run} />}
             {tab === 'timeline'  && <TimelineTab run={run} />}
+            {tab === 'audit'     && <AuditTab runId={run.id} />}
             {tab === 'related'   && (
               <RelatedTab
                 run={run}

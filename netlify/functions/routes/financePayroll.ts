@@ -24,6 +24,7 @@ import {
   listRunInputs,
   listRunLines,
   listRunWarnings,
+  listRunAuditLog,
   resolveRunWarning,
   getEmployeePopulationPreview,
   downloadRunExport,
@@ -166,6 +167,19 @@ router.post('/payroll/warnings/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listRunWarnings(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/audit/list
+// Returns hr_audit_log entries for a specific payroll run (drawer Audit tab).
+// Permission: finance.payroll.view_all
+router.post('/payroll/runs/audit/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listRunAuditLog(v.data.runId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

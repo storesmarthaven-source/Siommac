@@ -126,6 +126,16 @@ export interface PayrollReportResult {
 
 export interface NisProfileRow { [k: string]: unknown }
 
+export interface RunAuditLogEntry {
+  id:            string;
+  action:        string;
+  actorId:       string | null;
+  previousState: Record<string, unknown> | null;
+  newState:      Record<string, unknown> | null;
+  reason:        string | null;
+  createdAt:     string;
+}
+
 export interface CreateRunArgs {
   periodMonth: string;      // YYYY-MM-DD (first of month)
   payFrequency?: string;
@@ -203,6 +213,10 @@ export const financePayrollApi = {
   resolveWarning: (a: { warningId: string; note?: string }) =>
     call<ResolveWarningResult>('finance/payroll/warnings/resolve', a),
 
+  // Audit log for a run (drawer Audit tab)
+  listRunAuditLog: (a: { runId: string }) =>
+    call<RunAuditLogEntry[]>('finance/payroll/runs/audit/list', a),
+
   // Population preview (wizard step 2)
   populationPreview: (a: object = {}) =>
     call<PopulationPreview>('finance/payroll/runs/population-preview', a),
@@ -256,6 +270,13 @@ export function useRunInputs(runId: string | null) {
 }
 export function useNisProfiles(opts: { status?: string; limit?: number } = {}) {
   return useQuery({ queryKey: financePayrollKeys.nisProfiles(opts), queryFn: () => financePayrollApi.listNisProfiles(opts) });
+}
+export function useRunAuditLog(runId: string | null) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'audit', runId ?? ''],
+    queryFn:  () => financePayrollApi.listRunAuditLog({ runId: runId! }),
+    enabled:  !!runId,
+  });
 }
 export function usePopulationPreview() {
   return useQuery({

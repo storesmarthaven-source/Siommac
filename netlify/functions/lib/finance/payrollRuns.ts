@@ -293,6 +293,47 @@ export async function listRunWarnings(runId: string): Promise<PayrollRunWarningD
   return ((data ?? []) as DbWarningRow[]).map(toWarningDto);
 }
 
+// ── Audit log for a run ────────────────────────────────────────────────────────
+
+export interface RunAuditLogEntry {
+  id:            string;
+  action:        string;
+  actorId:       string | null;
+  previousState: Record<string, unknown> | null;
+  newState:      Record<string, unknown> | null;
+  reason:        string | null;
+  createdAt:     string;
+}
+
+/**
+ * Returns the hr_audit_log entries for a specific payroll run,
+ * ordered newest-first. Used by the drawer Audit tab.
+ */
+export async function listRunAuditLog(runId: string): Promise<RunAuditLogEntry[]> {
+  const { data, error } = await sb
+    .from('hr_audit_log')
+    .select('id, action, actor_id, previous_state, new_state, reason, created_at')
+    .eq('submodule_key', 'finance_payroll')
+    .eq('record_id', runId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw Object.assign(new Error('listRunAuditLog: ' + error.message), { status: 500 });
+  return ((data ?? []) as Array<{
+    id: string; action: string; actor_id: string | null;
+    previous_state: Record<string, unknown> | null;
+    new_state: Record<string, unknown> | null;
+    reason: string | null; created_at: string;
+  }>).map(r => ({
+    id:            r.id,
+    action:        r.action,
+    actorId:       r.actor_id,
+    previousState: r.previous_state,
+    newState:      r.new_state,
+    reason:        r.reason,
+    createdAt:     r.created_at,
+  }));
+}
+
 // ── Create Run ────────────────────────────────────────────────────────────────
 
 export interface CreateRunInput {
@@ -894,7 +935,7 @@ export async function resolveRunWarning(
 
   // Backbone — throws on hr_audit_log failure (compensating: re-unresolve warning)
   try {
-    const { emitFinanceMutationBackbone } = await import('./backbone');
+    const { emitFinanceMutationBackbone } = await import('./backbone.js');
     await emitFinanceMutationBackbone({
       actorUserId: actorId,
       module:      'finance_payroll',
