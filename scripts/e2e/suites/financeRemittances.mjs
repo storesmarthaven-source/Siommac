@@ -79,6 +79,8 @@ export default async function run(h) {
     try { if (ctx.nisRemId) await sb.from('message_threads').delete().eq('source_module', 'finance_remittances').eq('source_entity_id', ctx.nisRemId); } catch {}
     try { if (ctx.nisRemId) await sb.from('notifications').delete().eq('source_id', ctx.nisRemId); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
+    // Ticket cleanup for the missing-receipt path (§12 ticket side-effect test).
+    try { if (ctx.staffRemId) await sb.from('tickets').delete().eq('source_entity_id', ctx.staffRemId); } catch {}
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -422,6 +424,65 @@ export default async function run(h) {
 
   await test('employee is DENIED reports/run', async () => {
     fails(await api('finance/remittances/reports/run', empToken, { report: 'remittance_summary' }), 'employee should be denied reports/run');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › Ticket side-effect (§12 / §20)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // The mark-filed backend raises a ticket when isOverdue || missingReceipt.
+  // Exercise the missingReceipt path (omit receiptReference) using staffRemId
+  // (paye_bir, created by fstaff1 — currently in 'draft' status).
+  //
+  // Flow: submit as fstaff1 → approve as fmgr1 (≠ creator → SoD passes) →
+  //       mark-paid as fmgr1 → mark-filed WITHOUT receiptReference as fmgr1
+  //       → assert tickets row with source_entity_id = staffRemId exists.
+
+  await test('take staffRemId (paye_bir) to filed without receipt reference — triggers §12 ticket', async () => {
+    // submit as fstaff1 (has finance.remittances.manage)
+    let r = await api('finance/remittances/submit', fstaff1Token, { id: ctx.staffRemId });
+    ok(r, `submit staffRemId failed: ${r.body.message}`);
+    expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
+
+    // approve by fmgr1 (creator = fstaff1 ≠ fmgr1 → SoD passes)
+    r = await api('finance/remittances/approve', fmgr1Token, { id: ctx.staffRemId });
+    ok(r, `approve staffRemId failed: ${r.body.message}`);
+    expect(r.body.data.status === 'approved', `expected approved, got ${r.body.data.status}`);
+
+    // mark-paid by fmgr1
+    r = await api('finance/remittances/mark-paid', fmgr1Token, {
+      id:       ctx.staffRemId,
+      paidDate: '2026-07-10',
+    });
+    ok(r, `mark-paid staffRemId failed: ${r.body.message}`);
+    expect(r.body.data.status === 'paid', `expected paid, got ${r.body.data.status}`);
+
+    // mark-filed WITHOUT receiptReference → missingReceipt = true → ticket must be raised
+    r = await api('finance/remittances/mark-filed', fmgr1Token, {
+      id:           ctx.staffRemId,
+      filedDate:    '2026-07-12',
+      filingMethod: 'in_person',
+      // receiptReference intentionally omitted — §12 requires a ticket when missing
+    });
+    ok(r, `mark-filed staffRemId (no receipt) failed: ${r.body.message}`);
+    expect(r.body.data.status === 'filed', `expected filed, got ${r.body.data.status}`);
+  });
+
+  await test('§12 / §20: ticket row created in tickets table when receipt reference is missing on mark-filed', async () => {
+    const gotTicket = await waitFor(async () => {
+      const { data } = await sb
+        .from('tickets')
+        .select('id')
+        .eq('source_module', 'finance_remittances')
+        .eq('source_entity_id', ctx.staffRemId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(
+      gotTicket,
+      '§12 ticket not found — expected a tickets row with source_module=finance_remittances ' +
+      'and source_entity_id=staffRemId when receiptReference is omitted from mark-filed',
+    );
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

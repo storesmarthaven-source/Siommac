@@ -108,6 +108,8 @@ export function RemittancesOverview(): VNode {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [sortField, setSortField]   = useState<string>('');
+  const [sortDir, setSortDir]       = useState<'asc' | 'desc'>('asc');
 
   const canManage  = can('finance.remittances.manage');
   const canApprove = can('finance.remittances.approve');
@@ -165,8 +167,26 @@ export function RemittancesOverview(): VNode {
     return r;
   }, [remittances, search, statusFilter, authorityFilter]);
 
+  // ── Client-side sort ────────────────────────────────────────────────────────
+  const sorted = useMemo(() => {
+    if (!sortField) return filtered;
+    return [...filtered].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case 'ref':       cmp = a.remittanceNo.localeCompare(b.remittanceNo); break;
+        case 'authority': cmp = a.authority.localeCompare(b.authority); break;
+        case 'period':    cmp = (a.periodYear * 12 + a.periodMonth) - (b.periodYear * 12 + b.periodMonth); break;
+        case 'dueDate':   cmp = (a.dueDate ?? '').localeCompare(b.dueDate ?? ''); break;
+        case 'totalDue':  cmp = a.totalDue - b.totalDue; break;
+        case 'status':    cmp = a.status.localeCompare(b.status); break;
+        default: break;
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [filtered, sortField, sortDir]);
+
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pageRows  = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // ── Quick actions ────────────────────────────────────────────────────────────
   const quickActions: QuickAction[] = [
@@ -207,6 +227,7 @@ export function RemittancesOverview(): VNode {
     {
       key: 'ref',
       label: 'Ref',
+      sortable: true,
       render: r => (
         <span style={{ fontWeight: 600, fontSize: 13 }}>{r.remittanceNo}</span>
       ),
@@ -214,16 +235,19 @@ export function RemittancesOverview(): VNode {
     {
       key: 'authority',
       label: 'Authority',
+      sortable: true,
       render: r => <span>{AUTHORITY_LABEL[r.authority]}</span>,
     },
     {
       key: 'period',
       label: 'Period',
+      sortable: true,
       render: r => <span class="hrfin-muted">{periodLabel(r.periodYear, r.periodMonth)}</span>,
     },
     {
       key: 'dueDate',
       label: 'Due Date',
+      sortable: true,
       render: r => {
         const overdue = r.dueDate && r.dueDate < today && !['filed','cancelled'].includes(r.status);
         return (
@@ -237,11 +261,13 @@ export function RemittancesOverview(): VNode {
     {
       key: 'totalDue',
       label: 'Total Due',
+      sortable: true,
       render: r => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{money(r.totalDue)}</strong>,
     },
     {
       key: 'status',
       label: 'Status',
+      sortable: true,
       render: r => <HrfinPill tone={statusTone(r.status)}>{humanize(r.status)}</HrfinPill>,
     },
     {
@@ -315,6 +341,12 @@ export function RemittancesOverview(): VNode {
     if (!reason?.trim()) return;
     try { await cancelMut.mutateAsync({ id, reason: reason.trim() }); toast('Cancelled.'); }
     catch (e) { toast.error((e as Error).message); }
+  }
+
+  function handleSort(field: string, dir: 'asc' | 'desc') {
+    setSortField(field);
+    setSortDir(dir);
+    setPage(0);
   }
 
   // ── Mark-Paid / Mark-Filed state ─────────────────────────────────────────────
@@ -452,6 +484,9 @@ export function RemittancesOverview(): VNode {
               noun="remittances"
               loading={listQ.isLoading && !listQ.data}
               emptyMessage={listQ.isError ? 'Failed to load remittances.' : 'No remittances found.'}
+              sortField={sortField || undefined}
+              sortDir={sortDir}
+              onSort={handleSort}
             />
           )}
           {tab === 'lines' && (
