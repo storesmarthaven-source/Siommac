@@ -667,23 +667,23 @@ export function StatutoryDashboard({
     </div>
   );
 
-  // The summary strip and the 6 KPI tiles are `sizeToContent` — their tiles hug
-  // the card's natural height (no oversized empty tile). Paired with a fine board
-  // rowHeight (cellHeight=12 below) so the hug is tight, not quantized-up.
+  // Info cards are `sizeToContent`: their tiles auto-hug the card (no dead space) and
+  // are NON-resizable (see WidgetBoardZone) so a drag can't grow blank space. Only the
+  // CHART and the REGISTER are resizable — the chart scales its plot, the register
+  // scrolls its table. Fine rowHeight (below) keeps the hug tight; spacing = the gap.
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary' },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',    sizeToContent: true },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',    sizeToContent: true },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',    sizeToContent: true },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',       sizeToContent: true },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)' },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals' },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',          sizeToContent: true },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',             sizeToContent: true },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',             sizeToContent: true },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',             sizeToContent: true },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',                sizeToContent: true },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)',   sizeToContent: true },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',          sizeToContent: true },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',       sizeToContent: true },
-    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',        sizeToContent: true },
-    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',        sizeToContent: true },
-    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',           sizeToContent: true },
-    // Register stays drag-sized (long table scrolls internally) — the only tile the user resizes in height.
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',        sizeToContent: true },
+    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',         sizeToContent: true },
+    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',         sizeToContent: true },
+    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',            sizeToContent: true },
     [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register' },
   };
 

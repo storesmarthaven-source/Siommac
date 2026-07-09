@@ -131,7 +131,9 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       h: fit ? (fitRows[it.instanceId] ?? it.h) : it.h,
       minW: Math.max(1, min.w), maxW: column,
       minH: fit ? 1 : Math.max(1, min.h), maxH: maxRows,
-      static: !inter, isDraggable: inter, isResizable: inter && resizable,
+      // A sizeToContent (fit) tile auto-hugs its content, so height-resizing it only
+      // creates dead space — make those tiles NON-resizable (drag-move only).
+      static: !inter, isDraggable: inter, isResizable: inter && resizable && !fit,
     };
   });
 
