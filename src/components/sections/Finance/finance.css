@@ -314,28 +314,24 @@
    caption/sub are always legible; the resize floor (allowedSizes) guarantees the card is
    tall enough to show all three lines. (Height-based cqh was removed — it clipped the
    text at smaller sizes.) */
-/* KPI card — faithful to the Onboarding Overview KPI (.obw-kpi): white card, 11px
-   radius + soft shadow, icon chip + label, big bold number, muted context line. Fixed
-   size (w3 × h11), non-resizable (see the widget map). A big faded watermark glyph fills
-   the card the way the onboarding sparkline does. */
-.sdb-kpi { position: relative; display: flex; flex-direction: column; justify-content: center; padding: 16px 18px; overflow: hidden; container-type: inline-size;
-  background: #fff; border: 1px solid #dfe7f2; border-radius: 11px; box-shadow: 0 2px 8px rgba(16, 35, 68, .04); }
-.sdb-kpi--clickable { cursor: pointer; transition: box-shadow .14s ease, border-color .14s ease; }
-.sdb-kpi--clickable:hover { box-shadow: 0 5px 16px rgba(16, 35, 68, .09); border-color: #cfdcf0; }
-.sdb-kpi-body { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-.sdb-kpi-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 8px; display: grid; place-items: center; font-size: 15px; }
+/* KPI card — clean & compact (onboarding-style): white card, icon chip + label, big
+   bold number, muted context line. Fixed uniform size, pinned at the top (widget map). */
+.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 16px; overflow: hidden; container-type: inline-size;
+  background: #fff; border: 1px solid #e3e9f2; border-radius: 11px; }
+.sdb-kpi--clickable { cursor: pointer; transition: border-color .14s ease, box-shadow .14s ease; }
+.sdb-kpi--clickable:hover { border-color: #c9d6ec; box-shadow: 0 3px 10px rgba(16, 35, 68, .06); }
+.sdb-kpi-top { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.sdb-kpi-ic { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center; font-size: 13px; }
 .sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
 .sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
 .sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
 .sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
 .sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: 13px; font-weight: 600; color: #0d2145; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(24px, 9cqw, 32px); font-weight: 800; letter-spacing: -.04em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(16px, 6cqw, 22px); font-weight: 700; line-height: 1.2; white-space: normal; }
-.sdb-kpi-sub { font-size: 11.5px; color: #627394; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-cap { font-size: 12px; font-weight: 600; color: #56637b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(22px, 12cqw, 28px); font-weight: 800; letter-spacing: -.03em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(14px, 7cqw, 17px); font-weight: 700; line-height: 1.2; white-space: normal; }
+.sdb-kpi-sub { font-size: 11px; color: #7a8698; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sdb-kpi-sub .sdb-dot { flex: none; }
-.sdb-kpi-watermark { position: absolute; right: -10px; bottom: -14px; z-index: 0; font-size: 104px; line-height: 1; opacity: .07; background: transparent !important; pointer-events: none; }
 
 /* List cards (Verification Queue, Recent Activity) fill their tile: header fixed,
    the body/rows flex to fill so resizing grows the content region, not blank space. */

@@ -74,9 +74,9 @@ const W_REGISTER  = 'finance.statutory.register';
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// 12-COLUMN grid. Summary strip → 6 onboarding-sized KPI cards (w3, fixed h11 ≈ 186px,
-// non-resizable, 4+2) → FULL-WIDTH NIS rate chart → readiness/deadlines/verify/activity
-// on one row (w3 each) → the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
+// 12-COLUMN grid. Summary strip → 6 compact KPI cards on ONE row (w2, fixed h7 ≈ 114px,
+// pinned/locked) → FULL-WIDTH NIS rate chart → readiness/deadlines/verify/activity on
+// one row (w3 each) → the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
 // Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
 function defaultStatutoryLayout(): BoardLayout {
   return {
@@ -84,18 +84,18 @@ function defaultStatutoryLayout(): BoardLayout {
     zones: {
       main: [
         defInst(W_SUMMARY,         0,   0, 12,  4, 'wide'),      // ≈ 60px  thin strip
-        defInst(W_KPI_ACTIVE,      0,   4,  3, 11, 'compact'),   // ≈ 186px  KPI row 1 (4)
-        defInst(W_KPI_DRAFTS,      3,   4,  3, 11, 'compact'),
-        defInst(W_KPI_COMPONENTS,  6,   4,  3, 11, 'compact'),
-        defInst(W_KPI_NIS,         9,   4,  3, 11, 'compact'),
-        defInst(W_KPI_VERIFY,      0,  15,  3, 11, 'compact'),   // KPI row 2 (2)
-        defInst(W_KPI_APPROVALS,   3,  15,  3, 11, 'compact'),
-        defInst(W_CHART,           0,  26, 12, 30, 'large'),     // FULL WIDTH ≈ 528px
-        defInst(W_READY,           0,  56,  3, 24, 'standard'),  // info row (4 × w3)
-        defInst(W_DEADLINES,       3,  56,  3, 24, 'standard'),
-        defInst(W_VERIFY,          6,  56,  3, 24, 'standard'),
-        defInst(W_ACTIVITY,        9,  56,  3, 24, 'standard'),
-        defInst(W_REGISTER,        0,  80, 12, 46, 'hero'),      // ≈ 816px
+        defInst(W_KPI_ACTIVE,      0,   4,  2,  7, 'compact'),   // ≈ 114px  6 KPIs, ONE row
+        defInst(W_KPI_DRAFTS,      2,   4,  2,  7, 'compact'),
+        defInst(W_KPI_COMPONENTS,  4,   4,  2,  7, 'compact'),
+        defInst(W_KPI_NIS,         6,   4,  2,  7, 'compact'),
+        defInst(W_KPI_VERIFY,      8,   4,  2,  7, 'compact'),
+        defInst(W_KPI_APPROVALS,  10,   4,  2,  7, 'compact'),
+        defInst(W_CHART,           0,  11, 12, 30, 'large'),     // FULL WIDTH ≈ 528px
+        defInst(W_READY,           0,  41,  3, 24, 'standard'),  // info row (4 × w3)
+        defInst(W_DEADLINES,       3,  41,  3, 24, 'standard'),
+        defInst(W_VERIFY,          6,  41,  3, 24, 'standard'),
+        defInst(W_ACTIVITY,        9,  41,  3, 24, 'standard'),
+        defInst(W_REGISTER,        0,  65, 12, 46, 'hero'),      // ≈ 816px
       ],
     },
   };
@@ -357,16 +357,12 @@ export function StatutoryDashboard({
       class={`sdb-card sdb-kpi sdb-wgt-fill sdb-kpi--${p.color}${p.text ? ' sdb-kpi--text' : ''}${p.onClick ? ' sdb-kpi--clickable' : ''}`}
       {...(p.onClick ? { role: 'button', tabIndex: 0, onClick: p.onClick,
         onKeyDown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') p.onClick!(); } } : {})}>
-      {/* Large faded watermark icon (fills the card the way the onboarding spark does). */}
-      <i class={`fa-solid ${p.icon} sdb-kpi-watermark sdb-kpi-ic--${p.color}`} aria-hidden="true" />
-      <div class="sdb-kpi-body">
-        <div class="sdb-kpi-top">
-          <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
-          <span class="sdb-kpi-cap">{p.cap}</span>
-        </div>
-        <div class="sdb-kpi-val">{p.value}</div>
-        <div class="sdb-kpi-sub">{p.sub}</div>
+      <div class="sdb-kpi-top">
+        <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
+        <span class="sdb-kpi-cap">{p.cap}</span>
       </div>
+      <div class="sdb-kpi-val">{p.value}</div>
+      <div class="sdb-kpi-sub">{p.sub}</div>
     </div>
   );
 
@@ -408,7 +404,9 @@ export function StatutoryDashboard({
   // NIS contribution RATE over time — a real trend across the seeded schedule history
   // (10.5% 2008 → 16.2% 2026), which a per-class bar chart could never show.
   const renderChart = (): VNode => {
-    const P = { x0: 58, x1: 496, yTop: 34, yBase: 244 };
+    // viewBox is a wide 2:1 (600×300) so a full-width chart fills its tile with no
+    // left/right letterbox (empty space); preserveAspectRatio 'meet' keeps it undistorted.
+    const P = { x0: 54, x1: 576, yTop: 34, yBase: 244 };
     const { pts, lo, hi } = rateTrend;
     const span = Math.max(1, hi - lo);
     const yFor = (r: number): number => P.yBase - ((r - lo) / span) * (P.yBase - P.yTop);
@@ -436,7 +434,7 @@ export function StatutoryDashboard({
             {pts.length === 0 ? (
               <div class="sdb-up-empty" style={{ padding: '48px 0' }}>No NIS schedules on record yet.</div>
             ) : (
-              <svg viewBox="0 0 520 300" width="100%" style={{ display: 'block' }}>
+              <svg viewBox="0 0 600 300" width="100%" style={{ display: 'block' }}>
                 {/* Gridlines + left axis (%) */}
                 <g fontSize="10" fill="#9aa4b6" textAnchor="end">
                   {grid.map((g, i) => <text key={i} x={P.x0 - 8} y={g.y + 3}>{g.val.toFixed(1)}%</text>)}
@@ -473,7 +471,7 @@ export function StatutoryDashboard({
                   const p = pts[chartHover]!;
                   const cx = xFor(chartHover), cy = yFor(p.rate);
                   const tw = 132, th = 42;
-                  const tx = Math.min(Math.max(cx - tw / 2, 4), 520 - tw - 4);
+                  const tx = Math.min(Math.max(cx - tw / 2, 4), 600 - tw - 4);
                   const ty = cy - th - 16 < P.yTop ? cy + 14 : cy - th - 16;
                   return (
                     <g pointerEvents="none">
@@ -693,21 +691,20 @@ export function StatutoryDashboard({
     </div>
   );
 
-  // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): fixed uniform
-  // size (w3 × h11 ≈ 186px) like the Onboarding Overview KPIs, and they never move,
-  // resize, or get displaced by other tiles. The remaining widgets ARE resizable and
-  // each declares a resize FLOOR (allowedSizes → minGridFor); without one the generic
-  // floor is 2 cells ≈ 22px on this fine 6px grid.
+  // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): compact uniform
+  // size (w2 × h7 ≈ 114px), one row, and they never move, resize, or get displaced by
+  // other tiles. The remaining widgets ARE resizable and each declares a resize FLOOR
+  // (allowedSizes → minGridFor); without one the generic floor is 2 cells on this 6px grid.
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
     [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           locked: true, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           locked: true, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           locked: true, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              locked: true, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', locked: true, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        locked: true, allowedSizes: floor('compact', 2, 7) },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 24) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
