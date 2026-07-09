@@ -76,27 +76,28 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 }
 // Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
 // chart + readiness → deadlines/verify/activity → the register (full width, tall).
-// Board rowHeight is 34px (vMargin 16 → calm resize + real spacing). Everything
-// EXCEPT the register is sizeToContent, so those h values are just initial hints the
-// fit-pass overrides; only the register carries a real drag height (tile px ≈ 50·h − 16).
+// Board rowHeight is a FINE 6px so the sizeToContent tiles hug their content with
+// minimal quantization slack; spacing is set separately via the `gap` prop (tunable).
+// Everything EXCEPT the register is sizeToContent → those h values are just initial
+// hints the fit-pass overrides; only the register carries a real drag height.
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,        0,  0, 12,  2, 'wide'),
-        defInst(W_KPI_ACTIVE,     0,  2,  3,  3, 'compact'),
-        defInst(W_KPI_DRAFTS,     3,  2,  3,  3, 'compact'),
-        defInst(W_KPI_COMPONENTS, 6,  2,  3,  3, 'compact'),
-        defInst(W_KPI_NIS,        9,  2,  3,  3, 'compact'),
-        defInst(W_KPI_VERIFY,     0,  5,  3,  3, 'compact'),
-        defInst(W_KPI_APPROVALS,  3,  5,  3,  3, 'compact'),
-        defInst(W_CHART,          0,  8,  8,  6, 'large'),
-        defInst(W_READY,          8,  8,  4,  7, 'standard'),
-        defInst(W_DEADLINES,      0, 15,  4,  6, 'standard'),
-        defInst(W_VERIFY,         4, 15,  4,  6, 'standard'),
-        defInst(W_ACTIVITY,       8, 15,  4,  6, 'standard'),
-        defInst(W_REGISTER,       0, 21, 12, 15, 'hero'),
+        defInst(W_SUMMARY,        0,   0, 12,  9, 'wide'),
+        defInst(W_KPI_ACTIVE,     0,   9,  3, 18, 'compact'),
+        defInst(W_KPI_DRAFTS,     3,   9,  3, 18, 'compact'),
+        defInst(W_KPI_COMPONENTS, 6,   9,  3, 18, 'compact'),
+        defInst(W_KPI_NIS,        9,   9,  3, 18, 'compact'),
+        defInst(W_KPI_VERIFY,     0,  27,  3, 18, 'compact'),
+        defInst(W_KPI_APPROVALS,  3,  27,  3, 18, 'compact'),
+        defInst(W_CHART,          0,  45,  8, 48, 'large'),
+        defInst(W_READY,          8,  45,  4, 52, 'standard'),
+        defInst(W_DEADLINES,      0,  97,  4, 36, 'standard'),
+        defInst(W_VERIFY,         4,  97,  4, 36, 'standard'),
+        defInst(W_ACTIVITY,       8,  97,  4, 36, 'standard'),
+        defInst(W_REGISTER,       0, 133, 12, 84, 'hero'),
       ],
     },
   };
@@ -309,10 +310,11 @@ export function StatutoryDashboard({
   // Inter-widget spacing (px) — user-tunable, persisted client-side per page. Decoupled
   // from the board rowHeight so it's an exact value, not a side effect of the grid.
   const [gap, setGap] = useState<number>(() => {
-    try { const v = Number(localStorage.getItem('sdb.gap')); return Number.isFinite(v) && v >= 0 ? v : 12; }
-    catch { return 12; }
+    try { const raw = localStorage.getItem('sdb.gapPx'); const v = raw == null ? NaN : Number(raw);
+      return Number.isFinite(v) && v >= 0 && v <= 32 ? v : 10; }
+    catch { return 10; }
   });
-  useEffect(() => { try { localStorage.setItem('sdb.gap', String(gap)); } catch { /* ignore */ } }, [gap]);
+  useEffect(() => { try { localStorage.setItem('sdb.gapPx', String(gap)); } catch { /* ignore */ } }, [gap]);
   const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
   const boardItems = layout.zones['main'] ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
@@ -713,7 +715,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={34} gap={[gap, gap]}
+        cellHeight={6} gap={[gap, gap]}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
