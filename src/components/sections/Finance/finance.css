@@ -383,8 +383,8 @@
 /* The NIS bar chart SCALES to fill the tile — resizing the widget resizes the chart
    (viewBox + default preserveAspectRatio keep proportions). Scoped so the readiness
    gauge is untouched. min-height:0 lets the flex/grid child actually shrink. */
-.sdb-ch .sdb-sum-body > div:first-child { display: flex; flex-direction: column; min-height: 0; }
-.sdb-ch .sdb-sum-body svg { width: 100%; height: 100%; flex: 1 1 auto; min-height: 0; display: block; }
+.sdb-chart-plot { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.sdb-chart-plot svg { width: 100%; height: 100%; flex: 1 1 auto; min-height: 0; display: block; }
 .sdb-legend {
   display: flex; gap: 18px;
   margin-top: 6px;
@@ -438,45 +438,43 @@
   margin-top: 14px; cursor: pointer;
 }
 
-/* ── Statutory Readiness card (switchable gauge) ─────────────────────────────── */
-.sdb-ready { display: flex; flex-direction: column; }
-.sdb-ready-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+/* ── Statutory Readiness card — gauge scales to fill; compact text; no dead space ── */
+.sdb-ready { display: flex; flex-direction: column; gap: 6px; container-type: size; }
+.sdb-ready-head { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .sdb-ready-icon {
-  width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%;
-  background: #f2f5f9; display: grid; place-items: center; font-size: 18px;
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 9px;
+  background: #f2f5f9; display: grid; place-items: center; font-size: 14px;
 }
 .sdb-ready-htext { flex: 1; min-width: 0; }
-.sdb-ready-htext h2 { margin: 0 0 3px; font-size: 16px; font-weight: 700; color: var(--sdb-ink); letter-spacing: -.02em; line-height: 1.1; }
-.sdb-ready-htext p { margin: 0; font-size: 12px; color: var(--sdb-muted); line-height: 1.3; }
-.sdb-ready-nav-group { display: flex; gap: 6px; flex: 0 0 auto; align-self: flex-start; }
+.sdb-ready-htext h2 { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--sdb-ink); letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-ready-htext p { margin: 1px 0 0; font-size: 10.5px; color: var(--sdb-muted); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-ready-nav-group { display: flex; gap: 5px; flex: 0 0 auto; }
 .sdb-ready-nav {
-  width: 26px; height: 26px; border: 1px solid var(--sdb-line); border-radius: 7px;
+  width: 24px; height: 24px; border: 1px solid var(--sdb-line); border-radius: 7px;
   background: #fff; color: var(--sdb-muted); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 10px;
 }
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
-.sdb-ready-score { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 2px; }
-.sdb-ready-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); }
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: 158px; margin: 0 auto; }
-.sdb-gauge { width: 100%; aspect-ratio: 118 / 78; }
+/* The gauge grows to fill the card height (aspect-locked, centered) — the score area
+   absorbs the free vertical space so there's no dead white space. */
+.sdb-ready-score { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.sdb-gauge-wrap { position: relative; height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 118 / 78; }
+.sdb-gauge { width: 100%; height: 100%; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
-/* Fill sweep is driven by the Web Animations API in HalfGauge (left → right). */
+/* Fill sweep is driven by the Web Animations API in HalfGauge (left → right).
+   The % scales with the card (cqmin) — smaller by default than before. */
 .sdb-gauge-val {
-  position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
-  font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1;
+  position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%);
+  font-size: clamp(20px, 9cqmin, 44px); font-weight: 800; letter-spacing: -.02em; line-height: 1;
 }
-.sdb-ready-sub { font-size: 13px; color: var(--sdb-body); text-align: center; margin-top: 2px; }
-.sdb-ready-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.sdb-ready-stat { border: 1px solid var(--sdb-line); border-radius: 9px; padding: 6px 10px; display: flex; flex-direction: column; gap: 1px; }
-.sdb-ready-stat > span { font-size: 10.5px; color: var(--sdb-muted); }
-.sdb-ready-stat > strong { font-size: 15px; font-weight: 700; color: var(--sdb-ink); }
-.sdb-ready-dots { display: flex; gap: 5px; justify-content: center; margin: 13px 0 11px; }
+.sdb-ready-sub { font-size: 11px; color: var(--sdb-body); text-align: center; flex: 0 0 auto; }
+.sdb-ready-dots { display: flex; gap: 5px; justify-content: center; flex: 0 0 auto; }
 .sdb-ready-dot { width: 6px; height: 6px; border-radius: 50%; background: #d7deea; transition: width .15s; }
 .sdb-ready-dot.is-on { background: var(--sdb-primary); width: 16px; border-radius: 3px; }
 .sdb-ready-cta {
-  height: 40px; border-radius: 10px; border: 1px solid var(--sdb-line);
-  background: #f4f7fc; color: var(--sdb-primary); font: inherit; font-size: 13px; font-weight: 700;
-  cursor: pointer; margin-top: auto;
+  flex: 0 0 auto; width: 100%; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--sdb-line);
+  background: #f4f7fc; color: var(--sdb-primary); font: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .sdb-ready-cta:hover { background: #eaf1fe; }
 

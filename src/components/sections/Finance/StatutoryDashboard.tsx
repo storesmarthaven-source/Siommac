@@ -29,7 +29,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { useMemo, useState, useEffect, useRef } from 'preact/hooks';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import {
   type StatutoryVersion, type PayComponent, type NisClass,
 } from '@api/finance/statutory';
@@ -284,6 +284,25 @@ export function StatutoryDashboard({
   }, [versions]);
   // Hovered data point on the rate-trend chart (index into rateTrend.pts) → tooltip.
   const [chartHover, setChartHover] = useState<number | null>(null);
+  // Live pixel size of the chart plot area → the SVG viewBox matches it exactly, so the
+  // chart fills the whole container at any size (no letterbox) and never distorts.
+  const [chartDims, setChartDims] = useState<{ w: number; h: number }>({ w: 640, h: 320 });
+  const chartRO = useRef<ResizeObserver | null>(null);
+  const setChartPlotEl = useCallback((el: HTMLDivElement | null) => {
+    chartRO.current?.disconnect();
+    chartRO.current = null;
+    if (el) {
+      const ro = new ResizeObserver(() => {
+        const r = el.getBoundingClientRect();
+        if (r.width > 1 && r.height > 1) {
+          setChartDims(prev => (Math.abs(prev.w - r.width) < 1 && Math.abs(prev.h - r.height) < 1
+            ? prev : { w: Math.round(r.width), h: Math.round(r.height) }));
+        }
+      });
+      ro.observe(el);
+      chartRO.current = ro;
+    }
+  }, []);
 
   // Active-version contribution rate derived from the data (total ÷ assumed average).
   const nisRatePct = (() => {
@@ -404,9 +423,10 @@ export function StatutoryDashboard({
   // NIS contribution RATE over time — a real trend across the seeded schedule history
   // (10.5% 2008 → 16.2% 2026), which a per-class bar chart could never show.
   const renderChart = (): VNode => {
-    // viewBox is a wide 2:1 (600×300) so a full-width chart fills its tile with no
-    // left/right letterbox (empty space); preserveAspectRatio 'meet' keeps it undistorted.
-    const P = { x0: 54, x1: 576, yTop: 34, yBase: 244 };
+    // The SVG viewBox equals the plot area's live pixel size (chartDims), so the chart
+    // fills the ENTIRE container with no letterbox and no distortion at any size.
+    const W = chartDims.w, H = chartDims.h;
+    const P = { x0: 46, x1: W - 14, yTop: 18, yBase: H - 34 };
     const { pts, lo, hi } = rateTrend;
     const span = Math.max(1, hi - lo);
     const yFor = (r: number): number => P.yBase - ((r - lo) / span) * (P.yBase - P.yTop);
@@ -430,11 +450,11 @@ export function StatutoryDashboard({
           </div>
         </div>
         <div class="sdb-sum-body">
-          <div>
+          <div class="sdb-chart-plot" ref={setChartPlotEl}>
             {pts.length === 0 ? (
               <div class="sdb-up-empty" style={{ padding: '48px 0' }}>No NIS schedules on record yet.</div>
             ) : (
-              <svg viewBox="0 0 600 300" width="100%" style={{ display: 'block' }}>
+              <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="none" style={{ display: 'block' }}>
                 {/* Gridlines + left axis (%) */}
                 <g fontSize="10" fill="#9aa4b6" textAnchor="end">
                   {grid.map((g, i) => <text key={i} x={P.x0 - 8} y={g.y + 3}>{g.val.toFixed(1)}%</text>)}
@@ -465,13 +485,12 @@ export function StatutoryDashboard({
                   );
                 })}
                 <line x1={P.x0} y1={P.yBase} x2={P.x1} y2={P.yBase} stroke="#d7deea" strokeWidth="1" />
-                <text x={(P.x0 + P.x1) / 2} y="286" textAnchor="middle" fontSize="10.5" fill="#7a8698">NIS contribution rate by schedule year</text>
                 {/* Tooltip at the hovered data point */}
                 {chartHover != null && pts[chartHover] && (() => {
                   const p = pts[chartHover]!;
                   const cx = xFor(chartHover), cy = yFor(p.rate);
                   const tw = 132, th = 42;
-                  const tx = Math.min(Math.max(cx - tw / 2, 4), 600 - tw - 4);
+                  const tx = Math.min(Math.max(cx - tw / 2, 4), W - tw - 4);
                   const ty = cy - th - 16 < P.yTop ? cy + 14 : cy - th - 16;
                   return (
                     <g pointerEvents="none">
@@ -557,21 +576,12 @@ export function StatutoryDashboard({
         </div>
       </div>
       <div class="sdb-ready-score">
-        <span class="sdb-ready-label">Current</span>
         <div class="sdb-gauge-wrap">
           <HalfGauge key={readyLens} pct={lens.pct} color={lens.color} />
           <div class="sdb-gauge-val" style={{ color: lens.color }}>{lens.pct}%</div>
         </div>
-        <div class="sdb-ready-sub">{lens.sub}</div>
       </div>
-      <div class="sdb-ready-grid">
-        {lens.stats.map((s, i) => (
-          <div key={i} class="sdb-ready-stat">
-            <span>{s.label}</span>
-            <strong>{s.value}</strong>
-          </div>
-        ))}
-      </div>
+      <div class="sdb-ready-sub">{lens.sub}</div>
       <div class="sdb-ready-dots" aria-hidden="true">
         {readiness.map((_, i) => (
           <span key={i} class={`sdb-ready-dot${i === readyLens ? ' is-on' : ''}`} />
