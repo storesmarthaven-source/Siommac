@@ -76,27 +76,27 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 }
 // Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
 // chart + readiness → deadlines/verify/activity → the register (full width, tall).
-// 24-COLUMN grid (column={24} below) → finer horizontal resize + all six KPIs on one
-// clean row (6 × w4 = 24, no leftover gap). rowHeight is a fine 6px for smooth vertical
-// resize; spacing is a fixed 12px gap. Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
+// 12-COLUMN grid (the board default) → all six KPIs on one row (6 × w2 = 12, no
+// leftover gap). rowHeight is a fine 6px for smooth vertical resize; spacing is a
+// fixed 12px gap. Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,         0,   0, 24,  4, 'wide'),      // ≈ 60px  thin strip
-        defInst(W_KPI_ACTIVE,      0,   4,  4,  8, 'compact'),   // ≈ 132px  6 KPIs, one row
-        defInst(W_KPI_DRAFTS,      4,   4,  4,  8, 'compact'),
-        defInst(W_KPI_COMPONENTS,  8,   4,  4,  8, 'compact'),
-        defInst(W_KPI_NIS,        12,   4,  4,  8, 'compact'),
-        defInst(W_KPI_VERIFY,     16,   4,  4,  8, 'compact'),
-        defInst(W_KPI_APPROVALS,  20,   4,  4,  8, 'compact'),
-        defInst(W_CHART,           0,  12, 16, 24, 'large'),     // ≈ 420px
-        defInst(W_READY,          16,  12,  8, 24, 'standard'),
-        defInst(W_DEADLINES,       0,  36,  8, 18, 'standard'),  // ≈ 312px
-        defInst(W_VERIFY,          8,  36,  8, 18, 'standard'),
-        defInst(W_ACTIVITY,       16,  36,  8, 18, 'standard'),
-        defInst(W_REGISTER,        0,  54, 24, 46, 'hero'),      // ≈ 816px
+        defInst(W_SUMMARY,         0,   0, 12,  4, 'wide'),      // ≈ 60px  thin strip
+        defInst(W_KPI_ACTIVE,      0,   4,  2,  8, 'compact'),   // ≈ 132px  6 KPIs, one row
+        defInst(W_KPI_DRAFTS,      2,   4,  2,  8, 'compact'),
+        defInst(W_KPI_COMPONENTS,  4,   4,  2,  8, 'compact'),
+        defInst(W_KPI_NIS,         6,   4,  2,  8, 'compact'),
+        defInst(W_KPI_VERIFY,      8,   4,  2,  8, 'compact'),
+        defInst(W_KPI_APPROVALS,  10,   4,  2,  8, 'compact'),
+        defInst(W_CHART,           0,  12,  8, 24, 'large'),     // ≈ 420px
+        defInst(W_READY,           8,  12,  4, 24, 'standard'),
+        defInst(W_DEADLINES,       0,  36,  4, 18, 'standard'),  // ≈ 312px
+        defInst(W_VERIFY,          4,  36,  4, 18, 'standard'),
+        defInst(W_ACTIVITY,        8,  36,  4, 18, 'standard'),
+        defInst(W_REGISTER,        0,  54, 12, 46, 'hero'),      // ≈ 816px
       ],
     },
   };
@@ -669,19 +669,19 @@ export function StatutoryDashboard({
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 12, 4) },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           allowedSizes: floor('compact', 4, 8) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           allowedSizes: floor('compact', 4, 8) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           allowedSizes: floor('compact', 4, 8) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              allowedSizes: floor('compact', 4, 8) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', allowedSizes: floor('compact', 4, 8) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        allowedSizes: floor('compact', 4, 8) },
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 8, 14) },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 6, 24) },
-    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 6, 12) },
-    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 6, 12) },
-    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',          allowedSizes: floor('standard', 6, 12) },
-    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 12, 20) },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        allowedSizes: floor('compact', 2, 8) },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 4, 14) },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 24) },
+    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
+    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 3, 12) },
+    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',          allowedSizes: floor('standard', 3, 12) },
+    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
   };
 
   return (
@@ -706,7 +706,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={6} gap={[12, 12]} column={24}
+        cellHeight={6} gap={[12, 12]}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
