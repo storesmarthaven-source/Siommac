@@ -12,7 +12,7 @@
 }
 .stg-page-hero-icon i { color: #fff; font-size: 22px; }
 .stg-page-hero-title {
-  font-size: 1.55rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1;
+  font-size: 1.55rem; font-weight: 600; color: var(--siomac-navy); line-height: 1.1;
 }
 .stg-page-hero-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
 
@@ -33,7 +33,7 @@
 .stg-nav-group { margin-bottom: 4px; }
 .stg-nav-group:last-child { margin-bottom: 0; }
 .stg-nav-group-label {
-  font-size: 0.64rem; font-weight: 800; letter-spacing: 1px;
+  font-size: 0.64rem; font-weight: 600; letter-spacing: 1px;
   text-transform: uppercase; color: var(--text-muted);
   padding: 8px 12px 4px;
 }
@@ -78,7 +78,7 @@
 }
 .stg-panel-icon i { font-size: 20px; }
 .stg-panel-title {
-  font-size: 1.2rem; font-weight: 800; color: var(--siomac-navy); line-height: 1.1;
+  font-size: 1.2rem; font-weight: 600; color: var(--siomac-navy); line-height: 1.1;
 }
 .stg-panel-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
 
@@ -89,7 +89,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,.03);
 }
 .stg-card-label {
-  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: .6px; color: var(--text-muted);
   display: flex; align-items: center; gap: 7px;
   margin-bottom: 18px; padding-bottom: 12px;

@@ -43,7 +43,7 @@
   border-radius: 14px;
   background: #eff6ff;
   color: #0f6bff;
-  font-weight: 800;
+  font-weight: 600;
 }
 .efm-header h2 {
   margin: 0;
@@ -89,7 +89,7 @@
   padding: 0 16px;
   border: 1px solid transparent;
   border-radius: 11px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 .efm-btn:disabled {
@@ -129,7 +129,7 @@
   margin-bottom: 7px;
   color: #0f6bff;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -145,7 +145,7 @@
 .dcp-block-title {
   color: #0f172a;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -189,7 +189,7 @@
   background: #eff6ff;
   color: #0f6bff;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   text-transform: uppercase;
 }
 .dcp-preview h4 {
@@ -215,7 +215,7 @@
   padding: 3px 9px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 600;
 }
 .dcp-meta {
   display: grid;
@@ -271,7 +271,7 @@
   margin-top: 4px;
   color: #475569;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 .dcp-metric small {
   display: block;
@@ -288,7 +288,7 @@
   padding: 10px 11px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .dcp-callout-info {
   background: #eff6ff;

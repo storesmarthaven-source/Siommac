@@ -6,7 +6,7 @@
   flex: 1 1 150px; background: var(--surface, #fff);
   border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px;
 }
-.org-stat .n { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.org-stat .n { font-size: 22px; font-weight: 500; line-height: 1.1; }
 .org-stat .l { font-size: 12px; color: var(--muted, #64748b); margin-top: 3px; }
 
 .org-health { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; }
@@ -17,7 +17,7 @@
 
 .org-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; font-size: 12px; font-weight: 700;
+  min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; font-size: 12px; font-weight: 500;
 }
 .org-badge.critical { background: #fee2e2; color: #b91c1c; }
 .org-badge.warning  { background: #fef3c7; color: #92400e; }
@@ -45,25 +45,25 @@
   padding-left: 20px;
 }
 .org-unit-block-head {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em;
   color: #94a3b8; margin-bottom: 6px;
 }
 .org-unit-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 12px; color: #64748b; line-height: 1.6; }
 .org-unit-crumbs .crumb { display: inline-flex; align-items: center; gap: 2px; }
 .org-unit-crumbs .crumb i { margin: 0 4px; color: #cbd5e1; font-size: 10px; }
-.org-unit-crumbs .cur { font-weight: 700; color: #1e293b; }
+.org-unit-crumbs .cur { font-weight: 500; color: #1e293b; }
 .org-unit-crumbs .cur i { color: #f59e0b; margin-right: 4px; }
 
 .org-unit-preview {
   border: 1px solid #e5ebf3; border-radius: 10px; padding: 12px 14px; background: #fbfdff;
 }
 .org-unit-preview-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-.org-unit-preview-name { font-size: 15px; font-weight: 700; color: #1e293b; }
+.org-unit-preview-name { font-size: 15px; font-weight: 500; color: #1e293b; }
 .org-unit-preview-blurb { margin: 6px 0 0; font-size: 12px; color: #64748b; line-height: 1.5; }
 
 .org-type-pill {
   display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px;
-  border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2f7; color: #475569;
+  border-radius: 999px; font-size: 11px; font-weight: 500; background: #eef2f7; color: #475569;
 }
 .org-type-pill i { font-size: 11px; }
 .org-type-company         { background: #ede9fe; color: #6d28d9; }
@@ -75,7 +75,7 @@
 
 .org-code-chip {
   display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 6px;
-  font-size: 11px; font-weight: 700; letter-spacing: .03em; background: #1e293b; color: #fff;
+  font-size: 11px; font-weight: 500; letter-spacing: .03em; background: #1e293b; color: #fff;
 }
 
 @media (max-width: 720px) {

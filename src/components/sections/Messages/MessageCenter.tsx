@@ -135,7 +135,7 @@ function MessageAttachments({ attachments }: { attachments: MessageAttachment[] 
                 ? <img src={im.url} alt={im.fileName} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxHeight: '170px' }} />
                 : <span style={{ display: 'grid', placeItems: 'center', height: '90px', color: 'var(--text-muted)' }}>IMG</span>}
               {i === 3 && more > 0 && (
-                <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(19,41,87,.6)', color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>+{more}</span>
+                <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(19,41,87,.6)', color: '#fff', fontSize: '1.2rem', fontWeight: 600 }}>+{more}</span>
               )}
             </a>
           ))}
@@ -148,7 +148,7 @@ function MessageAttachments({ attachments }: { attachments: MessageAttachment[] 
           <a key={d.id} href={d.url ?? undefined} download={d.fileName} target="_blank" rel="noopener noreferrer"
             style={{ display: 'grid', gridTemplateColumns: '36px 1fr auto', gap: '10px', alignItems: 'center', maxWidth: '320px',
               padding: '8px', border: '1px solid var(--border)', borderRadius: '10px', background: '#fff', textDecoration: 'none' }}>
-            <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: ic.color, color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.58rem', fontWeight: 800 }}>{ic.label}</span>
+            <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: ic.color, color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.58rem', fontWeight: 600 }}>{ic.label}</span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.fileName}</span>
               <span style={{ display: 'block', fontSize: '0.66rem', color: 'var(--text-muted)' }}>{t.toUpperCase()}{d.sizeBytes ? ` · ${fmtBytes(d.sizeBytes)}` : ''}</span>

@@ -75,13 +75,13 @@
   width: 44px; height: 44px; border-radius: 50%;
   background: linear-gradient(145deg, var(--siomac-red), #8b0000);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 1rem; color: #fff;
+  font-weight: 600; font-size: 1rem; color: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   overflow: hidden; flex-shrink: 0;
 }
 .pnp-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .pnp-info { display: flex; flex-direction: column; line-height: 1.3; }
-.pnp-name { font-size: 0.85rem; font-weight: 800; color: #fff; }
+.pnp-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
 .pnp-role { font-size: 0.68rem; color: rgba(255,255,255,0.75); }
 
 .pnp-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.2); margin: 0 2px; flex-shrink: 0; }
@@ -94,14 +94,14 @@
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: #fff;
   transition: background 0.2s, transform 0.2s;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 .pnp-icon-btn:hover { background: rgb(83, 100, 137); transform: scale(1.04); }
 .pnp-badge {
   position: absolute; top: -3px; right: -3px;
   min-width: 19px; height: 19px;
   background: var(--siomac-red); color: #fff;
-  border-radius: 30px; font-size: 0.6rem; font-weight: 800;
+  border-radius: 30px; font-size: 0.6rem; font-weight: 600;
   display: flex; align-items: center; justify-content: center;
   padding: 0 5px; border: 2px solid var(--siomac-navy);
   animation: badgeFadeIn 0.25s ease both;
@@ -137,7 +137,7 @@
 .dash-overview-panel .stat-card-content {
   display: flex; flex-direction: column; min-width: 0;
 }
-.dash-overview-panel .stat-card-value { color: var(--siomac-navy); font-size: 1.8rem; font-weight: 800; margin-bottom: 2px; line-height: 1.1; }
+.dash-overview-panel .stat-card-value { color: var(--siomac-navy); font-size: 1.8rem; font-weight: 600; margin-bottom: 2px; line-height: 1.1; }
 .dash-overview-panel .stat-card-label { color: var(--text-muted); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .dash-overview-panel .stat-card-icon.blue  { background: rgba(27,45,85,0.08);    color: var(--siomac-navy); }
 .dash-overview-panel .stat-card-icon.green { background: rgba(34,197,94,0.08);   color: #15803d; }

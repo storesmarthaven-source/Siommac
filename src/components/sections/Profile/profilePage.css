@@ -237,7 +237,7 @@
   margin-bottom: 7px;
   color: rgba(226,238,252,0.68);
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -808,7 +808,7 @@
 .mp76-security-form-row { display: grid; gap: 7px; }
 .mp76-security-form-row label {
   display: flex; align-items: center; gap: 8px;
-  font-size: 0.77rem; font-weight: 700; color: #090b0c;
+  font-size: 0.77rem; font-weight: 500; color: #090b0c;
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 .mp76-security-form-row label svg { width: 13px; height: 13px; color: #67787c; opacity: 0.78; stroke: currentColor !important; fill: none !important; flex: none; }
@@ -955,7 +955,7 @@
   min-height: 24px; display: inline-flex; align-items: center;
   padding: 0 9px; border-radius: 999px;
   background: #eef2f6; color: #667085; border: 1px solid #e3e9f2;
-  font-size: 0.65rem; font-weight: 700; font-style: normal; white-space: nowrap;
+  font-size: 0.65rem; font-weight: 500; font-style: normal; white-space: nowrap;
 }
 .mp76-clean-status-pill.ready { color: #166534; background: #ecfdf3; border-color: #bbf7d0; }
 
@@ -982,7 +982,7 @@
   height: 24px; padding: 0 10px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(180,35,24,0.55); border: 1px solid rgba(180,35,24,0.6); color: #ffffff;
-  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+  font-size: 0.68rem; font-weight: 500; white-space: nowrap;
   cursor: pointer; transition: background 0.15s;
 }
 .mp76-photo-remove-overlay:hover { background: rgba(180,35,24,0.75); }
@@ -1004,7 +1004,7 @@
 }
 .mp76-inline-crop-note { display: block; width: 100%; min-width: 0; text-align: left; }
 .mp76-inline-crop-copy { display: grid; gap: 3px; max-width: none; min-width: 0; }
-.mp76-inline-crop-note strong { display: block; color: #1b2d54; font-size: 0.78rem; font-weight: 700; text-align: left; }
+.mp76-inline-crop-note strong { display: block; color: #1b2d54; font-size: 0.78rem; font-weight: 500; text-align: left; }
 .mp76-inline-crop-note span { display: block; color: #667085; font-size: 0.72rem; line-height: 1.35; text-align: left; max-width: none; }
 .mp76-inline-crop-actions {
   display: grid; grid-template-columns: repeat(4, 38px); gap: 8px;

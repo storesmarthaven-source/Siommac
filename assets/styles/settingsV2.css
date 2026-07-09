@@ -24,7 +24,7 @@
 }
 .sidebar-menu .stg-back:hover { background: rgba(255,255,255,0.16); }
 .sidebar-menu .stg-back .sb-ico { width: 16px; height: 16px; stroke-width: 2; }
-.sidebar-menu .stg-mode-title { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; color: #fff; }
+.sidebar-menu .stg-mode-title { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; color: #fff; }
 
 /* Groups reuse the app's .sb-group / .sb-group-header / .sb-group-label classes
    (styled in layout.css) so the section headers match the main navigation 1:1.
@@ -72,7 +72,7 @@
 .swz .top-panel{min-height:88px;border:1px solid var(--line);border-radius:12px;background:#fff;display:flex;align-items:center;padding:16px 18px;margin:0 0 18px 0;}
 .swz .module-icon{width:46px;height:46px;border-radius:10px;background:#0b408f;display:grid;place-items:center;color:#fff;margin-right:14px;flex:0 0 auto;}
 .swz .module-icon svg{width:24px;height:24px;stroke-width:2;}
-.swz .top-panel h1{margin:0 0 4px 0;font-size:20px;line-height:1.1;letter-spacing:-.015em;font-weight:800;color:#111827;}
+.swz .top-panel h1{margin:0 0 4px 0;font-size:20px;line-height:1.1;letter-spacing:-.015em;font-weight: 600;color:#111827;}
 .swz .top-panel p{margin:0;color:#687386;font-size:12.5px;line-height:1.4;max-width:700px;}
 .swz .top-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
 .swz .action-btn{height:42px;border:1px solid #ccd6e6;background:#fff;border-radius:8px;display:flex;align-items:center;gap:8px;color:#17243a;font-weight:750;font-size:13px;padding:0 14px;cursor:pointer;white-space:nowrap;}
@@ -91,12 +91,12 @@
 .swz .subpage-summary p{margin:0;color:#687386;font-size:12.5px;line-height:1.45;max-width:980px;}
 .swz .section-tabs{border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px;}
 .swz .section-tabs .tab-btn + .tab-btn{margin-top:4px;}
-.swz .tab-btn{width:100%;min-height:38px;border:0;background:transparent;border-radius:8px;display:flex;align-items:center;gap:8px;color:#667085;font-size:12.5px;font-weight:700;padding:8px 10px;margin:0;cursor:pointer;position:relative;text-align:left;}
+.swz .tab-btn{width:100%;min-height:38px;border:0;background:transparent;border-radius:8px;display:flex;align-items:center;gap:8px;color:#667085;font-size:12.5px;font-weight: 500;padding:8px 10px;margin:0;cursor:pointer;position:relative;text-align:left;}
 .swz .tab-btn svg{width:15px;height:15px;stroke-width:1.9;color:#8492a6;flex:0 0 auto;}
 .swz .tab-btn:hover{background:#f6f9fd;color:#173a73;}
-.swz .tab-btn.active{background:#eef4ff;color:#063b8f;font-weight:800;}
+.swz .tab-btn.active{background:#eef4ff;color:#063b8f;font-weight: 600;}
 .swz .tab-btn.active svg{color:#063b8f;}
-.swz .tab-count{margin-left:auto;font-size:11px;color:#9aa6b6;font-weight:700;}
+.swz .tab-count{margin-left:auto;font-size:11px;color:#9aa6b6;font-weight: 500;}
 
 .swz .setting-grid{display:grid;grid-template-columns:1fr;gap:12px;}
 .swz .setting-card.wz-section{border:1px solid var(--section-border);border-radius:12px;background:#fff;display:grid;grid-template-rows:auto 44px;overflow:hidden;}
@@ -105,7 +105,7 @@
 .swz .card-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;border:1px solid #d8e2f0;background:#f7f9fc;color:#5b6b84;}
 .swz .card-icon svg{width:18px;height:18px;stroke-width:1.9;}
 .swz .card-copy{min-width:0}
-.swz .card-copy h3{margin:0 0 6px;font-size:14px;line-height:1.25;font-weight:800;color:#111827;letter-spacing:-.01em;}
+.swz .card-copy h3{margin:0 0 6px;font-size:14px;line-height:1.25;font-weight: 600;color:#111827;letter-spacing:-.01em;}
 .swz .card-copy p{margin:0;color:#5e6878;font-size:12px;line-height:1.5;}
 .swz .setting-control-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .swz .setting-side{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;padding-top:2px;}
@@ -122,7 +122,7 @@
 .swz .switch:disabled{opacity:.55;cursor:not-allowed;}
 .swz .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
 .swz .setting-side .badge-row{margin-top:0;}
-.swz .pill{height:22px;border-radius:999px;display:inline-flex;align-items:center;padding:0 8px;font-size:11px;font-weight:700;white-space:nowrap;}
+.swz .pill{height:22px;border-radius:999px;display:inline-flex;align-items:center;padding:0 8px;font-size:11px;font-weight: 500;white-space:nowrap;}
 .swz .source-default,.swz .source-global{background:#eef4fb;color:#36537a}
 .swz .source-site{background:#edf7f0;color:#2d6c46}.swz .source-role{background:#f7f0e6;color:#8a641a}
 .swz .source-user{background:#f1e9ff;color:#6042ad}.swz .source-department,.swz .source-module{background:#eef4fb;color:#36537a}
@@ -148,12 +148,12 @@
 /* ── Company & Branding form (v2) ── */
 .swz .swz-form{display:grid;gap:14px;}
 .swz .swz-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 18px;}
-.swz .swz-card-title{font-size:14px;font-weight:800;color:#111827;display:flex;align-items:center;gap:9px;margin:0 0 14px;letter-spacing:-.01em;}
+.swz .swz-card-title{font-size:14px;font-weight: 600;color:#111827;display:flex;align-items:center;gap:9px;margin:0 0 14px;letter-spacing:-.01em;}
 .swz .swz-card-title i{color:#0b408f;font-size:14px;}
 .swz .swz-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
 @media (max-width:720px){.swz .swz-grid2{grid-template-columns:1fr;}}
 .swz .swz-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
-.swz .swz-field label{font-size:12px;font-weight:700;color:#344054;}
+.swz .swz-field label{font-size:12px;font-weight: 500;color:#344054;}
 .swz .swz-field input{height:40px;border:1px solid #ced8e8;border-radius:8px;padding:0 12px;font-size:13.5px;color:#111827;background:#fff;width:100%;}
 .swz .swz-field input:focus{outline:none;border-color:#0b4fb3;box-shadow:0 0 0 3px rgba(11,79,179,.12);}
 .swz .swz-field small{font-size:11px;color:#7a8597;line-height:1.4;}
@@ -177,5 +177,5 @@
 .swz-drawer .audit-item b{display:block;margin-bottom:5px;font-size:12.5px;color:#111827;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
 .swz-drawer .audit-change{display:flex;align-items:center;gap:8px;font-size:12.5px;flex-wrap:wrap;margin-bottom:4px;}
 .swz-drawer .audit-change .old{color:#b91c1c;text-decoration:line-through;}
-.swz-drawer .audit-change .new{color:#13783a;font-weight:700;}
+.swz-drawer .audit-change .new{color:#13783a;font-weight: 500;}
 .swz-drawer .audit-meta{color:#6b7280;font-size:11.5px;line-height:1.45;}

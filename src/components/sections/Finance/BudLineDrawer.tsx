@@ -149,7 +149,7 @@ function ActualsTab({ lineId, actualsQ }: {
             <span style={{ fontSize: 13, fontWeight: 600 }}>{money(amt)}</span>
           </div>
         ))}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontWeight: 700 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontWeight: 500 }}>
           <span>Total</span>
           <span>{money(totalActual)}</span>
         </div>

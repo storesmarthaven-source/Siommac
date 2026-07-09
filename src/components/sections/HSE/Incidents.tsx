@@ -563,7 +563,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
           <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
-              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{openActs.length}</span>
+              <span style={{ fontSize:'2.4rem', fontWeight: 600, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{openActs.length}</span>
               <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>open</span>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
@@ -589,7 +589,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
           <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
-              <span style={{ fontSize:'2.4rem', fontWeight:800, color: overdueActs2.length > 0 ? '#ef4444' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{overdueActs2.length}</span>
+              <span style={{ fontSize:'2.4rem', fontWeight: 600, color: overdueActs2.length > 0 ? '#ef4444' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{overdueActs2.length}</span>
               <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>{overdueActs2.length === 1 ? 'action' : 'actions'}</span>
             </div>
             {firstOverdue ? (
@@ -689,7 +689,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
           <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
-              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{invOpen + invReview}</span>
+              <span style={{ fontSize:'2.4rem', fontWeight: 600, color:'var(--siomac-navy)', lineHeight:1, letterSpacing:'-0.03em' }}>{invOpen + invReview}</span>
               <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>active</span>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
@@ -719,7 +719,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
           <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
-              <span style={{ fontSize:'2.4rem', fontWeight:800, color: evPending > 0 ? '#d97706' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{evPending}</span>
+              <span style={{ fontSize:'2.4rem', fontWeight: 600, color: evPending > 0 ? '#d97706' : '#16a34a', lineHeight:1, letterSpacing:'-0.03em' }}>{evPending}</span>
               <span style={{ fontSize:'0.65rem', color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>pending</span>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
@@ -754,7 +754,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                   transform="rotate(-90 42 42)" />
               </svg>
               <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1px' }}>
-                <span style={{ fontSize:'1.3rem', fontWeight:800, color: rcaPct===100 ? '#4ade80' : '#fff', lineHeight:1 }}>{rcaPct}%</span>
+                <span style={{ fontSize:'1.3rem', fontWeight: 600, color: rcaPct===100 ? '#4ade80' : '#fff', lineHeight:1 }}>{rcaPct}%</span>
               </div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
@@ -780,7 +780,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
           </div>
           <div class="inc-mini-card-body" style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
             <div style={{ display:'flex', alignItems:'baseline', gap:'8px' }}>
-              <span style={{ fontSize:'2.4rem', fontWeight:800, color:'#fff', lineHeight:1, letterSpacing:'-0.03em' }}>{invCapa.length}</span>
+              <span style={{ fontSize:'2.4rem', fontWeight: 600, color:'#fff', lineHeight:1, letterSpacing:'-0.03em' }}>{invCapa.length}</span>
               <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,.45)', textTransform:'uppercase', letterSpacing:'.05em' }}>actions</span>
             </div>
             {invCapa.length > 0 && (
@@ -846,7 +846,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
                   })()}
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
+                  <span style={{ fontSize: '2.4rem', fontWeight: 600, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{mtdIncidents.length}</span>
                   <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', marginTop: '3px' }}>Incidents MTD</span>
                 </div>
               </div>

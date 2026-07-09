@@ -64,7 +64,7 @@ function StatStackBar({ segments }: { segments: { label: string; value: number; 
         {shown.map(s => (
           <div key={s.label} title={`${s.label}: ${s.value}`}
             style={{ width: `${(s.value / total) * 100}%`, background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {(s.value / total) >= 0.12 && <span style={{ fontSize: '0.66rem', fontWeight: 800, color: '#fff' }}>{s.value}</span>}
+            {(s.value / total) >= 0.12 && <span style={{ fontSize: '0.66rem', fontWeight: 600, color: '#fff' }}>{s.value}</span>}
           </div>
         ))}
       </div>
@@ -107,7 +107,7 @@ function ExpiryRunway({ pins }: { pins: number[] }): VNode {
           const crit = h <= 2;
           return (
             <div key={i} style={{ position: 'absolute', left: `${xFor(h)}%`, top: '6px', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.58rem', fontWeight: 800, color: crit ? '#ef4444' : '#f59e0b' }}>{Math.round(h)}h</span>
+              <span style={{ fontSize: '0.58rem', fontWeight: 600, color: crit ? '#ef4444' : '#f59e0b' }}>{Math.round(h)}h</span>
               <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: crit ? '#ef4444' : '#f59e0b', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,.2)', marginTop: '2px' }} />
             </div>
           );
@@ -134,7 +134,7 @@ function StatGauge({ percent, color, caption }: { percent: number; color: string
           <path d={arc} fill="none" stroke={color} stroke-width="12" stroke-linecap="round" stroke-dasharray={`${dash} ${len}`} />
         </svg>
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: '0', textAlign: 'center' }}>
-          <span style={{ fontSize: '1.9rem', fontWeight: 800, color: 'var(--siomac-navy)', letterSpacing: '-0.02em' }}>{percent}%</span>
+          <span style={{ fontSize: '1.9rem', fontWeight: 600, color: 'var(--siomac-navy)', letterSpacing: '-0.02em' }}>{percent}%</span>
         </div>
       </div>
       <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>{caption}</div>

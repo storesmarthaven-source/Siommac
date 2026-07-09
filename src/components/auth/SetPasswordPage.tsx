@@ -28,7 +28,7 @@ const input: JSX.CSSProperties = {
 };
 const btn: JSX.CSSProperties = {
   width: '100%', height: '46px', marginTop: '20px', border: '0', borderRadius: '11px',
-  background: '#075fe8', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer',
+  background: '#075fe8', color: '#fff', fontSize: '15px', fontWeight: 500, cursor: 'pointer',
 };
 
 export function SetPasswordPage(): VNode {

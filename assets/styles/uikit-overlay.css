@@ -20,11 +20,11 @@
 
 /* ── Faithful v36 palette (scoped to this file's components via the classes) ── */
 
-/* ── Buttons (v36 primary gradient / secondary outline / small outline) ─────── */
+/* ── Buttons (flat primary / secondary outline / small outline) — no gradients ── */
 .ui-btn-primary {
   height: 42px; border: none; padding: 0 16px; border-radius: 8px; color: #fff;
   font: inherit; font-weight: var(--font-weight-semibold, 600); cursor: pointer;
-  background: linear-gradient(180deg, #0b65f0 0%, #0751d4 100%);
+  background: #0b65f0;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap;
 }
 .ui-btn-primary:disabled { opacity: .6; cursor: default; }

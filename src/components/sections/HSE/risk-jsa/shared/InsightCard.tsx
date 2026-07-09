@@ -85,7 +85,7 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', width: '100%' }}>
           {((d.tiles as Array<{ value: number | string; label: string; tone?: string }>) ?? []).slice(0, 4).map((t, i) => (
             <div key={i} style={{ padding: '8px', borderRadius: '8px', textAlign: 'center', background: navy ? 'rgba(255,255,255,.07)' : 'var(--bg-subtle)' }}>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, lineHeight: 1, color: t.tone ?? (navy ? '#fff' : 'var(--siomac-navy)') }}>{t.value}</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1, color: t.tone ?? (navy ? '#fff' : 'var(--siomac-navy)') }}>{t.value}</div>
               <div style={{ fontSize: '0.56rem', color: navy ? 'rgba(255,255,255,.45)' : 'var(--text-muted)', marginTop: '3px' }}>{t.label}</div>
             </div>
           ))}
@@ -103,7 +103,7 @@ export function InsightCard({ title, icon, value, subtitle, footer, variant, ton
     <Card icon={icon} title={title} variant={navy ? 'navy' : 'default'} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '120px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em', color: TONE_VALUE[tone] }}>{value}</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: 600, lineHeight: 1, letterSpacing: '-0.02em', color: TONE_VALUE[tone] }}>{value}</div>
           {subtitle && <div style={{ fontSize: '0.68rem', color: navy ? 'rgba(255,255,255,.55)' : 'var(--text-muted)', marginTop: '5px', lineHeight: 1.4 }}>{subtitle}</div>}
         </div>
         {isDonut && <Visual variant="donut" data={data} navy={navy} />}

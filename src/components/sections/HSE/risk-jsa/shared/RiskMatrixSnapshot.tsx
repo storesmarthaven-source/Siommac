@@ -28,7 +28,7 @@ export function RiskMatrixSnapshot({ initialScore, residualScore }: RiskMatrixSn
         <RiskScorePill score={residual} />
       </div>
       <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: reduction > 0 ? '#16a34a' : 'var(--text-muted)', lineHeight: 1 }}>{reduction}%</div>
+        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: reduction > 0 ? '#16a34a' : 'var(--text-muted)', lineHeight: 1 }}>{reduction}%</div>
         <div style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>reduction</div>
       </div>
     </div>

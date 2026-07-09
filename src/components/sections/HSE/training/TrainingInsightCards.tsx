@@ -80,7 +80,7 @@ function StatDonut({ total, centerLabel, segments }: { total: number; centerLabe
           })}
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: '2.1rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{total}</span>
+          <span style={{ fontSize: '2.1rem', fontWeight: 600, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{total}</span>
           <span style={{ fontSize: '0.55rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', marginTop: '3px' }}>{centerLabel}</span>
         </div>
       </div>
@@ -129,7 +129,7 @@ function StatGauge({ percent, color, caption }: { percent: number; color: string
           <path d={arc} fill="none" stroke={color} stroke-width="12" stroke-linecap="round" stroke-dasharray={`${dash} ${len}`} />
         </svg>
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: '0', textAlign: 'center' }}>
-          <span style={{ fontSize: '1.9rem', fontWeight: 800, color: 'var(--siomac-navy)', letterSpacing: '-0.02em' }}>{percent}%</span>
+          <span style={{ fontSize: '1.9rem', fontWeight: 600, color: 'var(--siomac-navy)', letterSpacing: '-0.02em' }}>{percent}%</span>
         </div>
       </div>
       <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>{caption}</div>

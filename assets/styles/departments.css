@@ -12,7 +12,7 @@
   color: var(--text-muted); margin-bottom: 6px;
 }
 .emp-ps-stat-val {
-  display: block; font-size: 1.35rem; font-weight: 800;
+  display: block; font-size: 1.35rem; font-weight: 600;
   color: var(--siomac-navy); line-height: 1;
 }
 .emp-ps-stat-val.green { color: #16a34a; }
@@ -92,7 +92,7 @@
   color: var(--text-muted); margin-bottom: 4px;
 }
 .emp-payslip-net-val {
-  display: block; font-size: 1.75rem; font-weight: 800;
+  display: block; font-size: 1.75rem; font-weight: 600;
   color: var(--siomac-navy); line-height: 1.1;
 }
 

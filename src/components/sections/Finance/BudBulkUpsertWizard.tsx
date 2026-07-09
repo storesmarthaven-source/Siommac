@@ -193,7 +193,7 @@ function Step3LineEntry({ state, patch }: {
           padding: '12px 14px', border: '1px solid var(--hrfin-border)', borderRadius: 8,
           marginBottom: 10, background: 'var(--hrfin-surface-2)',
         }}>
-          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>{line.category}</div>
+          <div style={{ fontWeight: 500, fontSize: 13, marginBottom: 10 }}>{line.category}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div class="hrfin-field">
               <label class="hrfin-label">Budgeted Amount (TTD) <span style={{ color: 'var(--hrfin-danger)' }}>*</span></label>
@@ -271,12 +271,12 @@ function Step4Review({ state, priorYearBudgets }: {
       <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
         <div style={{ flex: 1, padding: '10px 14px', background: 'var(--hrfin-surface-2)', borderRadius: 8 }}>
           <div style={{ fontSize: 11, color: 'var(--hrfin-muted)', marginBottom: 4 }}>FY {state.fiscalYear} total</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{money(totalNew)}</div>
+          <div style={{ fontSize: 20, fontWeight: 500 }}>{money(totalNew)}</div>
         </div>
         {totalPrior > 0 && (
           <div style={{ flex: 1, padding: '10px 14px', background: 'var(--hrfin-surface-2)', borderRadius: 8 }}>
             <div style={{ fontSize: 11, color: 'var(--hrfin-muted)', marginBottom: 4 }}>FY {state.fiscalYear - 1} total</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--hrfin-muted)' }}>{money(totalPrior)}</div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--hrfin-muted)' }}>{money(totalPrior)}</div>
           </div>
         )}
       </div>
@@ -300,7 +300,7 @@ function Step4Review({ state, priorYearBudgets }: {
                   {line.category}
                   {line.label && <div style={{ fontSize: 11, color: 'var(--hrfin-muted)' }}>{line.label}</div>}
                 </td>
-                <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 700 }}>{money(newAmt)}</td>
+                <td style={{ padding: '7px 8px', textAlign: 'right', fontWeight: 500 }}>{money(newAmt)}</td>
                 <td style={{ padding: '7px 0 7px 8px', textAlign: 'right', color: 'var(--hrfin-muted)' }}>
                   {priorAmt !== null ? money(priorAmt) : <em>—</em>}
                   {delta !== null && (
@@ -323,7 +323,7 @@ function Step5Confirm({ state }: { state: WizardState }): VNode {
   return (
     <div class="hrfin-wiz-fields">
       <div style={{ padding: '14px', background: 'var(--hrfin-accent-10)', borderRadius: 8, marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Ready to submit</div>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Ready to submit</div>
         <div style={{ fontSize: 12, color: 'var(--hrfin-muted)' }}>
           {state.lines.length} budget line{state.lines.length !== 1 ? 's' : ''} for FY {state.fiscalYear} · Total: {money(total)}
         </div>

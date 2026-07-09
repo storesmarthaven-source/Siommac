@@ -412,7 +412,7 @@ function UserMatrix({ user }: { user: ConsoleUser }): VNode {
                 paddingBottom: '6px', borderBottom: '2px solid var(--border)',
               }}>
                 <span style={{
-                  fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.07em',
+                  fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em',
                   color: 'var(--siomac-navy)',
                 }}>{module}</span>
               </div>

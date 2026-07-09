@@ -29,7 +29,7 @@ export function ListRow({ primary, secondary, right, tone = 'muted' }: { primary
         <div style={{ ...ellip, fontSize: 13, fontWeight: 600, color: 'var(--cds-text, #1f2a44)' }}>{primary}</div>
         {secondary ? <div style={{ ...ellip, fontSize: 11.5, color: '#667085' }}>{secondary}</div> : null}
       </div>
-      {right ? <span style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: TONE[tone] }}>{right}</span> : null}
+      {right ? <span style={{ flex: 'none', fontSize: 11, fontWeight: 500, color: TONE[tone] }}>{right}</span> : null}
     </div>
   );
 }

@@ -787,7 +787,7 @@ function ImportsTab({ fiscalYear, costCentreId, canManage }: {
       {canManage && (
         <>
           <div style={{ padding: '12px 14px', background: 'var(--hrfin-surface-2)', borderRadius: 8, fontSize: 12, marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>CSV Format</div>
+            <div style={{ fontWeight: 500, marginBottom: 6 }}>CSV Format</div>
             <code style={{ display: 'block', fontSize: 11, background: 'var(--hrfin-surface)', padding: '6px 8px', borderRadius: 4 }}>
               category,budgeted,label,notes
             </code>

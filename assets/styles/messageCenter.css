@@ -24,7 +24,7 @@
     position: relative; width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
     background: var(--bg-subtle, #eef1f6); color: var(--text-primary, #17284d);
-    font-size: 0.78rem; font-weight: 800;
+    font-size: 0.78rem; font-weight: 600;
   }
   .mc-thread-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .mc-thread-avatar .mc-presence {
@@ -50,11 +50,11 @@
   .mc-thread-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; align-self: stretch; min-width: 48px; padding: 2px 0; gap: 8px; }
   .mc-thread-time { font-size: 0.68rem; color: var(--soft, #94a3b8); font-weight: 600; }
   .mc-unread-badge { min-width: 20px; height: 20px; border-radius: 999px; padding: 0 6px; display: grid; place-items: center;
-    background: var(--danger, #dc2626); color: #fff; font-size: 0.64rem; font-weight: 800; }
-  .mc-failed-text { font-size: 0.64rem; font-weight: 800; color: var(--danger, #dc2626); }
+    background: var(--danger, #dc2626); color: #fff; font-size: 0.64rem; font-weight: 600; }
+  .mc-failed-text { font-size: 0.64rem; font-weight: 600; color: var(--danger, #dc2626); }
 
   /* Online-now + pinned strips share neutral chrome */
-  .mc-strip-label { font-size: 0.62rem; font-weight: 800; color: var(--soft, #94a3b8); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+  .mc-strip-label { font-size: 0.62rem; font-weight: 600; color: var(--soft, #94a3b8); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
 
   /* ── Navy "signals" right panel (ppe-signals-panel look) ────────────────────── */
   .mc-panel {
@@ -64,10 +64,10 @@
   .mc-panel-profile { text-align: center; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
   .mc-panel-avatar {
     width: 66px; height: 66px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden;
-    display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.12); color: #fff; font-size: 1.4rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.12); color: #fff; font-size: 1.4rem; font-weight: 600;
   }
   .mc-panel-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .mc-panel-profile h3 { margin: 0 0 3px; font-size: 1.05rem; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+  .mc-panel-profile h3 { margin: 0 0 3px; font-size: 1.05rem; font-weight: 600; color: #fff; letter-spacing: -.01em; }
   .mc-panel-profile p  { margin: 0; font-size: 0.72rem; color: rgba(255,255,255,.55); font-weight: 600; }
   .mc-panel-pills { margin-top: 11px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 
@@ -89,7 +89,7 @@
   .mc-signal.clickable:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.16); }
   .mc-signal-chip {
     width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 0.8rem; flex-shrink: 0; overflow: hidden;
-    background: rgba(255,255,255,.12); color: rgba(255,255,255,.75); font-weight: 800;
+    background: rgba(255,255,255,.12); color: rgba(255,255,255,.75); font-weight: 600;
   }
   .mc-signal-chip img { width: 100%; height: 100%; object-fit: cover; }
   .mc-signal-chip.is-danger { background: rgba(239,68,68,.2);  color: #fca5a5; }
@@ -125,9 +125,9 @@
   .mc-toggle.on::after { left: 21px; }
 
   .mc-media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .mc-media-box { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.1); display: grid; place-items: center; color: rgba(255,255,255,.5); font-size: 0.6rem; font-weight: 800; }
+  .mc-media-box { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.1); display: grid; place-items: center; color: rgba(255,255,255,.5); font-size: 0.6rem; font-weight: 600; }
   .mc-media-box img { width: 100%; height: 100%; object-fit: cover; }
 
   .mc-detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; color: rgba(255,255,255,.5); font-size: 0.72rem; font-weight: 600; }
-  .mc-detail-row strong { color: rgba(255,255,255,.92); font-weight: 800; }
+  .mc-detail-row strong { color: rgba(255,255,255,.92); font-weight: 600; }
 }

@@ -103,7 +103,7 @@
   padding: 0 14px;
 }
 .ps-section-stat-val {
-  font-size: 1.15rem; font-weight: 800; color: #fff; line-height: 1;
+  font-size: 1.15rem; font-weight: 600; color: #fff; line-height: 1;
 }
 .ps-section-stat-lbl {
   font-size: 0.62rem; font-weight: 600; color: rgba(255,255,255,0.65);
@@ -236,7 +236,7 @@
   width: 6px; height: 6px; border-radius: 50%;
   background: #fff; flex-shrink: 0;
 }
-.ps-presence-badge__count { font-weight: 800; }
+.ps-presence-badge__count { font-weight: 600; }
 .ps-presence-badge__total { font-weight: 600; opacity: 0.8; }
 .ps-presence-badge__label { font-weight: 600; opacity: 0.9; }
 

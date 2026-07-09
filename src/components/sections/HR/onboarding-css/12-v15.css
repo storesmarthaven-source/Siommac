@@ -848,7 +848,7 @@
   /* Proper text hierarchy: bold title, then a clearly secondary subtext, then a
      smaller supporting note — with real spacing between each tier. */
   .siomac-onboarding-overview-mockup-v2 .ui-empty-title {
-    font-weight: 700 !important;
+    font-weight: 500 !important;
     font-size: 15.5px !important;
     color: #101828 !important;
     margin-top: 2px !important;

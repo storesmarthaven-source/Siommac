@@ -143,7 +143,7 @@ function LinesTab({ disbursementId }: { disbursementId: string }): VNode {
         <tfoot>
           <tr style={{ borderTop: '2px solid var(--border)' }}>
             <td colSpan={2} style={{ padding: '8px 12px', fontWeight: 600 }}>Total</td>
-            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>
+            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500 }}>
               {money(lines.reduce((s, l) => s + l.netAmount, 0))}
             </td>
           </tr>

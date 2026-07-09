@@ -23,17 +23,17 @@
 .obx-section { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
 .obx-wcard { height: 100%; }
 .obx-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #eef2f7; background: #fbfdff; flex: none; }
-.obx-section-head h2 { margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.obx-section-head h2 { margin: 0; font-size: 14px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 8px; }
 .obx-section-head h2 i { color: #2563eb; font-size: 13px; }
 .obx-section-body { flex: 1; min-height: 0; overflow: auto; }
 
 /* tables */
 .obx-table { width: 100%; border-collapse: collapse; }
-.obx-table th { text-align: left; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; padding: 9px 16px; border-bottom: 1px solid #eef2f7; white-space: nowrap; background: #fbfdff; position: sticky; top: 0; z-index: 1; }
+.obx-table th { text-align: left; font-size: 11px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: .03em; padding: 9px 16px; border-bottom: 1px solid #eef2f7; white-space: nowrap; background: #fbfdff; position: sticky; top: 0; z-index: 1; }
 .obx-table td { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: middle; }
 .obx-table tr:last-child td { border-bottom: none; }
 .obx-table tr:hover td { background: #f8fbff; }
-.obx-table b { color: #0f172a; font-weight: 700; }
+.obx-table b { color: #0f172a; font-weight: 500; }
 
 .obx-rowbtns { display: flex; gap: 6px; }
 .obx-mini { height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid #d8e0ec; background: #fff; color: #334155; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
@@ -42,7 +42,7 @@
 .obx-checkline { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; margin-top: 10px; cursor: pointer; }
 .obx-checkline input { cursor: pointer; }
 
-.obx-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.obx-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; }
 .obx-pill.green { background: #dcfce7; color: #15803d; }
 .obx-pill.amber { background: #fef3c7; color: #b45309; }
 .obx-pill.red   { background: #fee2e2; color: #dc2626; }
@@ -51,30 +51,30 @@
 
 .obx-empty { padding: 20px; text-align: center; color: #94a3b8; font-size: 13px; }
 .obx-meta { color: #64748b; font-size: 13px; }
-.obx-overdue { color: #dc2626; font-size: 13px; font-weight: 700; }
+.obx-overdue { color: #dc2626; font-size: 13px; font-weight: 500; }
 
 /* ── Tasks Workspace (cross-case queue) ─────────────────────────────────────────── */
 .obx-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
 .obx-viewswitch { display: inline-flex; border: 1px solid #d8e0ec; border-radius: 8px; overflow: hidden; background: #fff; flex: none; }
-.obx-view-btn { height: 34px; padding: 0 12px; border: none; background: #fff; color: #64748b; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.obx-view-btn { height: 34px; padding: 0 12px; border: none; background: #fff; color: #64748b; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
 .obx-view-btn + .obx-view-btn { border-left: 1px solid #eef2f7; }
 .obx-view-btn.active { background: #1b2d54; color: #fff; }
 .obx-view-btn i { font-size: 11px; }
 
 .obx-board { display: grid; grid-template-columns: repeat(5, minmax(190px, 1fr)); gap: 12px; align-items: start; overflow-x: auto; }
 .obx-board-col { background: #f4f7fb; border: 1px solid #e5eaf2; border-radius: 12px; min-height: 120px; }
-.obx-board-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .03em; }
+.obx-board-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; font-size: 12px; font-weight: 600; color: #334155; text-transform: uppercase; letter-spacing: .03em; }
 .obx-board-count { background: #e2e8f0; color: #475569; border-radius: 999px; min-width: 22px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 7px; font-size: 11px; }
 .obx-board-cards { display: grid; gap: 8px; padding: 0 8px 10px; }
 .obx-taskcard { text-align: left; background: #fff; border: 1px solid #e5eaf2; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; display: grid; gap: 4px; }
 .obx-taskcard:hover { border-color: #b9c8e2; box-shadow: 0 2px 8px rgba(16,35,68,.06); }
-.obx-taskcard-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.obx-taskcard-title { font-size: 13px; font-weight: 500; color: #0f172a; }
 .obx-taskcard-meta { font-size: 11.5px; color: #94a3b8; }
 .obx-taskcard-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
 
 /* ── Handoffs Workspace (module lanes + payload) ─────────────────────────────────── */
 .obx-lane { margin-bottom: 14px; }
-.obx-lane-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #1b2d54; color: #fff; border-radius: 10px 10px 0 0; font-size: 13px; font-weight: 800; }
+.obx-lane-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #1b2d54; color: #fff; border-radius: 10px 10px 0 0; font-size: 13px; font-weight: 600; }
 .obx-lane-head i { font-size: 13px; color: rgba(255,255,255,.7); }
 .obx-lane-count { margin-left: auto; background: rgba(255,255,255,.18); border-radius: 999px; min-width: 22px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 7px; font-size: 11px; }
 .obx-lane .obx-section { border-radius: 0 0 12px 12px; border-top: none; }
@@ -83,14 +83,14 @@
 /* ── Blocked Board (module columns of blocker cards) ─────────────────────────────── */
 .obx-blockgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
 .obx-blockcol { background: #f4f7fb; border: 1px solid #e5eaf2; border-radius: 12px; }
-.obx-blockcol-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 12px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e5eaf2; }
+.obx-blockcol-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e5eaf2; }
 .obx-blockcol-head i { color: #dc2626; font-size: 12px; }
 .obx-blockcol-count { margin-left: auto; background: #fee2e2; color: #b91c1c; border-radius: 999px; min-width: 22px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 7px; font-size: 11px; }
 .obx-blockcards { display: grid; gap: 10px; padding: 10px; }
 .obx-blockcard { background: #fff; border: 1px solid #e5eaf2; border-left: 3px solid #e2e8f0; border-radius: 10px; padding: 11px 13px; display: grid; gap: 6px; }
 .obx-blockcard.sev-critical { border-left-color: #dc2626; } .obx-blockcard.sev-high { border-left-color: #f2a321; }
 .obx-blockcard.sev-medium { border-left-color: #2563eb; } .obx-blockcard.sev-low { border-left-color: #94a3b8; }
-.obx-blockcard-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.obx-blockcard-title { font-size: 13px; font-weight: 500; color: #0f172a; }
 .obx-blockcard-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #64748b; }
 .obx-blockcard-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 
@@ -100,20 +100,20 @@
 .obx-repcat-item { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; font-family: inherit; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; }
 .obx-repcat-item:last-child { border-bottom: none; }
 .obx-repcat-item:hover { background: #f8fbff; }
-.obx-repcat-item.active { background: #eaf2ff; color: #1d4ed8; font-weight: 700; }
+.obx-repcat-item.active { background: #eaf2ff; color: #1d4ed8; font-weight: 500; }
 .obx-repcat-item i { width: 16px; text-align: center; color: #94a3b8; }
 .obx-repcat-item.active i { color: #2563eb; }
 .obx-repview { display: grid; gap: 14px; }
 .obx-repstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .obx-repstat { background: #f8fafc; border-radius: 10px; padding: 12px 14px; }
 .obx-repstat-label { font-size: 12px; color: #64748b; }
-.obx-repstat-val { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 2px; letter-spacing: -.02em; }
+.obx-repstat-val { font-size: 22px; font-weight: 600; color: #0f172a; margin-top: 2px; letter-spacing: -.02em; }
 .obx-repstat.good .obx-repstat-val { color: #15803d; } .obx-repstat.warning .obx-repstat-val { color: #b45309; } .obx-repstat.critical .obx-repstat-val { color: #dc2626; }
 .obx-repchart { background: #fff; border: 1px solid #e5eaf2; border-radius: 12px; padding: 14px 16px; }
 .obx-repbar { display: grid; grid-template-columns: 140px 1fr 44px; align-items: center; gap: 10px; margin-bottom: 7px; font-size: 12px; }
 .obx-repbar-track { height: 10px; border-radius: 999px; background: #eef2f7; overflow: hidden; }
 .obx-repbar-fill { height: 100%; border-radius: inherit; background: #2563eb; }
-.obx-repbar-val { text-align: right; font-weight: 700; color: #475569; }
+.obx-repbar-val { text-align: right; font-weight: 500; color: #475569; }
 .obx-repdonut { display: grid; gap: 6px; }
 .obx-repdonut-row { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; font-size: 12px; color: #475569; }
 .obx-repdonut-dot { width: 10px; height: 10px; border-radius: 3px; }

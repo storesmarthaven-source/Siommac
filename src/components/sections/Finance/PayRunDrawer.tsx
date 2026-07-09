@@ -949,7 +949,7 @@ export function PayRunDrawer({
               <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
                             borderRadius: 8, padding: '10px 14px' }}>
                 <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Net Payroll</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--hrfin-accent)' }}>{fmtMoney(run.netTotal)}</div>
+                <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--hrfin-accent)' }}>{fmtMoney(run.netTotal)}</div>
               </div>
               <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
                             borderRadius: 8, padding: '10px 14px' }}>

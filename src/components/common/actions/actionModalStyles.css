@@ -35,7 +35,7 @@
   place-items: center;
   border-radius: 12px;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
   background: #f1f5f9;
   color: #334155;
 }
@@ -65,7 +65,7 @@
 .am-record-titles strong { color: #0f172a; font-size: 14px; }
 .am-record-titles span { color: #64748b; font-size: 12px; }
 .am-record-badges { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
-.am-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.am-badge { display: inline-flex; align-items: center; height: 20px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 .am-record-fields { display: grid; gap: 7px; margin-top: 11px; padding-top: 11px; border-top: 1px solid #eef2f7; }
 .am-record-row { display: grid; grid-template-columns: minmax(110px, 0.7fr) 1fr; gap: 10px; }
 .am-record-row span { color: #64748b; font-size: 12px; }
@@ -73,7 +73,7 @@
 
 .am-warning {
   display: flex; gap: 8px; align-items: flex-start;
-  padding: 10px 12px; border-radius: 12px; font-size: 12px; font-weight: 700;
+  padding: 10px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;
   background: #fff7ed; color: #c2410c;
 }
 .am-warning.am-tone-danger  { background: #fef2f2; color: #b91c1c; }
@@ -81,7 +81,7 @@
 .am-warning.am-tone-success { background: #ecfdf5; color: #047857; }
 
 .am-reason { display: grid; gap: 6px; }
-.am-reason > span { color: #475569; font-size: 12px; font-weight: 700; }
+.am-reason > span { color: #475569; font-size: 12px; font-weight: 500; }
 .am-reason input,
 .am-reason textarea {
   border: 1px solid #d8e0ec; border-radius: 10px; padding: 9px 11px;
@@ -91,7 +91,7 @@
 .am-reason textarea:focus { outline: none; border-color: #0f6bff; box-shadow: 0 0 0 3px rgba(15, 107, 255, 0.12); }
 
 .am-next { border-top: 1px solid #eef2f7; padding-top: 10px; }
-.am-next-title { color: #0f172a; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.am-next-title { color: #0f172a; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .am-next ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; }
 .am-next li { color: #64748b; font-size: 12px; }
 
@@ -99,7 +99,7 @@
   display: flex; justify-content: flex-end; gap: 10px;
   padding: 14px 22px 18px;
 }
-.am-btn { min-height: 38px; padding: 0 16px; border: 1px solid transparent; border-radius: 10px; font-weight: 800; font-family: inherit; cursor: pointer; }
+.am-btn { min-height: 38px; padding: 0 16px; border: 1px solid transparent; border-radius: 10px; font-weight: 600; font-family: inherit; cursor: pointer; }
 .am-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .am-btn-ghost { background: #fff; border-color: #dbe4f0; color: #334155; }
 .am-btn-primary { background: #0f172a; color: #fff; }

@@ -78,7 +78,7 @@ function StatDonut({ total, centerLabel, segments }: {
           })}
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{total}</span>
+          <span style={{ fontSize: '2.4rem', fontWeight: 600, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{total}</span>
           <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', marginTop: '3px' }}>{centerLabel}</span>
         </div>
       </div>
@@ -120,7 +120,7 @@ function StatTiles({ tiles }: { tiles: { value: number | string; label: string; 
     <div style={{ width: '100%', display: 'grid', gridTemplateColumns: `repeat(${tiles.length}, 1fr)`, gap: '10px' }}>
       {tiles.map(t => (
         <div key={t.label} style={{ background: 'var(--bg-subtle, #f8fafe)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 6px', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: t.color ?? 'var(--siomac-navy)', lineHeight: 1 }}>{t.value}</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 600, color: t.color ?? 'var(--siomac-navy)', lineHeight: 1 }}>{t.value}</div>
           <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: '6px' }}>{t.label}</div>
         </div>
       ))}

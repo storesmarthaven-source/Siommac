@@ -865,7 +865,7 @@ function RemAuthoritiesTab({ remittances, loading, tabs, activeTab, onTab }: {
               const s = authStats(auth);
               return (
                 <div key={auth} style={{ background: 'var(--hrfin-surface-2, #1e2535)', borderRadius: 12, padding: 20, border: '1px solid var(--hrfin-border, #2a3347)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{AUTHORITY_LABEL[auth]}</div>
+                  <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 12 }}>{AUTHORITY_LABEL[auth]}</div>
                   <div class="hrfin-metric-row" style={{ marginBottom: 6 }}>
                     <span class="hrfin-muted" style={{ fontSize: 12 }}>Outstanding</span>
                     <strong style={{ color: s.outstanding > 0 ? 'var(--hrfin-accent, #6c8fff)' : undefined }}>{money(s.outstanding)}</strong>
@@ -1150,10 +1150,10 @@ function DrawerLinesTab({ remittanceId, open }: { remittanceId: string; open: bo
         </tbody>
         <tfoot>
           <tr>
-            <td style={{ padding: '8px 8px', fontWeight: 700 }}>Total ({lines.length} employees)</td>
-            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 700 }}>{money(lines.reduce((s, l) => s + l.employeePortion, 0))}</td>
-            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 700 }}>{money(lines.reduce((s, l) => s + l.employerPortion, 0))}</td>
-            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 700 }}>{money(lines.reduce((s, l) => s + l.lineTotal, 0))}</td>
+            <td style={{ padding: '8px 8px', fontWeight: 500 }}>Total ({lines.length} employees)</td>
+            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 500 }}>{money(lines.reduce((s, l) => s + l.employeePortion, 0))}</td>
+            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 500 }}>{money(lines.reduce((s, l) => s + l.employerPortion, 0))}</td>
+            <td style={{ textAlign: 'right', padding: '8px 8px', fontWeight: 500 }}>{money(lines.reduce((s, l) => s + l.lineTotal, 0))}</td>
           </tr>
         </tfoot>
       </table>

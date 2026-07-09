@@ -220,7 +220,7 @@ export function LeaveOverview(): VNode {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, margin: '14px 0' }}>
         {statCells.map(([label, val]) => (
           <div key={label} style={{ flex: '1 1 140px', border: '1px solid var(--border,#e2e8f0)', borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{val}</div>
+            <div style={{ fontSize: 22, fontWeight: 500 }}>{val}</div>
             <div class='obx-meta' style={{ fontSize: 12 }}>{label}</div>
           </div>
         ))}

@@ -84,7 +84,7 @@ function PreviewStep({ state }: { state: DialogState }): VNode {
         ].map(s => (
           <div key={s.label} style={{ flex: 1, padding: '10px 12px', background: 'var(--hrfin-surface-2)', borderRadius: 8 }}>
             <div style={{ fontSize: 11, color: 'var(--hrfin-muted)', marginBottom: 3 }}>{s.label}</div>
-            <div style={{ fontWeight: 700 }}>{s.value}</div>
+            <div style={{ fontWeight: 500 }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -105,12 +105,12 @@ function PreviewStep({ state }: { state: DialogState }): VNode {
                 <tr key={`${l.costCenterId}::${l.category}`} style={{ borderBottom: '1px solid var(--hrfin-border)' }}>
                   <td style={{ padding: '6px 8px 6px 0' }}>{l.category}</td>
                   <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--hrfin-muted)' }}>{money(l.budgeted)}</td>
-                  <td style={{ padding: '6px 0 6px 8px', textAlign: 'right', fontWeight: 700 }}>{money(l.budgeted * adjFactor)}</td>
+                  <td style={{ padding: '6px 0 6px 8px', textAlign: 'right', fontWeight: 500 }}>{money(l.budgeted * adjFactor)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ fontWeight: 700 }}>
+              <tr style={{ fontWeight: 500 }}>
                 <td style={{ padding: '8px 8px 4px 0' }}>Total</td>
                 <td style={{ padding: '8px 8px 4px', textAlign: 'right', color: 'var(--hrfin-muted)' }}>{money(totalSource)}</td>
                 <td style={{ padding: '8px 0 4px 8px', textAlign: 'right' }}>{money(totalNew)}</td>

@@ -111,7 +111,7 @@ function TotalsPreviewStep({ computed }: { computed: ComputedDisbursement }): VN
       <div class="hrfin-metric-list" style={{ marginBottom: 12 }}>
         <div class="hrfin-metric-row">
           <span>Total net pay</span>
-          <b style={{ fontSize: 18, fontWeight: 700 }}>{money(computed.totalAmount)}</b>
+          <b style={{ fontSize: 18, fontWeight: 500 }}>{money(computed.totalAmount)}</b>
         </div>
         <div class="hrfin-metric-row">
           <span>Employees</span>
