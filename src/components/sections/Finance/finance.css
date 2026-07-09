@@ -458,7 +458,9 @@
 /* The gauge grows to fill the card height (aspect-locked, centered) — the score area
    absorbs the free vertical space so there's no dead white space. */
 .sdb-ready-score { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
-.sdb-gauge-wrap { position: relative; height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 118 / 78; }
+/* Width-driven with an aspect ratio + a height cap → contain-fits the score area
+   (grows the gauge without the height:100%/aspect conflict that broke it before). */
+.sdb-gauge-wrap { position: relative; width: 100%; max-width: 240px; max-height: 100%; aspect-ratio: 118 / 78; margin: 0 auto; }
 .sdb-gauge { width: 100%; height: 100%; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 /* Fill sweep is driven by the Web Animations API in HalfGauge (left → right).

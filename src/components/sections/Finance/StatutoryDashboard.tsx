@@ -288,16 +288,22 @@ export function StatutoryDashboard({
   // chart fills the whole container at any size (no letterbox) and never distorts.
   const [chartDims, setChartDims] = useState<{ w: number; h: number }>({ w: 640, h: 320 });
   const chartRO = useRef<ResizeObserver | null>(null);
+  const chartRAF = useRef<number>(0);
   const setChartPlotEl = useCallback((el: HTMLDivElement | null) => {
     chartRO.current?.disconnect();
     chartRO.current = null;
-    if (el) {
-      const ro = new ResizeObserver(() => {
-        const r = el.getBoundingClientRect();
-        if (r.width > 1 && r.height > 1) {
-          setChartDims(prev => (Math.abs(prev.w - r.width) < 1 && Math.abs(prev.h - r.height) < 1
-            ? prev : { w: Math.round(r.width), h: Math.round(r.height) }));
-        }
+    if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(chartRAF.current);
+    if (el && typeof ResizeObserver !== 'undefined') {
+      // Read the entry's contentRect (no forced reflow) and defer the state update to the
+      // next frame — this avoids the "ResizeObserver loop" warning.
+      const ro = new ResizeObserver(entries => {
+        const cr = entries[0]?.contentRect;
+        if (!cr || cr.width <= 1 || cr.height <= 1) return;
+        const w = Math.round(cr.width), h = Math.round(cr.height);
+        cancelAnimationFrame(chartRAF.current);
+        chartRAF.current = requestAnimationFrame(() => {
+          setChartDims(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
+        });
       });
       ro.observe(el);
       chartRO.current = ro;
