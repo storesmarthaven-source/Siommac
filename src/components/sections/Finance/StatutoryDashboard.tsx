@@ -76,28 +76,28 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 }
 // Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
 // chart + readiness → deadlines/verify/activity → the register (full width, tall).
-// Board rowHeight is a FINE 6px so the sizeToContent tiles hug their content with
-// minimal quantization slack; spacing is set separately via the `gap` prop (tunable).
-// Everything EXCEPT the register is sizeToContent → those h values are just initial
-// hints the fit-pass overrides; only the register carries a real drag height.
+// Standard resizable-board model: every tile has a real height and its content FILLS
+// the tile (the chart scales, cards center) — so dragging a tile's edge resizes the
+// CONTENT, not empty space. rowHeight is a fine 6px for smooth resize; spacing is the
+// separate (tunable) `gap`. Tile px ≈ 6·h + gap·(h−1).
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,        0,   0, 12,  9, 'wide'),
-        defInst(W_KPI_ACTIVE,     0,   9,  3, 18, 'compact'),
-        defInst(W_KPI_DRAFTS,     3,   9,  3, 18, 'compact'),
-        defInst(W_KPI_COMPONENTS, 6,   9,  3, 18, 'compact'),
-        defInst(W_KPI_NIS,        9,   9,  3, 18, 'compact'),
-        defInst(W_KPI_VERIFY,     0,  27,  3, 18, 'compact'),
-        defInst(W_KPI_APPROVALS,  3,  27,  3, 18, 'compact'),
-        defInst(W_CHART,          0,  45,  8, 48, 'large'),
-        defInst(W_READY,          8,  45,  4, 52, 'standard'),
-        defInst(W_DEADLINES,      0,  97,  4, 36, 'standard'),
-        defInst(W_VERIFY,         4,  97,  4, 36, 'standard'),
-        defInst(W_ACTIVITY,       8,  97,  4, 36, 'standard'),
-        defInst(W_REGISTER,       0, 133, 12, 84, 'hero'),
+        defInst(W_SUMMARY,        0,   0, 12,  4, 'wide'),
+        defInst(W_KPI_ACTIVE,     0,   4,  3,  8, 'compact'),
+        defInst(W_KPI_DRAFTS,     3,   4,  3,  8, 'compact'),
+        defInst(W_KPI_COMPONENTS, 6,   4,  3,  8, 'compact'),
+        defInst(W_KPI_NIS,        9,   4,  3,  8, 'compact'),
+        defInst(W_KPI_VERIFY,     0,  12,  3,  8, 'compact'),
+        defInst(W_KPI_APPROVALS,  3,  12,  3,  8, 'compact'),
+        defInst(W_CHART,          0,  20,  8, 22, 'large'),
+        defInst(W_READY,          8,  20,  4, 23, 'standard'),
+        defInst(W_DEADLINES,      0,  43,  4, 17, 'standard'),
+        defInst(W_VERIFY,         4,  43,  4, 17, 'standard'),
+        defInst(W_ACTIVITY,       8,  43,  4, 17, 'standard'),
+        defInst(W_REGISTER,       0,  60, 12, 46, 'hero'),
       ],
     },
   };
@@ -669,14 +669,14 @@ export function StatutoryDashboard({
   // the card's natural height (no oversized empty tile). Paired with a fine board
   // rowHeight (cellHeight=12 below) so the hug is tight, not quantized-up.
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary', sizeToContent: true },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary' },
     [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',    sizeToContent: true },
     [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',    sizeToContent: true },
     [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',    sizeToContent: true },
     [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',       sizeToContent: true },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', sizeToContent: true },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals', sizeToContent: true },
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', sizeToContent: true },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)' },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals' },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',       sizeToContent: true },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',        sizeToContent: true },
     [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',        sizeToContent: true },
