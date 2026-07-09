@@ -74,29 +74,28 @@ const W_REGISTER  = 'finance.statutory.register';
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
-// chart + readiness → deadlines/verify/activity → the register (full width, tall).
-// 12-COLUMN grid (the board default) → all six KPIs on one row (6 × w2 = 12, no
-// leftover gap). rowHeight is a fine 6px for smooth vertical resize; spacing is a
-// fixed 12px gap. Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
+// 12-COLUMN grid. Summary strip → 6 onboarding-sized KPI cards (w3, fixed h11 ≈ 186px,
+// non-resizable, 4+2) → FULL-WIDTH NIS rate chart → readiness/deadlines/verify/activity
+// on one row (w3 each) → the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
+// Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
         defInst(W_SUMMARY,         0,   0, 12,  4, 'wide'),      // ≈ 60px  thin strip
-        defInst(W_KPI_ACTIVE,      0,   4,  2,  8, 'compact'),   // ≈ 132px  6 KPIs, one row
-        defInst(W_KPI_DRAFTS,      2,   4,  2,  8, 'compact'),
-        defInst(W_KPI_COMPONENTS,  4,   4,  2,  8, 'compact'),
-        defInst(W_KPI_NIS,         6,   4,  2,  8, 'compact'),
-        defInst(W_KPI_VERIFY,      8,   4,  2,  8, 'compact'),
-        defInst(W_KPI_APPROVALS,  10,   4,  2,  8, 'compact'),
-        defInst(W_CHART,           0,  12,  8, 24, 'large'),     // ≈ 420px
-        defInst(W_READY,           8,  12,  4, 24, 'standard'),
-        defInst(W_DEADLINES,       0,  36,  4, 18, 'standard'),  // ≈ 312px
-        defInst(W_VERIFY,          4,  36,  4, 18, 'standard'),
-        defInst(W_ACTIVITY,        8,  36,  4, 18, 'standard'),
-        defInst(W_REGISTER,        0,  54, 12, 46, 'hero'),      // ≈ 816px
+        defInst(W_KPI_ACTIVE,      0,   4,  3, 11, 'compact'),   // ≈ 186px  KPI row 1 (4)
+        defInst(W_KPI_DRAFTS,      3,   4,  3, 11, 'compact'),
+        defInst(W_KPI_COMPONENTS,  6,   4,  3, 11, 'compact'),
+        defInst(W_KPI_NIS,         9,   4,  3, 11, 'compact'),
+        defInst(W_KPI_VERIFY,      0,  15,  3, 11, 'compact'),   // KPI row 2 (2)
+        defInst(W_KPI_APPROVALS,   3,  15,  3, 11, 'compact'),
+        defInst(W_CHART,           0,  26, 12, 30, 'large'),     // FULL WIDTH ≈ 528px
+        defInst(W_READY,           0,  56,  3, 24, 'standard'),  // info row (4 × w3)
+        defInst(W_DEADLINES,       3,  56,  3, 24, 'standard'),
+        defInst(W_VERIFY,          6,  56,  3, 24, 'standard'),
+        defInst(W_ACTIVITY,        9,  56,  3, 24, 'standard'),
+        defInst(W_REGISTER,        0,  80, 12, 46, 'hero'),      // ≈ 816px
       ],
     },
   };
@@ -356,12 +355,16 @@ export function StatutoryDashboard({
       class={`sdb-card sdb-kpi sdb-wgt-fill sdb-kpi--${p.color}${p.text ? ' sdb-kpi--text' : ''}${p.onClick ? ' sdb-kpi--clickable' : ''}`}
       {...(p.onClick ? { role: 'button', tabIndex: 0, onClick: p.onClick,
         onKeyDown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') p.onClick!(); } } : {})}>
-      <div class="sdb-kpi-top">
-        <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
-        <span class="sdb-kpi-cap">{p.cap}</span>
+      {/* Large faded watermark icon (fills the card the way the onboarding spark does). */}
+      <i class={`fa-solid ${p.icon} sdb-kpi-watermark sdb-kpi-ic--${p.color}`} aria-hidden="true" />
+      <div class="sdb-kpi-body">
+        <div class="sdb-kpi-top">
+          <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
+          <span class="sdb-kpi-cap">{p.cap}</span>
+        </div>
+        <div class="sdb-kpi-val">{p.value}</div>
+        <div class="sdb-kpi-sub">{p.sub}</div>
       </div>
-      <div class="sdb-kpi-val">{p.value}</div>
-      <div class="sdb-kpi-sub">{p.sub}</div>
     </div>
   );
 
@@ -456,21 +459,30 @@ export function StatutoryDashboard({
               </svg>
             )}
           </div>
-          {/* Compact facts derived from the trend. */}
+          {/* Compact info cards (right of the chart) — icon + label + value. */}
           <div class="sdb-mini">
             <div class="sdb-mini-item">
-              <span class="sdb-mini-k">Active rate</span>
-              <span class="sdb-mini-vv">{nisRatePct != null ? `${nisRatePct}%` : '—'}</span>
+              <span class="sdb-fact-ic sdb-fact-ic--blue"><i class="fa-solid fa-percent" /></span>
+              <div class="sdb-mini-txt">
+                <span class="sdb-mini-k">Active rate</span>
+                <span class="sdb-mini-vv">{nisRatePct != null ? `${nisRatePct}%` : '—'}</span>
+              </div>
             </div>
             {first && last && last.rate !== first.rate && (
               <div class="sdb-mini-item">
-                <span class="sdb-mini-k">Since {first.year}</span>
-                <span class="sdb-mini-vv">{last.rate > first.rate ? '+' : ''}{(last.rate - first.rate).toFixed(1)} pts</span>
+                <span class="sdb-fact-ic sdb-fact-ic--teal"><i class="fa-solid fa-arrow-trend-up" /></span>
+                <div class="sdb-mini-txt">
+                  <span class="sdb-mini-k">Since {first.year}</span>
+                  <span class="sdb-mini-vv">{last.rate > first.rate ? '+' : ''}{(last.rate - first.rate).toFixed(1)} pts</span>
+                </div>
               </div>
             )}
             <div class="sdb-mini-item">
-              <span class="sdb-mini-k">Schedules on record</span>
-              <span class="sdb-mini-vv">{pts.length}</span>
+              <span class="sdb-fact-ic sdb-fact-ic--amber"><i class="fa-solid fa-layer-group" /></span>
+              <div class="sdb-mini-txt">
+                <span class="sdb-mini-k">Schedules on record</span>
+                <span class="sdb-mini-vv">{pts.length}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -654,25 +666,21 @@ export function StatutoryDashboard({
     </div>
   );
 
-  // EVERY tile is resizable (no sizeToContent — that made tiles auto-hug and killed
-  // their resize handles). Each card's content FILLS + SCALES with its tile instead:
-  // the chart/gauge scale, KPI text scales via cqh (stable because RGL gives the tile
-  // a definite px height), lists flex to fill and scroll past their fit.
-  //
-  // Every widget declares a resize FLOOR (allowedSizes → minGridFor). Without one the
-  // generic floor is 2 cells ≈ 22px on this fine 6px grid, so a card could be dragged
-  // far below its content and the centered text clipped away ("text hides").
+  // The 6 KPI tiles are `resizable: false` → fixed, uniform size (w3 × h11 ≈ 186px) like
+  // the Onboarding Overview KPIs; the user can move them but not resize. The remaining
+  // widgets ARE resizable and each declares a resize FLOOR (allowedSizes → minGridFor);
+  // without one the generic floor is 2 cells ≈ 22px on this fine 6px grid.
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
     [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           allowedSizes: floor('compact', 2, 8) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           allowedSizes: floor('compact', 2, 8) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           allowedSizes: floor('compact', 2, 8) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              allowedSizes: floor('compact', 2, 8) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', allowedSizes: floor('compact', 2, 8) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        allowedSizes: floor('compact', 2, 8) },
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 4, 14) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 24) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
     [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 3, 12) },

@@ -236,6 +236,9 @@ export interface LocalWidget {
   allowedSizes?: WidgetSizeDef[];
   /** Same as `WidgetDef.sizeToContent` — tile height auto-fits the rendered card. */
   sizeToContent?: boolean;
+  /** Set false for a FIXED-size tile the user can move but never resize (e.g. KPI cards
+   *  that must stay a uniform size). Default true. */
+  resizable?: boolean;
 }
 export type LocalWidgetMap = Record<string, LocalWidget>;
 

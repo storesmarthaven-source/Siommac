@@ -314,27 +314,28 @@
    caption/sub are always legible; the resize floor (allowedSizes) guarantees the card is
    tall enough to show all three lines. (Height-based cqh was removed — it clipped the
    text at smaller sizes.) */
-.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; position: relative; overflow: hidden; container-type: inline-size; }
-.sdb-kpi::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--sdb-kpi-accent, transparent); }
-.sdb-kpi--blue   { --sdb-kpi-accent: var(--sdb-blue); }
-.sdb-kpi--purple { --sdb-kpi-accent: var(--sdb-purple); }
-.sdb-kpi--teal   { --sdb-kpi-accent: var(--sdb-teal); }
-.sdb-kpi--amber  { --sdb-kpi-accent: var(--sdb-amber); }
-.sdb-kpi--coral  { --sdb-kpi-accent: var(--sdb-coral); }
-.sdb-kpi--clickable { cursor: pointer; transition: background-color .12s ease; }
-.sdb-kpi--clickable:hover { background: #f9fbfe; }
+/* KPI card — faithful to the Onboarding Overview KPI (.obw-kpi): white card, 11px
+   radius + soft shadow, icon chip + label, big bold number, muted context line. Fixed
+   size (w3 × h11), non-resizable (see the widget map). A big faded watermark glyph fills
+   the card the way the onboarding sparkline does. */
+.sdb-kpi { position: relative; display: flex; flex-direction: column; justify-content: center; padding: 16px 18px; overflow: hidden; container-type: inline-size;
+  background: #fff; border: 1px solid #dfe7f2; border-radius: 11px; box-shadow: 0 2px 8px rgba(16, 35, 68, .04); }
+.sdb-kpi--clickable { cursor: pointer; transition: box-shadow .14s ease, border-color .14s ease; }
+.sdb-kpi--clickable:hover { box-shadow: 0 5px 16px rgba(16, 35, 68, .09); border-color: #cfdcf0; }
+.sdb-kpi-body { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .sdb-kpi-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 14px; }
+.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 8px; display: grid; place-items: center; font-size: 15px; }
 .sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
 .sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
 .sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
 .sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
 .sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(24px, 13cqw, 34px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(15px, 7.5cqw, 20px); font-weight: 700; line-height: 1.2; white-space: normal; }
-.sdb-kpi-sub { font-size: 12px; color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-cap { font-size: 13px; font-weight: 600; color: #0d2145; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(24px, 9cqw, 32px); font-weight: 800; letter-spacing: -.04em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(16px, 6cqw, 22px); font-weight: 700; line-height: 1.2; white-space: normal; }
+.sdb-kpi-sub { font-size: 11.5px; color: #627394; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sdb-kpi-sub .sdb-dot { flex: none; }
+.sdb-kpi-watermark { position: absolute; right: -10px; bottom: -14px; z-index: 0; font-size: 104px; line-height: 1; opacity: .07; background: transparent !important; pointer-events: none; }
 
 /* List cards (Verification Queue, Recent Activity) fill their tile: header fixed,
    the body/rows flex to fill so resizing grows the content region, not blank space. */
@@ -376,8 +377,8 @@
 /* combo chart + mini-rows layout */
 .sdb-sum-body {
   display: grid;
-  grid-template-columns: 1fr 196px;
-  gap: 22px;
+  grid-template-columns: 1fr 136px;   /* chart (big, left) · info cards (small, right) */
+  gap: 18px;
   align-items: stretch;
   margin-top: 8px;
   flex: 1 1 auto;
@@ -397,11 +398,17 @@
 .sdb-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .sdb-lg-sq { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .sdb-lg-ln { width: 16px; height: 3px; border-radius: 3px; display: inline-block; }
-.sdb-mini { display: flex; flex-direction: column; }
-.sdb-mini-item { display: flex; flex-direction: column; gap: 2px; padding: 9px 2px; border-top: 1px solid var(--sdb-line2); }
-.sdb-mini-item:first-child { border-top: 0; padding-top: 2px; }
-.sdb-mini-k { font-size: 11px; color: var(--sdb-muted); }
-.sdb-mini-vv { font-size: 13.5px; font-weight: 700; color: var(--sdb-ink); letter-spacing: -.01em; }
+/* Chart side facts — small INFO cards on the RIGHT of the (now full-width) chart:
+   icon chip + label + value. */
+.sdb-mini { display: flex; flex-direction: column; gap: 9px; justify-content: center; }
+.sdb-mini-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--sdb-line); border-radius: 9px; background: #fbfcfe; }
+.sdb-fact-ic { width: 28px; height: 28px; flex: none; border-radius: 7px; display: grid; place-items: center; font-size: 12px; }
+.sdb-fact-ic--blue  { background: var(--sdb-blue-bg);  color: var(--sdb-blue); }
+.sdb-fact-ic--teal  { background: var(--sdb-teal-bg);  color: var(--sdb-teal); }
+.sdb-fact-ic--amber { background: var(--sdb-amber-bg); color: var(--sdb-amber); }
+.sdb-mini-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.sdb-mini-k { font-size: 10px; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-mini-vv { font-size: 15px; font-weight: 800; color: var(--sdb-ink); letter-spacing: -.02em; }
 .sdb-mini-row {
   display: flex; align-items: center; gap: 13px;
   padding: 12px;
