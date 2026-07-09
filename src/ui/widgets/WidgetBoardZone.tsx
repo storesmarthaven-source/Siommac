@@ -43,6 +43,10 @@ export interface WidgetBoardZoneProps {
   cellHeight?: number;
   /** Grid column count (default 12) — see WidgetBoardProps.column. */
   column?: number;
+  /** Explicit [horizontal, vertical] gap in px between tiles. Overrides the default,
+   *  which is derived from cellHeight (`[12, vMargin]`). Lets a board tune spacing
+   *  independently of its row height — see WidgetBoardProps.gap. */
+  gap?: [number, number];
   /** RGL compactType — see WidgetBoardProps.compact. */
   compact?: 'vertical' | 'horizontal' | null;
   /** When false, tiles drag-reorder but never resize — see WidgetBoardProps.resizable. Default true. */
@@ -87,7 +91,7 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
   return !!(localWidgets?.[widgetId]?.sizeToContent ?? findWidgetDef(widgetId)?.sizeToContent);
 }
 
-export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, compact = 'vertical', resizable = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
+export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
   const { layout, updateZoneLayout, removeWidget, resetLayout } = useBoardLayout(pageKey, defaultLayout);
@@ -115,7 +119,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
 
   // Vertical gap between tiles. Must stay well below the row height on a fine grid — otherwise the
   // gap dominates and tiles can't hug content. Horizontal gutter is a constant 12.
-  const vMargin = cellHeight >= 44 ? 12 : Math.max(2, Math.floor(cellHeight / 2) - 1);
+  const vMargin = gap ? gap[1] : (cellHeight >= 44 ? 12 : Math.max(2, Math.floor(cellHeight / 2) - 1));
   const maxRows = Math.max(16, Math.ceil(1408 / cellHeight));
 
   const rglLayout: Layout[] = items.map(it => {
@@ -205,7 +209,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       <ReactGridLayout
         className="wbi-zone"
         cols={column} rowHeight={cellHeight}
-        margin={[12, vMargin]} containerPadding={[0, 0]}
+        margin={gap ?? [12, vMargin]} containerPadding={[0, 0]}
         compactType={compact ?? null} preventCollision={compact === null} isBounded={false}
         draggableHandle=".wbi-drag" resizeHandles={['se']}
         layout={rglLayout}

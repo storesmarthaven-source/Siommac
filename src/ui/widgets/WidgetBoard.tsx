@@ -28,6 +28,9 @@ export interface WidgetBoardProps {
    *  NOTE: every x/w/minW in the board's default layout and its widgets' allowedSizes
    *  is expressed in THESE units — they must match the column count. */
   column?: number;
+  /** Explicit [horizontal, vertical] px gap between tiles, independent of cellHeight.
+   *  Omit to keep the cellHeight-derived default (`[12, vMargin]`). */
+  gap?: [number, number];
   /** RGL compactType — 'vertical' (default, Employee Master), 'horizontal', or null.
    *  Set to null on the Onboarding board so tiles honour their saved x/y positions
    *  without being re-compacted into the top-left, preserving the multi-column layout. */
@@ -41,7 +44,7 @@ export interface WidgetBoardProps {
   onDiscardPreview?: () => void;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, compact, resizable, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
+export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
   // `isSuccess` = the installed-package list is authoritative — only THEN may a zone prune board
   // instances whose widget no longer resolves (a transient/stale-dist error must NOT drop widgets).
@@ -52,7 +55,7 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
         <WidgetBoardZone
           key={zoneId} pageKey={pageKey} zoneId={zoneId} editing={editing}
           localWidgets={localWidgets} defaultLayout={defaultLayout} demo={demo}
-          cellHeight={cellHeight} column={column} compact={compact} resizable={resizable}
+          cellHeight={cellHeight} column={column} gap={gap} compact={compact} resizable={resizable}
           registryReady={pkgQuery.isSuccess}
           preview={preview} onPreviewChange={onPreviewChange}
           onCommitPreview={onCommitPreview} onDiscardPreview={onDiscardPreview}
