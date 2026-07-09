@@ -292,13 +292,7 @@
 /* Widget-zone tiles own their height (RGL grid) — the card fills the tile so
    drag/resize behaves, and internal overflow scrolls instead of clipping. */
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
-.sdb-board-tools { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin: 0 0 12px; }
-/* Live spacing control — tune the gap between widgets, persisted per user. */
-.sdb-gap-ctl { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sdb-muted); }
-.sdb-gap-ctl > i { font-size: 11px; }
-.sdb-gap-lbl { font-weight: 600; }
-.sdb-gap-ctl input[type="range"] { width: 108px; accent-color: var(--sdb-primary, #2f5fe0); cursor: pointer; }
-.sdb-gap-val { font-variant-numeric: tabular-nums; color: var(--sdb-ink); min-width: 34px; text-align: right; }
+.sdb-board-tools { display: flex; align-items: center; justify-content: flex-end; margin: 0 0 12px; }
 
 /* Thin full-width statutory summary strip (PAYE · NIS · Health Surcharge) —
    every fact on ONE inline row per segment. */

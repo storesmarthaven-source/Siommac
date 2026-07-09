@@ -308,14 +308,6 @@ export function StatutoryDashboard({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo]       = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  // Inter-widget spacing (px) — user-tunable, persisted client-side per page. Decoupled
-  // from the board rowHeight so it's an exact value, not a side effect of the grid.
-  const [gap, setGap] = useState<number>(() => {
-    try { const raw = localStorage.getItem('sdb.gapPx'); const v = raw == null ? NaN : Number(raw);
-      return Number.isFinite(v) && v >= 0 && v <= 32 ? v : 10; }
-    catch { return 10; }
-  });
-  useEffect(() => { try { localStorage.setItem('sdb.gapPx', String(gap)); } catch { /* ignore */ } }, [gap]);
   const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
   const boardItems = layout.zones['main'] ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
@@ -700,14 +692,6 @@ export function StatutoryDashboard({
       {/* ── Customize toolbar at the TOP of the page ───────────────────────── */}
       {canEditBoard && (
         <div class="sdb-board-tools">
-          <label class="sdb-gap-ctl" title="Space between widgets">
-            <i class="fa-solid fa-left-right" aria-hidden="true" />
-            <span class="sdb-gap-lbl">Spacing</span>
-            <input type="range" min={0} max={32} step={1} value={gap}
-              aria-label="Space between widgets"
-              onInput={e => setGap(Number((e.currentTarget as HTMLInputElement).value))} />
-            <span class="sdb-gap-val">{gap}px</span>
-          </label>
           <WidgetBoardToolbar
             editing={editing} canSetDefault={isAdmin}
             onToggleEdit={() => setEditing(e => !e)}
@@ -724,7 +708,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={6} gap={[gap, gap]}
+        cellHeight={6} gap={[12, 12]}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
