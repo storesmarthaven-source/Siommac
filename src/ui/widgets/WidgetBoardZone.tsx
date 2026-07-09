@@ -126,15 +126,18 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
     const min = minGridFor(it.widgetId, localWidgets);
     const fit = wantsFit(it.widgetId, localWidgets);
     const inter = itemInteractive(it, editing);
+    const lw = localWidgets?.[it.widgetId];
     return {
       i: it.instanceId, x: it.x, y: it.y, w: it.w,
       h: fit ? (fitRows[it.instanceId] ?? it.h) : it.h,
       minW: Math.max(1, min.w), maxW: column,
       minH: fit ? 1 : Math.max(1, min.h), maxH: maxRows,
-      // A sizeToContent (fit) tile auto-hugs its content, and a widget can opt out of
-      // resize via `resizable:false` (fixed-size KPI cards) — both are drag-move only.
-      static: !inter, isDraggable: inter,
-      isResizable: inter && resizable && !fit && (localWidgets?.[it.widgetId]?.resizable !== false),
+      // A sizeToContent (fit) tile auto-hugs its content; a widget can opt out of resize
+      // (`resizable:false`) or be fully PINNED (`locked:true` → RGL static, so it never
+      // moves, resizes, or gets displaced — e.g. the KPI row stays at the top).
+      static: !inter || lw?.locked === true,
+      isDraggable: inter && lw?.locked !== true,
+      isResizable: inter && resizable && !fit && lw?.resizable !== false && lw?.locked !== true,
     };
   });
 

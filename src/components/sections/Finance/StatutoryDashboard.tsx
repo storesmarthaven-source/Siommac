@@ -40,7 +40,7 @@ import {
 } from '@ui/widgets';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
-import { fmtDate, fmtMoney } from './financeShared';
+import { fmtDate, fmtMoney, humanize } from './financeShared';
 
 // Re-export so the parent can reference the same literal type without a second import.
 export type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
@@ -275,13 +275,15 @@ export function StatutoryDashboard({
   const rateTrend = useMemo(() => {
     const pts = versions
       .filter(v => v.nisRatePercent != null)
-      .map(v => ({ id: v.id, year: v.effectiveFrom.slice(0, 4), rate: v.nisRatePercent as number, isActive: v.isActive }))
+      .map(v => ({ id: v.id, year: v.effectiveFrom.slice(0, 4), rate: v.nisRatePercent as number, isActive: v.isActive, effectiveFrom: v.effectiveFrom, status: v.status }))
       .sort((a, b) => (a.year < b.year ? -1 : a.year > b.year ? 1 : 0));
     const rates = pts.map(p => p.rate);
     const lo = rates.length ? Math.floor(Math.min(...rates)) - 1 : 0;
     const hi = rates.length ? Math.ceil(Math.max(...rates)) + 1 : 20;
     return { pts, lo, hi };
   }, [versions]);
+  // Hovered data point on the rate-trend chart (index into rateTrend.pts) → tooltip.
+  const [chartHover, setChartHover] = useState<number | null>(null);
 
   // Active-version contribution rate derived from the data (total ÷ assumed average).
   const nisRatePct = (() => {
@@ -445,17 +447,42 @@ export function StatutoryDashboard({
                 {/* Area + trend line */}
                 {areaD && <path d={areaD} fill="rgba(47,95,224,.09)" />}
                 <path d={lineD} fill="none" stroke="#2f5fe0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                {/* Points + labels (active version highlighted) */}
-                {pts.map((p, i) => (
-                  <g key={p.id}>
-                    <circle cx={xFor(i)} cy={yFor(p.rate)} r={p.isActive ? 6 : 4}
-                      fill={p.isActive ? '#2f5fe0' : '#ffffff'} stroke="#2f5fe0" strokeWidth="2" />
-                    <text x={xFor(i)} y={yFor(p.rate) - 12} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#1f3b6d">{p.rate}%</text>
-                    <text x={xFor(i)} y={P.yBase + 18} textAnchor="middle" fontSize="10" fill="#8593a8">{p.year}</text>
-                  </g>
-                ))}
+                {/* Hover guide line for the active point */}
+                {chartHover != null && pts[chartHover] && (
+                  <line x1={xFor(chartHover)} y1={P.yTop} x2={xFor(chartHover)} y2={P.yBase} stroke="#c9d6f0" strokeWidth="1" strokeDasharray="3 3" />
+                )}
+                {/* Points + labels (active version highlighted; hovered point enlarged) */}
+                {pts.map((p, i) => {
+                  const on = chartHover === i;
+                  return (
+                    <g key={p.id}>
+                      <circle cx={xFor(i)} cy={yFor(p.rate)} r={p.isActive || on ? 6 : 4}
+                        fill={p.isActive || on ? '#2f5fe0' : '#ffffff'} stroke="#2f5fe0" strokeWidth="2" />
+                      <text x={xFor(i)} y={yFor(p.rate) - 12} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#1f3b6d">{p.rate}%</text>
+                      <text x={xFor(i)} y={P.yBase + 18} textAnchor="middle" fontSize="10" fill={on ? '#2f5fe0' : '#8593a8'} fontWeight={on ? '700' : '400'}>{p.year}</text>
+                      {/* Invisible larger hit-area for easy hovering */}
+                      <circle cx={xFor(i)} cy={yFor(p.rate)} r="16" fill="transparent" style={{ cursor: 'pointer' }}
+                        onMouseEnter={() => setChartHover(i)} onMouseLeave={() => setChartHover(h => (h === i ? null : h))} />
+                    </g>
+                  );
+                })}
                 <line x1={P.x0} y1={P.yBase} x2={P.x1} y2={P.yBase} stroke="#d7deea" strokeWidth="1" />
                 <text x={(P.x0 + P.x1) / 2} y="286" textAnchor="middle" fontSize="10.5" fill="#7a8698">NIS contribution rate by schedule year</text>
+                {/* Tooltip at the hovered data point */}
+                {chartHover != null && pts[chartHover] && (() => {
+                  const p = pts[chartHover]!;
+                  const cx = xFor(chartHover), cy = yFor(p.rate);
+                  const tw = 132, th = 42;
+                  const tx = Math.min(Math.max(cx - tw / 2, 4), 520 - tw - 4);
+                  const ty = cy - th - 16 < P.yTop ? cy + 14 : cy - th - 16;
+                  return (
+                    <g pointerEvents="none">
+                      <rect x={tx} y={ty} width={tw} height={th} rx="7" fill="#17305c" />
+                      <text x={tx + 11} y={ty + 17} fontSize="11" fontWeight="700" fill="#ffffff">{fmtDate(p.effectiveFrom)}</text>
+                      <text x={tx + 11} y={ty + 32} fontSize="10.5" fill="#c9d6f0">{p.rate}% · {p.isActive ? 'Active' : humanize(p.status)}</text>
+                    </g>
+                  );
+                })()}
               </svg>
             )}
           </div>
@@ -666,20 +693,21 @@ export function StatutoryDashboard({
     </div>
   );
 
-  // The 6 KPI tiles are `resizable: false` → fixed, uniform size (w3 × h11 ≈ 186px) like
-  // the Onboarding Overview KPIs; the user can move them but not resize. The remaining
-  // widgets ARE resizable and each declares a resize FLOOR (allowedSizes → minGridFor);
-  // without one the generic floor is 2 cells ≈ 22px on this fine 6px grid.
+  // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): fixed uniform
+  // size (w3 × h11 ≈ 186px) like the Onboarding Overview KPIs, and they never move,
+  // resize, or get displaced by other tiles. The remaining widgets ARE resizable and
+  // each declares a resize FLOOR (allowedSizes → minGridFor); without one the generic
+  // floor is 2 cells ≈ 22px on this fine 6px grid.
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
     [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              resizable: false, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', resizable: false, allowedSizes: floor('compact', 3, 11) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        resizable: false, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', locked: true, allowedSizes: floor('compact', 3, 11) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        locked: true, allowedSizes: floor('compact', 3, 11) },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 24) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },

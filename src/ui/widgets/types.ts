@@ -239,6 +239,9 @@ export interface LocalWidget {
   /** Set false for a FIXED-size tile the user can move but never resize (e.g. KPI cards
    *  that must stay a uniform size). Default true. */
   resizable?: boolean;
+  /** Set true to PIN the tile in place (RGL `static`) — it can't be dragged, resized, or
+   *  displaced by other tiles, so it always stays where the default layout puts it. */
+  locked?: boolean;
 }
 export type LocalWidgetMap = Record<string, LocalWidget>;
 
