@@ -116,6 +116,29 @@ export function StatutoryConfigOverview(): VNode {
   const verifyQueue = nisProfilesQ.data?.length ?? 0;
   const verifiedNisCount = verifiedProfilesQ.data?.length ?? 0;
 
+  // Verification-queue breakdown — REAL sub-counts derived from the pending
+  // profiles already fetched (no extra endpoint). Only the categories the
+  // hr_employee_statutory_profiles schema actually supports:
+  //   Missing NIS Numbers      — an applicable profile with no NIS number captured.
+  //   Opening-Balance Anomalies — YTD insurable earnings vs YTD NIS contributions
+  //                               are inconsistent (one present while the other is 0).
+  // (A per-employee "class mismatch" is NOT derivable here — the earnings class is
+  //  resolved at payroll time from earnings vs the schedule, never stored on the
+  //  profile — so that category is deliberately omitted rather than faked.)
+  const verifyBreakdown = useMemo(() => {
+    const rows = (nisProfilesQ.data ?? []) as Array<Record<string, unknown>>;
+    const num = (x: unknown): number => (typeof x === 'number' ? x : Number(x)) || 0;
+    const str = (x: unknown): string => (typeof x === 'string' ? x : x == null ? '' : String(x));
+    let missingNisNumbers = 0, openingAnomalies = 0;
+    for (const p of rows) {
+      const applicable = p.nisApplicable !== false;
+      if (applicable && !str(p.nisNumber).trim()) missingNisNumbers++;
+      const e = num(p.openingYtdInsurableEarnings), ee = num(p.openingYtdNisEmployee), er = num(p.openingYtdNisEmployer);
+      if ((e > 0 && ee === 0 && er === 0) || ((ee > 0 || er > 0) && e === 0)) openingAnomalies++;
+    }
+    return { missingNisNumbers, openingAnomalies };
+  }, [nisProfilesQ.data]);
+
   // Recent activity from versions list (passed into dashboard for the Activity feed)
   const activityItems: ActivityItem[] = useMemo(() =>
     versions.slice(0, 5).map(v => ({
@@ -214,6 +237,7 @@ export function StatutoryConfigOverview(): VNode {
         pending={pending}
         activeComponents={activeComponents}
         verifyQueue={verifyQueue}
+        verifyBreakdown={verifyBreakdown}
         activityItems={activityItems}
         versionsLoading={versionsQ.isLoading}
         onVerifyNis={() => setTab('verify')}

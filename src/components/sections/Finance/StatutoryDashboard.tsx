@@ -18,13 +18,14 @@
  *     - Upcoming Effective Dates list                 ← versions with future effectiveFrom
  *     - Recent Activity list                          ← activityItems
  *     - Readiness donut segments                      ← version status distribution
+ *     - NIS Classes count in stat card                ← activeNisClasses.length
+ *     - Verification-queue breakdown (Missing NIS Numbers / Opening-Balance
+ *       Anomalies)                                    ← derived from pending profiles
  *
- *   PLACEHOLDER (clearly labelled, TODO comments in code):
- *     - NIS Classes count in stat card                ← no global count hook; shows active-ver info
- *     - Combo chart (Config Readiness / Rule Coverage / Effective Versions bars)
- *                                                     ← derived proxies; TODO real server metric
- *     - Mini-stat ring "Configuration Readiness %"    ← proxy: activeComponents/total components
- *     - Mini-stat "Rule Coverage %"                   ← proxy: statutory/active components ratio
+ *   DERIVED (computed from real data, not server-authored — clearly labelled):
+ *     - Readiness lenses (Config Completeness / NIS Verification / Payroll)
+ *                                                     ← booleans + ratios over the
+ *                                                       active version's real config
  */
 
 import { type VNode } from 'preact';
@@ -59,6 +60,8 @@ export interface StatutoryDashboardProps {
   pending: number;
   activeComponents: number;
   verifyQueue: number;
+  /** Real sub-counts of the pending verification queue (derived in the parent). */
+  verifyBreakdown: { missingNisNumbers: number; openingAnomalies: number };
   activityItems: ActivityItem[];
   versionsLoading: boolean;
   // ── Quick-action handler — the readiness card's CTA opens the Verify tab. ──
@@ -126,7 +129,7 @@ function timeAgo(isoOrLabel: string): string {
 
 export function StatutoryDashboard({
   versions, components, activeVer, activeNisClasses, verifiedNisCount, drafts, pending, activeComponents, verifyQueue,
-  activityItems, versionsLoading,
+  verifyBreakdown, activityItems, versionsLoading,
   onVerifyNis,
   tab, onTabChange, tabContent,
 }: StatutoryDashboardProps): VNode {
@@ -297,20 +300,17 @@ export function StatutoryDashboard({
           </div>
         </div>
 
-        {/* 4. NIS Classes — PLACEHOLDER (no global count; shows active-ver context)
-             TODO: Add a GET /statutory/nis-classes/count backend endpoint that returns
-                   the total class count across (or within) the active version so this
-                   stat shows a real number rather than navigating to the NIS tab. */}
+        {/* 4. NIS Classes — REAL (earnings-class count on the active version) */}
         <div class="sdb-card sdb-stat sdb-stat--clickable" onClick={() => onTabChange('nis')} role="button" tabIndex={0}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTabChange('nis'); }}>
           <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-solid fa-users" /></div>
           <div>
             <div class="sdb-stat-label">NIS Classes</div>
-            <div class="sdb-stat-value">{activeVer ? 'View ▸' : '—'}</div>
+            <div class="sdb-stat-value">{activeVer ? activeNisClasses.length : '—'}</div>
             <div class="sdb-stat-sub">
               {activeVer
-                ? <><span class="sdb-dot sdb-dot--green" />In {activeVer.label}</>
-                : 'Select a version'}
+                ? <><span class="sdb-dot sdb-dot--green" />Earnings classes on {activeVer.label}</>
+                : 'No active version'}
             </div>
           </div>
         </div>
@@ -540,40 +540,39 @@ export function StatutoryDashboard({
         {/* Side stack */}
         <div class="sdb-side">
 
-          {/* Verification Queue breakdown — REAL counts, breakdown categories are PLACEHOLDER
-               TODO: Add a /statutory/verify-queue-breakdown endpoint that splits the queue
-                     into Unclassified Employees / Missing NIS Numbers / Class Mismatches /
-                     Contribution Anomalies so each row shows a real sub-count. */}
+          {/* Verification Queue — REAL: pending total + data-quality sub-counts
+               derived from the pending profiles (Missing NIS Numbers /
+               Opening-Balance Anomalies). No faked categories. */}
           <div class="sdb-card">
             <div class="sdb-sc-hd">
               <i class="fa-regular fa-circle-check sdb-sc-lead" />
               <h3>Verification Queue</h3>
               <span class="sdb-view-all" onClick={() => onTabChange('verify')} role="button" tabIndex={0}>View all</span>
             </div>
-            <div class="sdb-q-row">
-              <span class="sdb-q-ic"><i class="fa-regular fa-circle-user" /></span>
-              <span class="sdb-q-l">NIS Profiles Pending</span>
-              <span class="sdb-q-n">{verifyQueue}</span>
-            </div>
-            {/* Breakdown rows below are placeholder — see TODO above */}
-            <div class="sdb-q-row sdb-q-row--muted">
-              <span class="sdb-q-ic"><i class="fa-solid fa-hashtag" /></span>
-              <span class="sdb-q-l">Missing NIS Numbers</span>
-              <span class="sdb-q-n sdb-placeholder-val" title="Placeholder — breakdown not yet available">—</span>
-            </div>
-            <div class="sdb-q-row sdb-q-row--muted">
-              <span class="sdb-q-ic"><i class="fa-solid fa-triangle-exclamation" /></span>
-              <span class="sdb-q-l">Class Mismatches</span>
-              <span class="sdb-q-n sdb-placeholder-val" title="Placeholder — breakdown not yet available">—</span>
-            </div>
-            <div class="sdb-q-row sdb-q-row--muted">
-              <span class="sdb-q-ic"><i class="fa-solid fa-chart-line" /></span>
-              <span class="sdb-q-l">Contribution Anomalies</span>
-              <span class="sdb-q-n sdb-placeholder-val" title="Placeholder — breakdown not yet available">—</span>
-            </div>
-            <div class="sdb-q-total">
-              <span>Total items</span><span>{verifyQueue}</span>
-            </div>
+            {verifyQueue === 0 ? (
+              <div class="sdb-act-empty">Queue clear — all NIS profiles verified.</div>
+            ) : (
+              <>
+                <div class="sdb-q-row">
+                  <span class="sdb-q-ic"><i class="fa-regular fa-circle-user" /></span>
+                  <span class="sdb-q-l">NIS Profiles Pending</span>
+                  <span class="sdb-q-n">{verifyQueue}</span>
+                </div>
+                <div class="sdb-q-row sdb-q-row--muted">
+                  <span class="sdb-q-ic"><i class="fa-solid fa-hashtag" /></span>
+                  <span class="sdb-q-l">Missing NIS Numbers</span>
+                  <span class="sdb-q-n">{verifyBreakdown.missingNisNumbers}</span>
+                </div>
+                <div class="sdb-q-row sdb-q-row--muted">
+                  <span class="sdb-q-ic"><i class="fa-solid fa-chart-line" /></span>
+                  <span class="sdb-q-l">Opening-Balance Anomalies</span>
+                  <span class="sdb-q-n">{verifyBreakdown.openingAnomalies}</span>
+                </div>
+                <div class="sdb-q-total">
+                  <span>Total pending</span><span>{verifyQueue}</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Recent Activity — REAL (derived from versions list in parent) */}
