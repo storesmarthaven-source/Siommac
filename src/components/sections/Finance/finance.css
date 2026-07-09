@@ -369,6 +369,9 @@
   align-items: center;
   margin-top: 8px;
 }
+/* Bound the NIS bar chart to a sensible plot height so the tile isn't oversized
+   (scales to fit via the SVG viewBox; scoped so the readiness gauge is untouched). */
+.sdb-ch .sdb-sum-body svg { width: 100%; height: 230px; display: block; }
 .sdb-legend {
   display: flex; gap: 18px;
   margin-top: 6px;
@@ -435,7 +438,7 @@
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
 .sdb-ready-score { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 2px; }
 .sdb-ready-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); }
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: min(90%, 300px); margin: 0 auto; }
+.sdb-gauge-wrap { position: relative; width: 100%; max-width: 168px; margin: 0 auto; }
 .sdb-gauge { width: 100%; aspect-ratio: 118 / 78; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 /* Fill sweep is driven by the Web Animations API in HalfGauge (left → right). */

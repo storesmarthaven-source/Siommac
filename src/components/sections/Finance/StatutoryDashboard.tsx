@@ -76,28 +76,27 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 }
 // Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
 // chart + readiness → deadlines/verify/activity → the register (full width, tall).
-// Heights are in the board's FINE rowHeight units (cellHeight=12): summary + KPIs
-// are sizeToContent so their h is just an initial hint the fit-pass overrides; the
-// draggable widgets (chart/readiness/deadlines/verify/activity/register) carry real
-// pixel-ish heights (≈ 17·h − 5 px).
+// Board rowHeight is 34px (vMargin 16 → calm resize + real spacing). Everything
+// EXCEPT the register is sizeToContent, so those h values are just initial hints the
+// fit-pass overrides; only the register carries a real drag height (tile px ≈ 50·h − 16).
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,        0,  0, 12,  4, 'wide'),
-        defInst(W_KPI_ACTIVE,     0,  4,  3,  7, 'compact'),
-        defInst(W_KPI_DRAFTS,     3,  4,  3,  7, 'compact'),
-        defInst(W_KPI_COMPONENTS, 6,  4,  3,  7, 'compact'),
-        defInst(W_KPI_NIS,        9,  4,  3,  7, 'compact'),
-        defInst(W_KPI_VERIFY,     0, 11,  3,  7, 'compact'),
-        defInst(W_KPI_APPROVALS,  3, 11,  3,  7, 'compact'),
-        defInst(W_CHART,          0, 18,  8, 27, 'large'),
-        defInst(W_READY,          8, 18,  4, 27, 'standard'),
-        defInst(W_DEADLINES,      0, 45,  4, 20, 'standard'),
-        defInst(W_VERIFY,         4, 45,  4, 20, 'standard'),
-        defInst(W_ACTIVITY,       8, 45,  4, 20, 'standard'),
-        defInst(W_REGISTER,       0, 65, 12, 43, 'hero'),
+        defInst(W_SUMMARY,        0,  0, 12,  2, 'wide'),
+        defInst(W_KPI_ACTIVE,     0,  2,  3,  3, 'compact'),
+        defInst(W_KPI_DRAFTS,     3,  2,  3,  3, 'compact'),
+        defInst(W_KPI_COMPONENTS, 6,  2,  3,  3, 'compact'),
+        defInst(W_KPI_NIS,        9,  2,  3,  3, 'compact'),
+        defInst(W_KPI_VERIFY,     0,  5,  3,  3, 'compact'),
+        defInst(W_KPI_APPROVALS,  3,  5,  3,  3, 'compact'),
+        defInst(W_CHART,          0,  8,  8,  6, 'large'),
+        defInst(W_READY,          8,  8,  4,  7, 'standard'),
+        defInst(W_DEADLINES,      0, 15,  4,  6, 'standard'),
+        defInst(W_VERIFY,         4, 15,  4,  6, 'standard'),
+        defInst(W_ACTIVITY,       8, 15,  4,  6, 'standard'),
+        defInst(W_REGISTER,       0, 21, 12, 15, 'hero'),
       ],
     },
   };
@@ -668,11 +667,12 @@ export function StatutoryDashboard({
     [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',       sizeToContent: true },
     [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', sizeToContent: true },
     [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals', sizeToContent: true },
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness' },
-    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines' },
-    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue' },
-    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity' },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', sizeToContent: true },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',       sizeToContent: true },
+    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',        sizeToContent: true },
+    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',        sizeToContent: true },
+    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',           sizeToContent: true },
+    // Register stays drag-sized (long table scrolls internally) — the only tile the user resizes in height.
     [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register' },
   };
 
@@ -698,7 +698,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={12}
+        cellHeight={34}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
