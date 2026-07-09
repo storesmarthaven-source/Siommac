@@ -284,6 +284,15 @@
   gap: 16px;
   align-items: stretch;
 }
+/* NIS contribution chart now sits in its own FIXED full-width row (it is not a
+   widget). The Readiness / Upcoming Deadlines / Verify / Activity cards moved
+   into the movable widget zone below it. */
+.sdb-chartrow { margin-bottom: 16px; }
+.sdb-chartrow .sdb-ch { width: 100%; }
+/* Widget-zone tiles own their height (RGL grid) — the card fills the tile so
+   drag/resize behaves, and internal overflow scrolls instead of clipping. */
+.sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
+.sdb-board-tools { display: flex; justify-content: flex-end; margin: 2px 0 10px; }
 .sdb-ch { padding: 18px 20px; }
 .sdb-ch-hd {
   display: flex;
@@ -470,6 +479,8 @@
 
 /* ── Bottom row ──────────────────────────────────────────────────────────── */
 .sdb-bot { display: grid; grid-template-columns: 2.6fr 1fr; gap: 16px; align-items: start; }
+/* Register-only bottom row (the verify/activity side stack became widgets). */
+.sdb-bot--full { grid-template-columns: 1fr; }
 
 /* Tabbed table card */
 .sdb-table-card { padding: 0 20px 18px; overflow: hidden; }

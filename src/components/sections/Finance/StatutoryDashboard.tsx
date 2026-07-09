@@ -34,6 +34,12 @@ import {
   type StatutoryVersion, type PayComponent, type NisClass,
 } from '@api/finance/statutory';
 import { type ActivityItem } from '@ui';
+import {
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
+} from '@ui/widgets';
+import { can } from '@lib/permissions';
+import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, fmtMoney, humanize, toRoman } from './financeShared';
 
 // Re-export so the parent can reference the same literal type without a second import.
@@ -46,6 +52,32 @@ const TABS: { key: MainTab; label: string }[] = [
   { key: 'verify',     label: 'NIS Verification' },
   { key: 'reports',    label: 'Reports' },
 ];
+
+// ── Widget zone ────────────────────────────────────────────────────────────────
+// The middle band is a movable/resizable board (per-user layout). The KPI strip,
+// the NIS contribution chart and the register table stay FIXED (never widgets).
+const PAGE_KEY = 'finance.statutory';
+const W_READY     = 'finance.statutory.readiness';
+const W_DEADLINES = 'finance.statutory.deadlines';
+const W_VERIFY    = 'finance.statutory.verifyQueue';
+const W_ACTIVITY  = 'finance.statutory.activity';
+
+function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
+  return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
+}
+function defaultStatutoryLayout(): BoardLayout {
+  return {
+    pageKey: PAGE_KEY,
+    zones: {
+      main: [
+        defInst(W_READY,     0, 0, 4, 5, 'standard'),
+        defInst(W_DEADLINES, 4, 0, 4, 5, 'standard'),
+        defInst(W_VERIFY,    8, 0, 4, 5, 'standard'),
+        defInst(W_ACTIVITY,  0, 5, 12, 3, 'wide'),
+      ],
+    },
+  };
+}
 
 export interface StatutoryDashboardProps {
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -243,6 +275,185 @@ export function StatutoryDashboard({
   // ── Activity icon lookup ──────────────────────────────────────────────────────
   // activityItems come from parent (derived from versions list)
 
+  // ── Widget board (Readiness / Upcoming Deadlines / Verify Queue / Activity) ──
+  // Per-user movable/resizable zone. Only managers/admins may customize it.
+  const canEditBoard = useSessionStore(selectIsManager);
+  const isAdmin      = useSessionStore(selectIsAdmin);
+  const [editing, setEditing] = useState(false);
+  const [libOpen, setLibOpen] = useState(false);
+  const [demo, setDemo]       = useState(false);
+  const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
+  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  const boardItems = layout.zones['main'] ?? [];
+  const placedWidgetIds = boardItems.map(w => w.widgetId);
+  const placeBottom = <T extends { x: number; y: number }>(w: T): T =>
+    ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
+  const userPermissions = useMemo(
+    () => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can),
+    [],
+  );
+  function discardPreview(): void { setPreview(null); setLibOpen(true); }
+  function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
+
+  const renderReadiness = (): VNode => (
+    <div class="sdb-card sdb-ch sdb-ready sdb-wgt-fill">
+      <div class="sdb-ready-head">
+        <span class="sdb-ready-icon" style={{ color: lens.color }}><i class={`fa-solid ${lens.icon}`} /></span>
+        <div class="sdb-ready-htext">
+          <h2>{lens.title}</h2>
+          <p>{lens.subtitle}</p>
+        </div>
+        <div class="sdb-ready-nav-group">
+          <button type="button" class="sdb-ready-nav" aria-label="Previous readiness view"
+            onClick={() => setReadyLens(l => (l + readiness.length - 1) % readiness.length)}>
+            <i class="fa-solid fa-chevron-left" />
+          </button>
+          <button type="button" class="sdb-ready-nav" aria-label="Next readiness view"
+            onClick={() => setReadyLens(l => (l + 1) % readiness.length)}>
+            <i class="fa-solid fa-chevron-right" />
+          </button>
+        </div>
+      </div>
+      <div class="sdb-ready-score">
+        <span class="sdb-ready-label">Current</span>
+        <div class="sdb-gauge-wrap">
+          <HalfGauge key={readyLens} pct={lens.pct} color={lens.color} />
+          <div class="sdb-gauge-val" style={{ color: lens.color }}>{lens.pct}%</div>
+        </div>
+        <div class="sdb-ready-sub">{lens.sub}</div>
+      </div>
+      <div class="sdb-ready-grid">
+        {lens.stats.map((s, i) => (
+          <div key={i} class="sdb-ready-stat">
+            <span>{s.label}</span>
+            <strong>{s.value}</strong>
+          </div>
+        ))}
+      </div>
+      <div class="sdb-ready-dots" aria-hidden="true">
+        {readiness.map((_, i) => (
+          <span key={i} class={`sdb-ready-dot${i === readyLens ? ' is-on' : ''}`} />
+        ))}
+      </div>
+      <button type="button" class="sdb-ready-cta" onClick={lens.onCta}>{lens.cta}</button>
+    </div>
+  );
+
+  const renderDeadlines = (): VNode => (
+    <div class="sdb-card sdb-ch sdb-cal sdb-wgt-fill">
+      <div class="sdb-ch-hd">
+        <i class="fa-regular fa-calendar" style={{ color: '#2f5fe0' }} />
+        <h2 style={{ fontSize: 14 }}>Upcoming Deadlines</h2>
+        <div class="sdb-ch-tools">
+          <button type="button" class="sdb-ready-nav" aria-label="Previous week" onClick={() => shiftWeek(-1)}><i class="fa-solid fa-chevron-left" /></button>
+          <button type="button" class="sdb-ready-nav" aria-label="Next week" onClick={() => shiftWeek(1)}><i class="fa-solid fa-chevron-right" /></button>
+        </div>
+      </div>
+      <div class="sdb-cal-month">{weekStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
+      <div class="sdb-cal-strip">
+        {weekDays.map(d => {
+          const on = sameDay(d, selectedDay);
+          const isToday = sameDay(d, today);
+          const has = deadlinesOn(d).length > 0;
+          return (
+            <button type="button" key={d.toISOString()}
+              class={`sdb-cal-day${on ? ' is-on' : ''}${isToday ? ' is-today' : ''}${has ? ' has-deadline' : ''}`}
+              onClick={() => setSelectedDay(new Date(d))}>
+              <span>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+              <strong>{d.getDate()}</strong>
+            </button>
+          );
+        })}
+      </div>
+      <div class="sdb-cal-list">
+        {selectedDeadlines.length === 0 ? (
+          <div class="sdb-up-empty">
+            No statutory deadlines on {selectedDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}. NIS &amp; PAYE fall on the 15th; TD4 by 28 Feb.
+          </div>
+        ) : (
+          selectedDeadlines.map((d, i) => (
+            <div key={i} class="sdb-cal-item">
+              <span class={`sdb-cal-dot ${d.tagCls}`} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div class="sdb-up-t">{d.title}</div>
+                <div class="sdb-up-s">{d.note}</div>
+              </div>
+              <span class={`sdb-tag ${d.tagCls}`}>{d.tagLabel}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const renderVerifyQueue = (): VNode => (
+    <div class="sdb-card sdb-wgt-fill">
+      <div class="sdb-sc-hd">
+        <i class="fa-regular fa-circle-check sdb-sc-lead" />
+        <h3>Verification Queue</h3>
+        <span class="sdb-view-all" onClick={() => onTabChange('verify')} role="button" tabIndex={0}>View all</span>
+      </div>
+      {verifyQueue === 0 ? (
+        <div class="sdb-act-empty">Queue clear — all NIS profiles verified.</div>
+      ) : (
+        <>
+          <div class="sdb-q-row">
+            <span class="sdb-q-ic"><i class="fa-regular fa-circle-user" /></span>
+            <span class="sdb-q-l">NIS Profiles Pending</span>
+            <span class="sdb-q-n">{verifyQueue}</span>
+          </div>
+          <div class="sdb-q-row sdb-q-row--muted">
+            <span class="sdb-q-ic"><i class="fa-solid fa-hashtag" /></span>
+            <span class="sdb-q-l">Missing NIS Numbers</span>
+            <span class="sdb-q-n">{verifyBreakdown.missingNisNumbers}</span>
+          </div>
+          <div class="sdb-q-row sdb-q-row--muted">
+            <span class="sdb-q-ic"><i class="fa-solid fa-chart-line" /></span>
+            <span class="sdb-q-l">Opening-Balance Anomalies</span>
+            <span class="sdb-q-n">{verifyBreakdown.openingAnomalies}</span>
+          </div>
+          <div class="sdb-q-total">
+            <span>Total pending</span><span>{verifyQueue}</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderActivity = (): VNode => (
+    <div class="sdb-card sdb-wgt-fill">
+      <div class="sdb-sc-hd">
+        <i class="fa-regular fa-calendar sdb-sc-lead" />
+        <h3>Recent Activity</h3>
+      </div>
+      {activityItems.length === 0 ? (
+        <div class="sdb-act-empty">No recent activity.</div>
+      ) : (
+        activityItems.slice(0, 5).map((item, i) => {
+          const ic = actIcon(item.icon ?? '');
+          return (
+            <div key={i} class="sdb-act">
+              <span class="sdb-act-ic" style={{ background: ic.bg, color: ic.color }}>
+                <i class={`fa-solid ${ic.fa}`} />
+              </span>
+              <div style={{ flex: 1 }}>
+                <div class="sdb-act-t">{item.title}</div>
+                <div class="sdb-act-s">{item.meta}</div>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+
+  const localWidgets: LocalWidgetMap = {
+    [W_READY]:     { render: renderReadiness,   chrome: 'none', title: 'Statutory Readiness' },
+    [W_DEADLINES]: { render: renderDeadlines,   chrome: 'none', title: 'Upcoming Deadlines' },
+    [W_VERIFY]:    { render: renderVerifyQueue, chrome: 'none', title: 'Verification Queue' },
+    [W_ACTIVITY]:  { render: renderActivity,    chrome: 'none', title: 'Recent Activity' },
+  };
+
   return (
     <div class="sdb">
 
@@ -343,8 +554,8 @@ export function StatutoryDashboard({
         </div>
       </div>
 
-      {/* ── Middle row ─────────────────────────────────────────────────────── */}
-      <div class="sdb-mid">
+      {/* ── NIS contribution chart (FIXED, full width) ─────────────────────── */}
+      <div class="sdb-chartrow">
 
         {/* NIS Contribution Schedule — REAL: the active version's earnings-class bands. */}
         <div class="sdb-card sdb-ch">
@@ -423,98 +634,33 @@ export function StatutoryDashboard({
           </div>
         </div>
 
-        {/* Statutory Readiness — switchable lens (Config / Verification / Payroll) */}
-        <div class="sdb-card sdb-ch sdb-ready">
-          <div class="sdb-ready-head">
-            <span class="sdb-ready-icon" style={{ color: lens.color }}><i class={`fa-solid ${lens.icon}`} /></span>
-            <div class="sdb-ready-htext">
-              <h2>{lens.title}</h2>
-              <p>{lens.subtitle}</p>
-            </div>
-            <div class="sdb-ready-nav-group">
-              <button type="button" class="sdb-ready-nav" aria-label="Previous readiness view"
-                onClick={() => setReadyLens(l => (l + readiness.length - 1) % readiness.length)}>
-                <i class="fa-solid fa-chevron-left" />
-              </button>
-              <button type="button" class="sdb-ready-nav" aria-label="Next readiness view"
-                onClick={() => setReadyLens(l => (l + 1) % readiness.length)}>
-                <i class="fa-solid fa-chevron-right" />
-              </button>
-            </div>
-          </div>
-          <div class="sdb-ready-score">
-            <span class="sdb-ready-label">Current</span>
-            <div class="sdb-gauge-wrap">
-              <HalfGauge key={readyLens} pct={lens.pct} color={lens.color} />
-              <div class="sdb-gauge-val" style={{ color: lens.color }}>{lens.pct}%</div>
-            </div>
-            <div class="sdb-ready-sub">{lens.sub}</div>
-          </div>
-          <div class="sdb-ready-grid">
-            {lens.stats.map((s, i) => (
-              <div key={i} class="sdb-ready-stat">
-                <span>{s.label}</span>
-                <strong>{s.value}</strong>
-              </div>
-            ))}
-          </div>
-          <div class="sdb-ready-dots" aria-hidden="true">
-            {readiness.map((_, i) => (
-              <span key={i} class={`sdb-ready-dot${i === readyLens ? ' is-on' : ''}`} />
-            ))}
-          </div>
-          <button type="button" class="sdb-ready-cta" onClick={lens.onCta}>{lens.cta}</button>
-        </div>
+      </div>{/* /sdb-chartrow */}
 
-        {/* Statutory compliance calendar (REAL recurring T&T deadlines) */}
-        <div class="sdb-card sdb-ch sdb-cal">
-          <div class="sdb-ch-hd">
-            <i class="fa-regular fa-calendar" style={{ color: '#2f5fe0' }} />
-            <h2 style={{ fontSize: 14 }}>Upcoming Deadlines</h2>
-            <div class="sdb-ch-tools">
-              <button type="button" class="sdb-ready-nav" aria-label="Previous week" onClick={() => shiftWeek(-1)}><i class="fa-solid fa-chevron-left" /></button>
-              <button type="button" class="sdb-ready-nav" aria-label="Next week" onClick={() => shiftWeek(1)}><i class="fa-solid fa-chevron-right" /></button>
-            </div>
-          </div>
-          <div class="sdb-cal-month">{weekStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
-          <div class="sdb-cal-strip">
-            {weekDays.map(d => {
-              const on = sameDay(d, selectedDay);
-              const isToday = sameDay(d, today);
-              const has = deadlinesOn(d).length > 0;
-              return (
-                <button type="button" key={d.toISOString()}
-                  class={`sdb-cal-day${on ? ' is-on' : ''}${isToday ? ' is-today' : ''}${has ? ' has-deadline' : ''}`}
-                  onClick={() => setSelectedDay(new Date(d))}>
-                  <span>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
-                  <strong>{d.getDate()}</strong>
-                </button>
-              );
-            })}
-          </div>
-          <div class="sdb-cal-list">
-            {selectedDeadlines.length === 0 ? (
-              <div class="sdb-up-empty">
-                No statutory deadlines on {selectedDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}. NIS &amp; PAYE fall on the 15th; TD4 by 28 Feb.
-              </div>
-            ) : (
-              selectedDeadlines.map((d, i) => (
-                <div key={i} class="sdb-cal-item">
-                  <span class={`sdb-cal-dot ${d.tagCls}`} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div class="sdb-up-t">{d.title}</div>
-                    <div class="sdb-up-s">{d.note}</div>
-                  </div>
-                  <span class={`sdb-tag ${d.tagCls}`}>{d.tagLabel}</span>
-                </div>
-              ))
-            )}
-          </div>
+      {/* ── Statutory widget zone — movable/resizable (Readiness · Upcoming
+             Deadlines · Verification Queue · Recent Activity) ───────────────── */}
+      {canEditBoard && (
+        <div class="sdb-board-tools">
+          <WidgetBoardToolbar
+            editing={editing} canSetDefault={isAdmin}
+            onToggleEdit={() => setEditing(e => !e)}
+            onOpenLibrary={() => setLibOpen(true)}
+            onReset={() => void resetLayout()}
+            onSetDefault={() => void setAsDefault()}
+          />
         </div>
-      </div>
+      )}
+      {preview && (
+        <div class="wmock-preview-banner">
+          <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then add it or discard.</span>
+        </div>
+      )}
+      <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
+        localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
+        preview={preview} onPreviewChange={setPreview}
+        onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
-      {/* ── Bottom row ─────────────────────────────────────────────────────── */}
-      <div class="sdb-bot">
+      {/* ── Register (FIXED, full width) ───────────────────────────────────── */}
+      <div class="sdb-bot sdb-bot--full">
 
         {/* Tabbed table card */}
         <div class="sdb-card sdb-table-card">
@@ -537,71 +683,15 @@ export function StatutoryDashboard({
           </div>
         </div>
 
-        {/* Side stack */}
-        <div class="sdb-side">
+      </div>{/* /sdb-bot */}
 
-          {/* Verification Queue — REAL: pending total + data-quality sub-counts
-               derived from the pending profiles (Missing NIS Numbers /
-               Opening-Balance Anomalies). No faked categories. */}
-          <div class="sdb-card">
-            <div class="sdb-sc-hd">
-              <i class="fa-regular fa-circle-check sdb-sc-lead" />
-              <h3>Verification Queue</h3>
-              <span class="sdb-view-all" onClick={() => onTabChange('verify')} role="button" tabIndex={0}>View all</span>
-            </div>
-            {verifyQueue === 0 ? (
-              <div class="sdb-act-empty">Queue clear — all NIS profiles verified.</div>
-            ) : (
-              <>
-                <div class="sdb-q-row">
-                  <span class="sdb-q-ic"><i class="fa-regular fa-circle-user" /></span>
-                  <span class="sdb-q-l">NIS Profiles Pending</span>
-                  <span class="sdb-q-n">{verifyQueue}</span>
-                </div>
-                <div class="sdb-q-row sdb-q-row--muted">
-                  <span class="sdb-q-ic"><i class="fa-solid fa-hashtag" /></span>
-                  <span class="sdb-q-l">Missing NIS Numbers</span>
-                  <span class="sdb-q-n">{verifyBreakdown.missingNisNumbers}</span>
-                </div>
-                <div class="sdb-q-row sdb-q-row--muted">
-                  <span class="sdb-q-ic"><i class="fa-solid fa-chart-line" /></span>
-                  <span class="sdb-q-l">Opening-Balance Anomalies</span>
-                  <span class="sdb-q-n">{verifyBreakdown.openingAnomalies}</span>
-                </div>
-                <div class="sdb-q-total">
-                  <span>Total pending</span><span>{verifyQueue}</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Recent Activity — REAL (derived from versions list in parent) */}
-          <div class="sdb-card">
-            <div class="sdb-sc-hd">
-              <i class="fa-regular fa-calendar sdb-sc-lead" />
-              <h3>Recent Activity</h3>
-            </div>
-            {activityItems.length === 0 ? (
-              <div class="sdb-act-empty">No recent activity.</div>
-            ) : (
-              activityItems.slice(0, 5).map((item, i) => {
-                const ic = actIcon(item.icon ?? '');
-                return (
-                  <div key={i} class="sdb-act">
-                    <span class="sdb-act-ic" style={{ background: ic.bg, color: ic.color }}>
-                      <i class={`fa-solid ${ic.fa}`} />
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <div class="sdb-act-t">{item.title}</div>
-                      <div class="sdb-act-s">{item.meta}</div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </div>
+      <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
+        placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
+        demo={demo} onToggleDemo={() => setDemo(d => !d)}
+        canManagePackages={isAdmin}
+        onClose={() => setLibOpen(false)}
+        onAddWidget={inst => addWidget('main', placeBottom(inst as WidgetInstance))}
+        onPreviewOnBoard={p => setPreview(placeBottom(p))} />
     </div>
   );
 }
